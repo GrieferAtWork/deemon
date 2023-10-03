@@ -1746,7 +1746,7 @@ PRIVATE struct type_method tpconst time_methods[] = {
 };
 
 
-#define DEFINE_TIME_AS(name, repr)                              \
+#define DEFINE_LIBTIME_AS(name, repr)                           \
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
 	time_getval_##name(DeeTimeObject *__restrict self) {        \
 		Dee_int128_t value;                                     \
@@ -1770,36 +1770,36 @@ PRIVATE struct type_method tpconst time_methods[] = {
 		DeeTime_SetRepr(self, &tval, repr);                     \
 		return 0;                                               \
 	}
-DEFINE_TIME_AS(nanosecond, TIME_REPR_NANOSECOND)
-DEFINE_TIME_AS(microsecond, TIME_REPR_MICROSECOND)
-DEFINE_TIME_AS(millisecond, TIME_REPR_MILLISECOND)
-DEFINE_TIME_AS(second, TIME_REPR_SECOND)
-DEFINE_TIME_AS(minute, TIME_REPR_MINUTE)
-DEFINE_TIME_AS(hour, TIME_REPR_HOUR)
-DEFINE_TIME_AS(wday, TIME_REPR_WDAY)
-DEFINE_TIME_AS(mweek, TIME_REPR_MWEEK)
-DEFINE_TIME_AS(month, TIME_REPR_MONTH)
-DEFINE_TIME_AS(year, TIME_REPR_YEAR)
-DEFINE_TIME_AS(decade, TIME_REPR_DECADE)
-DEFINE_TIME_AS(century, TIME_REPR_CENTURY)
-DEFINE_TIME_AS(millennium, TIME_REPR_MILLENNIUM)
-DEFINE_TIME_AS(mday, TIME_REPR_MDAY)
-DEFINE_TIME_AS(yday, TIME_REPR_YDAY)
-DEFINE_TIME_AS(yweek, TIME_REPR_YWEEK)
-DEFINE_TIME_AS(nanoseconds, TIME_REPR_NANOSECONDS)
-DEFINE_TIME_AS(microseconds, TIME_REPR_MICROSECONDS)
-DEFINE_TIME_AS(milliseconds, TIME_REPR_MILLISECONDS)
-DEFINE_TIME_AS(seconds, TIME_REPR_SECONDS)
-DEFINE_TIME_AS(minutes, TIME_REPR_MINUTES)
-DEFINE_TIME_AS(hours, TIME_REPR_HOURS)
-DEFINE_TIME_AS(days, TIME_REPR_DAYS)
-DEFINE_TIME_AS(weeks, TIME_REPR_WEEKS)
-DEFINE_TIME_AS(months, TIME_REPR_MONTHS)
-DEFINE_TIME_AS(years, TIME_REPR_YEARS)
-DEFINE_TIME_AS(decades, TIME_REPR_DECADES)
-DEFINE_TIME_AS(centuries, TIME_REPR_CENTURIES)
-DEFINE_TIME_AS(millennia, TIME_REPR_MILLENNIA)
-#undef DEFINE_TIME_AS
+DEFINE_LIBTIME_AS(nanosecond, TIME_REPR_NANOSECOND)
+DEFINE_LIBTIME_AS(microsecond, TIME_REPR_MICROSECOND)
+DEFINE_LIBTIME_AS(millisecond, TIME_REPR_MILLISECOND)
+DEFINE_LIBTIME_AS(second, TIME_REPR_SECOND)
+DEFINE_LIBTIME_AS(minute, TIME_REPR_MINUTE)
+DEFINE_LIBTIME_AS(hour, TIME_REPR_HOUR)
+DEFINE_LIBTIME_AS(wday, TIME_REPR_WDAY)
+DEFINE_LIBTIME_AS(mweek, TIME_REPR_MWEEK)
+DEFINE_LIBTIME_AS(month, TIME_REPR_MONTH)
+DEFINE_LIBTIME_AS(year, TIME_REPR_YEAR)
+DEFINE_LIBTIME_AS(decade, TIME_REPR_DECADE)
+DEFINE_LIBTIME_AS(century, TIME_REPR_CENTURY)
+DEFINE_LIBTIME_AS(millennium, TIME_REPR_MILLENNIUM)
+DEFINE_LIBTIME_AS(mday, TIME_REPR_MDAY)
+DEFINE_LIBTIME_AS(yday, TIME_REPR_YDAY)
+DEFINE_LIBTIME_AS(yweek, TIME_REPR_YWEEK)
+DEFINE_LIBTIME_AS(nanoseconds, TIME_REPR_NANOSECONDS)
+DEFINE_LIBTIME_AS(microseconds, TIME_REPR_MICROSECONDS)
+DEFINE_LIBTIME_AS(milliseconds, TIME_REPR_MILLISECONDS)
+DEFINE_LIBTIME_AS(seconds, TIME_REPR_SECONDS)
+DEFINE_LIBTIME_AS(minutes, TIME_REPR_MINUTES)
+DEFINE_LIBTIME_AS(hours, TIME_REPR_HOURS)
+DEFINE_LIBTIME_AS(days, TIME_REPR_DAYS)
+DEFINE_LIBTIME_AS(weeks, TIME_REPR_WEEKS)
+DEFINE_LIBTIME_AS(months, TIME_REPR_MONTHS)
+DEFINE_LIBTIME_AS(years, TIME_REPR_YEARS)
+DEFINE_LIBTIME_AS(decades, TIME_REPR_DECADES)
+DEFINE_LIBTIME_AS(centuries, TIME_REPR_CENTURIES)
+DEFINE_LIBTIME_AS(millennia, TIME_REPR_MILLENNIA)
+#undef DEFINE_LIBTIME_AS
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTimeObject *DCALL
 time_timepart_get(DeeTimeObject *__restrict self) {
@@ -1977,38 +1977,38 @@ time_get_asdelta(DeeTimeObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst time_getsets[] = {
 	/* Access to individual time parts by name */
-#define DEFINE_TIME_AS(name, doc) \
+#define DEFINE_LIBTIME_AS_FIELD(name, doc) \
 	TYPE_GETSET(#name, &time_getval_##name, &time_delval_##name, &time_setval_##name, DOC("->?Dint\n" doc))
-	DEFINE_TIME_AS(nanosecond, "Nanosecond of second"),
-	DEFINE_TIME_AS(microsecond, "Microsecond of second"),
-	DEFINE_TIME_AS(millisecond, "Millisecond of second"),
-	DEFINE_TIME_AS(second, "Second of minute"),
-	DEFINE_TIME_AS(minute, "Minute of Hour"),
-	DEFINE_TIME_AS(hour, "Hour of day"),
-	DEFINE_TIME_AS(wday, "Day of week (0-based; 0 is Sunday)"),
-	DEFINE_TIME_AS(mweek, "Week of month (week 1 starts on the first sunday of the month; if the month doesn't start on a sun-day, week 0 exists)"),
-	DEFINE_TIME_AS(month, "Month of year (1-based)"),
-	DEFINE_TIME_AS(year, "Year"),
-	DEFINE_TIME_AS(decade, "Decade"),
-	DEFINE_TIME_AS(century, "Century"),
-	DEFINE_TIME_AS(millennium, "Millennium"),
-	DEFINE_TIME_AS(mday, "Day of month (1-based)"),
-	DEFINE_TIME_AS(yday, "Day of year (1-based)"),
-	DEFINE_TIME_AS(yweek, "Week of year (week 1 starts on the first sunday of the year; if the year doesn't start on a sun-day, week 0 exists)"),
-	DEFINE_TIME_AS(nanoseconds, "Total nanoseconds (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(microseconds, "Total microseconds (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(milliseconds, "Total milliseconds (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(seconds, "Total seconds (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(minutes, "Total minutes (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(hours, "Total hours (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(days, "Total days (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(weeks, "Total weeks (since #C{01-01-0000})"),
-	DEFINE_TIME_AS(months, "Total months (since #C{01-01-0000}, using the average of $2_629_746 seconds per month)"),
-	DEFINE_TIME_AS(years, "Total years (since #C{01-01-0000}, using the average of $31_556_952 seconds per year)"),
-	DEFINE_TIME_AS(decades, "Total decades (since #C{01-01-0000}, using the average of $315_569_520 seconds per decade)"),
-	DEFINE_TIME_AS(centuries, "Total centuries (since #C{01-01-0000}, using the average of $3_155_695_200 seconds per century)"),
-	DEFINE_TIME_AS(millennia, "Total millennia (since #C{01-01-0000}, using the average of $31_556_952_000 seconds per millennium)"),
-#undef DEFINE_TIME_AS
+	DEFINE_LIBTIME_AS_FIELD(nanosecond, "Nanosecond of second"),
+	DEFINE_LIBTIME_AS_FIELD(microsecond, "Microsecond of second"),
+	DEFINE_LIBTIME_AS_FIELD(millisecond, "Millisecond of second"),
+	DEFINE_LIBTIME_AS_FIELD(second, "Second of minute"),
+	DEFINE_LIBTIME_AS_FIELD(minute, "Minute of Hour"),
+	DEFINE_LIBTIME_AS_FIELD(hour, "Hour of day"),
+	DEFINE_LIBTIME_AS_FIELD(wday, "Day of week (0-based; 0 is Sunday)"),
+	DEFINE_LIBTIME_AS_FIELD(mweek, "Week of month (week 1 starts on the first sunday of the month; if the month doesn't start on a sun-day, week 0 exists)"),
+	DEFINE_LIBTIME_AS_FIELD(month, "Month of year (1-based)"),
+	DEFINE_LIBTIME_AS_FIELD(year, "Year"),
+	DEFINE_LIBTIME_AS_FIELD(decade, "Decade"),
+	DEFINE_LIBTIME_AS_FIELD(century, "Century"),
+	DEFINE_LIBTIME_AS_FIELD(millennium, "Millennium"),
+	DEFINE_LIBTIME_AS_FIELD(mday, "Day of month (1-based)"),
+	DEFINE_LIBTIME_AS_FIELD(yday, "Day of year (1-based)"),
+	DEFINE_LIBTIME_AS_FIELD(yweek, "Week of year (week 1 starts on the first sunday of the year; if the year doesn't start on a sun-day, week 0 exists)"),
+	DEFINE_LIBTIME_AS_FIELD(nanoseconds, "Total nanoseconds (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(microseconds, "Total microseconds (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(milliseconds, "Total milliseconds (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(seconds, "Total seconds (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(minutes, "Total minutes (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(hours, "Total hours (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(days, "Total days (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(weeks, "Total weeks (since #C{01-01-0000})"),
+	DEFINE_LIBTIME_AS_FIELD(months, "Total months (since #C{01-01-0000}, using the average of $2_629_746 seconds per month)"),
+	DEFINE_LIBTIME_AS_FIELD(years, "Total years (since #C{01-01-0000}, using the average of $31_556_952 seconds per year)"),
+	DEFINE_LIBTIME_AS_FIELD(decades, "Total decades (since #C{01-01-0000}, using the average of $315_569_520 seconds per decade)"),
+	DEFINE_LIBTIME_AS_FIELD(centuries, "Total centuries (since #C{01-01-0000}, using the average of $3_155_695_200 seconds per century)"),
+	DEFINE_LIBTIME_AS_FIELD(millennia, "Total millennia (since #C{01-01-0000}, using the average of $31_556_952_000 seconds per millennium)"),
+#undef DEFINE_LIBTIME_AS_FIELD
 
 	TYPE_GETSET("time_t", &time_get_time_t, &time_del_time_t, &time_set_time_t,
 	            "->?Dint\n"
@@ -2038,43 +2038,43 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	            "->?GTime\nDeprecated alias for ?#timepart"),
 	TYPE_GETSET("part", &time_datepart_get, &time_datepart_del, &time_datepart_set,
 	            "->?GTime\nDeprecated alias for ?#datepart"),
-#define DEFINE_DEPRECATED_TIME_AS(name, alias_for) \
+#define DEFINE_DEPRECATED_TIME_AS_FIELD(name, alias_for)                                            \
 	TYPE_GETSET(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, \
 	            "->?Dint\nDeprecated alias for ?#" #alias_for)
-	DEFINE_DEPRECATED_TIME_AS("mic", microsecond),
-	DEFINE_DEPRECATED_TIME_AS("mil", millisecond),
-	DEFINE_DEPRECATED_TIME_AS("sec", second),
-	DEFINE_DEPRECATED_TIME_AS("min", minute),
-	DEFINE_DEPRECATED_TIME_AS("hor", hour),
-	DEFINE_DEPRECATED_TIME_AS("mwek", mweek),
-	DEFINE_DEPRECATED_TIME_AS("mon", month),
-	DEFINE_DEPRECATED_TIME_AS("yer", year),
-	DEFINE_DEPRECATED_TIME_AS("dec", decade),
-	DEFINE_DEPRECATED_TIME_AS("cen", century),
-	DEFINE_DEPRECATED_TIME_AS("mll", millennium),
-	DEFINE_DEPRECATED_TIME_AS("ywek", yweek),
-	DEFINE_DEPRECATED_TIME_AS("mics", microseconds),
-	DEFINE_DEPRECATED_TIME_AS("mils", milliseconds),
-	DEFINE_DEPRECATED_TIME_AS("secs", seconds),
-	DEFINE_DEPRECATED_TIME_AS("mins", minutes),
-	DEFINE_DEPRECATED_TIME_AS("hors", hours),
-	DEFINE_DEPRECATED_TIME_AS("weks", weeks),
-	DEFINE_DEPRECATED_TIME_AS("mons", months),
-	DEFINE_DEPRECATED_TIME_AS("yers", years),
-	DEFINE_DEPRECATED_TIME_AS("decs", decades),
-	DEFINE_DEPRECATED_TIME_AS("cens", centuries),
-	DEFINE_DEPRECATED_TIME_AS("mlls", millennia),
-	DEFINE_DEPRECATED_TIME_AS("weekday", wday),
-	DEFINE_DEPRECATED_TIME_AS("monthweek", mweek),
-	DEFINE_DEPRECATED_TIME_AS("monthday", mday),
-	DEFINE_DEPRECATED_TIME_AS("yearday", yday),
-	DEFINE_DEPRECATED_TIME_AS("yearweek", yweek),
-	DEFINE_DEPRECATED_TIME_AS("mweek", mweek),
-	DEFINE_DEPRECATED_TIME_AS("yweek", yweek),
-	DEFINE_DEPRECATED_TIME_AS("msecond", millisecond),
-	DEFINE_DEPRECATED_TIME_AS("mseconds", milliseconds),
-	DEFINE_DEPRECATED_TIME_AS("millenia", millennia),
-#undef DEFINE_DEPRECATED_TIME_AS
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mic", microsecond),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mil", millisecond),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("sec", second),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("min", minute),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("hor", hour),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mwek", mweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mon", month),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("yer", year),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("dec", decade),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("cen", century),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mll", millennium),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("ywek", yweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mics", microseconds),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mils", milliseconds),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("secs", seconds),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mins", minutes),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("hors", hours),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("weks", weeks),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mons", months),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("yers", years),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("decs", decades),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("cens", centuries),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mlls", millennia),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("weekday", wday),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("monthweek", mweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("monthday", mday),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("yearday", yday),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("yearweek", yweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mweek", mweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("yweek", yweek),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("msecond", millisecond),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("mseconds", milliseconds),
+	DEFINE_DEPRECATED_TIME_AS_FIELD("millenia", millennia),
+#undef DEFINE_DEPRECATED_TIME_AS_FIELD
 
 	TYPE_GETSET("timepart", &time_timepart_get, &time_timepart_del, &time_timepart_set,
 	            "->?GTime\n"
@@ -3228,7 +3228,7 @@ time_print(DeeTimeObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 time_printrepr(DeeTimeObject *__restrict self,
-           dformatprinter printer, void *arg) {
+               dformatprinter printer, void *arg) {
 	dssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "Time(");
 	if unlikely(result < 0)
@@ -3317,7 +3317,7 @@ time_hash(DeeTimeObject *__restrict self) {
 	return Dee_HashPtr(&self->t_nanos, 16);
 }
 
-#define DEFINE_TIME_CMP(op)                               \
+#define DEFINE_TIME_COMPARE(op)                           \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	time_##op(DeeTimeObject *self, DeeObject *other) {    \
 		Dee_int128_t lhs, rhs;                            \
@@ -3328,13 +3328,13 @@ time_hash(DeeTimeObject *__restrict self) {
 	err:                                                  \
 		return NULL;                                      \
 	}
-DEFINE_TIME_CMP(eq)
-DEFINE_TIME_CMP(ne)
-DEFINE_TIME_CMP(lo)
-DEFINE_TIME_CMP(le)
-DEFINE_TIME_CMP(gr)
-DEFINE_TIME_CMP(ge)
-#undef DEFINE_TIME_CMP
+DEFINE_TIME_COMPARE(eq)
+DEFINE_TIME_COMPARE(ne)
+DEFINE_TIME_COMPARE(lo)
+DEFINE_TIME_COMPARE(le)
+DEFINE_TIME_COMPARE(gr)
+DEFINE_TIME_COMPARE(ge)
+#undef DEFINE_TIME_COMPARE
 
 PRIVATE struct type_cmp time_cmp = {
 	/* .tp_hash = */ (dhash_t(DCALL *)(DeeObject *__restrict self))&time_hash,

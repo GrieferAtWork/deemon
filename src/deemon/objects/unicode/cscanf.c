@@ -538,21 +538,20 @@ ssi_visit(StringScanIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->si_scanner);
 }
 
-#define DEFINE_SPLITITER_CMP(name, op)                                      \
+#define DEFINE_STRINGSCANITERATOR_COMPARE(name, op)                         \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
-	name(StringScanIterator *__restrict self,                               \
-	     StringScanIterator *__restrict other) {                            \
+	name(StringScanIterator *self, StringScanIterator *other) {             \
 		if (DeeObject_AssertTypeExact(other, &StringScanIterator_Type))     \
 			return NULL;                                                    \
 		return_bool(GET_FORMAT_POINTER(self) op GET_FORMAT_POINTER(other)); \
 	}
-DEFINE_SPLITITER_CMP(ssi_eq, ==)
-DEFINE_SPLITITER_CMP(ssi_ne, !=)
-DEFINE_SPLITITER_CMP(ssi_lo, <)
-DEFINE_SPLITITER_CMP(ssi_le, <=)
-DEFINE_SPLITITER_CMP(ssi_gr, >)
-DEFINE_SPLITITER_CMP(ssi_ge, >=)
-#undef DEFINE_SPLITITER_CMP
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_eq, ==)
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ne, !=)
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_lo, <)
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_le, <=)
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_gr, >)
+DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ge, >=)
+#undef DEFINE_STRINGSCANITERATOR_COMPARE
 
 PRIVATE struct type_cmp ssi_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))NULL,

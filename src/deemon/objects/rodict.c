@@ -201,7 +201,7 @@ iter_exhausted:
 }
 
 INTDEF DeeTypeObject RoDictIterator_Type;
-#define DEFINE_ITERATOR_COMPARE(name, op)                      \
+#define DEFINE_RODICTITERATOR_COMPARE(name, op)                \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL      \
 	name(RoDictIterator *self, RoDictIterator *other) {        \
 		if (DeeObject_AssertType(other, &RoDictIterator_Type)) \
@@ -210,13 +210,13 @@ INTDEF DeeTypeObject RoDictIterator_Type;
 	err:                                                       \
 		return NULL;                                           \
 	}
-DEFINE_ITERATOR_COMPARE(rodictiterator_eq, ==)
-DEFINE_ITERATOR_COMPARE(rodictiterator_ne, !=)
-DEFINE_ITERATOR_COMPARE(rodictiterator_lo, <)
-DEFINE_ITERATOR_COMPARE(rodictiterator_le, <=)
-DEFINE_ITERATOR_COMPARE(rodictiterator_gr, >)
-DEFINE_ITERATOR_COMPARE(rodictiterator_ge, >=)
-#undef DEFINE_ITERATOR_COMPARE
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_eq, ==)
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_ne, !=)
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_lo, <)
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_le, <=)
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_gr, >)
+DEFINE_RODICTITERATOR_COMPARE(rodictiterator_ge, >=)
+#undef DEFINE_RODICTITERATOR_COMPARE
 
 PRIVATE struct type_cmp rodictiterator_cmp = {
 	/* .tp_hash = */ NULL,

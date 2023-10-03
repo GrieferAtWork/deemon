@@ -2084,7 +2084,7 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 	return 0;
 }
 
-#define DEFINE_TOI_COMPARE(name, op)                                       \
+#define DEFINE_TYPEOPREATORITEARTOR_COMPARE(name, op)                      \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
 	name(TypeOperatorsIterator *self, TypeOperatorsIterator *other) {      \
 		if (DeeObject_AssertTypeExact(other, &TypeOperatorsIterator_Type)) \
@@ -2093,13 +2093,13 @@ toi_copy(TypeOperatorsIterator *__restrict self,
 	err:                                                                   \
 		return NULL;                                                       \
 	}
-DEFINE_TOI_COMPARE(toi_eq, ==)
-DEFINE_TOI_COMPARE(toi_ne, !=)
-DEFINE_TOI_COMPARE(toi_lo, <)
-DEFINE_TOI_COMPARE(toi_le, <=)
-DEFINE_TOI_COMPARE(toi_gr, >)
-DEFINE_TOI_COMPARE(toi_ge, >=)
-#undef DEFINE_TOI_COMPARE
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_eq, ==)
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_ne, !=)
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_lo, <)
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_le, <=)
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_gr, >)
+DEFINE_TYPEOPREATORITEARTOR_COMPARE(toi_ge, >=)
+#undef DEFINE_TYPEOPREATORITEARTOR_COMPARE
 
 PRIVATE struct type_cmp toi_cmp = {
 	/* .tp_hash = */ NULL,

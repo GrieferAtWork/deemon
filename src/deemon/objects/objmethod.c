@@ -583,7 +583,7 @@ dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->dki_kwds);
 }
 
-#define DEFINE_DOCKWDSITER_COMPARE(name, op)                                \
+#define DEFINE_DOCKWDSITERATOR_COMPARE(name, op)                            \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                   \
 	name(DocKwdsIterator *self, DocKwdsIterator *other) {                   \
 		if (DeeObject_AssertTypeExact(other, &DocKwdsIterator_Type))        \
@@ -592,13 +592,13 @@ dockwdsiter_visit(DocKwdsIterator *__restrict self, dvisit_t proc, void *arg) {
 	err:                                                                    \
 		return NULL;                                                        \
 	}
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_eq, ==)
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_ne, !=)
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_lo, <)
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_le, <=)
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_gr, >)
-DEFINE_DOCKWDSITER_COMPARE(dockwdsiter_ge, >=)
-#undef DEFINE_COTI_COMPARE
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_eq, ==)
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_ne, !=)
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_lo, <)
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_le, <=)
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_gr, >)
+DEFINE_DOCKWDSITERATOR_COMPARE(dockwdsiter_ge, >=)
+#undef DEFINE_DOCKWDSITERATOR_COMPARE
 
 PRIVATE struct type_cmp dockwdsiter_cmp = {
 	/* .tp_hash = */ NULL,
@@ -1792,7 +1792,7 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	memcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
 #define CLSMEMBER_BCMP(a, b) \
 	bcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
-#define DEFINE_CLSMEMBER_CMP(name, CLSMEMBER_CMP, op)           \
+#define DEFINE_CLSMEMBER_COMPARE(name, CLSMEMBER_CMP, op)       \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
 	name(DeeClsMemberObject *self, DeeClsMemberObject *other) { \
 		if (DeeObject_AssertType(other, &DeeClsMember_Type))    \
@@ -1801,13 +1801,13 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	err:                                                        \
 		return NULL;                                            \
 	}
-DEFINE_CLSMEMBER_CMP(clsmember_eq, CLSMEMBER_BCMP, ==)
-DEFINE_CLSMEMBER_CMP(clsmember_ne, CLSMEMBER_BCMP, !=)
-DEFINE_CLSMEMBER_CMP(clsmember_lo, CLSMEMBER_CMP, <)
-DEFINE_CLSMEMBER_CMP(clsmember_le, CLSMEMBER_CMP, <=)
-DEFINE_CLSMEMBER_CMP(clsmember_gr, CLSMEMBER_CMP, >)
-DEFINE_CLSMEMBER_CMP(clsmember_ge, CLSMEMBER_CMP, >=)
-#undef DEFINE_CLSMEMBER_CMP
+DEFINE_CLSMEMBER_COMPARE(clsmember_eq, CLSMEMBER_BCMP, ==)
+DEFINE_CLSMEMBER_COMPARE(clsmember_ne, CLSMEMBER_BCMP, !=)
+DEFINE_CLSMEMBER_COMPARE(clsmember_lo, CLSMEMBER_CMP, <)
+DEFINE_CLSMEMBER_COMPARE(clsmember_le, CLSMEMBER_CMP, <=)
+DEFINE_CLSMEMBER_COMPARE(clsmember_gr, CLSMEMBER_CMP, >)
+DEFINE_CLSMEMBER_COMPARE(clsmember_ge, CLSMEMBER_CMP, >=)
+#undef DEFINE_CLSMEMBER_COMPARE
 #undef CLSMEMBER_BCMP
 #undef CLSMEMBER_CMP
 

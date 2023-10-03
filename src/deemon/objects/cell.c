@@ -299,9 +299,11 @@ cell_hash(Cell *__restrict self) {
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
 	name(Cell *self, Cell *other) {                                \
 		if (DeeObject_AssertType(other, &DeeCell_Type))            \
-			return NULL;                                           \
+			goto err;                                              \
 		return_bool(DeeObject_Id(DeeCell_GetItemPointer(self)) op  \
 		            DeeObject_Id(DeeCell_GetItemPointer(other)));  \
+	err:                                                           \
+		return NULL;                                               \
 	}
 DEFINE_CELL_COMPARE(cell_eq, ==)
 DEFINE_CELL_COMPARE(cell_ne, !=)

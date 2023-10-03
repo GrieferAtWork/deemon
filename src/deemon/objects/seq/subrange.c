@@ -82,20 +82,20 @@ subrangeiterator_next(SubRangeIterator *__restrict self) {
 
 INTDEF DeeTypeObject SeqSubRangeIterator_Type;
 
-#define DEFINE_COMPARE(name, op)                                         \
+#define DEFINE_SUBRANGEITERATOR_COMPARE(name, op)                        \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
 	name(SubRangeIterator *self, SubRangeIterator *other) {              \
 		if (DeeObject_AssertTypeExact(other, &SeqSubRangeIterator_Type)) \
 			return NULL;                                                 \
 		return_bool(READ_SIZE(other) op READ_SIZE(self));                \
 	}
-DEFINE_COMPARE(subrangeiterator_eq, ==)
-DEFINE_COMPARE(subrangeiterator_ne, !=)
-DEFINE_COMPARE(subrangeiterator_lo, <)
-DEFINE_COMPARE(subrangeiterator_le, <=)
-DEFINE_COMPARE(subrangeiterator_gr, >)
-DEFINE_COMPARE(subrangeiterator_ge, >=)
-#undef DEFINE_COMPARE
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_eq, ==)
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_ne, !=)
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_lo, <)
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_le, <=)
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_gr, >)
+DEFINE_SUBRANGEITERATOR_COMPARE(subrangeiterator_ge, >=)
+#undef DEFINE_SUBRANGEITERATOR_COMPARE
 
 PRIVATE struct type_cmp subrangeiterator_cmp = {
 	/* .tp_hash = */ NULL,

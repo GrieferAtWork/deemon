@@ -1042,23 +1042,22 @@ PRIVATE struct type_member tpconst stringiter_members[] = {
 
 INTDEF DeeTypeObject StringIterator_Type;
 
-#define DEFINE_STRINGITER_COMPARE(name, op)                                      \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                                                \
-	name(StringIterator *__restrict self,                                        \
-	     StringIterator *__restrict other) {                                     \
+#define DEFINE_STRINGITERATOR_COMPARE(name, op)                     \
+	PRIVATE WUNUSED DREF DeeObject *DCALL                           \
+	name(StringIterator *self, StringIterator *other) {             \
 		if (DeeObject_AssertTypeExact(other, &StringIterator_Type)) \
-			goto err;                                                            \
-		return_bool(READ_ITER_PTR(self) op READ_ITER_PTR(other));                \
-	err:                                                                         \
-		return NULL;                                                             \
+			goto err;                                               \
+		return_bool(READ_ITER_PTR(self) op READ_ITER_PTR(other));   \
+	err:                                                            \
+		return NULL;                                                \
 	}
-DEFINE_STRINGITER_COMPARE(stringiter_eq, ==)
-DEFINE_STRINGITER_COMPARE(stringiter_ne, !=)
-DEFINE_STRINGITER_COMPARE(stringiter_lo, <)
-DEFINE_STRINGITER_COMPARE(stringiter_le, <=)
-DEFINE_STRINGITER_COMPARE(stringiter_gr, >)
-DEFINE_STRINGITER_COMPARE(stringiter_ge, >=)
-#undef DEFINE_STRINGITER_COMPARE
+DEFINE_STRINGITERATOR_COMPARE(stringiter_eq, ==)
+DEFINE_STRINGITERATOR_COMPARE(stringiter_ne, !=)
+DEFINE_STRINGITERATOR_COMPARE(stringiter_lo, <)
+DEFINE_STRINGITERATOR_COMPARE(stringiter_le, <=)
+DEFINE_STRINGITERATOR_COMPARE(stringiter_gr, >)
+DEFINE_STRINGITERATOR_COMPARE(stringiter_ge, >=)
+#undef DEFINE_STRINGITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 stringiter_nii_getseq(StringIterator *__restrict self) {

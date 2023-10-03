@@ -28,8 +28,8 @@
 
 #include <__stdcxx.h>
 
-#define DEE_CXX_BEGIN   namespace deemon {
-#define DEE_CXX_END     }
+#define DEE_CXX_BEGIN   __CXXDECL_BEGIN namespace deemon {
+#define DEE_CXX_END     } __CXXDECL_END
 #define DEE_CXX_NOTHROW throw()
 
 #endif /* !GUARD_DEEMON_CXX_API_H */

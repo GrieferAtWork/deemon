@@ -78,9 +78,12 @@ struct Dee_float_object {
 	double      f_value; /* [const] The value of this float as a C-double. */
 #endif /* CONFIG_HAVE_FPU */
 };
-#define Dee_DEFINE_FLOAT(name, value) \
-	DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
 
+#ifdef CONFIG_HAVE_FPU
+#define Dee_DEFINE_FLOAT(name, value) DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type), value }
+#else /* CONFIG_HAVE_FPU */
+#define Dee_DEFINE_FLOAT(name, value) DeeFloatObject name = { Dee_OBJECT_HEAD_INIT(&DeeFloat_Type) }
+#endif /* !CONFIG_HAVE_FPU */
 
 #ifdef CONFIG_HAVE_FPU
 #define DeeFloat_VALUE(x) ((DeeFloatObject *)Dee_REQUIRES_OBJECT(x))->f_value

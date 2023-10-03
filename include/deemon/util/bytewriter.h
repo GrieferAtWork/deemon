@@ -106,17 +106,17 @@ err:
 
 
 /* Append a single byte/word/dword or qword, returning -1 on error and 0 on success */
-#define DEE_DEFINE_BYTEWRITER_PUTX(name, T, x)                   \
-	LOCAL WUNUSED NONNULL((1)) int                               \
-	(DCALL name)(struct Dee_bytewriter * __restrict self, T x) { \
-		T *buf;                                                  \
-		buf = (T *)Dee_bytewriter_alloc(self, sizeof(T));        \
-		if unlikely(!buf)                                        \
-			goto err;                                            \
-		*buf = x;                                                \
-		return 0;                                                \
-	err:                                                         \
-		return -1;                                               \
+#define DEE_DEFINE_BYTEWRITER_PUTX(name, T, x)                  \
+	LOCAL WUNUSED NONNULL((1)) int                              \
+	(DCALL name)(struct Dee_bytewriter *__restrict self, T x) { \
+		T *buf;                                                 \
+		buf = (T *)Dee_bytewriter_alloc(self, sizeof(T));       \
+		if unlikely(!buf)                                       \
+			goto err;                                           \
+		*buf = x;                                               \
+		return 0;                                               \
+	err:                                                        \
+		return -1;                                              \
 	}
 DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putb, uint8_t, byte)
 DEE_DEFINE_BYTEWRITER_PUTX(Dee_bytewriter_putw, uint16_t, word)

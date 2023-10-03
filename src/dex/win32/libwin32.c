@@ -775,7 +775,7 @@ handle_hash(DeeHandleObject *__restrict self) {
 	return Dee_HashPointer(self->ho_handle);
 }
 
-#define DEFINE_HANDLE_COMPARE(name, op)                           \
+#define DEFINE_WIN32_HANDLE_COMPARE(name, op)                     \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL         \
 	name(DeeHandleObject *self, DeeObject *some_object) {         \
 		HANDLE hOtherHandle;                                      \
@@ -785,13 +785,13 @@ handle_hash(DeeHandleObject *__restrict self) {
 	err:                                                          \
 		return NULL;                                              \
 	}
-DEFINE_HANDLE_COMPARE(handle_eq, ==)
-DEFINE_HANDLE_COMPARE(handle_ne, !=)
-DEFINE_HANDLE_COMPARE(handle_lo, <)
-DEFINE_HANDLE_COMPARE(handle_le, <=)
-DEFINE_HANDLE_COMPARE(handle_gr, >)
-DEFINE_HANDLE_COMPARE(handle_ge, >=)
-#undef DEFINE_HANDLE_COMPARE
+DEFINE_WIN32_HANDLE_COMPARE(handle_eq, ==)
+DEFINE_WIN32_HANDLE_COMPARE(handle_ne, !=)
+DEFINE_WIN32_HANDLE_COMPARE(handle_lo, <)
+DEFINE_WIN32_HANDLE_COMPARE(handle_le, <=)
+DEFINE_WIN32_HANDLE_COMPARE(handle_gr, >)
+DEFINE_WIN32_HANDLE_COMPARE(handle_ge, >=)
+#undef DEFINE_WIN32_HANDLE_COMPARE
 
 PRIVATE struct type_cmp handle_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&handle_hash,

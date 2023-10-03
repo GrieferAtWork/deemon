@@ -377,20 +377,20 @@ PRIVATE struct type_member tpconst scfi_members[] = {
 };
 
 
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)                    \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                  \
-	name(StringFindIterator *self, StringFindIterator *other) {            \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
-			return NULL;                                                   \
-		return_bool(READ_PTR(self) op READ_PTR(other));                    \
+#define DEFINE_STRINGFINDITERATOR_COMPARE(name, op)             \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
+	name(StringFindIterator *self, StringFindIterator *other) { \
+		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))   \
+			return NULL;                                        \
+		return_bool(READ_PTR(self) op READ_PTR(other));         \
 	}
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_eq, ==)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_ne, !=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_lo, <)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_le, <=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_gr, >)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(sfi_ge, >=)
-#undef DEFINE_STRINGSEGMENTSITERATOR_COMPARE
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_eq, ==)
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_ne, !=)
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_lo, <)
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_le, <=)
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_gr, >)
+DEFINE_STRINGFINDITERATOR_COMPARE(sfi_ge, >=)
+#undef DEFINE_STRINGFINDITERATOR_COMPARE
 
 
 PRIVATE struct type_cmp sfi_cmp = {

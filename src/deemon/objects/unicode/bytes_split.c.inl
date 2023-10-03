@@ -155,7 +155,7 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 }
 
 
-#define DEFINE_BSI_COMPARE(name, op)                            \
+#define DEFINE_BYTESSPLITITERATOR_COMPARE(name, op)             \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
 	name(BytesSplitIterator *self, BytesSplitIterator *other) { \
 		uint8_t *x, *y;                                         \
@@ -171,13 +171,13 @@ bsi_bool(BytesSplitIterator *__restrict self) {
 	err:                                                        \
 		return NULL;                                            \
 	}
-DEFINE_BSI_COMPARE(bsi_eq, ==)
-DEFINE_BSI_COMPARE(bsi_ne, !=)
-DEFINE_BSI_COMPARE(bsi_lo, <)
-DEFINE_BSI_COMPARE(bsi_le, <=)
-DEFINE_BSI_COMPARE(bsi_gr, >)
-DEFINE_BSI_COMPARE(bsi_ge, >=)
-#undef DEFINE_BSI_COMPARE
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_eq, ==)
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_ne, !=)
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_lo, <)
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_le, <=)
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_gr, >)
+DEFINE_BYTESSPLITITERATOR_COMPARE(bsi_ge, >=)
+#undef DEFINE_BYTESSPLITITERATOR_COMPARE
 
 PRIVATE struct type_cmp bsi_cmp = {
 	/* .tp_hash = */ NULL,

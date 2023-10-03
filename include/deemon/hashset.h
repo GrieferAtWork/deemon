@@ -46,7 +46,7 @@ struct Dee_hashset_item {
 
 struct Dee_hashset_object {
 	Dee_OBJECT_HEAD /* GC Object */
-	size_t                   hs_mask; /* [lock(hs_lock)][> hs_size || hs_mask == 0] Allocated set size. */
+	size_t                   hs_mask; /* [lock(hs_lock)][> hs_size || hs_mask == 0] Allocated set size minus 1. */
 	size_t                   hs_size; /* [lock(hs_lock)][< hs_mask || hs_mask == 0] Amount of non-NULL keys. */
 	size_t                   hs_used; /* [lock(hs_lock)][<= hs_size] Amount of keys actually in use.
 	                                   * HINT: The difference to `hs_size' is the number of dummy keys currently in use. */

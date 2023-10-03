@@ -165,22 +165,22 @@ byattr_hash(MapByAttr *__restrict self) {
 	return DeeObject_Hash(self->mba_map);
 }
 
-#define DEFINE_BYATTR_COMPARE(name, Name)                                      \
+#define DEFINE_MAPBYATTR_COMPARE(name, Name)                                   \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
-	byattr_##name(MapByAttr *self, MapByAttr *other) {                         \
+	name(MapByAttr *self, MapByAttr *other) {                                  \
 		if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))              \
 			goto err;                                                          \
 		return DeeObject_Compare##Name##Object(self->mba_map, other->mba_map); \
 err:                                                                           \
 		return NULL;                                                           \
 	}
-DEFINE_BYATTR_COMPARE(eq, Eq)
-DEFINE_BYATTR_COMPARE(ne, Ne)
-DEFINE_BYATTR_COMPARE(lo, Lo)
-DEFINE_BYATTR_COMPARE(le, Le)
-DEFINE_BYATTR_COMPARE(gr, Gr)
-DEFINE_BYATTR_COMPARE(ge, Ge)
-#undef DEFINE_BYATTR_COMPARE
+DEFINE_MAPBYATTR_COMPARE(byattr_eq, Eq)
+DEFINE_MAPBYATTR_COMPARE(byattr_ne, Ne)
+DEFINE_MAPBYATTR_COMPARE(byattr_lo, Lo)
+DEFINE_MAPBYATTR_COMPARE(byattr_le, Le)
+DEFINE_MAPBYATTR_COMPARE(byattr_gr, Gr)
+DEFINE_MAPBYATTR_COMPARE(byattr_ge, Ge)
+#undef DEFINE_MAPBYATTR_COMPARE
 
 PRIVATE struct type_cmp byattr_cmp = {
 	/* .tp_hash = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&byattr_hash,

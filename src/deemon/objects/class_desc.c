@@ -187,7 +187,7 @@ done:
 	return result;
 }
 
-#define DEFINE_COTI_COMPARE(name, op)                                           \
+#define DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(name, op)                     \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                       \
 	name(ClassOperatorTableIterator *self,                                      \
 	     ClassOperatorTableIterator *other) {                                   \
@@ -197,13 +197,13 @@ done:
 	err:                                                                        \
 		return NULL;                                                            \
 	}
-DEFINE_COTI_COMPARE(coti_eq, ==)
-DEFINE_COTI_COMPARE(coti_ne, !=)
-DEFINE_COTI_COMPARE(coti_lo, <)
-DEFINE_COTI_COMPARE(coti_le, <=)
-DEFINE_COTI_COMPARE(coti_gr, >)
-DEFINE_COTI_COMPARE(coti_ge, >=)
-#undef DEFINE_COTI_COMPARE
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_eq, ==)
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_ne, !=)
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_lo, <)
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_le, <=)
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_gr, >)
+DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(coti_ge, >=)
+#undef DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE
 
 PRIVATE struct type_cmp coti_cmp = {
 	/* .tp_hash = */ NULL,

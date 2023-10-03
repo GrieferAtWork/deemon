@@ -255,7 +255,7 @@ dictiterator_visit(DictIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 INTDEF DeeTypeObject DictIterator_Type;
-#define DEFINE_ITERATOR_COMPARE(name, op)                    \
+#define DEFINE_DICTITERATOR_COMPARE(name, op)                \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL    \
 	name(DictIterator *self, DictIterator *other) {          \
 		if (DeeObject_AssertType(other, &DictIterator_Type)) \
@@ -264,13 +264,13 @@ INTDEF DeeTypeObject DictIterator_Type;
 	err:                                                     \
 		return NULL;                                         \
 	}
-DEFINE_ITERATOR_COMPARE(dictiterator_eq, ==)
-DEFINE_ITERATOR_COMPARE(dictiterator_ne, !=)
-DEFINE_ITERATOR_COMPARE(dictiterator_lo, <)
-DEFINE_ITERATOR_COMPARE(dictiterator_le, <=)
-DEFINE_ITERATOR_COMPARE(dictiterator_gr, >)
-DEFINE_ITERATOR_COMPARE(dictiterator_ge, >=)
-#undef DEFINE_ITERATOR_COMPARE
+DEFINE_DICTITERATOR_COMPARE(dictiterator_eq, ==)
+DEFINE_DICTITERATOR_COMPARE(dictiterator_ne, !=)
+DEFINE_DICTITERATOR_COMPARE(dictiterator_lo, <)
+DEFINE_DICTITERATOR_COMPARE(dictiterator_le, <=)
+DEFINE_DICTITERATOR_COMPARE(dictiterator_gr, >)
+DEFINE_DICTITERATOR_COMPARE(dictiterator_ge, >=)
+#undef DEFINE_DICTITERATOR_COMPARE
 
 PRIVATE struct type_cmp dictiterator_cmp = {
 	/* .tp_hash = */ NULL,

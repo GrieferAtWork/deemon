@@ -2449,29 +2449,29 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	return result;
 }
 
-#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)       \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
-	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) { \
-		return DeeFile_GetStd(DEE_STDXXX);                        \
-	}                                                             \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                        \
-	file_class_del_##stdxxx(DeeObject *__restrict self) {         \
-		DREF DeeObject *old_stream;                               \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
-		if unlikely(!old_stream) {                                \
-			err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);       \
-			return -1;                                            \
-		}                                                         \
-		return 0;                                                 \
-	}                                                             \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                     \
-	file_class_set_##stdxxx(DeeObject *UNUSED(self),              \
-	                        DeeObject *value) {                   \
-		DREF DeeObject *old_stream;                               \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, value);           \
-		if (old_stream && old_stream != ITER_DONE)                \
-			Dee_Decref(old_stream);                               \
-		return 0;                                                 \
+#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)        \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL             \
+	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) {  \
+		return DeeFile_GetStd(DEE_STDXXX);                         \
+	}                                                              \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                         \
+	file_class_del_##stdxxx(DeeObject *__restrict self) {          \
+		DREF DeeObject *old_stream;                                \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);             \
+		if unlikely(!old_stream) {                                 \
+			err_unbound_attribute_string(Dee_TYPE(self), #stdxxx); \
+			return -1;                                             \
+		}                                                          \
+		return 0;                                                  \
+	}                                                              \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                      \
+	file_class_set_##stdxxx(DeeObject *UNUSED(self),               \
+	                        DeeObject *value) {                    \
+		DREF DeeObject *old_stream;                                \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, value);            \
+		if (old_stream && old_stream != ITER_DONE)                 \
+			Dee_Decref(old_stream);                                \
+		return 0;                                                  \
 	}
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdin, DEE_STDIN)
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdout, DEE_STDOUT)

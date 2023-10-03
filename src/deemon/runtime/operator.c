@@ -3536,29 +3536,29 @@ type_inherit_compare(DeeTypeObject *__restrict self) {
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
-#define DEFINE_COMPARE_OPERATOR(name, fwd, bck, operator_name, invoke_fwd, invoke_bck) \
-	DEFINE_OPERATOR(DREF DeeObject *, name,                                            \
-	                (DeeObject *self, DeeObject *some_object)) {                       \
-		LOAD_TP_SELF;                                                                  \
-		ASSERT_OBJECT(some_object);                                                    \
-		do {                                                                           \
-			if (tp_self->tp_cmp) {                                                     \
-				if (tp_self->tp_cmp->tp_##fwd)                                         \
-					return invoke_fwd(tp_self, self, some_object);                     \
-				if (tp_self->tp_cmp->tp_##bck)                                         \
-					return xinvoke_not(invoke_bck(tp_self, self, some_object));        \
-			}                                                                          \
-		} while (type_inherit_compare(tp_self));                                       \
-		err_unimplemented_operator(tp_self, operator_name);                            \
-		return NULL;                                                                   \
+#define DEFINE_OBJECT_COMPARE_OPERATOR(name, fwd, bck, operator_name, invoke_fwd, invoke_bck) \
+	DEFINE_OPERATOR(DREF DeeObject *, name,                                                   \
+	                (DeeObject *self, DeeObject *some_object)) {                              \
+		LOAD_TP_SELF;                                                                         \
+		ASSERT_OBJECT(some_object);                                                           \
+		do {                                                                                  \
+			if (tp_self->tp_cmp) {                                                            \
+				if (tp_self->tp_cmp->tp_##fwd)                                                \
+					return invoke_fwd(tp_self, self, some_object);                            \
+				if (tp_self->tp_cmp->tp_##bck)                                                \
+					return xinvoke_not(invoke_bck(tp_self, self, some_object));               \
+			}                                                                                 \
+		} while (type_inherit_compare(tp_self));                                              \
+		err_unimplemented_operator(tp_self, operator_name);                                   \
+		return NULL;                                                                          \
 	}
-DEFINE_COMPARE_OPERATOR(CompareEqObject, eq, ne, OPERATOR_EQ, DeeType_INVOKE_EQ, DeeType_INVOKE_NE)
-DEFINE_COMPARE_OPERATOR(CompareNeObject, ne, eq, OPERATOR_NE, DeeType_INVOKE_NE, DeeType_INVOKE_EQ)
-DEFINE_COMPARE_OPERATOR(CompareLoObject, lo, ge, OPERATOR_LO, DeeType_INVOKE_LO, DeeType_INVOKE_GE)
-DEFINE_COMPARE_OPERATOR(CompareLeObject, le, gr, OPERATOR_LE, DeeType_INVOKE_LE, DeeType_INVOKE_GR)
-DEFINE_COMPARE_OPERATOR(CompareGrObject, gr, lo, OPERATOR_GR, DeeType_INVOKE_GR, DeeType_INVOKE_LO)
-DEFINE_COMPARE_OPERATOR(CompareGeObject, ge, le, OPERATOR_GE, DeeType_INVOKE_GE, DeeType_INVOKE_LE)
-#undef DEFINE_COMPARE_OPERATOR
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareEqObject, eq, ne, OPERATOR_EQ, DeeType_INVOKE_EQ, DeeType_INVOKE_NE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareNeObject, ne, eq, OPERATOR_NE, DeeType_INVOKE_NE, DeeType_INVOKE_EQ)
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareLoObject, lo, ge, OPERATOR_LO, DeeType_INVOKE_LO, DeeType_INVOKE_GE)
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareLeObject, le, gr, OPERATOR_LE, DeeType_INVOKE_LE, DeeType_INVOKE_GR)
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareGrObject, gr, lo, OPERATOR_GR, DeeType_INVOKE_GR, DeeType_INVOKE_LO)
+DEFINE_OBJECT_COMPARE_OPERATOR(CompareGeObject, ge, le, OPERATOR_GE, DeeType_INVOKE_GE, DeeType_INVOKE_LE)
+#undef DEFINE_OBJECT_COMPARE_OPERATOR
 
 
 #ifndef DEFINE_TYPED_OPERATORS

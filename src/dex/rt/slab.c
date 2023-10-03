@@ -93,22 +93,24 @@ ss_hash(SlabStatObject *__restrict self) {
 	return Dee_HashPtr(&self->st_stat, SLABSTAT_DATASIZE(self));
 }
 
-#define DEFINE_SS_COMPARE(name, memcmp, op, return_diff_size)                               \
+#define DEFINE_SLABSTAT_COMPARE(name, memcmp, op, return_diff_size)                         \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                   \
 	name(SlabStatObject *self, SlabStatObject *other) {                                     \
 		if (DeeObject_AssertTypeExact(other, &SlabStat_Type))                               \
-			return NULL;                                                                    \
+			goto err;                                                                       \
 		if unlikely(SLABSTAT_DATASIZE(self) != SLABSTAT_DATASIZE(other))                    \
 			return_diff_size;                                                               \
 		return_bool(memcmp(&self->st_stat, &other->st_stat, SLABSTAT_DATASIZE(self)) op 0); \
+	err:                                                                                    \
+		return NULL;                                                                        \
 	}
-DEFINE_SS_COMPARE(ss_eq, bcmp, ==, return_false)
-DEFINE_SS_COMPARE(ss_ne, bcmp, !=, return_true)
-DEFINE_SS_COMPARE(ss_lo, memcmp, <, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_le, memcmp, <=, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_gr, memcmp, >, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
-DEFINE_SS_COMPARE(ss_ge, memcmp, >=, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
-#undef DEFINE_SS_COMPARE
+DEFINE_SLABSTAT_COMPARE(ss_eq, bcmp, ==, return_false)
+DEFINE_SLABSTAT_COMPARE(ss_ne, bcmp, !=, return_true)
+DEFINE_SLABSTAT_COMPARE(ss_lo, memcmp, <, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
+DEFINE_SLABSTAT_COMPARE(ss_le, memcmp, <=, return_bool_(SLABSTAT_DATASIZE(self) < SLABSTAT_DATASIZE(other)))
+DEFINE_SLABSTAT_COMPARE(ss_gr, memcmp, >, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
+DEFINE_SLABSTAT_COMPARE(ss_ge, memcmp, >=, return_bool_(SLABSTAT_DATASIZE(self) > SLABSTAT_DATASIZE(other)))
+#undef DEFINE_SLABSTAT_COMPARE
 
 PRIVATE struct type_cmp ss_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ss_hash,
@@ -305,20 +307,22 @@ ssi_bool(SlabStatIteratorObject *__restrict self) {
 	return READ_INDEX(self) < self->sti_stat->st_stat.st_slabcount;
 }
 
-#define DEFINE_SSI_COMPARE(name, op)                                    \
+#define DEFINE_SLABSTATITERATOR_COMPARE(name, op)                       \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
 	name(SlabStatIteratorObject *self, SlabStatIteratorObject *other) { \
 		if (DeeObject_AssertTypeExact(other, &SlabStatIterator_Type))   \
-			return NULL;                                                \
+			goto err;                                                   \
 		return_bool(READ_INDEX(self) op READ_INDEX(other));             \
+	err:                                                                \
+		return NULL;                                                    \
 	}
-DEFINE_SSI_COMPARE(ssi_eq, ==)
-DEFINE_SSI_COMPARE(ssi_ne, !=)
-DEFINE_SSI_COMPARE(ssi_lo, <)
-DEFINE_SSI_COMPARE(ssi_le, <=)
-DEFINE_SSI_COMPARE(ssi_gr, >)
-DEFINE_SSI_COMPARE(ssi_ge, >=)
-#undef DEFINE_SSI_COMPARE
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_eq, ==)
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_ne, !=)
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_lo, <)
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_le, <=)
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_gr, >)
+DEFINE_SLABSTATITERATOR_COMPARE(ssi_ge, >=)
+#undef DEFINE_SLABSTATITERATOR_COMPARE
 
 PRIVATE struct type_cmp ssi_cmp = {
 	/* .tp_hash = */ NULL,
@@ -441,26 +445,26 @@ si_get_slabsize(SlabInfoObject *__restrict self) {
 	                      self->si_info->si_slabstart);
 }
 
-#define DEFINE_FIELD_READER(field_name)                        \
+#define DEFINE_SLABINFO_FIELD_READER(field_name)               \
 	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL         \
 	si_get_##field_name(SlabInfoObject *__restrict self) {     \
 		return DeeInt_NewSize(self->si_info->si_##field_name); \
 	}
-DEFINE_FIELD_READER(itemsize)
-DEFINE_FIELD_READER(items_per_page)
-DEFINE_FIELD_READER(totalpages)
-DEFINE_FIELD_READER(totalitems)
-DEFINE_FIELD_READER(cur_alloc)
-DEFINE_FIELD_READER(max_alloc)
-DEFINE_FIELD_READER(cur_free)
-DEFINE_FIELD_READER(max_free)
-DEFINE_FIELD_READER(cur_fullpages)
-DEFINE_FIELD_READER(max_fullpages)
-DEFINE_FIELD_READER(cur_freepages)
-DEFINE_FIELD_READER(max_freepages)
-DEFINE_FIELD_READER(usedpages)
-DEFINE_FIELD_READER(tailpages)
-#undef DEFINE_FIELD_READER
+DEFINE_SLABINFO_FIELD_READER(itemsize)
+DEFINE_SLABINFO_FIELD_READER(items_per_page)
+DEFINE_SLABINFO_FIELD_READER(totalpages)
+DEFINE_SLABINFO_FIELD_READER(totalitems)
+DEFINE_SLABINFO_FIELD_READER(cur_alloc)
+DEFINE_SLABINFO_FIELD_READER(max_alloc)
+DEFINE_SLABINFO_FIELD_READER(cur_free)
+DEFINE_SLABINFO_FIELD_READER(max_free)
+DEFINE_SLABINFO_FIELD_READER(cur_fullpages)
+DEFINE_SLABINFO_FIELD_READER(max_fullpages)
+DEFINE_SLABINFO_FIELD_READER(cur_freepages)
+DEFINE_SLABINFO_FIELD_READER(max_freepages)
+DEFINE_SLABINFO_FIELD_READER(usedpages)
+DEFINE_SLABINFO_FIELD_READER(tailpages)
+#undef DEFINE_SLABINFO_FIELD_READER
 
 
 PRIVATE struct type_member tpconst si_members[] = {
@@ -492,20 +496,22 @@ PRIVATE struct type_getset tpconst si_getsets[] = {
 	TYPE_GETSET_END
 };
 
-#define DEFINE_SI_COMPARE(name, memcmp, op)                                           \
+#define DEFINE_SLABINFO_COMPARE(name, memcmp, op)                                     \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
 	name(SlabInfoObject *self, SlabInfoObject *other) {                               \
 		if (DeeObject_AssertTypeExact(other, &SlabInfo_Type))                         \
-			return NULL;                                                              \
+			goto err;                                                                 \
 		return_bool(memcmp(self->si_info, other->si_info, sizeof(DeeSlabInfo)) op 0); \
+	err:                                                                              \
+		return NULL;                                                                  \
 	}
-DEFINE_SI_COMPARE(si_eq, bcmp, ==)
-DEFINE_SI_COMPARE(si_ne, bcmp, !=)
-DEFINE_SI_COMPARE(si_lo, memcmp, <)
-DEFINE_SI_COMPARE(si_le, memcmp, <=)
-DEFINE_SI_COMPARE(si_gr, memcmp, >)
-DEFINE_SI_COMPARE(si_ge, memcmp, >=)
-#undef DEFINE_SI_COMPARE
+DEFINE_SLABINFO_COMPARE(si_eq, bcmp, ==)
+DEFINE_SLABINFO_COMPARE(si_ne, bcmp, !=)
+DEFINE_SLABINFO_COMPARE(si_lo, memcmp, <)
+DEFINE_SLABINFO_COMPARE(si_le, memcmp, <=)
+DEFINE_SLABINFO_COMPARE(si_gr, memcmp, >)
+DEFINE_SLABINFO_COMPARE(si_ge, memcmp, >=)
+#undef DEFINE_SLABINFO_COMPARE
 
 PRIVATE struct type_cmp si_cmp = {
 	/* .tp_hash = */ NULL,

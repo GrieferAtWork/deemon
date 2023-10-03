@@ -63,9 +63,9 @@
 
 
 // <__stdinc.h> + <hybrid/compiler.h>
-#define DECL_BEGIN extern "C" {
-#define __DECL_BEGIN extern "C" {
-#define __SYSDECL_BEGIN extern "C" {
+#define DECL_BEGIN extern "C"{
+#define __DECL_BEGIN extern "C"{
+#define __SYSDECL_BEGIN extern "C"{
 #define DECL_END }
 #define __DECL_END }
 #define __SYSDECL_END }
@@ -155,16 +155,16 @@
 #define EIDECLARE(attr,Treturn,nothrow,cc,name,param,...)                                                                Treturn name param;
 #define EIREDIRECT(attr,Treturn,nothrow,cc,name,param,asmname,...)                                                       Treturn name param;
 
-#define __NAMESPACE_GLB_SYM                 ::
-#define __NAMESPACE_STD_BEGIN               namespace std {
-#define __NAMESPACE_STD_END                 }
-#define __NAMESPACE_STD_SYM                 ::std::
-#define __NAMESPACE_STD_USING(x)            using ::std::x;
-#define __NAMESPACE_GLB_USING(x)            using ::x;
-#define __NAMESPACE_GLB_USING_TYPE(x)       using ::x;
-#define __NAMESPACE_GLB_USING_OR_IMPL(x, i) using ::x;
+#define __NAMESPACE_GLB_SYM                ::
+#define __NAMESPACE_STD_BEGIN              namespace std{
+#define __NAMESPACE_STD_END                }
+#define __NAMESPACE_STD_SYM                ::std::
+#define __NAMESPACE_STD_USING(x)           using ::std::x;
+#define __NAMESPACE_GLB_USING(x)           using ::x;
+#define __NAMESPACE_GLB_USING_TYPE(x)      using ::x;
+#define __NAMESPACE_GLB_USING_OR_IMPL(x,i) using ::x;
 
-#define __NAMESPACE_INT_BEGIN namespace __intern {
+#define __NAMESPACE_INT_BEGIN namespace __intern{
 #define __NAMESPACE_INT_END   }
 #define __NAMESPACE_INT_SYM   ::__intern::
 #define __NAMESPACE_INT_LSYM  __intern::
@@ -275,10 +275,10 @@
 #define NOTHROW_USER_T
 #define __NOTHROW_USER
 #define __NOTHROW_USER_T
-#define THROWING
-#define THROWING_T
-#define __THROWING
-#define __THROWING_T
+#define THROWING(...)
+#define THROWING_T(...)
+#define __THROWING(...)
+#define __THROWING_T(...)
 
 #define ASMCALL
 #define __ASMCALL
@@ -478,6 +478,18 @@
 #define ATTR_INOUT_T(x)
 #define __ATTR_INOUT(x)
 #define __ATTR_INOUT_T(x)
+#define ATTR_FDARG(x)
+#define ATTR_FDARG_T(x)
+#define __ATTR_FDARG(x)
+#define __ATTR_FDARG_T(x)
+#define ATTR_FDREAD(x)
+#define ATTR_FDREAD_T(x)
+#define __ATTR_FDREAD(x)
+#define __ATTR_FDREAD_T(x)
+#define ATTR_FDWRITE(x)
+#define ATTR_FDWRITE_T(x)
+#define __ATTR_FDWRITE(x)
+#define __ATTR_FDWRITE_T(x)
 
 
 
@@ -498,7 +510,7 @@
 #define __CXX_DELETE_COPY(T) T(T const&)
 #define __CXX_DELETE_COPY_ASSIGN(T) T&operator=(T const&)
 #define __CXX_DELETE_VOLATILE_COPY_ASSIGN(T) T&operator=(T const&)volatile
-#define __CXXDECL_BEGIN extern "C++" {
+#define __CXXDECL_BEGIN extern "C++"{
 #define __CXXDECL_END }
 #define __CXX_THROWS(...)
 #define __CXX_NOEXCEPT
@@ -615,14 +627,14 @@
 
 
 // <hybrid/pointer.h>
-#define __HYBRID_FUNCPTR32(return,cc,name,args) return (cc *name)args
-#define __HYBRID_FUNCPTR64(return,cc,name,args) return (cc *name)args
-#define FUNCPTR32(return,cc,name,args) return (cc *name)args
-#define FUNCPTR64(return,cc,name,args) return (cc *name)args
-#define __HYBRID_PTR32(T) T *
-#define __HYBRID_PTR64(T) T *
-#define PTR32(T) T *
-#define PTR64(T) T *
+#define __HYBRID_FUNCPTR32(return,cc,name,args) return (cc*name)args
+#define __HYBRID_FUNCPTR64(return,cc,name,args) return (cc*name)args
+#define FUNCPTR32(return,cc,name,args) return (cc*name)args
+#define FUNCPTR64(return,cc,name,args) return (cc*name)args
+#define __HYBRID_PTR32(T) T*
+#define __HYBRID_PTR64(T) T*
+#define PTR32(T) T*
+#define PTR64(T) T*
 
 
 
@@ -656,38 +668,38 @@
 
 // <hybrid/int128.h>
 #define __HYBRID_INT128_DEFINE_BINARY_CXX_OPERATOR(op,name) \
-	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){} \
-	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){} \
-	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){} \
-	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){} \
-	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){} \
-	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){} \
-	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){} \
-	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){} \
-	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_uint128_t const&v){} \
-	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_int128_t const&v){} \
-	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_uint128_t const&v){} \
-	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_int128_t const&v){} \
-	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){} \
-	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
-	__hybrid_int128_t operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
+	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){}\
+	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){}\
+	template<class ValType>__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,ValType v){}\
+	template<class ValType>__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,ValType v){}\
+	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){}\
+	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){}\
+	template<class ValType>__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,ValType __v){}\
+	template<class ValType>__hybrid_int128_t operator op(__hybrid_int128_t const&self,ValType __v){}\
+	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_uint128_t const&v){}\
+	__hybrid_uint128_t&operator op##=(__hybrid_uint128_t&self,__hybrid_int128_t const&v){}\
+	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_uint128_t const&v){}\
+	__hybrid_int128_t&operator op##=(__hybrid_int128_t&self,__hybrid_int128_t const&v){}\
+	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){}\
+	__hybrid_uint128_t operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){}\
+	__hybrid_int128_t operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){}\
 	__hybrid_int128_t operator op(__hybrid_int128_t const&self,__hybrid_int128_t const&v){}
 #define __HYBRID_INT128_DEFINE_COMPARE_CXX_OPERATOR(op,np,name) \
-	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){} \
-	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){} \
-	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){} \
-	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){} \
-	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){} \
-	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){} \
-	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){} \
-	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){} \
-	bool operator op(__hybrid_int128_t const&self,__hybrid_int128_t const&v){} \
-	bool operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
-	bool operator np(__hybrid_int128_t const&self,__hybrid_int128_t const&v){} \
-	bool operator np(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){} \
-	bool operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
-	bool operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){} \
-	bool operator np(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){} \
+	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){}\
+	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){}\
+	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){}\
+	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){}\
+	template<class ValType>bool operator op(__hybrid_uint128_t const&self,ValType v){}\
+	template<class ValType>bool operator np(__hybrid_uint128_t const&self,ValType v){}\
+	template<class ValType>bool operator op(__hybrid_int128_t const&self,ValType v){}\
+	template<class ValType>bool operator np(__hybrid_int128_t const&self,ValType v){}\
+	bool operator op(__hybrid_int128_t const&self,__hybrid_int128_t const&v){}\
+	bool operator op(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){}\
+	bool operator np(__hybrid_int128_t const&self,__hybrid_int128_t const&v){}\
+	bool operator np(__hybrid_int128_t const&self,__hybrid_uint128_t const&v){}\
+	bool operator op(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){}\
+	bool operator op(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){}\
+	bool operator np(__hybrid_uint128_t const&self,__hybrid_int128_t const&v){}\
 	bool operator np(__hybrid_uint128_t const&self,__hybrid_uint128_t const&v){}
 
 
@@ -695,7 +707,7 @@
 // <hybrid/sequence/[...].h>
 #define __HYBRID_Q_STRUCT struct
 #define __HYBRID_Q_CLASS class
-#define LIST_HEAD(n,t) struct n{struct t *lh_first;}
+#define LIST_HEAD(n,t) struct n{struct t*lh_first;}
 #define LIST_HEAD_P(T) struct{T*lh_first;}
 #define LIST_ENTRY(t) struct{struct t*le_next,**le_prev;}
 #define LIST_ENTRY_P(T) struct{T*le_next,**le_prev;}
@@ -711,7 +723,7 @@
 #define LIST_P_FOREACH(...) for(;;)
 #define LIST_P_FOREACH_P(...) for(;;)
 
-#define SLIST_HEAD(n,t) struct n{struct t *slh_first;}
+#define SLIST_HEAD(n,t) struct n{struct t*slh_first;}
 #define SLIST_HEAD_P(T) struct{T*slh_first;}
 #define SLIST_ENTRY(t) struct{struct t*sle_next;}
 #define SLIST_ENTRY_P(T) struct{T*sle_next;}
@@ -896,7 +908,7 @@
 #define BSEARCH_RANGE(...) for(;;)
 #define BSEARCH_RANGE_EX(...) for(;;)
 #define BITSET(num_bits) struct{unsigned int _bs_bits[42];}
-#define ATOMIC_ONCE_RUN(self, ...) __VA_ARGS__
+#define ATOMIC_ONCE_RUN(self,...) __VA_ARGS__
 
 
 
@@ -916,20 +928,20 @@
 
 #define DeeSlab_ENUMERATE(func) func(0,4) func(1,5) func(2,6) func(3,8) func(4,10)
 #define DEE_PRIVATE_DEFINE_SLAB_FUNCTIONS(index,size) \
-	void*DeeSlab_Malloc##size(void); \
-	void*DeeSlab_Calloc##size(void); \
-	void*DeeSlab_TryMalloc##size(void); \
-	void*DeeSlab_TryCalloc##size(void); \
-	void*DeeDbgSlab_Malloc##size(char const*file,int line); \
-	void*DeeDbgSlab_Calloc##size(char const*file,int line); \
-	void*DeeDbgSlab_TryMalloc##size(char const*file,int line); \
-	void*DeeDbgSlab_TryCalloc##size(char const*file,int line); \
-	void*DeeGCObject_SlabMalloc##size(void); \
-	void*DeeGCObject_SlabCalloc##size(void); \
-	void*DeeGCObject_SlabTryMalloc##size(void); \
-	void*DeeGCObject_SlabTryCalloc##size(void); \
-	void DeeSlab_Free##size(void*restrict ptr); \
-	void DeeDbgSlab_Free##size(void*restrict ptr, char const*file,int line); \
+	void*DeeSlab_Malloc##size(void);\
+	void*DeeSlab_Calloc##size(void);\
+	void*DeeSlab_TryMalloc##size(void);\
+	void*DeeSlab_TryCalloc##size(void);\
+	void*DeeDbgSlab_Malloc##size(char const*file,int line);\
+	void*DeeDbgSlab_Calloc##size(char const*file,int line);\
+	void*DeeDbgSlab_TryMalloc##size(char const*file,int line);\
+	void*DeeDbgSlab_TryCalloc##size(char const*file,int line);\
+	void*DeeGCObject_SlabMalloc##size(void);\
+	void*DeeGCObject_SlabCalloc##size(void);\
+	void*DeeGCObject_SlabTryMalloc##size(void);\
+	void*DeeGCObject_SlabTryCalloc##size(void);\
+	void DeeSlab_Free##size(void*restrict ptr);\
+	void DeeDbgSlab_Free##size(void*restrict ptr,char const*file,int line);\
 	void DeeGCObject_SlabFree##size(void*restrict ptr);
 
 #define DREF
@@ -941,28 +953,31 @@
 #define DDATDEF extern
 #define ASSEMBLY_NAME(x,s)  x
 #define Dee_DOC(x)          x
-#define Dee_DOC_DEF(name,x) char const name[]=x
-#define Dee_DOC_REF(name)   extern char const name[]
-#define Dee_DOC_GET(name)   name
+#define Dee_DOC_DEF(n,x) char const n[]=x
+#define Dee_DOC_REF(n)   extern char const n[]
+#define Dee_DOC_GET(n)   n
 #define DOC(x)              x
-#define DOC_DEF(name,x)     char const name[]=x
-#define DOC_REF(name)       extern char const name[]
-#define DOC_GET(name)       name
+#define DOC_DEF(n,x)     char const n[]=x
+#define DOC_REF(n)       extern char const n[]
+#define DOC_GET(n)       n
+#define DEE_CXX_BEGIN    namespace deemon{
+#define DEE_CXX_END      }
+#define DEE_CXX_NOTHROW
 
 #define OBJECT_HEAD               Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
 #define Dee_OBJECT_HEAD_EX(Ttype) Dee_refcnt_t ob_refcnt;Ttype*ob_type;
-#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct string_object*e_message;DeeObject*e_inner;
-#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct string_object*e_message;DeeObject*e_inner;
+#define ERROR_OBJECT_HEAD         Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct Dee_string_object*e_message;DeeObject*e_inner;
+#define Dee_ERROR_OBJECT_HEAD     Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;struct Dee_string_object*e_message;DeeObject*e_inner;
 #define FILE_OBJECT_HEAD          Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 #define Dee_FILE_OBJECT_HEAD      Dee_refcnt_t ob_refcnt;DeeFileTypeObject*ob_type;
 
 #define DEE_PRIVATE_REFCHANGE_PRIVATE_DATA
-#define WEAKREF_SUPPORT           struct weakref_list ob_weakrefs;
-#define Dee_WEAKREF_SUPPORT       struct weakref_list ob_weakrefs;
-#define WEAKREF(T)                struct weakref
-#define Dee_WEAKREF(T)            struct weakref
+#define WEAKREF_SUPPORT           struct Dee_weakref_list ob_weakrefs;
+#define Dee_WEAKREF_SUPPORT       struct Dee_weakref_list ob_weakrefs;
+#define WEAKREF(T)                struct Dee_weakref
+#define Dee_WEAKREF(T)            struct Dee_weakref
 
 #define Dee_ONCE(...) __VA_ARGS__
 
@@ -978,175 +993,236 @@
 
 #define DeeType_mro_foreach_start(...) for(;;)
 
-#define DEFINE_KWDS(name, ...)                            DeeKwdsObject name={}
-#define Dee_DEFINE_KWDS(name, ...)                        DeeKwdsObject name={}
-#define DEFINE_KWLIST                                     struct keyword name[]=__VA_ARGS__
-#define Dee_DEFINE_KWLIST(name, ...)                      struct keyword name[]=__VA_ARGS__
-#define DEFINE_BYTES(name, ...)                           DeeBytesObject name={}
-#define Dee_DEFINE_BYTES(name, ...)                       DeeBytesObject name={}
-#define DEFINE_BYTES_EX(name, ...)                        DeeBytesObject name={}
-#define Dee_DEFINE_BYTES_EX(name, ...)                    DeeBytesObject name={}
-#define DEFINE_CODE(name, ...)                            DeeCodeObject name={}
-#define Dee_DEFINE_CODE(name, ...)                        DeeCodeObject name={}
-#define DEFINE_FUNCTION(name, ...)                        DeeFunctionObject name={}
-#define Dee_DEFINE_FUNCTION(name, ...)                    DeeFunctionObject name={}
-#define DEFINE_FUNCTION_NOREFS(name, ...)                 DeeFunctionObject name={}
-#define Dee_DEFINE_FUNCTION_NOREFS(name, ...)             DeeFunctionObject name={}
-#define DEFINE_OBJMETHOD(name, func, self)                DeeObjMethodObject name={}
-#define Dee_DEFINE_OBJMETHOD(name, func, self)            DeeObjMethodObject name={}
-#define DEFINE_KWOBJMETHOD(name, func, self)              DeeKwObjMethodObject name={}
-#define Dee_DEFINE_KWOBJMETHOD(name, func, self)          DeeKwObjMethodObject name={}
-#define DEFINE_CLSMETHOD(name, func, type)                DeeClsMethodObject name={}
-#define Dee_DEFINE_CLSMETHOD(name, func, type)            DeeClsMethodObject name={}
-#define DEFINE_KWCLSMETHOD(name, func, type)              DeeKwClsMethodObject name={}
-#define Dee_DEFINE_KWCLSMETHOD(name, func, type)          DeeKwClsMethodObject name={}
-#define DEFINE_CLSPROPERTY(name, type, get, del, set)     DeeClsPropertyObject name={}
-#define Dee_DEFINE_CLSPROPERTY(name, type, get, del, set) DeeClsPropertyObject name={}
-#define DEFINE_CMETHOD(name, func)                        DeeCMethodObject name={}
-#define Dee_DEFINE_CMETHOD(name, func)                    DeeCMethodObject name={}
-#define DEFINE_KWCMETHOD(name, func)                      DeeKwCMethodObject name={}
-#define Dee_DEFINE_KWCMETHOD(name, func)                  DeeKwCMethodObject name={}
-#define DEFINE_STRING_EX(n,a,b,c)                         DeeStringObject n={}
-#define Dee_DEFINE_STRING_EX(n,a,b,c)                     DeeStringObject n={}
-#define DEFINE_STRING(n,a)                                DeeStringObject n={}
-#define Dee_DEFINE_STRING(n,a)                            DeeStringObject n={}
-#define DEFINE_INT_1DIGIT(n,a)                            DeeIntObject n={}
-#define Dee_DEFINE_INT_1DIGIT(n,a)                        DeeIntObject n={}
-#define DEFINE_UINT_1DIGIT(n,a)                           DeeIntObject n={}
-#define Dee_DEFINE_UINT_1DIGIT(n,a)                       DeeIntObject n={}
-#define DEFINE_INT_2DIGITS(n,a)                           DeeIntObject n={}
-#define Dee_DEFINE_INT_2DIGITS(n,a)                       DeeIntObject n={}
-#define DEFINE_UINT_2DIGITS(n,a)                          DeeIntObject n={}
-#define Dee_DEFINE_UINT_2DIGITS(n,a)                      DeeIntObject n={}
-#define DEFINE_INT_3DIGITS(n,a)                           DeeIntObject n={}
-#define Dee_DEFINE_INT_3DIGITS(n,a)                       DeeIntObject n={}
-#define DEFINE_INT_4DIGITS(n,a)                           DeeIntObject n={}
-#define Dee_DEFINE_INT_4DIGITS(n,a)                       DeeIntObject n={}
-#define DEFINE_INT_5DIGITS(n,a)                           DeeIntObject n={}
-#define Dee_DEFINE_INT_5DIGITS(n,a)                       DeeIntObject n={}
-#define DEFINE_UINT_3DIGITS(n,a)                          DeeIntObject n={}
-#define Dee_DEFINE_UINT_3DIGITS(n,a)                      DeeIntObject n={}
-#define DEFINE_UINT_4DIGITS(n,a)                          DeeIntObject n={}
-#define Dee_DEFINE_UINT_4DIGITS(n,a)                      DeeIntObject n={}
-#define DEFINE_UINT_5DIGITS(n,a)                          DeeIntObject n={}
-#define Dee_DEFINE_UINT_5DIGITS(n,a)                      DeeIntObject n={}
-#define DEFINE_INT15(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT15(n,a)                             DeeIntObject n={}
-#define DEFINE_INT16(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT16(n,a)                             DeeIntObject n={}
-#define DEFINE_INT30(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT30(n,a)                             DeeIntObject n={}
-#define DEFINE_INT32(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT32(n,a)                             DeeIntObject n={}
-#define DEFINE_INT45(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT45(n,a)                             DeeIntObject n={}
-#define DEFINE_INT48(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT48(n,a)                             DeeIntObject n={}
-#define DEFINE_INT60(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT60(n,a)                             DeeIntObject n={}
-#define DEFINE_INT64(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT64(n,a)                             DeeIntObject n={}
-#define DEFINE_INT75(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT75(n,a)                             DeeIntObject n={}
-#define DEFINE_UINT15(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT15(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT16(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT16(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT30(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT30(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT32(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT32(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT45(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT45(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT48(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT48(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT60(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT60(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT64(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT64(n,a)                            DeeIntObject n={}
-#define DEFINE_UINT75(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT75(n,a)                            DeeIntObject n={}
-#define DEFINE_INT90(n,a)                                 DeeIntObject n={}
-#define Dee_DEFINE_INT90(n,a)                             DeeIntObject n={}
-#define DEFINE_UINT90(n,a)                                DeeIntObject n={}
-#define Dee_DEFINE_UINT90(n,a)                            DeeIntObject n={}
+#define DeeThread_FOREACH(t) for(;;)
 
-#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,name) rT*name(void*restrict dst,void const*restrict src,Tneedle needle,size_t num_bytes){}
-#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,name) rT*name(void const*restrict p,Tneedle c,size_t n){}
-#define _DeeSystem_DEFINE_memrchrT(rT, T, Tneedle, name) rT*name(void const*restrict p,Tneedle c,size_t n){}
-#define _DeeSystem_DEFINE_memcmpT(T,name) int name(void const*s1,void const*s2,size_t n){}
-#define _DeeSystem_DEFINE_strcmpT(T,unsignedT,name) int name(T const*s1,T const*s2){}
-#define _DeeSystem_DEFINE_strncmpT(T,unsignedT,name) int name(T const*s1,T const*s2,size_t maxlen){}
-#define _DeeSystem_DEFINE_strcasecmpT(T,unsignedT,name) int name(T const*s1,T const*s2){}
-#define _DeeSystem_DEFINE_strncasecmpT(T,unsignedT,name) int name(T const*s1,T const*s2,size_t maxlen){}
-#define _DeeSystem_DEFINE_stpncpyT(T,name,strnlen) T*name(T*buf,T const*src,size_t buflen){}
-#define _DeeSystem_DEFINE_strncpyT(T,name,strnlen) T*name(T*buf,T const*src,size_t buflen){}
-#define DeeSystem_DEFINE_memccpy(name) _DeeSystem_DEFINE_memccpyT(void,uint8_t,int,name)
-#define DeeSystem_DEFINE_memrchr(name) _DeeSystem_DEFINE_memrchrT(void,uint8_t,int,name)
-#define DeeSystem_DEFINE_memrchrw(name) _DeeSystem_DEFINE_memrchrT(uint16_t,uint16_t,uint16_t,name)
-#define DeeSystem_DEFINE_memrchrl(name) _DeeSystem_DEFINE_memrchrT(uint32_t,uint32_t,uint32_t,name)
-#define DeeSystem_DEFINE_memrchrq(name) _DeeSystem_DEFINE_memrchrT(uint64_t,uint64_t,uint64_t,name)
-#define DeeSystem_DEFINE_memchrw(name) _DeeSystem_DEFINE_memchrT(uint16_t,uint16_t,uint16_t,name)
-#define DeeSystem_DEFINE_memchrl(name) _DeeSystem_DEFINE_memchrT(uint32_t,uint32_t,uint32_t,name)
-#define DeeSystem_DEFINE_memchrq(name) _DeeSystem_DEFINE_memchrT(uint64_t,uint64_t,uint64_t,name)
-#define DeeSystem_DEFINE_wmemchr(name) _DeeSystem_DEFINE_memchrT(Dee_wchar_t,Dee_wchar_t,wint_t,name)
-#define DeeSystem_DEFINE_memcmpw(name) _DeeSystem_DEFINE_memcmpT(uint16_t,name)
-#define DeeSystem_DEFINE_memcmpl(name) _DeeSystem_DEFINE_memcmpT(uint32_t,name)
-#define DeeSystem_DEFINE_memcmpq(name) _DeeSystem_DEFINE_memcmpT(uint64_t,name)
-#define DeeSystem_DEFINE_strcmp(name) _DeeSystem_DEFINE_strcmpT(char,unsigned char,name)
-#define DeeSystem_DEFINE_strncmp(name) _DeeSystem_DEFINE_strncmpT(char,unsigned char,name)
-#define DeeSystem_DEFINE_strcasecmp(name) _DeeSystem_DEFINE_strcasecmpT(char,unsigned char,name)
-#define DeeSystem_DEFINE_strncasecmp(name) _DeeSystem_DEFINE_strncasecmpT(char,unsigned char,name)
-#define DeeSystem_DEFINE_stpncpy(name) _DeeSystem_DEFINE_stpncpyT(char,name,strnlen)
-#define DeeSystem_DEFINE_strncpy(name) _DeeSystem_DEFINE_strncpyT(char,name,strnlen)
-#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,name) rT*name(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
-#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,name) rT*name(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
-#define DeeSystem_DEFINE_memmem(name) _DeeSystem_DEFINE_memmemT(void,uint8_t,memchr,,name)
-#define DeeSystem_DEFINE_memmemw(name,memchrw,memeqw) _DeeSystem_DEFINE_memmemT(uint16_t,uint16_t,memchrw,memeqw,name)
-#define DeeSystem_DEFINE_memmeml(name,memchrl,memeql) _DeeSystem_DEFINE_memmemT(uint32_t,uint32_t,memchrl,memeql,name)
-#define DeeSystem_DEFINE_memmemq(name,memchrq,memeqq) _DeeSystem_DEFINE_memmemT(uint64_t,uint64_t,memchrq,memeqq,name)
-#define DeeSystem_DEFINE_memrmem(name) _DeeSystem_DEFINE_memrmemT(void,uint8_t,memrchr,,name)
-#define DeeSystem_DEFINE_memrmemw(name,memrchrw,memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t,uint16_t,memrchrw,memeqw,name)
-#define DeeSystem_DEFINE_memrmeml(name,memrchrl,memeql) _DeeSystem_DEFINE_memrmemT(uint32_t,uint32_t,memrchrl,memeql,name)
-#define DeeSystem_DEFINE_memrmemq(name,memrchrq,memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t,uint64_t,memrchrq,memeqq,name)
-#define DeeSystem_DEFINE_strnlen(name) size_t name(char const*restrict str,size_t maxlen){}
-#define _DeeSystem_DEFINE_strlenT(T,name) size_t name(T const*restrict str){}
-#define DeeSystem_DEFINE_wcslen(name) _DeeSystem_DEFINE_strlenT(Dee_wchar_t,name)
-#define _DeeSystem_DEFINE_strcmpzT(T,Tu,Tr,name) Tr name(T const*lhs,T const*rhs,size_t rhs_len){}
-#define DeeSystem_DEFINE_strcmpz(name) _DeeSystem_DEFINE_strcmpzT(char,unsigned char,int,name)
-#define DeeSystem_DEFINE_rawmemchr(name) void*name(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemrchr(name) void*name(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_memend(name) void*name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxend(name) void*name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memrend(name) void*name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memrlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_rawmemrlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_memxchr(name) void*name(void const*restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_rawmemxchr(name) void*name(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemxlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasecmp(name) int name(void const*a,void const*b,size_t n){}
-#define DeeSystem_DEFINE_memcasemem(name) void*name(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
-#define DeeSystem_DEFINE_memrev(name) void*name(void*restrict buf,size_t n){}
-#define DeeSystem_DEFINE_memxrchr(name) void*name(void const*restrict p,int c,size_t n){}
-#define DeeSystem_DEFINE_memxrend(name) void*name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_memxrlen(name) size_t name(void const*p,int byte,size_t num_bytes){}
-#define DeeSystem_DEFINE_rawmemxrchr(name) void*name(void const*restrict p,int c){}
-#define DeeSystem_DEFINE_rawmemxrlen(name) size_t name(void const*p,int byte){}
-#define DeeSystem_DEFINE_memcasermem(name) void*_##name##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*name(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
-#define DeeSystem_DEFINE_qsort(name) void _##name##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes); void name(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
-#define _DeeSystem_DEFINE_memsetT(T,name) void*name(void*restrict p,T c,size_t n){}
-#define DeeSystem_DEFINE_memsetw(name) _DeeSystem_DEFINE_memsetT(uint16_t,name)
-#define DeeSystem_DEFINE_memsetl(name) _DeeSystem_DEFINE_memsetT(uint32_t,name)
-#define DeeSystem_DEFINE_memsetq(name) _DeeSystem_DEFINE_memsetT(uint64_t,name)
-#define DeeSystem_DEFINE_memsetp(name) _DeeSystem_DEFINE_memsetT(uintptr_t,name)
-#define _DeeSystem_DEFINE_mempsetT(T,name) void*name(void*restrict p,T c,size_t n){}
-#define DeeSystem_DEFINE_mempsetw(name) _DeeSystem_DEFINE_mempsetT(uint16_t,name)
-#define DeeSystem_DEFINE_mempsetl(name) _DeeSystem_DEFINE_mempsetT(uint32_t,name)
-#define DeeSystem_DEFINE_mempsetq(name) _DeeSystem_DEFINE_mempsetT(uint64_t,name)
-#define DeeSystem_DEFINE_mempsetp(name) _DeeSystem_DEFINE_mempsetT(uintptr_t,name)
+#define DDI_STATE_DO(ddi_xregs_iter,self) do
+#define Dee_DDI_STATE_DO(ddi_xregs_iter,self) do
+#define DDI_STATE_WHILE(ddi_xregs_iter,self) while(0)
+#define Dee_DDI_STATE_WHILE(ddi_xregs_iter,self) while(0)
+
+
+#define DEFINE_KWDS(n,...)                         DeeKwdsObject n={}
+#define Dee_DEFINE_KWDS(n,...)                     DeeKwdsObject n={}
+#define DEFINE_KWLIST                              struct keyword n[]=__VA_ARGS__
+#define Dee_DEFINE_KWLIST(n,...)                   struct keyword n[]=__VA_ARGS__
+#define DEFINE_BYTES(n,...)                        DeeBytesObject n={}
+#define Dee_DEFINE_BYTES(n,...)                    DeeBytesObject n={}
+#define DEFINE_BYTES_EX(n,...)                     DeeBytesObject n={}
+#define Dee_DEFINE_BYTES_EX(n,...)                 DeeBytesObject n={}
+#define DEFINE_CODE(n,...)                         DeeCodeObject n={}
+#define Dee_DEFINE_CODE(n,...)                     DeeCodeObject n={}
+#define DEFINE_FUNCTION(n,...)                     DeeFunctionObject n={}
+#define Dee_DEFINE_FUNCTION(n,...)                 DeeFunctionObject n={}
+#define DEFINE_FUNCTION_NOREFS(n,...)              DeeFunctionObject n={}
+#define Dee_DEFINE_FUNCTION_NOREFS(n,...)          DeeFunctionObject n={}
+#define DEFINE_OBJMETHOD(n,func,self)              DeeObjMethodObject n={}
+#define Dee_DEFINE_OBJMETHOD(n,func,self)          DeeObjMethodObject n={}
+#define DEFINE_KWOBJMETHOD(n,func,self)            DeeKwObjMethodObject n={}
+#define Dee_DEFINE_KWOBJMETHOD(n,func,self)        DeeKwObjMethodObject n={}
+#define DEFINE_CLSMETHOD(n,func,type)              DeeClsMethodObject n={}
+#define Dee_DEFINE_CLSMETHOD(n,func,type)          DeeClsMethodObject n={}
+#define DEFINE_KWCLSMETHOD(n,func,type)            DeeKwClsMethodObject n={}
+#define Dee_DEFINE_KWCLSMETHOD(n,func,type)        DeeKwClsMethodObject n={}
+#define DEFINE_CLSPROPERTY(n,type,get,del,set)     DeeClsPropertyObject n={}
+#define Dee_DEFINE_CLSPROPERTY(n,type,get,del,set) DeeClsPropertyObject n={}
+#define DEFINE_CMETHOD(n,func)                     DeeCMethodObject n={}
+#define Dee_DEFINE_CMETHOD(n,func)                 DeeCMethodObject n={}
+#define DEFINE_KWCMETHOD(n,func)                   DeeKwCMethodObject n={}
+#define Dee_DEFINE_KWCMETHOD(n,func)               DeeKwCMethodObject n={}
+#define DEFINE_STRING_EX(n,a,b,c)                  DeeStringObject n={}
+#define Dee_DEFINE_STRING_EX(n,a,b,c)              DeeStringObject n={}
+#define DEFINE_STRING(n,a)                         DeeStringObject n={}
+#define Dee_DEFINE_STRING(n,a)                     DeeStringObject n={}
+#define DEFINE_INT_1DIGIT(n,a)                     DeeIntObject n={}
+#define Dee_DEFINE_INT_1DIGIT(n,a)                 DeeIntObject n={}
+#define DEFINE_UINT_1DIGIT(n,a)                    DeeIntObject n={}
+#define Dee_DEFINE_UINT_1DIGIT(n,a)                DeeIntObject n={}
+#define DEFINE_INT_2DIGITS(n,a)                    DeeIntObject n={}
+#define Dee_DEFINE_INT_2DIGITS(n,a)                DeeIntObject n={}
+#define DEFINE_UINT_2DIGITS(n,a)                   DeeIntObject n={}
+#define Dee_DEFINE_UINT_2DIGITS(n,a)               DeeIntObject n={}
+#define DEFINE_INT_3DIGITS(n,a)                    DeeIntObject n={}
+#define Dee_DEFINE_INT_3DIGITS(n,a)                DeeIntObject n={}
+#define DEFINE_INT_4DIGITS(n,a)                    DeeIntObject n={}
+#define Dee_DEFINE_INT_4DIGITS(n,a)                DeeIntObject n={}
+#define DEFINE_INT_5DIGITS(n,a)                    DeeIntObject n={}
+#define Dee_DEFINE_INT_5DIGITS(n,a)                DeeIntObject n={}
+#define DEFINE_UINT_3DIGITS(n,a)                   DeeIntObject n={}
+#define Dee_DEFINE_UINT_3DIGITS(n,a)               DeeIntObject n={}
+#define DEFINE_UINT_4DIGITS(n,a)                   DeeIntObject n={}
+#define Dee_DEFINE_UINT_4DIGITS(n,a)               DeeIntObject n={}
+#define DEFINE_UINT_5DIGITS(n,a)                   DeeIntObject n={}
+#define Dee_DEFINE_UINT_5DIGITS(n,a)               DeeIntObject n={}
+#define DEFINE_INT15(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT15(n,a)                      DeeIntObject n={}
+#define DEFINE_INT16(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT16(n,a)                      DeeIntObject n={}
+#define DEFINE_INT30(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT30(n,a)                      DeeIntObject n={}
+#define DEFINE_INT32(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT32(n,a)                      DeeIntObject n={}
+#define DEFINE_INT45(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT45(n,a)                      DeeIntObject n={}
+#define DEFINE_INT48(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT48(n,a)                      DeeIntObject n={}
+#define DEFINE_INT60(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT60(n,a)                      DeeIntObject n={}
+#define DEFINE_INT64(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT64(n,a)                      DeeIntObject n={}
+#define DEFINE_INT75(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT75(n,a)                      DeeIntObject n={}
+#define DEFINE_UINT15(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT15(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT16(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT16(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT30(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT30(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT32(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT32(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT45(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT45(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT48(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT48(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT60(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT60(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT64(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT64(n,a)                     DeeIntObject n={}
+#define DEFINE_UINT75(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT75(n,a)                     DeeIntObject n={}
+#define DEFINE_INT90(n,a)                          DeeIntObject n={}
+#define Dee_DEFINE_INT90(n,a)                      DeeIntObject n={}
+#define DEFINE_UINT90(n,a)                         DeeIntObject n={}
+#define Dee_DEFINE_UINT90(n,a)                     DeeIntObject n={}
+#define DEFINE_FLOAT(n,a)                          DeeFloatObject n={}
+#define Dee_DEFINE_FLOAT(n,a)                      DeeFloatObject n={}
+
+
+#define _DeeSystem_DEFINE_memccpyT(rT,T,Tneedle,n) rT*n(void*restrict dst,void const*restrict src,Tneedle needle,size_t num_bytes){}
+#define _DeeSystem_DEFINE_memchrT(rT,T,Tneedle,n) rT*n(void const*restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memrchrT(rT,T,Tneedle,n) rT*n(void const*restrict p,Tneedle c,size_t n){}
+#define _DeeSystem_DEFINE_memcmpT(T,n) int n(void const*s1,void const*s2,size_t n){}
+#define _DeeSystem_DEFINE_strcmpT(T,unsignedT,n) int n(T const*s1,T const*s2){}
+#define _DeeSystem_DEFINE_strncmpT(T,unsignedT,n) int n(T const*s1,T const*s2,size_t maxlen){}
+#define _DeeSystem_DEFINE_strcasecmpT(T,unsignedT,n) int n(T const*s1,T const*s2){}
+#define _DeeSystem_DEFINE_strncasecmpT(T,unsignedT,n) int n(T const*s1,T const*s2,size_t maxlen){}
+#define _DeeSystem_DEFINE_stpncpyT(T,n,strnlen) T*n(T*buf,T const*src,size_t buflen){}
+#define _DeeSystem_DEFINE_strncpyT(T,n,strnlen) T*n(T*buf,T const*src,size_t buflen){}
+#define DeeSystem_DEFINE_memccpy(n) _DeeSystem_DEFINE_memccpyT(void,uint8_t,int,n)
+#define DeeSystem_DEFINE_memrchr(n) _DeeSystem_DEFINE_memrchrT(void,uint8_t,int,n)
+#define DeeSystem_DEFINE_memrchrw(n) _DeeSystem_DEFINE_memrchrT(uint16_t,uint16_t,uint16_t,n)
+#define DeeSystem_DEFINE_memrchrl(n) _DeeSystem_DEFINE_memrchrT(uint32_t,uint32_t,uint32_t,n)
+#define DeeSystem_DEFINE_memrchrq(n) _DeeSystem_DEFINE_memrchrT(uint64_t,uint64_t,uint64_t,n)
+#define DeeSystem_DEFINE_memchrw(n) _DeeSystem_DEFINE_memchrT(uint16_t,uint16_t,uint16_t,n)
+#define DeeSystem_DEFINE_memchrl(n) _DeeSystem_DEFINE_memchrT(uint32_t,uint32_t,uint32_t,n)
+#define DeeSystem_DEFINE_memchrq(n) _DeeSystem_DEFINE_memchrT(uint64_t,uint64_t,uint64_t,n)
+#define DeeSystem_DEFINE_wmemchr(n) _DeeSystem_DEFINE_memchrT(Dee_wchar_t,Dee_wchar_t,wint_t,n)
+#define DeeSystem_DEFINE_memcmpw(n) _DeeSystem_DEFINE_memcmpT(uint16_t,n)
+#define DeeSystem_DEFINE_memcmpl(n) _DeeSystem_DEFINE_memcmpT(uint32_t,n)
+#define DeeSystem_DEFINE_memcmpq(n) _DeeSystem_DEFINE_memcmpT(uint64_t,n)
+#define DeeSystem_DEFINE_strcmp(n) _DeeSystem_DEFINE_strcmpT(char,unsigned char,n)
+#define DeeSystem_DEFINE_strncmp(n) _DeeSystem_DEFINE_strncmpT(char,unsigned char,n)
+#define DeeSystem_DEFINE_strcasecmp(n) _DeeSystem_DEFINE_strcasecmpT(char,unsigned char,n)
+#define DeeSystem_DEFINE_strncasecmp(n) _DeeSystem_DEFINE_strncasecmpT(char,unsigned char,n)
+#define DeeSystem_DEFINE_stpncpy(n) _DeeSystem_DEFINE_stpncpyT(char,n,strnlen)
+#define DeeSystem_DEFINE_strncpy(n) _DeeSystem_DEFINE_strncpyT(char,n,strnlen)
+#define _DeeSystem_DEFINE_memmemT(rT,T,memchr,memeq,n) rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
+#define _DeeSystem_DEFINE_memrmemT(rT,T,memrchr,memeq,n) rT*n(void const*restrict haystack,size_t haystack_length,void const*restrict needle,size_t needle_length){}
+#define DeeSystem_DEFINE_memmem(n) _DeeSystem_DEFINE_memmemT(void,uint8_t,memchr,,n)
+#define DeeSystem_DEFINE_memmemw(n,memchrw,memeqw) _DeeSystem_DEFINE_memmemT(uint16_t,uint16_t,memchrw,memeqw,n)
+#define DeeSystem_DEFINE_memmeml(n,memchrl,memeql) _DeeSystem_DEFINE_memmemT(uint32_t,uint32_t,memchrl,memeql,n)
+#define DeeSystem_DEFINE_memmemq(n,memchrq,memeqq) _DeeSystem_DEFINE_memmemT(uint64_t,uint64_t,memchrq,memeqq,n)
+#define DeeSystem_DEFINE_memrmem(n) _DeeSystem_DEFINE_memrmemT(void,uint8_t,memrchr,,n)
+#define DeeSystem_DEFINE_memrmemw(n,memrchrw,memeqw) _DeeSystem_DEFINE_memrmemT(uint16_t,uint16_t,memrchrw,memeqw,n)
+#define DeeSystem_DEFINE_memrmeml(n,memrchrl,memeql) _DeeSystem_DEFINE_memrmemT(uint32_t,uint32_t,memrchrl,memeql,n)
+#define DeeSystem_DEFINE_memrmemq(n,memrchrq,memeqq) _DeeSystem_DEFINE_memrmemT(uint64_t,uint64_t,memrchrq,memeqq,n)
+#define DeeSystem_DEFINE_strnlen(n) size_t n(char const*restrict str,size_t maxlen){}
+#define _DeeSystem_DEFINE_strlenT(T,n) size_t n(T const*restrict str){}
+#define DeeSystem_DEFINE_wcslen(n) _DeeSystem_DEFINE_strlenT(Dee_wchar_t,n)
+#define _DeeSystem_DEFINE_strcmpzT(T,Tu,Tr,n) Tr n(T const*lhs,T const*rhs,size_t rhs_len){}
+#define DeeSystem_DEFINE_strcmpz(n) _DeeSystem_DEFINE_strcmpzT(char,unsigned char,int,n)
+#define DeeSystem_DEFINE_rawmemchr(n) void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemrchr(n) void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_memend(n) void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxend(n) void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memrend(n) void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memrlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_rawmemlen(n) size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_rawmemrlen(n) size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memxchr(n) void*n(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_rawmemxchr(n) void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemxlen(n) size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memcasecmp(n) int n(void const*a,void const*b,size_t n){}
+#define DeeSystem_DEFINE_memcasemem(n) void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_memrev(n) void*n(void*restrict buf,size_t n){}
+#define DeeSystem_DEFINE_memxrchr(n) void*n(void const*restrict p,int c,size_t n){}
+#define DeeSystem_DEFINE_memxrend(n) void*n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_memxrlen(n) size_t n(void const*p,int byte,size_t num_bytes){}
+#define DeeSystem_DEFINE_rawmemxrchr(n) void*n(void const*restrict p,int c){}
+#define DeeSystem_DEFINE_rawmemxrlen(n) size_t n(void const*p,int byte){}
+#define DeeSystem_DEFINE_memcasermem(n) void*_##n##_memlowerrchr(void const*restrict p,uint8_t c,size_t n){} void*n(void const*restrict haystack,size_t haystack_len,void const*restrict needle,size_t needle_len){}
+#define DeeSystem_DEFINE_qsort(n) void _##n##_swapmemory(uint8_t*a,uint8_t*b,size_t num_bytes);void n(void*base,size_t count,size_t size,int (*compare)(void const*a,void const*b)){}
+#define _DeeSystem_DEFINE_memsetT(T,n) void*n(void*restrict p,T c,size_t n){}
+#define DeeSystem_DEFINE_memsetw(n) _DeeSystem_DEFINE_memsetT(uint16_t,n)
+#define DeeSystem_DEFINE_memsetl(n) _DeeSystem_DEFINE_memsetT(uint32_t,n)
+#define DeeSystem_DEFINE_memsetq(n) _DeeSystem_DEFINE_memsetT(uint64_t,n)
+#define DeeSystem_DEFINE_memsetp(n) _DeeSystem_DEFINE_memsetT(uintptr_t,n)
+#define _DeeSystem_DEFINE_mempsetT(T,n) void*n(void*restrict p,T c,size_t n){}
+#define DeeSystem_DEFINE_mempsetw(n) _DeeSystem_DEFINE_mempsetT(uint16_t,n)
+#define DeeSystem_DEFINE_mempsetl(n) _DeeSystem_DEFINE_mempsetT(uint32_t,n)
+#define DeeSystem_DEFINE_mempsetq(n) _DeeSystem_DEFINE_mempsetT(uint64_t,n)
+#define DeeSystem_DEFINE_mempsetp(n) _DeeSystem_DEFINE_mempsetT(uintptr_t,n)
+
+#define cache_struct Dee_cache_struct
+#define cache_object Dee_cache_object
+#define DEFINE_STRUCT_CACHE            DEE_DEFINE_STRUCT_CACHE
+#define DEFINE_OBJECT_CACHE            DEE_DEFINE_OBJECT_CACHE
+#define DECLARE_STRUCT_CACHE           DEE_DECLARE_STRUCT_CACHE
+#define DECLARE_OBJECT_CACHE           DEE_DECLARE_OBJECT_CACHE
+#define DEFINE_STRUCT_CACHE_TRYALLOC   DEE_DEFINE_STRUCT_CACHE_TRYALLOC
+#define DEFINE_STRUCT_CACHE_EX         DEE_DEFINE_STRUCT_CACHE_EX
+#define DEFINE_OBJECT_CACHE_EX         DEE_DEFINE_OBJECT_CACHE_EX
+#define DEE_DEFINE_STRUCT_CACHE(n,T,l) DEE_DEFINE_STRUCT_CACHE_EX(n,T,,)
+#define DEE_DEFINE_OBJECT_CACHE(n,T,l) DEE_DEFINE_OBJECT_CACHE_EX(n,T,,)
+#define DEE_DECLARE_STRUCT_CACHE(n,T) \
+	struct Dee_cache_struct*structcache_##n##_list;\
+	size_t structcache_##n##_size;\
+	size_t n##_clear(size_t max_clear);\
+	void n##_free(T*ob);\
+	T*n##_alloc(void);\
+	T*n##_dbgalloc(char const*file,int line);
+#define DEE_DECLARE_OBJECT_CACHE(n,T) \
+	struct Dee_cache_object*obcache_##n##_list;\
+	size_t obcache_##n##_size;\
+	size_t n##_clear(size_t max_clear);\
+	void n##_free(T*ob);\
+	T*n##_alloc(void);\
+	T*n##_dbgalloc(char const*file,int line);\
+	void n##_tp_free(void*ob);\
+	void*n##_tp_alloc(void);
+#define DEE_DEFINE_STRUCT_CACHE_EX(n,T,s,l) \
+	struct Dee_cache_struct*structcache_##n##_list=0;\
+	size_t structcache_##n##_size=0;\
+	size_t n##_clear(size_t max_clear){}\
+	void n##_free(T*ob){}\
+	T*DCALL n##_alloc(){}\
+	T*DCALL n##_dbgalloc(char const*file,int line){}
+#define DEE_DEFINE_OBJECT_CACHE_EX(n,T,s,l) \
+	struct Dee_cache_object*obcache_##n##_list=0;\
+	size_t obcache_##n##_size=0;\
+	size_t n##_clear(size_t max_clear){}\
+	void n##_free(T*ob){}\
+	T*n##_alloc(){}\
+	T*n##_dbgalloc(char const*file,int line){}\
+	void n##_tp_free(void*ob){}\
+	void*n##_tp_alloc(){}
+
+#define DECLARE_DeeTime_NewUnix() DeeObject*DeeTime_NewUnix(int64_t seconds_since_01_01_1970,uint32_t extra_nanoseconds)
+#define DEFINE_DeeTime_NewUnix(get_time_module) DeeObject*DeeTime_NewUnix(int64_t seconds_since_01_01_1970,uint32_t extra_nanoseconds){}
+#define DECLARE_DeeTime_NewFILETIME() DeeObject*DeeTime_NewFILETIME(void const*p_filetime)
+#define DEFINE_DeeTime_NewFILETIME(get_time_module) DeeObject*DeeTime_NewFILETIME(void const*p_filetime){}
+
 
 
 #define appexit_object                 Dee_appexit_object
@@ -1276,19 +1352,223 @@
 
 
 // Misc. local macros
-#define DEFINE_STRING_TRAIT(name,function,test_ch) DeeObject*string_##name(String*self,size_t argc,DeeObject*const*argv);
-#define DEFINE_ANY_STRING_TRAIT(name,function) DeeObject*string_##name(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
-#define DEFINE_BYTES_TRAIT(name,function,test_ch) DeeObject*bytes_##name(Bytes*self,size_t argc,DeeObject*const*argv);
-#define DEFINE_ANY_BYTES_TRAIT(name,function) DeeObject*bytes_##name(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
-#define DEFINE_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
-#define DEFINE_INTERNAL_OPERATOR(return,name,args) return DeeObject_T##name args{} return DeeObject_##name args
+#define DEFINE_STRING_TRAIT(n,function,test_ch) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_STRING_TRAIT(n,function) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_BYTES_TRAIT(n,function,test_ch) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_BYTES_TRAIT(n,function) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_OPERATOR(return,n,args) return DeeObject_T##n args{} return DeeObject_##n args
+#define DEFINE_INTERNAL_OPERATOR(return,n,args) return DeeObject_T##n args{} return DeeObject_##n args
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**restrict p_self,intX_t val){}
-#define DEFINE_TYPE_INHERIT_FUNCTION(name,...) bool name(DeeTypeObject*self){}
-#define DEFINE_JSON_ITERATOR_COMPARE(name,...) DeeObject*name(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
+#define DEFINE_JSON_ITERATOR_COMPARE(n,...) DeeObject*n(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};
 #define RESTRICT_IF_NOTYPE
 #define ACTION(...)
 #define CONSTEXPR_FRAME_BEGIN(...) if(0)
+#define FUNC(...) __VA_ARGS__
+#define IF_EVAL(...) __VA_ARGS__
+#define IF_SKIP(...)
+#define IFELSE(a,b) a
+#define RETURN_TYPE int
+#define TPPCALL
 #define TRY
 #define EXCEPT
 #define CASE(x) case x
+#define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (__VA_ARGS__,char const*file,int line)
+#define DEFINE_AST_GENERATOR(attr,n,args) struct ast*n##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args{}struct ast*n args
+#define DECLARE_AST_GENERATOR(attr,n,args) struct ast*n##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args;struct ast*n args
+#define DEE_CXX_PRIVATE_DEFINE_OBJECT_WRAPPER(n) template<class T= ::DeeObject>class n {public:operator T*()const{}explicit n(DeeObject*ptr){}n(n const&ptr){}};
+#define DEE_ENABLE_IF_OBJECT(S) S
+#define DEE_ENABLE_IF_OBJECT_T(S,T) T
+#define DEE_ENABLE_IF_OBJECT_AND_PTR_T(Sob,Sptr,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR_T(S,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR2_T(S1,S2,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR3_T(S1,S2,S3,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR4_T(S1,S2,S3,S4,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR5_T(S1,S2,S3,S4,S5,T) T
+#define DEE_ENABLE_IF_OBJECT_PTR6_T(S1,S2,S3,S4,S5,S6,T) T
+#define DEE_ENABLE_IF_OBJECT_ASSIGNABLE(To,From) To
+#define DEE_ENABLE_IF_OBJECT_ASSIGNABLE_T(To,From,T) T
+#define DEE_ENABLE_IF_OBJECT_ASSIGNABLE2(To,From1,From2) To
+#define DEC_FOREACH_SECTION_VARS
+#define DEC_FOREACH_SECTION(s) for(;;)
+#define DEFINE_SIMPLE_SUFFIX_PARSER_FUNCTION(n,func,IF_SUFFIX,is_suffix) DeeObject*parser_##n(DeeCompilerWrapperObject*self,size_t argc,DeeObject*const*argv,DeeObject*kw){}
+#define DEFINE_SIMPLE_LOOKUPMODE_PARSER_FUNCTION(n,func) DeeObject*parser_##n(DeeCompilerWrapperObject*self,size_t argc,DeeObject*const*argv,DeeObject*kw){}
+#define DEFINE_KEYWORD_FLAG_FUNCTIONS(n,flag) \
+	DeeObject*keyword_get_##n(DeeCompilerItemObject*self){}\
+	int keyword_del_##n(DeeCompilerItemObject*self){}\
+	int keyword_set_##n(DeeCompilerItemObject*self,DeeObject*value){}
+#define DEFINE_LEXER_FLAG_FUNCTIONS(n,flag) \
+	DeeObject*lexer_get_##n(DeeCompilerWrapperObject*self){}\
+	int lexer_del_##n(DeeCompilerWrapperObject*self){}\
+	int lexer_set_##n(DeeCompilerWrapperObject*self,DeeObject*value){}
+#define DEFINE_MEI_COMPARE(n,op) DeeObject*n(ModuleExportsIterator*self,ModuleExportsIterator*other){}
+#define STACK_ALLOCATOR_DECL
+#define CONFIG_DEEMON_PATH(x)
+#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(BlackListVarkwdsIterator*self,BlackListVarkwdsIterator*other){}
+#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(BlackListMappingIterator*self,BlackListMappingIterator*other){}
+#define DEFINE_HASHFILTERITERATOR_COMPARE(n,...) DeeObject*n(HashFilterIterator*self,HashFilterIterator*other){}
+#define DEFINE_ITER_COMPARE(n,...) DeeObject*n(SeqSimpleProxyIterator*self,SeqSimpleProxyIterator*other){}
+#define DEFINE_SIITER_COMPARE(n,...) DeeObject*n(SetIntersectionIterator*self,SetIntersectionIterator*other){}
+#define DEFINE_SEGITER_COMPARE(n,...) DeeObject*n(SegmentsIterator*self,SegmentsIterator*other){}
+#define DEFINE_REPEATITER_COMPARE(n,...) DeeObject*n(RepeatIterator*self,RepeatIterator*other){}
+#define DEFINE_RANGEITERATOR_COMPARE(n,...) DeeObject*n(RangeIterator*self,RangeIterator*other){}
+#define DEFINE_RANGEITERATOR_COMPARE_R(n,...) DeeObject*n(RangeIterator*self,RangeIterator*other){}
+#define DEFINE_IRI_COMPARE(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
+#define DEFINE_IRI_COMPARE_R(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
+#define DEFINE_LOCATORITERATOR_COMPARE(n,...) DeeObject*n(LocatorIterator*self,LocatorIterator*other){}
+#define DEFINE_KWDSITERATOR_COMPARE(n,...) DeeObject*n(KwdsIterator*self,KwdsIterator*other){}
+#define SEQ_EACH_HEAD OBJECT_HEAD DeeObject*se_seq;
+#define DEFINE_SEQ_EACH_UNARY(n,...) SeqEachOperator*n(SeqEachBase*self){}
+#define DEFINE_SEQ_EACH_BINARY(n,...) SeqEachOperator*n(SeqEachBase*self,DeeObject*other){}
+#define DEFINE_SEQ_EACH_TRINARY(n,...) SeqEachOperator*n(SeqEachBase*self,DeeObject*a,DeeObject*b){}
+#define DEFINE_SEQ_EACH_UNARY_INPLACE(n,...) int n(SeqEachBase**p_self){}
+#define DEFINE_SEQ_EACH_BINARY_INPLACE(n,...) int n(SeqEachBase**p_self,DeeObject*other){}
+#define DEFINE_SEW_UNARY(n,...) SeqEachOperator*n(DeeObject*self){}
+#define DEFINE_SEW_BINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*other){}
+#define DEFINE_SEW_TRINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
+#define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
+#define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
+#define DEFINE_SEWI_COMPARE(n,...) DeeObject*n(SeqEachIterator*self,SeqEachIterator*other){}
+#define DEFINE_CATITERATOR_COMPARE(n,...) DeeObject*n(CatIterator*self,CatIterator*other){}
+#define DEFINE_COMITER_COMPARE(n,...) DeeObject*n(CombinationsIterator*self,CombinationsIterator*other){}
+#define DEFINE_MAPBYATTR_COMPARE(n,...) DeeObject*n(MapByAttr*self,MapByAttr*other){}
+#define DEFINE_SUBRANGEITERATOR_COMPARE(n,...) DeeObject*n(SubRangeIterator*self,SubRangeIterator*other){}
+#define DEFINE_TRANSFORMATIONITERATOR_COMPARE(n,...) DeeObject*n(TransformationIterator*self,TransformationIterator*other){}
+#define DEFINE_FOLD_COMPARE(n,T) size_t n(T const*data,size_t datalen,uint32_t fold[UNICODE_FOLDED_MAX],size_t fold_len);
+#define DEFINE_MEMCASECHR(n,rname,T,dee_foldcmp) \
+	T*n(T const*haystack,T needle,size_t haystack_length){}\
+	T*rname(T const*haystack,T needle,size_t haystack_length){}
+#define DEFINE_UNICODE_ISOLDREADER_API(n,T)\
+	struct n {\
+		T const*uf_dataptr;\
+		size_t uf_datalen;\
+		uint32_t uf_buf[UNICODE_FOLDED_MAX];\
+		uint8_t uf_len;\
+		uint8_t uf_idx;\
+	};\
+	uint32_t n##_getc(struct n*self){}\
+	uint32_t n##_getc_back(struct n*self){}
+#define DEFINE_MEMCASEEQ(n,T) bool n(T const*a,size_t a_size,T const*b,size_t b_size){}
+#define DEFINE_MEMCASESTARTSWITH(n,T) size_t n(T const*a,size_t a_size,T const*b,size_t b_size){}
+#define DEFINE_MEMCASEENDSWITH(n,T) size_t n(T const*a,size_t a_size,T const*b,size_t b_size){}
+#define DEFINE_MEMCASEMEM(n,rname,T,...) \
+	T*n(T const*haystack,size_t haystack_length,T const*needle,size_t needle_length,size_t*p_match_length){}\
+	T*rname(T const*haystack,size_t haystack_length,T const*needle,size_t needle_length,size_t*p_match_length){}
+#define DEFINE_FUZZY_COMPARE_FUNCTION(n,T,...) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
+#define DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(n,T) dssize_t n(T const*a,size_t alen,T const*b,size_t blen){}
+#define DEFINE_VERSION_COMPARE_FUNCTION(n,T,Ts,...) Ts n(T*a,size_t a_size,T*b,size_t b_size){}
+#define DEFINE_FIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size){}
+#define DEFINE_CASEFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size,size_t*p_match_length){}
+#define DEFINE_RFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_tscan_size,T*open_str,size_topen_size,T*clos_str,size_tclos_size){}
+#define DEFINE_CASERFIND_MATCH_FUNCTION(n,T,...) T*n(T*scan_str,size_t scan_size,T*open_str,size_t open_size,T*clos_str,size_t clos_size,size_t*p_match_length){}
+#define DEFINE_STRINGFINDITERATOR_COMPARE(n,...) DeeObject*n(StringFindIterator*self,StringFindIterator*other){}
+#define DEFINE_STRINGSCANITERATOR_COMPARE(n,...) DeeObject*n(StringScanIterator*self,StringScanIterator*other){}
+#define SWITCH_BUILTIN_CODECS(n,...) {}
+#define DEFINE_BYTESSPLITITERATOR_COMPARE(n,...) DeeObject*n(BytesSplitIterator*self,BytesSplitIterator*other){}
+#define DEFINE_BYTESFINDITERATOR_COMPARE(n,...) DeeObject*n(BytesFindIterator*self,BytesFindIterator*other){}
+#define DEFINE_REGRUPSITERATOR_COMPARE(n,...) DeeObject*n(ReGroupsIterator*self,ReGroupsIterator*other){}
+#define DEFINE_RESEQUENCEITARTOR_COMPARE(n,...) DeeObject*n(ReSequenceIterator*self,ReSequenceIterator*other){}
+#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(n,...) DeeObject*n(StringSegmentsIterator*self,StringSegmentsIterator*other){}
+#define DEFINE_STRINGSPLITITER_COMPARE(n,...) DeeObject*n(StringSplitIterator*self,StringSplitIterator*other){}
+#define DEFINE_WEAKREF_COMPARE(n,...) DeeObject*n(WeakRef*self,WeakRef*other){}
+#define DEFINE_DEPRECATED_INPLACE_BINARY(n,...) DeeObject*object_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
+#define DEFINE_NUMERIC_ISCMP(n,...) DeeObject*numeric_##n(DeeObject*self,size_t argc,DeeObject*const*argv){}
+#define DEFINE_LISTITERATOR_COMPARE(n,...) DeeObject*n(ListIterator*self,ListIterator*other){}
+#define DEFINE_ITERATOR_COMPARE(n,...) DeeObject*n(DeeObject*self,DeeObject*other){}
+#define DEFINE_INT_COMPARE_FUNCTION(n,...) DeeObject*int_##n(DeeIntObject*self,size_t argc,DeeObject*const*argv){}
+#define DEFINE_DOCKWDSITERATOR_COMPARE(n,...) DeeObject*n(DocKwdsIterator*self,DocKwdsIterator*other){}
+#define DEFINE_CLSMEMBER_COMPARE(n,...) DeeObject*n(DeeClsMemberObject*self,DeeClsMemberObject*other){}
+#define DEFINE_HASHSETITERATOR_COMPARE(n,...) DeeObject*n(HashSetIterator*self,HashSetIterator*other){}
+#define DEFINE_GCSETITERATOR_COMPARE(n,...) DeeObject*n(GCSetIterator*self,GCSetIterator*other){}
+#define DEFINE_FLOAT_COMPARE(n,...) DeeObject*n(Float*self,DeeObject*other){}
+#define DEFINE_FLOAT_COMPARE_FUNCTION(n,...) DeeObject*float_##n(Float*self,size_t argc,DeeObject*const*argv){}
+#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx,...) \
+	DeeObject*file_class_get_##stdxxx(DeeObject*self){}\
+	int file_class_del_##stdxxx(DeeObject*self){}\
+	int file_class_set_##stdxxx(DeeObject*self,DeeObject*value){}
+#define DEFINE_DICTITERATOR_COMPARE(n,...) DeeObject*n(DictIterator*self,DictIterator*other){}
+#define DEFINE_CLASSOPERATORTABLEITERATOR_COMPARE(n,...) DeeObject*n(ClassOperatorTableIterator*self,ClassOperatorTableIterator*other){}
+#define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
+	DeeObject*instance_txxx(DeeTypeObject*tp_self,DeeObject*self){}\
+	DeeObject*instance_xxx(DeeObject*self){}
+#define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
+	DeeObject*instance_txxx(DeeTypeObject*tp_self,DeeObject*self,DeeObject*other){}\
+	DeeObject*instance_xxx(DeeObject*self,DeeObject*other){}
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
+	DeeObject*instance_txxx(DeeTypeObject*tp_self,DeeObject*self,DeeObject*other,DeeObject*other2){}\
+	DeeObject*instance_xxx(DeeObject*self,DeeObject*other,DeeObject*other2){}
+#define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject*self){}\
+	int instance_xxx(DeeObject*self){}
+#define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject*self,DeeObject*other){}\
+	int instance_xxx(DeeObject*self,DeeObject*other){}
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject*self,DeeObject*other,DeeObject*other2){}\
+	int instance_xxx(DeeObject*self,DeeObject*other,DeeObject*other2){}
+#define DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject*self,DeeObject*other,DeeObject*other2,DeeObject*other3){}\
+	int instance_xxx(DeeObject*self,DeeObject*other,DeeObject*other2,DeeObject*other3){}
+#define DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject**p_self){}\
+	int instance_xxx(DeeObject**p_self){}
+#define DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx,instance_xxx,...) \
+	int instance_txxx(DeeTypeObject*tp_self,DeeObject**p_self,DeeObject*other){}\
+	int instance_xxx(DeeObject**p_self,DeeObject*other){}
+#define DEFINE_CELL_COMPARE(n,...) DeeObject*n(Cell*self,Cell*other){}
+#define DEFINE_BYTES_COMPARE(n,...) DeeObject*n(Bytes*self,DeeObject*other){}
+#define DEFINE_RODICTITERATOR_COMPARE(n,...) DeeObject*n(RoDictIterator*self,RoDictIterator*other){}
+#define DEFINE_ROSETITERATOR_COMPARE(n,...) DeeObject*n(RoSetIterator*self,RoSetIterator*other){}
+#define DEFINE_SEQITERATOR_COMPARE(n,...) DeeObject*n(SeqIterator*self,SeqIterator*other){}
+#define DEFINE_STRINGITERATOR_COMPARE(n,...) DeeObject*n(StringIterator*self,StringIterator*other){}
+#define DEFINE_TRACEITER_COMPARE(n,...) DeeObject*n(TraceIterator*self,TraceIterator*other){}
+#define DEFINE_TUPLEITERATOR_COMPARE(n,...) DeeObject*n(TupleIterator*self,TupleIterator*other){}
+#define DEFINE_TYPE_INHERIT_FUNCTION(n,...) bool n(DeeTypeObject*self){}
+#define DEFINE_TYPE_INHERIT_FUNCTION1(n,...) bool n(DeeTypeObject*self){}
+#define DEFINE_TYPE_INHERIT_FUNCTION2(n,...) bool n(DeeTypeObject*self){}
+#define DEFINE_MATH_OPERATOR1(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self)){}
+#define DEFINE_MATH_OPERATOR2(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
+#define DEFINE_MATH_INPLACE_OPERATOR2(n,...) DEFINE_OPERATOR(int,n,(DeeObject**p_self,DeeObject*some_object)){}
+#define DEFINE_OBJECT_COMPARE_OPERATOR(n,...) DEFINE_OPERATOR(DeeObject*,n,(DeeObject*self,DeeObject*some_object)){}
+#define DEFINE_COMPARE_OPERATOR(n,...) int n(DeeObject*self,DeeObject*some_object){}
+#define DEFINE_TYPEOPREATORITEARTOR_COMPARE(n,...) DeeObject*n(TypeOperatorsIterator*self,TypeOperatorsIterator*other){}
+#define DEE_DEFINE_BYTEWRITER_PUTX(n,T,x) int n(struct Dee_bytewriter*self,T x){}
+#define DEE_DEFINE_ATOMIC_HELPERS(n,T) \
+	T _Dee_atomic_xch_no_threads_##n(T*p,T value){}\
+	T _Dee_atomic_fetchand_no_threads_##n(T*p,T value){}\
+	T _Dee_atomic_fetchor_no_threads_##n(T*p,T value){}\
+	T _Dee_atomic_fetchnand_no_threads_##n(T*p,T value){}
+#define DEFINE_USETITERATOR_COMPARE(n,...) DeeObject*n(USetIterator*self,USetIterator*other){}
+#define DEFINE_RBTREE_NODE_FIELD_GETTER(rbtreeiter_get_FOO,...) DeeObject*rbtreeiter_get_FOO(RBTreeIterator*self){}
+#define DEFINE_RBTREE_NODE_SUBNODE_GETTER(rbtreeiter_get_FOO,...) DeeObject*rbtreeiter_get_FOO(RBTreeIterator*self){}
+#define DEFINE_FIXEDLISTITERATOR_COMPARE(n,...) DeeObject*n(FixedListIterator*self,FixedListIterator*other){}
+#define DEFINE_CTYPES_FLOAT_COMPARE(n,...) DeeObject*n(DeeSTypeObject*tp_self,T*self,DeeObject*some_object){}
+#define DEFINE_UNARY_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject*self){}
+#define DEFINE_BINARY_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject*self,DeeObject*other){}
+#define DEFINE_TRINARY_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject*self,DeeObject*a,DeeObject*b){}
+#define DEFINE_UNARY_INPLACE_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject**p_self){}
+#define DEFINE_BINARY_INPLACE_STRUCT_OPERATOR(Treturn,struct_xxx,...) Treturn struct_xxx(DeeObject**p_self,DeeObject*other){}
+#define DEFINE_UNARY_MATH_OPERATOR(Treturn,error_result,DeeStruct_Xxx,...) Treturn DeeStruct_Xxx(DeeSTypeObject*tp_self,void*self){}
+#define DEFINE_BINARY_MATH_OPERATOR(Treturn,error_result,DeeStruct_Xxx,...) Treturn DeeStruct_Xxx(DeeSTypeObject*tp_self,void*self,DeeObject*other){}
+#define DHASHALGO_MEMBERS(T) \
+	struct dhashalgo ha_base;\
+	T ha_start;\
+	T ha_outmod;\
+	T ha_table[256];
+#define DEFINE_LIBMATH_CONVERSION_1(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_CONVERSION_1_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_CONVERSION_2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_CONVERSION_2_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_FLOAT_TRAIT(n)  DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_FLOAT_TRAIT2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_SLABSTAT_COMPARE(n,...) DeeObject*n(SlabStatObject*self,SlabStatObject*other){}
+#define DEFINE_SLABSTATITERATOR_COMPARE(n,...) DeeObject*n(SlabStatIteratorObject*self,SlabStatIteratorObject*other){}
+#define DEFINE_SLABINFO_FIELD_READER(n) DeeObject*si_get_##n(SlabInfoObject*self){}
+#define DEFINE_SLABINFO_COMPARE(n,...) DeeObject*n(SlabInfoObject*self,SlabInfoObject*other){}
+#define DEFINE_TLS_COMPARE(n,...) DeeObject*n(TLS*self,TLS*other){}
+#define DEFINE_LIBTIME_AS(n, ...) \
+	DeeObject*time_getval_##n(DeeTimeObject*self){}\
+	int time_setval_##n(DeeTimeObject*self,DeeObject*value){}\
+	int time_delval_##n(DeeTimeObject*self){}
+#define DEFINE_TIME_COMPARE(n,...) DeeObject*n(DeeTimeObject*self,DeeTimeObject*other){}
+#define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}

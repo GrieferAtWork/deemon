@@ -158,7 +158,7 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, op)                               \
+#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(name, op)                     \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
 	name(BlackListVarkwdsIterator *self, BlackListVarkwdsIterator *other) {   \
 		if (DeeObject_AssertTypeExact(other, &BlackListVarkwdsIterator_Type)) \
@@ -167,13 +167,13 @@ blvi_nsi_nextvalue(BlackListVarkwdsIterator *__restrict self) {
 	err:                                                                      \
 		return NULL;                                                          \
 	}
-DEFINE_FILTERITERATOR_COMPARE(blvi_eq, ==)
-DEFINE_FILTERITERATOR_COMPARE(blvi_ne, !=)
-DEFINE_FILTERITERATOR_COMPARE(blvi_lo, <)
-DEFINE_FILTERITERATOR_COMPARE(blvi_le, <=)
-DEFINE_FILTERITERATOR_COMPARE(blvi_gr, >)
-DEFINE_FILTERITERATOR_COMPARE(blvi_ge, >=)
-#undef DEFINE_FILTERITERATOR_COMPARE
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_eq, ==)
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_ne, !=)
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_lo, <)
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_le, <=)
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_gr, >)
+DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(blvi_ge, >=)
+#undef DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE
 
 PRIVATE struct type_cmp blvi_cmp = {
 	/* .tp_hash = */ NULL,
@@ -1156,7 +1156,7 @@ err_r:
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, func)                             \
+#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(name, func)                   \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                     \
 	name(BlackListMappingIterator *self, BlackListMappingIterator *other) {   \
 		if (DeeObject_AssertTypeExact(other, &BlackListMappingIterator_Type)) \
@@ -1165,13 +1165,13 @@ err_r:
 	err:                                                                      \
 		return NULL;                                                          \
 	}
-DEFINE_FILTERITERATOR_COMPARE(blmi_eq, DeeObject_CompareEqObject)
-DEFINE_FILTERITERATOR_COMPARE(blmi_ne, DeeObject_CompareNeObject)
-DEFINE_FILTERITERATOR_COMPARE(blmi_lo, DeeObject_CompareLoObject)
-DEFINE_FILTERITERATOR_COMPARE(blmi_le, DeeObject_CompareLeObject)
-DEFINE_FILTERITERATOR_COMPARE(blmi_gr, DeeObject_CompareGrObject)
-DEFINE_FILTERITERATOR_COMPARE(blmi_ge, DeeObject_CompareGeObject)
-#undef DEFINE_FILTERITERATOR_COMPARE
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_eq, DeeObject_CompareEqObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ne, DeeObject_CompareNeObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_lo, DeeObject_CompareLoObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_le, DeeObject_CompareLeObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_gr, DeeObject_CompareGrObject)
+DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(blmi_ge, DeeObject_CompareGeObject)
+#undef DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE
 
 PRIVATE struct type_cmp blmi_cmp = {
 	/* .tp_hash = */ NULL,

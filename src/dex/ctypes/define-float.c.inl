@@ -376,7 +376,7 @@ PRIVATE struct stype_math tpconst F(floatmath) = {
 	/* .st_inplace_pow = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_inplace_pow)
 };
 
-#define DEFINE_COMPARE_OPERATOR(name, op)                  \
+#define DEFINE_CTYPES_FLOAT_COMPARE(name, op)              \
 	PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL  \
 	name(DeeSTypeObject *__restrict UNUSED(tp_self),       \
 	     T *self, DeeObject *__restrict some_object) {     \
@@ -389,13 +389,13 @@ PRIVATE struct stype_math tpconst F(floatmath) = {
 	err:                                                   \
 		return NULL;                                       \
 	}
-DEFINE_COMPARE_OPERATOR(F(float_eq), ==)
-DEFINE_COMPARE_OPERATOR(F(float_ne), !=)
-DEFINE_COMPARE_OPERATOR(F(float_lo), <)
-DEFINE_COMPARE_OPERATOR(F(float_le), <=)
-DEFINE_COMPARE_OPERATOR(F(float_gr), >)
-DEFINE_COMPARE_OPERATOR(F(float_ge), >=)
-#undef DEFINE_COMPARE_OPERATOR
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_eq), ==)
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_ne), !=)
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_lo), <)
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_le), <=)
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_gr), >)
+DEFINE_CTYPES_FLOAT_COMPARE(F(float_ge), >=)
+#undef DEFINE_CTYPES_FLOAT_COMPARE
 
 
 PRIVATE struct stype_cmp tpconst F(floatcmp) = {

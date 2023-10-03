@@ -1188,7 +1188,7 @@ PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_TUPLE_ITERATOR_COMPARE(name, op)                       \
+#define DEFINE_TUPLEITERATOR_COMPARE(name, op)                        \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
 	name(TupleIterator *self, TupleIterator *other) {                 \
 		if (DeeObject_AssertTypeExact(other, &DeeTupleIterator_Type)) \
@@ -1197,13 +1197,13 @@ PRIVATE struct type_member tpconst tuple_iterator_members[] = {
 	err:                                                              \
 		return NULL;                                                  \
 	}
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_eq, ==)
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ne, !=)
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_lo, <)
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_le, <=)
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_gr, >)
-DEFINE_TUPLE_ITERATOR_COMPARE(tuple_iterator_ge, >=)
-#undef DEFINE_TUPLE_ITERATOR_COMPARE
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_eq, ==)
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_ne, !=)
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_lo, <)
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_le, <=)
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_gr, >)
+DEFINE_TUPLEITERATOR_COMPARE(tuple_iterator_ge, >=)
+#undef DEFINE_TUPLEITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
 tuple_iterator_nii_getseq(TupleIterator *__restrict self) {

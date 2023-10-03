@@ -3994,7 +3994,7 @@ again:
 }
 
 
-#define DEFINE_LIST_ITERATOR_COMPARE(name, expr)                     \
+#define DEFINE_LISTITERATOR_COMPARE(name, expr)                      \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL            \
 	name(ListIterator *self, ListIterator *other) {                  \
 		if (DeeObject_AssertTypeExact(other, &DeeListIterator_Type)) \
@@ -4003,29 +4003,29 @@ again:
 	err:                                                             \
 		return NULL;                                                 \
 	}
-DEFINE_LIST_ITERATOR_COMPARE(li_eq,
-                             self->li_list == other->li_list &&
-                             LI_GETINDEX(self) == LI_GETINDEX(other))
-DEFINE_LIST_ITERATOR_COMPARE(li_ne,
-                             self->li_list != other->li_list ||
-                             LI_GETINDEX(self) != LI_GETINDEX(other))
-DEFINE_LIST_ITERATOR_COMPARE(li_lo,
-                             self->li_list < other->li_list ||
-                             (self->li_list == other->li_list &&
-                              LI_GETINDEX(self) < LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_le,
-                             self->li_list < other->li_list ||
-                             (self->li_list == other->li_list &&
-                              LI_GETINDEX(self) <= LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_gr,
-                             self->li_list > other->li_list ||
-                             (self->li_list == other->li_list &&
-                              LI_GETINDEX(self) > LI_GETINDEX(other)))
-DEFINE_LIST_ITERATOR_COMPARE(li_ge,
-                             self->li_list > other->li_list ||
-                             (self->li_list == other->li_list &&
-                              LI_GETINDEX(self) >= LI_GETINDEX(other)))
-#undef DEFINE_LIST_ITERATOR_COMPARE
+DEFINE_LISTITERATOR_COMPARE(li_eq,
+                            self->li_list == other->li_list &&
+                            LI_GETINDEX(self) == LI_GETINDEX(other))
+DEFINE_LISTITERATOR_COMPARE(li_ne,
+                            self->li_list != other->li_list ||
+                            LI_GETINDEX(self) != LI_GETINDEX(other))
+DEFINE_LISTITERATOR_COMPARE(li_lo,
+                            self->li_list < other->li_list ||
+                            (self->li_list == other->li_list &&
+                             LI_GETINDEX(self) < LI_GETINDEX(other)))
+DEFINE_LISTITERATOR_COMPARE(li_le,
+                            self->li_list < other->li_list ||
+                            (self->li_list == other->li_list &&
+                             LI_GETINDEX(self) <= LI_GETINDEX(other)))
+DEFINE_LISTITERATOR_COMPARE(li_gr,
+                            self->li_list > other->li_list ||
+                            (self->li_list == other->li_list &&
+                             LI_GETINDEX(self) > LI_GETINDEX(other)))
+DEFINE_LISTITERATOR_COMPARE(li_ge,
+                            self->li_list > other->li_list ||
+                            (self->li_list == other->li_list &&
+                             LI_GETINDEX(self) >= LI_GETINDEX(other)))
+#undef DEFINE_LISTITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF List *DCALL
 list_iterator_nii_getseq(ListIterator *__restrict self) {

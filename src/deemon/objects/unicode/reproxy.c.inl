@@ -309,7 +309,7 @@ rebfaiter_getseq(ReSequenceIterator *__restrict self) {
 
 #define REITER_GETDATAPTR(x) atomic_read(&(x)->rsi_exec.rx_startoff)
 
-#define DEFINE_REFA_COMPARE(name, op)                           \
+#define DEFINE_RESEQUENCEITARTOR_COMPARE(name, op)              \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
 	name(ReSequenceIterator *self, ReSequenceIterator *other) { \
 		size_t x, y;                                            \
@@ -321,13 +321,13 @@ rebfaiter_getseq(ReSequenceIterator *__restrict self) {
 	err:                                                        \
 		return NULL;                                            \
 	}
-DEFINE_REFA_COMPARE(refa_eq, ==)
-DEFINE_REFA_COMPARE(refa_ne, !=)
-DEFINE_REFA_COMPARE(refa_lo, <)
-DEFINE_REFA_COMPARE(refa_le, <=)
-DEFINE_REFA_COMPARE(refa_gr, >)
-DEFINE_REFA_COMPARE(refa_ge, >=)
-#undef DEFINE_REFA_COMPARE
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_eq, ==)
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_ne, !=)
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_lo, <)
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_le, <=)
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_gr, >)
+DEFINE_RESEQUENCEITARTOR_COMPARE(refa_ge, >=)
+#undef DEFINE_RESEQUENCEITARTOR_COMPARE
 
 
 #define rebfaiter_cmp refaiter_cmp

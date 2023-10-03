@@ -243,7 +243,7 @@ float_hash(Float *__restrict self) {
 }
 
 
-#define DEFINE_FLOAT_CMP(name, op)                        \
+#define DEFINE_FLOAT_COMPARE(name, op)                    \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Float *self, DeeObject *other) {                 \
 		double other_val;                                 \
@@ -251,13 +251,13 @@ float_hash(Float *__restrict self) {
 			return NULL;                                  \
 		return_bool(self->f_value op other_val);          \
 	}
-DEFINE_FLOAT_CMP(float_eq, ==)
-DEFINE_FLOAT_CMP(float_ne, !=)
-DEFINE_FLOAT_CMP(float_lo, <)
-DEFINE_FLOAT_CMP(float_le, <=)
-DEFINE_FLOAT_CMP(float_gr, >)
-DEFINE_FLOAT_CMP(float_ge, >=)
-#undef DEFINE_FLOAT_CMP
+DEFINE_FLOAT_COMPARE(float_eq, ==)
+DEFINE_FLOAT_COMPARE(float_ne, !=)
+DEFINE_FLOAT_COMPARE(float_lo, <)
+DEFINE_FLOAT_COMPARE(float_le, <=)
+DEFINE_FLOAT_COMPARE(float_gr, >)
+DEFINE_FLOAT_COMPARE(float_ge, >=)
+#undef DEFINE_FLOAT_COMPARE
 
 PRIVATE struct type_cmp float_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&float_hash,

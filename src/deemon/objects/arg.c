@@ -191,20 +191,20 @@ kwds_nsi_nextvalue(KwdsIterator *__restrict self) {
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, op)               \
+#define DEFINE_KWDSITERATOR_COMPARE(name, op)                 \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(KwdsIterator *self, KwdsIterator *other) {           \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                      \
 		return_bool(READ_ITER(self) op READ_ITER(other));     \
 	}
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_eq, ==)
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_ne, !=)
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_lo, <)
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_le, <=)
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_gr, >)
-DEFINE_FILTERITERATOR_COMPARE(kwdsiter_ge, >=)
-#undef DEFINE_FILTERITERATOR_COMPARE
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_eq, ==)
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_ne, !=)
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_lo, <)
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_le, <=)
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_gr, >)
+DEFINE_KWDSITERATOR_COMPARE(kwdsiter_ge, >=)
+#undef DEFINE_KWDSITERATOR_COMPARE
 
 PRIVATE struct type_cmp kwdsiter_cmp = {
 	/* .tp_hash = */ NULL,

@@ -1306,7 +1306,7 @@ hashsetiterator_bool(HashSetIterator *__restrict self) {
 	        item < set->hs_elem + (set->hs_mask + 1));
 }
 
-#define DEFINE_ITERATOR_COMPARE(name, op)                       \
+#define DEFINE_HASHSETITERATOR_COMPARE(name, op)                \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
 	name(HashSetIterator *self, HashSetIterator *other) {       \
 		if (DeeObject_AssertType(other, &HashSetIterator_Type)) \
@@ -1315,13 +1315,13 @@ hashsetiterator_bool(HashSetIterator *__restrict self) {
 	err:                                                        \
 		return NULL;                                            \
 	}
-DEFINE_ITERATOR_COMPARE(hashsetiterator_eq, ==)
-DEFINE_ITERATOR_COMPARE(hashsetiterator_ne, !=)
-DEFINE_ITERATOR_COMPARE(hashsetiterator_lo, <)
-DEFINE_ITERATOR_COMPARE(hashsetiterator_le, <=)
-DEFINE_ITERATOR_COMPARE(hashsetiterator_gr, >)
-DEFINE_ITERATOR_COMPARE(hashsetiterator_ge, >=)
-#undef DEFINE_ITERATOR_COMPARE
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_eq, ==)
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_ne, !=)
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_lo, <)
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_le, <=)
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_gr, >)
+DEFINE_HASHSETITERATOR_COMPARE(hashsetiterator_ge, >=)
+#undef DEFINE_HASHSETITERATOR_COMPARE
 
 PRIVATE struct type_member tpconst hashsetiterator_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(HashSetIterator, si_set), "->?DHashSet"),

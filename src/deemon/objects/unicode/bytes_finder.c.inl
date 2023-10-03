@@ -230,20 +230,20 @@ PRIVATE struct type_member tpconst bcfi_members[] = {
 #endif /* !CONFIG_NO_DOC */
 
 
-#define DEFINE_STRINGSEGMENTSITERATOR_COMPARE(name, op)       \
+#define DEFINE_BYTESFINDITERATOR_COMPARE(name, op)            \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(BytesFindIterator *self, BytesFindIterator *other) { \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
 			return NULL;                                      \
 		return_bool(READ_PTR(self) op READ_PTR(other));       \
 	}
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_eq, ==)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_ne, !=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_lo, <)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_le, <=)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_gr, >)
-DEFINE_STRINGSEGMENTSITERATOR_COMPARE(bfi_ge, >=)
-#undef DEFINE_STRINGSEGMENTSITERATOR_COMPARE
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_eq, ==)
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_ne, !=)
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_lo, <)
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_le, <=)
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_gr, >)
+DEFINE_BYTESFINDITERATOR_COMPARE(bfi_ge, >=)
+#undef DEFINE_BYTESFINDITERATOR_COMPARE
 
 
 PRIVATE struct type_cmp bfi_cmp = {

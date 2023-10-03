@@ -95,7 +95,7 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_COMPARE(name, base, opname)                                               \
+#define DEFINE_TRANSFORMATIONITERATOR_COMPARE(name, base, opname)                        \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                \
 	name(TransformationIterator *self, TransformationIterator *other) {                  \
 		if (DeeObject_AssertTypeExact(other, &SeqTransformationIterator_Type))           \
@@ -112,13 +112,13 @@ PRIVATE struct type_member tpconst transiter_members[] = {
 	err:                                                                                 \
 		return NULL;                                                                     \
 	}
-DEFINE_COMPARE(transiter_eq, DeeObject_CompareEqObject, OPERATOR_EQ)
-DEFINE_COMPARE(transiter_ne, DeeObject_CompareNeObject, OPERATOR_NE)
-DEFINE_COMPARE(transiter_lo, DeeObject_CompareLoObject, OPERATOR_LO)
-DEFINE_COMPARE(transiter_le, DeeObject_CompareLeObject, OPERATOR_LE)
-DEFINE_COMPARE(transiter_gr, DeeObject_CompareGrObject, OPERATOR_GR)
-DEFINE_COMPARE(transiter_ge, DeeObject_CompareGeObject, OPERATOR_GE)
-#undef DEFINE_COMPARE
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_eq, DeeObject_CompareEqObject, OPERATOR_EQ)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ne, DeeObject_CompareNeObject, OPERATOR_NE)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_lo, DeeObject_CompareLoObject, OPERATOR_LO)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_le, DeeObject_CompareLeObject, OPERATOR_LE)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_gr, DeeObject_CompareGrObject, OPERATOR_GR)
+DEFINE_TRANSFORMATIONITERATOR_COMPARE(transiter_ge, DeeObject_CompareGeObject, OPERATOR_GE)
+#undef DEFINE_TRANSFORMATIONITERATOR_COMPARE
 
 PRIVATE struct type_cmp transiter_cmp = {
 	/* .tp_hash = */ NULL,

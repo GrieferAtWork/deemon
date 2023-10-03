@@ -159,7 +159,7 @@ rgiter_bool(ReGroupsIterator *__restrict self) {
 	return ReGroupsIterator_GetIndex(self) < self->rgi_groups->rg_ngroups;
 }
 
-#define DEFINE_RGITER_COMPARE(name, op)                       \
+#define DEFINE_REGRUPSITERATOR_COMPARE(name, op)              \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(ReGroupsIterator *self, ReGroupsIterator *other) {   \
 		size_t x, y;                                          \
@@ -171,13 +171,13 @@ rgiter_bool(ReGroupsIterator *__restrict self) {
 	err:                                                      \
 		return NULL;                                          \
 	}
-DEFINE_RGITER_COMPARE(rgiter_eq, ==)
-DEFINE_RGITER_COMPARE(rgiter_ne, !=)
-DEFINE_RGITER_COMPARE(rgiter_lo, <)
-DEFINE_RGITER_COMPARE(rgiter_le, <=)
-DEFINE_RGITER_COMPARE(rgiter_gr, >)
-DEFINE_RGITER_COMPARE(rgiter_ge, >=)
-#undef DEFINE_RGITER_COMPARE
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_eq, ==)
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_ne, !=)
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_lo, <)
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_le, <=)
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_gr, >)
+DEFINE_REGRUPSITERATOR_COMPARE(rgiter_ge, >=)
+#undef DEFINE_REGRUPSITERATOR_COMPARE
 
 #define rssiter_cmp rgiter_cmp
 #define rsbiter_cmp rgiter_cmp

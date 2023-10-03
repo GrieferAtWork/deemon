@@ -169,7 +169,7 @@ usetiterator_bool(USetIterator *__restrict self) {
 	        item < set->us_elem + (set->us_mask + 1));
 }
 
-#define DEFINE_ITERATOR_COMPARE(name, op)                     \
+#define DEFINE_USETITERATOR_COMPARE(name, op)                 \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(USetIterator *self, USetIterator *other) {           \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
@@ -178,13 +178,13 @@ usetiterator_bool(USetIterator *__restrict self) {
 	err:                                                      \
 		return NULL;                                          \
 	}
-DEFINE_ITERATOR_COMPARE(usetiterator_eq, ==)
-DEFINE_ITERATOR_COMPARE(usetiterator_ne, !=)
-DEFINE_ITERATOR_COMPARE(usetiterator_lo, <)
-DEFINE_ITERATOR_COMPARE(usetiterator_le, <=)
-DEFINE_ITERATOR_COMPARE(usetiterator_gr, >)
-DEFINE_ITERATOR_COMPARE(usetiterator_ge, >=)
-#undef DEFINE_ITERATOR_COMPARE
+DEFINE_USETITERATOR_COMPARE(usetiterator_eq, ==)
+DEFINE_USETITERATOR_COMPARE(usetiterator_ne, !=)
+DEFINE_USETITERATOR_COMPARE(usetiterator_lo, <)
+DEFINE_USETITERATOR_COMPARE(usetiterator_le, <=)
+DEFINE_USETITERATOR_COMPARE(usetiterator_gr, >)
+DEFINE_USETITERATOR_COMPARE(usetiterator_ge, >=)
+#undef DEFINE_USETITERATOR_COMPARE
 
 INTERN struct type_cmp usetiterator_cmp = {
 	/* .tp_hash = */ NULL,

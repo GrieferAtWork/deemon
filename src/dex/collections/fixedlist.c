@@ -1300,20 +1300,22 @@ fli_visit(FixedListIterator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->li_list);
 }
 
-#define DEFINE_FLI_COMPARE(name, op)                                   \
+#define DEFINE_FIXEDLISTITERATOR_COMPARE(name, op)                     \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL              \
 	name(FixedListIterator *self, FixedListIterator *other) {          \
 		if (DeeObject_AssertTypeExact(other, &FixedListIterator_Type)) \
-			return NULL;                                               \
+			goto err;                                                  \
 		return_bool(FLI_GETITER(self) op FLI_GETITER(other));          \
+	err:                                                               \
+		return NULL;                                                   \
 	}
-DEFINE_FLI_COMPARE(fli_eq, ==)
-DEFINE_FLI_COMPARE(fli_ne, !=)
-DEFINE_FLI_COMPARE(fli_lo, <)
-DEFINE_FLI_COMPARE(fli_le, <=)
-DEFINE_FLI_COMPARE(fli_gr, >)
-DEFINE_FLI_COMPARE(fli_ge, >=)
-#undef DEFINE_FLI_COMPARE
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_eq, ==)
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_ne, !=)
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_lo, <)
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_le, <=)
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_gr, >)
+DEFINE_FIXEDLISTITERATOR_COMPARE(fli_ge, >=)
+#undef DEFINE_FIXEDLISTITERATOR_COMPARE
 
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fli_getseq(FixedListIterator *__restrict self) {

@@ -219,7 +219,7 @@ ob_weakref_hash(WeakRef *__restrict self) {
 	return Dee_HashPointer(LAZY_GETOBJ(self));
 }
 
-#define DEFINE_WEAKREF_CMP(name, op)                                \
+#define DEFINE_WEAKREF_COMPARE(name, op)                            \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
 	name(WeakRef *self, WeakRef *other) {                           \
 		if (DeeNone_Check(other))                                   \
@@ -228,13 +228,13 @@ ob_weakref_hash(WeakRef *__restrict self) {
 			return NULL;                                            \
 		return_bool(LAZY_GETOBJ(self) op LAZY_GETOBJ(other));       \
 	}
-DEFINE_WEAKREF_CMP(ob_weakref_eq, ==)
-DEFINE_WEAKREF_CMP(ob_weakref_ne, !=)
-DEFINE_WEAKREF_CMP(ob_weakref_lo, <)
-DEFINE_WEAKREF_CMP(ob_weakref_le, <=)
-DEFINE_WEAKREF_CMP(ob_weakref_gr, >)
-DEFINE_WEAKREF_CMP(ob_weakref_ge, >=)
-#undef DEFINE_WEAKREF_CMP
+DEFINE_WEAKREF_COMPARE(ob_weakref_eq, ==)
+DEFINE_WEAKREF_COMPARE(ob_weakref_ne, !=)
+DEFINE_WEAKREF_COMPARE(ob_weakref_lo, <)
+DEFINE_WEAKREF_COMPARE(ob_weakref_le, <=)
+DEFINE_WEAKREF_COMPARE(ob_weakref_gr, >)
+DEFINE_WEAKREF_COMPARE(ob_weakref_ge, >=)
+#undef DEFINE_WEAKREF_COMPARE
 
 PRIVATE struct type_cmp ob_weakref_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&ob_weakref_hash,

@@ -170,7 +170,7 @@ err:
 }
 
 
-#define DEFINE_FILTERITERATOR_COMPARE(name, compare_object)             \
+#define DEFINE_LOCATORITERATOR_COMPARE(name, compare_object)            \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
 	name(LocatorIterator *self, LocatorIterator *other) {               \
 		if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type)) \
@@ -179,13 +179,13 @@ err:
 	err:                                                                \
 		return NULL;                                                    \
 	}
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_eq, DeeObject_CompareEqObject)
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_ne, DeeObject_CompareNeObject)
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_lo, DeeObject_CompareLoObject)
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_le, DeeObject_CompareLeObject)
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_gr, DeeObject_CompareGrObject)
-DEFINE_FILTERITERATOR_COMPARE(locatoriter_ge, DeeObject_CompareGeObject)
-#undef DEFINE_FILTERITERATOR_COMPARE
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_eq, DeeObject_CompareEqObject)
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_ne, DeeObject_CompareNeObject)
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_lo, DeeObject_CompareLoObject)
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_le, DeeObject_CompareLeObject)
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_gr, DeeObject_CompareGrObject)
+DEFINE_LOCATORITERATOR_COMPARE(locatoriter_ge, DeeObject_CompareGeObject)
+#undef DEFINE_LOCATORITERATOR_COMPARE
 
 PRIVATE struct type_cmp locatoriter_cmp = {
 	/* .tp_hash = */ NULL,

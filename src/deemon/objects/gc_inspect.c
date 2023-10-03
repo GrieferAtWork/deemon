@@ -134,7 +134,7 @@ PRIVATE struct type_member tpconst gcset_iterator_members[] = {
 };
 
 INTDEF DeeTypeObject DeeGCSetIterator_Type;
-#define DEFINE_GCSET_ITERATOR_COMPARE(name, op)                       \
+#define DEFINE_GCSETITERATOR_COMPARE(name, op)                        \
 	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
 	name(GCSetIterator *self, GCSetIterator *other) {                 \
 		if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type)) \
@@ -143,13 +143,13 @@ INTDEF DeeTypeObject DeeGCSetIterator_Type;
 	err:                                                              \
 		return NULL;                                                  \
 	}
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_eq, ==)
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_ne, !=)
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_lo, <)
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_le, <=)
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_gr, >)
-DEFINE_GCSET_ITERATOR_COMPARE(gcset_iterator_ge, >=)
-#undef DEFINE_GCSET_ITERATOR_COMPARE
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_eq, ==)
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_ne, !=)
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_lo, <)
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_le, <=)
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_gr, >)
+DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_ge, >=)
+#undef DEFINE_GCSETITERATOR_COMPARE
 
 PRIVATE struct type_cmp gcset_iterator_cmp = {
 	/* .tp_hash = */ NULL,

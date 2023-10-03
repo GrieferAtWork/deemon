@@ -22,7 +22,7 @@
 //#define DEFINE_GETATTR 1
 //#define DEFINE_CALLATTR 1
 #define DEFINE_CALLATTRKW 1
-#endif
+#endif /* __INTELLISENSE__ */
 
 #include <deemon/map.h>
 
