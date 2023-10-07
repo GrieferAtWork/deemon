@@ -145,8 +145,9 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 		if (is_negative || (flags & (DEEFLOAT_PRINT_FSIGN | DEEFLOAT_PRINT_FSPACE)))
 			++total_len;
 		if (max_prec != 0) {
-			unsigned int temp_min = min_prec;
-			whole                 = frac;
+			unsigned int temp_min;
+			temp_min = min_prec;
+			whole    = frac;
 			++total_len; /* . */
 			for (;;) {
 				if (temp_min)
@@ -156,7 +157,7 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 				if (!whole)
 					break;
 			}
-			total_len += min_prec;
+			total_len += temp_min;
 		}
 		if (width <= total_len)
 			goto do_float_normal_width;
