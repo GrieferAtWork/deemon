@@ -49,6 +49,13 @@
 
 DECL_BEGIN
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
 #undef strcmp
@@ -764,6 +771,10 @@ struct attr_flag_entry {
 	char     fe_name[14];
 };
 
+#define CLASS_ATTRIBUTE_FLAGS_DB_KNOWN                     \
+	(CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL |   \
+	 CLASS_ATTRIBUTE_FREADONLY | CLASS_ATTRIBUTE_FMETHOD | \
+	 CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FCLASSMEM)
 PRIVATE struct attr_flag_entry const class_attribute_flags_db[] = {
 	{ CLASS_ATTRIBUTE_FPRIVATE, "private" },
 	{ CLASS_ATTRIBUTE_FFINAL, "final" },
@@ -1218,6 +1229,10 @@ struct class_flag_entry {
 	char fe_name[14];
 };
 
+#define CLASS_FLAGS_DB_KNOWN                       \
+	(TP_FFINAL | TP_FINTERRUPT | TP_FINHERITCTOR | \
+	 CLASS_TP_FSUPERKWDS | CLASS_TP_FAUTOINIT |    \
+	 TP_FTRUNCATE | TP_FMOVEANY)
 PRIVATE struct class_flag_entry const class_flags_db[] = {
 	{ TP_FFINAL,           "final" },
 	{ TP_FINTERRUPT,       "interrupt" },
@@ -1345,12 +1360,130 @@ PRIVATE struct type_member tpconst cd_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
-cd_str(ClassDescriptor *__restrict self) {
-	DREF DeeStringObject *result = self->cd_name;
-	if (result == NULL)
-		result = &str_lt_anonymous_gr;
-	return_reference_(result);
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cd_print(ClassDescriptor *__restrict self,
+         dformatprinter printer, void *arg) {
+	DeeStringObject *name = self->cd_name;
+	if (name == NULL)
+		name = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "<ClassDescriptor for %k>", name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) dssize_t DCALL
+xattr_table_printrepr(struct Dee_class_attribute *table, size_t mask,
+                      dformatprinter printer, void *arg) {
+	dssize_t temp, result = 0;
+	size_t i;
+	bool is_first = true;
+	for (i = 0; i <= mask; ++i) {
+		struct class_attribute *ent = &table[i];
+		if (!ent->ca_name)
+			continue;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg, "%r: ", ent->ca_name));
+		if (ent->ca_doc || ent->ca_flag) {
+			/* Use tuple representation */
+			DO(err, DeeFormat_Printf(printer, arg, "(%#" PRFx16 ", ", ent->ca_addr));
+			if (ent->ca_flag & ~CLASS_ATTRIBUTE_FLAGS_DB_KNOWN) {
+				DO(err, DeeFormat_Printf(printer, arg, "%#" PRFx16, ent->ca_flag));
+			} else {
+				size_t flag_i;
+				bool flag_first = true;
+				DO(err, DeeFormat_PRINT(printer, arg, "\""));
+				for (flag_i = 0; flag_i < COMPILER_LENOF(class_attribute_flags_db); ++flag_i) {
+					if ((ent->ca_flag & class_attribute_flags_db[flag_i].fe_flag) == 0)
+						continue;
+					if (!flag_first)
+						DO(err, DeeFormat_PRINT(printer, arg, ","));
+					DO(err, DeeFormat_PrintStr(printer, arg, class_attribute_flags_db[flag_i].fe_name));
+					flag_first = false;
+				}
+				DO(err, DeeFormat_PRINT(printer, arg, "\""));
+			}
+			if (ent->ca_doc)
+				DO(err, DeeFormat_Printf(printer, arg, ", %r", ent->ca_doc));
+			DO(err, DeeFormat_PRINT(printer, arg, ")"));
+		} else {
+			/* Use address representation */
+			DO(err, DeeFormat_Printf(printer, arg, "%#" PRFx16, ent->ca_addr));
+		}
+		is_first = false;
+	}
+	return result;
+err:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cd_printrepr(ClassDescriptor *__restrict self,
+             dformatprinter printer, void *arg) {
+	
+	dssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "rt.ClassDescriptor(");
+	if unlikely(result < 0)
+		goto done;
+	if (self->cd_name)
+		DO(err, DeeFormat_Printf(printer, arg, "name: %r, ", self->cd_name));
+	if (self->cd_doc)
+		DO(err, DeeFormat_Printf(printer, arg, "doc: %r, ", self->cd_doc));
+	if (self->cd_flags) {
+		if unlikely(self->cd_flags & ~CLASS_FLAGS_DB_KNOWN) {
+			/* Special case when unknown flags are present (shouldn't happen). */
+			DO(err, DeeFormat_Printf(printer, arg, "flags: %#" PRFx16 ", ", self->cd_flags));
+		} else {
+			size_t i;
+			bool is_first = true;
+			DO(err, DeeFormat_PRINT(printer, arg, "flags: \""));
+			for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
+				if ((class_flags_db[i].fe_flag & self->cd_flags) == 0)
+					continue;
+				if (!is_first)
+					DO(err, DeeFormat_PRINT(printer, arg, ","));
+				DO(err, DeeFormat_PrintStr(printer, arg, class_flags_db[i].fe_name));
+				is_first = false;
+			}
+			DO(err, DeeFormat_PRINT(printer, arg, "\", "));
+		}
+	}
+	if (self->cd_clsop_list != empty_class_operators) {
+		uint16_t i;
+		bool is_first = true;
+		DO(err, DeeFormat_PRINT(printer, arg, "operators: { "));
+		for (i = 0; i <= self->cd_clsop_mask; ++i) {
+			struct opinfo const *info;
+			struct class_operator op = self->cd_clsop_list[i];
+			if (op.co_name == (uint16_t)-1)
+				continue;
+			if (!is_first)
+				DO(err, DeeFormat_PRINT(printer, arg, ", "));
+			info = Dee_OperatorInfo(NULL, op.co_name);
+			if (info) {
+				DO(err, DeeFormat_Printf(printer, arg, "%q", info->oi_sname));
+			} else {
+				DO(err, DeeFormat_Printf(printer, arg, "%#" PRFx16, op.co_name));
+			}
+			DO(err, DeeFormat_Printf(printer, arg, ": %#" PRFx16, op.co_addr));
+			is_first = false;
+		}
+		DO(err, DeeFormat_PRINT(printer, arg, " }, "));
+	}
+	if (self->cd_iattr_mask > 0 || self->cd_iattr_list[0].ca_name != NULL) {
+		DO(err, DeeFormat_PRINT(printer, arg, "iattr: { "));
+		DO(err, xattr_table_printrepr(self->cd_iattr_list, self->cd_iattr_mask, printer, arg));
+		DO(err, DeeFormat_PRINT(printer, arg, " }, "));
+	}
+	if (self->cd_cattr_list != empty_class_attributes) {
+		DO(err, DeeFormat_PRINT(printer, arg, "cattr: { "));
+		DO(err, xattr_table_printrepr(self->cd_cattr_list, self->cd_cattr_mask, printer, arg));
+		DO(err, DeeFormat_PRINT(printer, arg, " }, "));
+	}
+	DO(err, DeeFormat_Printf(printer, arg, "isize: %#" PRFx16 ", csize: %#" PRFx16 ")",
+	                         self->cd_imemb_size, self->cd_cmemb_size));
+done:
+	return result;
+err:
+	return temp;
 }
 
 
@@ -1670,14 +1803,25 @@ cd_add_operator(ClassDescriptor *__restrict self,
 		goto err_invalid_name;
 	if (*operator_count >= (self->cd_clsop_mask / 3) * 2) {
 		mask = (self->cd_clsop_mask << 1) | 1;
-		if (mask <= 1)
+		if (mask < 3)
 			mask = 3;
 		map = (struct class_operator *)Dee_Mallocc(mask + 1, sizeof(struct class_operator));
 		if unlikely(!map)
 			goto err;
 		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
-			/* TODO? */
+			uint16_t dst_i, dst_perturb;
+			ent = &self->cd_clsop_list[i];
+			if (ent->co_name == (uint16_t)-1)
+				continue;
+			dst_i = dst_perturb = ent->co_name & mask;
+			for (;; DeeClassDescriptor_CLSOPNEXT(dst_i, dst_perturb)) {
+				struct class_operator *dst_ent = &map[dst_i & mask];
+				if (dst_ent->co_name != (uint16_t)-1)
+					continue;
+				*dst_ent = *ent;
+				break;
+			}
 		}
 		if (self->cd_clsop_list != empty_class_operators)
 			Dee_Free(self->cd_clsop_list);
@@ -1696,19 +1840,22 @@ cd_add_operator(ClassDescriptor *__restrict self,
 	}
 	ent->co_name = name;
 	ent->co_addr = index;
+	++*operator_count;
 	return 0;
-err_duplicate_name: {
-	struct opinfo const *op = Dee_OperatorInfo(NULL, name);
-	if (op) {
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Duplicate operator `%s'",
-		                op->oi_sname);
-	} else {
-		DeeError_Throwf(&DeeError_ValueError,
-		                "Duplicate operator `0x%.4I16x'",
-		                name);
+	{
+		struct opinfo const *op;
+err_duplicate_name:
+		op = Dee_OperatorInfo(NULL, name);
+		if (op) {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Duplicate operator `%s'",
+			                op->oi_sname);
+		} else {
+			DeeError_Throwf(&DeeError_ValueError,
+			                "Duplicate operator `0x%.4I16x'",
+			                name);
+		}
 	}
-}
 	goto err;
 err_invalid_name:
 	DeeError_Throwf(&DeeError_ValueError,
@@ -1957,11 +2104,11 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 	                         "The given @isize and @csize determine the allocated sizes of the instance class "
 	                         /**/ "member tables. - When omitted, these sizes are automatically calculated by "
 	                         /**/ "determining the greatest used table indices within @operators, @iattr and @cattr\n"
-	                         "Note that both @iattr and @cattr take mappings of attribute names to one either "
+	                         "Note that both @iattr and @cattr take mappings of attribute names to either "
 	                         /**/ "the associated table_index, or a tuple of (table_index, flags[, doc]), where flags is "
 	                         /**/ "a comma-separated string of flags as described in ?Aflags?#Attribute\n"
 	                         "Hint: Once created, a _ClassDescriptor object can be used "
-	                         /**/ "with :rt:makeclass to create custom class types at runtime"),
+	                         /**/ "with ?Ert:makeclass to create custom class types at runtime"),
 	/* .tp_flags    = */ TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONLOOPING,
@@ -1983,9 +2130,11 @@ PUBLIC DeeTypeObject DeeClassDescriptor_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&cd_str,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cd_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cd_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cd_visit,
