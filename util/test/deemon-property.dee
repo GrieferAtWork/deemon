@@ -1,0 +1,116 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import rt;
+
+function getter(args..., **kwds) {
+	return (args, kwds);
+}
+global deleteCalled;
+function delete(args..., **kwds) {
+	deleteCalled = (args, kwds);
+}
+global setterCalled;
+function setter(args..., **kwds) {
+	setterCalled = (args, kwds);
+}
+
+
+
+function testProperty(p: Property, canget: bool, candel: bool, canset: bool) {
+	assert p.operator hash() == p.operator hash();
+	assert p == p;
+	assert p == copy p;
+	assert p == deepcopy p;
+	assert p.canget == canget;
+	assert p.candel == candel;
+	assert p.canset == canset;
+	assert p.__type__ is none;
+	if (canget) {
+		assert p(10) == ((10,), {});
+		assert p(x: 20) == ((), {"x":20});
+		assert p(10, x: 20) == ((10,), {"x":20});
+		assert p.getter(10, x: 20) == ((10,), {"x":20});
+		assert p.getter == getter;
+	} else {
+		assert p.getter !is bound;
+	}
+	if (candel) {
+		deleteCalled = none;
+		p.delete(11, x: 21);
+		assert deleteCalled == ((11,), {"x":21});
+		assert p.delete == delete;
+	} else {
+		assert p.delete !is bound;
+	}
+	if (canset) {
+		setterCalled = none;
+		p.setter(12, x: 22);
+		assert setterCalled == ((12,), {"x":22});
+		assert p.setter == setter;
+	} else {
+		assert p.setter !is bound;
+	}
+	assert canget == repr(p).recontains(r"\bgetter\b"), repr p;
+	assert candel == repr(p).recontains(r"\bdelete\b"), repr p;
+	assert canset == repr(p).recontains(r"\bsetter\b"), repr p;
+	assert canget == (getter in gc.referred(p));
+	assert candel == (delete in gc.referred(p));
+	assert canset == (setter in gc.referred(p));
+}
+
+testProperty(Property(), false, false, false);
+testProperty(Property(getter: none, delete: none, setter: none), false, false, false);
+testProperty(Property(getter: getter), true, false, false);
+testProperty(Property(delete: delete), false, true, false);
+testProperty(Property(setter: setter), false, false, true);
+testProperty(Property(getter: getter, delete: delete), true, true, false);
+testProperty(Property(getter: getter, setter: setter), true, false, true);
+testProperty(Property(delete: delete, setter: setter), false, true, true);
+testProperty(Property(getter: getter, delete: delete, setter: setter), true, true, true);
+
+class MyClass {
+	this = default;
+	public member foo;
+	public property bar = {
+		get() {
+			return foo + "x";
+		}
+		del() {
+			del foo;
+		}
+		set(v) {
+			foo = v + "y";
+		}
+	}
+}
+
+assert MyClass.foo is rt.InstanceMember;
+assert MyClass.bar is Property;
+local i = MyClass();
+assert i.foo !is bound;
+assert i.bar !is bound;
+MyClass.bar.setter(i, "value");
+assert MyClass.bar(i) == "valueyx";
+assert MyClass.foo(i) == "valuey";
+assert i.bar == "valueyx";
+assert i.foo == "valuey";

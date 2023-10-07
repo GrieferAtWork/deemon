@@ -151,6 +151,7 @@ property_eq(Property *self, Property *other) {
 	int temp;
 	if (DeeObject_AssertType(other, &DeeProperty_Type))
 		goto err;
+
 	/* Make sure that the same callbacks are implemented. */
 	if ((self->p_get != NULL) != (other->p_get != NULL))
 		goto nope;
@@ -158,6 +159,7 @@ property_eq(Property *self, Property *other) {
 		goto nope;
 	if ((self->p_set != NULL) != (other->p_set != NULL))
 		goto nope;
+
 	/* Compare individual callbacks. */
 	if (self->p_get) {
 		temp = DeeObject_CompareEq(self->p_get, other->p_get);
@@ -226,7 +228,7 @@ property_canset(Property *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 property_info(Property *__restrict self,
               struct function_info *__restrict info) {
-	int result = 1;
+	int result;
 	if (self->p_get && DeeFunction_Check(self->p_get)) {
 		result = DeeFunction_GetInfo(self->p_get, info);
 		if (result <= 0)
@@ -242,6 +244,14 @@ property_info(Property *__restrict self,
 		if (result <= 0)
 			goto done;
 	}
+
+	/* No information available :( */
+	info->fi_type   = NULL;
+	info->fi_name   = NULL;
+	info->fi_doc    = NULL;
+	info->fi_opname = (uint16_t)-1;
+	info->fi_getset = (uint16_t)-1;
+	result = 1;
 done:
 	return result;
 }
@@ -358,7 +368,7 @@ PRIVATE struct type_getset tpconst property_getsets[] = {
 	            "->?X2?Dstring?N\n"
 	            "Returns the documentation string of @this Property, or ?N if unknown"),
 	TYPE_GETTER(STR___type__, &property_get_type,
-	            "->?X2?Dstring?N\n"
+	            "->?X2?DType?N\n"
 	            "Returns the type implementing @this Property, or ?N if unknown"),
 	TYPE_GETTER(STR___module__, &property_get_module,
 	            "->?X2?DModule?N\n"
@@ -370,7 +380,15 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_call(Property *self, size_t argc, DeeObject *const *argv) {
 	if likely(self->p_get)
 		return DeeObject_Call(self->p_get, argc, argv);
-	err_unbound_attribute_string(&DeeProperty_Type, STR_get);
+	err_unbound_attribute_string(&DeeProperty_Type, "getter");
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+property_call_kw(Property *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	if likely(self->p_get)
+		return DeeObject_CallKw(self->p_get, argc, argv, kw);
+	err_unbound_attribute_string(&DeeProperty_Type, "getter");
 	return NULL;
 }
 
@@ -386,7 +404,9 @@ property_printrepr(Property *__restrict self,
 	error = property_info(self, &info);
 	if unlikely(error < 0)
 		goto err_m1;
-	if (info.fi_name || info.fi_type) {
+
+	/* Special handling for when this is an unbound class property. */
+	if (info.fi_type) {
 		DeeModuleObject *mod = NULL;
 		if (self->p_get && DeeFunction_Check(self->p_get))
 			mod = ((DeeFunctionObject *)self->p_get)->fo_code->co_module;
@@ -397,15 +417,12 @@ property_printrepr(Property *__restrict self,
 		result = mod ? DeeFormat_PrintObjectRepr(printer, arg, (DeeObject *)mod)
 		             : DeeFormat_PRINT(printer, arg, "<unknown module>");
 		if likely(result >= 0) {
-			if (info.fi_type && info.fi_name) {
+			if (info.fi_name) {
 				temp = DeeFormat_Printf(printer, arg, ".%k.%k",
 				                        info.fi_type, info.fi_name);
-			} else if (info.fi_type) {
+			} else {
 				temp = DeeFormat_Printf(printer, arg, ".%k.<unknown>",
 				                        info.fi_type);
-			} else {
-				temp = DeeFormat_Printf(printer, arg, ".%k",
-				                        info.fi_name);
 			}
 			if likely(temp >= 0) {
 				result += temp;
@@ -444,8 +461,8 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	/* .tp_doc      = */ DOC("(getter:?DCallable=!N,delete:?DCallable=!N,setter:?DCallable=!N)\n"
 	                         "\n"
 
-	                         "call(args!)->\n"
-	                         "Same as ${this.get(args...)}"),
+	                         "call(args!,kwds!!)->\n"
+	                         "Same as ${this.get(args..., **kwds)}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -487,7 +504,8 @@ PUBLIC DeeTypeObject DeeProperty_Type = {
 	/* .tp_members       = */ property_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&property_call_kw
 };
 
 DECL_END
