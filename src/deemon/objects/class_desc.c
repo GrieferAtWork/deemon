@@ -695,7 +695,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 ca_printrepr(ClassAttribute *__restrict self,
              dformatprinter printer, void *arg) {
 	ClassDescriptor *desc = self->ca_desc;
-	DeeStringObject *cnam = self->ca_desc->cd_name;
+	DeeStringObject *cnam = desc->cd_name;
 	char field_id = 'c';
 	if (self->ca_attr >= desc->cd_iattr_list &&
 	    self->ca_attr <= desc->cd_iattr_list + desc->cd_iattr_mask)
@@ -998,6 +998,32 @@ INTERN DeeTypeObject ClassAttributeTableIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cat_print(ClassAttributeTable *__restrict self,
+          dformatprinter printer, void *arg) {
+	ClassDescriptor *desc = self->ca_desc;
+	DeeStringObject *name = desc->cd_name;
+	if (name == NULL)
+		name = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "<%s attribute table for %k>",
+	                        self->ca_start == desc->cd_cattr_list ? "class" : "instance",
+	                        name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cat_printrepr(ClassAttributeTable *__restrict self,
+              dformatprinter printer, void *arg) {
+	ClassDescriptor *desc = self->ca_desc;
+	DeeStringObject *cnam = desc->cd_name;
+	char field_id = 'c';
+	if (self->ca_start == desc->cd_iattr_list)
+		field_id = 'i';
+	if (cnam == NULL)
+		cnam = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "%k.__class__.%cattr", cnam, field_id);
+}
+
 INTERN DeeTypeObject ClassAttributeTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassAttributeTable",
@@ -1021,9 +1047,11 @@ INTERN DeeTypeObject ClassAttributeTable_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cat_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cat_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cat_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cat_visit,
@@ -1420,7 +1448,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 cd_printrepr(ClassDescriptor *__restrict self,
              dformatprinter printer, void *arg) {
-	
 	dssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "rt.ClassDescriptor(");
 	if unlikely(result < 0)
