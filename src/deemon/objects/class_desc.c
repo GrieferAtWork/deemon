@@ -2020,12 +2020,20 @@ STATIC_ASSERT(offsetof(ObjectTable, ot_owner) ==
               offsetof(ClassAttributeTable, ca_desc));
 #define ot_fini cot_fini
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ot_str(ObjectTable *__restrict self) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ot_print(ObjectTable *__restrict self, dformatprinter printer, void *arg) {
 	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
 	if (DeeType_IsTypeType(tp))
-		return DeeString_Newf("<class object table for %k>", tp);
-	return DeeString_Newf("<object table for instance of %k>", tp);
+		return DeeFormat_Printf(printer, arg, "<class object table for %k>", tp);
+	return DeeFormat_Printf(printer, arg, "<object table for instance of %k>", tp);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+ot_printrepr(ObjectTable *__restrict self, dformatprinter printer, void *arg) {
+	DeeTypeObject *tp = DeeObject_Class(self->ot_owner);
+	if (DeeType_IsTypeType(tp))
+		return DeeFormat_Printf(printer, arg, "%r.__ctable__", tp);
+	return DeeFormat_Printf(printer, arg, "%r.__itable__", self->ot_owner);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2352,9 +2360,11 @@ INTERN DeeTypeObject ObjectTable_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&ot_str,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&ot_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&ot_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ot_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&ot_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ot_visit,
