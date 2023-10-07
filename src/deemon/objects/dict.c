@@ -686,7 +686,6 @@ DeeDict_GetItemStringDef(DeeObject *self,
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
-	ASSERT_OBJECT(def);
 	DeeDict_LockRead(me);
 	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
@@ -719,7 +718,6 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
-	ASSERT_OBJECT(def);
 	DeeDict_LockRead(me);
 	perturb = i = DeeDict_HashSt(me, hash);
 	for (;; DeeDict_HashNx(i, perturb)) {
