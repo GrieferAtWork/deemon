@@ -28,26 +28,85 @@ function t(x, w) {
 	assert x.rfind(w("")) == -1;
 	assert (try x.index(w("")) catch (...) marker) === marker;
 	assert (try x.rindex(w("")) catch (...) marker) === marker;
-	assert x.find(w("a")) == 0;
-	assert x.find(w("b")) == 1;
-	assert x.find(w("c")) == 2;
-	assert x.find(w("d")) == 3;
-	assert x.find(w("ab")) == 0;
-	assert x.find(w("bc")) == 1;
-	assert x.find(w("cd")) == 2;
-	assert x.find(w("abc")) == 0;
-	assert x.find(w("bcd")) == 1;
-	assert x.find(w("abcd")) == 0;
-	assert x.rfind(w("d")) == 3;
-	assert x.rfind(w("c")) == 2;
-	assert x.rfind(w("b")) == 1;
-	assert x.rfind(w("a")) == 0;
-	assert x.rfind(w("ab")) == 0;
-	assert x.rfind(w("bc")) == 1;
-	assert x.rfind(w("cd")) == 2;
-	assert x.rfind(w("abc")) == 0;
-	assert x.rfind(w("bcd")) == 1;
-	assert x.rfind(w("abcd")) == 0;
+	for (local op: { "find", "index" }) {
+		local rop = f"r{op}";
+		assert x.operator . (op)(w("a")) == 0;
+		assert x.operator . (op)(w("b")) == 1;
+		assert x.operator . (op)(w("c")) == 2;
+		assert x.operator . (op)(w("d")) == 3;
+		assert x.operator . (op)(w("ab")) == 0;
+		assert x.operator . (op)(w("bc")) == 1;
+		assert x.operator . (op)(w("cd")) == 2;
+		assert x.operator . (op)(w("abc")) == 0;
+		assert x.operator . (op)(w("bcd")) == 1;
+		assert x.operator . (op)(w("abcd")) == 0;
+		assert x.operator . (rop)(w("d")) == 3;
+		assert x.operator . (rop)(w("c")) == 2;
+		assert x.operator . (rop)(w("b")) == 1;
+		assert x.operator . (rop)(w("a")) == 0;
+		assert x.operator . (rop)(w("ab")) == 0;
+		assert x.operator . (rop)(w("bc")) == 1;
+		assert x.operator . (rop)(w("cd")) == 2;
+		assert x.operator . (rop)(w("abc")) == 0;
+		assert x.operator . (rop)(w("bcd")) == 1;
+		assert x.operator . (rop)(w("abcd")) == 0;
+	}
+	for (local xOP, wOP: {
+		(x -> x, w),
+		(x -> x.lower(), w),
+		(x -> x.upper(), w),
+		(x -> x, x -> w(x).lower()),
+		(x -> x.lower(), x -> w(x).lower()),
+		(x -> x.upper(), x -> w(x).lower()),
+		(x -> x, x -> w(x).upper()),
+		(x -> x.lower(), x -> w(x).upper()),
+		(x -> x.upper(), x -> w(x).upper()),
+	}) {
+		for (local baseOp: { "find", "index" }) {
+			local op = f"case{baseOp}";
+			local rop = f"caser{baseOp}";
+			assert xOP(x).operator . (op)(wOP("a")) == (0, 1);
+			assert xOP(x).operator . (op)(wOP("b")) == (1, 2);
+			assert xOP(x).operator . (op)(wOP("c")) == (2, 3);
+			assert xOP(x).operator . (op)(wOP("d")) == (3, 4);
+			assert xOP(x).operator . (op)(wOP("ab")) == (0, 2);
+			assert xOP(x).operator . (op)(wOP("bc")) == (1, 3);
+			assert xOP(x).operator . (op)(wOP("cd")) == (2, 4);
+			assert xOP(x).operator . (op)(wOP("abc")) == (0, 3);
+			assert xOP(x).operator . (op)(wOP("bcd")) == (1, 4);
+			assert xOP(x).operator . (op)(wOP("abcd")) == (0, 4);
+			assert xOP(x).operator . (rop)(wOP("d")) == (3, 4);
+			assert xOP(x).operator . (rop)(wOP("c")) == (2, 3);
+			assert xOP(x).operator . (rop)(wOP("b")) == (1, 2);
+			assert xOP(x).operator . (rop)(wOP("a")) == (0, 1);
+			assert xOP(x).operator . (rop)(wOP("ab")) == (0, 2);
+			assert xOP(x).operator . (rop)(wOP("bc")) == (1, 3);
+			assert xOP(x).operator . (rop)(wOP("cd")) == (2, 4);
+			assert xOP(x).operator . (rop)(wOP("abc")) == (0, 3);
+			assert xOP(x).operator . (rop)(wOP("bcd")) == (1, 4);
+			assert xOP(x).operator . (rop)(wOP("abcd")) == (0, 4);
+		}
+	}
+	function assertCount(needle, n) {
+		assert x.count(needle) == n;
+		assert x.contains(needle) == (n != 0);
+		for (local xv: { x, x.lower(), x.upper() }) {
+			assert xv.casecount(needle) == n;
+			assert xv.casecount(needle.lower()) == n;
+			assert xv.casecount(needle.upper()) == n;
+			assert xv.casecontains(needle) == (n != 0);
+			assert xv.casecontains(needle.lower()) == (n != 0);
+			assert xv.casecontains(needle.upper()) == (n != 0);
+		}
+	}
+	assertCount("", 0);
+	assertCount("a", 1);
+	assertCount("ab", 1);
+	assertCount("abcd", 1);
+	assertCount("cd", 1);
+	assertCount("d", 1);
+	assertCount("bc", 1);
+	assertCount("cb", 0);
 	assert x.partition(w(""))[0] === x;
 	assert x.partition(w(""))[1] == "";
 	assert x.partition(w(""))[2] == "";

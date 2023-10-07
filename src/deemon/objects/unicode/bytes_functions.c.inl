@@ -1000,7 +1000,7 @@ bytes_count(Bytes *self, size_t argc,
 	if (end > size)
 		end = size;
 	result = 0;
-	if (start < end) {
+	if (start < end && needle.n_size) {
 		end -= start;
 		iter += start;
 		while (end >= needle.n_size) {
@@ -1035,7 +1035,7 @@ bytes_casecount(Bytes *self, size_t argc,
 	if (end > size)
 		end = size;
 	result = 0;
-	if (start < end) {
+	if (start < end && needle.n_size) {
 		end -= start;
 		iter += start;
 		while (end >= needle.n_size) {
