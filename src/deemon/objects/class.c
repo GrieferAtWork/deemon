@@ -248,7 +248,7 @@ again:
 	}
 }
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 	struct class_desc *my_class;
 	DREF DeeObject *buffer[64];
@@ -317,7 +317,7 @@ again:
 }
 
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 3)) void DCALL
 calls_desc_cache_operator(struct class_desc *__restrict self,
                           uint16_t name, DeeObject *__restrict func) {
 	struct class_optable *table;
@@ -579,7 +579,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 }
 
 
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 instance_clear_members(struct instance_desc *__restrict self, uint16_t size) {
 	DREF DeeObject *buffer[64];
 	size_t buflen;
@@ -976,6 +976,7 @@ err_members:
 	instance_clear_members(instance, size);
 	return -1;
 }
+
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
@@ -998,6 +999,7 @@ instance_builtin_nobase_tcopy(DeeTypeObject *tp_self,
 	return 0;
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_tdeepload(DeeTypeObject *tp_self,
                            DeeObject *__restrict self) {
@@ -1022,6 +1024,7 @@ instance_builtin_copy(DeeObject *__restrict self,
                       DeeObject *__restrict other) {
 	return instance_builtin_tcopy(Dee_TYPE(self), self, other);
 }
+
 #ifdef CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_builtin_nobase_copy(DeeObject *__restrict self,

@@ -138,8 +138,8 @@ DeeType_Implements(DeeTypeObject const *test_type,
 
 
 /* Inheriting the weakref support address works, however
- * it slows down object destruction more than it speeds up
- * weakref usage, so we don't actually use it!. */
+ * it slows down object destruction more than it speeds
+ * up weakref usage, so we don't actually use it!. */
 #undef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
 #if 0
 #define CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
@@ -168,7 +168,7 @@ type_inherit_weakrefs(DeeTypeObject *__restrict self) {
 #endif /* CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS */
 
 /* ==== Core Object API ==== */
-LOCAL struct weakref_list *DCALL
+LOCAL WUNUSED NONNULL((1)) struct weakref_list *DCALL
 weakrefs_get(DeeObject *__restrict ob) {
 	DeeTypeObject *tp = Dee_TYPE(ob);
 #ifdef CONFIG_INHERIT_WEAKREF_SUPPORT_ADDRESS
@@ -2188,7 +2188,7 @@ err:
 	return NULL;
 }
 
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 2, 4)) dssize_t DCALL
 object_format_generic(DeeObject *__restrict self,
                       dformatprinter printer, void *arg,
                       /*utf-8*/ char const *__restrict format_str,
@@ -2343,7 +2343,7 @@ err:
 }
 
 #define DEFINE_DEPRECATED_INPLACE_BINARY(name, func)              \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                         \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
 	object_##name(DeeObject *self, size_t argc,                   \
 	              DeeObject *const *argv) {                       \
 		DREF DeeObject *selfref;                                  \
@@ -2482,7 +2482,8 @@ PRIVATE struct type_member tpconst object_class_members[] = {
 };
 
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_get_itable(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
@@ -2490,8 +2491,8 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	TYPE_GETTER(STR_class, &object_class_get,
 	            "->?DType\n"
 	            "Returns the class of @this Type, which is usually identical to "
-	            /**/ "?#type, however in the case of a super-proxy, the viewed Type is "
-	            /**/ "returned, rather than the actual Type"),
+	            /**/ "?#type, however in the case of a super-proxy, the viewed "
+	            /**/ "Type is returned, rather than the actual Type."),
 	TYPE_GETTER("super", &DeeSuper_Of,
 	            "->?DSuper\n"
 	            "Returns a view for the super-instance of @this object"),
@@ -2500,8 +2501,8 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            "Returns an indexable sequence describing the instance object "
 	            /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
 	            "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	            /**/ "is ?f), an empty sequence is returned\n"
-	            "The class-attribute table can be accessed through ?A__ctable__?DType"),
+	            /**/ "is ?f), an empty sequence is returned.\n"
+	            "The class-attribute table can be accessed through ?A__ctable__?DType."),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	TYPE_GETTER("id", &object_id_get,
@@ -2511,7 +2512,7 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	/* Utility function: Return the size of a given object (in bytes) */
 	TYPE_GETTER("__sizeof__", &object_sizeof,
 	            "->?Dint\n"
-	            "Return the size of @this object in bytes"),
+	            "Return the size of @this object in bytes."),
 	TYPE_GETSET_END
 };
 
@@ -2676,7 +2677,7 @@ fallback:
 INTDEF NONNULL((1)) void DCALL class_fini(DeeTypeObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL class_visit(DeeTypeObject *__restrict self, dvisit_t proc, void *arg);
 INTDEF NONNULL((1)) void DCALL class_clear(DeeTypeObject *__restrict self);
-INTDEF void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
+INTDEF NONNULL((1)) void DCALL class_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority);
 
 PRIVATE NONNULL((1)) void DCALL
 type_fini(DeeTypeObject *__restrict self) {
@@ -2731,7 +2732,7 @@ type_clear(DeeTypeObject *__restrict self) {
 		class_clear(self);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 type_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
 	if (DeeType_IsClass(self))
 		class_pclear(self, gc_priority);
@@ -2774,14 +2775,14 @@ err:
 }
 
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_init_var_type(DeeTypeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Cannot instantiate variable-length type %k",
 	                       self);
 }
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_missing_mandatory_init(DeeTypeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Missing initializer for mandatory base-type %k",
@@ -2789,7 +2790,7 @@ err_missing_mandatory_init(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE char const str_shared_ctor_failed[] = "Constructor of shared object failed\n";
-INTDEF void DCALL
+INTDEF NONNULL((1)) void DCALL
 instance_clear_members(struct instance_desc *__restrict self, uint16_t size);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2968,7 +2969,7 @@ done_temp:
 	return temp;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 unpack_init_info(DeeObject *__restrict info,
                  DREF DeeObject **__restrict p_init_fields,
                  DREF DeeObject **__restrict p_init_args,
@@ -3134,7 +3135,7 @@ err:
 	return NULL;
 }
 
-INTDEF int DCALL
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
                              DeeObject *__restrict self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw);
