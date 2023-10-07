@@ -402,6 +402,24 @@ PRIVATE struct type_member tpconst cot_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cot_print(ClassOperatorTable *__restrict self,
+          dformatprinter printer, void *arg) {
+	DeeStringObject *name = self->co_desc->cd_name;
+	if (name == NULL)
+		name = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "<operator table for %k>", name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+cot_printrepr(ClassOperatorTable *__restrict self,
+              dformatprinter printer, void *arg) {
+	DeeStringObject *name = self->co_desc->cd_name;
+	if (name == NULL)
+		name = &str_lt_anonymous_gr;
+	return DeeFormat_Printf(printer, arg, "%k.__class__.operators", name);
+}
+
 INTERN DeeTypeObject ClassOperatorTable_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassOperatorTable",
@@ -425,9 +443,11 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&cot_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&cot_bool,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cot_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cot_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cot_visit,
