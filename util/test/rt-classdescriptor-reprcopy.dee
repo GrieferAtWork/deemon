@@ -1,0 +1,50 @@
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import doc;
+import rt;
+
+/* Weird way of copying the descriptors of user-defined classes (but it works).
+ * NOTE: The normal copy-constructor re-returns the same object since class
+ *       descriptors are immutable, so JIT-parsing the repr is a hacky way of
+ *       getting a *true* copy. */
+local c1 = doc.Doc.__class__;
+local c2 = exec(repr c1, globals: { "rt" : rt });
+local c3 = exec(repr c2, globals: { "rt" : rt });
+local c4 = exec(repr c3, globals: { "rt" : rt });
+
+function assertClassDescriptorEqual(a: rt.ClassDescriptor, b: rt.ClassDescriptor) {
+	/* FIXME: The regular compare operator has the same problem where is returns
+	 *        false when the orders of elements in the internal maps differ. */
+#if 1
+	/* Only compare the string reprs, since order of map arguments is arbitrary. */
+	local ra = repr a;
+	local rb = repr b;
+	assert (#ra) == (#rb), f"{ra} != {rb}";
+#else
+	assert a == b;
+#endif
+}
+
+assertClassDescriptorEqual(c1, c2);
+assertClassDescriptorEqual(c1, c3);
+assertClassDescriptorEqual(c1, c4);
+

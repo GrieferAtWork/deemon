@@ -1130,6 +1130,8 @@ cd_eq(ClassDescriptor *self,
 		goto nope;
 	if (self->cd_imemb_size != other->cd_imemb_size)
 		goto nope;
+	/* FIXME: hash vectors cannot be binary-compared. That leads to false negatives.
+	 *        -> s.a. `/util/test/rt-classdescriptor-reprcopy.dee' */
 	if (self->cd_clsop_mask != other->cd_clsop_mask)
 		goto nope;
 	if (self->cd_cattr_mask != other->cd_cattr_mask)
