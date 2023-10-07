@@ -3717,6 +3717,8 @@ type_is_ctypes_class(DeeTypeObject *__restrict self,
 nope:
 	return_false;
 err:
+	if (DeeError_Catch(&DeeError_AttributeError))
+		goto nope;
 	return NULL;
 }
 
@@ -3798,22 +3800,22 @@ err:
 PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD("baseof", &type_baseof,
 	              "(other:?.)->?Dbool\n"
-	              "Returns ?t if @this ?. is equal to, or a base of @other\n"
-	              "If @other isn't a ?., ?f is returned\n"
+	              "Returns ?t if @this ?. is equal to, or a base of @other.\n"
+	              "If @other isn't a ?., ?f is returned.\n"
 	              "Using baseof, the behavior of ${x is y} can be approximated as:\n"
 	              "${"
-	              /**/ "print y.baseof(type(x)); // print x is y;"
+	              /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
 	              "}"),
 	TYPE_KWMETHOD("derivedfrom", &type_derivedfrom,
 	              "(other:?.)->?Dbool\n"
-	              "Returns ?t if @this ?. is equal to, or has been derived from @other\n"
-	              "If @other isn't a ?., ?f is returned"),
+	              "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
+	              "If @other isn't a ?., ?f is returned."),
 	TYPE_KWMETHOD("implements", &type_implements,
 	              "(other:?.)->?Dbool\n"
 	              "Check if @other appears in ?#__mro__"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
 	              "(fields!!)->\n"
-	              "Allocate a new instance of @this ?. and initialize members in accordance to @fields\n"
+	              "Allocate a new instance of @this ?. and initialize members in accordance to @fields.\n"
 	              "${"
 	              /**/ "class MyClass {\n"
 	              /**/ "	member foo;\n"
@@ -3838,14 +3840,14 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /*            */ "only affecting builtin types such as ?DInstanceMethod or ?DProperty}"
 	              "A extended way of constructing and initializing a ?., that involves providing explicit "
 	              /**/ "member initializers on a per-Type bases, as well as argument tuples and optional keyword "
-	              /**/ "mappings to-be used for construction of one of the type's sub-classes (allowing to provide "
+	              /**/ "mappings to-be used for construction of one of the type's super-classes (allowing to provide "
 	              /**/ "for explicit argument lists when one of the type's bases has a mandatory constructor)\n"
 	              "${"
 	              /**/ "import List from deemon;\n"
 	              /**/ "class MyList: List {\n"
 	              /**/ "	this = del; /* Delete the regular constructor. */\n"
 	              /**/ "	member mylist_member;\n"
-	              /**/ "	appendmember() {\n"
+	              /**/ "	function appendmember() {\n"
 	              /**/ "		this.append(mylist_member);\n"
 	              /**/ "	}\n"
 	              /**/ "}\n"
@@ -3860,9 +3862,9 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "}"),
 	TYPE_KWMETHOD("hasattribute", &type_hasattribute,
 	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if this type, or one of its sub-classes defines an "
+	              "Returns ?t if this type, or one of its super-classes defines an "
 	              /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
-	              /**/ "Otherwise, return ?f\n"
+	              /**/ "Otherwise, return ?f:\n"
 	              "${"
 	              /**/ "function hasattribute(name: string): bool {\n"
 	              /**/ "	import attribute from deemon;\n"
@@ -3870,14 +3872,15 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "}"
 	              "}\n"
 	              "Note that this function only searches instance-attributes, meaning that class/static "
-	              /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something like ?Afind?Dstring is\n"
+	              /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something \n"
+	              /**/ "like ?Afind?Dstring is.\n"
 	              "Note that this function is quite similar to #hasinstanceattr, however unlike "
 	              /**/ "that function, this function will stop searching the base-classes of @this ?. "
 	              /**/ "when one of that types implements one of the attribute operators."),
 	TYPE_KWMETHOD("hasprivateattribute", &type_hasprivateattribute,
 	              "(name:?Dstring)->?Dbool\n"
-	              "Similar to #hasattribute, but only looks at attributes declared by "
-	              /**/ "@this ?., excluding any defined by a sub-class.\n"
+	              "Similar to #hasattribute, but only looks at attributes declared "
+	              /**/ "by @this ?., excluding any defined by a super-class.\n"
 	              "${"
 	              /**/ "function hasprivateattribute(name: string): bool {\n"
 	              /**/ "	import attribute from deemon;\n"
@@ -3965,38 +3968,38 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              "(name:?Dstring)->?Dbool\n"
 	              "Returns ?t if instances of @this ?. implement an operator @name, "
 	              /**/ "or ?f if not, or if @name is not recognized as an operator provided "
-	              /**/ "available for the Type-Type that is ${type this}\n"
+	              /**/ "available for the Type-Type that is ${type this}.\n"
 	              "Note that this function intentionally don't look at operators of "
 	              /**/ "base-classes (which is instead done by #hasoperator), meaning that "
 	              /**/ "inherited operators are not included, with the exception of explicitly "
-	              /**/ "inherited constructors\n"
-	              "For a list of operator names, see #hasoperator"),
+	              /**/ "inherited constructors.\n"
+	              "For a list of operator names, see #hasoperator."),
 	TYPE_KWMETHOD(STR_getinstanceattr, &type_getinstanceattr,
 	              "(name:?Dstring)->\n"
 	              "Lookup an attribute @name that is implemented by instances of @this ?.\n"
 	              "Normally, such attributes can also be accessed using regular attribute lookup, "
 	              /**/ "however in ambiguous cases where both the type, as well as instances implement "
 	              /**/ "an attribute of the same name (s.a. ?AKeys?DDict vs. ?Akeys?DDict), using regular "
-	              /**/ "attribute lookup on the type (as in ${posix.stat.isdir}) will always return the type-attribute, "
-	              /**/ "rather than a wrapper around the instance attribute.\n"
+	              /**/ "attribute lookup on the type (as in ${posix.stat.isdir}) will always return the "
+	              /**/ "type-attribute, rather than a wrapper around the instance attribute.\n"
 	              "In such cases, this function may be used to explicitly lookup the instance variant:\n"
 	              "${"
 	              /**/ "import stat from posix;\n"
-	              /**/ "local statIsRegProperty = stat.getinstanceattr(\"isdir\");\n"
+	              /**/ "local statIsDirProperty = stat.getinstanceattr(\"isdir\");\n"
 	              /**/ "local myStatInstance = stat(\".\");\n"
 	              /**/ "// Same as `myStatInstance.isdir' -- true\n"
-	              /**/ "print repr statIsRegProperty(myStatInstance);"
+	              /**/ "print repr statIsDirProperty(myStatInstance);"
 	              "}\n"
 	              "Note that one minor exception exists to the default lookup rule, and it relates to how "
 	              /**/ "attributes of ?. itself are queried (such as in the expression ${(Type from deemon).baseof}).\n"
 	              "In this case, access is always made as an instance-bound, meaning that for this purpose, "
 	              /**/ "?. is considered an instance of ?. (typetype), rather than the type of ?. (typetype) "
 	              /**/ "(I know that sounds complicated, but without this rule, ${(Type from deemon).baseof} would "
-	              /**/ "return a class method object taking 2 arguments, rather than the intended single argument)\n"
+	              /**/ "return a class method object taking 2 arguments, rather than the intended single argument).\n"
 	              "Also note that the `*instanceattr' functions will not check for types that have overwritten "
 	              /**/ "one of the attribute-operators, but will continue search for matching attribute names, even "
-	              /**/ "if those attributes would normally have been overshadowed by attribute callbacks"),
-	TYPE_KWMETHOD(STR_callinstanceattr, &type_callinstanceattr, "(name:?Dstring,args!)->\ns.a. ?#getinstanceattr"),
+	              /**/ "if those attributes would normally have been overshadowed by attribute callbacks."),
+	TYPE_KWMETHOD(STR_callinstanceattr, &type_callinstanceattr, "(name:?Dstring,args!,kwds!!)->\ns.a. ?#getinstanceattr"),
 	TYPE_KWMETHOD(STR_hasinstanceattr, &type_hasinstanceattr, "(name:?Dstring)->?Dbool\ns.a. ?#getinstanceattr"),
 	TYPE_KWMETHOD(STR_boundinstanceattr, &type_boundinstanceattr, "(name:?Dstring,allow_missing=!t)->?Dbool\ns.a. ?#getinstanceattr"),
 	TYPE_KWMETHOD(STR_delinstanceattr, &type_delinstanceattr, "(name:?Dstring)\ns.a. ?#getinstanceattr"),
@@ -4441,8 +4444,8 @@ PRIVATE struct type_gc tpconst type_gc_data = {
 PUBLIC DeeTypeObject DeeType_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_Type),
-	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything "
-	                         /**/ "that is also a Type, such as ?Dint or ?DList, and even itself"),
+	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything that "
+	                         /**/ "is also a Type, such as ?Dint or ?DList, or even itself"),
 	/* .tp_flags    = */ TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(DeeTypeObject),
 	/* .tp_features = */ TF_NONE,

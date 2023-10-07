@@ -19,20 +19,23 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-local data = "000100  \t 20\n10";
-local a, b, c = data.scanf("%d %d %d")...;
 
-assert a == 100;
-assert b == 20;
-assert c == 10;
+function doScanfTest1(data) {
+	local a, b, c = data.scanf("%d %d %d")...;
+	assert a == 100;
+	assert b == 20;
+	assert c == 10;
+}
+doScanfTest1("000100  \t 20\n10");
+doScanfTest1("000100  \t 20\n10".bytes());
 
 // A more advanced example, using character ranges
 // NOTE: '%[^0-9]' means: scan a string until a digit is encountered
-local data = "ab-cd42";
-local a, b = data.scanf("%[^0-9]%d")...;
+function doScanfTest2(data) {
+	local a, b = data.scanf("%[^0-9]%d")...;
+	assert a == "ab-cd";
+	assert b == 42;
+}
 
-assert a == "ab-cd";
-assert b == 42;
-
-
-
+doScanfTest2("ab-cd42");
+doScanfTest2("ab-cd42".bytes());

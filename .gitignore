@@ -13,6 +13,7 @@
 /.vs/*.suo
 /.vs/*.opensdf
 /.vs/.vs
+/.vs/.opencppcov
 *.exe
 *.exp
 *.lib

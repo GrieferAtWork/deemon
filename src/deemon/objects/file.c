@@ -46,6 +46,7 @@
 #include <hybrid/host.h>
 #include <hybrid/minmax.h>
 #include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -2350,7 +2351,7 @@ DeeFile_SetStd(unsigned int id, DeeObject *file) {
 	DREF DeeObject *old_stream;
 	ASSERT(id < DEE_STDCNT);
 	if (ITER_ISOK(file)) {
-		Dee_ASSERT_OBJECT(file);
+		ASSERT_OBJECT(file);
 		Dee_Incref(file);
 	}
 	dee_std_lock_write();
@@ -2449,30 +2450,30 @@ PUBLIC bool DCALL DeeFile_ResetStd(void) {
 	return result;
 }
 
-#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)        \
-	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL             \
-	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) {  \
-		return DeeFile_GetStd(DEE_STDXXX);                         \
-	}                                                              \
-	PRIVATE WUNUSED NONNULL((1)) int DCALL                         \
-	file_class_del_##stdxxx(DeeObject *__restrict self) {          \
-		DREF DeeObject *old_stream;                                \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);             \
-		if unlikely(!old_stream)                                   \
-			goto err_unbound;                                      \
-		return 0;                                                  \
-	err_unbound:                                                   \
-		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);     \
-		return -1;                                                 \
-	}                                                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                      \
-	file_class_set_##stdxxx(DeeObject *UNUSED(self),               \
-	                        DeeObject *value) {                    \
-		DREF DeeObject *old_stream;                                \
-		old_stream = DeeFile_SetStd(DEE_STDXXX, value);            \
-		if (old_stream && old_stream != ITER_DONE)                 \
-			Dee_Decref(old_stream);                                \
-		return 0;                                                  \
+#define DEFINE_FILE_CLASS_STD_FUNCTIONS(stdxxx, DEE_STDXXX)       \
+	PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL            \
+	file_class_get_##stdxxx(DeeObject *__restrict UNUSED(self)) { \
+		return DeeFile_GetStd(DEE_STDXXX);                        \
+	}                                                             \
+	PRIVATE WUNUSED NONNULL((1)) int DCALL                        \
+	file_class_del_##stdxxx(DeeObject *__restrict self) {         \
+		DREF DeeObject *old_stream;                               \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, NULL);            \
+		if unlikely(!old_stream)                                  \
+			goto err_unbound;                                     \
+		return 0;                                                 \
+	err_unbound:                                                  \
+		err_unbound_attribute_string(Dee_TYPE(self), #stdxxx);    \
+		return -1;                                                \
+	}                                                             \
+	PRIVATE WUNUSED NONNULL((1, 2)) int DCALL                     \
+	file_class_set_##stdxxx(DeeObject *UNUSED(self),              \
+	                        DeeObject *value) {                   \
+		DREF DeeObject *old_stream;                               \
+		old_stream = DeeFile_SetStd(DEE_STDXXX, value);           \
+		if (ITER_ISOK(old_stream))                                \
+			Dee_Decref(old_stream);                               \
+		return 0;                                                 \
 	}
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdin, DEE_STDIN)
 DEFINE_FILE_CLASS_STD_FUNCTIONS(stdout, DEE_STDOUT)
@@ -2798,8 +2799,10 @@ file_seek(DeeObject *self, size_t argc,
 		if (DeeString_Check(whence_ob)) {
 			char const *name = DeeString_STR(whence_ob);
 			size_t length    = DeeString_SIZE(whence_ob);
-			if (length >= 5 && MEMCASEEQ(name, "SEEK_", 5 * sizeof(char)))
-				name += 5, length -= 5;
+			if (length >= 5 && MEMCASEEQ(name, "SEEK_", 5 * sizeof(char))) {
+				name += 5;
+				length -= 5;
+			}
 			if (length == 3) {
 				char buf[4];
 				/* Convert the given mode name to lower-case. */
@@ -2808,7 +2811,7 @@ file_seek(DeeObject *self, size_t argc,
 				buf[2] = (char)DeeUni_ToLower(name[2]);
 				buf[3] = '\0';
 				for (whence = 0; (unsigned int)whence < COMPILER_LENOF(whence_names); ++whence) {
-					if (*(uint32_t *)whence_names[(unsigned int)whence].name != *(uint32_t *)buf)
+					if (UNALIGNED_GET32(whence_names[(unsigned int)whence].name) != UNALIGNED_GET32(buf))
 						continue;
 					whence = whence_names[(unsigned int)whence].id;
 					goto got_whence;
@@ -2819,6 +2822,7 @@ file_seek(DeeObject *self, size_t argc,
 			                whence_ob);
 			goto err;
 		}
+
 		/* Fallback: Convert the whence-object to an integer. */
 		if (DeeObject_AsInt(whence_ob, &whence))
 			goto err;
@@ -2870,6 +2874,7 @@ file_trunc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		if (DeeFile_Trunc(self, trunc_pos))
 			goto err;
 	}
+
 	/* Return the position where we've truncated the file. */
 	return DeeInt_NewUInt64(trunc_pos);
 err:
@@ -3005,6 +3010,7 @@ file_size(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	if (DeeFile_Seek(self, old_pos, SEEK_SET) == (Dee_pos_t)-1)
 		goto err;
+
 	/* Return the size of the file. */
 	return DeeInt_NewUInt64((uint64_t)result);
 err:
@@ -3114,14 +3120,14 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              "(maxbytes=!-1,readall=!f)->?DBytes\n"
 	              "Read and return at most @maxbytes of data from the file stream. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
-	              /**/ "read-callback returns $0, rather than until it returns something other than the "
-	              /**/ "internal buffer size used when reading data."),
+	              /**/ "read-callback returns $0, rather than until it returns something other than "
+	              /**/ "the internal buffer size used when reading data."),
 	TYPE_KWMETHOD("readinto", &file_readinto,
 	              "(dst:?DBytes,readall=!f)->?Dint\n"
 	              "Read data into the given buffer @dst and return the number of bytes read. "
 	              /**/ "When @readall is ?t, keep on reading data until the buffer is full, or the "
-	              /**/ "read-callback returns $0, rather than until it returns something other than the "
-	              /**/ "requested read size."),
+	              /**/ "read-callback returns $0, rather than until it returns something other than "
+	              /**/ "the requested read size."),
 	TYPE_KWMETHOD("write", &file_write,
 	              "(data:?DBytes,writeall=!t)->?Dint\n"
 	              "Write @data to the file stream and return the actual number of bytes written. "
@@ -3149,7 +3155,7 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	              /**/ "before returning its absolute offset within the file.\n"
 
 	              "When a string is given for @whence, it may be one of the following "
-	              /**/ "case-insensitive values, optionally prefixed with $\"SEEK_\"\n"
+	              /**/ "case-insensitive values, optionally prefixed with $\"SEEK_\".\n"
 
 	              "#T{Whence-name|Description~"
 	              /**/ "$\"SET\"|Set the file pointer to an absolute in-file position&"
@@ -3166,51 +3172,76 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	            "(size:?Dint)->?Dint\n"
 	            "Truncate the file to a new length of @size bytes. "
 	            /**/ "When no argument is given, the file's length is truncated "
-	            /**/ "to its current position (?#tell), rather than the one given"),
+	            /**/ "to its current position (?#tell), rather than the one given."),
 	TYPE_METHOD("sync", &file_sync,
 	            "()\n"
-	            "Flush buffers and synchronize disk activity of the file"),
+	            "Flush buffers and synchronize disk activity of the file."),
 	TYPE_METHOD("close", &file_close,
 	            "()\n"
 	            "Close the file"),
 	TYPE_METHOD("getc", &file_getc,
 	            "->?Dint\n"
 	            "Read and return a single character (byte) from then file, "
-	            /**/ "or return ${-1} if the file's end has been reached"),
+	            /**/ "or return ${-1} if the file's end has been reached."),
 	TYPE_METHOD("ungetc", &file_ungetc,
 	            "(ch:?Dint)->?Dbool\n"
 	            "Unget a given character @ch to be re-read the next time ?#getc or ?#read is called. "
 	            /**/ "If the file's start has already been reached, ?f is returned and the character "
-	            /**/ "will not be re-read from this file"),
+	            /**/ "will not be re-read from this file."),
 	TYPE_METHOD("putc", &file_putc,
 	            "(byte:?Dint)->?Dbool\n"
 	            "Append a single @byte at the end of @this File, returning ?t on "
-	            /**/ "success, or ?f if the file has entered an end-of-file state"),
+	            /**/ "success, or ?f if the file has entered an end-of-file state."),
 
 	/* Unicode (utf-8) read/write functions */
 	TYPE_METHOD("getutf8", &file_getutf8,
 	            "->?Dstring\n"
 	            "Read and return a single unicode character (utf-8) from then "
-	            /**/ "file, or return $\"\" if the file's end has been reached"),
+	            /**/ "file, or return $\"\" if the file's end has been reached."),
 	TYPE_METHOD("ungetutf8", &file_ungetutf8,
 	            "(ch:?Dstring)->?Dbool\n"
 	            "Unget a given unicode character @ch (as utf-8) to be re-read the next time ?#getuni "
 	            /**/ "or ?#read is called. If the file's start has already been reached, ?f is returned "
-	            /**/ "and the character will not be re-read from this file"),
+	            /**/ "and the character will not be re-read from this file."),
 	TYPE_METHOD("pututf8", &file_pututf8,
 	            "(data:?Dstring)->?Dbool\n"
 	            "Append a unicode string @data (as utf-8) at the end of @this File, returning "
-	            /**/ "?t on success, or ?f if the file has entered an end-of-file state"),
+	            /**/ "?t on success, or ?f if the file has entered an end-of-file state."),
 
 	TYPE_METHOD(STR_size, &file_size,
 	            "->?Dint\n"
-	            "Returns the size (in bytes) of the file stream"),
+	            "Returns the size (in bytes) of the file stream."),
 	TYPE_METHOD("readline", &file_readline,
 	            "(keeplf:?Dbool)->?X2?DBytes?N\n"
 	            "(maxbytes=!-1,keeplf=!t)->?X2?DBytes?N\n"
 	            "Read one line from the file stream, but read at most @maxbytes bytes.\n"
 	            "When @keeplf is ?f, strip the trailing linefeed from the returned ?DBytes object.\n"
-	            "Once EOF is reached, return ?N instead"),
+	            "Once EOF is reached, return ?N instead."),
+
+	/* mmap support */
+	TYPE_KWMETHOD("mmap", &file_mmap,
+	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
+	              "#pminbytes{The min number of bytes (excluding @nulbytes) that should be mapped "
+	              /*      */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
+	              /*      */ "this number of bytes has been reached, nul bytes are mapped for its remainder.}"
+	              "#pmaxbytes{The max number of bytes (excluding @nulbytes) that should be mapped starting "
+	              /*      */ "at @offset. If the file is smaller than this, or indicates EOF before this "
+	              /*      */ "number of bytes has been reached, simply stop there.}"
+	              "#poffset{Starting offset of mapping (absolute), or ${-1} to map the entire file}"
+	              "#pnulbytes{When non-zero, append this many trailing ${0x00}-bytes at the end of the map}"
+	              "#preadall{When ?t, use ?#readall, rather than ?#read}"
+	              "#pmustmmap{When ?t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap}"
+	              "#pmapshared{When ?t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)}"
+	              "Map the contents of the file into memory. If #Cmmap isn't supported by the file, and "
+	              /**/ "@mustmmap is ?f, allow the use of ?#read and ?#readall for loading file data.\n"
+	              "The returned ?DBytes object is always writable, though changes are only reflected within "
+	              /**/ "files when @mapshared is ?t.\n"
+	              "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
+	              /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use.\n"
+	              "Be careful when using this function, and don't use it as a catch-all method of loading a file "
+	              /**/ "from disk, since this function will fail for files that are larger than the maximum possible "
+	              /**/ "address space (since every byte of the file needs to be given a distinct memory address for "
+	              /**/ "this function to succeed, as opposed to something like #read when given $maxbytes)"),
 
 	/* Deprecated functions. */
 	TYPE_METHOD("readall", &file_readall,
@@ -3234,31 +3265,6 @@ PRIVATE struct type_method tpconst file_methods[] = {
 	TYPE_KWMETHOD("puts", &file_write,
 	              "(data:?DBytes)->?Dint\n"
 	              "Deprecated alias for ?#write"),
-
-	/* mmap support */
-	TYPE_KWMETHOD("mmap", &file_mmap,
-	              "(minbytes=!0,maxbytes=!-1,offset=!-1,nulbytes=!0,readall=!f,mustmmap=!f,mapshared=!f)->?DBytes\n"
-	              "#pminbytes{The min number of bytes (excluding @nulbytes) that should be mapped "
-	              /*      */ "starting at @offset. If the file is smaller than this, or indicates EOF before "
-	              /*      */ "this number of bytes has been reached, nul bytes are mapped for its remainder.}"
-	              "#pmaxbytes{The max number of bytes (excluding @nulbytes) that should be mapped starting "
-	              /*      */ "at @offset. If the file is smaller than this, or indicates EOF before this "
-	              /*      */ "number of bytes has been reached, simply stop there.}"
-	              "#poffset{Starting offset of mapping (absolute), or ${-1} to map the entire file}"
-	              "#pnulbytes{When non-zero, append this many trailing ${0x00}-bytes at the end of the map}"
-	              "#preadall{When ?t, use ?#readall, rather than ?#read}"
-	              "#pmustmmap{When ?t, throw an :UnsupportedAPI exception if @this file doesn't support $mmap}"
-	              "#pmapshared{When ?t, use $MAP_SHARED instead of $MAP_PRIVATE (also implies @mustmmap)}"
-	              "Map the contents of the file into memory. If #Cmmap isn't supported by the this file, "
-	              /**/ "and @mustmmap is ?f, allow the use of ?#read and ?#readall for loading file data.\n"
-	              "The returned ?DBytes object is always writable, though changes are only reflected within "
-	              /**/ "files when @mapshared is ?t.\n"
-	              "Calls to ?#read and ?#pread (without a caller-provided buffer) automatically make use of this "
-	              /**/ "function during large I/O requests in order to off-load disk I/O until the actual point of use.\n"
-	              "Be careful when using this function, and don't use it as a catch-all method of loading a file "
-	              /**/ "from disk, since this function will fail for files that are larger than the maximum possible "
-	              /**/ "address space (since every byte of the file needs to be given a distinct memory address for "
-	              /**/ "this function to succeed, as opposed to something like #read when given $maxbytes)"),
 
 	TYPE_METHOD_END
 };
@@ -3388,39 +3394,39 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 
 		                         "#T{Operator prototype|Description~"
 		                         /**/ "${operator read(size: int): Bytes}|"
-		                         /**/ "Reads up to size bytes and returns a buffer (usually a :string) containing read data"
+		                         /**/ "Reads up to size bytes and returns a buffer (usually a ?Dstring) containing read data."
 		                         "&"
 		                         /**/ "${operator write(buf: Bytes): int}|"
-		                         /**/ "Writes data from buf into the file and returns the number of bytes written"
+		                         /**/ "Writes data from buf into the file and returns the number of bytes written."
 		                         "&"
 		                         /**/ "${operator seek(off: int, whence: int): int}|"
 		                         /**/ "Moves the file pointer relative to whence, "
 		                         /**/ /**/ "which is one of ?#SEEK_SET, ?#SEEK_CUR or ?#SEEK_END. "
 		                         /**/ /**/ "The return value of this operator is the new, "
-		                         /**/ /**/ "absolute file position within the stream"
+		                         /**/ /**/ "absolute file position within the stream."
 		                         "&"
 		                         /**/ "${operator sync(): none}|"
-		                         /**/ "Synchronize unwritten data with lower-level components"
+		                         /**/ "Synchronize unwritten data with lower-level components."
 		                         "&"
 		                         /**/ "${operator trunc(int newsize): none}|"
-		                         /**/ "Truncate, or pre-allocate file memory to match a length of newsize"
+		                         /**/ "Truncate, or pre-allocate file memory to match a length of newsize."
 		                         "&"
 		                         /**/ "${operator close(): none}|"
 		                         /**/ "Close the file. This operator is invoked during destruction, but "
-		                         /**/ /**/ "can also be invoked before then using the ?#close member function"
+		                         /**/ /**/ "can also be invoked before then using the ?#close member function."
 		                         "&"
 		                         /**/ "${operator pread(size: int, pos: int): Bytes}|"
 		                         /**/ "Similar to ${operator read}, but data is read from the given "
-		                         /**/ /**/ "absolute file position pos"
+		                         /**/ /**/ "absolute file position pos."
 		                         "&"
 		                         /**/ "${operator pwrite(buf: Bytes, pos: int): int}|"
 		                         /**/ "Similar to ${operator write}, but data is written to the given "
-		                         /**/ /**/ "absolute file position pos"
+		                         /**/ /**/ "absolute file position pos."
 		                         "&"
 		                         /**/ "${operator getc(): int}|"
 		                         /**/ "Reads, and returns a single byte from the stream (Usually the same "
 		                         /**/ /**/ "as ${operator read(1)}). If EOF has been reached, a negative value "
-		                         /**/ /**/ "is returned"
+		                         /**/ /**/ "is returned."
 		                         "&"
 		                         /**/ "${operator ungetc(ch: int): bool}|"
 		                         /**/ "Returns a previously read character to the stream, allowing it to be "
@@ -3433,7 +3439,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         /**/ "${operator putc(ch: int): bool}|"
 		                         /**/ "Write a single byte to the stream (Usually the same as ${operator write"
 		                         /**/ /**/ "(Bytes({ ch }))}). Returns ?t if the byte was successfully "
-		                         /**/ /**/ "written, or ?f if EOF was reached"
+		                         /**/ /**/ "written, or ?f if EOF was reached."
 		                         "}\n"
 		                         "\n"
 
@@ -3443,21 +3449,21 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 
 		                         "iter->?.\n"
 		                         "Returns an iterator that allows for line-wise processing of "
-		                         /**/ "file data, making use of the the ?#readline member function\n"
-		                         "The returned lines have their trailing line-feeds preserved\n"
+		                         /**/ "file data, making use of the the ?#readline member function.\n"
+		                         "The returned lines have their trailing line-feeds preserved.\n"
 		                         "Note that because a ?. cannot be iterated multiple times "
 		                         /**/ "without additional work being done, as well as the fact that "
 		                         /**/ "this type of iteration isn't thread-save, ?. isn't derived "
 		                         /**/ "from ?DSequence, meaning that abstract ?DSequence functions are "
 		                         /**/ "not implicitly provided, but would have to be invoked like "
-		                         /**/ "${Sequence.find(File.open(\"foo.txt\"), \"find this line\")}\n"
+		                         /**/ "${Sequence.find(File.open(\"foo.txt\"), \"find this line\")}.\n"
 		                         "Note that because ?. isn't derived from ?DSequence, the returned "
-		                         /**/ "iterator also isn't required to be derived from ?DIterator\n"
+		                         /**/ "iterator also isn't required to be derived from ?DIterator.\n"
 		                         "\n"
 
 		                         "next->?DBytes\n"
-		                         "Alias for ?#readline, allowing for line-wise reading of lines\n"
-		                         "Note that the trailing linefeed is always included in this\n"
+		                         "Alias for ?#readline, allowing for line-wise reading of lines.\n"
+		                         "Note that the trailing linefeed is always included in this.\n"
 		                         "\n"
 
 		                         "<<(ob)->\n"
@@ -3474,7 +3480,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		                         "leave->\n"
 		                         "Invokes ${this.operator close()}\n"
 		                         "Note that due to this operators presence, an "
-		                         /**/ "implicit enter-operator exists, which is a no-op"),
+		                         /**/ "implicit enter-operator exists, which is a no-op."),
 		/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT,
 		/* .tp_weakrefs = */ 0,
 		/* .tp_features = */ TF_NONE,

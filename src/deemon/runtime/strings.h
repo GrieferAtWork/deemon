@@ -245,7 +245,6 @@ print;
 print("#ifndef CONFIG_LANGUAGE_NO_ASM");
 defString("this_module");
 defString("this_function");
-defString("str_cell_empty", "cell empty");
 print("#endif /" "* !CONFIG_LANGUAGE_NO_ASM *" "/");
 ]]]*/
 DEF_STRING(str_Signal, "Signal", 0x9b300d86, 0x966027ef8153891b)
@@ -574,8 +573,6 @@ DEF_STRING(str_this_module, "this_module", 0x34998e44, 0x473e02aa4d7eba45)
 #define STR_this_module DeeString_STR(&str_this_module)
 DEF_STRING(str_this_function, "this_function", 0xe2b69fa3, 0xdf2ba17d58877ece)
 #define STR_this_function DeeString_STR(&str_this_function)
-DEF_STRING(str_cell_empty, "cell empty", 0x5df2baea, 0x87d3182524393808)
-#define STR_cell_empty DeeString_STR(&str_cell_empty)
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 /*[[[end]]]*/
 

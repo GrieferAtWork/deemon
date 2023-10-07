@@ -903,6 +903,14 @@
 #define __CDECL_OR_DEFAULT
 #define __HYBRID_LIBATOMIC_DECL
 #define __HYBRID_LIBATOMIC_CC
+#define ____IMPL_DO_FFS(...) {}
+#define ____IMPL_DO_CLZ(...) {}
+#define ____IMPL_DO_CTZ(...) {}
+#define ____IMPL_DO_POPCOUNT(...) {}
+#define ____IMPL_DO_PARITY(...) {}
+#define ____IMPL_DO_CLRSB(...) {}
+#define ____IMPL_DO_PDEP(...) {}
+#define ____IMPL_DO_PEXT(...) {}
 #define BSEARCH(...) for(;;)
 #define BSEARCH_EX(...) for(;;)
 #define BSEARCH_RANGE(...) for(;;)
@@ -1373,6 +1381,10 @@
 #define TRY
 #define EXCEPT
 #define CASE(x) case x
+#define TARGET(...)
+#define XTARGET(...)
+#define CC
+#define VCC
 #define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (__VA_ARGS__,char const*file,int line)
 #define DEFINE_AST_GENERATOR(attr,n,args) struct ast*n##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args{}struct ast*n args
 #define DECLARE_AST_GENERATOR(attr,n,args) struct ast*n##_d PRIVATE_AST_GENERATOR_UNPACK_ARGS args;struct ast*n args
@@ -1572,3 +1584,4 @@
 	int time_delval_##n(DeeTimeObject*self){}
 #define DEFINE_TIME_COMPARE(n,...) DeeObject*n(DeeTimeObject*self,DeeTimeObject*other){}
 #define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
+#define DEFINE_FILTERITERATOR_COMPARE(n,...) DeeObject*n(FilterIterator*self,FilterIterator*other){}
