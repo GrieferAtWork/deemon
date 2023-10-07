@@ -2636,6 +2636,29 @@ PRIVATE struct type_cmp instancemember_cmp = {
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&instancemember_eq
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instancemember_print(DeeInstanceMemberObject *__restrict self,
+                     dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg, "<InstanceMember %k.%k>",
+	                        self->im_type, self->im_attribute->ca_name);
+}
+
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+DeeString_IsSymbol(DeeStringObject *__restrict self,
+                   size_t start_index,
+                   size_t end_index);
+
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+instancemember_printrepr(DeeInstanceMemberObject *__restrict self,
+                         dformatprinter printer, void *arg) {
+	DeeStringObject *name = (DeeStringObject *)self->im_attribute->ca_name;
+	if (DeeString_IsSymbol(name, 0, (size_t)-1)) {
+		return DeeFormat_Printf(printer, arg, "%r.%k", self->im_type, name);
+	} else {
+		return DeeFormat_Printf(printer, arg, "%r.operator . (%r)", self->im_type, name);
+	}
+}
+
 PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_InstanceMember",
@@ -2659,9 +2682,11 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 		/* .tp_move_assign = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&instancemember_print,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&instancemember_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&instancemember_visit,
