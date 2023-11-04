@@ -34,12 +34,15 @@
 
 DECL_BEGIN
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeBytesObject *b_str;   /* [1..1][const] The Bytes object that is being segmented. */
 	size_t               b_siz;   /* [!0][const] The size of a single segment. */
-	DWEAK uint8_t       *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
-	uint8_t             *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
+	DWEAK byte_t        *b_ptr;   /* [1..1][in(DeeBytes_WSTR(b_str))] Pointer to the start of the next segment. */
+	byte_t              *b_end;   /* [1..1][== DeeBytes_WEND(b_str)] End pointer. */
 } BytesSegmentsIterator;
 
 #define READ_PTR(x) atomic_read(&(x)->b_ptr)
@@ -70,8 +73,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsegiter_ctor(BytesSegmentsIterator *__restrict self) {
 	self->b_str = (DREF DeeBytesObject *)Dee_EmptyBytes;
 	self->b_siz = 1;
-	self->b_ptr = (uint8_t *)DeeBytes_DATA(Dee_EmptyBytes);
-	self->b_end = (uint8_t *)DeeBytes_DATA(Dee_EmptyBytes);
+	self->b_ptr = DeeBytes_DATA(Dee_EmptyBytes);
+	self->b_end = DeeBytes_DATA(Dee_EmptyBytes);
 	Dee_Incref(Dee_EmptyBytes);
 	return 0;
 }
@@ -108,7 +111,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsegiter_next(BytesSegmentsIterator *__restrict self) {
 	size_t part_size;
-	uint8_t *new_ptr, *ptr;
+	byte_t *new_ptr, *ptr;
 	do {
 		ptr = atomic_read(&self->b_ptr);
 		if (ptr >= self->b_end)
@@ -257,7 +260,7 @@ bseg_size(BytesSegments *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bseg_contains(BytesSegments *self,
               DeeObject *other) {
-	uint8_t *other_data, *iter, *end;
+	byte_t *other_data, *iter, *end;
 	DeeBytesObject *str;
 	size_t other_size;
 	if (DeeBytes_Check(other)) {

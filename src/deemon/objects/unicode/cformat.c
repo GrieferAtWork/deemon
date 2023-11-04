@@ -448,7 +448,7 @@ do_length_integer:
 			dec     = DeeAscii_ItoaDigits(flags & F_UPPER);
 			bufiter = COMPILER_ENDOF(buffer);
 			is_neg  = false;
-			if (flags & F_SIGNED && intval.int_s64 < 0) {
+			if ((flags & F_SIGNED) && intval.int_s64 < 0) {
 				is_neg         = true;
 				intval.int_s64 = -intval.int_s64;
 			}
@@ -457,7 +457,7 @@ do_length_integer:
 				*--bufiter = dec[intval.int_u64 % radix];
 			} while ((intval.int_u64 /= radix) != 0);
 			addend = 0;
-			if (flags & F_PREFIX && radix != 10) {
+			if ((flags & F_PREFIX) && radix != 10) {
 				if (radix == 16) {
 					++addend;
 					*--bufiter = dec[33]; /* X/x */

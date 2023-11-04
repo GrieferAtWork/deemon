@@ -2937,7 +2937,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 file_putc(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	int result;
 	byte_t byte;
-	if (DeeArg_Unpack(argc, argv, UNPuBYTE ":putc", &byte))
+	if (DeeArg_Unpack(argc, argv, UNPuB ":putc", &byte))
 		goto err;
 	result = DeeFile_Putc(self, (int)(unsigned int)byte);
 	if unlikely(result == GETC_ERR)

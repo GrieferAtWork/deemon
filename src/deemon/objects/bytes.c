@@ -39,20 +39,24 @@
 
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
 DECL_BEGIN
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 typedef DeeBytesObject Bytes;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF Bytes    *bi_bytes; /* [1..1][const] The Bytes object being iterated. */
-	DWEAK uint8_t *bi_iter;  /* [1..1][in(bi_bytes->b_base)] Pointer to the next byte to-be iterated. */
-	uint8_t       *bi_end;   /* [1..1][const][== bi_bytes->b_base + bi_bytes->b_size]
-	                          * Pointer to one byte past the end of the Bytes object being iterated. */
+	DREF Bytes   *bi_bytes; /* [1..1][const] The Bytes object being iterated. */
+	DWEAK byte_t *bi_iter;  /* [1..1][in(bi_bytes->b_base)] Pointer to the next byte to-be iterated. */
+	byte_t       *bi_end;   /* [1..1][const][== bi_bytes->b_base + bi_bytes->b_size]
+	                         * Pointer to one byte past the end of the Bytes object being iterated. */
 } BytesIterator;
 
 #define BytesIterator_GetIter(self) atomic_read(&(self)->bi_iter)
@@ -72,14 +76,14 @@ bytesiter_visit(BytesIterator *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytesiter_next(BytesIterator *__restrict self) {
-	uint8_t *pos;
+	byte_t *pos;
 	do {
 		pos = BytesIterator_GetIter(self);
 		if (pos >= self->bi_end)
 			return ITER_DONE;
 	} while unlikely(!atomic_cmpxch_weak_or_write(&self->bi_iter,
 	                                              pos, pos + 1));
-	return DeeInt_NewUInt8(*pos);
+	return DeeInt_NEWU(*pos);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -200,7 +204,7 @@ INTERN DeeTypeObject BytesIterator_Type = {
 
 
 PUBLIC WUNUSED NONNULL((1, 3)) int
-(DCALL DeeSeq_ItemsToBytes)(uint8_t *__restrict dst, size_t num_bytes,
+(DCALL DeeSeq_ItemsToBytes)(byte_t *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq) {
 	size_t i, fast_size;
 	int error;
@@ -213,7 +217,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 
 	if (DeeString_Check(seq)) {
 		/* Special case: `string' */
-		uint8_t *data = DeeString_AsBytes(seq, false);
+		byte_t *data = DeeString_AsBytes(seq, false);
 		if unlikely(!data)
 			goto err;
 		if (WSTR_LENGTH(data) != num_bytes) {
@@ -249,7 +253,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			elem = DeeFastSeq_GetItem(seq, i);
 			if unlikely(!elem)
 				goto err;
-			error = DeeObject_AsUInt8(elem, &dst[i]);
+			error = DeeObject_AsUIntX(elem, &dst[i]);
 			Dee_Decref(elem);
 			if unlikely(error)
 				goto err;
@@ -268,7 +272,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			Dee_Decref(elem);
 			goto err_iter;
 		}
-		error = DeeObject_AsUInt8(elem, &dst[i]);
+		error = DeeObject_AsUIntX(elem, &dst[i]);
 		Dee_Decref(elem);
 		if unlikely(error)
 			goto err_iter;
@@ -309,7 +313,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 			elem = DeeFastSeq_GetItem(seq, i);
 			if unlikely(!elem)
 				goto err_r;
-			error = DeeObject_AsUInt8(elem, &result->b_data[i]);
+			error = DeeObject_AsUIntX(elem, &result->b_data[i]);
 			Dee_Decref(elem);
 			if unlikely(error)
 				goto err_r;
@@ -351,7 +355,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 			result  = new_result;
 			bufsize = new_bufsize;
 		}
-		if unlikely(DeeObject_AsUInt8(elem, &result->b_data[i]))
+		if unlikely(DeeObject_AsUIntX(elem, &result->b_data[i]))
 			goto err_r_elem;
 		Dee_Decref(elem);
 		++i;
@@ -413,7 +417,7 @@ DeeObject_Bytes(DeeObject *__restrict self,
 		start = result->b_buffer.bb_size;
 	if (end > result->b_buffer.bb_size)
 		end = result->b_buffer.bb_size;
-	result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
+	result->b_base  = (byte_t *)result->b_buffer.bb_base + start;
 	result->b_size  = (size_t)(end - start);
 	result->b_orig  = self;
 	result->b_flags = flags;
@@ -428,7 +432,7 @@ err_r:
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeBytes_NewBuffer(size_t num_bytes, uint8_t init) {
+DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {
 	DREF Bytes *result;
 	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 	                                        num_bytes);
@@ -477,7 +481,7 @@ DeeBytes_NewBufferData(void const *__restrict data, size_t num_bytes) {
 	                                        num_bytes);
 	if unlikely(!result)
 		goto done;
-	result->b_base  = (uint8_t *)memcpy(result->b_data, data, num_bytes);
+	result->b_base  = (byte_t *)memcpy(result->b_data, data, num_bytes);
 	result->b_size  = num_bytes;
 	result->b_orig  = (DREF DeeObject *)result;
 	result->b_flags = Dee_BUFFER_FWRITABLE;
@@ -565,11 +569,11 @@ DeeBytes_NewView(DeeObject *owner, void *base,
 	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data));
 	if unlikely(!result)
 		goto done;
-	result->b_base           = (uint8_t *)base;
+	result->b_base           = (byte_t *)base;
 	result->b_size           = num_bytes;
 	result->b_orig           = owner;
 	result->b_flags          = flags;
-	result->b_buffer.bb_base = (uint8_t *)base;
+	result->b_buffer.bb_base = (byte_t *)base;
 	result->b_buffer.bb_size = num_bytes;
 #ifndef __INTELLISENSE__
 	result->b_buffer.bb_put = NULL;
@@ -617,10 +621,10 @@ bytes_init(size_t argc, DeeObject *const *argv) {
 	if (argc >= 2) {
 		ob = argv[0];
 		if (DeeInt_Check(ob)) {
-			uint8_t init;
+			byte_t init;
 			if (DeeObject_AsSize(ob, &start))
 				goto err;
-			if (DeeObject_AsUInt8(argv[1], &init))
+			if (DeeObject_AsUIntX(argv[1], &init))
 				goto err;
 			return (DREF Bytes *)DeeBytes_NewBuffer(start, init);
 		}
@@ -689,7 +693,7 @@ err_args:
 					start = result->b_buffer.bb_size;
 				if (end > result->b_buffer.bb_size)
 					end = result->b_buffer.bb_size;
-				result->b_base  = (uint8_t *)result->b_buffer.bb_base + start;
+				result->b_base  = (byte_t *)result->b_buffer.bb_base + start;
 				result->b_size  = (size_t)(end - start);
 				result->b_orig  = ob;
 				result->b_flags = Dee_BUFFER_FREADONLY;
@@ -739,7 +743,7 @@ err_readonly:
 
 INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeBytes_Print(DeeObject *__restrict self,
-                   dformatprinter printer, void *arg) {
+               dformatprinter printer, void *arg) {
 	return DeeFormat_Print8(printer, arg,
 	                        DeeBytes_DATA(self),
 	                        DeeBytes_SIZE(self));
@@ -828,7 +832,7 @@ bytes_getitem(Bytes *self, DeeObject *index) {
 		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
 		goto err;
 	}
-	return DeeInt_NewUInt8(DeeBytes_DATA(self)[i]);
+	return DeeInt_NEWU(DeeBytes_DATA(self)[i]);
 err:
 	return NULL;
 }
@@ -855,10 +859,10 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 bytes_setitem(Bytes *self, DeeObject *index, DeeObject *value) {
 	size_t i;
-	uint8_t val;
+	byte_t val;
 	if (DeeObject_AsSize(index, &i))
 		goto err;
-	if (DeeObject_AsUInt8(value, &val))
+	if (DeeObject_AsUIntX(value, &val))
 		goto err;
 	if unlikely(i >= DeeBytes_SIZE(self)) {
 		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
@@ -911,7 +915,7 @@ bytes_setrange(Bytes *self, DeeObject *begin,
                DeeObject *end, DeeObject *value) {
 	dssize_t start_index;
 	dssize_t end_index = (dssize_t)DeeBytes_SIZE(self);
-	uint8_t *dst;
+	byte_t *dst;
 	size_t size;
 	if (DeeObject_AsSSize(begin, &start_index))
 		goto err;
@@ -962,7 +966,7 @@ compare_string_bytes(DeeStringObject *lhs,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_eq(Bytes *self, DeeObject *other) {
-	uint8_t *other_data;
+	byte_t *other_data;
 	size_t other_size;
 	if (DeeString_Check(other))
 		return_bool(string_eq_bytes((DeeStringObject *)other, self));
@@ -979,7 +983,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_ne(Bytes *self, DeeObject *other) {
-	uint8_t *other_data;
+	byte_t *other_data;
 	size_t other_size;
 	if (DeeString_Check(other))
 		return_bool(!string_eq_bytes((DeeStringObject *)other, self));
@@ -1021,7 +1025,7 @@ dee_memxcmp(void const *a, size_t asiz,
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 bytes_compare(Bytes *lhs, DeeObject *rhs) {
-	uint8_t *other_data;
+	byte_t *other_data;
 	size_t other_size;
 	if (DeeString_Check(rhs))
 		return -compare_string_bytes((DeeStringObject *)rhs, lhs);
@@ -1053,7 +1057,7 @@ err:
 #define DEFINE_BYTES_COMPARE(name, op)                                              \
 	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
 	name(Bytes *self, DeeObject *other) {                                           \
-		uint8_t *other_data;                                                        \
+		byte_t *other_data;                                                         \
 		size_t other_size;                                                          \
 		if (DeeString_Check(other))                                                 \
 			return_bool(0 op compare_string_bytes((DeeStringObject *)other, self)); \
@@ -1096,7 +1100,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Bytes *DCALL
 bytes_mul(Bytes *self, DeeObject *other) {
 	DREF Bytes *result;
-	uint8_t *dst, *src;
+	byte_t *dst, *src;
 	size_t my_length, total_length, repeat;
 	if (DeeObject_AsSize(other, &repeat))
 		goto err;
@@ -1113,7 +1117,7 @@ bytes_mul(Bytes *self, DeeObject *other) {
 	src = DeeBytes_DATA(self);
 	dst = DeeBytes_DATA(result);
 	while (repeat--)
-		dst = (uint8_t *)mempcpy(dst, src, my_length);
+		dst = (byte_t *)mempcpy(dst, src, my_length);
 	return result;
 err_overflow:
 	err_integer_overflow_i(sizeof(size_t) * 8, true);
@@ -1198,7 +1202,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self))
 		goto err_bounds;
-	return DeeInt_NewUInt8(DeeBytes_DATA(self)[index]);
+	return DeeInt_NEWU(DeeBytes_DATA(self)[index]);
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 	return NULL;
@@ -1222,8 +1226,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 bytes_nsi_setitem(Bytes *self, size_t index, DeeObject *value) {
-	uint8_t val;
-	if (DeeObject_AsUInt8(value, &val))
+	byte_t val;
+	if (DeeObject_AsUIntX(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
 		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
@@ -1282,7 +1286,7 @@ bytes_nsi_setrange_i(Bytes *self,
                      dssize_t start_index,
                      dssize_t end_index,
                      DeeObject *value) {
-	uint8_t *dst;
+	byte_t *dst;
 	size_t size;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
@@ -1308,7 +1312,7 @@ PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 bytes_nsi_setrange_in(Bytes *self,
                       dssize_t start_index,
                       DeeObject *value) {
-	uint8_t *dst;
+	byte_t *dst;
 	size_t size;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
@@ -1325,8 +1329,8 @@ err_readonly:
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 bytes_nsi_xch(Bytes *self, size_t index, DeeObject *value) {
-	uint8_t val, result;
-	if (DeeObject_AsUInt8(value, &val))
+	byte_t val, result;
+	if (DeeObject_AsUIntX(value, &val))
 		goto err;
 	if unlikely(index >= DeeBytes_SIZE(self)) {
 		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
@@ -1335,7 +1339,7 @@ bytes_nsi_xch(Bytes *self, size_t index, DeeObject *value) {
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
 	result = atomic_xch(&DeeBytes_DATA(self)[index], val);
-	return DeeInt_NewUInt8(result);
+	return DeeInt_NEWU(result);
 err_readonly:
 	err_bytes_not_writable((DeeObject *)self);
 err:
@@ -1404,7 +1408,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getfirst(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto err_empty;
-	return DeeInt_NewUInt8(DeeBytes_DATA(self)[0]);
+	return DeeInt_NEWU(DeeBytes_DATA(self)[0]);
 err_empty:
 	err_empty_sequence((DeeObject *)self);
 	return NULL;
@@ -1412,12 +1416,12 @@ err_empty:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_setfirst(Bytes *__restrict self, DeeObject *__restrict value) {
-	uint8_t int_value;
+	byte_t int_value;
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto err_empty;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(DeeObject_AsUInt8(value, &int_value))
+	if unlikely(DeeObject_AsUIntX(value, &int_value))
 		goto err;
 	DeeBytes_DATA(self)[0] = int_value;
 	return 0;
@@ -1434,7 +1438,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getlast(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto err_empty;
-	return DeeInt_NewUInt8(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
+	return DeeInt_NEWU(DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1]);
 err_empty:
 	err_empty_sequence((DeeObject *)self);
 	return NULL;
@@ -1442,12 +1446,12 @@ err_empty:
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_setlast(Bytes *__restrict self, DeeObject *__restrict value) {
-	uint8_t int_value;
+	byte_t int_value;
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto err_empty;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(DeeObject_AsUInt8(value, &int_value))
+	if unlikely(DeeObject_AsUIntX(value, &int_value))
 		goto err;
 	DeeBytes_DATA(self)[DeeBytes_SIZE(self) - 1] = int_value;
 	return 0;
@@ -1549,7 +1553,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
               size_t argc, DeeObject *const *argv) {
 	DeeObject *hex_str;
 	DREF Bytes *result;
-	uint8_t *dst;
+	byte_t *dst;
 	union dcharptr iter, end;
 	size_t length;
 	if (DeeArg_Unpack(argc, argv, "o:fromhex", &hex_str))
@@ -1567,7 +1571,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst     = DeeBytes_DATA(result);
 		end.cp8 = iter.cp8 + length;
 		for (;;) {
-			uint8_t byte_value, nibble;
+			byte_t byte_value, nibble;
 			uint8_t ch;
 			for (;;) {
 				if (iter.cp8 == end.cp8)
@@ -1600,7 +1604,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst      = DeeBytes_DATA(result);
 		end.cp16 = iter.cp16 + length;
 		for (;;) {
-			uint8_t byte_value, nibble;
+			byte_t byte_value, nibble;
 			uint16_t ch;
 			for (;;) {
 				if (iter.cp16 == end.cp16)
@@ -1633,7 +1637,7 @@ bytes_fromhex(DeeTypeObject *__restrict UNUSED(self),
 		dst      = DeeBytes_DATA(result);
 		end.cp32 = iter.cp32 + length;
 		for (;;) {
-			uint8_t byte_value, nibble;
+			byte_t byte_value, nibble;
 			uint32_t ch;
 			for (;;) {
 				if (iter.cp32 == end.cp32)
@@ -2000,7 +2004,7 @@ Dee_bytes_printer_pack(/*inherit(always)*/ struct bytes_printer *__restrict self
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
 PUBLIC WUNUSED NONNULL((1)) dssize_t DPRINTER_CC
 Dee_bytes_printer_append(struct bytes_printer *__restrict self,
-                         uint8_t const *__restrict data, size_t datalen) {
+                         byte_t const *__restrict data, size_t datalen) {
 	Bytes *bytes;
 	size_t alloc_size;
 	ASSERT(data || !datalen);
@@ -2061,7 +2065,7 @@ done:
 }
 
 PUBLIC WUNUSED NONNULL((1)) int
-(DCALL Dee_bytes_printer_putb)(struct bytes_printer *__restrict self, uint8_t ch) {
+(DCALL Dee_bytes_printer_putb)(struct bytes_printer *__restrict self, byte_t ch) {
 	/* Quick check: Can we print to an existing buffer. */
 	if (self->bp_bytes &&
 	    self->bp_length < self->bp_bytes->b_size) {
@@ -2070,7 +2074,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	}
 
 	/* Fallback: go the long route. */
-	if (bytes_printer_append(self, (uint8_t *)&ch, 1) < 0)
+	if (bytes_printer_append(self, &ch, 1) < 0)
 		goto err;
 done:
 	return 0;
@@ -2080,8 +2084,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1)) dssize_t
 (DCALL Dee_bytes_printer_repeat)(struct bytes_printer *__restrict self,
-                                 uint8_t ch, size_t count) {
-	uint8_t *buffer;
+                                 byte_t ch, size_t count) {
+	byte_t *buffer;
 	buffer = bytes_printer_alloc(self, count);
 	if unlikely(!buffer)
 		goto err;
@@ -2103,11 +2107,11 @@ PUBLIC NONNULL((1)) void
 	self->bp_length -= datalen;
 }
 
-PUBLIC WUNUSED NONNULL((1)) uint8_t *
+PUBLIC WUNUSED NONNULL((1)) byte_t *
 (DCALL Dee_bytes_printer_alloc)(struct bytes_printer *__restrict self, size_t datalen) {
 	Bytes *bytes;
 	size_t alloc_size;
-	uint8_t *result;
+	byte_t *result;
 	if ((bytes = self->bp_bytes) == NULL) {
 		/* Make sure not to allocate new bytes when the used length remains ZERO.
 		 * >> Must be done to assure the expectation of `if(bp_length == 0) bp_bytes == NULL' */
@@ -2165,9 +2169,6 @@ realloc_again:
 	self->bp_length += datalen;
 	return result;
 }
-
-
-
 
 DECL_END
 

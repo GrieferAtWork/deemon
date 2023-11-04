@@ -281,12 +281,12 @@ PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
 LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #endif /* !LOCAL_HAVE_max_count */
 {
-	uint8_t *begin;
+	byte_t *begin;
 	Needle needle;
 #ifdef LOCAL_IS_SSTRIP
 	size_t size;
 #else /* LOCAL_IS_SSTRIP */
-	uint8_t *end;
+	byte_t *end;
 #endif /* !LOCAL_IS_SSTRIP */
 #ifdef LOCAL_HAVE_max_count
 	size_t max_count = SIZE_MAX;
@@ -298,10 +298,10 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #endif /* !LOCAL_HAVE_max_count */
 #ifdef LOCAL_IS_LINES
 #ifdef LOCAL_IS_SSTRIP
-	uint8_t *end;
+	byte_t *end;
 #endif /* LOCAL_IS_SSTRIP */
 	struct bytes_printer printer;
-	uint8_t *flush_start;
+	byte_t *flush_start;
 #endif /* LOCAL_IS_LINES */
 	DeeObject *mask;
 
@@ -401,7 +401,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 	if (mask) {
 		/* Deal with a custom strip-character/sequence mask. */
 		while (begin < end) {
-			uint8_t ch = *begin;
+			byte_t ch = *begin;
 			if (ch != ASCII_CR && ch != ASCII_LF) {
 				++begin;
 				continue; /* Not a line-feed character */
@@ -410,7 +410,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				uint8_t *flush_end = begin;
+				byte_t *flush_end = begin;
 #ifdef LOCAL_IS_SSTRIP
 				while (flush_end >= (flush_start + needle.n_size) &&
 				       LOCAL_MEMEQB(flush_end - needle.n_size, needle.n_data, needle.n_size))
@@ -436,7 +436,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				uint8_t *new_flush_start = begin;
+				byte_t *new_flush_start = begin;
 #ifdef LOCAL_IS_SSTRIP
 				while ((new_flush_start + needle.n_size) <= end &&
 				       LOCAL_MEMEQB(new_flush_start, needle.n_data, needle.n_size))
@@ -457,7 +457,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 		}
 	} else {
 		while (begin < end) {
-			uint8_t ch = *begin;
+			byte_t ch = *begin;
 			if (ch != ASCII_CR && ch != ASCII_LF) {
 				++begin;
 				continue; /* Not a line-feed character */
@@ -466,7 +466,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #ifdef LOCAL_IS_RSTRIP
 			/* rstrip (at the end of lines) */
 			{
-				uint8_t *flush_end = begin;
+				byte_t *flush_end = begin;
 				while (flush_end > flush_start && LOCAL_isspace(flush_end[-1]))
 					--flush_end;
 				if (flush_end < begin) {
@@ -486,7 +486,7 @@ LOCAL_bytes_strip(Bytes *self, size_t argc, DeeObject *const *argv)
 #ifdef LOCAL_IS_LSTRIP
 			/* lstrip (at the start of lines) */
 			{
-				uint8_t *new_flush_start = begin;
+				byte_t *new_flush_start = begin;
 				while (new_flush_start < end && LOCAL_isspace(*new_flush_start))
 					++new_flush_start;
 				if (new_flush_start > begin) {

@@ -564,29 +564,29 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 #define DEE_UNPdSIZ DEE_UNPdN(__SIZEOF_SIZE_T__)
 #define DEE_UNPuPTR DEE_UNPuN(__SIZEOF_POINTER__)
 #define DEE_UNPdPTR DEE_UNPdN(__SIZEOF_POINTER__)
-#define DEE_UNPuBYTE DEE_UNPu8
-#define DEE_UNPdBYTE DEE_UNPd8
+#define DEE_UNPuB   DEE_UNPu8
+#define DEE_UNPdB   DEE_UNPd8
 
 /* Unescaped names. */
 #ifdef DEE_SOURCE
-#define UNPuBYTE DEE_UNPuBYTE
-#define UNPdBYTE DEE_UNPdBYTE
-#define UNPu8    DEE_UNPu8
-#define UNPd8    DEE_UNPd8
-#define UNPu16   DEE_UNPu16
-#define UNPd16   DEE_UNPd16
-#define UNPu32   DEE_UNPu32
-#define UNPd32   DEE_UNPd32
-#define UNPu64   DEE_UNPu64
-#define UNPd64   DEE_UNPd64
-#define UNPu128  DEE_UNPu128
-#define UNPd128  DEE_UNPd128
-#define UNPuN    DEE_UNPuN
-#define UNPdN    DEE_UNPdN
-#define UNPuSIZ  DEE_UNPuSIZ
-#define UNPdSIZ  DEE_UNPdSIZ
-#define UNPuPTR  DEE_UNPuPTR
-#define UNPdPTR  DEE_UNPdPTR
+#define UNPuB   DEE_UNPuB
+#define UNPdB   DEE_UNPdB
+#define UNPu8   DEE_UNPu8
+#define UNPd8   DEE_UNPd8
+#define UNPu16  DEE_UNPu16
+#define UNPd16  DEE_UNPd16
+#define UNPu32  DEE_UNPu32
+#define UNPd32  DEE_UNPd32
+#define UNPu64  DEE_UNPu64
+#define UNPd64  DEE_UNPd64
+#define UNPu128 DEE_UNPu128
+#define UNPd128 DEE_UNPd128
+#define UNPuN   DEE_UNPuN
+#define UNPdN   DEE_UNPdN
+#define UNPuSIZ DEE_UNPuSIZ
+#define UNPdSIZ DEE_UNPdSIZ
+#define UNPuPTR DEE_UNPuPTR
+#define UNPdPTR DEE_UNPdPTR
 #endif /* DEE_SOURCE */
 
 DECL_END

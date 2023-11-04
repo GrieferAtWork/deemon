@@ -24,6 +24,8 @@
 
 #include "object.h"
 
+#include <hybrid/typecore.h>
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
@@ -38,22 +40,22 @@ DECL_BEGIN
 typedef struct Dee_bytes_object DeeBytesObject;
 struct Dee_bytes_object {
 	Dee_OBJECT_HEAD
-	uint8_t                         *b_base;   /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
-	size_t                           b_size;   /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
-	DREF DeeObject                  *b_orig;   /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
-	DeeBuffer                        b_buffer; /* [const] The buffer being accessed. */
-	unsigned int                     b_flags;  /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
-	COMPILER_FLEXIBLE_ARRAY(uint8_t, b_data);  /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
+	__BYTE_TYPE__                         *b_base;   /* [0..b_size][in(b_buffer.bb_base)][const] Base address of the used portion of the buffer. */
+	size_t                                 b_size;   /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
+	DREF DeeObject                        *b_orig;   /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
+	DeeBuffer                              b_buffer; /* [const] The buffer being accessed. */
+	unsigned int                           b_flags;  /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
+	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);  /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
 };
 
 
 /* Define a statically initialized Bytes object `name' */
 #define Dee_DEFINE_BYTES(name, flags, num_bytes, ...) \
-	Dee_DEFINE_BYTES_EX(name, flags, uint8_t, num_bytes, __VA_ARGS__)
+	Dee_DEFINE_BYTES_EX(name, flags, __BYTE_TYPE__, num_bytes, __VA_ARGS__)
 #define Dee_DEFINE_BYTES_EX(name, flags, Titem, num_items, ...) \
 	struct {                                                    \
 		Dee_OBJECT_HEAD                                         \
-		uint8_t *b_base;                                        \
+		__BYTE_TYPE__ *b_base;                                  \
 		size_t b_size;                                          \
 		DREF DeeObject *b_orig;                                 \
 		DeeBuffer b_buffer;                                     \
@@ -61,10 +63,10 @@ struct Dee_bytes_object {
 		Titem b_data[num_items];                                \
 	} name = {                                                  \
 		Dee_OBJECT_HEAD_INIT(&DeeBytes_Type),                   \
-		(uint8_t *)name.b_data,                                 \
+		(__BYTE_TYPE__ *)name.b_data,                           \
 		(num_items) * sizeof(Titem),                            \
 		(DeeObject *)&name,                                     \
-		DeeBuffer_INIT((uint8_t *)name.b_data,                  \
+		DeeBuffer_INIT((__BYTE_TYPE__ *)name.b_data,            \
 		               (num_items) * sizeof(Titem)),            \
 		flags,                                                  \
 		__VA_ARGS__                                             \
@@ -114,7 +116,7 @@ DeeObject_Bytes(DeeObject *__restrict self,
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeBytes_NewBuffer(size_t num_bytes, uint8_t init);
+DeeBytes_NewBuffer(size_t num_bytes, __BYTE_TYPE__ init);
 
 DFUNDEF WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBufferUninitialized(size_t num_bytes);
@@ -193,7 +195,7 @@ DeeBytes_PrintRepr(DeeObject *__restrict self,
  * If the length of `seq' doesn't match `num_bytes', an UnpackError is thrown.
  * If `seq' is the none-singleton, `dst...+=num_bytes' is zero-initialized. */
 DFUNDEF WUNUSED NONNULL((1, 3)) int
-(DCALL DeeSeq_ItemsToBytes)(uint8_t *__restrict dst, size_t num_bytes,
+(DCALL DeeSeq_ItemsToBytes)(__BYTE_TYPE__ *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq);
 
 
@@ -272,12 +274,12 @@ DFUNDEF WUNUSED NONNULL((1)) int
 
 /* Append a single byte. */
 DFUNDEF WUNUSED NONNULL((1)) int
-(DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, uint8_t byte);
+(DCALL Dee_bytes_printer_putb)(struct Dee_bytes_printer *__restrict self, __BYTE_TYPE__ byte);
 
 /* Repeat the given `byte' a total of `count' times. */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DCALL Dee_bytes_printer_repeat)(struct Dee_bytes_printer *__restrict self,
-                                 uint8_t byte, size_t count);
+                                 __BYTE_TYPE__ byte, size_t count);
 
 
 /* Append raw byte data to the given bytes-printer, without concern
@@ -288,11 +290,11 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
  * -> The equivalent unicode_printer function is `unicode_printer_print8' */
 DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_bytes_printer_append)(struct Dee_bytes_printer *__restrict self,
-                                       uint8_t const *__restrict data,
+                                       __BYTE_TYPE__ const *__restrict data,
                                        size_t datalen);
 
 /* Allocate a buffer of `datalen' bytes at the end of the printer. */
-DFUNDEF WUNUSED NONNULL((1)) uint8_t *
+DFUNDEF WUNUSED NONNULL((1)) __BYTE_TYPE__ *
 (DCALL Dee_bytes_printer_alloc)(struct Dee_bytes_printer *__restrict self, size_t datalen);
 
 /* Release the last `datalen' bytes from the printer to be

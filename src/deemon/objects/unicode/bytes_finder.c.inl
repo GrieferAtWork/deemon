@@ -30,22 +30,25 @@
 
 DECL_BEGIN
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 typedef struct {
 	OBJECT_HEAD
 	DREF Bytes     *bf_bytes;  /* [1..1][const] The bytes that is being searched. */
 	DREF DeeObject *bf_other;  /* [1..1][const] The needle object. */
 	Needle          bf_needle; /* [const] The needle being searched for. */
-	uint8_t        *bf_start;  /* [1..1][const] Starting pointer. */
-	uint8_t        *bf_end;    /* [1..1][const] End pointer. */
+	byte_t         *bf_start;  /* [1..1][const] Starting pointer. */
+	byte_t         *bf_end;    /* [1..1][const] End pointer. */
 } BytesFind;
 
 typedef struct {
 	OBJECT_HEAD
 	DREF BytesFind *bfi_find;       /* [1..1][const] The underlying find-controller. */
-	uint8_t        *bfi_start;      /* [1..1][const] Starting pointer. */
-	DWEAK uint8_t  *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
-	uint8_t        *bfi_end;        /* [1..1][const] End pointer. */
-	uint8_t        *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
+	byte_t         *bfi_start;      /* [1..1][const] Starting pointer. */
+	DWEAK byte_t   *bfi_ptr;        /* [1..1] Pointer to the start of data left to be searched. */
+	byte_t         *bfi_end;        /* [1..1][const] End pointer. */
+	byte_t         *bfi_needle_ptr; /* [1..1][const] Starting pointer of the needle being searched. */
 	size_t          bfi_needle_len; /* [const] Length of the needle being searched. */
 } BytesFindIterator;
 
@@ -150,12 +153,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bfi_next(BytesFindIterator *__restrict self) {
-	uint8_t *ptr, *new_ptr;
+	byte_t *ptr, *new_ptr;
 again:
 	ptr     = atomic_read(&self->bfi_ptr);
-	new_ptr = (uint8_t *)memmemb(ptr, (size_t)(self->bfi_end - ptr),
-	                             self->bfi_needle_ptr,
-	                             self->bfi_needle_len);
+	new_ptr = (byte_t *)memmemb(ptr, (size_t)(self->bfi_end - ptr),
+	                            self->bfi_needle_ptr,
+	                            self->bfi_needle_len);
 	if (new_ptr) {
 		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
 			goto again;
@@ -166,12 +169,12 @@ again:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bcfi_next(BytesFindIterator *__restrict self) {
-	uint8_t *ptr, *new_ptr;
+	byte_t *ptr, *new_ptr;
 again:
 	ptr     = atomic_read(&self->bfi_ptr);
-	new_ptr = (uint8_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                                     self->bfi_needle_ptr,
-	                                     self->bfi_needle_len);
+	new_ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
+	                                    self->bfi_needle_ptr,
+	                                    self->bfi_needle_len);
 	if (new_ptr) {
 		size_t result;
 		if (!atomic_cmpxch_weak(&self->bfi_ptr, ptr, new_ptr + self->bfi_needle_len))
@@ -197,7 +200,7 @@ bfi_visit(BytesFindIterator *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bfi_bool(BytesFindIterator *__restrict self) {
-	uint8_t *ptr;
+	byte_t *ptr;
 	ptr = atomic_read(&self->bfi_ptr);
 	ptr = memmemb(ptr, (size_t)(self->bfi_end - ptr),
 	              self->bfi_needle_ptr,
@@ -207,11 +210,11 @@ bfi_bool(BytesFindIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bcfi_bool(BytesFindIterator *__restrict self) {
-	uint8_t *ptr;
+	byte_t *ptr;
 	ptr = atomic_read(&self->bfi_ptr);
-	ptr = memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
-	                      self->bfi_needle_ptr,
-	                      self->bfi_needle_len);
+	ptr = (byte_t *)memasciicasemem(ptr, (size_t)(self->bfi_end - ptr),
+	                                self->bfi_needle_ptr,
+	                                self->bfi_needle_len);
 	return ptr != NULL;
 }
 
