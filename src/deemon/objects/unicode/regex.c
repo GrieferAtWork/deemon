@@ -492,6 +492,7 @@ again_rules_iter:
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Invalid regex rules string flag %:1q",
 			                iter - 1);
+			goto err;
 		}
 	}
 
