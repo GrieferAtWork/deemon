@@ -3083,6 +3083,14 @@ err:
 	return NULL;
 }
 
+#ifndef DEFINED_err_empty_filler
+#define DEFINED_err_empty_filler
+PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Empty filler");
+}
+#endif /* !DEFINED_err_empty_filler */
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
@@ -3094,6 +3102,8 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;
+		if unlikely(!filler.n_size)
+			goto empty_filler;
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
@@ -3117,6 +3127,8 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
+empty_filler:
+	err_empty_filler();
 err:
 	return NULL;
 }
@@ -3132,6 +3144,8 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;
+		if unlikely(!filler.n_size)
+			goto empty_filler;
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
@@ -3152,6 +3166,8 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		        fill_back, filler.n_data, filler.n_size);
 	}
 	return result;
+empty_filler:
+	err_empty_filler();
 err:
 	return NULL;
 }
@@ -3167,6 +3183,8 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;
+		if unlikely(!filler.n_size)
+			goto empty_filler;
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
@@ -3186,6 +3204,8 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 		        DeeBytes_DATA(self), DeeBytes_SIZE(self));
 	}
 	return result;
+empty_filler:
+	err_empty_filler();
 err:
 	return NULL;
 }
@@ -3201,6 +3221,8 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if (filler_ob) {
 		if (get_needle(&filler, filler_ob))
 			goto err;
+		if unlikely(!filler.n_size)
+			goto empty_filler;
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
@@ -3227,6 +3249,8 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 		memcpyb(dst + fill_front, src, src_len);
 	}
 	return result;
+empty_filler:
+	err_empty_filler();
 err:
 	return NULL;
 }

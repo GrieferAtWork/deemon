@@ -3887,10 +3887,13 @@ err:
 	return NULL;
 }
 
+#ifndef DEFINED_err_empty_filler
+#define DEFINED_err_empty_filler
 PRIVATE ATTR_COLD int DCALL err_empty_filler(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Empty filler");
 }
+#endif /* !DEFINED_err_empty_filler */
 
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_center(String *self, size_t argc, DeeObject *const *argv) {
