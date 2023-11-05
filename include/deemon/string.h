@@ -28,6 +28,7 @@
 #include "alloc.h"
 #endif /* !__INTELLISENSE__ */
 
+#include <hybrid/__overflow.h>
 #include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
@@ -1089,8 +1090,32 @@ DeeString_NewWideAltEndian(Dee_wchar_t const *__restrict str,
 
 
 /* API for string construction from buffers. */
+#if 0
 #define DeeString_SizeOf2ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 2)
 #define DeeString_SizeOf4ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 4)
+#else
+LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf2ByteBuffer)(size_t num_chars) {
+	size_t result;
+	if unlikely(__hybrid_overflow_umul(num_chars, 2, &result))
+		goto overflow;
+	if unlikely(__hybrid_overflow_uadd(result, sizeof(size_t) + 2, &result))
+		goto overflow;
+	return result;
+overflow:
+	return (size_t)-1;
+}
+LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf4ByteBuffer)(size_t num_chars) {
+	size_t result;
+	if unlikely(__hybrid_overflow_umul(num_chars, 4, &result))
+		goto overflow;
+	if unlikely(__hybrid_overflow_uadd(result, sizeof(size_t) + 4, &result))
+		goto overflow;
+	return result;
+overflow:
+	return (size_t)-1;
+}
+#endif
+
 #ifdef __INTELLISENSE__
 /* Allocate a new buffer for constructing a string form either
  * wide-character encoding, or any 1-, 2- or 4-byte encoding.
