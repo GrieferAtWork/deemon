@@ -9353,7 +9353,7 @@ string_charcnt2bytecnt(String const *self, size_t charpos, char const *utf8) {
 	size_t num_bytes;
 	if (!self->s_data || (self->s_data->u_flags & STRING_UTF_FASCII))
 		return charpos;
-	iter     = utf8;
+	iter      = utf8;
 	num_bytes = WSTR_LENGTH(utf8);
 	for (; charpos; --charpos) {
 		uint8_t charlen = unicode_utf8seqlen[(unsigned char)*iter];
@@ -10284,6 +10284,8 @@ string_relstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((String *)Dee_EmptyString);
 	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
 	                                        exec.rx_endoff - exec.rx_startoff,
 	                                        STRING_ERROR_FSTRICT);
@@ -10315,6 +10317,8 @@ string_rerstrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((String *)Dee_EmptyString);
 	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
 	                                        exec.rx_endoff - exec.rx_startoff,
 	                                        STRING_ERROR_FSTRICT);
@@ -10362,6 +10366,8 @@ string_restrip(String *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((String *)Dee_EmptyString);
 	return (DREF String *)DeeString_NewUtf8((char const *)exec.rx_inbase + exec.rx_startoff,
 	                                        exec.rx_endoff - exec.rx_startoff,
 	                                        STRING_ERROR_FSTRICT);
@@ -10421,12 +10427,13 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Decode @this ?., re-interpreting its underlying character bytes as @codec\n"
 	              "Prior to processing, @codec is normalized as follows:\n"
 	              "${"
-	              "name = name.lower().replace(\"_\", \"-\");\n"
-	              "if (name.startswith(\"iso-\"))\n"
-	              "	name = \"iso\" + name[4:];\n"
-	              "else if (name.startswith(\"cp-\")) {\n"
-	              "	name = \"cp\" + name[3:];\n"
-	              "}}\n"
+	              /**/ "name = name.lower().replace(\"_\", \"-\");\n"
+	              /**/ "if (name.startswith(\"iso-\"))\n"
+	              /**/ "	name = \"iso\" + name[4:];\n"
+	              /**/ "else if (name.startswith(\"cp-\")) {\n"
+	              /**/ "	name = \"cp\" + name[3:];\n"
+	              /**/ "}"
+	              "}\n"
 	              "Following that, @codec is compared against the following list of builtin codecs\n"
 	              "#T{Codec Name|Aliases|Return type|Description~"
 	              "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
@@ -10448,13 +10455,15 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "#tUnicodeEncodeError{@this ?. could not be decoded as @codec and @errors was set to $\"strict\"}"
 	              "#perrors{The way that decode-errors are handled as one of $\"strict\", $\"replace\" or $\"ignore\"}"
 	              "Encode @this ?., re-interpreting its underlying character bytes as @codec\n"
-	              "Prior to processing, @codec is normalized as follows:\n${"
-	              "name = name.lower().replace(\"_\", \"-\");\n"
-	              "if (name.startswith(\"iso-\"))\n"
-	              "	name = \"iso\" + name[4:];\n"
-	              "else if (name.startswith(\"cp-\")) {\n"
-	              "	name = \"cp\" + name[3:];\n"
-	              "}}\n"
+	              "Prior to processing, @codec is normalized as follows:\n"
+	              "${"
+	              /**/ "name = name.lower().replace(\"_\", \"-\");\n"
+	              /**/ "if (name.startswith(\"iso-\"))\n"
+	              /**/ "	name = \"iso\" + name[4:];\n"
+	              /**/ "else if (name.startswith(\"cp-\")) {\n"
+	              /**/ "	name = \"cp\" + name[3:];\n"
+	              /**/ "}"
+	              "}\n"
 	              "Following that, @codec is compared against the following list of builtin codecs\n"
 	              "#T{Codec Name|Aliases|Return type|Description~"
 	              "$\"ascii\"|$\"646\", $\"us-ascii\"|Same as $this|"
@@ -10475,9 +10484,9 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	            "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
 	            "#tValueError{@allow_invalid is ?f, and @this ?. contains characters above $0xff}"
 	            "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
-	            "using a single byte per character. A character greater than $0xff either causes :ValueError "
-	            "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
-	            "$\"?\" in the returned Bytes object"),
+	            /**/ "using a single byte per character. A character greater than $0xff either causes :ValueError "
+	            /**/ "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
+	            /**/ "$\"?\" in the returned Bytes object"),
 	TYPE_METHOD("ord", &string_ord,
 	            "->?Dint\n"
 	            "#tValueError{The length of @this ?. is not equal to $1}"

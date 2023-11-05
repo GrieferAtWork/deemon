@@ -5044,6 +5044,8 @@ bytes_relstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((Bytes *)Dee_EmptyBytes);
 	return (DREF Bytes *)DeeBytes_NewSubView(self,
 	                                         (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 	                                         exec.rx_endoff - exec.rx_startoff);
@@ -5077,6 +5079,8 @@ bytes_rerstrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((Bytes *)Dee_EmptyBytes);
 	return (DREF Bytes *)DeeBytes_NewSubView(self,
 	                                         (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 	                                         exec.rx_endoff - exec.rx_startoff);
@@ -5126,6 +5130,8 @@ bytes_restrip(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	}
 
 	/* End-of-matching-area */
+	if unlikely(exec.rx_startoff >= exec.rx_endoff)
+		return_reference_((Bytes *)Dee_EmptyBytes);
 	return (DREF Bytes *)DeeBytes_NewSubView(self,
 	                                         (void *)((char const *)exec.rx_inbase + exec.rx_startoff),
 	                                         exec.rx_endoff - exec.rx_startoff);
