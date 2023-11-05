@@ -1419,24 +1419,21 @@ object_str(DeeObject *__restrict self) {
 	Dee_Incref(&str_Object);
 	return &str_Object;
 #else
-	if (self->ob_type != &DeeObject_Type)
+	if (Dee_TYPE(self) != &DeeObject_Type)
 		goto err_noimp;
 	Dee_Incref(&str_Object);
 	return &str_Object;
 err_noimp:
-	err_unimplemented_operator(self->ob_type, OPERATOR_STR);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_STR);
 	return NULL;
 #endif
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
 object_repr(DeeObject *__restrict self) {
-	if (self->ob_type != &DeeObject_Type)
-		goto err_noimp;
-	Dee_Incref(&str_Object);
-	return &str_Object;
-err_noimp:
-	err_unimplemented_operator(self->ob_type, OPERATOR_REPR);
+	if (Dee_TYPE(self) == &DeeObject_Type)
+		return (DREF DeeStringObject *)DeeString_New("Object()");
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
 	return NULL;
 }
 
