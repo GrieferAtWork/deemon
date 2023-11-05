@@ -1848,8 +1848,14 @@ DeeMem_ClearCaches(size_t max_collect) {
 }
 
 PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
-	/* Clear caches and collect memory from various places. */
 	size_t collect_bytes;
+	/* Check for likely case: intentional allocation overflow.
+	 * In this case, don't try to do GC collect, etc., since
+	 * the OOM is probably intended by the caller. */
+	if likely(req_bytes >= ((size_t)-1 / 2))
+		return false;
+
+	/* Clear caches and collect memory from various places. */
 	collect_bytes = DeeMem_ClearCaches(req_bytes);
 	if (collect_bytes >= req_bytes)
 		return true;
