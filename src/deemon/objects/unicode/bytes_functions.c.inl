@@ -34,6 +34,7 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 
 #include "regroups.h"
@@ -2627,7 +2628,7 @@ struct bcompare_args {
 	size_t     rhs_len; /* # of bytes in rhs. */
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
 get_bcompare_args(Bytes *__restrict self,
                   struct bcompare_args *__restrict args,
                   size_t argc, DeeObject *const *argv,
@@ -2716,7 +2717,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
-				args->rhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
+					args->rhs_len = 0;
 			}
 		} else if (DeeString_Check(argv[0])) {
 			args->other = other = argv[0];
@@ -2734,7 +2736,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
-				args->rhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
+					args->rhs_len = 0;
 			}
 		} else if (DeeBytes_Check(argv[1])) {
 			if (DeeObject_AsSSize(argv[0], (dssize_t *)&temp))
@@ -2789,7 +2792,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->lhs_len)
 					temp2 = args->lhs_len;
 				args->lhs_ptr += temp;
-				args->lhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
+					args->lhs_len = 0;
 			}
 			args->other = other = argv[2];
 			if (DeeBytes_Check(other)) {
@@ -2828,7 +2832,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
-				args->rhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
+					args->rhs_len = 0;
 			}
 		} else if (DeeString_Check(argv[1])) {
 			if unlikely(temp >= args->lhs_len) {
@@ -2852,7 +2857,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->rhs_len)
 					temp2 = args->rhs_len;
 				args->rhs_ptr += temp;
-				args->rhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
+					args->rhs_len = 0;
 			}
 		} else {
 			if (DeeObject_AsSSize(argv[1], (dssize_t *)&temp2))
@@ -2863,7 +2869,8 @@ get_bcompare_args(Bytes *__restrict self,
 				if (temp2 > args->lhs_len)
 					temp2 = args->lhs_len;
 				args->lhs_ptr += temp;
-				args->lhs_len = temp2 - temp;
+				if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
+					args->lhs_len = 0;
 			}
 			args->other = other = argv[2];
 			if unlikely(!DeeString_Check(other))
@@ -2893,7 +2900,8 @@ get_bcompare_args(Bytes *__restrict self,
 			if (temp2 > args->lhs_len)
 				temp2 = args->lhs_len;
 			args->lhs_ptr += temp;
-			args->lhs_len = temp2 - temp;
+			if (OVERFLOW_USUB(temp2, temp, &args->lhs_len))
+				args->lhs_len = 0;
 		}
 		args->other = other = argv[2];
 		if (DeeBytes_Check(other)) {
@@ -2917,7 +2925,8 @@ get_bcompare_args(Bytes *__restrict self,
 			if (temp2 > args->rhs_len)
 				temp2 = args->rhs_len;
 			args->rhs_ptr += temp;
-			args->rhs_len = temp2 - temp;
+			if (OVERFLOW_USUB(temp2, temp, &args->rhs_len))
+				args->rhs_len = 0;
 		}
 		break;
 	default:
