@@ -1847,12 +1847,16 @@ DeeMem_ClearCaches(size_t max_collect) {
 	return result;
 }
 
+/* Threshold before OOM is forced (without trying to collect memory) */
+#define FORCED_OOM_THRESHOLD ((size_t)-1 / 3)
+
 PUBLIC bool DCALL Dee_TryCollectMemory(size_t req_bytes) {
 	size_t collect_bytes;
+
 	/* Check for likely case: intentional allocation overflow.
 	 * In this case, don't try to do GC collect, etc., since
 	 * the OOM is probably intended by the caller. */
-	if likely(req_bytes >= ((size_t)-1 / 2))
+	if likely(req_bytes >= FORCED_OOM_THRESHOLD)
 		return false;
 
 	/* Clear caches and collect memory from various places. */
