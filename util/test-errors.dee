@@ -1,0 +1,470 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import deemon;
+import * from deemon;
+import * from doc;
+import util;
+import posix;
+import threading;
+
+#define TERM_WIDTH 120
+
+global taskPool: {Callable...} = [];
+global taskThreads: {Thread...} = [];
+global taskPoolAvailable = threading.Semaphore(0);
+function postTask(func: Callable) {
+	taskPool.append(func);
+	taskPoolAvailable.release();
+}
+function serveTaskPool() {
+	for (;;) {
+		taskPoolAvailable.acquire();
+		local func;
+		try {
+			func = taskPool.popfront();
+		} catch (...) {
+			return;
+		}
+		func();
+	}
+}
+function waitDone() {
+	taskPoolAvailable.release(#taskThreads);
+	for (local t: taskThreads)
+		t.join();
+}
+
+for (none: [:posix.cpu_count()]) {
+	local t = deemon.Thread(serveTaskPool);
+	t.start();
+	taskThreads.append(t);
+}
+
+
+
+/* Test invocations if various functions and operators. Not to assert
+ * their expected results, but to make sure that references aren't leaked
+ * in some situation. */
+
+function getTypeInstances(t: Type | TypeExpr): {Object...} {
+	if (t is TypeExpr) {
+		/* TODO: Handle sequence-of-type expressions */
+		/* TODO: Handle tuple-of-types expressions */
+		/* TODO: Handle mapping-of-key-value expressions */
+		for (local txType: t.types) {
+			yield getTypeInstances(txType)...;
+		}
+		return;
+	}
+	switch (t) {
+	case int:
+		yield -0x8000000000000000;
+		yield -0x80000000;
+		yield -1;
+		yield 0;
+		yield 1;
+		yield 0x7fffffff;
+		yield 0x7fffffffffffffff;
+		return;
+	case bool:
+		yield true;
+		yield false;
+		return;
+	case type none:
+		yield none;
+		return;
+	case Bytes:
+		for (local x: getTypeInstances(string))
+			yield x.bytes();
+		return;
+	case Sequence:
+		yield {};
+		yield {none};
+		yield {none,none};
+		yield {none,none,none};
+		return;
+	case Tuple:
+	case List:
+		for (local x: getTypeInstances(Sequence))
+			yield t(x);
+		yield Object(); /* To check wrong-type paths (which are often special for tuples) */
+		return;
+	case string:
+		yield "";
+		yield "$";
+		yield "aBcDeFgHiJkLmNoPqRsTuVwXyZ";
+		yield "\U0000007f"; /* Last ASCII char */
+		yield "\U00000080"; /* First latin-1 char */
+		yield "\U000000ff"; /* Last latin-1 char */
+		yield "\U00000100"; /* First UCS-16 char */
+		yield "\U0000de12"; /* Inside UTF-16 surrogate area */
+		yield "\U00007fff"; /* Last signed UCS-16 char */
+		yield "\U00008000"; /* First unsigned UCS-16 char */
+		yield "\U0000ffff"; /* Last unsigned UCS-16 char */
+		yield "\U00010000"; /* First UTF-32 char */
+		yield "\U0010ffff"; /* Last defined UTF-32 char */
+		yield "\U00110000"; /* First undefined UTF-32 char */
+		yield "\U7fffffff"; /* Last signed UTF-32 char */
+		yield "\U80000000"; /* First unsigned UTF-32 char */
+		yield "\Uffffffff"; /* Last unsigned UTF-32 char */
+		yield Object(); /* To check wrong-type paths (which are often special for strings) */
+		return;
+	default:
+		break;
+	}
+	try { yield t(); } catch (...) { return; }
+	try { yield copy t(); } catch (...) {}
+	try { yield deepcopy t(); } catch (...) {}
+	try { local v = t(); v := t(); yield v; } catch (...) {}
+	try { local v = t(); v.operator move := (t()); yield v; } catch (...) {}
+}
+
+function invokeWithValues(
+		f: Function, argValues: {Object...}, name: string = "") {
+	if (!name)
+		name = repr f;
+	if (!argValues) {
+		/* Special case: invoke once, without any arguments. */
+		print f"\r{name}()".ljust(TERM_WIDTH),;
+		try {
+			f();
+		} catch (...) {
+		}
+		return;
+	}
+	local argIndices = [0] * #argValues;
+	while (argIndices.first < #argValues.first) {
+		local args = Tuple(
+			for (local i, j: util.enumerate(argIndices))
+				argValues[i][j]);
+		print f"\r{name}({", ".join(for (local x: args) repr x)})"
+			[:TERM_WIDTH].ljust(TERM_WIDTH),;
+		try {
+			f(args...);
+		} catch (...) {
+		}
+
+		/* Move on to the next permutation */
+		local indexIndex = #argIndices - 1;
+		for (;;) {
+			local newIndex = argIndices[indexIndex] + 1;
+			if (newIndex >= #argValues[indexIndex]) {
+				argIndices[indexIndex] = 0;
+			} else {
+				argIndices[indexIndex] = newIndex;
+				break;
+			}
+			if (indexIndex == 0)
+				return;
+			--indexIndex;
+		}
+	}
+}
+
+function invoke(f: Callable,
+		argTypes: {Type | TypeExpr | {Type | TypeExpr...} |
+		          {Object...} | Object...} | none = none,
+		name: string = "", doc: Doc | none = none) {
+	if (!name)
+		name = repr f;
+	if (argTypes is none) {
+		/* Extract type information from doc string. */
+		if (doc is none)
+			doc = Doc(f);
+		local thisType = none;
+		if (hasattr(f, "__type__"))
+			thisType = f.__type__;
+		for (local decl: doc.decls) {
+			local declArgTypes = [];
+			if (thisType !is none)
+				declArgTypes.append(thisType);
+			declArgTypes.extend(decl.parameters.each.typ);
+			invoke(f, declArgTypes, name, doc);
+		}
+		return;
+	}
+	print f"\r{name}:".ljust(TERM_WIDTH) + "\n",;
+	local argValues: {{Object...}...} = Tuple(for (local t: argTypes) ({
+		local values;
+		if (t is Type || t is TypeExpr) {
+			values = Tuple(getTypeInstances(t));
+			if (!values)
+				throw Error(f"{name}: unable to instantiate {repr t}");
+		} else if (t is Sequence && t) {
+			local first = t.first;
+			if (first is Type || first is TypeExpr) {
+				values = Tuple(for (local x: t) getTypeInstances(x));
+			} else {
+				values = t;
+			}
+		} else {
+			values = { t };
+		}
+		values;
+	}));
+	invokeWithValues(f, argValues, name);
+}
+
+function invokeAsync(args..., **kwds) {
+	postTask(() -> invoke(args..., **kwds));
+}
+
+@@Invoke member functions of the given @Type @t
+function invokeTypeMembers(t: Type) {
+	for (local a: enumattr(t)) {
+		if (a.decl !== t)
+			continue;
+		local wrapper = t.operator . (a.name);
+		print(f"invoke({repr wrapper});");
+		invokeAsync(wrapper, name: f"{repr t}.{a.name}");
+	}
+}
+
+
+function main() {
+	//invokeTypeMembers(deemon.string);
+	invokeTypeMembers(deemon.Bytes);
+
+	//invokeAsync(deemon.string.chr);
+	//invokeAsync(deemon.string.fromseq);
+	//invokeAsync(deemon.string.decode);
+	//invokeAsync(deemon.string.encode);
+	//invokeAsync(deemon.string.bytes);
+	//invokeAsync(deemon.string.ord);
+	//invokeAsync(deemon.string.format);
+	//invokeAsync(deemon.string.scanf);
+	//invokeAsync(deemon.string.iscntrl);
+	//invokeAsync(deemon.string.istab);
+	//invokeAsync(deemon.string.iscempty);
+	//invokeAsync(deemon.string.iswhite);
+	//invokeAsync(deemon.string.islf);
+	//invokeAsync(deemon.string.isspace);
+	//invokeAsync(deemon.string.islower);
+	//invokeAsync(deemon.string.isupper);
+	//invokeAsync(deemon.string.isalpha);
+	//invokeAsync(deemon.string.isdigit);
+	//invokeAsync(deemon.string.ishex);
+	//invokeAsync(deemon.string.isxdigit);
+	//invokeAsync(deemon.string.isalnum);
+	//invokeAsync(deemon.string.ispunct);
+	//invokeAsync(deemon.string.isgraph);
+	//invokeAsync(deemon.string.isprint);
+	//invokeAsync(deemon.string.isblank);
+	//invokeAsync(deemon.string.isnumeric);
+	//invokeAsync(deemon.string.issymstrt);
+	//invokeAsync(deemon.string.issymcont);
+	//invokeAsync(deemon.string.iscempty);
+	//invokeAsync(deemon.string.isascii);
+	//invokeAsync(deemon.string.istitle);
+	//invokeAsync(deemon.string.issymbol);
+	//invokeAsync(deemon.string.isanycntrl);
+	//invokeAsync(deemon.string.isanytab);
+	//invokeAsync(deemon.string.isanycempty);
+	//invokeAsync(deemon.string.isanywhite);
+	//invokeAsync(deemon.string.isanylf);
+	//invokeAsync(deemon.string.isanyspace);
+	//invokeAsync(deemon.string.isanylower);
+	//invokeAsync(deemon.string.isanyupper);
+	//invokeAsync(deemon.string.isanyalpha);
+	//invokeAsync(deemon.string.isanydigit);
+	//invokeAsync(deemon.string.isanyhex);
+	//invokeAsync(deemon.string.isanyxdigit);
+	//invokeAsync(deemon.string.isanyalnum);
+	//invokeAsync(deemon.string.isanypunct);
+	//invokeAsync(deemon.string.isanygraph);
+	//invokeAsync(deemon.string.isanyprint);
+	//invokeAsync(deemon.string.isanyblank);
+	//invokeAsync(deemon.string.isanytitle);
+	//invokeAsync(deemon.string.isanynumeric);
+	//invokeAsync(deemon.string.isanysymstrt);
+	//invokeAsync(deemon.string.isanysymcont);
+	//invokeAsync(deemon.string.isanycempty);
+	//invokeAsync(deemon.string.isanyascii);
+	//invokeAsync(deemon.string.asnumeric);
+	//invokeAsync(deemon.string.asdigit);
+	//invokeAsync(deemon.string.asxdigit);
+	//invokeAsync(deemon.string.lower);
+	//invokeAsync(deemon.string.upper);
+	//invokeAsync(deemon.string.title);
+	//invokeAsync(deemon.string.capitalize);
+	//invokeAsync(deemon.string.swapcase);
+	//invokeAsync(deemon.string.casefold);
+
+	//invokeAsync(deemon.string.replace);
+	//invokeAsync(deemon.string.find);
+	//invokeAsync(deemon.string.rfind);
+	//invokeAsync(deemon.string.index);
+	//invokeAsync(deemon.string.rindex);
+	//invokeAsync(deemon.string.findany);
+	//invokeAsync(deemon.string.rfindany);
+	//invokeAsync(deemon.string.indexany);
+	//invokeAsync(deemon.string.rindexany);
+	//invokeAsync(deemon.string.findall);
+	//invokeAsync(deemon.string.count);
+
+	//invokeAsync(deemon.string.contains);
+	//invokeAsync(deemon.string.substr);
+	//invokeAsync(deemon.string.strip);
+	//invokeAsync(deemon.string.lstrip);
+	//invokeAsync(deemon.string.rstrip);
+	//invokeAsync(deemon.string.sstrip);
+	//invokeAsync(deemon.string.lsstrip);
+	//invokeAsync(deemon.string.rsstrip);
+	//invokeAsync(deemon.string.striplines);
+	//invokeAsync(deemon.string.lstriplines);
+	//invokeAsync(deemon.string.rstriplines);
+	//invokeAsync(deemon.string.sstriplines);
+	//invokeAsync(deemon.string.lsstriplines);
+	//invokeAsync(deemon.string.rsstriplines);
+	//invokeAsync(deemon.string.startswith);
+	//invokeAsync(deemon.string.endswith);
+	//invokeAsync(deemon.string.partition);
+	//invokeAsync(deemon.string.rpartition);
+	//invokeAsync(deemon.string.compare);
+	//invokeAsync(deemon.string.vercompare);
+	//invokeAsync(deemon.string.wildcompare);
+	//invokeAsync(deemon.string.fuzzycompare);
+	//invokeAsync(deemon.string.wmatch);
+	//invokeAsync(deemon.string.casereplace);
+
+	//invokeAsync(deemon.string.casefind);
+	//invokeAsync(deemon.string.caserfind);
+	//invokeAsync(deemon.string.caseindex);
+	//invokeAsync(deemon.string.caserindex);
+	//invokeAsync(deemon.string.casefindany);
+	//invokeAsync(deemon.string.caserfindany);
+	//invokeAsync(deemon.string.caseindexany);
+	//invokeAsync(deemon.string.caserindexany);
+	//invokeAsync(deemon.string.casefindall);
+	//invokeAsync(deemon.string.casecount);
+	//invokeAsync(deemon.string.casecontains);
+	//invokeAsync(deemon.string.casestrip);
+	//invokeAsync(deemon.string.caselstrip);
+	//invokeAsync(deemon.string.caserstrip);
+	//invokeAsync(deemon.string.casesstrip);
+	//invokeAsync(deemon.string.caselsstrip);
+	//invokeAsync(deemon.string.casersstrip);
+	//invokeAsync(deemon.string.casestriplines);
+	//invokeAsync(deemon.string.caselstriplines);
+	//invokeAsync(deemon.string.caserstriplines);
+	//invokeAsync(deemon.string.casesstriplines);
+	//invokeAsync(deemon.string.caselsstriplines);
+	//invokeAsync(deemon.string.casersstriplines);
+	//invokeAsync(deemon.string.casestartswith);
+	//invokeAsync(deemon.string.caseendswith);
+	//invokeAsync(deemon.string.casepartition);
+	//invokeAsync(deemon.string.caserpartition);
+	//invokeAsync(deemon.string.casecompare);
+	//invokeAsync(deemon.string.casevercompare);
+	//invokeAsync(deemon.string.casewildcompare);
+	//invokeAsync(deemon.string.casefuzzycompare);
+	//invokeAsync(deemon.string.casewmatch);
+
+	//invokeAsync(deemon.string.center);
+	//invokeAsync(deemon.string.ljust);
+	//invokeAsync(deemon.string.rjust);
+	//invokeAsync(deemon.string.zfill);
+
+	//invokeAsync(deemon.string.reversed);
+	//invokeAsync(deemon.string.expandtabs);
+	//invokeAsync(deemon.string.unifylines);
+	//invokeAsync(deemon.string.join);
+	//invokeAsync(deemon.string.split);
+	//invokeAsync(deemon.string.casesplit);
+	//invokeAsync(deemon.string.splitlines);
+	//invokeAsync(deemon.string.indent);
+	//invokeAsync(deemon.string.dedent);
+	//invokeAsync(deemon.string.common);
+	//invokeAsync(deemon.string.rcommon);
+	//invokeAsync(deemon.string.casecommon);
+	//invokeAsync(deemon.string.casercommon);
+	//invokeAsync(deemon.string.findmatch);
+	//invokeAsync(deemon.string.indexmatch);
+	//invokeAsync(deemon.string.casefindmatch);
+	//invokeAsync(deemon.string.caseindexmatch);
+	//invokeAsync(deemon.string.rfindmatch);
+	//invokeAsync(deemon.string.rindexmatch);
+	//invokeAsync(deemon.string.caserfindmatch);
+	//invokeAsync(deemon.string.caserindexmatch);
+	//invokeAsync(deemon.string.partitionmatch);
+	//invokeAsync(deemon.string.rpartitionmatch);
+	//invokeAsync(deemon.string.casepartitionmatch);
+	//invokeAsync(deemon.string.caserpartitionmatch);
+	//invokeAsync(deemon.string.segments);
+	//invokeAsync(deemon.string.distribute);
+
+	//invokeAsync(deemon.string.rematch);
+	//invokeAsync(deemon.string.rematches);
+	//invokeAsync(deemon.string.refind);
+	//invokeAsync(deemon.string.rerfind);
+	//invokeAsync(deemon.string.reindex);
+	//invokeAsync(deemon.string.rerindex);
+	//invokeAsync(deemon.string.relocate);
+	//invokeAsync(deemon.string.rerlocate);
+	//invokeAsync(deemon.string.repartition);
+	//invokeAsync(deemon.string.rerpartition);
+	//invokeAsync(deemon.string.rereplace);
+	//invokeAsync(deemon.string.refindall);
+	//invokeAsync(deemon.string.relocateall);
+	//invokeAsync(deemon.string.resplit);
+	//invokeAsync(deemon.string.restartswith);
+	//invokeAsync(deemon.string.reendswith);
+	//invokeAsync(deemon.string.restrip);
+	//invokeAsync(deemon.string.relstrip);
+	//invokeAsync(deemon.string.rerstrip);
+	//invokeAsync(deemon.string.recount);
+	//invokeAsync(deemon.string.recontains);
+	//invokeAsync(deemon.string.rescanf);
+	//invokeAsync(deemon.string.regmatch);
+	//invokeAsync(deemon.string.regfind);
+	//invokeAsync(deemon.string.regrfind);
+	//invokeAsync(deemon.string.regfindall);
+	//invokeAsync(deemon.string.regindex);
+	//invokeAsync(deemon.string.regrindex);
+
+	//invokeAsync(deemon.string.reversed);
+	//invokeAsync(deemon.string.ordinals);
+	//invokeAsync(deemon.string.__hashed__);
+	//invokeAsync(deemon.string.__hasutf__);
+	//invokeAsync(deemon.string.__hasregex__);
+	//invokeAsync(deemon.string.first);
+	//invokeAsync(deemon.string.last);
+	//invokeAsync(deemon.string.__sizeof__);
+	//invokeAsync(deemon.string.__str_bytes__);
+	//invokeAsync(deemon.string.__str_bytes_isutf8__);
+	//invokeAsync(deemon.string.__str_bytes_islatin1__);
+	//invokeAsync(deemon.string.__str_width__);
+	//invokeAsync(deemon.string.__wstr_bytes__);
+	//invokeAsync(deemon.string.__utf8_bytes__);
+	//invokeAsync(deemon.string.__utf16_bytes__);
+	//invokeAsync(deemon.string.__utf32_bytes__);
+	//invokeAsync(deemon.string.__1byte_bytes__);
+	//invokeAsync(deemon.string.__2byte_bytes__);
+	//invokeAsync(deemon.string.__utf32_bytes__);
+}
+
+
+#ifdef __MAIN__
+main();
+waitDone();
+print "DONE";
+#endif /* __MAIN__ */
