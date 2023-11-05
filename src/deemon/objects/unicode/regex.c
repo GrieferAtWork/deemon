@@ -394,6 +394,7 @@ PRIVATE bool DCALL regex_cache_rehash(int sizedir) {
 	                                                        sizeof(struct regex_cache_entry));
 	if unlikely(!new_vector)
 		return false;
+	new_vector = (struct regex_cache_entry *)Dee_UntrackAlloc(new_vector);
 	ASSERT((regex_cache_base == regex_cache_empty) == (regex_cache_mask == 0));
 	ASSERT((regex_cache_base == regex_cache_empty) == (regex_cache_size == 0));
 	if (regex_cache_base != regex_cache_empty) {
@@ -571,6 +572,7 @@ again_insert_result:
 				utf = Dee_string_utf_alloc();
 				haslock = false;
 			}
+			utf = (struct string_utf *)Dee_UntrackAlloc(utf);
 			if unlikely(!atomic_cmpxch(&((DeeStringObject *)self)->s_data, NULL, utf)) {
 				Dee_string_utf_free(utf);
 				utf = ((DeeStringObject *)self)->s_data;
@@ -588,7 +590,7 @@ again_insert_result:
 		       first_dummy->rce_str == REGEX_CACHE_DUMMY_STR);
 		wasdummy = first_dummy->rce_str != NULL;
 		first_dummy->rce_str    = (DeeStringObject *)self;
-		first_dummy->rce_regex  = result;
+		first_dummy->rce_regex  = (struct DeeRegexCode *)Dee_UntrackAlloc(result);
 		first_dummy->rce_syntax = compile_flags;
 		++regex_cache_used;
 		if (!wasdummy) {

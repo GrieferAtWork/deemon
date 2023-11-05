@@ -247,34 +247,6 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 
-	invokeAsync(deemon.Bytes.rematch);
-	invokeAsync(deemon.Bytes.rematches);
-	invokeAsync(deemon.Bytes.refind);
-	invokeAsync(deemon.Bytes.rerfind);
-	//invokeAsync(deemon.Bytes.reindex);
-	//invokeAsync(deemon.Bytes.rerindex);
-	//invokeAsync(deemon.Bytes.relocate);
-	//invokeAsync(deemon.Bytes.rerlocate);
-	//invokeAsync(deemon.Bytes.repartition);
-	//invokeAsync(deemon.Bytes.rerpartition);
-	//invokeAsync(deemon.Bytes.rereplace);
-	//invokeAsync(deemon.Bytes.refindall);
-	//invokeAsync(deemon.Bytes.relocateall);
-	//invokeAsync(deemon.Bytes.resplit);
-	//invokeAsync(deemon.Bytes.restartswith);
-	//invokeAsync(deemon.Bytes.reendswith);
-	//invokeAsync(deemon.Bytes.restrip);
-	//invokeAsync(deemon.Bytes.relstrip);
-	//invokeAsync(deemon.Bytes.rerstrip);
-	//invokeAsync(deemon.Bytes.recount);
-	//invokeAsync(deemon.Bytes.recontains);
-	//invokeAsync(deemon.Bytes.rescanf);
-	//invokeAsync(deemon.Bytes.regmatch);
-	//invokeAsync(deemon.Bytes.regfind);
-	//invokeAsync(deemon.Bytes.regrfind);
-	//invokeAsync(deemon.Bytes.regfindall);
-	//invokeAsync(deemon.Bytes.regindex);
-	//invokeAsync(deemon.Bytes.regrindex);
 }
 
 
