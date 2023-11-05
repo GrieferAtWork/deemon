@@ -482,6 +482,7 @@ DeeSeq_Sum(DeeObject *__restrict self) {
 		/* Special case: empty sequence. */
 		if unlikely(!result)
 			goto err_iter;
+		Dee_Decref_likely(iterator);
 		return_none;
 	}
 	if (DeeBytes_Check(result)) {
@@ -496,7 +497,7 @@ DeeSeq_Sum(DeeObject *__restrict self) {
 			Dee_Decref(result);
 			goto err;
 		}
-		/* Use a unicode printer. */
+		/* Use a bytes printer. */
 		bytes_printer_init(&p);
 		error = bytes_printer_append(&p, DeeBytes_DATA(result), DeeBytes_SIZE(result));
 		if (error >= 0)
