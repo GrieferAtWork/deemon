@@ -2323,10 +2323,12 @@ do_callcmember_this_r:
 			DISPATCH();
 		}
 
-		RAW_TARGET(ASM_FUNCTION_C_16)
-		imm_val  = READ_imm8();
-		imm_val2 = READ_imm16();
-		goto do_function_c;
+		RAW_TARGET(ASM_FUNCTION_C_16) {
+			imm_val  = READ_imm8();
+			imm_val2 = READ_imm16();
+			goto do_function_c;
+		}
+
 		RAW_TARGET(ASM_FUNCTION_C) {
 			DREF DeeObject *function;
 			imm_val  = READ_imm8();
