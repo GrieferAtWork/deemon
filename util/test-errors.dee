@@ -247,10 +247,10 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 
-	//invokeAsync(deemon.Bytes.rematch);
-	//invokeAsync(deemon.Bytes.rematches);
-	//invokeAsync(deemon.Bytes.refind);
-	//invokeAsync(deemon.Bytes.rerfind);
+	invokeAsync(deemon.Bytes.rematch);
+	invokeAsync(deemon.Bytes.rematches);
+	invokeAsync(deemon.Bytes.refind);
+	invokeAsync(deemon.Bytes.rerfind);
 	//invokeAsync(deemon.Bytes.reindex);
 	//invokeAsync(deemon.Bytes.rerindex);
 	//invokeAsync(deemon.Bytes.relocate);
@@ -275,14 +275,6 @@ function main() {
 	//invokeAsync(deemon.Bytes.regfindall);
 	//invokeAsync(deemon.Bytes.regindex);
 	//invokeAsync(deemon.Bytes.regrindex);
-
-	invokeAsync(deemon.Bytes.isreadonly);
-	invokeAsync(deemon.Bytes.iswritable);
-	invokeAsync(deemon.Bytes.iswritable);
-	invokeAsync(deemon.Bytes.first);
-	invokeAsync(deemon.Bytes.last);
-	invokeAsync(deemon.Bytes.__sizeof__);
-	invokeAsync(deemon.Bytes.length);
 }
 
 

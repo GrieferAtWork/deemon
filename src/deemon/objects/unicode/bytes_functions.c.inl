@@ -4298,6 +4298,7 @@ bytes_search_regex_getargs(Bytes *self, size_t argc, DeeObject *const *argv,
 	if (DeeArg_UnpackKw(argc, argv, kw, bytes_search_regex_kwlist, fmt,
 	                    &pattern, &result->rewr_exec.rx_startoff,
 	                    &result->rewr_exec.rx_endoff,
+	                    &result->rewr_range,
 	                    &rules))
 		goto err;
 	if (DeeObject_AssertTypeExact(pattern, &DeeString_Type))
