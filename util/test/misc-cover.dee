@@ -23,62 +23,6 @@ import * from deemon;
 import * from errors;
 import * from collections;
 
-assert((try (assert(false),) catch (AssertionError) "here") == "here");
-
-{
-	class Foo {
-		func() {
-			return this.id;
-		}
-	}
-	function func2(x) {
-		return x.id;
-	}
-	local x = Foo();
-	assert x.id == x.func();
-	assert x.id == Foo.func(x);
-	assert x.id == Foo.func.__thiscall__(x);
-	assert x.id == Foo.func.__thiscall__(x, ());
-	assert x.id == func2(x);
-	assert x.id == func2(x: x);
-	assert x.id == func2.__thiscall__(x);
-	assert x.id == func2.__thiscall__(x, ());
-}
-
-{
-	function kw0(**kwds) -> kwds;
-	function kw1(x, **kwds) -> kwds;
-	function kw2(x, y, **kwds) -> kwds;
-	function kw3(x, y, z, **kwds) -> kwds;
-	/* Assert allowed invocations */
-	assert (try kw0() catch (TypeError) "nope") == {};
-	assert (try kw0(10) catch (TypeError) "nope") == "nope";
-	assert (try kw0(10, 20) catch (TypeError) "nope") == "nope";
-	assert (try kw0(10, 20, 30) catch (TypeError) "nope") == "nope";
-	assert (try kw1() catch (TypeError) "nope") == "nope";
-	assert (try kw1(10) catch (TypeError) "nope") == {};
-	assert (try kw1(10, 20) catch (TypeError) "nope") == "nope";
-	assert (try kw1(10, 20, 30) catch (TypeError) "nope") == "nope";
-	assert (try kw2() catch (TypeError) "nope") == "nope";
-	assert (try kw2(10) catch (TypeError) "nope") == "nope";
-	assert (try kw2(10, 20) catch (TypeError) "nope") == {};
-	assert (try kw2(10, 20, 30) catch (TypeError) "nope") == "nope";
-	assert (try kw3() catch (TypeError) "nope") == "nope";
-	assert (try kw3(10) catch (TypeError) "nope") == "nope";
-	assert (try kw3(10, 20) catch (TypeError) "nope") == "nope";
-	assert (try kw3(10, 20, 30) catch (TypeError) "nope") == {};
-	/* Assert keyword blacklisting */
-	assert !(kw0(x: 0, y: 1, z: 2, foo: 10) != { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 });
-	assert kw0(x: 0, y: 1, z: 2, foo: 10) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
-	assert kw1(x: 0, y: 1, z: 2, foo: 10) == { "y" : 1, "z" : 2, "foo" : 10 };
-	assert kw2(x: 0, y: 1, z: 2, foo: 10) == { "z" : 2, "foo" : 10 };
-	assert kw3(x: 0, y: 1, z: 2, foo: 10) == { "foo" : 10 };
-	assert kw0(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "x" : 0, "y" : 1, "z" : 2, "foo" : 10 };
-	assert kw1(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "y" : 1, "z" : 2, "foo" : 10 };
-	assert kw2(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "z" : 2, "foo" : 10 };
-	assert kw3(**{ "x": 0, "y": 1, "z": 2, "foo": 10 }) == { "foo" : 10 };
-}
-
 {
 	local x = Dict {
 		"foo" : "bar",
@@ -377,7 +321,6 @@ assert((try (assert(false),) catch (AssertionError) "here") == "here");
 		check_generic_sequence(FixedList(ord_tuple));
 		check_generic_sequence(FixedList(ord_tuple) as Sequence);
 	}
-	
 }
 
 
@@ -416,13 +359,3 @@ import("rt.builtins");
 	t(SeqRepeatCombinations);
 	t(SeqPermutations);
 }
-
-
-
-
-
-
-
-
-
-

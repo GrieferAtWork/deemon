@@ -67,3 +67,8 @@ assert "\t".bytes().isanyspacexlf();
 assert !"\0".bytes().isanyspacexlf();
 assert !"\n".bytes().isanyspacexlf();
 
+assert !"\U0010ffff".isspace();
+assert !"\U00110000".isspace();
+assert !"\U7fffffff".isspace();
+assert !"\U80000000".isspace();
+assert !"\Uffffffff".isspace();

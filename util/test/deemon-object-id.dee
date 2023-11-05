@@ -19,34 +19,22 @@
  * 3. This notice may not be removed or altered from any source distribution. *
  */
 
-import * from deemon;
 import * from errors;
 
-/* Ensure that asserts actually work (allowing for compile-time short-circuitry) */
-local got_error = false;
-try {
-	assert false;
-} catch (AssertionError) {
-	got_error = true;
+class Foo {
+	func() {
+		return this.id;
+	}
 }
-if (!got_error)
-	throw Error("Didn't get AssertionError");
-
-
-
-/* Ensure that asserts actually work (not allowing for compile-time short-circuitry) */
-local got_error = false;
-try {
-	local volatile_expression = false;
-	__asm__("" : "+X" (volatile_expression));
-	assert volatile_expression;
-} catch (AssertionError) {
-	got_error = true;
+function func2(x) {
+	return x.id;
 }
-
-if (!got_error)
-	throw Error("Didn't get AssertionError");
-
-
-/* Also make sure that assert expressions work. */
-assert((try (assert(false),) catch (AssertionError) "here") == "here");
+local x = Foo();
+assert x.id == x.func();
+assert x.id == Foo.func(x);
+assert x.id == Foo.func.__thiscall__(x);
+assert x.id == Foo.func.__thiscall__(x, ());
+assert x.id == func2(x);
+assert x.id == func2(x: x);
+assert x.id == func2.__thiscall__(x);
+assert x.id == func2.__thiscall__(x, ());

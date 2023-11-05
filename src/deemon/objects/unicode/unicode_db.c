@@ -117,11 +117,10 @@ PRIVATE struct unifold const unicode_fold_descriptors[UNICODE_FOLD_COUNT];
 PRIVATE unidigit_t const unicode_digits[UNICODE_DIGIT_COUNT];
 #define UNICODE_DESCRIPTOR_COUNT 42
 PRIVATE struct unitraits const unicode_descriptors[UNICODE_DESCRIPTOR_COUNT];
-#define UNICODE_COUNT                0x10fffe
-#define UNICODE_COUNT_VALID          0x110000
-#define UNICODE_SHIFT                6
-#define UNICODE_TAB1_MASK            0x3f
-#define UNICODE_DESCRIPTOR_INDEX(ch) unicode_tab2[(unicode_tab1[(uint32_t)(ch) >> 6] << 6) + ((uint8_t)(ch) & 0x3f)]
+#define UNICODE_COUNT                0xe01f0
+#define UNICODE_SHIFT                7
+#define UNICODE_TAB1_MASK            0x7f
+#define UNICODE_DESCRIPTOR_INDEX(ch) unicode_tab2[(unicode_tab1[(uint32_t)(ch) >> 7] << 7) + ((uint8_t)(ch) & 0x7f)]
 #define UNICODE_DESCRIPTOR(ch)       unicode_descriptors[UNICODE_DESCRIPTOR_INDEX(ch)]
 #define unicode_default_descriptor   unicode_descriptors[0]
 PRIVATE uint16_t const unicode_tab1[42];
@@ -141,7 +140,7 @@ PRIVATE struct unitraits const default_traits = { 0x0, 0, 0xff, 0, 0, 0 };
 
 PUBLIC ATTR_CONST ATTR_RETNONNULL WUNUSED struct unitraits *
 (DCALL DeeUni_Descriptor)(uint32_t ch) {
-	if likely(ch < UNICODE_COUNT_VALID)
+	if likely(ch < UNICODE_COUNT)
 		return (struct unitraits *)&UNICODE_DESCRIPTOR(ch);
 	return (struct unitraits *)&default_traits;
 }
