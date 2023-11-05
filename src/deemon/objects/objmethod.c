@@ -1725,7 +1725,23 @@ clsmember_visit(DeeClsMemberObject *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get(DeeClsMemberObject *self, size_t argc,
-              DeeObject *const *argv, DeeObject *kw) {
+              DeeObject *const *argv) {
+	DeeObject *thisarg;
+	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
+		goto err;
+	/* Allow non-instance objects for generic types. */
+	if (!DeeType_IsAbstract(self->cm_type)) {
+		if (DeeObject_AssertType(thisarg, self->cm_type))
+			goto err;
+	}
+	return type_member_get(&self->cm_memb, thisarg);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+clsmember_get_kw(DeeClsMemberObject *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *thisarg;
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
@@ -1776,7 +1792,7 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsmember_methods[] = {
-	TYPE_KWMETHOD(STR_get, &clsmember_get, "(thisarg)->"),
+	TYPE_KWMETHOD(STR_get, &clsmember_get_kw, "(thisarg)->"),
 	TYPE_KWMETHOD("delete", &clsmember_delete, "(thisarg)"),
 	TYPE_KWMETHOD(STR_set, &clsmember_set, "(thisarg,value)"),
 	TYPE_METHOD_END
@@ -1907,7 +1923,8 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_members       = */ clsmember_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw
 };
 
 

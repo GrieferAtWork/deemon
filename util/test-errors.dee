@@ -247,27 +247,6 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 
-	invokeAsync(deemon.Bytes.indent);
-	invokeAsync(deemon.Bytes.dedent);
-	invokeAsync(deemon.Bytes.common);
-	invokeAsync(deemon.Bytes.rcommon);
-	invokeAsync(deemon.Bytes.casecommon);
-	invokeAsync(deemon.Bytes.casercommon);
-	invokeAsync(deemon.Bytes.findmatch);
-	invokeAsync(deemon.Bytes.indexmatch);
-	invokeAsync(deemon.Bytes.casefindmatch);
-	invokeAsync(deemon.Bytes.caseindexmatch);
-	invokeAsync(deemon.Bytes.rfindmatch);
-	invokeAsync(deemon.Bytes.rindexmatch);
-	invokeAsync(deemon.Bytes.caserfindmatch);
-	invokeAsync(deemon.Bytes.caserindexmatch);
-	invokeAsync(deemon.Bytes.partitionmatch);
-	invokeAsync(deemon.Bytes.rpartitionmatch);
-	invokeAsync(deemon.Bytes.casepartitionmatch);
-	invokeAsync(deemon.Bytes.caserpartitionmatch);
-	invokeAsync(deemon.Bytes.segments);
-	invokeAsync(deemon.Bytes.distribute);
-
 	//invokeAsync(deemon.Bytes.rematch);
 	//invokeAsync(deemon.Bytes.rematches);
 	//invokeAsync(deemon.Bytes.refind);
@@ -280,7 +259,6 @@ function main() {
 	//invokeAsync(deemon.Bytes.rerpartition);
 	//invokeAsync(deemon.Bytes.rereplace);
 	//invokeAsync(deemon.Bytes.refindall);
-
 	//invokeAsync(deemon.Bytes.relocateall);
 	//invokeAsync(deemon.Bytes.resplit);
 	//invokeAsync(deemon.Bytes.restartswith);
@@ -297,13 +275,14 @@ function main() {
 	//invokeAsync(deemon.Bytes.regfindall);
 	//invokeAsync(deemon.Bytes.regindex);
 	//invokeAsync(deemon.Bytes.regrindex);
-	//invokeAsync(deemon.Bytes.isreadonly);
-	//invokeAsync(deemon.Bytes.iswritable);
-	//invokeAsync(deemon.Bytes.iswritable);
-	//invokeAsync(deemon.Bytes.first);
-	//invokeAsync(deemon.Bytes.last);
-	//invokeAsync(deemon.Bytes.__sizeof__);
-	//invokeAsync(deemon.Bytes.length);
+
+	invokeAsync(deemon.Bytes.isreadonly);
+	invokeAsync(deemon.Bytes.iswritable);
+	invokeAsync(deemon.Bytes.iswritable);
+	invokeAsync(deemon.Bytes.first);
+	invokeAsync(deemon.Bytes.last);
+	invokeAsync(deemon.Bytes.__sizeof__);
+	invokeAsync(deemon.Bytes.length);
 }
 
 
