@@ -237,8 +237,10 @@ function invokeTypeMembers(t: Type) {
 		if (a.decl !== t)
 			continue;
 		local wrapper = t.operator . (a.name);
-		print(f"invokeAsync({repr wrapper});");
-		invokeAsync(wrapper, name: f"{repr t}.{a.name}");
+		if (wrapper is Callable) {
+			print(f"invokeAsync({repr wrapper});");
+			invokeAsync(wrapper, name: f"{repr t}.{a.name}");
+		}
 	}
 }
 
@@ -246,12 +248,12 @@ function invokeTypeMembers(t: Type) {
 function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
-
+	invokeTypeMembers(deemon.int);
 }
 
 
 #ifdef __MAIN__
 main();
 waitDone();
-print "DONE";
+print "\nDONE";
 #endif /* __MAIN__ */

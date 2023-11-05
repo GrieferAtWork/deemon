@@ -22,6 +22,7 @@
 
 #include <deemon/api.h>
 #include <deemon/arg.h>
+#include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/object.h>
@@ -1460,6 +1461,26 @@ DeeFormat_Repeat(/*ascii*/ dformatprinter printer, void *arg,
 		memset(buffer, ch, count);
 		return (*printer)(arg, buffer, count);
 	}
+
+	/* Fast-paths for certain printers. */
+	if (printer == &unicode_printer_print) {
+		return unicode_printer_repeatascii((struct unicode_printer *)arg, ch, count);
+	} else if (printer == &ascii_printer_print) {
+		char *buf;
+		buf = ascii_printer_alloc((struct ascii_printer *)arg, count);
+		if unlikely(!buf)
+			return -1;
+		memset(buf, ch, count);
+		return (dssize_t)count;
+	} else if (printer == &bytes_printer_print) {
+		unsigned char *buf;
+		buf = bytes_printer_alloc((struct bytes_printer *)arg, count);
+		if unlikely(!buf)
+			return -1;
+		memset(buf, ch, count);
+		return (dssize_t)count;
+	}
+
 	result = 0;
 	memset(buffer, ch, sizeof(buffer));
 	while (count) {
