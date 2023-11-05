@@ -5016,7 +5016,7 @@ bytes_reendswith(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw
 		goto err;
 	if unlikely(result == DEE_RE_STATUS_NOMATCH)
 		return_false;
-	ASSERT((size_t)result + match_size <= exec.rx_endoff);
+	ASSERT((size_t)result + match_size <= exec.rx_endoff || !match_size);
 	return_bool((size_t)result + match_size >= exec.rx_endoff);
 err:
 	return NULL;
