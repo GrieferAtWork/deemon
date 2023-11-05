@@ -131,6 +131,12 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 		yield "\Uffffffff"; /* Last unsigned UTF-32 char */
 		yield Object(); /* To check wrong-type paths (which are often special for strings) */
 		return;
+	case Callable:
+	case Function:
+		/* For sort/removeif-style predicates. */
+		yield (args..., **kwds) -> true;
+		yield (args..., **kwds) -> false;
+		return;
 	default:
 		break;
 	}
@@ -238,8 +244,8 @@ function invokeTypeMembers(t: Type) {
 			continue;
 		local wrapper = t.operator . (a.name);
 		if (wrapper is Callable) {
-			print(f"invokeAsync({repr wrapper});");
-			invokeAsync(wrapper, name: f"{repr t}.{a.name}");
+			//print(f"invokeAsync({repr wrapper});");
+			invoke(wrapper, name: f"{repr t}.{a.name}");
 		}
 	}
 }
@@ -248,7 +254,8 @@ function invokeTypeMembers(t: Type) {
 function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
-	invokeTypeMembers(deemon.int);
+	//invokeTypeMembers(deemon.int);
+	invokeTypeMembers(deemon.List);
 }
 
 

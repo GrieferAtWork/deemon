@@ -621,9 +621,9 @@ DeeList_Pop(DeeObject *__restrict self, dssize_t index) {
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeList_Erase(DeeObject *__restrict self,
               size_t index, size_t count) {
+	size_t max_count;
 	List *me = (List *)self;
 	DREF DeeObject **delobv;
-	size_t delete_count;
 	ASSERT_OBJECT_TYPE(me, &DeeList_Type);
 again:
 	DeeList_LockWrite(me);
@@ -631,13 +631,13 @@ again:
 		DeeList_LockEndWrite(me);
 		return 0;
 	}
-	delete_count = count;
-	if (index + count > me->l_list.ol_elemc)
-		delete_count = me->l_list.ol_elemc - index;
-	delobv = (DREF DeeObject **)Dee_TryMalloca(delete_count * sizeof(DREF DeeObject *));
+	max_count = me->l_list.ol_elemc - index;
+	if (count > max_count)
+		count = max_count;
+	delobv = (DREF DeeObject **)Dee_TryMalloca(count * sizeof(DREF DeeObject *));
 	if unlikely(!delobv) {
 		DeeList_LockEndWrite(me);
-		if (!Dee_CollectMemory(delete_count * sizeof(DREF DeeObject *)))
+		if (!Dee_CollectMemory(count * sizeof(DREF DeeObject *)))
 			return (size_t)-1;
 		goto again;
 	}
