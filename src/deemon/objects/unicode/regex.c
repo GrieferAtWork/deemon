@@ -476,7 +476,8 @@ DeeString_GetRegex(/*String*/ DeeObject *__restrict self,
 	/* Parse `rules' (if given) */
 	if (rules != NULL) {
 		char const *iter;
-		DeeObject_AssertTypeExact(rules, &DeeString_Type);
+		if (DeeObject_AssertTypeExact(rules, &DeeString_Type))
+			goto err;
 		iter = DeeString_STR(rules);
 again_rules_iter:
 		switch (*iter++) {
