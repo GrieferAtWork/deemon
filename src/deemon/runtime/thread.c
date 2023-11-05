@@ -3405,18 +3405,24 @@ thread_clear(DeeThreadObject *__restrict self) {
 	bzero(old_objects, sizeof(old_objects));
 	_DeeThread_AcquireSetup(self);
 	state = atomic_read(&self->t_state);
-	if (!(state & Dee_THREAD_STATE_STARTED)) {
-		ASSERTF(state & Dee_THREAD_STATE_TERMINATED,
-		        "Running threads should be reachable and thus not be considered gc-clearable");
-		old_objects[0] = self->t_inout.io_result; /* Inherit reference */
-		self->t_inout.io_result = Dee_None;
-		Dee_Incref(Dee_None);
-		if (self->t_exceptsz) {
-			/* Steal exception context. */
-			old_objects[0]   = NULL;
-			old_except       = self->t_except;
-			self->t_exceptsz = 0;
-			self->t_except   = NULL;
+	if (state & Dee_THREAD_STATE_STARTED) {
+		if (state & Dee_THREAD_STATE_TERMINATED) {
+			if (self->t_exceptsz) {
+				/* Steal exception context. */
+				old_objects[0]   = NULL;
+				old_except       = self->t_except;
+				self->t_exceptsz = 0;
+				self->t_except   = NULL;
+
+				/* When setting `t_except' to NULL, the thread is implicitly changed
+				 * such that it returned without an exception. To keep the thread in
+				 * a valid state, we need to set a return value (which we use `none'
+				 * for). */
+			} else {
+				old_objects[0] = self->t_inout.io_result; /* Inherit reference */
+			}
+			self->t_inout.io_result = Dee_None;
+			Dee_Incref(Dee_None);
 		}
 	} else {
 		old_objects[0] = self->t_inout.io_main;                    /* Inherit reference */
