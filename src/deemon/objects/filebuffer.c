@@ -427,13 +427,18 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 			if (!DeeFileBuffer_LockTryWrite(buffer)) {
 				if (or_unlock_me) {
 					/* Unlock the caller-given `or_unlock_me' */
-					DeeFileBuffer_LockEnd(or_unlock_me);
+					DeeFileBuffer_LockEndWrite(or_unlock_me);
 					Dee_Decref(buffer);
 	
 					/* While not holding any locks, force a sync of all TTYs */
 					result = DeeFileBuffer_SyncTTYs(NULL);
-					if (result == 0)
+					if (result == 0) {
 						result = 1; /* Tell the caller that we lost their lock... */
+					} else {
+						ASSERT(result == -1);
+						/* XXX: Tell the caller that the lock was lost, *and* an error happened. */
+						DeeFileBuffer_LockWriteNoInt(or_unlock_me);
+					}
 					return result;
 				} else {
 					if (DeeFileBuffer_LockWrite(buffer)) {
