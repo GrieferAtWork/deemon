@@ -973,11 +973,11 @@ DeeSeq_RLocate(DeeObject *self,
 			if unlikely(temp < 0)
 				goto err_elem;
 			/* Found one! */
-			Dee_Decref(iterator);
 			Dee_XDecref(result);
 			result = elem;
+		} else {
+			Dee_Decref(elem);
 		}
-		Dee_Decref(elem);
 		if (DeeThread_CheckInterrupt())
 			goto err_iter;
 	}
