@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
+#include <deemon/callable.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
@@ -4439,8 +4440,14 @@ PRIVATE struct type_gc tpconst type_gc_data = {
 	/* .tp_gcprio = */ Dee_GC_PRIORITY_CLASS
 };
 
+PRIVATE DeeTypeObject *tpconst type_mro[] = {
+	&DeeObject_Type,
+	&DeeCallable_Type, /* Types can be called to invoke their constructor, so have them implement deemon.Callable. */
+	NULL,
+};
+
 PUBLIC DeeTypeObject DeeType_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
+	OBJECT_HEAD_INIT(&DeeType_Type), /* The type of Type is Type :D */
 	/* .tp_name     = */ DeeString_STR(&str_Type),
 	/* .tp_doc      = */ DOC("The so-called Type-Type, that is the type of anything that "
 	                         /**/ "is also a Type, such as ?Dint or ?DList, or even itself"),
@@ -4486,6 +4493,7 @@ PUBLIC DeeTypeObject DeeType_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_call_kw       = */ (DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeObject_NewKw,
+	/* .tp_mro           = */ type_mro
 };
 
 
