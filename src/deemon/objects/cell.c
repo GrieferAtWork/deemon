@@ -341,6 +341,7 @@ cell_get(Cell *self, size_t argc, DeeObject *const *argv) {
 		result = def;
 		if (!result)
 			goto err_empty;
+		Dee_Incref(def);
 	}
 	return result;
 err_empty:

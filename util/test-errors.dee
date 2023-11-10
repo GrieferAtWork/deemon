@@ -248,7 +248,7 @@ function invokeTypeMembers(t: Type) {
 		local wrapper = t.operator . (a.name);
 		if (wrapper is Callable) {
 			//print(f"invokeAsync({repr wrapper});");
-			invokeAsync(wrapper, name: f"{repr t}.{a.name}");
+			invoke(wrapper, name: f"{repr t}.{a.name}");
 		}
 	}
 }
@@ -264,6 +264,8 @@ function main() {
 	//invokeTypeMembers(deemon.Object);
 	//invokeTypeMembers(deemon.bool);
 	//invokeTypeMembers(type(none));
+	//invokeTypeMembers(deemon.float);
+	invokeTypeMembers(deemon.Cell);
 }
 
 
