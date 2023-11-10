@@ -93,6 +93,41 @@ cell_fini(Cell *__restrict self) {
 	Dee_XDecref(self->c_item);
 }
 
+PRIVATE NONNULL((1)) int DCALL
+cell_assign(Cell *__restrict self, Cell *__restrict other) {
+	DREF DeeObject *old_obj, *new_obj;
+	if (DeeObject_AssertType(other, &DeeCell_Type))
+		goto err;
+	DeeCell_LockRead(other);
+	new_obj = other->c_item;
+	Dee_XIncref(new_obj);
+	DeeCell_LockEndRead(other);
+	DeeCell_LockWrite(self);
+	old_obj = self->c_item;
+	self->c_item = new_obj;
+	DeeCell_LockEndWrite(self);
+	Dee_XDecref(old_obj);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) int DCALL
+cell_moveassign(Cell *__restrict self, Cell *__restrict other) {
+	DREF DeeObject *old_obj, *new_obj;
+	ASSERT_OBJECT_TYPE(other, &DeeCell_Type);
+	DeeCell_LockWrite(other);
+	new_obj = other->c_item;
+	other->c_item = NULL; /* Steal */
+	DeeCell_LockEndWrite(other);
+	DeeCell_LockWrite(self);
+	old_obj = self->c_item;
+	self->c_item = new_obj;
+	DeeCell_LockEndWrite(self);
+	Dee_XDecref(old_obj);
+	return 0;
+}
+
 PRIVATE NONNULL((1, 2)) void DCALL
 cell_visit(Cell *__restrict self, dvisit_t proc, void *arg) {
 	DeeCell_LockRead(self);
@@ -578,8 +613,8 @@ PUBLIC DeeTypeObject DeeCell_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&cell_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&cell_moveassign,
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&cell_deepload
 	},
 	/* .tp_cast = */ {
