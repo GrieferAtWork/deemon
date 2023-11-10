@@ -3892,11 +3892,12 @@ Dee_unicode_printer_print(void *__restrict self,
 		uint8_t curlen, reqlen;
 		if (!textlen)
 			goto done;
-		curlen              = (me->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
+		curlen = (me->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
 		me->up_pend[curlen] = (uint8_t)*text++;
-		reqlen              = unicode_utf8seqlen[me->up_pend[0]];
+		--textlen;
+		reqlen = unicode_utf8seqlen[me->up_pend[0]];
 		ASSERT(curlen + 1 <= reqlen);
-		if (curlen + 1 == reqlen) {
+		if (curlen + 1 >= reqlen) {
 			/* Append the full character. */
 			int error;
 			uint32_t ch32 = utf8_getchar((uint8_t *)me->up_pend, reqlen);

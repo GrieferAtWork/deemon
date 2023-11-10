@@ -261,6 +261,7 @@ function main() {
 	//invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
 	//invokeTypeMembers(deemon.Sequence);
+	invokeTypeMembers(deemon.Object);
 }
 
 
