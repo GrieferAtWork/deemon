@@ -1424,8 +1424,8 @@ INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
 PRIVATE struct keyword setter_kwlist[] = { K(thisarg), K(value), KEND };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-clsproperty_get_nokw(DeeClsPropertyObject *__restrict self,
-                     size_t argc, DeeObject *const *argv) {
+clsproperty_get(DeeClsPropertyObject *__restrict self,
+                size_t argc, DeeObject *const *argv) {
 	DeeObject *thisarg;
 	if (!self->cp_get) {
 		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
@@ -1444,9 +1444,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-clsproperty_get(DeeClsPropertyObject *__restrict self,
-                size_t argc, DeeObject *const *argv,
-                DeeObject *kw) {
+clsproperty_get_kw(DeeClsPropertyObject *__restrict self,
+                   size_t argc, DeeObject *const *argv,
+                   DeeObject *kw) {
 	DeeObject *thisarg;
 	if unlikely(!self->cp_get) {
 		err_cant_access_attribute_string(&DeeClsProperty_Type, STR_get, ATTR_ACCESS_GET);
@@ -1511,10 +1511,10 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
-	TYPE_KWMETHOD(STR_get, &clsproperty_get, "(thisarg)->"),
+	TYPE_KWMETHOD(STR_get, &clsproperty_get_kw, "(thisarg)->"),
 	TYPE_KWMETHOD("delete", &clsproperty_delete, "(thisarg)"),
 	TYPE_KWMETHOD(STR_set, &clsproperty_set, "(thisarg,value)"),
-	TYPE_KWMETHOD("getter", &clsproperty_get, "(thisarg)->\nAlias for ?#get"),
+	TYPE_KWMETHOD("getter", &clsproperty_get_kw, "(thisarg)->\nAlias for ?#get"),
 	TYPE_KWMETHOD("setter", &clsproperty_set, "(thisarg,value)\nAlias for ?#set"),
 	TYPE_METHOD_END
 };
@@ -1636,7 +1636,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -1658,7 +1658,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsproperty_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&clsproperty_printrepr
 	},
-	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get_nokw,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&clsproperty_get,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&clsmethod_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -1674,7 +1674,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get_kw,
 };
 
 
@@ -1886,7 +1886,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
