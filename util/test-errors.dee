@@ -140,6 +140,26 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 		yield (args..., **kwds) -> true;
 		yield (args..., **kwds) -> false;
 		return;
+	case Object:
+		yield Object();
+		yield none;
+		yield "";
+		yield 0;
+		yield false;
+		return;
+	case Cell:
+		yield Cell();
+		yield Cell(Dict());
+		return;
+	case WeakRef:
+		yield WeakRef();
+		yield WeakRef(Dict());
+		return;
+	case File:
+		yield File();
+		yield File.Reader("foo");
+		yield File.Writer();
+		return;
 	default:
 		break;
 	}
@@ -265,7 +285,10 @@ function main() {
 	//invokeTypeMembers(deemon.bool);
 	//invokeTypeMembers(type(none));
 	//invokeTypeMembers(deemon.float);
-	invokeTypeMembers(deemon.Cell);
+	//invokeTypeMembers(deemon.Cell);
+	//invokeTypeMembers(deemon.WeakRef);
+	// FIXME: This crashes: `deemon.File.mmap(File.Reader("foo"), -2147483648, -2147483648, 0, -2147483648, true, false, false)`
+	invokeTypeMembers(deemon.File);
 }
 
 

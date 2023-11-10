@@ -28,6 +28,8 @@
 #include "util/lock.h"
 #include "util/rlock.h"
 
+#include <hybrid/typecore.h>
+
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
@@ -234,11 +236,11 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me);
 
 struct Dee_memory_file_object {
 	Dee_FILE_OBJECT_HEAD
-	char               *mf_begin; /* [0..1][<= mf_end][lock(mf_lock)] The effective start position. */
-	char               *mf_ptr;   /* [0..1][>= mf_begin][lock(mf_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-	char               *mf_end;   /* [0..1][>= mf_begin][lock(mf_lock)] The effective end position. */
+	__BYTE_TYPE__ const *mf_begin; /* [0..1][<= mf_end][lock(mf_lock)] The effective start position. */
+	__BYTE_TYPE__ const *mf_ptr;   /* [0..1][>= mf_begin][lock(mf_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	__BYTE_TYPE__ const *mf_end;   /* [0..1][>= mf_begin][lock(mf_lock)] The effective end position. */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t mf_lock;  /* Lock for this memory-file object. */
+	Dee_atomic_rwlock_t  mf_lock;  /* Lock for this memory-file object. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -284,13 +286,13 @@ DeeFile_ReleaseMemory(DREF /*File*/ DeeObject *__restrict self);
 
 struct Dee_file_reader_object {
 	Dee_FILE_OBJECT_HEAD
-	char               *r_begin;  /* [0..1][in(r_string->s_str)][<= r_end][lock(r_lock)] The effective start position within `r_string'. */
-	char               *r_ptr;    /* [0..1][>= r_begin][lock(r_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
-	char               *r_end;    /* [0..1][in(r_string->s_str)][>= r_begin][lock(r_lock)] The effective end position within `r_string'. */
-	DREF DeeObject     *r_owner;  /* [0..1][lock(r_lock)] The owner for the data. NOTE: Set to NULL when the file is closed. */
-	DeeBuffer           r_buffer; /* [valid_if(r_owner)][lock(r_lock)] The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
+	__BYTE_TYPE__ const *r_begin;  /* [0..1][<= r_end][lock(r_lock)] The effective start position within `r_owner'. */
+	__BYTE_TYPE__ const *r_ptr;    /* [0..1][>= r_begin][lock(r_lock)] The current string position (May be above `r_end', in which case no more data may be read) */
+	__BYTE_TYPE__ const *r_end;    /* [0..1][<= r_buffer.bb_base + r_buffer.bb_size][>= r_begin][lock(r_lock)] The effective end position within `r_owner'. */
+	DREF DeeObject      *r_owner;  /* [0..1][lock(r_lock)] The owner for the data. NOTE: Set to NULL when the file is closed. */
+	DeeBuffer            r_buffer; /* [valid_if(r_owner)][lock(r_lock)] The data buffer view for `r_owner' (using `Dee_BUFFER_FREADONLY') */
 #ifndef CONFIG_NO_THREADS
-	Dee_atomic_rwlock_t r_lock;   /* Lock for this file reader object. */
+	Dee_atomic_rwlock_t  r_lock;   /* Lock for this file reader object. */
 #endif /* !CONFIG_NO_THREADS */
 };
 
@@ -333,7 +335,7 @@ DeeFile_OpenObjectMemory(DeeObject *__restrict data_owner,
  * to open a generic object using the buffer-interface. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenObjectBuffer(DeeObject *__restrict data,
-                         size_t begin, size_t end);
+                         size_t start, size_t end);
 
 
 struct Dee_file_writer_object {
