@@ -24,6 +24,11 @@
 #include <deemon/api.h>
 #include <deemon/object.h>
 
+#ifndef CHAR_BIT
+#include <hybrid/typecore.h>
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
+
 DECL_BEGIN
 
 INTDEF ATTR_COLD int DCALL

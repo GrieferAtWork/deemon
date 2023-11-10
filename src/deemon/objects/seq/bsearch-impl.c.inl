@@ -191,6 +191,8 @@ LOCAL_bfind_with_xxx(
 			*p_endindex   = result_end;
 			return 0;
 #elif defined(DEFINE_DeeSeq_BFindPosition)
+			if unlikely(mid == (size_t)-1)
+				err_integer_overflow_i(sizeof(size_t) * CHAR_BIT, true);
 			return mid;
 #else /* defined(DEFINE_DeeSeq_BLocate) */
 			return seq_elem;
@@ -209,6 +211,8 @@ notfound:
 	*p_endindex   = start;
 	return 0;
 #elif defined(DEFINE_DeeSeq_BFindPosition)
+	if unlikely(start == (size_t)-1)
+		err_integer_overflow_i(sizeof(size_t) * CHAR_BIT, true);
 	return start;
 #else /* defined(DEFINE_DeeSeq_BLocate) */
 	if (defl)

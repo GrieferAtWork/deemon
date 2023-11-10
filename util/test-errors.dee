@@ -247,8 +247,8 @@ function invokeTypeMembers(t: Type) {
 			continue;
 		local wrapper = t.operator . (a.name);
 		if (wrapper is Callable) {
-			print(f"invokeAsync({repr wrapper});");
-			//invoke(wrapper, name: f"{repr t}.{a.name}");
+			//print(f"invokeAsync({repr wrapper});");
+			invokeAsync(wrapper, name: f"{repr t}.{a.name}");
 		}
 	}
 }
@@ -261,19 +261,6 @@ function main() {
 	//invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
 	//invokeTypeMembers(deemon.Sequence);
-
-	// TODO: crash: deemon.Sequence.bposition((), Object(), -1, (...) -> true)
-	//invokeAsync(deemon.Sequence.bposition);
-	//invokeAsync(deemon.Sequence.brange);
-	//invokeAsync(deemon.Sequence.blocate);
-	//invokeAsync(deemon.Sequence.blocateall);
-	//invokeAsync(deemon.Sequence.binsert);
-	//invokeAsync(deemon.Sequence.front);
-	//invokeAsync(deemon.Sequence.back);
-	//invokeAsync(deemon.Sequence.empty);
-	//invokeAsync(deemon.Sequence.non_empty);
-	//invokeAsync(deemon.Sequence.at);
-	//invokeAsync(deemon.Sequence.at);
 }
 
 
