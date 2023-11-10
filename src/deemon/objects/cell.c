@@ -425,7 +425,7 @@ cell_cmpdel(Cell *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:cmpdel", &oldval))
 		goto err;
 	result = DeeCell_CmpXch((DeeObject *)self, oldval, NULL);
-	Dee_Decref(result);
+	Dee_XDecref(result);
 	return_bool_(result == oldval);
 err:
 	return NULL;
