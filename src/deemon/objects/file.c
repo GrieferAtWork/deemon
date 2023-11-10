@@ -3360,6 +3360,15 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+file_repr(DeeObject *__restrict self) {
+	if (Dee_TYPE(self) == (DeeTypeObject *)&DeeFile_Type)
+		return (DREF DeeStringObject *)DeeString_New("File()");
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_REPR);
+	return NULL;
+}
+
+
 PRIVATE struct type_math file_math = {
 	/* .tp_int32  = */ NULL,
 	/* .tp_int64  = */ NULL,
@@ -3518,7 +3527,7 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 		},
 		/* .tp_cast = */ {
 			/* .tp_str  = */ NULL,
-			/* .tp_repr = */ NULL,
+			/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&file_repr,
 			/* .tp_bool = */ NULL
 		},
 		/* .tp_call          = */ NULL,
