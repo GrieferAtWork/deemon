@@ -289,7 +289,10 @@ function main() {
 	//invokeTypeMembers(deemon.WeakRef);
 	//invokeTypeMembers(deemon.File);
 	//invokeTypeMembers(deemon.HashSet);
-	invokeTypeMembers(deemon.Dict);
+	//invokeTypeMembers(deemon.Dict);
+	//invokeTypeMembers(deemon.Set);
+	//invokeTypeMembers(deemon.Mapping);
+	//invokeTypeMembers(deemon.Dict.Frozen);
 }
 
 

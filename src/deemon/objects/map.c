@@ -137,7 +137,7 @@ map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!result)
 		goto err;
 	if (result == ITER_DONE)
-		goto err_r_empty;
+		goto err_empty;
 	key = DeeObject_GetItemIndex(result, 0);
 	if unlikely(!key)
 		goto err_r;
@@ -146,8 +146,9 @@ map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(temp)
 		goto err_r;
 	return result;
-err_r_empty:
+err_empty:
 	err_empty_sequence(self);
+	goto err;
 err_r:
 	Dee_Decref(result);
 err:
