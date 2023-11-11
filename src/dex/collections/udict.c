@@ -1178,7 +1178,9 @@ udict_update(UDict *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
 	iterator = DeeObject_IterSelf(items);
-	error    = udict_insert_iterator(self, iterator);
+	if unlikely(!iterator)
+		goto err;
+	error = udict_insert_iterator(self, iterator);
 	Dee_Decref(iterator);
 	if unlikely(error)
 		goto err;

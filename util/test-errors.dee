@@ -302,7 +302,12 @@ function main() {
 	//invokeTypeMembers(deemon.Set);
 	//invokeTypeMembers(deemon.Mapping);
 	//invokeTypeMembers(deemon.Dict.Frozen);
-	invokeTypeMembers(Deque from collections);
+	//invokeTypeMembers(Deque from collections);
+	//invokeTypeMembers(FixedList from collections);
+	//invokeTypeMembers((UniqueDict from collections));
+	//invokeTypeMembers((UniqueDict from collections).Frozen);
+	//invokeTypeMembers((UniqueSet from collections));
+	//invokeTypeMembers((UniqueSet from collections).Frozen);
 }
 
 

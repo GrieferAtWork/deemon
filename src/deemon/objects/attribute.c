@@ -1043,10 +1043,12 @@ enumattriter_fini(EnumAttrIter *__restrict self) {
 		int error;
 		ASSERT(iter >= self->ei_buffer);
 		ASSERT(iter <= COMPILER_ENDOF(self->ei_buffer));
+
 		/* Discard all remaining items. */
 		for (; iter < COMPILER_ENDOF(self->ei_buffer); ++iter)
 			Dee_Decref(*iter);
 		self->ei_bufpos = (DREF Attr **)ITER_DONE; /* Indicate that we want to stop iteration. */
+
 		/* Resolve execution of the iterator normally. */
 		error = DeeSystem_SetJmp(self->ei_break);
 		if (error == 0)
@@ -1105,8 +1107,10 @@ again:
 	Dee_XIncref(declarator);
 	Dee_XIncref(attr_type);
 	DeeObject_Init(new_attribute, &DeeAttribute_Type);
+
 	/* Done! Now save the attribute in the collection buffer. */
 	*iterator->ei_bufpos++ = new_attribute;
+
 	/* If the buffer is not full, jump over to the
 	 * caller and let them yield what we've collected. */
 	if (iterator->ei_bufpos == COMPILER_ENDOF(iterator->ei_buffer)) {
@@ -1118,6 +1122,7 @@ again:
 			return -2;
 	}
 	return 0;
+
 err_collect:
 	/* Let the other end collect memory for us.
 	 * With how small our stack is, we'd probably not be able to
@@ -1125,6 +1130,7 @@ err_collect:
 	 * associated with the memory collection sub-system. */
 	if ((error = DeeSystem_SetJmp(iterator->ei_continue)) == 0)
 		DeeSystem_LongJmp(iterator->ei_break, BRKSIG_COLLECT);
+
 	/* Stop iteration if the other end requested this. */
 	if (error == CNTSIG_STOP)
 		return -2;
@@ -1136,11 +1142,13 @@ PRIVATE ATTR_NOINLINE ATTR_NORETURN ATTR_USED void SPCALL_CC
 enumattr_start(void *arg) {
 	EnumAttrIter *self = (EnumAttrIter *)arg;
 	dssize_t enum_error;
+
 	/* This is where execution on the fake stack starts. */
 	self->ei_bufpos = self->ei_buffer;
 	enum_error = DeeObject_EnumAttr(self->ei_seq->ea_type,
 	                                self->ei_seq->ea_obj,
 	                                (denum_t)&enumattr_longjmp, self);
+
 	/* -1 indicates an internal error, rather than stop-enumeration (with is -2). */
 	if unlikely(enum_error == -1) {
 		/* Discard all unyielded attributes and enter an error state. */
@@ -1152,6 +1160,7 @@ enumattr_start(void *arg) {
 		DeeSystem_LongJmp(self->ei_break, BRKSIG_ERROR);
 		__builtin_unreachable();
 	}
+
 	/* Notify of the last remaining attributes (if there are any). */
 	if (self->ei_bufpos != (DREF Attr **)ITER_DONE &&
 	    self->ei_bufpos != self->ei_buffer) {
@@ -1166,6 +1175,7 @@ enumattr_start(void *arg) {
 		ASSERT(self->ei_bufpos == self->ei_buffer ||
 		       self->ei_bufpos == (DREF Attr **)ITER_DONE);
 	}
+
 	/* Mark the buffer as exhausted. */
 	self->ei_bufpos = (DREF Attr **)ITER_DONE;
 	DeeSystem_LongJmp(self->ei_break, BRKSIG_STOP);
@@ -1199,14 +1209,17 @@ again:
 		}
 		ASSERT(self->ei_bufpos >= self->ei_buffer);
 		ASSERT(self->ei_bufpos < COMPILER_ENDOF(self->ei_buffer));
+
 		/* Take away one of the generated attributes. */
 		result = *self->ei_bufpos++;
 		goto done;
 	}
+
 	/* Continue execution of the iterator. */
 	self->ei_bufpos = self->ei_buffer;
 	if ((error = DeeSystem_SetJmp(self->ei_break)) == 0)
 		DeeSystem_LongJmp(self->ei_continue, CNTSIG_CONTINUE);
+
 	/* Handle signal return signals from the enumeration sub-routine. */
 	if (error == BRKSIG_COLLECT) {
 		DeeEnumAttrIterator_LockRelease(self);
@@ -1220,6 +1233,7 @@ again:
 		result = NULL;
 		goto done;
 	}
+
 	/* Jump back and handle the attributes that got enumerated. */
 	goto again;
 iter_done:
