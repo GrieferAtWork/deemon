@@ -1120,8 +1120,6 @@ rbtree_iter(RBTree *__restrict self) {
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto done;
-	result->rbti_tree = self;
-	Dee_Incref(self);
 	RBTree_LockRead(self);
 	result->rbti_version = self->rbt_version;
 	result->rbti_next    = self->rbt_root;
@@ -1131,6 +1129,8 @@ rbtree_iter(RBTree *__restrict self) {
 			result->rbti_next = result->rbti_next->rbtn_lhs;
 	}
 	RBTree_LockEndRead(self);
+	result->rbti_tree = self;
+	Dee_Incref(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
 done:
 	return result;
@@ -3030,14 +3030,14 @@ rbtree_get_itroot(RBTree *__restrict self) {
 	result = DeeObject_MALLOC(RBTreeIterator);
 	if unlikely(!result)
 		goto done;
-	result->rbti_tree = self;
-	Dee_Incref(self);
 	RBTree_LockRead(self);
 	if unlikely(!self->rbt_root)
 		goto err_r_unlock_empty;
 	result->rbti_next    = self->rbt_root;
 	result->rbti_version = self->rbt_version;
 	RBTree_LockEndRead(self);
+	result->rbti_tree = self;
+	Dee_Incref(self);
 	DeeObject_Init(result, &RBTreeIterator_Type);
 done:
 	return result;

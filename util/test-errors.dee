@@ -276,8 +276,8 @@ function invokeTypeMembers(t: Type) {
 			continue;
 		local wrapper = t.operator . (a.name);
 		if (wrapper is Callable) {
-			//print(f"invokeAsync({repr wrapper});");
-			invoke(wrapper, name: f"{repr t}.{a.name}");
+			print(f"invokeAsync({repr wrapper});");
+			//invoke(wrapper, name: f"{repr t}.{a.name}");
 		}
 	}
 }
@@ -308,8 +308,7 @@ function main() {
 	//invokeTypeMembers((UniqueDict from collections).Frozen);
 	//invokeTypeMembers((UniqueSet from collections));
 	//invokeTypeMembers((UniqueSet from collections).Frozen);
-	// FIXME: This leaks references somewhere
-	invokeTypeMembers(RBTree from collections);
+	//invokeTypeMembers(RBTree from collections);
 }
 
 
