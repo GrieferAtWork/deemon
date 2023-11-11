@@ -332,8 +332,12 @@ error_printrepr(DeeErrorObject *__restrict self, dformatprinter printer, void *a
 		return DeeFormat_Printf(printer, arg, "%r(inner: %r)",
 		                        Dee_TYPE(self), self->e_inner);
 	}
-	return DeeFormat_Printf(printer, arg, "%r(%r)",
-	                        Dee_TYPE(self), self->e_message);
+	if (self->e_message) {
+		return DeeFormat_Printf(printer, arg, "%r(%r)",
+		                        Dee_TYPE(self), self->e_message);
+	}
+	return DeeFormat_Printf(printer, arg, "%r()",
+	                        Dee_TYPE(self));
 }
 
 PRIVATE struct type_member tpconst error_members[] = {

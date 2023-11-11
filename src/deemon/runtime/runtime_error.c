@@ -45,6 +45,8 @@ DECL_BEGIN
 #define Q3  "??" "?"
 
 
+/* Throw a bad-allocation error for `req_bytes' bytes.
+ * @return: -1: Always returns -1. */
 PUBLIC ATTR_COLD int (DCALL Dee_BadAlloc)(size_t req_bytes) {
 	DeeNoMemoryErrorObject *nomem_error;
 	int result;
