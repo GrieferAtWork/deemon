@@ -308,6 +308,8 @@ function main() {
 	//invokeTypeMembers((UniqueDict from collections).Frozen);
 	//invokeTypeMembers((UniqueSet from collections));
 	//invokeTypeMembers((UniqueSet from collections).Frozen);
+	// FIXME: This leaks references somewhere
+	invokeTypeMembers(RBTree from collections);
 }
 
 

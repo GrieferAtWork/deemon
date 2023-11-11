@@ -2453,7 +2453,7 @@ again_locate_node:
 	/* Remove the node from the tree. */
 	rbtree_abi_removenode(&self->rbt_root, node);
 	++self->rbt_version;
-	RBTree_LockEndRead(self);
+	RBTree_LockEndWrite(self);
 	DeeTuple_SET(result, 0, rbtree_node_get_minkey(node)); /* Inherit reference */
 	DeeTuple_SET(result, 1, rbtree_node_get_maxkey(node)); /* Inherit reference */
 	DeeTuple_SET(result, 2, rbtree_node_get_value(node));  /* Inherit reference */

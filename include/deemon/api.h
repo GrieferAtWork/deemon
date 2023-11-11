@@ -557,12 +557,14 @@ DFUNDEF ATTR_NORETURN void (DCALL _DeeAssert_XFail)(char const *expr, char const
 DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...);
 
 #ifdef Dee_BREAKPOINT_IS_NOOP
-#define Dee_Fatal()     _DeeAssert_XFail(NULL, __FILE__, __LINE__)
-#define Dee_Fatalf(...) _DeeAssert_XFailf(NULL, __FILE__, __LINE__, __VA_ARGS__)
+#define _Dee_Fatal(expr)       _DeeAssert_Fail(expr, __FILE__, __LINE__)
+#define _Dee_Fatalf(expr, ...) _DeeAssert_Failf(expr, __FILE__, __LINE__, __VA_ARGS__)
 #else /* Dee_BREAKPOINT_IS_NOOP */
-#define Dee_Fatal()     (_DeeAssert_Fail(NULL, __FILE__, __LINE__), Dee_BREAKPOINT())
-#define Dee_Fatalf(...) (_DeeAssert_Failf(NULL, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT())
+#define _Dee_Fatal(expr)       (_DeeAssert_Fail(expr, __FILE__, __LINE__), Dee_BREAKPOINT())
+#define _Dee_Fatalf(expr, ...) (_DeeAssert_Failf(expr, __FILE__, __LINE__, __VA_ARGS__), Dee_BREAKPOINT())
 #endif /* !Dee_BREAKPOINT_IS_NOOP */
+#define Dee_Fatal()     _Dee_Fatal(NULL)
+#define Dee_Fatalf(...) _Dee_Fatalf(NULL, __VA_ARGS__)
 
 #ifndef Dee_ASSERT
 #if !defined(NDEBUG) && !defined(NDEBUG_ASSERT)
@@ -590,6 +592,19 @@ DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *fil
 #undef ASSERTF
 #define ASSERT  Dee_ASSERT
 #define ASSERTF Dee_ASSERTF
+
+/* Override hooks from `<hybrid/__assert.h>' */
+#ifndef __GUARD_HYBRID___ASSERT_H
+#define __GUARD_HYBRID___ASSERT_H
+#endif /* !__GUARD_HYBRID___ASSERT_H */
+#undef __hybrid_assert
+#undef __hybrid_assertf
+#undef __hybrid_assertion_failed
+#undef __hybrid_assertion_failedf
+#define __hybrid_assertion_failed  _Dee_Fatal
+#define __hybrid_assertion_failedf _Dee_Fatalf
+#define __hybrid_assert            Dee_ASSERT
+#define __hybrid_assertf           Dee_ASSERTF
 #endif /* DEE_SOURCE */
 
 
