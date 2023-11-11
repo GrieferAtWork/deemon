@@ -505,6 +505,7 @@ Deque_Pop(Deque *__restrict self, size_t index) {
 			err_empty_sequence((DeeObject *)self);
 			return NULL;
 		}
+		--index;
 	}
 	result = Deque_Pop_unlocked(self, (size_t)index);
 	Deque_LockEndWrite(self);

@@ -163,6 +163,15 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 	default:
 		break;
 	}
+
+	/* Special case for sequence sub-classes. */
+	if (t.implements(Sequence)) {
+		for (local x: getTypeInstances(List))
+			yield t(x);
+		return;
+	}
+
+	/* Fallback: construct some default instances. */
 	try { yield t(); } catch (...) { return; }
 	try { yield copy t(); } catch (...) {}
 	try { yield deepcopy t(); } catch (...) {}
@@ -293,6 +302,7 @@ function main() {
 	//invokeTypeMembers(deemon.Set);
 	//invokeTypeMembers(deemon.Mapping);
 	//invokeTypeMembers(deemon.Dict.Frozen);
+	invokeTypeMembers(Deque from collections);
 }
 
 
