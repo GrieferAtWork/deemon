@@ -44,6 +44,13 @@
 
 DECL_BEGIN
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 /* Dummy key object. */
 #define dummy (&DeeDict_Dummy)
 
@@ -1206,7 +1213,7 @@ udict_repr(UDict *__restrict self) {
 	size_t mask;
 again:
 	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "UniqueDict({ ") < 0)
+	if (UNICODE_PRINTER_PRINT(&p, "collections.UniqueDict({ ") < 0)
 		goto err;
 	UDict_LockRead(self);
 	is_first = true;
@@ -1249,6 +1256,70 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+udict_printrepr(UDict *__restrict self,
+                dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	struct udict_item *iter, *end;
+	struct udict_item *vector;
+	size_t mask;
+	bool is_first;
+	result = DeeFormat_PRINT(printer, arg, "collections.UDict({ ");
+	if unlikely(result < 0)
+		goto done;
+	is_first = true;
+	UDict_LockRead(self);
+	vector = self->ud_elem;
+	mask   = self->ud_mask;
+	end    = (iter = vector) + (mask + 1);
+	for (; iter < end; ++iter) {
+		DREF DeeObject *key, *value;
+		key = iter->di_key;
+		if (key == NULL || key == dummy)
+			continue;
+		value = iter->di_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		UDict_LockEndRead(self);
+		/* Print this key/value pair. */
+		if (!is_first) {
+			temp = DeeFormat_PRINT(printer, arg, ", ");
+			if unlikely(temp < 0) {
+				Dee_Decref(value);
+				Dee_Decref(key);
+				goto err;
+			}
+			result += temp;
+		}
+		temp = DeeFormat_Printf(printer, arg, "%r: %r", key, value);
+		Dee_Decref(value);
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err;
+		is_first = false;
+		UDict_LockRead(self);
+		if unlikely(self->ud_elem != vector ||
+		            self->ud_mask != mask) {
+			UDict_LockEndRead(self);
+			temp = DeeFormat_PRINT(printer, arg, ", <UDict changed while being iterated>");
+			if (temp < 0)
+				goto err;
+			result += temp;
+			goto stop_after_changed;
+		}
+	}
+	UDict_LockEndRead(self);
+stop_after_changed:
+	temp = is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                : DeeFormat_PRINT(printer, arg, " })");
+	if (temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err:
+	return temp;
+}
 
 
 
@@ -1352,7 +1423,7 @@ PRIVATE struct type_seq udict_seq = {
 INTERN DeeTypeObject UDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "UniqueDict",
-	/* .tp_doc      = */ DOC("A mutable mapping-like container that uses @?Aid?O "
+	/* .tp_doc      = */ DOC("A mutable mapping-like container that uses ?Aid?O "
 	                         /**/ "and ${x === y} to detect/prevent duplicates\n"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(UDict),
@@ -1374,9 +1445,11 @@ INTERN DeeTypeObject UDict_Type = {
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&udict_deepload
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&udict_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&udict_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&udict_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&udict_visit,
@@ -1837,30 +1910,31 @@ urodict_visit(URoDict *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-urodict_repr(URoDict *__restrict self) {
-	struct unicode_printer p = UNICODE_PRINTER_INIT;
-	bool is_first            = true;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+urodict_printrepr(URoDict *__restrict self,
+                  dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	bool is_first = true;
 	size_t i;
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err;
+	result = DeeFormat_PRINT(printer, arg, "collections.UniqueDict.Frozen({ ");
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i <= self->urd_mask; ++i) {
 		if (!self->urd_elem[i].di_key)
 			continue;
-		if unlikely(unicode_printer_printf(&p, "%s%r: %r",
-		                                   is_first ? "" : ", ",
-		                                   self->urd_elem[i].di_key,
-		                                   self->urd_elem[i].di_value) < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_Printf(printer, arg, "%r: %r",
+		                         self->urd_elem[i].di_key,
+		                         self->urd_elem[i].di_value));
 		is_first = false;
 	}
-	if unlikely((is_first ? unicode_printer_putascii(&p, '}')
-	                      : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-		goto err;
-	return unicode_printer_pack(&p);
+	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                 : DeeFormat_PRINT(printer, arg, " })"));
+done:
+	return result;
 err:
-	unicode_printer_fini(&p);
-	return NULL;
+	return temp;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
@@ -2037,9 +2111,11 @@ INTERN DeeTypeObject URoDict_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&urodict_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&urodict_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&urodict_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&urodict_visit,

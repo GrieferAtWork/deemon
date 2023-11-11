@@ -533,11 +533,8 @@ roset_printrepr(RoSet *__restrict self,
 		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->rs_elem[i].rsi_key));
 		is_first = false;
 	}
-	if (is_first) {
-		DO(err, DeeFormat_PRINT(printer, arg, "})"));
-	} else {
-		DO(err, DeeFormat_PRINT(printer, arg, " })"));
-	}
+	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                 : DeeFormat_PRINT(printer, arg, " })"));
 done:
 	return result;
 err:

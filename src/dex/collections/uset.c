@@ -43,6 +43,13 @@
 
 DECL_BEGIN
 
+#define DO(err, expr)                    \
+	do {                                 \
+		if unlikely((temp = (expr)) < 0) \
+			goto err;                    \
+		result += temp;                  \
+	}	__WHILE0
+
 /* Dummy key object. */
 #define dummy (&DeeDict_Dummy)
 
@@ -982,7 +989,7 @@ uset_repr(USet *__restrict self) {
 	size_t mask;
 again:
 	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
+	if (UNICODE_PRINTER_PRINT(&p, "collections.UniqueSet({ ") < 0)
 		goto err;
 	USet_LockRead(self);
 	is_first = true;
@@ -1009,8 +1016,8 @@ again:
 			goto restart;
 	}
 	USet_LockEndRead(self);
-	if ((is_first ? unicode_printer_putascii(&p, '}')
-	              : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
+	if ((is_first ? UNICODE_PRINTER_PRINT(&p, "})")
+	              : UNICODE_PRINTER_PRINT(&p, " })")) < 0)
 		goto err;
 	return unicode_printer_pack(&p);
 restart:
@@ -1022,6 +1029,67 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+uset_printrepr(USet *__restrict self,
+               dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	struct uset_item *iter, *end;
+	struct uset_item *vector;
+	size_t mask;
+	bool is_first;
+	result = DeeFormat_PRINT(printer, arg, "collections.UniqueSet({ ");
+	if unlikely(result < 0)
+		goto done;
+	is_first = true;
+	USet_LockRead(self);
+	vector = self->us_elem;
+	mask   = self->us_mask;
+	end    = (iter = vector) + (mask + 1);
+	for (; iter < end; ++iter) {
+		DREF DeeObject *key;
+		key = iter->usi_key;
+		if (key == NULL || key == dummy)
+			continue;
+		Dee_Incref(key);
+		USet_LockEndRead(self);
+		/* Print this item. */
+		if (!is_first) {
+			temp = DeeFormat_PRINT(printer, arg, ", ");
+			if unlikely(temp < 0) {
+				Dee_Decref(key);
+				goto err;
+			}
+			result += temp;
+		}
+		temp = DeeObject_PrintRepr(key, printer, arg);
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		is_first = false;
+		USet_LockRead(self);
+		if unlikely(self->us_elem != vector ||
+		            self->us_mask != mask) {
+			USet_LockEndRead(self);
+			temp = DeeFormat_PRINT(printer, arg, ", <UniqueSet changed while being iterated>");
+			if (temp < 0)
+				goto err;
+			result += temp;
+			goto stop_after_changed;
+		}
+	}
+	USet_LockEndRead(self);
+stop_after_changed:
+	temp = is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                : DeeFormat_PRINT(printer, arg, " })");
+	if (temp < 0)
+		goto err;
+	result += temp;
+done:
+	return result;
+err:
+	return temp;
+}
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 uset_bool(USet *__restrict self) {
@@ -1270,9 +1338,11 @@ INTERN DeeTypeObject USet_Type = {
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&uset_deepload
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&uset_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_repr,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uset_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&uset_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uset_visit,
@@ -1432,38 +1502,30 @@ STATIC_ASSERT(offsetof(URoSet, urs_size) == offsetof(USet, us_used));
 #define uroset_nsi_getsize uset_nsi_getsize
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-uroset_repr(URoSet *__restrict self) {
-	struct unicode_printer p;
-	dssize_t error;
-	bool is_first;
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+uroset_printrepr(URoSet *__restrict self,
+                 dformatprinter printer, void *arg) {
+	dssize_t temp, result;
+	bool is_first = true;
 	size_t i;
-	unicode_printer_init(&p);
-	if (UNICODE_PRINTER_PRINT(&p, "{ ") < 0)
-		goto err;
-	is_first = true;
+	result = DeeFormat_PRINT(printer, arg, "collections.UniqueSet.Frozen({ ");
+	if unlikely(result < 0)
+		goto done;
 	for (i = 0; i <= self->urs_mask; ++i) {
-		DREF DeeObject *key;
-		key = self->urs_elem[i].usi_key;
-		if (key == NULL)
+		if (!self->urs_elem[i].usi_key)
 			continue;
-		/* Print this item. */
-		error = unicode_printer_printf(&p, "%s%r",
-		                               is_first ? "" : ", ",
-		                               key);
-		if unlikely(error < 0)
-			goto err;
+		if (!is_first)
+			DO(err, DeeFormat_PRINT(printer, arg, ", "));
+		DO(err, DeeFormat_PrintObjectRepr(printer, arg, self->urs_elem[i].usi_key));
 		is_first = false;
 	}
-	if ((is_first ? unicode_printer_putascii(&p, '}')
-	              : UNICODE_PRINTER_PRINT(&p, " }")) < 0)
-		goto err;
-	return unicode_printer_pack(&p);
+	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                 : DeeFormat_PRINT(printer, arg, " })"));
+done:
+	return result;
 err:
-	unicode_printer_fini(&p);
-	return NULL;
+	return temp;
 }
-
 
 PRIVATE struct type_nsi tpconst uroset_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
@@ -1948,9 +2010,11 @@ INTERN DeeTypeObject URoSet_Type = {
 		/* .tp_deepload    = */ NULL
 	},
 	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_repr,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&uroset_bool
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&uroset_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&uroset_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&uroset_visit,
