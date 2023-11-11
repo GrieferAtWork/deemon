@@ -2080,7 +2080,9 @@ dict_update(Dict *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
 	iterator = DeeObject_IterSelf(items);
-	error    = dict_insert_iterator(self, iterator);
+	if unlikely(!iterator)
+		goto err;
+	error = dict_insert_iterator(self, iterator);
 	Dee_Decref(iterator);
 	if unlikely(error)
 		goto err;
