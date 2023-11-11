@@ -88,10 +88,6 @@ for (local f: functions) {
 /*[[[end]]]*/
 
 
-/* TODO: Come up with a way to implement uid/gid on windows.
- * Idea: Since we've got infinite-length integers, we could
- *       just encode whole SIDs as integers! */
-
 
 /* Figure out how we want to implement `chown()' */
 #undef posix_chown_USE_wchown

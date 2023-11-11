@@ -281,7 +281,6 @@
 		<ClInclude Include="..\src\deemon\system\futex-wake.c.inl" />
 		<ClInclude Include="..\src\deemon\system\system-nt.c.inl" />
 		<ClInclude Include="..\src\deemon\system\system-unix.c.inl" />
-		<ClInclude Include="..\src\deemon\system\win-file.c.inl" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\src\deemon\cmdline.c" />

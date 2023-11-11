@@ -101,7 +101,7 @@ struct DeeMapFile {
 /* Finalize a given file map */
 DFUNDEF NONNULL((1)) void DCALL
 DeeMapFile_Fini(struct DeeMapFile *__restrict self);
-#define DeeMapFile_Move(dst, src) (*(dst) = *(src))
+#define DeeMapFile_Move(dst, src) (void)(*(dst) = *(src))
 
 /* Initialize a file mapping from a given system FD.
  * @param: fd:        The file that should be loaded into memory.

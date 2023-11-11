@@ -3497,13 +3497,13 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
        * members with all the additional functions provided by `DeeSeq_Type'.
        * Especially considering that `File' does its own handling for
        * operations such as `a|b' (creating a multi-targeted file), whereas
-       * `sequence' already implements that operator as a union (in the case
+       * `Sequence' already implements that operator as a union (in the case
        * of file: of all lines in either file).
        * Besides: A lot of sequence functions expect to be able to re-run
        *          iterators multiple times, yet file iterators expect the
        *          user to rewind the file before they can be iterated again,
        *          meaning that in that respect, `File' isn't 100% compliant
-       *          to the `sequence' interface, meaning we're kind-of not
+       *          to the `Sequence' interface, meaning we're kind-of not
        *          even allowed to consider ourselves a sequence.
        *          But as already said: that's a good thing, because
        *          we don't even want to be considered one. */

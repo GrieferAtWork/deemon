@@ -1846,7 +1846,6 @@ posix_utime_unix_parse_timespec64_3(struct timespec64 *p_tsv /*[3]*/,
 #undef NEED_posix_utime_unix_object_to_timeval
 /*[[[deemon
 import * from time;
-import * from time;
 print("#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(", Time(year: 1970, month: 1, day: 1).microseconds.hex(), ")");
 print("#define MICROSECONDS_PER_SECOND      ", Time(seconds: 1).microseconds);
 print("#define NANOSECONDS_PER_MICROSECOND  ", Time(microseconds: 1).nanoseconds);
@@ -1882,7 +1881,6 @@ err:
 #undef NEED_posix_utime_unix_object_to_timeval64
 /*[[[deemon
 import * from time;
-import * from time;
 print("#define UNIX_TIME_T_BASE_MICROSECOND UINT64_C(", Time(year: 1970, month: 1, day: 1).microseconds.hex(), ")");
 print("#define MICROSECONDS_PER_SECOND      ", Time(seconds: 1).microseconds);
 print("#define NANOSECONDS_PER_MICROSECOND  ", Time(microseconds: 1).nanoseconds);
@@ -1917,7 +1915,6 @@ err:
 #ifdef NEED_posix_utime_unix_object_to_timespec
 #undef NEED_posix_utime_unix_object_to_timespec
 /*[[[deemon
-import * from time;
 import * from time;
 print("#ifndef UNIX_TIME_T_BASE_NANOSECOND");
 print("#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND");
@@ -1964,7 +1961,6 @@ err:
 #ifdef NEED_posix_utime_unix_object_to_timespec64
 #undef NEED_posix_utime_unix_object_to_timespec64
 /*[[[deemon
-import * from time;
 import * from time;
 print("#ifndef UNIX_TIME_T_BASE_NANOSECOND");
 print("#define UNIX_TIME_T_BASE_NANOSECOND UNIX_TIME_T_BASE_NANOSECOND");
