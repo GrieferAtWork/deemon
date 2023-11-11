@@ -3317,7 +3317,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 	            "->?Dint\n"
 	            "Control the current file position"),
 
-	/* Maintain at least a tiny bit of compatibility to the iterator interface... */
+	/* Maintain at least a tiny bit of compatibility to the Iterator interface... */
 	TYPE_GETTER(STR_seq, &DeeObject_NewRef, "->?DFile"),
 
 	TYPE_GETSET_END

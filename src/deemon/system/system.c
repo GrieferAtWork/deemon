@@ -1680,8 +1680,21 @@ done:
 	size_t bufused;
 	size_t buffree;
 
+	/* Check for special case: map an empty portion of the file. */
+	if unlikely(max_bytes == 0) {
+		buf = (unsigned char *)Dee_Calloc(num_trailing_nulbytes);
+		if unlikely(!buf)
+			return -1;
+		DeeMapFile_SETADDR(self, buf);
+		DeeMapFile_SETSIZE(self, 0);
+		DeeMapFile_SETHEAP(self);
+		return 0;
+	}
+
 	/* Try to use mmap(2) */
+#if defined(CONFIG_HOST_WINDOWS) || defined(ENOMEM) || defined(EINTR)
 again:
+#endif /* CONFIG_HOST_WINDOWS || ENOMEM || EINTR */
 #if defined(DeeMapFile_IS_CreateFileMapping) || defined(DeeMapFile_IS_mmap)
 	if (FSTAT_FOR_SIZE(fd, &st) == 0) {
 		Dee_pos_t map_offset = offset;
@@ -1706,7 +1719,7 @@ again:
 #endif /* !DeeMapFile_IS_CreateFileMapping */
 			}
 		}
-		if (OVERFLOW_USUB(STRUCT_STAT_FOR_SIZE_GETSIZE(st), map_offset, &map_bytes)) {
+		if unlikely(OVERFLOW_USUB(STRUCT_STAT_FOR_SIZE_GETSIZE(st), map_offset, &map_bytes)) {
 			map_bytes = 0;
 			if (STRUCT_STAT_FOR_SIZE_GETSIZE(st) > (Dee_pos_t)map_offset)
 				map_bytes = (size_t)-1;
@@ -1729,7 +1742,7 @@ again:
 					 * larger than what could fit into our address space.
 					 *
 					 * As such, just indicate a bad-allocation error with the max size. */
-					return Dee_BadAlloc((size_t)-1);
+					goto err_2big;
 				}
 			}
 #endif /* __SIZEOF_SIZE_T__ < 8 */
@@ -1744,10 +1757,13 @@ again:
 #endif /* DeeMapFile_IS_CreateFileMapping */
 			addend = (size_t)(map_offset & psm);
 			map_offset -= addend;
-			mapsize = map_bytes + addend;
+			if unlikely(OVERFLOW_UADD(map_bytes, addend, &mapsize))
+				goto err_2big;
 			used_nulbytes = num_trailing_nulbytes;
-			if (min_bytes > map_bytes)
-				used_nulbytes += min_bytes - map_bytes;
+			if (min_bytes > map_bytes) {
+				if unlikely(OVERFLOW_UADD(used_nulbytes, min_bytes - map_bytes, &used_nulbytes))
+					goto err_2big;
+			}
 #ifdef DeeMapFile_IS_CreateFileMapping
 			/* NOTE: This right here doesn't work in all cases, mainly due to
 			 *       the fact that the `VirtualAlloc()' below fails if passed
@@ -1846,7 +1862,13 @@ again:
 						size_t tail_size;
 						tail_base = (void *)(nul + bytes_in_page);
 						tail_size = used_nulbytes - bytes_in_page;
-						tail_size = (tail_size + psm) & ~psm;
+						if unlikely(OVERFLOW_UADD(tail_size, psm, &tail_size)) {
+							(void)UnmapViewOfFile(buf);
+							(void)CloseHandle(hMap);
+							goto err_2big;
+						}
+						tail_size = tail_size & ~psm;
+
 						/* Must map bss memory at `tail_base...+=tail_size'
 						 * If mapping memory here isn't possible, try to map
 						 * the file once again, but at a different location.
@@ -1911,12 +1933,20 @@ err_mmap_impossible:
 		bufsize = 0x10000;
 	if (bufsize < min_bytes)
 		bufsize = min_bytes;
-	buf = (unsigned char *)Dee_TryMalloc(bufsize + num_trailing_nulbytes);
+	{
+		size_t alcsize;
+		if unlikely(OVERFLOW_UADD(bufsize, num_trailing_nulbytes, &alcsize))
+			goto err_2big;
+		buf = (unsigned char *)Dee_TryMalloc(alcsize);
+	}
 	if unlikely(!buf) {
+		size_t alcsize;
 		bufsize = 1;
 		if (bufsize < min_bytes)
 			bufsize = min_bytes;
-		buf = (unsigned char *)Dee_Malloc(bufsize + num_trailing_nulbytes);
+		if unlikely(OVERFLOW_UADD(bufsize, num_trailing_nulbytes, &alcsize))
+			goto err_2big; /* This can happen when `max_bytes == 0' */
+		buf = (unsigned char *)Dee_Malloc(alcsize);
 		if unlikely(!buf)
 			return -1;
 	}
@@ -1993,15 +2023,25 @@ err_mmap_impossible:
 			buffree -= (size_t)error;
 			if (buffree < 1024) {
 				unsigned char *newbuf;
-				size_t newsize = bufsize * 2;
-				newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				size_t newsize, alcsize;
+				if unlikely(OVERFLOW_UMUL(bufsize, 2, &newsize))
+					newsize = (size_t)-1;
+				if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+					alcsize = (size_t)-1;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 				if (!newbuf) {
-					newsize = bufsize + 1024;
-					newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+					if unlikely(OVERFLOW_UADD(bufsize, 1024, &newsize))
+						newsize = (size_t)-1;
+					if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+						alcsize = (size_t)-1;
+					newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 					if (!newbuf) {
 						if (!buffree) {
-							newsize = bufsize + 1;
-							newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+							if unlikely(OVERFLOW_UADD(bufsize, 1, &newsize))
+								goto err_buf_2big;
+							if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+								goto err_buf_2big;
+							newbuf  = (unsigned char *)Dee_Realloc(buf, alcsize);
 							if unlikely(!newbuf)
 								goto err_buf;
 						} else {
@@ -2123,15 +2163,25 @@ err_mmap_impossible:
 		buffree -= (size_t)error;
 		if (buffree < 1024) {
 			unsigned char *newbuf;
-			size_t newsize = bufsize * 2;
-			newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+			size_t newsize, alcsize;
+			if unlikely(OVERFLOW_UMUL(bufsize, 2, &newsize))
+				newsize = (size_t)-1;
+			if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+				alcsize = (size_t)-1;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 			if (!newbuf) {
-				newsize = bufsize + 1024;
-				newbuf  = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if unlikely(OVERFLOW_UADD(bufsize, 1024, &newsize))
+					newsize = (size_t)-1;
+				if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+					alcsize = (size_t)-1;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 				if (!newbuf) {
 					if (!buffree) {
-						newsize = bufsize + 1;
-						newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+						if unlikely(OVERFLOW_UADD(bufsize, 1, &newsize))
+							goto err_buf_2big;
+						if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+							goto err_buf_2big;
+						newbuf  = (unsigned char *)Dee_Realloc(buf, alcsize);
 						if unlikely(!newbuf)
 							goto err_buf;
 					} else {
@@ -2232,6 +2282,10 @@ system_err_buf:
 err_buf:
 	Dee_Free(buf);
 	return -1;
+err_buf_2big:
+	Dee_Free(buf);
+err_2big:
+	return Dee_BadAlloc((size_t)-1);
 #else /* ... */
 	return DeeError_Throwf(&DeeError_UnsupportedAPI, "File mappings aren't supported");
 #endif /* !... */
@@ -2255,6 +2309,18 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		                            offset, min_bytes, max_bytes,
 		                            num_trailing_nulbytes, flags);
 	}
+
+	/* Check for special case: map an empty portion of the file. */
+	if unlikely(max_bytes == 0) {
+		buf = (unsigned char *)Dee_Calloc(num_trailing_nulbytes);
+		if unlikely(!buf)
+			return -1;
+		DeeMapFile_SETADDR(self, buf);
+		DeeMapFile_SETSIZE(self, 0);
+		DeeMapFile_SETHEAP(self);
+		return 0;
+	}
+
 	if (flags & DEE_MAPFILE_F_MUSTMMAP) {
 		if (flags & DEE_MAPFILE_F_TRYMMAP)
 			return 1;
@@ -2262,6 +2328,7 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		                       "Cannot mmap objects of type %r",
 		                       Dee_TYPE(file));
 	}
+
 	/* Same as the after-mmap code in `DeeMapFile_InitSysFd()',
 	 * but using deemon's file API, rather than the system's! */
 
@@ -2271,9 +2338,16 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		bufsize = 0x10000;
 	if (bufsize < min_bytes)
 		bufsize = min_bytes;
-	buf = (unsigned char *)Dee_TryMalloc(bufsize + num_trailing_nulbytes);
+	{
+		size_t alcsize;
+		if unlikely(OVERFLOW_UADD(bufsize, num_trailing_nulbytes, &alcsize))
+			goto err_2big;
+		buf = (unsigned char *)Dee_TryMalloc(alcsize);
+	}
 	if unlikely(!buf) {
 		bufsize = 1;
+		if (bufsize < min_bytes)
+			bufsize = min_bytes;
 		buf = (unsigned char *)Dee_Malloc(bufsize + num_trailing_nulbytes);
 		if unlikely(!buf)
 			return -1;
@@ -2315,15 +2389,25 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 			buffree -= error;
 			if (buffree < 1024) {
 				unsigned char *newbuf;
-				size_t newsize = bufsize * 2;
-				newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				size_t newsize, alcsize;
+				if unlikely(OVERFLOW_UMUL(bufsize, 2, &newsize))
+					newsize = (size_t)-1;
+				if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+					alcsize = (size_t)-1;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 				if (!newbuf) {
-					newsize = bufsize + 1024;
-					newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+					if unlikely(OVERFLOW_UADD(bufsize, 1024, &newsize))
+						newsize = (size_t)-1;
+					if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+						alcsize = (size_t)-1;
+					newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 					if (!newbuf) {
 						if (!buffree) {
-							newsize = bufsize + 1;
-							newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+							if unlikely(OVERFLOW_UADD(bufsize, 1, &newsize))
+								goto err_buf_2big;
+							if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+								goto err_buf_2big;
+							newbuf  = (unsigned char *)Dee_Realloc(buf, alcsize);
 							if unlikely(!newbuf)
 								goto err_buf;
 						} else {
@@ -2391,15 +2475,25 @@ DeeMapFile_InitFile(struct DeeMapFile *__restrict self, DeeObject *__restrict fi
 		buffree -= error;
 		if (buffree < 1024) {
 			unsigned char *newbuf;
-			size_t newsize = bufsize * 2;
-			newbuf = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+			size_t newsize, alcsize;
+			if unlikely(OVERFLOW_UMUL(bufsize, 2, &newsize))
+				newsize = (size_t)-1;
+			if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+				alcsize = (size_t)-1;
+			newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 			if (!newbuf) {
-				newsize = bufsize + 1024;
-				newbuf  = (unsigned char *)Dee_TryRealloc(buf, newsize + num_trailing_nulbytes);
+				if unlikely(OVERFLOW_UADD(bufsize, 1024, &newsize))
+					newsize = (size_t)-1;
+				if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+					alcsize = (size_t)-1;
+				newbuf = (unsigned char *)Dee_TryRealloc(buf, alcsize);
 				if (!newbuf) {
 					if (!buffree) {
-						newsize = bufsize + 1;
-						newbuf  = (unsigned char *)Dee_Realloc(buf, newsize + num_trailing_nulbytes);
+						if unlikely(OVERFLOW_UADD(bufsize, 1, &newsize))
+							goto err_buf_2big;
+						if unlikely(OVERFLOW_UADD(newsize, num_trailing_nulbytes, &alcsize))
+							goto err_buf_2big;
+						newbuf  = (unsigned char *)Dee_Realloc(buf, alcsize);
 						if unlikely(!newbuf)
 							goto err_buf;
 					} else {
@@ -2445,6 +2539,10 @@ empty_file:
 err_buf:
 	Dee_Free(buf);
 	return -1;
+err_buf_2big:
+	Dee_Free(buf);
+err_2big:
+	return Dee_BadAlloc((size_t)-1);
 }
 
 DECL_END
