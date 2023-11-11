@@ -2970,10 +2970,12 @@ rbtree_insert_iterator(RBTree *self, DeeObject *iter) {
 		if (count == 2) {
 			/* In this case, the first item is expected to be a range-object without a step. */
 			DREF DeeObject *range;
+			int unpack_err;
 			items[2] = items[1];
 			range    = items[0];
-			if unlikely(unpack_range(range, items)) {
-				Dee_Decref(range);
+			unpack_err = unpack_range(range, items);
+			Dee_Decref(range);
+			if unlikely(unpack_err) {
 				Dee_Decref(items[2]);
 				goto err;
 			}
