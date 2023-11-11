@@ -1311,10 +1311,10 @@ PUBLIC WUNUSED void *
 	void *result;
 	(void)file;
 	(void)line;
-#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
 		n_bytes = 1;
-#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
 	HEAP_CHECK();
 	BEGIN_TRYALLOC();
 	result = DO_REALLOC_D(ptr, n_bytes, file, line);
@@ -1380,10 +1380,10 @@ PUBLIC WUNUSED void *
 	(void)file;
 	(void)line;
 	HEAP_CHECK();
-#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
 		n_bytes = 1;
-#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
 again:
 	BEGIN_ALLOC();
 	result = DO_REALLOC_D(ptr, n_bytes, file, line);
@@ -1452,10 +1452,10 @@ PUBLIC WUNUSED void *
 	void *result;
 	(void)file;
 	(void)line;
-#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
 		n_bytes = 1;
-#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
 	BEGIN_TRYALLOC();
 	HEAP_CHECK();
 	result = _realloc_dbg(ptr, n_bytes, _NORMAL_BLOCK, file, line);
@@ -1520,10 +1520,10 @@ PUBLIC WUNUSED void *
 	void *result;
 	(void)file;
 	(void)line;
-#ifndef __MALLOC_ZERO_IS_NONNULL
+#ifndef __REALLOC_ZERO_IS_NONNULL
 	if unlikely(!n_bytes)
 		n_bytes = 1;
-#endif /* !__MALLOC_ZERO_IS_NONNULL */
+#endif /* !__REALLOC_ZERO_IS_NONNULL */
 again:
 	BEGIN_ALLOC();
 	HEAP_CHECK();
