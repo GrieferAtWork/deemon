@@ -66,6 +66,12 @@ DECL_BEGIN
 PRIVATE void DCALL free_reftracker(struct Dee_reftracker *__restrict self);
 #endif /* CONFIG_TRACE_REFCHANGES */
 
+#ifndef CONFIG_HAVE_memsetp
+#define memsetp(dst, pointer, num_pointers) \
+	dee_memsetp(dst, (__UINTPTR_TYPE__)(pointer), num_pointers)
+DeeSystem_DEFINE_memsetp(dee_memsetp)
+#endif // !CONFIG_HAVE_memsetp
+
 
 typedef DeeTypeObject Type;
 
@@ -4895,6 +4901,13 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 	return dst;
 }
 
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
+(DCALL Dee_Setrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
+                           /*in*/ DeeObject *obj, size_t object_count,
+                           char const *file, int line) {
+	Dee_Incref_n_traced(obj, object_count, file, line);
+	return (DREF DeeObject **)memsetp(dst, obj, object_count);
+}
 #else /* CONFIG_TRACE_REFCHANGES */
 
 /* Maintain ABI compatibility by always providing traced variants of functions! */
@@ -5037,13 +5050,12 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
                            char const *file, int line) {
 #ifdef CONFIG_NO_BADREFCNT_CHECKS
 	(void)file;
-	(void)file;
 	(void)line;
 	return Dee_Movrefv(dst, src, object_count);
 #else /* CONFIG_NO_BADREFCNT_CHECKS */
 	size_t i;
 	(void)file;
-	(void)file;
+	(void)line;
 	for (i = 0; i < object_count; ++i) {
 		DREF DeeObject *ob;
 		ob = src[i];
@@ -5053,6 +5065,21 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 	return dst;
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
 }
+
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
+(DCALL Dee_Setrefv_traced)(/*out:ref*/ DeeObject **__restrict dst,
+                           /*in*/ DeeObject *obj, size_t object_count,
+                           char const *file, int line) {
+	(void)file;
+	(void)line;
+#ifdef CONFIG_NO_BADREFCNT_CHECKS
+	return Dee_Setrefv(dst, obj, object_count);
+#else /* CONFIG_NO_BADREFCNT_CHECKS */
+	Dee_Incref_n_untraced(obj, object_count);
+	return (DREF DeeObject **)memsetp(dst, obj, object_count);
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
+}
+
 
 DFUNDEF void (DCALL Dee_DumpReferenceLeaks)(void);
 PUBLIC void (DCALL Dee_DumpReferenceLeaks)(void) {
@@ -5157,6 +5184,17 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 	}
 	return dst;
 }
+
+/* Fill object pointers in `dst' with `obj' and increment
+ * the reference counter of `obj' accordingly.
+ * @return: * : Always re-returns the pointer to `dst' */
+PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
+(DCALL Dee_Setrefv)(/*out:ref*/ DeeObject **__restrict dst,
+                    /*in*/ DeeObject *obj, size_t object_count) {
+	Dee_Incref_n_untraced(obj, object_count);
+	return (DREF DeeObject **)memsetp(dst, obj, object_count);
+}
+
 
 
 #ifndef DID_DEFINE_DEEOBJECT_FREETRACKER

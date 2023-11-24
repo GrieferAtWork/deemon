@@ -978,6 +978,13 @@ DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
                     /*in*/ DeeObject *const *__restrict src,
                     size_t object_count);
 
+/* Fill object pointers in `dst' with `obj' and increment
+ * the reference counter of `obj' accordingly.
+ * @return: * : Always re-returns the pointer to `dst' */
+DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
+(DCALL Dee_Setrefv)(/*out:ref*/ DeeObject **__restrict dst,
+                    /*in*/ DeeObject *obj, size_t object_count);
+
 
 LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XIncrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
@@ -1026,10 +1033,142 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #endif /* __OPTIMIZE_SIZE__ */
 #endif /* !CONFIG_[NO_]INLINE_INCREFV */
 
+
+/* Try to define `DEE_PRIVATE_MEMSETP' with platform-specific optimizations (if possible) */
+#undef DEE_PRIVATE_MEMSETP
+#ifdef CONFIG_INLINE_INCREFV
+#ifdef CONFIG_HAVE_memsetp
+#define DEE_PRIVATE_MEMSETP memsetp
+#elif __SIZEOF_POINTER__ == 4
+#ifdef CONFIG_NO_memsetl
+#undef CONFIG_HAVE_memsetl
+#elif !defined(CONFIG_HAVE_memsetl) && \
+      (defined(memsetl) || defined(__memsetl_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_memsetl
+#endif
+#ifndef CONFIG_HAVE_memsetl
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memsetl
+DECL_BEGIN
+#undef memsetl
+#ifdef __x86_64__
+extern void __stosd(unsigned long *, unsigned long, unsigned __int64);
+#define memsetl(dst, c, n)                   \
+	(__stosd((unsigned long *)(void *)(dst), \
+	         (unsigned long)(c),             \
+	         (unsigned __int64)(n)),         \
+	 (uint32_t *)(void *)(dst))
+#else /* __x86_64__ */
+extern void __stosd(unsigned long *, unsigned long, unsigned int);
+#define memsetl(dst, c, n)                   \
+	(__stosd((unsigned long *)(void *)(dst), \
+	         (unsigned long)(c),             \
+	         (unsigned int)(n)),             \
+	 (uint32_t *)(void *)(dst))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__stosd)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memsetl */
+#ifdef CONFIG_HAVE_memsetl
+#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+	memsetl(dst, (uint32_t)(pointer), num_pointers)
+#endif /* CONFIG_HAVE_memsetl */
+#elif __SIZEOF_POINTER__ == 8
+#ifdef CONFIG_NO_memsetq
+#undef CONFIG_HAVE_memsetq
+#elif !defined(CONFIG_HAVE_memsetq) && \
+      (defined(memsetq) || defined(__memsetq_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_memsetq
+#endif
+#ifndef CONFIG_HAVE_memsetq
+#if defined(_MSC_VER) && defined(__x86_64__)
+#define CONFIG_HAVE_memsetq
+DECL_BEGIN
+extern void __stosq(unsigned long long *, unsigned long long, unsigned __int64);
+#undef memsetq
+#define memsetq(dst, c, n)                        \
+	(__stosq((unsigned long long *)(void *)(dst), \
+	         (unsigned long long)(c),             \
+	         (unsigned __int64)(n)),              \
+	 (uint64_t *)(void *)(dst))
+#pragma intrinsic(__stosq)
+DECL_END
+#endif /* _MSC_VER && __x86_64__ */
+#endif /* !CONFIG_HAVE_memsetq */
+#ifdef CONFIG_HAVE_memsetq
+#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+	memsetq(dst, (uint64_t)(pointer), num_pointers)
+#endif /* CONFIG_HAVE_memsetq */
+#elif __SIZEOF_POINTER__ == 2
+#ifdef CONFIG_NO_memsetw
+#undef CONFIG_HAVE_memsetw
+#elif !defined(CONFIG_HAVE_memsetw) && \
+      (defined(memsetw) || defined(__memsetw_defined) || (defined(CONFIG_HAVE_STRING_H) && \
+       defined(__USE_KOS)))
+#define CONFIG_HAVE_memsetw
+#endif
+#ifndef CONFIG_HAVE_memsetw
+#if defined(_MSC_VER) && (defined(__i386__) || defined(__x86_64__))
+#define CONFIG_HAVE_memsetw
+DECL_BEGIN
+#undef memsetw
+#ifdef __x86_64__
+extern void __stosw(unsigned short *, unsigned short, unsigned __int64);
+#define memsetw(dst, c, n)                    \
+	(__stosw((unsigned short *)(void *)(dst), \
+	         (unsigned short)(c),             \
+	         (unsigned __int64)(n)),          \
+	 (uint16_t *)(void *)(dst))
+#else /* __x86_64__ */
+extern void __stosw(unsigned short *, unsigned short, unsigned int);
+#define memsetw(dst, c, n)                    \
+	(__stosw((unsigned short *)(void *)(dst), \
+	         (unsigned short)(c),             \
+	         (unsigned int)(n)),              \
+	 (uint16_t *)(void *)(dst))
+#endif /* !__x86_64__ */
+#pragma intrinsic(__stosw)
+DECL_END
+#endif /* _MSC_VER && (__i386__ || __x86_64__) */
+#endif /* !CONFIG_HAVE_memsetw */
+#ifdef CONFIG_HAVE_memsetw
+#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+	memsetw(dst, (uint16_t)(pointer), num_pointers)
+#endif /* CONFIG_HAVE_memsetw */
+#elif __SIZEOF_POINTER__ == 1
+#ifdef CONFIG_NO_memset
+#undef CONFIG_HAVE_memset
+#else
+#define CONFIG_HAVE_memset
+#endif
+#ifndef CONFIG_HAVE_memset
+#define CONFIG_HAVE_memset
+DECL_BEGIN
+#undef memset
+#define memset dee_memset
+LOCAL WUNUSED ATTR_OUTS(1, 3) void *
+dee_memset(void *__restrict dst, int byte, size_t num_bytes) {
+	uint8_t *dst_p = (uint8_t *)dst;
+	while (num_bytes--)
+		*dst_p++ = (uint8_t)(unsigned int)byte;
+	return dst;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memset */
+#define DEE_PRIVATE_MEMSETP(dst, pointer, num_pointers) \
+	memset(dst, (int)(unsigned int)(__UINT8_TYPE__)(pointer), num_pointers)
+#endif /* ... */
+#endif /* CONFIG_INLINE_INCREFV */
+
+
 #ifdef __INTELLISENSE__
 #define Dee_Increfv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
 #define Dee_Decrefv_untraced(object_vector, object_count) ((void)(object_count), (DeeObject **)Dee_REQUIRES_OBJECT(*(object_vector)))
 #define Dee_Movrefv_untraced(dst, src, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(*(src)), (DeeObject **)Dee_REQUIRES_OBJECT(*(dst)))
+#define Dee_Setrefv_untraced(dst, obj, object_count)      ((void)(object_count), Dee_REQUIRES_OBJECT(obj), (DeeObject **)Dee_REQUIRES_OBJECT(*(dst)))
 #elif defined(CONFIG_INLINE_INCREFV)
 #define Dee_Increfv_untraced(object_vector, object_count) \
 	Dee_Increfv_untraced((DeeObject *const *)(object_vector), object_count)
@@ -1073,10 +1212,28 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 	}
 	return dst;
 }
+
+#define Dee_Setrefv_untraced(dst, obj, object_count) \
+	Dee_Setrefv_untraced((DeeObject **)(dst), (DeeObject *)(obj), object_count)
+LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
+(DCALL Dee_Setrefv_untraced)(/*out:ref*/ DeeObject **__restrict dst,
+                             /*in*/ DeeObject *obj, size_t object_count) {
+#ifdef DEE_PRIVATE_MEMSETP
+	Dee_Incref_n_untraced(obj, object_count);
+	return (DREF DeeObject **)DEE_PRIVATE_MEMSETP(dst, obj, object_count);
+#else /* DEE_PRIVATE_MEMSETP */
+	size_t i;
+	Dee_Incref_n_untraced(obj, object_count);
+	for (i = 0; i < object_count; ++i)
+		dst[i] = obj;
+	return dst;
+#endif /* !DEE_PRIVATE_MEMSETP */
+}
 #else /* CONFIG_INLINE_INCREFV */
 #define Dee_Increfv_untraced(object_vector, object_count) (Dee_Increfv)((DeeObject *const *)(object_vector), object_count)
 #define Dee_Decrefv_untraced(object_vector, object_count) (Dee_Decrefv)((DeeObject *const *)(object_vector), object_count)
 #define Dee_Movrefv_untraced(dst, src, object_count)      (Dee_Movrefv)((DeeObject **)(dst), (DeeObject *const *)(src), object_count)
+#define Dee_Setrefv_untraced(dst, obj, object_count)      (Dee_Setrefv)((DeeObject **)(dst), (DeeObject *)(obj), object_count)
 #endif /* !CONFIG_INLINE_INCREFV */
 
 
@@ -1096,9 +1253,11 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **(DCALL Dee_Increfv_traced)(DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
 DFUNDEF ATTR_RETNONNULL ATTR_INS(1, 2) DeeObject **(DCALL Dee_Decrefv_traced)(DREF DeeObject *const *__restrict object_vector, size_t object_count, char const *file, int line);
 DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **(DCALL Dee_Movrefv_traced)(/*out:ref*/ DeeObject **__restrict dst, /*in*/ DeeObject *const *__restrict src, size_t object_count, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **(DCALL Dee_Setrefv_traced)(/*out:ref*/ DeeObject **__restrict dst, /*in*/ DeeObject *obj, size_t object_count, char const *file, int line);
 #define Dee_Increfv(object_vector, object_count) Dee_Increfv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
 #define Dee_Decrefv(object_vector, object_count) Dee_Decrefv_traced((DeeObject *const *)(object_vector), object_count, __FILE__, __LINE__)
 #define Dee_Movrefv(dst, src, object_count)      Dee_Movrefv_traced((DeeObject **)(dst), (DeeObject *const *)(src), object_count, __FILE__, __LINE__)
+#define Dee_Setrefv(dst, obj, object_count)      Dee_Setrefv_traced((DeeObject **)(dst), (DeeObject *)(obj), object_count, __FILE__, __LINE__)
 
 #define Dee_XIncrefv_traced(object_vector, object_count, file, line) \
 	Dee_XIncrefv_traced((DeeObject *const *)(object_vector), object_count, file, line)
@@ -1146,9 +1305,11 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_Increfv_traced(object_vector, object_count, file, line)  Dee_Increfv_untraced(object_vector, object_count)
 #define Dee_Decrefv_traced(object_vector, object_count, file, line)  Dee_Decrefv_untraced(object_vector, object_count)
 #define Dee_Movrefv_traced(dst, src, object_count, file, line)       Dee_Movrefv_untraced(dst, src, object_count)
+#define Dee_Setrefv_traced(dst, obj, object_count, file, line)       Dee_Setrefv_untraced(dst, obj, object_count)
 #define Dee_Increfv(object_vector, object_count)                     Dee_Increfv_untraced(object_vector, object_count)
 #define Dee_Decrefv(object_vector, object_count)                     Dee_Decrefv_untraced(object_vector, object_count)
 #define Dee_Movrefv(dst, src, object_count)                          Dee_Movrefv_untraced(dst, src, object_count)
+#define Dee_Setrefv(dst, obj, object_count)                          Dee_Setrefv_untraced(dst, obj, object_count)
 #define Dee_XIncrefv_traced(object_vector, object_count, file, line) Dee_XIncrefv_untraced(object_vector, object_count)
 #define Dee_XDecrefv_traced(object_vector, object_count, file, line) Dee_XDecrefv_untraced(object_vector, object_count)
 #define Dee_XMovrefv_traced(dst, src, object_count, file, line)      Dee_XMovrefv_untraced(dst, src, object_count)
@@ -1175,12 +1336,15 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_Incprefv_untraced(object_vector, object_count)            (Dee_Increfv_untraced(object_vector, object_count) + (object_count))
 #define Dee_Decprefv_untraced(object_vector, object_count)            (Dee_Decrefv_untraced(object_vector, object_count) + (object_count))
 #define Dee_Movprefv_untraced(dst, src, object_count)                 (Dee_Movrefv_untraced(dst, src, object_count) + (object_count))
+#define Dee_Setprefv_untraced(dst, obj, object_count)                 (Dee_Setrefv_untraced(dst, obj, object_count) + (object_count))
 #define Dee_Incprefv_traced(object_vector, object_count, file, line)  (Dee_Increfv_traced(object_vector, object_count, file, line) + (object_count))
 #define Dee_Decprefv_traced(object_vector, object_count, file, line)  (Dee_Decrefv_traced(object_vector, object_count, file, line) + (object_count))
 #define Dee_Movprefv_traced(dst, src, object_count, file, line)       (Dee_Movrefv_traced(dst, src, object_count, file, line) + (object_count))
+#define Dee_Setprefv_traced(dst, obj, object_count, file, line)       (Dee_Setrefv_traced(dst, obj, object_count, file, line) + (object_count))
 #define Dee_Incprefv(object_vector, object_count)                     (Dee_Increfv(object_vector, object_count) + (object_count))
 #define Dee_Decprefv(object_vector, object_count)                     (Dee_Decrefv(object_vector, object_count) + (object_count))
 #define Dee_Movprefv(dst, src, object_count)                          (Dee_Movrefv(dst, src, object_count) + (object_count))
+#define Dee_Setprefv(dst, obj, object_count)                          (Dee_Setrefv(dst, obj, object_count) + (object_count))
 #define Dee_XIncprefv_untraced(object_vector, object_count)           (Dee_XIncrefv_untraced(object_vector, object_count) + (object_count))
 #define Dee_XDecprefv_untraced(object_vector, object_count)           (Dee_XDecrefv_untraced(object_vector, object_count) + (object_count))
 #define Dee_XMovprefv_untraced(dst, src, object_count)                (Dee_XMovrefv_untraced(dst, src, object_count) + (object_count))

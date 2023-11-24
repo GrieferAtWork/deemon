@@ -282,7 +282,12 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 	DREF Function *result;
 	DeeCodeObject *code = (DeeCodeObject *)code_;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
-	ASSERT(code->co_refc == refc);
+	ASSERTF(code->co_refc == refc,
+	        "code->co_refc = %" PRFu16 "\n"
+	        "refc          = %" PRFu16 "\n"
+	        "name          = %s\n",
+	        code->co_refc, refc,
+	        DeeCode_NAME(code));
 	result = (DREF Function *)DeeObject_Malloc(offsetof(Function, fo_refv) +
 	                                           (refc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)

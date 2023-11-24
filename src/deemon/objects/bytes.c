@@ -40,6 +40,7 @@
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -1104,20 +1105,42 @@ bytes_mul(Bytes *self, DeeObject *other) {
 	size_t my_length, total_length, repeat;
 	if (DeeObject_AsSize(other, &repeat))
 		goto err;
-	if (!repeat)
-		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	if (repeat == 1)
 		return bytes_copy(self);
 	my_length = DeeBytes_SIZE(self);
 	if (OVERFLOW_UMUL(my_length, repeat, &total_length))
 		goto err_overflow;
+	if unlikely(total_length == 0)
+		return_reference_((DREF Bytes *)Dee_EmptyBytes);
 	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(total_length);
 	if unlikely(!result)
 		goto err;
 	src = DeeBytes_DATA(self);
 	dst = DeeBytes_DATA(result);
-	while (repeat--)
-		dst = (byte_t *)mempcpy(dst, src, my_length);
+	switch (my_length) {
+	case 1:
+		memsetb(dst, UNALIGNED_GET8(src), repeat);
+		break;
+#ifdef CONFIG_HAVE_memsetw
+	case 2:
+		memsetw(dst, UNALIGNED_GET16(src), repeat);
+		break;
+#endif /* CONFIG_HAVE_memsetw */
+#ifdef CONFIG_HAVE_memsetl
+	case 4:
+		memsetl(dst, UNALIGNED_GET32(src), repeat);
+		break;
+#endif /* CONFIG_HAVE_memsetl */
+#ifdef CONFIG_HAVE_memsetq
+	case 8:
+		memsetq(dst, UNALIGNED_GET64(src), repeat);
+		break;
+#endif /* CONFIG_HAVE_memsetq */
+	default:
+		while (repeat--)
+			dst = (byte_t *)mempcpy(dst, src, my_length);
+		break;
+	}
 	return result;
 err_overflow:
 	err_integer_overflow_i(sizeof(size_t) * 8, true);

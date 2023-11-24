@@ -953,6 +953,8 @@ EXPORTS
 	Dee_Realloc@8=_Dee_Realloc@8
 	Dee_RunAtExit@4=_Dee_RunAtExit@4
 	Dee_SetArgv@4=_Dee_SetArgv@4
+	Dee_Setrefv@12=_Dee_Setrefv@12
+	Dee_Setrefv_traced@20=_Dee_Setrefv_traced@20
 	Dee_Shutdown@0=_Dee_Shutdown@0
 	Dee_Strtod@8=_Dee_Strtod@8
 	Dee_Strtold@8=_Dee_Strtold@8
