@@ -3264,10 +3264,6 @@ list_inplace_mul(List **__restrict p_self,
 	size_t i, my_length, result_length, multiplier;
 	if (DeeObject_AsSize(other, &multiplier))
 		goto err;
-	if unlikely(!multiplier) {
-		DeeList_Clear((DeeObject *)me);
-		goto done;
-	}
 	if unlikely(multiplier == 1)
 		goto done;
 again:
@@ -3279,6 +3275,17 @@ again:
 		goto err;
 	}
 	elemv = me->l_list.ol_elemv;
+	if unlikely(result_length <= 0) {
+		/* Special case: list is being cleared. */
+		size_t elemc;
+		elemc = me->l_list.ol_elemc;
+		elemv = me->l_list.ol_elemv;
+		Dee_objectlist_init(&me->l_list);
+		DeeList_LockEndWrite(me);
+		Dee_Decrefv(elemv, elemc);
+		Dee_Free(elemv);
+		goto done;
+	}
 
 	/* Make sure sufficient memory has been allocated. */
 	if (result_length > DeeList_GetAlloc(me)) {
