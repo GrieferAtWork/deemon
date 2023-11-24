@@ -3262,8 +3262,6 @@ list_mul(List *me, DeeObject *other) {
 	DREF DeeObject **res_elemv, **dst;
 	if (DeeObject_AsSize(other, &multiplier))
 		goto err;
-	if unlikely(!multiplier)
-		return (DREF List *)DeeList_New();
 again:
 	DeeList_LockRead(me);
 	my_elemc = me->l_list.ol_elemc;
@@ -3272,6 +3270,10 @@ again:
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
 		goto err;
 	}
+	if unlikely(res_elemc == 0) {
+		DeeList_LockEndRead(me);
+		return (DREF List *)DeeList_New();
+	}
 	res_elemv = (DREF DeeObject **)Dee_TryMallocc(res_elemc, sizeof(DREF DeeObject *));
 	if unlikely(!res_elemv) {
 		DeeList_LockEndRead(me);
@@ -3279,15 +3281,23 @@ again:
 			goto again;
 		goto err;
 	}
-	for (i = 0; i < my_elemc; ++i) {
-		DeeObject *obj;
-		obj = DeeList_GET(me, i);
-		Dee_Incref_n(obj, multiplier);
-	}
-	for (dst = res_elemv, i = 0; i < multiplier; ++i) {
-		memcpyc(dst, DeeList_ELEM(me),
-		        my_elemc, sizeof(DREF DeeObject *));
-		dst += my_elemc;
+#ifndef __OPTIMIZE_SIZE__
+	if (my_elemc == 1) {
+		DeeObject *obj = DeeList_GET(me, 0);
+		Dee_Setrefv(res_elemv, obj, multiplier);
+	} else
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		for (i = 0; i < my_elemc; ++i) {
+			DeeObject *obj;
+			obj = DeeList_GET(me, i);
+			Dee_Incref_n(obj, multiplier);
+		}
+		for (dst = res_elemv, i = 0; i < multiplier; ++i) {
+			memcpyc(dst, DeeList_ELEM(me),
+					my_elemc, sizeof(DREF DeeObject *));
+			dst += my_elemc;
+		}
 	}
 	DeeList_LockEndRead(me);
 	result = DeeGCObject_MALLOC(List);
