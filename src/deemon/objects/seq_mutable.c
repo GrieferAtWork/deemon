@@ -670,8 +670,8 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
 				/* Check for NSI-optimized variants */
-				if (nsi->nsi_seqlike.nsi_setrange)
-					return (*nsi->nsi_seqlike.nsi_setrange)(self, start, end, Dee_None);
+				if (nsi->nsi_seqlike.nsi_delrange)
+					return (*nsi->nsi_seqlike.nsi_delrange)(self, start, end);
 				if (nsi->nsi_seqlike.nsi_erase) {
 					size_t temp, mylen;
 					mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
@@ -718,9 +718,8 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 					return 0;
 				}
 			}
-			if (has_noninherited_delrange(tp_self, seq) ||
-			    has_noninherited_setrange(tp_self, seq)) {
-				/* Try to implement delitem using delrange or setrange. */
+			if (has_noninherited_delrange(tp_self, seq)) {
+				/* Try to implement delitem using delrange. */
 				DREF DeeObject *start_index, *end_index;
 				start_index = DeeInt_NewSize(start);
 				if unlikely(!start_index)
@@ -730,11 +729,7 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 					Dee_Decref(start_index);
 					goto err;
 				}
-				if (has_noninherited_delrange(tp_self, seq)) {
-					result = (*seq->tp_range_del)(self, start_index, end_index);
-				} else {
-					result = (*seq->tp_range_set)(self, start_index, end_index, Dee_None);
-				}
+				result = (*seq->tp_range_del)(self, start_index, end_index);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
 				return result;
@@ -817,14 +812,10 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    is_noninherited_nsi(tp_self, seq, nsi)) {
 				/* Check for NSI-optimized variants */
-				if (nsi->nsi_seqlike.nsi_setrange_n)
-					return (*nsi->nsi_seqlike.nsi_setrange_n)(self, start, Dee_None);
-				if (nsi->nsi_seqlike.nsi_setrange) {
-					size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
-					if unlikely(mylen == (size_t)-1)
-						goto err;
-					return (*nsi->nsi_seqlike.nsi_setrange)(self, start, mylen, Dee_None);
-				}
+				if (nsi->nsi_seqlike.nsi_delrange_n)
+					return (*nsi->nsi_seqlike.nsi_delrange_n)(self, start);
+				if (nsi->nsi_seqlike.nsi_delrange)
+					return (*nsi->nsi_seqlike.nsi_delrange)(self, start, SSIZE_MAX);
 				if (nsi->nsi_seqlike.nsi_erase) {
 					size_t temp, mylen;
 					mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
@@ -865,18 +856,13 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 					return 0;
 				}
 			}
-			if (has_noninherited_delrange(tp_self, seq) ||
-			    has_noninherited_setrange(tp_self, seq)) {
-				/* Try to implement delitem using delrange or setrange. */
+			if (has_noninherited_delrange(tp_self, seq)) {
+				/* Try to implement delitem using delrange. */
 				DREF DeeObject *start_index;
 				start_index = DeeInt_NewSize(start);
 				if unlikely(!start_index)
 					goto err;
-				if (seq->tp_range_del) {
-					result = (*seq->tp_range_del)(self, start_index, Dee_None);
-				} else {
-					result = (*seq->tp_range_set)(self, start_index, Dee_None, Dee_None);
-				}
+				result = (*seq->tp_range_del)(self, start_index, Dee_None);
 				Dee_Decref(start_index);
 				return result;
 			}
@@ -1266,23 +1252,6 @@ erase_remainder:
 					Dee_Decref(start_ob);
 					return result;
 				}
-#if 0
-				if (has_noninherited_setrange(tp_self, seq)) {
-					DREF DeeObject *start_ob, *end_ob;
-					start_ob = DeeInt_NewSize(start);
-					if unlikely(!start_ob)
-						goto err;
-					end_ob = DeeInt_NewSize(end);
-					if unlikely(!end_ob) {
-						Dee_Decref(start_ob);
-						goto err;
-					}
-					result = (*seq->tp_range_set)(self, start_ob, end_ob, Dee_None);
-					Dee_Decref(end_ob);
-					Dee_Decref(start_ob);
-					return result;
-				}
-#endif
 				if (has_noninherited_delitem(tp_self, seq)) {
 					do {
 						DREF DeeObject *index_ob;
@@ -2391,7 +2360,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 				/* Check for NSI-optimized variants */
 				if (nsi->nsi_seqlike.nsi_erase)
 					return (*nsi->nsi_seqlike.nsi_erase)(self, index, count);
-				if (nsi->nsi_seqlike.nsi_setrange) {
+				if (nsi->nsi_seqlike.nsi_delrange) {
 					size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if unlikely(mylen == (size_t)-1)
 						goto err;
@@ -2401,7 +2370,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					} else if (index + count > mylen) {
 						count = mylen - index;
 					}
-					if ((*nsi->nsi_seqlike.nsi_setrange)(self, index, index + count, Dee_None))
+					if ((*nsi->nsi_seqlike.nsi_delrange)(self, index, index + count))
 						goto err;
 					return count;
 				}
@@ -2426,8 +2395,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					return count;
 				}
 			}
-			if (has_noninherited_delrange(tp_self, seq) ||
-			    has_noninherited_setrange(tp_self, seq)) {
+			if (has_noninherited_delrange(tp_self, seq)) {
 				DREF DeeObject *start_index, *end_index;
 				size_t mylen = DeeObject_Size(self);
 				if unlikely(mylen == (size_t)-1)
@@ -2446,9 +2414,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					Dee_Decref(start_index);
 					goto err;
 				}
-				error = has_noninherited_delrange(tp_self, seq)
-				        ? (*seq->tp_range_del)(self, start_index, end_index)
-				        : (*seq->tp_range_set)(self, start_index, end_index, Dee_None);
+				error = (*seq->tp_range_del)(self, start_index, end_index);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
 				if unlikely(error)
@@ -2576,7 +2542,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 						return result;
 					}
 				}
-				if (nsi->nsi_seqlike.nsi_setrange) {
+				if (nsi->nsi_seqlike.nsi_delrange) {
 					if (nsi->nsi_seqlike.nsi_getitem) {
 						if (index < 0) {
 							size_t mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
@@ -2587,7 +2553,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 						result = (*nsi->nsi_seqlike.nsi_getitem)(self, (size_t)index);
 						if unlikely(!result)
 							goto err;
-						if unlikely((*nsi->nsi_seqlike.nsi_setrange)(self, (size_t)index, (size_t)index + 1, Dee_None))
+						if unlikely((*nsi->nsi_seqlike.nsi_delrange)(self, (size_t)index, (size_t)index + 1))
 							goto err_r;
 						return result;
 					}
@@ -2606,7 +2572,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 							err_unbound_index(self, (size_t)index);
 							goto err;
 						}
-						if unlikely((*nsi->nsi_seqlike.nsi_setrange)(self, (size_t)index, (size_t)index + 1, Dee_None))
+						if unlikely((*nsi->nsi_seqlike.nsi_delrange)(self, (size_t)index, (size_t)index + 1))
 							goto err_r;
 						return result;
 					}
@@ -2634,8 +2600,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 					goto err_r;
 				return result;
 			}
-			if (has_noninherited_delrange(tp_self, seq) ||
-			    has_noninherited_setrange(tp_self, seq)) {
+			if (has_noninherited_delrange(tp_self, seq)) {
 				DREF DeeObject *index_ob, *index_plus1_ob;
 				if (index < 0) {
 					size_t mylen = DeeObject_Size(self);
@@ -2656,9 +2621,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 					Dee_Decref(index_ob);
 					goto err_r;
 				}
-				error = has_noninherited_delrange(tp_self, seq)
-				        ? (*seq->tp_range_del)(self, index_ob, index_plus1_ob)
-				        : (*seq->tp_range_set)(self, index_ob, index_plus1_ob, Dee_None);
+				error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
 				Dee_Decref(index_plus1_ob);
 				Dee_Decref(index_ob);
 				if unlikely(error)
@@ -2705,7 +2668,7 @@ DeeSeq_Remove(DeeObject *self, size_t start, size_t end,
 				if (nsi->nsi_seqlike.nsi_getitem &&
 				    (nsi->nsi_seqlike.nsi_delitem ||
 				     nsi->nsi_seqlike.nsi_erase ||
-				     nsi->nsi_seqlike.nsi_setrange)) {
+				     nsi->nsi_seqlike.nsi_delrange)) {
 					size_t i, mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if (end > mylen)
 						end = mylen;
@@ -2744,8 +2707,8 @@ do_delete_i:
 									if ((*nsi->nsi_seqlike.nsi_erase)(self, i, 1) == (size_t)-1)
 										goto err;
 								} else {
-									ASSERT(nsi->nsi_seqlike.nsi_setrange);
-									if ((*nsi->nsi_seqlike.nsi_setrange)(self, i, i + 1, Dee_None))
+									ASSERT(nsi->nsi_seqlike.nsi_delrange);
+									if ((*nsi->nsi_seqlike.nsi_delrange)(self, i, i + 1))
 										goto err;
 								}
 								return 1;
@@ -2991,7 +2954,7 @@ DeeSeq_RRemove(DeeObject *self, size_t start, size_t end,
 				if (nsi->nsi_seqlike.nsi_getitem &&
 				    (nsi->nsi_seqlike.nsi_delitem ||
 				     nsi->nsi_seqlike.nsi_erase ||
-				     nsi->nsi_seqlike.nsi_setrange)) {
+				     nsi->nsi_seqlike.nsi_delrange)) {
 					size_t i, mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if (end > mylen)
 						end = mylen;
@@ -3033,8 +2996,8 @@ do_delete_i:
 										if ((*nsi->nsi_seqlike.nsi_erase)(self, i, 1) == (size_t)-1)
 											goto err;
 									} else {
-										ASSERT(nsi->nsi_seqlike.nsi_setrange);
-										if ((*nsi->nsi_seqlike.nsi_setrange)(self, i, i + 1, Dee_None))
+										ASSERT(nsi->nsi_seqlike.nsi_delrange);
+										if ((*nsi->nsi_seqlike.nsi_delrange)(self, i, i + 1))
 											goto err;
 									}
 									return 1;
@@ -3487,7 +3450,7 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 				if (nsi->nsi_seqlike.nsi_getitem &&
 				    (nsi->nsi_seqlike.nsi_delitem ||
 				     nsi->nsi_seqlike.nsi_erase ||
-				     nsi->nsi_seqlike.nsi_setrange)) {
+				     nsi->nsi_seqlike.nsi_delrange)) {
 					size_t i, mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if (end > mylen)
 						end = mylen;
@@ -3514,8 +3477,8 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 										if ((*nsi->nsi_seqlike.nsi_erase)(self, i, 1) == (size_t)-1)
 											goto err_keyed_search_item;
 									} else {
-										ASSERT(nsi->nsi_seqlike.nsi_setrange);
-										if ((*nsi->nsi_seqlike.nsi_setrange)(self, i, i + 1, Dee_None))
+										ASSERT(nsi->nsi_seqlike.nsi_delrange);
+										if ((*nsi->nsi_seqlike.nsi_delrange)(self, i, i + 1))
 											goto err_keyed_search_item;
 									}
 									if unlikely(count == (size_t)-2)
@@ -3542,8 +3505,8 @@ DeeSeq_RemoveAll(DeeObject *self, size_t start, size_t end,
 										if ((*nsi->nsi_seqlike.nsi_erase)(self, i, 1) == (size_t)-1)
 											goto err;
 									} else {
-										ASSERT(nsi->nsi_seqlike.nsi_setrange);
-										if ((*nsi->nsi_seqlike.nsi_setrange)(self, i, i + 1, Dee_None))
+										ASSERT(nsi->nsi_seqlike.nsi_delrange);
+										if ((*nsi->nsi_seqlike.nsi_delrange)(self, i, i + 1))
 											goto err;
 									}
 									if unlikely(count == (size_t)-2)
@@ -3961,7 +3924,7 @@ DeeSeq_RemoveIf(DeeObject *self, size_t start,
 				if (nsi->nsi_seqlike.nsi_getitem &&
 				    (nsi->nsi_seqlike.nsi_delitem ||
 				     nsi->nsi_seqlike.nsi_erase ||
-				     nsi->nsi_seqlike.nsi_setrange)) {
+				     nsi->nsi_seqlike.nsi_delrange)) {
 					size_t i, mylen = (*nsi->nsi_seqlike.nsi_getsize)(self);
 					if (end > mylen)
 						end = mylen;
@@ -3988,8 +3951,8 @@ DeeSeq_RemoveIf(DeeObject *self, size_t start,
 									if ((*nsi->nsi_seqlike.nsi_erase)(self, i, 1) == (size_t)-1)
 										goto err;
 								} else {
-									ASSERT(nsi->nsi_seqlike.nsi_setrange);
-									if ((*nsi->nsi_seqlike.nsi_setrange)(self, i, i + 1, Dee_None))
+									ASSERT(nsi->nsi_seqlike.nsi_delrange);
+									if ((*nsi->nsi_seqlike.nsi_delrange)(self, i, i + 1))
 										goto err;
 								}
 								if unlikely(count == (size_t)-2)

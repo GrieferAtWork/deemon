@@ -3364,10 +3364,13 @@ DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_GetRangeBeginIn
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self, Dee_ssize_t begin, Dee_ssize_t end);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_DelRange)(DeeObject *self, DeeObject *begin, DeeObject *end);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_SetRange)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_DelRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_SetRange)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *values);
 #define DeeObject_GetItemString(self, key)                    DeeObject_GetItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_GetItemStringLen(self, key, keylen)         DeeObject_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeObject_GetItemStringDef(self, key, def)            DeeObject_GetItemStringHashDef(self, key, Dee_HashStr(key), def)

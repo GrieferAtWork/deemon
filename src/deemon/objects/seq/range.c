@@ -1381,30 +1381,26 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 intrange_nsi_getrange(IntRange *__restrict self,
-                      dssize_t start, dssize_t end) {
+                      dssize_t begin, dssize_t end) {
+	struct Dee_seq_range range;
 	size_t mylen = intrange_nsi_getsize(self);
-	if (start < 0)
-		start += mylen;
-	if (end < 0)
-		end += mylen;
-	if ((size_t)end > mylen)
-		end = (dssize_t)mylen;
-	if ((size_t)start >= (size_t)end)
+	DeeSeqRange_Clamp(&range, begin, end, mylen);
+	if (range.sr_end <= range.sr_start)
 		return_reference_(Dee_EmptySeq);
-	return DeeRange_NewInt(self->ir_start + ((size_t)start * self->ir_step),
-	                       self->ir_end - ((mylen - (size_t)end) * self->ir_step),
+	return DeeRange_NewInt(self->ir_start + (range.sr_start * self->ir_step),
+	                       self->ir_end - ((mylen - range.sr_end) * self->ir_step),
 	                       self->ir_step);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 intrange_nsi_getrange_n(IntRange *__restrict self,
-                        dssize_t start) {
+                        dssize_t begin) {
+	size_t start;
 	size_t mylen = intrange_nsi_getsize(self);
-	if (start < 0)
-		start += mylen;
-	if ((size_t)start >= mylen)
+	start = DeeSeqRange_Clamp_n(begin, mylen);
+	if (start >= mylen)
 		return_reference_(Dee_EmptySeq);
-	return DeeRange_NewInt(self->ir_start + ((size_t)start * self->ir_step),
+	return DeeRange_NewInt(self->ir_start + (start * self->ir_step),
 	                       self->ir_end,
 	                       self->ir_step);
 }
@@ -1441,6 +1437,8 @@ PRIVATE struct type_nsi tpconst intrange_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)&intrange_nsi_getrange,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&intrange_nsi_getrange_n,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)NULL,

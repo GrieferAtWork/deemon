@@ -38,6 +38,9 @@
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 
+#undef SSIZE_MAX
+#define SSIZE_MAX __SSIZE_MAX__
+
 DECL_BEGIN
 
 #define RVI_GETPOS(x) atomic_read(&(x)->rvi_pos)
@@ -296,8 +299,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rvec_getitem(RefVector *self,
-             DeeObject *index_ob) {
+rvec_getitem(RefVector *self, DeeObject *index_ob) {
 	size_t index;
 	DREF DeeObject *result;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -328,9 +330,9 @@ PRIVATE ATTR_COLD int DCALL err_readonly_rvec(void) {
 }
 
 
-PRIVATE int DCALL
-rvec_setitem(RefVector *__restrict self,
-             DeeObject *__restrict index_ob,
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+rvec_setitem(RefVector *self,
+             DeeObject *index_ob,
              DeeObject *value) {
 	size_t index;
 	DREF DeeObject *old_item;
@@ -358,8 +360,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rvec_delitem(RefVector *__restrict self,
-             DeeObject *__restrict index_ob) {
+rvec_delitem(RefVector *self, DeeObject *index_ob) {
 	return rvec_setitem(self, index_ob, NULL);
 }
 
@@ -426,9 +427,9 @@ rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
 	Dee_XDecref(oldobj);
 }
 
-PRIVATE void DCALL
-rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
-                      /*inherit(always)*/ DREF DeeObject *__restrict value) {
+PRIVATE NONNULL((1, 3)) void DCALL
+rvec_nsi_setitem_fast(RefVector *self, size_t index,
+                      /*inherit(always)*/ DREF DeeObject *value) {
 	DREF DeeObject *oldobj;
 	ASSERT(index < self->rv_length);
 	ASSERT(RefVector_IsWritable(self));
@@ -439,9 +440,9 @@ rvec_nsi_setitem_fast(RefVector *__restrict self, size_t index,
 	Dee_XDecref(oldobj);
 }
 
-PRIVATE int DCALL
-rvec_nsi_setitem(RefVector *__restrict self, size_t index,
-                 DeeObject *__restrict value) {
+PRIVATE NONNULL((1, 3)) int DCALL
+rvec_nsi_setitem(RefVector *self, size_t index,
+                 DeeObject *value) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
 		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -467,9 +468,9 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-rvec_nsi_xchitem(RefVector *__restrict self, size_t index,
-                 DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+rvec_nsi_xchitem(RefVector *self, size_t index,
+                 DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -494,9 +495,9 @@ err:
 	return NULL;
 }
 
-PRIVATE bool DCALL
-rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
-                    DeeObject *__restrict old_value) {
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
+rvec_nsi_cmpdelitem(RefVector *self, size_t index,
+                    DeeObject *old_value) {
 	ASSERT(index < self->rv_length);
 	ASSERT(RefVector_IsWritable(self));
 	RefVector_LockWrite(self);
@@ -510,9 +511,9 @@ rvec_nsi_cmpdelitem(RefVector *__restrict self, size_t index,
 	return true;
 }
 
-PRIVATE size_t DCALL
-rvec_nsi_find(RefVector *__restrict self, size_t start, size_t end,
-              DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+rvec_nsi_find(RefVector *self, size_t start, size_t end,
+              DeeObject *keyed_search_item, DeeObject *key) {
 	size_t i;
 	DREF DeeObject *item;
 	int temp;
@@ -535,9 +536,9 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE size_t DCALL
-rvec_nsi_rfind(RefVector *__restrict self, size_t start, size_t end,
-               DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+rvec_nsi_rfind(RefVector *self, size_t start, size_t end,
+               DeeObject *keyed_search_item, DeeObject *key) {
 	size_t i;
 	DREF DeeObject *item;
 	int temp;
@@ -563,9 +564,9 @@ err:
 }
 
 
-PRIVATE int DCALL
-rvec_nsi_remove(RefVector *__restrict self, size_t start, size_t end,
-                DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+rvec_nsi_remove(RefVector *self, size_t start, size_t end,
+                DeeObject *keyed_search_item, DeeObject *key) {
 	size_t i;
 	DREF DeeObject *item;
 	int temp;
@@ -594,9 +595,9 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-rvec_nsi_rremove(RefVector *__restrict self, size_t start, size_t end,
-                 DeeObject *__restrict keyed_search_item, DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+rvec_nsi_rremove(RefVector *self, size_t start, size_t end,
+                 DeeObject *keyed_search_item, DeeObject *key) {
 	size_t i;
 	DREF DeeObject *item;
 	int temp;
@@ -627,11 +628,9 @@ err:
 	return -1;
 }
 
-PRIVATE size_t DCALL
-rvec_nsi_removeall(RefVector *__restrict self,
-                   size_t start, size_t end,
-                   DeeObject *__restrict keyed_search_item,
-                   DeeObject *key) {
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+rvec_nsi_removeall(RefVector *self, size_t start, size_t end,
+                   DeeObject *keyed_search_item, DeeObject *key) {
 	size_t i;
 	size_t result = 0;
 	DREF DeeObject *item;
@@ -664,9 +663,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-rvec_nsi_removeif(RefVector *__restrict self,
-                  size_t start, size_t end,
-                  DeeObject *__restrict should_remove) {
+rvec_nsi_removeif(RefVector *self, size_t start, size_t end,
+                  DeeObject *should_remove) {
 	size_t i;
 	size_t result = 0;
 	int temp;
@@ -704,59 +702,50 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_nsi_delrange(RefVector *__restrict self,
-                  dssize_t start, dssize_t end) {
+                  dssize_t i_begin, dssize_t i_end) {
+	struct Dee_seq_range range;
 	size_t i;
 	if (!RefVector_IsWritable(self))
 		return err_readonly_rvec();
-	if (start < 0)
-		start += self->rv_length;
-	if (end < 0)
-		end += self->rv_length;
-	if ((size_t)end > self->rv_length)
-		end = (dssize_t)self->rv_length;
-	for (i = (size_t)start; i < (size_t)end; ++i)
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rv_length);
+	for (i = range.sr_start; i < range.sr_end; ++i)
 		rvec_nsi_delitem_fast(self, i);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 rvec_nsi_delrange_n(RefVector *__restrict self,
-                    dssize_t start) {
-	size_t i, end = self->rv_length;
+                    dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return rvec_nsi_delrange(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t i, start;
 	if (!RefVector_IsWritable(self))
 		return err_readonly_rvec();
-	if (start < 0)
-		start += end;
-	for (i = (size_t)start; i < end; ++i)
+	start = DeeSeqRange_Clamp_n(i_begin, self->rv_length);
+	for (i = start; i < self->rv_length; ++i)
 		rvec_nsi_delitem_fast(self, i);
 	return 0;
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
-PRIVATE int DCALL
-rvec_nsi_setrange(RefVector *__restrict self,
-                  dssize_t start, dssize_t end,
-                  DeeObject *__restrict values) {
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+rvec_nsi_setrange(RefVector *self, dssize_t i_begin,
+                  dssize_t i_end, DeeObject *values) {
+	struct Dee_seq_range range;
+	size_t range_size;
 	size_t i, fast_length;
 	DREF DeeObject *elem;
-	if (DeeNone_Check(values))
-		return rvec_nsi_delrange(self, start, end);
 	if (!RefVector_IsWritable(self))
 		return err_readonly_rvec();
-	if (start < 0)
-		start += self->rv_length;
-	if (end < 0)
-		end += self->rv_length;
-	if ((size_t)end > self->rv_length)
-		end = (dssize_t)self->rv_length;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rv_length);
+	range_size = range.sr_end - range.sr_start;
 	fast_length = DeeFastSeq_GetSize(values);
 	if (fast_length != DEE_FASTSEQ_NOTFAST) {
-		if (fast_length != ((size_t)end - (size_t)start)) {
-			return err_invalid_unpack_size(values,
-			                               (size_t)end - (size_t)start,
-			                               fast_length);
-		}
-		for (i = (size_t)start; i < (size_t)end; ++i) {
-			elem = DeeFastSeq_GetItem(values, i - (size_t)start);
+		if (fast_length != range_size)
+			return err_invalid_unpack_size(values, range_size, fast_length);
+		for (i = range.sr_start; i < range.sr_end; ++i) {
+			elem = DeeFastSeq_GetItem(values, i - range.sr_start);
 			if unlikely(!elem)
 				goto err;
 			rvec_nsi_setitem_fast(self, i, elem); /* Inherit reference. */
@@ -766,13 +755,13 @@ rvec_nsi_setrange(RefVector *__restrict self,
 		iterator = DeeObject_IterSelf(values);
 		if unlikely(!iterator)
 			goto err;
-		for (i = (size_t)start; i < (size_t)end; ++i) {
+		for (i = range.sr_start; i < range.sr_end; ++i) {
 			elem = DeeObject_IterNext(iterator);
 			if unlikely(!ITER_ISOK(elem)) {
 				if unlikely(elem == ITER_DONE) {
 					err_invalid_unpack_size(values,
-					                        (size_t)end - (size_t)start,
-					                        i - (size_t)start);
+					                        range_size,
+					                        i - range.sr_start);
 				}
 err_iterator:
 				Dee_Decref(iterator);
@@ -784,7 +773,7 @@ err_iterator:
 		elem = DeeObject_IterNext(iterator);
 		if unlikely(elem != ITER_DONE) {
 			if (elem) {
-				err_invalid_unpack_iter_size(values, iterator, (size_t)end - (size_t)start);
+				err_invalid_unpack_iter_size(values, iterator, range_size);
 				Dee_Decref(elem);
 			}
 			goto err_iterator;
@@ -796,42 +785,33 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-rvec_nsi_setrange_n(RefVector *__restrict self,
-                    dssize_t start,
-                    DeeObject *__restrict values) {
-	if (DeeNone_Check(values))
-		return rvec_nsi_delrange_n(self, start);
-	return rvec_nsi_setrange(self, start,
-	                         (size_t)self->rv_length,
-	                         values);
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+rvec_nsi_setrange_n(RefVector *self, dssize_t start,
+                    DeeObject *values) {
+	return rvec_nsi_setrange(self, start, SSIZE_MAX, values);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-rvec_delrange(RefVector *__restrict self,
-              DeeObject *__restrict start,
-              DeeObject *__restrict end) {
-	dssize_t start_index;
-	dssize_t end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+rvec_delrange(RefVector *self, DeeObject *begin, DeeObject *end) {
+	dssize_t i_begin;
+	dssize_t i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return rvec_nsi_delrange_n(self, start_index);
-	if (DeeObject_AsSSize(end, &end_index))
+		return rvec_nsi_delrange_n(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return rvec_nsi_delrange(self, start_index, end_index);
+	return rvec_nsi_delrange(self, i_begin, i_end);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-rvec_setrange(RefVector *__restrict self,
-              DeeObject *__restrict start,
-              DeeObject *__restrict end,
-              DeeObject *__restrict values) {
+rvec_setrange(RefVector *self, DeeObject *begin,
+              DeeObject *end, DeeObject *values) {
 	dssize_t start_index;
 	dssize_t end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+	if (DeeObject_AsSSize(begin, &start_index))
 		goto err;
 	if (DeeNone_Check(end))
 		return rvec_nsi_setrange_n(self, start_index, values);
@@ -856,6 +836,8 @@ PRIVATE struct type_nsi tpconst rvec_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&rvec_nsi_getitem_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)&rvec_nsi_delrange,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&rvec_nsi_delrange_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&rvec_nsi_setrange,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_nsi_setrange_n,
 			/* .nsi_find         = */ (dfunptr_t)&rvec_nsi_find,
@@ -942,7 +924,7 @@ INTERN DeeTypeObject RefVector_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RefVector",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL, /* TODO: This needs to become a GC object (since it can reference itself) */
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -1438,6 +1420,8 @@ PRIVATE struct type_nsi tpconst svec_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_nsi_getitem_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&svec_nsi_find,

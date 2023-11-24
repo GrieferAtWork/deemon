@@ -34,11 +34,15 @@
 #include <deemon/seq.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
 #include "../../runtime/runtime_error.h"
 #include "../../runtime/strings.h"
 #include "../gc_inspect.h"
+
+#undef SSIZE_MAX
+#define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN
 
@@ -571,6 +575,8 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&repeat_nsi_find,
@@ -1013,35 +1019,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-repeatitem_getrange(RepeatItem *self,
-                    DeeObject *start_ob,
-                    DeeObject *end_ob) {
-	dssize_t start, end;
-	if (DeeObject_AsSSize(start_ob, &start))
-		goto err;
-	if (DeeNone_Check(end_ob)) {
-		end = self->rpit_num;
-	} else if (DeeObject_AsSSize(end_ob, &end)) {
-		goto err;
-	}
-	if unlikely(start < 0)
-		start += self->rpit_num;
-	if unlikely(end < 0)
-		end += self->rpit_num;
-	if unlikely((size_t)start >= self->rpit_num ||
-		         (size_t)start >= (size_t)end)
-	return_reference_(Dee_EmptySeq);
-	if unlikely((size_t)end > self->rpit_num)
-		end = (dssize_t)self->rpit_num;
-	end -= start;
-	ASSERT(end != 0);
-	return DeeSeq_RepeatItem(self->rpit_obj, (size_t)end);
-err:
-	return NULL;
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 repeatitem_nsi_getsize(RepeatItem *__restrict self) {
 	if unlikely(self->rpit_num == (size_t)-1)
@@ -1071,39 +1048,54 @@ repeatitem_nsi_getitem_fast(RepeatItem *__restrict self, size_t UNUSED(index)) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_nsi_getrange(RepeatItem *__restrict self,
-                        dssize_t start,
-                        dssize_t end) {
-	if unlikely(start < 0)
-		start += self->rpit_num;
-	if unlikely(end < 0)
-		end += self->rpit_num;
-	if unlikely((size_t)start >= self->rpit_num ||
-		         (size_t)start >= (size_t)end)
-	return_reference_(Dee_EmptySeq);
-	if unlikely((size_t)end > self->rpit_num)
-		end = (dssize_t)self->rpit_num;
-	end -= start;
-	ASSERT(end != 0);
-	return DeeSeq_RepeatItem(self->rpit_obj, (size_t)end);
+repeatitem_nsi_getrange_i(RepeatItem *__restrict self,
+                          dssize_t i_begin,
+                          dssize_t i_end) {
+	struct Dee_seq_range range;
+	size_t range_size;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rpit_num);
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0)
+		return_reference_(Dee_EmptySeq);
+	return DeeSeq_RepeatItem(self->rpit_obj, range_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_nsi_getrange_n(RepeatItem *__restrict self,
-                          dssize_t start) {
-	if unlikely(start < 0)
-		start += self->rpit_num;
-	if unlikely((size_t)start >= self->rpit_num)
+repeatitem_nsi_getrange_in(RepeatItem *__restrict self,
+                           dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return repeatitem_nsi_getrange_i(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
+	start = DeeSeqRange_Clamp_n(i_begin, self->rpit_num);
+	range_size = self->rpit_num - start;
+	if unlikely(range_size <= 0)
 		return_reference_(Dee_EmptySeq);
-	ASSERT(self->rpit_num != 0);
-	return DeeSeq_RepeatItem(self->rpit_obj,
-	                         self->rpit_num - (size_t)start);
+	return DeeSeq_RepeatItem(self->rpit_obj, range_size);
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
-PRIVATE size_t DCALL
-repeatitem_nsi_find(RepeatItem *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+repeatitem_getrange(RepeatItem *self,
+                    DeeObject *begin,
+                    DeeObject *end) {
+	dssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
+		goto err;
+	if (DeeNone_Check(end))
+		return repeatitem_nsi_getrange_in(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
+		goto err;
+	return repeatitem_nsi_getrange_i(self, i_begin, i_end);
+err:
+	return NULL;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+repeatitem_nsi_find(RepeatItem *self,
                     size_t start, size_t end,
-                    DeeObject *__restrict keyed_search_item,
+                    DeeObject *keyed_search_item,
                     DeeObject *key) {
 	int error;
 	if (start >= self->rpit_num || start >= end)
@@ -1116,10 +1108,10 @@ repeatitem_nsi_find(RepeatItem *__restrict self,
 	return start;
 }
 
-PRIVATE size_t DCALL
-repeatitem_nsi_rfind(RepeatItem *__restrict self,
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
+repeatitem_nsi_rfind(RepeatItem *self,
                      size_t start, size_t end,
-                     DeeObject *__restrict keyed_search_item,
+                     DeeObject *keyed_search_item,
                      DeeObject *key) {
 	size_t result;
 	result = repeatitem_nsi_find(self, start, end, keyed_search_item, key);
@@ -1143,8 +1135,10 @@ PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_nsi_getrange,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_nsi_getrange_n,
+			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_nsi_getrange_i,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_nsi_getrange_in,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&repeatitem_nsi_find,

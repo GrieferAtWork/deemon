@@ -564,6 +564,9 @@ EXPORTS
 	_DeeObject_DelItemStringHash@12=DeeObject_DelItemStringHash@12
 	_DeeObject_DelItemStringLenHash@16=DeeObject_DelItemStringLenHash@16
 	_DeeObject_DelRange@12=DeeObject_DelRange@12
+	_DeeObject_DelRangeBeginIndex@12=DeeObject_DelRangeBeginIndex@12
+	_DeeObject_DelRangeEndIndex@12=DeeObject_DelRangeEndIndex@12
+	_DeeObject_DelRangeIndex@12=DeeObject_DelRangeIndex@12
 	_DeeObject_Destroy@4=DeeObject_Destroy@4
 	_DeeObject_Destroy_d@12=DeeObject_Destroy_d@12
 	_DeeObject_Div@8=DeeObject_Div@8
@@ -743,6 +746,8 @@ EXPORTS
 	_DeeRoSet_Insert@8=DeeRoSet_Insert@8
 	_DeeRoSet_New@0=DeeRoSet_New@0
 	_DeeRoSet_NewWithHint@4=DeeRoSet_NewWithHint@4
+	_DeeSeqRange_DoClamp@8=DeeSeqRange_DoClamp@8
+	_DeeSeqRange_DoClamp_n@8=DeeSeqRange_DoClamp_n@8
 	_DeeSeq_All@4=DeeSeq_All@4
 	_DeeSeq_Any@4=DeeSeq_Any@4
 	_DeeSeq_AsHeapVector@8=DeeSeq_AsHeapVector@8

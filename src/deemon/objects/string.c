@@ -33,11 +33,13 @@
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>
-#include <deemon/thread.h>
 #include <deemon/system-features.h> /* memmem() */
+#include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
+#include <hybrid/typecore.h>
 
 #include <stddef.h>
 
@@ -45,9 +47,9 @@
 #include "../runtime/strings.h"
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
-
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -584,10 +586,10 @@ compare_string_bytes(String *__restrict lhs,
 	size_t rhs_len;
 	if (!lhs->s_data ||
 	    lhs->s_data->u_width == STRING_WIDTH_1BYTE) {
-		uint8_t *lhs_str;
+		uint8_t const *lhs_str;
 		int result;
 		/* Compare against single-byte string. */
-		lhs_str = (uint8_t *)lhs->s_str;
+		lhs_str = (uint8_t const *)lhs->s_str;
 		lhs_len = lhs->s_len;
 		rhs_len = DeeBytes_SIZE(rhs);
 		/* Most simple case: compare ascii/single-byte strings. */
@@ -595,7 +597,7 @@ compare_string_bytes(String *__restrict lhs,
 		if (result != 0)
 			return fix_memcmp_return(result);
 	} else {
-		uint8_t *rhs_str;
+		byte_t const *rhs_str;
 		struct string_utf *lhs_utf;
 		/* Compare against single-byte string. */
 		rhs_str = DeeBytes_DATA(rhs);
@@ -660,9 +662,9 @@ compare_strings(String *__restrict lhs,
 	size_t rhs_len;
 	if (!lhs->s_data ||
 	    lhs->s_data->u_width == STRING_WIDTH_1BYTE) {
-		uint8_t *lhs_str;
+		uint8_t const *lhs_str;
 		/* Compare against single-byte string. */
-		lhs_str = (uint8_t *)lhs->s_str;
+		lhs_str = (uint8_t const *)lhs->s_str;
 		lhs_len = lhs->s_len;
 		if (!rhs->s_data ||
 		    rhs->s_data->u_width == STRING_WIDTH_1BYTE) {
@@ -707,18 +709,18 @@ compare_strings(String *__restrict lhs,
 		}
 	} else if (!rhs->s_data ||
 	           rhs->s_data->u_width == STRING_WIDTH_1BYTE) {
-		uint8_t *rhs_str;
+		uint8_t const *rhs_str;
 		struct string_utf *lhs_utf;
 		/* Compare against single-byte string. */
-		rhs_str = (uint8_t *)rhs->s_str;
+		rhs_str = (uint8_t const *)rhs->s_str;
 		rhs_len = rhs->s_len;
 		lhs_utf = lhs->s_data;
 		switch (lhs_utf->u_width) {
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *lhs_str;
+			uint16_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint16_t *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint16_t const *)lhs_utf->u_data[lhs_utf->u_width];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
@@ -729,9 +731,9 @@ compare_strings(String *__restrict lhs,
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *lhs_str;
+			uint32_t const *lhs_str;
 			size_t i, common_len;
-			lhs_str    = (uint32_t *)lhs_utf->u_data[lhs_utf->u_width];
+			lhs_str    = (uint32_t const *)lhs_utf->u_data[lhs_utf->u_width];
 			lhs_len    = WSTR_LENGTH(lhs_str);
 			common_len = MIN(rhs_len, lhs_len);
 			for (i = 0; i < common_len; ++i) {
@@ -744,8 +746,8 @@ compare_strings(String *__restrict lhs,
 		default: __builtin_unreachable();
 		}
 	} else {
-		struct string_utf *lhs_utf;
-		struct string_utf *rhs_utf;
+		struct string_utf const *lhs_utf;
+		struct string_utf const *rhs_utf;
 		lhs_utf = lhs->s_data;
 		rhs_utf = rhs->s_data;
 		ASSERT(lhs_utf != NULL);
@@ -756,16 +758,16 @@ compare_strings(String *__restrict lhs,
 		switch (lhs_utf->u_width) {
 
 		CASE_WIDTH_2BYTE: {
-			uint16_t *lhs_str;
-			lhs_str = (uint16_t *)lhs_utf->u_data[lhs_utf->u_width];
+			uint16_t const *lhs_str;
+			lhs_str = (uint16_t const *)lhs_utf->u_data[lhs_utf->u_width];
 			lhs_len = WSTR_LENGTH(lhs_str);
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
 				int result;
-				uint16_t *rhs_str;
+				uint16_t const *rhs_str;
 				size_t common_len;
-				rhs_str    = (uint16_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint16_t const *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpw(lhs_str, rhs_str, common_len);
@@ -774,9 +776,9 @@ compare_strings(String *__restrict lhs,
 			}	break;
 
 			CASE_WIDTH_4BYTE: {
-				uint32_t *rhs_str;
+				uint32_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint32_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint32_t const *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
@@ -791,15 +793,15 @@ compare_strings(String *__restrict lhs,
 		}	break;
 
 		CASE_WIDTH_4BYTE: {
-			uint32_t *lhs_str;
-			lhs_str = (uint32_t *)lhs_utf->u_data[lhs_utf->u_width];
+			uint32_t const *lhs_str;
+			lhs_str = (uint32_t const *)lhs_utf->u_data[lhs_utf->u_width];
 			lhs_len = WSTR_LENGTH(lhs_str);
 			switch (rhs_utf->u_width) {
 
 			CASE_WIDTH_2BYTE: {
-				uint16_t *rhs_str;
+				uint16_t const *rhs_str;
 				size_t i, common_len;
-				rhs_str    = (uint16_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint16_t const *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				for (i = 0; i < common_len; ++i) {
@@ -811,9 +813,9 @@ compare_strings(String *__restrict lhs,
 
 			CASE_WIDTH_4BYTE: {
 				int result;
-				uint32_t *rhs_str;
+				uint32_t const *rhs_str;
 				size_t common_len;
-				rhs_str    = (uint32_t *)rhs_utf->u_data[rhs_utf->u_width];
+				rhs_str    = (uint32_t const *)rhs_utf->u_data[rhs_utf->u_width];
 				rhs_len    = WSTR_LENGTH(rhs_str);
 				common_len = MIN(lhs_len, rhs_len);
 				result     = memcmpl(lhs_str, rhs_str, common_len);
@@ -1073,7 +1075,7 @@ PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 stringiter_nii_getindex(StringIterator *__restrict self) {
 	union dcharptr pos;
 	pos.ptr = READ_ITER_PTR(self);
-	return (size_t)(pos.cp8 - (uint8_t *)DeeString_WSTR(self->si_string)) /
+	return (size_t)(pos.cp8 - (byte_t const *)DeeString_WSTR(self->si_string)) /
 	       STRING_SIZEOF_WIDTH(self->si_width);
 }
 
@@ -1081,7 +1083,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 stringiter_nii_setindex(StringIterator *__restrict self, size_t index) {
 	if (index > DeeString_WLEN(self->si_string))
 		index = DeeString_WLEN(self->si_string);
-	self->si_iter.cp8 = (uint8_t *)DeeString_WSTR(self->si_string) +
+	self->si_iter.cp8 = (byte_t *)DeeString_WSTR(self->si_string) +
 	                    (index * STRING_SIZEOF_WIDTH(self->si_width));
 	return 0;
 }
@@ -1282,33 +1284,54 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_getrange_i(String *__restrict self,
+                  dssize_t begin, dssize_t end) {
+	struct Dee_seq_range range;
+	size_t range_size;
+	void *str  = DeeString_WSTR(self);
+	int width  = DeeString_WIDTH(self);
+	size_t len = WSTR_LENGTH(str);
+	DeeSeqRange_Clamp(&range, begin, end, len);
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0)
+		return_empty_string;
+	return DeeString_NewWithWidth((byte_t *)str +
+	                              (range.sr_start * STRING_SIZEOF_WIDTH(width)),
+	                              range_size, width);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_getrange_in(String *__restrict self, dssize_t begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return string_getrange_i(self, begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t range_size, start;
+	void *str  = DeeString_WSTR(self);
+	int width  = DeeString_WIDTH(self);
+	size_t len = WSTR_LENGTH(str);
+	start = DeeSeqRange_Clamp_n(begin, len);
+	range_size = len - start;
+	if unlikely(range_size <= 0)
+		return_empty_string;
+	return DeeString_NewWithWidth((byte_t *)str +
+	                              (start * STRING_SIZEOF_WIDTH(width)),
+	                              range_size, width);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 string_range_get(String *__restrict self,
                  DeeObject *__restrict begin,
                  DeeObject *__restrict end) {
-	void *str  = DeeString_WSTR(self);
-	int width  = DeeString_WIDTH(self);
-	size_t len = WSTR_LENGTH(str);
-	dssize_t i_begin, i_end = (dssize_t)len;
+	dssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &i_end))
-			goto err;
-	}
-	if (i_begin < 0)
-		i_begin += len;
-	if (i_end < 0)
-		i_end += len;
-	if unlikely((size_t)i_begin >= len ||
-	            (size_t)i_begin >= (size_t)i_end)
-		return_empty_string;
-	if unlikely((size_t)i_end > len)
-		i_end = (dssize_t)len;
-	return DeeString_NewWithWidth((uint8_t *)str +
-	                              ((size_t)i_begin * STRING_SIZEOF_WIDTH(width)),
-	                              (size_t)i_end - (size_t)i_begin,
-	                              width);
+	if (DeeNone_Check(end))
+		return string_getrange_in(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
+		goto err;
+	return string_getrange_i(self, i_begin, i_end);
 err:
 	return NULL;
 }
@@ -1351,8 +1374,10 @@ PRIVATE struct type_nsi tpconst string_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)NULL,
-			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&string_getrange_i,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&string_getrange_in,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)NULL,

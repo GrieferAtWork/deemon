@@ -219,6 +219,7 @@ DFUNDEF ATTR_COLD bool DCALL Dee_TryCollectMemory(size_t req_bytes);
 /* Same as `Dee_TryCollectMemory()', but raise an
 * `Error.NoMemory' if memory could not be collected. */
 DFUNDEF WUNUSED ATTR_COLD bool DCALL Dee_CollectMemory(size_t req_bytes);
+#define Dee_CollectMemoryc(elem_count, elem_size) Dee_CollectMemory((elem_count) * (elem_size))
 
 /* Throw a bad-allocation error for `req_bytes' bytes.
  * @return: -1: Always returns -1. */

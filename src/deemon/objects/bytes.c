@@ -37,6 +37,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
@@ -44,6 +45,9 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+
+#undef SSIZE_MAX
+#define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN
 
@@ -1267,87 +1271,117 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
-bytes_nsi_getrange_i(Bytes *__restrict self,
-                     dssize_t start_index,
-                     dssize_t end_index) {
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if unlikely(end_index < 0)
-		end_index += DeeBytes_SIZE(self);
-	if ((size_t)end_index > DeeBytes_SIZE(self))
-		end_index = (dssize_t)DeeBytes_SIZE(self);
-	if ((size_t)start_index >= (size_t)end_index)
+bytes_nsi_getrange(Bytes *__restrict self,
+                   dssize_t i_begin,
+                   dssize_t i_end) {
+	struct Dee_seq_range range;
+	size_t range_size;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeBytes_SIZE(self));
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0)
 		return_reference_((Bytes *)Dee_EmptyBytes);
-	if ((size_t)start_index == 0 &&
-	    (size_t)end_index == DeeBytes_SIZE(self))
+	if unlikely(range_size == DeeBytes_SIZE(self))
 		return_reference_(self);
 	return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
-	                                      self->b_base + (size_t)start_index,
-	                                      (size_t)(end_index - start_index),
+	                                      self->b_base + range.sr_start,
+	                                      range_size,
 	                                      self->b_flags);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
-bytes_nsi_getrange_in(Bytes *__restrict self,
-                      dssize_t start_index) {
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if ((size_t)start_index >= DeeBytes_SIZE(self))
-		return_reference_((Bytes *)Dee_EmptyBytes);
-	if (start_index == 0)
+bytes_nsi_getrange_n(Bytes *__restrict self,
+                     dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return bytes_nsi_getrange(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
+	start = DeeSeqRange_Clamp_n(i_begin, DeeBytes_SIZE(self));
+	if unlikely(start == 0)
 		return_reference_(self);
+	range_size = DeeBytes_SIZE(self) - start;
+	if unlikely(range_size <= 0)
+		return_reference_((Bytes *)Dee_EmptyBytes);
 	return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
-	                                      self->b_base + (size_t)start_index,
-	                                      (size_t)(DeeBytes_SIZE(self) - start_index),
+	                                      self->b_base + start,
+	                                      range_size,
 	                                      self->b_flags);
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
-
-
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-bytes_nsi_setrange_i(Bytes *self,
-                     dssize_t start_index,
-                     dssize_t end_index,
-                     DeeObject *value) {
+bytes_nsi_setrange(Bytes *self,
+                   dssize_t i_begin,
+                   dssize_t i_end,
+                   DeeObject *value) {
+	struct Dee_seq_range range;
+	size_t range_size;
 	byte_t *dst;
-	size_t size;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if unlikely(end_index < 0)
-		end_index += DeeBytes_SIZE(self);
-	if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
-	            (size_t)start_index >= (size_t)end_index) {
-		start_index = 0;
-		end_index   = 0;
-	} else if unlikely((size_t)end_index > DeeBytes_SIZE(self)) {
-		end_index = (dssize_t)DeeBytes_SIZE(self);
-	}
-	size = (size_t)(end_index - start_index);
-	dst  = DeeBytes_DATA(self) + (size_t)start_index;
-	return DeeSeq_ItemsToBytes(dst, size, value);
+	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeBytes_SIZE(self));
+	range_size = range.sr_end - range.sr_start;
+	dst = DeeBytes_DATA(self) + range.sr_start;
+	return DeeSeq_ItemsToBytes(dst, range_size, value);
 err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-bytes_nsi_setrange_in(Bytes *self,
-                      dssize_t start_index,
-                      DeeObject *value) {
+bytes_nsi_setrange_n(Bytes *self, dssize_t i_begin,
+                     DeeObject *value) {
+#ifdef __OPTIMIZE_SIZE__
+	return bytes_nsi_setrange(self, i_begin, SSIZE_MAX, value);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
 	byte_t *dst;
-	size_t size;
 	if unlikely(!DeeBytes_WRITABLE(self))
 		goto err_readonly;
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if unlikely((size_t)start_index >= DeeBytes_SIZE(self))
-		start_index = DeeBytes_SIZE(self);
-	size = (size_t)(DeeBytes_SIZE(self) - start_index);
-	dst  = DeeBytes_DATA(self) + (size_t)start_index;
-	return DeeSeq_ItemsToBytes(dst, size, value);
+	start      = DeeSeqRange_Clamp_n(i_begin, DeeBytes_SIZE(self));
+	range_size = DeeBytes_SIZE(self) - start;
+	dst = DeeBytes_DATA(self) + start;
+	return DeeSeq_ItemsToBytes(dst, range_size, value);
 err_readonly:
 	return err_bytes_not_writable((DeeObject *)self);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bytes_nsi_delrange(Bytes *self, dssize_t i_begin, dssize_t i_end) {
+#ifdef __OPTIMIZE_SIZE__
+	return bytes_nsi_setrange(self, i_begin, i_end, Dee_None);
+#else /* __OPTIMIZE_SIZE__ */
+	struct Dee_seq_range range;
+	size_t range_size;
+	byte_t *dst;
+	if unlikely(!DeeBytes_WRITABLE(self))
+		goto err_readonly;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeBytes_SIZE(self));
+	range_size = range.sr_end - range.sr_start;
+	dst = DeeBytes_DATA(self) + range.sr_start;
+	bzero(dst, range_size);
+	return 0;
+err_readonly:
+	return err_bytes_not_writable((DeeObject *)self);
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bytes_nsi_delrange_n(Bytes *self, dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return bytes_nsi_delrange(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
+	byte_t *dst;
+	if unlikely(!DeeBytes_WRITABLE(self))
+		goto err_readonly;
+	start      = DeeSeqRange_Clamp_n(i_begin, DeeBytes_SIZE(self));
+	range_size = DeeBytes_SIZE(self) - start;
+	dst = DeeBytes_DATA(self) + start;
+	bzero(dst, range_size);
+	return 0;
+err_readonly:
+	return err_bytes_not_writable((DeeObject *)self);
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
@@ -1381,10 +1415,12 @@ PRIVATE struct type_nsi tpconst bytes_nsi = {
 			/* .nsi_delitem      = */ (dfunptr_t)&bytes_nsi_delitem,
 			/* .nsi_setitem      = */ (dfunptr_t)&bytes_nsi_setitem,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&bytes_nsi_getrange_i,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_nsi_getrange_in,
-			/* .nsi_setrange     = */ (dfunptr_t)&bytes_nsi_setrange_i,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_nsi_setrange_in,
+			/* .nsi_getrange     = */ (dfunptr_t)&bytes_nsi_getrange,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_nsi_getrange_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&bytes_nsi_delrange,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&bytes_nsi_delrange_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&bytes_nsi_setrange,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_nsi_setrange_n,
 			/* .nsi_find         = */ (dfunptr_t)NULL,
 			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)&bytes_nsi_xch,

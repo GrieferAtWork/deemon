@@ -348,7 +348,7 @@ struct Dee_type_nsi {
 	__UINTPTR_HALF_TYPE__   nsi_class; /* Sequence class (One of `TYPE_SEQX_CLASS_*') */
 	__UINTPTR_HALF_TYPE__   nsi_flags; /* Sequence flags (Set of `TYPE_SEQX_F*') */
 	union {
-		Dee_funptr_t       _nsi_class_functions[22];
+		Dee_funptr_t       _nsi_class_functions[24];
 
 		struct {
 			/* [1..1] ERROR: (size_t)-1 */
@@ -383,6 +383,8 @@ struct Dee_type_nsi {
 
 			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);
 			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getrange_n)(DeeObject *__restrict self, Dee_ssize_t start); /* end: Dee_None */
+			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delrange_n)(DeeObject *self, Dee_ssize_t start); /* end: Dee_None */
 			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_setrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
 			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setrange_n)(DeeObject *self, Dee_ssize_t start, DeeObject *values); /* end: Dee_None */
 
@@ -485,6 +487,55 @@ struct Dee_type_nsi {
 	;
 };
 
+
+struct Dee_seq_range {
+	union {
+#undef sr_start
+#undef sr_istart
+		size_t      sr_start;  /* Start index (clamped) */
+		Dee_ssize_t sr_istart; /* Start index (input) */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion_s
+#define sr_start  _dee_aunion_s.sr_start
+#define sr_istart _dee_aunion_s.sr_istart
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+	union {
+#undef sr_end
+#undef sr_iend
+		size_t      sr_end;    /* End index (clamped) */
+		Dee_ssize_t sr_iend;   /* End index (input) */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_dee_aunion_e
+#define sr_end  _dee_aunion_e.sr_end
+#define sr_iend _dee_aunion_e.sr_iend
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
+};
+
+
+/* Clamp a range, as given to `operator [:]' & friends to the bounds
+ * accepted by the associated sequence. This handles stuff like negative
+ * index over-roll and past-the-end truncation. */
+#define DeeSeqRange_Clamp(prange, istart, iend, size) \
+	((prange)->sr_istart = (istart),                  \
+	 (prange)->sr_iend   = (iend),                    \
+	 _DeeSeqRange_Clamp(prange, size))
+#define _DeeSeqRange_Clamp(prange, size)              \
+	(void)(((prange)->sr_start <= (prange)->sr_end && \
+	        (prange)->sr_end <= (size)) ||            \
+	       (DeeSeqRange_DoClamp(prange, size), 0))
+DFUNDEF ATTR_INOUT(1) void DCALL
+DeeSeqRange_DoClamp(struct Dee_seq_range *__restrict self,
+                    size_t size);
+
+/* Specialized version of `DeeSeqRange_DoClamp()' for `[istart:none]' range expressions. */
+#define DeeSeqRange_Clamp_n(istart, size) \
+	((size_t)(istart) <= (size) ? (size_t)(istart) : DeeSeqRange_DoClamp_n(istart, size))
+DFUNDEF ATTR_CONST WUNUSED size_t DCALL
+DeeSeqRange_DoClamp_n(Dee_ssize_t start, size_t size);
 
 
 /* Lookup the closest NSI descriptor for `tp', or return `NULL'

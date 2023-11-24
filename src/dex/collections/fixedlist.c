@@ -40,7 +40,11 @@
 #include <deemon/thread.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+
+#undef SSIZE_MAX
+#define SSIZE_MAX __SSIZE_MAX__
 
 DECL_BEGIN
 
@@ -658,26 +662,24 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
-	size_t count;
+fl_nsi_getrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
 	DREF FixedList *result;
-	if (start < 0)
-		start += self->fl_size;
-	if (end < 0)
-		end += self->fl_size;
-	if ((size_t)end > self->fl_size)
-		end = (dssize_t)self->fl_size;
-	if ((size_t)start >= (size_t)end)
+	struct Dee_seq_range range;
+	size_t range_size;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->fl_size);
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0)
 		return_reference_(Dee_EmptySeq);
-	count  = (size_t)end - (size_t)start;
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
-	                                              count * sizeof(DREF DeeObject *));
+	                                              range_size * sizeof(DREF DeeObject *));
 	if unlikely(!result)
 		goto done;
 	Dee_atomic_rwlock_init(&result->fl_lock);
-	result->fl_size = count;
+	result->fl_size = range_size;
 	FixedList_LockRead(self);
-	Dee_XMovrefv(result->fl_elem, self->fl_elem + (size_t)start, count);
+	Dee_XMovrefv(result->fl_elem,
+	             self->fl_elem + range.sr_start,
+	             range_size);
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
@@ -687,69 +689,120 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getrange_n(FixedList *__restrict self, dssize_t start) {
-	return fl_nsi_getrange(self, start, (dssize_t)self->fl_size);
+fl_nsi_getrange_n(FixedList *__restrict self, dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return fl_nsi_getrange(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	DREF FixedList *result;
+	size_t start, range_size;
+	start = DeeSeqRange_Clamp_n(i_begin, self->fl_size);
+	range_size = self->fl_size - start;
+	if unlikely(range_size <= 0)
+		return_reference_(Dee_EmptySeq);
+	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
+	                                              range_size * sizeof(DREF DeeObject *));
+	if unlikely(!result)
+		goto done;
+	Dee_atomic_rwlock_init(&result->fl_lock);
+	result->fl_size = range_size;
+	FixedList_LockRead(self);
+	Dee_XMovrefv(result->fl_elem,
+	             self->fl_elem + start,
+	             range_size);
+	FixedList_LockEndRead(self);
+	weakref_support_init(result);
+	DeeObject_Init(result, &FixedList_Type);
+	DeeGC_Track((DeeObject *)result);
+done:
+	return (DREF DeeObject *)result;
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fl_nsi_delrange(FixedList *__restrict self, dssize_t start, dssize_t end) {
-	size_t i, count;
-	DREF DeeObject **values_buf;
-	if (start < 0)
-		start += self->fl_size;
-	if (end < 0)
-		end += self->fl_size;
-	if ((size_t)end > self->fl_size)
-		end = (dssize_t)self->fl_size;
-	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_Mallocac(count, sizeof(DREF DeeObject *));
-	if unlikely(!values_buf)
-		goto err;
-	FixedList_LockWrite(self);
-	for (i = 0; i < count; ++i) {
-		DREF DeeObject **p_slot;
-		p_slot = &self->fl_elem[(size_t)start + i];
-		/* Exchange objects. */
-		values_buf[i] = *p_slot;
-		*p_slot       = NULL;
+fl_nsi_delrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
+	struct Dee_seq_range range;
+	size_t range_size;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->fl_size);
+	range_size = range.sr_end - range.sr_start;
+	if (range_size > 0) {
+		size_t i;
+		DREF DeeObject **values_buf;
+		values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
+		if unlikely(!values_buf)
+			goto err;
+		FixedList_LockWrite(self);
+		for (i = 0; i < range_size; ++i) {
+			DREF DeeObject **p_slot;
+			p_slot = &self->fl_elem[(size_t)i_begin + i];
+			/* Exchange objects. */
+			values_buf[i] = *p_slot;
+			*p_slot       = NULL;
+		}
+		FixedList_LockEndWrite(self);
+		Dee_XDecrefv(values_buf, range_size);
+		Dee_Freea(values_buf);
 	}
-	FixedList_LockEndWrite(self);
-	Dee_XDecrefv(values_buf, count);
-	Dee_Freea(values_buf);
 	return 0;
 err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fl_nsi_delrange_n(FixedList *__restrict self, dssize_t i_begin) {
+#ifdef __OPTIMIZE_SIZE__
+	return fl_nsi_delrange(self, i_begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
+	start = DeeSeqRange_Clamp_n(i_begin, self->fl_size);
+	range_size = self->fl_size - start;
+	if (range_size > 0) {
+		size_t i;
+		DREF DeeObject **values_buf;
+		values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
+		if unlikely(!values_buf)
+			goto err;
+		FixedList_LockWrite(self);
+		for (i = 0; i < range_size; ++i) {
+			DREF DeeObject **p_slot;
+			p_slot = &self->fl_elem[(size_t)i_begin + i];
+			/* Exchange objects. */
+			values_buf[i] = *p_slot;
+			*p_slot       = NULL;
+		}
+		FixedList_LockEndWrite(self);
+		Dee_XDecrefv(values_buf, range_size);
+		Dee_Freea(values_buf);
+	}
+	return 0;
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
+}
+
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-fl_nsi_setrange(FixedList *self, dssize_t start, dssize_t end, DeeObject *values) {
-	size_t i, count;
+fl_nsi_setrange(FixedList *self, dssize_t i_begin,
+                dssize_t i_end, DeeObject *values) {
+	struct Dee_seq_range range;
+	size_t i, range_size;
 	DREF DeeObject **values_buf;
-	if (DeeNone_Check(values))
-		return fl_nsi_delrange(self, start, end);
-	if (start < 0)
-		start += self->fl_size;
-	if (end < 0)
-		end += self->fl_size;
-	if ((size_t)end > self->fl_size)
-		end = (dssize_t)self->fl_size;
-	count      = (size_t)end - (size_t)start;
-	values_buf = (DREF DeeObject **)Dee_Mallocac(count, sizeof(DREF DeeObject *));
+	DeeSeqRange_Clamp(&range, i_begin, i_end, self->fl_size);
+	range_size = range.sr_end - range.sr_start;
+	values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
 	if unlikely(!values_buf)
 		goto err;
-	if (DeeObject_UnpackWithUnbound(values, count, values_buf))
+	if (DeeObject_UnpackWithUnbound(values, range_size, values_buf))
 		goto err_values_buf;
 	FixedList_LockWrite(self);
-	for (i = 0; i < count; ++i) {
+	for (i = 0; i < range_size; ++i) {
 		DREF DeeObject **p_slot, *temp;
-		p_slot = &self->fl_elem[(size_t)start + i];
+		p_slot = &self->fl_elem[(size_t)i_begin + i];
 		/* Exchange objects. */
 		temp          = *p_slot;
 		*p_slot       = values_buf[i];
 		values_buf[i] = temp;
 	}
 	FixedList_LockEndWrite(self);
-	Dee_XDecrefv(values_buf, count);
+	Dee_XDecrefv(values_buf, range_size);
 	Dee_Freea(values_buf);
 	return 0;
 err_values_buf:
@@ -759,63 +812,79 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-fl_nsi_setrange_n(FixedList *self, dssize_t start, DeeObject *values) {
-	return fl_nsi_setrange(self, start, (dssize_t)self->fl_size, values);
+fl_nsi_setrange_n(FixedList *self, dssize_t i_begin, DeeObject *values) {
+#ifdef __OPTIMIZE_SIZE__
+	return fl_nsi_setrange(self, i_begin, SSIZE_MAX, values);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t i, start, range_size;
+	DREF DeeObject **values_buf;
+	start = DeeSeqRange_Clamp_n(i_begin, self->fl_size);
+	range_size = self->fl_size - start;
+	values_buf = (DREF DeeObject **)Dee_Mallocac(range_size, sizeof(DREF DeeObject *));
+	if unlikely(!values_buf)
+		goto err;
+	if (DeeObject_UnpackWithUnbound(values, range_size, values_buf))
+		goto err_values_buf;
+	FixedList_LockWrite(self);
+	for (i = 0; i < range_size; ++i) {
+		DREF DeeObject **p_slot, *temp;
+		p_slot = &self->fl_elem[(size_t)i_begin + i];
+		/* Exchange objects. */
+		temp          = *p_slot;
+		*p_slot       = values_buf[i];
+		values_buf[i] = temp;
+	}
+	FixedList_LockEndWrite(self);
+	Dee_XDecrefv(values_buf, range_size);
+	Dee_Freea(values_buf);
+	return 0;
+err_values_buf:
+	Dee_Freea(values_buf);
+err:
+	return -1;
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-fl_getrange(FixedList *__restrict self,
-            DeeObject *__restrict start,
-            DeeObject *__restrict end) {
-	dssize_t start_index;
-	dssize_t end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+fl_getrange(FixedList *self, DeeObject *begin, DeeObject *end) {
+	dssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
-	if (DeeNone_Check(end)) {
-		end_index = (dssize_t)self->fl_size;
-	} else {
-		if (DeeObject_AsSSize(end, &end_index))
-			goto err;
-	}
-	return fl_nsi_getrange(self, start_index, end_index);
+	if (DeeNone_Check(end))
+		return fl_nsi_getrange_n(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
+		goto err;
+	return fl_nsi_getrange(self, i_begin, i_end);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fl_delrange(FixedList *__restrict self,
-            DeeObject *__restrict start,
-            DeeObject *__restrict end) {
-	dssize_t start_index;
-	dssize_t end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+fl_delrange(FixedList *self, DeeObject *begin, DeeObject *end) {
+	dssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
-	if (DeeNone_Check(end)) {
-		end_index = (dssize_t)self->fl_size;
-	} else {
-		if (DeeObject_AsSSize(end, &end_index))
-			goto err;
-	}
-	return fl_nsi_delrange(self, start_index, end_index);
+	if (DeeNone_Check(end))
+		return fl_nsi_delrange_n(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
+		goto err;
+	return fl_nsi_delrange(self, i_begin, i_end);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-fl_setrange(FixedList *__restrict self,
-            DeeObject *__restrict start,
-            DeeObject *__restrict end,
-            DeeObject *__restrict values) {
-	dssize_t start_index;
-	dssize_t end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+fl_setrange(FixedList *self, DeeObject *begin,
+            DeeObject *end, DeeObject *values) {
+	dssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return fl_nsi_setrange_n(self, start_index, values);
-	if (DeeObject_AsSSize(end, &end_index))
+		return fl_nsi_setrange_n(self, i_begin, values);
+	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return fl_nsi_setrange(self, start_index, end_index, values);
+	return fl_nsi_setrange(self, i_begin, i_end, values);
 err:
 	return -1;
 }
@@ -1073,6 +1142,8 @@ PRIVATE struct type_nsi tpconst fl_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&fl_nsi_getitem_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)&fl_nsi_getrange,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&fl_nsi_getrange_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&fl_nsi_delrange,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&fl_nsi_delrange_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&fl_nsi_setrange,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&fl_nsi_setrange_n,
 			/* .nsi_find         = */ (dfunptr_t)&fl_nsi_find,

@@ -420,6 +420,8 @@ PRIVATE struct type_nsi tpconst subrange_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&subrange_nsi_find,
@@ -566,6 +568,7 @@ DeeSeq_GetRange(DeeObject *__restrict self,
 	DREF SubRange *result;
 	if unlikely(begin >= end)
 		return_reference_(Dee_EmptySeq);
+
 	/* Create a sub-range sequence. */
 	result = DeeObject_MALLOC(SubRange);
 	if unlikely(!result)
@@ -738,6 +741,8 @@ PRIVATE struct type_nsi tpconst subrangen_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&subrangen_nsi_find,

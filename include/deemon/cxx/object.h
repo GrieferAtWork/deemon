@@ -2131,10 +2131,10 @@ public:
 class RangeProxyIdxObjBase {
 private:
 	DeeObject *m_ptr;
-	size_t m_bgn;
+	Dee_ssize_t m_bgn;
 	DeeObject *m_end;
 public:
-	RangeProxyIdxObjBase(DeeObject *ptr, size_t bgn, DeeObject *end) DEE_CXX_NOTHROW
+	RangeProxyIdxObjBase(DeeObject *ptr, Dee_ssize_t bgn, DeeObject *end) DEE_CXX_NOTHROW
 		: m_ptr(ptr)
 		, m_bgn(bgn)
 		, m_end(end) {}
@@ -2149,12 +2149,7 @@ public:
 		return DeeObject_SetRangeBeginIndex(m_ptr, m_bgn, m_end, value);
 	}
 	void del() const {
-		int error;
-		DREF DeeObject *begin_ob;
-		begin_ob = throw_if_null(DeeInt_NewSize(m_bgn));
-		error    = DeeObject_DelRange(m_ptr, begin_ob, m_end);
-		Dee_Decref(begin_ob);
-		throw_if_nonzero(error);
+		throw_if_nonzero(DeeObject_DelRangeBeginIndex(m_ptr, m_bgn, m_end));
 	}
 };
 
@@ -2162,9 +2157,9 @@ class RangeProxyObjIdxBase {
 private:
 	DeeObject *m_ptr;
 	DeeObject *m_bgn;
-	size_t m_end;
+	Dee_ssize_t m_end;
 public:
-	RangeProxyObjIdxBase(DeeObject *ptr, DeeObject *bgn, size_t end) DEE_CXX_NOTHROW
+	RangeProxyObjIdxBase(DeeObject *ptr, DeeObject *bgn, Dee_ssize_t end) DEE_CXX_NOTHROW
 		: m_ptr(ptr)
 		, m_bgn(bgn)
 		, m_end(end) {}
@@ -2179,22 +2174,17 @@ public:
 		return DeeObject_SetRangeEndIndex(m_ptr, m_bgn, m_end, value);
 	}
 	void del() const {
-		int error;
-		DREF DeeObject *end_ob;
-		end_ob = throw_if_null(DeeInt_NewSize(m_end));
-		error  = DeeObject_DelRange(m_ptr, m_bgn, end_ob);
-		Dee_Decref(end_ob);
-		throw_if_nonzero(error);
+		throw_if_nonzero(DeeObject_DelRangeEndIndex(m_ptr, m_bgn, m_end));
 	}
 };
 
 class RangeProxyIdxBase {
 private:
 	DeeObject *m_ptr;
-	size_t m_bgn;
-	size_t m_end;
+	Dee_ssize_t m_bgn;
+	Dee_ssize_t m_end;
 public:
-	RangeProxyIdxBase(DeeObject *ptr, size_t bgn, size_t end) DEE_CXX_NOTHROW
+	RangeProxyIdxBase(DeeObject *ptr, Dee_ssize_t bgn, Dee_ssize_t end) DEE_CXX_NOTHROW
 		: m_ptr(ptr)
 		, m_bgn(bgn)
 		, m_end(end) {}
@@ -2209,18 +2199,7 @@ public:
 		return DeeObject_SetRangeIndex(m_ptr, m_bgn, m_end, value);
 	}
 	void del() const {
-		int error;
-		DREF DeeObject *begin_ob, *end_ob;
-		begin_ob = throw_if_null(DeeInt_NewSize(m_bgn));
-		end_ob   = DeeInt_NewSize(m_end);
-		if unlikely(!end_ob) {
-			Dee_Decref(begin_ob);
-			throw_last_deemon_exception();
-		}
-		error = DeeObject_DelRange(m_ptr, begin_ob, end_ob);
-		Dee_Decref(end_ob);
-		Dee_Decref(begin_ob);
-		throw_if_nonzero(error);
+		throw_if_nonzero(DeeObject_DelRangeIndex(m_ptr, m_bgn, m_end));
 	}
 };
 
@@ -2244,7 +2223,7 @@ class RangeProxyIdxObj
 {
 public:
 	using ConstGetAndSetRefProxyWithDefault<RangeProxyIdxObj<RangeSeqType>, RangeSeqType>::operator=;
-	RangeProxyIdxObj(DeeObject *ptr, size_t bgn, DeeObject *end) DEE_CXX_NOTHROW
+	RangeProxyIdxObj(DeeObject *ptr, Dee_ssize_t bgn, DeeObject *end) DEE_CXX_NOTHROW
 		: RangeProxyIdxObjBase(ptr, bgn, end) {}
 	RangeProxyIdxObj(RangeProxyIdxObj const &right) DEE_CXX_NOTHROW
 		: RangeProxyIdxObjBase(static_cast<RangeProxyIdxObjBase const &>(right)) {}
@@ -2257,7 +2236,7 @@ class RangeProxyObjIdx
 {
 public:
 	using ConstGetAndSetRefProxyWithDefault<RangeProxyObjIdx<RangeSeqType>, RangeSeqType>::operator=;
-	RangeProxyObjIdx(DeeObject *ptr, DeeObject *bgn, size_t end) DEE_CXX_NOTHROW
+	RangeProxyObjIdx(DeeObject *ptr, DeeObject *bgn, Dee_ssize_t end) DEE_CXX_NOTHROW
 		: RangeProxyObjIdxBase(ptr, bgn, end) {}
 	RangeProxyObjIdx(RangeProxyObjIdx const &right) DEE_CXX_NOTHROW
 		: RangeProxyObjIdxBase(static_cast<RangeProxyObjIdxBase const &>(right)) {}
@@ -2270,7 +2249,7 @@ class RangeProxyIdx
 {
 public:
 	using ConstGetAndSetRefProxyWithDefault<RangeProxyIdx<RangeSeqType>, RangeSeqType>::operator=;
-	RangeProxyIdx(DeeObject *ptr, size_t bgn, size_t end) DEE_CXX_NOTHROW
+	RangeProxyIdx(DeeObject *ptr, Dee_ssize_t bgn, Dee_ssize_t end) DEE_CXX_NOTHROW
 		: RangeProxyIdxBase(ptr, bgn, end) {}
 	RangeProxyIdx(RangeProxyIdx const &right) DEE_CXX_NOTHROW
 		: RangeProxyIdxBase(static_cast<RangeProxyIdxBase const &>(right)) {}
@@ -2648,73 +2627,52 @@ public:
 	NONNULL_CXX((1, 2)) RangeProxyObj<RangeSeqType> range(DeeObject *begin, DeeObject *end) {
 		return RangeProxyObj<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
-	NONNULL_CXX((1)) RangeProxyObjIdx<RangeSeqType> range(DeeObject *begin, size_t end) {
+	NONNULL_CXX((1)) RangeProxyObjIdx<RangeSeqType> range(DeeObject *begin, Dee_ssize_t end) {
 		return RangeProxyObjIdx<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
-	NONNULL_CXX((2)) RangeProxyIdxObj<RangeSeqType> range(size_t begin, DeeObject *end) {
+	NONNULL_CXX((2)) RangeProxyIdxObj<RangeSeqType> range(Dee_ssize_t begin, DeeObject *end) {
 		return RangeProxyIdxObj<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
-	RangeProxyIdx<RangeSeqType> range(size_t begin, size_t end) {
+	RangeProxyIdx<RangeSeqType> range(Dee_ssize_t begin, Dee_ssize_t end) {
 		return RangeProxyIdx<RangeSeqType>(((ProxyType *)this)->ptr(), begin, end);
 	}
 
 	NONNULL_CXX((1, 2)) Ref<RangeSeqType> getrange(DeeObject *begin, DeeObject *end) {
 		return inherit(DeeObject_GetRange(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL_CXX((1)) Ref<RangeSeqType> getrange(DeeObject *begin, size_t end) {
+	NONNULL_CXX((1)) Ref<RangeSeqType> getrange(DeeObject *begin, Dee_ssize_t end) {
 		return inherit(DeeObject_GetRangeEndIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL_CXX((2)) Ref<RangeSeqType> getrange(size_t begin, DeeObject *end) {
+	NONNULL_CXX((2)) Ref<RangeSeqType> getrange(Dee_ssize_t begin, DeeObject *end) {
 		return inherit(DeeObject_GetRangeBeginIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
-	Ref<RangeSeqType> getrange(size_t begin, size_t end) {
+	Ref<RangeSeqType> getrange(Dee_ssize_t begin, Dee_ssize_t end) {
 		return inherit(DeeObject_GetRangeIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
 
 	NONNULL_CXX((1, 2)) void delrange(DeeObject *begin, DeeObject *end) {
 		throw_if_nonzero(DeeObject_DelRange(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL_CXX((1)) void delrange(DeeObject *begin, size_t end) {
-		int error;
-		DREF DeeObject *end_ob;
-		end_ob = throw_if_null(DeeInt_NewSize(end));
-		error    = DeeObject_DelRange(((ProxyType *)this)->ptr(), begin, end_ob);
-		Dee_Decref(end_ob);
-		throw_if_nonzero(error);
+	NONNULL_CXX((1)) void delrange(DeeObject *begin, Dee_ssize_t end) {
+		throw_if_nonzero(DeeObject_DelRangeEndIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
-	NONNULL_CXX((2)) void delrange(size_t begin, DeeObject *end) {
-		int error;
-		DREF DeeObject *begin_ob;
-		begin_ob = throw_if_null(DeeInt_NewSize(begin));
-		error    = DeeObject_DelRange(((ProxyType *)this)->ptr(), begin_ob, end);
-		Dee_Decref(begin_ob);
-		throw_if_nonzero(error);
+	NONNULL_CXX((2)) void delrange(Dee_ssize_t begin, DeeObject *end) {
+		throw_if_nonzero(DeeObject_DelRangeBeginIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
-	void delrange(size_t begin, size_t end) {
-		int error;
-		DREF DeeObject *begin_ob, *end_ob;
-		begin_ob = throw_if_null(DeeInt_NewSize(begin));
-		end_ob   = DeeInt_NewSize(end);
-		if unlikely(!end_ob) {
-			Dee_Decref(begin_ob);
-			throw_last_deemon_exception();
-		}
-		error = DeeObject_DelRange(((ProxyType *)this)->ptr(), begin_ob, end_ob);
-		Dee_Decref(end_ob);
-		Dee_Decref(begin_ob);
-		throw_if_nonzero(error);
+	void delrange(Dee_ssize_t begin, Dee_ssize_t end) {
+		throw_if_nonzero(DeeObject_DelRangeIndex(((ProxyType *)this)->ptr(), begin, end));
 	}
 
 	NONNULL_CXX((1, 2, 3)) void setrange(DeeObject *begin, DeeObject *end, DeeObject *value) {
 		return inherit(DeeObject_SetRange(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL_CXX((1, 3)) void setrange(DeeObject *begin, size_t end, DeeObject *value) {
+	NONNULL_CXX((1, 3)) void setrange(DeeObject *begin, Dee_ssize_t end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeEndIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL_CXX((2, 3)) void setrange(size_t begin, DeeObject *end, DeeObject *value) {
+	NONNULL_CXX((2, 3)) void setrange(Dee_ssize_t begin, DeeObject *end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeBeginIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
-	NONNULL_CXX((3)) void setrange(size_t begin, size_t end, DeeObject *value) {
+	NONNULL_CXX((3)) void setrange(Dee_ssize_t begin, Dee_ssize_t end, DeeObject *value) {
 		return inherit(DeeObject_SetRangeIndex(((ProxyType *)this)->ptr(), begin, end, value));
 	}
 };

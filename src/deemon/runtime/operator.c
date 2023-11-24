@@ -277,7 +277,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_SETITEM(tp_self, self, index, value)        (*(tp_self)->tp_seq->tp_set)(self, index, value)
 #define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_range_get)(self, start, end)
 #define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_range_del)(self, start, end)
-#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) (*(tp_self)->tp_seq->tp_range_set)(self, start, end, value)
+#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) (*(tp_self)->tp_seq->tp_range_set)(self, start, end, values)
 #define DeeType_INVOKE_GETATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_getattr)(self, name)
 #define DeeType_INVOKE_DELATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_delattr)(self, name)
 #define DeeType_INVOKE_SETATTR(tp_self, self, name, value)         (*(tp_self)->tp_attr->tp_setattr)(self, name, value)
@@ -4061,15 +4061,118 @@ err:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self,
+                                     dssize_t begin, DeeObject *end) {
+	LOAD_TP_SELF;
+	ASSERT_OBJECT(end);
+	do {
+		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_del) {
+			int result;
+			DREF DeeObject *begin_ob;
+			struct type_nsi const *nsi;
+			/* NSI optimizations. */
+			nsi = tp_self->tp_seq->tp_nsi;
+			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+				if (DeeNone_Check(end)) {
+					if (nsi->nsi_seqlike.nsi_delrange_n)
+						return (*nsi->nsi_seqlike.nsi_delrange_n)(self, begin);
+				} else if (nsi->nsi_seqlike.nsi_delrange) {
+					dssize_t end_index;
+					if (DeeObject_AsSSize(end, &end_index))
+						goto err;
+					return (*nsi->nsi_seqlike.nsi_delrange)(self, begin, end_index);
+				}
+			}
+			begin_ob = DeeInt_NewSSize(begin);
+			if unlikely(!begin_ob)
+				goto err;
+			result = DeeType_INVOKE_DELRANGE(tp_self, self, begin_ob, end);
+			Dee_Decref(begin_ob);
+			return result;
+		}
+	} while (type_inherit_setrange(tp_self));
+	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_DelRangeEndIndex)(DeeObject *self,
+                                   DeeObject *begin, dssize_t end) {
+	LOAD_TP_SELF;
+	ASSERT_OBJECT(begin);
+	do {
+		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_del) {
+			int result;
+			DREF DeeObject *end_ob;
+			struct type_nsi const *nsi;
+			/* NSI optimizations. */
+			nsi = tp_self->tp_seq->tp_nsi;
+			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+				if (nsi->nsi_seqlike.nsi_delrange) {
+					dssize_t start_index;
+					if (DeeObject_AsSSize(begin, &start_index))
+						goto err;
+					return (*nsi->nsi_seqlike.nsi_delrange)(self, start_index, end);
+				}
+			}
+			end_ob = DeeInt_NewSSize(end);
+			if unlikely(!end_ob)
+				goto err;
+			result = DeeType_INVOKE_DELRANGE(tp_self, self, begin, end_ob);
+			Dee_Decref(end_ob);
+			return result;
+		}
+	} while (type_inherit_setrange(tp_self));
+	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeObject_DelRangeIndex)(DeeObject *self,
+                                dssize_t begin, dssize_t end) {
+	LOAD_TP_SELF;
+	do {
+		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_del) {
+			DREF DeeObject *begin_ob, *end_ob;
+			int result;
+			struct type_nsi const *nsi;
+			/* NSI optimizations. */
+			nsi = tp_self->tp_seq->tp_nsi;
+			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
+				if (nsi->nsi_seqlike.nsi_delrange)
+					return (*nsi->nsi_seqlike.nsi_delrange)(self, begin, end);
+			}
+			begin_ob = DeeInt_NewSSize(begin);
+			if unlikely(!begin_ob)
+				goto err;
+			end_ob = DeeInt_NewSSize(end);
+			if unlikely(!end_ob) {
+				Dee_Decref(begin_ob);
+				goto err;
+			}
+			result = DeeType_INVOKE_DELRANGE(tp_self, self, begin_ob, end_ob);
+			Dee_Decref(end_ob);
+			Dee_Decref(begin_ob);
+			return result;
+		}
+	} while (type_inherit_setrange(tp_self));
+	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
+err:
+	return -1;
+}
+
 PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self,
                                      dssize_t begin, DeeObject *end,
-                                     DeeObject *value) {
+                                     DeeObject *values) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
-	ASSERT_OBJECT(value);
+	ASSERT_OBJECT(values);
 	do {
-		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set) {
 			int result;
 			DREF DeeObject *begin_ob;
 			struct type_nsi const *nsi;
@@ -4078,18 +4181,18 @@ PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 				if (DeeNone_Check(end)) {
 					if (nsi->nsi_seqlike.nsi_setrange_n)
-						return (*nsi->nsi_seqlike.nsi_setrange_n)(self, begin, value);
+						return (*nsi->nsi_seqlike.nsi_setrange_n)(self, begin, values);
 				} else if (nsi->nsi_seqlike.nsi_setrange) {
 					dssize_t end_index;
 					if (DeeObject_AsSSize(end, &end_index))
 						goto err;
-					return (*nsi->nsi_seqlike.nsi_setrange)(self, begin, end_index, value);
+					return (*nsi->nsi_seqlike.nsi_setrange)(self, begin, end_index, values);
 				}
 			}
 			begin_ob = DeeInt_NewSSize(begin);
 			if unlikely(!begin_ob)
 				goto err;
-			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin_ob, end, value);
+			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin_ob, end, values);
 			Dee_Decref(begin_ob);
 			return result;
 		}
@@ -4102,12 +4205,12 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self,
                                    DeeObject *begin, dssize_t end,
-                                   DeeObject *value) {
+                                   DeeObject *values) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
-	ASSERT_OBJECT(value);
+	ASSERT_OBJECT(values);
 	do {
-		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get) {
+		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set) {
 			int result;
 			DREF DeeObject *end_ob;
 			struct type_nsi const *nsi;
@@ -4118,13 +4221,13 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 					dssize_t start_index;
 					if (DeeObject_AsSSize(begin, &start_index))
 						goto err;
-					return (*nsi->nsi_seqlike.nsi_setrange)(self, start_index, end, value);
+					return (*nsi->nsi_seqlike.nsi_setrange)(self, start_index, end, values);
 				}
 			}
 			end_ob = DeeInt_NewSSize(end);
 			if unlikely(!end_ob)
 				goto err;
-			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin, end_ob, value);
+			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin, end_ob, values);
 			Dee_Decref(end_ob);
 			return result;
 		}
@@ -4137,9 +4240,9 @@ err:
 PUBLIC WUNUSED NONNULL((1, 4)) int
 (DCALL DeeObject_SetRangeIndex)(DeeObject *self,
                                 dssize_t begin, dssize_t end,
-                                DeeObject *value) {
+                                DeeObject *values) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(value);
+	ASSERT_OBJECT(values);
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set) {
 			DREF DeeObject *begin_ob, *end_ob;
@@ -4149,7 +4252,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 			nsi = tp_self->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 				if (nsi->nsi_seqlike.nsi_setrange)
-					return (*nsi->nsi_seqlike.nsi_setrange)(self, begin, end, value);
+					return (*nsi->nsi_seqlike.nsi_setrange)(self, begin, end, values);
 			}
 			begin_ob = DeeInt_NewSSize(begin);
 			if unlikely(!begin_ob)
@@ -4159,7 +4262,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 				Dee_Decref(begin_ob);
 				goto err;
 			}
-			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin_ob, end_ob, value);
+			result = DeeType_INVOKE_SETRANGE(tp_self, self, begin_ob, end_ob, values);
 			Dee_Decref(end_ob);
 			Dee_Decref(begin_ob);
 			return result;

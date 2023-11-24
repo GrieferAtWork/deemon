@@ -73,6 +73,10 @@
 #include <hybrid/sched/yield.h>
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT && !CONFIG_NO_THREADS */
 
+#undef SSIZE_MAX
+#include <hybrid/limitcore.h>
+#define SSIZE_MAX __SSIZE_MAX__
+
 DECL_BEGIN
 
 #ifndef NDEBUG
@@ -1477,38 +1481,40 @@ err:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_i(Tuple *__restrict self,
                  dssize_t begin, dssize_t end) {
-	if unlikely(begin < 0)
-		begin += DeeTuple_SIZE(self);
-	if unlikely(end < 0)
-		end += DeeTuple_SIZE(self);
-	if unlikely((size_t)begin >= DeeTuple_SIZE(self) ||
-	            (size_t)begin >= (size_t)end)
-		return_empty_tuple;
-	if unlikely((size_t)end > DeeTuple_SIZE(self))
-		end = (dssize_t)DeeTuple_SIZE(self);
-	return DeeTuple_NewVector((size_t)(end - begin),
-	                          DeeTuple_ELEM(self) + begin);
+	size_t range_size;
+	struct Dee_seq_range range;
+	DeeSeqRange_Clamp(&range, begin, end, self->t_size);
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size == self->t_size)
+		return_reference((DeeObject *)self);
+	return DeeTuple_NewVector(range_size, self->t_elem + range.sr_start);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_in(Tuple *__restrict self,
                   dssize_t begin) {
-	if unlikely(begin < 0)
-		begin += DeeTuple_SIZE(self);
-	if unlikely((size_t)begin >= DeeTuple_SIZE(self))
-		return_empty_tuple;
-	return DeeTuple_NewVector(DeeTuple_SIZE(self) - (size_t)begin,
-	                          DeeTuple_ELEM(self) + (size_t)begin);
+#ifdef __OPTIMIZE_SIZE__
+	return tuple_getrange_i(self, begin, SSIZE_MAX);
+#else /* __OPTIMIZE_SIZE__ */
+	size_t start, range_size;
+	start = DeeSeqRange_Clamp_n(begin, self->t_size);
+	if unlikely(start == 0)
+		return_reference((DeeObject *)self);
+	return DeeTuple_NewVector(DeeTuple_SIZE(self) - start,
+	                          DeeTuple_ELEM(self) + start);
+#endif /* !__OPTIMIZE_SIZE__ */
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 tuple_getrange(Tuple *__restrict self,
                DeeObject *__restrict begin,
                DeeObject *__restrict end) {
-	dssize_t i_begin, i_end = DeeTuple_SIZE(self);
+	dssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
-	if (!DeeNone_Check(end) && DeeObject_AsSSize(end, &i_end))
+	if (DeeNone_Check(end))
+		return tuple_getrange_in(self, i_begin);
+	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
 	return tuple_getrange_i(self, i_begin, i_end);
 err:
@@ -1597,6 +1603,8 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)&tuple_nsi_getitem_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)&tuple_getrange_i,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&tuple_getrange_in,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
 			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_find         = */ (dfunptr_t)&tuple_nsi_find,

@@ -37,11 +37,14 @@
 #include <deemon/system-features.h> /* bzero() */
 #include <deemon/util/atomic.h>
 
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
+#include <hybrid/typecore.h>
 
 #undef SSIZE_MAX
-#include <hybrid/limitcore.h>
 #define SSIZE_MAX __SSIZE_MAX__
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -67,7 +70,7 @@ aiter_visit(ArrayIterator *__restrict self, dvisit_t proc, void *arg) {
 }
 
 
-PRIVATE WUNUSED DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
 aiter_next(ArrayIterator *__restrict self) {
 	DREF struct lvalue_object *result;
 	union pointer result_pointer;
@@ -96,7 +99,7 @@ aiter_bool(ArrayIterator *__restrict self) {
 	return atomic_read(&self->ai_pos.ptr) >= self->ai_end.ptr;
 }
 
-PRIVATE WUNUSED DREF struct lvalue_object *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct lvalue_object *DCALL
 aiter_getseq(ArrayIterator *__restrict self) {
 	DREF struct lvalue_object *result;
 	DREF DeeArrayTypeObject *atype;
@@ -182,7 +185,7 @@ PRIVATE DeeTypeObject ArrayIterator_Type = {
 };
 
 
-PRIVATE WUNUSED DREF ArrayIterator *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF ArrayIterator *DCALL
 array_iter(DeeArrayTypeObject *tp_self, void *base) {
 	DREF ArrayIterator *result;
 
@@ -207,12 +210,12 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 array_size(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return DeeInt_NewSize(tp_self->at_count);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 array_contains(DeeArrayTypeObject *tp_self, void *base, DeeObject *other) {
 	DREF struct lvalue_object *temp = NULL;
 	DREF DeeLValueTypeObject *lval_type;
@@ -256,7 +259,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 array_get(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *lval_type;
@@ -290,7 +293,7 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 array_set(DeeArrayTypeObject *tp_self, void *base,
           DeeObject *index_ob, DeeObject *value) {
 	int result;
@@ -307,37 +310,31 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 array_del(DeeArrayTypeObject *tp_self, void *base, DeeObject *index_ob) {
 	return array_set(tp_self, base, index_ob, Dee_None);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL
 array_getrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob) {
 	DREF struct lvalue_object *result;
 	DREF DeeLValueTypeObject *lval_type;
 	DREF DeeArrayTypeObject *array_type;
-	dssize_t begin, end = -1;
-	if (DeeObject_AsSSize(begin_ob, &begin))
+	dssize_t i_begin, i_end = (dssize_t)tp_self->at_count;
+	struct Dee_seq_range range;
+	size_t range_size;
+	if (DeeObject_AsSSize(begin_ob, &i_begin))
 		goto err;
 	if (!DeeNone_Check(end_ob)) {
-		if (DeeObject_AsSSize(end_ob, &end))
+		if (DeeObject_AsSSize(end_ob, &i_end))
 			goto err;
 	}
-	if unlikely(begin < 0)
-		begin += tp_self->at_count;
-	if unlikely(end < 0)
-		end += tp_self->at_count;
-	if unlikely((size_t)begin >= tp_self->at_count ||
-	            (size_t)begin >= (size_t)end)
-		begin = end = 0; /* Empty array. */
-	if unlikely((size_t)end > tp_self->at_count)
-		end = (dssize_t)tp_self->at_count;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, tp_self->at_count);
+	range_size = range.sr_end - range.sr_start;
 
 	/* Construct a sub-array type. */
-	array_type = DeeSType_Array(tp_self->at_orig,
-	                            (size_t)(end - begin));
+	array_type = DeeSType_Array(tp_self->at_orig, range_size);
 	if unlikely(!array_type)
 		goto err;
 
@@ -353,7 +350,7 @@ array_getrange(DeeArrayTypeObject *tp_self, void *base,
 
 	/* Set the base pointer to the start of the requested sub-range. */
 	result->l_ptr.uint = ((uintptr_t)base) +
-	                     ((size_t)begin * DeeSType_Sizeof(tp_self->at_orig));
+	                     (range.sr_start * DeeSType_Sizeof(tp_self->at_orig));
 	return (DREF DeeObject *)result;
 err_lval_type:
 	Dee_Decref(DeeLValueType_AsType(lval_type));
@@ -361,34 +358,31 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4)) int DCALL
 array_delrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob) {
-	dssize_t begin, end = -1;
-	if (DeeObject_AsSSize(begin_ob, &begin))
+	dssize_t i_begin, i_end = (dssize_t)tp_self->at_count;
+	struct Dee_seq_range range;
+	size_t range_size;
+	if (DeeObject_AsSSize(begin_ob, &i_begin))
 		goto err;
 	if (!DeeNone_Check(end_ob)) {
-		if (DeeObject_AsSSize(end_ob, &end))
+		if (DeeObject_AsSSize(end_ob, &i_end))
 			goto err;
 	}
-	if unlikely(begin < 0)
-		begin += tp_self->at_count;
-	if unlikely(end < 0)
-		end += tp_self->at_count;
-	if unlikely((size_t)begin >= tp_self->at_count ||
-	            (size_t)begin >= (size_t)end) {
+	DeeSeqRange_Clamp(&range, i_begin, i_end, tp_self->at_count);
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0) {
 		/* Empty range . */
 	} else {
 		size_t item_size;
-		uint8_t *del_begin;
+		byte_t *del_begin;
 		size_t del_size;
-		if unlikely((size_t)end > tp_self->at_count)
-			end = (dssize_t)tp_self->at_count;
 
 		/* Simply zero out the described memory range. */
 		item_size = DeeSType_Sizeof(tp_self->at_orig);
-		del_size  = (size_t)(end - begin) * item_size;
-		del_begin = (uint8_t *)((uintptr_t)base + ((size_t)begin * item_size));
+		del_size  = range_size * item_size;
+		del_begin = (byte_t *)((uintptr_t)base + (range.sr_start * item_size));
 		CTYPES_FAULTPROTECT(bzero(del_begin, del_size), goto err);
 	}
 	return 0;
@@ -396,45 +390,44 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
 array_setrange(DeeArrayTypeObject *tp_self, void *base,
                DeeObject *begin_ob, DeeObject *end_ob, DeeObject *value) {
-	dssize_t begin, end = SSIZE_MAX;
+	dssize_t i_begin, i_end;
+	struct Dee_seq_range range;
+	size_t range_size;
 	DREF DeeObject *iter, *elem;
 
 	/* When `none' is passed, simply clear out affected memory. */
 	if (DeeNone_Check(value))
 		return array_delrange(tp_self, base, begin_ob, end_ob);
-	if (DeeObject_AsSSize(begin_ob, &begin))
+	i_end = (dssize_t)tp_self->at_count;
+	if (DeeObject_AsSSize(begin_ob, &i_begin))
 		goto err;
 	if (!DeeNone_Check(end_ob)) {
-		if (DeeObject_AsSSize(end_ob, &end))
+		if (DeeObject_AsSSize(end_ob, &i_end))
 			goto err;
 	}
-	if unlikely(begin < 0)
-		begin += tp_self->at_count;
-	if unlikely(end < 0)
-		end += tp_self->at_count;
+	DeeSeqRange_Clamp(&range, i_begin, i_end, tp_self->at_count);
+	range_size = range.sr_end - range.sr_start;
 	iter = DeeObject_IterSelf(value);
 	if unlikely(!iter)
 		goto err;
-	if unlikely((size_t)begin >= tp_self->at_count ||
-	            (size_t)begin >= (size_t)end) {
+	if unlikely(range_size <= 0) {
 		/* Empty range. */
 	} else {
 		size_t item_size;
 		union pointer array_iter, array_end;
-		if unlikely((size_t)end > tp_self->at_count)
-			end = (dssize_t)tp_self->at_count;
-		item_size       = DeeSType_Sizeof(tp_self->at_orig);
-		array_iter.uint = (uintptr_t)base + (size_t)begin * item_size;
-		array_end.uint  = (uintptr_t)base + (size_t)end * item_size;
-		while (array_iter.uint < array_end.uint) {
+		item_size      = DeeSType_Sizeof(tp_self->at_orig);
+		array_iter.ptr = (byte_t *)base + range.sr_start * item_size;
+		array_end.ptr  = (byte_t *)base + range.sr_end * item_size;
+		while (array_iter.ptr < array_end.ptr) {
 			int error;
 			elem = DeeObject_IterNext(iter);
 			if unlikely(!ITER_ISOK(elem)) {
 				if (elem) { /* Unexpected end of sequence. */
-					size_t given_count = array_iter.uint - ((uintptr_t)base + (size_t)begin * item_size);
+					size_t given_count;
+					given_count = array_iter.uint - ((uintptr_t)base + range.sr_start * item_size);
 					if (item_size)
 						given_count /= item_size;
 					DeeError_Throwf(&DeeError_UnpackError,
@@ -476,12 +469,12 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 array_assign(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	return array_setrange(tp_self, base, Dee_None, Dee_None, value);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_init(DeeArrayTypeObject *tp_self, void *base,
            size_t argc, DeeObject *const *argv) {
 	DeeObject *arg;
@@ -492,7 +485,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF struct pointer_object *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF struct pointer_object *DCALL
 array_adddiff(DeeArrayTypeObject *tp_self,
               void *base, ptrdiff_t diff) {
 	/* Follow C-conventions and return a pointer to the `diff's element. */
@@ -519,7 +512,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF struct pointer_object *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF struct pointer_object *DCALL
 array_add(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
@@ -529,7 +522,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF struct pointer_object *DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) DREF struct pointer_object *DCALL
 array_sub(DeeArrayTypeObject *tp_self, void *base, DeeObject *value) {
 	ptrdiff_t diff;
 	if (DeeObject_AsPtrdiff(value, &diff))
@@ -539,7 +532,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 array_repr(DeeArrayTypeObject *tp_self, void *base) {
 	union pointer iter, end;
 	size_t item_size;
@@ -576,14 +569,14 @@ err:
 }
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 array_bool(DeeArrayTypeObject *tp_self, void *UNUSED(base)) {
 	return tp_self->at_count != 0;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-array_call(DeeArrayTypeObject *tp_self,
-           void *base, size_t argc, DeeObject *const *argv) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+array_call(DeeArrayTypeObject *tp_self, void *base,
+           size_t argc, DeeObject *const *argv) {
 	/* Because arrays must behave compatible to pointers,
 	 * calling an array will call its first element. */
 	return DeeStruct_Call(tp_self->at_orig, base, argc, argv);

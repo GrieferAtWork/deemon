@@ -50,6 +50,76 @@
 
 DECL_BEGIN
 
+#define do_fix_negative_range_index(index, size) \
+	((size) - ((size_t)(-(index)) % (size)))
+
+/* Clamp a range, as given to `operator [:]' & friends to the bounds
+ * accepted by the associated sequence. This handles stuff like negative
+ * index over-roll and past-the-end truncation. */
+PUBLIC ATTR_INOUT(1) void DCALL
+DeeSeqRange_DoClamp(struct Dee_seq_range *__restrict self,
+                    size_t size) {
+	/* Fix invalid start indices. */
+	if (self->sr_start >= size) {
+		if (self->sr_istart >= 0)
+			goto empty_range; /* Range starts at too great of an index. */
+
+		/* Fast-case for when `-1' is used (or anything with an
+		 * absolute value less than the sequence's size) */
+		self->sr_istart += size;
+		if unlikely(self->sr_istart < 0) {
+			/* Check for special case: empty sequence (else the mod will
+			 * fault due to divide-by-zero) -> only valid range is [0:0] */
+			if unlikely(size == 0)
+				goto empty_range;
+			self->sr_start = do_fix_negative_range_index(self->sr_istart, size);
+		}
+	}
+	ASSERT(self->sr_start <= size);
+
+	/* Fix invalid end indices. */
+	if (self->sr_end > size) {
+		if (self->sr_iend < 0) {
+			self->sr_iend += size;
+			if unlikely(self->sr_iend < 0) {
+				/* Check for special case: empty sequence (else the mod will
+				 * fault due to divide-by-zero) -> only valid range is [0:0] */
+				if unlikely(size == 0)
+					goto empty_range;
+				self->sr_end = do_fix_negative_range_index(self->sr_iend, size);
+			}
+		} else {
+			self->sr_end = size;
+		}
+	}
+	ASSERT(self->sr_end <= size);
+
+	/* Fix range-end happening before range-start. */
+	if unlikely(self->sr_end < self->sr_start)
+		self->sr_end = self->sr_start;
+	return;
+empty_range:
+	self->sr_start = size;
+	self->sr_end   = size;
+}
+
+/* Specialized version of `DeeSeqRange_DoClamp()' for `[istart:none]' range expressions. */
+PUBLIC ATTR_CONST WUNUSED size_t DCALL
+DeeSeqRange_DoClamp_n(Dee_ssize_t start, size_t size) {
+	if likely((size_t)start >= size) {
+		if (start >= 0)
+			goto empty_range;
+		start += size;
+		if unlikely((size_t)start >= size) {
+			if unlikely(size == 0)
+				goto empty_range;
+			start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
+		}
+	}
+	return (size_t)start;
+empty_range:
+	return 0;
+}
 
 /* Lookup the closest NSI descriptor for `tp', or return `NULL'
  * if the top-most type implementing any sequence operator doesn't
@@ -107,8 +177,11 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			size_t seq_len = DeeObject_Size(self);
 			if unlikely(seq_len == (size_t)-1)
 				goto err;
-			if (i_begin < 0)
+			if (i_begin < 0) {
 				i_begin += seq_len;
+				if unlikely(i_begin < 0)
+					i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		return DeeSeq_GetRangeN(self, (size_t)i_begin);
 	}
@@ -118,10 +191,16 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
-		if (i_begin < 0)
+		if (i_begin < 0) {
 			i_begin += seq_len;
-		if (i_end < 0)
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
+		if (i_end < 0) {
 			i_end += seq_len;
+			if unlikely(i_end < 0)
+				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+		}
 	}
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
@@ -137,10 +216,16 @@ seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 		seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
-		if (i_begin < 0)
+		if (i_begin < 0) {
 			i_begin += seq_len;
-		if (i_end < 0)
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
+		if (i_end < 0) {
 			i_end += seq_len;
+			if unlikely(i_end < 0)
+				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+		}
 	}
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
@@ -156,8 +241,11 @@ seq_nsi_getrange_n(DeeObject *__restrict self, dssize_t i_begin) {
 		seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
-		if (i_begin < 0)
+		if (i_begin < 0) {
 			i_begin += seq_len;
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
 	}
 	return DeeSeq_GetRangeN(self, (size_t)i_begin);
 err:
@@ -603,6 +691,30 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seq_nsi_delrange(DeeObject *self, dssize_t i_begin, dssize_t i_end) {
+	if unlikely(i_begin < 0 || i_end < 0) {
+		size_t seq_len = DeeObject_Size(self);
+		if unlikely(seq_len == (size_t)-1)
+			goto err;
+		if (i_begin < 0) {
+			i_begin += seq_len;
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
+		if (i_end < 0) {
+			i_end += seq_len;
+			if unlikely(i_end < 0)
+				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+		}
+	}
+	return DeeSeq_DelRange(self,
+	                       (size_t)i_begin,
+	                       (size_t)i_end);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
                  DeeObject *values) {
@@ -610,20 +722,36 @@ seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
-		if (i_begin < 0)
+		if (i_begin < 0) {
 			i_begin += seq_len;
-		if (i_end < 0)
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
+		if (i_end < 0) {
 			i_end += seq_len;
-	}
-	if (DeeNone_Check(values)) {
-		return DeeSeq_DelRange(self,
-		                       (size_t)i_begin,
-		                       (size_t)i_end);
+			if unlikely(i_end < 0)
+				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+		}
 	}
 	return DeeSeq_SetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end,
 	                       values);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seq_nsi_delrange_n(DeeObject *self, dssize_t i_begin) {
+	if unlikely(i_begin < 0) {
+		size_t seq_len = DeeObject_Size(self);
+		if unlikely(seq_len == (size_t)-1)
+			goto err;
+		i_begin += seq_len;
+		if unlikely(i_begin < 0)
+			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+	}
+	return DeeSeq_DelRangeN(self, (size_t)i_begin);
 err:
 	return -1;
 }
@@ -636,9 +764,9 @@ seq_nsi_setrange_n(DeeObject *self, dssize_t i_begin,
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
 		i_begin += seq_len;
+		if unlikely(i_begin < 0)
+			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
 	}
-	if (DeeNone_Check(values))
-		return DeeSeq_DelRangeN(self, (size_t)i_begin);
 	return DeeSeq_SetRangeN(self, (size_t)i_begin, values);
 err:
 	return -1;
@@ -646,32 +774,40 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
-	dssize_t start_index, end_index;
-	if (DeeObject_AsSSize(start, &start_index))
+	dssize_t i_begin, i_end;
+	if (DeeObject_AsSSize(start, &i_begin))
 		goto err;
 	if (DeeNone_Check(end)) {
-		if unlikely(start_index < 0) {
+		if unlikely(i_begin < 0) {
 			size_t seq_len = DeeObject_Size(self);
 			if unlikely(seq_len == (size_t)-1)
 				goto err;
-			start_index += seq_len;
+			i_begin += seq_len;
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
 		}
-		return DeeSeq_DelRangeN(self, (size_t)start_index);
+		return DeeSeq_DelRangeN(self, (size_t)i_begin);
 	}
-	if (DeeObject_AsSSize(end, &end_index))
+	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	if unlikely(start_index < 0 || end_index < 0) {
+	if unlikely(i_begin < 0 || i_end < 0) {
 		size_t seq_len = DeeObject_Size(self);
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
-		if (start_index < 0)
-			start_index += seq_len;
-		if (end_index < 0)
-			end_index += seq_len;
+		if (i_begin < 0) {
+			i_begin += seq_len;
+			if unlikely(i_begin < 0)
+				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
+		if (i_end < 0) {
+			i_end += seq_len;
+			if unlikely(i_end < 0)
+				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+		}
 	}
 	return DeeSeq_DelRange(self,
-	                       (size_t)start_index,
-	                       (size_t)end_index);
+	                       (size_t)i_begin,
+	                       (size_t)i_end);
 err:
 	return -1;
 }
@@ -720,6 +856,8 @@ PRIVATE struct type_nsi tpconst seq_nsi = {
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)&seq_nsi_getrange,
 			/* .nsi_getrange_n   = */ (dfunptr_t)&seq_nsi_getrange_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&seq_nsi_delrange,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&seq_nsi_delrange_n,
 			/* .nsi_setrange     = */ (dfunptr_t)&seq_nsi_setrange,
 			/* .nsi_setrange_n   = */ (dfunptr_t)&seq_nsi_setrange_n,
 			/* .nsi_find         = */ (dfunptr_t)&DeeSeq_Find,
@@ -4853,9 +4991,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "		if (start < 0 || end < 0) {\n"
 	                         /**/ "			local mylen = ##this;\n"
 	                         /**/ "			if (start < 0)\n"
-	                         /**/ "				start += mylen;\n"
+	                         /**/ "				start += mylen;\n" /* TODO: Incorrect! */
 	                         /**/ "			if (end < 0)\n"
-	                         /**/ "				end += mylen;\n"
+	                         /**/ "				end += mylen;\n" /* TODO: Incorrect! */
 	                         /**/ "		}\n"
 	                         /**/ "		if (start >= end)\n"
 	                         /**/ "			return Sequence(); /* Empty Sequence */\n"
@@ -5117,9 +5255,9 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "		if (start < 0 || end < 0) {\n"
 	                         /**/ "			local mylen = (##this).operator int();\n"
 	                         /**/ "			if (start < 0)\n"
-	                         /**/ "				start += mylen;\n"
+	                         /**/ "				start += mylen;\n" /* TODO: Incorrect! */
 	                         /**/ "			if (end < 0)\n"
-	                         /**/ "				end += mylen;\n"
+	                         /**/ "				end += mylen;\n" /* TODO: Incorrect! */
 	                         /**/ "		}\n"
 	                         /**/ "		for (local tp: type(this).__mro__) {\n"
 	                         /**/ "			if (tp === Sequence)\n"
@@ -5175,7 +5313,7 @@ PUBLIC DeeTypeObject DeeSeq_Type = {
 	                         /**/ "		if (end is none) {\n"
 	                         /**/ "			end = mylen;\n"
 	                         /**/ "		} else if (end < 0) {\n"
-	                         /**/ "			end += mylen;\n"
+	                         /**/ "			end += mylen;\n" /* TODO: Incorrect! */
 	                         /**/ "		}\n"
 	                         /**/ "	}\n"
 	                         /**/ "	if (start >= end) {\n"

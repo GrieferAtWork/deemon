@@ -138,47 +138,38 @@ err:
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_getrange_i(DeeTupleObject *__restrict self,
-                 dssize_t begin, dssize_t end);
+                 dssize_t i_begin, dssize_t i_end);
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_getrange_as_tuple(DeeListObject *__restrict self,
-                       dssize_t begin, dssize_t end) {
+                       dssize_t i_begin, dssize_t i_end) {
 	DREF DeeTupleObject *result;
-	size_t i;
+	struct Dee_seq_range range;
+	size_t range_size;
 again:
 	DeeList_LockRead(self);
-	if unlikely(begin < 0)
-		begin += DeeList_SIZE(self);
-	if unlikely(end < 0)
-		end += DeeList_SIZE(self);
-	if unlikely((size_t)begin >= DeeList_SIZE(self) ||
-	            (size_t)begin >= (size_t)end) {
+	DeeSeqRange_Clamp(&range, i_begin, i_end, DeeList_SIZE(self));
+	range_size = range.sr_end - range.sr_start;
+	if unlikely(range_size <= 0) {
 		/* Empty list. */
 		DeeList_LockEndRead(self);
-		return DeeList_New();
+		return_empty_tuple;
 	}
-	if unlikely((size_t)end > DeeList_SIZE(self))
-		end = (dssize_t)DeeList_SIZE(self);
-	end -= begin;
-	ASSERT(end != 0);
-	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(offsetof(DeeTupleObject, t_elem) +
-	                                                    (size_t)end * sizeof(DREF DeeObject *));
+	result = (DREF DeeTupleObject *)DeeObject_TryMalloc(DeeTuple_SIZEOF(range_size));
 	if unlikely(!result) {
 		DeeList_LockEndRead(self);
-		if (Dee_CollectMemory(offsetof(DeeTupleObject, t_elem) +
-		                      (size_t)end * sizeof(DREF DeeObject *)))
+		if (Dee_CollectMemory(DeeTuple_SIZEOF(range_size)))
 			goto again;
 		goto err;
 	}
 
 	/* Copy vector elements. */
-	for (i = 0; i < (size_t)end; ++i) {
-		result->t_elem[i] = DeeList_GET(self, (size_t)begin + i);
-		Dee_Incref(result->t_elem[i]);
-	}
+	Dee_Movrefv(DeeTuple_ELEM(result),
+	            DeeList_ELEM(self) + range.sr_start,
+	            range_size);
 	DeeList_LockEndRead(self);
 	DeeObject_Init(result, &DeeTuple_Type);
-	result->t_size = (size_t)end;
+	result->t_size = range_size;
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
