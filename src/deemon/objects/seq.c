@@ -179,8 +179,11 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 				goto err;
 			if (i_begin < 0) {
 				i_begin += seq_len;
-				if unlikely(i_begin < 0)
+				if unlikely(i_begin < 0) {
+					if unlikely(seq_len == 0)
+						goto empty_range;
 					i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+				}
 			}
 		}
 		return DeeSeq_GetRangeN(self, (size_t)i_begin);
@@ -193,18 +196,26 @@ seq_getrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		if (i_end < 0) {
 			i_end += seq_len;
-			if unlikely(i_end < 0)
+			if unlikely(i_end < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+			}
 		}
 	}
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+empty_range:
+	return_empty_seq;
 err:
 	return NULL;
 }
@@ -218,18 +229,26 @@ seq_nsi_getrange(DeeObject *__restrict self, dssize_t i_begin, dssize_t i_end) {
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		if (i_end < 0) {
 			i_end += seq_len;
-			if unlikely(i_end < 0)
+			if unlikely(i_end < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+			}
 		}
 	}
 	return DeeSeq_GetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+empty_range:
+	return_empty_seq;
 err:
 	return NULL;
 }
@@ -243,11 +262,16 @@ seq_nsi_getrange_n(DeeObject *__restrict self, dssize_t i_begin) {
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 	}
 	return DeeSeq_GetRangeN(self, (size_t)i_begin);
+empty_range:
+	return_empty_seq;
 err:
 	return NULL;
 }
@@ -699,18 +723,26 @@ seq_nsi_delrange(DeeObject *self, dssize_t i_begin, dssize_t i_end) {
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		if (i_end < 0) {
 			i_end += seq_len;
-			if unlikely(i_end < 0)
+			if unlikely(i_end < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+			}
 		}
 	}
 	return DeeSeq_DelRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+empty_range:
+	return 0;
 err:
 	return -1;
 }
@@ -724,19 +756,30 @@ seq_nsi_setrange(DeeObject *self, dssize_t i_begin, dssize_t i_end,
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		if (i_end < 0) {
 			i_end += seq_len;
-			if unlikely(i_end < 0)
+			if unlikely(i_end < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+			}
 		}
 	}
+do_setrange:
 	return DeeSeq_SetRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end,
 	                       values);
+empty_range:
+	i_begin = 0;
+	i_end   = 0;
+	goto do_setrange;
 err:
 	return -1;
 }
@@ -748,10 +791,15 @@ seq_nsi_delrange_n(DeeObject *self, dssize_t i_begin) {
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
 		i_begin += seq_len;
-		if unlikely(i_begin < 0)
+		if unlikely(i_begin < 0) {
+			if unlikely(seq_len == 0)
+				goto empty_range;
 			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
 	}
 	return DeeSeq_DelRangeN(self, (size_t)i_begin);
+empty_range:
+	return 0;
 err:
 	return -1;
 }
@@ -764,10 +812,17 @@ seq_nsi_setrange_n(DeeObject *self, dssize_t i_begin,
 		if unlikely(seq_len == (size_t)-1)
 			goto err;
 		i_begin += seq_len;
-		if unlikely(i_begin < 0)
+		if unlikely(i_begin < 0) {
+			if unlikely(seq_len == 0)
+				goto empty_range;
 			i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+		}
 	}
+do_setrange:
 	return DeeSeq_SetRangeN(self, (size_t)i_begin, values);
+empty_range:
+	i_begin = 0;
+	goto do_setrange;
 err:
 	return -1;
 }
@@ -783,8 +838,11 @@ seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			if unlikely(seq_len == (size_t)-1)
 				goto err;
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		return DeeSeq_DelRangeN(self, (size_t)i_begin);
 	}
@@ -796,18 +854,26 @@ seq_delrange(DeeObject *self, DeeObject *start, DeeObject *end) {
 			goto err;
 		if (i_begin < 0) {
 			i_begin += seq_len;
-			if unlikely(i_begin < 0)
+			if unlikely(i_begin < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_begin = (dssize_t)do_fix_negative_range_index(i_begin, seq_len);
+			}
 		}
 		if (i_end < 0) {
 			i_end += seq_len;
-			if unlikely(i_end < 0)
+			if unlikely(i_end < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
 				i_end = (dssize_t)do_fix_negative_range_index(i_end, seq_len);
+			}
 		}
 	}
 	return DeeSeq_DelRange(self,
 	                       (size_t)i_begin,
 	                       (size_t)i_end);
+empty_range:
+	return 0;
 err:
 	return -1;
 }

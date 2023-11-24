@@ -299,8 +299,8 @@ function main() {
 	//invokeTypeMembers(deemon.Bytes);
 	//invokeTypeMembers(deemon.int);
 	//invokeTypeMembers(deemon.List);
-	invokeTypeMembers(deemon.Tuple);
-	//invokeTypeMembers(deemon.Sequence);
+	//invokeTypeMembers(deemon.Tuple);
+	invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);
 	//invokeTypeMembers(deemon.bool);
 	//invokeTypeMembers(type(none));
