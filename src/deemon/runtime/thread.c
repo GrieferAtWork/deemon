@@ -2725,9 +2725,9 @@ again:
 #endif /* !DeeThread_USE_SINGLE_THREADED */
 
 /* Start execution of the given thread.
- * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  * @return:  0: Successfully started the thread.
- * @return:  1: The thread had already been started. */
+ * @return:  1: The thread had already been started.
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self) {
 #ifdef DeeThread_USE_SINGLE_THREADED
@@ -5093,7 +5093,7 @@ err:
  * a traceback object describing what is actually being run by it.
  * Note that this is just a snapshot that by no means will remain
  * consistent once this function returns.
- * NOTE: If the given thread is the caller's this is identical `(Traceback from deemon)()' */
+ * NOTE: If the given thread is the caller's, this is identical `(Traceback from deemon)()' */
 PUBLIC WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self) {
 	DeeThreadObject *me = (DeeThreadObject *)self;

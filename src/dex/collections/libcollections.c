@@ -121,6 +121,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "UniqueSet", (DeeObject *)&USet_Type },
 	{ "RangeMap", (DeeObject *)&RangeMap_Type },
 	{ "RBTree", (DeeObject *)&RBTree_Type },
+	/* TODO: STailQ (singly linked list; internally: STAILQ) */
+	/* TODO: TailQ (double linked list; internally: TAILQ) */
 	{ NULL }
 };
 

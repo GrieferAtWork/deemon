@@ -309,6 +309,24 @@ function main() {
 	//invokeTypeMembers((UniqueSet from collections));
 	//invokeTypeMembers((UniqueSet from collections).Frozen);
 	//invokeTypeMembers(RBTree from collections);
+	//invokeTypeMembers(Time from time);
+	//invokeTypeMembers(Lock from threading);
+	//invokeTypeMembers(AtomicLock from threading);
+	//invokeTypeMembers(SharedLock from threading);
+	//invokeTypeMembers(RAtomicLock from threading);
+	//invokeTypeMembers(RSharedLock from threading);
+	//invokeTypeMembers(RWLock from threading);
+	//invokeTypeMembers(RWLockReadLock from threading);
+	//invokeTypeMembers(RWLockWriteLock from threading);
+	//invokeTypeMembers(AtomicRWLock from threading);
+	//invokeTypeMembers(SharedRWLock from threading);
+	//invokeTypeMembers(RAtomicRWLock from threading);
+	//invokeTypeMembers(RSharedRWLock from threading);
+	//invokeTypeMembers(LockUnion from threading);
+	//invokeTypeMembers(Semaphore from threading);
+	//invokeTypeMembers(Event from threading);
+	//invokeTypeMembers(TLS from threading);
+	//invokeTypeMembers(Once from threading);
 }
 
 

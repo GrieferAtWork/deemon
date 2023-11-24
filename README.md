@@ -85,8 +85,8 @@ make
 - Infinite-precision integers
 - Sequence, Set, and Map-like built-in containers
 	- Mutable/Immutable sequences (`List` / `Tuple`)
-	- Mutable/Immutable mapping (`Dict` / `Dict.Frozen`)
-	- Mutable/Immutable set (`HashSet` / `HashSet.Frozen`)
+	- Mutable/Immutable mappings (`Dict` / `Dict.Frozen`)
+	- Mutable/Immutable sets (`HashSet` / `HashSet.Frozen`)
 	- Everything inherits from a common `Sequence` class providing a full-featured sequence API
 - Everything is reference-counted (automatic cleanup)
 - Modules are compiled on first use and automatically re-compiled if modified
@@ -124,10 +124,10 @@ Code examples can be found in */util/tut*
 ### Major improvements
 
 - Introduction of a module-based dependency system that allows code reuse without relying on preprocessor functionality that really didn't fit a scripting language all too well.
-- With more emphasis on documentation, deemon now comes shipped with a documentation server accessing via web-browser
-	- It should be of note that the documentation server, as well as documentation text processor is written entirely in deemon.
-	- Links listed below require that you are running it locally.
-- A complete overhaul of the builtin [`string`](http://localhost:8080/modules/deemon/i:string)
+- With more emphasis on documentation, deemon now comes shipped with a documentation server accessible via web-browser
+	- It should be noted that the documentation server, as well as the RTTI parser are written entirely in deemon.
+	- Links listed below require this server to be running locally.
+- A complete overhaul of the builtin [`string`](http://localhost:8080/modules/deemon/i:string) type
 	- Full unicode support all packed together into a single string type
 	- Separation between raw data [`Bytes`](http://localhost:8080/modules/deemon/i:Bytes) and [`string`](http://localhost:8080/modules/deemon/string)s, as well as functionality to decode/encode data and strings
 	- Builtin support for regular expressions
@@ -136,23 +136,23 @@ Code examples can be found in */util/tut*
 - Introduction of a common base class for any [`Sequence`-like type](http://localhost:8080/modules/deemon/i:Sequence)
 	- Includes emulation of any kind of sequence operator, as well as a huge set of member functions, including [`find()`](http://localhost:8080/modules/deemon/i:Sequence/find), [`sum()`](http://localhost:8080/modules/deemon/i:Sequence/sum), [`operator add`](http://localhost:8080/modules/deemon/i:Sequence/op:add) or comparisons
 	- Also introduced are common base classes for set-like, and mapping-like objects
-- Introduction of ASP (Abstract Sequence Proxy)-like objects allows for lazy computation in functions like [`string.split()`](http://localhost:8080/modules/deemon/i:string/i:split), distributing work load across usage and essentially making such functions O(1) when invoked
-- Introduction of default, optional, named and keyword arguments for user-functions
-	- `function foo(a, b = 10,c ?)`
+- Introduction of ASP (Abstract Sequence Proxy)-like objects to allow for lazy computation in functions like [`string.split()`](http://localhost:8080/modules/deemon/i:string/i:split), distributing work load across usage and essentially making such functions O(1) when invoked
+- Introduction of default, optional, and named function arguments
+	- `function foo(a, b = 10, c?)`
 		- `foo("Hello")` Called as `foo(a: "Hello", b: 10, c: /unbound/)`
 		- `foo("Hello", "World")` Called as `foo(a: "Hello", b: "World", c: /unbound/)`
 		- `foo("Hello", c: "Universe")` Called as `foo(a: "Hello", b: 10, c: "Universe")`
 - Introduction of a same-object / different-object operators `===` and `!==`
 - Introduction of a new syntax for constructing a [super-view](http://localhost:8080/modules/deemon/i:Super) `foo as Sequence`
 - Introduction of a new syntax for checking if variables or attributes are bound `if (x is bound) print x;`
-- Introduction of `with`-statements, useful when dealing with files or synchronization primitives
+- Introduction of `with`-statements, useful when dealing with files or locks
 	- To go alongside, 2 new operator `operator enter()` and `operator leave()` were introduced
-- Introduction of an interactive excution mode `deemon -i` where code is executed, and results are printed as it is typed by the user
+- Introduction of an interactive excution mode `deemon -i` where code is executed, and results are printed in real time
 - Introduction of a `deepcopy` keyword and operator to go alongside the `copy` keyword
 	- Also includes automatic tracking of recursive objects such as a list containing itself.
 - Added support for raw string literals `r"the following are 2 seperate characters: \n"`
-- Overhaul of exception handlers in user-code now introduces zero-effort exception and finally handlers (as opposed to some stack of active handlers)
-- Overhaul of user-classes now require member variables to also be declared, significantly improving runtime performance
+- Overhaul of exception handlers in user-code now introduces zero-effort exception and finally handlers (as opposed to having a stack of active handlers)
+- Overhaul of user-classes which now require member variables to also be declared, significantly improving runtime performance
 - Lazy compilation of module source files into pre-compiled file caches improves load time significantly
 - Extremely powerful peephole optimization of generated bytecode
 - The bytecode generated by deemon has grown so powerful that you can actually write code using it, or have it be printed back to you by a powerful, builtin disassembler

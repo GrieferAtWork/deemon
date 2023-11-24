@@ -1995,7 +1995,8 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
 	TYPE_GETTER("__yfunc__", &yfi_getyfunc,
 	            "->?Ert:YieldFunction\n"
-	            "The underlying yield-function, describing the ?DFunction and arguments that are being executed"),
+	            "The underlying yield-function, describing the ?DFunction "
+	            /**/ "and arguments that are being executed"),
 #endif /* !CONFIG_NO_THREADS */
 	TYPE_GETTER("__func__", &yfi_getfunc,
 	            "->?Dfunction\n"
@@ -2044,7 +2045,7 @@ PRIVATE struct type_member tpconst yfi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YFIterator, yi_func),
 	                      "->?Ert:YieldFunction\n"
 	                      "The underlying yield-function, describing the ?DFunction "
-	                      "and arguments that are being executed"),
+	                      /**/ "and arguments that are being executed"),
 	TYPE_MEMBER_END
 };
 #endif /* CONFIG_NO_THREADS */

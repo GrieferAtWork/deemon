@@ -1929,7 +1929,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 
 
 
-/* Make sure that we can re-use some functions from `classmethod' */
+/* Make sure that we can re-use some functions from `ClassMethod' */
 STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
               offsetof(DeeClsMethodObject, cm_func));
 
@@ -2170,7 +2170,7 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
 #define cmethod_getsets (kwcmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
-	TYPE_GETTER(STR___kwds__, &kwcmethod_get_kwds, DOC_GET(objmethod_get_kwds_doc)),
+	TYPE_GETTER(STR___kwds__, &kwcmethod_get_kwds, DOC_GET(cmethod_get_kwds_doc)),
 	TYPE_GETTER(STR___module__, &cmethod_get_module,
 	            "->?X2?DModule?N\n"
 	            "Returns the module defining @this method, or ?N if that module could not be determined"),
@@ -2319,7 +2319,7 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 };
 
 
-/* Make sure that we can re-use some functions from `classmethod' */
+/* Make sure that we can re-use some functions from `CMethod' */
 STATIC_ASSERT(offsetof(DeeKwCMethodObject, cm_func) ==
               offsetof(DeeCMethodObject, cm_func));
 
@@ -2385,6 +2385,38 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwcmethod_call_kw
 };
+
+
+/* Helpers for dynamically creating C method wrapper objects.
+ * You really shouldn't use these (unless you *really* need to
+ * wrap functions dynamically with no way of creating CMETHOD
+ * objects statically). These are really only here to allow
+ * for portable bindings of the deemon API in languages other
+ * than C.
+ *
+ * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCMethod_New(Dee_cmethod_t func) {
+	DREF DeeCMethodObject *result;
+	result = DeeObject_MALLOC(DeeCMethodObject);
+	if likely(result) {
+		result->cm_func = func;
+		DeeObject_Init(result, &DeeCMethod_Type);
+	}
+	return (DREF DeeObject *)result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKwCMethod_New(Dee_kwcmethod_t func) {
+	DREF DeeKwCMethodObject *result;
+	result = DeeObject_MALLOC(DeeKwCMethodObject);
+	if likely(result) {
+		result->cm_func = func;
+		DeeObject_Init(result, &DeeKwCMethod_Type);
+	}
+	return (DREF DeeObject *)result;
+}
+
 
 
 

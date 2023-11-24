@@ -791,6 +791,8 @@ PRIVATE struct type_member tpconst rangemap_class_members[] = {
 INTERN DeeTypeObject RangeMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "RangeMap",
+	/* TODO: Document the minimal feature-set required by sub-classes
+	 *       (and what needs to be implemented for optimal performance) */
 	/* .tp_doc      = */ DOC("Base-class for range-based mappings"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,

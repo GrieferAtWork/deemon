@@ -248,6 +248,17 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define Dee_DEFINE_KWCMETHOD(name, func) \
 	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func) }
 
+/* Helpers for dynamically creating C method wrapper objects.
+ * You really shouldn't use these (unless you *really* need to
+ * wrap functions dynamically with no way of creating CMETHOD
+ * objects statically). These are really only here to allow
+ * for portable bindings of the deemon API in languages other
+ * than C.
+ *
+ * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func);
+
 
 /* Invoke a given c-function callback.
  * Since this is the main way through which external functions are invoked,

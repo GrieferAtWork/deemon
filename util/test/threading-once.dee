@@ -27,9 +27,6 @@ function myCallback() {
 	return f"result{myCallbackCount}";
 }
 
-function myCallback2(x) {
-	return f"{x}result{x}";
-}
 
 local o1 = Once(myCallback);
 local o2 = Once(callback: myCallback);

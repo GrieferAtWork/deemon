@@ -420,6 +420,11 @@ DDATDEF DeeTypeObject DeeThread_Type;
 #define DeeThread_Check(ob)      DeeObject_InstanceOf(ob, &DeeThread_Type)
 #define DeeThread_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeThread_Type)
 
+/* Create a new thread that will invoke `main()' (without any arguments) once started.
+ * @return: * :   The enw thread object.
+ * @return: NULL: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
+#define DeeThread_New(main) DeeObject_NewPack(&DeeThread_Type, 1, main)
+
 /* Construct a new wrapper for an external reference to `pid'
  * NOTE: The given `pid' is _NOT_ inherited! */
 #ifdef Dee_pid_t
@@ -428,9 +433,9 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t pid);
 
 
 /* Start execution of the given thread.
- * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS')
  * @return:  0: Successfully started the thread.
- * @return:  1: The thread had already been started. */
+ * @return:  1: The thread had already been started.
+ * @return: -1: An error occurred. (Always returned for `CONFIG_NO_THREADS') */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeThread_Start(/*Thread*/ DeeObject *__restrict self);
 
@@ -496,7 +501,7 @@ DeeThread_GetTid(/*Thread*/ DeeObject *__restrict self);
  * a traceback object describing what is actually being run by it.
  * Note that this is just a snapshot that by no means will remain
  * consistent once this function returns.
- * NOTE: If the given thread is the caller's this is identical `(Traceback from deemon)()' */
+ * NOTE: If the given thread is the caller's, this is identical `(Traceback from deemon)()' */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Traceback*/ DeeObject *DCALL
 DeeThread_Trace(/*Thread*/ DeeObject *__restrict self);
 
