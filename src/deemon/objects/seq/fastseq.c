@@ -436,7 +436,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 	DeeObject **new_elemv, **elemv = *p_vector;
 	DREF DeeObject *iterator, *elem;
 #ifdef Dee_MallocUsableSize
-	size_t elema = Dee_MallocUsableSize(elemv);
+	size_t elema = Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject *);
 #else /* Dee_MallocUsableSize */
 	size_t elema = *p_allocated;
 #endif /* !Dee_MallocUsableSize */
@@ -553,7 +553,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 	DeeObject **new_elemv, **elemv = *p_vector;
 	DREF DeeObject *iterator, *elem;
 #ifdef Dee_MallocUsableSize
-	size_t elema = Dee_MallocUsableSize(elemv);
+	size_t elema = Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject **);
 #else /* Dee_MallocUsableSize */
 	size_t elema = *p_allocated;
 #endif /* !Dee_MallocUsableSize */
@@ -572,7 +572,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 			elemv     = new_elemv;
 			*p_vector = new_elemv;
 #ifndef Dee_MallocUsableSize
-			*p_allocated      = offset + elemc;
+			*p_allocated = offset + elemc;
 #endif /* !Dee_MallocUsableSize */
 		}
 		for (i = 0; i < elemc; ++i) {

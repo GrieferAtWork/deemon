@@ -106,7 +106,10 @@ list_assign(List *me, DeeObject *other) {
 	DeeList_LockEndWrite(me);
 
 	/* Free the list state that got created while we loaded `other' */
-	if unlikely(old_elemv) {
+#ifndef __OPTIMIZE_SIZE__
+	if unlikely(old_elemv)
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
 		Dee_Decrefv(old_elemv, old_elemc);
 		Dee_Free(old_elemv);
 	}
