@@ -22,6 +22,8 @@
 
 #include "api.h"
 
+#include <hybrid/__overflow.h>
+
 #include <stdarg.h>
 #include <stddef.h>
 
@@ -51,6 +53,19 @@ struct Dee_tuple_object {
 #define DeeTuple_END(ob)         (((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem + ((DeeTupleObject *)(ob))->t_size)
 #define DeeTuple_GET(ob, i)      ((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i]
 #define DeeTuple_SET(ob, i, v)   (void)(((DeeTupleObject *)Dee_REQUIRES_OBJECT(ob))->t_elem[i] = (DeeObject *)Dee_REQUIRES_OBJECT(v))
+
+/* Same as `DeeTuple_SIZEOF()', but makes sure that no overflow takes place. */
+#define DeeTuple_SIZEOF_SAFE(n_items) DeeTuple_SIZEOF_SAFE(n_items)
+LOCAL ATTR_CONST WUNUSED size_t
+(DCALL DeeTuple_SIZEOF_SAFE)(size_t n_items) {
+	size_t result;
+	if unlikely(__hybrid_overflow_umul(n_items, sizeof(DREF DeeObject *), &result))
+		result = (size_t)-1;
+	if unlikely(__hybrid_overflow_uadd(result, COMPILER_OFFSETOF(DeeTupleObject, t_elem), &result))
+		result = (size_t)-1;
+	return result;
+}
+
 
 /* Define a statically allocated tuple:
  * >> PRIVATE WUNUSED DREF DeeObject *DCALL get_my_tuple(void) {

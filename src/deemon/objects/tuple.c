@@ -171,8 +171,7 @@ DeeTuple_NewUninitialized(size_t n) {
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
-	result = (DREF Tuple *)DeeObject_Malloc(offsetof(Tuple, t_elem) +
-	                                        (n * sizeof(DeeObject *)));
+	result = (DREF Tuple *)DeeObject_Malloc(DeeTuple_SIZEOF_SAFE(n));
 	if unlikely(!result)
 		goto done;
 	result->t_size = n;
@@ -215,8 +214,7 @@ DeeTuple_TryNewUninitialized(size_t n) {
 		}
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT != 0 */
-	result = (DREF Tuple *)DeeObject_TryMalloc(offsetof(Tuple, t_elem) +
-	                                           (n * sizeof(DeeObject *)));
+	result = (DREF Tuple *)DeeObject_TryMalloc(DeeTuple_SIZEOF_SAFE(n));
 	if unlikely(!result)
 		goto done;
 	result->t_size = n;
@@ -337,9 +335,7 @@ DeeTuple_ResizeUninitialized(/*inherit(on_success)*/ DREF Tuple *__restrict self
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 	/* Resize the old tuple. */
-	new_tuple = (DREF Tuple *)DeeObject_Realloc(self,
-	                                            offsetof(Tuple, t_elem) +
-	                                            new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF Tuple *)DeeObject_Realloc(self, DeeTuple_SIZEOF_SAFE(new_size));
 	if unlikely(!new_tuple)
 		goto err;
 #ifndef NDEBUG
@@ -417,9 +413,7 @@ DeeTuple_TryResizeUninitialized(/*inherit(on_success)*/ DREF Tuple *__restrict s
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 
 	/* Try to resize the old tuple. */
-	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self,
-	                                               offsetof(Tuple, t_elem) +
-	                                               new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self, DeeTuple_SIZEOF_SAFE(new_size));
 	if unlikely(!new_tuple)
 		goto err;
 #ifndef NDEBUG
@@ -489,9 +483,7 @@ DeeTuple_TruncateUninitialized(/*inherit(always)*/ DREF Tuple *__restrict self,
 	}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 	/* Try to resize the old tuple. */
-	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self,
-	                                               offsetof(Tuple, t_elem) +
-	                                               new_size * sizeof(DREF DeeObject *));
+	new_tuple = (DREF Tuple *)DeeObject_TryRealloc(self, DeeTuple_SIZEOF(new_size));
 	if unlikely(!new_tuple)
 		new_tuple = (DREF Tuple *)self;
 	new_tuple->t_size = new_size;
@@ -697,9 +689,7 @@ err_cleanup:
 		}
 #endif /* CONFIG_TUPLE_CACHE_MAXCOUNT */
 		ASSERT(result->ob_refcnt == 1);
-		next = (DREF DeeObject *)DeeObject_TryRealloc(result,
-		                                              offsetof(Tuple, t_elem) +
-		                                              used_size * sizeof(DREF DeeObject *));
+		next = (DREF DeeObject *)DeeObject_TryRealloc(result, DeeTuple_SIZEOF(used_size));
 		if likely(next)
 			result = (DREF Tuple *)next;
 		result->t_size = used_size;
@@ -1496,7 +1486,7 @@ tuple_getrange_in(Tuple *__restrict self,
 #ifdef __OPTIMIZE_SIZE__
 	return tuple_getrange_i(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
-	size_t start, range_size;
+	size_t start;
 	start = DeeSeqRange_Clamp_n(begin, self->t_size);
 	if unlikely(start == 0)
 		return_reference((DeeObject *)self);
@@ -1810,8 +1800,7 @@ tuple_hash(Tuple *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_sizeof(Tuple *self) {
-	return DeeInt_NewSize(offsetof(Tuple, t_elem) +
-	                      (self->t_size * sizeof(DeeObject *)));
+	return DeeInt_NewSize(DeeTuple_SIZEOF(self->t_size));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
