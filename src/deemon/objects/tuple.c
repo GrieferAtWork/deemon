@@ -2004,30 +2004,34 @@ tuple_repeat(Tuple *self, DeeObject *other) {
 	DREF DeeObject **dst;
 	if (DeeObject_AsSize(other, &count))
 		goto err;
-	if (!count)
-		goto return_empty;
 	if (count == 1)
 		return_reference_(self);
 
 	/* Repeat `self' `count' number of times. */
 	my_length = DeeTuple_SIZE(self);
-	if (my_length == 0)
-		goto return_empty;
 	if (OVERFLOW_UMUL(my_length, count, &total_length))
 		goto err_overflow;
+	if unlikely(total_length == 0)
+		goto return_empty;
 	result = DeeTuple_NewUninitialized(total_length);
 	if unlikely(!result)
 		goto err;
 
-	/* Create all the new references that will be contained in the new tuple. */
-	for (i = 0; i < my_length; ++i)
-		Dee_Incref_n(DeeTuple_GET(self, i), count);
-
 	/* Fill in the resulting tuple with repetitions of ourself. */
 	dst = DeeTuple_ELEM(result);
-	while (count--) {
-		dst = (DREF DeeObject **)mempcpyc(dst, DeeTuple_ELEM(self),
-		                                  my_length, sizeof(DREF DeeObject *));
+#ifndef __OPTIMIZE_SIZE__
+	if (my_length == 1) {
+		Dee_Setrefv(dst, DeeTuple_GET(self, 0), count);
+	} else
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		/* Create all the new references that will be contained in the new tuple. */
+		for (i = 0; i < my_length; ++i)
+			Dee_Incref_n(DeeTuple_GET(self, i), count);
+		while (count--) {
+			dst = (DREF DeeObject **)mempcpyc(dst, DeeTuple_ELEM(self),
+			                                  my_length, sizeof(DREF DeeObject *));
+		}
 	}
 	return result;
 return_empty:
