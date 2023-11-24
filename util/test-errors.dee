@@ -25,6 +25,7 @@ import * from doc;
 import util;
 import posix;
 import threading;
+import printcode from disassembler;
 
 #define TERM_WIDTH 120
 
@@ -271,13 +272,23 @@ function invokeAsync(args..., **kwds) {
 
 @@Invoke member functions of the given @Type @t
 function invokeTypeMembers(t: Type) {
-	for (local a: enumattr(t)) {
-		if (a.decl !== t)
-			continue;
-		local wrapper = t.operator . (a.name);
-		if (wrapper is Callable) {
-			print(f"invokeAsync({repr wrapper});");
-			//invoke(wrapper, name: f"{repr t}.{a.name}");
+	//for (local a: enumattr(t)) {
+	//	if (a.decl !== t)
+	//		continue;
+	//	local wrapper = t.operator . (a.name);
+	//	if (wrapper is Callable) {
+	//		print(f"invokeAsync({repr wrapper});");
+	//		//invoke(wrapper, name: f"{repr t}.{a.name}");
+	//	}
+	//}
+	local d = Doc(t);
+	for (local op: d.operators) {
+		local f = op.operatorfunc;
+		local name = f"operator {op.prettyname} ";
+		for (local decl: op.decls) {
+			local argTypes = { t, decl.parameters.each.typ... };
+			//print(f"invoke({name[:-1]}, \{{", ".join(argTypes)}\});");
+			invoke(f, argTypes, name, op);
 		}
 	}
 }
@@ -287,7 +298,7 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 	//invokeTypeMembers(deemon.int);
-	//invokeTypeMembers(deemon.List);
+	invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
 	//invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);

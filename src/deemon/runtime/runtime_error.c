@@ -145,8 +145,8 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	ASSERT_OBJECT(b);
 	return DeeError_Throwf(&DeeError_NegativeShift,
 	                       "Negative %s shift: `%k %s %k'",
-	                       is_left_shift ? "left" : "right", a, b,
-	                       is_left_shift ? "<<" : ">>");
+	                       is_left_shift ? "left" : "right", a,
+	                       is_left_shift ? "<<" : ">>", b);
 }
 
 INTERN ATTR_COLD NONNULL((1)) int

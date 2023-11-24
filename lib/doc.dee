@@ -528,7 +528,7 @@ global final PRETTY_OPERATOR_NAMES: {string: string} = {
 	"setitem" : "[]=", "delrange" : "del[:]", "iadd" : "+=",
 	"setrange" : "[:]=", "ior" : "|=", "ixor" : "^=", "imul" : "*=",
 	"idiv" : "/=", "getrange" : "[:]", "ipow" : "**=", "imod" : "%=",
-	"le" : "<=", "pow" : "**", "ge" : ">="
+	"le" : "<=", "pow" : "**", "ge" : ">=", "lo" : "<", "gr" : ">",
 };
 
 @@Weight of different node types when being sorted
@@ -3584,6 +3584,17 @@ set_is_type:
 	@@Evaluates to @true if the object is an operator
 	public final member isoperator: bool = false;
 
+	@@Returns the function from @import("operators") that can be called in
+	@@order to invoke the operator described by @this @Doc. Can only be used
+	@@when @isoperator evaluates is true.
+	public final property operatorfunc: Callable = {
+		get(): Callable {
+			if (!isoperator)
+				throw Error.ValueError(f"Not an operator");
+			return import("operators").operator . (name);
+		}
+	}
+
 	@@Evaluates to @true if the object can be read from
 	public final property canget: bool = {
 		get() {
@@ -4068,12 +4079,15 @@ set_is_type:
 	}
 	private member m_operator_sections: {string: {DocSection...}};
 
-	@@Enumerate the child nodes used to represent operators of @this when @istype is @true
-	private enumerateOperators(): {Doc...} {
-		if (m_operator_sections !is bound)
-			m_operator_sections = enumerateOperatorSections();
-		for (local name, sect: m_operator_sections)
-			yield Doc(this, "op:" + name, sect);
+	@@Enumerate the child nodes used to represent operators
+	@@of @this when @istype is @true
+	public final property operators: {Doc...} = {
+		get(): {Doc...} {
+			if (m_operator_sections !is bound)
+				m_operator_sections = enumerateOperatorSections();
+			for (local name, sect: m_operator_sections)
+				yield Doc(this, "op:" + name, sect);
+		}
 	}
 
 	@@Check if @this doc node has a child attribute @name
@@ -4101,7 +4115,7 @@ set_is_type:
 		if (!haschildren)
 			return;
 		if (istype)
-			yield enumerateOperators()...;
+			yield operators...;
 		if (object !is bound)
 			return;
 		local my_object = object;
