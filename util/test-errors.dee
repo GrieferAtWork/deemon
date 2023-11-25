@@ -115,6 +115,26 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 		yield List({none});
 		yield List({none,none});
 		return;
+	case Set:
+		yield Set();
+		yield HashSet();
+		yield HashSet({none});
+		yield HashSet({none}).frozen;
+		return;
+	case HashSet:
+		yield HashSet();
+		yield HashSet({none});
+		return;
+	case Mapping:
+		yield Dict();
+		yield Dict({"foo": 42});
+		yield Dict().frozen;
+		yield Dict({"foo": 42}).frozen;
+		return;
+	case Dict:
+		yield Dict();
+		yield Dict({"foo": 42});
+		return;
 	case string:
 		yield "";
 		yield "$";
@@ -166,7 +186,11 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 	}
 
 	/* Special case for sequence sub-classes. */
-	if (t.implements(Sequence)) {
+	if (t.implements(Mapping)) {
+		for (local x: getTypeInstances(Dict))
+			yield t(x);
+		return;
+	} else if (t.implements(Sequence)) {
 		for (local x: getTypeInstances(List))
 			yield t(x);
 		return;
@@ -300,7 +324,7 @@ function main() {
 	//invokeTypeMembers(deemon.int);
 	//invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
-	invokeTypeMembers(deemon.Sequence);
+	//invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);
 	//invokeTypeMembers(deemon.bool);
 	//invokeTypeMembers(type(none));
@@ -309,10 +333,10 @@ function main() {
 	//invokeTypeMembers(deemon.WeakRef);
 	//invokeTypeMembers(deemon.File);
 	//invokeTypeMembers(deemon.HashSet);
-	//invokeTypeMembers(deemon.Dict);
 	//invokeTypeMembers(deemon.Set);
 	//invokeTypeMembers(deemon.Mapping);
-	//invokeTypeMembers(deemon.Dict.Frozen);
+	//invokeTypeMembers(deemon.Dict);
+	invokeTypeMembers(deemon.Dict.Frozen);
 	//invokeTypeMembers(Deque from collections);
 	//invokeTypeMembers(FixedList from collections);
 	//invokeTypeMembers((UniqueDict from collections));

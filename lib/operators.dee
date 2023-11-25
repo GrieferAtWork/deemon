@@ -68,7 +68,7 @@ varying function bool(self): bool from deemon -> !!self;
 varying function call(self: Callable | Object, args: Tuple) -> self(args...);
 varying function next(self: Iterator | Object) -> self.operator next();
 varying function int(self: Numeric | Object): int from deemon -> self.operator int();
-varying function float(self): float from deemon -> self.operator float();
+varying function float(self: Numeric | Object): float from deemon -> self.operator float();
 varying function inv(self) -> ~self;
 varying function pos(self) -> +self;
 varying function neg(self) -> -self;

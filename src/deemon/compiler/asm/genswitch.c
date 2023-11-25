@@ -55,6 +55,7 @@ emit_runtime_check(struct ast *__restrict ddi_ast,
 		goto err; /* expr, expr */
 	if (ast_genasm_one(case_expr, ASM_G_FPUSHRES))
 		goto err; /* expr, expr, case */
+
 	/* This instruction must be protected by an exception
 	 * handler for NOT_IMPLEMENTED and TYPE errors that
 	 * are handled by jumping to the next check. */
@@ -188,9 +189,9 @@ ast_genasm_switch(struct ast *__restrict self) {
 	switch_break = asm_newsym();
 	if unlikely(!switch_break)
 		goto err;
-	old_break                                    = current_assembler.a_loopctl[ASM_LOOPCTL_BRK];
+	old_break = current_assembler.a_loopctl[ASM_LOOPCTL_BRK];
 	current_assembler.a_loopctl[ASM_LOOPCTL_BRK] = switch_break;
-	old_finflag                                  = current_assembler.a_finflag;
+	old_finflag = current_assembler.a_finflag;
 	current_assembler.a_finflag |= ASM_FINFLAG_NOLOOP;
 
 	if (self->a_switch.s_default) {
@@ -245,6 +246,7 @@ ast_genasm_switch(struct ast *__restrict self) {
 			constant_cases = cases;
 			continue;
 		}
+
 		/* Generate a runtime check for this case. */
 		if likely(!temp) {
 			if (!has_expression) {
@@ -263,10 +265,12 @@ err_cases:
 		temp = -1;
 		goto continue_next_case;
 	}
+
 	/* Re-append all of the constant cases at the end of the linked list of cases. */
 	*p_cases = constant_cases;
 	ASSERT((constant_cases != NULL) ==
 	       (num_constants != 0));
+
 	/* Check if something went wrong during creation of runtime cases. */
 	if unlikely(temp)
 		goto err;
@@ -293,11 +297,13 @@ err_cases:
 			constant_cases = constant_cases->tl_next;
 		}
 		ASSERT(!constant_cases);
+
 		/* With all cases now in check, pop the expression and jump ahead to the default case. */
 		if (asm_putddi(self))
 			goto err;
 		if (asm_gpop())
 			goto err; /* Pop the switch-expression. */
+
 		/* Jump to the default case when no other was matched. */
 		if (asm_gjmp(ASM_JMP, default_sym))
 			goto err;
@@ -335,14 +341,14 @@ err_jump_table:
 				goto err_jump_table;
 			constant_cases = constant_cases->tl_next;
 		}
-		/* With the jump table now generated, generate code like this:
+
+		/* With the jump table now generated, generate code looks like this:
 		 * >>    push     const @<jump_table>             // expr, jump_table
 		 * >>    swap                                     // jump_table, expr
 		 * >>    push     const @(default.PC, default.SP) // jump_table, expr, default
 		 * >>    callattr top, @"get", #2                 // target
 		 * >>    unpack   pop, #2                         // target.PC, target.SP
-		 * >>    jmp      pop, #pop */
-		// ...
+		 * >>    jmp      pop, #pop                       // ... */
 		if (asm_allowconst((DeeObject *)jump_table)) {
 			jumptable_cid = asm_newconst((DeeObject *)jump_table);
 			if unlikely(jumptable_cid < 0)
@@ -402,6 +408,7 @@ do_generate_block:
 	 * it will jump where `break' is located at. */
 	if (!ASM_SYM_DEFINED(default_sym))
 		asm_defsym(default_sym);
+
 	/* Define the switch break symbol and restore the assembler state. */
 	asm_defsym(switch_break);
 	ASSERT(current_assembler.a_finflag & ASM_FINFLAG_NOLOOP);
@@ -441,6 +448,7 @@ do_generate_block:
 			goto done; /* Shouldn't happen */
 		if (!try_get_integer_as_u16(DeeTuple_GET(default_target, 1), &common_sp))
 			goto done;
+
 		/* Make sure that all constant cases share the same common SP value. */
 		for (i = 0; i <= jump_table->rd_mask; ++i) {
 			DeeObject *case_target;

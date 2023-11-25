@@ -53,6 +53,7 @@
 #include <hybrid/overflow.h>
 #include <hybrid/sched/yield.h>
 #include <hybrid/typecore.h>
+#include <hybrid/unaligned.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -107,9 +108,9 @@
 #define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl16(var, DIGIT_BITS)
 #define __hybrid_uint128_shl_DIGIT_BITS_overflows(var) __hybrid_uint128_shl16_overflows(var, DIGIT_BITS)
 #elif DIGIT_BITS < 32 && defined(__hybrid_uint128_shr32)
-#define __hybrid_uint128_shr_DIGIT_BITS(var)               __hybrid_uint128_shr32(var, DIGIT_BITS)
-#define __hybrid_uint128_shl_DIGIT_BITS(var)               __hybrid_uint128_shl32(var, DIGIT_BITS)
-#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var)     __hybrid_uint128_shl32_overflows(var, DIGIT_BITS)
+#define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr32(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl32(var, DIGIT_BITS)
+#define __hybrid_uint128_shl_DIGIT_BITS_overflows(var) __hybrid_uint128_shl32_overflows(var, DIGIT_BITS)
 #else /* ... */
 #define __hybrid_uint128_shr_DIGIT_BITS(var)           __hybrid_uint128_shr64(var, DIGIT_BITS)
 #define __hybrid_uint128_shl_DIGIT_BITS(var)           __hybrid_uint128_shl64(var, DIGIT_BITS)
@@ -1215,7 +1216,7 @@ DeeInt_NewInt16(int16_t val) {
 	int sign         = 1;
 	uint16_t abs_val = (uint16_t)val;
 #ifdef CONFIG_STRING_8BIT_STATIC
-	if (val >= -128 && val <= 127)
+	if (val >= -128 && val <= 255)
 		return_reference(eightbit + val);
 #endif /* CONFIG_STRING_8BIT_STATIC */
 #if DIGIT_BITS >= 16
@@ -1265,7 +1266,7 @@ DeeInt_NewInt32(int32_t val) {
 	size_t req_digits;
 	uint32_t iter, abs_val;
 #ifdef CONFIG_STRING_8BIT_STATIC
-	if (val >= -128 && val <= 127)
+	if (val >= -128 && val <= 255)
 		return_reference(eightbit + val);
 #endif /* CONFIG_STRING_8BIT_STATIC */
 	sign = 1;
@@ -1312,7 +1313,7 @@ DeeInt_NewInt64(int64_t val) {
 		return DeeInt_NewInt32((int32_t)val);
 #else /* __SIZEOF_POINTER__ < 8 */
 #ifdef CONFIG_STRING_8BIT_STATIC
-	if (val >= -128 && val <= 127)
+	if (val >= -128 && val <= 255)
 		return_reference(eightbit + val);
 #endif /* CONFIG_STRING_8BIT_STATIC */
 #endif /* __SIZEOF_POINTER__ >= 8 */
@@ -3345,20 +3346,20 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 
 	case 1:
 		if (as_signed) {
-			return DeeInt_NewInt8(*(int8_t const *)buf);
+			return DeeInt_NewInt8((int8_t)UNALIGNED_GET8(buf));
 		} else {
-			return DeeInt_NewUInt8(*(uint8_t const *)buf);
+			return DeeInt_NewUInt8(UNALIGNED_GET8(buf));
 		}
 		break;
 
 	case 2:
 		if (as_signed) {
-			int16_t val = *(int16_t const *)buf;
+			int16_t val = (int16_t)UNALIGNED_GET16(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = (int16_t)__hybrid_bswap16((uint16_t)val);
 			return DeeInt_NewInt16(val);
 		} else {
-			uint16_t val = *(uint16_t const *)buf;
+			uint16_t val = UNALIGNED_GET16(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = __hybrid_bswap16(val);
 			return DeeInt_NewUInt16(val);
@@ -3367,12 +3368,12 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 
 	case 4:
 		if (as_signed) {
-			int32_t val = *(int32_t const *)buf;
+			int32_t val = (int32_t)UNALIGNED_GET32(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = (int32_t)__hybrid_bswap32((uint32_t)val);
 			return DeeInt_NewInt32(val);
 		} else {
-			uint32_t val = *(uint32_t const *)buf;
+			uint32_t val = UNALIGNED_GET32(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = __hybrid_bswap32(val);
 			return DeeInt_NewUInt32(val);
@@ -3381,12 +3382,12 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 
 	case 8:
 		if (as_signed) {
-			int64_t val = *(int64_t const *)buf;
+			int64_t val = (int64_t)UNALIGNED_GET64(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = (int64_t)__hybrid_bswap64((uint64_t)val);
 			return DeeInt_NewInt64(val);
 		} else {
-			uint64_t val = *(uint64_t const *)buf;
+			uint64_t val = UNALIGNED_GET64(buf);
 			if unlikely(!IS_NATIVE_ENDIAN())
 				val = __hybrid_bswap64(val);
 			return DeeInt_NewUInt64(val);
@@ -3395,12 +3396,26 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 
 	case 16:
 		if (as_signed) {
-			Dee_int128_t val = *(Dee_int128_t const *)buf;
+			Dee_int128_t val;
+#ifdef UNALIGNED_GET128
+			val = __hybrid_int128_asunsigned(UNALIGNED_GET128(buf));
+#elif defined(__ARCH_HAVE_UNALIGNED_MEMORY_ACCESS)
+			val = *(Dee_int128_t const *)buf;
+#else /* ... */
+			memcpy(&val, buf, 16);
+#endif /* !... */
 			if unlikely(!IS_NATIVE_ENDIAN())
 				__hybrid_int128_bswap(val);
 			return DeeInt_NewInt128(val);
 		} else {
-			Dee_uint128_t val = *(Dee_uint128_t const *)buf;
+			Dee_uint128_t val;
+#ifdef UNALIGNED_GET128
+			val = UNALIGNED_GET128(buf);
+#elif defined(__ARCH_HAVE_UNALIGNED_MEMORY_ACCESS)
+			val = *(Dee_uint128_t const *)buf;
+#else /* ... */
+			memcpy(&val, buf, 16);
+#endif /* !... */
 			if unlikely(!IS_NATIVE_ENDIAN())
 				__hybrid_uint128_bswap(val);
 			return DeeInt_NewUInt128(val);
@@ -3463,13 +3478,13 @@ PUBLIC WUNUSED DREF /*Int*/ DeeObject *
 					goto return_zero;
 				}
 				total_bits -= 8;
-				buf = (void *)((uint8_t *)buf + 1);
+				buf = (void const *)((uint8_t const *)buf + 1);
 			}
 			msb_byte = ((uint8_t const *)buf)[0];
 
 			/* Check for special case: does the sign-bit differ in the next byte? */
 			if (is_negative && !(msb_byte & 0x80)) {
-				buf      = (void *)((uint8_t *)buf - 1);
+				buf      = (void const *)((uint8_t const *)buf - 1);
 				msb_byte = ((uint8_t const *)buf)[0];
 				++length;
 				total_bits += 1;
@@ -3705,7 +3720,7 @@ PRIVATE struct type_math int_math = {
 
 /* Integer compare. */
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
-int_compareint(DeeIntObject *a, DeeIntObject *b) {
+int_compareint(DeeIntObject const *a, DeeIntObject const *b) {
 	dssize_t sign;
 	if (a->ob_size != b->ob_size) {
 		sign = a->ob_size - b->ob_size;
@@ -4161,7 +4176,7 @@ err:
 
 PRIVATE struct type_method tpconst int_class_methods[] = {
 	TYPE_KWMETHOD("frombytes", &int_frombytes,
-	              "(data:?DBytes,byteorder:?Dstring=!N,signed=!f)->?.\n"
+	              "(data:?DBytes,byteorder:?X2?Dstring?N=!N,signed=!f)->?.\n"
 	              "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	              /*            */ "One of $\"little\" (for little-endian), $\"big\" "
 	              /*            */ "(for big-endian) or ?N (for host-endian)}"
@@ -4601,8 +4616,8 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 
 	TYPE_GETTER("nth", &int_get_nth,
 	            "->?Dstring\n"
-	            "Returns the value of @this ?. as a string (as per ?#op:str), with "
-	            "the standard english enumeration suffix applicable to the value of @{this}:\n"
+	            "Returns the value of @this ?. as a string (as per ?#op:str), with the "
+	            /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
 	            "#T{Value|Return~"
 	            "$-3|$\"-3rd\"&"
 	            "$-2|$\"-2nd\"&"
@@ -4648,7 +4663,7 @@ PRIVATE struct type_member tpconst int_class_members[] = {
 	                      /**/ "to memory constraints.\n"
 	                      "In this implementation, $SIZE_MAX is ${2**31} on 32-bit hosts, and ${2**63} on 64-bit hosts\n"
 	                      "Custom, mutable sequences with sizes greater than this may experience inaccuracies "
-	                      /**/ "with the default implementation of function such as :Sequence.insert's index-argument "
+	                      /**/ "with the default implementation of function such as ?Ainsert?DSequence's index-argument "
 	                      /**/ "potentially not being able to correctly determine if a negative or positive number was given\n"
 	                      "Such behavior may be considered a bug, however it falls under the category of doesn't-matter-wont-fix\n"),
 	TYPE_MEMBER_CONST(STR_isfloat, Dee_False),

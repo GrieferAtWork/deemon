@@ -393,12 +393,12 @@ err:
  * as more memory needs to be allocated.
  * NOTE: `*p_vector' may be updated to point to a new vector, even
  *       when the function fails (i.e. (size_t)-1 is returned)
- * @param: p_vector:     A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
+ * @param: p_vector:    A pointer to a preallocated object-vector `[0..IN(*p_allocated)]'
  *                      May only point to a `NULL' vector when `IN(*p_allocated)' is ZERO(0).
  *                      Upon return, this pointer may have been updated to point to a
  *                      realloc()-ated vector, should the need to allocate more memory
  *                      have arisen.
- * @param: p_allocated:  A pointer to an information field describing how much pointers
+ * @param: p_allocated: A pointer to an information field describing how much pointers
  *                      are allocated upon entry / how much are allocated upon exit.
  *                      Just as `p_vector', this pointer may be updated, even upon error.
  * @return: * :         The amount of filled in objects in `*p_vector'

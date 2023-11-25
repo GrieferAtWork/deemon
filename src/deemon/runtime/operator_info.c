@@ -93,7 +93,7 @@ INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_XOR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_xor),            "^",            "xor",         "tp_xor" },
 	/* [OPERATOR_POW]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_pow),            "**",           "pow",         "tp_pow" },
 	/* [OPERATOR_INC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_inc),            "++",           "inc",         "tp_inc" },
-	/* [OPERATOR_DEC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_dec),            ",,",           "dec",         "tp_dec" },
+	/* [OPERATOR_DEC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_dec),            "--",           "dec",         "tp_dec" },
 	/* [OPERATOR_INPLACE_ADD]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_add),    "+=",           "iadd",        "tp_inplace_add" },
 	/* [OPERATOR_INPLACE_SUB]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_sub),    ",=",           "isub",        "tp_inplace_sub" },
 	/* [OPERATOR_INPLACE_MUL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_mul),    "*=",           "imul",        "tp_inplace_mul" },
@@ -552,18 +552,19 @@ Dee_OperatorFromName(DeeTypeObject *typetype,
 
 	default: break;
 	}
+
 	/* Fallback: manually resolve names. */
 	for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
-		if (!strcmp(basic_opinfo[result].oi_sname, name))
+		if (strcmp(basic_opinfo[result].oi_sname, name) == 0)
 			goto done;
-		if (!strcmp(basic_opinfo[result].oi_uname, name))
+		if (strcmp(basic_opinfo[result].oi_uname, name) == 0)
 			goto done;
 	}
 	if (typetype == &DeeFileType_Type) {
 		for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
-			if (!strcmp(file_opinfo[result].oi_sname, name))
+			if (strcmp(file_opinfo[result].oi_sname, name) == 0)
 				goto done_extended;
-			if (!strcmp(file_opinfo[result].oi_uname, name))
+			if (strcmp(file_opinfo[result].oi_uname, name) == 0)
 				goto done_extended;
 		}
 	}

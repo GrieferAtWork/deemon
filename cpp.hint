@@ -972,6 +972,14 @@
 #define DEE_CXX_END      }
 #define DEE_CXX_NOTHROW
 
+#define TPPCALL
+#define TPPVCALL
+#define TPPFUN
+#define TPP_LOCAL
+#define TPP(x) x
+#define TPPSTRING_DEF(name, value) struct{refcnt_t _r;size_t _s;char _t[1];}name={}
+#define PRIVDEF
+
 #define OBJECT_HEAD               Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define Dee_OBJECT_HEAD           Dee_refcnt_t ob_refcnt;DeeTypeObject*ob_type;
 #define OBJECT_HEAD_EX(Ttype)     Dee_refcnt_t ob_refcnt;Ttype*ob_type;
