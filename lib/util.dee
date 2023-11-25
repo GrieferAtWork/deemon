@@ -134,10 +134,10 @@ function round(x: float): int {
 @@>print zip([10, 20, 30], [40, 50, 60, 70])...; /* "(10, 40) (20, 50) (30, 60)" */
 @@>/* `70' is ignored because the shortest Sequence's length is used */
 function zip(seqs...: Sequence): {Sequence...} {
-	local iterators = [(
+	local iterators = {(
 		for (local x: seqs)
 			x.operator iter()
-	)...];
+	)...};
 	try {
 		for (;;) {
 			yield Tuple(
@@ -151,12 +151,12 @@ function zip(seqs...: Sequence): {Sequence...} {
 @@Iterate the given @seq and yield its items, as well as
 @@an associated index number, starting at @start or @0
 @@>import enumerate from util;
-@@>function enum_items() {
+@@>function enumItems() {
 @@>    yield 10;
 @@>    yield 20;
 @@>    yield 30;
 @@>}
-@@>for (local index, item: enumerate(enum_items())) {
+@@>for (local index, item: enumerate(enumItems())) {
 @@>    /* Item number 0 is 10 */
 @@>    /* Item number 1 is 20 */
 @@>    /* Item number 2 is 30 */
@@ -179,4 +179,84 @@ function enumerate(seq: Sequence, start: int = 0): Sequence {
 @@>print abs(-10); /* 10 */
 function abs(x) {
 	return x < 0 ? -x : x;
+}
+
+
+@@Helper function that implements the normalization/clamping of
+@@conventional @(operator [:]) and friends of all built-in sequence
+@@types, including @List and @Tuple.
+@@
+@@> import clamprange from util;
+@@> print repr clamprange(0, 10, length: 20);      // (0, 10)
+@@> print repr clamprange(0, 20, length: 20);      // (0, 20)
+@@> print repr clamprange(0, 21, length: 20);      // (0, 20)
+@@> print repr clamprange(0, -1, length: 20);      // (0, 19)
+@@> print repr clamprange(-2, -1, length: 20);     // (18, 19)
+@@> print repr clamprange(-20, -1, length: 20);    // (0, 19)
+@@> print repr clamprange(-21, -1, length: 20);    // (19, 19)
+@@> print repr clamprange(-22, -21, length: 20);   // (18, 19)
+@@> print repr clamprange(5, 0, length: 20);       // (5, 5)
+@@> print repr clamprange(5, none, length: 20);    // (5, 20)
+@@> print repr clamprange(none, 19, length: 20);   // (0, 19)
+@@> print repr clamprange(none, none, length: 20); // (0, 20)
+@@> print repr clamprange(-1, 10, length: 0);      // (0, 0)
+@@
+@@@param start:  The range's starting index, or @none if omitted (as in @foo[:end])
+@@@param end:    The range's end index, or @none if omitted (as in @foo[start:])
+@@@param length: The associated sequence's length. The returned range's start/end
+@@               indices are guarantied to be `<=` this value. Behavior is undefined
+@@               when this value is negative.
+@@@return: The [lo,hi) bounds of of the range that is *actually* being accessed.
+@@         This function guaranties that `lo <= hi <= length`
+function clamprange(start: int | none, end: int | none, length: int): (int, int) {
+	/* NOTE: This function's implementation mirrors `DeeSeqRange_DoClamp()'
+	 *       from deemon's C implementation. */
+	if (start is none) {
+		start = 0;
+	} else if (start >= length) {
+		goto empty_range;
+	} else if (start < 0) {
+		start += length;
+		@[unlikely]
+		if (start < 0) {
+			try {
+#if 0 /* Not needed because deemon uses floor-mod */
+				start = length - ((-start) % length);
+#else
+				start %= length;
+#endif
+			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
+				goto empty_range;
+			}
+		}
+	}
+	/*assert start <= length;*/
+
+	if (end is none) {
+		end = length;
+	} else if (end < 0) {
+		end += length;
+		@[unlikely]
+		if (end < 0) {
+			try {
+#if 0 /* Not needed because deemon uses floor-mod */
+				end = length - ((-end) % length);
+#else
+				end %= length;
+#endif
+			} catch (Error.ValueError.ArithmeticError.DivideByZero) {
+				goto empty_range;
+			}
+		}
+	} else if (end > length) {
+		end = length;
+	}
+	/*assert end <= length;*/
+
+	@[unlikely]
+	if (end < start)
+		end = start;
+	return (start, end);
+empty_range:
+	return (length, length);
 }
