@@ -360,7 +360,7 @@ seqiterator_printrepr(SeqIterator *__restrict self,
 	Dee_Incref(index_ob);
 	SeqIterator_LockEndRead(self);
 	result = DeeFormat_Printf(printer, arg,
-	                          "GenericIterator(%r, %r /* of %r */)",
+	                          "rt.GenericIterator(%r, %r /* of %r */)",
 	                          self->si_seq, index_ob, self->si_size);
 	Dee_Decref(index_ob);
 	return result;
@@ -557,7 +557,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst seqiterator_getsets[] = {
-	TYPE_GETSET("__index__",
+	TYPE_GETSET(STR_index,
 	            &seqiterator_index_get,
 	            &seqiterator_index_del,
 	            &seqiterator_index_set,
@@ -1315,6 +1315,13 @@ fail:
 	return NULL;
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("Frozen");
+]]]*/
+#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
+/*[[[end]]]*/
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 seq_frozen_get(DeeTypeObject *__restrict self) {
 	int error;
@@ -1322,7 +1329,7 @@ seq_frozen_get(DeeTypeObject *__restrict self) {
 	struct attribute_info info;
 	struct attribute_lookup_rules rules;
 	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashPtr("Frozen", COMPILER_STRLEN("Frozen"));
+	rules.alr_hash       = Dee_HashStr__Frozen;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
 	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;

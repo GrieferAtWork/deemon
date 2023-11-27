@@ -894,7 +894,7 @@ done_endcopy:
 	} else {
 		/* Optimization: In the event that this is the first-level deepcopy call,
 		 *               yet the type does not implement the deepload protocol
-		 *              (as could be the case for immutable sequence types like
+		 *               (as could be the case for immutable sequence types like
 		 *               tuple, which could still contain the same object twice),
 		 *               then we don't need to track the association of this
 		 *               specific deepcopy, as it would have just become undone
@@ -2031,6 +2031,7 @@ DeeObject_Visit(DeeObject *__restrict self,
 			}
 		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
+
 	/* Only visit heap-allocated types. */
 	if (Dee_TYPE(self)->tp_flags & TP_FHEAP)
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
@@ -2607,7 +2608,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
                             Dee_uint128_t *__restrict result) {
 	int error = DeeObject_Get128Bit(self, (Dee_int128_t *)result);
 	if (error == INT_SIGNED) {
-		if (__hybrid_int128_isneg(*(Dee_int128_t *)result))
+		if (__hybrid_int128_isneg(*(Dee_int128_t const *)result))
 			return err_integer_overflow(self, 128, false);
 #if INT_SIGNED != 0
 		return 0;
@@ -3042,9 +3043,9 @@ DEFINE_OPERATOR(DREF DeeObject *, Add,
 				return self;
 			}
 			if (math->tp_sub)
-				break; /* XXX: `x + y --> x - (-y)' */
+				break;
 			if (math->tp_inplace_sub)
-				break; /* XXX: `x += y --> x -= (-y)' */
+				break;
 			if (math->tp_inc)
 				break;
 			if (math->tp_dec)
@@ -3076,9 +3077,9 @@ DEFINE_OPERATOR(DREF DeeObject *, Sub,
 				return self;
 			}
 			if (math->tp_add)
-				break; /* XXX: `x - y --> x + (-y)' */
+				break;
 			if (math->tp_inplace_add)
-				break; /* XXX: `x -= y --> x += (-y)' */
+				break;
 			if (math->tp_inc)
 				break;
 			if (math->tp_dec)
@@ -3406,9 +3407,9 @@ DEFINE_OPERATOR(int, InplaceAdd,
 				return 0;
 			}
 			if (math->tp_sub)
-				break; /* XXX: `x - y --> x + (-y)' */
+				break;
 			if (math->tp_inplace_sub)
-				break; /* XXX: `x -= y --> x += (-y)' */
+				break;
 			if (math->tp_inc)
 				break;
 			if (math->tp_dec)
@@ -3438,9 +3439,9 @@ DEFINE_OPERATOR(int, InplaceSub,
 				return 0;
 			}
 			if (math->tp_add)
-				break; /* XXX: `x + y --> x - (-y)' */
+				break;
 			if (math->tp_inplace_add)
-				break; /* XXX: `x += y --> x -= (-y)' */
+				break;
 			if (math->tp_inc)
 				break;
 			if (math->tp_dec)
@@ -3640,7 +3641,7 @@ super_lo(DeeSuperObject *self, DeeObject *some_object);
 
 /* @return: == -2: An error occurred.
  * @return: == -1: `lhs < rhs'
- * @return: == 0:  Objects compare as equal
+ * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs' */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_Compare(DeeObject *lhs, DeeObject *rhs) {
@@ -5286,7 +5287,8 @@ DeeObject_Foreach(DeeObject *__restrict self,
 	}
 
 	/* Fallback: Use an iterator. */
-	if ((self = DeeObject_IterSelf(self)) == NULL)
+	self = DeeObject_IterSelf(self);
+	if unlikely(self == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		temp = (*proc)(arg, elem);
@@ -5417,7 +5419,8 @@ DeeObject_ForeachPair(DeeObject *__restrict self,
 	}
 
 	/* Fallback: Use an iterator. */
-	if ((self = DeeObject_IterSelf(self)) == NULL)
+	self = DeeObject_IterSelf(self);
+	if unlikely(self == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
 		int error = DeeObject_Unpack(elem, 2, key_and_value);
@@ -5447,9 +5450,9 @@ err:
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -2: An error occurred.
- * @return: == -1: `lhs < key(rhs)'
- * @return: == 0:  Objects compare as equal
- * @return: == 1:  `lhs > key(rhs)' */
+ * @return: == -1: `lhs_keyed < key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed > key(rhs)' */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, /*nullable*/ DeeObject *key) {
@@ -5468,8 +5471,8 @@ err:
 
 
 /* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
- * @return:  > 0: The objects are equal.
- * @return: == 0: The objects are non-equal.
+ * @return:  > 0: `keyed_search_item == key(elem)'
+ * @return: == 0: `keyed_search_item != key(elem)'
  * @return:  < 0: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,

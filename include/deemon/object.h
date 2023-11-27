@@ -3317,23 +3317,23 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
 
 /* @return: == -2: An error occurred.
  * @return: == -1: `lhs < rhs'
- * @return: == 0:  Objects compare as equal
+ * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs' */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -2: An error occurred.
- * @return: == -1: `lhs < key(rhs)'
- * @return: == 0:  Objects compare as equal
- * @return: == 1:  `lhs > key(rhs)' */
+ * @return: == -1: `lhs_keyed < key(rhs)'
+ * @return: == 0:  `lhs_keyed == key(rhs)'
+ * @return: == 1:  `lhs_keyed > key(rhs)' */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, /*nullable*/ DeeObject *key);
 
 /* Compare a pre-keyed `keyed_search_item' with `elem' using the given (optional) `key' function
- * @return:  > 0: The objects are equal.
- * @return: == 0: The objects are non-equal.
+ * @return:  > 0: `keyed_search_item == key(elem)'
+ * @return: == 0: `keyed_search_item != key(elem)'
  * @return:  < 0: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKeyEq)(DeeObject *keyed_search_item,
@@ -3425,11 +3425,11 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t (DCALL DeeObject_PrintRepr)(DeeObjec
  * If `self' implements a member function `__format__', that function
  * is called as `self.__format__(format_str)', with the returned object
  * then printed using `DeeObject_Print()'
- * Also note that `object' implements a `__format__' function that calls forward
+ * Also note that `Object' implements a `__format__' function that calls forward
  * to the `str' operator and allows for alignment of the produced string, as well
  * as the fact that if accessing a sub-classes __format__ attribute causes an
  * AttributeError, or NotImplemented error to be thrown, the object will be formatted
- * using `object.__format__' as well:
+ * using `Object.__format__' as well:
  *  - "{:}"        --> arg.operator str()
  *  - "{:42}"      --> arg.operator str().ljust(42);
  *  - "{:<42}"     --> arg.operator str().ljust(42);
@@ -3557,15 +3557,15 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringLenHash)(Dee
 
 
 /* With-operator invocation:
- * >> with (my_object) {
+ * >> with (myObject) {
  * >>     ...
  * >> }
  * Translates to:
- * >> DeeObject_Enter(my_object);
+ * >> DeeObject_Enter(myObject);
  * >> try {
  * >>     ...
  * >> } finally {
- * >>    DeeObject_Leave(my_object);
+ * >>     DeeObject_Leave(myObject);
  * >> } */
 DFUNDEF WUNUSED int (DCALL DeeObject_Enter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
@@ -3612,75 +3612,75 @@ DDATDEF DeeObject DeeNotImplemented_Singleton;
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
-#define DeeObject_InplaceDeepCopy(p_self)                          __builtin_expect(DeeObject_InplaceDeepCopy(p_self), 0)
-#define DeeObject_InplaceDeepCopyv(object_vector, object_count)    __builtin_expect(DeeObject_InplaceDeepCopyv(object_vector, object_count), 0)
-#define DeeObject_Assign(self, some_object)                        __builtin_expect(DeeObject_Assign(self, some_object), 0)
-#define DeeObject_MoveAssign(self, other)                          __builtin_expect(DeeObject_MoveAssign(self, other), 0)
-#define DeeObject_AsInt8(self, result)                             __builtin_expect(DeeObject_AsInt8(self, result), 0)
-#define DeeObject_AsInt16(self, result)                            __builtin_expect(DeeObject_AsInt16(self, result), 0)
-#define DeeObject_AsInt32(self, result)                            __builtin_expect(DeeObject_AsInt32(self, result), 0)
-#define DeeObject_AsInt64(self, result)                            __builtin_expect(DeeObject_AsInt64(self, result), 0)
-#define DeeObject_AsUInt8(self, result)                            __builtin_expect(DeeObject_AsUInt8(self, result), 0)
-#define DeeObject_AsUInt16(self, result)                           __builtin_expect(DeeObject_AsUInt16(self, result), 0)
-#define DeeObject_AsUInt32(self, result)                           __builtin_expect(DeeObject_AsUInt32(self, result), 0)
-#define DeeObject_AsUInt64(self, result)                           __builtin_expect(DeeObject_AsUInt64(self, result), 0)
-#define DeeObject_AsDouble(self, result)                           __builtin_expect(DeeObject_AsDouble(self, result), 0)
-#define DeeObject_Inc(p_self)                                      __builtin_expect(DeeObject_Inc(p_self), 0)
-#define DeeObject_Dec(p_self)                                      __builtin_expect(DeeObject_Dec(p_self), 0)
-#define DeeObject_InplaceAdd(p_self, some_object)                  __builtin_expect(DeeObject_InplaceAdd(p_self, some_object), 0)
-#define DeeObject_InplaceSub(p_self, some_object)                  __builtin_expect(DeeObject_InplaceSub(p_self, some_object), 0)
-#define DeeObject_InplaceMul(p_self, some_object)                  __builtin_expect(DeeObject_InplaceMul(p_self, some_object), 0)
-#define DeeObject_InplaceDiv(p_self, some_object)                  __builtin_expect(DeeObject_InplaceDiv(p_self, some_object), 0)
-#define DeeObject_InplaceMod(p_self, some_object)                  __builtin_expect(DeeObject_InplaceMod(p_self, some_object), 0)
-#define DeeObject_InplaceShl(p_self, some_object)                  __builtin_expect(DeeObject_InplaceShl(p_self, some_object), 0)
-#define DeeObject_InplaceShr(p_self, some_object)                  __builtin_expect(DeeObject_InplaceShr(p_self, some_object), 0)
-#define DeeObject_InplaceAnd(p_self, some_object)                  __builtin_expect(DeeObject_InplaceAnd(p_self, some_object), 0)
-#define DeeObject_InplaceOr(p_self, some_object)                   __builtin_expect(DeeObject_InplaceOr(p_self, some_object), 0)
-#define DeeObject_InplaceXor(p_self, some_object)                  __builtin_expect(DeeObject_InplaceXor(p_self, some_object), 0)
-#define DeeObject_InplacePow(p_self, some_object)                  __builtin_expect(DeeObject_InplacePow(p_self, some_object), 0)
-#define DeeObject_DelItem(self, index)                             __builtin_expect(DeeObject_DelItem(self, index), 0)
-#define DeeObject_DelItemIndex(self, index)                        __builtin_expect(DeeObject_DelItemIndex(self, index), 0)
+#define DeeObject_InplaceDeepCopy(p_self)                              __builtin_expect(DeeObject_InplaceDeepCopy(p_self), 0)
+#define DeeObject_InplaceDeepCopyv(object_vector, object_count)        __builtin_expect(DeeObject_InplaceDeepCopyv(object_vector, object_count), 0)
+#define DeeObject_Assign(self, some_object)                            __builtin_expect(DeeObject_Assign(self, some_object), 0)
+#define DeeObject_MoveAssign(self, other)                              __builtin_expect(DeeObject_MoveAssign(self, other), 0)
+#define DeeObject_AsInt8(self, result)                                 __builtin_expect(DeeObject_AsInt8(self, result), 0)
+#define DeeObject_AsInt16(self, result)                                __builtin_expect(DeeObject_AsInt16(self, result), 0)
+#define DeeObject_AsInt32(self, result)                                __builtin_expect(DeeObject_AsInt32(self, result), 0)
+#define DeeObject_AsInt64(self, result)                                __builtin_expect(DeeObject_AsInt64(self, result), 0)
+#define DeeObject_AsUInt8(self, result)                                __builtin_expect(DeeObject_AsUInt8(self, result), 0)
+#define DeeObject_AsUInt16(self, result)                               __builtin_expect(DeeObject_AsUInt16(self, result), 0)
+#define DeeObject_AsUInt32(self, result)                               __builtin_expect(DeeObject_AsUInt32(self, result), 0)
+#define DeeObject_AsUInt64(self, result)                               __builtin_expect(DeeObject_AsUInt64(self, result), 0)
+#define DeeObject_AsDouble(self, result)                               __builtin_expect(DeeObject_AsDouble(self, result), 0)
+#define DeeObject_Inc(p_self)                                          __builtin_expect(DeeObject_Inc(p_self), 0)
+#define DeeObject_Dec(p_self)                                          __builtin_expect(DeeObject_Dec(p_self), 0)
+#define DeeObject_InplaceAdd(p_self, some_object)                      __builtin_expect(DeeObject_InplaceAdd(p_self, some_object), 0)
+#define DeeObject_InplaceSub(p_self, some_object)                      __builtin_expect(DeeObject_InplaceSub(p_self, some_object), 0)
+#define DeeObject_InplaceMul(p_self, some_object)                      __builtin_expect(DeeObject_InplaceMul(p_self, some_object), 0)
+#define DeeObject_InplaceDiv(p_self, some_object)                      __builtin_expect(DeeObject_InplaceDiv(p_self, some_object), 0)
+#define DeeObject_InplaceMod(p_self, some_object)                      __builtin_expect(DeeObject_InplaceMod(p_self, some_object), 0)
+#define DeeObject_InplaceShl(p_self, some_object)                      __builtin_expect(DeeObject_InplaceShl(p_self, some_object), 0)
+#define DeeObject_InplaceShr(p_self, some_object)                      __builtin_expect(DeeObject_InplaceShr(p_self, some_object), 0)
+#define DeeObject_InplaceAnd(p_self, some_object)                      __builtin_expect(DeeObject_InplaceAnd(p_self, some_object), 0)
+#define DeeObject_InplaceOr(p_self, some_object)                       __builtin_expect(DeeObject_InplaceOr(p_self, some_object), 0)
+#define DeeObject_InplaceXor(p_self, some_object)                      __builtin_expect(DeeObject_InplaceXor(p_self, some_object), 0)
+#define DeeObject_InplacePow(p_self, some_object)                      __builtin_expect(DeeObject_InplacePow(p_self, some_object), 0)
+#define DeeObject_DelItem(self, index)                                 __builtin_expect(DeeObject_DelItem(self, index), 0)
+#define DeeObject_DelItemIndex(self, index)                            __builtin_expect(DeeObject_DelItemIndex(self, index), 0)
 #define DeeObject_DelItemStringHash(self, key, hash)                   __builtin_expect(DeeObject_DelItemStringHash(self, key, hash), 0)
 #define DeeObject_DelItemStringLenHash(self, key, keylen, hash)        __builtin_expect(DeeObject_DelItemStringLenHash(self, key, keylen, hash), 0)
-#define DeeObject_SetItem(self, index, value)                      __builtin_expect(DeeObject_SetItem(self, index, value), 0)
-#define DeeObject_SetItemIndex(self, index, value)                 __builtin_expect(DeeObject_SetItemIndex(self, index, value), 0)
+#define DeeObject_SetItem(self, index, value)                          __builtin_expect(DeeObject_SetItem(self, index, value), 0)
+#define DeeObject_SetItemIndex(self, index, value)                     __builtin_expect(DeeObject_SetItemIndex(self, index, value), 0)
 #define DeeObject_SetItemStringHash(self, key, hash, value)            __builtin_expect(DeeObject_SetItemStringHash(self, key, hash, value), 0)
 #define DeeObject_SetItemStringLenHash(self, key, keylen, hash, value) __builtin_expect(DeeObject_SetItemStringLenHash(self, key, keylen, hash, value), 0)
-#define DeeObject_DelRange(self, begin, end)                       __builtin_expect(DeeObject_DelRange(self, begin, end), 0)
-#define DeeObject_SetRange(self, begin, end, value)                __builtin_expect(DeeObject_SetRange(self, begin, end, value), 0)
-#define DeeObject_SetRangeBeginIndex(self, begin, end, value)      __builtin_expect(DeeObject_SetRangeBeginIndex(self, begin, end, value), 0)
-#define DeeObject_SetRangeEndIndex(self, begin, end, value)        __builtin_expect(DeeObject_SetRangeEndIndex(self, begin, end, value), 0)
-#define DeeObject_SetRangeIndex(self, begin, end, value)           __builtin_expect(DeeObject_SetRangeIndex(self, begin, end, value), 0)
-#define DeeObject_Unpack(self, objc, objv)                         __builtin_expect(DeeObject_Unpack(self, objc, objv), 0)
-#define DeeObject_DelAttr(self, attr)                              __builtin_expect(DeeObject_DelAttr(self, attr), 0)
-#define DeeObject_SetAttr(self, attr, value)                       __builtin_expect(DeeObject_SetAttr(self, attr, value), 0)
+#define DeeObject_DelRange(self, begin, end)                           __builtin_expect(DeeObject_DelRange(self, begin, end), 0)
+#define DeeObject_SetRange(self, begin, end, value)                    __builtin_expect(DeeObject_SetRange(self, begin, end, value), 0)
+#define DeeObject_SetRangeBeginIndex(self, begin, end, value)          __builtin_expect(DeeObject_SetRangeBeginIndex(self, begin, end, value), 0)
+#define DeeObject_SetRangeEndIndex(self, begin, end, value)            __builtin_expect(DeeObject_SetRangeEndIndex(self, begin, end, value), 0)
+#define DeeObject_SetRangeIndex(self, begin, end, value)               __builtin_expect(DeeObject_SetRangeIndex(self, begin, end, value), 0)
+#define DeeObject_Unpack(self, objc, objv)                             __builtin_expect(DeeObject_Unpack(self, objc, objv), 0)
+#define DeeObject_DelAttr(self, attr)                                  __builtin_expect(DeeObject_DelAttr(self, attr), 0)
+#define DeeObject_SetAttr(self, attr, value)                           __builtin_expect(DeeObject_SetAttr(self, attr, value), 0)
 #ifndef DeeObject_DelAttrString
-#define DeeObject_DelAttrString(self, attr)                        __builtin_expect(DeeObject_DelAttrString(self, attr), 0)
+#define DeeObject_DelAttrString(self, attr)                            __builtin_expect(DeeObject_DelAttrString(self, attr), 0)
 #endif /* !DeeObject_DelAttrString */
 #ifndef DeeObject_DelAttrStringLen
-#define DeeObject_DelAttrStringLen(self, attr, attrlen)            __builtin_expect(DeeObject_DelAttrStringLen(self, attr, attrlen), 0)
+#define DeeObject_DelAttrStringLen(self, attr, attrlen)                __builtin_expect(DeeObject_DelAttrStringLen(self, attr, attrlen), 0)
 #endif /* !DeeObject_DelAttrStringLen */
 #ifndef DeeObject_SetAttrString
-#define DeeObject_SetAttrString(self, attr, value)                 __builtin_expect(DeeObject_SetAttrString(self, attr, value), 0)
+#define DeeObject_SetAttrString(self, attr, value)                     __builtin_expect(DeeObject_SetAttrString(self, attr, value), 0)
 #endif /* !DeeObject_SetAttrString */
 #ifndef DeeObject_SetAttrStringLen
-#define DeeObject_SetAttrStringLen(self, attr, attrlen, value)     __builtin_expect(DeeObject_SetAttrStringLen(self, attr, attrlen, value), 0)
+#define DeeObject_SetAttrStringLen(self, attr, attrlen, value)         __builtin_expect(DeeObject_SetAttrStringLen(self, attr, attrlen, value), 0)
 #endif /* !DeeObject_SetAttrStringLen */
 #ifndef DeeObject_DelAttrStringHash
-#define DeeObject_DelAttrStringHash(self, attr, hash)              __builtin_expect(DeeObject_DelAttrStringHash(self, attr, hash), 0)
+#define DeeObject_DelAttrStringHash(self, attr, hash)                  __builtin_expect(DeeObject_DelAttrStringHash(self, attr, hash), 0)
 #endif /* !DeeObject_DelAttrStringHash */
 #ifndef DeeObject_DelAttrStringLenHash
-#define DeeObject_DelAttrStringLenHash(self, attr, attrlen, hash)  __builtin_expect(DeeObject_DelAttrStringLenHash(self, attr, attrlen, hash), 0)
+#define DeeObject_DelAttrStringLenHash(self, attr, attrlen, hash)      __builtin_expect(DeeObject_DelAttrStringLenHash(self, attr, attrlen, hash), 0)
 #endif /* !DeeObject_DelAttrStringLenHash */
 #ifndef DeeObject_SetAttrStringHash
-#define DeeObject_SetAttrStringHash(self, attr, hash, value)       __builtin_expect(DeeObject_SetAttrStringHash(self, attr, hash, value), 0)
+#define DeeObject_SetAttrStringHash(self, attr, hash, value)           __builtin_expect(DeeObject_SetAttrStringHash(self, attr, hash, value), 0)
 #endif /* !DeeObject_SetAttrStringHash */
 #ifndef DeeObject_SetAttrStringLenHash
 #define DeeObject_SetAttrStringLenHash(self, attr, attrlen, hash, value) \
 	__builtin_expect(DeeObject_SetAttrStringLenHash(self, attr, attrlen, hash, value), 0)
 #endif /* !DeeObject_SetAttrStringLenHash */
-#define DeeObject_Enter(self)                                      __builtin_expect(DeeObject_Enter(self), 0)
-#define DeeObject_Leave(self)                                      __builtin_expect(DeeObject_Leave(self), 0)
+#define DeeObject_Enter(self) __builtin_expect(DeeObject_Enter(self), 0)
+#define DeeObject_Leave(self) __builtin_expect(DeeObject_Leave(self), 0)
 #endif /* !__NO_builtin_expect */
 #endif /* !__INTELLISENSE__ */
 

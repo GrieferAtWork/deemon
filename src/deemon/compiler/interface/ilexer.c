@@ -338,14 +338,25 @@ get_token_name(tok_t id, struct TPPKeyword *kwd) {
 	                         STRING_ERROR_FIGNORE);
 }
 
+/*[[[deemon
+import define_Dee_HashStr, _Dee_HashSelect from rt.gen.hash;
+print define_Dee_HashStr("");
+print "#define Dee_HashStr_dot_0", _Dee_HashSelect(".0");
+print "#define Dee_HashStr_slash_slash", _Dee_HashSelect("//");
+]]]*/
+#define Dee_HashStr__ _Dee_HashSelectC(0x0, 0x0)
+#define Dee_HashStr_dot_0 _Dee_HashSelectC(0x240d5efb, 0xb57aef495f833b5c)
+#define Dee_HashStr_slash_slash _Dee_HashSelectC(0x838f93fb, 0x32ed7842efd9cb44)
+/*[[[end]]]*/
+
 INTERN WUNUSED dhash_t DCALL
 get_token_namehash(tok_t id, struct TPPKeyword *kwd) {
 	if ((unsigned int)id <= 255) {
 		char name[2];
 		switch (id) {
-		case TOK_EOF: return Dee_HashPtr(NULL, 0);
-		case TOK_FLOAT: return Dee_HashPtr(".0", 2);
-		case TOK_COMMENT: return Dee_HashPtr("//", 2);
+		case TOK_EOF: return Dee_HashStr__;
+		case TOK_FLOAT: return Dee_HashStr_dot_0;
+		case TOK_COMMENT: return Dee_HashStr_slash_slash;
 		default: break;
 		}
 		name[0] = (char)id;

@@ -201,6 +201,13 @@ yes:
 PRIVATE DEFINE_STRING_EX(str_operators, "operators", 0xd4b6b76c, 0xc8d5b5ae0eb7316e);
 /*[[[end]]]*/
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("operator");
+]]]*/
+#define Dee_HashStr__operator _Dee_HashSelectC(0xa5f184dd, 0x970564e28323bb4)
+/*[[[end]]]*/
+
 
 INTERN WUNUSED DREF DeeObject *DFCALL
 JIT_GetOperatorFunction(uint16_t opname) {
@@ -233,8 +240,9 @@ JIT_GetOperatorFunction(uint16_t opname) {
 		                                     hash);
 	} else {
 		/* Fallback: Invoke `operator(id)' to generate the default callback. */
-		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, "operator",
-		                                     Dee_HashPtr("operator", COMPILER_STRLEN("operator")));
+		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
+		                                     "operator",
+		                                     Dee_HashStr__operator);
 		if likely(result) {
 			DREF DeeObject *callback_result;
 			callback_result = DeeObject_Callf(result, "I16u", opname);

@@ -1881,6 +1881,13 @@ map_iterator_get(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("Frozen");
+]]]*/
+#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
+/*[[[end]]]*/
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 map_frozen_get(DeeTypeObject *__restrict self) {
 	int error;
@@ -1888,7 +1895,7 @@ map_frozen_get(DeeTypeObject *__restrict self) {
 	struct attribute_info info;
 	struct attribute_lookup_rules rules;
 	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashPtr("Frozen", COMPILER_STRLEN("Frozen"));
+	rules.alr_hash       = Dee_HashStr__Frozen;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
 	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;

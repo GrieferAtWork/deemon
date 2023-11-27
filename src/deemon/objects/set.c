@@ -379,6 +379,7 @@ DeeSet_IsSubSet(DeeObject *lhs, DeeObject *rhs) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
 		if (!DeeSetInversion_CheckExact(rhs))
 			return 0;
+		/* ~lhs <= ~rhs   <===>   rhs <= lhs */
 		return DeeSet_IsSubSet(DeeSetInversion_GetSet(rhs),
 		                       DeeSetInversion_GetSet(lhs));
 	} else {
@@ -397,6 +398,7 @@ DeeSet_IsTrueSubSet(DeeObject *lhs, DeeObject *rhs) {
 		/* An inverse set can only ever be the sub-set of another inverse set. */
 		if (!DeeSetInversion_CheckExact(rhs))
 			return 0;
+		/* ~lhs < ~rhs   <===>   rhs < lhs */
 		return DeeSet_IsTrueSubSet(DeeSetInversion_GetSet(rhs),
 		                           DeeSetInversion_GetSet(lhs));
 	} else {
@@ -768,6 +770,13 @@ set_iterator_get(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("Frozen");
+]]]*/
+#define Dee_HashStr__Frozen _Dee_HashSelectC(0xa7ed3902, 0x16013e56a91991ea)
+/*[[[end]]]*/
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 set_frozen_get(DeeTypeObject *__restrict self) {
 	int error;
@@ -775,7 +784,7 @@ set_frozen_get(DeeTypeObject *__restrict self) {
 	struct attribute_info info;
 	struct attribute_lookup_rules rules;
 	rules.alr_name       = "Frozen";
-	rules.alr_hash       = Dee_HashPtr("Frozen", COMPILER_STRLEN("Frozen"));
+	rules.alr_hash       = Dee_HashStr__Frozen;
 	rules.alr_decl       = NULL;
 	rules.alr_perm_mask  = ATTR_PERMGET | ATTR_IMEMBER;
 	rules.alr_perm_value = ATTR_PERMGET | ATTR_IMEMBER;
