@@ -308,6 +308,8 @@ function invokeTypeMembers(t: Type) {
 	local d = Doc(t);
 	for (local op: d.operators) {
 		local f = op.operatorfunc;
+		if (t == int && op.name == "pow")
+			continue; /* Works, but would take forever to test. */
 		local name = f"operator {op.prettyname} ";
 		for (local decl: op.decls) {
 			local argTypes = { t, decl.parameters.each.typ... };
@@ -322,7 +324,7 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 	//invokeTypeMembers(deemon.int);
-	//invokeTypeMembers(deemon.List);
+	invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
 	//invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);
@@ -336,7 +338,7 @@ function main() {
 	//invokeTypeMembers(deemon.Set);
 	//invokeTypeMembers(deemon.Mapping);
 	//invokeTypeMembers(deemon.Dict);
-	invokeTypeMembers(deemon.Dict.Frozen);
+	//invokeTypeMembers(deemon.Dict.Frozen);
 	//invokeTypeMembers(Deque from collections);
 	//invokeTypeMembers(FixedList from collections);
 	//invokeTypeMembers((UniqueDict from collections));

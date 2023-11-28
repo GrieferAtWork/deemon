@@ -1801,10 +1801,10 @@ again:
 
 		/* Move following items to their proper places. */
 		if (range.sr_start + insert_count != range.sr_end) {
-			memmoveupc(DeeList_ELEM(me) + range.sr_start + insert_count,
-			           DeeList_ELEM(me) + range.sr_end,
-			           DeeList_SIZE(me) - range.sr_end,
-			           sizeof(DREF DeeObject *));
+			memmovec(DeeList_ELEM(me) + range.sr_start + insert_count,
+			         DeeList_ELEM(me) + range.sr_end,
+			         DeeList_SIZE(me) - range.sr_end,
+			         sizeof(DREF DeeObject *));
 		}
 
 		/* Fill in the new items. */
@@ -2008,10 +2008,10 @@ again:
 
 		/* Move following items to their proper places. */
 		if (range.sr_start + insert_count != range.sr_end) {
-			memmoveupc(DeeList_ELEM(me) + range.sr_start + insert_count,
-			           DeeList_ELEM(me) + range.sr_end,
-			           DeeList_SIZE(me) - range.sr_end,
-			           sizeof(DREF DeeObject *));
+			memmovec(DeeList_ELEM(me) + range.sr_start + insert_count,
+			         DeeList_ELEM(me) + range.sr_end,
+			         DeeList_SIZE(me) - range.sr_end,
+			         sizeof(DREF DeeObject *));
 		}
 
 		/* Copy new items into the list. */
