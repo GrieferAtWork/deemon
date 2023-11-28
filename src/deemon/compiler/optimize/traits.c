@@ -185,6 +185,17 @@ again:
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 
 
+struct seqops {
+	/* Opcodes are encoded in big-endian.
+	 * When the mask 0xff00 is ZERO, the opcode is a single byte long. */
+	DeeTypeObject *so_typ; /* The deemon type for this sequence. */
+	uint16_t so_pck[2];    /* Pack - [0]: 8-bit; [1]: 16-bit; */
+	uint16_t so_cas;       /* Cast */
+};
+
+INTDEF struct seqops seqops_info[4];
+
+
 /* Predict the typing of a given AST, or return NULL when unpredictable.
  * NOTE: When the `OPTIMIZE_FNOPREDICT' flag is set, this function always returns `NULL'.
  * @param: flags: Set of `AST_PREDICT_TYPE_F_*' */
@@ -206,6 +217,34 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 			return ast_predict_type_ex(self->a_multiple.m_astv[self->a_multiple.m_astc - 1],
 			                           flags);
 		}
+#ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
+		if (flags & AST_PREDICT_TYPE_F_NOANNO) {
+			/* Special case: the normal code generator is allowed to optimize
+			 *               based on type annotation, such that:
+			 * >> local a: Tuple;
+			 * >> local b: List;
+			 * >> local c = (a...); // Cast-to-tuple can be optimized away
+			 * >> local d = (b...); // Cast-to-tuple must be retained
+			 *
+			 * So if the caller is now asking us about the type of `c' when
+			 * not considering type annotations, we mustn't respect the type
+			 * annotation of `a' */
+			if (self->a_multiple.m_astc >= 1) {
+				struct ast *e0 = self->a_multiple.m_astv[0];
+				if (e0->a_type == AST_EXPAND) {
+					DeeTypeObject *expected_type = seqops_info[self->a_flag & 3].so_typ;
+					if ((expected_type == &DeeTuple_Type /* Immutable sequence type */ ||
+					     !ast_predict_object_shared(e0->a_expand)) &&
+					    (ast_predict_type(e0->a_expand) == expected_type)) {
+						/* In this case, the code generator will have no produced a cast operator.
+						 * As such, it is our job to return the type of the sequence *without*
+						 * taking type annotations into account. */
+						return ast_predict_type_noanno(e0->a_expand);
+					}
+				}
+			}
+		}
+#endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
 		if (self->a_flag == AST_FMULTIPLE_TUPLE)
 			return &DeeTuple_Type;
 		if (self->a_flag == AST_FMULTIPLE_LIST)
@@ -287,7 +326,6 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 		if (!(flags & AST_PREDICT_TYPE_F_NOANNO))
 			return eval_decl_ast_type(&sym->s_decltype);
 #endif /* CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION */
-
 	}	break;
 
 	case AST_BOOL:
@@ -501,6 +539,93 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags) {
 	}
 nope:
 	return NULL;
+}
+
+
+/* Predict the reference count of a given AST at runtime (if predictable)
+ * If not predictable, return `0' (which is never a valid reference count) */
+INTERN WUNUSED NONNULL((1)) Dee_refcnt_t DFCALL
+ast_predict_object_refcnt(struct ast *__restrict self) {
+	switch (self->a_type) {
+
+	case AST_MULTIPLE:
+		if (self->a_flag == AST_FMULTIPLE_KEEPLAST) {
+			if (!self->a_multiple.m_astc)
+				goto nope;
+			return ast_predict_object_refcnt(self->a_multiple.m_astv[self->a_multiple.m_astc - 1]);
+		}
+		if (self->a_multiple.m_astc == 0 && (self->a_flag == AST_FMULTIPLE_TUPLE ||
+		                                     self->a_flag == AST_FMULTIPLE_GENERIC ||
+		                                     self->a_flag == AST_FMULTIPLE_GENERIC_KEYS))
+			goto nope; /* These will generate to access global singletons (with unknown reference counts) */
+		if (self->a_flag != AST_FMULTIPLE_TUPLE)
+			return 1; /* Anything but tuples must be created on the spot. */
+		if (self->a_multiple.m_astc == 1) {
+			/* Tuples with at least 2 elements must be created on the spot. */
+		} else {
+			/* Special case for 1-element tuples.
+			 * Here, `(foo...)' can get optimized when `foo' is already known to have tuple
+			 * typing (when not considering type annotations), so if that optimization is
+			 * done, then the resulting expression won't represent a new tuple, and we need
+			 * to return the reference count of `foo'. */
+			struct ast *e0 = self->a_multiple.m_astv[0];
+			if (e0->a_type == AST_EXPAND) {
+				if (ast_predict_type(e0->a_expand) == &DeeTuple_Type)
+					return ast_predict_object_refcnt(e0->a_expand);
+			}
+		}
+		return 1;
+
+	case AST_TRY: {
+		size_t i;
+		Dee_refcnt_t guard;
+		guard = ast_predict_object_refcnt(self->a_try.t_guard);
+		if (guard == 0)
+			goto nope;
+		for (i = 0; i < self->a_try.t_catchc; ++i) {
+			if (ast_predict_object_refcnt(self->a_try.t_catchv[i].ce_code) != guard)
+				goto nope;
+		}
+		return guard;
+	}	break;
+
+	case AST_CONDITIONAL: {
+		Dee_refcnt_t result;
+		if (self->a_flag & AST_FCOND_BOOL)
+			goto nope; /* Evaluates to a boolean singleton (which has unknown refcnt) */
+		if (!self->a_conditional.c_tt || !self->a_conditional.c_ff)
+			goto nope; /* Possibly evaluates to `none' (which has unknown refcnt) */
+		result = ast_predict_object_refcnt(self->a_conditional.c_tt);
+		if (result == 0)
+			goto nope;
+		if (ast_predict_object_refcnt(self->a_conditional.c_ff) != result)
+			goto nope;
+		return result;
+	}	break;
+
+	case AST_ACTION: {
+		switch (self->a_flag & AST_FACTION_KINDMASK) {
+#define ACTION(x) case x &AST_FACTION_KINDMASK:
+
+		ACTION(AST_FACTION_CELL0)
+		ACTION(AST_FACTION_CELL1)
+		ACTION(AST_FACTION_SUPEROF)
+		ACTION(AST_FACTION_AS)
+			return 1;
+
+		default: break;
+#undef ACTION
+		}
+	}	break;
+
+	case AST_CLASS:
+		return 1;
+
+	default:
+		break;
+	}
+nope:
+	return 0;
 }
 
 

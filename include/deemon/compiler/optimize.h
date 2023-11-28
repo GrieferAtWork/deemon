@@ -368,6 +368,12 @@ ast_predict_type_ex(struct ast *__restrict self, unsigned int flags);
 /* Same as `ast_predict_type()', but don't take type annotations into account */
 #define ast_predict_type_noanno(self) ast_predict_type_ex(self, AST_PREDICT_TYPE_F_NOANNO)
 
+/* Predict the reference count of a given AST at runtime (if predictable)
+ * If not predictable, return `0' (which is never a valid reference count) */
+INTDEF WUNUSED NONNULL((1)) Dee_refcnt_t DFCALL
+ast_predict_object_refcnt(struct ast *__restrict self);
+
+#define ast_predict_object_shared(self) (ast_predict_object_refcnt(self) != 1)
 
 
 #define CONSTEXPR_ILLEGAL 0 /* Use of this object is not allowed. */

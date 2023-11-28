@@ -242,7 +242,8 @@ struct seqops {
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC & 3) <= 1);
 STATIC_ASSERT((AST_FMULTIPLE_GENERIC_KEYS & 3) == (AST_FMULTIPLE_DICT & 3));
 
-PRIVATE struct seqops seqops_info[4] = {
+INTDEF struct seqops seqops_info[4];
+INTERN struct seqops seqops_info[4] = {
 	/* [AST_FMULTIPLE_TUPLE   & 3] = */ { &DeeTuple_Type,   { ASM_PACK_TUPLE,   ASM16_PACK_TUPLE   }, ASM_CAST_TUPLE   },
 	/* [AST_FMULTIPLE_LIST    & 3] = */ { &DeeList_Type,    { ASM_PACK_LIST,    ASM16_PACK_LIST    }, ASM_CAST_LIST    },
 	/* [AST_FMULTIPLE_HASHSET & 3] = */ { &DeeHashSet_Type, { ASM_PACK_HASHSET, ASM16_PACK_HASHSET }, ASM_CAST_HASHSET },
@@ -499,8 +500,12 @@ done_push_none:
 					/* The AST starts with an expand expression.
 					 * Because of that, we have to make sure that the entire
 					 * branch gets the correct type by casting now. */
-					if (ast_predict_type(elem->a_expand) !=
-					    seqops_info[self->a_flag & 3].so_typ) {
+					DeeTypeObject *expected_type = seqops_info[self->a_flag & 3].so_typ;
+					if ((expected_type == &DeeTuple_Type /* Immutable sequence type */ ||
+					     !ast_predict_object_shared(elem->a_expand)) &&
+					    (ast_predict_type(elem->a_expand) == expected_type)) {
+						/* Sequence type is immutable, or not shared */
+					} else {
 						if (asm_putddi(self))
 							goto err;
 						if unlikely(cast_sequence(self->a_flag))
@@ -511,7 +516,7 @@ done_push_none:
 				active_size        = 0;
 			} else {
 				if (need_all) {
-					if unlikely(active_size == UINT16_MAX) {
+					if unlikely(active_size >= UINT16_MAX) {
 						PERRAST(self, W_ASM_SEQUENCE_TOO_LONG);
 						goto err;
 					}

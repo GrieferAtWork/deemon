@@ -1,0 +1,66 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2023 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from errors;
+import operators;
+
+function foo(args...) -> args.reversed() + ...;
+
+@@Important: even though @args is marked as a @Tuple, the compiler
+@@           still has to generate a cast to @Tuple when using that
+@@           argument in the contained call. This is because while
+@@           type annotation can be used to optimize:
+@@           >> local a: Tuple;
+@@           >> local b = (a...); // No extra cast needed here
+@@           It cannot be used to optimize places where the runtime
+@@           *really* needs there to be an object of a certain type,
+@@           as is the case when doing varargs calls.
+function myCall(self, args: Tuple) -> self(args...);
+
+
+local o = 42;
+__asm__("" : "+X" (o));
+
+/* NOTE: The NotImplemented errors here are due to deemon trying to
+ *       cast an int to a sequence, which doesn't work because int
+ *       doesn't implement `operator iter()` */
+local error = try foo(o...) catch (e...) e;
+assert error is NotImplemented;
+
+local error = try foo.operator ()(o) catch (e...) e;
+assert error is NotImplemented;
+
+local error = try operator ()(foo, o) catch (e...) e;
+assert error is NotImplemented;
+
+local error = try operators.call(foo, o) catch (e...) e;
+assert error is NotImplemented;
+
+local error = try myCall(foo, o) catch (e...) e;
+assert error is NotImplemented;
+
+/* Also test all works when given something other than a tuple in varargs. */
+assert foo("abc") == "abc";
+assert foo("abc"...) == "cba";
+assert foo.operator ()("abc") == "cba";
+assert operator ()(foo, "abc") == "cba";
+assert operators.call(foo, "abc") == "cba";
+assert myCall(foo, "abc") == "cba";

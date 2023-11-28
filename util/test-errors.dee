@@ -324,12 +324,12 @@ function main() {
 	//invokeTypeMembers(deemon.string);
 	//invokeTypeMembers(deemon.Bytes);
 	//invokeTypeMembers(deemon.int);
-	invokeTypeMembers(deemon.List);
+	//invokeTypeMembers(deemon.List);
 	//invokeTypeMembers(deemon.Tuple);
 	//invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);
 	//invokeTypeMembers(deemon.bool);
-	//invokeTypeMembers(type(none));
+	invokeTypeMembers(type(none));
 	//invokeTypeMembers(deemon.float);
 	//invokeTypeMembers(deemon.Cell);
 	//invokeTypeMembers(deemon.WeakRef);

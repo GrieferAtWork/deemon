@@ -992,8 +992,8 @@ inc_execsz_start:
 		goto increase_stacksize;                                                     \
 	}
 #else /* EXEC_SAFE */
-#define ASSERT_TUPLE(ob)     ASSERT(DeeTuple_CheckExact(ob))
-#define ASSERT_STRING(ob)    ASSERT(DeeString_CheckExact(ob))
+#define ASSERT_TUPLE(ob)     ASSERT_OBJECT_TYPE_EXACT(ob, &DeeTuple_Type)
+#define ASSERT_STRING(ob)    ASSERT_OBJECT_TYPE_EXACT(ob, &DeeString_Type)
 #define ASSERT_THISCALL()    ASSERT(code->co_flags & CODE_FTHISCALL)
 #define CONST_LOCKREAD()     (void)0
 #define CONST_LOCKENDREAD()  (void)0
