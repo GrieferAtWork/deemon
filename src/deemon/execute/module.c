@@ -200,6 +200,28 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
+DeeModule_GetSymbol(DeeModuleObject *__restrict self,
+                    /*String*/ DeeObject *__restrict name) {
+	dhash_t i, perturb;
+	dhash_t hash;
+	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	hash = DeeString_Hash((DeeObject *)name);
+	perturb = i = MODULE_HASHST(self, hash);
+	for (;; MODULE_HASHNX(i, perturb)) {
+		struct module_symbol *item = MODULE_HASHIT(self, i);
+		if (!item->ss_name)
+			break; /* Not found */
+		if (item->ss_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_EqualsCStr(name, item->ss_name))
+			continue; /* Differing strings. */
+		return item;  /* Found it! */
+	}
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 DeeModule_GetSymbolStringHash(DeeModuleObject *__restrict self,
                               char const *__restrict attr_name,
                               dhash_t hash) {

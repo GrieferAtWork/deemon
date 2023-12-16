@@ -2031,6 +2031,12 @@ err:
 }
 
 
+/* Lookup an instruction mnemonic by name.
+ * NOTE: The second variation will automatically attempt to
+ *       cache the mnemonic's descriptor within the keyword.
+ *       However if this is not possible, or if the cache
+ *       slot is already used by something different, it will
+ *       always perform a string lookup on the mnemonic. */
 INTERN WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup_str(char const *__restrict name) {
 	struct asm_mnemonic *result;

@@ -230,10 +230,6 @@ err:
 	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-get_module_symbol(DeeModuleObject *__restrict module,
-                  DeeStringObject *__restrict name);
-
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 ast_gen_getattr(struct ast *__restrict base,
@@ -320,7 +316,8 @@ check_getattr_sym:
 				struct module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> push extern ... */
-				modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym), attrname);
+				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
+				                             (DeeObject *)attrname);
 				if (!modsym)
 					break;
 				if (!PUSH_RESULT && !(modsym->ss_flags & MODSYM_FPROPERTY))
@@ -494,7 +491,8 @@ check_boundattr_sym:
 				struct module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> push bnd extern ... */
-				modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym), attrname);
+				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
+				                             (DeeObject *)attrname);
 				if (!modsym)
 					break;
 				if (modsym->ss_flags & MODSYM_FPROPERTY)
@@ -1025,8 +1023,8 @@ check_base_symbol_class:
 				struct module_symbol *modsym;
 				int32_t module_id;
 				/* module.attr --> pop extern ... */
-				modsym = get_module_symbol(SYMBOL_MODULE_MODULE(sym),
-				                           (DeeStringObject *)name->a_constexpr);
+				modsym = DeeModule_GetSymbol(SYMBOL_MODULE_MODULE(sym),
+				                             name->a_constexpr);
 				if (!modsym)
 					break;
 				if (modsym->ss_flags & MODSYM_FREADONLY)

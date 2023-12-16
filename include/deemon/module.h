@@ -1191,6 +1191,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *
  *         `DeeModule_UnlockSymbols()'
  *          Additionally, you must be extremely careful, as an interactive
  *          module may arbitrarily modify its global object table! */
+DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbol(DeeModuleObject *__restrict self, /*String*/ DeeObject *__restrict name);
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolStringHash(DeeModuleObject *__restrict self, char const *__restrict attr, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolStringLenHash(DeeModuleObject *__restrict self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1)) struct Dee_module_symbol *DCALL DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid);
@@ -1198,7 +1199,6 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeModule_GetAttrSymbol(De
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_BoundAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_SetAttrSymbol(DeeModuleObject *__restrict self, struct Dee_module_symbol *__restrict symbol, DeeObject *__restrict value);
-#define DeeModule_GetSymbol(self, attr)                   DeeModule_GetSymbolStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeModule_GetSymbolHash(self, attr, hash)         DeeModule_GetSymbolStringHash(self, DeeString_STR(attr), hash)
 #define DeeModule_GetSymbolString(self, attr)             DeeModule_GetSymbolStringHash(self, attr, Dee_HashStr(attr))
 #define DeeModule_GetSymbolStringLen(self, attr, attrlen) DeeModule_GetSymbolStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen))

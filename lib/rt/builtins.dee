@@ -536,7 +536,7 @@ local __objects = deemon.List {
 	/* 0x01da */ (a, b?) -> b is bound ? a & b : a.ref, /* DeeBuiltinFunction___dual_reforand__ */
 	/* 0x01db */ (seq, a, b?) -> b is bound ? seq[a:b] : seq[a], /* DeeBuiltinFunction___dual_getitemorgetrange__ */
 	/* 0x01dc */ (seq, a, b?) -> b is bound ? seq.operator del[:](a, b) : seq.operator del[](a), /* DeeBuiltinFunction___dual_delitemordelrange__ */
-	/* 0x01dd */ (seq, a, b, c?) -> c is bound ? seq.operator [:](a, b, c) : seq.operator[]=(a, b), /* DeeBuiltinFunction___dual_setitemorsetrange__ */
+	/* 0x01dd */ (seq, a, b, c?) -> c is bound ? seq.operator [:]=(a, b, c) : seq.operator[]=(a, b), /* DeeBuiltinFunction___dual_setitemorsetrange__ */
 	/* 0x01de */ deemon.operator . ("import"), /* DeeBuiltinFunction___builtin_dex */
 	/* 0x01df */ operators.bool, /* DeeBuiltinFunction___bool__ */
 	/* 0x01e0 */ (f, n, t = none) -> { __stack local res = ctypes.ShLib(f).operator . (n); if (t !is none) res = t(res); return res; }, /* DeeBuiltinFunction___builtin_extern */

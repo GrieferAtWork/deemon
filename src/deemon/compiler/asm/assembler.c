@@ -1760,7 +1760,6 @@ err:
 	return -1;
 }
 
-#if __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__
 INTERN WUNUSED int
 (DCALL asm_put_data16)(uint16_t data) {
 	uint16_t *result;
@@ -1772,7 +1771,6 @@ INTERN WUNUSED int
 err:
 	return -1;
 }
-#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
 
 INTERN WUNUSED int
 (DCALL asm_put_data32)(uint32_t data) {

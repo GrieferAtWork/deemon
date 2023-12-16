@@ -7,6 +7,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "deemon", "deemon.vcxproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dex", "dex", "{2360741E-FB49-40D4-B684-000000001A50}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_hostasm", "dex\_hostasm.vcxproj", "{85DE4E2D-552A-48E3-A320-00000A7043B5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
+	EndProjectSection
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "_jit", "dex\_jit.vcxproj", "{85DE4E2D-552A-48E3-A320-00000000A7BC}"
 	ProjectSection(ProjectDependencies) = postProject
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF} = {86D226C5-EF62-4562-AC06-E6A753DFA7CF}
@@ -320,6 +325,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\collections.dee = ..\util\test\collections.dee
 		..\util\test\compiler-assert.dee = ..\util\test\compiler-assert.dee
 		..\util\test\compiler-c-cast.dee = ..\util\test\compiler-c-cast.dee
+		..\util\test\compiler-call-non-tuple.dee = ..\util\test\compiler-call-non-tuple.dee
 		..\util\test\compiler-class-constructors.dee = ..\util\test\compiler-class-constructors.dee
 		..\util\test\compiler-class-with-multiple-bases.dee = ..\util\test\compiler-class-with-multiple-bases.dee
 		..\util\test\compiler-conversion-operator.dee = ..\util\test\compiler-conversion-operator.dee
@@ -342,6 +348,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\compiler-range-expressions.dee = ..\util\test\compiler-range-expressions.dee
 		..\util\test\compiler-recursive-references.dee = ..\util\test\compiler-recursive-references.dee
 		..\util\test\compiler-self-recursion.dee = ..\util\test\compiler-self-recursion.dee
+		..\util\test\compiler-sequence-copy.dee = ..\util\test\compiler-sequence-copy.dee
 		..\util\test\compiler-template-string-jit.dee = ..\util\test\compiler-template-string-jit.dee
 		..\util\test\compiler-template-string.dee = ..\util\test\compiler-template-string.dee
 		..\util\test\compiler-thousands-grouping.dee = ..\util\test\compiler-thousands-grouping.dee
@@ -407,6 +414,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\threading-lock.dee = ..\util\test\threading-lock.dee
 		..\util\test\threading-once.dee = ..\util\test\threading-once.dee
 		..\util\test\time-time.dee = ..\util\test\time-time.dee
+		..\util\test\util-clamprange.dee = ..\util\test\util-clamprange.dee
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tut", "tut", "{2360741E-FB49-40D4-B684-00000F42E6DC}"
@@ -483,6 +491,22 @@ Global
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF}.Release-MSVC|Win32.Build.0 = Release-MSVC|Win32
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF}.Release-MSVC|x64.ActiveCfg = Release-MSVC|x64
 		{86D226C5-EF62-4562-AC06-E6A753DFA7CF}.Release-MSVC|x64.Build.0 = Release-MSVC|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC (NDEBUG)|Win32.ActiveCfg = Debug-MSVC (NDEBUG)|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC (NDEBUG)|Win32.Build.0 = Debug-MSVC (NDEBUG)|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC (NDEBUG)|x64.ActiveCfg = Debug-MSVC (NDEBUG)|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC (NDEBUG)|x64.Build.0 = Debug-MSVC (NDEBUG)|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC|Win32.ActiveCfg = Debug-MSVC|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC|Win32.Build.0 = Debug-MSVC|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC|x64.ActiveCfg = Debug-MSVC|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Debug-MSVC|x64.Build.0 = Debug-MSVC|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC (NDEBUG)|Win32.ActiveCfg = Release-MSVC (NDEBUG)|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC (NDEBUG)|Win32.Build.0 = Release-MSVC (NDEBUG)|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC (NDEBUG)|x64.ActiveCfg = Release-MSVC (NDEBUG)|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC (NDEBUG)|x64.Build.0 = Release-MSVC (NDEBUG)|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC|Win32.ActiveCfg = Release-MSVC|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC|Win32.Build.0 = Release-MSVC|Win32
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC|x64.ActiveCfg = Release-MSVC|x64
+		{85DE4E2D-552A-48E3-A320-00000A7043B5}.Release-MSVC|x64.Build.0 = Release-MSVC|x64
 		{85DE4E2D-552A-48E3-A320-00000000A7BC}.Debug-MSVC (NDEBUG)|Win32.ActiveCfg = Debug-MSVC (NDEBUG)|Win32
 		{85DE4E2D-552A-48E3-A320-00000000A7BC}.Debug-MSVC (NDEBUG)|Win32.Build.0 = Debug-MSVC (NDEBUG)|Win32
 		{85DE4E2D-552A-48E3-A320-00000000A7BC}.Debug-MSVC (NDEBUG)|x64.ActiveCfg = Debug-MSVC (NDEBUG)|x64
@@ -728,6 +752,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{85DE4E2D-552A-48E3-A320-00000A7043B5} = {2360741E-FB49-40D4-B684-000000001A50}
 		{85DE4E2D-552A-48E3-A320-00000000A7BC} = {2360741E-FB49-40D4-B684-000000001A50}
 		{85DE4E2D-552A-48E3-A320-001BD8220AC3} = {2360741E-FB49-40D4-B684-000000001A50}
 		{85DE4E2D-552A-48E3-A320-000000362D5B} = {2360741E-FB49-40D4-B684-000000001A50}

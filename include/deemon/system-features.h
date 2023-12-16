@@ -832,6 +832,7 @@ functest("nice(0)", "defined(__USE_MISC) || defined(__USE_XOPEN) || (" + isenabl
 func("mmap", isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + ")", test: "return mmap(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("mmap64", "defined(__USE_LARGEFILE64) && (" + isenabled("_POSIX_MAPPED_FILES") + " || (!defined(CONFIG_HAVE_UNISTD_H) && " + addparen(unix) + "))", test: "return mmap64(NULL, 1, 0, 0, -1, 0) == (void *)0;");
 func("munmap", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return munmap(buf, 6);');
+func("mprotect", "defined(CONFIG_HAVE_mmap)", test: 'char buf[] = "foobar"; return mprotect(buf, 6, PROT_READ);');
 func("fmapfile", "0", test: 'extern struct mapfile m; return fmapfile(&m, 1, 2, 3, 4, 5, FMAPFILE_READALL);');
 func("unmapfile", "0", test: 'extern struct mapfile m; return unmapfile(&m);');
 func("getpagesize", "defined(CONFIG_HAVE_UNISTD_H) && (defined(__USE_MISC) || !defined(__USE_XOPEN2K))", test: 'return getpagesize() != 0;');
@@ -846,6 +847,7 @@ constant("MAP_STACK");
 constant("MAP_UNINITIALIZED");
 constant("PROT_READ");
 constant("PROT_WRITE");
+constant("PROT_EXEC");
 
 func("pipe", "defined(CONFIG_HAVE_UNISTD_H) || " + addparen(unix), "int fds[2]; return pipe(fds);");
 func("pipe2", "defined(__USE_GNU)", "int fds[2]; return pipe2(fds, 0);");
@@ -6533,6 +6535,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #define CONFIG_HAVE_munmap
 #endif
 
+#ifdef CONFIG_NO_mprotect
+#undef CONFIG_HAVE_mprotect
+#elif !defined(CONFIG_HAVE_mprotect) && \
+      (defined(mprotect) || defined(__mprotect_defined) || defined(CONFIG_HAVE_mmap))
+#define CONFIG_HAVE_mprotect
+#endif
+
 #ifdef CONFIG_NO_fmapfile
 #undef CONFIG_HAVE_fmapfile
 #elif !defined(CONFIG_HAVE_fmapfile) && \
@@ -6630,6 +6639,13 @@ feature("CONSTANT_NAN", "1", test: "extern int val[NAN != 0.0 ? 1 : -1]; return 
 #elif !defined(CONFIG_HAVE_PROT_WRITE) && \
       (defined(PROT_WRITE) || defined(__PROT_WRITE_defined))
 #define CONFIG_HAVE_PROT_WRITE
+#endif
+
+#ifdef CONFIG_NO_PROT_EXEC
+#undef CONFIG_HAVE_PROT_EXEC
+#elif !defined(CONFIG_HAVE_PROT_EXEC) && \
+      (defined(PROT_EXEC) || defined(__PROT_EXEC_defined))
+#define CONFIG_HAVE_PROT_EXEC
 #endif
 
 #ifdef CONFIG_NO_pipe

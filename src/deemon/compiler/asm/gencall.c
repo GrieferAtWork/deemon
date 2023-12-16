@@ -60,12 +60,9 @@ err:
 	return -1;
 }
 
-INTDEF struct module_symbol *DCALL
-get_module_symbol(DeeModuleObject *__restrict module,
-                  DeeStringObject *__restrict name);
-
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL asm_check_thiscall(struct symbol *__restrict sym,
-                                    struct ast *__restrict warn_ast);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+asm_check_thiscall(struct symbol *__restrict sym,
+                   struct ast *__restrict warn_ast);
 
 
 PRIVATE WUNUSED DREF DeeCodeObject *DCALL
@@ -721,8 +718,7 @@ check_getattr_base_symbol_class_small:
 							struct module_symbol *modsym;
 							int32_t module_id;
 							/* module.attr() --> call extern ... */
-							modsym = get_module_symbol(sym->s_module,
-							                           (DeeStringObject *)function_attr->a_constexpr);
+							modsym = DeeModule_GetSymbol(sym->s_module, function_attr->a_constexpr);
 							if (!modsym)
 								break;
 							if (modsym->ss_flags & MODSYM_FPROPERTY)
@@ -1700,8 +1696,7 @@ check_getattr_base_symbol_class_argv:
 					struct module_symbol *modsym;
 					int32_t module_id;
 					/* module.attr() --> call extern ... */
-					modsym = get_module_symbol(sym->s_module,
-					                           (DeeStringObject *)function_attr->a_constexpr);
+					modsym = DeeModule_GetSymbol(sym->s_module, function_attr->a_constexpr);
 					if (!modsym)
 						break;
 					if (modsym->ss_flags & MODSYM_FPROPERTY)

@@ -146,7 +146,7 @@ struct asm_exc {
 struct asm_rel {
 	struct asm_sym *ar_sym;    /* [?..1][REF(->as_used)] Symbol to relocate against (Undefined when not used by the relocation). */
 	code_addr_t     ar_addr;   /* Address to which the relocation is applied. */
-	uint16_t        ar_type;   /* The type of relocation (One of `REL_*'). */
+	uint16_t        ar_type;   /* The type of relocation (One of `R_DMN_*'). */
 	uint16_t        ar_value;  /* [valid_if(?)] An optional relocation value used by some relocation types.
 	                            * When not used by the relocation type, this field is undefined. */
 };
@@ -190,7 +190,7 @@ struct asm_sec {
 
 struct ddi_binding {
 #define DDI_BINDING_CLASS_LOCAL 0x0000 /* The binding refers to a local variable. */
-#define DDI_BINDING_CLASS_STACK 0x0001 /* The binding refers to a stack-variable. */
+#define DDI_BINDING_CLASS_STACK 0x0001 /* The binding refers to a stack variable. */
 	uint16_t           db_class; /* The symbol binding class (One of `DDI_BINDING_CLASS_*') */
 	uint16_t           db_index; /* The symbol binding index (stack-address, or LID) */
 	struct TPPKeyword *db_name;  /* [0..1][const] Name of the symbol (when `NULL', the symbol must be unbound). */
@@ -232,7 +232,7 @@ struct ddi_assembler {
 	struct asm_sec        *da_slast;  /* The section associated with `da_last'. */
 	DREF struct TPPFile   *da_files;  /* [0..1][CHAIN(->f_prev)]
 	                                   * Chain of fake DDI files used to implement custom file names. */
-	uint16_t               da_bndc;   /* The number of symbol binding . */
+	uint16_t               da_bndc;   /* The number of symbol bindings. */
 	uint16_t               da_bnda;   /* The allocated number of symbol bindings. */
 	struct ddi_binding    *da_bndv;   /* [0..dc_bndc|ALLOC(da_bnda)][owned] Vector of symbol bindings. */
 };
@@ -545,10 +545,10 @@ INTDEF size_t const asm_mnemonics_size;
 
 /* Lookup an instruction mnemonic by name.
  * NOTE: The second variation will automatically attempt to
- *       cache the mnemonic the mnemonic's descriptor within
- *       the keyword. However if this is not possible, or if
- *       the cache slot is already used by something different,
- *       it will always perform a string lookup on the mnemonic. */
+ *       cache the mnemonic's descriptor within the keyword.
+ *       However if this is not possible, or if the cache
+ *       slot is already used by something different, it will
+ *       always perform a string lookup on the mnemonic. */
 INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
 asm_mnemonic_lookup_str(char const *__restrict name);
 INTDEF WUNUSED NONNULL((1)) struct asm_mnemonic *DCALL
@@ -643,7 +643,7 @@ struct asm_symbol_ref {
 	 *     preserved and must be restored when an assembler instance
 	 *     finishes.
 	 *   - For more information on when this is required, take a look
-	 *     at the test `/util/test/recursive_references.dee'
+	 *     at the test `/util/test/compiler-recursive-references.dee'
 	 */
 	struct symbol         *sr_sym;         /* [1..1][const]
 	                                        * [->s_flag & SYMBOL_FALLOCREF]
@@ -706,101 +706,101 @@ struct assembler {
 #define ASM_FINFLAG_NORMAL 0x0000      /* Normal finally-flags. */
 #define ASM_FINFLAG_USED   0x0001      /* Set when `a_finsym' is being used. */
 #define ASM_FINFLAG_NOLOOP 0x0002      /* Set when `a_finsym' is located outside of the current loop, and symbols from `a_loopctl'. */
-	uint16_t               a_finflag;  /* Loop symbol flags (Set of `ASM_LOOPSYM_F*'). */
+	uint16_t               a_finflag;  /* Finally-block flags (Set of `ASM_FINFLAG_*'). */
 #define ASM_FNORMAL        0x0000      /* Normal assembler operation. */
 #define ASM_FBIGCODE       0x0001      /* Generate assembly for large code targets.
-	                                    * When this flag is set, the assembler will attempt to
-	                                    * generate code capable of handling a very large assembly.
-	                                    * In essence: in this mode, all jmp instructions are
-	                                    * encoded as `ASM32_JMP' opcodes, allowing for more than
-	                                    * a total of 2^16 bytes of text.
-	                                    * HINT: 32-bit conditional jumps are encoded as follows:
-	                                    * 8/16-bit:
-	                                    * >>    ...
-	                                    * >>    jt    foo
-	                                    * >>    ...
-	                                    * 32-bit:
-	                                    * >>    ...
-	                                    * >>    jf    1f
-	                                    * >>    jmp32 foo
-	                                    * >>1:  ...
-	                                    * Because of this, bigcode is only generated when the linker
-	                                    * failed because a jump target would have been truncated, in
-	                                    * which case assembly automatically starts over with this flag
-	                                    * set. */
+                                        * When this flag is set, the assembler will attempt to
+                                        * generate code capable of handling a very large assembly.
+                                        * In essence: in this mode, all jmp instructions are
+                                        * encoded as `ASM32_JMP' opcodes, allowing for more than
+                                        * a total of 2^16 bytes of text.
+                                        * HINT: 32-bit conditional jumps are encoded as follows:
+                                        * 8/16-bit:
+                                        * >>    ...
+                                        * >>    jt    foo
+                                        * >>    ...
+                                        * 32-bit:
+                                        * >>    ...
+                                        * >>    jf    1f
+                                        * >>    jmp32 foo
+                                        * >>1:  ...
+                                        * Because of this, bigcode is only generated when the linker
+                                        * failed because a jump target would have been truncated, in
+                                        * which case assembly automatically starts over with this flag
+                                        * set. */
 #define ASM_FOPTIMIZE      0x0002      /* Optimize generated assembly and perform minor improvements
-	                                    * during generation, so long as they don't impact DDI. */
+                                        * during generation, so long as they don't impact DDI. */
 #define ASM_FOPTIMIZE_SIZE 0x0100      /* When the decision between smaller vs. faster code comes up, choose smaller code. */
 #define ASM_FREUSELOC      0x0004      /* Allow local variables to be re-used. (May make manual debugging more difficult) */
 #define ASM_FPEEPHOLE      0x0008      /* Perform peephole optimizations. */
 #define ASM_FSTACKDISP     0x0010      /* The stack may get displaced between instruction at (seemingly) random intervals.
-	                                    * When this flag is set, much more optimal code can be generated for stack variables,
-	                                    * but peephole & minjmp optimizations are expected to do a lot of cleanup.
-	                                    * Essentially, this flag allows stack variables to be lazily initialized
-	                                    * and only be popped once their scope ends.
-	                                    * However, this means that before having been assigned, a stack variable
-	                                    * doesn't have a storage location associated with it, meaning that a lot
-	                                    * of (usually meaningless) code to adjust the stack has to be generated:
-	                                    * REMINDER: Uninitialized stack variables have a value of `none'
-	                                    *
-	                                    * >> for (__stack local x: [:10]) {
-	                                    * >>      print x;
-	                                    * >> }
-	                                    *
-	                                    * Without this flag set, the following code would be generated.
-	                                    * If you read this code, you will notice that stack variables are pre-allocated
-	                                    * and cleaned before their scope is left, while stack duplication instructions are
-	                                    * used every time they are interacted with, similar to how all other variables
-	                                    * are operated upon.
-	                                    * >>    adjstack #SP + 1   // Allocate stack memory for `x' (preinitializes to `none'; actually assembled as `push none')
-	                                    * >>    range    $0, $10
-	                                    * >>    iterself top
-	                                    * >>2:  foreach  top, 1f
-	                                    * >>    pop      #3   // Save the result of `foreach' in `x'
-	                                    * >>    dup      #2   // Load `x' for printing
-	                                    * >>    print    pop, nl // Print `x'
-	                                    * >>    jmp      2b
-	                                    * >>1:  adjstack #SP - 1   // Cleanup `x' (actually assembled as `pop')
-	                                    *
-	                                    * However when this flag _is_ set, no stack-space must be pre-allocated,
-	                                    * and the value that was meant to be assigned initially can simply be
-	                                    * kept around and be re-referenced every time the variable is used,
-	                                    * essentially meaning that unused stack variables never take up memory
-	                                    * at runtime, as well as stack variables that _were_ used never needing
-	                                    * to be assigned to (as their initially assigned value is always the
-	                                    * result pushed onto the stack by their instruction of origin)
-	                                    * Despite all of this, stack variables still remain consistent, with
-	                                    * their absolute stack-offset at runtime already known at compile-time.
-	                                    * >>    range    $0, $10
-	                                    * >>    iterself top
-	                                    * >>2:  foreach  top, 1f
-	                                    * >>    // Internal: Assign `top' as the stack location for `x'
-	                                    * >>    dup      #0      // Copy `x' for print
-	                                    * >>    print    pop, nl // Print `x'
-	                                    * >>    adjstack #SP - 1 // Adjust to fix the stack prior to jumping. (actually assembled as `pop')
-	                                    * >>    jmp      2b
-	                                    * >>1:
-	                                    * And after applying peephole optimizations, it will look like this:
-	                                    * >>    range    $0, $10
-	                                    * >>    iterself top
-	                                    * >>2:  foreach  top, 1f
-	                                    * >>    print    pop, nl // Print `x'
-	                                    * >>    jmp      2b
-	                                    * >>1: */
+                                        * When this flag is set, much more optimal code can be generated for stack variables,
+                                        * but peephole & minjmp optimizations are expected to do a lot of cleanup.
+                                        * Essentially, this flag allows stack variables to be lazily initialized
+                                        * and only be popped once their scope ends.
+                                        * However, this means that before having been assigned, a stack variable
+                                        * doesn't have a storage location associated with it, meaning that a lot
+                                        * of (usually meaningless) code to adjust the stack has to be generated:
+                                        * REMINDER: Uninitialized stack variables have a value of `none'
+                                        *
+                                        * >> for (__stack local x: [:10]) {
+                                        * >>      print x;
+                                        * >> }
+                                        *
+                                        * Without this flag set, the following code would be generated.
+                                        * If you read this code, you will notice that stack variables are pre-allocated
+                                        * and cleaned before their scope is left, while stack duplication instructions are
+                                        * used every time they are interacted with, similar to how all other variables
+                                        * are operated upon.
+                                        * >>    adjstack #SP + 1   // Allocate stack memory for `x' (preinitializes to `none'; actually assembled as `push none')
+                                        * >>    range    $0, $10
+                                        * >>    iterself top
+                                        * >>2:  foreach  top, 1f
+                                        * >>    pop      #3   // Save the result of `foreach' in `x'
+                                        * >>    dup      #2   // Load `x' for printing
+                                        * >>    print    pop, nl // Print `x'
+                                        * >>    jmp      2b
+                                        * >>1:  adjstack #SP - 1   // Cleanup `x' (actually assembled as `pop')
+                                        *
+                                        * However when this flag _is_ set, no stack-space must be pre-allocated,
+                                        * and the value that was meant to be assigned initially can simply be
+                                        * kept around and be re-referenced every time the variable is used,
+                                        * essentially meaning that unused stack variables never take up memory
+                                        * at runtime, as well as stack variables that _were_ used never needing
+                                        * to be assigned to (as their initially assigned value is always the
+                                        * result pushed onto the stack by their instruction of origin)
+                                        * Despite all of this, stack variables still remain consistent, with
+                                        * their absolute stack-offset at runtime already known at compile-time.
+                                        * >>    range    $0, $10
+                                        * >>    iterself top
+                                        * >>2:  foreach  top, 1f
+                                        * >>    // Internal: Assign `top' as the stack location for `x'
+                                        * >>    dup      #0      // Copy `x' for print
+                                        * >>    print    pop, nl // Print `x'
+                                        * >>    adjstack #SP - 1 // Adjust to fix the stack prior to jumping. (actually assembled as `pop')
+                                        * >>    jmp      2b
+                                        * >>1:
+                                        * And after applying peephole optimizations, it will look like this:
+                                        * >>    range    $0, $10
+                                        * >>    iterself top
+                                        * >>2:  foreach  top, 1f
+                                        * >>    print    pop, nl // Print `x'
+                                        * >>    jmp      2b
+                                        * >>1: */
 #define ASM_FNOASSERT      0x0020      /* Replace all assert statements with a compile-time constant `true'. */
 #define ASM_FNODEC         0x0040      /* Do not create a `*.dec' file once the module has been compiled. */
 #define ASM_FNOREUSECONST  0x0080      /* Do not re-use constants. */
 #define ASM_FREDUCEREFS    0x0100      /* Try to minimize use of references when accessing class/instance members.
-	                                    * Enabling this isn't a good idea, as it slows down access to members inside
-	                                    * of classes, while only speeding up construction of said class.
-	                                    * Additionally, problems may ensue when the class's symbol is overwritten,
-	                                    * as member function may not be holding their own references to the class,
-	                                    * but be using global symbols instead. */
+                                        * Enabling this isn't a good idea, as it slows down access to members inside
+                                        * of classes, while only speeding up construction of said class.
+                                        * Additionally, problems may ensue when the class's symbol is overwritten,
+                                        * as member function may not be holding their own references to the class,
+                                        * but be using global symbols instead. */
 #define ASM_FARGREFS       0x0200      /* [INTERNAL] Make use of references-through-arguments */
 #define ASM_FNODDIXDAT     0x4000      /* Do not generate extended DDI debug information. */
 #define ASM_FNODDI         0x8000      /* Do not generate DDI debug information.
-	                                    * Setting this flag allows peephole optimizations to
-	                                    * be more effective than when this flag wasn't set. */
+                                        * Setting this flag allows peephole optimizations to
+                                        * be more effective than when this flag wasn't set. */
 	uint16_t               a_flag;     /* Assembler operation flags (Set of `ASM_F*') */
 };
 
@@ -1003,19 +1003,12 @@ INTDEF WUNUSED int DCALL asm_putsid16(uint16_t instr, uint16_t sid);
 #ifdef __INTELLISENSE__
 /* Given a host-endian data word, encode it as little endian and write it to the current text position. */
 INTDEF WUNUSED int DCALL asm_put_data8(uint8_t data);
+#else /* __INTELLISENSE__ */
+#define asm_put_data8(data) asm_put(data)
+#endif /* !__INTELLISENSE__ */
 INTDEF WUNUSED int DCALL asm_put_data16(uint16_t data);
 INTDEF WUNUSED int DCALL asm_put_data32(uint32_t data);
 INTDEF WUNUSED int DCALL asm_put_data64(uint64_t data);
-#else /* __INTELLISENSE__ */
-#define asm_put_data8(data) asm_put(data)
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#define asm_put_data16(data) asm_put16(data)
-#else /* __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ */
-INTDEF int DCALL asm_put_data16(uint16_t data);
-#endif /* __BYTE_ORDER__ != __ORDER_BIG_ENDIAN__ */
-INTDEF int DCALL asm_put_data32(uint32_t data);
-INTDEF int DCALL asm_put_data64(uint64_t data);
-#endif /* !__INTELLISENSE__ */
 
 /* Push the absolute address of an assembly symbol + offset onto the stack. */
 INTDEF WUNUSED NONNULL((1)) int DCALL asm_gpush_abs(struct asm_sym *__restrict sym); /* PC */
@@ -1063,7 +1056,7 @@ INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_gsymid(struct symbol *__restrict s
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_lsymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_LOCAL' */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_ssymid(struct symbol *__restrict sym);   /* `SYM_CLASS_VAR:SYM_FVAR_STATIC' */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_esymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_EXTERN' (Returns the module index in the current root-scope's import vector)
-                                                                   *  NOTE: This function will dereference external aliases. */
+                                                                                        *  NOTE: This function will dereference external aliases. */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_msymid(struct symbol *__restrict sym);   /* `SYMBOL_TYPE_MODULE' */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_rsymid(struct symbol *__restrict sym);   /* Reference a symbol for a lower base-scope. */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_asymid_r(struct symbol *__restrict sym); /* For use in `ASM_FARGREFS' mode: Return an argument ID for a referenced symbol. */

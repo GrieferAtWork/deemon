@@ -206,28 +206,6 @@ INTERN_CONST uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_LEAVE]       = */ ENTRY(OPCOUNT_PUSHNONE, 1)
 };
 
-
-INTERN WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-get_module_symbol(DeeModuleObject *__restrict module,
-                  DeeStringObject *__restrict name) {
-	dhash_t i, perturb;
-	dhash_t hash = DeeString_Hash((DeeObject *)name);
-	perturb = i = MODULE_HASHST(module, hash);
-	for (;; MODULE_HASHNX(i, perturb)) {
-		struct module_symbol *item = MODULE_HASHIT(module, i);
-		if (!item->ss_name)
-			break; /* Not found */
-		if (item->ss_hash != hash)
-			continue; /* Non-matching hash */
-		if (!DeeString_EqualsCStr(name, item->ss_name))
-			continue; /* Differing strings. */
-		return item;  /* Found it! */
-	}
-	return NULL;
-}
-
-
-
 struct seqops {
 	/* Opcodes are encoded in big-endian.
 	 * When the mask 0xff00 is ZERO, the opcode is a single byte long. */

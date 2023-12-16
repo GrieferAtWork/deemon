@@ -412,6 +412,7 @@ EXPORTS
 	_DeeModule_GetNativeSymbol@8=DeeModule_GetNativeSymbol@8
 	_DeeModule_GetRoot@8=DeeModule_GetRoot@8
 	_DeeModule_GetString@8=DeeModule_GetString@8
+	_DeeModule_GetSymbol@8=DeeModule_GetSymbol@8
 	_DeeModule_GetSymbolID@8=DeeModule_GetSymbolID@8
 	_DeeModule_GetSymbolStringHash@12=DeeModule_GetSymbolStringHash@12
 	_DeeModule_GetSymbolStringLenHash@16=DeeModule_GetSymbolStringLenHash@16

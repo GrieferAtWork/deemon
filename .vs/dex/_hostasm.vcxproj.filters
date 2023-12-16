@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<Filter Include="libgen86">
+			<UniqueIdentifier>{372a956e-8c03-4d55-8939-00000C13A076}</UniqueIdentifier>
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\api.h">
+			<Filter>libgen86</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\gen.h">
+			<Filter>libgen86</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\register.h">
+			<Filter>libgen86</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\src\dex\_hostasm\libhostasm.h" />
+	</ItemGroup>
+	<ItemGroup>
+		<ClCompile Include="..\..\src\dex\_hostasm\assembler.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\common.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-arch.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-common.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
+	</ItemGroup>
+</Project>

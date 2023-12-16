@@ -1285,6 +1285,10 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	return result;
 }
 
+/* Same as `DeeAsm_NextInstr()', but also keep track of the current stack depth.
+ * NOTE:    The affect of branch instructions is evaluated as the
+ *          fall-through path (aka. when the branch isn't taken).
+ * WARNING: This also goes for instructions that always take a branch! */
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
 DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
                    uint16_t *__restrict p_stacksz) {
@@ -1292,6 +1296,17 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
 	return DeeAsm_NextInstrEf(pc, p_stacksz, &sp_add, &sp_sub);
 }
 
+/* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
+ * This function is used by the peephole optimizer to trace usage of objects stored on the stack.
+ * NOTES:
+ *   - Because some instruction's stack effect depends on the current stack depth.
+ *     That may sound weird, but think about how fixed-depth instructions behave,
+ *     this function also keeps track of the current stack depth. (e.g.: ASM_STACK)
+ *   - Since some instructions exist who's stack-effect depends on parameters on
+ *     known at runtime (e.g.: ASM_JMP_POP_POP), those instructions have an effective
+ *     stack-effect of 0, which sub/add effect addends that maximize the potential
+ *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
+ *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
 PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
 DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
                    uint16_t *__restrict p_stacksz,
