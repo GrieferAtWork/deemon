@@ -431,6 +431,7 @@ genArithBlock("cmp", 0x38);
 #define GEN86_CC_NG  14 /* Not Greater (signed) */
 #define GEN86_CC_G   15 /* Greater (signed) */
 #define GEN86_CC_NLE 15 /* Not Less or Equal (signed) */
+#define GEN86_CC_COUNT 16
 
 /* Conditional jumps
  * @param: cc: One of `GEN86_CC_*' */
@@ -834,19 +835,19 @@ genShift("sar", 7);
 #define gen86_outl_eax_imm(p_pc, imm) /* outl %eax, $imm */ (_gen86_pfx32_(p_pc) _gen86_putb(p_pc, 0xe7), _gen86_putb(p_pc, imm))
 
 #if LIBGEN86_TARGET_BITS == 16
-#define gen86_callP(p_pc, addr)          /* call  addr          */ (_gen86_putb(p_pc, 0xe8), _gen86_putsw_pcrel(p_pc, addr))
-#define gen86_jmpP(p_pc, addr)           /* jmp   addr          */ (_gen86_putb(p_pc, 0xe9), _gen86_putsw_pcrel(p_pc, addr))
-#define gen86_callP_offset(p_pc, offset) /* call  1f+offset; 1: */ (_gen86_putb(p_pc, 0xe8), _gen86_putsw(p_pc, offset))
-#define gen86_jmpP_offset(p_pc, offset)  /* jmp   1f+offset; 1: */ (_gen86_putb(p_pc, 0xe9), _gen86_putsw(p_pc, offset))
+#define gen86_callP(p_pc, addr)          /* call  addr            */ (_gen86_putb(p_pc, 0xe8), _gen86_putsw_pcrel(p_pc, addr))
+#define gen86_jmpP(p_pc, addr)           /* jmp   addr            */ (_gen86_putb(p_pc, 0xe9), _gen86_putsw_pcrel(p_pc, addr))
+#define gen86_callP_offset(p_pc, offset) /* call  1f+offset-2; 1: */ (_gen86_putb(p_pc, 0xe8), _gen86_putsw(p_pc, offset))
+#define gen86_jmpP_offset(p_pc, offset)  /* jmp   1f+offset-2; 1: */ (_gen86_putb(p_pc, 0xe9), _gen86_putsw(p_pc, offset))
 #define gen86_callw                      gen86_callP
 #define gen86_jmpw                       gen86_jmpP
 #define gen86_callw_offset               gen86_callP_offset
 #define gen86_jmpw_offset                gen86_jmpP_offset
 #else /* LIBGEN86_TARGET_BITS == ... */
-#define gen86_callP(p_pc, addr)          /* call  addr          */ (_gen86_putb(p_pc, 0xe8), _gen86_putsl_pcrel(p_pc, addr))
-#define gen86_jmpP(p_pc, addr)           /* jmp   addr          */ (_gen86_putb(p_pc, 0xe9), _gen86_putsl_pcrel(p_pc, addr))
-#define gen86_callP_offset(p_pc, offset) /* call  1f+offset; 1: */ (_gen86_putb(p_pc, 0xe8), _gen86_putsl(p_pc, offset))
-#define gen86_jmpP_offset(p_pc, offset)  /* jmp   1f+offset; 1: */ (_gen86_putb(p_pc, 0xe9), _gen86_putsl(p_pc, offset))
+#define gen86_callP(p_pc, addr)          /* call  addr            */ (_gen86_putb(p_pc, 0xe8), _gen86_putsl_pcrel(p_pc, addr))
+#define gen86_jmpP(p_pc, addr)           /* jmp   addr            */ (_gen86_putb(p_pc, 0xe9), _gen86_putsl_pcrel(p_pc, addr))
+#define gen86_callP_offset(p_pc, offset) /* call  1f+offset-4; 1: */ (_gen86_putb(p_pc, 0xe8), _gen86_putsl(p_pc, offset))
+#define gen86_jmpP_offset(p_pc, offset)  /* jmp   1f+offset-4; 1: */ (_gen86_putb(p_pc, 0xe9), _gen86_putsl(p_pc, offset))
 #define gen86_calll                      gen86_callP
 #define gen86_jmpl                       gen86_jmpP
 #define gen86_calll_offset               gen86_callP_offset
@@ -1186,8 +1187,8 @@ genShift("sar", 7);
 #endif /* LIBGEN86_TARGET_BITS == 64 */
 
 #define gen86_lfence(p_pc) /* lfence */ _gen86_putb3(p_pc, 0x0f, 0xae, 0xe8)
-#define gen86_mfence(p_pc) /* lfence */ _gen86_putb3(p_pc, 0x0f, 0xae, 0xf0)
-#define gen86_sfence(p_pc) /* lfence */ _gen86_putb3(p_pc, 0x0f, 0xae, 0xf8)
+#define gen86_mfence(p_pc) /* mfence */ _gen86_putb3(p_pc, 0x0f, 0xae, 0xf0)
+#define gen86_sfence(p_pc) /* sfence */ _gen86_putb3(p_pc, 0x0f, 0xae, 0xf8)
 
 #define gen86_imulw_mod_r(p_pc, gen_modrm, reg, ...) /* imulw ..., %reg */ (_gen86_pfx16_(p_pc) gen_modrm((p_pc, 0, _gen86_putb2(p_pc, 0x0f, 0xaf), reg, __VA_ARGS__, (void)0)))
 #define gen86_imull_mod_r(p_pc, gen_modrm, reg, ...) /* imull ..., %reg */ (_gen86_pfx32_(p_pc) gen_modrm((p_pc, 0, _gen86_putb2(p_pc, 0x0f, 0xaf), reg, __VA_ARGS__, (void)0)))

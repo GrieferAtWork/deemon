@@ -27,7 +27,10 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/object.h>
+#include <deemon/tuple.h>
 
+#include <hybrid/sequence/bitset.h>
 #include <hybrid/unaligned.h>
 
 #ifdef HOSTASM_X86
@@ -66,80 +69,278 @@ PRIVATE uint8_t const gen86_registers[HOST_REGISTER_COUNT] = {
 #endif /* ... */
 };
 
-#define p_pc(block) (&(block)->bb_host_end)
+#define p_pc(block)  (&(block)->bb_host_end)
+#define p_off(block) (uintptr_t)((block)->bb_host_end - (block)->bb_host_start)
 
 
-/* Code generators. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gincref(struct Dee_function_generator *__restrict self,
-                               struct Dee_memloc *__restrict loc) {
-	/* TODO:
-	 * #IF(loc->ml_where == MEMLOC_TYPE_CONST && FIT32)
-	 * >>     lock  decP <loc->ml_value.ml_const->ob_refcnt>
-	 * #ELIF(loc->ml_where == MEMLOC_TYPE_CONST && !FIT32)
-	 * >>     movabs $<loc->ml_value.ml_const->ob_refcnt>, %Pax
-	 * >>     lock  incP (%Pax)
-	 * #ELSE
-	 * >> movP  <loc>, %Pax
-	 * >> lock  incP ob_refcnt(%Pax)
-	 * #ENDIF
-	 */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
+/* Object reference count incref/decref */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_gincref_reg(struct Dee_basic_block *__restrict self,
+                             Dee_host_register_t regno) {
+	if unlikely(Dee_basic_block_reqx86(self, 2))
+		goto err;
+	gen86_lock(p_pc(self));
+	gen86_incP_mod(p_pc(self), gen86_modrm_db,
+	               offsetof(DeeObject, ob_refcnt),
+	               gen86_registers[regno]);
+	return 0;
+err:
+	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gdecref(struct Dee_function_generator *__restrict self,
-                               struct Dee_memloc *__restrict loc) {
-	/* TODO:
-	 * #IF(loc->ml_where == MEMLOC_TYPE_CONST && FIT32)
-	 * >>     lock  decP <loc->ml_value.ml_const->ob_refcnt>
-	 * #ELIF(loc->ml_where == MEMLOC_TYPE_CONST && !FIT32)
-	 * >>     movabs $<loc->ml_value.ml_const->ob_refcnt>, %Pax
-	 * >>     lock  decP (%Pax)
-	 * #ELIF_OPTION_1
-	 * >> <Dee_function_generator_gflushregs>
-	 * >>     movP  <loc>, %Pax
-	 * >>     lock  subP $1, ob_refcnt(%Pax)
-	 * >>     jnz   1f
-	 * >>     pushl %Pax
-	 * >>     call  DeeObject_Destroy@4
-	 * >> 1:
-	 * #ELSE
-	 * >>     movP  <loc>, %Pax
-	 * >>     lock  subP $1, ob_refcnt(%Pax)
-	 * >>     jnz   1f
-	 * >>     <push_all_used_registers>
-	 * >>     pushl %Pax
-	 * >>     call  DeeObject_Destroy@4
-	 * >>     <pop_all_used_registers>
-	 * >> 1:
-	 * #ENDIF
-	 */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_gdecref_reg_nokill(struct Dee_basic_block *__restrict self,
+                                    Dee_host_register_t regno) {
+	if unlikely(Dee_basic_block_reqx86(self, 2))
+		goto err;
+	gen86_lock(p_pc(self));
+	gen86_decP_mod(p_pc(self), gen86_modrm_db,
+	               offsetof(DeeObject, ob_refcnt),
+	               gen86_registers[regno]);
+	return 0;
+err:
+	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gxincref(struct Dee_function_generator *__restrict self,
-                                struct Dee_memloc *__restrict loc) {
-	/* TODO: Like `Dee_function_generator_gincref()', but generate a NULL-check */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
+#if !defined(CONFIG_NO_BADREFCNT_CHECKS) || defined(CONFIG_TRACE_REFCHANGES)
+DFUNDEF NONNULL((1)) void (DCALL DeeObject_Destroy)(DeeObject *__restrict self);
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS || CONFIG_TRACE_REFCHANGES */
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+_Dee_function_generator_gdestroy_reg(struct Dee_function_generator *__restrict self,
+                                     struct Dee_basic_block *block,
+                                     Dee_host_register_t regno) {
+	struct Dee_memstate *state = self->fg_state;
+	BITSET(HOST_REGISTER_COUNT) used_regs;
+	Dee_host_register_t save_regno;
+	uint16_t i;
+
+	/* Figure out all registers that are currently in use (because
+	 * the call to `DeeObject_Destory()' might clobber them). Note
+	 * that we push and then later pop those registers! */
+	bzero(&used_regs, sizeof(used_regs));
+	for (i = 0; i < state->ms_localc; ++i) {
+		struct Dee_memloc const *loc = &state->ms_localv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HREG) {
+			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
+			BITSET_TURNON(&used_regs, loc->ml_value.ml_hreg);
+		}
+	}
+	for (i = 0; i < state->ms_stackc; ++i) {
+		struct Dee_memloc const *loc = &state->ms_stackv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HREG) {
+			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
+			BITSET_TURNON(&used_regs, loc->ml_value.ml_hreg);
+		}
+	}
+
+	/* The caller-given register never needs to be preserved.
+	 * Since this is the path where the object gets destroyed,
+	 * there isn't any reason to save its address somewhere! */
+	BITSET_TURNOFF(&used_regs, regno);
+
+	/* Save registers. */
+	for (save_regno = 0; save_regno < HOST_REGISTER_COUNT; ++save_regno) {
+		if (!BITSET_GET(&used_regs, save_regno))
+			continue;
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		gen86_pushP_r(p_pc(block), gen86_registers[save_regno]);
+		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+	}
+
+	/* Load `regno' as argument for the call to `DeeObject_Destroy()' */
+#ifdef HOST_REGISTER_R_ARG0
+	if (regno != HOST_REGISTER_R_ARG0) {
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		gen86_movP_r_r(p_pc(block),
+		               gen86_registers[regno],
+		               gen86_registers[HOST_REGISTER_R_ARG0]);
+	}
+#else /* HOST_REGISTER_R_ARG0 */
+	if unlikely(Dee_basic_block_reqx86(block, 1))
+		goto err;
+	gen86_pushP_r(p_pc(block), gen86_registers[regno]);
+	Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+#endif /* !HOST_REGISTER_R_ARG0 */
+
+	/* Make the call to `DeeObject_Destroy()' */
+	{
+		struct Dee_host_reloc *rel;
+#ifdef HOSTASM_X86_64_MSABI
+		if unlikely(Dee_basic_block_reqx86(block, 3))
+			goto err;
+		gen86_subP_imm_r(p_pc(block), 32, GEN86_R_PSP);
+#else /* HOSTASM_X86_64_MSABI */
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+#endif /* !HOSTASM_X86_64_MSABI */
+		rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!rel)
+			goto err;
+		gen86_calll_offset(p_pc(block), -4);
+		rel->hr_offset = p_off(block) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_PTREL32;
+		rel->hr_value.hr_pt = (void *)&DeeObject_Destroy;
+#ifdef HOSTASM_X86_64_MSABI
+		gen86_addP_imm_r(p_pc(block), 32, GEN86_R_PSP);
+#endif /* !HOSTASM_X86_64_MSABI */
+	}
+
+	/* Account for the fact that `DeeObject_Destroy()' pops its own arguments on i386 */
+#ifndef HOST_REGISTER_R_ARG0
+	Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
+#endif /* !HOST_REGISTER_R_ARG0 */
+
+	/* After calling an external function, usage registers may have gotten clobbered. */
+	Dee_memstate_hregs_clear_usage(self->fg_state);
+
+	/* Restore registers (in reverse order). */
+	save_regno = HOST_REGISTER_COUNT;
+	while (save_regno) {
+		--save_regno;
+		if (!BITSET_GET(&used_regs, save_regno))
+			continue;
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		gen86_popP_r(p_pc(block), gen86_registers[save_regno]);
+		Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
+	}
+
+	return 0;
+err:
+	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gxdecref(struct Dee_function_generator *__restrict self,
-                                struct Dee_memloc *__restrict loc) {
-	/* TODO: Like `Dee_function_generator_gdecref()', but generate a NULL-check */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gdecref_reg(struct Dee_function_generator *__restrict self,
+                                    Dee_host_register_t regno) {
+	struct Dee_basic_block *cold_block = self->fg_assembler->fa_cold_block;
+	struct Dee_basic_block *block = self->fg_block;
+	if unlikely(Dee_basic_block_reqx86(block, 2))
+		goto err;
+	gen86_lock(p_pc(block));
+	gen86_decP_mod(p_pc(block), gen86_modrm_db,
+	               offsetof(DeeObject, ob_refcnt),
+	               gen86_registers[regno]);
+
+	/* NOTE: decP sets FLAGS.Z=1 when the reference counter becomes `0'. */
+	if (cold_block != NULL) {
+		struct Dee_host_reloc *enter_rel;
+		struct Dee_host_reloc *leave_rel;
+		int32_t delta;
+
+		/* Generate code that jumps into the cold block when the reference counter became `0'. */
+		delta = -4 + p_off(cold_block);
+		gen86_jccl_offset(p_pc(block), GEN86_CC_Z, delta);
+		enter_rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!enter_rel)
+			goto err;
+		enter_rel->hr_offset      = p_off(block);
+		enter_rel->hr_type        = DEE_HOST_RELOC_BBREL32;
+		enter_rel->hr_value.hr_bb = cold_block;
+
+		/* Generate the destroy-code *within* the cold block. */
+		if unlikely(_Dee_function_generator_gdestroy_reg(self, cold_block, regno))
+			goto err;
+
+		/* Generate code to jump from the cold block back to the normal block. */
+		if unlikely(Dee_basic_block_reqx86(cold_block, 1))
+			goto err;
+		delta = -4 + p_off(block);
+		gen86_jmpl_offset(p_pc(cold_block), delta);
+		leave_rel = Dee_basic_block_newhostrel(cold_block);
+		if unlikely(!leave_rel)
+			goto err;
+		leave_rel->hr_offset      = p_off(cold_block);
+		leave_rel->hr_type        = DEE_HOST_RELOC_BBREL32;
+		leave_rel->hr_value.hr_bb = block;
+	} else {
+		uintptr_t jcc8_offset;
+		gen86_jcc8_offset(p_pc(block), GEN86_CC_NZ, -1);
+		jcc8_offset = p_off(block) - 1;
+		if unlikely(_Dee_function_generator_gdestroy_reg(self, block, regno))
+			goto err;
+		/* Fill in the delta for the non-zero-jump above. */
+		*(int8_t *)(block->bb_host_start + jcc8_offset) += (int8_t)(p_off(block) - jcc8_offset);
+	}
+	return 0;
+err:
+	return -1;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_gincref_const(struct Dee_basic_block *__restrict self,
+                               DeeObject *value) {
+	if unlikely(Dee_basic_block_reqx86(self, 2))
+		goto err;
+	gen86_lock(p_pc(self));
+	gen86_incP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_gdecref_const(struct Dee_basic_block *__restrict self,
+                               DeeObject *value) {
+	if unlikely(Dee_basic_block_reqx86(self, 2))
+		goto err;
+	/* Constants can never be destroyed, so decref'ing one is
+	 * like `Dee_DecrefNoKill()' (iow: doesn't need a zero-check) */
+	gen86_lock(p_pc(self));
+	gen86_decP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
+}
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_gxincref_reg(struct Dee_basic_block *__restrict self,
+                              Dee_host_register_t regno) {
+	uint8_t reg86;
+	uintptr_t jcc8_offset;
+	if unlikely(Dee_basic_block_reqx86(self, 2))
+		goto err;
+	reg86 = gen86_registers[regno];
+	gen86_testP_r_r(p_pc(self), reg86, reg86);
+	gen86_jcc8_offset(p_pc(self), GEN86_CC_Z, -1);
+	jcc8_offset = p_off(self) - 1;
+	if unlikely(_Dee_basic_block_gincref_reg(self, regno))
+		goto err;
+	/* Fix-up the jump */
+	*(int8_t *)(self->bb_host_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gxdecref_reg(struct Dee_function_generator *__restrict self,
+                                     Dee_host_register_t regno) {
+	struct Dee_basic_block *block = self->fg_block;
+	uint8_t reg86;
+	uintptr_t jcc8_offset;
+	if unlikely(Dee_basic_block_reqx86(block, 2))
+		goto err;
+	reg86 = gen86_registers[regno];
+	gen86_testP_r_r(p_pc(block), reg86, reg86);
+	gen86_jcc8_offset(p_pc(block), GEN86_CC_Z, -1);
+	jcc8_offset = p_off(block) - 1;
+	if unlikely(_Dee_function_generator_gdecref_reg(self, regno))
+		goto err;
+	/* Fix-up the jump */
+	*(int8_t *)(block->bb_host_start + jcc8_offset) += (int8_t)(p_off(block) - jcc8_offset);
+	return 0;
+err:
+	return -1;
+}
+
+
+
+/* Controls for operating with R/W-locks (as needed for accessing global/extern variables) */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 _Dee_function_generator_grwlock_read(struct Dee_function_generator *__restrict self,
                                      Dee_atomic_rwlock_t *__restrict lock) {
@@ -221,6 +422,28 @@ _Dee_basic_block_ghstack_pushconst(struct Dee_basic_block *__restrict self,
 	if unlikely(Dee_basic_block_reqx86(self, 1))
 		goto err;
 	gen86_pushP_imm(p_pc(self), (intptr_t)(uintptr_t)value); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_ghstack_pushhstack(struct Dee_basic_block *__restrict self,
+                                    ptrdiff_t sp_offset) {
+	if unlikely(Dee_basic_block_reqx86(self, 1))
+		goto err;
+	gen86_pushP_mod(p_pc(self), gen86_modrm_db, sp_offset, GEN86_R_PSP);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_basic_block_ghstack_popreg(struct Dee_basic_block *__restrict self,
+                                Dee_host_register_t dst_regno) {
+	if unlikely(Dee_basic_block_reqx86(self, 1))
+		goto err;
+	gen86_popP_r(p_pc(self), gen86_registers[dst_regno]);
 	return 0;
 err:
 	return -1;
@@ -435,45 +658,386 @@ err:
 
 
 /* Generate a call to a C-function `c_function' with `argc'
- * pointer-sized arguments whose values are taken from `argv'. */
+ * pointer-sized arguments whose values are taken from `argv'.
+ * NOTE: The given `c_function' is assumed to use the `DCALL' calling convention. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gcall_c_function(struct Dee_function_generator *__restrict self,
-                                        void *c_function, size_t argc,
-                                        struct Dee_memloc const *argv) {
+_Dee_function_generator_gcall_c_function(struct Dee_function_generator *__restrict self,
+                                         void *c_function, size_t argc,
+                                         struct Dee_memloc const *argv) {
+#ifdef HOSTASM_X86_64
 	/* TODO */
 	(void)self;
 	(void)c_function;
 	(void)argc;
 	(void)argv;
 	return DeeError_NOTIMPLEMENTED();
+#else /* HOSTASM_X86_64 */
+	struct Dee_basic_block *block = self->fg_block;
+	size_t argi;
+	/* MEMLOC_TYPE_ARG-type arguments with index >= this must be filled after-the-fact */
+	size_t fill_arg_args_later;
+
+	/* Push arguments onto the host stack in reverse order. */
+	argi = argc;
+	fill_arg_args_later = argc;
+	while (argi) {
+		struct Dee_memloc const *arg;
+		--argi;
+		arg = &argv[argi];
+		switch (arg->ml_where) {
+		case MEMLOC_TYPE_HSTACK:
+			if unlikely(Dee_function_generator_ghstack_pushhstack(self, arg->ml_value.ml_hstack))
+				goto err;
+			break;
+		case MEMLOC_TYPE_HREG:
+			if unlikely(Dee_function_generator_ghstack_pushreg(self, arg->ml_value.ml_hreg))
+				goto err;
+			break;
+		case MEMLOC_TYPE_ARG: {
+			/* Must load the `argv' vector, for which we need a temp register.
+			 * However, we mustn't use registers needed by later argument pushs for this! */
+			uint16_t aid = arg->ml_value.ml_harg;
+			struct Dee_memstate *state = self->fg_state;
+			Dee_host_register_t temp_regno;
+			BITSET(HOST_REGISTER_COUNT) used_regs;
+			size_t future_argi;
+			if unlikely(Dee_basic_block_reqx86(block, 1))
+				goto err;
+			temp_regno = Dee_memstate_hregs_find_usage(state, REGISTER_USAGE_ARGV);
+			if (temp_regno < HOST_REGISTER_COUNT) {
+				ptrdiff_t offset;
+do_load_arg_with_argv_regno:
+				offset = (ptrdiff_t)aid * HOST_SIZEOF_POINTER;
+				gen86_pushP_mod(p_pc(block), gen86_modrm_db, offset, gen86_registers[temp_regno]);
+				Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+				break;
+			}
+			temp_regno = Dee_memstate_hregs_find_usage(state, REGISTER_USAGE_ARGS);
+			if (temp_regno < HOST_REGISTER_COUNT) {
+				ptrdiff_t offset;
+do_load_arg_with_args_regno:
+				offset = offsetof(DeeTupleObject, t_elem) + ((ptrdiff_t)aid * HOST_SIZEOF_POINTER);
+				gen86_pushP_mod(p_pc(block), gen86_modrm_db, offset, gen86_registers[temp_regno]);
+				Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+				break;
+			}
+
+			/* Figure out which registers are used by later pushs. */
+			bzero(&used_regs, sizeof(used_regs));
+			for (future_argi = 0; future_argi < argi; ++future_argi) {
+				struct Dee_memloc const *future_arg = &argv[future_argi];
+				if (future_arg->ml_where == MEMLOC_TYPE_HREG) {
+					ASSERT(future_arg->ml_value.ml_hreg < HOST_REGISTER_COUNT);
+					BITSET_TURNON(&used_regs, future_arg->ml_value.ml_hreg);
+				}
+			}
+			for (temp_regno = 0; temp_regno < HOST_REGISTER_COUNT; ++temp_regno) {
+				if (!BITSET_GET(&used_regs, temp_regno)) {
+					/* Found an empty register! */
+					if (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_TUPLE) {
+						if unlikely(_Dee_function_generator_gmov_usage2reg(self, REGISTER_USAGE_ARGS, temp_regno))
+							goto err;
+						state->ms_regs[temp_regno] = REGISTER_USAGE_ARGS;
+						goto do_load_arg_with_args_regno;
+					}
+					if unlikely(_Dee_function_generator_gmov_usage2reg(self, REGISTER_USAGE_ARGV, temp_regno))
+						goto err;
+					state->ms_regs[temp_regno] = REGISTER_USAGE_ARGV;
+					goto do_load_arg_with_argv_regno;
+				}
+			}
+
+			/* Must fill in this argument later */
+			fill_arg_args_later = argi;
+			gen86_pushP_imm(p_pc(block), 0);
+			Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+		}	break;
+
+		case MEMLOC_TYPE_CONST:
+			if unlikely(Dee_function_generator_ghstack_pushconst(self, arg->ml_value.ml_const))
+				goto err;
+			break;
+		default:
+			return DeeError_Throwf(&DeeError_IllegalInstruction,
+			                       "Cannot push memory location with type %#" PRFx16,
+			                       arg->ml_where);
+			break;
+		}
+	}
+	if (fill_arg_args_later < argc) {
+		/* Fill in missing arg-arguments */
+		ptrdiff_t extra_offset = 0;
+		Dee_host_register_t temp_regno, temp2_regno;
+		temp_regno = Dee_memstate_hregs_find_usage(self->fg_state, REGISTER_USAGE_ARGV);
+		if (temp_regno >= HOST_REGISTER_COUNT) {
+			temp_regno = Dee_memstate_hregs_find_usage(self->fg_state, REGISTER_USAGE_ARGS);
+			if (temp_regno < HOST_REGISTER_COUNT) {
+				extra_offset = offsetof(DeeTupleObject, t_elem);
+			} else {
+				temp_regno = HOST_REGISTER_RETURN;
+				if (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_TUPLE) {
+					extra_offset = offsetof(DeeTupleObject, t_elem);
+					if unlikely(_Dee_function_generator_gmov_usage2reg(self, REGISTER_USAGE_ARGS, temp_regno))
+						goto err;
+				} else {
+					if unlikely(_Dee_function_generator_gmov_usage2reg(self, REGISTER_USAGE_ARGV, temp_regno))
+						goto err;
+				}
+				self->fg_state->ms_regs[temp_regno] = REGISTER_USAGE_ARGV;
+			}
+		}
+		temp2_regno = temp_regno + 1;
+		if (temp2_regno >= HOST_REGISTER_COUNT)
+			temp2_regno = 0;
+		for (argi = fill_arg_args_later; argi < argc; ++argi) {
+			ptrdiff_t offset;
+			ptrdiff_t sp_offset;
+			struct Dee_memloc const *arg = &argv[argi];
+			if (arg->ml_where != MEMLOC_TYPE_ARG)
+				continue;
+			if unlikely(Dee_basic_block_reqx86(block, 2))
+				goto err;
+			offset = (ptrdiff_t)arg->ml_value.ml_harg * HOST_SIZEOF_POINTER;
+			offset += extra_offset;
+			sp_offset = (ptrdiff_t)argi * HOST_SIZEOF_POINTER;
+			gen86_movP_db_r(p_pc(block), offset, gen86_registers[temp_regno], gen86_registers[temp2_regno]);
+			gen86_movP_r_db(p_pc(block), gen86_registers[temp2_regno], sp_offset, GEN86_R_PSP);
+		}
+	}
+
+	/* With everything pushed onto the stack and in the correct position, generate the call.
+	 * Note that because deemon API functions use DCALL (STDCALL), the called function does
+	 * the stack cleanup. */
+	{
+		struct Dee_host_reloc *rel;
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!rel)
+			goto err;
+		gen86_calll_offset(p_pc(block), -4);
+		rel->hr_offset = p_off(block) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_PTREL32;
+		rel->hr_value.hr_pt = c_function;
+	}
+
+	/* Adjust the CFA offset to account for the called function having cleaned up stack arguments. */
+	Dee_function_generator_gadjust_cfa_offset(self, -(ptrdiff_t)(argc * HOST_SIZEOF_POINTER));
+
+	/* After calling an external function, usage registers may have gotten clobbered. */
+	Dee_memstate_hregs_clear_usage(self->fg_state);
+	return 0;
+err:
+	return -1;
+#endif /* !HOSTASM_X86_64 */
 }
 
-/* Generate checks to enter exception handling mode. */
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+_Dee_function_generator_gtest_and_jcc(struct Dee_function_generator *__restrict self,
+                                      struct Dee_basic_block *dst,
+                                      struct Dee_memloc *test_loc, uint8_t cc) {
+	struct Dee_basic_block *block = self->fg_block;
+	struct Dee_host_reloc *rel;
+	if unlikely(Dee_basic_block_reqx86(block, 2))
+		goto err;
+	switch (test_loc->ml_where) {
+
+	case MEMLOC_TYPE_HSTACK: {
+		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, test_loc->ml_value.ml_hstack);
+		gen86_cmpP_imm_mod(p_pc(block), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
+	}	break;
+
+	case MEMLOC_TYPE_HREG: {
+		uint8_t reg86 = gen86_registers[test_loc->ml_value.ml_hreg];
+		gen86_testP_r_r(p_pc(block), reg86, reg86);
+	}	break;
+
+	case MEMLOC_TYPE_ARG:
+		/* Arguments are always non-NULL */
+		if (cc == GEN86_CC_Z)
+			return 0; /* Don't jump */
+		goto always_jump;
+	case MEMLOC_TYPE_CONST:
+		if ((test_loc->ml_value.ml_const == NULL) != (cc == GEN86_CC_Z))
+			return 0; /* Don't jump */
+always_jump:
+		return _Dee_basic_block_gjmp(block, dst);
+	default:
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Cannot test memory location with type %#" PRFx16,
+		                       test_loc->ml_where);
+	}
+	gen86_jccl_offset(p_pc(block), cc, -4);
+	rel = Dee_basic_block_newhostrel(block);
+	if unlikely(!rel)
+		goto err;
+	rel->hr_offset = p_off(block) - 4;
+	rel->hr_type   = DEE_HOST_RELOC_BBREL32;
+	rel->hr_value.hr_bb = dst;
+	return 0;
+err:
+	return -1;
+}
+
+/* Generate jumps. */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+_Dee_function_generator_gjz(struct Dee_function_generator *__restrict self,
+                            struct Dee_basic_block *dst, struct Dee_memloc *test_loc) {
+	return _Dee_function_generator_gtest_and_jcc(self, dst, test_loc, GEN86_CC_Z);
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+_Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self,
+                             struct Dee_basic_block *dst, struct Dee_memloc *test_loc) {
+	return _Dee_function_generator_gtest_and_jcc(self, dst, test_loc, GEN86_CC_NZ);
+}
+
+/* Emit conditional jump(s) based on `<test_loc> <=> 0' */
+INTERN WUNUSED NONNULL((1, 5)) int DCALL
+_Dee_function_generator_gjcmp0(struct Dee_function_generator *__restrict self,
+                               struct Dee_basic_block *dst_lo_0, /* Jump here if `<test_loc> < 0' */
+                               struct Dee_basic_block *dst_eq_0, /* Jump here if `<test_loc> == 0' */
+                               struct Dee_basic_block *dst_gr_0, /* Jump here if `<test_loc> > 0' */
+                               struct Dee_memloc *test_loc) {
+	struct Dee_basic_block *block = self->fg_block;
+	/* Check for some special cases. */
+	if (!dst_lo_0 && !dst_eq_0 && !dst_gr_0)
+		return 0;
+	if (!dst_lo_0 && dst_eq_0 && !dst_gr_0)
+		return _Dee_function_generator_gjz(self, dst_eq_0, test_loc);
+	if (!dst_eq_0 && dst_lo_0 == dst_gr_0)
+		return _Dee_function_generator_gjnz(self, dst_lo_0, test_loc);
+	if unlikely(Dee_basic_block_reqx86(block, 2))
+		goto err;
+	switch (test_loc->ml_where) {
+
+	case MEMLOC_TYPE_HSTACK: {
+		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, test_loc->ml_value.ml_hstack);
+		gen86_cmpP_imm_mod(p_pc(block), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
+	}	break;
+
+	case MEMLOC_TYPE_HREG: {
+		uint8_t reg86 = gen86_registers[test_loc->ml_value.ml_hreg];
+		gen86_cmpP_imm_r(p_pc(block), 0, reg86);
+	}	break;
+
+	case MEMLOC_TYPE_CONST: {
+		struct Dee_basic_block *dst;
+		if ((intptr_t)test_loc->ml_value.ml_const < 0) {
+			dst = dst_lo_0;
+		} else if ((intptr_t)test_loc->ml_value.ml_const > 0) {
+			dst = dst_gr_0;
+		} else {
+			dst = NULL;
+		}
+		return dst ? _Dee_basic_block_gjmp(block, dst) : 0;
+	}	break;
+
+	case MEMLOC_TYPE_ARG:
+		/* Always non-NULL, and sign-bit shouldn't be
+		 * set because that's where the kernel is at! */
+		return dst_gr_0 ? _Dee_basic_block_gjmp(block, dst_gr_0) : 0;
+
+	default:
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Cannot test memory location with type %#" PRFx16,
+		                       test_loc->ml_where);
+	}
+
+	/* Emit jumps to different basic blocks (while trying to combine shared destinations). */
+	if (dst_lo_0) {
+		struct Dee_host_reloc *rel;
+		uint8_t cc = GEN86_CC_L;
+		if (dst_lo_0 == dst_eq_0) {
+			cc = GEN86_CC_LE;
+			dst_eq_0 = NULL;
+		} else if (dst_lo_0 == dst_gr_0) {
+			cc = GEN86_CC_NE;
+			dst_gr_0 = NULL;
+		}
+		gen86_jccl_offset(p_pc(block), cc, -4);
+		rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!rel)
+			goto err;
+		rel->hr_offset = p_off(block) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
+		rel->hr_value.hr_bb = dst_lo_0;
+		if (cc == GEN86_CC_LE) {
+			if (dst_gr_0) {
+				dst_eq_0 = dst_gr_0;
+emit_unconditional_jump:
+				if unlikely(Dee_basic_block_reqx86(block, 1))
+					goto err;
+				goto do_emit_unconditional_jump;
+			}
+			return 0;
+		} else if (cc == GEN86_CC_NE) {
+			if (dst_eq_0)
+				goto emit_unconditional_jump;
+			return 0;
+		}
+	}
+	if (dst_gr_0) {
+		struct Dee_host_reloc *rel;
+		uint8_t cc = GEN86_CC_G;
+		if (dst_eq_0 == dst_gr_0) {
+			if (dst_lo_0)
+				goto emit_unconditional_jump;
+			cc = GEN86_CC_GE;
+			dst_eq_0 = NULL;
+		}
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		gen86_jccl_offset(p_pc(block), cc, -4);
+		rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!rel)
+			goto err;
+		rel->hr_offset = p_off(block) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
+		rel->hr_value.hr_bb = dst_gr_0;
+	}
+	if (dst_eq_0) {
+		struct Dee_host_reloc *rel;
+		if unlikely(Dee_basic_block_reqx86(block, 1))
+			goto err;
+		if (dst_lo_0 && dst_gr_0) {
+do_emit_unconditional_jump:
+			gen86_jmpl_offset(p_pc(block), -4);
+		} else {
+			gen86_jccl_offset(p_pc(block), GEN86_CC_E, -4);
+		}
+		rel = Dee_basic_block_newhostrel(block);
+		if unlikely(!rel)
+			goto err;
+		rel->hr_offset = p_off(block) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
+		rel->hr_value.hr_bb = dst_eq_0;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gexcept_if_zero(struct Dee_function_generator *__restrict self,
-                                       struct Dee_memloc *__restrict loc) {
-	/* TODO */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
+_Dee_basic_block_gjmp(struct Dee_basic_block *__restrict self,
+                      struct Dee_basic_block *dst) {
+	struct Dee_host_reloc *rel;
+	if unlikely(Dee_basic_block_reqx86(self, 1))
+		goto err;
+	gen86_jmpl_offset(p_pc(self), -4);
+	rel = Dee_basic_block_newhostrel(self);
+	if unlikely(!rel)
+		goto err;
+	rel->hr_offset = p_off(self) - 4;
+	rel->hr_type   = DEE_HOST_RELOC_BBREL32;
+	rel->hr_value.hr_bb = dst;
+	return 0;
+err:
+	return -1;
 }
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gexcept_if_nonzero(struct Dee_function_generator *__restrict self,
-                                          struct Dee_memloc *__restrict loc) {
-	/* TODO */
-	(void)self;
-	(void)loc;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gexcept(struct Dee_function_generator *__restrict self) {
-	/* TODO */
-	(void)self;
-	return DeeError_NOTIMPLEMENTED();
-}
-
 
 
 DECL_END

@@ -213,16 +213,10 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 	block = Dee_basic_block_alloc();
 	if unlikely(!block)
 		goto err;
+	Dee_basic_block_init_common(block);
 	block->bb_deemon_start = self->fa_code->co_code;
 	block->bb_deemon_end   = self->fa_code->co_code + self->fa_code->co_codebytes;
-	Dee_jump_descriptors_init(&block->bb_entries);
 	Dee_jump_descriptors_init(&block->bb_exits);
-	block->bb_next       = NULL;
-	block->bb_mem_start  = NULL;
-	block->bb_mem_end    = NULL;
-	block->bb_host_start = NULL;
-	block->bb_host_end   = NULL;
-	block->bb_host_free  = 0;
 
 	/* Set the initial block. */
 	self->fa_blockv[0] = block;
@@ -716,8 +710,9 @@ Dee_function_assembler_loadboundlocals(struct Dee_function_assembler *__restrict
 	state->ms_localc = self->fa_code->co_localc;
 	state->ms_stackc = 0;
 	state->ms_stacka = 0;
-	bzero(state->ms_regs, sizeof(state->ms_regs));
+	Dee_memstate_hregs_clear_usage(state);
 	state->ms_stackv = NULL;
+
 	/* Initially, all variables are unbound */
 	for (lid = 0; lid < state->ms_localc; ++lid) {
 		state->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
@@ -734,7 +729,7 @@ Dee_function_assembler_loadboundlocals(struct Dee_function_assembler *__restrict
 		if unlikely(!state)
 			goto err;
 		if (state == (struct Dee_memstate *)ITER_DONE) {
-			block->bb_host_free = 1;
+			block->bb_host_relc = 1;
 			has_unreachable_code = true;
 			break;
 		}
@@ -775,12 +770,12 @@ merge_and_scan_changed_block:
 			if (block_changed) {
 				changed = true;
 				/* (Re-)scan the block for changes */
-				block->bb_host_free = 0;
+				block->bb_host_relc = 0;
 				state = Dee_basic_block_scan_boundlocals(block, primary_state, false);
 				if unlikely(!state)
 					goto err;
 				if (state == (struct Dee_memstate *)ITER_DONE) {
-					block->bb_host_free = 1;
+					block->bb_host_relc = 1;
 					has_unreachable_code = true;
 				} else {
 					/* Merge the block's exit status with the block it fall into. */
@@ -809,8 +804,8 @@ merge_and_scan_changed_block:
 		for (i = 0; i < self->fa_blockc; ++i) {
 			block = self->fa_blockv[i];
 			ASSERT(block);
-			if (block->bb_host_free) {
-				block->bb_host_free = 0;
+			if (block->bb_host_relc) {
+				block->bb_host_relc = 0;
 				state = Dee_basic_block_scan_boundlocals(block, primary_state, true);
 				if unlikely(!state)
 					goto err;
@@ -823,7 +818,7 @@ err:
 	for (i = 0; i < self->fa_blockc; ++i) {
 		block = self->fa_blockv[i];
 		ASSERT(block);
-		block->bb_host_free = 0;
+		block->bb_host_relc = 0;
 	}
 	return -1;
 }

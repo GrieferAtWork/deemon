@@ -362,7 +362,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value) {
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
@@ -370,6 +370,23 @@ Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value)
 	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
 	self->ms_stackv[self->ms_stackc].ml_where = MEMLOC_TYPE_CONST;
 	self->ms_stackv[self->ms_stackc].ml_value.ml_const = value;
+	++self->ms_stackc;
+	return 0;
+err:
+	return -1;
+}
+
+
+/* Sets the `MEMLOC_F_NOREF' flag */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self,
+                       Dee_host_register_t regno) {
+	if unlikely(self->ms_stackc >= self->ms_stacka &&
+	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+		goto err;
+	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
+	self->ms_stackv[self->ms_stackc].ml_where = MEMLOC_TYPE_HREG;
+	self->ms_stackv[self->ms_stackc].ml_value.ml_hreg = regno;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -406,6 +423,67 @@ Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, size_t n) {
 err:
 	return -1;
 }
+
+
+
+
+/* Initialize `self' from `state' (with the exception of `self->exi_block')
+ * @return: 0 : Success
+ * @return: -1: Error (you're holding a reference to an argument/constant; why?) */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
+                         struct Dee_memstate *__restrict state) {
+	uint16_t i;
+	self->exi_cfa_offset = state->ms_host_cfa_offset;
+	bzero(&self->exi_regs,
+	      ((offsetof(struct Dee_except_exitinfo, exi_stack) -
+	        offsetof(struct Dee_except_exitinfo, exi_regs)) +
+	       (self->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t)));
+	for (i = 0; i < state->ms_localc; ++i) {
+		struct Dee_memloc *loc = &state->ms_localv[i];
+		if (loc->ml_flags & (MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND))
+			continue;
+		switch (loc->ml_where) {
+		case MEMLOC_TYPE_HSTACK: {
+			size_t index = Dee_except_exitinfo_cfa2index(loc->ml_value.ml_hstack);
+			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
+			++self->exi_stack[index];
+		}	break;
+		case MEMLOC_TYPE_HREG:
+			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
+			++self->exi_regs[loc->ml_value.ml_hreg];
+			break;
+		case MEMLOC_TYPE_UNALLOC:
+			break;
+		default:
+			return DeeError_Throwf(&DeeError_IllegalInstruction,
+			                       "Cannot jump to exception handler while holding "
+			                       "a reference to an argument or a constant");
+		}
+	}
+	for (i = 0; i < state->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &state->ms_stackv[i];
+		if (loc->ml_flags & MEMLOC_F_NOREF)
+			continue;
+		switch (loc->ml_where) {
+		case MEMLOC_TYPE_HSTACK: {
+			size_t index = Dee_except_exitinfo_cfa2index(loc->ml_value.ml_hstack);
+			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
+			++self->exi_stack[index];
+		}	break;
+		case MEMLOC_TYPE_HREG:
+			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
+			++self->exi_regs[loc->ml_value.ml_hreg];
+			break;
+		default:
+			return DeeError_Throwf(&DeeError_IllegalInstruction,
+			                       "Cannot jump to exception handler while holding "
+			                       "a reference to an argument or a constant");
+		}
+	}
+	return 0;
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

@@ -25,10 +25,17 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 
 DECL_BEGIN
+
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
 
 INTERN NONNULL((1)) void DCALL
 Dee_memstate_destroy(struct Dee_memstate *__restrict self) {
@@ -191,6 +198,7 @@ Dee_jump_descriptors_remove(struct Dee_jump_descriptors *__restrict self,
 
 
 
+/* Destroy the given basic block `self'. */
 INTERN NONNULL((1)) void DCALL
 Dee_basic_block_destroy(struct Dee_basic_block *__restrict self) {
 	size_t i;
@@ -205,6 +213,7 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self) {
 		Dee_memstate_decref(self->bb_mem_start);
 	if (self->bb_mem_end)
 		Dee_memstate_decref(self->bb_mem_end);
+	Dee_Free(self->bb_host_relv);
 	Dee_Free(self->bb_host_start);
 	Dee_basic_block_free(self);
 }
@@ -277,13 +286,7 @@ Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
 	}
 
 	/* Fill in remaining fields and adjust caller-given block bounds. */
-	Dee_jump_descriptors_init(&result->bb_entries);
-	result->bb_next         = NULL;
-	result->bb_mem_start    = NULL;
-	result->bb_mem_end      = NULL;
-	result->bb_host_start   = NULL;
-	result->bb_host_end     = NULL;
-	result->bb_host_free    = 0;
+	Dee_basic_block_init_common(result);
 	result->bb_deemon_start = addr;
 	result->bb_deemon_end   = self->bb_deemon_end;
 	self->bb_deemon_end     = addr;
@@ -302,8 +305,8 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_basic_block_reqhost(struct Dee_basic_block *__restrict self,
                         size_t num_bytes) {
 	byte_t *new_blob;
-	size_t old_used  = self->bb_host_end - self->bb_host_start;
-	size_t old_alloc = old_used + self->bb_host_free;
+	size_t old_used  = (size_t)(self->bb_host_end - self->bb_host_start);
+	size_t old_alloc = (size_t)(self->bb_host_alend - self->bb_host_start);
 	size_t min_alloc = old_used + num_bytes;
 	size_t new_alloc = old_alloc << 1;
 	if (new_alloc < min_alloc)
@@ -317,12 +320,54 @@ _Dee_basic_block_reqhost(struct Dee_basic_block *__restrict self,
 	}
 	self->bb_host_start = new_blob;
 	self->bb_host_end   = new_blob + old_used;
-	self->bb_host_free  = new_alloc - old_used;
-	ASSERT(self->bb_host_free >= num_bytes);
+	self->bb_host_alend = new_blob + new_alloc;
+	ASSERT(self->bb_host_alend >= self->bb_host_end);
 	return 0;
 err:
 	return -1;
 }
+
+
+/* Allocate and return a new host relocation. The caller is responsible
+ * for filling in said relocation, and the returned pointer only remains
+ * valid until the next call to this function with the same `self'.
+ * @return: * :   The (uninitialized) host relocation
+ * @return: NULL: Error  */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_reloc *DCALL
+Dee_basic_block_newhostrel(struct Dee_basic_block *__restrict self) {
+	struct Dee_host_reloc *result;
+	ASSERT(self->bb_host_relc <= self->bb_host_rela);
+	if unlikely(self->bb_host_relc >= self->bb_host_rela) {
+		size_t min_alloc = self->bb_host_relc + 1;
+		size_t new_alloc = self->bb_host_rela * 2;
+		struct Dee_host_reloc *new_list;
+		if (new_alloc < 4)
+			new_alloc = 4;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_list = (struct Dee_host_reloc *)Dee_TryReallocc(self->bb_host_relv,
+		                                                    new_alloc,
+		                                                    sizeof(struct Dee_host_reloc));
+		if unlikely(!new_list) {
+			new_alloc = min_alloc;
+			new_list = (struct Dee_host_reloc *)Dee_Reallocc(self->bb_host_relv,
+			                                                 new_alloc,
+			                                                 sizeof(struct Dee_host_reloc));
+			if unlikely(!new_list)
+				goto err;
+		}
+		self->bb_host_relv = new_list;
+		self->bb_host_rela = new_alloc;
+	}
+	result = &self->bb_host_relv[self->bb_host_relc];
+	++self->bb_host_relc;
+	DBG_memset(result, 0xcc, sizeof(*result));
+	return result;
+err:
+	return NULL;
+}
+
+
 
 
 
@@ -331,7 +376,10 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->fa_blockc; ++i)
 		Dee_basic_block_destroy(self->fa_blockv[i]);
+	for (i = 0; i < self->fa_except_exitc; ++i)
+		Dee_except_exitinfo_destroy(self->fa_except_exitv[i]);
 	Dee_Free(self->fa_blockv);
+	Dee_Free(self->fa_except_exitv);
 }
 
 
@@ -423,6 +471,126 @@ Dee_function_assembler_locateblock(struct Dee_function_assembler const *__restri
 	}
 	return NULL;
 }
+
+/* Lookup/allocate an exception-exit basic block that to clean up `state'
+ * and then return `NULL' to the caller of the generated function.
+ * @return: * :   The basic block to which to jump in order to clean up `state'.
+ * @return: NULL: Error. */
+INTERN WUNUSED NONNULL((1, 2)) struct Dee_basic_block *DCALL
+Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict self,
+                                   struct Dee_memstate *__restrict state) {
+	size_t lo, hi;
+	size_t infosize = Dee_except_exitinfo_cmp_sizeof(state->ms_host_cfa_offset);
+	struct Dee_basic_block *result;
+	struct Dee_except_exitinfo *info;
+#ifdef Dee_Alloca
+	info = (struct Dee_except_exitinfo *)Dee_Alloca(infosize);
+#else /* Dee_Alloca */
+	info = Dee_except_exitinfo_alloc(infosize);
+	if unlikely(!info)
+		goto err;
+#endif /* !Dee_Alloca */
+
+	/* Fill in info. */
+	if unlikely(Dee_except_exitinfo_init(info, state))
+		goto err_info_alloca;
+
+	/* Check if we already have a block for this state. */
+	lo = 0;
+	hi = self->fa_except_exitc;
+	while (lo < hi) {
+		int diff;
+		struct Dee_except_exitinfo *oldinfo;
+		size_t mid = (lo + hi) / 2;
+		oldinfo = self->fa_except_exitv[mid];
+		ASSERT(oldinfo);
+		ASSERT(oldinfo->exi_block);
+		diff = Dee_except_exitinfo_cmp(info, oldinfo);
+		if (diff < 0) {
+			hi = mid;
+		} else if (diff > 0) {
+			lo = mid + 1;
+		} else {
+			/* Found it! */
+#ifndef Dee_Alloca
+			Dee_except_exitinfo_free(info);
+#endif /* !Dee_Alloca */
+			return oldinfo->exi_block;
+		}
+	}
+	ASSERT(lo == hi);
+
+	/* Need to insert a new exit information descriptor. */
+#ifdef Dee_Alloca
+	{
+		struct Dee_except_exitinfo *heapinfo;
+		heapinfo = Dee_except_exitinfo_alloc(infosize);
+		if unlikely(!heapinfo)
+			goto err_info_alloca;
+		info = (struct Dee_except_exitinfo *)memcpy(heapinfo, info, infosize);
+	}
+#endif /* Dee_Alloca */
+
+	/* Allocate a basic block for `info'. */
+	result = Dee_basic_block_alloc();
+	if unlikely(!result)
+		goto err_info;
+	info->exi_block = result;
+	Dee_basic_block_init_common(result);
+	Dee_jump_descriptors_init(&result->bb_exits);
+	result->bb_deemon_start = NULL; /* No deemon code here */
+	result->bb_deemon_end   = NULL;
+	result->bb_mem_start    = state; /* Remember (some) state when jumping to this block. */
+	Dee_memstate_incref(state);
+
+	/* Make sure there is enough space in the sorted list of exit information descriptors. */
+	ASSERT(self->fa_except_exitc <= self->fa_except_exita);
+	if unlikely(self->fa_except_exitc >= self->fa_except_exita) {
+		struct Dee_except_exitinfo **new_list;
+		size_t new_alloc = self->fa_except_exita * 2;
+		size_t min_alloc = self->fa_except_exitc + 1;
+		if (new_alloc < 8)
+			new_alloc = 8;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_list = (struct Dee_except_exitinfo **)Dee_TryReallocc(self->fa_except_exitv,
+		                                                          new_alloc,
+		                                                          sizeof(struct Dee_except_exitinfo *));
+		if unlikely(!new_list) {
+			new_alloc = min_alloc;
+			new_list = (struct Dee_except_exitinfo **)Dee_Reallocc(self->fa_except_exitv,
+			                                                       new_alloc,
+			                                                       sizeof(struct Dee_except_exitinfo *));
+			if unlikely(!new_list)
+				goto err_info_result;
+		}
+		self->fa_except_exitv = new_list;
+		self->fa_except_exita = new_alloc;
+	}
+
+	/* Insert the new info-descriptor at the appropriate location (`lo'). */
+	memmoveupc(&self->fa_except_exitv[lo + 1],
+	           &self->fa_except_exitv[lo],
+	           self->fa_except_exitc - lo,
+	           sizeof(struct Dee_except_exitinfo *));
+	self->fa_except_exitv[lo] = info;
+	++self->fa_except_exitc;
+
+	return result;
+err_info_result:
+	Dee_basic_block_free(result);
+err_info:
+#ifdef Dee_Alloca
+	Dee_except_exitinfo_free(info);
+#endif /* Dee_Alloca */
+err_info_alloca:
+#ifndef Dee_Alloca
+	Dee_except_exitinfo_free(info);
+err:
+#endif /* !Dee_Alloca */
+	return NULL;
+}
+
 
 
 

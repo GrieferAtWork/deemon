@@ -6,6 +6,7 @@
 		</Filter>
 	</ItemGroup>
 	<ItemGroup>
+		<ClInclude Include="..\..\src\dex\_hostasm\host.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\api.h">
 			<Filter>libgen86</Filter>
 		</ClInclude>

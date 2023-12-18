@@ -35,6 +35,7 @@
 		</ProjectConfiguration>
 	</ItemGroup>
 	<ItemGroup>
+		<ClInclude Include="..\..\src\dex\_hostasm\host.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\api.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\gen.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\register.h" />

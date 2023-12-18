@@ -83,7 +83,8 @@ find_not_compiled_block_with_most_defined_entry_points(struct Dee_function_assem
 			result_index           = i;
 		}
 	}
-	ASSERTF(result_missing_entries < self->fa_blockv[result_index]->bb_entries.jds_size,
+	ASSERTF(result_index == 0 ||
+	        result_missing_entries < self->fa_blockv[result_index]->bb_entries.jds_size,
 	        "There must be at least 1 present entry, else the block itself would "
 	        "be completely unreachable, which is impossible because the loader created "
 	        "it because it found a label that points to it.");
@@ -136,17 +137,6 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 	/* Save caller-provided arguments onto stack. */
 #ifdef HOSTASM_X86_64
 	{
-#ifdef HOSTASM_X86_64_MSABI
-#define HOST_REGISTER_R_ARG0 HOST_REGISTER_RCX
-#define HOST_REGISTER_R_ARG1 HOST_REGISTER_RDX
-#define HOST_REGISTER_R_ARG2 HOST_REGISTER_R8
-#define HOST_REGISTER_R_ARG3 HOST_REGISTER_R9
-#elif defined(HOSTASM_X86_64_SYSVABI)
-#define HOST_REGISTER_R_ARG0 HOST_REGISTER_RDI
-#define HOST_REGISTER_R_ARG1 HOST_REGISTER_RSI
-#define HOST_REGISTER_R_ARG2 HOST_REGISTER_RDX
-#define HOST_REGISTER_R_ARG3 HOST_REGISTER_RCX
-#endif /* ... */
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,

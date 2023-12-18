@@ -197,8 +197,8 @@
 	 (__INT64_TYPE__)(__UINT64_TYPE__)(value))
 #endif /* LIBGEN86_TARGET_BITS != 64 */
 
-#define _gen86_putb(p_pc, b)  (void)(*(*(p_pc))++ = (__UINT8_TYPE__)(b))
-#define _gen86_putsb(p_pc, b) (void)(*(*(p_pc))++ = (__UINT8_TYPE__)(__INT8_TYPE__)(b))
+#define _gen86_putb(p_pc, b)  (void)(**(p_pc) = (__UINT8_TYPE__)(b), ++*(p_pc))
+#define _gen86_putsb(p_pc, b) (void)(**(p_pc) = (__UINT8_TYPE__)(__INT8_TYPE__)(b), ++*(p_pc))
 #define _gen86_putw(p_pc, w)  (void)(__hybrid_unaligned_setle16(*(p_pc), (__UINT16_TYPE__)(w)), *(p_pc) += 2)
 #define _gen86_putsw(p_pc, w) (void)(__hybrid_unaligned_setle16(*(p_pc), (__UINT16_TYPE__)(__INT16_TYPE__)(w)), *(p_pc) += 2)
 #define _gen86_putl(p_pc, l)  (void)(__hybrid_unaligned_setle32(*(p_pc), (__UINT32_TYPE__)(l)), *(p_pc) += 4)
