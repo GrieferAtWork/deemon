@@ -30,10 +30,6 @@
 
 #include <stdint.h>
 
-#ifdef CONFIG_HOST_WINDOWS
-#include <Windows.h>
-#endif /* CONFIG_HOST_WINDOWS */
-
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -68,7 +64,15 @@
 #endif /* !... */
 #endif /* !CONFIG_NO_LIBHOSTASM */
 
+
+
+
+
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#ifdef CONFIG_hostfunc_USES_VirtualAlloc
+#include <Windows.h>
+#endif /* CONFIG_hostfunc_USES_VirtualAlloc */
+
 
 /* Select the arch for which to generate code. */
 #if defined(__i386__) || defined(__x86_64__)

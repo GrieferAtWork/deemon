@@ -2175,6 +2175,9 @@ print_imm_pop:
 		break;
 
 	case ASM_SETITEM_I:
+		printf("%" PRFu16 ", pop", READ_imm16(iter));
+		break;
+
 	case ASM_GETRANGE_IP:
 	case ASM_SETRANGE_PI:
 	case ASM_SETRANGE_NI:
@@ -2183,8 +2186,11 @@ print_imm_pop:
 
 	case ASM_GETRANGE_PI:
 	case ASM_GETRANGE_NI:
-	case ASM_GETITEM_I:
 		printf("%" PRFd16, READ_Simm16(iter));
+		break;
+
+	case ASM_GETITEM_I:
+		printf("%" PRFu16, READ_imm16(iter));
 		break;
 
 	case ASM_GETRANGE_IN:

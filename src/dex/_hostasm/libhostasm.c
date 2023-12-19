@@ -50,11 +50,13 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	Dee_function_assembler_init(&assembler, func, HOSTFUNC_CC_CALL);
 	if unlikely(Dee_function_assembler_loadblocks(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_loadboundlocals(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_trimunused(&assembler))
-		goto err_assembler;
 	if unlikely(Dee_function_assembler_compileblocks(&assembler))
+		goto err_assembler;
+	if unlikely(Dee_function_assembler_trimdead(&assembler))
+		goto err_assembler;
+	if unlikely(Dee_function_assembler_compilemorph(&assembler))
+		goto err_assembler;
+	if unlikely(Dee_function_assembler_stitchblocks(&assembler))
 		goto err_assembler;
 	if unlikely(Dee_function_assembler_linkblocks(&assembler, &hfunc))
 		goto err_assembler;

@@ -47,13 +47,14 @@ Dee_memstate_destroy(struct Dee_memstate *__restrict self) {
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_memstate_inplace_copy(struct Dee_memstate **__restrict p_self) {
+Dee_memstate_inplace_copy_because_shared(struct Dee_memstate **__restrict p_self) {
 	struct Dee_memstate *copy, *self;
 	self = *p_self;
+	ASSERT(Dee_memstate_isshared(self));
 	copy = Dee_memstate_copy(self);
 	if unlikely(!copy)
 		goto err;
-	Dee_memstate_decref(self);
+	Dee_memstate_decref_nokill(self);
 	*p_self = copy;
 	return 0;
 err:
@@ -80,6 +81,78 @@ Dee_memstate_copy(struct Dee_memstate *__restrict self) {
 	return result;
 err_r:
 	Dee_memstate_free(result);
+err:
+	return NULL;
+}
+
+
+
+
+/* Ensure that at least `num_bytes' of host text memory are available.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_reqhost(struct Dee_host_section *__restrict self,
+                          size_t num_bytes) {
+	byte_t *new_blob;
+	size_t old_used  = (size_t)(self->hs_end - self->hs_start);
+	size_t old_alloc = (size_t)(self->hs_alend - self->hs_start);
+	size_t min_alloc = old_used + num_bytes;
+	size_t new_alloc = old_alloc << 1;
+	if (new_alloc < min_alloc)
+		new_alloc = min_alloc;
+	new_blob = (byte_t *)Dee_TryRealloc(self->hs_start, new_alloc);
+	if (new_blob == NULL) {
+		new_alloc = min_alloc;
+		new_blob = (byte_t *)Dee_Realloc(self->hs_start, new_alloc);
+		if unlikely(!new_blob)
+			goto err;
+	}
+	self->hs_start = new_blob;
+	self->hs_end   = new_blob + old_used;
+	self->hs_alend = new_blob + new_alloc;
+	ASSERT(self->hs_alend >= self->hs_end);
+	return 0;
+err:
+	return -1;
+}
+
+
+/* Allocate and return a new host relocation. The caller is responsible
+ * for filling in said relocation, and the returned pointer only remains
+ * valid until the next call to this function with the same `self'.
+ * @return: * :   The (uninitialized) host relocation
+ * @return: NULL: Error  */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_reloc *DCALL
+Dee_host_section_newhostrel(struct Dee_host_section *__restrict self) {
+	struct Dee_host_reloc *result;
+	ASSERT(self->hs_relc <= self->hs_rela);
+	if unlikely(self->hs_relc >= self->hs_rela) {
+		size_t min_alloc = self->hs_relc + 1;
+		size_t new_alloc = self->hs_rela * 2;
+		struct Dee_host_reloc *new_list;
+		if (new_alloc < 4)
+			new_alloc = 4;
+		if (new_alloc < min_alloc)
+			new_alloc = min_alloc;
+		new_list = (struct Dee_host_reloc *)Dee_TryReallocc(self->hs_relv,
+		                                                    new_alloc,
+		                                                    sizeof(struct Dee_host_reloc));
+		if unlikely(!new_list) {
+			new_alloc = min_alloc;
+			new_list = (struct Dee_host_reloc *)Dee_Reallocc(self->hs_relv,
+			                                                 new_alloc,
+			                                                 sizeof(struct Dee_host_reloc));
+			if unlikely(!new_list)
+				goto err;
+		}
+		self->hs_relv = new_list;
+		self->hs_rela = new_alloc;
+	}
+	result = &self->hs_relv[self->hs_relc];
+	++self->hs_relc;
+	DBG_memset(result, 0xcc, sizeof(*result));
+	return result;
 err:
 	return NULL;
 }
@@ -213,8 +286,8 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self) {
 		Dee_memstate_decref(self->bb_mem_start);
 	if (self->bb_mem_end)
 		Dee_memstate_decref(self->bb_mem_end);
-	Dee_Free(self->bb_host_relv);
-	Dee_Free(self->bb_host_start);
+	Dee_host_section_fini(&self->bb_htext);
+	Dee_host_section_fini(&self->bb_hcold);
 	Dee_basic_block_free(self);
 }
 
@@ -298,77 +371,6 @@ err:
 }
 
 
-/* Ensure that at least `num_bytes' of host text memory are available.
- * @return: 0 : Success
- * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_reqhost(struct Dee_basic_block *__restrict self,
-                        size_t num_bytes) {
-	byte_t *new_blob;
-	size_t old_used  = (size_t)(self->bb_host_end - self->bb_host_start);
-	size_t old_alloc = (size_t)(self->bb_host_alend - self->bb_host_start);
-	size_t min_alloc = old_used + num_bytes;
-	size_t new_alloc = old_alloc << 1;
-	if (new_alloc < min_alloc)
-		new_alloc = min_alloc;
-	new_blob = (byte_t *)Dee_TryRealloc(self->bb_host_start, new_alloc);
-	if (new_blob == NULL) {
-		new_alloc = min_alloc;
-		new_blob = (byte_t *)Dee_Realloc(self->bb_host_start, new_alloc);
-		if unlikely(!new_blob)
-			goto err;
-	}
-	self->bb_host_start = new_blob;
-	self->bb_host_end   = new_blob + old_used;
-	self->bb_host_alend = new_blob + new_alloc;
-	ASSERT(self->bb_host_alend >= self->bb_host_end);
-	return 0;
-err:
-	return -1;
-}
-
-
-/* Allocate and return a new host relocation. The caller is responsible
- * for filling in said relocation, and the returned pointer only remains
- * valid until the next call to this function with the same `self'.
- * @return: * :   The (uninitialized) host relocation
- * @return: NULL: Error  */
-INTERN WUNUSED NONNULL((1)) struct Dee_host_reloc *DCALL
-Dee_basic_block_newhostrel(struct Dee_basic_block *__restrict self) {
-	struct Dee_host_reloc *result;
-	ASSERT(self->bb_host_relc <= self->bb_host_rela);
-	if unlikely(self->bb_host_relc >= self->bb_host_rela) {
-		size_t min_alloc = self->bb_host_relc + 1;
-		size_t new_alloc = self->bb_host_rela * 2;
-		struct Dee_host_reloc *new_list;
-		if (new_alloc < 4)
-			new_alloc = 4;
-		if (new_alloc < min_alloc)
-			new_alloc = min_alloc;
-		new_list = (struct Dee_host_reloc *)Dee_TryReallocc(self->bb_host_relv,
-		                                                    new_alloc,
-		                                                    sizeof(struct Dee_host_reloc));
-		if unlikely(!new_list) {
-			new_alloc = min_alloc;
-			new_list = (struct Dee_host_reloc *)Dee_Reallocc(self->bb_host_relv,
-			                                                 new_alloc,
-			                                                 sizeof(struct Dee_host_reloc));
-			if unlikely(!new_list)
-				goto err;
-		}
-		self->bb_host_relv = new_list;
-		self->bb_host_rela = new_alloc;
-	}
-	result = &self->bb_host_relv[self->bb_host_relc];
-	++self->bb_host_relc;
-	DBG_memset(result, 0xcc, sizeof(*result));
-	return result;
-err:
-	return NULL;
-}
-
-
-
 
 
 INTERN NONNULL((1)) void DCALL
@@ -378,6 +380,7 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 		Dee_basic_block_destroy(self->fa_blockv[i]);
 	for (i = 0; i < self->fa_except_exitc; ++i)
 		Dee_except_exitinfo_destroy(self->fa_except_exitv[i]);
+	Dee_host_section_fini(&self->fa_prolog);
 	Dee_Free(self->fa_blockv);
 	Dee_Free(self->fa_except_exitv);
 }
@@ -613,7 +616,8 @@ INTERN ATTR_COLD int DCALL err_illegal_cid(uint16_t cid) {
 INTERN ATTR_COLD int DCALL err_illegal_rid(uint16_t rid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal reference ID: %#" PRFx16, rid);
 }
-INTERN ATTR_COLD NONNULL((1)) int DCALL err_illegal_gid(DeeModuleObject *__restrict mod, uint16_t gid) {
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+err_illegal_gid(struct Dee_module_object *__restrict mod, uint16_t gid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal global ID in %r: %#" PRFx16, mod, gid);
 }
 

@@ -912,11 +912,11 @@
 #define ASM_CONTAINS          0xb0 /* [1][-2,+1]   `contains top, pop'                  - Pop an Object and invoke the __contains__ operator on stack-top. */
 #define ASM_CONTAINS_C        0xb1 /* [2][-1,+1]   `push contains const <imm8>, pop'    - Pop an Object and check if it is contained within a sequence found int the given constant (which is usually a read-only HashSet). */
 #define ASM_GETITEM           0xb2 /* [1][-2,+1]   `getitem top, pop'                   - Pop a key/index and invoke the __getitem__ operator on stack-top. */
-#define ASM_GETITEM_I         0xb3 /* [3][-1,+1]   `getitem top, $<Simm16>'             - Invoke the __getitem__ operator on stack-top, using an int <Simm16> (little-endian) as index. */
+#define ASM_GETITEM_I         0xb3 /* [3][-1,+1]   `getitem top, $<imm16>'              - Invoke the __getitem__ operator on stack-top, using an int <imm16> (little-endian) as index. */
 #define ASM_GETITEM_C         0xb4 /* [2][-1,+1]   `getitem top, const <imm8>'          - Invoke the __getitem__ operator on stack-top, using constant slot `<imm8>' as key. */
 #define ASM_GETSIZE           0xb5 /* [1][-1,+1]   `getsize top'                        - Invoke the __size__ operator on stack-top. */
 #define ASM_SETITEM           0xb6 /* [1][-3,+0]   `setitem pop, pop, pop'              - Pop a value, a key/index and invoke the __setitem__ operator on stack-top. */
-#define ASM_SETITEM_I         0xb7 /* [3][-2,+0]   `setitem pop, $<Simm16>, pop'        - Pop a value and invoke the __setitem__ operator on stack-top, using an int <Simm16> (little-endian) as index. */
+#define ASM_SETITEM_I         0xb7 /* [3][-2,+0]   `setitem pop, $<imm16>, pop'         - Pop a value and invoke the __setitem__ operator on stack-top, using an int <imm16> (little-endian) as index. */
 #define ASM_SETITEM_C         0xb8 /* [2][-2,+0]   `setitem pop, const <imm8>, pop'     - Pop a value and invoke the __setitem__ operator on stack-top, using constant slot `<imm8>' as key. */
 #define ASM_ITERSELF          0xb9 /* [1][-1,+1]   `iterself top'                       - Replace stack-top with an iterator of itself. */
 #define ASM_DELITEM           0xba /* [1][-2,+0]   `delitem pop, pop'                   - Pop a key/index and invoke the __delitem__ operator on stack-top. */

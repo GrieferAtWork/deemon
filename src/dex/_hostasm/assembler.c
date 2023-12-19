@@ -44,36 +44,40 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
 	Dee_memstate_incref(generator.fg_state);
 	result = Dee_function_generator_genall(&generator);
 	Dee_memstate_decref(generator.fg_state);
-	ASSERT(result != 0 || self->bb_mem_end != NULL);
 	return result;
 }
 
 /* Given the set of all basic block that have yet to be compiled,
  * find the one that has the most entry descriptors with a defined
- * `jd_stat' and return that one. */
+ * `jd_stat' and return that one.
+ * @return: (size_t)-1: Everything has been compiled. */
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-find_not_compiled_block_with_most_defined_entry_points(struct Dee_function_assembler *__restrict self) {
-	size_t result_index = 0;
+find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
+	size_t result_index = (size_t)-1;
 	size_t i, result_missing_entries = (size_t)-1;
-	for (i = 1; i < self->fa_blockc; ++i) {
-		size_t entry_i, num_missing_entries;
+	for (i = 0; i < self->fa_blockc; ++i) {
+		size_t j, num_missing_entries;
 		struct Dee_basic_block *block = self->fa_blockv[i];
+		if (block->bb_mem_start == NULL)
+			continue; /* Block hasn't been reached at all, yet. */
 		if (block->bb_mem_end != NULL)
 			continue; /* Already compiled. */
+		if (i == 0)
+			return 0; /* Always compile the entry-block first! */
 		num_missing_entries = 0;
-
-		/* Special case for when the block can only be reached via fallthru (shouldn't happen) */
-		if (block->bb_entries.jds_size == 0) {
-			ASSERTF(self->fa_blockv[i - 1]->bb_next,
-			        "That would mean the block is entirely unreachable. "
-			        /**/ "If that were the case, then `Dee_function_assembler_trimunused()' "
-			        /**/ "should have removed it!");
-			if (self->fa_blockv[i - 1]->bb_mem_end == NULL)
+		for (j = 0; j < block->bb_entries.jds_size; ++j) {
+			struct Dee_jump_descriptor *entry = block->bb_entries.jds_list[j];
+			if (entry->jd_stat == NULL)
 				++num_missing_entries;
 		}
-		for (entry_i = 0; entry_i < block->bb_entries.jds_size; ++entry_i) {
-			struct Dee_jump_descriptor *entry = block->bb_entries.jds_list[entry_i];
-			if (entry->jd_stat == NULL)
+		for (j = 0; j < self->fa_blockc; ++j) {
+			struct Dee_basic_block *block2 = self->fa_blockv[j];
+			if (block2->bb_next == block && block2->bb_mem_end == NULL)
+				++num_missing_entries;
+		}
+		for (j = 0; j < self->fa_except_exitc; ++j) {
+			struct Dee_basic_block *block2 = self->fa_except_exitv[j]->exi_block;
+			if (block2->bb_next == block && block2->bb_mem_end == NULL)
 				++num_missing_entries;
 		}
 		if (num_missing_entries == 0)
@@ -83,11 +87,6 @@ find_not_compiled_block_with_most_defined_entry_points(struct Dee_function_assem
 			result_index           = i;
 		}
 	}
-	ASSERTF(result_index == 0 ||
-	        result_missing_entries < self->fa_blockv[result_index]->bb_entries.jds_size,
-	        "There must be at least 1 present entry, else the block itself would "
-	        "be completely unreachable, which is impossible because the loader created "
-	        "it because it found a label that points to it.");
 	return result_index;
 }
 
@@ -131,8 +130,31 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 	ASSERT(self->fa_blockc >= 1);
 	block = self->fa_blockv[0];
 	ASSERT(block);
-	state = block->bb_mem_start;
-	ASSERT(state);
+	ASSERT(block->bb_mem_start == NULL);
+
+	/* Setup the state of the function's first (entry) block. */
+	state = Dee_memstate_alloc(self->fa_code->co_localc);
+	if unlikely(!state)
+		goto err;
+	state->ms_refcnt = 1;
+	state->ms_host_cfa_offset = 0;
+	state->ms_localc = self->fa_code->co_localc;
+	state->ms_stackc = 0;
+	state->ms_stacka = 0;
+	Dee_memstate_hregs_clear_usage(state);
+	state->ms_stackv = NULL;
+
+	/* Initially, all variables are unbound */
+	{
+		uint16_t lid;
+		for (lid = 0; lid < state->ms_localc; ++lid) {
+			state->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
+			state->ms_localv[lid].ml_where = MEMLOC_TYPE_UNALLOC;
+		}
+	}
+
+	/* Set the mem-state for the initial block. */
+	block->bb_mem_start = state; /* Inherit reference */
 
 	/* Save caller-provided arguments onto stack. */
 #ifdef HOSTASM_X86_64
@@ -163,6 +185,9 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 			state->ms_regs[truearg_regno[trueargc]] = REGISTER_USAGE_KW;
 			trueargc += 1;
 		}
+
+#if 0 /* TODO: This can't go in the first basic block; this needs to go into
+       *       a special prolog section that is generated during linking! */
 #ifdef HOSTASM_X86_64_SYSVABI
 		/* Push arguments onto stack */
 		if (trueargc >= 4 && _Dee_basic_block_ghstack_pushreg(block, HOST_REGISTER_R_ARG3))
@@ -185,113 +210,26 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		if (trueargc >= 4 && _Dee_basic_block_gmov_reg2hstack(block, HOST_REGISTER_R_ARG3, HOST_SIZEOF_POINTER * 4))
 			goto err;
 #endif /* ... */
+#endif
 	}
 #endif /* HOSTASM_X86_64 */
 
-	/* Allocate stack space for local variables that are used before they're initialized. */
-	{
-		uint16_t lid;
-		for (lid = 0; lid < state->ms_localc; ++lid) {
-			if (state->ms_localv[lid].ml_where == MEMLOC_TYPE_HSTACK) {
-				uintptr_t loc = Dee_memstate_hstack_alloca(state, HOST_SIZEOF_POINTER);
-				state->ms_localv[lid].ml_value.ml_hstack = loc;
-			}
-		}
-	}
-
-	/* Adjust host SP for pre-allocated locals. */
-	if (state->ms_host_cfa_offset != 0) {
-		int temp;
-#ifdef HOSTASM_STACK_GROWS_DOWN
-		temp = _Dee_basic_block_ghstack_adjust(block, -(ptrdiff_t)state->ms_host_cfa_offset);
-#else /* HOSTASM_STACK_GROWS_DOWN */
-		temp = _Dee_basic_block_ghstack_adjust(block, (ptrdiff_t)state->ms_host_cfa_offset);
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
-		if unlikely(temp)
-			goto err;
-	}
-
-	/* Compile the first block. */
-	if unlikely(Dee_basic_block_compile(block, self))
-		goto err;
-
-	/* Compile all of the other blocks. */
-	while ((block_i = find_not_compiled_block_with_most_defined_entry_points(self)) != 0) {
+	/* Compile all basic blocks until everything has been compiled and everyone is happy. */
+	while ((block_i = find_next_block_to_compile(self)) != (size_t)-1) {
 		block = self->fa_blockv[block_i];
+		Dee_DPRINTF("Dee_function_assembler_compileblocks: %" PRFuSIZ " [%.4" PRFx32 "-%.4" PRFx32 "]\n",
+		            block_i,
+		            Dee_function_assembler_addrof(self, block->bb_deemon_start),
+		            Dee_function_assembler_addrof(self, block->bb_deemon_end - 1));
+#ifndef NO_HOSTASM_DEBUG_PRINT
+		_Dee_memstate_debug_print(block->bb_mem_start);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
 		ASSERT(block->bb_mem_start != NULL);
 		ASSERT(block->bb_mem_end == NULL);
-
-		/* Check for special case where the preceding block falls through into this one. */
-		{
-			uint16_t lid;
-			struct Dee_basic_block *prev = self->fa_blockv[block_i - 1];
-			struct Dee_memstate *initial = prev->bb_mem_end;
-			struct Dee_memstate *mem_start;
-			ASSERT(prev->bb_next == NULL ||
-			       prev->bb_next == block);
-			if (prev->bb_next != block)
-				initial = NULL;
-			if (initial == NULL) {
-				size_t entry_i;
-				for (entry_i = 0; entry_i < block->bb_entries.jds_size; ++entry_i) {
-					struct Dee_jump_descriptor *entry;
-					entry = block->bb_entries.jds_list[entry_i];
-					if (entry->jd_stat)
-						initial = entry->jd_stat;
-				}
-			}
-			ASSERT(initial != NULL);
-			if unlikely(Dee_memstate_unshare(&block->bb_mem_start))
-				goto err;
-
-			/* Fill in the initial mem-state of the block. */
-			mem_start = block->bb_mem_start;
-			ASSERTF(mem_start->ms_stackc == 0,
-			        "Should have been set like this by `Dee_function_assembler_loadboundlocals()'");
-			ASSERT(mem_start->ms_localc == initial->ms_localc);
-			if unlikely(Dee_memstate_reqvstack(mem_start, initial->ms_stackc))
-				goto err;
-			memcpyc(mem_start->ms_stackv, initial->ms_stackv,
-			        initial->ms_stackc, sizeof(struct Dee_memloc));
-			memcpy(mem_start->ms_regs, initial->ms_regs, sizeof(initial->ms_regs));
-			mem_start->ms_host_cfa_offset = initial->ms_host_cfa_offset;
-			mem_start->ms_stackc = initial->ms_stackc;
-			for (lid = 0; lid < initial->ms_localc; ++lid) {
-				struct Dee_memloc *dst = &mem_start->ms_localv[lid];
-				struct Dee_memloc *src = &initial->ms_localv[lid];
-				/* Important: *don't* inherit the is-bound of the local here.
-				 * That state was already set by `Dee_function_assembler_loadboundlocals()' */
-				dst->ml_flags &= MEMLOC_M_LOCAL_BSTATE;
-				dst->ml_flags |= src->ml_flags & ~MEMLOC_M_LOCAL_BSTATE;
-				dst->ml_where = src->ml_where;
-				dst->ml_value._ml_data = src->ml_value._ml_data;
-			}
-		}
-
-		/* Merge all other already-defined entry points into the block. */
-		{
-			size_t entry_i;
-			for (entry_i = 0; entry_i < block->bb_entries.jds_size; ++entry_i) {
-				struct Dee_jump_descriptor *entry;
-				struct Dee_memstate *entry_state;
-				entry       = block->bb_entries.jds_list[entry_i];
-				entry_state = entry->jd_stat;
-				if (entry_state != NULL) {
-					if unlikely(block->bb_mem_start->ms_stackc != entry_state->ms_stackc) {
-						DeeError_Throwf(&DeeError_IllegalInstruction,
-						                "Conflicting stack depth at +%.4" PRFx32 ": "
-						                "both %" PRFu16 " and %" PRFu16 " matched",
-						                Dee_function_assembler_addrof(self, block->bb_deemon_start),
-						                block->bb_mem_start->ms_stackc, entry_state->ms_stackc);
-						goto err;
-					}
-					Dee_memstate_constrainwith(block->bb_mem_start, entry_state);
-				}
-			}
-		}
-
-		/* Try to deallocate unused stack memory. */
-		Dee_memstate_hstack_free(block->bb_mem_start);
+		ASSERT(block->bb_htext.hs_end == block->bb_htext.hs_start);
+		ASSERT(block->bb_htext.hs_relc == 0);
+		ASSERT(block->bb_hcold.hs_end == block->bb_hcold.hs_start);
+		ASSERT(block->bb_hcold.hs_relc == 0);
 
 		/* Compile this block. */
 		if unlikely(Dee_basic_block_compile(block, self))
@@ -303,7 +241,221 @@ err:
 	return -1;
 }
 
-/* Step #5: Link blocks into an executable function blob.
+
+struct host_section_set {
+	struct Dee_host_section **hss_list; /* [1..1][0..hss_size] List of basic blocks (sorted by pointer) */
+	size_t                   hss_size; /* # of items in `hss_list' */
+#ifndef NDEBUG
+	size_t                   hss_smax; /* Max # of items in `hss_list' */
+#endif /* !NDEBUG */
+};
+
+#ifdef NDEBUG
+#define _host_section_set_init_set_smax(self, smax) (void)0
+#else /* NDEBUG */
+#define _host_section_set_init_set_smax(self, smax) ((self)->hss_smax = (smax))
+#endif /* !NDEBUG */
+#define host_section_set_fini(self) Dee_Freea((self)->hss_list)
+#define host_section_set_init(self, smax)         \
+	(_host_section_set_init_set_smax(self, smax), \
+	 (self)->hss_size = 0,                        \
+	 ((self)->hss_list = (struct Dee_host_section **)Dee_Mallocac(smax, sizeof(struct Dee_host_section *))) != NULL ? 0 : -1)
+
+
+/* Try to insert `sect' into `self' (if it wasn't inserted already) */
+PRIVATE NONNULL((1, 2)) void DCALL
+host_section_set_insert(struct host_section_set *__restrict self,
+                        struct Dee_host_section *sect) {
+	size_t lo = 0, hi = self->hss_size;
+	ASSERT(sect);
+	while (lo < hi) {
+		size_t mid = (lo + hi) / 2;
+		struct Dee_host_section *ex = self->hss_list[mid];
+		if (sect < ex) {
+			hi = mid;
+		} else if (sect > ex) {
+			lo = mid + 1;
+		} else {
+			return; /* Already inserted. */
+		}
+	}
+#ifndef NDEBUG
+	ASSERTF(self->hss_size < self->hss_smax,
+	        "This would mean that there are more "
+	        "sections than are known to the assembler");
+#endif /* !NDEBUG */
+	ASSERT(lo == hi);
+	memmoveupc(&self->hss_list[lo + 1],
+	           &self->hss_list[lo],
+	           self->hss_size - lo,
+	           sizeof(struct Dee_host_section *));
+	self->hss_list[lo] = sect;
+	++self->hss_size;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+host_section_set_contains(struct host_section_set const *__restrict self,
+                          struct Dee_host_section *sect) {
+	size_t lo = 0, hi = self->hss_size;
+	while (lo < hi) {
+		size_t mid = (lo + hi) / 2;
+		struct Dee_host_section *ex = self->hss_list[mid];
+		if (sect < ex) {
+			hi = mid;
+		} else if (sect > ex) {
+			lo = mid + 1;
+		} else {
+			return true;
+		}
+	}
+	return false;
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+host_section_set_insertall_from_relocations(struct host_section_set *__restrict self,
+                                            struct Dee_host_section *sect) {
+	size_t i;
+	for (i = 0; i < sect->hs_relc; ++i) {
+		struct Dee_host_reloc *rel = &sect->hs_relv[i];
+		switch (rel->hr_type) {
+#ifdef DEE_HOST_RELOC_SCREL32
+		case DEE_HOST_RELOC_SCREL32:
+#endif /* DEE_HOST_RELOC_SCREL32 */
+#ifdef DEE_HOST_RELOC_SCABS32
+		case DEE_HOST_RELOC_SCABS32:
+#endif /* DEE_HOST_RELOC_SCABS32 */
+			host_section_set_insert(self, rel->hr_value.hr_sc);
+			break;
+
+		default:
+			break;
+		}
+	}
+}
+
+
+/* Step #3: Trim basic blocks (and parts thereof) that turned out to be unreachable.
+ * This extra step is needed for when part of a basic block only turns out to be
+ * unreachable during the compileblocks-phase, as would be the case in code like this:
+ *       >>     push true
+ *       >>     jf   pop, 1f
+ *       >>     ret
+ *       >> 1:  print @"NEVER REACHED", nl
+ *       >>     ret
+ * This function also gets rid of exception handling basic blocks that are never used
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) {
+	struct host_section_set referenced_sections;
+	size_t i;
+
+	/* Note how we skip the primary block here.
+	 * That's because it could never not have been compiled. */
+	ASSERT(self->fa_blockc >= 1);
+	ASSERT(self->fa_blockv[0]);
+	ASSERT(self->fa_blockv[0]->bb_mem_start != NULL);
+	ASSERT(self->fa_blockv[0]->bb_mem_end != NULL);
+	for (i = 1; i < self->fa_blockc;) {
+		struct Dee_basic_block *block = self->fa_blockv[i];
+		ASSERT((block->bb_mem_start != NULL) == (block->bb_mem_end != NULL));
+		if (block->bb_mem_start == NULL) {
+			/* Fully get rid of this block. */
+			--self->fa_blockc;
+			memmovedownc(&self->fa_blockv[i],
+			             &self->fa_blockv[i + 1],
+			             self->fa_blockc - i,
+			             sizeof(struct Dee_basic_block *));
+			Dee_basic_block_destroy(block);
+			continue;
+		}
+		if (block->bb_deemon_end < block->bb_deemon_end_r) {
+			/* Block ends with a late-detected unreachable instruction.
+			 * In this case, it is possible that there are further jump
+			 * descriptors for parts of the code that hasn't been compiled,
+			 * which we must get rid of now. */
+			Dee_basic_block_trim_unused_exits(block);
+		}
+		++i;
+	}
+
+	/* Go through all blocks and check which exception exit info blocks
+	 * are actually still being used, and remove those that aren't. */
+	if unlikely(host_section_set_init(&referenced_sections,
+	                                  (self->fa_blockc * 2) +
+	                                  self->fa_except_exitc))
+		goto err;
+	for (i = 0; i < self->fa_blockc; ++i) {
+		struct Dee_basic_block *block = self->fa_blockv[i];
+		ASSERT(block);
+		ASSERT(block->bb_mem_start);
+		ASSERT(block->bb_mem_end);
+		host_section_set_insertall_from_relocations(&referenced_sections, &block->bb_htext);
+		host_section_set_insertall_from_relocations(&referenced_sections, &block->bb_hcold);
+	}
+
+	/* Go through exception handlers and remove those that aren't referenced. */
+	for (i = 0; i < self->fa_except_exitc;) {
+		struct Dee_except_exitinfo *info = self->fa_except_exitv[i];
+		struct Dee_basic_block *block = info->exi_block;
+
+		/* Note that the cold section of exception handlers is never referenced by code
+		 * blocks, which is why we only allocate 1 slot for each except exit in the set
+		 * above, and only check the bb_htext section here. */
+		if (host_section_set_contains(&referenced_sections, &block->bb_htext)) {
+			++i;
+			continue;
+		}
+
+		/* Unreferenced exit info blob -> get rid of it! */
+		Dee_except_exitinfo_destroy(info);
+		--self->fa_except_exitc;
+		memmovedownc(&self->fa_except_exitv[i],
+		             &self->fa_except_exitv[i + 1],
+		             self->fa_except_exitc - i,
+		             sizeof(struct Dee_except_exitinfo *));
+	}
+	host_section_set_fini(&referenced_sections);
+
+	return 0;
+err:
+	return -1;
+}
+
+/* Step #4: Generate morph instruction sequences to perform memory state transitions.
+ * This also extends the host text of basic blocks that fall through to some
+ * other basic block with an extra instructions needed for morphing:
+ * - self->fa_prolog
+ * - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph
+ * - self->fa_blockv[*]->bb_htext        (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
+ * - self->fa_except_exitv[*]->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
+ * - self->fa_except_exitv[*]->bb_next   (set if intend is to fall into another exit block)
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict self) {
+	/* TODO */
+	(void)self;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+/* Step #5: Generate missing unconditional jumps to jump from one block to the next
+ * - Find loops of blocks that "fall through" back on each other in a loop, and
+ *   append a jump-to-the-start on all blocks that "fall through" to themselves.
+ *   For one of these blocks, also generate a call to `DeeThread_CheckInterrupt()'
+ * - For all blocks that have more than 1 fallthru predecessors, take all but
+ *   1 of those predecessors and append unconditional jumps to them, then set
+ *   the `bb_next' field of those blocks to `NULL'.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_stitchblocks(struct Dee_function_assembler *__restrict self) {
+	/* TODO */
+	(void)self;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+/* Step #6: Link blocks into an executable function blob.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL

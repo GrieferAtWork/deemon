@@ -2987,7 +2987,7 @@ do_contains_c:
 
 		TARGET(ASM_GETITEM_I, -1, +1) {
 			DREF DeeObject *value;
-			value = DeeObject_GetItemIndex(TOP, READ_Simm16());
+			value = DeeObject_GetItemIndex(TOP, READ_imm16());
 			if unlikely(!value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3031,7 +3031,7 @@ do_getitem_c:
 		}
 
 		TARGET(ASM_SETITEM_I, -2, +0) {
-			if (DeeObject_SetItemIndex(SECOND, READ_Simm16(), FIRST))
+			if (DeeObject_SetItemIndex(SECOND, READ_imm16(), FIRST))
 				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();

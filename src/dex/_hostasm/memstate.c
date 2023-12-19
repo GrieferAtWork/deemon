@@ -101,6 +101,26 @@ done:
 	return result;
 }
 
+/* Check if `regno' is used by stack/locals (ignores `ms_regs') */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_memstate_hregs_isused(struct Dee_memstate const *__restrict self,
+                          Dee_host_register_t regno) {
+	size_t i;
+	for (i = 0; i < self->ms_stackc; ++i) {
+		struct Dee_memloc const *loc = &self->ms_stackv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HREG &&
+		    loc->ml_value.ml_hreg == regno)
+			return true;
+	}
+	for (i = 0; i < self->ms_localc; ++i) {
+		struct Dee_memloc const *loc = &self->ms_localv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HREG &&
+		    loc->ml_value.ml_hreg == regno)
+			return true;
+	}
+	return false;
+}
+
 /* Same as `Dee_memstate_hregs_find_unused(self, true)', but don't return `not_these',
  * which is an array of register numbers terminated by one `>= HOST_REGISTER_COUNT'.
  * Returns some value `>= HOST_REGISTER_COUNT' if non-existent. */
@@ -146,13 +166,39 @@ done:
 }
 
 
+/* Check if a pointer-sized blob at `cfa_offset' is being used by something. */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
+                           uintptr_t cfa_offset) {
+	size_t i;
+	for (i = 0; i < self->ms_stackc; ++i) {
+		struct Dee_memloc const *loc = &self->ms_stackv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HSTACK &&
+		    loc->ml_value.ml_hstack == cfa_offset)
+			return true;
+	}
+	for (i = 0; i < self->ms_localc; ++i) {
+		struct Dee_memloc const *loc = &self->ms_localv[i];
+		if (loc->ml_where == MEMLOC_TYPE_HSTACK &&
+		    loc->ml_value.ml_hstack == cfa_offset)
+			return true;
+	}
+	return false;
+}
+
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 Dee_memloc_hstack_used(struct Dee_memloc const *__restrict self,
                        uintptr_t min_offset, uintptr_t end_offset) {
 	if (self->ml_where == MEMLOC_TYPE_HSTACK) {
+#ifdef HOSTASM_STACK_GROWS_DOWN
+		if (self->ml_value.ml_hstack > min_offset &&
+		    self->ml_value.ml_hstack <= end_offset)
+			return true;
+#else /* HOSTASM_STACK_GROWS_DOWN */
 		if (self->ml_value.ml_hstack >= min_offset &&
 		    self->ml_value.ml_hstack < end_offset)
 			return true;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
 	}
 	return false; /* No used by this one! */
 }
@@ -184,19 +230,14 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self, size_t n_by
 		size_t n_pointers = n_bytes / HOST_SIZEOF_POINTER;
 		size_t i, check = (a_pointers - n_pointers) + 1;
 		for (i = 0; i < check; ++i) {
-			uintptr_t min_offset, end_offset;
-			min_offset = i * HOST_SIZEOF_POINTER;
-#ifdef HOSTASM_STACK_GROWS_DOWN
-			end_offset = min_offset;
-			min_offset -= n_bytes;
-#else /* HOSTASM_STACK_GROWS_DOWN */
-			end_offset = min_offset + n_bytes;
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			uintptr_t min_offset = i * HOST_SIZEOF_POINTER;
+			uintptr_t end_offset = min_offset + n_bytes;
 			if (Dee_memstate_hstack_unused(self, min_offset, end_offset)) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
-				min_offset += n_bytes;
-#endif /* HOSTASM_STACK_GROWS_DOWN */
+				return end_offset;
+#else /* HOSTASM_STACK_GROWS_DOWN */
 				return min_offset;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
 			}
 		}
 	}
@@ -211,13 +252,8 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 	bool result = false;
 	while (self->ms_host_cfa_offset > 0) {
 		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
-#ifdef HOSTASM_STACK_GROWS_DOWN
-		uintptr_t end_offset = (a_pointers - 1) * HOST_SIZEOF_POINTER;
-		uintptr_t min_offset = end_offset - HOST_SIZEOF_POINTER;
-#else /* HOSTASM_STACK_GROWS_DOWN */
 		uintptr_t min_offset = (a_pointers - 1) * HOST_SIZEOF_POINTER;
 		uintptr_t end_offset = min_offset + HOST_SIZEOF_POINTER;
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
 		if (!Dee_memstate_hstack_unused(self, min_offset, end_offset))
 			break;
 		self->ms_host_cfa_offset -= HOST_SIZEOF_POINTER;
@@ -227,66 +263,198 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) void DCALL
+PRIVATE NONNULL((1, 2, 3)) bool DCALL
 Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
                          struct Dee_memloc *self,
-                         struct Dee_memloc const *__restrict other) {
-	/* Quick check: are locations identical? */
-	if (Dee_memloc_sameloc(self, other))
-		return;
-	switch (self->ml_where) {
+                         struct Dee_memloc const *__restrict other,
+                         bool is_local) {
+	bool result = false;
 
-	case MEMLOC_TYPE_CONST:
-	case MEMLOC_TYPE_ARG: {
-		/* On one side it's an argument or a constant, and on the other
-		 * side it's something else.
-		 * In this case, need to convert to a register/stack location. */
-		Dee_host_register_t regno;
-		regno = Dee_memstate_hregs_find_unused(state, true);
-		if (regno < HOST_REGISTER_COUNT) {
-			self->ml_where = MEMLOC_TYPE_HREG;
-			self->ml_value.ml_hreg = regno;
-		} else {
-			/* Use a stack location. */
-			uintptr_t cfa_offset;
-			cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
-			if (cfa_offset == (uintptr_t)-1)
-				cfa_offset = Dee_memstate_hstack_alloca(state, HOST_SIZEOF_POINTER);
-			self->ml_where = MEMLOC_TYPE_HSTACK;
-			self->ml_value.ml_hstack = cfa_offset;
-		}
-	}	break;
-
-	default:
-		break;
+	/* If `MEMLOC_F_NOREF' isn't set in both locations, must clear it in `self' */
+	if ((self->ml_flags & MEMLOC_F_NOREF) && !(other->ml_flags & MEMLOC_F_NOREF)) {
+		self->ml_flags &= ~MEMLOC_F_NOREF;
+		result = true;
 	}
+
+	/* For local variables, merge the binding state of the variable. */
+	if (is_local) {
+		uint16_t nw_bound;
+		uint16_t my_bound = self->ml_flags & MEMLOC_M_LOCAL_BSTATE;
+		uint16_t ot_bound = other->ml_flags & MEMLOC_M_LOCAL_BSTATE;
+		ASSERTF(my_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
+		ASSERTF(ot_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
+		nw_bound = ((my_bound & ot_bound) & MEMLOC_F_LOCAL_BOUND) |
+		           ((my_bound | ot_bound) & MEMLOC_F_LOCAL_UNBOUND);
+		if (my_bound != nw_bound) {
+			self->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+			self->ml_flags |= nw_bound;
+			result = true;
+		}
+	}
+
+	/* Quick check: are locations identical? */
+	if (!Dee_memloc_sameloc(self, other)) {
+		switch (self->ml_where) {
+	
+		case MEMLOC_TYPE_CONST:
+		case MEMLOC_TYPE_ARG: {
+			/* On one side it's an argument or a constant, and on the other
+			 * side it's something else.
+			 * In this case, need to convert to a register/stack location. */
+			Dee_host_register_t regno;
+
+			/* If the location describe by `other' isn't already in use in `state',
+			 * then use *it* as-it. That way, we can reduce the necessary number of
+			 * memory state transformation! */
+			switch (other->ml_where) {
+	
+			case MEMLOC_TYPE_HSTACK:
+				if (!Dee_memstate_hstack_isused(state, other->ml_value.ml_hstack)) {
+					uintptr_t min_cfa_offset;
+					self->ml_where = MEMLOC_TYPE_HSTACK;
+					self->ml_value.ml_hstack = other->ml_value.ml_hstack;
+					min_cfa_offset = other->ml_value.ml_hstack;
+#ifndef HOSTASM_STACK_GROWS_DOWN
+					min_cfa_offset += HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+					if (state->ms_host_cfa_offset < min_cfa_offset)
+						state->ms_host_cfa_offset = min_cfa_offset;
+					goto did_runtime_value_merge;
+				}
+				break;
+
+			case MEMLOC_TYPE_HREG:
+				if (!Dee_memstate_hregs_isused(state, other->ml_value.ml_hreg)) {
+					self->ml_where = MEMLOC_TYPE_HREG;
+					self->ml_value.ml_hreg = other->ml_value.ml_hreg;
+					goto did_runtime_value_merge;
+				}
+				break;
+	
+			default:
+				break;
+			}
+	
+			regno = Dee_memstate_hregs_find_unused(state, true);
+			if (regno < HOST_REGISTER_COUNT) {
+				self->ml_where = MEMLOC_TYPE_HREG;
+				self->ml_value.ml_hreg = regno;
+				state->ms_regs[regno]  = REGISTER_USAGE_GENERIC;
+			} else {
+				/* Use a stack location. */
+				uintptr_t cfa_offset;
+				cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
+				if (cfa_offset == (uintptr_t)-1)
+					cfa_offset = Dee_memstate_hstack_alloca(state, HOST_SIZEOF_POINTER);
+				self->ml_where = MEMLOC_TYPE_HSTACK;
+				self->ml_value.ml_hstack = cfa_offset;
+			}
+did_runtime_value_merge:
+			result = true;
+		}	break;
+	
+		default:
+			break;
+		}
+	}
+	return result;
 }
 
 /* Constrain `self' with `other', such that it is possible to generate code to
  * transition from `other' to `self', as well as any other mem-state that might
- * be the result of further constraints applied to `self'. */
-INTERN WUNUSED NONNULL((1, 2)) void DCALL
+ * be the result of further constraints applied to `self'.
+ * @return: true:  State become more constrained
+ * @return: false: State didn't change */
+INTERN NONNULL((1, 2)) bool DCALL
 Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
                            struct Dee_memstate const *__restrict other) {
+	bool result = false;
 	uint16_t i;
 	Dee_host_register_t regno;
 	ASSERT(self->ms_stackc == other->ms_stackc);
 
-	/* Always use the largest host-stack size. */
-	if (self->ms_host_cfa_offset < other->ms_host_cfa_offset)
-		self->ms_host_cfa_offset = other->ms_host_cfa_offset;
-
 	/* Mark usage registers as undefined if different between blocks. */
 	for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
-		if (self->ms_regs[regno] != other->ms_regs[regno])
+		if (self->ms_regs[regno] != other->ms_regs[regno]) {
 			self->ms_regs[regno] = REGISTER_USAGE_GENERIC;
+			result = true;
+		}
 	}
 
 	/* Merge stack/locals memory locations. */
 	for (i = 0; i < self->ms_stackc; ++i)
-		Dee_memloc_constrainwith(self, &self->ms_stackv[i], &other->ms_stackv[i]);
+		result |= Dee_memloc_constrainwith(self, &self->ms_stackv[i], &other->ms_stackv[i], false);
 	for (i = 0; i < self->ms_localc; ++i)
-		Dee_memloc_constrainwith(self, &self->ms_localv[i], &other->ms_localv[i]);
+		result |= Dee_memloc_constrainwith(self, &self->ms_localv[i], &other->ms_localv[i], true);
+	return result;
+}
+
+
+PRIVATE NONNULL((1)) void DCALL
+Dee_basic_block_clear_hcode_and_exits(struct Dee_basic_block *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->bb_exits.jds_size; ++i) {
+		struct Dee_jump_descriptor *jump;
+		jump = self->bb_exits.jds_list[i];
+		ASSERT(jump);
+		if (jump->jd_stat) {
+			Dee_memstate_decref(jump->jd_stat);
+			jump->jd_stat = NULL;
+		}
+	}
+	Dee_host_section_clear(&self->bb_htext);
+	Dee_host_section_clear(&self->bb_hcold);
+}
+
+/* Constrain or assign `self->bb_mem_start' with the memory state `state'
+ * @param: self_start_addr: The starting-address of `self' (for error messages)
+ * @return: 1 : State become more constrained
+ * @return: 0 : State didn't change 
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_basic_block_constrainwith(struct Dee_basic_block *__restrict self,
+                              struct Dee_memstate *__restrict state,
+                              code_addr_t self_start_addr) {
+	bool result;
+	struct Dee_memstate *block_start = self->bb_mem_start;
+	/* Check for simple case: the block doesn't have a state assigned, yet. */
+	if (block_start == NULL) {
+		self->bb_mem_start = state;
+		Dee_memstate_incref(state);
+		ASSERT(self->bb_htext.hs_end == self->bb_htext.hs_start);
+		ASSERT(self->bb_htext.hs_relc == 0);
+		ASSERT(self->bb_hcold.hs_end == self->bb_hcold.hs_start);
+		ASSERT(self->bb_hcold.hs_relc == 0);
+		return 0;
+	}
+	if unlikely(block_start->ms_stackc != state->ms_stackc) {
+		DeeError_Throwf(&DeeError_IllegalInstruction,
+		                "Unbalanced stack depth at +%.4" PRFx32 ". "
+		                "Both %" PRFu16 " and %" PRFu16 " encountered",
+		                self_start_addr,
+		                block_start->ms_stackc,
+		                state->ms_stackc);
+		goto err;
+	}
+	if (Dee_memstate_isshared(block_start)) {
+		ASSERT(self->bb_mem_start == block_start);
+		block_start = Dee_memstate_copy(block_start);
+		if unlikely(!block_start)
+			goto err;
+		Dee_memstate_decref_nokill(self->bb_mem_start);
+		self->bb_mem_start = block_start;
+	}
+	result = Dee_memstate_constrainwith(block_start, state);
+	if (result) {
+		if (self->bb_mem_end != NULL) {
+			Dee_memstate_decref(self->bb_mem_end);
+			self->bb_mem_end = NULL;
+		}
+		Dee_basic_block_clear_hcode_and_exits(self);
+	}
+	return result;
+err:
+	return -1;
 }
 
 
@@ -329,7 +497,7 @@ Dee_memstate_vlrot(struct Dee_memstate *__restrict self, size_t n) {
 		temp = self->ms_stackv[self->ms_stackc - n];
 		memmovedownc(&self->ms_stackv[self->ms_stackc - n],
 		             &self->ms_stackv[self->ms_stackc - (n - 1)],
-		             self->ms_stackc - (n - 1), sizeof(struct Dee_memloc));
+		             n - 1, sizeof(struct Dee_memloc));
 		self->ms_stackv[self->ms_stackc - 1] = temp;
 	}
 	return 0;
@@ -344,7 +512,7 @@ Dee_memstate_vrrot(struct Dee_memstate *__restrict self, size_t n) {
 		temp = self->ms_stackv[self->ms_stackc - 1];
 		memmoveupc(&self->ms_stackv[self->ms_stackc - (n - 1)],
 		           &self->ms_stackv[self->ms_stackc - n],
-		           self->ms_stackc - (n - 1), sizeof(struct Dee_memloc));
+		           n - 1, sizeof(struct Dee_memloc));
 		self->ms_stackv[self->ms_stackc - n] = temp;
 	}
 	return 0;

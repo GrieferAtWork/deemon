@@ -40,8 +40,8 @@
 
 DECL_BEGIN
 
-#define Dee_basic_block_reqx86(self, n_instructions) \
-	Dee_basic_block_reqhost(self, GEN86_INSTRLEN_MAX * (n_instructions))
+#define Dee_host_section_reqx86(self, n_instructions) \
+	Dee_host_section_reqhost(self, GEN86_INSTRLEN_MAX * (n_instructions))
 
 PRIVATE uint8_t const gen86_registers[HOST_REGISTER_COUNT] = {
 #ifdef HOSTASM_X86_64_MSABI
@@ -69,16 +69,235 @@ PRIVATE uint8_t const gen86_registers[HOST_REGISTER_COUNT] = {
 #endif /* ... */
 };
 
-#define p_pc(block)  (&(block)->bb_host_end)
-#define p_off(block) (uintptr_t)((block)->bb_host_end - (block)->bb_host_start)
+#define p_pc(sect)  (&(sect)->hs_end)
+#define p_off(sect) (uintptr_t)((sect)->hs_end - (sect)->hs_start)
+
+
+#ifdef NO_HOSTASM_DEBUG_PRINT
+#define gen86_regname(regno) ""
+#define gen86_printf(...)    (void)0
+#else /* NO_HOSTASM_DEBUG_PRINT */
+#define gen86_regname(regno) gen86_regnames[gen86_registers[regno]]
+#ifdef HOSTASM_X86_64
+#define Per "r"
+#define Plq "q"
+#else /* HOSTASM_X86_64 */
+#define Per "e"
+#define Plq "l"
+#endif /* !HOSTASM_X86_64 */
+PRIVATE char const gen86_regnames[][5] = {
+	/* [GEN86_R_PAX] = */ "%" Per "ax",
+	/* [GEN86_R_PCX] = */ "%" Per "cx",
+	/* [GEN86_R_PDX] = */ "%" Per "dx",
+	/* [GEN86_R_PBX] = */ "%" Per "bx",
+	/* [GEN86_R_PSP] = */ "%" Per "sp",
+	/* [GEN86_R_PBP] = */ "%" Per "bp",
+	/* [GEN86_R_PSI] = */ "%" Per "si",
+	/* [GEN86_R_PDI] = */ "%" Per "di",
+#ifdef HOSTASM_X86_64
+	/* [GEN86_R_R8]  = */ "%r8",
+	/* [GEN86_R_R9]  = */ "%r9",
+	/* [GEN86_R_R10] = */ "%r10",
+	/* [GEN86_R_R11] = */ "%r11",
+	/* [GEN86_R_R12] = */ "%r12",
+	/* [GEN86_R_R13] = */ "%r13",
+	/* [GEN86_R_R14] = */ "%r14",
+	/* [GEN86_R_R15] = */ "%r15",
+#endif /* HOSTASM_X86_64 */
+};
+PRIVATE char const gen86_ccnames[][3] = {
+	/* [GEN86_CC_O]  = */ "o",
+	/* [GEN86_CC_NO] = */ "no",
+	/* [GEN86_CC_B]  = */ "b",
+	/* [GEN86_CC_AE] = */ "ae",
+	/* [GEN86_CC_Z]  = */ "z",
+	/* [GEN86_CC_NZ] = */ "nz",
+	/* [GEN86_CC_BE] = */ "be",
+	/* [GEN86_CC_A]  = */ "a",
+	/* [GEN86_CC_S]  = */ "s",
+	/* [GEN86_CC_NS] = */ "ns",
+	/* [GEN86_CC_PE] = */ "pe",
+	/* [GEN86_CC_PO] = */ "po",
+	/* [GEN86_CC_L]  = */ "l",
+	/* [GEN86_CC_GE] = */ "ge",
+	/* [GEN86_CC_LE] = */ "le",
+	/* [GEN86_CC_G]  = */ "g",
+};
+#define gen86_printf(...) Dee_DPRINTF("gen86:" __VA_ARGS__)
+PRIVATE char const *gen86_addrname(void const *addr) {
+	static char buf[2 + sizeof(void *) * 2 + 1];
+#ifdef HOSTASM_X86_64
+#define CASE(func, n)                \
+	if (addr == (void const *)&func) \
+		return #func
+#else /* HOSTASM_X86_64 */
+#define CASE(func, n)                \
+	if (addr == (void const *)&func) \
+		return #func "@" #n
+#endif /* !HOSTASM_X86_64 */
+	CASE(DeeObject_Copy, 4);
+	CASE(DeeObject_DeepCopy, 4);
+	CASE(DeeObject_Assign, 8);
+	CASE(DeeObject_MoveAssign, 8);
+	CASE(DeeObject_Str, 4);
+	CASE(DeeObject_Repr, 4);
+	CASE(DeeObject_Bool, 4);
+	CASE(DeeObject_IterNext, 4);
+	CASE(DeeObject_Call, 12);
+	CASE(DeeObject_CallKw, 16);
+	CASE(DeeObject_CallTuple, 8);
+	CASE(DeeObject_CallTupleKw, 12);
+	CASE(DeeObject_CallAttr, 16);
+	CASE(DeeObject_CallAttrKw, 20);
+	CASE(DeeObject_CallAttrTuple, 12);
+	CASE(DeeObject_CallAttrTupleKw, 16);
+	CASE(DeeObject_Int, 4);
+	CASE(DeeObject_Inv, 4);
+	CASE(DeeObject_Pos, 4);
+	CASE(DeeObject_Neg, 4);
+	CASE(DeeObject_Add, 8);
+	CASE(DeeObject_Sub, 8);
+	CASE(DeeObject_Mul, 8);
+	CASE(DeeObject_Div, 8);
+	CASE(DeeObject_Mod, 8);
+	CASE(DeeObject_Shl, 8);
+	CASE(DeeObject_Shr, 8);
+	CASE(DeeObject_And, 8);
+	CASE(DeeObject_Or, 8);
+	CASE(DeeObject_Xor, 8);
+	CASE(DeeObject_Pow, 8);
+	CASE(DeeObject_AddInt8, 8);
+	CASE(DeeObject_SubInt8, 8);
+	CASE(DeeObject_MulInt8, 8);
+	CASE(DeeObject_DivInt8, 8);
+	CASE(DeeObject_ModInt8, 8);
+	CASE(DeeObject_ShlUInt8, 8);
+	CASE(DeeObject_ShrUInt8, 8);
+	CASE(DeeObject_AddUInt32, 8);
+	CASE(DeeObject_SubUInt32, 8);
+	CASE(DeeObject_AndUInt32, 8);
+	CASE(DeeObject_OrUInt32, 8);
+	CASE(DeeObject_XorUInt32, 8);
+	CASE(DeeObject_Inc, 4);
+	CASE(DeeObject_Dec, 4);
+	CASE(DeeObject_InplaceAdd, 8);
+	CASE(DeeObject_InplaceSub, 8);
+	CASE(DeeObject_InplaceMul, 8);
+	CASE(DeeObject_InplaceDiv, 8);
+	CASE(DeeObject_InplaceMod, 8);
+	CASE(DeeObject_InplaceShl, 8);
+	CASE(DeeObject_InplaceShr, 8);
+	CASE(DeeObject_InplaceAnd, 8);
+	CASE(DeeObject_InplaceOr, 8);
+	CASE(DeeObject_InplaceXor, 8);
+	CASE(DeeObject_InplacePow, 8);
+	CASE(DeeObject_Hash, 4);
+	CASE(DeeObject_CompareEqObject, 8);
+	CASE(DeeObject_CompareNeObject, 8);
+	CASE(DeeObject_CompareLoObject, 8);
+	CASE(DeeObject_CompareLeObject, 8);
+	CASE(DeeObject_CompareGrObject, 8);
+	CASE(DeeObject_CompareGeObject, 8);
+	CASE(DeeObject_IterSelf, 4);
+	CASE(DeeObject_SizeObject, 4);
+	CASE(DeeObject_Contains, 8);
+	CASE(DeeObject_GetItem, 8);
+	CASE(DeeObject_DelItem, 8);
+	CASE(DeeObject_SetItem, 12);
+	CASE(DeeObject_GetRange, 12);
+	CASE(DeeObject_GetRangeBeginIndex, 12);
+	CASE(DeeObject_GetRangeEndIndex, 12);
+	CASE(DeeObject_GetRangeIndex, 12);
+	CASE(DeeObject_DelRange, 12);
+	CASE(DeeObject_SetRange, 16);
+	CASE(DeeObject_SetRangeBeginIndex, 16);
+	CASE(DeeObject_SetRangeEndIndex, 16);
+	CASE(DeeObject_SetRangeIndex, 16);
+	CASE(DeeObject_GetAttr, 8);
+	CASE(DeeObject_DelAttr, 8);
+	CASE(DeeObject_SetAttr, 12);
+	CASE(DeeObject_Enter, 4);
+	CASE(DeeObject_Leave, 4);
+#undef CASE
+	Dee_sprintf(buf, "%#Ix", addr);
+	return buf;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+_Dee_memloc_debug_print(struct Dee_memloc *__restrict self, bool is_local) {
+	if (!(self->ml_flags & MEMLOC_F_NOREF))
+		Dee_DPRINT("r");
+	switch (self->ml_where) {
+	case MEMLOC_TYPE_HSTACK:
+		Dee_DPRINTF("#%Iu", self->ml_value.ml_hstack);
+		break;
+	case MEMLOC_TYPE_HREG:
+		Dee_DPRINTF("%s", gen86_regname(self->ml_value.ml_hreg));
+		break;
+	case MEMLOC_TYPE_ARG:
+		Dee_DPRINTF("a%I16u", self->ml_value.ml_harg);
+		break;
+	case MEMLOC_TYPE_CONST:
+		Dee_DPRINTF("$%p", self->ml_value.ml_const);
+		break;
+	case MEMLOC_TYPE_UNALLOC:
+		if (is_local) {
+			Dee_DPRINT("-");
+			break;
+		}
+		ATTR_FALLTHROUGH
+	default:
+		Dee_DPRINTF("{%I16u:%p}", self->ml_where, self->ml_value._ml_data);
+		break;
+	}
+	if (is_local) {
+		switch (self->ml_flags & MEMLOC_M_LOCAL_BSTATE) {
+		case MEMLOC_F_LOCAL_BOUND:
+			Dee_DPRINT("!");
+			break;
+		case MEMLOC_F_LOCAL_UNBOUND:
+			Dee_DPRINT("?");
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+_Dee_memstate_debug_print(struct Dee_memstate *__restrict self) {
+	uint16_t i;
+	Dee_DPRINTF("\tCFA:   #%Iu\n", self->ms_host_cfa_offset);
+	if (self->ms_stackc > 0) {
+		Dee_DPRINT("\tstack: ");
+		for (i = 0; i < self->ms_stackc; ++i) {
+			if (i != 0)
+				Dee_DPRINT(", ");
+			_Dee_memloc_debug_print(&self->ms_stackv[i], false);
+		}
+		Dee_DPRINT("\n");
+	}
+	if (self->ms_localc > 0) {
+		Dee_DPRINT("\tlocal: ");
+		for (i = 0; i < self->ms_localc; ++i) {
+			if (i != 0)
+				Dee_DPRINT(", ");
+			Dee_DPRINTF("%I16u=", i);
+			_Dee_memloc_debug_print(&self->ms_localv[i], true);
+		}
+		Dee_DPRINT("\n");
+	}
+}
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
 
 
 /* Object reference count incref/decref */
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gincref_reg(struct Dee_basic_block *__restrict self,
-                             Dee_host_register_t regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 2))
+_Dee_host_section_gincref_reg(struct Dee_host_section *__restrict self,
+                              Dee_host_register_t regno) {
+	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
+	gen86_printf("lock inc" Plq "\t%Iu(%s)\n", offsetof(DeeObject, ob_refcnt), gen86_regname(regno));
 	gen86_lock(p_pc(self));
 	gen86_incP_mod(p_pc(self), gen86_modrm_db,
 	               offsetof(DeeObject, ob_refcnt),
@@ -89,10 +308,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gdecref_reg_nokill(struct Dee_basic_block *__restrict self,
-                                    Dee_host_register_t regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 2))
+_Dee_host_section_gdecref_reg_nokill(struct Dee_host_section *__restrict self,
+                                     Dee_host_register_t regno) {
+	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
+	gen86_printf("lock dec" Plq "\t%Iu(%s)\n", offsetof(DeeObject, ob_refcnt), gen86_regname(regno));
 	gen86_lock(p_pc(self));
 	gen86_decP_mod(p_pc(self), gen86_modrm_db,
 	               offsetof(DeeObject, ob_refcnt),
@@ -108,7 +328,7 @@ DFUNDEF NONNULL((1)) void (DCALL DeeObject_Destroy)(DeeObject *__restrict self);
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 _Dee_function_generator_gdestroy_reg(struct Dee_function_generator *__restrict self,
-                                     struct Dee_basic_block *block,
+                                     struct Dee_host_section *sect,
                                      Dee_host_register_t regno) {
 	struct Dee_memstate *state = self->fg_state;
 	BITSET(HOST_REGISTER_COUNT) used_regs;
@@ -143,25 +363,28 @@ _Dee_function_generator_gdestroy_reg(struct Dee_function_generator *__restrict s
 	for (save_regno = 0; save_regno < HOST_REGISTER_COUNT; ++save_regno) {
 		if (!BITSET_GET(&used_regs, save_regno))
 			continue;
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
-		gen86_pushP_r(p_pc(block), gen86_registers[save_regno]);
+		gen86_printf("push" Plq "\t%s\n", gen86_regname(save_regno));
+		gen86_pushP_r(p_pc(sect), gen86_registers[save_regno]);
 		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 	}
 
 	/* Load `regno' as argument for the call to `DeeObject_Destroy()' */
 #ifdef HOST_REGISTER_R_ARG0
 	if (regno != HOST_REGISTER_R_ARG0) {
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
-		gen86_movP_r_r(p_pc(block),
+		gen86_printf("mov" Plq "\t%s, %s\n", gen86_regname(regno), gen86_regname(HOST_REGISTER_R_ARG0));
+		gen86_movP_r_r(p_pc(sect),
 		               gen86_registers[regno],
 		               gen86_registers[HOST_REGISTER_R_ARG0]);
 	}
 #else /* HOST_REGISTER_R_ARG0 */
-	if unlikely(Dee_basic_block_reqx86(block, 1))
+	if unlikely(Dee_host_section_reqx86(sect, 1))
 		goto err;
-	gen86_pushP_r(p_pc(block), gen86_registers[regno]);
+	gen86_printf("push" Plq "\t%s\n", gen86_regname(regno));
+	gen86_pushP_r(p_pc(sect), gen86_registers[regno]);
 	Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 #endif /* !HOST_REGISTER_R_ARG0 */
 
@@ -169,22 +392,29 @@ _Dee_function_generator_gdestroy_reg(struct Dee_function_generator *__restrict s
 	{
 		struct Dee_host_reloc *rel;
 #ifdef HOSTASM_X86_64_MSABI
-		if unlikely(Dee_basic_block_reqx86(block, 3))
+		if unlikely(Dee_host_section_reqx86(sect, 3))
 			goto err;
-		gen86_subP_imm_r(p_pc(block), 32, GEN86_R_PSP);
+		gen86_printf("sub" Plq "\t$32, %%Psp\n");
+		gen86_subP_imm_r(p_pc(sect), 32, GEN86_R_PSP);
 #else /* HOSTASM_X86_64_MSABI */
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
 #endif /* !HOSTASM_X86_64_MSABI */
-		rel = Dee_basic_block_newhostrel(block);
+		rel = Dee_host_section_newhostrel(sect);
 		if unlikely(!rel)
 			goto err;
-		gen86_calll_offset(p_pc(block), -4);
-		rel->hr_offset = p_off(block) - 4;
+#ifdef HOSTASM_X86_64
+		gen86_printf("calll\tDeeObject_Destroy\n");
+#else /* HOSTASM_X86_64 */
+		gen86_printf("calll\tDeeObject_Destroy@4\n");
+#endif /* !HOSTASM_X86_64 */
+		gen86_calll_offset(p_pc(sect), -4);
+		rel->hr_offset = p_off(sect) - 4;
 		rel->hr_type   = DEE_HOST_RELOC_PTREL32;
 		rel->hr_value.hr_pt = (void *)&DeeObject_Destroy;
 #ifdef HOSTASM_X86_64_MSABI
-		gen86_addP_imm_r(p_pc(block), 32, GEN86_R_PSP);
+		gen86_printf("add" Plq "\t$32, %%Psp\n");
+		gen86_addP_imm_r(p_pc(sect), 32, GEN86_R_PSP);
 #endif /* !HOSTASM_X86_64_MSABI */
 	}
 
@@ -202,9 +432,10 @@ _Dee_function_generator_gdestroy_reg(struct Dee_function_generator *__restrict s
 		--save_regno;
 		if (!BITSET_GET(&used_regs, save_regno))
 			continue;
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
-		gen86_popP_r(p_pc(block), gen86_registers[save_regno]);
+		gen86_printf("pop" Plq "\t%s\n", gen86_regname(save_regno));
+		gen86_popP_r(p_pc(sect), gen86_registers[save_regno]);
 		Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
 	}
 
@@ -216,54 +447,62 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_function_generator_gdecref_reg(struct Dee_function_generator *__restrict self,
                                     Dee_host_register_t regno) {
-	struct Dee_basic_block *cold_block = self->fg_assembler->fa_cold_block;
 	struct Dee_basic_block *block = self->fg_block;
-	if unlikely(Dee_basic_block_reqx86(block, 2))
+	if unlikely(Dee_host_section_reqx86(&block->bb_htext, 2))
 		goto err;
-	gen86_lock(p_pc(block));
-	gen86_decP_mod(p_pc(block), gen86_modrm_db,
+	gen86_printf("lock dec" Plq "\t%Iu(%s)\n", offsetof(DeeObject, ob_refcnt), gen86_regname(regno));
+	gen86_lock(p_pc(&block->bb_htext));
+	gen86_decP_mod(p_pc(&block->bb_htext), gen86_modrm_db,
 	               offsetof(DeeObject, ob_refcnt),
 	               gen86_registers[regno]);
 
 	/* NOTE: decP sets FLAGS.Z=1 when the reference counter becomes `0'. */
-	if (cold_block != NULL) {
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) {
+		uintptr_t jcc8_offset;
+		gen86_printf("jnz8\t1f\n");
+		gen86_jcc8_offset(p_pc(&block->bb_htext), GEN86_CC_NZ, -1);
+		jcc8_offset = p_off(&block->bb_htext) - 1;
+		if unlikely(_Dee_function_generator_gdestroy_reg(self, &block->bb_htext, regno))
+			goto err;
+		/* Fill in the delta for the non-zero-jump above. */
+		*(int8_t *)(block->bb_htext.hs_start + jcc8_offset) += (int8_t)(p_off(&block->bb_htext) - jcc8_offset);
+		gen86_printf("1:\n");
+	} else {
 		struct Dee_host_reloc *enter_rel;
 		struct Dee_host_reloc *leave_rel;
 		int32_t delta;
 
 		/* Generate code that jumps into the cold block when the reference counter became `0'. */
-		delta = -4 + p_off(cold_block);
-		gen86_jccl_offset(p_pc(block), GEN86_CC_Z, delta);
-		enter_rel = Dee_basic_block_newhostrel(block);
+		delta = -4 + p_off(&block->bb_hcold);
+		gen86_printf("jzl\t1f\n");
+		gen86_jccl_offset(p_pc(&block->bb_htext), GEN86_CC_Z, delta);
+		enter_rel = Dee_host_section_newhostrel(&block->bb_htext);
 		if unlikely(!enter_rel)
 			goto err;
-		enter_rel->hr_offset      = p_off(block);
-		enter_rel->hr_type        = DEE_HOST_RELOC_BBREL32;
-		enter_rel->hr_value.hr_bb = cold_block;
+		enter_rel->hr_offset      = p_off(&block->bb_htext);
+		enter_rel->hr_type        = DEE_HOST_RELOC_SCREL32;
+		enter_rel->hr_value.hr_sc = &block->bb_hcold;
 
 		/* Generate the destroy-code *within* the cold block. */
-		if unlikely(_Dee_function_generator_gdestroy_reg(self, cold_block, regno))
+		gen86_printf(".section .cold\n");
+		gen86_printf("1:\n");
+		if unlikely(_Dee_function_generator_gdestroy_reg(self, &block->bb_hcold, regno))
 			goto err;
 
 		/* Generate code to jump from the cold block back to the normal block. */
-		if unlikely(Dee_basic_block_reqx86(cold_block, 1))
+		if unlikely(Dee_host_section_reqx86(&block->bb_hcold, 1))
 			goto err;
-		delta = -4 + p_off(block);
-		gen86_jmpl_offset(p_pc(cold_block), delta);
-		leave_rel = Dee_basic_block_newhostrel(cold_block);
+		gen86_printf("jmpl\t1f\n");
+		delta = -4 + p_off(&block->bb_htext);
+		gen86_jmpl_offset(p_pc(&block->bb_hcold), delta);
+		leave_rel = Dee_host_section_newhostrel(&block->bb_hcold);
 		if unlikely(!leave_rel)
 			goto err;
-		leave_rel->hr_offset      = p_off(cold_block);
-		leave_rel->hr_type        = DEE_HOST_RELOC_BBREL32;
-		leave_rel->hr_value.hr_bb = block;
-	} else {
-		uintptr_t jcc8_offset;
-		gen86_jcc8_offset(p_pc(block), GEN86_CC_NZ, -1);
-		jcc8_offset = p_off(block) - 1;
-		if unlikely(_Dee_function_generator_gdestroy_reg(self, block, regno))
-			goto err;
-		/* Fill in the delta for the non-zero-jump above. */
-		*(int8_t *)(block->bb_host_start + jcc8_offset) += (int8_t)(p_off(block) - jcc8_offset);
+		gen86_printf(".section .text\n");
+		gen86_printf("1:\n");
+		leave_rel->hr_offset      = p_off(&block->bb_hcold);
+		leave_rel->hr_type        = DEE_HOST_RELOC_SCREL32;
+		leave_rel->hr_value.hr_sc = &block->bb_htext;
 	}
 	return 0;
 err:
@@ -271,10 +510,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gincref_const(struct Dee_basic_block *__restrict self,
-                               DeeObject *value) {
-	if unlikely(Dee_basic_block_reqx86(self, 2))
+_Dee_host_section_gincref_const(struct Dee_host_section *__restrict self,
+                                DeeObject *value) {
+	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
+	gen86_printf("lock inc" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt);
 	gen86_lock(p_pc(self));
 	gen86_incP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
 	return 0;
@@ -283,12 +523,13 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gdecref_const(struct Dee_basic_block *__restrict self,
-                               DeeObject *value) {
-	if unlikely(Dee_basic_block_reqx86(self, 2))
+_Dee_host_section_gdecref_const(struct Dee_host_section *__restrict self,
+                                DeeObject *value) {
+	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
 	/* Constants can never be destroyed, so decref'ing one is
 	 * like `Dee_DecrefNoKill()' (iow: doesn't need a zero-check) */
+	gen86_printf("lock dec" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt);
 	gen86_lock(p_pc(self));
 	gen86_decP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
 	return 0;
@@ -298,20 +539,23 @@ err:
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gxincref_reg(struct Dee_basic_block *__restrict self,
-                              Dee_host_register_t regno) {
+_Dee_host_section_gxincref_reg(struct Dee_host_section *__restrict self,
+                               Dee_host_register_t regno) {
 	uint8_t reg86;
 	uintptr_t jcc8_offset;
-	if unlikely(Dee_basic_block_reqx86(self, 2))
+	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
 	reg86 = gen86_registers[regno];
+	gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(regno), gen86_regname(regno));
 	gen86_testP_r_r(p_pc(self), reg86, reg86);
+	gen86_printf("jz8\t1f\n");
 	gen86_jcc8_offset(p_pc(self), GEN86_CC_Z, -1);
 	jcc8_offset = p_off(self) - 1;
-	if unlikely(_Dee_basic_block_gincref_reg(self, regno))
+	if unlikely(_Dee_host_section_gincref_reg(self, regno))
 		goto err;
 	/* Fix-up the jump */
-	*(int8_t *)(self->bb_host_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
+	*(int8_t *)(self->hs_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
+	gen86_printf("1:\n");
 	return 0;
 err:
 	return -1;
@@ -323,16 +567,19 @@ _Dee_function_generator_gxdecref_reg(struct Dee_function_generator *__restrict s
 	struct Dee_basic_block *block = self->fg_block;
 	uint8_t reg86;
 	uintptr_t jcc8_offset;
-	if unlikely(Dee_basic_block_reqx86(block, 2))
+	if unlikely(Dee_host_section_reqx86(&block->bb_htext, 2))
 		goto err;
 	reg86 = gen86_registers[regno];
-	gen86_testP_r_r(p_pc(block), reg86, reg86);
-	gen86_jcc8_offset(p_pc(block), GEN86_CC_Z, -1);
-	jcc8_offset = p_off(block) - 1;
+	gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(regno), gen86_regname(regno));
+	gen86_testP_r_r(p_pc(&block->bb_htext), reg86, reg86);
+	gen86_printf("jz8\t1f\n");
+	gen86_jcc8_offset(p_pc(&block->bb_htext), GEN86_CC_Z, -1);
+	jcc8_offset = p_off(&block->bb_htext) - 1;
 	if unlikely(_Dee_function_generator_gdecref_reg(self, regno))
 		goto err;
 	/* Fix-up the jump */
-	*(int8_t *)(block->bb_host_start + jcc8_offset) += (int8_t)(p_off(block) - jcc8_offset);
+	*(int8_t *)(block->bb_htext.hs_start + jcc8_offset) += (int8_t)(p_off(&block->bb_htext) - jcc8_offset);
+	gen86_printf("1:\n");
 	return 0;
 err:
 	return -1;
@@ -381,12 +628,13 @@ _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restric
 /* Allocate/deallocate memory from the host stack.
  * If stack memory gets allocated, zero-initialize it. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_ghstack_adjust(struct Dee_basic_block *__restrict self,
-                                ptrdiff_t sp_delta) {
+_Dee_host_section_ghstack_adjust(struct Dee_host_section *__restrict self,
+                                 ptrdiff_t sp_delta) {
 	if (sp_delta < 0) {
 		/* Release stack memory. */
-		if unlikely(Dee_basic_block_reqx86(self, 1))
+		if unlikely(Dee_host_section_reqx86(self, 1))
 			goto err;
+		gen86_printf("add" Plq "\t$%Id, %%Psp\n", -sp_delta);
 		gen86_addP_imm_r(p_pc(self), (-sp_delta), GEN86_R_PSP);
 	} else if (sp_delta > 0) {
 		/* Acquire stack memory. */
@@ -394,9 +642,10 @@ _Dee_basic_block_ghstack_adjust(struct Dee_basic_block *__restrict self,
 		ASSERT(IS_ALIGNED((uintptr_t)sp_delta, HOST_SIZEOF_POINTER));
 		ASSERT(n_pointers >= 1);
 		/* Generate a bunch of `pushP $0' instructions. */
-		if unlikely(Dee_basic_block_reqx86(self, n_pointers))
+		if unlikely(Dee_host_section_reqx86(self, n_pointers))
 			goto err;
 		do {
+			gen86_printf("push" Plq "\t$0\n");
 			gen86_pushP_imm(p_pc(self), 0);
 		} while (--n_pointers);
 	}
@@ -406,10 +655,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_ghstack_pushreg(struct Dee_basic_block *__restrict self,
-                                 Dee_host_register_t src_regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_ghstack_pushreg(struct Dee_host_section *__restrict self,
+                                  Dee_host_register_t src_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("push" Plq "\t%s\n", gen86_regname(src_regno));
 	gen86_pushP_r(p_pc(self), gen86_registers[src_regno]);
 	return 0;
 err:
@@ -417,10 +667,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_ghstack_pushconst(struct Dee_basic_block *__restrict self,
-                                   DeeObject *value) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self,
+                                    DeeObject *value) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("push" Plq "\t$%#Ix\n", (intptr_t)(uintptr_t)value);
 	gen86_pushP_imm(p_pc(self), (intptr_t)(uintptr_t)value); /* TODO: movabs */
 	return 0;
 err:
@@ -428,10 +679,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_ghstack_pushhstack(struct Dee_basic_block *__restrict self,
-                                    ptrdiff_t sp_offset) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_ghstack_pushhstack(struct Dee_host_section *__restrict self,
+                                     ptrdiff_t sp_offset) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("push" Plq "\t%Id(%%Psp)\n", sp_offset);
 	gen86_pushP_mod(p_pc(self), gen86_modrm_db, sp_offset, GEN86_R_PSP);
 	return 0;
 err:
@@ -439,10 +691,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_ghstack_popreg(struct Dee_basic_block *__restrict self,
-                                Dee_host_register_t dst_regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_ghstack_popreg(struct Dee_host_section *__restrict self,
+                                 Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("pop" Plq "\t%s\n", gen86_regname(dst_regno));
 	gen86_popP_r(p_pc(self), gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -450,10 +703,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_reg2hstack(struct Dee_basic_block *__restrict self,
-                                 Dee_host_register_t src_regno, ptrdiff_t sp_offset) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_gmov_reg2hstack(struct Dee_host_section *__restrict self,
+                                  Dee_host_register_t src_regno, ptrdiff_t sp_offset) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%s, %Id(%%Psp)\n", gen86_regname(src_regno), sp_offset);
 	gen86_movP_r_db(p_pc(self), gen86_registers[src_regno], sp_offset, GEN86_R_PSP);
 	return 0;
 err:
@@ -461,10 +715,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_hstack2reg(struct Dee_basic_block *__restrict self,
-                                 ptrdiff_t sp_offset, Dee_host_register_t dst_regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_gmov_hstack2reg(struct Dee_host_section *__restrict self,
+                                  ptrdiff_t sp_offset, Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%Id(%%Psp), %s\n", sp_offset, gen86_regname(dst_regno));
 	gen86_movP_db_r(p_pc(self), sp_offset, GEN86_R_PSP, gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -472,13 +727,15 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_const2reg(struct Dee_basic_block *__restrict self,
-                                DeeObject *value, Dee_host_register_t dst_regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_gmov_const2reg(struct Dee_host_section *__restrict self,
+                                 DeeObject *value, Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
 	if (value == NULL) {
+		gen86_printf("xor" Plq "\t%s, %s\n", gen86_regname(dst_regno), gen86_regname(dst_regno));
 		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
 	} else {
+		gen86_printf("mov" Plq "\t$%#Ix, %s\n", (intptr_t)(uintptr_t)value, gen86_regname(dst_regno));
 		gen86_movP_imm_r(p_pc(self), (intptr_t)(uintptr_t)value, gen86_registers[dst_regno]); /* TODO: movabs */
 	}
 	return 0;
@@ -487,13 +744,14 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_reg2reg(struct Dee_basic_block *__restrict self,
-                              Dee_host_register_t src_regno,
-                              Dee_host_register_t dst_regno) {
+_Dee_host_section_gmov_reg2reg(struct Dee_host_section *__restrict self,
+                               Dee_host_register_t src_regno,
+                               Dee_host_register_t dst_regno) {
 	if unlikely(src_regno == dst_regno)
 		return 0;
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%s, %s\n", gen86_regname(src_regno), gen86_regname(dst_regno));
 	gen86_movP_r_r(p_pc(self), gen86_registers[src_regno], gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -501,10 +759,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_constind2reg(struct Dee_basic_block *__restrict self,
-                                   DeeObject **p_value, Dee_host_register_t dst_regno) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_gmov_constind2reg(struct Dee_host_section *__restrict self,
+                                    DeeObject **p_value, Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%#Ix, %s\n", (intptr_t)(uintptr_t)p_value, gen86_regname(dst_regno));
 	gen86_movP_d_r(p_pc(self), (intptr_t)(uintptr_t)p_value, gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -512,10 +771,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_reg2constind(struct Dee_basic_block *__restrict self,
-                                   Dee_host_register_t src_regno, DeeObject **p_value) {
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+_Dee_host_section_gmov_reg2constind(struct Dee_host_section *__restrict self,
+                                    Dee_host_register_t src_regno, DeeObject **p_value) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%s, %#Ix\n", gen86_regname(src_regno), (intptr_t)(uintptr_t)p_value);
 	gen86_movP_r_d(p_pc(self), gen86_registers[src_regno], (intptr_t)(uintptr_t)p_value);
 	return 0;
 err:
@@ -523,13 +783,14 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_regind2reg(struct Dee_basic_block *__restrict self,
-                                 Dee_host_register_t src_regno, ptrdiff_t src_delta,
-                                 Dee_host_register_t dst_regno) {
+_Dee_host_section_gmov_regind2reg(struct Dee_host_section *__restrict self,
+                                  Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                  Dee_host_register_t dst_regno) {
 	if unlikely(src_regno == dst_regno)
 		return 0;
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%Id(%s), %s\n", src_delta, gen86_regname(src_regno), gen86_regname(dst_regno));
 	gen86_movP_db_r(p_pc(self), src_delta, gen86_registers[src_regno], gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -537,13 +798,14 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_basic_block_gmov_reg2regind(struct Dee_basic_block *__restrict self,
-                                 Dee_host_register_t src_regno,
-                                 Dee_host_register_t dst_regno, ptrdiff_t dst_delta) {
+_Dee_host_section_gmov_reg2regind(struct Dee_host_section *__restrict self,
+                                  Dee_host_register_t src_regno,
+                                  Dee_host_register_t dst_regno, ptrdiff_t dst_delta) {
 	if unlikely(src_regno == dst_regno)
 		return 0;
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("mov" Plq "\t%s, %Id(%s)\n", gen86_regname(src_regno), dst_delta, gen86_regname(dst_regno));
 	gen86_movP_r_db(p_pc(self), gen86_registers[src_regno], dst_delta, gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -556,7 +818,7 @@ _Dee_function_generator_gmov_truearg2reg(struct Dee_function_generator *__restri
 	size_t sp_offset;
 	sp_offset = self->fg_state->ms_host_cfa_offset; /* Offset to return-pc */
 #if defined(HOSTASM_X86_64) && defined(HOSTASM_X86_64_SYSVABI)
-	/* This matches the way `Dee_function_assembler_compileblocks()' saves registers. */
+	/* This matches the way registers are saved in the prolog. */
 	{
 		Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
 		size_t trueargc = cc & HOSTFUNC_CC_F_TUPLE ? 1 : 2;
@@ -634,10 +896,11 @@ _Dee_function_generator_gmov_usage2reg(struct Dee_function_generator *__restrict
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_function_generator_gret(struct Dee_function_generator *__restrict self) {
 	struct Dee_basic_block *block = self->fg_block;
-	if unlikely(Dee_basic_block_reqx86(block, 1))
+	if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 		goto err;
 #ifdef HOSTASM_X86_64
-	gen86_retP(p_pc(block));
+	gen86_printf("ret" Plq "\n");
+	gen86_retP(p_pc(&block->bb_htext));
 #else /* HOSTASM_X86_64 */
 	/* Special handling needed because DCALL is STDCALL on i386 */
 	{
@@ -647,7 +910,8 @@ _Dee_function_generator_gret(struct Dee_function_generator *__restrict self) {
 			ret_imm += 4;
 		if (cc & HOSTFUNC_CC_F_KW)
 			ret_imm += 4;
-		gen86_retP_imm(p_pc(block), ret_imm);
+		gen86_printf("ret" Plq "\t$%Iu\n", ret_imm);
+		gen86_retP_imm(p_pc(&block->bb_htext), ret_imm);
 	}
 #endif /* !HOSTASM_X86_64 */
 	return 0;
@@ -701,14 +965,15 @@ _Dee_function_generator_gcall_c_function(struct Dee_function_generator *__restri
 			Dee_host_register_t temp_regno;
 			BITSET(HOST_REGISTER_COUNT) used_regs;
 			size_t future_argi;
-			if unlikely(Dee_basic_block_reqx86(block, 1))
+			if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 				goto err;
 			temp_regno = Dee_memstate_hregs_find_usage(state, REGISTER_USAGE_ARGV);
 			if (temp_regno < HOST_REGISTER_COUNT) {
 				ptrdiff_t offset;
 do_load_arg_with_argv_regno:
 				offset = (ptrdiff_t)aid * HOST_SIZEOF_POINTER;
-				gen86_pushP_mod(p_pc(block), gen86_modrm_db, offset, gen86_registers[temp_regno]);
+				gen86_printf("push" Plq "\t%Id(%s)\n", offset, gen86_regname(temp_regno));
+				gen86_pushP_mod(p_pc(&block->bb_htext), gen86_modrm_db, offset, gen86_registers[temp_regno]);
 				Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 				break;
 			}
@@ -717,7 +982,8 @@ do_load_arg_with_argv_regno:
 				ptrdiff_t offset;
 do_load_arg_with_args_regno:
 				offset = offsetof(DeeTupleObject, t_elem) + ((ptrdiff_t)aid * HOST_SIZEOF_POINTER);
-				gen86_pushP_mod(p_pc(block), gen86_modrm_db, offset, gen86_registers[temp_regno]);
+				gen86_printf("push" Plq "\t%Id(%s)\n", offset, gen86_regname(temp_regno));
+				gen86_pushP_mod(p_pc(&block->bb_htext), gen86_modrm_db, offset, gen86_registers[temp_regno]);
 				Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 				break;
 			}
@@ -749,7 +1015,8 @@ do_load_arg_with_args_regno:
 
 			/* Must fill in this argument later */
 			fill_arg_args_later = argi;
-			gen86_pushP_imm(p_pc(block), 0);
+			gen86_printf("push" Plq "\t$0\n");
+			gen86_pushP_imm(p_pc(&block->bb_htext), 0);
 			Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 		}	break;
 
@@ -795,13 +1062,15 @@ do_load_arg_with_args_regno:
 			struct Dee_memloc const *arg = &argv[argi];
 			if (arg->ml_where != MEMLOC_TYPE_ARG)
 				continue;
-			if unlikely(Dee_basic_block_reqx86(block, 2))
+			if unlikely(Dee_host_section_reqx86(&block->bb_htext, 2))
 				goto err;
 			offset = (ptrdiff_t)arg->ml_value.ml_harg * HOST_SIZEOF_POINTER;
 			offset += extra_offset;
 			sp_offset = (ptrdiff_t)argi * HOST_SIZEOF_POINTER;
-			gen86_movP_db_r(p_pc(block), offset, gen86_registers[temp_regno], gen86_registers[temp2_regno]);
-			gen86_movP_r_db(p_pc(block), gen86_registers[temp2_regno], sp_offset, GEN86_R_PSP);
+			gen86_printf("mov" Plq "\t%Id(%s), %s\n", offset, gen86_regname(temp_regno), gen86_regname(temp2_regno));
+			gen86_movP_db_r(p_pc(&block->bb_htext), offset, gen86_registers[temp_regno], gen86_registers[temp2_regno]);
+			gen86_printf("mov" Plq "\t%s, %Id(%%Psp)\n", gen86_regname(temp2_regno), sp_offset);
+			gen86_movP_r_db(p_pc(&block->bb_htext), gen86_registers[temp2_regno], sp_offset, GEN86_R_PSP);
 		}
 	}
 
@@ -810,13 +1079,14 @@ do_load_arg_with_args_regno:
 	 * the stack cleanup. */
 	{
 		struct Dee_host_reloc *rel;
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 			goto err;
-		rel = Dee_basic_block_newhostrel(block);
+		rel = Dee_host_section_newhostrel(&block->bb_htext);
 		if unlikely(!rel)
 			goto err;
-		gen86_calll_offset(p_pc(block), -4);
-		rel->hr_offset = p_off(block) - 4;
+		gen86_printf("calll\t%s\n", gen86_addrname(c_function));
+		gen86_calll_offset(p_pc(&block->bb_htext), -4);
+		rel->hr_offset = p_off(&block->bb_htext) - 4;
 		rel->hr_type   = DEE_HOST_RELOC_PTREL32;
 		rel->hr_value.hr_pt = c_function;
 	}
@@ -837,22 +1107,24 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 _Dee_function_generator_gtest_and_jcc(struct Dee_function_generator *__restrict self,
-                                      struct Dee_basic_block *dst,
+                                      struct Dee_host_section *dst,
                                       struct Dee_memloc *test_loc, uint8_t cc) {
 	struct Dee_basic_block *block = self->fg_block;
 	struct Dee_host_reloc *rel;
-	if unlikely(Dee_basic_block_reqx86(block, 2))
+	if unlikely(Dee_host_section_reqx86(&block->bb_htext, 2))
 		goto err;
 	switch (test_loc->ml_where) {
 
 	case MEMLOC_TYPE_HSTACK: {
 		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, test_loc->ml_value.ml_hstack);
-		gen86_cmpP_imm_mod(p_pc(block), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
+		gen86_printf("cmp" Plq "\t$0, %Id(%%Psp)\n", sp_offset);
+		gen86_cmpP_imm_mod(p_pc(&block->bb_htext), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
 	}	break;
 
 	case MEMLOC_TYPE_HREG: {
 		uint8_t reg86 = gen86_registers[test_loc->ml_value.ml_hreg];
-		gen86_testP_r_r(p_pc(block), reg86, reg86);
+		gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(test_loc->ml_value.ml_hreg), gen86_regname(test_loc->ml_value.ml_hreg));
+		gen86_testP_r_r(p_pc(&block->bb_htext), reg86, reg86);
 	}	break;
 
 	case MEMLOC_TYPE_ARG:
@@ -864,19 +1136,20 @@ _Dee_function_generator_gtest_and_jcc(struct Dee_function_generator *__restrict 
 		if ((test_loc->ml_value.ml_const == NULL) != (cc == GEN86_CC_Z))
 			return 0; /* Don't jump */
 always_jump:
-		return _Dee_basic_block_gjmp(block, dst);
+		return _Dee_host_section_gjmp(&block->bb_htext, dst);
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Cannot test memory location with type %#" PRFx16,
 		                       test_loc->ml_where);
 	}
-	gen86_jccl_offset(p_pc(block), cc, -4);
-	rel = Dee_basic_block_newhostrel(block);
+	gen86_printf("j%sl\t[sect:%p]\n", gen86_ccnames[cc], dst);
+	gen86_jccl_offset(p_pc(&block->bb_htext), cc, -4);
+	rel = Dee_host_section_newhostrel(&block->bb_htext);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(block) - 4;
-	rel->hr_type   = DEE_HOST_RELOC_BBREL32;
-	rel->hr_value.hr_bb = dst;
+	rel->hr_offset = p_off(&block->bb_htext) - 4;
+	rel->hr_type   = DEE_HOST_RELOC_SCREL32;
+	rel->hr_value.hr_sc = dst;
 	return 0;
 err:
 	return -1;
@@ -885,22 +1158,22 @@ err:
 /* Generate jumps. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 _Dee_function_generator_gjz(struct Dee_function_generator *__restrict self,
-                            struct Dee_basic_block *dst, struct Dee_memloc *test_loc) {
+                            struct Dee_host_section *dst, struct Dee_memloc *test_loc) {
 	return _Dee_function_generator_gtest_and_jcc(self, dst, test_loc, GEN86_CC_Z);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 _Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self,
-                             struct Dee_basic_block *dst, struct Dee_memloc *test_loc) {
+                             struct Dee_host_section *dst, struct Dee_memloc *test_loc) {
 	return _Dee_function_generator_gtest_and_jcc(self, dst, test_loc, GEN86_CC_NZ);
 }
 
 /* Emit conditional jump(s) based on `<test_loc> <=> 0' */
 INTERN WUNUSED NONNULL((1, 5)) int DCALL
 _Dee_function_generator_gjcmp0(struct Dee_function_generator *__restrict self,
-                               struct Dee_basic_block *dst_lo_0, /* Jump here if `<test_loc> < 0' */
-                               struct Dee_basic_block *dst_eq_0, /* Jump here if `<test_loc> == 0' */
-                               struct Dee_basic_block *dst_gr_0, /* Jump here if `<test_loc> > 0' */
+                               struct Dee_host_section *dst_lo_0, /* Jump here if `<test_loc> < 0' */
+                               struct Dee_host_section *dst_eq_0, /* Jump here if `<test_loc> == 0' */
+                               struct Dee_host_section *dst_gr_0, /* Jump here if `<test_loc> > 0' */
                                struct Dee_memloc *test_loc) {
 	struct Dee_basic_block *block = self->fg_block;
 	/* Check for some special cases. */
@@ -910,22 +1183,24 @@ _Dee_function_generator_gjcmp0(struct Dee_function_generator *__restrict self,
 		return _Dee_function_generator_gjz(self, dst_eq_0, test_loc);
 	if (!dst_eq_0 && dst_lo_0 == dst_gr_0)
 		return _Dee_function_generator_gjnz(self, dst_lo_0, test_loc);
-	if unlikely(Dee_basic_block_reqx86(block, 2))
+	if unlikely(Dee_host_section_reqx86(&block->bb_htext, 2))
 		goto err;
 	switch (test_loc->ml_where) {
 
 	case MEMLOC_TYPE_HSTACK: {
 		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, test_loc->ml_value.ml_hstack);
-		gen86_cmpP_imm_mod(p_pc(block), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
+		gen86_printf("cmp" Plq "\t$0, %Id(%%Psp)\n", sp_offset);
+		gen86_cmpP_imm_mod(p_pc(&block->bb_htext), gen86_modrm_db, 0, sp_offset, GEN86_R_PSP);
 	}	break;
 
 	case MEMLOC_TYPE_HREG: {
 		uint8_t reg86 = gen86_registers[test_loc->ml_value.ml_hreg];
-		gen86_cmpP_imm_r(p_pc(block), 0, reg86);
+		gen86_printf("cmp" Plq "\t$0, %s\n", gen86_regname(test_loc->ml_value.ml_hreg));
+		gen86_cmpP_imm_r(p_pc(&block->bb_htext), 0, reg86);
 	}	break;
 
 	case MEMLOC_TYPE_CONST: {
-		struct Dee_basic_block *dst;
+		struct Dee_host_section *dst;
 		if ((intptr_t)test_loc->ml_value.ml_const < 0) {
 			dst = dst_lo_0;
 		} else if ((intptr_t)test_loc->ml_value.ml_const > 0) {
@@ -933,13 +1208,13 @@ _Dee_function_generator_gjcmp0(struct Dee_function_generator *__restrict self,
 		} else {
 			dst = NULL;
 		}
-		return dst ? _Dee_basic_block_gjmp(block, dst) : 0;
+		return dst ? _Dee_host_section_gjmp(&block->bb_htext, dst) : 0;
 	}	break;
 
 	case MEMLOC_TYPE_ARG:
 		/* Always non-NULL, and sign-bit shouldn't be
 		 * set because that's where the kernel is at! */
-		return dst_gr_0 ? _Dee_basic_block_gjmp(block, dst_gr_0) : 0;
+		return dst_gr_0 ? _Dee_host_section_gjmp(&block->bb_htext, dst_gr_0) : 0;
 
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
@@ -958,18 +1233,19 @@ _Dee_function_generator_gjcmp0(struct Dee_function_generator *__restrict self,
 			cc = GEN86_CC_NE;
 			dst_gr_0 = NULL;
 		}
-		gen86_jccl_offset(p_pc(block), cc, -4);
-		rel = Dee_basic_block_newhostrel(block);
+		gen86_printf("j%sl\t[sect:%p]\n", gen86_ccnames[cc], dst_lo_0);
+		gen86_jccl_offset(p_pc(&block->bb_htext), cc, -4);
+		rel = Dee_host_section_newhostrel(&block->bb_htext);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(block) - 4;
-		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
-		rel->hr_value.hr_bb = dst_lo_0;
+		rel->hr_offset = p_off(&block->bb_htext) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_SCREL32;
+		rel->hr_value.hr_sc = dst_lo_0;
 		if (cc == GEN86_CC_LE) {
 			if (dst_gr_0) {
 				dst_eq_0 = dst_gr_0;
 emit_unconditional_jump:
-				if unlikely(Dee_basic_block_reqx86(block, 1))
+				if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 					goto err;
 				goto do_emit_unconditional_jump;
 			}
@@ -989,32 +1265,35 @@ emit_unconditional_jump:
 			cc = GEN86_CC_GE;
 			dst_eq_0 = NULL;
 		}
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 			goto err;
-		gen86_jccl_offset(p_pc(block), cc, -4);
-		rel = Dee_basic_block_newhostrel(block);
+		gen86_printf("j%sl\t[sect:%p]\n", gen86_ccnames[cc], dst_gr_0);
+		gen86_jccl_offset(p_pc(&block->bb_htext), cc, -4);
+		rel = Dee_host_section_newhostrel(&block->bb_htext);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(block) - 4;
-		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
-		rel->hr_value.hr_bb = dst_gr_0;
+		rel->hr_offset = p_off(&block->bb_htext) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_SCREL32;
+		rel->hr_value.hr_sc = dst_gr_0;
 	}
 	if (dst_eq_0) {
 		struct Dee_host_reloc *rel;
-		if unlikely(Dee_basic_block_reqx86(block, 1))
+		if unlikely(Dee_host_section_reqx86(&block->bb_htext, 1))
 			goto err;
 		if (dst_lo_0 && dst_gr_0) {
 do_emit_unconditional_jump:
-			gen86_jmpl_offset(p_pc(block), -4);
+			gen86_printf("jmpl\t[sect:%p]\n", dst_eq_0);
+			gen86_jmpl_offset(p_pc(&block->bb_htext), -4);
 		} else {
-			gen86_jccl_offset(p_pc(block), GEN86_CC_E, -4);
+			gen86_printf("jel\t[sect:%p]\n", dst_eq_0);
+			gen86_jccl_offset(p_pc(&block->bb_htext), GEN86_CC_E, -4);
 		}
-		rel = Dee_basic_block_newhostrel(block);
+		rel = Dee_host_section_newhostrel(&block->bb_htext);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(block) - 4;
-		rel->hr_type   = DEE_HOST_RELOC_BBREL32;
-		rel->hr_value.hr_bb = dst_eq_0;
+		rel->hr_offset = p_off(&block->bb_htext) - 4;
+		rel->hr_type   = DEE_HOST_RELOC_SCREL32;
+		rel->hr_value.hr_sc = dst_eq_0;
 	}
 	return 0;
 err:
@@ -1022,18 +1301,19 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-_Dee_basic_block_gjmp(struct Dee_basic_block *__restrict self,
-                      struct Dee_basic_block *dst) {
+_Dee_host_section_gjmp(struct Dee_host_section *__restrict self,
+                       struct Dee_host_section *dst) {
 	struct Dee_host_reloc *rel;
-	if unlikely(Dee_basic_block_reqx86(self, 1))
+	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
+	gen86_printf("jmpl\t[sect:%p]\n", dst);
 	gen86_jmpl_offset(p_pc(self), -4);
-	rel = Dee_basic_block_newhostrel(self);
+	rel = Dee_host_section_newhostrel(self);
 	if unlikely(!rel)
 		goto err;
 	rel->hr_offset = p_off(self) - 4;
-	rel->hr_type   = DEE_HOST_RELOC_BBREL32;
-	rel->hr_value.hr_bb = dst;
+	rel->hr_type   = DEE_HOST_RELOC_SCREL32;
+	rel->hr_value.hr_sc = dst;
 	return 0;
 err:
 	return -1;
