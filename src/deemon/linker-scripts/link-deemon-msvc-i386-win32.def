@@ -613,7 +613,7 @@ EXPORTS
 	DeeObject_Hashv@8=_DeeObject_Hashv@8
 	DeeObject_Inc@4=_DeeObject_Inc@4
 	DeeObject_InplaceAdd@8=_DeeObject_InplaceAdd@8
-	DeeObject_InplaceAddS8@8=_DeeObject_InplaceAddS8@8
+	DeeObject_InplaceAddInt8@8=_DeeObject_InplaceAddInt8@8
 	DeeObject_InplaceAddUInt32@8=_DeeObject_InplaceAddUInt32@8
 	DeeObject_InplaceAnd@8=_DeeObject_InplaceAnd@8
 	DeeObject_InplaceAndUInt32@8=_DeeObject_InplaceAndUInt32@8
@@ -634,7 +634,7 @@ EXPORTS
 	DeeObject_InplaceShr@8=_DeeObject_InplaceShr@8
 	DeeObject_InplaceShrUInt8@8=_DeeObject_InplaceShrUInt8@8
 	DeeObject_InplaceSub@8=_DeeObject_InplaceSub@8
-	DeeObject_InplaceSubS8@8=_DeeObject_InplaceSubS8@8
+	DeeObject_InplaceSubInt8@8=_DeeObject_InplaceSubInt8@8
 	DeeObject_InplaceSubUInt32@8=_DeeObject_InplaceSubUInt32@8
 	DeeObject_InplaceXor@8=_DeeObject_InplaceXor@8
 	DeeObject_InplaceXorUInt32@8=_DeeObject_InplaceXorUInt32@8

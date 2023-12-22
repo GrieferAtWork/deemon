@@ -134,6 +134,7 @@
 DECL_BEGIN
 
 
+
 union Dee_memloc_value {
 	uintptr_t _v_data[2];
 	struct {
@@ -163,6 +164,8 @@ struct Dee_memloc {
 #define MEMLOC_F_LOCAL_BOUND   0x4000 /* Local variable is bound */
 #define MEMLOC_F_LOCAL_UNBOUND 0x8000 /* Local variable is unbound */
 	uint16_t               ml_flags; /* Location flags (set of `MEMLOC_F_*') */
+	/* TODO: value-proxy indirection (applied on-top of `ml_type'). e.g.: `value = DeeBool_For(value)' */
+
 	/* NOTE: *IND location types are *never* used as store targets (they only act as lazily loaded cache locations) */
 #define MEMLOC_TYPE_HREG      0 /* >> value = %v_hreg.r_regno + v_hreg.r_off; */
 #define MEMLOC_TYPE_HREGIND   1 /* >> value = *(byte_t **)(%v_hreg.r_regno + v_hreg.r_off) + v_hreg.r_voff; */
@@ -172,7 +175,7 @@ struct Dee_memloc {
 #define MEMLOC_TYPE_UNALLOC   5 /* >> value = ???;  // Not allocated (only valid for local variables) */
 #define MEMLOC_TYPE_HASREG(typ) ((typ) <= MEMLOC_TYPE_HREGIND)
 #define MEMLOC_TYPE_CASEREG     case MEMLOC_TYPE_HREG: case MEMLOC_TYPE_HREGIND
-	uint16_t               ml_type; /* Location kind (one of `MEMLOC_TYPE_*') */
+	uint16_t               ml_type;  /* Location kind (one of `MEMLOC_TYPE_*') */
 	union Dee_memloc_value ml_value; /* Location value */
 };
 
@@ -198,9 +201,10 @@ typedef uint8_t Dee_host_regusage_t;
  * These indices appear after "normal" locals. */
 #define DEE_MEMSTATE_EXTRA_LOCALS_VARARGS    0 /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
 #define DEE_MEMSTATE_EXTRA_LOCALS_VARKWDS    1 /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
-#define DEE_MEMSTATE_EXTRA_LOCALS_MINCOUNT   2 /* Min number of extra locals */
-#define DEE_MEMSTATE_EXTRA_LOCALS_DEFARG_MIN 2
-#define DEE_MEMSTATE_EXTRA_LOCALS_DEFARG(i)  (2 + (i)) /* Start of cached optional arguments. */
+#define DEE_MEMSTATE_EXTRA_LOCALS_STDOUT     2 /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
+#define DEE_MEMSTATE_EXTRA_LOCALS_MINCOUNT   3 /* Min number of extra locals */
+#define DEE_MEMSTATE_EXTRA_LOCALS_DEFARG_MIN DEE_MEMSTATE_EXTRA_LOCALS_MINCOUNT
+#define DEE_MEMSTATE_EXTRA_LOCALS_DEFARG(i)  (DEE_MEMSTATE_EXTRA_LOCALS_DEFARG_MIN + (i)) /* Start of cached optional arguments. */
 
 struct Dee_memstate {
 	Dee_refcnt_t                               ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
@@ -296,6 +300,11 @@ INTDEF WUNUSED NONNULL((1)) Dee_host_register_t DCALL
 Dee_memstate_hregs_find_unused_ex(struct Dee_memstate *__restrict self,
                                   Dee_host_register_t const *not_these);
 
+/* Adjust register-related memory locations to account for `%regno = %regno + delta' */
+INTDEF NONNULL((1)) void DCALL
+Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
+                                Dee_host_register_t regno, ptrdiff_t delta);
+
 /* Set all members of `self->ms_rusage' to `DEE_HOST_REGUSAGE_GENERIC' */
 #if DEE_HOST_REGUSAGE_GENERIC == 0
 #define Dee_memstate_hregs_clear_usage(self) \
@@ -344,8 +353,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vlrot(struct Dee_memstate *__
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vrrot(struct Dee_memstate *__restrict self, size_t n);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush(struct Dee_memstate *__restrict self, struct Dee_memloc *loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t delta); /* Sets the `MEMLOC_F_NOREF' flag */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* Sets the `MEMLOC_F_NOREF' flag */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t delta);                             /* (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self, uintptr_t cfa_offset);                                                /* (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_hstackind(struct Dee_memstate *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta);                        /* (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, size_t n);
 #define Dee_memstate_vdup(self) Dee_memstate_vdup_n(self, 1)
 
@@ -720,7 +731,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_fu
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, size_t n);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_const(struct Dee_function_generator *__restrict self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t delta); /* Sets the `MEMLOC_F_NOREF' flag */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t delta);                             /* %regno + delta                    (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_regind(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* *(%regno + ind_delta) + val_delta (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset);                                                /* (MEMLOC_F_NOREF) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta);                        /* (MEMLOC_F_NOREF) */
 #define Dee_function_generator_vpush_addr(self, addr)     Dee_function_generator_vpush_const(self, (DeeObject *)(void *)(addr))
 #define Dee_function_generator_vpush_imm8(self, imm8)     Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))
 #define Dee_function_generator_vpush_Simm8(self, Simm8)   Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int8_t)(Simm8))
@@ -738,6 +752,9 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_n(struct Dee_f
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_usage(struct Dee_function_generator *__restrict self, Dee_host_regusage_t usage);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, size_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, size_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vop(struct Dee_function_generator *__restrict self, uint16_t operator_name, uint16_t argc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopv(struct Dee_function_generator *__restrict self, uint16_t operator_name, uint16_t argc); /* doesn't leave result on-stack */
 
@@ -768,6 +785,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vxch_ind(struct Dee
 /* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref(struct Dee_function_generator *__restrict self);
 
+/* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vreg(struct Dee_function_generator *__restrict self, Dee_host_register_t const *not_these);
+/* Force vtop onto the stack (ensuring it has type `MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0') */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vflush(struct Dee_function_generator *__restrict self);
+
 /* Generate code to push a global variable onto the virtual stack. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_global(struct Dee_function_generator *__restrict self, uint16_t gid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid);
@@ -789,11 +811,10 @@ Dee_function_generator_vcallapi(struct Dee_function_generator *__restrict self,
                                 void const *api_function, unsigned int cc, uint16_t argc);
 #define VCALLOP_CC_OBJECT          0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); */
 #define VCALLOP_CC_INT             1 /* int (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);      (doesn't push anything onto the vstack) */
-#define VCALLOP_CC_INPLACE         2 /* int (DCALL *api_function)(DeeObject **, [DeeObject *, [DeeObject *, [...]]]);     (doesn't push anything onto the vstack) */
-#define VCALLOP_CC_RAWINT          3 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack) */
-#define VCALLOP_CC_RAWINT_KEEPARGS 4 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack, and don't pop arguments) */
-#define VCALLOP_CC_VOID            5 /* void (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);     (doesn't push anything onto the vstack) */
-#define VCALLOP_CC_EXCEPT          6 /* ? (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);        (always jumps to exception handling) */
+#define VCALLOP_CC_RAWINT          2 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack) */
+#define VCALLOP_CC_RAWINT_KEEPARGS 3 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack, and don't pop arguments) */
+#define VCALLOP_CC_VOID            4 /* void (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);     (doesn't push anything onto the vstack) */
+#define VCALLOP_CC_EXCEPT          5 /* ? (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);        (always jumps to exception handling) */
 
 /* Arrange the top `argc' stack-items linearly, such that they all appear on the host-stack,
  * in consecutive order (with `vtop' at the greatest address, and STACK[SIZE-argc] appearing
@@ -842,6 +863,11 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
                             struct Dee_memloc *__restrict loc,
                             Dee_host_register_t const *not_these);
 
+/* Force `loc' to reside on the stack, giving it an address (`MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
+                              struct Dee_memloc *__restrict loc);
+
 /* Controls for operating with R/W-locks (as needed for accessing global/extern variables) */
 #define Dee_function_generator_grwlock_read(self, lock)     _Dee_function_generator_grwlock_read(self, lock)
 #define Dee_function_generator_grwlock_write(self, lock)    _Dee_function_generator_grwlock_write(self, lock)
@@ -877,6 +903,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct De
 #define Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno)         (unlikely(_Dee_function_generator_gmov_hstackind2reg(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), dst_regno)) ? -1 : ((self)->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC, 0))
 #define Dee_function_generator_gmov_const2reg(self, value, dst_regno)                  (unlikely(_Dee_function_generator_gmov_const2reg(self, value, dst_regno)) ? -1 : ((self)->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC, 0))
 #define Dee_function_generator_gmov_const2regind(self, value, dst_regno, dst_delta)    _Dee_function_generator_gmov_const2regind(self, value, dst_regno, dst_delta)
+#define Dee_function_generator_gmov_const2hstackind(self, value, cfa_offset)           _Dee_function_generator_gmov_const2hstackind(self, value, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset))
 #define Dee_function_generator_gmov_reg2reg(self, src_regno, dst_regno)                (unlikely(_Dee_function_generator_gmov_reg2reg(self, src_regno, dst_regno)) ? -1 : ((self)->fg_state->ms_rusage[dst_regno] = (self)->fg_state->ms_rusage[src_regno], 0))
 #define Dee_function_generator_gmov_regx2reg(self, src_regno, src_delta, dst_regno)    (unlikely(_Dee_function_generator_gmov_regx2reg(self, src_regno, src_delta, dst_regno)) ? -1 : ((self)->fg_state->ms_rusage[dst_regno] = (src_delta) == 0 ? (self)->fg_state->ms_rusage[src_regno] : DEE_HOST_REGUSAGE_GENERIC, 0))
 #define Dee_function_generator_gmov_regind2reg(self, src_regno, src_delta, dst_regno)  (unlikely(_Dee_function_generator_gmov_regind2reg(self, src_regno, src_delta, dst_regno)) ? -1 : ((self)->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC, 0))
@@ -888,6 +915,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct De
 #define _Dee_function_generator_gmov_hstackind2reg(self, sp_offset, dst_regno)         _Dee_host_section_gmov_hstackind2reg((self)->fg_sect, sp_offset, dst_regno)
 #define _Dee_function_generator_gmov_const2reg(self, value, dst_regno)                 _Dee_host_section_gmov_const2reg((self)->fg_sect, value, dst_regno)
 #define _Dee_function_generator_gmov_const2regind(self, value, dst_regno, dst_delta)   _Dee_host_section_gmov_const2regind((self)->fg_sect, value, dst_regno, dst_delta)
+#define _Dee_function_generator_gmov_const2hstackind(self, value, sp_offset)           _Dee_host_section_gmov_const2hstackind((self)->fg_sect, value, sp_offset)
 #define _Dee_function_generator_gmov_reg2reg(self, src_regno, dst_regno)               _Dee_host_section_gmov_reg2reg((self)->fg_sect, src_regno, dst_regno)
 #define _Dee_function_generator_gmov_regx2reg(self, src_regno, src_delta, dst_regno)   _Dee_host_section_gmov_regx2reg((self)->fg_sect, src_regno, src_delta, dst_regno)
 #define _Dee_function_generator_gmov_regind2reg(self, src_regno, src_delta, dst_regno) _Dee_host_section_gmov_regind2reg((self)->fg_sect, src_regno, src_delta, dst_regno)
@@ -899,6 +927,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_hstack2reg(struct D
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_hstackind2reg(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, Dee_host_register_t dst_regno);                             /* dst_regno = *(SP + sp_offset); */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_const2reg(struct Dee_host_section *__restrict self, DeeObject *value, Dee_host_register_t dst_regno);                                    /* dst_regno = <value>; */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_const2regind(struct Dee_host_section *__restrict self, DeeObject *value, Dee_host_register_t dst_regno, ptrdiff_t dst_delta);            /* *(dst_regno + dst_delta) = <value>; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_const2hstackind(struct Dee_host_section *__restrict self, DeeObject *value, ptrdiff_t sp_offset);                                        /* *(SP + sp_offset) = <value>; */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_regx2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno);   /* dst_regno = src_regno + src_delta; */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_regind2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno); /* dst_regno = *(src_regno + src_delta); */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_reg2regind(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, Dee_host_register_t dst_regno, ptrdiff_t dst_delta); /* *(dst_regno * dst_delta) = src_regno; */
@@ -914,6 +943,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_locind2reg(
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, struct Dee_memloc const *__restrict dst_loc, ptrdiff_t dst_delta);                /* *(<dst_loc> + dst_delta) = src_regno; */
 #define Dee_function_generator_gmov_reg2loc(self, src_regno, dst_loc) Dee_function_generator_gmov_regx2loc(self, src_regno, 0, dst_loc)
 #define Dee_function_generator_gmov_loc2reg(self, src_loc, dst_regno) Dee_function_generator_gmov_loc2regx(self, src_loc, dst_regno, 0)
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict src_loc, ptrdiff_t dst_delta);                           /* PUSH(<src_loc> - dst_delta); */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict src_loc, uintptr_t dst_cfa_offset, ptrdiff_t dst_delta); /* *<SP@dst_cfa_offset> = <src_loc> - dst_delta; */
+#define Dee_function_generator_ghstack_pushloc(self, src_loc)                    Dee_function_generator_ghstack_pushlocx(self, src_loc, 0)
+#define Dee_function_generator_gmov_loc2hstackind(self, src_loc, dst_cfa_offset) Dee_function_generator_gmov_loc2hstackindx(self, src_loc, dst_cfa_offset, 0)
 
 /* Load special runtime values into `dst_regno' */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_usage2reg(struct Dee_function_generator *__restrict self, Dee_host_regusage_t usage, Dee_host_register_t dst_regno);
@@ -1008,10 +1041,14 @@ Dee_function_generator_gmorph(struct Dee_function_generator *__restrict self,
 
 /* Convert a single deemon instruction `instr' to host assembly and adjust the host memory
  * state according to the instruction in question. This is the core function to parse deemon
- * code and convert it to host assembly. */
-INTDEF WUNUSED NONNULL((1)) int DCALL
+ * code and convert it to host assembly.
+ * @param: p_next_instr: [inout] Pointer to the next instruction (may be overwritten if the
+ *                               generated instruction was merged with its successor, as is
+ *                               the case for `ASM_REPR' when followed by print-instructions) */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
-                                Dee_instruction_t const *instr);
+                                Dee_instruction_t const *instr,
+                                Dee_instruction_t const **p_next_instr);
 
 /* Wrapper around `Dee_function_generator_geninstr()' to generate the entire basic block. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1118,7 +1155,7 @@ INTDEF NONNULL((1)) void DCALL _Dee_memstate_debug_print(struct Dee_memstate *__
 
 /* Error throwing helper functions. */
 INTDEF ATTR_COLD int DCALL err_illegal_stack_effect(void);
-INTDEF ATTR_COLD int DCALL err_illegal_lid(size_t lid);
+INTDEF ATTR_COLD int DCALL err_illegal_lid(uint16_t lid);
 INTDEF ATTR_COLD int DCALL err_illegal_mid(uint16_t mid);
 INTDEF ATTR_COLD int DCALL err_illegal_aid(uint16_t aid);
 INTDEF ATTR_COLD int DCALL err_illegal_cid(uint16_t cid);

@@ -26,6 +26,7 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/error.h>
+#include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/list.h>
 #include <deemon/object.h>
@@ -200,7 +201,25 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_InplaceOr, 8);
 	CASE(DeeObject_InplaceXor, 8);
 	CASE(DeeObject_InplacePow, 8);
+	CASE(DeeObject_InplaceAddInt8, 8);
+	CASE(DeeObject_InplaceSubInt8, 8);
+	CASE(DeeObject_InplaceMulInt8, 8);
+	CASE(DeeObject_InplaceDivInt8, 8);
+	CASE(DeeObject_InplaceModInt8, 8);
+	CASE(DeeObject_InplaceShlUInt8, 8);
+	CASE(DeeObject_InplaceShrUInt8, 8);
+	CASE(DeeObject_InplaceAddUInt32, 8);
+	CASE(DeeObject_InplaceSubUInt32, 8);
+	CASE(DeeObject_InplaceAndUInt32, 8);
+	CASE(DeeObject_InplaceOrUInt32, 8);
+	CASE(DeeObject_InplaceXorUInt32, 8);
 	CASE(DeeObject_Hash, 4);
+	CASE(DeeObject_CompareEq, 8);
+	CASE(DeeObject_CompareNe, 8);
+	CASE(DeeObject_CompareLo, 8);
+	CASE(DeeObject_CompareLe, 8);
+	CASE(DeeObject_CompareGr, 8);
+	CASE(DeeObject_CompareGe, 8);
 	CASE(DeeObject_CompareEqObject, 8);
 	CASE(DeeObject_CompareNeObject, 8);
 	CASE(DeeObject_CompareLoObject, 8);
@@ -234,6 +253,17 @@ gen86_addrname(void const *addr) {
 	CASE(DeeList_FromSequence, 4);
 	CASE(DeeSuper_Of, 4);
 	CASE(DeeRange_NewInt, 4);
+	CASE(DeeFile_GetStd, 8);
+	CASE(DeeFile_PrintNl, 4);
+	CASE(DeeFile_PrintObject, 8);
+	CASE(DeeFile_PrintObjectSp, 8);
+	CASE(DeeFile_PrintObjectNl, 8);
+	CASE(DeeFile_PrintObjectRepr, 8);
+	CASE(DeeFile_PrintObjectReprSp, 8);
+	CASE(DeeFile_PrintObjectReprNl, 8);
+	CASE(DeeFile_PrintAll, 8);
+	CASE(DeeFile_PrintAllSp, 8);
+	CASE(DeeFile_PrintAllNl, 8);
 #undef CASE
 	*Dee_sprintf(buf, "%#Ix", addr) = '\0';
 	return buf;
@@ -993,6 +1023,18 @@ err:
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gmov_const2hstackind(struct Dee_host_section *__restrict self,
+                                       DeeObject *value, ptrdiff_t sp_offset) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
+		goto err;
+	gen86_printf("mov" Plq "\t$%#Ix, %Id(%%" Per "sp)\n", (intptr_t)(uintptr_t)value, sp_offset);
+	gen86_movP_imm_db(p_pc(self), (intptr_t)(uintptr_t)value, sp_offset, GEN86_R_PSP); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
+}
+
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gmov_regx2reg(struct Dee_host_section *__restrict self,
@@ -1317,7 +1359,7 @@ do_push_hind_offset_with_temp_regno:
 				if (!BITSET_GET(&preserve_regs, addr_regno)) {
 					if unlikely(_Dee_host_section_gmov_hstack2reg(sect, sp_offset, addr_regno))
 						goto err;
-					hstackaddr_regs[cfa_offset] = addr_regno;
+					hstackaddr_regs[addr_regno] = cfa_offset;
 					if unlikely(Dee_function_generator_ghstack_pushreg(self, addr_regno))
 						goto err;
 					goto done_push_argi;
@@ -1524,24 +1566,6 @@ err:
 	return -1;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-Dee_memstate_adjust_register_delta(struct Dee_memstate *__restrict self,
-                                   Dee_host_register_t regno, ptrdiff_t delta) {
-	size_t i;
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc *loc = &self->ms_stackv[i];
-		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
-		    loc->ml_value.v_hreg.r_regno == regno)
-			loc->ml_value.v_hreg.r_off += delta;
-	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc *loc = &self->ms_localv[i];
-		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
-		    loc->ml_value.v_hreg.r_regno == regno)
-			loc->ml_value.v_hreg.r_off += delta;
-	}
-}
-
 /* Emit conditional jump(s) based on `<lhs> <=> <rhs>'
  * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1623,7 +1647,7 @@ swap_operands:
 					gen86_printf("lea" Plq "\t%Id(%s), %s\n", -rhs_basereg_off,
 					             gen86_regnames[lhs_gen86_basereg], gen86_regnames[lhs_gen86_basereg]);
 					gen86_leaP_db_r(p_pc(sect), -rhs_basereg_off, lhs_gen86_basereg, lhs_gen86_basereg);
-					Dee_memstate_adjust_register_delta(self->fg_state, lhs_regno, -rhs_basereg_off);
+					Dee_memstate_hregs_adjust_delta(self->fg_state, lhs_regno, -rhs_basereg_off);
 					self->fg_state->ms_rusage[lhs_regno] = DEE_HOST_REGUSAGE_GENERIC;
 				} else {
 					Dee_host_register_t rhs_regno = rhs->ml_value.v_hreg.r_regno;
@@ -1631,7 +1655,7 @@ swap_operands:
 					gen86_printf("lea" Plq "\t%Id(%s), %s\n", rhs_basereg_off,
 					             gen86_regnames[rhs_gen86_basereg], gen86_regnames[rhs_gen86_basereg]);
 					gen86_leaP_db_r(p_pc(sect), rhs_basereg_off, rhs_gen86_basereg, rhs_gen86_basereg);
-					Dee_memstate_adjust_register_delta(self->fg_state, rhs_regno, rhs_basereg_off);
+					Dee_memstate_hregs_adjust_delta(self->fg_state, rhs_regno, rhs_basereg_off);
 					self->fg_state->ms_rusage[rhs_regno] = DEE_HOST_REGUSAGE_GENERIC;
 				}
 			}
@@ -1717,7 +1741,7 @@ swap_operands:
 				gen86_printf("lea" Plq "\t%Id(%s), %s\n", -rhs_value_off,
 				             gen86_regnames[lhs_gen86_basereg], gen86_regname(temp_regno));
 				gen86_leaP_db_r(p_pc(sect), -rhs_value_off, lhs_gen86_basereg, gen86_registers[temp_regno]);
-				Dee_memstate_adjust_register_delta(self->fg_state, temp_regno, -rhs_value_off);
+				Dee_memstate_hregs_adjust_delta(self->fg_state, temp_regno, -rhs_value_off);
 				self->fg_state->ms_rusage[temp_regno] = DEE_HOST_REGUSAGE_GENERIC;
 				lhs_gen86_basereg = gen86_registers[temp_regno];
 			}

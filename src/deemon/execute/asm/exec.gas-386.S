@@ -6935,9 +6935,9 @@ define_inplace_math_op pow, fSYM(DeeObject_InplacePow,8)
 	jmp    set_prefix_object
 .endm
 
-define_inplace_math_op_s8  prefix_target_add_simm8, fSYM(DeeObject_InplaceAddS8,8)
+define_inplace_math_op_s8  prefix_target_add_simm8, fSYM(DeeObject_InplaceAddInt8,8)
 define_inplace_math_op_u32 prefix_target_add_imm32, fSYM(DeeObject_InplaceAddUInt32,8)
-define_inplace_math_op_s8  prefix_target_sub_simm8, fSYM(DeeObject_InplaceSubS8,8)
+define_inplace_math_op_s8  prefix_target_sub_simm8, fSYM(DeeObject_InplaceSubInt8,8)
 define_inplace_math_op_u32 prefix_target_sub_imm32, fSYM(DeeObject_InplaceSubUInt32,8)
 define_inplace_math_op_s8  prefix_target_mul_simm8, fSYM(DeeObject_InplaceMulInt8,8)
 define_inplace_math_op_s8  prefix_target_div_simm8, fSYM(DeeObject_InplaceDivInt8,8)

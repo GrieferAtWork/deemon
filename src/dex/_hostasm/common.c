@@ -651,8 +651,8 @@ Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self) {
 INTERN ATTR_COLD int DCALL err_illegal_stack_effect(void) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal stack effect");
 }
-INTERN ATTR_COLD int DCALL err_illegal_lid(size_t lid) {
-	return DeeError_Throwf(&DeeError_SegFault, "Illegal local variable ID: %#" PRFxSIZ, lid);
+INTERN ATTR_COLD int DCALL err_illegal_lid(uint16_t lid) {
+	return DeeError_Throwf(&DeeError_SegFault, "Illegal local variable ID: %#" PRFx16, lid);
 }
 INTERN ATTR_COLD int DCALL err_illegal_mid(uint16_t mid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal module ID: %#" PRFx16, mid);

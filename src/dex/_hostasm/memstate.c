@@ -145,6 +145,25 @@ done:
 	return result;
 }
 
+/* Adjust register-related memory locations to account for `%regno = %regno + delta' */
+INTERN NONNULL((1)) void DCALL
+Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
+                                Dee_host_register_t regno, ptrdiff_t delta) {
+	size_t i;
+	for (i = 0; i < self->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &self->ms_stackv[i];
+		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
+		    loc->ml_value.v_hreg.r_regno == regno)
+			loc->ml_value.v_hreg.r_off -= delta;
+	}
+	for (i = 0; i < self->ms_localc; ++i) {
+		struct Dee_memloc *loc = &self->ms_localv[i];
+		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
+		    loc->ml_value.v_hreg.r_regno == regno)
+			loc->ml_value.v_hreg.r_off -= delta;
+	}
+}
+
 
 /* Check if a pointer-sized blob at `cfa_offset' is being used by something. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -426,6 +445,10 @@ Dee_basic_block_constrainwith(struct Dee_basic_block *__restrict self,
 		return 0;
 	}
 	if unlikely(block_start->ms_stackc != state->ms_stackc) {
+#ifndef NO_HOSTASM_DEBUG_PRINT
+		_Dee_memstate_debug_print(block_start);
+		_Dee_memstate_debug_print(state);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
 		DeeError_Throwf(&DeeError_IllegalInstruction,
 		                "Unbalanced stack depth at +%.4" PRFx32 ". "
 		                "Both %" PRFu16 " and %" PRFu16 " encountered",
@@ -558,12 +581,14 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value) {
+	struct Dee_memloc *loc;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
-	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_CONST;
-	self->ms_stackv[self->ms_stackc].ml_value.v_const = value;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_CONST;
+	loc->ml_value.v_const = value;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -575,13 +600,15 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self,
                        Dee_host_register_t regno, ptrdiff_t delta) {
+	struct Dee_memloc *loc;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
-	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_HREG;
-	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_regno = regno;
-	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_off   = delta;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_HREG;
+	loc->ml_value.v_hreg.r_regno = regno;
+	loc->ml_value.v_hreg.r_off   = delta;
 	Dee_memstate_incrinuse(self, regno);
 	++self->ms_stackc;
 	return 0;
@@ -593,15 +620,52 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self,
                           Dee_host_register_t regno,
                           ptrdiff_t ind_delta, ptrdiff_t val_delta) {
+	struct Dee_memloc *loc;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
-	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_HREGIND;
-	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_regno = regno;
-	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_off   = ind_delta;
-	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_voff  = val_delta;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_HREGIND;
+	loc->ml_value.v_hreg.r_regno = regno;
+	loc->ml_value.v_hreg.r_off   = ind_delta;
+	loc->ml_value.v_hreg.r_voff  = val_delta;
 	Dee_memstate_incrinuse(self, regno);
+	++self->ms_stackc;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self,
+                          uintptr_t cfa_offset) {
+	struct Dee_memloc *loc;
+	if unlikely(self->ms_stackc >= self->ms_stacka &&
+	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+		goto err;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_HSTACK;
+	loc->ml_value.v_hstack.s_cfa = cfa_offset;
+	++self->ms_stackc;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_hstackind(struct Dee_memstate *__restrict self,
+                             uintptr_t cfa_offset, ptrdiff_t val_delta) {
+	struct Dee_memloc *loc;
+	if unlikely(self->ms_stackc >= self->ms_stacka &&
+	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+		goto err;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_HSTACKIND;
+	loc->ml_value.v_hstack.s_cfa = cfa_offset;
+	loc->ml_value.v_hstack.s_off = val_delta;
 	++self->ms_stackc;
 	return 0;
 err:

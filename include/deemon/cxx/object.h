@@ -431,7 +431,7 @@ public:
 	}
 
 	RefBase &inplace_add(int8_t right) {
-		throw_if_nonzero(DeeObject_InplaceAddS8(&m_ptr, right));
+		throw_if_nonzero(DeeObject_InplaceAddInt8(&m_ptr, right));
 		return *this;
 	}
 	RefBase &inplace_add(uint32_t right) {
@@ -443,7 +443,7 @@ public:
 		return *this;
 	}
 	RefBase &inplace_sub(int8_t right) {
-		throw_if_nonzero(DeeObject_InplaceSubS8(&m_ptr, right));
+		throw_if_nonzero(DeeObject_InplaceSubInt8(&m_ptr, right));
 		return *this;
 	}
 	RefBase &inplace_sub(uint32_t right) {

@@ -852,9 +852,9 @@
 #define ASM_MOD_SIMM8         0x87 /* [2][-1,+1]   `mod top, $<Simm8>'                  - Same as `ASM_MOD', but use <Simm8> as second operand.
                                     * [2][-0,+0]   `mod PREFIX, $<Simm8>'               - `PREFIX: mod $<Simm8>' */
 #define ASM_SHL_IMM8          0x88 /* [2][-1,+1]   `shl top, $<imm8>'                   - Same as `ASM_SHL', but use <imm8> as second operand.
-                                    * [2][-0,+0]   `shl PREFIX, $<Simm8>'               - `PREFIX: shl $<Simm8>' */
+                                    * [2][-0,+0]   `shl PREFIX, $<imm8>'                - `PREFIX: shl $<imm8>' */
 #define ASM_SHR_IMM8          0x89 /* [2][-1,+1]   `shr top, $<imm8>'                   - Same as `ASM_SHR', but use <imm8> as second operand.
-                                    * [2][-0,+0]   `shr PREFIX, $<Simm8>'               - `PREFIX: shr $<Simm8>' */
+                                    * [2][-0,+0]   `shr PREFIX, $<imm8>'                - `PREFIX: shr $<imm8>' */
 #define ASM_AND_IMM32         0x8a /* [5][-1,+1]   `and top, $<imm32>'                  - Same as `ASM_AND', but use <imm32> as second operand.
                                     * [5][-0,+0]   `and PREFIX, $<imm32>'               - `PREFIX: and $<Simm8>' */
 #define ASM_OR_IMM32          0x8b /* [5][-1,+1]   `or top, $<imm32>'                   - Same as `ASM_OR', but use <imm32> as second operand.

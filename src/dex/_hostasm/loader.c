@@ -116,7 +116,7 @@ scan_and_split_blocks(struct Dee_function_assembler *__restrict self,
 			switch (iter[1]) {
 
 			case ASM32_JMP & 0xff: {
-				int32_t delta = (int32_t)UNALIGNED_GET32(iter + 2);
+				int32_t delta = (int32_t)UNALIGNED_GETLE32(iter + 2);
 				Dee_instruction_t const *to = iter + 6 + delta;
 				if unlikely(register_jump(self, iter, to))
 					goto err;

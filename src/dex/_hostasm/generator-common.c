@@ -225,9 +225,9 @@ Dee_function_generator_gmov_loc2regy(struct Dee_function_generator *__restrict s
 		break;
 
 	default:
-		return DeeError_Throwf(&DeeError_IllegalInstruction,
-		                       "Cannot move location type %" PRFu16 " to register",
-		                       src_loc->ml_type);
+		result = Dee_function_generator_gmov_loc2regx(self, src_loc, dst_regno, 0);
+		*p_dst_delta = 0;
+		return result;
 	}
 	if likely(result == 0)
 		self->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC;
@@ -317,6 +317,111 @@ Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict
 err:
 	return -1;
 }
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restrict self,
+                                        struct Dee_memloc const *__restrict src_loc, ptrdiff_t dst_delta) {
+	switch (src_loc->ml_type) {
+
+	case MEMLOC_TYPE_HREG: {
+		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_off - dst_delta;
+		if (final_delta != 0) {
+			if unlikely(Dee_function_generator_gmov_regx2reg(self, src_loc->ml_value.v_hreg.r_regno,
+			                                                 final_delta, src_loc->ml_value.v_hreg.r_regno))
+				goto err;
+			Dee_memstate_hregs_adjust_delta(self->fg_state, src_loc->ml_value.v_hreg.r_regno, final_delta);
+		}
+		return Dee_function_generator_ghstack_pushreg(self, src_loc->ml_value.v_hreg.r_regno);
+	}	break;
+
+	case MEMLOC_TYPE_HREGIND: {
+		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_voff - dst_delta;
+		if (final_delta != 0)
+			goto fallback;
+		return Dee_function_generator_ghstack_pushregind(self,
+		                                                 src_loc->ml_value.v_hreg.r_regno,
+		                                                 src_loc->ml_value.v_hreg.r_off);
+	}	break;
+
+	case MEMLOC_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
+		ptrdiff_t final_delta = src_loc->ml_value.v_hstack.s_off - dst_delta;
+		if (final_delta != 0)
+			goto fallback;
+		return Dee_function_generator_ghstack_pushhstackind(self, cfa_offset);
+	}	break;
+
+	case MEMLOC_TYPE_CONST: {
+		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
+		return Dee_function_generator_ghstack_pushconst(self, (DeeObject *)value);
+	}	break;
+
+	default: {
+		Dee_host_register_t temp_regno;
+		Dee_host_register_t not_these[2];
+fallback:
+		not_these[0] = HOST_REGISTER_COUNT;
+		not_these[1] = HOST_REGISTER_COUNT;
+		if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
+			not_these[0] = src_loc->ml_value.v_hreg.r_regno;
+		temp_regno = Dee_function_generator_gallocreg(self, not_these);
+		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
+			goto err;
+		if unlikely(Dee_function_generator_gmov_loc2regx(self, src_loc, temp_regno, dst_delta))
+			goto err;
+		return Dee_function_generator_ghstack_pushreg(self, temp_regno);
+	}	break;
+
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__restrict self,
+                                           struct Dee_memloc const *__restrict src_loc,
+                                           uintptr_t dst_cfa_offset, ptrdiff_t dst_delta) {
+	switch (src_loc->ml_type) {
+
+	case MEMLOC_TYPE_HREG: {
+		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_off - dst_delta;
+		if (final_delta != 0) {
+			if unlikely(Dee_function_generator_gmov_regx2reg(self, src_loc->ml_value.v_hreg.r_regno,
+			                                                 final_delta, src_loc->ml_value.v_hreg.r_regno))
+				goto err;
+			Dee_memstate_hregs_adjust_delta(self->fg_state, src_loc->ml_value.v_hreg.r_regno, final_delta);
+		}
+		return Dee_function_generator_gmov_reg2hstackind(self, src_loc->ml_value.v_hreg.r_regno, dst_cfa_offset);
+	}	break;
+
+	case MEMLOC_TYPE_CONST: {
+		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
+		return Dee_function_generator_gmov_const2hstackind(self, (DeeObject *)value, dst_cfa_offset);
+	}	break;
+
+	default: {
+		Dee_host_register_t temp_regno;
+		Dee_host_register_t not_these[2];
+/*fallback:*/
+		not_these[0] = HOST_REGISTER_COUNT;
+		not_these[1] = HOST_REGISTER_COUNT;
+		if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
+			not_these[0] = src_loc->ml_value.v_hreg.r_regno;
+		temp_regno = Dee_function_generator_gallocreg(self, not_these);
+		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
+			goto err;
+		if unlikely(Dee_function_generator_gmov_loc2regx(self, src_loc, temp_regno, dst_delta))
+			goto err;
+		return Dee_function_generator_ghstack_pushreg(self, temp_regno);
+	}	break;
+
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
 
 
 /* Load special runtime values into `dst_regno' */
@@ -855,8 +960,51 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
 	if unlikely(Dee_function_generator_gmov_loc2regy(self, loc, regno, &reg_delta))
 		goto err;
 
+	/* If the location used to be a writable location, then we must
+	 * also update any other location that used to alias `loc'. */
 	state = self->fg_state;
-	is_in_state = (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc) ||
+	if (loc->ml_type == MEMLOC_TYPE_HREGIND ||
+	    loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
+		size_t i;
+		ptrdiff_t delta_change = reg_delta - loc->ml_value.v_hreg.r_voff;
+		for (i = 0; i < state->ms_stackc; ++i) {
+			struct Dee_memloc *alias = &state->ms_stackv[i];
+			if (alias->ml_type != loc->ml_type)
+				continue;
+			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
+				continue;
+			if (loc->ml_type == MEMLOC_TYPE_HREGIND &&
+			    (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno))
+				continue;
+			if (alias == loc)
+				continue;
+			if (MEMLOC_TYPE_HASREG(alias->ml_type))
+				Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
+			alias->ml_type = MEMLOC_TYPE_HREG;
+			alias->ml_value.v_hreg.r_regno = regno;
+			alias->ml_value.v_hreg.r_off   = alias->ml_value.v_hreg.r_voff + delta_change;
+		}
+		for (i = 0; i < state->ms_localc; ++i) {
+			struct Dee_memloc *alias = &state->ms_localv[i];
+			if (alias->ml_type != loc->ml_type)
+				continue;
+			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
+				continue;
+			if (loc->ml_type == MEMLOC_TYPE_HREGIND &&
+			    (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno))
+				continue;
+			if (alias == loc)
+				continue;
+			if (MEMLOC_TYPE_HASREG(alias->ml_type))
+				Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
+			alias->ml_type = MEMLOC_TYPE_HREG;
+			alias->ml_value.v_hreg.r_regno = regno;
+			alias->ml_value.v_hreg.r_off   = alias->ml_value.v_hreg.r_voff + delta_change;
+		}
+	}
+
+	/* Adjust register usage if `loc' is tracked by the memory state. */
+	is_in_state = (loc >= state->ms_stackv && loc < state->ms_stackv + state->ms_stackc) ||
 	              (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc);
 	if (is_in_state && MEMLOC_TYPE_HASREG(loc->ml_type))
 		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
@@ -871,6 +1019,94 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
 err:
 	return -1;
 }
+
+/* Force `loc' to reside on the stack, giving it an address (`MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
+                              struct Dee_memloc *__restrict loc) {
+	uintptr_t cfa_offset;
+	struct Dee_memstate *state = self->fg_state;
+	ASSERT(!Dee_memstate_isshared(state));
+	if (loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
+		if (loc->ml_value.v_hstack.s_off == 0)
+			return 0; /* Already on-stack at offset=0 */
+
+		/* TODO: emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
+		 *       Afterwards, go through all stack/local variables and adjust value offsets
+		 *       wherever the same CFA offset is referenced. */
+	}
+
+	/* Figure out where we want to allocate the value. */
+	cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
+	if (cfa_offset != (uintptr_t)-1) {
+		if unlikely(Dee_function_generator_gmov_loc2hstackind(self, loc, cfa_offset))
+			goto err;
+	} else {
+		if unlikely(Dee_function_generator_ghstack_pushloc(self, loc))
+			goto err;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+		cfa_offset = state->ms_host_cfa_offset;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+		cfa_offset = state->ms_host_cfa_offset - HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+	}
+
+	/* If the location used to be a writable location, then we must
+	 * also update any other location that used to alias `loc'. */
+	state = self->fg_state;
+	if (loc->ml_type == MEMLOC_TYPE_HREG ||
+	    loc->ml_type == MEMLOC_TYPE_HREGIND) {
+		size_t i;
+		ptrdiff_t delta_change = -loc->ml_value.v_hreg.r_voff;
+		for (i = 0; i < state->ms_stackc; ++i) {
+			struct Dee_memloc *alias = &state->ms_stackv[i];
+			if (alias->ml_type != loc->ml_type)
+				continue;
+			if (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno)
+				continue;
+			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
+				continue;
+			if (alias == loc)
+				continue;
+			ASSERT(MEMLOC_TYPE_HASREG(alias->ml_type));
+			Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
+			alias->ml_type = MEMLOC_TYPE_HSTACKIND;
+			alias->ml_value.v_hstack.s_off = alias->ml_value.v_hreg.r_voff + delta_change;
+			alias->ml_value.v_hstack.s_cfa = cfa_offset;
+		}
+		for (i = 0; i < state->ms_localc; ++i) {
+			struct Dee_memloc *alias = &state->ms_localv[i];
+			if (alias->ml_type != loc->ml_type)
+				continue;
+			if (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno)
+				continue;
+			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
+				continue;
+			if (alias == loc)
+				continue;
+			ASSERT(MEMLOC_TYPE_HASREG(alias->ml_type));
+			Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
+			alias->ml_type = MEMLOC_TYPE_HSTACKIND;
+			alias->ml_value.v_hstack.s_off = alias->ml_value.v_hreg.r_voff + delta_change;
+			alias->ml_value.v_hstack.s_cfa = cfa_offset;
+		}
+	}
+
+	/* Adjust register usage if `loc' is tracked by the memory state. */
+	if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
+	    ((loc >= state->ms_stackv && loc < state->ms_stackv + state->ms_stackc) ||
+	     (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc)))
+		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+
+	/* Remember that `loc' now lies on-stack (with an offset of `0') */
+	loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+	loc->ml_value.v_hstack.s_cfa = cfa_offset;
+	loc->ml_value.v_hstack.s_off = 0;
+	return 0;
+err:
+	return -1;
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

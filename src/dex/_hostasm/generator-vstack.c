@@ -101,6 +101,34 @@ Dee_function_generator_vpush_reg(struct Dee_function_generator *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpush_regind(struct Dee_function_generator *__restrict self,
+                                    Dee_host_register_t regno, ptrdiff_t ind_delta,
+                                    ptrdiff_t val_delta) {
+	int result = Dee_function_generator_state_unshare(self);
+	if likely(result == 0)
+		result = Dee_memstate_vpush_regind(self->fg_state, regno, ind_delta, val_delta);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self,
+                                    uintptr_t cfa_offset) {
+	int result = Dee_function_generator_state_unshare(self);
+	if likely(result == 0)
+		result = Dee_memstate_vpush_hstack(self->fg_state, cfa_offset);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self,
+                                       uintptr_t cfa_offset, ptrdiff_t val_delta) {
+	int result = Dee_function_generator_state_unshare(self);
+	if likely(result == 0)
+		result = Dee_memstate_vpush_hstackind(self->fg_state, cfa_offset, val_delta);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self, uint16_t aid) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
 	if (aid < code->co_argc_min) /* Simple case: mandatory argument */
@@ -142,8 +170,7 @@ Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict sel
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	state = self->fg_state;
-	if unlikely(lid >= state->ms_localc)
-		return err_illegal_lid(lid);
+	ASSERT(lid < state->ms_localc);
 	if unlikely(state->ms_stackc >= state->ms_stacka &&
 	            Dee_memstate_reqvstack(state, state->ms_stackc + 1))
 		goto err;
@@ -270,8 +297,7 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	state = self->fg_state;
-	if unlikely(lid >= state->ms_localc)
-		return err_illegal_lid(lid);
+	ASSERT(lid < state->ms_localc);
 	src = Dee_memstate_vtop(state);
 	dst = &state->ms_localv[lid];
 	if ((dst->ml_type == MEMLOC_TYPE_UNALLOC) ||
@@ -312,8 +338,7 @@ Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	state = self->fg_state;
-	if unlikely(lid >= state->ms_localc)
-		return err_illegal_lid(lid);
+	ASSERT(lid < state->ms_localc);
 	loc = &state->ms_localv[lid];
 	if ((loc->ml_type != MEMLOC_TYPE_UNALLOC) &&
 	    !(loc->ml_flags & MEMLOC_F_NOREF)) {
@@ -359,6 +384,27 @@ done:
 	return 0;
 err:
 	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid) {
+	if unlikely(lid >= self->fg_assembler->fa_code->co_localc)
+		return err_illegal_lid(lid);
+	return Dee_function_generator_vpush_local(self, (size_t)lid);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpop_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid) {
+	if unlikely(lid >= self->fg_assembler->fa_code->co_localc)
+		return err_illegal_lid(lid);
+	return Dee_function_generator_vpop_local(self, (size_t)lid);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vdel_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid) {
+	if unlikely(lid >= self->fg_assembler->fa_code->co_localc)
+		return err_illegal_lid(lid);
+	return Dee_function_generator_vdel_local(self, (size_t)lid);
 }
 
 
@@ -413,19 +459,19 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_OR]           = */ { (void *)&DeeObject_Or, 2, VCALLOP_CC_OBJECT },
 	/* [OPERATOR_XOR]          = */ { (void *)&DeeObject_Xor, 2, VCALLOP_CC_OBJECT },
 	/* [OPERATOR_POW]          = */ { (void *)&DeeObject_Pow, 2, VCALLOP_CC_OBJECT },
-	/* [OPERATOR_INC]          = */ { (void *)&DeeObject_Inc, 1, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_DEC]          = */ { (void *)&DeeObject_Dec, 1, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_ADD]  = */ { (void *)&DeeObject_InplaceAdd, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_SUB]  = */ { (void *)&DeeObject_InplaceSub, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_MUL]  = */ { (void *)&DeeObject_InplaceMul, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_DIV]  = */ { (void *)&DeeObject_InplaceDiv, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_MOD]  = */ { (void *)&DeeObject_InplaceMod, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_SHL]  = */ { (void *)&DeeObject_InplaceShl, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_SHR]  = */ { (void *)&DeeObject_InplaceShr, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_AND]  = */ { (void *)&DeeObject_InplaceAnd, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_OR]   = */ { (void *)&DeeObject_InplaceOr, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_XOR]  = */ { (void *)&DeeObject_InplaceXor, 2, VCALLOP_CC_INPLACE },
-	/* [OPERATOR_INPLACE_POW]  = */ { (void *)&DeeObject_InplacePow, 2, VCALLOP_CC_INPLACE },
+	/* [OPERATOR_INC]          = */ { (void *)NULL },
+	/* [OPERATOR_DEC]          = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_ADD]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_SUB]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_MUL]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_DIV]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_MOD]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_SHL]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_SHR]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_AND]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_OR]   = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_XOR]  = */ { (void *)NULL },
+	/* [OPERATOR_INPLACE_POW]  = */ { (void *)NULL },
 	/* [OPERATOR_HASH]         = */ { (void *)NULL }, /* Special handling */
 	/* [OPERATOR_EQ]           = */ { (void *)&DeeObject_CompareEqObject, 2, VCALLOP_CC_OBJECT },
 	/* [OPERATOR_NE]           = */ { (void *)&DeeObject_CompareNeObject, 2, VCALLOP_CC_OBJECT },
@@ -676,7 +722,8 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 	Dee_memstate_incref(self->fg_state);
 
 	temp = Dee_basic_block_constrainwith(target, desc->jd_stat,
-	                                     Dee_function_assembler_addrof(self->fg_assembler, instr));
+	                                     Dee_function_assembler_addrof(self->fg_assembler,
+	                                                                   target->bb_deemon_start));
 	if (temp > 0) {
 		temp = 0;
 		if (target == self->fg_block) {
@@ -691,7 +738,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		}
 	}
 
-	return 0;
+	return temp;
 err:
 	return -1;
 }
@@ -777,6 +824,53 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 err:
 	return -1;
 }
+
+/* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vreg(struct Dee_function_generator *__restrict self,
+                            Dee_host_register_t const *not_these) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *loc;
+	if unlikely(state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	loc = Dee_memstate_vtop(state);
+	if (loc->ml_type != MEMLOC_TYPE_HREG) {
+		if unlikely(Dee_function_generator_state_unshare(self))
+			goto err;
+		state = self->fg_state;
+		loc   = Dee_memstate_vtop(state);
+		if unlikely(Dee_function_generator_greg(self, loc, not_these))
+			goto err;
+		ASSERT(loc->ml_type == MEMLOC_TYPE_HREG);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Force vtop onto the stack (ensuring it has type `MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0') */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vflush(struct Dee_function_generator *__restrict self) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *loc;
+	if unlikely(state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	loc = Dee_memstate_vtop(state);
+	if (loc->ml_type != MEMLOC_TYPE_HSTACKIND ||
+	    loc->ml_value.v_hstack.s_off != 0) {
+		if unlikely(Dee_function_generator_state_unshare(self))
+			goto err;
+		state = self->fg_state;
+		loc   = Dee_memstate_vtop(state);
+		if unlikely(Dee_function_generator_gflush(self, loc))
+			goto err;
+		ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 /* Generate code to push a global variable onto the virtual stack. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1100,13 +1194,14 @@ rotate_return_register:
 		return Dee_function_generator_gjmp_except(self);
 
 	case VCALLOP_CC_INT:
-	case VCALLOP_CC_INPLACE:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err;
 		loc = Dee_function_generator_vtop(self);
 		if unlikely(Dee_function_generator_gjnz_except(self, loc))
 			goto err;
 		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err;
 		break;
 
 	default: __builtin_unreachable();
