@@ -88,6 +88,33 @@ err:
 
 
 
+/* Fill in `self->hr_vtype' and `self->hr_value' based on `sym'
+ * If `sym' has already been defined as absolute or pointing to
+ * the start of a section, directly inline it. */
+INTERN NONNULL((1, 2)) void DCALL
+Dee_host_reloc_setsym(struct Dee_host_reloc *__restrict self,
+                      struct Dee_host_symbol *__restrict sym) {
+	switch (sym->hs_type) {
+	case DEE_HOST_SYMBOL_ABS:
+		self->hr_vtype = DEE_HOST_RELOCVALUE_ABS;
+		self->hr_value.rv_abs = sym->hs_value.sv_abs;
+		return;
+	case DEE_HOST_SYMBOL_SECT:
+		if (sym->hs_value.sv_sect.ss_off == 0) {
+			self->hr_vtype = DEE_HOST_RELOCVALUE_SECT;
+			self->hr_value.rv_sect = sym->hs_value.sv_sect.ss_sect;
+			return;
+		}
+		break;
+	default: break;
+	}
+	self->hr_vtype = DEE_HOST_RELOCVALUE_SYM;
+	self->hr_value.rv_sym = sym;
+}
+
+
+
+
 /* Ensure that at least `num_bytes' of host text memory are available.
  * @return: 0 : Success
  * @return: -1: Error */
@@ -383,6 +410,14 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 	Dee_host_section_fini(&self->fa_prolog);
 	Dee_Free(self->fa_blockv);
 	Dee_Free(self->fa_except_exitv);
+	{
+		struct Dee_host_symbol *sym = self->fa_symbols;
+		while (sym) {
+			struct Dee_host_symbol *next = sym->_hs_next;
+			_Dee_host_symbol_free(sym);
+			sym = next;
+		}
+	}
 }
 
 
@@ -594,6 +629,21 @@ err:
 	return NULL;
 }
 
+/* Allocate a new host text symbol and return it.
+ * @return: * :   The newly allocated host text symbol
+ * @return: NULL: Error */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
+Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self) {
+	struct Dee_host_symbol *result = _Dee_host_symbol_alloc();
+	if likely(result) {
+		result->hs_type  = DEE_HOST_SYMBOL_UNDEF;
+		result->_hs_next = self->fa_symbols;
+		self->fa_symbols = result;
+	}
+	return result;
+}
+
+
 
 
 
@@ -601,8 +651,8 @@ err:
 INTERN ATTR_COLD int DCALL err_illegal_stack_effect(void) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal stack effect");
 }
-INTERN ATTR_COLD int DCALL err_illegal_lid(uint16_t lid) {
-	return DeeError_Throwf(&DeeError_SegFault, "Illegal local variable ID: %#" PRFx16, lid);
+INTERN ATTR_COLD int DCALL err_illegal_lid(size_t lid) {
+	return DeeError_Throwf(&DeeError_SegFault, "Illegal local variable ID: %#" PRFxSIZ, lid);
 }
 INTERN ATTR_COLD int DCALL err_illegal_mid(uint16_t mid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal module ID: %#" PRFx16, mid);

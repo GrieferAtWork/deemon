@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -43,6 +44,35 @@
 
 DECL_BEGIN
 
+/* Check if `a' and `b' describe the same host memory location (i.e. are aliasing each other). */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memloc_sameloc(struct Dee_memloc const *a,
+                   struct Dee_memloc const *b) {
+	if (a->ml_type != b->ml_type)
+		return false;
+	switch (a->ml_type) {
+	case MEMLOC_TYPE_HREG:
+		return a->ml_value.v_hreg.r_regno == b->ml_value.v_hreg.r_regno &&
+		       a->ml_value.v_hreg.r_off == b->ml_value.v_hreg.r_off;
+	case MEMLOC_TYPE_HREGIND:
+		return a->ml_value.v_hreg.r_regno == b->ml_value.v_hreg.r_regno &&
+		       a->ml_value.v_hreg.r_off == b->ml_value.v_hreg.r_off &&
+		       a->ml_value.v_hreg.r_voff == b->ml_value.v_hreg.r_voff;
+	case MEMLOC_TYPE_HSTACK:
+		return a->ml_value.v_hstack.s_cfa == b->ml_value.v_hstack.s_cfa;
+	case MEMLOC_TYPE_HSTACKIND:
+		return a->ml_value.v_hstack.s_cfa == b->ml_value.v_hstack.s_cfa &&
+		       a->ml_value.v_hstack.s_off == b->ml_value.v_hstack.s_off;
+	case MEMLOC_TYPE_CONST:
+		return a->ml_value.v_const == b->ml_value.v_const;
+	case MEMLOC_TYPE_UNALLOC:
+		return true;
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+
 /* Check if there is a register that contains `usage'.
  * Returns some value `>= HOST_REGISTER_COUNT' if non-existent. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_host_register_t DCALL
@@ -50,7 +80,7 @@ Dee_memstate_hregs_find_usage(struct Dee_memstate const *__restrict self,
                               Dee_host_regusage_t usage) {
 	Dee_host_register_t result;
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-		if (self->ms_regs[result] == usage)
+		if (self->ms_rusage[result] == usage)
 			break;
 	}
 	return result;
@@ -59,66 +89,26 @@ Dee_memstate_hregs_find_usage(struct Dee_memstate const *__restrict self,
 /* Check if there is a register that is completely unused.
  * Returns some value `>= HOST_REGISTER_COUNT' if non-existent.
  * @param: accept_if_with_regusage: When true, allowed to return registers with
- *                                  `ms_regs[return] != REGISTER_USAGE_GENERIC' */
+ *                                  `ms_rusage[return] != DEE_HOST_REGUSAGE_GENERIC' */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_host_register_t DCALL
 Dee_memstate_hregs_find_unused(struct Dee_memstate const *__restrict self,
                                bool accept_if_with_regusage) {
-	size_t i;
 	Dee_host_register_t result;
-	BITSET(HOST_REGISTER_COUNT) used;
-	bzero(&used, sizeof(used));
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_stackv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG) {
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			BITSET_TURNON(&used, loc->ml_value.ml_hreg);
-		}
-	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_localv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG) {
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			BITSET_TURNON(&used, loc->ml_value.ml_hreg);
-		}
-	}
-	if (!accept_if_with_regusage) {
-		for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-			if (self->ms_regs[result] != REGISTER_USAGE_GENERIC)
-				BITSET_TURNON(&used, result);
-		}
-	} else {
-		/* Even when other usage registers can be re-used, try not to do so unless necessary. */
-		for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-			if (!BITSET_GET(&used, result) && self->ms_regs[result] == REGISTER_USAGE_GENERIC)
-				goto done;
-		}
-	}
+	/* Check if we can find a register that not used anywhere. */
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-		if (!BITSET_GET(&used, result))
-			break; /* Found an unused register! */
+		if (!Dee_memstate_hregs_isused(self, result)) {
+			if (self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
+				return result;
+		}
 	}
-done:
+	if (accept_if_with_regusage) {
+		/* Check for registers that are only used by regusage. */
+		for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+			if (Dee_memstate_hregs_isused(self, result))
+				break; /* Found an unused register! */
+		}
+	}
 	return result;
-}
-
-/* Check if `regno' is used by stack/locals (ignores `ms_regs') */
-INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-Dee_memstate_hregs_isused(struct Dee_memstate const *__restrict self,
-                          Dee_host_register_t regno) {
-	size_t i;
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_stackv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG &&
-		    loc->ml_value.ml_hreg == regno)
-			return true;
-	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_localv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG &&
-		    loc->ml_value.ml_hreg == regno)
-			return true;
-	}
-	return false;
 }
 
 /* Same as `Dee_memstate_hregs_find_unused(self, true)', but don't return `not_these',
@@ -127,34 +117,24 @@ Dee_memstate_hregs_isused(struct Dee_memstate const *__restrict self,
 INTERN WUNUSED NONNULL((1)) Dee_host_register_t DCALL
 Dee_memstate_hregs_find_unused_ex(struct Dee_memstate *__restrict self,
                                   Dee_host_register_t const *not_these) {
-	size_t i;
 	Dee_host_register_t result;
 	BITSET(HOST_REGISTER_COUNT) used;
 	bzero(&used, sizeof(used));
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_stackv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG) {
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			BITSET_TURNON(&used, loc->ml_value.ml_hreg);
-		}
-	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_localv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HREG) {
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			BITSET_TURNON(&used, loc->ml_value.ml_hreg);
-		}
+	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+		if (Dee_memstate_hregs_isused(self, result))
+			BITSET_TURNON(&used, result);
 	}
 
 	/* If specified, exclude certain registers. */
 	if (not_these != NULL) {
+		size_t i;
 		for (i = 0; (result = not_these[i]) < HOST_REGISTER_COUNT; ++i)
 			BITSET_TURNON(&used, result);
 	}
 
 	/* Even when other usage registers can be re-used, try not to do so unless necessary. */
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-		if (!BITSET_GET(&used, result) && self->ms_regs[result] == REGISTER_USAGE_GENERIC)
+		if (!BITSET_GET(&used, result) && self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
 			goto done;
 	}
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
@@ -173,14 +153,14 @@ Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
 	size_t i;
 	for (i = 0; i < self->ms_stackc; ++i) {
 		struct Dee_memloc const *loc = &self->ms_stackv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HSTACK &&
-		    loc->ml_value.ml_hstack == cfa_offset)
+		if (loc->ml_type == MEMLOC_TYPE_HSTACKIND &&
+		    loc->ml_value.v_hstack.s_cfa == cfa_offset)
 			return true;
 	}
 	for (i = 0; i < self->ms_localc; ++i) {
 		struct Dee_memloc const *loc = &self->ms_localv[i];
-		if (loc->ml_where == MEMLOC_TYPE_HSTACK &&
-		    loc->ml_value.ml_hstack == cfa_offset)
+		if (loc->ml_type == MEMLOC_TYPE_HSTACKIND &&
+		    loc->ml_value.v_hstack.s_cfa == cfa_offset)
 			return true;
 	}
 	return false;
@@ -189,14 +169,14 @@ Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 Dee_memloc_hstack_used(struct Dee_memloc const *__restrict self,
                        uintptr_t min_offset, uintptr_t end_offset) {
-	if (self->ml_where == MEMLOC_TYPE_HSTACK) {
+	if (self->ml_type == MEMLOC_TYPE_HSTACKIND) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
-		if (self->ml_value.ml_hstack > min_offset &&
-		    self->ml_value.ml_hstack <= end_offset)
+		if (self->ml_value.v_hstack.s_cfa > min_offset &&
+		    self->ml_value.v_hstack.s_cfa <= end_offset)
 			return true;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-		if (self->ml_value.ml_hstack >= min_offset &&
-		    self->ml_value.ml_hstack < end_offset)
+		if (self->ml_value.v_hstack.s_cfa >= min_offset &&
+		    self->ml_value.v_hstack.s_cfa < end_offset)
 			return true;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 	}
@@ -294,10 +274,15 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 
 	/* Quick check: are locations identical? */
 	if (!Dee_memloc_sameloc(self, other)) {
-		switch (self->ml_where) {
+		switch (self->ml_type) {
 	
-		case MEMLOC_TYPE_CONST:
-		case MEMLOC_TYPE_ARG: {
+		case MEMLOC_TYPE_HSTACKIND:
+			if ((intptr_t)other->ml_value.v_hstack.s_cfa >= 0)
+				break; /* Normal stack location */
+			ATTR_FALLTHROUGH
+		case MEMLOC_TYPE_HREGIND:
+		case MEMLOC_TYPE_HSTACK:
+		case MEMLOC_TYPE_CONST: {
 			/* On one side it's an argument or a constant, and on the other
 			 * side it's something else.
 			 * In this case, need to convert to a register/stack location. */
@@ -306,14 +291,17 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 			/* If the location describe by `other' isn't already in use in `state',
 			 * then use *it* as-it. That way, we can reduce the necessary number of
 			 * memory state transformation! */
-			switch (other->ml_where) {
+			switch (other->ml_type) {
 	
-			case MEMLOC_TYPE_HSTACK:
-				if (!Dee_memstate_hstack_isused(state, other->ml_value.ml_hstack)) {
+			case MEMLOC_TYPE_HSTACKIND:
+				if ((intptr_t)other->ml_value.v_hstack.s_cfa < 0)
+					break; /* Out-of-band location (e.g. true arguments on i386) */
+				if (!Dee_memstate_hstack_isused(state, other->ml_value.v_hstack.s_cfa)) {
 					uintptr_t min_cfa_offset;
-					self->ml_where = MEMLOC_TYPE_HSTACK;
-					self->ml_value.ml_hstack = other->ml_value.ml_hstack;
-					min_cfa_offset = other->ml_value.ml_hstack;
+					self->ml_type = MEMLOC_TYPE_HSTACKIND;
+					self->ml_value.v_hstack.s_cfa = other->ml_value.v_hstack.s_cfa;
+					self->ml_value.v_hstack.s_off = other->ml_value.v_hstack.s_off;
+					min_cfa_offset = other->ml_value.v_hstack.s_cfa;
 #ifndef HOSTASM_STACK_GROWS_DOWN
 					min_cfa_offset += HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
@@ -324,9 +312,9 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 				break;
 
 			case MEMLOC_TYPE_HREG:
-				if (!Dee_memstate_hregs_isused(state, other->ml_value.ml_hreg)) {
-					self->ml_where = MEMLOC_TYPE_HREG;
-					self->ml_value.ml_hreg = other->ml_value.ml_hreg;
+				if (!Dee_memstate_hregs_isused(state, other->ml_value.v_hreg.r_regno)) {
+					self->ml_type = MEMLOC_TYPE_HREG;
+					self->ml_value.v_hreg.r_regno = other->ml_value.v_hreg.r_regno;
 					goto did_runtime_value_merge;
 				}
 				break;
@@ -337,17 +325,27 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 	
 			regno = Dee_memstate_hregs_find_unused(state, true);
 			if (regno < HOST_REGISTER_COUNT) {
-				self->ml_where = MEMLOC_TYPE_HREG;
-				self->ml_value.ml_hreg = regno;
-				state->ms_regs[regno]  = REGISTER_USAGE_GENERIC;
+				self->ml_type = MEMLOC_TYPE_HREG;
+				self->ml_value.v_hreg.r_regno = regno;
+				self->ml_value.v_hreg.r_off   = 0;
+				state->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
 			} else {
 				/* Use a stack location. */
 				uintptr_t cfa_offset;
 				cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
 				if (cfa_offset == (uintptr_t)-1)
 					cfa_offset = Dee_memstate_hstack_alloca(state, HOST_SIZEOF_POINTER);
-				self->ml_where = MEMLOC_TYPE_HSTACK;
-				self->ml_value.ml_hstack = cfa_offset;
+				self->ml_type = MEMLOC_TYPE_HSTACKIND;
+				self->ml_value.v_hstack.s_cfa = cfa_offset;
+				self->ml_value.v_hstack.s_off = 0;
+			}
+			if (other->ml_type == MEMLOC_TYPE_HREGIND ||
+			    other->ml_type == MEMLOC_TYPE_HSTACKIND) {
+				if (self->ml_type == MEMLOC_TYPE_HREG) {
+					self->ml_value.v_hreg.r_off = other->ml_value.v_hstack.s_off;
+				} else {
+					self->ml_value.v_hstack.s_off = other->ml_value.v_hstack.s_off;
+				}
 			}
 did_runtime_value_merge:
 			result = true;
@@ -368,15 +366,15 @@ did_runtime_value_merge:
 INTERN NONNULL((1, 2)) bool DCALL
 Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
                            struct Dee_memstate const *__restrict other) {
+	size_t i;
 	bool result = false;
-	uint16_t i;
 	Dee_host_register_t regno;
 	ASSERT(self->ms_stackc == other->ms_stackc);
 
 	/* Mark usage registers as undefined if different between blocks. */
 	for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
-		if (self->ms_regs[regno] != other->ms_regs[regno]) {
-			self->ms_regs[regno] = REGISTER_USAGE_GENERIC;
+		if (self->ms_rusage[regno] != other->ms_rusage[regno]) {
+			self->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
 			result = true;
 		}
 	}
@@ -477,6 +475,31 @@ err:
 	return -1;
 }
 
+#ifndef NDEBUG
+INTERN NONNULL((1)) void DCALL
+Dee_memstate_verifyrinuse_d(struct Dee_memstate *__restrict self) {
+	size_t i, correct_rinuse[HOST_REGISTER_COUNT];
+	bzero(correct_rinuse, sizeof(correct_rinuse));
+	for (i = 0; i < self->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &self->ms_stackv[i];
+		if (MEMLOC_TYPE_HASREG(loc->ml_type)) {
+			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
+			++correct_rinuse[loc->ml_value.v_hreg.r_regno];
+		}
+	}
+	for (i = 0; i < self->ms_localc; ++i) {
+		struct Dee_memloc *loc = &self->ms_localv[i];
+		if (MEMLOC_TYPE_HASREG(loc->ml_type)) {
+			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
+			++correct_rinuse[loc->ml_value.v_hreg.r_regno];
+		}
+	}
+	ASSERTF(memcmp(self->ms_rinuse, correct_rinuse, sizeof(correct_rinuse)) == 0,
+	        "Incorrect register-in-use numbers");
+}
+#endif /* !NDEBUG */
+
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vswap(struct Dee_memstate *__restrict self) {
 	struct Dee_memloc temp;
@@ -524,6 +547,9 @@ Dee_memstate_vpush(struct Dee_memstate *__restrict self, struct Dee_memloc *loc)
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	self->ms_stackv[self->ms_stackc] = *loc;
+	self->ms_stackv[self->ms_stackc].ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+	if (MEMLOC_TYPE_HASREG(loc->ml_type))
+		Dee_memstate_incrinuse(self, loc->ml_value.v_hreg.r_regno);
 	++self->ms_stackc;
 	return 0;
 err:
@@ -536,8 +562,8 @@ Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value)
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_where = MEMLOC_TYPE_CONST;
-	self->ms_stackv[self->ms_stackc].ml_value.ml_const = value;
+	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_CONST;
+	self->ms_stackv[self->ms_stackc].ml_value.v_const = value;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -548,27 +574,34 @@ err:
 /* Sets the `MEMLOC_F_NOREF' flag */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self,
-                       Dee_host_register_t regno) {
+                       Dee_host_register_t regno, ptrdiff_t delta) {
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_where = MEMLOC_TYPE_HREG;
-	self->ms_stackv[self->ms_stackc].ml_value.ml_hreg = regno;
+	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_HREG;
+	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_regno = regno;
+	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_off   = delta;
+	Dee_memstate_incrinuse(self, regno);
 	++self->ms_stackc;
 	return 0;
 err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_memstate_vpush_arg(struct Dee_memstate *__restrict self, uint16_t aid) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self,
+                          Dee_host_register_t regno,
+                          ptrdiff_t ind_delta, ptrdiff_t val_delta) {
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	self->ms_stackv[self->ms_stackc].ml_flags = MEMLOC_F_NOREF;
-	self->ms_stackv[self->ms_stackc].ml_where = MEMLOC_TYPE_ARG;
-	self->ms_stackv[self->ms_stackc].ml_value.ml_harg = aid;
+	self->ms_stackv[self->ms_stackc].ml_type = MEMLOC_TYPE_HREGIND;
+	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_regno = regno;
+	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_off   = ind_delta;
+	self->ms_stackv[self->ms_stackc].ml_value.v_hreg.r_voff  = val_delta;
+	Dee_memstate_incrinuse(self, regno);
 	++self->ms_stackc;
 	return 0;
 err:
@@ -577,6 +610,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, size_t n) {
+	struct Dee_memloc *dst_loc;
 	size_t index;
 	ASSERT(n >= 1);
 	if (OVERFLOW_USUB(self->ms_stackc, n, &index))
@@ -584,8 +618,11 @@ Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, size_t n) {
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
-	self->ms_stackv[self->ms_stackc] = self->ms_stackv[index];
-	self->ms_stackv[self->ms_stackc].ml_flags |= MEMLOC_F_NOREF; /* alias! (so no reference) */
+	dst_loc = &self->ms_stackv[self->ms_stackc];
+	*dst_loc = self->ms_stackv[index];
+	dst_loc->ml_flags |= MEMLOC_F_NOREF; /* alias! (so no reference) */
+	if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
+		Dee_memstate_incrinuse(self, dst_loc->ml_value.v_hreg.r_regno);
 	++self->ms_stackc;
 	return 0;
 err:
@@ -601,7 +638,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
                          struct Dee_memstate *__restrict state) {
-	uint16_t i;
+	size_t i;
 	self->exi_cfa_offset = state->ms_host_cfa_offset;
 	bzero(&self->exi_regs,
 	      ((offsetof(struct Dee_except_exitinfo, exi_stack) -
@@ -611,45 +648,60 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 		struct Dee_memloc *loc = &state->ms_localv[i];
 		if (loc->ml_flags & (MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND))
 			continue;
-		switch (loc->ml_where) {
-		case MEMLOC_TYPE_HSTACK: {
-			size_t index = Dee_except_exitinfo_cfa2index(loc->ml_value.ml_hstack);
+		switch (loc->ml_type) {
+
+		case MEMLOC_TYPE_HSTACKIND: {
+			size_t index;
+			if unlikely(loc->ml_value.v_hstack.s_off != 0)
+				goto err_bad_loc;
+			index = Dee_except_exitinfo_cfa2index(loc->ml_value.v_hstack.s_cfa);
 			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
 			++self->exi_stack[index];
 		}	break;
+
 		case MEMLOC_TYPE_HREG:
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			++self->exi_regs[loc->ml_value.ml_hreg];
+			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
+			if unlikely(loc->ml_value.v_hreg.r_off != 0)
+				goto err_bad_loc;
+			++self->exi_regs[loc->ml_value.v_hreg.r_regno];
 			break;
+
 		case MEMLOC_TYPE_UNALLOC:
 			break;
-		default:
-			return DeeError_Throwf(&DeeError_IllegalInstruction,
-			                       "Cannot jump to exception handler while holding "
-			                       "a reference to an argument or a constant");
+
+		default: goto err_bad_loc;
 		}
 	}
 	for (i = 0; i < state->ms_stackc; ++i) {
 		struct Dee_memloc *loc = &state->ms_stackv[i];
 		if (loc->ml_flags & MEMLOC_F_NOREF)
 			continue;
-		switch (loc->ml_where) {
-		case MEMLOC_TYPE_HSTACK: {
-			size_t index = Dee_except_exitinfo_cfa2index(loc->ml_value.ml_hstack);
+		switch (loc->ml_type) {
+
+		case MEMLOC_TYPE_HSTACKIND: {
+			size_t index;
+			if unlikely(loc->ml_value.v_hstack.s_off != 0)
+				goto err_bad_loc;
+			index = Dee_except_exitinfo_cfa2index(loc->ml_value.v_hstack.s_cfa);
 			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
 			++self->exi_stack[index];
 		}	break;
+
 		case MEMLOC_TYPE_HREG:
-			ASSERT(loc->ml_value.ml_hreg < HOST_REGISTER_COUNT);
-			++self->exi_regs[loc->ml_value.ml_hreg];
+			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
+			if unlikely(loc->ml_value.v_hreg.r_off != 0)
+				goto err_bad_loc;
+			++self->exi_regs[loc->ml_value.v_hreg.r_regno];
 			break;
-		default:
-			return DeeError_Throwf(&DeeError_IllegalInstruction,
-			                       "Cannot jump to exception handler while holding "
-			                       "a reference to an argument or a constant");
+
+		default: goto err_bad_loc;
 		}
 	}
 	return 0;
+err_bad_loc:
+	return DeeError_Throwf(&DeeError_IllegalInstruction,
+	                       "Cannot jump to exception handler while holding "
+	                       "a reference to such a complex object location");
 }
 
 

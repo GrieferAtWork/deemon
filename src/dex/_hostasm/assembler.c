@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 
@@ -38,12 +39,16 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
 	int result;
 	struct Dee_function_generator generator;
 	generator.fg_block     = self;
+	generator.fg_sect      = &self->bb_htext;
 	generator.fg_assembler = assembler;
 	generator.fg_state     = self->bb_mem_start;
 	ASSERT(generator.fg_state);
 	Dee_memstate_incref(generator.fg_state);
 	result = Dee_function_generator_genall(&generator);
 	Dee_memstate_decref(generator.fg_state);
+	ASSERT(generator.fg_block == self);
+	ASSERT(generator.fg_sect == &self->bb_htext);
+	ASSERT(generator.fg_assembler == assembler);
 	return result;
 }
 
@@ -127,29 +132,37 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 	size_t block_i;
 	struct Dee_memstate *state;
 	struct Dee_basic_block *block;
+	size_t local_count;
 	ASSERT(self->fa_blockc >= 1);
 	block = self->fa_blockv[0];
 	ASSERT(block);
 	ASSERT(block->bb_mem_start == NULL);
 
+	/* Figure out how many locals we need. */
+	local_count = self->fa_code->co_localc;
+	local_count += DEE_MEMSTATE_EXTRA_LOCALS_MINCOUNT;
+	local_count += self->fa_code->co_argc_max;
+	local_count -= self->fa_code->co_argc_max;
+
 	/* Setup the state of the function's first (entry) block. */
-	state = Dee_memstate_alloc(self->fa_code->co_localc);
+	state = Dee_memstate_alloc(local_count);
 	if unlikely(!state)
 		goto err;
 	state->ms_refcnt = 1;
 	state->ms_host_cfa_offset = 0;
-	state->ms_localc = self->fa_code->co_localc;
+	state->ms_localc = local_count;
 	state->ms_stackc = 0;
 	state->ms_stacka = 0;
+	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
 	Dee_memstate_hregs_clear_usage(state);
 	state->ms_stackv = NULL;
 
 	/* Initially, all variables are unbound */
 	{
-		uint16_t lid;
+		size_t lid;
 		for (lid = 0; lid < state->ms_localc; ++lid) {
 			state->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
-			state->ms_localv[lid].ml_where = MEMLOC_TYPE_UNALLOC;
+			state->ms_localv[lid].ml_type = MEMLOC_TYPE_UNALLOC;
 		}
 	}
 
@@ -169,20 +182,20 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		Dee_hostfunc_cc_t cc = self->fa_cc;
 		size_t trueargc = 0;
 		if (cc & HOSTFUNC_CC_F_THIS) {
-			state->ms_regs[HOST_REGISTER_R_ARG0] = REGISTER_USAGE_THIS;
+			state->ms_rusage[HOST_REGISTER_R_ARG0] = DEE_HOST_REGUSAGE_THIS;
 			trueargc += 1;
 		}
 		if (cc & HOSTFUNC_CC_F_TUPLE) {
-			state->ms_regs[truearg_regno[trueargc]] = REGISTER_USAGE_ARGS;
+			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGS;
 			trueargc += 1;
 		} else {
-			state->ms_regs[truearg_regno[trueargc]] = REGISTER_USAGE_ARGC;
+			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGC;
 			trueargc += 1;
-			state->ms_regs[truearg_regno[trueargc]] = REGISTER_USAGE_ARGV;
+			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGV;
 			trueargc += 1;
 		}
 		if (cc & HOSTFUNC_CC_F_KW) {
-			state->ms_regs[truearg_regno[trueargc]] = REGISTER_USAGE_KW;
+			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_KW;
 			trueargc += 1;
 		}
 
@@ -317,14 +330,24 @@ host_section_set_insertall_from_relocations(struct host_section_set *__restrict 
 	size_t i;
 	for (i = 0; i < sect->hs_relc; ++i) {
 		struct Dee_host_reloc *rel = &sect->hs_relv[i];
-		switch (rel->hr_type) {
-#ifdef DEE_HOST_RELOC_SCREL32
-		case DEE_HOST_RELOC_SCREL32:
-#endif /* DEE_HOST_RELOC_SCREL32 */
-#ifdef DEE_HOST_RELOC_SCABS32
-		case DEE_HOST_RELOC_SCABS32:
-#endif /* DEE_HOST_RELOC_SCABS32 */
-			host_section_set_insert(self, rel->hr_value.hr_sc);
+		switch (rel->hr_vtype) {
+		case DEE_HOST_RELOCVALUE_SYM: {
+			struct Dee_host_symbol const *sym = rel->hr_value.rv_sym;
+			switch (sym->hs_type) {
+#if 0 /* We only care about sections that might be used for exception handling! */
+			case DEE_HOST_SYMBOL_JUMP:
+				host_section_set_insert(self, &sym->hs_value.sv_jump->jd_morph);
+				host_section_set_insert(self, &sym->hs_value.sv_jump->jd_to->bb_htext);
+				break;
+#endif
+			case DEE_HOST_SYMBOL_SECT:
+				host_section_set_insert(self, sym->hs_value.sv_sect.ss_sect);
+				break;
+			default: break;
+			}
+		}	break;
+		case DEE_HOST_RELOCVALUE_SECT:
+			host_section_set_insert(self, rel->hr_value.rv_sect);
 			break;
 
 		default:
