@@ -224,6 +224,26 @@ Dee_memstate_hstack_unused(struct Dee_memstate const *__restrict self,
 INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self, size_t n_bytes) {
 	ASSERT(IS_ALIGNED(n_bytes, HOST_SIZEOF_POINTER));
+#ifdef HOSTASM_X86_64_MSABI
+	/* MSABI provides an additional 32 bytes of GP memory at CFA offsets [-40, -8) */
+	if (n_bytes <= 4 * HOST_SIZEOF_POINTER) {
+		size_t a_pointers = 4;
+		size_t n_pointers = n_bytes / HOST_SIZEOF_POINTER;
+		size_t i, check = (a_pointers - n_pointers) + 1;
+		for (i = 0; i < check; ++i) {
+			uintptr_t min_offset = (uintptr_t)(-(ptrdiff_t)((5 * HOST_SIZEOF_POINTER) -
+			                                                (i * HOST_SIZEOF_POINTER)));
+			uintptr_t end_offset = min_offset + n_bytes;
+			if (Dee_memstate_hstack_unused(self, min_offset, end_offset)) {
+#ifdef HOSTASM_STACK_GROWS_DOWN
+				return end_offset;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+				return min_offset;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			}
+		}
+	}
+#endif /* HOSTASM_X86_64_MSABI */
 	if (n_bytes <= self->ms_host_cfa_offset) {
 		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
 		size_t n_pointers = n_bytes / HOST_SIZEOF_POINTER;

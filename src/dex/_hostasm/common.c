@@ -407,6 +407,8 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 		Dee_basic_block_destroy(self->fa_blockv[i]);
 	for (i = 0; i < self->fa_except_exitc; ++i)
 		Dee_except_exitinfo_destroy(self->fa_except_exitv[i]);
+	if (self->fa_prolog_end)
+		Dee_memstate_decref(self->fa_prolog_end);
 	Dee_host_section_fini(&self->fa_prolog);
 	Dee_Free(self->fa_blockv);
 	Dee_Free(self->fa_except_exitv);

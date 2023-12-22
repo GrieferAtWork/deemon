@@ -292,10 +292,12 @@ _Dee_memloc_debug_print(struct Dee_memloc *__restrict self, bool is_local) {
 		Dee_DPRINT("r");
 	switch (self->ml_type) {
 	case MEMLOC_TYPE_HSTACK:
-		Dee_DPRINTF("#%Iu", self->ml_value.v_hstack.s_cfa);
+		/* Signed, because we cheat when it comes to how caller-arguments */
+		Dee_DPRINTF("#%Id", (ptrdiff_t)self->ml_value.v_hstack.s_cfa);
 		break;
 	case MEMLOC_TYPE_HSTACKIND:
-		Dee_DPRINTF("[#%Iu]", self->ml_value.v_hstack.s_cfa);
+		/* Signed, because we cheat when it comes to how caller-arguments */
+		Dee_DPRINTF("[#%Id]", (ptrdiff_t)self->ml_value.v_hstack.s_cfa);
 		if (self->ml_value.v_hstack.s_off != 0)
 			Dee_DPRINTF("+%Id", self->ml_value.v_hstack.s_off);
 		break;
@@ -1117,87 +1119,6 @@ _Dee_host_section_gmov_reg2regind(struct Dee_host_section *__restrict self,
 	return 0;
 err:
 	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-_Dee_function_generator_gmov_truearg2reg(struct Dee_function_generator *__restrict self,
-                                         size_t argno, Dee_host_register_t dst_regno) {
-	size_t sp_offset;
-	sp_offset = self->fg_state->ms_host_cfa_offset; /* Offset to return-pc */
-#if defined(HOSTASM_X86_64) && defined(HOSTASM_X86_64_SYSVABI)
-	/* This matches the way registers are saved in the prolog. */
-	{
-		Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
-		size_t trueargc = cc & HOSTFUNC_CC_F_TUPLE ? 1 : 2;
-		if (cc & HOSTFUNC_CC_F_THIS)
-			++trueargc;
-		if (cc & HOSTFUNC_CC_F_KW)
-			++trueargc;
-		sp_offset -= trueargc * HOST_SIZEOF_POINTER; /* Base address of saved register arguments */
-		sp_offset += argno * HOST_SIZEOF_POINTER;    /* Load the relevant argument */
-	}
-#else /* HOSTASM_X86_64 */
-	sp_offset += HOST_SIZEOF_POINTER;               /* Skip over return-pc */
-	sp_offset += argno * HOST_SIZEOF_POINTER;       /* Load the relevant argument */
-#endif /* !HOSTASM_X86_64 */
-	return _Dee_function_generator_gmov_hstackind2reg(self, sp_offset, dst_regno);
-}
-
-/* Load special runtime values into `dst_regno' */
-INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_function_generator_gmov_usage2reg(struct Dee_function_generator *__restrict self,
-                                       Dee_host_regusage_t usage,
-                                       Dee_host_register_t dst_regno) {
-	Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
-	switch (usage) {
-	case DEE_HOST_REGUSAGE_THIS:
-		if (!(cc & HOSTFUNC_CC_F_THIS))
-			break;
-		return _Dee_function_generator_gmov_truearg2reg(self, 0, dst_regno);
-
-	case DEE_HOST_REGUSAGE_ARGC: {
-		size_t offset = 0;
-		if (cc & HOSTFUNC_CC_F_TUPLE)
-			break;
-		if (cc & HOSTFUNC_CC_F_THIS)
-			++offset;
-		return _Dee_function_generator_gmov_truearg2reg(self, offset, dst_regno);
-	}	break;
-
-	case DEE_HOST_REGUSAGE_ARGV: {
-		size_t offset = 1;
-		if (cc & HOSTFUNC_CC_F_TUPLE)
-			break;
-		if (cc & HOSTFUNC_CC_F_THIS)
-			++offset;
-		return _Dee_function_generator_gmov_truearg2reg(self, offset, dst_regno);
-	}	break;
-
-	case DEE_HOST_REGUSAGE_ARGS: {
-		size_t offset = 0;
-		if (!(cc & HOSTFUNC_CC_F_TUPLE))
-			break;
-		if (cc & HOSTFUNC_CC_F_THIS)
-			++offset;
-		return _Dee_function_generator_gmov_truearg2reg(self, offset, dst_regno);
-	}	break;
-
-	case DEE_HOST_REGUSAGE_KW: {
-		size_t offset = 1;
-		if (!(cc & HOSTFUNC_CC_F_KW))
-			break;
-		if (!(cc & HOSTFUNC_CC_F_TUPLE))
-			++offset;
-		if (cc & HOSTFUNC_CC_F_THIS)
-			++offset;
-		return _Dee_function_generator_gmov_truearg2reg(self, offset, dst_regno);
-	}	break;
-
-	default: break;
-	}
-	return DeeError_Throwf(&DeeError_IllegalInstruction,
-	                       "Unsupported register usage %" PRFu8,
-	                       (uint8_t)usage);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

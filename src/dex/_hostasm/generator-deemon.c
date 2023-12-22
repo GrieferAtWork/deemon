@@ -399,7 +399,7 @@ err:
 
 /* For the non-file-print instructions, load the `stdout' file stream only the first
  * time a print-like instruction is reached. We then keep that object in a hidden
- * local `DEE_MEMSTATE_EXTRA_LOCALS_STDOUT' until the end of the basic block, or until
+ * local `DEE_MEMSTATE_EXTRA_LOCAL_STDOUT' until the end of the basic block, or until
  * a chunk of at least `CONFIG_HOSTASM_STDOUT_CACHE_MAXINSTR_N' non-print-to-stdout
  * instructions are about to be compiled.
  *
@@ -415,7 +415,7 @@ Dee_function_generator_gen_stdout_print(struct Dee_function_generator *__restric
 	Dee_instruction_t const *iter, *print_block_end, *print_block_end_limit;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
-	stdout_lid = (size_t)self->fg_assembler->fa_code->co_localc + DEE_MEMSTATE_EXTRA_LOCALS_STDOUT;
+	stdout_lid = (size_t)self->fg_assembler->fa_localc + DEE_MEMSTATE_EXTRA_LOCAL_STDOUT;
 
 	/* Figure out where we want to end the print-block. */
 	print_block_end_limit = self->fg_block->bb_deemon_end;
@@ -766,7 +766,7 @@ do_jcc:
 		reference = self->fg_assembler->fa_function->fo_refv[rid];
 		if unlikely(Dee_function_generator_vpush_const(self, reference))
 			goto err;
-		if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS))
+		if unlikely(Dee_function_generator_vpush_this(self))
 			goto err;
 		return Dee_function_generator_vcallapi(self, (void const *)&DeeSuper_New, VCALLOP_CC_OBJECT, 2);
 	}	break;
@@ -785,18 +785,8 @@ do_jcc:
 	case ASM16_POP_GLOBAL:
 		return Dee_function_generator_vpop_global(self, UNALIGNED_GETLE16(instr + 2));
 
-	case ASM_PUSH_VARARGS:
-		if (!(self->fg_assembler->fa_cc & HOSTFUNC_CC_F_TUPLE)) {
-			if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_ARGC))
-				goto err;
-			if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_ARGV))
-				goto err;
-			return Dee_function_generator_vcallapi(self, (void const *)&DeeTuple_NewVector, VCALLOP_CC_OBJECT, 2);
-		}
-		return Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_ARGS);
-
-	case ASM_PUSH_VARKWDS:
-		return Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_KW);
+	//TODO: case ASM_PUSH_VARARGS:
+	//TODO: case ASM_PUSH_VARKWDS:
 
 	case ASM_PUSH_STATIC:
 		return Dee_function_generator_vpush_static(self, instr[1]);
@@ -973,7 +963,7 @@ do_jcc:
 		__IF0 { case ASM16_GETATTR_THIS_C: cid = UNALIGNED_GETLE16(instr + 2); }
 		if unlikely(cid >= self->fg_assembler->fa_code->co_staticc)
 			return err_illegal_cid(cid);
-		if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS))
+		if unlikely(Dee_function_generator_vpush_this(self))
 			goto err;
 		constant = self->fg_assembler->fa_code->co_staticv[cid];
 		if unlikely(Dee_function_generator_vpush_const(self, constant))
@@ -988,7 +978,7 @@ do_jcc:
 		__IF0 { case ASM16_DELATTR_THIS_C: cid = UNALIGNED_GETLE16(instr + 2); }
 		if unlikely(cid >= self->fg_assembler->fa_code->co_staticc)
 			return err_illegal_cid(cid);
-		if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS))
+		if unlikely(Dee_function_generator_vpush_this(self))
 			goto err;
 		constant = self->fg_assembler->fa_code->co_staticv[cid];
 		if unlikely(Dee_function_generator_vpush_const(self, constant))
@@ -1005,7 +995,7 @@ do_jcc:
 		__IF0 { case ASM16_SETATTR_THIS_C: cid = UNALIGNED_GETLE16(instr + 2); }
 		if unlikely(cid >= self->fg_assembler->fa_code->co_staticc)
 			return err_illegal_cid(cid);
-		if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS))
+		if unlikely(Dee_function_generator_vpush_this(self))
 			goto err;
 		constant = self->fg_assembler->fa_code->co_staticv[cid];
 		if unlikely(Dee_function_generator_vpush_const(self, constant))
@@ -1582,7 +1572,7 @@ do_jcc:
 		__IF0 { case ASM16_CALLATTR_THIS_C_TUPLE: cid = UNALIGNED_GETLE16(instr + 2); }
 		if unlikely(cid >= self->fg_assembler->fa_code->co_staticc)
 			return err_illegal_cid(cid);
-		if unlikely(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS))
+		if unlikely(Dee_function_generator_vpush_this(self))
 			goto err;
 		constant = self->fg_assembler->fa_code->co_staticv[cid];
 		if unlikely(Dee_function_generator_vpush_const(self, constant))
@@ -1626,7 +1616,7 @@ do_jcc:
 	//TODO: case ASM_PUSH_EXCEPT:
 
 	case ASM_PUSH_THIS:
-		return Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THIS);
+		return Dee_function_generator_vpush_this(self);
 	case ASM_CAST_HASHSET:
 		return Dee_function_generator_vcallapi(self, (void const *)&DeeHashSet_FromSequence, VCALLOP_CC_OBJECT, 1);
 	case ASM_CAST_DICT:
@@ -1741,7 +1731,7 @@ do_jcc:
 				return err_illegal_gid(mod, id1);
 		}	break;
 		case ASM_LOCAL:
-			if unlikely(id1 >= self->fg_assembler->fa_code->co_localc)
+			if unlikely(id1 >= self->fg_assembler->fa_localc)
 				return err_illegal_lid(id1);
 			break;
 		default: __builtin_unreachable();

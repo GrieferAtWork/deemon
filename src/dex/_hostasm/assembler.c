@@ -113,34 +113,22 @@ INTERN_CONST size_t const _Dee_function_assembler_cfa_addend[HOSTFUNC_CC_COUNT] 
 };
 #endif /* !HOSTASM_X86_64_SYSVABI */
 
-/* Step #4: Compile basic blocks and determine memory states. Fills in:
- * - self->fa_blockv[*]->bb_entries.jds_list[*]->jd_stat
- * - self->fa_blockv[*]->bb_mem_start->* (everything not already done by `Dee_function_assembler_loadboundlocals()')
- * - self->fa_blockv[*]->bb_mem_end
- * - self->fa_blockv[*]->bb_host_start
- * - self->fa_blockv[*]->bb_host_end
- * Also makes sure that memory states at start/end of basic blocks are
- * always identical (or compatible; i.e.: MEMLOC_F_LOCAL_UNKNOWN can
- * be set at the start of a block, but doesn't need to be set at the
- * end of a preceding block). When not compatible, extra block(s) are
- * inserted with `bb_deemon_start==bb_deemon_end', but non-empty host
- * assembly, which serves the purpose of transforming memory states.
- * @return: 0 : Success
- * @return: -1: Error */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict self) {
-	size_t block_i;
+/* Allocate and return the initial memory-state when the
+ * generated function is entered at the start of the prolog.
+ * @return: * :   The initial memory-state
+ * @return: NULL: Error */
+PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
+Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *__restrict self) {
+	Dee_hostfunc_cc_t cc = self->fa_cc;
 	struct Dee_memstate *state;
-	struct Dee_basic_block *block;
 	size_t local_count;
+	size_t extra_base;
 	ASSERT(self->fa_blockc >= 1);
-	block = self->fa_blockv[0];
-	ASSERT(block);
-	ASSERT(block->bb_mem_start == NULL);
 
 	/* Figure out how many locals we need. */
-	local_count = self->fa_code->co_localc;
-	local_count += DEE_MEMSTATE_EXTRA_LOCALS_MINCOUNT;
+	extra_base  = self->fa_localc;
+	local_count = extra_base;
+	local_count += DEE_MEMSTATE_EXTRA_LOCAL_MINCOUNT;
 	local_count += self->fa_code->co_argc_max;
 	local_count -= self->fa_code->co_argc_max;
 
@@ -162,75 +150,141 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		size_t lid;
 		for (lid = 0; lid < state->ms_localc; ++lid) {
 			state->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
-			state->ms_localv[lid].ml_type = MEMLOC_TYPE_UNALLOC;
+			state->ms_localv[lid].ml_type  = MEMLOC_TYPE_UNALLOC;
 		}
 	}
 
-	/* Set the mem-state for the initial block. */
-	block->bb_mem_start = state; /* Inherit reference */
-
-	/* Save caller-provided arguments onto stack. */
-#ifdef HOSTASM_X86_64
+	/* Set-up the mem-state to indicate where arguments are stored at */
+#ifdef HOSTASM_X86
 	{
+#ifdef HOSTASM_X86_64
+#define Dee_memloc_set_x86_arg(self, argi)                     \
+	((self)->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND, \
+	 (self)->ml_type  = MEMLOC_TYPE_HREG,                      \
+	 (self)->ml_value.v_hreg.r_regno = truearg_regno[argi],    \
+	 (self)->ml_value.v_hreg.r_off   = 0)
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,
 			HOST_REGISTER_R_ARG2,
 			HOST_REGISTER_R_ARG0,
 		};
-
-		Dee_hostfunc_cc_t cc = self->fa_cc;
-		size_t trueargc = 0;
+#else /* HOSTASM_X86_64 */
+#define Dee_memloc_set_x86_arg(self, argi)                                          \
+	((self)->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND,                      \
+	 (self)->ml_type  = MEMLOC_TYPE_HSTACKIND,                                      \
+	 (self)->ml_value.v_hstack.s_cfa = (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
+	 (self)->ml_value.v_hstack.s_off = 0)
+#endif /* !HOSTASM_X86_64 */
+		size_t argi = 0;
 		if (cc & HOSTFUNC_CC_F_THIS) {
-			state->ms_rusage[HOST_REGISTER_R_ARG0] = DEE_HOST_REGUSAGE_THIS;
-			trueargc += 1;
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_THIS], argi);
+			++argi;
 		}
 		if (cc & HOSTFUNC_CC_F_TUPLE) {
-			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGS;
-			trueargc += 1;
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_ARGS], argi);
+			++argi;
 		} else {
-			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGC;
-			trueargc += 1;
-			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_ARGV;
-			trueargc += 1;
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_ARGC], argi);
+			++argi;
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_ARGV], argi);
+			++argi;
 		}
-		if (cc & HOSTFUNC_CC_F_KW) {
-			state->ms_rusage[truearg_regno[trueargc]] = DEE_HOST_REGUSAGE_KW;
-			trueargc += 1;
-		}
-
-#if 0 /* TODO: This can't go in the first basic block; this needs to go into
-       *       a special prolog section that is generated during linking! */
-#ifdef HOSTASM_X86_64_SYSVABI
-		/* Push arguments onto stack */
-		if (trueargc >= 4 && _Dee_basic_block_ghstack_pushreg(block, HOST_REGISTER_R_ARG3))
-			goto err;
-		if (trueargc >= 3 && _Dee_basic_block_ghstack_pushreg(block, HOST_REGISTER_R_ARG2))
-			goto err;
-		if (trueargc >= 2 && _Dee_basic_block_ghstack_pushreg(block, HOST_REGISTER_R_ARG1))
-			goto err;
-		if (_Dee_basic_block_ghstack_pushreg(block, HOST_REGISTER_R_ARG0))
-			goto err;
-		ASSERT(_Dee_function_assembler_cfa_addend[cc] == trueargc * HOST_SIZEOF_POINTER);
-#elif defined(HOSTASM_X86_64_MSABI)
-		/* Save register arguments in caller-allocated locations */
-		if (_Dee_basic_block_gmov_reg2hstack(block, HOST_REGISTER_R_ARG0, HOST_SIZEOF_POINTER * 1))
-			goto err;
-		if (trueargc >= 2 && _Dee_basic_block_gmov_reg2hstack(block, HOST_REGISTER_R_ARG1, HOST_SIZEOF_POINTER * 2))
-			goto err;
-		if (trueargc >= 3 && _Dee_basic_block_gmov_reg2hstack(block, HOST_REGISTER_R_ARG2, HOST_SIZEOF_POINTER * 3))
-			goto err;
-		if (trueargc >= 4 && _Dee_basic_block_gmov_reg2hstack(block, HOST_REGISTER_R_ARG3, HOST_SIZEOF_POINTER * 4))
-			goto err;
-#endif /* ... */
-#endif
+		if (cc & HOSTFUNC_CC_F_KW)
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_KW], argi);
+#undef Dee_memloc_set_x86_arg
 	}
-#endif /* HOSTASM_X86_64 */
+#else /* ... */
+#error "Initial register state not implemented for this architecture"
+#endif /* !... */
+
+	return state;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self) {
+	/* TODO: Check argc */
+	/* TODO: Unpack keywords */
+	(void)self;
+	return 0;
+}
+
+
+/* Generate the prolog of the function (check argc, unpack keywords, etc...).
+ * This fills in:
+ * - self->fa_prolog
+ * - self->fa_prolog_end
+ * @return: 0 : Success
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self,
+                                  /*inherit(always)*/ DREF struct Dee_memstate *__restrict state) {
+	int result;
+	struct Dee_function_generator gen;
+	gen.fg_assembler = self;
+	gen.fg_block     = self->fa_blockv[0];
+	gen.fg_sect      = &self->fa_prolog;
+	gen.fg_state     = state; /* Inherit reference */
+	ASSERT(gen.fg_block);
+	ASSERT(self->fa_prolog_end == NULL);
+	ASSERT(gen.fg_state != NULL);
+	result = Dee_function_generator_makeprolog(&gen);
+	ASSERT(gen.fg_state != NULL);
+	ASSERT(self->fa_prolog_end == NULL);
+	if likely(result == 0) {
+		self->fa_prolog_end = gen.fg_state; /* Inherit reference */
+	} else {
+		Dee_memstate_decref(gen.fg_state);
+	}
+	return result;
+}
+
+/* Step #2: Compile basic blocks and determine memory states. Fills in:
+ * - self->fa_prolog
+ * - self->fa_prolog_end
+ * - self->fa_blockv[*]->bb_entries.jds_list[*]->jd_stat
+ * - self->fa_blockv[*]->bb_mem_start
+ * - self->fa_blockv[*]->bb_mem_end
+ * - self->fa_blockv[*]->bb_host_start
+ * - self->fa_blockv[*]->bb_host_end
+ * Also makes sure that memory states at start/end of basic blocks are
+ * always identical (or compatible; i.e.: MEMLOC_F_LOCAL_UNKNOWN can
+ * be set at the start of a block, but doesn't need to be set at the
+ * end of a preceding block). When not compatible, extra block(s) are
+ * inserted with `bb_deemon_start==bb_deemon_end', but non-empty host
+ * assembly, which serves the purpose of transforming memory states.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict self) {
+	size_t block_i;
+	struct Dee_memstate *state;
+	struct Dee_basic_block *block;
+	ASSERT(self->fa_blockc >= 1);
+
+	/* Setup the state of the function's first (entry) block. */
+	state = Dee_function_assembler_alloc_init_memstate(self);
+	if unlikely(!state)
+		goto err;
+
+	/* Generate the function prolog. */
+	if unlikely(Dee_function_assembler_makeprolog(self, state))
+		goto err;
+
+	/* Set the mem-state for the initial block. */
+	ASSERT(self->fa_prolog_end);
+	block = self->fa_blockv[0];
+	ASSERT(block);
+	ASSERT(block->bb_mem_start == NULL);
+	Dee_memstate_incref(self->fa_prolog_end);
+	block->bb_mem_start = self->fa_prolog_end; /* Inherit reference */
 
 	/* Compile all basic blocks until everything has been compiled and everyone is happy. */
 	while ((block_i = find_next_block_to_compile(self)) != (size_t)-1) {
 		block = self->fa_blockv[block_i];
-		Dee_DPRINTF("Dee_function_assembler_compileblocks: %" PRFuSIZ " [%.4" PRFx32 "-%.4" PRFx32 "]\n",
+		Dee_DPRINTF("Dee_basic_block_compile: %" PRFuSIZ " [%.4" PRFx32 "-%.4" PRFx32 "]\n",
 		            block_i,
 		            Dee_function_assembler_addrof(self, block->bb_deemon_start),
 		            Dee_function_assembler_addrof(self, block->bb_deemon_end - 1));
@@ -445,6 +499,43 @@ err:
 	return -1;
 }
 
+
+/* Append morphing code for `from_state' to `to_state' to `sect' */
+#undef assemble_morph
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+assemble_morph(struct Dee_function_assembler *__restrict assembler,
+               struct Dee_host_section *sect,
+               struct Dee_memstate *from_state,
+               struct Dee_basic_block *to_block
+#ifndef Dee_DPRINT_IS_NOOP
+               , Dee_instruction_t const *from_instr
+#endif /* !Dee_DPRINT_IS_NOOP */
+               ) {
+#ifdef Dee_DPRINT_IS_NOOP
+#define assemble_morph(a, b, c, d, e) assemble_morph(a, b, c, d)
+#endif /* Dee_DPRINT_IS_NOOP */
+	int result;
+	struct Dee_function_generator gen;
+	ASSERT(to_block->bb_mem_start);
+	Dee_DPRINTF("Dee_function_generator_gmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
+	            Dee_function_assembler_addrof(assembler, from_instr),
+	            to_block->bb_deemon_start < to_block->bb_deemon_end
+	            ? Dee_function_assembler_addrof(assembler, to_block->bb_deemon_start)
+	            : 0xffff);
+#ifndef NO_HOSTASM_DEBUG_PRINT
+	_Dee_memstate_debug_print(from_state);
+	_Dee_memstate_debug_print(to_block->bb_mem_start);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	gen.fg_assembler = assembler;
+	gen.fg_block     = to_block;
+	gen.fg_sect      = sect;
+	gen.fg_state     = from_state;
+	Dee_memstate_incref(gen.fg_state);
+	result = Dee_function_generator_gmorph(&gen, to_block->bb_mem_start);
+	Dee_memstate_decref(gen.fg_state);
+	return result;
+}
+
 /* Step #4: Generate morph instruction sequences to perform memory state transitions.
  * This also extends the host text of basic blocks that fall through to some
  * other basic block with an extra instructions needed for morphing:
@@ -457,9 +548,41 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict self) {
-	/* TODO */
+	size_t i;
+	/* Initial morph after the prolog to match the start-state of the first block. */
+	if unlikely(assemble_morph(self, &self->fa_prolog, self->fa_prolog_end,
+	                           self->fa_blockv[0],
+	                           self->fa_blockv[0]->bb_deemon_start))
+		goto err;
+	for (i = 0; i < self->fa_blockc; ++i) {
+		size_t j;
+		struct Dee_basic_block *block = self->fa_blockv[i];
+		ASSERT(block);
+		ASSERT(block->bb_mem_start);
+		ASSERT(block->bb_mem_end);
+		for (j = 0; j < block->bb_exits.jds_size; ++j) {
+			struct Dee_jump_descriptor *jd = block->bb_exits.jds_list[j];
+			ASSERT(jd);
+			ASSERT(jd->jd_from >= block->bb_deemon_start);
+			ASSERT(jd->jd_from < block->bb_deemon_end);
+			ASSERT(jd->jd_stat != NULL);
+			ASSERT(jd->jd_to != NULL);
+			if unlikely(assemble_morph(self, &jd->jd_morph, jd->jd_stat,
+			                           jd->jd_to, jd->jd_from))
+				goto err;
+		}
+		if (block->bb_next != NULL) {
+			if unlikely(assemble_morph(self, &block->bb_htext, block->bb_mem_end,
+			                           block->bb_next, block->bb_deemon_end))
+				goto err;
+		}
+	}
+
+	/* TODO: Generate cleanup/fallthru code for exit descriptors. */
 	(void)self;
 	return DeeError_NOTIMPLEMENTED();
+err:
+	return -1;
 }
 
 /* Step #5: Generate missing unconditional jumps to jump from one block to the next

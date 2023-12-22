@@ -39,28 +39,6 @@ STATIC_ASSERT(offsetof(struct Dee_memloc, ml_value.v_hreg.r_voff) ==
 /* COMMON CODE GENERATION FUNCTIONS                                     */
 /************************************************************************/
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gmov_arg2reg(struct Dee_function_generator *__restrict self,
-                                    uint16_t aid, Dee_host_register_t dst_regno) {
-	ptrdiff_t delta = (ptrdiff_t)aid * HOST_SIZEOF_POINTER;
-	struct Dee_memstate *state = self->fg_state;
-	Dee_host_register_t argv_regno;
-	argv_regno = Dee_memstate_hregs_find_usage(state, DEE_HOST_REGUSAGE_ARGV);
-	if (argv_regno >= HOST_REGISTER_COUNT) {
-		argv_regno = Dee_memstate_hregs_find_unused(state, true);
-		if (argv_regno >= HOST_REGISTER_COUNT)
-			argv_regno = dst_regno;
-		if unlikely(Dee_function_generator_gmov_usage2reg(self, DEE_HOST_REGUSAGE_ARGV, argv_regno))
-			goto err;
-	}
-	if unlikely(Dee_function_generator_gmov_regind2reg(self, argv_regno, delta, dst_regno))
-		goto err;
-	state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC;
-	return 0;
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict self,
                                      Dee_host_register_t src_regno, ptrdiff_t src_delta,
@@ -424,45 +402,6 @@ err:
 
 
 
-/* Load special runtime values into `dst_regno' */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gmov_usage2reg(struct Dee_function_generator *__restrict self,
-                                      Dee_host_regusage_t usage,
-                                      Dee_host_register_t dst_regno) {
-	struct Dee_memstate *state = self->fg_state;
-	if unlikely(state->ms_rusage[dst_regno] == usage)
-		return 0;
-	if ((usage == DEE_HOST_REGUSAGE_ARGC || usage == DEE_HOST_REGUSAGE_ARGV) &&
-	    (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_TUPLE)) {
-		/* Special case: need to load via argc-tuple indirection */
-		ptrdiff_t args_offset;
-		Dee_host_register_t args_regno;
-		args_regno = Dee_memstate_hregs_find_usage(state, DEE_HOST_REGUSAGE_ARGS);
-		if (args_regno >= HOST_REGISTER_COUNT) {
-			args_regno = Dee_memstate_hregs_find_unused(state, true);
-			if (args_regno >= HOST_REGISTER_COUNT)
-				args_regno = dst_regno;
-			if unlikely(_Dee_function_generator_gmov_usage2reg(self, DEE_HOST_REGUSAGE_ARGS, args_regno))
-				goto err;
-			state->ms_rusage[args_regno] = DEE_HOST_REGUSAGE_ARGV;
-		}
-
-		/* Now load the relevant tuple object field. */
-		args_offset = offsetof(DeeTupleObject, t_elem);
-		if (usage == DEE_HOST_REGUSAGE_ARGC)
-			args_offset = offsetof(DeeTupleObject, t_size);
-		if unlikely(_Dee_function_generator_gmov_regind2reg(self, args_regno, args_offset, dst_regno))
-			goto err;
-	} else {
-		if unlikely(_Dee_function_generator_gmov_usage2reg(self, usage, dst_regno))
-			goto err;
-	}
-	state->ms_rusage[dst_regno] = usage;
-	return 0;
-err:
-	return -1;
-}
-
 /* Generate code to return `loc'. No extra code to decref stack/locals is generated. If you
  * want that extra code to be generated, you need to use `Dee_function_generator_vret()'. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -491,12 +430,71 @@ done:
 	return result;
 }
 
+#if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64)
+#define HAVE_try_restore_xloc_arg_cfa_offset
+
+/* On i386, caller-argument locals don't have to be flushed to the stack.
+ * Instead, if you try to flush a register that's been populated with one
+ * of the function's caller-arguments, no code needs to be generated and
+ * the CFA offset can just be reset to point at the argument again. */
+PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
+try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
+                                Dee_host_register_t regno) {
+#define DEE_MEMSTATE_EXTRA_LOCAL_A_MIN DEE_MEMSTATE_EXTRA_LOCAL_A_THIS
+#define DEE_MEMSTATE_EXTRA_LOCAL_A_MAX DEE_MEMSTATE_EXTRA_LOCAL_A_KW
+	size_t i, xloc_base = self->fg_assembler->fa_localc;
+	struct Dee_memstate *state = self->fg_state;
+	for (i = DEE_MEMSTATE_EXTRA_LOCAL_A_MIN; i <= DEE_MEMSTATE_EXTRA_LOCAL_A_MAX; ++i) {
+		struct Dee_memloc *xloc = &state->ms_localv[xloc_base + i];
+		if (xloc->ml_type == MEMLOC_TYPE_HREG &&
+		    xloc->ml_value.v_hreg.r_regno == regno) {
+			uintptr_t cfa_offset;
+			Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
+			size_t true_argi = 0;
+			switch (i) {
+			case DEE_MEMSTATE_EXTRA_LOCAL_A_THIS:
+				ASSERT(cc & HOSTFUNC_CC_F_THIS);
+				break;
+			case DEE_MEMSTATE_EXTRA_LOCAL_A_ARGC:
+				ASSERT(!(cc & HOSTFUNC_CC_F_TUPLE));
+				if (cc & HOSTFUNC_CC_F_THIS)
+					++true_argi;
+				break;
+			case DEE_MEMSTATE_EXTRA_LOCAL_A_ARGV: /* or `DEE_MEMSTATE_EXTRA_LOCAL_A_ARGS' */
+				if (cc & HOSTFUNC_CC_F_THIS)
+					++true_argi;
+				if (!(cc & HOSTFUNC_CC_F_TUPLE))
+					++true_argi;
+				break;
+			case DEE_MEMSTATE_EXTRA_LOCAL_A_KW:
+				ASSERT(cc & HOSTFUNC_CC_F_KW);
+				if (cc & HOSTFUNC_CC_F_THIS)
+					++true_argi;
+				if (cc & HOSTFUNC_CC_F_TUPLE)
+					++true_argi;
+				++true_argi;
+				break;
+			default: __builtin_unreachable();
+			}
+			cfa_offset = (uintptr_t)(-(ptrdiff_t)((true_argi + 1) * HOST_SIZEOF_POINTER));
+			return cfa_offset;
+		}
+	}
+	return (uintptr_t)-1;
+}
+#endif /* HOSTASM_X86 && !HOSTASM_X86_64 */
+
 /* Push/move `regno' onto the host stack, returning the CFA offset of the target location. */
 PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
 Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
                                  Dee_host_register_t regno) {
 	uintptr_t cfa_offset;
 	ASSERT(!Dee_memstate_isshared(self->fg_state));
+#ifdef HAVE_try_restore_xloc_arg_cfa_offset
+	cfa_offset = try_restore_xloc_arg_cfa_offset(self, regno);
+	if (cfa_offset != (uintptr_t)-1)
+		return cfa_offset;
+#endif /* HAVE_try_restore_xloc_arg_cfa_offset */
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state, HOST_SIZEOF_POINTER);
 	if (cfa_offset != (uintptr_t)-1) {
 		if unlikely(Dee_function_generator_gmov_reg2hstackind(self, regno, cfa_offset))
@@ -731,12 +729,10 @@ Dee_function_generator_gusagereg(struct Dee_function_generator *__restrict self,
 	Dee_host_register_t regno;
 	regno = Dee_memstate_hregs_find_usage(state, usage);
 	if (regno >= HOST_REGISTER_COUNT) {
-		/* Need to allocate a register for `usage'. */
-		regno = Dee_function_generator_gallocreg(self, dont_alloc_these);
-		if unlikely(regno >= HOST_REGISTER_COUNT)
-			goto err;
-		if unlikely(Dee_function_generator_gmov_usage2reg(self, usage, regno))
-			goto err;
+		(void)dont_alloc_these;
+		/* TODO */
+		DeeError_NOTIMPLEMENTED();
+		goto err;
 	}
 	return regno;
 err:
@@ -939,10 +935,61 @@ err:
 	return -1;
 }
 
+/* Change `loc' into the value of `<loc> = *(<loc> + ind_delta)'
+ * Note that unlike the `Dee_function_generator_gmov*' functions, this
+ * one may use `MEMLOC_TYPE_*IND' to defer the indirection until later. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gind(struct Dee_function_generator *__restrict self,
+                            struct Dee_memloc *loc, ptrdiff_t ind_delta) {
+	ASSERTF(loc->ml_flags & MEMLOC_F_NOREF, "Dee_function_generator_gind() called on reference");
+	switch (loc->ml_type) {
+
+	case MEMLOC_TYPE_HSTACK:
+		loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+		loc->ml_value.v_hstack.s_cfa -= ind_delta;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+		loc->ml_value.v_hstack.s_cfa += ind_delta;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+		loc->ml_value.v_hstack.s_off = 0;
+		return 0;
+
+	case MEMLOC_TYPE_CONST: {
+		DeeObject **p_value;
+		Dee_host_register_t temp_regno;
+		temp_regno = Dee_function_generator_gallocreg(self, NULL);
+		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
+			goto err;
+		p_value = (DeeObject **)((uintptr_t)loc->ml_value.v_const + ind_delta);
+		if unlikely(Dee_function_generator_gmov_constind2reg(self, p_value, temp_regno))
+			goto err;
+		loc->ml_type = MEMLOC_TYPE_HREG;
+		loc->ml_value.v_hreg.r_regno = temp_regno;
+		loc->ml_value.v_hreg.r_off   = 0;
+		loc->ml_value.v_hreg.r_voff  = 0;
+	}	break;
+
+	default:
+		if unlikely(Dee_function_generator_vreg(self, NULL))
+			goto err;
+		ASSERT(loc->ml_type == MEMLOC_TYPE_HREG);
+		ATTR_FALLTHROUGH
+	case MEMLOC_TYPE_HREG:
+		/* Turn the location from an HREG into HREGIND */
+		loc->ml_type = MEMLOC_TYPE_HREGIND;
+		loc->ml_value.v_hreg.r_off += ind_delta;
+		loc->ml_value.v_hreg.r_voff = 0;
+		break;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 /* Force `loc' to become a register (`MEMLOC_TYPE_HREG'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
-                            struct Dee_memloc *__restrict loc,
+                            struct Dee_memloc *loc,
                             Dee_host_register_t const *not_these) {
 	struct Dee_memstate *state;
 	Dee_host_register_t regno;
@@ -1023,7 +1070,7 @@ err:
 /* Force `loc' to reside on the stack, giving it an address (`MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc *__restrict loc) {
+                              struct Dee_memloc *loc) {
 	uintptr_t cfa_offset;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
@@ -1037,18 +1084,26 @@ Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
 	}
 
 	/* Figure out where we want to allocate the value. */
-	cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
-	if (cfa_offset != (uintptr_t)-1) {
-		if unlikely(Dee_function_generator_gmov_loc2hstackind(self, loc, cfa_offset))
-			goto err;
-	} else {
-		if unlikely(Dee_function_generator_ghstack_pushloc(self, loc))
-			goto err;
+#ifdef HAVE_try_restore_xloc_arg_cfa_offset
+	if (loc->ml_type == MEMLOC_TYPE_HREG &&
+		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, loc->ml_value.v_hreg.r_regno)) != (uintptr_t)-1) {
+		/* CFA offset restored */
+	} else
+#endif /* HAVE_try_restore_xloc_arg_cfa_offset */
+	{
+		cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
+		if (cfa_offset != (uintptr_t)-1) {
+			if unlikely(Dee_function_generator_gmov_loc2hstackind(self, loc, cfa_offset))
+				goto err;
+		} else {
+			if unlikely(Dee_function_generator_ghstack_pushloc(self, loc))
+				goto err;
 #ifdef HOSTASM_STACK_GROWS_DOWN
-		cfa_offset = state->ms_host_cfa_offset;
+			cfa_offset = state->ms_host_cfa_offset;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-		cfa_offset = state->ms_host_cfa_offset - HOST_SIZEOF_POINTER;
+			cfa_offset = state->ms_host_cfa_offset - HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
+		}
 	}
 
 	/* If the location used to be a writable location, then we must
