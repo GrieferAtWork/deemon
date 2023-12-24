@@ -834,7 +834,6 @@ DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
 
 
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Handle a breakpoint having been triggered in `frame'.
  * NOTE: This function is called to deal with an encounter
  *       of a breakpoint during execution of code.
@@ -854,9 +853,8 @@ DeeCode_ExecFrameSafeAltStack(struct Dee_code_frame *__restrict frame);
  *                 - The valid stack size is always stored in `cf_stacksz'
  * @return: * :   One of `TRIGGER_BREAKPOINT_*' describing how execution
  *                should continue once the breakpoint has been dealt with. */
-INTDEF WUNUSED NONNULL((1)) int DCALL
-trigger_breakpoint(struct Dee_code_frame *__restrict frame);
-#endif /* CONFIG_BUILDING_DEEMON */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL
+DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame);
 
 /* Breakpoint execution modes. */
 #ifdef DEE_SOURCE

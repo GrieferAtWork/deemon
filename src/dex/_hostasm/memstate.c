@@ -51,6 +51,8 @@ Dee_memloc_sameloc(struct Dee_memloc const *a,
 	if (a->ml_type != b->ml_type)
 		return false;
 	switch (a->ml_type) {
+	case MEMLOC_TYPE_UNDEFINED:
+		return true;
 	case MEMLOC_TYPE_HREG:
 		return a->ml_value.v_hreg.r_regno == b->ml_value.v_hreg.r_regno &&
 		       a->ml_value.v_hreg.r_off == b->ml_value.v_hreg.r_off;
@@ -63,6 +65,36 @@ Dee_memloc_sameloc(struct Dee_memloc const *a,
 	case MEMLOC_TYPE_HSTACKIND:
 		return a->ml_value.v_hstack.s_cfa == b->ml_value.v_hstack.s_cfa &&
 		       a->ml_value.v_hstack.s_off == b->ml_value.v_hstack.s_off;
+	case MEMLOC_TYPE_CONST:
+		return a->ml_value.v_const == b->ml_value.v_const;
+	case MEMLOC_TYPE_UNALLOC:
+		return true;
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+/* Similar to `Dee_memloc_samemem()', but disregard differences in value-offsets. */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memloc_samemem(struct Dee_memloc const *a,
+                   struct Dee_memloc const *b) {
+	if (a->ml_type != b->ml_type)
+		return false;
+	switch (a->ml_type) {
+	case MEMLOC_TYPE_UNDEFINED:
+		return true;
+	case MEMLOC_TYPE_HREG:
+		return a->ml_value.v_hreg.r_regno == b->ml_value.v_hreg.r_regno /*&&
+		       a->ml_value.v_hreg.r_off == b->ml_value.v_hreg.r_off*/;
+	case MEMLOC_TYPE_HREGIND:
+		return a->ml_value.v_hreg.r_regno == b->ml_value.v_hreg.r_regno &&
+		       a->ml_value.v_hreg.r_off == b->ml_value.v_hreg.r_off /*&&
+		       a->ml_value.v_hreg.r_voff == b->ml_value.v_hreg.r_voff*/;
+	case MEMLOC_TYPE_HSTACK:
+		return true /*a->ml_value.v_hstack.s_cfa == b->ml_value.v_hstack.s_cfa*/;
+	case MEMLOC_TYPE_HSTACKIND:
+		return a->ml_value.v_hstack.s_cfa == b->ml_value.v_hstack.s_cfa /*&&
+		       a->ml_value.v_hstack.s_off == b->ml_value.v_hstack.s_off*/;
 	case MEMLOC_TYPE_CONST:
 		return a->ml_value.v_const == b->ml_value.v_const;
 	case MEMLOC_TYPE_UNALLOC:
@@ -149,19 +181,13 @@ done:
 INTERN NONNULL((1)) void DCALL
 Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
                                 Dee_host_register_t regno, ptrdiff_t delta) {
-	size_t i;
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc *loc = &self->ms_stackv[i];
+	struct Dee_memloc *loc;
+	Dee_memstate_foreach(loc, self) {
 		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
 		    loc->ml_value.v_hreg.r_regno == regno)
 			loc->ml_value.v_hreg.r_off -= delta;
 	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc *loc = &self->ms_localv[i];
-		if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
-		    loc->ml_value.v_hreg.r_regno == regno)
-			loc->ml_value.v_hreg.r_off -= delta;
-	}
+	Dee_memstate_foreach_end;
 }
 
 
@@ -169,19 +195,13 @@ Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
                            uintptr_t cfa_offset) {
-	size_t i;
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_stackv[i];
+	struct Dee_memloc const *loc;
+	Dee_memstate_foreach(loc, self) {
 		if (loc->ml_type == MEMLOC_TYPE_HSTACKIND &&
 		    loc->ml_value.v_hstack.s_cfa == cfa_offset)
 			return true;
 	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc const *loc = &self->ms_localv[i];
-		if (loc->ml_type == MEMLOC_TYPE_HSTACKIND &&
-		    loc->ml_value.v_hstack.s_cfa == cfa_offset)
-			return true;
-	}
+	Dee_memstate_foreach_end;
 	return false;
 }
 
@@ -204,25 +224,33 @@ Dee_memloc_hstack_used(struct Dee_memloc const *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 Dee_memstate_hstack_unused(struct Dee_memstate const *__restrict self,
+                           struct Dee_memstate const *hstack_reserved,
                            uintptr_t min_offset, uintptr_t end_offset) {
-	size_t i;
-	for (i = 0; i < self->ms_stackc; ++i) {
-		if (Dee_memloc_hstack_used(&self->ms_stackv[i], min_offset, end_offset))
+	struct Dee_memloc const *loc;
+	Dee_memstate_foreach(loc, self) {
+		if (Dee_memloc_hstack_used(loc, min_offset, end_offset))
 			return false;
 	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		if (Dee_memloc_hstack_used(&self->ms_localv[i], min_offset, end_offset))
-			return false;
+	Dee_memstate_foreach_end;
+	if (hstack_reserved != NULL) {
+		Dee_memstate_foreach(loc, hstack_reserved) {
+			if (Dee_memloc_hstack_used(loc, min_offset, end_offset))
+				return false;
+		}
+		Dee_memstate_foreach_end;
 	}
 	return true;
 }
 
 /* Try to find a `n_bytes'-large free section of host stack memory.
+ * @param: hstack_reserved: When non-NULL, only consider locations that are *also* free in here
  * @return: * :            The base-CFA offset of the free section of memory
  * @return: (uintptr_t)-1: There is no free section of at least `n_bytes' bytes.
  *                         In this case, allocate using `Dee_memstate_hstack_alloca()' */
-INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
-Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self, size_t n_bytes) {
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
+                         struct Dee_memstate const *hstack_reserved,
+                         size_t n_bytes) {
 	ASSERT(IS_ALIGNED(n_bytes, HOST_SIZEOF_POINTER));
 #ifdef HOSTASM_X86_64_MSABI
 	/* MSABI provides an additional 32 bytes of GP memory at CFA offsets [-40, -8) */
@@ -234,7 +262,7 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self, size_t n_by
 			uintptr_t min_offset = (uintptr_t)(-(ptrdiff_t)((5 * HOST_SIZEOF_POINTER) -
 			                                                (i * HOST_SIZEOF_POINTER)));
 			uintptr_t end_offset = min_offset + n_bytes;
-			if (Dee_memstate_hstack_unused(self, min_offset, end_offset)) {
+			if (Dee_memstate_hstack_unused(self, hstack_reserved, min_offset, end_offset)) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				return end_offset;
 #else /* HOSTASM_STACK_GROWS_DOWN */
@@ -251,7 +279,7 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self, size_t n_by
 		for (i = 0; i < check; ++i) {
 			uintptr_t min_offset = i * HOST_SIZEOF_POINTER;
 			uintptr_t end_offset = min_offset + n_bytes;
-			if (Dee_memstate_hstack_unused(self, min_offset, end_offset)) {
+			if (Dee_memstate_hstack_unused(self, hstack_reserved, min_offset, end_offset)) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				return end_offset;
 #else /* HOSTASM_STACK_GROWS_DOWN */
@@ -273,7 +301,7 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
 		uintptr_t min_offset = (a_pointers - 1) * HOST_SIZEOF_POINTER;
 		uintptr_t end_offset = min_offset + HOST_SIZEOF_POINTER;
-		if (!Dee_memstate_hstack_unused(self, min_offset, end_offset))
+		if (!Dee_memstate_hstack_unused(self, NULL, min_offset, end_offset))
 			break;
 		self->ms_host_cfa_offset -= HOST_SIZEOF_POINTER;
 		result = true;
@@ -281,42 +309,76 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 	return false;
 }
 
+PRIVATE NONNULL((1, 2, 3)) void DCALL
+Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
+                        struct Dee_memloc const *__restrict other_state,
+                        struct Dee_memloc *loc) {
+	Dee_host_register_t regno;
+	regno = Dee_memstate_hregs_find_unused(self, true);
+	if (MEMLOC_TYPE_HASREG(loc->ml_type))
+		Dee_memstate_decrinuse(self, loc->ml_value.v_hreg.r_regno);
+	if (regno < HOST_REGISTER_COUNT) {
+		loc->ml_type = MEMLOC_TYPE_HREG;
+		loc->ml_value.v_hreg.r_regno = regno;
+		loc->ml_value.v_hreg.r_off   = 0;
+		self->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
+		Dee_memstate_incrinuse(self, regno);
+	} else {
+		/* Use a stack location. */
+		uintptr_t cfa_offset;
+		cfa_offset = Dee_memstate_hstack_find(self, NULL, HOST_SIZEOF_POINTER);
+		if (cfa_offset == (uintptr_t)-1)
+			cfa_offset = Dee_memstate_hstack_alloca(self, HOST_SIZEOF_POINTER);
+		loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+		loc->ml_value.v_hstack.s_cfa = cfa_offset;
+		loc->ml_value.v_hstack.s_off = 0;
+	}
+	if (other_state->ml_type == MEMLOC_TYPE_HREGIND ||
+	    other_state->ml_type == MEMLOC_TYPE_HSTACKIND) {
+		if (loc->ml_type == MEMLOC_TYPE_HREG) {
+			loc->ml_value.v_hreg.r_off = other_state->ml_value.v_hstack.s_off;
+		} else {
+			loc->ml_value.v_hstack.s_off = other_state->ml_value.v_hstack.s_off;
+		}
+	}
+}
 
-PRIVATE NONNULL((1, 2, 3)) bool DCALL
-Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
-                         struct Dee_memloc *self,
-                         struct Dee_memloc const *__restrict other,
+PRIVATE NONNULL((1, 2, 3, 4)) bool DCALL
+Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
+                         struct Dee_memstate const *__restrict other_state,
+                         struct Dee_memloc *loc,
+                         struct Dee_memloc const *other_loc,
                          bool is_local) {
 	bool result = false;
 
 	/* If `MEMLOC_F_NOREF' isn't set in both locations, must clear it in `self' */
-	if ((self->ml_flags & MEMLOC_F_NOREF) && !(other->ml_flags & MEMLOC_F_NOREF)) {
-		self->ml_flags &= ~MEMLOC_F_NOREF;
+	if ((loc->ml_flags & MEMLOC_F_NOREF) && !(other_loc->ml_flags & MEMLOC_F_NOREF)) {
+		loc->ml_flags &= ~MEMLOC_F_NOREF;
 		result = true;
 	}
 
 	/* For local variables, merge the binding state of the variable. */
 	if (is_local) {
 		uint16_t nw_bound;
-		uint16_t my_bound = self->ml_flags & MEMLOC_M_LOCAL_BSTATE;
-		uint16_t ot_bound = other->ml_flags & MEMLOC_M_LOCAL_BSTATE;
+		uint16_t my_bound = loc->ml_flags & MEMLOC_M_LOCAL_BSTATE;
+		uint16_t ot_bound = other_loc->ml_flags & MEMLOC_M_LOCAL_BSTATE;
 		ASSERTF(my_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
 		ASSERTF(ot_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
 		nw_bound = ((my_bound & ot_bound) & MEMLOC_F_LOCAL_BOUND) |
 		           ((my_bound | ot_bound) & MEMLOC_F_LOCAL_UNBOUND);
 		if (my_bound != nw_bound) {
-			self->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
-			self->ml_flags |= nw_bound;
+			loc->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+			loc->ml_flags |= nw_bound;
 			result = true;
 		}
 	}
 
 	/* Quick check: are locations identical? */
-	if (!Dee_memloc_sameloc(self, other)) {
-		switch (self->ml_type) {
+	if (!Dee_memloc_sameloc(loc, other_loc)) {
+		switch (loc->ml_type) {
 	
 		case MEMLOC_TYPE_HSTACKIND:
-			if ((intptr_t)other->ml_value.v_hstack.s_cfa >= 0)
+			if ((intptr_t)other_loc->ml_value.v_hstack.s_cfa >= 0)
 				break; /* Normal stack location */
 			ATTR_FALLTHROUGH
 		case MEMLOC_TYPE_HREGIND:
@@ -325,35 +387,34 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 			/* On one side it's an argument or a constant, and on the other
 			 * side it's something else.
 			 * In this case, need to convert to a register/stack location. */
-			Dee_host_register_t regno;
 
 			/* If the location describe by `other' isn't already in use in `state',
 			 * then use *it* as-it. That way, we can reduce the necessary number of
 			 * memory state transformation! */
-			switch (other->ml_type) {
+			switch (other_loc->ml_type) {
 	
 			case MEMLOC_TYPE_HSTACKIND:
-				if ((intptr_t)other->ml_value.v_hstack.s_cfa < 0)
+				if ((intptr_t)other_loc->ml_value.v_hstack.s_cfa < 0)
 					break; /* Out-of-band location (e.g. true arguments on i386) */
-				if (!Dee_memstate_hstack_isused(state, other->ml_value.v_hstack.s_cfa)) {
+				if (!Dee_memstate_hstack_isused(self, other_loc->ml_value.v_hstack.s_cfa)) {
 					uintptr_t min_cfa_offset;
-					self->ml_type = MEMLOC_TYPE_HSTACKIND;
-					self->ml_value.v_hstack.s_cfa = other->ml_value.v_hstack.s_cfa;
-					self->ml_value.v_hstack.s_off = other->ml_value.v_hstack.s_off;
-					min_cfa_offset = other->ml_value.v_hstack.s_cfa;
+					loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+					loc->ml_value.v_hstack.s_cfa = other_loc->ml_value.v_hstack.s_cfa;
+					loc->ml_value.v_hstack.s_off = other_loc->ml_value.v_hstack.s_off;
+					min_cfa_offset = other_loc->ml_value.v_hstack.s_cfa;
 #ifndef HOSTASM_STACK_GROWS_DOWN
 					min_cfa_offset += HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
-					if (state->ms_host_cfa_offset < min_cfa_offset)
-						state->ms_host_cfa_offset = min_cfa_offset;
+					if (self->ms_host_cfa_offset < min_cfa_offset)
+						self->ms_host_cfa_offset = min_cfa_offset;
 					goto did_runtime_value_merge;
 				}
 				break;
 
 			case MEMLOC_TYPE_HREG:
-				if (!Dee_memstate_hregs_isused(state, other->ml_value.v_hreg.r_regno)) {
-					self->ml_type = MEMLOC_TYPE_HREG;
-					self->ml_value.v_hreg.r_regno = other->ml_value.v_hreg.r_regno;
+				if (!Dee_memstate_hregs_isused(self, other_loc->ml_value.v_hreg.r_regno)) {
+					loc->ml_type = MEMLOC_TYPE_HREG;
+					loc->ml_value.v_hreg.r_regno = other_loc->ml_value.v_hreg.r_regno;
 					goto did_runtime_value_merge;
 				}
 				break;
@@ -361,37 +422,46 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict state,
 			default:
 				break;
 			}
-	
-			regno = Dee_memstate_hregs_find_unused(state, true);
-			if (regno < HOST_REGISTER_COUNT) {
-				self->ml_type = MEMLOC_TYPE_HREG;
-				self->ml_value.v_hreg.r_regno = regno;
-				self->ml_value.v_hreg.r_off   = 0;
-				state->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
-			} else {
-				/* Use a stack location. */
-				uintptr_t cfa_offset;
-				cfa_offset = Dee_memstate_hstack_find(state, HOST_SIZEOF_POINTER);
-				if (cfa_offset == (uintptr_t)-1)
-					cfa_offset = Dee_memstate_hstack_alloca(state, HOST_SIZEOF_POINTER);
-				self->ml_type = MEMLOC_TYPE_HSTACKIND;
-				self->ml_value.v_hstack.s_cfa = cfa_offset;
-				self->ml_value.v_hstack.s_off = 0;
-			}
-			if (other->ml_type == MEMLOC_TYPE_HREGIND ||
-			    other->ml_type == MEMLOC_TYPE_HSTACKIND) {
-				if (self->ml_type == MEMLOC_TYPE_HREG) {
-					self->ml_value.v_hreg.r_off = other->ml_value.v_hstack.s_off;
-				} else {
-					self->ml_value.v_hstack.s_off = other->ml_value.v_hstack.s_off;
-				}
-			}
+			Dee_memloc_makedistinct(self, other_loc, loc);
 did_runtime_value_merge:
 			result = true;
 		}	break;
 	
 		default:
 			break;
+		}
+
+		/* Even if both sides have it in-register/on-stack, must still
+		 * ensure that all aliases in `self' also appear in `other'.
+		 * Any alias that doesn't must become a distinct memory location. */
+		{
+			size_t i;
+			for (i = 0; i < self->ms_localc; ++i) {
+				struct Dee_memloc *my_alias = &self->ms_localv[i];
+				struct Dee_memloc const *ot_alias = &other_state->ms_localv[i];
+				if (my_alias == loc)
+					continue;
+
+				/* If it's an alias in our state, but not in the other, then it must become distinct */
+				if (Dee_memloc_sameloc(loc, my_alias) &&
+				    !Dee_memloc_sameloc(other_loc, ot_alias)) {
+					Dee_memloc_makedistinct(self, ot_alias, my_alias);
+					result = true;
+				}
+			}
+			for (i = 0; i < self->ms_stackc; ++i) {
+				struct Dee_memloc *my_alias = &self->ms_stackv[i];
+				struct Dee_memloc const *ot_alias = &other_state->ms_stackv[i];
+				if (my_alias == loc)
+					continue;
+
+				/* If it's an alias in our state, but not in the other, then it must become distinct */
+				if (Dee_memloc_sameloc(loc, my_alias) &&
+				    !Dee_memloc_sameloc(other_loc, ot_alias)) {
+					Dee_memloc_makedistinct(self, ot_alias, my_alias);
+					result = true;
+				}
+			}
 		}
 	}
 	return result;
@@ -409,6 +479,7 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 	bool result = false;
 	Dee_host_register_t regno;
 	ASSERT(self->ms_stackc == other->ms_stackc);
+	ASSERT(self->ms_localc == other->ms_localc);
 
 	/* Mark usage registers as undefined if different between blocks. */
 	for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
@@ -420,10 +491,39 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 
 	/* Merge stack/locals memory locations. */
 	for (i = 0; i < self->ms_stackc; ++i)
-		result |= Dee_memloc_constrainwith(self, &self->ms_stackv[i], &other->ms_stackv[i], false);
+		result |= Dee_memloc_constrainwith(self, other, &self->ms_stackv[i], &other->ms_stackv[i], false);
 	for (i = 0; i < self->ms_localc; ++i)
-		result |= Dee_memloc_constrainwith(self, &self->ms_localv[i], &other->ms_localv[i], true);
+		result |= Dee_memloc_constrainwith(self, other, &self->ms_localv[i], &other->ms_localv[i], true);
 	return result;
+}
+
+/* Find the next alias (that is holding a reference) for `loc' after `after'
+ * @return: * :   The newly discovered alias
+ * @return: NULL: No (more) aliases exist for `loc' */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memloc *DCALL
+Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
+                          struct Dee_memloc const *loc,
+                          struct Dee_memloc *after) {
+	size_t i;
+	if (after >= self->ms_localv && after < self->ms_localv + self->ms_localc) {
+		i = (size_t)(after - self->ms_localv) + 1;
+	} else {
+		i = 0;
+		if (after >= self->ms_stackv && after < self->ms_stackv + self->ms_stackc)
+			i = (size_t)(after - self->ms_stackv) + 1;
+		for (; i < self->ms_stackc; ++i) {
+			struct Dee_memloc *result = &self->ms_stackv[i];
+			if (Dee_memloc_sameloc(result, loc) && result != loc && !(result->ml_flags & MEMLOC_F_NOREF))
+				return result;
+		}
+		i = 0;
+	}
+	for (; i < self->ms_localc; ++i) {
+		struct Dee_memloc *result = &self->ms_localv[i];
+		if (Dee_memloc_sameloc(result, loc) && result != loc && !(result->ml_flags & MEMLOC_F_NOREF))
+			return result;
+	}
+	return NULL;
 }
 
 
@@ -466,8 +566,8 @@ Dee_basic_block_constrainwith(struct Dee_basic_block *__restrict self,
 	}
 	if unlikely(block_start->ms_stackc != state->ms_stackc) {
 #ifndef NO_HOSTASM_DEBUG_PRINT
-		_Dee_memstate_debug_print(block_start);
-		_Dee_memstate_debug_print(state);
+		_Dee_memstate_debug_print(block_start, NULL, NULL);
+		_Dee_memstate_debug_print(state, NULL, NULL);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 		DeeError_Throwf(&DeeError_IllegalInstruction,
 		                "Unbalanced stack depth at +%.4" PRFx32 ". "
@@ -502,7 +602,8 @@ err:
 
 /* Ensure that at least `min_alloc' stack slots are allocated. */
 INTERN NONNULL((1)) int DCALL
-Dee_memstate_reqvstack(struct Dee_memstate *__restrict self, uint16_t min_alloc) {
+Dee_memstate_reqvstack(struct Dee_memstate *__restrict self,
+                       Dee_vstackaddr_t min_alloc) {
 	ASSERT(self->ms_stackc <= self->ms_stacka);
 	if (min_alloc > self->ms_stacka) {
 		struct Dee_memloc *new_stack;
@@ -520,23 +621,17 @@ err:
 
 #ifndef NDEBUG
 INTERN NONNULL((1)) void DCALL
-Dee_memstate_verifyrinuse_d(struct Dee_memstate *__restrict self) {
-	size_t i, correct_rinuse[HOST_REGISTER_COUNT];
+Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
+	struct Dee_memloc const *loc;
+	size_t correct_rinuse[HOST_REGISTER_COUNT];
 	bzero(correct_rinuse, sizeof(correct_rinuse));
-	for (i = 0; i < self->ms_stackc; ++i) {
-		struct Dee_memloc *loc = &self->ms_stackv[i];
+	Dee_memstate_foreach(loc, self) {
 		if (MEMLOC_TYPE_HASREG(loc->ml_type)) {
 			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
 			++correct_rinuse[loc->ml_value.v_hreg.r_regno];
 		}
 	}
-	for (i = 0; i < self->ms_localc; ++i) {
-		struct Dee_memloc *loc = &self->ms_localv[i];
-		if (MEMLOC_TYPE_HASREG(loc->ml_type)) {
-			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
-			++correct_rinuse[loc->ml_value.v_hreg.r_regno];
-		}
-	}
+	Dee_memstate_foreach_end;
 	ASSERTF(memcmp(self->ms_rinuse, correct_rinuse, sizeof(correct_rinuse)) == 0,
 	        "Incorrect register-in-use numbers");
 }
@@ -555,7 +650,7 @@ Dee_memstate_vswap(struct Dee_memstate *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_memstate_vlrot(struct Dee_memstate *__restrict self, size_t n) {
+Dee_memstate_vlrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	if likely(n > 1) {
 		struct Dee_memloc temp;
 		if unlikely(self->ms_stackc < n)
@@ -570,7 +665,7 @@ Dee_memstate_vlrot(struct Dee_memstate *__restrict self, size_t n) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_memstate_vrrot(struct Dee_memstate *__restrict self, size_t n) {
+Dee_memstate_vrrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	if likely(n > 1) {
 		struct Dee_memloc temp;
 		if unlikely(self->ms_stackc < n)
@@ -593,6 +688,21 @@ Dee_memstate_vpush(struct Dee_memstate *__restrict self, struct Dee_memloc *loc)
 	self->ms_stackv[self->ms_stackc].ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
 	if (MEMLOC_TYPE_HASREG(loc->ml_type))
 		Dee_memstate_incrinuse(self, loc->ml_value.v_hreg.r_regno);
+	++self->ms_stackc;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_undefined(struct Dee_memstate *__restrict self) {
+	struct Dee_memloc *loc;
+	if unlikely(self->ms_stackc >= self->ms_stacka &&
+	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+		goto err;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags = MEMLOC_F_NOREF;
+	loc->ml_type  = MEMLOC_TYPE_UNDEFINED;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -693,9 +803,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, size_t n) {
+Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	struct Dee_memloc *dst_loc;
-	size_t index;
+	Dee_vstackaddr_t index;
 	ASSERT(n >= 1);
 	if (OVERFLOW_USUB(self->ms_stackc, n, &index))
 		return err_illegal_stack_effect();
@@ -729,9 +839,13 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 	        offsetof(struct Dee_except_exitinfo, exi_regs)) +
 	       (self->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t)));
 	for (i = 0; i < state->ms_localc; ++i) {
+		uint16_t nullflag;
 		struct Dee_memloc *loc = &state->ms_localv[i];
 		if (loc->ml_flags & (MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND))
 			continue;
+		nullflag = 0;
+		if (!(loc->ml_flags & MEMLOC_F_LOCAL_BOUND))
+			nullflag = DEE_EXCEPT_EXITINFO_NULLFLAG;
 		switch (loc->ml_type) {
 
 		case MEMLOC_TYPE_HSTACKIND: {
@@ -740,6 +854,7 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 				goto err_bad_loc;
 			index = Dee_except_exitinfo_cfa2index(loc->ml_value.v_hstack.s_cfa);
 			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
+			self->exi_stack[index] |= nullflag;
 			++self->exi_stack[index];
 		}	break;
 
@@ -747,6 +862,7 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 			ASSERT(loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
 			if unlikely(loc->ml_value.v_hreg.r_off != 0)
 				goto err_bad_loc;
+			self->exi_regs[loc->ml_value.v_hreg.r_regno] |= nullflag;
 			++self->exi_regs[loc->ml_value.v_hreg.r_regno];
 			break;
 

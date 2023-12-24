@@ -61,6 +61,7 @@ EXPORTS
 	DeeCode_GetInfo@8=_DeeCode_GetInfo@8
 	DeeCode_GetRSymbolName@8=_DeeCode_GetRSymbolName@8
 	DeeCode_GetSSymbolName@8=_DeeCode_GetSSymbolName@8
+	DeeCode_HandleBreakpoint@4=_DeeCode_HandleBreakpoint@4
 	DeeCode_SetAssembly@4=_DeeCode_SetAssembly@4
 	DeeCodec_Decode@12=_DeeCodec_Decode@12
 	DeeCodec_Encode@12=_DeeCodec_Encode@12

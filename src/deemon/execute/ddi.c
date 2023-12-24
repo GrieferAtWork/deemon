@@ -671,8 +671,7 @@ ddi_hash(DeeDDIObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
-ddi_eq_impl(DeeDDIObject *__restrict self,
-            DeeDDIObject *__restrict other) {
+ddi_eq_impl(DeeDDIObject *self, DeeDDIObject *other) {
 	if (self == other)
 		return true;
 	if (self->d_ddisize != other->d_ddisize)
@@ -703,8 +702,7 @@ nope:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-ddi_eq(DeeDDIObject *self,
-       DeeDDIObject *other) {
+ddi_eq(DeeDDIObject *self, DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
 		goto err;
 	return_bool(ddi_eq_impl(self, other));
@@ -713,8 +711,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-ddi_ne(DeeDDIObject *self,
-       DeeDDIObject *other) {
+ddi_ne(DeeDDIObject *self, DeeDDIObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeDDI_Type))
 		goto err;
 	return_bool(!ddi_eq_impl(self, other));

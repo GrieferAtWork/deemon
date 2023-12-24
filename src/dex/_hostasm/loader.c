@@ -194,6 +194,7 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self) {
 
 /* Step #1: Load basic blocks. Fills in:
  * - self->fa_blockc
+ * - self->fa_blockv
  * - self->fa_blockv[*]->bb_deemon_start
  * - self->fa_blockv[*]->bb_deemon_end
  * - self->fa_blockv[*]->bb_entries+bb_exits

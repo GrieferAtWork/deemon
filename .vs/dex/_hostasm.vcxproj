@@ -48,6 +48,7 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-common.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-deemon.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-morph.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-rt.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />

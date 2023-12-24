@@ -443,8 +443,8 @@ DECL_BEGIN
  *                 - The valid stack size is always stored in `cf_stacksz'
  * @return: * :   One of `TRIGGER_BREAKPOINT_*' describing how execution
  *                should continue once the breakpoint has been dealt with. */
-INTERN WUNUSED NONNULL((1)) int DCALL
-trigger_breakpoint(struct code_frame *__restrict frame) {
+PUBLIC WUNUSED NONNULL((1)) int DCALL
+DeeCode_HandleBreakpoint(struct code_frame *__restrict frame) {
 	/* TODO: Add some sort of hook that allows for debugging. */
 	(void)frame;
 	return TRIGGER_BREAKPOINT_CONTINUE;

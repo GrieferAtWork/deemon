@@ -42,6 +42,7 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
 	generator.fg_sect      = &self->bb_htext;
 	generator.fg_assembler = assembler;
 	generator.fg_state     = self->bb_mem_start;
+	generator.fg_state_hstack_res = NULL;
 	ASSERT(generator.fg_state);
 	Dee_memstate_incref(generator.fg_state);
 	result = Dee_function_generator_genall(&generator);
@@ -97,22 +98,6 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 
 
 
-#ifdef HOSTASM_X86_64_SYSVABI
-INTDEF size_t const _Dee_function_assembler_cfa_addend[HOSTFUNC_CC_COUNT];
-INTERN_CONST size_t const _Dee_function_assembler_cfa_addend[HOSTFUNC_CC_COUNT] = {
-#define N_ARGS(n) ((n) * 8)
-	/* [HOSTFUNC_CC_CALL]              = */ N_ARGS(2), /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
-	/* [HOSTFUNC_CC_CALL_KW]           = */ N_ARGS(3), /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv, DeeObject *kw); */
-	/* [HOSTFUNC_CC_THISCALL]          = */ N_ARGS(3), /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv); */
-	/* [HOSTFUNC_CC_THISCALL_KW]       = */ N_ARGS(4), /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
-	/* [HOSTFUNC_CC_CALL_TUPLE]        = */ N_ARGS(1), /* DREF DeeObject *(DCALL *)(DeeObject *args); */
-	/* [HOSTFUNC_CC_CALL_TUPLE_KW]     = */ N_ARGS(2), /* DREF DeeObject *(DCALL *)(DeeObject *args, DeeObject *kw); */
-	/* [HOSTFUNC_CC_THISCALL_TUPLE]    = */ N_ARGS(2), /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
-	/* [HOSTFUNC_CC_THISCALL_TUPLE_KW] = */ N_ARGS(3), /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
-#undef N_ARGS
-};
-#endif /* !HOSTASM_X86_64_SYSVABI */
-
 /* Allocate and return the initial memory-state when the
  * generated function is entered at the start of the prolog.
  * @return: * :   The initial memory-state
@@ -130,7 +115,7 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	local_count = extra_base;
 	local_count += DEE_MEMSTATE_EXTRA_LOCAL_MINCOUNT;
 	local_count += self->fa_code->co_argc_max;
-	local_count -= self->fa_code->co_argc_max;
+	local_count -= self->fa_code->co_argc_min;
 
 	/* Setup the state of the function's first (entry) block. */
 	state = Dee_memstate_alloc(local_count);
@@ -162,7 +147,8 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	((self)->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND, \
 	 (self)->ml_type  = MEMLOC_TYPE_HREG,                      \
 	 (self)->ml_value.v_hreg.r_regno = truearg_regno[argi],    \
-	 (self)->ml_value.v_hreg.r_off   = 0)
+	 (self)->ml_value.v_hreg.r_off   = 0,                      \
+	 Dee_memstate_incrinuse(state, truearg_regno[argi]))
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,
@@ -227,6 +213,7 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
 	gen.fg_block     = self->fa_blockv[0];
 	gen.fg_sect      = &self->fa_prolog;
 	gen.fg_state     = state; /* Inherit reference */
+	gen.fg_state_hstack_res = NULL;
 	ASSERT(gen.fg_block);
 	ASSERT(self->fa_prolog_end == NULL);
 	ASSERT(gen.fg_state != NULL);
@@ -289,7 +276,7 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		            Dee_function_assembler_addrof(self, block->bb_deemon_start),
 		            Dee_function_assembler_addrof(self, block->bb_deemon_end - 1));
 #ifndef NO_HOSTASM_DEBUG_PRINT
-		_Dee_memstate_debug_print(block->bb_mem_start);
+		_Dee_memstate_debug_print(block->bb_mem_start, self, block->bb_deemon_start);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 		ASSERT(block->bb_mem_start != NULL);
 		ASSERT(block->bb_mem_end == NULL);
@@ -311,9 +298,9 @@ err:
 
 struct host_section_set {
 	struct Dee_host_section **hss_list; /* [1..1][0..hss_size] List of basic blocks (sorted by pointer) */
-	size_t                   hss_size; /* # of items in `hss_list' */
+	size_t                    hss_size; /* # of items in `hss_list' */
 #ifndef NDEBUG
-	size_t                   hss_smax; /* Max # of items in `hss_list' */
+	size_t                    hss_smax; /* Max # of items in `hss_list' */
 #endif /* !NDEBUG */
 };
 
@@ -517,21 +504,25 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 	int result;
 	struct Dee_function_generator gen;
 	ASSERT(to_block->bb_mem_start);
-	Dee_DPRINTF("Dee_function_generator_gmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
+	Dee_DPRINTF("Dee_function_generator_vmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
 	            Dee_function_assembler_addrof(assembler, from_instr),
 	            to_block->bb_deemon_start < to_block->bb_deemon_end
 	            ? Dee_function_assembler_addrof(assembler, to_block->bb_deemon_start)
 	            : 0xffff);
 #ifndef NO_HOSTASM_DEBUG_PRINT
-	_Dee_memstate_debug_print(from_state);
-	_Dee_memstate_debug_print(to_block->bb_mem_start);
+	_Dee_memstate_debug_print(from_state, assembler, from_instr);
+	_Dee_memstate_debug_print(to_block->bb_mem_start, assembler,
+	                          to_block->bb_deemon_start < to_block->bb_deemon_end
+	                          ? to_block->bb_deemon_start
+	                          : NULL);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 	gen.fg_assembler = assembler;
 	gen.fg_block     = to_block;
 	gen.fg_sect      = sect;
 	gen.fg_state     = from_state;
+	gen.fg_state_hstack_res = NULL;
 	Dee_memstate_incref(gen.fg_state);
-	result = Dee_function_generator_gmorph(&gen, to_block->bb_mem_start);
+	result = Dee_function_generator_vmorph(&gen, to_block->bb_mem_start);
 	Dee_memstate_decref(gen.fg_state);
 	return result;
 }
@@ -539,11 +530,11 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 /* Step #4: Generate morph instruction sequences to perform memory state transitions.
  * This also extends the host text of basic blocks that fall through to some
  * other basic block with an extra instructions needed for morphing:
- * - self->fa_prolog
+ * - self->fa_prolog                                (to transition )
  * - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph
- * - self->fa_blockv[*]->bb_htext        (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
- * - self->fa_except_exitv[*]->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
- * - self->fa_except_exitv[*]->bb_next   (set if intend is to fall into another exit block)
+ * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
+ * - self->fa_except_exitv[*]->exi_block->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
+ * - self->fa_except_exitv[*]->exi_block->bb_next   (set if intend is to fall into another exit block)
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -592,6 +583,13 @@ err:
  * - For all blocks that have more than 1 fallthru predecessors, take all but
  *   1 of those predecessors and append unconditional jumps to them, then set
  *   the `bb_next' field of those blocks to `NULL'.
+ * - Also fills in:
+ *   - self->fa_prolog.hs_link
+ *   - self->fa_blockv[*]->bb_htext.hs_link
+ *   - self->fa_blockv[*]->bb_hcold.hs_link
+ *   - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph.hs_link
+ *   - self->fa_except_exitv[*]->exi_block->bb_htext.hs_link
+ *   - self->fa_except_exitv[*]->exi_block->bb_hcold.hs_link
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL

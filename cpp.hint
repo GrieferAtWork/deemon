@@ -1593,3 +1593,6 @@
 #define DEFINE_TIME_COMPARE(n,...) DeeObject*n(DeeTimeObject*self,DeeTimeObject*other){}
 #define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
 #define DEFINE_FILTERITERATOR_COMPARE(n,...) DeeObject*n(FilterIterator*self,FilterIterator*other){}
+
+#define Dee_memstate_foreach(...) for(;;)
+#define Dee_memstate_foreach_end

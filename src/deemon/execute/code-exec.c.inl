@@ -3251,7 +3251,7 @@ do_setitem_c:
 #endif /* EXEC_FAST */
 
 			/* Trigger a breakpoint. */
-			error = trigger_breakpoint(frame);
+			error = DeeCode_HandleBreakpoint(frame);
 
 			/* _always_ load new PC/SP from the frame to ensure that we are in a
 			 * consistent state before handling potential exception, or moving on.

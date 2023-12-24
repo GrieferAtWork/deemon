@@ -6747,7 +6747,7 @@ target_breakpoint:
 	movl   SP, FRAME_SP /* Safe the correct stack-pointer. */
 	pushl  FRAME
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(trigger_breakpoint,4) /* Trigger a breakpoint. */
+	call   fSYM(DeeCode_HandleBreakpoint,4) /* Trigger a breakpoint. */
 	ADJUST_CFA_OFFSET(-4)
 	/* _always_ load new SP/PC from the frame to ensure that we are in a
 	 * consistent state before handling potential exception, or moving on.

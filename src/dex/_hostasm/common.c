@@ -424,7 +424,7 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 
 
 /* Ensure that the basic block containing `deemon_addr' also *starts* at that address.
- * This function is used during the initial code-pass where basic blocks are identified
+ * This function is used during the initial scan-pass where basic blocks are identified
  * and created.
  * @return: * :   The basic block in question.
  * @return: NULL: An error occurred (OOM or address is out-of-bounds). */
@@ -512,15 +512,15 @@ Dee_function_assembler_locateblock(struct Dee_function_assembler const *__restri
 	return NULL;
 }
 
-/* Lookup/allocate an exception-exit basic block that to clean up `state'
- * and then return `NULL' to the caller of the generated function.
+/* Lookup/allocate an exception-exit basic block that can be used to clean
+ * up `state' and then return `NULL' to the caller of the generated function.
  * @return: * :   The basic block to which to jump in order to clean up `state'.
  * @return: NULL: Error. */
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_basic_block *DCALL
 Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict self,
                                    struct Dee_memstate *__restrict state) {
 	size_t lo, hi;
-	size_t infosize = Dee_except_exitinfo_cmp_sizeof(state->ms_host_cfa_offset);
+	size_t infosize = Dee_except_exitinfo_sizeof(state->ms_host_cfa_offset);
 	struct Dee_basic_block *result;
 	struct Dee_except_exitinfo *info;
 #ifdef Dee_Alloca
