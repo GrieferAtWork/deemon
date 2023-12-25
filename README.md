@@ -44,9 +44,9 @@ With configure
 make
 ```
 
-Cross-compiling deemon  
+Cross-compiling deemon (using `/opt/kos/binutils/i386-kos/bin/i686-kos-gcc`)  
 ```sh
-./configure --cross-prefix=/ops/kos/binutils/i386-kos/bin/i686-kos-
+./configure --cross-prefix=/opt/kos/binutils/i386-kos/bin/i686-kos-
 make
 ```
 
