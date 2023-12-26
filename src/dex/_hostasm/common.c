@@ -516,7 +516,7 @@ Dee_function_assembler_locateblock(struct Dee_function_assembler const *__restri
  * up `state' and then return `NULL' to the caller of the generated function.
  * @return: * :   The basic block to which to jump in order to clean up `state'.
  * @return: NULL: Error. */
-INTERN WUNUSED NONNULL((1, 2)) struct Dee_basic_block *DCALL
+INTERN WUNUSED NONNULL((1, 2)) struct Dee_except_exitinfo *DCALL
 Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict self,
                                    struct Dee_memstate *__restrict state) {
 	size_t lo, hi;
@@ -555,7 +555,7 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 #ifndef Dee_Alloca
 			Dee_except_exitinfo_free(info);
 #endif /* !Dee_Alloca */
-			return oldinfo->exi_block;
+			return oldinfo;
 		}
 	}
 	ASSERT(lo == hi);
@@ -616,7 +616,7 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 	self->fa_except_exitv[lo] = info;
 	++self->fa_except_exitc;
 
-	return result;
+	return info;
 err_info_result:
 	Dee_basic_block_free(result);
 err_info:

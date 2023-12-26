@@ -363,6 +363,7 @@ fast_DeeInstance_SetAttribute(struct instance_desc *__restrict self,
 			self->id_vtab[attr->ca_addr] = value;
 		}
 		Dee_instance_desc_lock_endwrite(self);
+
 		/* Drop a reference from the old value. */
 		Dee_XDecref(old_value);
 	}

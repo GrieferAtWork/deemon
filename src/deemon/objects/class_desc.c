@@ -4387,8 +4387,8 @@ DeeInstance_SetAttribute(struct class_desc *__restrict desc,
 	return 0;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_SET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_SET);
 err:
 	return -1;
 }
@@ -4634,7 +4634,7 @@ err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
 
 
 /* Instance member access (by addr) */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeInstance_GetMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
                               /*Instance*/ DeeObject *__restrict self,
                               uint16_t addr) {
@@ -4645,7 +4645,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	ASSERT(DeeType_IsClass(tp_self));
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
 	desc = DeeClass_DESC(tp_self);
-	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
+	ASSERT(addr < desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
 	/* Lock and extract the member. */
 	Dee_instance_desc_lock_read(inst);
@@ -4657,7 +4657,7 @@ INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool
+PUBLIC WUNUSED NONNULL((1, 2)) bool
 (DCALL DeeInstance_BoundMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
                                 /*Instance*/ DeeObject *__restrict self,
                                 uint16_t addr) {
@@ -4667,12 +4667,12 @@ INTERN WUNUSED NONNULL((1, 2)) bool
 	ASSERT(DeeType_IsClass(tp_self));
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
 	desc = DeeClass_DESC(tp_self);
-	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
+	ASSERT(addr < desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
 	return atomic_read(&inst->id_vtab[addr]) != NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInstance_DelMember)(/*Class*/ DeeTypeObject *__restrict tp_self,
                               /*Instance*/ DeeObject *__restrict self,
                               uint16_t addr) {
@@ -4683,7 +4683,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	ASSERT(DeeType_IsClass(tp_self));
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
 	desc = DeeClass_DESC(tp_self);
-	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
+	ASSERT(addr < desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
 
 	/* Lock and extract the member. */
@@ -4701,7 +4701,7 @@ INTERN WUNUSED NONNULL((1, 2)) int
 	return 0;
 }
 
-INTERN NONNULL((1, 2, 4)) void
+PUBLIC NONNULL((1, 2, 4)) void
 (DCALL DeeInstance_SetMember)(/*Class*/ DeeTypeObject *tp_self,
                               /*Instance*/ DeeObject *self,
                               uint16_t addr, DeeObject *value) {
@@ -4712,7 +4712,7 @@ INTERN NONNULL((1, 2, 4)) void
 	ASSERT(DeeType_IsClass(tp_self));
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
 	desc = DeeClass_DESC(tp_self);
-	ASSERT(addr <= desc->cd_desc->cd_imemb_size);
+	ASSERT(addr < desc->cd_desc->cd_imemb_size);
 	inst = DeeInstance_DESC(desc, self);
 
 	/* Lock and extract the member. */
@@ -4725,7 +4725,7 @@ INTERN NONNULL((1, 2, 4)) void
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
@@ -4749,7 +4749,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInstance_BoundMemberSafe)(DeeTypeObject *tp_self,
                                     DeeObject *__restrict self,
                                     uint16_t addr) {
@@ -4772,7 +4772,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeInstance_DelMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *__restrict self,
                                   uint16_t addr) {
@@ -4795,7 +4795,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) int
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 (DCALL DeeInstance_SetMemberSafe)(DeeTypeObject *tp_self,
                                   DeeObject *self,
                                   uint16_t addr, DeeObject *value) {
@@ -4820,7 +4820,7 @@ err:
 }
 
 /* Class member access (by addr) */
-INTERN NONNULL((1, 3)) void
+PUBLIC NONNULL((1, 3)) void
 (DCALL DeeClass_SetMember)(DeeTypeObject *self,
                            uint16_t addr, DeeObject *value) {
 	struct class_desc *desc;
@@ -4838,7 +4838,7 @@ INTERN NONNULL((1, 3)) void
 	Dee_XDecref(old_value);
 }
 
-INTERN WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeClass_SetMemberSafe)(DeeTypeObject *self,
                                uint16_t addr, DeeObject *value) {
 	if (DeeObject_AssertType(self, &DeeType_Type))
@@ -4857,7 +4857,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeClass_GetMember)(DeeTypeObject *__restrict self, uint16_t addr) {
 	struct class_desc *desc;
 	DREF DeeObject *result;
@@ -4876,7 +4876,7 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeClass_GetMemberSafe)(DeeTypeObject *__restrict self, uint16_t addr) {
 	if (DeeObject_AssertType(self, &DeeType_Type))
 		goto err;

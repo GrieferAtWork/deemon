@@ -436,8 +436,8 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 		Dee_memstate_foreach_end;
 
 		/* No-where to shift the reference to -> must decref the object ourselves. */
-		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc)
-		                          : Dee_function_generator_gdecref(self, loc)) {
+		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc, 1)
+		                          : Dee_function_generator_gdecref(self, loc, 1)) {
 			if (MEMLOC_TYPE_HASREG(loc->ml_type))
 				Dee_memstate_incrinuse(state, loc->ml_value.v_hreg.r_regno);
 			++state->ms_stackc;
@@ -504,8 +504,8 @@ Dee_function_generator_decref_local(struct Dee_function_generator *__restrict se
 			return 0;
 		}
 		Dee_memstate_foreach_end;
-		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc)
-		                          : Dee_function_generator_gdecref(self, loc))
+		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc, 1)
+		                          : Dee_function_generator_gdecref(self, loc, 1))
 			goto err;
 	} else {
 		/* Location is conditionally bound.
@@ -529,8 +529,8 @@ Dee_function_generator_decref_local(struct Dee_function_generator *__restrict se
 			other_loc->ml_flags &= ~MEMLOC_F_NOREF;
 			return 0;
 		}
-		if unlikely(has_ref_alias ? Dee_function_generator_gxdecref_nokill(self, loc)
-		                          : Dee_function_generator_gxdecref(self, loc))
+		if unlikely(has_ref_alias ? Dee_function_generator_gxdecref_nokill(self, loc, 1)
+		                          : Dee_function_generator_gxdecref(self, loc, 1))
 			goto err;
 	}
 	return 0;
@@ -852,7 +852,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
                             Dee_instruction_t const *instr, bool jump_if_true) {
 	int temp;
 	struct Dee_basic_block *target = desc->jd_to;
-	struct Dee_basic_block *except_exit;
+	struct Dee_except_exitinfo *except_exit;
 	struct Dee_memloc loc;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
@@ -948,7 +948,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		tsym.hs_value.sv_sect.ss_sect = &target->bb_htext;
 		tsym.hs_value.sv_sect.ss_off  = 0;
 		xsym.hs_type = DEE_HOST_SYMBOL_SECT;
-		xsym.hs_value.sv_sect.ss_sect = &except_exit->bb_htext;
+		xsym.hs_value.sv_sect.ss_sect = &except_exit->exi_block->bb_htext;
 		xsym.hs_value.sv_sect.ss_off  = 0;
 		if unlikely(_Dee_function_generator_gjcmp(self, &loc, &zero, true,
 		                                          &xsym,                        /* loc < 0 */
@@ -997,6 +997,25 @@ Dee_function_generator_vind(struct Dee_function_generator *__restrict self,
 		goto err;
 	loc = Dee_function_generator_vtop(self);
 	return Dee_function_generator_gind(self, loc, ind_delta);
+err:
+	return -1;
+}
+
+/* >> *(SECOND + ind_delta) = POP(); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self,
+                               ptrdiff_t ind_delta) {
+	struct Dee_memloc src, *loc;
+	if unlikely(self->fg_state->ms_stackc < 2)
+		return err_illegal_stack_effect();
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	src = *Dee_function_generator_vtop(self);
+	--self->fg_state->ms_stackc;
+	if (MEMLOC_TYPE_HASREG(src.ml_type))
+		Dee_memstate_decrinuse(self->fg_state, src.ml_value.v_hreg.r_regno);
+	loc = Dee_function_generator_vtop(self);
+	return Dee_function_generator_gmov_loc2locind(self, &src, loc, ind_delta);
 err:
 	return -1;
 }
@@ -1087,7 +1106,7 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 			}
 		}
 
-		if unlikely(Dee_function_generator_gincref(self, loc))
+		if unlikely(Dee_function_generator_gincref(self, loc, 1))
 			goto err;
 		ASSERT(loc == Dee_memstate_vtop(state));
 		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
@@ -1149,9 +1168,9 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vpush_global_or_extern(struct Dee_function_generator *__restrict self,
                        DeeModuleObject *__restrict mod, uint16_t gid,
-                       uint8_t kind, uint16_t id1, uint16_t id2) {
-	struct module_symbol *symbol;
+                       uint8_t kind, uint16_t id1, uint16_t id2, bool ref) {
 	struct Dee_memloc *loc;
+	struct module_symbol *symbol;
 	symbol = DeeModule_GetSymbolID(mod, gid);
 	if unlikely(!symbol)
 		return err_illegal_gid(mod, gid);
@@ -1167,25 +1186,35 @@ vpush_global_or_extern(struct Dee_function_generator *__restrict self,
 	}
 	if unlikely(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]))
 		goto err;
-	if unlikely(Dee_function_generator_grwlock_read(self, &mod->mo_lock))
-		goto err;
+	if (ref) {
+		if unlikely(Dee_function_generator_grwlock_read(self, &mod->mo_lock))
+			goto err;
+	}
 	if unlikely(Dee_function_generator_vind(self, 0))
 		goto err;
 	if unlikely(Dee_function_generator_vreg(self, NULL))
 		goto err;
 	loc = Dee_function_generator_vtop(self);
 	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-	if unlikely(Dee_function_generator_gassert_bound(self, loc, NULL, kind, id1, id2, &mod->mo_lock, NULL))
+	if unlikely(Dee_function_generator_gassert_bound(self, loc, NULL, kind, id1, id2,
+	                                                 ref ? &mod->mo_lock : NULL, NULL))
 		goto err;
-	loc = Dee_function_generator_vtop(self);
-	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-	if unlikely(Dee_function_generator_gincref(self, loc))
-		goto err;
-	if unlikely(Dee_function_generator_grwlock_endread(self, &mod->mo_lock))
-		goto err;
-	loc = Dee_function_generator_vtop(self);
-	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-	loc->ml_flags &= ~MEMLOC_F_NOREF;
+
+	/* Depending on how the value will be used, we may not need a reference.
+	 * If only its value is used (ASM_ISNONE, ASM_CMP_SO, ASM_CMP_DO), we
+	 * won't actually need to take a reference here!
+	 * Also: when not needing a reference, we don't need to acquire the lock,
+	 *       either! */
+	ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+	if (ref) {
+		if unlikely(Dee_function_generator_gincref(self, loc, 1))
+			goto err;
+		if unlikely(Dee_function_generator_grwlock_endread(self, &mod->mo_lock))
+			goto err;
+		loc = Dee_function_generator_vtop(self);
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		loc->ml_flags &= ~MEMLOC_F_NOREF;
+	}
 	return 0;
 err:
 	return -1;
@@ -1193,19 +1222,19 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_global(struct Dee_function_generator *__restrict self,
-                                    uint16_t gid) {
+                                    uint16_t gid, bool ref) {
 	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	return vpush_global_or_extern(self, mod, gid, ASM_GLOBAL, gid, 0);
+	return vpush_global_or_extern(self, mod, gid, ASM_GLOBAL, gid, 0, ref);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_extern(struct Dee_function_generator *__restrict self,
-                                    uint16_t mid, uint16_t gid) {
+                                    uint16_t mid, uint16_t gid, bool ref) {
 	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
 	if unlikely(mid >= mod->mo_importc)
 		return err_illegal_mid(mid);
 	mod = mod->mo_importv[mid];
-	return vpush_global_or_extern(self, mod, gid, ASM_EXTERN, mid, gid);
+	return vpush_global_or_extern(self, mod, gid, ASM_EXTERN, mid, gid, ref);
 }
 
 /* Generate code to pop a global variable from the virtual stack. */
@@ -1228,7 +1257,7 @@ vpop_global_or_extern(struct Dee_function_generator *__restrict self,
 	ASSERT(self->fg_state->ms_stackc >= 2);
 	loc = Dee_function_generator_vtop(self);
 	loc->ml_flags |= MEMLOC_F_NOREF;
-	if unlikely(Dee_function_generator_gxdecref(self, loc)) /* xdecref in case global wasn't bound before. */
+	if unlikely(Dee_function_generator_gxdecref(self, loc, 1)) /* xdecref in case global wasn't bound before. */
 		goto err;
 	if unlikely(Dee_function_generator_vpop(self))
 		goto err;
@@ -1300,7 +1329,7 @@ Dee_function_generator_vpush_static(struct Dee_function_generator *__restrict se
 	loc = Dee_function_generator_vtop(self);
 	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
 	loc->ml_flags &= ~MEMLOC_F_NOREF;
-	if unlikely(Dee_function_generator_gincref(self, loc))
+	if unlikely(Dee_function_generator_gincref(self, loc, 1))
 		goto err;
 	return Dee_function_generator_grwlock_endread(self, &code->co_static_lock);
 err:

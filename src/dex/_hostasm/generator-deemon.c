@@ -52,19 +52,6 @@ DECL_BEGIN
 /* DEEMON TO VSTACK MICRO-OP TRANSFORMATION                             */
 /************************************************************************/
 
-INTERN ATTR_COLD NONNULL((1, 2)) int
-(DCALL impl_err_illegal_instruction)(DeeCodeObject *code, void *ip) {
-	uint32_t offset;
-	char const *code_name = DeeCode_NAME(code);
-	if (!code_name)
-		code_name = "<anonymous>";
-	offset = (uint32_t)((instruction_t *)ip - code->co_code);
-	return DeeError_Throwf(&DeeError_IllegalInstruction,
-	                       "Illegal instruction at %s+%.4" PRFX32,
-	                       code_name, offset);
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL /* this/addrof(this), opname, args */
 Dee_function_generator_vcall_DeeObject_InvokeOperatorTuple(struct Dee_function_generator *__restrict self,
                                                            void const *api_function) {
@@ -107,9 +94,9 @@ Dee_function_generator_vpush_prefix(struct Dee_function_generator *__restrict se
 	case ASM_STATIC:
 		return Dee_function_generator_vpush_static(self, id1);
 	case ASM_EXTERN:
-		return Dee_function_generator_vpush_extern(self, id1, id2);
+		return Dee_function_generator_vpush_extern(self, id1, id2, true);
 	case ASM_GLOBAL:
-		return Dee_function_generator_vpush_global(self, id1);
+		return Dee_function_generator_vpush_global(self, id1, true);
 	case ASM_LOCAL:
 		return Dee_function_generator_vpush_ulocal(self, instr, id1);
 	default: __builtin_unreachable();
@@ -162,6 +149,7 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 		/* Direct addressing not support for this type of prefix. */
 		return 1;
 	}
+
 	/* In case of a local, assert that the local is currently bound. */
 	if (prefix_type == ASM_LOCAL && !(src_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
 		if (src_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND)
@@ -174,7 +162,7 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 
 	/* Prefixed location must contain a reference */
 	if (src_loc->ml_flags & MEMLOC_F_NOREF) {
-		if unlikely(Dee_function_generator_gincref(self, src_loc))
+		if unlikely(Dee_function_generator_gincref(self, src_loc, 1))
 			goto err;
 		src_loc->ml_flags &= ~MEMLOC_F_NOREF;
 	}
@@ -527,6 +515,136 @@ err:
 	return -1;
 }
 
+/* Given a vstack that looks like this:
+ * >> [...], value
+ * Check if whatever instruction eventually pops `value' requires `value' to
+ * be a valid deemon object. Now this might sound like something that should
+ * always be the case, and you'd be right, but there are situations where
+ * it's OK if an object isn't valid (i.e. not safe to dereference), such as
+ * in case of `ASM_ISNONE' or `ASM_CMP_SO' and `ASM_CMP_DO', all of which
+ * only look at the address of the object in vtop.
+ *
+ * This special handling makes it so no extra reference is needed for code like:
+ * >> global testGlobal = none;
+ * >> function testFunction() {
+ * >>     if (testGlobal is none)
+ * >>         testGlobal = 42;
+ * >> }
+ * asm(testFunction):
+ * >>     push global @testGlobal   # This push doesn't need to incref...
+ * >>     instanceof top, none      # ... because this use of the value doesn't need a reference
+ * >>     jf   pop, 1f
+ * >>     mov  const @42, global @testGlobal
+ * >> 1:  ret
+ */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+matching_pop_requires_reference(Dee_instruction_t const *instr,
+                                Dee_instruction_t const *end,
+                                uint16_t stacksz) {
+	uint16_t sptrack = stacksz - 1; /* Absolute stack address which we care about. */
+	while (instr < end) {
+		uint16_t opcode;
+		opcode = instr[0];
+		if (ASM_ISEXTENDED(opcode))
+			opcode = (opcode << 8) | instr[1];
+		switch (opcode) {
+
+		case ASM_JF:
+		case ASM_JF16:
+		case ASM_JT:
+		case ASM_JT16:
+		case ASM_FOREACH:
+		case ASM_FOREACH16:
+		case ASM_JMP:
+		case ASM_JMP16:
+		case ASM32_JMP:
+			/* Technically: if stack address is used on at least 1 branch */
+			goto yes;
+
+		default: {
+			Dee_instruction_t const *next;
+			uint16_t new_stacksz = stacksz;
+			uint16_t sp_add, sp_sub;
+			next = DeeAsm_NextInstrEf(instr, &new_stacksz, &sp_add, &sp_sub);
+			if (sptrack >= (stacksz - sp_sub) && sptrack < stacksz) {
+				/* Found the instruction which eventually pops the value in question. */
+				switch (opcode) {
+
+				case ASM_ISNONE:
+				case ASM_CMP_SO:
+				case ASM_CMP_DO:
+				case ASM_POP:
+				case ASM_ADJSTACK:
+				case ASM16_ADJSTACK:
+					/* If a stack location is popped by  */
+					return false;
+
+				case ASM_POP_N: {
+					Dee_vstackaddr_t n;
+					n = instr[1] + 2;
+					__IF0 { case ASM16_POP_N: n = UNALIGNED_GETLE16(instr + 2) + 2; }
+					if (sptrack == stacksz - n)
+						return false; /* Location will simply get overwritten! */
+					sptrack = stacksz - n;
+					goto continue_with_next;
+				}	break;
+
+				case ASM_DUP_N: {
+					Dee_vstackaddr_t n;
+					n = instr[1] + 2;
+					__IF0 { case ASM16_DUP_N: n = UNALIGNED_GETLE16(instr + 2) + 2; }
+					if (sptrack == stacksz - n)
+						goto yes; /* Technically: if either original or dup'd location needs reference... */
+					goto continue_with_next;
+				}	break;
+
+				case ASM_SWAP:
+					if (sptrack == stacksz - 1) {
+						--sptrack;
+					} else {
+						++sptrack;
+					}
+					goto continue_with_next;
+
+				case ASM_LROT: {
+					Dee_vstackaddr_t n;
+					n = instr[1] + 3;
+					__IF0 { case ASM16_LROT: n = UNALIGNED_GETLE16(instr + 2) + 3; }
+					if (sptrack == stacksz - n) {
+						sptrack += (n - 1);
+					} else {
+						--sptrack;
+					}
+					goto continue_with_next;
+				}	break;
+
+				case ASM_RROT: {
+					Dee_vstackaddr_t n;
+					n = instr[1] + 3;
+					__IF0 { case ASM16_RROT: n = UNALIGNED_GETLE16(instr + 2) + 3; }
+					if (sptrack == stacksz - 1) {
+						sptrack -= (n - 1);
+					} else {
+						++sptrack;
+					}
+					goto continue_with_next;
+				}	break;
+
+				default: break;
+				}
+				goto yes;
+			}
+continue_with_next:
+			stacksz = new_stacksz;
+			instr   = next;
+		}	break;
+
+		}
+	}
+yes:
+	return true;
+}
+
 /* Convert a single deemon instruction `instr' to host assembly and adjust the host memory
  * state according to the instruction in question. This is the core function to parse deemon
  * code and convert it to host assembly.
@@ -648,13 +766,23 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vpush_rid(self, UNALIGNED_GETLE16(instr + 2));
 
 	case ASM_PUSH_EXTERN:
-		return Dee_function_generator_vpush_extern(self, instr[1], instr[2]);
 	case ASM16_PUSH_EXTERN:
-		return Dee_function_generator_vpush_extern(self, UNALIGNED_GETLE16(instr + 2), UNALIGNED_GETLE16(instr + 4));
 	case ASM_PUSH_GLOBAL:
-		return Dee_function_generator_vpush_global(self, instr[1]);
-	case ASM16_PUSH_GLOBAL:
-		return Dee_function_generator_vpush_global(self, UNALIGNED_GETLE16(instr + 2));
+	case ASM16_PUSH_GLOBAL: {
+		bool ref = matching_pop_requires_reference(*p_next_instr, self->fg_block->bb_deemon_end,
+		                                           (uint16_t)self->fg_state->ms_stackc + 1);
+		switch (opcode) {
+		case ASM_PUSH_EXTERN:
+			return Dee_function_generator_vpush_extern(self, instr[1], instr[2], ref);
+		case ASM16_PUSH_EXTERN:
+			return Dee_function_generator_vpush_extern(self, UNALIGNED_GETLE16(instr + 2), UNALIGNED_GETLE16(instr + 4), ref);
+		case ASM_PUSH_GLOBAL:
+			return Dee_function_generator_vpush_global(self, instr[1], ref);
+		case ASM16_PUSH_GLOBAL:
+			return Dee_function_generator_vpush_global(self, UNALIGNED_GETLE16(instr + 2), ref);
+		default: __builtin_unreachable();
+		}
+	}	break;
 
 	case ASM_PUSH_LOCAL:
 		return Dee_function_generator_vpush_ulocal(self, instr, instr[1]);
@@ -729,9 +857,9 @@ do_jcc:
 		desc = Dee_jump_descriptors_lookup(&self->fg_block->bb_exits, instr);
 		ASSERTF(desc, "Jump at +%.4" PRFx32 " should have been found by the loader",
 		        Dee_function_assembler_addrof(self->fg_assembler, instr));
-		if ((opcode & 0xff) == ASM_JF) {
+		if (opcode == ASM_JF || opcode == ASM_JF16) {
 			jump_if_true = false;
-		} else if ((opcode & 0xff) == ASM_JT) {
+		} else if (opcode == ASM_JT || opcode == ASM_JT16) {
 			jump_if_true = true;
 		} else {
 			DO(Dee_function_generator_vpush_const(self, Dee_True));
@@ -828,21 +956,75 @@ do_jcc:
 	case ASM_CAST_LIST:
 		return Dee_function_generator_vcallapi(self, &DeeList_FromSequence, VCALLOP_CC_OBJECT, 1);
 
-		/* TODO: Implement these by creating the list/tuple raw, and then filling its items. */
-	//TODO: case ASM_PACK_TUPLE:
-	//TODO: case ASM16_PACK_TUPLE:
-	//TODO: case ASM_PACK_LIST:
-	//TODO: case ASM16_PACK_LIST:
+	case ASM_PACK_TUPLE:
+	case ASM16_PACK_TUPLE:
+	case ASM_PACK_LIST:
+	case ASM16_PACK_LIST: {
+		/* Implement these by creating the list/tuple raw, and then filling its items. */
+		uint16_t elemc = instr[1];
+		bool is_list = (opcode & 0xff) == ASM_PACK_LIST;
+		if (opcode > 0xff)
+			elemc = UNALIGNED_GETLE16(instr + 2);
+		DO(Dee_function_generator_vpush_immSIZ(self, elemc)); /* [elems...], elemc */
+		DO(Dee_function_generator_vcallapi(self, is_list ? (void const *)&DeeList_NewUninitialized
+		                                                 : (void const *)&DeeTuple_NewUninitialized,
+		                                   VCALLOP_CC_OBJECT, 1)); /* [elems...], ref:seq */
+		DO(Dee_function_generator_vdup(self));                     /* [elems...], ref:seq, seq */
+		DO(is_list ? Dee_function_generator_vind(self, offsetof(DeeListObject, l_list.ol_elemv))
+		           : Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [elems...], ref:seq, elemv */
+		DO(Dee_function_generator_vswap(self));                    /* [elems...], elemv, ref:seq */
+		DO(Dee_function_generator_vrrot(self, elemc + 2));         /* ref:seq, [elems...], elemv */
+		while (elemc) {
+			--elemc;
+			DO(Dee_function_generator_vswap(self));                                     /* ref:seq, [elems...], elemv, elem */
+			DO(Dee_function_generator_vref(self));                                      /* ref:seq, [elems...], elemv, ref:elem */
+			DO(Dee_function_generator_vpopind(self, elemc * sizeof(DREF DeeObject *))); /* ref:seq, [elems...], elemv */
+		}
+		DO(Dee_function_generator_vpop(self)); /* ref:seq */
+		if (is_list) {
+			ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+			Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* Inherited by `DeeGC_Track()' */
+			DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALLOP_CC_RAWINT, 1));
+			ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+			Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* Returned by `DeeGC_Track()' */
+		}
+	}	break;
 
-	//TODO: case ASM_UNPACK:
-	//TODO: case ASM16_UNPACK:
+	case ASM_UNPACK: {
+		uint16_t i, n;
+		uintptr_t cfa_offset;
+		size_t alloc_size;
+		n = instr[1];
+		__IF0 { case ASM16_UNPACK: n = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_state_unshare(self));
+		alloc_size = n * sizeof(DREF DeeObject *);
+		cfa_offset = Dee_memstate_hstack_find(self->fg_state, self->fg_state_hstack_res, alloc_size);
+		if (cfa_offset == (uintptr_t)-1) {
+			cfa_offset = Dee_memstate_hstack_alloca(self->fg_state, alloc_size);
+			DO(Dee_function_generator_ghstack_adjust(self, alloc_size));
+		}
+		DO(Dee_function_generator_vpush_immSIZ(self, n));          /* seq, objc */
+		DO(Dee_function_generator_vpush_hstack(self, cfa_offset)); /* seq, objc, objv */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_Unpack, VCALLOP_CC_INT, 3)); /* - */
+		for (i = 0; i < n; ++i) {
+			uintptr_t n_cfa_offset;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+			n_cfa_offset = cfa_offset - i * sizeof(DREF DeeObject *);
+#else /* HOSTASM_STACK_GROWS_DOWN */
+			n_cfa_offset = cfa_offset + i * sizeof(DREF DeeObject *);
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			DO(Dee_function_generator_vpush_hstackind(self, n_cfa_offset, 0));
+			ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+			Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;
+		}
+	}	break;
 	
 	case ASM_CONCAT:
 		DO(Dee_function_generator_vswap(self));                                                               /* rhs, lhs */
-		DO(Dee_function_generator_vref(self));                                                                /* rhs, REF:lhs */
-		DO(Dee_function_generator_vswap(self));                                                               /* REF:lhs, rhs */
-		DO(Dee_function_generator_vcallapi(self, &DeeObject_ConcatInherited, VCALLOP_CC_RAWINT_KEEPARGS, 2)); /* ([valid_if(!result)] REF:lhs), rhs, result */
-		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self)));                       /* ([valid_if(false)] REF:lhs), rhs, result */
+		DO(Dee_function_generator_vref(self));                                                                /* rhs, ref:lhs */
+		DO(Dee_function_generator_vswap(self));                                                               /* ref:lhs, rhs */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_ConcatInherited, VCALLOP_CC_RAWINT_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, result */
+		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self)));                       /* ([valid_if(false)] ref:lhs), rhs, result */
 		DO(Dee_function_generator_vlrot(self, 3));                                                            /* rhs, result, ([valid_if(false)] REF:lhs) */
 		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));                              /* ... */
 		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;                                        /* rhs, result, ([valid_if(false)] lhs) */
@@ -850,9 +1032,54 @@ do_jcc:
 		DO(Dee_function_generator_vswap(self));                                                               /* result, rhs */
 		return Dee_function_generator_vpop(self);                                                             /* result */
 
-	//TODO: case ASM_EXTEND:
-	//TODO: case ASM_TYPEOF:
-	//TODO: case ASM_CLASSOF:
+	case ASM_EXTEND: {
+		uint8_t i, n = instr[1];
+		for (i = 0; i < n; ++i) {
+			DO(Dee_function_generator_vref(self));
+			DO(Dee_function_generator_vlrot(self, n));
+		}
+		DO(Dee_function_generator_vlinear(self, n));      /* seq, [elems...], elemv */
+		DO(Dee_function_generator_vlrot(self, n + 2));    /* [elems...], elemv, seq */
+		DO(Dee_function_generator_vdup(self));            /* [elems...], elemv, seq, seq */
+		DO(Dee_function_generator_vrrot(self, n + 3));    /* seq, [elems...], elemv, seq */
+		DO(Dee_function_generator_vpush_immSIZ(self, n)); /* seq, [elems...], elemv, seq, elemc */
+		DO(Dee_function_generator_vlrot(self, 3));        /* seq, [elems...], seq, elemc, elemv */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_ExtendInherited, VCALLOP_CC_INT, 3)); /* seq, [elems...] */
+		for (i = 0; i < n; ++i) {
+			/* In the success-case, references were inherited! */
+			ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+			Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;
+			DO(Dee_function_generator_vpop(self));
+		}
+	}	break;
+
+	case ASM_TYPEOF:
+		DO(Dee_function_generator_vdup(self));                               /* obj, obj */
+		DO(Dee_function_generator_vind(self, offsetof(DeeObject, ob_type))); /* obj, obj->ob_type */
+		if (!(self->fg_state->ms_stackv[self->fg_state->ms_stackc - 2].ml_flags & MEMLOC_F_NOREF)) {
+			/* If the object whose type we're trying to read is a
+			 * reference, then we also need a reference to the type! */
+			DO(Dee_function_generator_vref(self)); /* obj, ref:obj->ob_type */
+		}
+		DO(Dee_function_generator_vswap(self));   /* [ref]:obj->ob_type, obj */
+		return Dee_function_generator_vpop(self); /* [ref]:obj->ob_type */
+
+	case ASM_CLASSOF:
+		if unlikely(self->fg_state->ms_stackc < 1)
+			return err_illegal_stack_effect();
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_Class, VCALLOP_CC_RAWINT_KEEPARGS, 1)); /* obj, obj.class */
+		if (!(self->fg_state->ms_stackv[self->fg_state->ms_stackc - 2].ml_flags & MEMLOC_F_NOREF)) {
+			/* If the object whose type we're trying to read is a
+			 * reference, then we also need a reference to the type!
+			 * XXX: Shouldn't this also happen if an *alias* is holding a reference:
+			 * >> local x = ...;
+			 * >> local y = type x; // Here, "x" was pushed as an alias
+			 * >> del x;            // If "y" wasn't a reference, it might get destroyed here...
+			 */
+			DO(Dee_function_generator_vref(self)); /* obj, ref:obj.class */
+		}
+		DO(Dee_function_generator_vswap(self));   /* [ref]:obj.class, obj */
+		return Dee_function_generator_vpop(self); /* [ref]:obj.class */
 
 	case ASM_SUPEROF:
 		return Dee_function_generator_vcallapi(self, &DeeSuper_Of, VCALLOP_CC_OBJECT, 1);
@@ -885,6 +1112,7 @@ do_jcc:
 		case ASM_FPRINT_SP:
 		case ASM_FPRINT_NL: {
 			void const *api_function;
+			*p_next_instr = DeeAsm_NextInstr(next_instr);
 			switch (opcode) {
 			case ASM_FPRINT:    /* print top, pop */
 				api_function = (void const *)&DeeFile_PrintObjectRepr;
@@ -904,8 +1132,9 @@ do_jcc:
 		}	break;
 
 		case ASM_SHL:
-			/* TODO: Special handling needed here! */
-			break;
+			/* Special handling needed here! */
+			*p_next_instr = DeeAsm_NextInstr(next_instr);
+			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALLOP_CC_OBJECT, 2);
 
 		default: break;
 		}
@@ -1057,7 +1286,7 @@ do_jcc:
 				base_gid = UNALIGNED_GETLE16(instr + 2);
 				desc_cid = UNALIGNED_GETLE16(instr + 4);
 			}
-			DO(Dee_function_generator_vpush_global(self, base_gid));
+			DO(Dee_function_generator_vpush_global(self, base_gid, true));
 		}	break;
 		case ASM_CLASS_EC: {
 			uint16_t base_mid;
@@ -1071,7 +1300,7 @@ do_jcc:
 				base_gid = UNALIGNED_GETLE16(instr + 4);
 				desc_cid = UNALIGNED_GETLE16(instr + 6);
 			}
-			DO(Dee_function_generator_vpush_extern(self, base_mid, base_gid));
+			DO(Dee_function_generator_vpush_extern(self, base_mid, base_gid, true));
 		}	break;
 		default: __builtin_unreachable();
 		}
@@ -1090,13 +1319,58 @@ do_jcc:
 	//TODO: case ASM_CALLCMEMBER_THIS_R:
 	//TODO: case ASM16_CALLCMEMBER_THIS_R:
 
-		/* TODO: Implement these by creating the function raw, and then using mov-s to fill in `fo_refv'
-		 *       That way, we don't even have to push the reference somewhere temporarily, or have to
-		 *       do decref when we just want the function to inherit them. */
-	//TODO: case ASM_FUNCTION_C:
-	//TODO: case ASM16_FUNCTION_C:
-	//TODO: case ASM_FUNCTION_C_16:
-	//TODO: case ASM16_FUNCTION_C_16:
+	case ASM_FUNCTION_C:
+	case ASM16_FUNCTION_C:
+	case ASM_FUNCTION_C_16:
+	case ASM16_FUNCTION_C_16: {
+		/* Implement these by creating the function raw, and then using mov-s to fill in `fo_refv'
+		 * That way, we don't even have to push the reference somewhere temporarily, or have to
+		 * do decref when we just want the function to inherit them. */
+		uint32_t refc;
+		uint16_t code_cid;
+		size_t sizeof_function;
+		switch (opcode) {
+		case ASM_FUNCTION_C:
+			code_cid = instr[1];
+			refc     = instr[2] + 1;
+			break;
+		case ASM16_FUNCTION_C:
+			code_cid = UNALIGNED_GETLE16(instr + 2) + 1;
+			refc     = instr[4];
+			break;
+		case ASM_FUNCTION_C_16:
+			code_cid = instr[1];
+			refc     = UNALIGNED_GETLE16(instr + 2) + 1;
+			break;
+		case ASM16_FUNCTION_C_16:
+			code_cid = UNALIGNED_GETLE16(instr + 2);
+			refc     = UNALIGNED_GETLE16(instr + 4) + 1;
+			break;
+		default: __builtin_unreachable();
+		}
+		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
+		                  ((size_t)refc * sizeof(DREF DeeObject *));
+		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
+		DO(Dee_function_generator_vcallapi(self, &Dee_Malloc, VCALLOP_CC_OBJECT, 1));     /* [refs...], ref:function */
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* - */
+		DO(Dee_function_generator_vpush_immSIZ(self, 1));                                 /* [refs...], ref:function, 1 */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_refcnt))); /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_const(self, (DeeObject *)&DeeFunction_Type));     /* [refs...], ref:function, DeeFunction_Type */
+		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:DeeFunction_Type */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_type)));   /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_cid(self, code_cid));                             /* [refs...], ref:function, code */
+		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:code */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));   /* [refs...], ref:function */
+		while (refc) {
+			--refc;
+			DO(Dee_function_generator_vswap(self)); /* [refs...], ref:function, ref */
+			DO(Dee_function_generator_vref(self));  /* [refs...], ref:function, ref:ref */
+			DO(Dee_function_generator_vpopind(self, /* [refs...], ref:function */
+			                                  offsetof(DeeFunctionObject, fo_refv) +
+			                                  (refc * sizeof(DREF DeeObject *))));
+		}
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF)); /* ref:function */
+	}	break;
 
 	case ASM_CAST_INT:
 		return Dee_function_generator_vop(self, OPERATOR_INT, 1);
@@ -1424,7 +1698,7 @@ do_jcc:
 	case ASM_UD: {
 		DO(Dee_function_generator_vpush_addr(self, instr));
 		DO(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code));
-		return Dee_function_generator_vcallapi(self, &impl_err_illegal_instruction, VCALLOP_CC_EXCEPT, 2);
+		return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_illegal_instruction, VCALLOP_CC_EXCEPT, 2);
 	}	break;
 
 	case ASM_CALLATTR_C_KW: {
@@ -1595,15 +1869,6 @@ do_jcc:
 		return Dee_function_generator_vcheckobj(self);                                          /* result */
 	}	break;
 
-	//TODO: case ASM_GETMEMBER_THIS_R:
-	//TODO: case ASM16_GETMEMBER_THIS_R:
-	//TODO: case ASM_DELMEMBER_THIS_R:
-	//TODO: case ASM16_DELMEMBER_THIS_R:
-	//TODO: case ASM_SETMEMBER_THIS_R:
-	//TODO: case ASM16_SETMEMBER_THIS_R:
-	//TODO: case ASM_BOUNDMEMBER_THIS_R:
-	//TODO: case ASM16_BOUNDMEMBER_THIS_R:
-
 	case ASM_CALL_EXTERN:
 	case ASM16_CALL_EXTERN:
 	case ASM_CALL_GLOBAL:
@@ -1623,7 +1888,7 @@ do_jcc:
 				gid  = UNALIGNED_GETLE16(instr + 4);
 				argc = instr[6];
 			}
-			DO(Dee_function_generator_vpush_extern(self, mid, gid)); /* [args...], func */
+			DO(Dee_function_generator_vpush_extern(self, mid, gid, true)); /* [args...], func */
 		}	break;
 		case ASM_CALL_GLOBAL: {
 			uint16_t gid;
@@ -1634,7 +1899,7 @@ do_jcc:
 				gid  = UNALIGNED_GETLE16(instr + 2);
 				argc = instr[4];
 			}
-			DO(Dee_function_generator_vpush_global(self, gid)); /* [args...], func */
+			DO(Dee_function_generator_vpush_global(self, gid, true)); /* [args...], func */
 		}	break;
 		case ASM_CALL_LOCAL: {
 			uint16_t lid;
@@ -1744,22 +2009,120 @@ do_jcc:
 	case ASM_ITERNEXT:
 		return Dee_function_generator_vop(self, OPERATOR_ITERNEXT, 1);
 
-	//TODO: case ASM_GETMEMBER:
-	//TODO: case ASM16_GETMEMBER:
-	//TODO: case ASM_DELMEMBER:
-	//TODO: case ASM16_DELMEMBER:
-	//TODO: case ASM_SETMEMBER:
-	//TODO: case ASM16_SETMEMBER:
+	case ASM_GETMEMBER: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_GETMEMBER: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vswap(self));             /* type, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, this, addr */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_GetMemberSafe, VCALLOP_CC_OBJECT, 3);
+	}	break;
+
+	case ASM_DELMEMBER: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_DELMEMBER: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vswap(self));             /* type, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, this, addr */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_DelMemberSafe, VCALLOP_CC_INT, 3);
+	}	break;
+
+	case ASM_SETMEMBER: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_SETMEMBER: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vrrot(self, 3));          /* value, this, type */
+		DO(Dee_function_generator_vswap(self));             /* value, type, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* value, type, this, addr */
+		DO(Dee_function_generator_vlrot(self, 4));          /* type, this, addr, value */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMemberSafe, VCALLOP_CC_INT, 4);
+	}	break;
+
 	//TODO: case ASM_BOUNDMEMBER:
 	//TODO: case ASM16_BOUNDMEMBER:
-	//TODO: case ASM_GETMEMBER_THIS:
-	//TODO: case ASM16_GETMEMBER_THIS:
-	//TODO: case ASM_DELMEMBER_THIS:
-	//TODO: case ASM16_DELMEMBER_THIS:
-	//TODO: case ASM_SETMEMBER_THIS:
-	//TODO: case ASM16_SETMEMBER_THIS:
+
+	case ASM_GETMEMBER_THIS: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_GETMEMBER_THIS: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vpush_this(self));        /* type, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, this, addr */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_GetMemberSafe, VCALLOP_CC_OBJECT, 3);
+	}	break;
+
+	case ASM_DELMEMBER_THIS: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_DELMEMBER_THIS: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vpush_this(self));        /* type, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, this, addr */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_DelMemberSafe, VCALLOP_CC_INT, 3);
+	}	break;
+
+	case ASM_SETMEMBER_THIS: {
+		uint16_t addr;
+		addr = instr[1];
+		__IF0 { case ASM16_SETMEMBER_THIS: addr = UNALIGNED_GETLE16(instr + 2); }
+		DO(Dee_function_generator_vpush_this(self));        /* type, value, this */
+		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, value, this, addr */
+		DO(Dee_function_generator_vlrot(self, 3));          /* type, this, addr, value */
+		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMemberSafe, VCALLOP_CC_INT, 4);
+	}	break;
+
 	//TODO: case ASM_BOUNDMEMBER_THIS:
 	//TODO: case ASM16_BOUNDMEMBER_THIS:
+
+	case ASM_GETMEMBER_THIS_R:
+	case ASM16_GETMEMBER_THIS_R:
+	//TODO: case ASM_BOUNDMEMBER_THIS_R:
+	//TODO: case ASM16_BOUNDMEMBER_THIS_R:
+	case ASM_DELMEMBER_THIS_R:
+	case ASM16_DELMEMBER_THIS_R:
+	case ASM_SETMEMBER_THIS_R:
+	case ASM16_SETMEMBER_THIS_R: {
+		/* For these, we can determine the *actual* class descriptor offsets at
+		 * compile-time (meaning: right now), so rather than emit calls to access
+		 * members and locks at runtime, inline them! */
+		struct class_desc *desc;
+		uint16_t type_rid;
+		uint16_t addr;
+		ptrdiff_t lock_offset;
+		ptrdiff_t slot_offset;
+		DeeTypeObject *type;
+		type_rid = instr[1];
+		addr     = instr[2];
+		if (opcode > 0xff) {
+			type_rid = UNALIGNED_GETLE16(instr + 2);
+			addr     = UNALIGNED_GETLE16(instr + 4);
+		}
+		if unlikely(type_rid >= self->fg_assembler->fa_code->co_refc)
+			return err_illegal_rid(type_rid);
+		type = (DeeTypeObject *)self->fg_assembler->fa_function->fo_refv[type_rid];
+		DO(DeeObject_AssertType((DeeObject *)type, &DeeType_Type));
+		if unlikely(DeeType_IsClass(type)) {
+			return DeeError_Throwf(&DeeError_IllegalInstruction,
+			                       "type %r used by member accessor isn't a class",
+			                       type);
+		}
+		desc = DeeClass_DESC(type);
+		if unlikely(addr >= desc->cd_desc->cd_imemb_size) {
+			return DeeError_Throwf(&DeeError_IllegalInstruction,
+			                       "Invalid member id %" PRFu16 " for class %r",
+			                       addr, type);
+		}
+		lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
+		slot_offset = desc->cd_offset + offsetof(struct instance_desc, id_vtab) +
+		              addr * sizeof(DREF DeeObject *);
+		/* XXX: (and this is a problem with the normal executor):
+		 *      assert that "this" is an instance of `type' */
+		DO(Dee_function_generator_vpush_this(self)); /* [value], this */
+		/* TODO: In case of reading members, if the next instruction also does a read, keep the lock acquired */
+		/* TODO: Acquire lock */
+		/* TODO: Access member */
+		/* TODO: Release lock */
+		return DeeError_NOTIMPLEMENTED();
+	}	break;
+
 
 
 
@@ -1828,6 +2191,9 @@ do_jcc:
 			/* Need to do this in a special way because `instr' must not become `prefix_instr' here. */
 			goto do_jcc;
 
+		//TODO: case ASM_FOREACH:   /* foreach PREFIX, <Sdisp8> */
+		//TODO: case ASM_FOREACH16: /* foreach PREFIX, <Sdisp16> */
+
 		case ASM_RET:          /* ret PREFIX */
 		case ASM_THROW:        /* throw PREFIX */
 		case ASM_SETRET:       /* setret PREFIX */
@@ -1843,12 +2209,10 @@ do_jcc:
 			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));
 			return Dee_function_generator_geninstr(self, prefix_instr, p_next_instr);
 
-		case ASM_FOREACH:            /* foreach PREFIX, <Sdisp8> */
-		case ASM_FOREACH16:          /* foreach PREFIX, <Sdisp16> */
-		case ASM_DUP:                /* mov PREFIX, top', `mov PREFIX, #SP - 1 */
-		case ASM_DUP_N:              /* mov PREFIX, #SP - <imm8> - 2 */
-		case ASM16_DUP_N:            /* mov PREFIX, #SP - <imm16> - 2 */
-		case ASM_POP:                /* mov top, PREFIX */
+		case ASM_DUP:                /* mov  PREFIX, top', `mov PREFIX, #SP - 1 */
+		case ASM_DUP_N:              /* mov  PREFIX, #SP - <imm8> - 2 */
+		case ASM16_DUP_N:            /* mov  PREFIX, #SP - <imm16> - 2 */
+		case ASM_POP:                /* mov  top, PREFIX */
 		case ASM_PUSH_NONE:          /* mov  PREFIX, none */
 		case ASM_PUSH_VARARGS:       /* mov  PREFIX, varargs */
 		case ASM_PUSH_VARKWDS:       /* mov  PREFIX, varkwds */

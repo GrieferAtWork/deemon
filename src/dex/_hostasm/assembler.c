@@ -97,18 +97,11 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 }
 
 
-
-/* Allocate and return the initial memory-state when the
- * generated function is entered at the start of the prolog.
- * @return: * :   The initial memory-state
- * @return: NULL: Error */
 PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
-Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *__restrict self) {
-	Dee_hostfunc_cc_t cc = self->fa_cc;
-	struct Dee_memstate *state;
+Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *__restrict self) {
+	struct Dee_memstate *result;
 	size_t local_count;
 	size_t extra_base;
-	ASSERT(self->fa_blockc >= 1);
 
 	/* Figure out how many locals we need. */
 	extra_base  = self->fa_localc;
@@ -118,26 +111,44 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	local_count -= self->fa_code->co_argc_min;
 
 	/* Setup the state of the function's first (entry) block. */
-	state = Dee_memstate_alloc(local_count);
-	if unlikely(!state)
-		goto err;
-	state->ms_refcnt = 1;
-	state->ms_host_cfa_offset = 0;
-	state->ms_localc = local_count;
-	state->ms_stackc = 0;
-	state->ms_stacka = 0;
-	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
-	Dee_memstate_hregs_clear_usage(state);
-	state->ms_stackv = NULL;
+	result = Dee_memstate_alloc(local_count);
+	if unlikely(!result)
+		goto done;
+	result->ms_refcnt = 1;
+	result->ms_host_cfa_offset = 0;
+	result->ms_localc = local_count;
+	result->ms_stackc = 0;
+	result->ms_stacka = 0;
+	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
+	Dee_memstate_hregs_clear_usage(result);
+	result->ms_stackv = NULL;
 
 	/* Initially, all variables are unbound */
 	{
 		size_t lid;
-		for (lid = 0; lid < state->ms_localc; ++lid) {
-			state->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
-			state->ms_localv[lid].ml_type  = MEMLOC_TYPE_UNALLOC;
+		for (lid = 0; lid < result->ms_localc; ++lid) {
+			result->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
+			result->ms_localv[lid].ml_type  = MEMLOC_TYPE_UNALLOC;
 		}
 	}
+done:
+	return result;
+}
+
+/* Allocate and return the initial memory-state when the
+ * generated function is entered at the start of the prolog.
+ * @return: * :   The initial memory-state
+ * @return: NULL: Error */
+PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
+Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *__restrict self) {
+	Dee_hostfunc_cc_t cc = self->fa_cc;
+	struct Dee_memstate *state;
+	ASSERT(self->fa_blockc >= 1);
+
+	/* Figure out how many locals we need. */
+	state = Dee_function_assembler_alloc_zero_memstate(self);
+	if unlikely(!state)
+		goto err;
 
 	/* Set-up the mem-state to indicate where arguments are stored at */
 #ifdef HOSTASM_X86
@@ -162,7 +173,7 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	 (self)->ml_value.v_hstack.s_cfa = (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
 	 (self)->ml_value.v_hstack.s_off = 0)
 #endif /* !HOSTASM_X86_64 */
-		size_t argi = 0;
+		size_t argi = 0, extra_base = self->fa_localc;
 		if (cc & HOSTFUNC_CC_F_THIS) {
 			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + DEE_MEMSTATE_EXTRA_LOCAL_A_THIS], argi);
 			++argi;
@@ -527,6 +538,101 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc zero;
+	zero.ml_flags = MEMLOC_F_NORMAL;
+	zero.ml_type  = MEMLOC_TYPE_CONST;
+	zero.ml_value.v_const = NULL;
+	return Dee_function_generator_gret(self, &zero);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict self,
+                                     struct Dee_except_exitinfo *__restrict from,
+                                     struct Dee_except_exitinfo *__restrict to) {
+	(void)self;
+	(void)from;
+	(void)to;
+	/* TODO */
+	/* TODO: It's also possible to shift references from one location to another! */
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict self) {
+	DREF struct Dee_memstate *retstate;
+	struct Dee_except_exitinfo *last_info;
+	struct Dee_function_generator gen;
+	retstate = Dee_function_assembler_alloc_zero_memstate(self);
+	if unlikely(!retstate)
+		goto err;
+	last_info = Dee_function_assembler_except_exit(self, retstate);
+	Dee_memstate_decref(retstate);
+	if unlikely(!last_info)
+		goto err;
+
+	/* Generate code for `return NULL' */
+	gen.fg_assembler        = self;
+	gen.fg_block            = last_info->exi_block;
+	gen.fg_sect             = &gen.fg_block->bb_htext;
+	gen.fg_state            = gen.fg_block->bb_mem_start;
+	gen.fg_state_hstack_res = NULL;
+	ASSERT(gen.fg_state != NULL);
+	Dee_memstate_incref(gen.fg_state);
+	if unlikely(Dee_function_generator_gretNULL(&gen))
+		goto err_gen_fg_state;
+	ASSERT(gen.fg_block == last_info->exi_block);
+	ASSERT(gen.fg_block->bb_mem_end == NULL);
+	gen.fg_block->bb_mem_end = gen.fg_state; /* Inherit reference */
+
+	/* Compile and order all of the other blocks. */
+	if (self->fa_except_exitc > 1) {
+		size_t i;
+		struct Dee_except_exitinfo *next_info;
+		size_t next_info_score;
+search_for_next_block:
+		next_info       = NULL;
+		next_info_score = (size_t)-1;
+		for (i = 0; i < self->fa_except_exitc; ++i) {
+			size_t score;
+			struct Dee_except_exitinfo *info;
+			info = self->fa_except_exitv[i];
+			ASSERT(info);
+			if (Dee_except_exitinfo_compiled(info))
+				continue;
+			score = Dee_except_exitinfo_distance(last_info, info);
+			if (next_info_score > score || next_info == NULL) {
+				next_info_score = score;
+				next_info       = info;
+			}
+		}
+		if (next_info) {
+			ASSERT(gen.fg_assembler == self);
+			ASSERT(gen.fg_state_hstack_res == NULL);
+			gen.fg_block = next_info->exi_block;
+			gen.fg_sect  = &gen.fg_block->bb_htext;
+			gen.fg_state = gen.fg_block->bb_mem_start;
+			Dee_memstate_incref(gen.fg_state);
+			ASSERT(last_info->exi_block->bb_mem_start != NULL);
+			if unlikely(Dee_function_generator_gexcept_morph(&gen, next_info, last_info))
+				goto err_gen_fg_state;
+			ASSERT(next_info->exi_block->bb_mem_end == NULL);
+			ASSERT(next_info->exi_block->bb_next == NULL);
+			next_info->exi_block->bb_mem_end = gen.fg_state; /* Inherit reference */
+			next_info->exi_block->bb_next = last_info->exi_block;
+			last_info                     = next_info;
+			goto search_for_next_block;
+		}
+	}
+	return 0;
+err_gen_fg_state:
+	Dee_memstate_decref(gen.fg_state);
+err:
+	return -1;
+}
+
 /* Step #4: Generate morph instruction sequences to perform memory state transitions.
  * This also extends the host text of basic blocks that fall through to some
  * other basic block with an extra instructions needed for morphing:
@@ -569,9 +675,10 @@ Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict se
 		}
 	}
 
-	/* TODO: Generate cleanup/fallthru code for exit descriptors. */
-	(void)self;
-	return DeeError_NOTIMPLEMENTED();
+	/* Generate cleanup/fallthru code for exit descriptors. */
+	if (self->fa_except_exitc > 0)
+		return Dee_function_assembler_compileexcept(self);
+	return 0;
 err:
 	return -1;
 }

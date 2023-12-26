@@ -220,12 +220,12 @@ morph_location(struct Dee_function_generator *__restrict self,
 		 *       longer a reference, is when it is known that the reference is question
 		 *       is also being held someplace else! */
 		if (is_local && !(old_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
-			if unlikely(must_incref ? Dee_function_generator_gxincref(self, old_loc)
-			                        : Dee_function_generator_gxdecref_nokill(self, old_loc))
+			if unlikely(must_incref ? Dee_function_generator_gxincref(self, old_loc, 1)
+			                        : Dee_function_generator_gxdecref_nokill(self, old_loc, 1))
 				goto err;
 		} else {
-			if unlikely(must_incref ? Dee_function_generator_gincref(self, old_loc)
-			                        : Dee_function_generator_gdecref_nokill(self, old_loc))
+			if unlikely(must_incref ? Dee_function_generator_gincref(self, old_loc, 1)
+			                        : Dee_function_generator_gdecref_nokill(self, old_loc, 1))
 				goto err;
 		}
 		old_loc->ml_flags &= ~MEMLOC_F_NOREF;

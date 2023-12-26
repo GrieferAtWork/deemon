@@ -905,6 +905,119 @@ err_bad_loc:
 }
 
 
+/* Costs of different exception cleanup operations. */
+#define DISTANCEOF_CFA_ADJUST    1 /* Adjust stack offset */
+#define DISTANCEOF_INCREF        1 /* Increment refcnt */
+#define DISTANCEOF_DECREF        5 /* Decrement refcnt w/ optional object destroy */
+#define DISTANCEOF_DECREF_NOKILL 1 /* Decrement refcnt w/o object destroy */
+#define DISTANCEOF_NULLCHK       2 /* Check if a location contains NULL */
+#define DISTANCEOF_PRESERVE      1 /* Preserve a register during `DeeObject_Destroy()' */
+
+PRIVATE ATTR_CONST WUNUSED size_t DCALL
+decref_distance(uint16_t from_refs, uint16_t to_refs,
+                Dee_host_register_t num_preserve_regs) {
+	size_t result = 0;
+	to_refs &= ~DEE_EXCEPT_EXITINFO_NULLFLAG;
+	if (from_refs == to_refs)
+		goto done;
+	if (from_refs & DEE_EXCEPT_EXITINFO_NULLFLAG) {
+		result += DISTANCEOF_NULLCHK;
+		from_refs &= ~DEE_EXCEPT_EXITINFO_NULLFLAG;
+	}
+	if (from_refs > to_refs) {
+		result += to_refs ? DISTANCEOF_DECREF_NOKILL
+		                  : DISTANCEOF_DECREF + (num_preserve_regs * DISTANCEOF_PRESERVE);
+	} else if (from_refs < to_refs) {
+		result += DISTANCEOF_INCREF;
+	}
+done:
+	return result;
+}
+
+/* Calculate the "distance" score that determines the complexity of the
+ * transitioning code needed to morph from `from' to `to'. When ordering
+ * exception cleanup code, exit descriptors should be ordered such that
+ * the fallthru of one to the next always yields the lowest distance
+ * score.
+ * @return: * : The distance scrore for morphing from `from' to `to' */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
+                             struct Dee_except_exitinfo const *__restrict to) {
+	size_t result = 0;
+	uintptr_t min_cfa = from->exi_cfa_offset / HOST_SIZEOF_POINTER;
+	Dee_host_register_t num_preserve_regs;
+
+	/* Determine distance between registers. */
+	{
+		Dee_host_register_t regno;
+		num_preserve_regs = 0;
+		for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
+			if (from->exi_regs[regno] != 0 || to->exi_regs[regno] != 0)
+				++num_preserve_regs;
+		}
+		for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
+			uint16_t from_refs = from->exi_regs[regno];
+			uint16_t to_refs   = to->exi_regs[regno];
+			if (to_refs == 0)
+				--num_preserve_regs; /* If register isn't used afterwards, then  */
+			result += decref_distance(from_refs, to_refs, num_preserve_regs);
+		}
+	}
+
+	/* Check for CFA adjustment (and see if it can be combined with push/pop) */
+	if (from->exi_cfa_offset != to->exi_cfa_offset) {
+		size_t i;
+		uintptr_t from_cfa = from->exi_cfa_offset / HOST_SIZEOF_POINTER;
+		uintptr_t to_cfa   = to->exi_cfa_offset / HOST_SIZEOF_POINTER;
+		if (to_cfa < from_cfa) {
+			min_cfa = to_cfa;
+			i       = from_cfa;
+			while (i > to_cfa) {
+				if (from->exi_stack[i - 1]) {
+					if (from->exi_stack[i - 1] & DEE_EXCEPT_EXITINFO_NULLFLAG)
+						result += DISTANCEOF_NULLCHK; /* Extra null-check is needed */
+					result += DISTANCEOF_DECREF;      /* Because it's a decref, need a destroy-call */
+					if (to_cfa == i) {
+						/* Because pop can be used, a manual
+						 * CFA adjust might be unnecessary */
+						to_cfa = i - 1;
+					}
+				}
+				--i;
+			}
+		} else {
+			ASSERT(to_cfa > from_cfa);
+			i = from_cfa;
+			while (i < to_cfa) {
+				if (to->exi_stack[i]) {
+					result += DISTANCEOF_INCREF;
+					if (from_cfa == i) {
+						/* Because push can be used, a manual
+						 * CFA adjust might be unnecessary */
+						from_cfa = i + 1;
+					}
+				}
+				++i;
+			}
+		}
+		if (from_cfa != to_cfa)
+			result += DISTANCEOF_CFA_ADJUST; /* Manual adjust is necessary */
+	}
+
+	/* Check common stack. */
+	{
+		Dee_vstackaddr_t i;
+		for (i = 0; i < min_cfa; ++i) {
+			uint16_t from_refs = from->exi_stack[i];
+			uint16_t to_refs   = to->exi_stack[i];
+			result += decref_distance(from_refs, to_refs, num_preserve_regs);
+		}
+	}
+
+	return result;
+}
+
+
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 

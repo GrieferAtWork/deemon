@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
@@ -247,9 +248,10 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_SetAttr, 12);
 	CASE(DeeObject_Enter, 4);
 	CASE(DeeObject_Leave, 4);
+	CASE(DeeObject_Unpack, 12);
 	CASE(DeeError_Throw, 4);
 	CASE(DeeObject_ConcatInherited, 8);
-	CASE(DeeObject_ExtendInherited, 8);
+	CASE(DeeObject_ExtendInherited, 12);
 	CASE(DeeTuple_FromSequence, 4);
 	CASE(DeeList_FromSequence, 4);
 	CASE(DeeSuper_Of, 4);
@@ -270,6 +272,28 @@ gen86_addrname(void const *addr) {
 	CASE(DeeSharedMap_NewShared, 8);
 	CASE(DeeSharedMap_Decref, 4);
 	CASE(DeeCode_HandleBreakpoint, 4);
+	CASE(DeeList_NewUninitialized, 4);
+	CASE(DeeTuple_NewUninitialized, 4);
+	CASE(DeeInstance_GetMember, 12);
+	CASE(DeeInstance_BoundMember, 12);
+	CASE(DeeInstance_DelMember, 12);
+	CASE(DeeInstance_SetMember, 16);
+	CASE(DeeInstance_GetMemberSafe, 12);
+	CASE(DeeInstance_BoundMemberSafe, 12);
+	CASE(DeeInstance_DelMemberSafe, 12);
+	CASE(DeeInstance_SetMemberSafe, 16);
+	CASE(DeeClass_SetMember, 12);
+	CASE(DeeClass_SetMemberSafe, 12);
+	CASE(DeeClass_GetMember, 8);
+	CASE(DeeClass_GetMemberSafe, 8);
+	CASE(DeeClass_New, 4);
+	CASE(DeeGC_Track, 4);
+	CASE(DeeGC_Untrack, 4);
+	CASE(libhostasm_rt_err_unbound_global, 8);
+	CASE(libhostasm_rt_err_unbound_local, 12);
+	CASE(libhostasm_rt_err_unbound_arg, 12);
+	CASE(libhostasm_rt_err_illegal_instruction, 8);
+	CASE(libhostasm_rt_DeeObject_ShlRepr, 8);
 #undef CASE
 	*Dee_sprintf(buf, "%#Ix", addr) = '\0';
 	return buf;
@@ -475,28 +499,75 @@ do_print_memloc_desc:
 
 /* Object reference count incref/decref */
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_host_section_gincref_regx(struct Dee_host_section *__restrict self,
-                               Dee_host_register_t regno, ptrdiff_t reg_offset) {
+_Dee_host_section_gincref_regx_impl(struct Dee_host_section *__restrict self,
+                                    Dee_host_register_t regno,
+                                    ptrdiff_t reg_offset, Dee_refcnt_t n) {
 	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
-#ifndef NO_HOSTASM_DEBUG_PRINT
-	if (reg_offset == 0) {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock inc" Plq "\tob_refcnt(%s)\n", gen86_regname(regno)));
+	gen86_lock(p_pc(self));
+	if (n == 1) {
+		gen86_incP_mod(p_pc(self), gen86_modrm_db,
+		               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		               gen86_registers[regno]);
 	} else {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock inc" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno)));
+		gen86_addP_imm_mod(p_pc(self), gen86_modrm_db, (intptr_t)(uintptr_t)n,
+		                   reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		                   gen86_registers[regno]);
 	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gincref_regx(struct Dee_host_section *__restrict self,
+                               Dee_host_register_t regno,
+                               ptrdiff_t reg_offset, Dee_refcnt_t n) {
+#ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
 	if (reg_offset == 0) {
-		gen86_printf("incref\t(%s)\n", gen86_regname(regno));
+		gen86_printf("incref\t(%s)", gen86_regname(regno));
 	} else {
-		gen86_printf("incref\t%Id(%s)\n", reg_offset, gen86_regname(regno));
+		gen86_printf("incref\t%Id(%s)", reg_offset, gen86_regname(regno));
 	}
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n == 1) {
+		if (reg_offset == 0) {
+			gen86_printf("lock inc" Plq "\tob_refcnt(%s)\n", gen86_regname(regno));
+		} else {
+			gen86_printf("lock inc" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno));
+		}
+	} else {
+		if (reg_offset == 0) {
+			gen86_printf("lock add" Plq "\t$%Iu, ob_refcnt(%s)\n", n, gen86_regname(regno));
+		} else {
+			gen86_printf("lock add" Plq "\t$%Iu, ob_refcnt+%Id(%s)\n", n, reg_offset, gen86_regname(regno));
+		}
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
+	return _Dee_host_section_gincref_regx_impl(self, regno, reg_offset, n);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gdecref_regx_nokill_impl(struct Dee_host_section *__restrict self,
+                                           Dee_host_register_t regno,
+                                           ptrdiff_t reg_offset, Dee_refcnt_t n) {
+	if unlikely(Dee_host_section_reqx86(self, 2))
+		goto err;
 	gen86_lock(p_pc(self));
-	gen86_incP_mod(p_pc(self), gen86_modrm_db,
-	               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
-	               gen86_registers[regno]);
+	if (n == 1) {
+		gen86_decP_mod(p_pc(self), gen86_modrm_db,
+		               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		               gen86_registers[regno]);
+	} else {
+		gen86_subP_imm_mod(p_pc(self), gen86_modrm_db, (intptr_t)(uintptr_t)n,
+		                   reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		                   gen86_registers[regno]);
+	}
 	return 0;
 err:
 	return -1;
@@ -504,30 +575,35 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gdecref_regx_nokill(struct Dee_host_section *__restrict self,
-                                      Dee_host_register_t regno, ptrdiff_t reg_offset) {
-	if unlikely(Dee_host_section_reqx86(self, 2))
-		goto err;
+                                      Dee_host_register_t regno,
+                                      ptrdiff_t reg_offset, Dee_refcnt_t n) {
 #ifndef NO_HOSTASM_DEBUG_PRINT
-	if (reg_offset == 0) {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock dec" Plq "\tob_refcnt(%s)\n", gen86_regname(regno)));
-	} else {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock dec" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno)));
-	}
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
 	if (reg_offset == 0) {
-		gen86_printf("decref_nokill\t(%s)\n", gen86_regname(regno));
+		gen86_printf("decref_nokill\t(%s)", gen86_regname(regno));
 	} else {
-		gen86_printf("decref_nokill\t%Id(%s)\n", reg_offset, gen86_regname(regno));
+		gen86_printf("decref_nokill\t%Id(%s)", reg_offset, gen86_regname(regno));
 	}
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n == 1) {
+		if (reg_offset == 0) {
+			gen86_printf("lock dec" Plq "\tob_refcnt(%s)\n", gen86_regname(regno));
+		} else {
+			gen86_printf("lock dec" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno));
+		}
+	} else {
+		if (reg_offset == 0) {
+			gen86_printf("lock sub" Plq "\t$%Iu, ob_refcnt(%s)\n", n, gen86_regname(regno));
+		} else {
+			gen86_printf("lock sub" Plq "\t$%Iu, ob_refcnt+%Id(%s)\n", n, reg_offset, gen86_regname(regno));
+		}
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
-	gen86_lock(p_pc(self));
-	gen86_decP_mod(p_pc(self), gen86_modrm_db,
-	               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
-	               gen86_registers[regno]);
-	return 0;
-err:
-	return -1;
+	return _Dee_host_section_gdecref_regx_nokill_impl(self, regno, reg_offset, n);
 }
 
 #if !defined(CONFIG_NO_BADREFCNT_CHECKS) || defined(CONFIG_TRACE_REFCHANGES)
@@ -672,31 +748,22 @@ log_compact_decref_register_preserve_list(struct Dee_function_generator *__restr
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_function_generator_gdecref_regx(struct Dee_function_generator *__restrict self,
-                                     Dee_host_register_t regno, ptrdiff_t reg_offset) {
+_Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restrict self,
+                                          Dee_host_register_t regno,
+                                          ptrdiff_t reg_offset, Dee_refcnt_t n) {
 	struct Dee_host_section *sect = self->fg_sect;
 	if unlikely(Dee_host_section_reqx86(sect, 2))
 		goto err;
-#ifndef NO_HOSTASM_DEBUG_PRINT
-	if (reg_offset == 0) {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock dec" Plq "\tob_refcnt(%s)\n", gen86_regname(regno)));
-	} else {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock dec" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno)));
-	}
-#ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	if (reg_offset == 0) {
-		gen86_printf("decref\t(%s)", gen86_regname(regno));
-	} else {
-		gen86_printf("decref\t%Id(%s)", reg_offset, gen86_regname(regno));
-	}
-	log_compact_decref_register_preserve_list(self, regno);
-	Dee_DPRINT("\n");
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
-#endif /* !NO_HOSTASM_DEBUG_PRINT */
 	gen86_lock(p_pc(sect));
-	gen86_decP_mod(p_pc(sect), gen86_modrm_db,
-	               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
-	               gen86_registers[regno]);
+	if (n == 1) {
+		gen86_decP_mod(p_pc(sect), gen86_modrm_db,
+		               reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		               gen86_registers[regno]);
+	} else {
+		gen86_subP_imm_mod(p_pc(sect), gen86_modrm_db, (intptr_t)(uintptr_t)n,
+		                   reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+		                   gen86_registers[regno]);
+	}
 
 	/* NOTE: decP sets FLAGS.Z=1 when the reference counter becomes `0'. */
 	if ((self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) ||
@@ -756,18 +823,65 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gdecref_regx(struct Dee_function_generator *__restrict self,
+                                     Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n) {
+#ifndef NO_HOSTASM_DEBUG_PRINT
+#ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
+	if (reg_offset == 0) {
+		gen86_printf("decref\t(%s)", gen86_regname(regno));
+	} else {
+		gen86_printf("decref\t%Id(%s)", reg_offset, gen86_regname(regno));
+	}
+	log_compact_decref_register_preserve_list(self, regno);
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n == 1) {
+		if (reg_offset == 0) {
+			gen86_printf("lock dec" Plq "\tob_refcnt(%s)\n", gen86_regname(regno));
+		} else {
+			gen86_printf("lock dec" Plq "\tob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno));
+		}
+	} else {
+		if (reg_offset == 0) {
+			gen86_printf("lock sub" Plq "\t$%Iu, ob_refcnt(%s)\n", n, gen86_regname(regno));
+		} else {
+			gen86_printf("lock sub" Plq "\t$%Iu, ob_refcnt+%Id(%s)\n", n, reg_offset, gen86_regname(regno));
+		}
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	return _Dee_function_generator_gdecref_regx_impl(self, regno, reg_offset, n);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gincref_const(struct Dee_host_section *__restrict self,
-                                DeeObject *value) {
+                                DeeObject *value, Dee_refcnt_t n) {
 	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	gen86_printf("incref\t%#Ix\n", value);
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	gen86_printf("incref\t%#Ix", value);
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n == 1) {
+		gen86_printf("lock inc" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt);
+	} else {
+		gen86_printf("lock add" Plq "\t$%Iu, %#Ix\n", n, (intptr_t)(uintptr_t)&value->ob_refcnt);
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
-	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock inc" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt));
 	gen86_lock(p_pc(self));
-	gen86_incP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	if (n == 1) {
+		gen86_incP_mod(p_pc(self), gen86_modrm_d,
+		               (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	} else {
+		gen86_addP_imm_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)n,
+		                   (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	}
 	return 0;
 err:
 	return -1;
@@ -775,19 +889,33 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gdecref_const(struct Dee_host_section *__restrict self,
-                                DeeObject *value) {
+                                DeeObject *value, Dee_refcnt_t n) {
 	if unlikely(Dee_host_section_reqx86(self, 2))
 		goto err;
 	/* Constants can never be destroyed, so decref'ing one is
 	 * like `Dee_DecrefNoKill()' (iow: doesn't need a zero-check) */
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	gen86_printf("decref_nokill\t%#Ix\n", value);
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	gen86_printf("decref_nokill\t%#Ix", value);
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (n == 1) {
+		gen86_printf("lock dec" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt);
+	} else {
+		gen86_printf("lock sub" Plq "\t$%Iu, %#Ix\n", n, (intptr_t)(uintptr_t)&value->ob_refcnt);
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
-	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("lock dec" Plq "\t%#Ix\n", (intptr_t)(uintptr_t)&value->ob_refcnt));
 	gen86_lock(p_pc(self));
-	gen86_decP_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	if (n == 1) {
+		gen86_decP_mod(p_pc(self), gen86_modrm_d,
+		               (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	} else {
+		gen86_subP_imm_mod(p_pc(self), gen86_modrm_d, (intptr_t)(uintptr_t)n,
+		                   (intptr_t)(uintptr_t)&value->ob_refcnt); /* TODO: movabs */
+	}
 	return 0;
 err:
 	return -1;
@@ -796,7 +924,8 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gxincref_regx(struct Dee_host_section *__restrict self,
-                               Dee_host_register_t regno, ptrdiff_t reg_offset) {
+                                Dee_host_register_t regno,
+                                ptrdiff_t reg_offset, Dee_refcnt_t n) {
 	uint8_t reg86;
 	uintptr_t jcc8_offset;
 	if unlikely(Dee_host_section_reqx86(self, 2))
@@ -804,47 +933,12 @@ _Dee_host_section_gxincref_regx(struct Dee_host_section *__restrict self,
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
 	if (reg_offset == 0) {
-		gen86_printf("xincref\t(%s)\n", gen86_regname(regno));
+		gen86_printf("xincref\t(%s)", gen86_regname(regno));
 	} else {
-		gen86_printf("xincref\t%Id(%s)\n", reg_offset, gen86_regname(regno));
+		gen86_printf("xincref\t%Id(%s)", reg_offset, gen86_regname(regno));
 	}
-#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
-#endif /* !NO_HOSTASM_DEBUG_PRINT */
-	reg86 = gen86_registers[regno];
-	if (reg_offset == 0) {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(regno), gen86_regname(regno)));
-		gen86_testP_r_r(p_pc(self), reg86, reg86);
-	} else {
-		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("cmp" Plq "\t$%Id, %s\n", -reg_offset, gen86_regname(regno)));
-		gen86_cmpP_imm_r(p_pc(self), -reg_offset, reg86);
-	}
-	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("jz8\t1f\n"));
-	gen86_jcc8_offset(p_pc(self), GEN86_CC_Z, -1);
-	jcc8_offset = p_off(self) - 1;
-	if unlikely(_Dee_host_section_gincref_regx(self, regno, reg_offset))
-		goto err;
-	/* Fix-up the jump */
-	*(int8_t *)(self->hs_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
-	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
-	return 0;
-err:
-	return -1;
-}
-
-INTDEF WUNUSED NONNULL((1)) int DCALL
-_Dee_host_section_gxdecref_regx_nokill(struct Dee_host_section *__restrict self,
-                                       Dee_host_register_t regno, ptrdiff_t reg_offset) {
-	uint8_t reg86;
-	uintptr_t jcc8_offset;
-	if unlikely(Dee_host_section_reqx86(self, 2))
-		goto err;
-#ifndef NO_HOSTASM_DEBUG_PRINT
-#ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	if (reg_offset == 0) {
-		gen86_printf("xdecref_nokill\t(%s)", gen86_regname(regno));
-	} else {
-		gen86_printf("xdecref_nokill\t%Id(%s)", reg_offset, gen86_regname(regno));
-	}
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
 	Dee_DPRINT("\n");
 #endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
@@ -859,7 +953,48 @@ _Dee_host_section_gxdecref_regx_nokill(struct Dee_host_section *__restrict self,
 	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("jz8\t1f\n"));
 	gen86_jcc8_offset(p_pc(self), GEN86_CC_Z, -1);
 	jcc8_offset = p_off(self) - 1;
-	if unlikely(_Dee_host_section_gdecref_regx_nokill(self, regno, reg_offset))
+	if unlikely(_Dee_host_section_gincref_regx_impl(self, regno, reg_offset, n))
+		goto err;
+	/* Fix-up the jump */
+	*(int8_t *)(self->hs_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
+	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
+	return 0;
+err:
+	return -1;
+}
+
+INTDEF WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gxdecref_regx_nokill(struct Dee_host_section *__restrict self,
+                                       Dee_host_register_t regno,
+                                       ptrdiff_t reg_offset, Dee_refcnt_t n) {
+	uint8_t reg86;
+	uintptr_t jcc8_offset;
+	if unlikely(Dee_host_section_reqx86(self, 2))
+		goto err;
+#ifndef NO_HOSTASM_DEBUG_PRINT
+#ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
+	if (reg_offset == 0) {
+		gen86_printf("xdecref_nokill\t(%s)", gen86_regname(regno));
+	} else {
+		gen86_printf("xdecref_nokill\t%Id(%s)", reg_offset, gen86_regname(regno));
+	}
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
+	Dee_DPRINT("\n");
+#endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	reg86 = gen86_registers[regno];
+	if (reg_offset == 0) {
+		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(regno), gen86_regname(regno)));
+		gen86_testP_r_r(p_pc(self), reg86, reg86);
+	} else {
+		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("cmp" Plq "\t$%Id, %s\n", -reg_offset, gen86_regname(regno)));
+		gen86_cmpP_imm_r(p_pc(self), -reg_offset, reg86);
+	}
+	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("jz8\t1f\n"));
+	gen86_jcc8_offset(p_pc(self), GEN86_CC_Z, -1);
+	jcc8_offset = p_off(self) - 1;
+	if unlikely(_Dee_host_section_gdecref_regx_nokill_impl(self, regno, reg_offset, n))
 		goto err;
 	/* Fix-up the jump */
 	*(int8_t *)(self->hs_start + jcc8_offset) += (int8_t)(p_off(self) - jcc8_offset);
@@ -871,7 +1006,8 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict self,
-                                      Dee_host_register_t regno, ptrdiff_t reg_offset) {
+                                      Dee_host_register_t regno,
+                                      ptrdiff_t reg_offset, Dee_refcnt_t n) {
 	struct Dee_host_section *sect = self->fg_sect;
 	uint8_t reg86;
 	uintptr_t jcc8_offset;
@@ -885,6 +1021,8 @@ _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict 
 		gen86_printf("xdecref\t%Id(%s)", reg_offset, gen86_regname(regno));
 	}
 	log_compact_decref_register_preserve_list(self, regno);
+	if (n != 1)
+		Dee_DPRINTF(", $%Iu", n);
 	Dee_DPRINT("\n");
 #endif /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
@@ -899,7 +1037,7 @@ _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict 
 	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("jz8\t1f\n"));
 	gen86_jcc8_offset(p_pc(sect), GEN86_CC_Z, -1);
 	jcc8_offset = p_off(sect) - 1;
-	if unlikely(_Dee_function_generator_gdecref_regx(self, regno, reg_offset))
+	if unlikely(_Dee_function_generator_gdecref_regx_impl(self, regno, reg_offset, n))
 		goto err;
 	/* Fix-up the jump */
 	*(int8_t *)(sect->hs_start + jcc8_offset) += (int8_t)(p_off(sect) - jcc8_offset);
@@ -917,27 +1055,27 @@ _Dee_function_generator_grwlock_read(struct Dee_function_generator *__restrict s
                                      Dee_atomic_rwlock_t *__restrict lock) {
 	/* >> #if OSIZE
 	 * >> .Lfull_retry:
-	 * >>     movP  <&lock->arw_lock>, %Pax
+	 * >>     movP  <lock->arw_lock>, %Pax
 	 * >> .LPax_retry:
 	 * >>     testP $ATOMIC_RWLOCK_WFLAG, %Pax
 	 * >>     jnz8  .Lfull_retry
 	 * >>     leaP  1(%Pax), %temp
-	 * >>     lock  cmpxchgP %temp, <&lock->arw_lock>
+	 * >>     lock  cmpxchgP %temp, <lock->arw_lock>
 	 * >>     jnz8  .LPax_retry
 	 * >> #else // OSIZE
 	 * >> .Ldo_retry:
-	 * >>     movP  <&lock->arw_lock>, %Pax
+	 * >>     movP  <lock->arw_lock>, %Pax
 	 * >>     testP $ATOMIC_RWLOCK_WFLAG, %Pax
 	 * >>     jnzl  .Lretry
 	 * >>     leaP  1(%Pax), %temp
-	 * >>     lock  cmpxchgP %temp, <&lock->arw_lock>
+	 * >>     lock  cmpxchgP %temp, <lock->arw_lock>
 	 * >>     jnzl  .Lretry
 	 * >> .section .cold
 	 * >> .Lretry:
 	 * >> #if CONFIG_HAVE_sched_yield
 	 * >>     <PUSH_USED_REGS_EXCEPT(%Pax, %temp)>
 	 * >>     call  sched_yield
-	 * >>     <POP_USED_REGS(%Pax, %temp)>
+	 * >>     <POP_USED_REGS_EXCEPT(%Pax, %temp)>
 	 * >> #else // CONFIG_HAVE_sched_yield
 	 * >>     pause
 	 * >> #endif // !CONFIG_HAVE_sched_yield
@@ -956,7 +1094,7 @@ _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict 
 	/* >> .Lretry:
 	/* >>     xorP  %Pax, %Pax
 	 * >>     movP  $ATOMIC_RWLOCK_WFLAG, %temp
-	 * >>     lock  cmpxchgP %temp, <&lock->arw_lock>
+	 * >>     lock  cmpxchgP %temp, <lock->arw_lock>
 	 * >> #if OSIZE
 	 * >>     jnz8  .Lretry
 	 * >> #else // OSIZE
@@ -966,7 +1104,7 @@ _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict 
 	 * >> #if CONFIG_HAVE_sched_yield
 	 * >>     <PUSH_USED_REGS_EXCEPT(%Pax, %temp)>
 	 * >>     call  sched_yield
-	 * >>     <POP_USED_REGS(%Pax, %temp)>
+	 * >>     <POP_USED_REGS_EXCEPT(%Pax, %temp)>
 	 * >> #else // CONFIG_HAVE_sched_yield
 	 * >>     pause
 	 * >> #endif // !CONFIG_HAVE_sched_yield
@@ -982,20 +1120,30 @@ _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self,
                                         Dee_atomic_rwlock_t *__restrict lock) {
-	/* >> lock decP <&lock->arw_lock> */
-	/* TODO */
-	(void)self;
-	(void)lock;
-	return DeeError_NOTIMPLEMENTED();
+	/* >> lock decP <lock->arw_lock> */
+	struct Dee_host_section *sect = self->fg_sect;
+	if unlikely(Dee_host_section_reqx86(sect, 1))
+		goto err;
+	gen86_printf("lock dec" Plq "\t%#Ix\n", &lock->arw_lock);
+	gen86_lock(p_pc(sect));
+	gen86_decP_mod(p_pc(sect), gen86_modrm_d, (intptr_t)(uintptr_t)&lock->arw_lock); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self,
                                          Dee_atomic_rwlock_t *__restrict lock) {
-	/* >> movP  $0, <&lock->arw_lock> */
-	(void)self;
-	(void)lock;
-	return DeeError_NOTIMPLEMENTED();
+	/* >> movP  $0, <lock->arw_lock> */
+	struct Dee_host_section *sect = self->fg_sect;
+	if unlikely(Dee_host_section_reqx86(sect, 1))
+		goto err;
+	gen86_printf("mov" Plq "\t$0, %#Ix\n", &lock->arw_lock);
+	gen86_movP_imm_d(p_pc(sect), 0, (intptr_t)(uintptr_t)&lock->arw_lock); /* TODO: movabs */
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -1573,8 +1721,7 @@ always_jump:
 		goto err;
 	rel->hr_offset = p_off(sect) - 4;
 	rel->hr_rtype  = DEE_HOST_RELOC_REL32;
-	rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
-	rel->hr_value.rv_sym = dst;
+	Dee_host_reloc_setsym(rel, dst);
 	return 0;
 err:
 	return -1;
@@ -1606,8 +1753,7 @@ _Dee_host_section_gjmp(struct Dee_host_section *__restrict self,
 		goto err;
 	rel->hr_offset = p_off(self) - 4;
 	rel->hr_rtype  = DEE_HOST_RELOC_REL32;
-	rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
-	rel->hr_value.rv_sym = dst;
+	Dee_host_reloc_setsym(rel, dst);
 	return 0;
 err:
 	return -1;
@@ -1626,8 +1772,7 @@ _Dee_host_section_gjcc(struct Dee_host_section *__restrict self,
 		goto err;
 	rel->hr_offset = p_off(self) - 4;
 	rel->hr_rtype  = DEE_HOST_RELOC_REL32;
-	rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
-	rel->hr_value.rv_sym = dst;
+	Dee_host_reloc_setsym(rel, dst);
 	return 0;
 err:
 	return -1;
