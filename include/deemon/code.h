@@ -461,12 +461,10 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id); /* DDI symb
 #define DeeDDI_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeDDI_Type)
 DDATDEF DeeTypeObject DeeDDI_Type;
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* A stub ddi-object that contains no actual information. */
 #ifndef GUARD_DEEMON_EXECUTE_DDI_C
-INTDEF DeeDDIObject empty_ddi;
+DDATDEF DeeDDIObject DeeDDI_Empty;
 #endif /* !GUARD_DEEMON_EXECUTE_DDI_C */
-#endif /* CONFIG_BUILDING_DEEMON */
 
 
 

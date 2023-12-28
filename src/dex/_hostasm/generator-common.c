@@ -633,11 +633,11 @@ done:
 PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
 try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
                                 Dee_host_register_t regno) {
-#define DEE_MEMSTATE_EXTRA_LOCAL_A_MIN DEE_MEMSTATE_EXTRA_LOCAL_A_THIS
-#define DEE_MEMSTATE_EXTRA_LOCAL_A_MAX DEE_MEMSTATE_EXTRA_LOCAL_A_KW
+#define MEMSTATE_XLOCAL_A_MIN MEMSTATE_XLOCAL_A_THIS
+#define MEMSTATE_XLOCAL_A_MAX MEMSTATE_XLOCAL_A_KW
 	size_t i, xloc_base = self->fg_assembler->fa_localc;
 	struct Dee_memstate *state = self->fg_state;
-	for (i = DEE_MEMSTATE_EXTRA_LOCAL_A_MIN; i <= DEE_MEMSTATE_EXTRA_LOCAL_A_MAX; ++i) {
+	for (i = MEMSTATE_XLOCAL_A_MIN; i <= MEMSTATE_XLOCAL_A_MAX; ++i) {
 		struct Dee_memloc *xloc = &state->ms_localv[xloc_base + i];
 		if (xloc->ml_type == MEMLOC_TYPE_HREG &&
 		    xloc->ml_value.v_hreg.r_regno == regno) {
@@ -645,21 +645,21 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 			Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
 			size_t true_argi = 0;
 			switch (i) {
-			case DEE_MEMSTATE_EXTRA_LOCAL_A_THIS:
+			case MEMSTATE_XLOCAL_A_THIS:
 				ASSERT(cc & HOSTFUNC_CC_F_THIS);
 				break;
-			case DEE_MEMSTATE_EXTRA_LOCAL_A_ARGC:
+			case MEMSTATE_XLOCAL_A_ARGC:
 				ASSERT(!(cc & HOSTFUNC_CC_F_TUPLE));
 				if (cc & HOSTFUNC_CC_F_THIS)
 					++true_argi;
 				break;
-			case DEE_MEMSTATE_EXTRA_LOCAL_A_ARGV: /* or `DEE_MEMSTATE_EXTRA_LOCAL_A_ARGS' */
+			case MEMSTATE_XLOCAL_A_ARGV: /* or `MEMSTATE_XLOCAL_A_ARGS' */
 				if (cc & HOSTFUNC_CC_F_THIS)
 					++true_argi;
 				if (!(cc & HOSTFUNC_CC_F_TUPLE))
 					++true_argi;
 				break;
-			case DEE_MEMSTATE_EXTRA_LOCAL_A_KW:
+			case MEMSTATE_XLOCAL_A_KW:
 				ASSERT(cc & HOSTFUNC_CC_F_KW);
 				if (cc & HOSTFUNC_CC_F_THIS)
 					++true_argi;
@@ -975,10 +975,10 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 
 	/* Location isn't bound -> generate code to throw an exception. */
 	if (opt_endwrite_before_throw != NULL &&
-	    unlikely(Dee_function_generator_grwlock_endwrite(self, opt_endwrite_before_throw)))
+	    unlikely(Dee_function_generator_grwlock_endwrite_const(self, opt_endwrite_before_throw)))
 		goto err;
 	if (opt_endread_before_throw != NULL &&
-	    unlikely(Dee_function_generator_grwlock_endread(self, opt_endread_before_throw)))
+	    unlikely(Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw)))
 		goto err;
 	switch (kind) {
 	case ASM_LOCAL:
@@ -1070,14 +1070,29 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self,
                                   struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
-	struct Dee_host_symbol sym;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-	sym.hs_type = DEE_HOST_SYMBOL_SECT;
-	sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-	sym.hs_value.sv_sect.ss_off  = 0;
-	return _Dee_function_generator_gjz(self, loc, &sym);
+#ifdef DEE_HOST_RELOCVALUE_SECT
+	{
+		struct Dee_host_symbol sym;
+		sym.hs_type = DEE_HOST_SYMBOL_SECT;
+		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym.hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjz(self, loc, &sym);
+	}
+#else /* DEE_HOST_RELOCVALUE_SECT */
+	{
+		struct Dee_host_symbol *sym;
+		sym = Dee_function_generator_newsym(self);
+		if unlikely(!sym)
+			goto err;
+		sym->hs_type = DEE_HOST_SYMBOL_SECT;
+		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym->hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjz(self, loc, sym);
+	}
+#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }
@@ -1086,14 +1101,29 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self,
                                    struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
-	struct Dee_host_symbol sym;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-	sym.hs_type = DEE_HOST_SYMBOL_SECT;
-	sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-	sym.hs_value.sv_sect.ss_off  = 0;
-	return _Dee_function_generator_gjnz(self, loc, &sym);
+#ifdef DEE_HOST_RELOCVALUE_SECT
+	{
+		struct Dee_host_symbol sym;
+		sym.hs_type = DEE_HOST_SYMBOL_SECT;
+		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym.hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjnz(self, loc, &sym);
+	}
+#else /* DEE_HOST_RELOCVALUE_SECT */
+	{
+		struct Dee_host_symbol *sym;
+		sym = Dee_function_generator_newsym(self);
+		if unlikely(!sym)
+			goto err;
+		sym->hs_type = DEE_HOST_SYMBOL_SECT;
+		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym->hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjnz(self, loc, sym);
+	}
+#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }
@@ -1101,14 +1131,29 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gjmp_except(struct Dee_function_generator *__restrict self) {
 	struct Dee_except_exitinfo *info;
-	struct Dee_host_symbol sym;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-	sym.hs_type = DEE_HOST_SYMBOL_SECT;
-	sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-	sym.hs_value.sv_sect.ss_off  = 0;
-	return _Dee_function_generator_gjmp(self, &sym);
+#ifdef DEE_HOST_RELOCVALUE_SECT
+	{
+		struct Dee_host_symbol sym;
+		sym.hs_type = DEE_HOST_SYMBOL_SECT;
+		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym.hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjmp(self, &sym);
+	}
+#else /* DEE_HOST_RELOCVALUE_SECT */
+	{
+		struct Dee_host_symbol *sym;
+		sym = Dee_function_generator_newsym(self);
+		if unlikely(!sym)
+			goto err;
+		sym->hs_type = DEE_HOST_SYMBOL_SECT;
+		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
+		sym->hs_value.sv_sect.ss_off  = 0;
+		return _Dee_function_generator_gjmp(self, sym);
+	}
+#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }
@@ -1291,8 +1336,7 @@ Dee_function_generator_gind(struct Dee_function_generator *__restrict self,
 		loc->ml_value.v_hreg.r_regno = temp_regno;
 		loc->ml_value.v_hreg.r_off   = 0;
 		loc->ml_value.v_hreg.r_voff  = 0;
-		if ((loc >= state->ms_stackv && loc < state->ms_stackv + state->ms_stackc) ||
-		    (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc))
+		if (Dee_memstate_isinstate(state, loc))
 			Dee_memstate_incrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
 	}	break;
 
@@ -1365,8 +1409,7 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
 	}
 
 	/* Adjust register usage if `loc' is tracked by the memory state. */
-	is_in_state = (loc >= state->ms_stackv && loc < state->ms_stackv + state->ms_stackc) ||
-	              (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc);
+	is_in_state = Dee_memstate_isinstate(state, loc);
 	if (is_in_state && MEMLOC_TYPE_HASREG(loc->ml_type))
 		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
 
@@ -1446,9 +1489,7 @@ Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
 	}
 
 	/* Adjust register usage if `loc' is tracked by the memory state. */
-	if (MEMLOC_TYPE_HASREG(loc->ml_type) &&
-	    ((loc >= state->ms_stackv && loc < state->ms_stackv + state->ms_stackc) ||
-	     (loc >= state->ms_localv && loc < state->ms_localv + state->ms_localc)))
+	if (MEMLOC_TYPE_HASREG(loc->ml_type) && Dee_memstate_isinstate(state, loc))
 		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
 
 	/* Remember that `loc' now lies on-stack (with an offset of `0') */
@@ -1462,7 +1503,7 @@ err:
 
 
 /* Check if `src_loc' differs from `dst_loc', and if so: move `src_loc' *into* `dst_loc'. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_gmov_loc2loc(struct Dee_function_generator *__restrict self,
                                     struct Dee_memloc *src_loc,
                                     struct Dee_memloc const *dst_loc) {
@@ -1562,6 +1603,44 @@ Dee_function_generator_gmov_loc2locind(struct Dee_function_generator *__restrict
 err:
 	return -1;
 }
+
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self,
+                                          Dee_atomic_rwlock_t *__restrict lock) {
+	struct Dee_memloc loc;
+	loc.ml_type = MEMLOC_TYPE_CONST;
+	loc.ml_value.v_const = (DeeObject *)lock;
+	return Dee_function_generator_grwlock_read(self, &loc);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_grwlock_write_const(struct Dee_function_generator *__restrict self,
+                                           Dee_atomic_rwlock_t *__restrict lock) {
+	struct Dee_memloc loc;
+	loc.ml_type = MEMLOC_TYPE_CONST;
+	loc.ml_value.v_const = (DeeObject *)lock;
+	return Dee_function_generator_grwlock_write(self, &loc);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_grwlock_endread_const(struct Dee_function_generator *__restrict self,
+                                             Dee_atomic_rwlock_t *__restrict lock) {
+	struct Dee_memloc loc;
+	loc.ml_type = MEMLOC_TYPE_CONST;
+	loc.ml_value.v_const = (DeeObject *)lock;
+	return Dee_function_generator_grwlock_endread(self, &loc);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_grwlock_endwrite_const(struct Dee_function_generator *__restrict self,
+                                              Dee_atomic_rwlock_t *__restrict lock) {
+	struct Dee_memloc loc;
+	loc.ml_type = MEMLOC_TYPE_CONST;
+	loc.ml_value.v_const = (DeeObject *)lock;
+	return Dee_function_generator_grwlock_endwrite(self, &loc);
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

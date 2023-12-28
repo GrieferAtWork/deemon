@@ -607,14 +607,14 @@ PRIVATE int ATTR_FASTCALL
 set_prefix_object_fast(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
-                       DREF DeeObject *__restrict value)
+                       /*inhert(always)*/ DREF DeeObject *__restrict value)
 #else /* EXEC_FAST */
 #define set_prefix_object(v) unlikely(set_prefix_object_safe(frame, code, sp, v))
 PRIVATE int ATTR_FASTCALL
 set_prefix_object_safe(struct code_frame *__restrict frame,
                        DeeCodeObject *__restrict code,
                        DeeObject **__restrict sp,
-                       DREF DeeObject *__restrict value)
+                       /*inhert(always)*/ DREF DeeObject *__restrict value)
 #endif /* !EXEC_FAST */
 {
 	DREF DeeObject *old_value;
@@ -3807,7 +3807,7 @@ do_setmember_r:
 
 		{
 			DREF DeeObject *call_object, *call_result;
-			RAW_TARGET(ASM_CALL_EXTERN)
+		RAW_TARGET(ASM_CALL_EXTERN)
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
 do_call_extern:
@@ -3839,7 +3839,7 @@ do_object_call_imm:
 				POPREF();
 			PUSH(call_result);
 			DISPATCH();
-			RAW_TARGET(ASM_CALL_GLOBAL)
+		RAW_TARGET(ASM_CALL_GLOBAL)
 			imm_val = READ_imm8();
 do_call_global:
 			ASSERT_GLOBALimm();
@@ -3850,7 +3850,7 @@ do_call_global:
 			if unlikely(!call_object)
 				goto err_unbound_global;
 			goto do_object_call_imm;
-			RAW_TARGET(ASM_CALL_LOCAL)
+		RAW_TARGET(ASM_CALL_LOCAL)
 			imm_val = READ_imm8();
 do_call_local:
 			ASSERT_LOCALimm();
@@ -6671,7 +6671,7 @@ do_prefix_push_arg:
 					DREF DeeObject *varkwds;
 					/* Special case: Varargs. */
 #ifdef EXEC_SAFE
-					if (!(code->co_flags & CODE_FVARKWDS))
+					if unlikely(!(code->co_flags & CODE_FVARKWDS))
 						goto err_requires_varkwds_code;
 #else /* EXEC_SAFE */
 					ASSERT(code->co_flags & CODE_FVARKWDS);

@@ -630,7 +630,7 @@ INTERN DEFINE_CODE(empty_code_head,
                    /* co_defaultv:  */ NULL,
                    /* co_staticv:   */ NULL,
                    /* co_exceptv:   */ NULL,
-                   /* co_ddi:       */ &empty_ddi,
+                   /* co_ddi:       */ &DeeDDI_Empty,
                    /* co_code:      */ { ASM_RET_NONE });
 
 
@@ -1784,7 +1784,7 @@ got_flag:
 		}
 	}
 	if (DeeNone_Check(ddi)) {
-		ddi = &empty_ddi;
+		ddi = &DeeDDI_Empty;
 	} else {
 		if (DeeObject_AssertTypeExact(ddi, &DeeDDI_Type))
 			goto err_r_except;
@@ -2005,7 +2005,7 @@ code_printrepr(DeeCodeObject *__restrict self,
 			DO(DeeFormat_PRINT(printer, arg, "\""));
 		}
 	}
-	if (self->co_ddi != &empty_ddi) {
+	if (self->co_ddi != &DeeDDI_Empty) {
 		DO(DeeFormat_Printf(printer, arg,
 		                    ", ddi: %r",
 		                    self->co_ddi));

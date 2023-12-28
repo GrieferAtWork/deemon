@@ -1391,6 +1391,8 @@
 #define CASE(x) case x
 #define TARGET(...)
 #define XTARGET(...)
+#define RAW_TARGET(...)
+#define PREFIX_TARGET(...)
 #define CC
 #define VCC
 #define PRIVATE_AST_GENERATOR_UNPACK_ARGS(...) (__VA_ARGS__,char const*file,int line)

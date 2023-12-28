@@ -364,8 +364,7 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
 		uint16_t ot_bound = other_loc->ml_flags & MEMLOC_M_LOCAL_BSTATE;
 		ASSERTF(my_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
 		ASSERTF(ot_bound != (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND), "Can't be both bound and unbound at once");
-		nw_bound = ((my_bound & ot_bound) & MEMLOC_F_LOCAL_BOUND) |
-		           ((my_bound | ot_bound) & MEMLOC_F_LOCAL_UNBOUND);
+		nw_bound = (my_bound & ot_bound) & (MEMLOC_F_LOCAL_BOUND | MEMLOC_F_LOCAL_UNBOUND);
 		if (my_bound != nw_bound) {
 			loc->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
 			loc->ml_flags |= nw_bound;

@@ -1364,10 +1364,10 @@ err_compiler_basefile:
 		init_code->co_staticv  = NULL;
 		init_code->co_exceptv  = NULL;
 		init_code->co_keywords = NULL;
-		init_code->co_ddi      = &empty_ddi;
+		init_code->co_ddi      = &DeeDDI_Empty;
 		init_code->co_code[0]  = ASM_UD;
 		Dee_Incref((DeeObject *)self);
-		Dee_Incref(&empty_ddi);
+		Dee_Incref(&DeeDDI_Empty);
 		DeeObject_Init(init_code, &DeeCode_Type);
 		DeeGC_Track((DeeObject *)init_code);
 		self->im_module.mo_root = init_code; /* Inherit reference. */

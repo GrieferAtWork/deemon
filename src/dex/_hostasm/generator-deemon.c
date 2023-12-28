@@ -411,7 +411,7 @@ err:
 
 /* For the non-file-print instructions, load the `stdout' file stream only the first
  * time a print-like instruction is reached. We then keep that object in a hidden
- * local `DEE_MEMSTATE_EXTRA_LOCAL_STDOUT' until the end of the basic block, or until
+ * local `MEMSTATE_XLOCAL_STDOUT' until the end of the basic block, or until
  * a chunk of at least `CONFIG_HOSTASM_STDOUT_CACHE_MAXINSTR_N' non-print-to-stdout
  * instructions are about to be compiled.
  *
@@ -423,11 +423,9 @@ Dee_function_generator_gen_stdout_print(struct Dee_function_generator *__restric
                                         Dee_instruction_t const *instr,
                                         Dee_instruction_t const **p_next_instr,
                                         bool repr) {
-	size_t stdout_lid;
 	Dee_instruction_t const *iter, *print_block_end, *print_block_end_limit;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
-	stdout_lid = (size_t)self->fg_assembler->fa_localc + DEE_MEMSTATE_EXTRA_LOCAL_STDOUT;
 
 	/* Figure out where we want to end the print-block. */
 	print_block_end_limit = self->fg_block->bb_deemon_end;
@@ -458,18 +456,6 @@ Dee_function_generator_gen_stdout_print(struct Dee_function_generator *__restric
 
 	/* If the stdout lid hasn't been loaded yet, do so now.
 	 * Note that it should always be not-yet-loaded! */
-	ASSERT(stdout_lid < self->fg_state->ms_localc);
-	if likely(!(self->fg_state->ms_localv[stdout_lid].ml_flags & MEMLOC_F_LOCAL_BOUND)) {
-		if unlikely(Dee_function_generator_vpush_imm32(self, DEE_STDOUT))
-			goto err;
-		if unlikely(Dee_function_generator_vcallapi(self, &DeeFile_GetStd, VCALLOP_CC_OBJECT, 1))
-			goto err;
-		if unlikely(Dee_function_generator_vpop_local(self, stdout_lid))
-			goto err;
-	}
-	ASSERT(self->fg_state->ms_localv[stdout_lid].ml_type != MEMLOC_TYPE_UNALLOC);
-	ASSERT(self->fg_state->ms_localv[stdout_lid].ml_flags & MEMLOC_F_LOCAL_BOUND);
-	ASSERT(!(self->fg_state->ms_localv[stdout_lid].ml_flags & MEMLOC_F_NOREF));
 	for (iter = instr; iter < print_block_end;) {
 		int temp;
 		Dee_instruction_t const *next = DeeAsm_NextInstr(iter);
@@ -479,7 +465,7 @@ Dee_function_generator_gen_stdout_print(struct Dee_function_generator *__restric
 		switch (opcode) {
 		CASE_ASM_PRINT:
 do_handle_ASM_PRINT:
-			if unlikely(Dee_function_generator_vpush_local(self, NULL, stdout_lid))
+			if unlikely(Dee_function_generator_vpush_xlocal(self, iter, MEMSTATE_XLOCAL_STDOUT))
 				goto err;
 			temp = gen_print_with_stdout_in_vtop(self, iter, opcode, repr);
 			break;
@@ -493,6 +479,7 @@ do_handle_ASM_PRINT:
 				repr = true;
 				opcode = next_opcode;
 				++iter;
+				next = DeeAsm_NextInstr(iter);
 				goto do_handle_ASM_PRINT;
 			default:
 				break;
@@ -510,7 +497,7 @@ do_handle_ASM_PRINT:
 		repr = false;
 	}
 	*p_next_instr = iter;
-	return Dee_function_generator_vdel_local(self, stdout_lid); /* Delete the stdout-cache */
+	return Dee_function_generator_vdel_xlocal(self, MEMSTATE_XLOCAL_STDOUT); /* Delete the stdout-cache */
 err:
 	return -1;
 }
@@ -943,8 +930,10 @@ do_jcc:
 	case ASM16_POP_GLOBAL:
 		return Dee_function_generator_vpop_global(self, UNALIGNED_GETLE16(instr + 2));
 
-	//TODO: case ASM_PUSH_VARARGS:
-	//TODO: case ASM_PUSH_VARKWDS:
+	case ASM_PUSH_VARARGS:
+		return Dee_function_generator_vpush_xlocal(self, instr, MEMSTATE_XLOCAL_VARARGS);
+	case ASM_PUSH_VARKWDS:
+		return Dee_function_generator_vpush_xlocal(self, instr, MEMSTATE_XLOCAL_VARKWDS);
 
 	case ASM_PUSH_STATIC:
 		return Dee_function_generator_vpush_static(self, instr[1]);
@@ -2311,7 +2300,7 @@ do_jcc:
 
 				DO(Dee_function_generator_vref(self));                                /* ..., ref:value */
 				DO(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]));   /* ..., ref:value, p_global */
-				DO(Dee_function_generator_grwlock_write(self, &mod->mo_lock));        /* - */
+				DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));  /* - */
 				DO(Dee_function_generator_vind(self, 0));                             /* ..., ref:value, *p_global */
 				DO(Dee_function_generator_vreg(self, NULL));                          /* ..., ref:value, old_value */
 				ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF); /* - */
@@ -2323,7 +2312,7 @@ do_jcc:
 				ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF)); /* - */
 				DO(Dee_function_generator_gmov_loc2constind(self, Dee_function_generator_vtop(self), &mod->mo_globalv[gid], 0)); /* - */
 				Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;        /* ..., ref:old_value, value */
-				DO(Dee_function_generator_grwlock_endwrite(self, &mod->mo_lock));     /* - */
+				DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* - */
 				DO(Dee_function_generator_vpop(self));                                /* ..., ref:old_value */
 
 				/* Do post-processing, now that the stack looks like: a, b, c, old_value */
@@ -2537,18 +2526,13 @@ do_jcc:
 		}	break;
 
 		default:
-			DeeError_Throwf(&DeeError_IllegalInstruction,
-			                "Opcode not supported: %#.2" PRFx16 ":%#.2" PRFx16,
-			                opcode, prefix_opcode);
-			goto err;
+			goto unsupported_opcode;
 		}
 	}	break;
 
 	default:
-		DeeError_Throwf(&DeeError_IllegalInstruction,
-		                "Opcode not supported: %#.2" PRFx16,
-		                opcode);
-		goto err;
+unsupported_opcode:
+		return err_unsupported_opcode(self->fg_assembler->fa_code, instr);
 	}
 	return 0;
 err:

@@ -610,7 +610,7 @@ DeeCode_FindDDI(DeeObject *__restrict self,
 }
 
 
-INTERN DEFINE_DDI(empty_ddi,
+PUBLIC DEFINE_DDI(DeeDDI_Empty,
                   /* d_strings: */ NULL,
                   /* d_strtab:  */ (DeeStringObject *)Dee_EmptyString,
                   /* d_exdat:   */ NULL,
@@ -632,7 +632,7 @@ INTERN DEFINE_DDI(empty_ddi,
 
 PRIVATE NONNULL((1)) void DCALL
 ddi_fini(DeeDDIObject *__restrict self) {
-	ASSERT(self != (DeeDDIObject *)&empty_ddi);
+	ASSERT(self != (DeeDDIObject *)&DeeDDI_Empty);
 	Dee_Free((void *)self->d_strings);
 	Dee_Free((void *)self->d_exdat);
 	Dee_Decref(self->d_strtab);
@@ -649,7 +649,7 @@ PRIVATE struct type_member tpconst ddi_members[] = {
 };
 
 PRIVATE WUNUSED DREF DeeDDIObject *DCALL ddi_ctor(void) {
-	return_reference_((DREF DeeDDIObject *)&empty_ddi);
+	return_reference_((DREF DeeDDIObject *)&DeeDDI_Empty);
 }
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL

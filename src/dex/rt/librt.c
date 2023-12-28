@@ -492,12 +492,12 @@ PRIVATE DEFINE_CODE(
 	/* co_argc_max : */ COMPILER_LENOF(varkwds_keywords),
 	/* co_framesize: */ 1 * sizeof(DREF DeeObject *),
 	/* co_codebytes: */ 2,
-	/* co_module   : */ NULL, /* WARNING: NULL here is non-conforming! */
+	/* co_module   : */ &DeeModule_Deemon,
 	/* co_keywords : */ varkwds_keywords,
 	/* co_defaultv : */ NULL,
 	/* co_staticv  : */ NULL,
 	/* co_exceptv  : */ NULL,
-	/* co_ddi      : */ NULL, /* WARNING: NULL here is non-conforming! */
+	/* co_ddi      : */ &DeeDDI_Empty,
 {
 	ASM_PUSH_VARKWDS, /* push varkwds  (This is the only thing we're actually interested in) */
 	ASM_RET           /* ret  pop */

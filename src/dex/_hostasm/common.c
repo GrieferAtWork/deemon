@@ -26,6 +26,7 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/alloc.h>
+#include <deemon/asm.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 
@@ -99,6 +100,7 @@ Dee_host_reloc_setsym(struct Dee_host_reloc *__restrict self,
 		self->hr_vtype = DEE_HOST_RELOCVALUE_ABS;
 		self->hr_value.rv_abs = sym->hs_value.sv_abs;
 		return;
+#ifdef DEE_HOST_RELOCVALUE_SECT
 	case DEE_HOST_SYMBOL_SECT:
 		if (sym->hs_value.sv_sect.ss_off == 0) {
 			self->hr_vtype = DEE_HOST_RELOCVALUE_SECT;
@@ -106,6 +108,7 @@ Dee_host_reloc_setsym(struct Dee_host_reloc *__restrict self,
 			return;
 		}
 		break;
+#endif /* DEE_HOST_RELOCVALUE_SECT */
 	default: break;
 	}
 	self->hr_vtype = DEE_HOST_RELOCVALUE_SYM;
@@ -152,14 +155,32 @@ Dee_host_reloc_value(struct Dee_host_reloc const *__restrict self) {
 		return Dee_host_symbol_value(self->hr_value.rv_sym);
 	case DEE_HOST_RELOCVALUE_ABS:
 		return (uintptr_t)self->hr_value.rv_abs;
+#ifdef DEE_HOST_RELOCVALUE_SECT
 	case DEE_HOST_RELOCVALUE_SECT:
 		return (uintptr_t)self->hr_value.rv_sect->hs_base;
+#endif /* DEE_HOST_RELOCVALUE_SECT */
 	default: __builtin_unreachable();
 	}
 }
 
 
 
+INTERN NONNULL((1)) void DCALL
+Dee_host_section_fini(struct Dee_host_section *__restrict self) {
+#ifdef HOSTASM_HAVE_SHRINKJUMPS
+	if (TAILQ_ISBOUND(self, hs_link)) {
+		struct Dee_host_symbol *sym = self->hs_symbols;
+		while (sym) {
+			struct Dee_host_symbol *next;
+			next = sym->_hs_next;
+			_Dee_host_symbol_free(sym);
+			sym = next;
+		}
+	}
+#endif /* HOSTASM_HAVE_SHRINKJUMPS */
+	Dee_Free(self->hs_start);
+	Dee_Free(self->hs_relv);
+}
 
 /* Ensure that at least `num_bytes' of host text memory are available.
  * @return: 0 : Success
@@ -714,11 +735,44 @@ INTERN ATTR_COLD int DCALL err_illegal_cid(uint16_t cid) {
 INTERN ATTR_COLD int DCALL err_illegal_rid(uint16_t rid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal reference ID: %#" PRFx16, rid);
 }
+
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_illegal_gid(struct Dee_module_object *__restrict mod, uint16_t gid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal global ID in %r: %#" PRFx16, mod, gid);
 }
 
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+err_unsupported_opcode(DeeCodeObject *__restrict code, Dee_instruction_t const *instr) {
+	uint16_t opcode;
+	char const *code_name = DeeCode_NAME(code);
+	if (!instr) {
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Unsupported opcode in '%s'",
+		                       code_name);
+	}
+	opcode = instr[0];
+	if (ASM_ISEXTENDED(opcode))
+		opcode = (opcode << 8) | instr[1];
+	if (!ASM_ISPREFIX(opcode & 0xff)) {
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Unsupported opcode %#.2" PRFx16 " at +%.4" PRFx32 " in '%s'",
+		                       opcode, (Dee_code_addr_t)(instr - code->co_code), code_name);
+	} else {
+		uint16_t opcode2;
+		Dee_instruction_t const *instr2;
+		instr2 = instr + 1;
+		if (opcode > 0xff)
+			++instr2;
+		opcode2 = instr2[0];
+		if (ASM_ISEXTENDED(opcode2))
+			opcode2 = (opcode2 << 8) | instr2[1];
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Unsupported opcode %#.2" PRFx16 " %.2" PRFx16 " at +%.4" PRFx32 " in '%s'",
+		                       opcode, opcode2,
+		                       (Dee_code_addr_t)(instr - code->co_code),
+		                       code_name);
+	}
+}
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

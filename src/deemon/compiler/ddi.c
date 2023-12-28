@@ -294,7 +294,7 @@ INTERN WUNUSED DREF DeeDDIObject *DCALL ddi_compile(void) {
 	struct ascii_printer strtab;
 	/* Check for simple case: no DDI information needs to be generated. */
 	if (current_assembler.a_flag & ASM_FNODDI)
-		return_reference_(&empty_ddi);
+		return_reference_(&DeeDDI_Empty);
 	/* Start out with a buffer that should already be sufficient for most cases. */
 	result_size = (current_assembler.a_sect[0].sec_iter -
 	               current_assembler.a_sect[0].sec_begin) *

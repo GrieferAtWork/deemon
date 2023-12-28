@@ -208,9 +208,6 @@ END(_impl_assert_failed)
 #define DEE_STDOUT 1
 #define DEE_STDERR 2
 
-#define ATOMIC_RWLOCK_RMASK 0x7fffffff
-#define ATOMIC_RWLOCK_WFLAG 0x80000000
-
 #define ITER_DONE                 -1
 #define CODE_FRAME_NOT_EXECUTING  -1
 
@@ -896,22 +893,8 @@ IF_USE_CFI(.cfi_restore_state)
 .if \eax_is_zero == 0
 	xorl  %eax, %eax
 .endif
-	movl  $(ATOMIC_RWLOCK_WFLAG), \clobber
+	movl  $(-1), \clobber
 	LOCK_PREFIX cmpxchgl \clobber, \self
-.endm
-
-/* WARNING: Clobber: \clobber, %eax
- * @return: true:  ZF=1
- * @return: false: ZF=0 */
-.macro rwlock_tryread self, clobber=%ecx
-995:
-	movl  \self, %eax
-	testl $(ATOMIC_RWLOCK_WFLAG), %eax
-	jnz   994f
-	leal  1(%eax), \clobber
-	LOCK_PREFIX cmpxchgl \clobber, \self
-	jnz   995b
-994:
 .endm
 
 
@@ -931,15 +914,24 @@ IF_USE_CFI(.cfi_restore_state)
 
 /* WARNING: Clobber: \clobber, %eax */
 .macro rwlock_read self, clobber=%ecx
-996:
-	rwlock_tryread \self, \clobber
+993:
+	movl  \self, %eax
+	cmpl  $(-1), %eax
 #ifdef ARCH_YIELD
-	jz     997f
-	ARCH_YIELD
-	jmp    996b
-997:
+	je    994f
 #else /* ARCH_YIELD */
-	jnz    996b
+	je    993b
+#endif /* !ARCH_YIELD */
+	leal  1(%eax), \clobber
+	LOCK_PREFIX cmpxchgl \clobber, \self
+#ifdef ARCH_YIELD
+994:
+	jz    995f
+	ARCH_YIELD
+	jmp   993b
+995:
+#else /* ARCH_YIELD */
+	jnz   993b
 #endif /* !ARCH_YIELD */
 .endm
 

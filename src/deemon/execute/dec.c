@@ -2581,8 +2581,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		}
 		result->co_ddi = ddi; /* Inherit */
 	} else {
-		result->co_ddi = &empty_ddi;
-		Dee_Incref(&empty_ddi);
+		result->co_ddi = &DeeDDI_Empty;
+		Dee_Incref(&DeeDDI_Empty);
 	}
 
 	/* Load keyword information. */

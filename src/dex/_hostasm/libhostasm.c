@@ -38,7 +38,6 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DeeFunctionObject *func;
 	DeeTupleObject *args = (DeeTupleObject *)Dee_EmptyTuple;
-	struct Dee_function_assembler assembler;
 	if (DeeArg_Unpack(argc, argv, "o|o:test_compile_and_run", &func, &args))
 		goto err;
 	if (DeeObject_AssertTypeExact(func, &DeeFunction_Type))
@@ -47,20 +46,8 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 		goto err;
 
 	/* Assemble the function. */
-	Dee_function_assembler_init(&assembler, func, HOSTFUNC_CC_CALL);
-	if unlikely(Dee_function_assembler_loadblocks(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_compileblocks(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_trimdead(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_compilemorph(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_ordersections(&assembler))
-		goto err_assembler;
-	if unlikely(Dee_function_assembler_output(&assembler, &hfunc))
-		goto err_assembler;
-	Dee_function_assembler_fini(&assembler);
+	if unlikely(Dee_assemble(func, &hfunc, HOSTFUNC_CC_CALL, DEE_FUNCTION_ASSEMBLER_F_NORMAL))
+		goto err;
 
 	/* Call the function. */
 	result = (*hfunc.hf_entry.hfe_call)(DeeTuple_SIZE(args),
@@ -68,8 +55,6 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	Dee_hostfunc_fini(&hfunc);
 
 	return result;
-err_assembler:
-	Dee_function_assembler_fini(&assembler);
 err:
 	return NULL;
 }
