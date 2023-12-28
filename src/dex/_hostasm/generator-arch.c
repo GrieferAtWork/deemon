@@ -790,7 +790,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 		enter_rel = Dee_host_section_newhostrel(sect);
 		if unlikely(!enter_rel)
 			goto err;
-		enter_rel->hr_offset = p_off(sect);
+		enter_rel->hr_offset = p_off(sect) - 4;
 		enter_rel->hr_rtype  = DEE_HOST_RELOC_REL32;
 		enter_rel->hr_vtype  = DEE_HOST_RELOCVALUE_SECT;
 		enter_rel->hr_value.rv_sect = cold;
@@ -812,10 +812,10 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 			goto err;
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf(".section .text\n"));
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
-		leave_rel->hr_offset = p_off(cold);
-		enter_rel->hr_rtype  = DEE_HOST_RELOC_REL32;
-		enter_rel->hr_vtype  = DEE_HOST_RELOCVALUE_SECT;
-		enter_rel->hr_value.rv_sect = sect;
+		leave_rel->hr_offset = p_off(cold) - 4;
+		leave_rel->hr_rtype  = DEE_HOST_RELOC_REL32;
+		leave_rel->hr_vtype  = DEE_HOST_RELOCVALUE_SECT;
+		leave_rel->hr_value.rv_sect = sect;
 	}
 	return 0;
 err:

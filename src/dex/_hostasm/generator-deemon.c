@@ -1020,17 +1020,17 @@ do_jcc:
 	}	break;
 	
 	case ASM_CONCAT:
-		DO(Dee_function_generator_vswap(self));                                                               /* rhs, lhs */
-		DO(Dee_function_generator_vref(self));                                                                /* rhs, ref:lhs */
-		DO(Dee_function_generator_vswap(self));                                                               /* ref:lhs, rhs */
+		DO(Dee_function_generator_vswap(self));                                         /* rhs, lhs */
+		DO(Dee_function_generator_vref(self));                                          /* rhs, ref:lhs */
+		DO(Dee_function_generator_vswap(self));                                         /* ref:lhs, rhs */
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_ConcatInherited, VCALLOP_CC_RAWINT_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, result */
-		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self)));                       /* ([valid_if(false)] ref:lhs), rhs, result */
-		DO(Dee_function_generator_vlrot(self, 3));                                                            /* rhs, result, ([valid_if(false)] REF:lhs) */
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));                              /* ... */
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;                                        /* rhs, result, ([valid_if(false)] lhs) */
-		DO(Dee_function_generator_vpop(self));                                                                /* rhs, result */
-		DO(Dee_function_generator_vswap(self));                                                               /* result, rhs */
-		return Dee_function_generator_vpop(self);                                                             /* result */
+		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self))); /* ([valid_if(false)] ref:lhs), rhs, result */
+		DO(Dee_function_generator_vlrot(self, 3));                                      /* rhs, result, ([valid_if(false)] REF:lhs) */
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));        /* ... */
+		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;                  /* rhs, result, ([valid_if(false)] lhs) */
+		DO(Dee_function_generator_vpop(self));                                          /* rhs, result */
+		DO(Dee_function_generator_vswap(self));                                         /* result, rhs */
+		return Dee_function_generator_vpop(self);                                       /* result */
 
 	case ASM_EXTEND: {
 		uint8_t i, n = instr[1];
@@ -1316,8 +1316,28 @@ do_jcc:
 	//TODO: case ASM_GETCMEMBER_R:
 	//TODO: case ASM16_GETCMEMBER:
 	//TODO: case ASM16_GETCMEMBER_R:
-	//TODO: case ASM_CALLCMEMBER_THIS_R:
-	//TODO: case ASM16_CALLCMEMBER_THIS_R:
+
+	case ASM_CALLCMEMBER_THIS_R: {
+		DREF DeeObject *callback;
+		DeeObject *type;
+		uint16_t type_rid;
+		uint16_t addr;
+		uint8_t argc;
+		type_rid = instr[1];
+		addr     = instr[2];
+		argc     = instr[3];
+		__IF0 {
+	case ASM16_CALLCMEMBER_THIS_R:
+			type_rid = UNALIGNED_GETLE16(instr + 2);
+			addr     = UNALIGNED_GETLE16(instr + 4);
+			argc     = instr[6];
+		}
+		if unlikely(type_rid >= self->fg_assembler->fa_code->co_refc)
+			return err_illegal_rid(type_rid);
+		type = self->fg_assembler->fa_function->fo_refv[type_rid];
+		callback = DeeClass_GetMemberSafe((DeeTypeObject *)type, addr);
+
+	}	break;
 
 	case ASM_FUNCTION_C:
 	case ASM16_FUNCTION_C:

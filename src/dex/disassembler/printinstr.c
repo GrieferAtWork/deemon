@@ -1752,7 +1752,7 @@ do_prefix_mnemonic_pop:
 do_prefix_mnemonic_simm8:
 			print(mnemonic, strlen(mnemonic));
 			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
-			printf(", $%d", (int)READ_Simm8(iter));
+			printf(", " PREFIX_INTEGERAL "%d", (int)READ_Simm8(iter));
 			goto done;
 
 		case ASM_ADD_IMM32:
@@ -1760,7 +1760,7 @@ do_prefix_mnemonic_simm8:
 do_prefix_mnemonic_imm32:
 			print(mnemonic, strlen(mnemonic));
 			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
-			printf(", $%#I32x", READ_imm32(iter));
+			printf(", " PREFIX_INTEGERAL "%#I32x", READ_imm32(iter));
 			goto done;
 
 		case ASM_SUB_SIMM8:
@@ -1788,7 +1788,7 @@ do_prefix_mnemonic_imm32:
 do_prefix_mnemonic_imm8:
 			print(mnemonic, strlen(mnemonic));
 			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
-			printf(", $%u", (unsigned int)READ_imm8(iter));
+			printf(", " PREFIX_INTEGERAL "%u", (unsigned int)READ_imm8(iter));
 			goto done;
 
 		case ASM_SHR_IMM8:

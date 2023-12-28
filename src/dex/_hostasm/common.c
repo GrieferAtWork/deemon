@@ -113,6 +113,52 @@ Dee_host_reloc_setsym(struct Dee_host_reloc *__restrict self,
 }
 
 
+/* Calculate and return the value of `self'
+ * Only returns valid values after `hs_base' have been assigned. */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+Dee_host_symbol_value(struct Dee_host_symbol const *__restrict self) {
+	ASSERTF(self->hs_type != DEE_HOST_SYMBOL_UNDEF,
+	        "Symbol was never defined");
+	switch (self->hs_type) {
+	case DEE_HOST_SYMBOL_ABS:
+		return (uintptr_t)self->hs_value.sv_abs;
+	case DEE_HOST_SYMBOL_JUMP: {
+		struct Dee_jump_descriptor *jmp = self->hs_value.sv_jump;
+		if (Dee_host_section_islinked(&jmp->jd_morph)) {
+			return (uintptr_t)jmp->jd_morph.hs_base;
+		} else {
+			struct Dee_basic_block *block;
+			block = jmp->jd_to;
+			while (Dee_host_section_islinked(&block->bb_htext)) {
+				ASSERTF(block->bb_next, "symbol points to not-linked block with not successor");
+				block = block->bb_next;
+			}
+			return (uintptr_t)block->bb_htext.hs_base;
+		}
+	}	break;
+	case DEE_HOST_SYMBOL_SECT:
+		return (uintptr_t)self->hs_value.sv_sect.ss_sect->hs_base +
+		       (uintptr_t)self->hs_value.sv_sect.ss_off;
+	default: __builtin_unreachable();
+	}
+}
+
+/* Calculate and return the value of `self'
+ * Only returns valid values after `hs_base' have been assigned. */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+Dee_host_reloc_value(struct Dee_host_reloc const *__restrict self) {
+	switch (self->hr_vtype) {
+	case DEE_HOST_RELOCVALUE_SYM:
+		return Dee_host_symbol_value(self->hr_value.rv_sym);
+	case DEE_HOST_RELOCVALUE_ABS:
+		return (uintptr_t)self->hr_value.rv_abs;
+	case DEE_HOST_RELOCVALUE_SECT:
+		return (uintptr_t)self->hr_value.rv_sect->hs_base;
+	default: __builtin_unreachable();
+	}
+}
+
+
 
 
 /* Ensure that at least `num_bytes' of host text memory are available.

@@ -56,9 +56,9 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 		goto err_assembler;
 	if unlikely(Dee_function_assembler_compilemorph(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_stitchblocks(&assembler))
+	if unlikely(Dee_function_assembler_ordersections(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_linkblocks(&assembler, &hfunc))
+	if unlikely(Dee_function_assembler_output(&assembler, &hfunc))
 		goto err_assembler;
 	Dee_function_assembler_fini(&assembler);
 

@@ -256,9 +256,10 @@ struct Dee_memstate {
 	}	__WHILE0
 
 
-#define Dee_memstate_alloc(localc)                                                \
-	((struct Dee_memstate *)Dee_Malloc(offsetof(struct Dee_memstate, ms_localv) + \
-	                                   (localc) * sizeof(struct Dee_memloc)))
+#define Dee_memstate_sizeof(localc) \
+	(offsetof(struct Dee_memstate, ms_localv) + (localc) * sizeof(struct Dee_memloc))
+#define Dee_memstate_alloc(localc) \
+	((struct Dee_memstate *)Dee_Malloc(Dee_memstate_sizeof(localc)))
 #define Dee_memstate_free(self) Dee_Free(self)
 INTDEF NONNULL((1)) void DCALL Dee_memstate_destroy(struct Dee_memstate *__restrict self);
 #define Dee_memstate_incref(self) (void)(++(self)->ms_refcnt)
@@ -447,6 +448,11 @@ struct Dee_host_symbol {
 	       (self)->hs_value.sv_sect.ss_sect = (sect),               \
 	       (self)->hs_value.sv_sect.ss_off  = (offset))
 
+/* Calculate and return the value of `self'
+ * Only returns valid values after `hs_base' have been assigned. */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+Dee_host_symbol_value(struct Dee_host_symbol const *__restrict self);
+
 
 
 /* Host relocation types. */
@@ -476,14 +482,32 @@ INTDEF NONNULL((1, 2)) void DCALL
 Dee_host_reloc_setsym(struct Dee_host_reloc *__restrict self,
                       struct Dee_host_symbol *__restrict sym);
 
+/* Calculate and return the value of `self'
+ * Only returns valid values after `hs_base' have been assigned. */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+Dee_host_reloc_value(struct Dee_host_reloc const *__restrict self);
+
+struct Dee_host_section;
+TAILQ_HEAD(Dee_host_section_tailq, Dee_host_section);
 struct Dee_host_section {
-	byte_t                      *hs_start; /* [<= hs_end][owned] Start of host assembly */
-	byte_t                      *hs_end;   /* [>= hs_start && <= hs_alend] End of host assembly */
-	byte_t                      *hs_alend; /* [>= hs_start] End of allocated host assembly */
-	struct Dee_host_reloc       *hs_relv;  /* [0..hs_relc][owned] Vector of host relocations. */
-	size_t                       hs_relc;  /* Number of host relocations. */
-	size_t                       hs_rela;  /* Allocated number of host relocations. */
-	LIST_ENTRY(Dee_host_section) hs_link;  /* [0..1] Position of this section in the final output. */
+	byte_t                       *hs_start; /* [<= hs_end][owned] Start of host assembly */
+	byte_t                       *hs_end;   /* [>= hs_start && <= hs_alend] End of host assembly */
+	byte_t                       *hs_alend; /* [>= hs_start] End of allocated host assembly */
+	TAILQ_ENTRY(Dee_host_section) hs_link;  /* [0..1] Position of this section in the final output. */
+	struct Dee_host_reloc        *hs_relv;  /* [0..hs_relc][owned] Vector of host relocations. */
+	size_t                        hs_relc;  /* Number of host relocations. */
+	union {
+#undef hs_rela
+#undef hs_base
+		size_t                    hs_rela;  /* [valid_if(NEVER_CALLED(Dee_function_assembler_output))] Allocated number of host relocations. */
+		byte_t                   *hs_base;  /* [valid_if(EVER_CALLED(Dee_function_assembler_output))] Base address in latest output */
+	}
+#ifndef __COMPILER_HAVE_TRANSPARENT_UNION
+	_hs_u
+#define hs_rela _hs_u.hs_rela
+#define hs_base _hs_u.hs_base
+#endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
+	;
 };
 
 #define Dee_host_section_init(self) bzero(self, sizeof(struct Dee_host_section))
@@ -492,6 +516,8 @@ struct Dee_host_section {
 	(void)((self)->hs_end = (self)->hs_start, (self)->hs_relc = 0)
 #define Dee_host_section_size(self) \
 	(size_t)((self)->hs_end - (self)->hs_start)
+
+#define Dee_host_section_islinked(self) TAILQ_ISBOUND(self, hs_link)
 
 /* Ensure that at least `num_bytes' of host text memory are available.
  * @return: 0 : Success
@@ -655,6 +681,22 @@ struct Dee_except_exitinfo {
 	                                                                  * How often CFA offsets need to be decref'd */
 };
 
+#define Dee_except_exitinfo_isreg(i)      ((i) < HOST_REGISTER_COUNT)
+#define Dee_except_exitinfo_locc(self)    (((self)->exi_cfa_offset / HOST_SIZEOF_POINTER) + HOST_REGISTER_COUNT)
+#define Dee_except_exitinfo_locv(self, i) (_Dee_except_exitinfo_locv(self)[i])
+#define _Dee_except_exitinfo_locv(self)   ((uint16_t *)((byte_t *)(self) + offsetof(struct Dee_except_exitinfo, exi_regs)))
+#define Dee_except_exitinfo_loci_revstack(self, i) \
+	((i) < HOST_REGISTER_COUNT ? (i) : (HOST_REGISTER_COUNT + ((((self)->exi_cfa_offset / HOST_SIZEOF_POINTER) - 1) - ((i) - HOST_REGISTER_COUNT))))
+
+#define Dee_except_exitinfo_asloc(i, loc)                                                              \
+	(Dee_except_exitinfo_isreg(i)                                                                      \
+	 ? (void)((loc)->ml_type                 = MEMLOC_TYPE_HREG,                                       \
+	          (loc)->ml_value.v_hreg.r_regno = (Dee_host_register_t)(i),                               \
+	          (loc)->ml_value.v_hreg.r_off   = 0)                                                      \
+	 : (void)((loc)->ml_type                 = MEMLOC_TYPE_HSTACKIND,                                  \
+	          (loc)->ml_value.v_hstack.s_cfa = Dee_except_exitinfo_index2cfa((i)-HOST_REGISTER_COUNT), \
+	          (loc)->ml_value.v_hstack.s_off = 0))
+
 /* Check if `self' has been compiled. */
 #define Dee_except_exitinfo_compiled(self)                                          \
 	(((self)->exi_block->bb_htext.hs_start < (self)->exi_block->bb_htext.hs_end) || \
@@ -708,22 +750,25 @@ Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
 
 
 struct Dee_function_assembler {
-	DeeFunctionObject           *fa_function;     /* [1..1][const] The function being assembled */
-	DeeCodeObject               *fa_code;         /* [1..1][const][== fa_function->fo_code] The code being assembled */
-	struct Dee_host_section      fa_prolog;       /* Function prolog (output even before `fa_blockv[0]'; verify arguments & set-up initial memstate) */
-	DREF struct Dee_memstate    *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL' if `Dee_function_assembler_compileblocks()' wasn't called, yet) */
-	struct Dee_basic_block     **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start'). */
-	size_t                       fa_blockc;       /* Number of basic blocks. */
-	size_t                       fa_blocka;       /* Allocated number of basic blocks. */
-	struct Dee_except_exitinfo **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exit basic blocks (sorted by `Dee_except_exitinfo_cmp()') */
-	size_t                       fa_except_exitc; /* Number of exception exit basic blocks. */
-	size_t                       fa_except_exita; /* Allocated number of exception exit basic blocks. */
-	struct Dee_host_symbol      *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
+	DeeFunctionObject            *fa_function;     /* [1..1][const] The function being assembled */
+	DeeCodeObject                *fa_code;         /* [1..1][const][== fa_function->fo_code] The code being assembled */
+	struct Dee_host_section       fa_prolog;       /* Function prolog (output even before `fa_blockv[0]'; verify arguments & set-up initial memstate) */
+	DREF struct Dee_memstate     *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL' if `Dee_function_assembler_compileblocks()' wasn't called, yet) */
+	struct Dee_basic_block      **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start'). */
+	size_t                        fa_blockc;       /* Number of basic blocks. */
+	size_t                        fa_blocka;       /* Allocated number of basic blocks. */
+	struct Dee_except_exitinfo  **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exit basic blocks (sorted by `Dee_except_exitinfo_cmp()') */
+	size_t                        fa_except_exitc; /* Number of exception exit basic blocks. */
+	size_t                        fa_except_exita; /* Allocated number of exception exit basic blocks. */
+	struct Dee_except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `Dee_function_assembler_ordersections()') */
+	struct Dee_host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
 #define DEE_FUNCTION_ASSEMBLER_F_NORMAL 0x0000
 #define DEE_FUNCTION_ASSEMBLER_F_OSIZE  0x0001    /* Optimize for size (generally means: try not to use cold sections) */
-	uint16_t                     fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
-	uint16_t                     fa_localc;       /* [const][== fa_code->co_localc] */
-	Dee_hostfunc_cc_t            fa_cc;           /* [const] Calling convention. */
+	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
+	uint16_t                      fa_localc;       /* [const][== fa_code->co_localc] */
+	Dee_hostfunc_cc_t             fa_cc;           /* [const] Calling convention. */
+	struct Dee_host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link') */
+	size_t                        fa_sectsize;     /* Total size of all sections combined */
 };
 
 #define Dee_function_assembler_addrof(self, addr) \
@@ -740,6 +785,7 @@ struct Dee_function_assembler {
 	       (self)->fa_except_exitv = NULL,                            \
 	       (self)->fa_except_exitc = 0,                               \
 	       (self)->fa_except_exita = 0,                               \
+	       (self)->fa_except_first = NULL,                            \
 	       (self)->fa_symbols      = NULL,                            \
 	       (self)->fa_flags        = DEE_FUNCTION_ASSEMBLER_F_NORMAL, \
 	       (self)->fa_localc       = (self)->fa_code->co_localc,      \
@@ -1268,6 +1314,7 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self);
  * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
  * - self->fa_except_exitv[*]->exi_block->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
  * - self->fa_except_exitv[*]->exi_block->bb_next   (set if intend is to fall into another exit block)
+ * - self->fa_except_first
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1281,6 +1328,7 @@ Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict se
  *   1 of those predecessors and append unconditional jumps to them, then set
  *   the `bb_next' field of those blocks to `NULL'.
  * - Also fills in:
+ *   - self->fa_sections
  *   - self->fa_prolog.hs_link
  *   - self->fa_blockv[*]->bb_htext.hs_link
  *   - self->fa_blockv[*]->bb_hcold.hs_link
@@ -1290,14 +1338,14 @@ Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict se
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_stitchblocks(struct Dee_function_assembler *__restrict self);
+Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict self);
 
 /* Step #6: Link blocks into an executable function blob.
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_assembler_linkblocks(struct Dee_function_assembler *__restrict self,
-                                  struct Dee_hostfunc *__restrict result);
+Dee_function_assembler_output(struct Dee_function_assembler *__restrict self,
+                              struct Dee_hostfunc *__restrict result);
 
 
 

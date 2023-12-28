@@ -174,6 +174,7 @@ typedef uint8_t Dee_hostfunc_cc_t;
 #define HOSTFUNC_CC_THISCALL_TUPLE_KW 7 /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
 #define HOSTFUNC_CC_COUNT             8
 union Dee_hostfunc_entry {
+	void                   *hfe_addr;
 	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                        /* HOSTFUNC_CC_CALL */
 	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                      /* HOSTFUNC_CC_CALL_KW */
 	DREF DeeObject *(DCALL *hfe_thiscall)(DeeObject *self, size_t argc, DeeObject *const *argv);                   /* HOSTFUNC_CC_THISCALL */

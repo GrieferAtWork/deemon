@@ -28,7 +28,10 @@
 #include <deemon/alloc.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/none.h>
 
+#include <hybrid/minmax.h>
+#include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 
 DECL_BEGIN
@@ -548,15 +551,357 @@ Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) 
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restrict self,
+                                         struct Dee_memloc *oldloc,
+                                         struct Dee_memloc const *newloc,
+                                         uint16_t old_refcnt, uint16_t new_refcnt) {
+	int temp;
+	ASSERT(old_refcnt != 0);
+	ASSERT(new_refcnt != 0);
+	if ((old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) != 0 &&
+	    (new_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) == 0) {
+		/* New state expects the value to never be NULL
+		 * -> Handle this by loading the proper refcnt and `Dee_None' into `oldloc' if it's NULL
+		 */
+		struct Dee_host_symbol *not_null_sym;
+		not_null_sym = Dee_function_generator_newsym(self);
+		if unlikely(!not_null_sym)
+			goto err;
+		if unlikely(_Dee_function_generator_gjnz(self, oldloc, not_null_sym))
+			goto err;
+		old_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* No longer nullable! */
+		_Dee_function_generator_gincref_const(self, Dee_None, old_refcnt);
+		if unlikely(Dee_function_generator_gmov_const2loc(self, Dee_None, oldloc))
+			goto err;
+		Dee_host_symbol_setsect(not_null_sym, self->fg_sect);
+	}
+	new_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* Don't care about nullable here anymore! */
+
+	if (old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) {
+		ptrdiff_t refcnt_delta = (ptrdiff_t)(new_refcnt) -
+		                         (ptrdiff_t)(old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
+		if (refcnt_delta > 0) {
+			temp = Dee_function_generator_gxincref(self, oldloc, (Dee_refcnt_t)refcnt_delta);
+		} else if (refcnt_delta < 0) {
+			temp = new_refcnt ? Dee_function_generator_gxdecref_nokill(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
+			                  : Dee_function_generator_gxdecref(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
+		} else {
+			temp = 0;
+		}
+	} else {
+		ptrdiff_t refcnt_delta = (ptrdiff_t)new_refcnt - (ptrdiff_t)old_refcnt;
+		if (refcnt_delta > 0) {
+			temp = Dee_function_generator_gincref(self, oldloc, (Dee_refcnt_t)refcnt_delta);
+		} else if (refcnt_delta < 0) {
+			temp = new_refcnt ? Dee_function_generator_gdecref_nokill(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
+			                  : Dee_function_generator_gdecref(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
+		} else {
+			temp = 0;
+		}
+	}
+	if unlikely(temp)
+		goto err;
+	return Dee_function_generator_gmov_loc2loc(self, oldloc, newloc);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gexcept_morph_adjref(struct Dee_function_generator *__restrict self,
+                                            struct Dee_memloc *__restrict oldloc,
+                                            uint16_t old_refcnt, uint16_t new_refcnt) {
+	return Dee_function_generator_gexcept_morph_mov(self, oldloc, oldloc, old_refcnt, new_refcnt);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gexcept_morph_decref(struct Dee_function_generator *__restrict self,
+                                            struct Dee_memloc *__restrict loc,
+                                            uint16_t old_refcnt) {
+	ASSERT(old_refcnt != 0);
+	if (old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) {
+		return Dee_function_generator_gxdecref(self, loc, old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
+	} else {
+		return Dee_function_generator_gdecref(self, loc, old_refcnt);
+	}
+}
+
+/* Pop the V-stack entry describing `loc' */
+PRIVATE NONNULL((1, 2)) void DCALL
+Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
+                        Dee_vstackaddr_t i) {
+	struct Dee_memloc *vloc;
+	ASSERT(i < self->ms_stackc);
+	vloc = &self->ms_stackv[i];
+	if (MEMLOC_TYPE_HASREG(vloc->ml_type))
+		Dee_memstate_decrinuse(self, vloc->ml_value.v_hreg.r_regno);
+	vloc->ml_type = MEMLOC_TYPE_UNDEFINED;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict self,
-                                     struct Dee_except_exitinfo *__restrict from,
-                                     struct Dee_except_exitinfo *__restrict to) {
-	(void)self;
-	(void)from;
-	(void)to;
-	/* TODO */
-	/* TODO: It's also possible to shift references from one location to another! */
-	return DeeError_NOTIMPLEMENTED();
+                                     struct Dee_except_exitinfo const *__restrict oldinfo,
+                                     struct Dee_except_exitinfo const *__restrict newinfo) {
+	Dee_vstackaddr_t *curinfo_vaddr; /* Map from `i < Dee_except_exitinfo_locc()' -> `state->ms_stackv' */
+	struct Dee_memstate *state;
+	size_t cur_loci, cur_locc;
+	size_t new_loci, new_locc, max_locc;
+	size_t cursize;
+	struct Dee_except_exitinfo *curinfo;
+	cursize = Dee_except_exitinfo_sizeof(oldinfo->exi_cfa_offset);
+	curinfo = (struct Dee_except_exitinfo *)Dee_Malloca(cursize);
+	if unlikely(!curinfo)
+		goto err;
+	curinfo = (struct Dee_except_exitinfo *)memcpy(curinfo, oldinfo, cursize);
+
+	/* Allocate a mem-state and then push all registers containing references
+	 * onto the v-stack, so they get saved properly in case they need to be
+	 * flushed. */
+	state = (struct Dee_memstate *)Dee_Malloca(Dee_memstate_sizeof(1));
+	if unlikely(!state)
+		goto err_infostate;
+	state->ms_refcnt          = 1;
+	state->ms_host_cfa_offset = curinfo->exi_cfa_offset;
+	state->ms_localc          = 1;
+	state->ms_stackc          = 0;
+	state->ms_stacka          = 0;
+	state->ms_stackv          = NULL;
+	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
+	bzero(state->ms_rusage, sizeof(state->ms_rusage));
+	self->fg_state = state;
+
+	cur_locc = Dee_except_exitinfo_locc(curinfo);
+	new_locc = Dee_except_exitinfo_locc(newinfo);
+	while (cur_locc && !Dee_except_exitinfo_locv(curinfo, cur_locc - 1))
+		--cur_locc;
+	while (new_locc && !Dee_except_exitinfo_locv(curinfo, new_locc - 1))
+		--new_locc;
+
+	/* Push locations used by the old state onto the V-stack (so they aren't clobbered). */
+	max_locc = MAX(cur_locc, new_locc);
+	curinfo_vaddr = (Dee_vstackaddr_t *)Dee_Mallocac(max_locc, sizeof(Dee_vstackaddr_t));
+	if unlikely(!curinfo_vaddr)
+		goto err_infostate_state;
+	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
+		struct Dee_memloc cur_loc;
+		uint16_t old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
+		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		if (!old_refcnt) {
+			curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+			continue;
+		}
+		curinfo_vaddr[cur_loci] = state->ms_stackc;
+		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
+		if unlikely(Dee_memstate_vpush(state, &cur_loc))
+			goto err_infostate_state_curinfo_vaddr;
+	}
+	for (; cur_loci < max_locc; ++cur_loci)
+		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+
+	/* Try to shift values between locations. */
+	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
+		size_t cur_locX;
+		struct Dee_memloc cur_loc;
+		uint16_t cur_refcnt_i, new_refcnt_i;
+		uint16_t old_refcnt;
+		uint16_t new_refcnt;
+		cur_locX   = Dee_except_exitinfo_loci_revstack(curinfo, cur_loci);
+		old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_locX);
+		new_refcnt = 0;
+		if (cur_locX < new_locc)
+			new_refcnt = Dee_except_exitinfo_locv(newinfo, cur_locX);
+		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		if (old_refcnt == 0)
+			continue; /* Nothing here */
+		if (old_refcnt == (new_refcnt) ||
+		    old_refcnt == (new_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
+			continue; /* Location already matches target perfectly. */
+
+		/* Check if we can off-load to a different location. */
+		Dee_except_exitinfo_asloc(cur_locX, &cur_loc);
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_i = 0;
+			if (new_loci < cur_locc)
+				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_i == old_refcnt && !cur_refcnt_i) {
+				struct Dee_memloc new_loc;
+offload_cur_locX_to_new_loci:
+				Dee_except_exitinfo_asloc(cur_locX, &cur_loc);
+				Dee_except_exitinfo_asloc(new_loci, &new_loc);
+				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
+				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_locX]);
+				curinfo_vaddr[cur_locX] = (Dee_vstackaddr_t)-1;
+				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
+				                                                     old_refcnt, new_refcnt))
+					goto err_infostate_state_curinfo_vaddr;
+				ASSERT(Dee_except_exitinfo_locv(curinfo, cur_locX) != 0);
+				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
+				Dee_except_exitinfo_locv(curinfo, cur_locX) = 0;
+				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
+				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+				curinfo_vaddr[new_loci] = state->ms_stackc;
+				if unlikely(Dee_memstate_vpush(state, &new_loc))
+					goto err_infostate_state_curinfo_vaddr;
+				goto next_cur_locX;
+			}
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_i = 0;
+			if (new_loci < cur_locc)
+				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_i == (old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_i)
+				goto offload_cur_locX_to_new_loci;
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_i = 0;
+			if (new_loci < cur_locc)
+				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_i >= old_refcnt && !cur_refcnt_i)
+				goto offload_cur_locX_to_new_loci;
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_i = 0;
+			if (new_loci < cur_locc)
+				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_i >= (old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_i)
+				goto offload_cur_locX_to_new_loci;
+		}
+
+		/* Nowhere to off-load to -> must do the (possibly partial) decref ourselves. */
+		if (new_refcnt != 0) {
+			if unlikely(Dee_function_generator_gexcept_morph_adjref(self, &cur_loc, old_refcnt, new_refcnt))
+				goto err_infostate_state_curinfo_vaddr;
+		} else {
+			/* Value doesn't matter anymore. */
+			Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_locX]);
+			curinfo_vaddr[cur_locX] = (Dee_vstackaddr_t)-1;
+			if unlikely(Dee_function_generator_gexcept_morph_decref(self, &cur_loc, old_refcnt))
+				goto err_infostate_state_curinfo_vaddr;
+		}
+		Dee_except_exitinfo_locv(curinfo, cur_locX) = new_refcnt;
+next_cur_locX:;
+	}
+
+	/* With value shifting down, force same-slot locations to have the proper reference counts. */
+	for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+		struct Dee_memloc new_loc;
+		size_t new_locX;
+		uint16_t old_refcnt = 0;
+		uint16_t new_refcnt;
+		new_locX   = Dee_except_exitinfo_loci_revstack(newinfo, new_loci);
+		new_refcnt = Dee_except_exitinfo_locv(newinfo, new_locX);
+		old_refcnt = 0;
+		if (new_locX < cur_locc)
+			old_refcnt = Dee_except_exitinfo_locv(curinfo, new_locX);
+		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		if (new_refcnt == 0) {
+			ASSERT(old_refcnt == 0);
+			continue; /* Nothing here */
+		}
+		if (old_refcnt == (new_refcnt) ||
+		    old_refcnt == (new_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
+			continue; /* Location already matches target perfectly. */
+		Dee_except_exitinfo_asloc(new_locX, &new_loc);
+
+		/* Handle special case: "push" only gets used if at the CFA boundary.
+		 * So if the target is a stack location that is out-of-bounds (and not
+		 * at the boundary), then allocate the remaining stack. */
+		if (new_loc.ml_type == MEMLOC_TYPE_HSTACKIND) {
+			uintptr_t loc_cfa = new_loc.ml_value.v_hstack.s_cfa;
+			uintptr_t cur_cfa = state->ms_host_cfa_offset;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+			if (loc_cfa > cur_cfa)
+#else /* HOSTASM_STACK_GROWS_DOWN */
+			if (loc_cfa >= cur_cfa)
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			{
+				uintptr_t new_cfa = newinfo->exi_cfa_offset;
+				ptrdiff_t cfa_delta = (ptrdiff_t)new_cfa - (ptrdiff_t)cur_cfa;
+				if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
+					goto err_infostate_state_curinfo_vaddr;
+			}
+		}
+		if (old_refcnt == 0) {
+			/* Need to get an object out of the void. */
+			struct Dee_memloc none;
+			none.ml_type = MEMLOC_TYPE_CONST;
+			none.ml_value.v_const = Dee_None;
+			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
+			                                                     0, new_refcnt))
+				goto err_infostate_state_curinfo_vaddr;
+			ASSERT(curinfo_vaddr[new_locX] == (Dee_vstackaddr_t)-1);
+			curinfo_vaddr[new_locX] = state->ms_stackc;
+			if unlikely(Dee_memstate_vpush(state, &new_loc))
+				goto err_infostate_state_curinfo_vaddr;
+		} else {
+			if unlikely(Dee_function_generator_gexcept_morph_adjref(self, &new_loc, old_refcnt, new_refcnt))
+				goto err_infostate_state_curinfo_vaddr;
+		}
+		/*if (new_locX < cur_locc)
+			Dee_except_exitinfo_locv(curinfo, new_locX) = new_refcnt;*/
+	}
+
+	/* Load register-references needed by the new state into registers (if they were flushed). */
+	{
+		Dee_host_register_t new_regi, new_regc;
+		new_regc = HOST_REGISTER_COUNT;
+		if (new_locc < HOST_REGISTER_COUNT)
+			new_regc = (Dee_host_register_t)new_locc;
+		for (new_regi = 0; new_regi < new_regc; ++new_regi) {
+			struct Dee_memloc *loc;
+			uint16_t new_refcnt = Dee_except_exitinfo_locv(newinfo, new_regi);
+			ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+			if (new_refcnt == 0)
+				continue;
+			ASSERT(curinfo_vaddr[new_regi] != (Dee_vstackaddr_t)-1);
+			ASSERT(curinfo_vaddr[new_regi] < state->ms_stackc);
+			loc = &state->ms_stackv[curinfo_vaddr[new_regi]];
+			ASSERT(loc->ml_type == MEMLOC_TYPE_HREG ||
+			       loc->ml_type == MEMLOC_TYPE_HSTACKIND);
+			ASSERT(loc->ml_type != MEMLOC_TYPE_HREG ||
+			       (loc->ml_value.v_hreg.r_regno == new_regi ||
+			        loc->ml_value.v_hreg.r_off == 0));
+			if (loc->ml_type != MEMLOC_TYPE_HREG) {
+				if unlikely(Dee_function_generator_gmov_loc2regx(self, loc, new_regi, 0))
+					goto err_infostate_state_curinfo_vaddr;
+				loc->ml_type = MEMLOC_TYPE_HREG;
+				loc->ml_value.v_hreg.r_regno = new_regi;
+				loc->ml_value.v_hreg.r_off   = 0;
+			}
+		}
+	}
+
+	/* Fix any remaining delta in the CFA offset. */
+	if (state->ms_host_cfa_offset != newinfo->exi_cfa_offset) {
+		ptrdiff_t cfa_delta = (ptrdiff_t)newinfo->exi_cfa_offset -
+		                      (ptrdiff_t)state->ms_host_cfa_offset;
+		if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
+			goto err_infostate_state_curinfo_vaddr;
+	}
+	ASSERT(state->ms_host_cfa_offset == newinfo->exi_cfa_offset);
+
+	/* Cleanup... */
+	Dee_Freea(curinfo_vaddr);
+	ASSERT(self->fg_state == state);
+	Dee_Free(state->ms_stackv);
+	Dee_Freea(state);
+	Dee_Freea(curinfo);
+	return 0;
+err_infostate_state_curinfo_vaddr:
+	Dee_Freea(curinfo_vaddr);
+err_infostate_state:
+	ASSERT(self->fg_state == state);
+	Dee_Free(state->ms_stackv);
+	Dee_Freea(state);
+err_infostate:
+	Dee_Freea(curinfo);
+err:
+	return -1;
 }
 
 
@@ -613,19 +958,18 @@ search_for_next_block:
 			ASSERT(gen.fg_state_hstack_res == NULL);
 			gen.fg_block = next_info->exi_block;
 			gen.fg_sect  = &gen.fg_block->bb_htext;
-			gen.fg_state = gen.fg_block->bb_mem_start;
-			Dee_memstate_incref(gen.fg_state);
 			ASSERT(last_info->exi_block->bb_mem_start != NULL);
 			if unlikely(Dee_function_generator_gexcept_morph(&gen, next_info, last_info))
-				goto err_gen_fg_state;
+				goto err;
 			ASSERT(next_info->exi_block->bb_mem_end == NULL);
 			ASSERT(next_info->exi_block->bb_next == NULL);
-			next_info->exi_block->bb_mem_end = gen.fg_state; /* Inherit reference */
 			next_info->exi_block->bb_next = last_info->exi_block;
 			last_info                     = next_info;
 			goto search_for_next_block;
 		}
 	}
+	/* Remember the most "convoluted" exception exit block, so ordering can start with *it* */
+	self->fa_except_first = last_info;
 	return 0;
 err_gen_fg_state:
 	Dee_memstate_decref(gen.fg_state);
@@ -641,6 +985,7 @@ err:
  * - self->fa_blockv[*]->bb_htext                   (extend with transition code so that `bb_mem_end == bb_next->bb_mem_start')
  * - self->fa_except_exitv[*]->exi_block->bb_htext  (generate morph-code to transition to an empty stack, or fall into another exit block)
  * - self->fa_except_exitv[*]->exi_block->bb_next   (set if intend is to fall into another exit block)
+ * - self->fa_except_first
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -691,6 +1036,7 @@ err:
  *   1 of those predecessors and append unconditional jumps to them, then set
  *   the `bb_next' field of those blocks to `NULL'.
  * - Also fills in:
+ *   - self->fa_sections
  *   - self->fa_prolog.hs_link
  *   - self->fa_blockv[*]->bb_htext.hs_link
  *   - self->fa_blockv[*]->bb_hcold.hs_link
@@ -700,22 +1046,183 @@ err:
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_stitchblocks(struct Dee_function_assembler *__restrict self) {
-	/* TODO */
-	(void)self;
-	return DeeError_NOTIMPLEMENTED();
+Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict self) {
+	size_t block_i, morph_flush_i;
+#ifdef __INTELLISENSE__
+	struct Dee_host_section_tailq text;
+#else /* __INTELLISENSE__ */
+#define text self->fa_sections
+#endif /* !__INTELLISENSE__ */
+	struct Dee_host_section_tailq cold;
+	struct Dee_basic_block *block;
+	TAILQ_INIT(&text);
+	TAILQ_INIT(&cold);
+	ASSERT(!Dee_host_section_islinked(&self->fa_prolog));
+	TAILQ_INSERT_HEAD(&text, &self->fa_prolog, hs_link);
+	ASSERT(Dee_host_section_islinked(&self->fa_prolog));
+	ASSERT(self->fa_blockc >= 1);
+#define LOCAL_morph_flush(until_block_i)                                                  \
+	do {                                                                                  \
+		size_t morph_i;                                                                   \
+		for (morph_i = morph_flush_i; morph_i <= (until_block_i); ++morph_i) {            \
+			size_t exit_i;                                                                \
+			struct Dee_basic_block *morph_block = self->fa_blockv[morph_i];               \
+			for (exit_i = 0; exit_i < morph_block->bb_exits.jds_size; ++exit_i) {         \
+				struct Dee_jump_descriptor *jmp = morph_block->bb_exits.jds_list[exit_i]; \
+				ASSERT(jmp);                                                              \
+				TAILQ_INSERT_TAIL(&text, &jmp->jd_morph, hs_link);                        \
+			}                                                                             \
+		}                                                                                 \
+		morph_flush_i = (until_block_i) + 1;                                              \
+	}	__WHILE0
+
+	/* For now, instead of trying to re-order blocks, trust that the original byte-code
+	 * already got it good enough, and simply output based on the position of blocks in
+	 * relation to deemon bytecode address ranges. */
+	morph_flush_i = 0;
+	for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
+		struct Dee_basic_block *jmp_next, *gen_next;
+		block = self->fa_blockv[block_i];
+		ASSERT(block);
+		jmp_next = block->bb_next;
+		gen_next = NULL;
+		if ((block_i + 1) < self->fa_blockc)
+			gen_next = self->fa_blockv[block_i + 1];
+		TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
+		TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
+		if (jmp_next && jmp_next != gen_next) {
+			/* Just append a jump to the end of the block */
+			struct Dee_host_symbol dst;
+			dst.hs_type = DEE_HOST_SYMBOL_SECT;
+			dst.hs_value.sv_sect.ss_sect = &jmp_next->bb_htext;
+			dst.hs_value.sv_sect.ss_off  = 0;
+			if unlikely(_Dee_host_section_gjmp(&block->bb_htext, &dst))
+				goto err;
+			block->bb_next = NULL; /* No longer fallthru */
+		}
+		if (block->bb_next == NULL) {
+			/* Block doesn't return normally -> this is a good spot to insert morph flush sections. */
+			LOCAL_morph_flush(block_i);
+		}
+	}
+	ASSERT(block_i == self->fa_blockc);
+	LOCAL_morph_flush(self->fa_blockc - 1);
+
+	/* Go through exception exits and put them into the section order.
+	 * Note that `Dee_function_assembler_compilemorph()' already ordered
+	 * them for us, so all we need to do is start walking at `fa_except_first' */
+	ASSERT((self->fa_except_first != NULL) ==
+	       (self->fa_except_exitc > 0));
+	if (self->fa_except_first != NULL) {
+		block = self->fa_except_first->exi_block;
+		do {
+			TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
+			TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
+		} while ((block = block->bb_next) != NULL);
+		block = self->fa_except_first->exi_block;
+		do {
+			size_t exit_i;
+			for (exit_i = 0; exit_i < block->bb_exits.jds_size; ++exit_i) {
+				struct Dee_jump_descriptor *jmp = block->bb_exits.jds_list[exit_i];
+				ASSERT(jmp);
+				TAILQ_INSERT_TAIL(&text, &jmp->jd_morph, hs_link);
+			}
+		} while ((block = block->bb_next) != NULL);
+	}
+
+	/* Append all of the cold text to the end of normal text. */
+	TAILQ_CONCAT(&text, &cold, hs_link);
+
+	/* Go through the big ol' list of sections and remove all that are empty.
+	 * Also figure out the total text-size of all sections combined. */
+	self->fa_sectsize = 0;
+	{
+		struct Dee_host_section *sect, *_tvar;
+		TAILQ_FOREACH_SAFE (sect, &self->fa_sections, hs_link, _tvar) {
+			size_t size = Dee_host_section_size(sect);
+			if (size > 0) {
+				self->fa_sectsize += size;
+			} else {
+				TAILQ_REMOVE(&self->fa_sections, sect, hs_link);
+			}
+		}
+	}
+	return 0;
+err:
+	return -1;
+#undef text
+}
+
+
+INTERN NONNULL((1)) bool DCALL
+Dee_host_section_reloc(struct Dee_host_section *__restrict self) {
+	size_t i;
+	for (i = 0; i < self->hs_relc; ++i) {
+		struct Dee_host_reloc *rel = &self->hs_relv[i];
+		byte_t *rel_addr = self->hs_base + rel->hr_offset;
+		uintptr_t value = Dee_host_reloc_value(rel);
+		switch (rel->hr_rtype) {
+		case DEE_HOST_RELOC_NONE:
+			break;
+
+#ifdef DEE_HOST_RELOC_REL32
+		case DEE_HOST_RELOC_REL32: {
+			ptrdiff_t diff = (ptrdiff_t)(value - (uintptr_t)rel_addr);
+			int32_t *addr  = (int32_t *)rel_addr;
+			if (OVERFLOW_SADD(*addr, diff, addr))
+				return false;
+		}	break;
+#endif /* DEE_HOST_RELOC_REL32 */
+
+		default: __builtin_unreachable();
+		}
+	}
+	return true;
 }
 
 /* Step #6: Link blocks into an executable function blob.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_assembler_linkblocks(struct Dee_function_assembler *__restrict self,
-                                  struct Dee_hostfunc *__restrict result) {
-	/* TODO */
-	(void)self;
-	(void)result;
-	return DeeError_NOTIMPLEMENTED();
+Dee_function_assembler_output(struct Dee_function_assembler *__restrict self,
+                              struct Dee_hostfunc *__restrict result) {
+	byte_t *writer;
+	struct Dee_host_section *sect;
+again:
+	if unlikely(Dee_hostfunc_init(result, self->fa_sectsize)) {
+		if (Dee_CollectMemory(self->fa_sectsize))
+			goto again;
+		goto err;
+	}
+	result->hf_entry.hfe_addr = result->_hf_base;
+
+	/* Figure out the final base addresses of sections. */
+	writer = (byte_t *)result->_hf_base;
+	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
+		size_t size = Dee_host_section_size(sect);
+		sect->hs_base = writer;
+		writer += size;
+	}
+
+	/* Output sections and resolve relocations. */
+	writer = (byte_t *)result->_hf_base;
+	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
+		size_t size = Dee_host_section_size(sect);
+		ASSERT(writer == sect->hs_base);
+		writer = (byte_t *)mempcpy(writer, sect->hs_start, size);
+		if (!Dee_host_section_reloc(sect)) {
+			 /* TODO: Error if overflow on x86_64 (to re-compile w/ large memory model) */
+		}
+	}
+	if unlikely(Dee_hostfunc_mkexec(result)) {
+		Dee_BadAlloc(self->fa_sectsize);
+		goto err_result;
+	}
+	return 0;
+err_result:
+	Dee_hostfunc_fini(result);
+err:
+	return -1;
 }
 
 DECL_END
