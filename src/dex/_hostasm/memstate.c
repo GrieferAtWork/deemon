@@ -311,7 +311,7 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
-                        struct Dee_memloc const *__restrict other_state,
+                        struct Dee_memloc const *__restrict other_loc,
                         struct Dee_memloc *loc) {
 	Dee_host_register_t regno;
 	regno = Dee_memstate_hregs_find_unused(self, true);
@@ -333,12 +333,12 @@ Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
 		loc->ml_value.v_hstack.s_cfa = cfa_offset;
 		loc->ml_value.v_hstack.s_off = 0;
 	}
-	if (other_state->ml_type == MEMLOC_TYPE_HREGIND ||
-	    other_state->ml_type == MEMLOC_TYPE_HSTACKIND) {
+	if (other_loc->ml_type == MEMLOC_TYPE_HREGIND ||
+	    other_loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
 		if (loc->ml_type == MEMLOC_TYPE_HREG) {
-			loc->ml_value.v_hreg.r_off = other_state->ml_value.v_hstack.s_off;
+			loc->ml_value.v_hreg.r_off = other_loc->ml_value.v_hstack.s_off;
 		} else {
-			loc->ml_value.v_hstack.s_off = other_state->ml_value.v_hstack.s_off;
+			loc->ml_value.v_hstack.s_off = other_loc->ml_value.v_hstack.s_off;
 		}
 	}
 }
@@ -376,13 +376,14 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
 	if (!Dee_memloc_sameloc(loc, other_loc)) {
 		switch (loc->ml_type) {
 	
+		case MEMLOC_TYPE_HREG:
+			break;
+
 		case MEMLOC_TYPE_HSTACKIND:
 			if ((intptr_t)other_loc->ml_value.v_hstack.s_cfa >= 0)
 				break; /* Normal stack location */
 			ATTR_FALLTHROUGH
-		case MEMLOC_TYPE_HREGIND:
-		case MEMLOC_TYPE_HSTACK:
-		case MEMLOC_TYPE_CONST: {
+		default: {
 			/* On one side it's an argument or a constant, and on the other
 			 * side it's something else.
 			 * In this case, need to convert to a register/stack location. */
@@ -426,8 +427,6 @@ did_runtime_value_merge:
 			result = true;
 		}	break;
 	
-		default:
-			break;
 		}
 
 		/* Even if both sides have it in-register/on-stack, must still
@@ -493,6 +492,12 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 		result |= Dee_memloc_constrainwith(self, other, &self->ms_stackv[i], &other->ms_stackv[i], false);
 	for (i = 0; i < self->ms_localc; ++i)
 		result |= Dee_memloc_constrainwith(self, other, &self->ms_localv[i], &other->ms_localv[i], true);
+
+	/* Combine state flags. */
+	if ((self->ms_flags & other->ms_flags) != self->ms_flags) {
+		self->ms_flags &= other->ms_flags;
+		result = true;
+	}
 	return result;
 }
 

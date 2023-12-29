@@ -132,6 +132,7 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	result->ms_localc = local_count;
 	result->ms_stackc = 0;
 	result->ms_stacka = 0;
+	result->ms_flags  = MEMSTATE_F_NORMAL;
 	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
 	Dee_memstate_hregs_clear_usage(result);
 	result->ms_stackv = NULL;
@@ -499,7 +500,9 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 		}
 
 		/* Unreferenced exit info blob -> get rid of it! */
-		Dee_except_exitinfo_destroy(info);
+		block->bb_next   = self->fa_deleted; /* Must keep the block around (in case symbols reference its sections) */
+		self->fa_deleted = block;
+		_Dee_except_exitinfo_destroy_noblock(info);
 		--self->fa_except_exitc;
 		memmovedownc(&self->fa_except_exitv[i],
 		             &self->fa_except_exitv[i + 1],
@@ -1043,6 +1046,18 @@ err:
 	return -1;
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+collect_morph_sections(struct Dee_host_section_tailq *__restrict text,
+                       struct Dee_basic_block *__restrict morph_block) {
+	size_t exit_i;
+	for (exit_i = 0; exit_i < morph_block->bb_exits.jds_size; ++exit_i) {
+		struct Dee_jump_descriptor *jmp = morph_block->bb_exits.jds_list[exit_i];
+		ASSERT(jmp);
+		TAILQ_INSERT_TAIL(text, &jmp->jd_morph, hs_link);
+		jmp->jd_morph.hs_fallthru = &jmp->jd_to->bb_htext;
+	}
+}
+
 /* Step #5: Generate missing unconditional jumps to jump from one block to the next
  * - Find loops of blocks that "fall through" back on each other in a loop, and
  *   append a jump-to-the-start on all blocks that "fall through" to themselves.
@@ -1062,6 +1077,7 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict self) {
+	struct Dee_host_section *sect;
 	size_t block_i, morph_flush_i;
 #ifdef __INTELLISENSE__
 	struct Dee_host_section_tailq text;
@@ -1075,19 +1091,12 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 	TAILQ_INSERT_HEAD(&text, &self->fa_prolog, hs_link);
 	ASSERT(Dee_host_section_islinked(&self->fa_prolog));
 	ASSERT(self->fa_blockc >= 1);
-#define LOCAL_morph_flush(until_block_i)                                                  \
-	do {                                                                                  \
-		size_t morph_i;                                                                   \
-		for (morph_i = morph_flush_i; morph_i <= (until_block_i); ++morph_i) {            \
-			size_t exit_i;                                                                \
-			struct Dee_basic_block *morph_block = self->fa_blockv[morph_i];               \
-			for (exit_i = 0; exit_i < morph_block->bb_exits.jds_size; ++exit_i) {         \
-				struct Dee_jump_descriptor *jmp = morph_block->bb_exits.jds_list[exit_i]; \
-				ASSERT(jmp);                                                              \
-				TAILQ_INSERT_TAIL(&text, &jmp->jd_morph, hs_link);                        \
-			}                                                                             \
-		}                                                                                 \
-		morph_flush_i = (until_block_i) + 1;                                              \
+#define LOCAL_morph_flush(until_block_i)                                     \
+	do {                                                                     \
+		size_t morph_i;                                                      \
+		for (morph_i = morph_flush_i; morph_i <= (until_block_i); ++morph_i) \
+			collect_morph_sections(&text, self->fa_blockv[morph_i]);         \
+		morph_flush_i = (until_block_i) + 1;                                 \
 	}	__WHILE0
 
 	/* For now, instead of trying to re-order blocks, trust that the original byte-code
@@ -1095,44 +1104,22 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 	 * relation to deemon bytecode address ranges. */
 	morph_flush_i = 0;
 	for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
-		struct Dee_basic_block *jmp_next, *gen_next;
+		struct Dee_basic_block *jmp_next;
 		struct Dee_basic_block *block = self->fa_blockv[block_i];
 		ASSERT(block);
 		jmp_next = block->bb_next;
-		gen_next = NULL;
-		if ((block_i + 1) < self->fa_blockc)
-			gen_next = self->fa_blockv[block_i + 1];
+		block->bb_htext.hs_fallthru = jmp_next ? &jmp_next->bb_htext : NULL;
+		block->bb_hcold.hs_fallthru = NULL;
 		TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
 		TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
-		if (jmp_next && jmp_next != gen_next) {
-			/* Just append a jump to the end of the block */
-#ifdef DEE_HOST_RELOCVALUE_SECT
-			struct Dee_host_symbol dst;
-			dst.hs_type = DEE_HOST_SYMBOL_SECT;
-			dst.hs_value.sv_sect.ss_sect = &jmp_next->bb_htext;
-			dst.hs_value.sv_sect.ss_off  = 0;
-			if unlikely(_Dee_host_section_gjmp(&block->bb_htext, &dst))
-				goto err;
-#else /* DEE_HOST_RELOCVALUE_SECT */
-			struct Dee_host_symbol *dst;
-			dst = Dee_function_assembler_newsym(self);
-			if unlikely(!dst)
-				goto err;
-			dst->hs_type = DEE_HOST_SYMBOL_SECT;
-			dst->hs_value.sv_sect.ss_sect = &jmp_next->bb_htext;
-			dst->hs_value.sv_sect.ss_off  = 0;
-			if unlikely(_Dee_host_section_gjmp(&block->bb_htext, dst))
-				goto err;
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
-			block->bb_next = NULL; /* No longer fallthru */
-		}
-		if (block->bb_next == NULL) {
+		if (jmp_next == NULL) {
 			/* Block doesn't return normally -> this is a good spot to insert morph sections. */
 			LOCAL_morph_flush(block_i);
 		}
 	}
 	ASSERT(block_i == self->fa_blockc);
 	LOCAL_morph_flush(self->fa_blockc - 1);
+#undef LOCAL_morph_flush
 
 	/* Go through exception exits and put them into the section order.
 	 * Note that `Dee_function_assembler_compilemorph()' already ordered
@@ -1143,6 +1130,9 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 		struct Dee_basic_block *block;
 		block = self->fa_except_first->exi_block;
 		do {
+			struct Dee_basic_block *jmp_next = block->bb_next;
+			block->bb_htext.hs_fallthru = jmp_next ? &jmp_next->bb_htext : NULL;
+			block->bb_hcold.hs_fallthru = NULL;
 			TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
 			TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
 		} while ((block = block->bb_next) != NULL);
@@ -1152,6 +1142,7 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 			for (exit_i = 0; exit_i < block->bb_exits.jds_size; ++exit_i) {
 				struct Dee_jump_descriptor *jmp = block->bb_exits.jds_list[exit_i];
 				ASSERT(jmp);
+				jmp->jd_morph.hs_fallthru = &jmp->jd_to->bb_htext;
 				TAILQ_INSERT_TAIL(&text, &jmp->jd_morph, hs_link);
 			}
 		} while ((block = block->bb_next) != NULL);
@@ -1160,22 +1151,108 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 	/* Append all of the cold text to the end of normal text. */
 	TAILQ_CONCAT(&text, &cold, hs_link);
 
-	/* Go through the big ol' list of sections and remove all that are empty.
-	 * Also figure out the total text-size of all sections combined. */
-	self->fa_sectsize = 0;
-	{
-		struct Dee_host_section *sect, *_tvar;
-		TAILQ_FOREACH_SAFE (sect, &self->fa_sections, hs_link, _tvar) {
-			size_t size = Dee_host_section_size(sect);
-			if (size > 0) {
-				self->fa_sectsize += size;
-#ifdef HOSTASM_HAVE_SHRINKJUMPS
-				sect->hs_symbols = NULL; /* Needed for symbol ordering */
-#endif /* HOSTASM_HAVE_SHRINKJUMPS */
-			} else {
-				TAILQ_UNBIND(&self->fa_sections, sect, hs_link);
+	/* Go through the big ol' section list and search for sections that have
+	 * a non-NULL `hs_fallthru' that differs from `TAILQ_NEXT(sect, hs_link)'
+	 *
+	 * When encountered, try to move the section before their intended fallthru
+	 * (so-long as doing so doesn't mean that some other section's fallthru
+	 * becomes blocked) */
+	sect = TAILQ_FIRST(&text);
+	while (sect) {
+		struct Dee_host_section *sort_next = TAILQ_NEXT(sect, hs_link);
+		struct Dee_host_section *want_next = sect->hs_fallthru;
+		ASSERT(sort_next != sect);
+		if (want_next && want_next != sort_next && want_next != sect) {
+			struct Dee_host_section *want_prev;
+			/* Special case: can *always* move an empty section */
+			if (Dee_host_section_size(sect) == 0)
+				goto do_move_section;
+
+			/* See if we can move this section to where it wants to go. */
+			want_prev = TAILQ_PREV(want_next, Dee_host_section_tailq, hs_link);
+			while (want_prev && want_prev->hs_fallthru == want_next &&
+			       Dee_host_section_size(want_prev) == 0) {
+				/* Special case: the other section is empty, so it
+				 * doesn't matter if we jump to it, or after it.
+				 *
+				 * As such, try to jump *to* it so we get another
+				 * chance of shifting `sect'. */
+				want_next = want_prev;
+				want_prev = TAILQ_PREV(want_next, Dee_host_section_tailq, hs_link);
 			}
+			if (want_prev == NULL || want_prev->hs_fallthru != want_next) {
+				/* Moving the section doesn't have any downsides (other
+				 * than potential cache locality) -> so move it! */
+do_move_section:
+				sect->hs_fallthru = want_next;
+				TAILQ_REMOVE(&text, sect, hs_link);
+				TAILQ_INSERT_BEFORE(want_next, sect, hs_link);
+				ASSERT(TAILQ_NEXT(sect, hs_link) == sect->hs_fallthru);
+				ASSERT(TAILQ_NEXT(sect, hs_link) == want_next);
+				}
 		}
+		sect = sort_next;
+	}
+
+	/* Go through the list of sections and append jump instructions wherever
+	 * the intended fallthru target differs from the actual successor section. */
+	TAILQ_FOREACH (sect, &text, hs_link) {
+		struct Dee_host_symbol *dst;
+		struct Dee_host_section *want_next = sect->hs_fallthru;
+		struct Dee_host_section *sort_next = TAILQ_NEXT(sect, hs_link);
+		unsigned int n;
+		if (want_next == NULL)
+			goto no_jmp_needed; /* No specific successor needed */
+		if (want_next == sort_next)
+			goto no_jmp_needed; /* Expected successor already matched */
+
+		/* If the intended target is a zero-sized section, then the
+		 * actual jump goes to wherever that section falls to. */
+		want_next = sect->hs_fallthru;
+		for (n = 128; n > 0; --n) { /* Limit is needed for infinite loops */
+			struct Dee_host_section *next;
+			if (Dee_host_section_size(want_next) != 0)
+				break;
+			next = want_next->hs_fallthru;
+			if (next == NULL) {
+				DeeError_Throwf(&DeeError_IllegalInstruction,
+				                "Cannot fallthru into unmapped code");
+				goto err;
+			}
+			if (next == sort_next)
+				goto no_jmp_needed;
+			want_next = next;
+			sect->hs_fallthru = want_next;
+		}
+
+		/* Must generate a jump */
+		dst = Dee_function_assembler_newsym(self);
+		if unlikely(!dst)
+			goto err;
+		dst->hs_type = DEE_HOST_SYMBOL_SECT;
+		dst->hs_value.sv_sect.ss_sect = want_next;
+		dst->hs_value.sv_sect.ss_off  = 0;
+#ifdef Dee_MallocUsableSize
+		sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
+		ASSERT(sect->hs_alend >= sect->hs_end);
+#else /* Dee_MallocUsableSize */
+		sect->hs_alend = sect->hs_end;
+#endif /* !Dee_MallocUsableSize */
+		if unlikely(_Dee_host_section_gjmp(sect, dst))
+			goto err;
+		/*sect->hs_fallthru = NULL;*/
+no_jmp_needed:;
+	}
+
+	/* Go through the big ol' list of sections to figure out the total text size.
+	 * Note that we can't remove empty sections because they might still be
+	 * referenced by Dee_host_symbol-s. */
+	self->fa_sectsize = 0;
+	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
+		self->fa_sectsize += Dee_host_section_size(sect);
+#ifdef HOSTASM_HAVE_SHRINKJUMPS
+		sect->hs_symbols = NULL; /* Needed for symbol ordering */
+#endif /* HOSTASM_HAVE_SHRINKJUMPS */
 	}
 
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
@@ -1208,11 +1285,17 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 			}
 			ASSERT(sym->hs_type == DEE_HOST_SYMBOL_SECT ||
 			       sym->hs_type == DEE_HOST_SYMBOL_ABS);
+			p_list = &misc_symbols;
 			if (sym->hs_type == DEE_HOST_SYMBOL_SECT) {
-				p_list = &sym->hs_value.sv_sect.ss_sect->hs_symbols;
-			} else {
-				p_list = &misc_symbols;
+				struct Dee_host_section *symsect;
+				symsect = sym->hs_value.sv_sect.ss_sect;
+				ASSERT(symsect);
+				/* The section may not be linked if it was deleted by `Dee_function_assembler_trimdead()'.
+				 * When that is the case, simply keep the symbol as part of the misc-symbols list. */
+				if (Dee_host_section_islinked(symsect))
+					p_list = &symsect->hs_symbols;
 			}
+			ASSERT(!*p_list || (*p_list)->hs_type != DEE_HOST_SYMBOL_UNDEF);
 			sym->_hs_next = *p_list;
 			*p_list = sym;
 			sym = next;
@@ -1224,15 +1307,8 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 
 	return 0;
 err:
-#ifdef HOSTASM_HAVE_SHRINKJUMPS
-	{
-		struct Dee_host_section *sect;
-		TAILQ_FOREACH (sect, &text, hs_link)
-			sect->hs_symbols = NULL;
-		TAILQ_FOREACH (sect, &cold, hs_link)
-			sect->hs_symbols = NULL;
-	}
-#endif /* HOSTASM_HAVE_SHRINKJUMPS */
+	TAILQ_FOREACH (sect, &text, hs_link)
+		sect->hs_symbols = NULL;
 	return -1;
 #undef text
 }
@@ -1280,6 +1356,7 @@ Dee_host_reloc_shrinkjump(struct Dee_host_section *__restrict sect,
 	byte_t *rel_templ = sect->hs_start + self->hr_offset;
 	uintptr_t rel_adr = sect->hs_badr + self->hr_offset;
 	uintptr_t rel_val;
+	ASSERT(self->hr_offset < Dee_host_section_size(sect));
 	switch (self->hr_vtype) {
 	case DEE_HOST_RELOCVALUE_ABS:
 		goto nope; /* Cannot shrink absolute relocation */
@@ -1443,6 +1520,25 @@ again:
 		Dee_BadAlloc(self->fa_sectsize);
 		goto err_result;
 	}
+
+	/* Let the generated function inherit inlined references (if there are any).
+	 * NOTE: this is the only reason why you can call output only once, so if it
+	 *       ever becomes necessary to output the same code multiple times, you
+	 *       have to change this part to create copies of the refs vector! */
+	result->hf_refs = NULL;
+	if (self->fa_irefs.ir_size > 0) {
+		size_t i;
+		DREF DeeObject **refs = self->fa_irefs.ir_elem;
+		for (i = 0; i <= self->fa_irefs.ir_mask; ++i) {
+			/* Fill gaps with references to `Dee_None' */
+			if (refs[i] == NULL)
+				refs[i] = DeeNone_NewRef();
+		}
+		refs[i] = NULL; /* Sentinel */
+		result->hf_refs = refs;
+		self->fa_irefs.ir_elem = NULL; /* Stolen... */
+	}
+
 	return 0;
 err_result:
 	Dee_hostfunc_fini(result);

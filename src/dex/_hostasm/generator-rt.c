@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -131,6 +132,110 @@ libhostasm_rt_err_illegal_instruction(DeeCodeObject *code, void *ip) {
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
 	                       "Illegal instruction at %s+%.4" PRFX32,
 	                       code_name, offset);
+}
+
+INTERN ATTR_COLD int DCALL libhostasm_rt_err_no_active_exception(void) {
+	return DeeError_Throwf(&DeeError_RuntimeError, "No active exception");
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
+libhostasm_rt_err_unbound_attribute_string(DeeTypeObject *__restrict tp,
+                                           char const *__restrict name) {
+	ASSERT_OBJECT(tp);
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "Unbound attribute `%r.%s'",
+	                       tp, name);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_unbound_class_member(DeeTypeObject *__restrict class_type, uint16_t addr) {
+	/* Check if we can find the proper member so we can pass its name. */
+	size_t i;
+	char const *name = "??" "?";
+	struct class_desc *desc;
+	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
+	ASSERT(DeeType_IsClass(class_type));
+	desc = DeeClass_DESC(class_type);
+	for (i = 0; i <= desc->cd_desc->cd_cattr_mask; ++i) {
+		struct class_attribute *attr;
+		attr = &desc->cd_desc->cd_cattr_list[i];
+		if (!attr->ca_name)
+			continue;
+		if (addr < attr->ca_addr)
+			continue;
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+			continue;
+		name = DeeString_STR(attr->ca_name);
+		goto got_it;
+	}
+	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
+		struct class_attribute *attr;
+		attr = &desc->cd_desc->cd_iattr_list[i];
+		if (!attr->ca_name)
+			continue;
+		if (addr < attr->ca_addr)
+			continue;
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+			continue;
+		if (!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
+			continue;
+		name = DeeString_STR(attr->ca_name);
+		goto got_it;
+	}
+	/* Throw the error. */
+got_it:
+	return libhostasm_rt_err_unbound_attribute_string(class_type, name);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_unbound_instance_member(DeeTypeObject *__restrict class_type, uint16_t addr) {
+	/* Check if we can find the proper member so we can pass its name. */
+	size_t i;
+	char const *name = "??" "?";
+	struct class_desc *desc;
+	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
+	ASSERT(DeeType_IsClass(class_type));
+	desc = DeeClass_DESC(class_type);
+	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
+		struct class_attribute *attr;
+		attr = &desc->cd_desc->cd_iattr_list[i];
+		if (!attr->ca_name)
+			continue;
+		if (addr < attr->ca_addr)
+			continue;
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+			continue;
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+			continue;
+		name = DeeString_STR(attr->ca_name);
+		break;
+	}
+
+	/* Throw the error. */
+	return libhostasm_rt_err_unbound_attribute_string(class_type, name);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_requires_class(DeeTypeObject *__restrict tp_self) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Needed a class when %k is only a regular type",
+	                       tp_self);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_invalid_class_addr(DeeTypeObject *__restrict tp_self,
+                                     uint16_t addr) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Invalid class address %" PRFu16 " for %k",
+	                       addr, tp_self);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_invalid_instance_addr(DeeTypeObject *__restrict tp_self,
+                                        uint16_t addr) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Invalid class instance address %" PRFu16 " for %k",
+	                       addr, tp_self);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

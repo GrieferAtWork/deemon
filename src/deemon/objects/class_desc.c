@@ -4572,8 +4572,7 @@ err_unbound_class_member(/*Class*/ DeeTypeObject *__restrict class_type,
                          uint16_t addr) {
 	/* Check if we can find the proper member so we can pass its name. */
 	size_t i;
-	char const *name = "??"
-	                   "?";
+	char const *name = "??" "?";
 	for (i = 0; i <= desc->cd_desc->cd_cattr_mask; ++i) {
 		struct class_attribute *attr;
 		attr = &desc->cd_desc->cd_cattr_list[i];
@@ -4611,8 +4610,7 @@ err_unbound_member(/*Class*/ DeeTypeObject *__restrict class_type,
                    uint16_t addr) {
 	/* Check if we can find the proper member so we can pass its name. */
 	size_t i;
-	char const *name = "??"
-	                   "?";
+	char const *name = "??" "?";
 	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
 		struct class_attribute *attr;
 		attr = &desc->cd_desc->cd_iattr_list[i];
@@ -4867,10 +4865,10 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
 
 	/* Lock and extract the member. */
-	Dee_class_desc_lock_write(desc);
+	Dee_class_desc_lock_read(desc);
 	result = desc->cd_members[addr];
 	Dee_XIncref(result);
-	Dee_class_desc_lock_endwrite(desc);
+	Dee_class_desc_lock_endread(desc);
 	if unlikely(!result)
 		err_unbound_class_member(self, desc, addr);
 	return result;

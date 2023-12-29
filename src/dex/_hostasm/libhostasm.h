@@ -204,9 +204,14 @@ typedef uint8_t Dee_host_regusage_t;
 #define MEMSTATE_XLOCAL_VARARGS    4 /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
 #define MEMSTATE_XLOCAL_VARKWDS    5 /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
 #define MEMSTATE_XLOCAL_STDOUT     6 /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
-#define MEMSTATE_XLOCAL_MINCOUNT   7 /* Min number of extra locals */
+#define MEMSTATE_XLOCAL_POPITER    7 /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
+#define MEMSTATE_XLOCAL_MINCOUNT   8 /* Min number of extra locals */
 #define MEMSTATE_XLOCAL_DEFARG_MIN MEMSTATE_XLOCAL_MINCOUNT
 #define MEMSTATE_XLOCAL_DEFARG(i)  (MEMSTATE_XLOCAL_DEFARG_MIN + (i)) /* Start of cached optional arguments. */
+
+/* Mem-state flags. */
+#define MEMSTATE_F_NORMAL    0x0000 /* Normal flags */
+#define MEMSTATE_F_GOTEXCEPT 0x0001 /* It's known that `DeeThread_Self()->t_except != NULL' */
 
 struct Dee_memstate {
 	Dee_refcnt_t                               ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
@@ -215,6 +220,7 @@ struct Dee_memstate {
 	                                                                * Number of local variables + extra slots. NOTE: Never 0! */
 	Dee_vstackaddr_t                           ms_stackc;          /* Number of (currently) used deemon stack slots in use. */
 	Dee_vstackaddr_t                           ms_stacka;          /* Allocated number of deemon stack slots in use. */
+	uintptr_t                                  ms_flags;           /* Special state flags (set f `MEMSTATE_F_*' and'd when constraining states; initialized to `0') */
 	size_t                                     ms_rinuse[HOST_REGISTER_COUNT]; /* Number of times each register is referenced by `ms_stackv' and `ms_localv' */
 	Dee_host_regusage_t                        ms_rusage[HOST_REGISTER_COUNT]; /* Meaning of registers (set to `DEE_HOST_REGUSAGE_GENERIC' if clobbered) */
 	struct Dee_memloc                         *ms_stackv;          /* [0..ms_stackc][owned] Deemon stack memory locations. */
@@ -284,6 +290,10 @@ Dee_memstate_copy(struct Dee_memstate *__restrict self);
 	 unlikely(Dee_memstate_isshared(*(p_self))                   \
 	          ? Dee_memstate_inplace_copy_because_shared(p_self) \
 	          : 0))
+#define Dee_memstate_dounshare(p_self)                           \
+	(Dee_memstate_verifyrinuse(*(p_self)), /* TODO: REMOVE ME */ \
+	 ASSERT(Dee_memstate_isshared(*(p_self))),                   \
+	 Dee_memstate_inplace_copy_because_shared(p_self))
 
 /* Ensure that at least `min_alloc' stack slots are allocated. */
 INTDEF NONNULL((1)) int DCALL
@@ -414,6 +424,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vdup_n(struct Dee_memstate *_
 #define Dee_memstate_vdup(self) Dee_memstate_vdup_n(self, 1)
 
 
+#undef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+#if !defined(NDEBUG) && 1
+#define HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+#endif /* !NDEBUG */
+
 
 
 /* Host text symbol */
@@ -421,11 +436,15 @@ struct Dee_jump_descriptor;
 struct Dee_host_section;
 struct Dee_host_symbol {
 	struct Dee_host_symbol *_hs_next; /* [0..1][owned] Next symbol (used internally for chaining) */
+#ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+	char const              *hs_file;
+	int                      hs_line;
+#endif /* HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
 #define DEE_HOST_SYMBOL_UNDEF 0 /* Not yet defined */
 #define DEE_HOST_SYMBOL_ABS   1 /* Absolute value (e.g. for API functions) */
 #define DEE_HOST_SYMBOL_JUMP  2 /* Pass-through via a `struct Dee_jump_descriptor' (or fast-forward to start of section) */
 #define DEE_HOST_SYMBOL_SECT  3 /* Offset into a `struct Dee_host_section' */
-	uintptr_t hs_type; /* Symbol type (one of `DEE_HOST_SYMBOL_*') */
+	uintptr_t                hs_type; /* Symbol type (one of `DEE_HOST_SYMBOL_*') */
 	union {
 		void const                 *sv_abs;  /* [?..?][valid_if(DEE_HOST_SYMBOL_ABS)] */
 		struct Dee_jump_descriptor *sv_jump; /* [1..1][valid_if(DEE_HOST_SYMBOL_JUMP)] */
@@ -443,8 +462,8 @@ struct Dee_host_symbol {
 #define Dee_host_symbol_setabs(self, addr)                \
 	(void)((self)->hs_type         = DEE_HOST_SYMBOL_ABS, \
 	       (self)->hs_value.sv_abs = (addr))
-#define Dee_host_symbol_setjump(self, desc)                \
-	(void)((self)->hs_type          = DEE_HOST_SYMBOL_JMP, \
+#define Dee_host_symbol_setjump(self, desc)                 \
+	(void)((self)->hs_type          = DEE_HOST_SYMBOL_JUMP, \
 	       (self)->hs_value.sv_jump = (desc))
 #define Dee_host_symbol_setsect(self, sect) \
 	Dee_host_symbol_setsect_ex(self, sect, Dee_host_section_size(sect))
@@ -472,7 +491,7 @@ struct Dee_host_reloc {
 	uint16_t                hr_rtype;  /* Relocation type (one of `DEE_HOST_RELOC_*') */
 #define DEE_HOST_RELOCVALUE_SYM  0     /* Relocate against a symbol */
 #define DEE_HOST_RELOCVALUE_ABS  1     /* Relocate against an absolute value (for API calls) */
-#ifndef HOSTASM_HAVE_SHRINKJUMPS /* shrinkjumps requires all sections references to use symbols */
+#ifndef HOSTASM_HAVE_SHRINKJUMPS /* shrinkjumps requires all section references to use symbols */
 #define DEE_HOST_RELOCVALUE_SECT 2     /* Relocate against a section base address */
 #endif /* !HOSTASM_HAVE_SHRINKJUMPS */
 	uint16_t                hr_vtype;  /* Value type (one of `DEE_HOST_RELOCVALUE_*') */
@@ -507,11 +526,13 @@ struct Dee_host_section {
 		byte_t                   *hs_alend;   /* [>= hs_start] End of allocated host assembly */
 		struct Dee_host_symbol   *hs_symbols; /* [0..1][owned][valid_if(TAILQ_ISBOUND(self, hs_link))]
 		                                       * First symbol defined as part of this section */
+		struct Dee_host_section  *hs_fallthru; /* [0..1] Used internally by `Dee_function_assembler_ordersections()' */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_hs_u1
-#define hs_alend   _hs_u1.hs_alend
-#define hs_symbols _hs_u1.hs_symbols
+#define hs_alend    _hs_u1.hs_alend
+#define hs_symbols  _hs_u1.hs_symbols
+#define hs_fallthru _hs_u1.hs_fallthru
 #endif /* !__COMPILER_HAVE_TRANSPARENT_UNION */
 	;
 #else /* HOSTASM_HAVE_SHRINKJUMPS */
@@ -744,7 +765,8 @@ struct Dee_except_exitinfo {
 
 #define Dee_except_exitinfo_alloc(sizeof) ((struct Dee_except_exitinfo *)Dee_Malloc(sizeof))
 #define Dee_except_exitinfo_free(self)    Dee_Free(self)
-#define Dee_except_exitinfo_destroy(self) (Dee_basic_block_destroy((self)->exi_block), Dee_except_exitinfo_free(self))
+#define _Dee_except_exitinfo_destroy_noblock(self) Dee_except_exitinfo_free(self)
+#define Dee_except_exitinfo_destroy(self) (Dee_basic_block_destroy((self)->exi_block), _Dee_except_exitinfo_destroy_noblock(self))
 #define Dee_except_exitinfo_sizeof(cfa_offset) \
 	(offsetof(struct Dee_except_exitinfo, exi_stack) + ((cfa_offset) / HOST_SIZEOF_POINTER) * sizeof(uint16_t))
 #define _Dee_except_exitinfo_cmp_baseof(x) (&(x)->exi_cfa_offset)
@@ -778,6 +800,26 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
                              struct Dee_except_exitinfo const *__restrict to);
 
+struct Dee_inlined_references {
+	size_t           ir_mask; /* [> ir_size || ir_mask == 0] Allocated set size. */
+	size_t           ir_size; /* [< ir_mask || ir_mask == 0] Amount of non-NULL keys. */
+	DREF DeeObject **ir_elem; /* [0..ir_size|ALLOC(ir_mask+2)] Set keys (+ one extra slot for a trailing NULL to-be added later). */
+};
+
+#define Dee_inlined_references_init(self) bzero(self, sizeof(struct Dee_inlined_references))
+INTDEF NONNULL((1)) void DCALL Dee_inlined_references_fini(struct Dee_inlined_references *__restrict self);
+
+#define Dee_inlined_references_hashof(obj)          DeeObject_HashGeneric(obj)
+#define Dee_inlined_references_hashst(self, hash)  ((hash) & (self)->ir_mask)
+#define Dee_inlined_references_hashnx(hs, perturb) (void)((hs) = ((hs) << 2) + (hs) + (perturb) + 1, (perturb) >>= 5) /* This `5' is tunable. */
+#define Dee_inlined_references_hashit(self, i)     ((self)->ir_elem + ((i) & (self)->ir_mask))
+
+/* Make sure that `inherit_me' appears in `self', thus inheriting a reference to it.
+ * @return: inherit_me: Success: `self' now owns the reference to `inherit_me', and you can use it lazily
+ * @return: NULL:       Error */
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+Dee_inlined_references_ref(struct Dee_inlined_references *__restrict self,
+                           /*inherit(always)*/ DREF DeeObject *inherit_me);
 
 
 struct Dee_function_assembler {
@@ -785,6 +827,7 @@ struct Dee_function_assembler {
 	DeeCodeObject                *fa_code;         /* [1..1][const][== fa_function->fo_code] The code being assembled */
 	struct Dee_host_section       fa_prolog;       /* Function prolog (output even before `fa_blockv[0]'; verify arguments & set-up initial memstate) */
 	DREF struct Dee_memstate     *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL' if `Dee_function_assembler_compileblocks()' wasn't called, yet) */
+	struct Dee_basic_block       *fa_deleted;      /* [0..n][owned] Chain (via `bb_next') of blocks deleted by `Dee_function_assembler_trimdead()' (need to keep around because of unused symbols referencing these blocks) */
 	struct Dee_basic_block      **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start'). */
 	size_t                        fa_blockc;       /* Number of basic blocks. */
 	size_t                        fa_blocka;       /* Allocated number of basic blocks. */
@@ -793,11 +836,14 @@ struct Dee_function_assembler {
 	size_t                        fa_except_exita; /* Allocated number of exception exit basic blocks. */
 	struct Dee_except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `Dee_function_assembler_ordersections()') */
 	struct Dee_host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
-#define DEE_FUNCTION_ASSEMBLER_F_NORMAL 0x0000
-#define DEE_FUNCTION_ASSEMBLER_F_OSIZE  0x0001    /* Optimize for size (generally means: try not to use cold sections) */
+#define DEE_FUNCTION_ASSEMBLER_F_NORMAL     0x0000
+#define DEE_FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections) */
+#define DEE_FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `CODE_FASSEMBLY' code) */
+#define DEE_FUNCTION_ASSEMBLER_F_NOCMINLINE 0x0004 /* Don't inline references to already-bound class members, even if the attribute is `Dee_CLASS_ATTRIBUTE_FREADONLY' */
 	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
 	uint16_t                      fa_localc;       /* [const][== fa_code->co_localc] */
 	Dee_hostfunc_cc_t             fa_cc;           /* [const] Calling convention. */
+	struct Dee_inlined_references fa_irefs;        /* Inlined object references (must be ) */
 	struct Dee_host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link') */
 	size_t                        fa_sectsize;     /* Total size of all sections combined */
 };
@@ -810,6 +856,7 @@ struct Dee_function_assembler {
 	       (self)->fa_code     = (function)->fo_code,            \
 	       Dee_host_section_init(&(self)->fa_prolog),            \
 	       (self)->fa_prolog_end   = NULL,                       \
+	       (self)->fa_deleted      = NULL,                       \
 	       (self)->fa_blockv       = NULL,                       \
 	       (self)->fa_blockc       = 0,                          \
 	       (self)->fa_blocka       = 0,                          \
@@ -820,7 +867,8 @@ struct Dee_function_assembler {
 	       (self)->fa_symbols      = NULL,                       \
 	       (self)->fa_flags        = (flags),                    \
 	       (self)->fa_localc       = (self)->fa_code->co_localc, \
-	       (self)->fa_cc           = (cc))
+	       (self)->fa_cc           = (cc),                       \
+	       Dee_inlined_references_init(&(self)->fa_irefs))
 INTDEF NONNULL((1)) void DCALL
 Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self);
 
@@ -853,8 +901,18 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 /* Allocate a new host text symbol and return it.
  * @return: * :   The newly allocated host text symbol
  * @return: NULL: Error */
+#ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+INTDEF WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
+Dee_function_assembler_newsym_dbg(struct Dee_function_assembler *__restrict self,
+                                  char const *file, int line);
+#define Dee_function_assembler_newsym(self) Dee_function_assembler_newsym_dbg(self, __FILE__, __LINE__)
+#else /* HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
 INTDEF WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
 Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self);
+#endif /* !HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
+
+#define Dee_function_assembler_inlineref(self, inherit_me) \
+	Dee_inlined_references_ref(&(self)->fa_irefs, inherit_me)
 
 
 
@@ -871,7 +929,8 @@ struct Dee_function_generator {
 	struct Dee_memstate const     *fg_state_hstack_res; /* [0..1] State defining some extra reserved hstack locations (s.a. `Dee_memstate_hstack_find()'). */
 };
 
-#define Dee_function_generator_state_unshare(self) Dee_memstate_unshare(&(self)->fg_state)
+#define Dee_function_generator_state_unshare(self)   Dee_memstate_unshare(&(self)->fg_state)
+#define Dee_function_generator_state_dounshare(self) Dee_memstate_dounshare(&(self)->fg_state)
 
 /* Return a basic block that should be jumped to in order to handle a exception. */
 #define Dee_function_generator_except_exit(self) \
@@ -880,7 +939,10 @@ struct Dee_function_generator {
 #define Dee_function_generator_gadjust_cfa_offset(self, delta) \
 	(void)((self)->fg_state->ms_host_cfa_offset += (uintptr_t)(ptrdiff_t)(delta))
 
-#define Dee_function_generator_newsym(self) Dee_function_assembler_newsym((self)->fg_assembler)
+#define Dee_function_generator_newsym(self) \
+	Dee_function_assembler_newsym((self)->fg_assembler)
+#define Dee_function_generator_inlineref(self, inherit_me) \
+	Dee_function_assembler_inlineref((self)->fg_assembler, inherit_me)
 
 
 /* Code generator helpers to manipulate the V-stack. */
@@ -936,6 +998,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_xlocal(struct
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_argc(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_argv(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_usage(struct Dee_function_generator *__restrict self, Dee_host_regusage_t usage);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict self);
+
+/* Class/instance member access helpers. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, bool ref); /* type -> value */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict self, uint16_t addr, bool ref); /* this, type -> value */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict self, uint16_t addr);            /* this, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict self, uint16_t addr);            /* this, type, value -> N/A */
 
 /* Perform a conditional jump to `desc' based on `jump_if_true'
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
@@ -944,7 +1013,19 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_usage(struct 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
                             struct Dee_jump_descriptor *desc,
-                            Dee_instruction_t const *instr, bool jump_if_true);
+                            Dee_instruction_t const *instr,
+                            bool jump_if_true);
+
+/* Implement a ASM_FOREACH-style jump to `desc'
+ * @param: instr:               Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
+ * @param: always_pop_iterator: When true, the iterator is also popped during the jump to `desc'
+ *                              This is needed to implement ASM_FOREACH when used with a prefix.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
+                                struct Dee_jump_descriptor *desc,
+                                bool always_pop_iterator);
 
 /* >> TOP = *(TOP + ind_delta); */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vind(struct Dee_function_generator *__restrict self, ptrdiff_t ind_delta);
@@ -1002,8 +1083,9 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 #define VCALLOP_CC_INT             1 /* int (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);      (doesn't push anything onto the vstack) */
 #define VCALLOP_CC_RAWINT          2 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack) */
 #define VCALLOP_CC_RAWINT_KEEPARGS 3 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (Push the returned value onto the vstack, and don't pop arguments) */
-#define VCALLOP_CC_VOID            4 /* void (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);     (doesn't push anything onto the vstack) */
-#define VCALLOP_CC_EXCEPT          5 /* ? (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);        (always jumps to exception handling) */
+#define VCALLOP_CC_NEGINT          4 /* dssize_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); (doesn't push anything onto the vstack; error if negative) */
+#define VCALLOP_CC_VOID            5 /* void (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);     (doesn't push anything onto the vstack) */
+#define VCALLOP_CC_EXCEPT          6 /* ? (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);        (always jumps to exception handling) */
 
 /* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
  * do the extra trailing checks needed to turn that call into `VCALLOP_CC_OBJECT'
@@ -1417,7 +1499,10 @@ INTDEF NONNULL((1)) void DCALL
 _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
                           struct Dee_function_assembler *assembler,
                           Dee_instruction_t const *instr);
-#endif /* !NO_HOSTASM_DEBUG_PRINT */
+#define HA_printf(...) Dee_DPRINTF("hostasm:" __VA_ARGS__)
+#else /* !NO_HOSTASM_DEBUG_PRINT */
+#define HA_printf(...) (void)0
+#endif /* NO_HOSTASM_DEBUG_PRINT */
 
 
 
@@ -1440,6 +1525,13 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_unbound_global(struct 
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL libhostasm_rt_err_unbound_local(struct code_object *code, void *ip, uint16_t local_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL libhostasm_rt_err_unbound_arg(struct code_object *code, void *ip, uint16_t arg_index);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL libhostasm_rt_err_illegal_instruction(DeeCodeObject *code, void *ip);
+INTDEF ATTR_COLD int DCALL libhostasm_rt_err_no_active_exception(void);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL libhostasm_rt_err_unbound_attribute_string(DeeTypeObject *__restrict tp, char const *__restrict name);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_unbound_class_member(DeeTypeObject *__restrict class_type, uint16_t addr);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_unbound_instance_member(DeeTypeObject *__restrict class_type, uint16_t addr);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_requires_class(DeeTypeObject *__restrict tp_self);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_instance_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
 
 DECL_END

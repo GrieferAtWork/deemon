@@ -951,6 +951,7 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
                                      Dee_atomic_rwlock_t *opt_endread_before_throw,
                                      Dee_atomic_rwlock_t *opt_endwrite_before_throw) {
 	int temp;
+	DREF struct Dee_memstate *saved_state;
 	struct Dee_host_symbol *target;
 	struct Dee_host_section *text_sect;
 	struct Dee_host_section *cold_sect;
@@ -962,13 +963,15 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	cold_sect = text_sect;
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE))
 		cold_sect = &self->fg_block->bb_hcold;
-	if (text_sect == cold_sect) {
-		if unlikely(_Dee_function_generator_gjnz(self, loc, target))
-			goto err;
-	} else {
-		if unlikely(_Dee_function_generator_gjz(self, loc, target))
-			goto err;
-	}
+	if unlikely(text_sect == cold_sect
+	            ? _Dee_function_generator_gjnz(self, loc, target)
+	            : _Dee_function_generator_gjz(self, loc, target))
+		goto err;
+	saved_state = self->fg_state;
+	Dee_memstate_incref(saved_state);
+	if unlikely(Dee_function_generator_state_dounshare(self))
+		goto err_saved_state;
+
 	self->fg_sect = cold_sect;
 	if (text_sect != cold_sect)
 		Dee_host_symbol_setsect(target, cold_sect);
@@ -976,10 +979,10 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	/* Location isn't bound -> generate code to throw an exception. */
 	if (opt_endwrite_before_throw != NULL &&
 	    unlikely(Dee_function_generator_grwlock_endwrite_const(self, opt_endwrite_before_throw)))
-		goto err;
+		goto err_saved_state;
 	if (opt_endread_before_throw != NULL &&
 	    unlikely(Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw)))
-		goto err;
+		goto err_saved_state;
 	switch (kind) {
 	case ASM_LOCAL:
 		temp = Dee_function_generator_gthrow_local_unbound(self, instr, id1);
@@ -993,14 +996,18 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	default: __builtin_unreachable();
 	}
 	if unlikely(temp)
-		goto err;
+		goto err_saved_state;
 
-	/* Switch back to the original section. */
+	/* Switch back to the original section, and restore the saved mem-state. */
+	Dee_memstate_decref(self->fg_state);
+	self->fg_state = saved_state;
+	self->fg_sect = text_sect;
 	ASSERT((text_sect == cold_sect) == !!Dee_host_symbol_isdefined(target));
 	if (text_sect == cold_sect)
 		Dee_host_symbol_setsect(target, text_sect);
-	self->fg_sect = text_sect;
 	return 0;
+err_saved_state:
+	Dee_memstate_decref(self->fg_state);
 err:
 	return -1;
 }

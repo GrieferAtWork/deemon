@@ -30,6 +30,10 @@
 
 #include <stdint.h>
 
+#ifndef __INTELLISENSE__
+#include <deemon/alloc.h>
+#endif /* !__INTELLISENSE__ */
+
 #undef byte_t
 #define byte_t __BYTE_TYPE__
 
@@ -195,6 +199,7 @@ struct Dee_hostfunc {
 	union Dee_hostfunc_entry hf_entry; /* Function entry point. */
 	void                   *_hf_base;  /* Mmap base address. */
 	size_t                  _hf_size;  /* Mmap size address. */
+	DREF DeeObject         **hf_refs;  /* [1..1][0..n][owned] Inlined object references (terminated by a trailing NULL). */
 };
 
 #ifdef __CYGWIN__
@@ -242,7 +247,7 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 #define Dee_hostfunc_init(self, size)                      \
 	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
 	 ((self)->_hf_base = VirtualAlloc(NULL, (self)->_hf_size, MEM_COMMIT, PAGE_READWRITE)) != NULL ? 0 : -1)
-#define Dee_hostfunc_fini(self)   (void)VirtualFree((self)->_hf_base, 0, MEM_RELEASE)
+#define _Dee_hostfunc_fini(self)  (void)VirtualFree((self)->_hf_base, 0, MEM_RELEASE)
 #define Dee_hostfunc_mkexec(self) Dee_hostfunc_mkexec(self)
 LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_hostfunc_mkexec)(struct Dee_hostfunc *__restrict self) {
 	DWORD dwTemp;
@@ -256,15 +261,30 @@ LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_hostfunc_mkexec)(struct Dee_hostfunc *
 	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
 	 ((self)->_hf_base = mmap(NULL, (self)->_hf_size, PROT_READ | PROT_WRITE, \
 	                          MAP_PRIVATE | MAP_ANON, -1, 0)) != MAP_FAILED ? 0 : -1)
-#define Dee_hostfunc_fini(self)   (void)munmap((self)->_hf_base, (self)->_hf_size)
+#define _Dee_hostfunc_fini(self)  (void)munmap((self)->_hf_base, (self)->_hf_size)
 #define Dee_hostfunc_mkexec(self) mprotect((self)->_hf_base, (self)->_hf_size, PROT_READ | PROT_EXEC)
 #else /* ... */
 #define Dee_hostfunc_init(self, size)                      \
 	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
 	 ((self)->_hf_base = Dee_TryMalloc((self)->_hf_size)) != NULL ? 0 : -1)
-#define Dee_hostfunc_fini(self)   Dee_Free((self)->_hf_base)
+#define _Dee_hostfunc_fini(self)  Dee_Free((self)->_hf_base)
 #define Dee_hostfunc_mkexec(self) 0
 #endif /* !... */
+
+LOCAL NONNULL((1)) void DCALL
+Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self) {
+	_Dee_hostfunc_fini(self);
+#ifndef __INTELLISENSE__
+	if (self->hf_refs) {
+		size_t i;
+		DREF DeeObject *ob;
+		for (i = 0; (ob = self->hf_refs[i]) != NULL; ++i)
+			Dee_Decref(ob);
+		Dee_Free(self->hf_refs);
+	}
+#endif /* !__INTELLISENSE__ */
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

@@ -1161,11 +1161,11 @@ except_no_active_exception:
 		}
 
 		TARGET(ASM_ENDCATCH, -0, +0) {
-			ASSERT(except_recursion <= this_thread->t_exceptsz);
 			/* Handle errors if we've caused any.
 			 * NOTE: We do allow the handling of interrupt signal here,
 			 *       so-as to comply with the intended usage-case within
 			 *       interrupt exception handlers. */
+			ASSERT(except_recursion <= this_thread->t_exceptsz);
 			if (except_recursion != this_thread->t_exceptsz)
 				DeeError_Handled(ERROR_HANDLED_INTERRUPT);
 			DISPATCH();
@@ -1176,6 +1176,7 @@ except_no_active_exception:
 			if (frame->cf_result != NULL)
 				goto end_return;
 			/* Check for errors. */
+			ASSERT(except_recursion <= this_thread->t_exceptsz);
 			if (except_recursion != this_thread->t_exceptsz)
 				HANDLE_EXCEPT();
 			DISPATCH();
@@ -5360,7 +5361,7 @@ do_pack_dict:
 						err_va_index_out_of_bounds((size_t)(index - code->co_argc_max), va_size);
 						HANDLE_EXCEPT();
 					}
-					/* Exchange the stack-top object */
+					/* Push the argument */
 					argobj = frame->cf_argv[index];
 					PUSHREF(argobj);
 					DISPATCH();

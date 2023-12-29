@@ -201,10 +201,16 @@ morph_location(struct Dee_function_generator *__restrict self,
 	                old_loc < state->ms_localv + state->ms_localc;
 	if (is_local) {
 		if (old_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND) {
-			if (!(new_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND))
+			if (new_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND)
+				return 0; /* Value is never bound -> nothing to move! */
+			if (new_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)
 				return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot morph unbound -> not unbound");
-			/* Value is never bound -> nothing to move! */
-			return 0;
+			/* Value is conditionally bound in the target -> must generate code to assign "0" to it. */
+			old_loc->ml_flags &= ~(MEMLOC_F_NOREF | MEMLOC_M_LOCAL_BSTATE);
+			old_loc->ml_flags |= new_loc->ml_flags & MEMLOC_F_NOREF;
+			old_loc->ml_type = MEMLOC_TYPE_CONST;
+			old_loc->ml_value.v_const = NULL;
+			goto do_move_to_new_loc;
 		}
 		if (old_loc->ml_flags & MEMLOC_F_LOCAL_BOUND) {
 			if (!(new_loc->ml_flags & MEMLOC_F_LOCAL_BOUND))
@@ -218,7 +224,10 @@ morph_location(struct Dee_function_generator *__restrict self,
 		/* NOTE: Can always use decref_nokill() here, since the only situation where
 		 *       the caller is ever allowed to morph code such that something is no
 		 *       longer a reference, is when it is known that the reference is question
-		 *       is also being held someplace else! */
+		 *       is also being held someplace else!
+		 * TODO: This is incorrect. `MEMSTATE_XLOCAL_POPITER' should be decref'd normally
+		 *       if the location isn't being aliased elsewhere. As such, the decref *can*
+		 *       kill if there isn't an alias. */
 		if (is_local && !(old_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
 			if unlikely(must_incref ? Dee_function_generator_gxincref(self, old_loc, 1)
 			                        : Dee_function_generator_gxdecref_nokill(self, old_loc, 1))
@@ -232,6 +241,7 @@ morph_location(struct Dee_function_generator *__restrict self,
 		old_loc->ml_flags |= new_loc->ml_flags & MEMLOC_F_NOREF;
 	}
 	if (!check_different || !Dee_memloc_sameloc(old_loc, new_loc)) {
+do_move_to_new_loc:
 		if unlikely(Dee_function_generator_gmov_loc2loc(self, old_loc, new_loc))
 			goto err;
 		if (MEMLOC_TYPE_HASREG(old_loc->ml_type))

@@ -360,8 +360,8 @@ uset_rehash(USet *__restrict self, int sizedir) {
 		for (; iter < end; ++iter) {
 			struct uset_item *item;
 			dhash_t i, perturb;
-			/* Skip dummy keys. */
-			if (iter->usi_key == dummy)
+			/* Skip dummy and NULL keys. */
+			if (iter->usi_key == NULL || iter->usi_key == dummy)
 				continue;
 			perturb = i = UHASH(iter->usi_key) & new_mask;
 			for (;; USet_HashNx(i, perturb)) {

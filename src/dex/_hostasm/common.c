@@ -466,6 +466,90 @@ err:
 
 
 
+INTERN NONNULL((1)) void DCALL
+Dee_inlined_references_fini(struct Dee_inlined_references *__restrict self) {
+	if (self->ir_elem != NULL) {
+		size_t i;
+		for (i = 0; i <= self->ir_mask; ++i) {
+			DREF DeeObject *ob = self->ir_elem[i];
+			Dee_XDecref(ob);
+		}
+		Dee_Free(self->ir_elem);
+	}
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_inlined_references_rehash(struct Dee_inlined_references *__restrict self) {
+	DREF DeeObject **new_vector, **iter, **end;
+	size_t new_mask = self->ir_mask;
+	new_mask = (new_mask << 1) | 1;
+	if unlikely(new_mask == 1)
+		new_mask = 16 - 1; /* Start out bigger than 2. */
+	new_vector = (DREF DeeObject **)Dee_Callocc(new_mask + 1, sizeof(DREF DeeObject *));
+	if unlikely(!new_vector)
+		return false;
+	ASSERT((self->ir_elem == NULL) == (self->ir_mask == 0));
+	ASSERT((self->ir_elem == NULL) == (self->ir_size == 0));
+	if (self->ir_elem != NULL) {
+		/* Re-insert all existing items into the new set vector. */
+		end = (iter = self->ir_elem) + (self->ir_mask + 1);
+		for (; iter < end; ++iter) {
+			DREF DeeObject **item;
+			dhash_t i, perturb;
+			/* Skip NULL keys. */
+			if (*iter == NULL)
+				continue;
+			perturb = i = Dee_inlined_references_hashof(*iter) & new_mask;
+			for (;; Dee_inlined_references_hashnx(i, perturb)) {
+				item = &new_vector[i & new_mask];
+				if (!*item)
+					break; /* Empty slot found. */
+			}
+			/* Transfer this object. */
+			*item = *iter;
+		}
+		Dee_Free(self->ir_elem);
+	}
+	self->ir_mask = new_mask;
+	self->ir_elem = new_vector;
+	return 0;
+}
+
+/* Make sure that `inherit_me' appears in `self', thus inheriting a reference to it.
+ * @return: inherit_me: Success: `self' now owns the reference to `inherit_me', and you can use it lazily
+ * @return: NULL:       Error */
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+Dee_inlined_references_ref(struct Dee_inlined_references *__restrict self,
+                           /*inherit(always)*/ DREF DeeObject *inherit_me) {
+	dhash_t i, perturb, hash;
+	/* Check if a rehash is needed */
+	if ((self->ir_size + 1) * 2 > self->ir_mask) {
+		if unlikely(Dee_inlined_references_rehash(self)) {
+			Dee_Decref_unlikely(inherit_me);
+			return NULL;
+		}
+	}
+	hash    = Dee_inlined_references_hashof(inherit_me);
+	perturb = i = Dee_inlined_references_hashst(self, hash);
+	for (;; Dee_inlined_references_hashnx(i, perturb)) {
+		DREF DeeObject **item;
+		item = Dee_inlined_references_hashit(self, i);
+		if (*item) { /* Already in use */
+			if likely(*item == inherit_me) {
+				Dee_DecrefNokill(inherit_me);
+				break;
+			}
+		} else {
+			/* Fill in unused slot. */
+			*item = inherit_me; /* Inherited */
+			++self->ir_size;
+			break;
+		}
+	}
+	return inherit_me;
+}
+
+
 
 INTERN NONNULL((1)) void DCALL
 Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
@@ -476,9 +560,19 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 		Dee_except_exitinfo_destroy(self->fa_except_exitv[i]);
 	if (self->fa_prolog_end)
 		Dee_memstate_decref(self->fa_prolog_end);
+	Dee_inlined_references_fini(&self->fa_irefs);
 	Dee_host_section_fini(&self->fa_prolog);
 	Dee_Free(self->fa_blockv);
 	Dee_Free(self->fa_except_exitv);
+	{
+		struct Dee_basic_block *block = self->fa_deleted;
+		while (block) {
+			struct Dee_basic_block *next;
+			next = block->bb_next;
+			Dee_basic_block_destroy(block);
+			block = next;
+		}
+	}
 	{
 		struct Dee_host_symbol *sym = self->fa_symbols;
 		while (sym) {
@@ -701,10 +795,21 @@ err:
 /* Allocate a new host text symbol and return it.
  * @return: * :   The newly allocated host text symbol
  * @return: NULL: Error */
+#ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
 INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
-Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self) {
+Dee_function_assembler_newsym_dbg(struct Dee_function_assembler *__restrict self,
+                                  char const *file, int line)
+#else /* HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
+Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self)
+#endif /* !HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
+{
 	struct Dee_host_symbol *result = _Dee_host_symbol_alloc();
 	if likely(result) {
+#ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+		result->hs_file = file;
+		result->hs_line = line;
+#endif /* HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
 		result->hs_type  = DEE_HOST_SYMBOL_UNDEF;
 		result->_hs_next = self->fa_symbols;
 		self->fa_symbols = result;

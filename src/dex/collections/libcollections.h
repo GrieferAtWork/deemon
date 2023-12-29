@@ -536,7 +536,7 @@ struct uset_object {
 	                              * HINT: The difference to `us_size' is the number of dummy keys currently in use. */
 	size_t              us_size; /* [lock(us_lock)][< us_mask || us_mask == 0] Amount of non-NULL keys. */
 	struct uset_item   *us_elem; /* [1..us_size|ALLOC(us_mask+1)][lock(us_lock)]
-	                             * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
+	                              * [ownes_if(!= INTERNAL(empty_set_items))] Set keys. */
 #ifndef CONFIG_NO_THREADS
 	Dee_atomic_rwlock_t us_lock; /* Lock used for accessing this set. */
 #endif /* !CONFIG_NO_THREADS */
