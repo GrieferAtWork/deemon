@@ -182,7 +182,7 @@ typedef uint8_t Dee_hostfunc_cc_t;
 #define HOSTFUNC_CC_THISCALL_TUPLE    6 /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
 #define HOSTFUNC_CC_THISCALL_TUPLE_KW 7 /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
 #define HOSTFUNC_CC_COUNT             8
-union Dee_hostfunc_entry {
+union Dee_rawhostfunc_entry {
 	void                   *hfe_addr;
 	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                        /* HOSTFUNC_CC_CALL */
 	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                      /* HOSTFUNC_CC_CALL_KW */
@@ -195,11 +195,10 @@ union Dee_hostfunc_entry {
 };
 
 
-struct Dee_hostfunc {
-	union Dee_hostfunc_entry hf_entry; /* Function entry point. */
-	void                   *_hf_base;  /* Mmap base address. */
-	size_t                  _hf_size;  /* Mmap size address. */
-	DREF DeeObject         **hf_refs;  /* [1..1][0..n][owned] Inlined object references (terminated by a trailing NULL). */
+struct Dee_rawhostfunc {
+	union Dee_rawhostfunc_entry rhf_entry; /* Function entry point. */
+	void                      *_rhf_base;  /* Mmap base address. */
+	size_t                     _rhf_size;  /* Mmap size address. */
 };
 
 #ifdef __CYGWIN__
@@ -244,47 +243,32 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 
 
 #if defined(CONFIG_hostfunc_USES_VirtualAlloc)
-#define Dee_hostfunc_init(self, size)                      \
-	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
-	 ((self)->_hf_base = VirtualAlloc(NULL, (self)->_hf_size, MEM_COMMIT, PAGE_READWRITE)) != NULL ? 0 : -1)
-#define _Dee_hostfunc_fini(self)  (void)VirtualFree((self)->_hf_base, 0, MEM_RELEASE)
-#define Dee_hostfunc_mkexec(self) Dee_hostfunc_mkexec(self)
-LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_hostfunc_mkexec)(struct Dee_hostfunc *__restrict self) {
+#define Dee_rawhostfunc_init(self, size)                    \
+	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())), \
+	 ((self)->_rhf_base = VirtualAlloc(NULL, (self)->_rhf_size, MEM_COMMIT, PAGE_READWRITE)) != NULL ? 0 : -1)
+#define Dee_rawhostfunc_fini(self)   (void)VirtualFree((self)->_rhf_base, 0, MEM_RELEASE)
+#define Dee_rawhostfunc_mkexec(self) Dee_rawhostfunc_mkexec(self)
+LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_rawhostfunc_mkexec)(struct Dee_rawhostfunc *__restrict self) {
 	DWORD dwTemp;
-	return VirtualProtect(self->_hf_base, self->_hf_size, PAGE_EXECUTE_READ, &dwTemp) ? 0 : -1;
+	return VirtualProtect(self->_rhf_base, self->_rhf_size, PAGE_EXECUTE_READ, &dwTemp) ? 0 : -1;
 }
 #elif defined(CONFIG_hostfunc_USES_mmap)
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)(uintptr_t)-1)
 #endif /* !MAP_FAILED */
-#define Dee_hostfunc_init(self, size) \
-	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
-	 ((self)->_hf_base = mmap(NULL, (self)->_hf_size, PROT_READ | PROT_WRITE, \
+#define Dee_rawhostfunc_init(self, size)                                        \
+	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())),                     \
+	 ((self)->_rhf_base = mmap(NULL, (self)->_rhf_size, PROT_READ | PROT_WRITE, \
 	                          MAP_PRIVATE | MAP_ANON, -1, 0)) != MAP_FAILED ? 0 : -1)
-#define _Dee_hostfunc_fini(self)  (void)munmap((self)->_hf_base, (self)->_hf_size)
-#define Dee_hostfunc_mkexec(self) mprotect((self)->_hf_base, (self)->_hf_size, PROT_READ | PROT_EXEC)
+#define Dee_rawhostfunc_fini(self)   (void)munmap((self)->_rhf_base, (self)->_rhf_size)
+#define Dee_rawhostfunc_mkexec(self) mprotect((self)->_rhf_base, (self)->_rhf_size, PROT_READ | PROT_EXEC)
 #else /* ... */
-#define Dee_hostfunc_init(self, size)                      \
-	(((self)->_hf_size = CEIL_ALIGN(size, getpagesize())), \
-	 ((self)->_hf_base = Dee_TryMalloc((self)->_hf_size)) != NULL ? 0 : -1)
-#define _Dee_hostfunc_fini(self)  Dee_Free((self)->_hf_base)
-#define Dee_hostfunc_mkexec(self) 0
+#define Dee_rawhostfunc_init(self, size)                    \
+	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())), \
+	 ((self)->_rhf_base = Dee_TryMalloc((self)->_rhf_size)) != NULL ? 0 : -1)
+#define Dee_rawhostfunc_fini(self)   Dee_Free((self)->_rhf_base)
+#define Dee_rawhostfunc_mkexec(self) 0
 #endif /* !... */
-
-LOCAL NONNULL((1)) void DCALL
-Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self) {
-	_Dee_hostfunc_fini(self);
-#ifndef __INTELLISENSE__
-	if (self->hf_refs) {
-		size_t i;
-		DREF DeeObject *ob;
-		for (i = 0; (ob = self->hf_refs[i]) != NULL; ++i)
-			Dee_Decref(ob);
-		Dee_Free(self->hf_refs);
-	}
-#endif /* !__INTELLISENSE__ */
-}
-
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

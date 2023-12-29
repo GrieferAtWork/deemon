@@ -47,6 +47,8 @@
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
+#include "utils.h"
+
 DECL_BEGIN
 
 /************************************************************************/
@@ -2631,12 +2633,54 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 	ASSERT(block->bb_mem_start != NULL);
 	ASSERT(block->bb_mem_end == NULL);
 
+	/* Generate code to delete all locals that are currently bound,
+	 * but whose values don't matter as per `self->bb_locuse' */
+	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
+		struct Dee_memstate *state = self->fg_state;
+		size_t lid;
+		for (lid = 0; lid < state->ms_localc; ++lid) {
+			if (state->ms_localv[lid].ml_type == MEMLOC_TYPE_UNALLOC)
+				continue;
+			if (bitset_test(block->bb_locuse, lid))
+				continue;
+			if (Dee_memstate_isshared(state)) {
+				if unlikely(Dee_function_generator_state_unshare(self))
+					goto err;
+				state = self->fg_state;
+			}
+			if unlikely(Dee_function_generator_vdel_local(self, lid))
+				goto err;
+		}
+	}
+
 	/* Generate text. */
 	block->bb_deemon_end = block->bb_deemon_end_r;
+	self->fg_nextlastloc = block->bb_locreadv;
 	for (instr = block->bb_deemon_start; instr < block->bb_deemon_end;) {
 		Dee_instruction_t const *next_instr = DeeAsm_NextInstr(instr);
 		if unlikely(Dee_function_generator_geninstr(self, instr, &next_instr))
 			goto err;
+
+		/* Look at `self->fg_block->bb_locreadv' to delete all locals
+		 * for which there are entries for the range `[instr, next_instr)' */
+		if (self->fg_nextlastloc != NULL) {
+			/* TODO: `Dee_function_generator_geninstr()' should also incorporate this.
+			 *       For example:
+			 *       >>     call global @getValue
+			 *       >>     pop  local @foo
+			 *       >>     jt   @local foo, 1f    // If this is the last time "foo" is used, it can be decref'd *before* the jump happens!
+			 *       >>     ...
+			 *       >> 1:
+			 */
+			while (self->fg_nextlastloc->bbl_instr < next_instr) {
+				/* Delete local after the last time it was read. */
+				size_t lid = self->fg_nextlastloc->bbl_lid;
+				if unlikely(Dee_function_generator_vdel_local(self, lid))
+					goto err;
+				++self->fg_nextlastloc;
+			}
+		}
+
 		ASSERT(block->bb_mem_end == NULL ||
 		       block->bb_mem_end == (DREF struct Dee_memstate *)-1);
 		if (block->bb_mem_end == (DREF struct Dee_memstate *)-1) {
@@ -2673,7 +2717,10 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 		int error = Dee_basic_block_constrainwith(next_block, block->bb_mem_end, addr);
 		if unlikely(error < 0)
 			goto err;
+		if (error > 0)
+			return 0;
 	}
+
 	return 0;
 err:
 	ASSERT(block->bb_mem_end == NULL);

@@ -113,23 +113,14 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
 Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *__restrict self) {
 	struct Dee_memstate *result;
-	size_t local_count;
-	size_t extra_base;
-
-	/* Figure out how many locals we need. */
-	extra_base  = self->fa_localc;
-	local_count = extra_base;
-	local_count += MEMSTATE_XLOCAL_MINCOUNT;
-	local_count += self->fa_code->co_argc_max;
-	local_count -= self->fa_code->co_argc_min;
 
 	/* Setup the state of the function's first (entry) block. */
-	result = Dee_memstate_alloc(local_count);
+	result = Dee_memstate_alloc(self->fa_xlocalc);
 	if unlikely(!result)
 		goto done;
 	result->ms_refcnt = 1;
 	result->ms_host_cfa_offset = 0;
-	result->ms_localc = local_count;
+	result->ms_localc = self->fa_xlocalc;
 	result->ms_stackc = 0;
 	result->ms_stacka = 0;
 	result->ms_flags  = MEMSTATE_F_NORMAL;
@@ -1489,15 +1480,15 @@ Dee_function_assembler_output(struct Dee_function_assembler *__restrict self,
 	byte_t *writer;
 	struct Dee_host_section *sect;
 again:
-	if unlikely(Dee_hostfunc_init(result, self->fa_sectsize)) {
+	if unlikely(Dee_rawhostfunc_init(&result->hf_raw, self->fa_sectsize)) {
 		if (Dee_CollectMemory(self->fa_sectsize))
 			goto again;
 		goto err;
 	}
-	result->hf_entry.hfe_addr = result->_hf_base;
+	result->hf_raw.rhf_entry.hfe_addr = result->hf_raw._rhf_base;
 
 	/* Figure out the final base addresses of sections. */
-	writer = (byte_t *)result->_hf_base;
+	writer = (byte_t *)result->hf_raw._rhf_base;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
 		size_t size = Dee_host_section_size(sect);
 		sect->hs_base = writer;
@@ -1505,7 +1496,7 @@ again:
 	}
 
 	/* Output sections and resolve relocations. */
-	writer = (byte_t *)result->_hf_base;
+	writer = (byte_t *)result->hf_raw._rhf_base;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
 		size_t size = Dee_host_section_size(sect);
 		ASSERT(writer == sect->hs_base);
@@ -1516,7 +1507,7 @@ again:
 			goto err_result;
 		}
 	}
-	if unlikely(Dee_hostfunc_mkexec(result)) {
+	if unlikely(Dee_rawhostfunc_mkexec(&result->hf_raw)) {
 		Dee_BadAlloc(self->fa_sectsize);
 		goto err_result;
 	}
@@ -1541,7 +1532,7 @@ again:
 
 	return 0;
 err_result:
-	Dee_hostfunc_fini(result);
+	Dee_rawhostfunc_fini(&result->hf_raw);
 err:
 	return -1;
 }
@@ -1557,8 +1548,20 @@ Dee_assemble(DeeFunctionObject *__restrict function,
              Dee_hostfunc_cc_t cc, uint16_t flags) {
 	struct Dee_function_assembler assembler;
 	Dee_function_assembler_init(&assembler, function, cc, flags);
+
+	/* Special case: deemon code that contains user-written deemon assembly
+	 *               requires special care to include some extra checks in
+	 *               generated host assembly. */
+	if unlikely(assembler.fa_code->co_flags & CODE_FASSEMBLY)
+		assembler.fa_flags |= DEE_FUNCTION_ASSEMBLER_F_SAFE;
+
+	/* Go through all the steps of assembling the function. */
 	if unlikely(Dee_function_assembler_loadblocks(&assembler))
 		goto err_assembler;
+	if (!(assembler.fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
+		if unlikely(Dee_function_assembler_loadlocuse(&assembler))
+			goto err_assembler;
+	}
 	if unlikely(Dee_function_assembler_compileblocks(&assembler))
 		goto err_assembler;
 	if unlikely(Dee_function_assembler_trimdead(&assembler))

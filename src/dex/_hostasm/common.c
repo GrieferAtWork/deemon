@@ -382,6 +382,7 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self) {
 		Dee_memstate_decref(self->bb_mem_end);
 	Dee_host_section_fini(&self->bb_htext);
 	Dee_host_section_fini(&self->bb_hcold);
+	Dee_Free(self->bb_locreadv);
 	Dee_basic_block_free(self);
 }
 
@@ -415,12 +416,13 @@ Dee_jump_descriptors_find_lowest_addr(struct Dee_jump_descriptors const *__restr
  * @return: NULL: Error */
 INTERN WUNUSED NONNULL((1)) struct Dee_basic_block *DCALL
 Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
-                        Dee_instruction_t const *addr) {
+                        Dee_instruction_t const *addr,
+                        size_t n_locals) {
 	size_t exit_split;
 	struct Dee_basic_block *result;
 	ASSERT(addr > self->bb_deemon_start);
 	ASSERT(addr < self->bb_deemon_end);
-	result = Dee_basic_block_alloc();
+	result = Dee_basic_block_alloc(n_locals);
 	if unlikely(!result)
 		goto err;
 
@@ -626,7 +628,7 @@ Dee_function_assembler_splitblock(struct Dee_function_assembler *__restrict self
 				}
 
 				/* Must split this basic block. */
-				result = Dee_basic_block_splitat(result, deemon_addr);
+				result = Dee_basic_block_splitat(result, deemon_addr, self->fa_xlocalc);
 				if unlikely(!result)
 					goto err;
 
@@ -733,7 +735,7 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 #endif /* Dee_Alloca */
 
 	/* Allocate a basic block for `info'. */
-	result = Dee_basic_block_alloc();
+	result = Dee_basic_block_alloc(self->fa_xlocalc);
 	if unlikely(!result)
 		goto err_info;
 	info->exi_block = result;
@@ -878,6 +880,25 @@ err_unsupported_opcode(DeeCodeObject *__restrict code, Dee_instruction_t const *
 		                       code_name);
 	}
 }
+
+
+
+/************************************************************************/
+/* C-Callable host function output data structure                       */
+/************************************************************************/
+
+INTERN NONNULL((1)) void DCALL
+Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self) {
+	Dee_rawhostfunc_fini(&self->hf_raw);
+	if (self->hf_refs) {
+		size_t i;
+		DeeObject *obj;
+		for (i = 0; (obj = self->hf_refs[i]) != NULL; ++i)
+			Dee_Decref(obj);
+		Dee_Free(self->hf_refs);
+	}
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

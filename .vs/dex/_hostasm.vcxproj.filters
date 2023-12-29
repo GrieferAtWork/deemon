@@ -17,6 +17,7 @@
 			<Filter>libgen86</Filter>
 		</ClInclude>
 		<ClInclude Include="..\..\src\dex\_hostasm\libhostasm.h" />
+		<ClInclude Include="..\..\src\dex\_hostasm\utils.h" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\_hostasm\assembler.c" />
@@ -28,6 +29,7 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-rt.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\loader-locuse.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
 	</ItemGroup>

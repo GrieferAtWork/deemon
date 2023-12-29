@@ -65,7 +65,7 @@ PRIVATE void DCALL ddi_load_symbols(void) {
 #endif /* !__LIBCCALL */
 
 PRIVATE WUNUSED int __LIBCCALL
-checkpoint_compare(const void *a, const void *b) {
+checkpoint_compare(void const *a, void const *b) {
 	struct ddi_checkpoint *lhs;
 	struct ddi_checkpoint *rhs;
 	lhs = (struct ddi_checkpoint *)a;

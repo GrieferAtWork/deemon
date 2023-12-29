@@ -644,6 +644,12 @@ Dee_jump_descriptors_remove(struct Dee_jump_descriptors *__restrict self,
                             struct Dee_jump_descriptor *__restrict descriptor);
 
 
+struct Dee_basic_block_loclastread {
+	Dee_instruction_t const *bbl_instr; /* [1..1] The instruction that reads the local for the final time
+	                                     * (before noreturn or another instruction writing to the variable) */
+	size_t                   bbl_lid;   /* ID of the variable in question */
+};
+
 struct Dee_basic_block {
 	Dee_instruction_t const    *bb_deemon_start; /* [1..1][<= bb_deemon_end][const] Start of deemon assembly */
 	Dee_instruction_t const    *bb_deemon_end;   /* [1..1][>= bb_deemon_start][const] End of deemon assembly */
@@ -660,27 +666,20 @@ struct Dee_basic_block {
 #endif /* !__INTELLISENSE__ */
 	struct Dee_host_section     bb_htext;        /* Host assembly text */
 	struct Dee_host_section     bb_hcold;        /* Extra assembly text that should be placed at the end of the function */
-	/* TODO: Have an extra pass before `Dee_function_assembler_compileblocks()' that checks when's
-	 *       the last time that a local variable (including extra locals; e.g. the last time any
-	 *       argument is accessed affects MEMSTATE_XLOCAL_A_ARGV) gets used.
-	 * With that extra information, emit calls to `Dee_function_generator_vdel_local()' as code gets
-	 * processed. Using this, we can dispose of local variables earlier, which then makes it possible
-	 * to reduce the overall hreg/hstack usage, as well as simplify exception cleanup.
-	 * - For this purpose, have a bitset for all locals that say "this basic block uses these vars"
-	 * - In an initial pass, simply scan the deemon code of the block and mark used locals
-	 * - Recursively merge bitsets from `bb_next' and `bb_exits.jds_list[*]->jd_to' with the source block
-	 * - With these steps, information is now available for "block still needs local to be alive"
-	 * - While generating code any instruction that uses a local must then:
-	 *   - Find the next-reached entry from the block `bb_exits', or `bb_next' if there are none
-	 *     - If a next-block exists, but indicates that it also uses a local, do nothing
-	 *     - else, see if the current block uses the local between the current instruction and where
-	 *       the jump to the next-block happens (if the next block is `bb_next', search until the end
-	 *       of the current basic block)
-	 *       - If the local will still be needed, do nothing
-	 *       - else, delete the local (using `Dee_function_generator_vdel_local()') */
+
+	/* Load variable usage data */
+	struct Dee_basic_block_loclastread *bb_locreadv; /* [SORT(bbl_instr)][0..bb_locreadc][owned] Information about the final times a variable is read (+ trailing entry with `bbl_instr=-1') */
+	size_t                              bb_locreadc; /* # of times a local variable is read for the final time in this block. */
+	COMPILER_FLEXIBLE_ARRAY(byte_t,     bb_locuse);  /* [CEILDIV(bb_mem_start->ms_localc, 8)][valid_if(bb_deemon_start < bb_deemon_end)]
+	                                                  * Bitset of locals read-from before being written to by this basic block (including
+	                                                  * any branch taken prior to writing a local). NOTE: The [valid_if] is correct, but
+	                                                  * technically, this bitset only exists for `Dee_function_assembler::fa_blockv', but
+	                                                  * not `Dee_except_exitinfo::exi_block'. */
 };
 
-#define Dee_basic_block_alloc()    ((struct Dee_basic_block *)Dee_Malloc(sizeof(struct Dee_basic_block)))
+#define Dee_basic_block_alloc(n_locals)                                                 \
+	((struct Dee_basic_block *)Dee_Malloc(offsetof(struct Dee_basic_block, bb_locuse) + \
+	                                      ((n_locals) + 7) / 8))
 #define Dee_basic_block_free(self) Dee_Free(self)
 
 /* Initialize common fields of `self'. The caller must still initialize:
@@ -693,7 +692,9 @@ struct Dee_basic_block {
 	 (self)->bb_mem_start = NULL,                    \
 	 (self)->bb_mem_end   = NULL,                    \
 	 Dee_host_section_init(&(self)->bb_htext),       \
-	 Dee_host_section_init(&(self)->bb_hcold))
+	 Dee_host_section_init(&(self)->bb_hcold),       \
+	 (self)->bb_locreadv = NULL,                     \
+	 (self)->bb_locreadc = 0)
 
 /* Destroy the given basic block `self'. */
 INTDEF NONNULL((1)) void DCALL
@@ -705,7 +706,8 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self);
  * @return: NULL: Error */
 INTDEF WUNUSED NONNULL((1)) struct Dee_basic_block *DCALL
 Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
-                        Dee_instruction_t const *addr);
+                        Dee_instruction_t const *addr,
+                        size_t n_locals);
 
 /* Constrain or assign `self->bb_mem_start' with the memory state `state'
  * @param: self_start_addr: The starting-address of `self' (for error messages)
@@ -803,7 +805,11 @@ Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
 struct Dee_inlined_references {
 	size_t           ir_mask; /* [> ir_size || ir_mask == 0] Allocated set size. */
 	size_t           ir_size; /* [< ir_mask || ir_mask == 0] Amount of non-NULL keys. */
+#ifdef __INTELLISENSE__
+	DeeObject      **ir_elem; /* [0..ir_size|ALLOC(ir_mask+2)] Set keys (+ one extra slot for a trailing NULL to-be added later). */
+#else /* __INTELLISENSE__ */
 	DREF DeeObject **ir_elem; /* [0..ir_size|ALLOC(ir_mask+2)] Set keys (+ one extra slot for a trailing NULL to-be added later). */
+#endif /* !__INTELLISENSE__ */
 };
 
 #define Dee_inlined_references_init(self) bzero(self, sizeof(struct Dee_inlined_references))
@@ -838,10 +844,13 @@ struct Dee_function_assembler {
 	struct Dee_host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
 #define DEE_FUNCTION_ASSEMBLER_F_NORMAL     0x0000
 #define DEE_FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections) */
+	/* TODO: `DEE_FUNCTION_ASSEMBLER_F_SAFE' isn't being fully used, yet (e.g. all the *CALL_TUPLE* instruction must assert the args-object to be a tuple) */
 #define DEE_FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `CODE_FASSEMBLY' code) */
 #define DEE_FUNCTION_ASSEMBLER_F_NOCMINLINE 0x0004 /* Don't inline references to already-bound class members, even if the attribute is `Dee_CLASS_ATTRIBUTE_FREADONLY' */
+#define DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
 	uint16_t                      fa_localc;       /* [const][== fa_code->co_localc] */
+	size_t                        fa_xlocalc;      /* [const][== fa_code->co_localc + MEMSTATE_XLOCAL_MINCOUNT + (fa_code->co_argc_max - fa_code->co_argc_min)] */
 	Dee_hostfunc_cc_t             fa_cc;           /* [const] Calling convention. */
 	struct Dee_inlined_references fa_irefs;        /* Inlined object references (must be ) */
 	struct Dee_host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link') */
@@ -867,7 +876,11 @@ struct Dee_function_assembler {
 	       (self)->fa_symbols      = NULL,                       \
 	       (self)->fa_flags        = (flags),                    \
 	       (self)->fa_localc       = (self)->fa_code->co_localc, \
-	       (self)->fa_cc           = (cc),                       \
+	       (self)->fa_xlocalc = ((self)->fa_localc +             \
+	                             MEMSTATE_XLOCAL_MINCOUNT +      \
+	                             (self)->fa_code->co_argc_max -  \
+	                             (self)->fa_code->co_argc_min),  \
+	       (self)->fa_cc = (cc),                                 \
 	       Dee_inlined_references_init(&(self)->fa_irefs))
 INTDEF NONNULL((1)) void DCALL
 Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self);
@@ -927,6 +940,7 @@ struct Dee_function_generator {
 	                                                     * NOTE: If you alter this, you must also (and *always*) restore it. */
 	DREF struct Dee_memstate      *fg_state;            /* [1..1] Current memory state. */
 	struct Dee_memstate const     *fg_state_hstack_res; /* [0..1] State defining some extra reserved hstack locations (s.a. `Dee_memstate_hstack_find()'). */
+	struct Dee_basic_block_loclastread *fg_nextlastloc; /* [0..1] The next time some local will be read for the last time (only for `Dee_function_generator_geninstr()') */
 };
 
 #define Dee_function_generator_state_unshare(self)   Dee_memstate_unshare(&(self)->fg_state)
@@ -1378,6 +1392,27 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 
 
 /************************************************************************/
+/* C-Callable host function output data structure                       */
+/************************************************************************/
+
+struct Dee_hostfunc {
+	struct Dee_rawhostfunc hf_raw;  /* Raw function information */
+	DREF DeeObject       **hf_refs; /* [1..1][0..n][owned] Vector of extra objects referenced by host assembly. */
+	/* TODO: Save information about where/how to call the function whilst skipping
+	 *       its prolog. That way, when hostasm code calls another deemon function
+	 *       that has already been re-compiled into hostasm, argument/keyword checks
+	 *       can potentially be performed at (re-)compile-time, rather than having
+	 *       to pack/unpack arguments and go through `DeeObject_Call()' */
+};
+
+INTDEF NONNULL((1)) void DCALL
+Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self);
+
+
+
+
+
+/************************************************************************/
 /* Core functions to perform the different (re-)compilation steps       */
 /************************************************************************/
 
@@ -1394,6 +1429,21 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self);
+
+/* Step #1.1 (optional: `DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL'):
+ * Figure out all the instructions that read from a local the last time before
+ * the function ends, or the variable gets written to again. By using this info,
+ * `Dee_function_generator_geninstr()' emits extra instrumentation in order to
+ * delete local variables earlier than usual, which in turn significantly lowers
+ * the overhead associated with keeping objects alive longer than strictly
+ * necessary. When this step is skipped, local simply aren't deleted early.
+ * - self->fa_blockv[*]->bb_locuse
+ * - self->fa_blockv[*]->bb_locreadv
+ * - self->fa_blockv[*]->bb_locreadc
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_loadlocuse(struct Dee_function_assembler *__restrict self);
 
 /* Step #2: Compile basic blocks and determine memory states. Fills in:
  * - self->fa_prolog

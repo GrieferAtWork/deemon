@@ -50,8 +50,8 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 		goto err;
 
 	/* Call the function. */
-	result = (*hfunc.hf_entry.hfe_call)(DeeTuple_SIZE(args),
-	                                    DeeTuple_ELEM(args));
+	result = (*hfunc.hf_raw.rhf_entry.hfe_call)(DeeTuple_SIZE(args),
+	                                            DeeTuple_ELEM(args));
 	Dee_hostfunc_fini(&hfunc);
 
 	return result;

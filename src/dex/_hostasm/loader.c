@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/error.h>
 
@@ -211,8 +212,6 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 
 	if (self->fa_code->co_flags & CODE_FYIELDING)
 		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot re-compile yield function");
-	if (self->fa_code->co_flags & CODE_FASSEMBLY)
-		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot re-compile function with user-assembly");
 	if (self->fa_code->co_exceptc > 0)
 		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot re-compile function with exception handlers");
 
@@ -230,7 +229,7 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 	}
 
 	/* Initialize the initial block. */
-	block = Dee_basic_block_alloc();
+	block = Dee_basic_block_alloc(self->fa_xlocalc);
 	if unlikely(!block)
 		goto err;
 	Dee_basic_block_init_common(block);
