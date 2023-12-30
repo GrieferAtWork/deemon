@@ -36,6 +36,8 @@
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 
+#include "utils.h"
+
 DECL_BEGIN
 
 #ifndef INT8_MIN
@@ -120,10 +122,11 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 		goto done;
 	result->ms_refcnt = 1;
 	result->ms_host_cfa_offset = 0;
-	result->ms_localc = self->fa_xlocalc;
-	result->ms_stackc = 0;
-	result->ms_stacka = 0;
-	result->ms_flags  = MEMSTATE_F_NORMAL;
+	result->ms_localc    = self->fa_xlocalc;
+	result->ms_stackc    = 0;
+	result->ms_stacka    = 0;
+	result->ms_flags     = MEMSTATE_F_NORMAL;
+	result->ms_uargc_min = self->fa_code->co_argc_min;
 	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
 	Dee_memstate_hregs_clear_usage(result);
 	result->ms_stackv = NULL;
@@ -132,8 +135,9 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	{
 		size_t lid;
 		for (lid = 0; lid < result->ms_localc; ++lid) {
-			result->ms_localv[lid].ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
-			result->ms_localv[lid].ml_type  = MEMLOC_TYPE_UNALLOC;
+			result->ms_localv[lid].ml_flags  = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
+			result->ms_localv[lid].ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			result->ms_localv[lid].ml_type   = MEMLOC_TYPE_UNALLOC;
 		}
 	}
 done:
@@ -170,6 +174,9 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 			HOST_REGISTER_R_ARG1,
 			HOST_REGISTER_R_ARG2,
 			HOST_REGISTER_R_ARG0,
+#ifdef HOST_REGISTER_R_ARG4
+			HOST_REGISTER_R_ARG4,
+#endif /* HOST_REGISTER_R_ARG4 */
 		};
 #else /* HOSTASM_X86_64 */
 #define Dee_memloc_set_x86_arg(self, argi)                                          \
@@ -179,6 +186,10 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	 (self)->ml_value.v_hstack.s_off = 0)
 #endif /* !HOSTASM_X86_64 */
 		size_t argi = 0, extra_base = self->fa_localc;
+		if (cc & HOSTFUNC_CC_F_FUNC) {
+			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
+			++argi;
+		}
 		if (cc & HOSTFUNC_CC_F_THIS) {
 			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_THIS], argi);
 			++argi;
@@ -192,8 +203,25 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGV], argi);
 			++argi;
 		}
-		if (cc & HOSTFUNC_CC_F_KW)
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
+		if (cc & HOSTFUNC_CC_F_KW) {
+#if defined(HOSTASM_X86_64) && !defined(HOST_REGISTER_R_ARG4)
+			if (argi == 5) {
+				struct Dee_memloc *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
+				/*  */
+				a_kw->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND;
+				a_kw->ml_type  = MEMLOC_TYPE_HSTACKIND;
+#ifdef HOSTASM_X86_64_MSABI
+				a_kw->ml_value.v_hstack.s_cfa = (uintptr_t)(-(5 * HOST_SIZEOF_POINTER));
+#else /* HOSTASM_X86_64_MSABI */
+				a_kw->ml_value.v_hstack.s_cfa = (uintptr_t)(-(1 * HOST_SIZEOF_POINTER));
+#endif /* !HOSTASM_X86_64_MSABI */
+				a_kw->ml_value.v_hstack.s_off = 0;
+			} else
+#endif /* HOSTASM_X86_64 && !HOST_REGISTER_R_ARG4 */
+			{
+				Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
+			}
+		}
 #undef Dee_memloc_set_x86_arg
 	}
 #else /* ... */
@@ -211,6 +239,27 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 	/* TODO: Unpack keywords */
 	(void)self;
 	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_makeprolog_cleanup(struct Dee_function_generator *__restrict self) {
+	/* Delete all locals initialized by the prolog
+	 * that aren't used within the function. */
+	size_t lid;
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_basic_block *block0 = self->fg_block;
+	for (lid = 0; lid < state->ms_localc; ++lid) {
+		if (bitset_test(block0->bb_locuse, lid))
+			continue;
+		if (state->ms_localv[lid].ml_type == MEMLOC_TYPE_UNALLOC)
+			continue;
+		if unlikely(Dee_function_generator_vdel_local(self, lid))
+			goto err;
+		state = self->fg_state; /* Re-load in case unshare happened. */
+	}
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -234,6 +283,8 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
 	ASSERT(self->fa_prolog_end == NULL);
 	ASSERT(gen.fg_state != NULL);
 	result = Dee_function_generator_makeprolog(&gen);
+	if likely(result == 0)
+		result = Dee_function_generator_makeprolog_cleanup(&gen);
 	ASSERT(gen.fg_state != NULL);
 	ASSERT(self->fa_prolog_end == NULL);
 	if likely(result == 0) {

@@ -41,6 +41,39 @@ STATIC_ASSERT(offsetof(struct Dee_memloc, ml_value.v_hreg.r_voff) ==
 /* COMMON CODE GENERATION FUNCTIONS                                     */
 /************************************************************************/
 
+/* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.
+ * NOTE: This is the only `Dee_function_generator_g*' function that
+ *       doesn't simply assume `MEMLOC_VMORPH_ISDIRECT(ml_vmorph)'. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
+                               struct Dee_memloc *loc) {
+	switch (loc->ml_vmorph) {
+	case MEMLOC_VMORPH_DIRECT:
+	case MEMLOC_VMORPH_DIRECT_01:
+		break;
+
+		/* NOTE: When normalizing direct value, be sure to kill all aliases
+		 *       *before* calling API function or allocating temp registers.
+		 * Otherwise, aliases will have their non-direct values flushed, which
+		 * is unnecessary as those values will get overwritten in the end! */
+	//TODO: case MEMLOC_VMORPH_BOOL_Z:
+	//TODO: case MEMLOC_VMORPH_BOOL_NZ:
+	//TODO: case MEMLOC_VMORPH_INT:
+	//TODO: case MEMLOC_VMORPH_UINT:
+
+	default:
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Unsupported location value type %#" PRFx8,
+		                       loc->ml_vmorph);
+	}
+	/* TODO */
+	(void)self;
+	return 0;
+}
+
+
+
+
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 Dee_function_generator_gmov_const2loc(struct Dee_function_generator *__restrict self,
                                       DeeObject *value, struct Dee_memloc const *__restrict dst_loc) {

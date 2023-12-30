@@ -388,6 +388,27 @@ Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
 		cfa_delta = (ptrdiff_t)new_state->ms_host_cfa_offset -
 		            (ptrdiff_t)old_state->ms_host_cfa_offset;
 		if (cfa_delta != 0) {
+			/* FIXME:
+			 * >> Dee_function_generator_vmorph: 000a -> 0003
+			 * >>     CFA:   #8
+			 * >>     stack: r[#4]
+			 * >>     CFA:   #0
+			 * >>     stack: r%eax
+			 * >> hostasm:addl	$8, %esp
+			 * >> hostasm:movl	-4(%esp), %eax
+			 *
+			 * Correct code would be:
+			 * >> hostasm:addl	$4, %esp
+			 * >> hostasm:popl	%eax
+			 *
+			 * Solution: When `cfa_delta < 0', only release up until the next
+			 *           value that still lies on the stack but should also be
+			 *           deallocated, then jump back to the while-loop to check
+			 *           `Dee_memaction_find_push_or_pop_at_cfa_boundary()' for
+			 *           another pop-style morph.
+			 */
+			/* TODO */
+
 			if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
 				goto err_actv_restore;
 		}

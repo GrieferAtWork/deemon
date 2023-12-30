@@ -105,9 +105,6 @@ scan_instr:
 		} else {
 			result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_A_ARGC);
 		}
-		if (self->fa_cc & HOSTFUNC_CC_F_KW) {
-			/* TODO: Check keyword argument override (not yet implemented, but will also use x-locals) */
-		}
 	}	break;
 
 	case ASM_PUSH_ARG: {
@@ -119,9 +116,6 @@ scan_instr:
 		} else {
 			result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_A_ARGC);
 			result->alu_rd[1] = xlid(MEMSTATE_XLOCAL_A_ARGV);
-		}
-		if (self->fa_cc & HOSTFUNC_CC_F_KW) {
-			/* TODO: Check keyword argument override (not yet implemented, but will also use x-locals) */
 		}
 		if (aid < self->fa_code->co_argc_min) {
 			/* Normal positional argument */
@@ -172,6 +166,11 @@ scan_instr:
 	case ASM_BOUNDMEMBER_THIS:
 	case ASM16_BOUNDMEMBER_THIS:
 		result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_A_THIS);
+		break;
+
+	case ASM_PUSH_THIS_FUNCTION:
+		if (self->fa_cc & HOSTFUNC_CC_F_FUNC)
+			result->alu_rd[0] = xlid(MEMSTATE_XLOCAL_A_FUNC);
 		break;
 
 	case ASM_VARARGS_CMP_EQ_SZ:

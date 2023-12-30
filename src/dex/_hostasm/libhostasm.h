@@ -99,11 +99,12 @@
  * - Add a heuristic to DeeFunctionObject that keeps track of how often
  *   the function has been called. If that count exceeds some limit,
  *   automatically replace the function with its hostasm version.
+ *   - When a Function is called "n" times, re-compile it w/o HOSTFUNC_CC_F_FUNC
+ *   - When a Code is used to create a Functino "n" times, re-compile it w/ HOSTFUNC_CC_F_FUNC
  * - Hostasm re-compilation should take place in a separate thread that
  *   operates as a lazily-launched deamon, and takes re-compilation jobs
  *   as they come up.
  * - Add support for functions with custom exception handlers/finally
- * - Add support for functions with CODE_FASSEMBLY (by adding extra asserts in generated x86 code)
  * - Add an extra mapper for x86 assembly address -> Dee_code_addr_t+Dee_memstate,
  *   so that the original set of DDI instrumentation can still be used, and (e.g.)
  *   an lid can be converted to an x86 CFA-offset/register at runtime.
@@ -154,14 +155,27 @@ union Dee_memloc_value {
 };
 
 struct Dee_memloc {
-#define MEMLOC_F_NORMAL        0x0000
-#define MEMLOC_F_NOREF         0x0001 /* Slot contains no reference */
-#define MEMLOC_M_LOCAL_BSTATE  0xc000 /* Mask for the bound-ness of a local variable */
-#define MEMLOC_F_LOCAL_UNKNOWN 0x0000 /* Local variable bound-ness is unknown */
-#define MEMLOC_F_LOCAL_BOUND   0x4000 /* Local variable is bound */
-#define MEMLOC_F_LOCAL_UNBOUND 0x8000 /* Local variable is unbound */
-	uint16_t               ml_flags; /* Location flags (set of `MEMLOC_F_*') */
-	/* TODO: value-proxy indirection (applied on-top of `ml_type'). e.g.: `value = DeeBool_For(value)' */
+#define MEMLOC_F_NORMAL        0x00
+#define MEMLOC_F_NOREF         0x01 /* Slot contains no reference (should always be set when `ml_vmorph != MEMLOC_VMORPH_DIRECT') */
+#define MEMLOC_M_LOCAL_BSTATE  0xc0 /* Mask for the bound-ness of a local variable */
+#define MEMLOC_F_LOCAL_UNKNOWN 0x00 /* Local variable bound-ness is unknown */
+#define MEMLOC_F_LOCAL_BOUND   0x40 /* Local variable is bound */
+#define MEMLOC_F_LOCAL_UNBOUND 0x80 /* Local variable is unbound */
+	uint8_t                ml_flags;  /* Location flags (set of `MEMLOC_F_*') */
+
+	/* Value-proxy indirection (applied on-top of `ml_type'). e.g.: `value = DeeBool_For(value)'
+	 * NOTE: All of the `Dee_function_generator_g*' function are allowed to assume `MEMLOC_VMORPH_ISDIRECT'
+	 *       only the `Dee_function_generator_v*' functions actually check for `ml_vmorph'! */
+#define MEMLOC_VMORPH_DIRECT     0 /* >> value = value; // Location contains a direct value (usually an object pointer, but can also be anything else) */
+#define MEMLOC_VMORPH_DIRECT_01  1 /* >> value = value; __assume(value == 0 || value == 1); */
+#define MEMLOC_VMORPH_ISDIRECT(vmorph) ((vmorph) <= MEMLOC_VMORPH_DIRECT_01)
+#define MEMLOC_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(value == 0); */
+#define MEMLOC_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For(!value); */
+#define MEMLOC_VMORPH_BOOL_NZ    4 /* >> value = DeeBool_For(value != 0); */
+#define MEMLOC_VMORPH_BOOL_NZ_01 5 /* >> value = DeeBool_For(value); */
+#define MEMLOC_VMORPH_INT        6 /* >> value = DeeInt_NewIntptr(value); */
+#define MEMLOC_VMORPH_UINT       7 /* >> value = DeeInt_NewUIntptr(value); */
+	uint8_t                ml_vmorph; /* Location value type (set of `MEMLOC_VMORPH_*') */
 
 	/* NOTE: *IND location types are *never* used as store targets (they only act as lazily loaded cache locations) */
 #define MEMLOC_TYPE_HREG      0 /* >> value = %v_hreg.r_regno + v_hreg.r_off; */
@@ -173,9 +187,9 @@ struct Dee_memloc {
 #define MEMLOC_TYPE_UNDEFINED 6 /* >> value = ???;  // Not defined (value can be anything at runtime) */
 #define MEMLOC_TYPE_HASREG(typ) ((typ) <= MEMLOC_TYPE_HREGIND)
 #define MEMLOC_TYPE_CASEREG     case MEMLOC_TYPE_HREG: case MEMLOC_TYPE_HREGIND
-	uint16_t               ml_type;  /* Location kind (one of `MEMLOC_TYPE_*') */
-	union Dee_memloc_value ml_value; /* Location value */
-	/* TODO: DeeTypeObject *ml_valtyp; // [0..1] If non-null, the guarantied correct object type of this location (for inlining operator calls) */
+	uint16_t               ml_type;   /* Location kind (one of `MEMLOC_TYPE_*') */
+	union Dee_memloc_value ml_value;  /* Location value */
+	/* TODO: DeeTypeObject *ml_valtyp; // [0..1][valid_if(ml_vmorph == MEMLOC_VMORPH_DIRECT)] If non-null, the guarantied correct object type of this location (for inlining operator calls) */
 };
 
 /* Check if `a' and `b' describe the same host memory location (i.e. are aliasing each other). */
@@ -185,6 +199,10 @@ Dee_memloc_sameloc(struct Dee_memloc const *a, struct Dee_memloc const *b);
 /* Similar to `Dee_memloc_samemem()', but disregard differences in value-offsets. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memloc_samemem(struct Dee_memloc const *a, struct Dee_memloc const *b);
+
+/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+Dee_memloc_typeof(struct Dee_memloc const *self);
 
 
 
@@ -196,16 +214,17 @@ typedef uint8_t Dee_host_regusage_t;
 
 /* Extra local variable IDs always present in `ms_localv'
  * These indices appear after "normal" locals. */
-#define MEMSTATE_XLOCAL_A_THIS     0 /* Caller-argument: `DeeObject *this'      (only for `HOSTFUNC_CC_F_THIS') */
-#define MEMSTATE_XLOCAL_A_ARGC     1 /* Caller-argument: `size_t argc'          (only for `!HOSTFUNC_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGS     2 /* Caller-argument: `DeeTupleObject *args' (only for `HOSTFUNC_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGV     2 /* Caller-argument: `DeeObject **argv'     (only for `!HOSTFUNC_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_KW       3 /* Caller-argument: `DeeObject *kw'        (only for `HOSTFUNC_CC_F_KW') */
-#define MEMSTATE_XLOCAL_VARARGS    4 /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
-#define MEMSTATE_XLOCAL_VARKWDS    5 /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
-#define MEMSTATE_XLOCAL_STDOUT     6 /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
-#define MEMSTATE_XLOCAL_POPITER    7 /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
-#define MEMSTATE_XLOCAL_MINCOUNT   8 /* Min number of extra locals */
+#define MEMSTATE_XLOCAL_A_FUNC     0 /* Caller-argument: `DeeFunctionObject *func' (only for `HOSTFUNC_CC_F_FUNC') */
+#define MEMSTATE_XLOCAL_A_THIS     1 /* Caller-argument: `DeeObject *this'         (only for `HOSTFUNC_CC_F_THIS') */
+#define MEMSTATE_XLOCAL_A_ARGC     2 /* Caller-argument: `size_t argc'             (only for `!HOSTFUNC_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_ARGS     3 /* Caller-argument: `DeeTupleObject *args'    (only for `HOSTFUNC_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_ARGV     3 /* Caller-argument: `DeeObject **argv'        (only for `!HOSTFUNC_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_KW       4 /* Caller-argument: `DeeObject *kw'           (only for `HOSTFUNC_CC_F_KW') */
+#define MEMSTATE_XLOCAL_VARARGS    5 /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
+#define MEMSTATE_XLOCAL_VARKWDS    6 /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
+#define MEMSTATE_XLOCAL_STDOUT     7 /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
+#define MEMSTATE_XLOCAL_POPITER    8 /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
+#define MEMSTATE_XLOCAL_MINCOUNT   9 /* Min number of extra locals */
 #define MEMSTATE_XLOCAL_DEFARG_MIN MEMSTATE_XLOCAL_MINCOUNT
 #define MEMSTATE_XLOCAL_DEFARG(i)  (MEMSTATE_XLOCAL_DEFARG_MIN + (i)) /* Start of cached optional arguments. */
 
@@ -220,7 +239,8 @@ struct Dee_memstate {
 	                                                                * Number of local variables + extra slots. NOTE: Never 0! */
 	Dee_vstackaddr_t                           ms_stackc;          /* Number of (currently) used deemon stack slots in use. */
 	Dee_vstackaddr_t                           ms_stacka;          /* Allocated number of deemon stack slots in use. */
-	uintptr_t                                  ms_flags;           /* Special state flags (set f `MEMSTATE_F_*' and'd when constraining states; initialized to `0') */
+	uintptr_t                                  ms_flags;           /* Special state flags (set of `MEMSTATE_F_*' and'd when constraining states; initialized to `0') */
+	size_t                                     ms_uargc_min;       /* Lower bound for the `argc' passed to the generated function (can be used to skip argc-checks) */
 	size_t                                     ms_rinuse[HOST_REGISTER_COUNT]; /* Number of times each register is referenced by `ms_stackv' and `ms_localv' */
 	Dee_host_regusage_t                        ms_rusage[HOST_REGISTER_COUNT]; /* Meaning of registers (set to `DEE_HOST_REGUSAGE_GENERIC' if clobbered) */
 	struct Dee_memloc                         *ms_stackv;          /* [0..ms_stackc][owned] Deemon stack memory locations. */
@@ -829,7 +849,7 @@ Dee_inlined_references_ref(struct Dee_inlined_references *__restrict self,
 
 
 struct Dee_function_assembler {
-	DeeFunctionObject            *fa_function;     /* [1..1][const] The function being assembled */
+	DeeFunctionObject            *fa_function;     /* [1..1][const][valid_if(!HOSTFUNC_CC_F_FUNC)] The function being assembled */
 	DeeCodeObject                *fa_code;         /* [1..1][const][== fa_function->fo_code] The code being assembled */
 	struct Dee_host_section       fa_prolog;       /* Function prolog (output even before `fa_blockv[0]'; verify arguments & set-up initial memstate) */
 	DREF struct Dee_memstate     *fa_prolog_end;   /* [0..1] Memory state at the end of the prolog (or `NULL' if `Dee_function_assembler_compileblocks()' wasn't called, yet) */
@@ -842,11 +862,10 @@ struct Dee_function_assembler {
 	size_t                        fa_except_exita; /* Allocated number of exception exit basic blocks. */
 	struct Dee_except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `Dee_function_assembler_ordersections()') */
 	struct Dee_host_symbol       *fa_symbols;      /* [0..1][owned] Chain of allocated symbols. */
-#define DEE_FUNCTION_ASSEMBLER_F_NORMAL     0x0000
-#define DEE_FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections) */
-	/* TODO: `DEE_FUNCTION_ASSEMBLER_F_SAFE' isn't being fully used, yet (e.g. all the *CALL_TUPLE* instruction must assert the args-object to be a tuple) */
+#define DEE_FUNCTION_ASSEMBLER_F_NORMAL     0x0000 /* Normal flags */
+#define DEE_FUNCTION_ASSEMBLER_F_OSIZE      0x0001 /* Optimize for size (generally means: try not to use cold sections or inlines) */
 #define DEE_FUNCTION_ASSEMBLER_F_SAFE       0x0002 /* Generate "safe" code (for `CODE_FASSEMBLY' code) */
-#define DEE_FUNCTION_ASSEMBLER_F_NOCMINLINE 0x0004 /* Don't inline references to already-bound class members, even if the attribute is `Dee_CLASS_ATTRIBUTE_FREADONLY' */
+#define DEE_FUNCTION_ASSEMBLER_F_NOROINLINE 0x0004 /* Don't inline references to already-bound class members/globals, even if the location is `Dee_CLASS_ATTRIBUTE_FREADONLY' / `Dee_MODSYM_FREADONLY' */
 #define DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
 	uint16_t                      fa_localc;       /* [const][== fa_code->co_localc] */
@@ -960,7 +979,8 @@ struct Dee_function_generator {
 
 
 /* Code generator helpers to manipulate the V-stack. */
-#define Dee_function_generator_vtop(self) Dee_memstate_vtop((self)->fg_state)
+#define Dee_function_generator_vtop(self)     Dee_memstate_vtop((self)->fg_state)
+#define Dee_function_generator_vtoptype(self) Dee_memloc_typeof(Dee_function_generator_vtop(self))
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswap(struct Dee_function_generator *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
@@ -968,6 +988,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush(struct Dee
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_undefined(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_const(struct Dee_function_generator *__restrict self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cid(struct Dee_function_generator *__restrict self, uint16_t cid);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_vpush_cid_t(struct Dee_function_generator *__restrict self, uint16_t cid, DeeTypeObject *__restrict type);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_rid(struct Dee_function_generator *__restrict self, uint16_t rid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t delta);                             /* %regno + delta                    (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_regind(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* *(%regno + ind_delta) + val_delta (MEMLOC_F_NOREF) */
@@ -991,8 +1012,18 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopmany(struct Dee
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_n(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, size_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, size_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self);    /* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboolnot(struct Dee_function_generator *__restrict self); /* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vop(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t argc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopv(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t argc); /* doesn't leave result on-stack */
+
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqconstaddr(struct Dee_function_generator *__restrict self, DeeObject *value); /* VTOP = VTOP == <value> */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_function_generator *__restrict self);                        /* PUSH(POP() == POP()); */
+
+/* Force the top `n' elements of the v-stack to use `MEMLOC_VMORPH_ISDIRECT'.
+ * Any memory locations that might alias one of those locations is also changed.
+ * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 
 /* Helper wrappers to do checked operations on local variables as usercode sees them. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t lid);
@@ -1002,23 +1033,38 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_ulocal(struct 
 /* Helper macros for operating on "extra" locals (s.a. `MEMSTATE_XLOCAL_*') */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, size_t xlid);
 #define _Dee_function_generator_vpush_xlocal(self, xlid) Dee_function_generator_vpush_local(self, NULL, (size_t)(self)->fg_assembler->fa_localc + (xlid))
-#define Dee_function_generator_vpop_xlocal(self, xlid)  Dee_function_generator_vpop_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
-#define Dee_function_generator_vdel_xlocal(self, xlid)  Dee_function_generator_vdel_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
+#define Dee_function_generator_vpop_xlocal(self, xlid)   Dee_function_generator_vpop_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
+#define Dee_function_generator_vdel_xlocal(self, xlid)   Dee_function_generator_vdel_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
 
 /* Push the "this" argument of thiscall functions. */
 #define Dee_function_generator_vpush_this(self) _Dee_function_generator_vpush_xlocal(self, MEMSTATE_XLOCAL_A_THIS)
 #define Dee_function_generator_vpush_args(self) _Dee_function_generator_vpush_xlocal(self, MEMSTATE_XLOCAL_A_ARGS)
 #define Dee_function_generator_vpush_kw(self)   _Dee_function_generator_vpush_xlocal(self, MEMSTATE_XLOCAL_A_KW)
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_this_function(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_argc(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_argv(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_usage(struct Dee_function_generator *__restrict self, Dee_host_regusage_t usage);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict self);
 
-/* Class/instance member access helpers. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, bool ref); /* type -> value */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict self, uint16_t addr, bool ref); /* this, type -> value */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict self, uint16_t addr);            /* this, type -> N/A */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict self, uint16_t addr);            /* this, type, value -> N/A */
+/* Class/instance member access helpers.
+ * @param: flags: Set of `DEE_FUNCTION_GENERATOR_CIMEMBER_F_*' */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* type -> value */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* this, type -> value */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags); /* this, type -> bound */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);   /* this, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);   /* this, type, value -> N/A */
+#define DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL 0x0000 /* Normal flags */
+#define DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF    0x0001 /* Always push a reference when reading a member (only for `Dee_function_generator_vpush_[ic]member') */
+#define DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE   0x0002 /* Force "safe" access if it needs to happen at runtime (verify object type & addr being in-bounds). */
+
+/* Generate code equivalent to `DeeObject_AssertTypeExact(VTOP, type)', but don't pop `VTOP' from the v-stack. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self,
+                                    DeeTypeObject *__restrict type);
+#define Dee_function_generator_vassert_type_if_safe(self, type)     \
+	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE \
+	 ? Dee_function_generator_vassert_type(self, type)              \
+	 : 0)
 
 /* Perform a conditional jump to `desc' based on `jump_if_true'
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
@@ -1134,6 +1180,15 @@ Dee_function_generator_vcheckint(struct Dee_function_generator *__restrict self)
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
                                Dee_vstackaddr_t argc);
+
+
+/* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.
+ * NOTE: This is the only `Dee_function_generator_g*' function that
+ *       doesn't simply assume `MEMLOC_VMORPH_ISDIRECT(ml_vmorph)'. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
+                               struct Dee_memloc *loc);
+
 
 /* Generate a call to a C-function `api_function' with `argc'
  * pointer-sized arguments whose values are taken from `argv'.
@@ -1403,6 +1458,7 @@ struct Dee_hostfunc {
 	 *       that has already been re-compiled into hostasm, argument/keyword checks
 	 *       can potentially be performed at (re-)compile-time, rather than having
 	 *       to pack/unpack arguments and go through `DeeObject_Call()' */
+	/* TODO: Save debug information to encode locations of stack/locals */
 };
 
 INTDEF NONNULL((1)) void DCALL

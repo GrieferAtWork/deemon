@@ -157,6 +157,8 @@
 #define HOST_REGISTER_R_ARG1 HOST_REGISTER_RSI
 #define HOST_REGISTER_R_ARG2 HOST_REGISTER_RDX
 #define HOST_REGISTER_R_ARG3 HOST_REGISTER_RCX
+#define HOST_REGISTER_R_ARG4 HOST_REGISTER_R8
+#define HOST_REGISTER_R_ARG5 HOST_REGISTER_R9
 #endif /* ... */
 
 
@@ -168,20 +170,29 @@ typedef uint8_t Dee_host_register_t;
 typedef uint8_t Dee_hostfunc_cc_t;
 
 /* Possible calling convention flags. */
-#define HOSTFUNC_CC_F_KW    1
-#define HOSTFUNC_CC_F_THIS  2
-#define HOSTFUNC_CC_F_TUPLE 4
+#define HOSTFUNC_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
+#define HOSTFUNC_CC_F_THIS  2 /* Take an an extra `DeeObject *self' parameter for "this" */
+#define HOSTFUNC_CC_F_TUPLE 4 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
+#define HOSTFUNC_CC_F_FUNC  8 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
 
 /* Possible calling conventions. */
-#define HOSTFUNC_CC_CALL              0 /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_CALL_KW           1 /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_THISCALL          2 /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_THISCALL_KW       3 /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_CALL_TUPLE        4 /* DREF DeeObject *(DCALL *)(DeeObject *args); */
-#define HOSTFUNC_CC_CALL_TUPLE_KW     5 /* DREF DeeObject *(DCALL *)(DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_THISCALL_TUPLE    6 /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
-#define HOSTFUNC_CC_THISCALL_TUPLE_KW 7 /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_COUNT             8
+#define HOSTFUNC_CC_CALL                   0  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
+#define HOSTFUNC_CC_CALL_KW                1  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOSTFUNC_CC_THISCALL               2  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define HOSTFUNC_CC_THISCALL_KW            3  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOSTFUNC_CC_CALL_TUPLE             4  /* DREF DeeObject *(DCALL *)(DeeObject *args); */
+#define HOSTFUNC_CC_CALL_TUPLE_KW          5  /* DREF DeeObject *(DCALL *)(DeeObject *args, DeeObject *kw); */
+#define HOSTFUNC_CC_THISCALL_TUPLE         6  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
+#define HOSTFUNC_CC_THISCALL_TUPLE_KW      7  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
+#define HOSTFUNC_CC_FUNC_CALL              8  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv); */
+#define HOSTFUNC_CC_FUNC_CALL_KW           9  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOSTFUNC_CC_FUNC_THISCALL          10 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define HOSTFUNC_CC_FUNC_THISCALL_KW       11 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOSTFUNC_CC_FUNC_CALL_TUPLE        12 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args); */
+#define HOSTFUNC_CC_FUNC_CALL_TUPLE_KW     13 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw); */
+#define HOSTFUNC_CC_FUNC_THISCALL_TUPLE    14 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args); */
+#define HOSTFUNC_CC_FUNC_THISCALL_TUPLE_KW 15 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args, DeeObject *kw); */
+#define HOSTFUNC_CC_COUNT                  16
 union Dee_rawhostfunc_entry {
 	void                   *hfe_addr;
 	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                        /* HOSTFUNC_CC_CALL */

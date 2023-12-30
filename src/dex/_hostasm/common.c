@@ -644,7 +644,8 @@ Dee_function_assembler_splitblock(struct Dee_function_assembler *__restrict self
 			return result;
 		}
 	}
-	DeeError_Throwf(&DeeError_SegFault, "Out-of-bounds text location %#.4" PRFx32 " accessed",
+	DeeError_Throwf(&DeeError_SegFault,
+	                "Out-of-bounds text location %#.4" PRFx32 " accessed",
 	                Dee_function_assembler_addrof(self, deemon_addr));
 err:
 	return NULL;

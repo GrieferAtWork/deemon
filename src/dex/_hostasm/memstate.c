@@ -26,9 +26,11 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/alloc.h>
+#include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 
@@ -102,6 +104,28 @@ Dee_memloc_samemem(struct Dee_memloc const *a,
 	default: __builtin_unreachable();
 	}
 	__builtin_unreachable();
+}
+
+/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+Dee_memloc_typeof(struct Dee_memloc const *self) {
+	switch (self->ml_vmorph) {
+	case MEMLOC_VMORPH_DIRECT:
+	case MEMLOC_VMORPH_DIRECT_01:
+		if (self->ml_type == MEMLOC_TYPE_CONST)
+			return Dee_TYPE(self->ml_value.v_const);
+		break;
+	case MEMLOC_VMORPH_BOOL_Z:
+	case MEMLOC_VMORPH_BOOL_Z_01:
+	case MEMLOC_VMORPH_BOOL_NZ:
+	case MEMLOC_VMORPH_BOOL_NZ_01:
+		return &DeeBool_Type;
+	case MEMLOC_VMORPH_INT:
+	case MEMLOC_VMORPH_UINT:
+		return &DeeInt_Type;
+	default: break;
+	}
+	return NULL;
 }
 
 
@@ -357,6 +381,12 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
 		result = true;
 	}
 
+	/* If the value type differs between the 2 sides, then default to a direct value. */
+	if (loc->ml_vmorph != other_loc->ml_vmorph && loc->ml_vmorph != MEMLOC_VMORPH_DIRECT) {
+		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		result = true;
+	}
+
 	/* For local variables, merge the binding state of the variable. */
 	if (is_local) {
 		uint16_t nw_bound;
@@ -498,6 +528,13 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 		self->ms_flags &= other->ms_flags;
 		result = true;
 	}
+
+	/* Combine minimum argument count. */
+	if (self->ms_uargc_min > other->ms_uargc_min) {
+		self->ms_uargc_min = other->ms_uargc_min;
+		result = true;
+	}
+
 	return result;
 }
 
@@ -705,8 +742,9 @@ Dee_memstate_vpush_undefined(struct Dee_memstate *__restrict self) {
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_UNDEFINED;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_UNDEFINED;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -720,8 +758,9 @@ Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value)
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_CONST;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_CONST;
 	loc->ml_value.v_const = value;
 	++self->ms_stackc;
 	return 0;
@@ -739,8 +778,9 @@ Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self,
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_HREG;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_HREG;
 	loc->ml_value.v_hreg.r_regno = regno;
 	loc->ml_value.v_hreg.r_off   = delta;
 	Dee_memstate_incrinuse(self, regno);
@@ -759,8 +799,9 @@ Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self,
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_HREGIND;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_HREGIND;
 	loc->ml_value.v_hreg.r_regno = regno;
 	loc->ml_value.v_hreg.r_off   = ind_delta;
 	loc->ml_value.v_hreg.r_voff  = val_delta;
@@ -779,8 +820,9 @@ Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self,
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_HSTACK;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_HSTACK;
 	loc->ml_value.v_hstack.s_cfa = cfa_offset;
 	++self->ms_stackc;
 	return 0;
@@ -796,8 +838,9 @@ Dee_memstate_vpush_hstackind(struct Dee_memstate *__restrict self,
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	loc = &self->ms_stackv[self->ms_stackc];
-	loc->ml_flags = MEMLOC_F_NOREF;
-	loc->ml_type  = MEMLOC_TYPE_HSTACKIND;
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_HSTACKIND;
 	loc->ml_value.v_hstack.s_cfa = cfa_offset;
 	loc->ml_value.v_hstack.s_off = val_delta;
 	++self->ms_stackc;

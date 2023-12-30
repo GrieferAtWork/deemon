@@ -1534,8 +1534,7 @@ do_del_local:
 			DISPATCH();
 		}
 
-		{
-			RAW_TARGET(ASM_ADJSTACK)
+		RAW_TARGET(ASM_ADJSTACK) {
 			imm_val = (uint16_t)(int16_t)READ_Simm8();
 do_stack_adjust:
 			if ((int16_t)imm_val < 0) {
