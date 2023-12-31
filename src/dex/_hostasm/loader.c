@@ -28,6 +28,7 @@
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/error.h>
+#include <deemon/format.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -157,10 +158,27 @@ scan_block_for_noreturn(struct Dee_basic_block *__restrict block, uint16_t code_
 		opcode = iter[0];
 		if (ASM_ISEXTENDED(opcode))
 			opcode = (opcode << 8) | iter[1];
-		if (DeeAsm_IsNoreturn(opcode, code_flags)) {
-			block->bb_deemon_end = DeeAsm_NextInstr(iter);
-			block->bb_next = NULL;
+		switch (opcode) {
+
+		case ASM_JMP:
+		case ASM_JMP16:
+		case ASM32_JMP: {
+			/* Convert unconditional jump -> fallthru */
+			struct Dee_jump_descriptor *desc;
+			desc = Dee_jump_descriptors_lookup(&block->bb_exits, iter);
+			ASSERTF(desc, "Jump at %p should have been found by the loader", iter);
+			block->bb_next = desc->jd_to;
+			block->bb_deemon_end = iter;
 			return true;
+		}	break;
+
+		default:
+			if (DeeAsm_IsNoreturn(opcode, code_flags)) {
+				block->bb_deemon_end = DeeAsm_NextInstr(iter);
+				block->bb_next = NULL;
+				return true;
+			}
+			break;
 		}
 	}
 	return false;
@@ -271,8 +289,21 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 		struct Dee_basic_block *prev_block;
 		block = self->fa_blockv[i];
 		if (block->bb_entries.jds_size > 0) {
+continue_with_next_block:
 			++i;
 			continue;
+		}
+
+		/* Check if some other block other than "prev_block" wants to fall into "block" */
+		{
+			size_t j;
+			for (j = 0; j < self->fa_blockc; ++j) {
+				struct Dee_basic_block *other_block = self->fa_blockv[j];
+				if (j == i - 1)
+					continue;
+				if (other_block->bb_next == block)
+					goto continue_with_next_block;
+			}
 		}
 
 		/* Block can't be reached via jumps (can happen if jumps were unreachable).

@@ -21,8 +21,9 @@
 #define GUARD_DEX_HOSTASM_UTILS_H 1
 
 #include "host.h"
-#include <hybrid/typecore.h>
 /**/
+
+#include <hybrid/typecore.h>
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 DECL_BEGIN

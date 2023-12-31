@@ -890,7 +890,7 @@ next_cur_locX:;
 			none.ml_type = MEMLOC_TYPE_CONST;
 			none.ml_value.v_const = Dee_None;
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
-			                                                     0, new_refcnt))
+			                                                     1, new_refcnt + 1))
 				goto err_infostate_state_curinfo_vaddr;
 			ASSERT(curinfo_vaddr[new_locX] == (Dee_vstackaddr_t)-1);
 			curinfo_vaddr[new_locX] = state->ms_stackc;
@@ -1239,7 +1239,6 @@ do_move_section:
 	/* Go through the list of sections and append jump instructions wherever
 	 * the intended fallthru target differs from the actual successor section. */
 	TAILQ_FOREACH (sect, &text, hs_link) {
-		struct Dee_host_symbol *dst;
 		struct Dee_host_section *want_next = sect->hs_fallthru;
 		struct Dee_host_section *sort_next = TAILQ_NEXT(sect, hs_link);
 		unsigned int n;
@@ -1268,20 +1267,17 @@ do_move_section:
 		}
 
 		/* Must generate a jump */
-		dst = Dee_function_assembler_newsym(self);
-		if unlikely(!dst)
-			goto err;
-		dst->hs_type = DEE_HOST_SYMBOL_SECT;
-		dst->hs_value.sv_sect.ss_sect = want_next;
-		dst->hs_value.sv_sect.ss_off  = 0;
+		{
+			Dee_function_assembler_DEFINE_Dee_host_symbol_section(self, err, dst, want_next, 0);
 #ifdef Dee_MallocUsableSize
-		sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
-		ASSERT(sect->hs_alend >= sect->hs_end);
+			sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
+			ASSERT(sect->hs_alend >= sect->hs_end);
 #else /* Dee_MallocUsableSize */
-		sect->hs_alend = sect->hs_end;
+			sect->hs_alend = sect->hs_end;
 #endif /* !Dee_MallocUsableSize */
-		if unlikely(_Dee_host_section_gjmp(sect, dst))
-			goto err;
+			if unlikely(_Dee_host_section_gjmp(sect, dst))
+				goto err;
+		}
 		/*sect->hs_fallthru = NULL;*/
 no_jmp_needed:;
 	}
@@ -1598,7 +1594,7 @@ Dee_assemble(DeeFunctionObject *__restrict function,
              struct Dee_hostfunc *__restrict result,
              Dee_hostfunc_cc_t cc, uint16_t flags) {
 	struct Dee_function_assembler assembler;
-	Dee_function_assembler_init(&assembler, function, cc, flags);
+	Dee_function_assembler_init(&assembler, function, function->fo_code, cc, flags);
 
 	/* Special case: deemon code that contains user-written deemon assembly
 	 *               requires special care to include some extra checks in

@@ -4052,7 +4052,7 @@ err_underflow:
 
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_tobytes(DeeIntObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE struct keyword kwlist[] = { K(length), K(byteorder), K(signed), KEND };
@@ -4111,7 +4111,7 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 int_bitcount(DeeIntObject *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE struct keyword kwlist[] = { K(signed), KEND };

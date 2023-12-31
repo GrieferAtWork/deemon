@@ -113,7 +113,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 			for (;; DeeDict_HashNx(i, perturb)) {
 				struct dict_item *item = &result->d_elem[i & mask];
 				if (item->di_key)
-					continue; /* Already in use */
+					continue; /* Already in use (XXX: Check for duplicates?) */
 				item->di_hash  = hash;
 				item->di_key   = key;   /* Inherit reference. */
 				item->di_value = value; /* Inherit reference. */

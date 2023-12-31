@@ -100,7 +100,7 @@ struct Dee_attribute_info {
 	                                 * NOTE: When the `Dee_ATTR_DOCOBJ' flag is set, then this is actually
 	                                 *       the `DeeString_STR()' of a string objects, to which a
 	                                 *       reference is being held. */
-	uint16_t            a_perm;     /* Set of `ATTR_*' flags, describing the attribute's behavior. */
+	uint16_t            a_perm;     /* Set of `Dee_ATTR_*' flags, describing the attribute's behavior. */
 	DREF DeeTypeObject *a_attrtype; /* [0..1] The typing of this attribute. */
 };
 #define Dee_attribute_info_docobj(self) \

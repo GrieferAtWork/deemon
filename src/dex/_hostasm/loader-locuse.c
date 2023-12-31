@@ -53,6 +53,16 @@ struct asm_locuse {
 	size_t alu_wr[ASM_WRMAX]; /* LIDs written by the instruction (unused slots are set to `(size_t)-1') */
 };
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+asm_locuse_isreading(struct asm_locuse const *__restrict self, size_t lid) {
+	size_t i;
+	for (i = 0; i < ASM_RDMAX; ++i) {
+		if (self->alu_rd[i] == lid)
+			return true;
+	}
+	return false;
+}
+
 
 /* Load information on which locals are used by an instruction.
  * NOTE: This function intentionally *doesn't* track:
@@ -551,7 +561,7 @@ err:
  *   - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse'
  *   - NOTE: Unconditional branches shouldn't appear (already removed by `Dee_function_assembler_loadblocks()')
  *   - If a read happens, do `i_lastread[lid] = instr'
- *   - If a write happens, do:
+ *   - If a write happens (but no read for the same lid), do:
  *     >> if (i_lastread[lid] != NULL)
  *     >>     block->bb_locreadv.append(Dee_basic_block_loclastread { i_lastread[lid], lid });
  *     >> i_lastread[lid] = instr;
@@ -611,7 +621,7 @@ Dee_basic_block_locuse_pass3(struct Dee_function_assembler *__restrict assembler
 		for (i = 0; i < ASM_WRMAX; ++i) {
 			size_t lid = use.alu_wr[i];
 			if (lid < n_locals) {
-				if (i_lastread[lid] != NULL)
+				if (i_lastread[lid] != NULL && !asm_locuse_isreading(&use, lid))
 					LOCAL_append_lastreadat(i_lastread[lid], lid);
 				i_lastread[i] = instr;
 			}
@@ -709,7 +719,7 @@ Dee_function_assembler_loadlocuse(struct Dee_function_assembler *__restrict self
 	 *     - NOTE: In case of a branch-instructions, "read happens" for `target->bb_locuse'
 	 *     - NOTE: Unconditional branches shouldn't appear (already removed by `Dee_function_assembler_loadblocks()')
 	 *     - If a read happens, do `i_lastread[lid] = instr'
-	 *     - If a write happens, do:
+	 *     - If a write happens (but no read for the same lid), do:
 	 *       >> if (i_lastread[lid] != NULL)
 	 *       >>     block->bb_locreadv.append(Dee_basic_block_loclastread { i_lastread[lid], lid });
 	 *       >> i_lastread[lid] = instr;

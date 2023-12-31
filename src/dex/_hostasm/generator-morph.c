@@ -310,16 +310,33 @@ Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
 	 *   second time due to extra stack space needed for saving registers)
 	 */
 	old_state = self->fg_state;
+again_search_changes:
 	mactc = 0;
 	for (i = 0; i < old_state->ms_stackc; ++i) {
-		struct Dee_memloc const *old_loc = &old_state->ms_stackv[i];
+		struct Dee_memloc *old_loc = &old_state->ms_stackv[i];
 		struct Dee_memloc const *new_loc = &new_state->ms_stackv[i];
+		if unlikely(old_loc->ml_vmorph != new_loc->ml_vmorph) {
+			ASSERT(new_loc->ml_vmorph == MEMLOC_VMORPH_DIRECT);
+			if unlikely(Dee_function_generator_gdirect(self, old_loc))
+				goto err;
+			ASSERT(MEMLOC_VMORPH_ISDIRECT(old_loc->ml_vmorph));
+			old_loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
+		}
 		if (!Dee_memloc_sameloc(old_loc, new_loc))
 			++mactc;
 	}
 	for (i = 0; i < old_state->ms_localc; ++i) {
-		struct Dee_memloc const *old_loc = &old_state->ms_localv[i];
+		struct Dee_memloc *old_loc = &old_state->ms_localv[i];
 		struct Dee_memloc const *new_loc = &new_state->ms_localv[i];
+		if unlikely(old_loc->ml_vmorph != new_loc->ml_vmorph) {
+			ASSERT(new_loc->ml_vmorph == MEMLOC_VMORPH_DIRECT);
+			if unlikely(Dee_function_generator_gdirect(self, old_loc))
+				goto err;
+			ASSERT(MEMLOC_VMORPH_ISDIRECT(old_loc->ml_vmorph));
+			old_loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
+		}
 		if (!Dee_memloc_sameloc(old_loc, new_loc))
 			++mactc;
 	}

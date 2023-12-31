@@ -2820,7 +2820,7 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_constructors(DeeTypeObject *__restri
 INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
 INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
 INTDEF NONNULL((1)) bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
-INTDEF NONNULL((1)) bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call */
+INTDEF NONNULL((1)) bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
 INTDEF NONNULL((1)) bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
 INTDEF NONNULL((1)) bool DCALL type_inherit_int(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
 INTDEF NONNULL((1)) bool DCALL type_inherit_inv(DeeTypeObject *__restrict self);           /* tp_inv */

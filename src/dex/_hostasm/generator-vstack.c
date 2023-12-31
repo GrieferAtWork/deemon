@@ -37,6 +37,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/string.h>
 #include <deemon/tuple.h>
 
 DECL_BEGIN
@@ -231,6 +232,64 @@ Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self, uint16_t aid) {
+	DeeCodeObject *code = self->fg_assembler->fa_code;
+	if (aid < code->co_argc_min) /* Simple case: mandatory argument */
+		return Dee_function_generator_vpush_const(self, Dee_True);
+	if (aid < code->co_argc_max) {
+		/* Special case: optional argument
+		 * NOTE: The normal code executor doesn't look at default values,
+		 *       but we are forced to, since cached optional arguments are
+		 *       shared with keyword arguments, making it impossible to
+		 *       differentiate between a caller-given argument and a cached
+		 *       argument with its default value already assigned. */
+		struct Dee_memloc *loc;
+		uint16_t opt_aid = aid - code->co_argc_min;
+		size_t xlid = MEMSTATE_XLOCAL_DEFARG(opt_aid);
+		size_t lid = self->fg_assembler->fa_localc + xlid;
+		DeeObject *default_value = code->co_defaultv[opt_aid];
+		if (default_value != NULL)
+			return Dee_function_generator_vpush_const(self, Dee_True);
+		loc = &self->fg_state->ms_localv[lid];
+		if (loc->ml_flags & MEMLOC_F_LOCAL_BOUND)
+			return Dee_function_generator_vpush_const(self, Dee_True);
+		if (loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND)
+			return Dee_function_generator_vpush_const(self, Dee_False);
+		if (loc->ml_type != MEMLOC_TYPE_UNALLOC) {
+			/* Check if the already-allocated argument location contains a value. */
+			if unlikely(Dee_function_generator_vpush(self, loc))
+				goto err;
+			if unlikely(Dee_function_generator_vdirect(self, 1))
+				goto err;
+			loc = Dee_function_generator_vtop(self);
+			ASSERT(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph));
+			loc->ml_vmorph = MEMLOC_VMORPH_TESTNZ(loc->ml_vmorph);
+			return 0;
+		}
+
+		/* Argument hasn't been accessed or populated by the keyword loader.
+		 * -> Simply check if the argument is present positionally:
+		 *         argc >= aid
+		 *    <=>  argc > (aid - 1)
+		 *    <=>  argc - (aid - 1) > 0
+		 */
+		if unlikely(Dee_function_generator_vpush_argc(self))
+			goto err;
+		if unlikely(Dee_function_generator_vdelta(self, -((ptrdiff_t)aid - 1)))
+			goto err;
+		if unlikely(Dee_function_generator_vdirect(self, 1))
+			goto err;
+		loc = Dee_function_generator_vtop(self);
+		ASSERT(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph));
+		loc->ml_vmorph = MEMLOC_VMORPH_BOOL_GZ;
+		return 0;
+	}
+	return err_illegal_aid(aid);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restrict self, uint16_t aid) {
 	int result;
 	ASSERT(aid < self->fg_assembler->fa_code->co_argc_min);
@@ -252,6 +311,58 @@ Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restri
 		                                   0);
 	}
 	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+delete_unused_local_after_read(struct Dee_function_generator *__restrict self,
+                               Dee_instruction_t const *instr, size_t lid) {
+	if (self->fg_nextlastloc != NULL /*&& instr*/) {
+		/* If the caller-given `instr' has an entry that says that this is the last
+		 * time `lid' is read from, then automatically delete the local *now*. This
+		 * then allows the variable to be deleted earlier than usual:
+		 * >>     call global @getValue
+		 * >>     pop  local @foo
+		 * >>     jt   @local foo, 1f    // If this is the last time "foo" is used, and "1f" doesn't
+		 * >>                            // use it, it can be decref'd *before* the jump happens!
+		 * >>     ...
+		 * >> 1:
+		 * Here, we're able to delete "foo" *before* the jump! */
+		while (self->fg_nextlastloc->bbl_instr < instr) {
+			/* Delete local after the last time it was read. */
+			size_t delete_lid = self->fg_nextlastloc->bbl_lid;
+			if unlikely(Dee_function_generator_vdel_local(self, delete_lid))
+				goto err;
+			++self->fg_nextlastloc;
+		}
+		ASSERT(self->fg_nextlastloc->bbl_instr >= instr);
+		if (self->fg_nextlastloc->bbl_instr == instr) {
+			struct Dee_basic_block_loclastread *item = self->fg_nextlastloc;
+			while (item->bbl_instr == instr && item->bbl_lid != lid)
+				++item;
+			if (item->bbl_instr == instr) {
+				ASSERT(item->bbl_lid == lid);
+				if (item != self->fg_nextlastloc) {
+					struct Dee_basic_block_loclastread temp;
+					temp = *self->fg_nextlastloc;
+					memmovedownc(self->fg_nextlastloc,
+					             self->fg_nextlastloc + 1,
+					             (size_t)(item - self->fg_nextlastloc),
+					             sizeof(struct Dee_basic_block_loclastread));
+					*item = temp;
+					item = self->fg_nextlastloc;
+				}
+				ASSERT(item == self->fg_nextlastloc);
+				ASSERT(item->bbl_instr == instr);
+				ASSERT(item->bbl_lid == lid);
+				if unlikely(Dee_function_generator_vdel_local(self, lid))
+					goto err;
+				++self->fg_nextlastloc;
+			}
+		}
+	}
+	return 0;
 err:
 	return -1;
 }
@@ -291,6 +402,48 @@ Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict sel
 	if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
 		Dee_memstate_incrinuse(state, dst_loc->ml_value.v_hreg.r_regno);
 	++state->ms_stackc;
+	if unlikely(delete_unused_local_after_read(self, instr, lid))
+		goto err;
+	return 0;
+err:
+	return -1;
+}
+
+/* `instr' is needed for automatic deletion of unused locals */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbound_local(struct Dee_function_generator *__restrict self,
+                                    Dee_instruction_t const *instr, size_t lid) {
+	struct Dee_memstate *state;
+	struct Dee_memloc *dst_loc, *src_loc;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	state = self->fg_state;
+	ASSERT(lid < state->ms_localc);
+	if unlikely(state->ms_stackc >= state->ms_stacka &&
+	            Dee_memstate_reqvstack(state, state->ms_stackc + 1))
+		goto err;
+	src_loc = &state->ms_localv[lid];
+	if ((src_loc->ml_type == MEMLOC_TYPE_UNALLOC) ||
+	    (src_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND)) {
+		/* Variable is always unbound -> return "false" */
+		return Dee_function_generator_vpush_const(self, Dee_False);
+	} else if (src_loc->ml_flags & MEMLOC_F_LOCAL_BOUND) {
+		/* Variable is always bound -> return "true" */
+		return Dee_function_generator_vpush_const(self, Dee_True);
+	}
+	dst_loc = &state->ms_stackv[state->ms_stackc];
+	*dst_loc = *src_loc;
+	dst_loc->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+	dst_loc->ml_flags |= MEMLOC_F_NOREF; /* alias! (so no reference) */
+	if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
+		Dee_memstate_incrinuse(state, dst_loc->ml_value.v_hreg.r_regno);
+	++state->ms_stackc;
+	if unlikely(delete_unused_local_after_read(self, instr, lid))
+		goto err;
+	if unlikely(Dee_function_generator_gdirect(self, dst_loc))
+		goto err;
+	ASSERT(MEMLOC_VMORPH_ISDIRECT(dst_loc->ml_vmorph));
+	dst_loc->ml_vmorph = MEMLOC_VMORPH_TESTNZ(dst_loc->ml_vmorph);
 	return 0;
 err:
 	return -1;
@@ -584,70 +737,6 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_LEAVE]        = */ { (void *)&DeeObject_Leave, 1, VCALLOP_CC_INT },
 };
 
-/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc *vtop;
-	if unlikely(Dee_function_generator_state_unshare(self))
-		goto err;
-	if unlikely(self->fg_state->ms_stackc < 1)
-		return err_illegal_stack_effect();
-	vtop = Dee_function_generator_vtop(self);
-	switch (vtop->ml_vmorph) {
-	case MEMLOC_VMORPH_BOOL_Z:
-	case MEMLOC_VMORPH_BOOL_Z_01:
-	case MEMLOC_VMORPH_BOOL_NZ:
-	case MEMLOC_VMORPH_BOOL_NZ_01:
-		return 0; /* Already a proper boolean */
-	case MEMLOC_VMORPH_DIRECT:
-	case MEMLOC_VMORPH_DIRECT_01:
-		break;
-	default:
-		if unlikely(Dee_function_generator_gdirect(self, vtop))
-			goto err;
-		break;
-	}
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALLOP_CC_NEGINT, 1))
-		goto err;
-	vtop = Dee_function_generator_vtop(self);
-	ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
-	if (vtop->ml_vmorph == MEMLOC_VMORPH_DIRECT_01) {
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
-	} else {
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_Z' */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopboolnot(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc *vtop;
-	if unlikely(Dee_function_generator_vopbool(self))
-		goto err;
-	vtop = Dee_function_generator_vtop(self);
-	switch (vtop->ml_vmorph) {
-	case MEMLOC_VMORPH_BOOL_Z:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
-		break;
-	case MEMLOC_VMORPH_BOOL_Z_01:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
-		break;
-	case MEMLOC_VMORPH_BOOL_NZ:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z;
-		break;
-	case MEMLOC_VMORPH_BOOL_NZ_01:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z_01;
-		break;
-	default: __builtin_unreachable();
-	}
-	return 0;
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
                            uint16_t operator_name, Dee_vstackaddr_t argc) {
@@ -657,6 +746,9 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
 	state = self->fg_state;
 	if unlikely(state->ms_stackc < argc)
 		return err_illegal_stack_effect();
+
+	/* TODO: If the type of the "this"-operand is known, try to
+	 *       directly dispatch to the operator implementation. */
 
 	/* Check if there is a dedicated API function. */
 	if (operator_name < COMPILER_LENOF(operator_apis)) {
@@ -694,7 +786,7 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
 	if unlikely(argc < 1)
 		return err_illegal_stack_effect();
 	--argc; /* The "this"-argument is passed individually */
-	if unlikely(Dee_function_generator_vlinear(self, argc))
+	if unlikely(Dee_function_generator_vlinear(self, argc, true))
 		goto err; /* this, [args...], argv */
 	if unlikely(Dee_function_generator_vlrot(self, argc + 2))
 		goto err; /* [args...], argv, this */
@@ -745,6 +837,430 @@ done_pop:
 err:
 	return -1;
 }
+
+/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc *vtop;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	vtop = Dee_function_generator_vtop(self);
+	switch (vtop->ml_vmorph) {
+	case MEMLOC_VMORPH_BOOL_Z:
+	case MEMLOC_VMORPH_BOOL_Z_01:
+	case MEMLOC_VMORPH_BOOL_NZ:
+	case MEMLOC_VMORPH_BOOL_NZ_01:
+		return 0; /* Already a proper boolean */
+	case MEMLOC_VMORPH_DIRECT:
+	case MEMLOC_VMORPH_DIRECT_01:
+		break;
+	default:
+		if unlikely(Dee_function_generator_gdirect(self, vtop))
+			goto err;
+		break;
+	}
+	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALLOP_CC_NEGINT, 1))
+		goto err;
+	vtop = Dee_function_generator_vtop(self);
+	ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
+	if (vtop->ml_vmorph == MEMLOC_VMORPH_DIRECT_01) {
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
+	} else {
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopnot(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc *vtop;
+	if unlikely(Dee_function_generator_vopbool(self))
+		goto err;
+	vtop = Dee_function_generator_vtop(self);
+	switch (vtop->ml_vmorph) {
+	case MEMLOC_VMORPH_BOOL_Z:
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
+		break;
+	case MEMLOC_VMORPH_BOOL_Z_01:
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
+		break;
+	case MEMLOC_VMORPH_BOOL_NZ:
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z;
+		break;
+	case MEMLOC_VMORPH_BOOL_NZ_01:
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z_01;
+		break;
+	default: __builtin_unreachable();
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* func, [args...], kw -> [args...], UNCHECKED(result) -- Invoke `DeeObject_CallKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
+                                           Dee_vstackaddr_t argc) {
+	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeObjMethodObject') */
+	if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+		goto err; /* func, kw, [args...] */
+	/* TODO: If generating the linear version of `argc' is much more complicated
+	 *       than doing the same for `argc - 1', then encode as `DeeObject_ThisCall()'
+	 *       instead. */
+	if unlikely(Dee_function_generator_vlinear(self, argc, true))
+		goto err; /* func, kw, [args...], argv */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 2))
+		goto err; /* func, [args...], argv, kw */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 3))
+		goto err; /* [args...], argv, kw, func */
+	if unlikely(Dee_function_generator_vrrot(self, 3))
+		goto err; /* [args...], func, argv, kw */
+	if unlikely(Dee_function_generator_vpush_immSIZ(self, argc))
+		goto err; /* [args...], func, argv, kw, argc */
+	if unlikely(Dee_function_generator_vrrot(self, 3))
+		goto err; /* [args...], func, argc, argv, kw */
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* [args...], func, argc, argv */
+		return Dee_function_generator_vcallapi(self, &DeeObject_Call, VCALLOP_CC_RAWINT, 3);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallKw, VCALLOP_CC_RAWINT, 4);
+err:
+	return -1;
+}
+
+/* func, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_CallTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcalltuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeObjMethodObject') */
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE) {
+		if unlikely(Dee_function_generator_vswap(self))
+			goto err; /* func, kw, args */
+		if unlikely(Dee_function_generator_vassert_type(self, &DeeTuple_Type))
+			goto err; /* func, kw, args */
+		if unlikely(Dee_function_generator_vswap(self))
+			goto err; /* func, args, kw */
+	}
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* func, args */
+		return Dee_function_generator_vcallapi(self, &DeeObject_CallTuple, VCALLOP_CC_RAWINT, 2);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallTupleKw, VCALLOP_CC_RAWINT, 3);
+err:
+	return -1;
+}
+
+/* func, this, [args...], kw -> [args...], UNCHECKED(result) -- Invoke `DeeObject_ThisCallKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscallkw_unchecked(struct Dee_function_generator *__restrict self,
+                                               Dee_vstackaddr_t argc) {
+	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeClsMethodObject') */
+	/* TODO: Optimizations when `type(func)' is known by skipping operator resolution and directly invoking the call-operator */
+	/* TODO: If generating the linear version of `[args...]' combined with `this' prefixed
+	 *       is not any more complex than it is without, then include it in the argument
+	 *       list and encode as `DeeObject_ThisCall()' instead. */
+	if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+		goto err; /* func, this, kw, [args...] */
+	if unlikely(Dee_function_generator_vlinear(self, argc, true))
+		goto err; /* func, this, kw, [args...], argv */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 4))
+		goto err; /* this, kw, [args...], argv, func */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 4))
+		goto err; /* kw, [args...], argv, func, this */
+	if unlikely(Dee_function_generator_vpush_immSIZ(self, argc))
+		goto err; /* kw, [args...], argv, func, this, argc */
+	if unlikely(Dee_function_generator_vlrot(self, 4))
+		goto err; /* kw, [args...], func, this, argc, argv */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 5))
+		goto err; /* [args...], func, this, argc, argv, kw */
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* [args...], func, this, argc, argv */
+		return Dee_function_generator_vcallapi(self, &DeeObject_ThisCall, VCALLOP_CC_RAWINT, 4);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallKw, VCALLOP_CC_RAWINT, 5);
+err:
+	return -1;
+}
+
+/* func, this, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscalltuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeClsMethodObject') */
+	/* TODO: Optimizations when `type(func)' is known by skipping operator resolution and directly invoking the call-operator */
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE) {
+		if unlikely(Dee_function_generator_vswap(self))
+			goto err; /* func, this, kw, args */
+		if unlikely(Dee_function_generator_vassert_type(self, &DeeTuple_Type))
+			goto err; /* func, this, kw, args */
+		if unlikely(Dee_function_generator_vswap(self))
+			goto err; /* func, this, args, kw */
+	}
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* func, this, args */
+		return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTuple, VCALLOP_CC_RAWINT, 3);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTupleKw, VCALLOP_CC_RAWINT, 4);
+err:
+	return -1;
+}
+
+/* this, attr, [args...], kw -> [args...], UNCHECKED(result) -- Invoke `DeeObject_CallAttrKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
+                                               Dee_vstackaddr_t argc) {
+	/* TODO: Optimization or when `attr' and the type of `this' is known:
+	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()',
+	 * >>                          // bypassing the complete attribute lookup */
+	if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+		goto err; /* this, attr, kw, [args...] */
+	if unlikely(Dee_function_generator_vlinear(self, argc, true))
+		goto err; /* this, attr, kw, [args...], argv */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 4))
+		goto err; /* attr, kw, [args...], argv, this */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 4))
+		goto err; /* kw, [args...], argv, this, attr */
+	if unlikely(Dee_function_generator_vpush_immSIZ(self, argc))
+		goto err; /* kw, [args...], argv, this, attr, argc */
+	if unlikely(Dee_function_generator_vlrot(self, 4))
+		goto err; /* kw, [args...], this, attr, argc, argv */
+	if unlikely(Dee_function_generator_vlrot(self, argc + 5))
+		goto err; /* [args...], this, attr, argc, argv, kw */
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* [args...], this, attr, argc, argv */
+		return Dee_function_generator_vcallapi(self, &DeeObject_CallAttr, VCALLOP_CC_RAWINT, 4);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrKw, VCALLOP_CC_RAWINT, 5);
+err:
+	return -1;
+}
+
+/* this, attr, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrtuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+	/* TODO: Optimization or when `attr' and the type of `this' is known:
+	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()',
+	 * >>                          // bypassing the complete attribute lookup */
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE) {
+		if unlikely(Dee_function_generator_vlrot(self, 3))
+			goto err; /* this, args, kw, attr */
+		if unlikely(Dee_function_generator_vassert_type(self, &DeeString_Type))
+			goto err; /* this, args, kw, attr */
+		if unlikely(Dee_function_generator_vlrot(self, 3))
+			goto err; /* this, kw, attr, args */
+		if unlikely(Dee_function_generator_vassert_type(self, &DeeTuple_Type))
+			goto err; /* this, kw, attr, args */
+		if unlikely(Dee_function_generator_vlrot(self, 3))
+			goto err; /* this, attr, args, kw */
+	}
+	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* this, attr, args */
+		return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTuple, VCALLOP_CC_RAWINT, 3);
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTupleKw, VCALLOP_CC_RAWINT, 4);
+err:
+	return -1;
+}
+
+
+
+
+
+
+/* func, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_Call()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcall_unchecked(struct Dee_function_generator *__restrict self,
+                                         Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* func, [args...], kw=NULL */
+		result = Dee_function_generator_vopcallkw_unchecked(self, argc);
+	return result;
+}
+
+/* func, args -> UNCHECKED(result) -- Invoke `DeeObject_CallTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcalltuple_unchecked(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* func, args, kw=NULL */
+		result = Dee_function_generator_vopcalltuplekw_unchecked(self);
+	return result;
+}
+
+/* func, this, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_ThisCall()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscall_unchecked(struct Dee_function_generator *__restrict self,
+                                             Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* func, this, [args...], kw=NULL */
+		result = Dee_function_generator_vopthiscallkw_unchecked(self, argc);
+	return result;
+}
+
+/* func, this, args -> UNCHECKED(result) -- Invoke `DeeObject_ThisCallTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscalltuple_unchecked(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* func, this, args, kw=NULL */
+		result = Dee_function_generator_vopthiscalltuplekw_unchecked(self);
+	return result;
+}
+
+/* this, attr, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_CallAttr()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattr_unchecked(struct Dee_function_generator *__restrict self,
+                                             Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* this, attr, [args...], kw=NULL */
+		result = Dee_function_generator_vopcallattrkw_unchecked(self, argc);
+	return result;
+}
+
+/* this, attr, args -> UNCHECKED(result) -- Invoke `DeeObject_CallAttrTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrtuple_unchecked(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
+	if likely(result == 0) /* this, attr, args, kw=NULL */
+		result = Dee_function_generator_vopcallattrtuplekw_unchecked(self);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpop_args_and_check_result(struct Dee_function_generator *__restrict self,
+                                                  Dee_vstackaddr_t argc) {
+	if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+		goto err; /* UNCHECKED(result), [args...] */
+	if unlikely(Dee_function_generator_vpopmany(self, argc))
+		goto err; /* UNCHECKED(result) */
+	return Dee_function_generator_vcheckobj(self); /* result */
+err:
+	return -1;
+}
+
+/* func, [args...] -> result -- Invoke `DeeObject_Call()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcall(struct Dee_function_generator *__restrict self,
+                               Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopcall_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallkw(struct Dee_function_generator *__restrict self,
+                                 Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopcallkw_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* func, args -> result -- Invoke `DeeObject_CallTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcalltuple(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopcalltuple_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+/* func, args, kw -> result -- Invoke `DeeObject_CallTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcalltuplekw(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopcalltuplekw_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+/* func, this, [args...] -> result -- Invoke `DeeObject_ThisCall()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscall(struct Dee_function_generator *__restrict self,
+                                   Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopthiscall_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscallkw(struct Dee_function_generator *__restrict self,
+                                     Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopthiscallkw_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* func, this, args -> result -- Invoke `DeeObject_ThisCallTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscalltuple(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopthiscalltuple_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+/* func, this, args, kw -> result -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopthiscalltuplekw(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopthiscalltuplekw_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+
+/* this, attr, [args...] -> result -- Invoke `DeeObject_CallAttr()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattr(struct Dee_function_generator *__restrict self,
+                                   Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopcallattr_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrkw(struct Dee_function_generator *__restrict self,
+                                     Dee_vstackaddr_t argc) {
+	int result = Dee_function_generator_vopcallattrkw_unchecked(self, argc);
+	if likely(result == 0) /* [args...], UNCHECKED(result) */
+		result = Dee_function_generator_vpop_args_and_check_result(self, argc);
+	return result;
+}
+
+/* this, attr, args -> result -- Invoke `DeeObject_CallAttrTuple()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrtuple(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopcallattrtuple_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+/* this, attr, args, kw -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restrict self) {
+	int result = Dee_function_generator_vopcallattrtuplekw_unchecked(self);
+	if likely(result == 0) /* UNCHECKED(result) */
+		result = Dee_function_generator_vcheckobj(self); /* result */
+	return result;
+}
+
+
 
 /* VTOP = VTOP == <value> */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -833,6 +1349,81 @@ err:
 }
 
 
+/* >> if (THIRD == SECOND) // Address-based
+ * >>     THIRD = FIRST;
+ * >> POP();
+ * >> POP(); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self) {
+	DREF struct Dee_memstate *common_state;
+	struct Dee_host_symbol *text_already_equal;
+	struct Dee_memloc *dst, *p_coalesce_from, *p_coalesce_to;
+	struct Dee_memloc coalesce_from;
+	if unlikely(self->fg_state->ms_stackc < 3)
+		return err_illegal_stack_effect();
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	p_coalesce_to   = Dee_function_generator_vtop(self);
+	p_coalesce_from = p_coalesce_to - 1;
+	dst             = p_coalesce_from - 1;
+	if (dst->ml_type == MEMLOC_TYPE_CONST) {
+		struct Dee_memloc temp;
+		temp = *dst;
+		*dst = *p_coalesce_from;
+		*p_coalesce_from = temp;
+	}
+	if (Dee_memloc_sameval(p_coalesce_from, p_coalesce_to) ||
+	    Dee_memloc_sameval(dst, p_coalesce_from)) {
+		/* Special case: result is always "coalesce_to" */
+		if unlikely(Dee_function_generator_vrrot(self, 3))
+			goto err;
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err;
+		return Dee_function_generator_vpop(self);
+	}
+
+	/* Fallback: generate code to branch at runtime. */
+	if unlikely(Dee_function_generator_vlrot(self, 3))
+		goto err; /* from, to, dst */
+	if unlikely(Dee_function_generator_vreg(self, NULL))
+		goto err; /* from, to, reg:dst */
+	if unlikely(Dee_function_generator_vrrot(self, 3))
+		goto err; /* reg:dst, from, to */
+	coalesce_from = *p_coalesce_from;
+	if unlikely(Dee_function_generator_vswap(self))
+		goto err; /* reg:dst, to, from */
+	if unlikely(Dee_function_generator_vpop(self))
+		goto err; /* reg:dst, to */
+	ASSERT(p_coalesce_from == Dee_function_generator_vtop(self));
+	ASSERT(p_coalesce_to == Dee_function_generator_vtop(self) + 1);
+	text_already_equal = Dee_function_generator_newsym(self);
+	if unlikely(!text_already_equal)
+		goto err;
+	common_state = Dee_memstate_copy(self->fg_state);
+	if unlikely(!common_state)
+		goto err;
+	if unlikely(_Dee_function_generator_gjcmp(self, dst, &coalesce_from, false,
+	                                          NULL, text_already_equal, NULL))
+		goto err_common_state;
+	if unlikely(Dee_function_generator_vswap(self))
+		goto err_common_state; /* to, reg:dst */
+	if unlikely(Dee_function_generator_vpop(self))
+		goto err_common_state; /* to */
+	if unlikely(Dee_function_generator_vdup(self))
+		goto err_common_state; /* to, to */
+	if unlikely(Dee_function_generator_vmorph(self, common_state))
+		goto err_common_state; /* ... */
+	Dee_memstate_decref(common_state);
+	HA_printf(".Ltext_already_equal:\n");
+	Dee_host_symbol_setsect(text_already_equal, self->fg_sect);
+	return Dee_function_generator_vpop(self);
+err_common_state:
+	Dee_memstate_decref(common_state);
+err:
+	return -1;
+}
+
+
 /* Force the top `n' elements of the v-stack to use `MEMLOC_VMORPH_ISDIRECT'.
  * Any memory locations that might alias one of those locations is also changed.
  * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
@@ -870,6 +1461,14 @@ Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict se
 	if unlikely(lid >= self->fg_assembler->fa_localc)
 		return err_illegal_lid(lid);
 	return Dee_function_generator_vpush_local(self, instr, (size_t)lid);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbound_ulocal(struct Dee_function_generator *__restrict self,
+                                     Dee_instruction_t const *instr, uint16_t lid) {
+	if unlikely(lid >= self->fg_assembler->fa_localc)
+		return err_illegal_lid(lid);
+	return Dee_function_generator_vbound_local(self, instr, (size_t)lid);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1137,10 +1736,17 @@ Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict se
 			goto err;
 		if unlikely(_Dee_function_generator_gjnz(self, loc, skipinit))
 			goto err;
-		common_state = self->fg_state;
-		loc = &common_state->ms_localv[self->fg_assembler->fa_localc + xlid];
+		if unlikely(Dee_function_generator_state_unshare(self))
+			goto err;
+		common_state = Dee_memstate_copy(self->fg_state);
+		if unlikely(!common_state)
+			goto err;
+		loc = &self->fg_state->ms_localv[self->fg_assembler->fa_localc + xlid];
+		ASSERT(!(loc->ml_flags & MEMLOC_M_LOCAL_BSTATE));
 		loc->ml_flags |= MEMLOC_F_LOCAL_UNBOUND; /* Known to always be NULL if the branch isn't taken. */
-		Dee_memstate_incref(common_state);
+		loc = &common_state->ms_localv[self->fg_assembler->fa_localc + xlid];
+		ASSERT(!(loc->ml_flags & MEMLOC_M_LOCAL_BSTATE));
+		loc->ml_flags |= MEMLOC_F_LOCAL_BOUND; /* Known to always be bound in the end. */
 		if unlikely(Dee_function_generator_vinit_xlocal(self, instr, xlid))
 			goto err_common_state;
 		ASSERT(!(self->fg_state->ms_localv[self->fg_assembler->fa_localc + xlid].ml_flags & MEMLOC_F_LOCAL_UNBOUND));
@@ -1664,8 +2270,7 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 		if unlikely(Dee_function_generator_vswap(self))
 			goto err; /* type, this, addr, value */
 		value_loc = Dee_function_generator_vtop(self);
-		if (value_loc->ml_type == MEMLOC_TYPE_CONST &&
-		    value_loc->ml_value.v_const == NULL) {
+		if (Dee_memloc_isnull(value_loc)) {
 			if unlikely(Dee_function_generator_vpop(self))
 				goto err; /* type, this, addr */
 			return Dee_function_generator_vcallapi(self, &DeeInstance_DelMember, VCALLOP_CC_INT, 3);
@@ -1674,7 +2279,7 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 	} else {
 		struct Dee_memloc *value_loc;
 		value_loc = Dee_function_generator_vtop(self);
-		if (value_loc->ml_type != MEMLOC_TYPE_CONST || value_loc->ml_value.v_const != NULL) {
+		if (!Dee_memloc_isnull(value_loc)) {
 			if unlikely(Dee_function_generator_vref(self))
 				goto err; /* this, ref:value */
 		}
@@ -1720,7 +2325,7 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
                                     uint16_t addr, unsigned int flags) {
 	bool safe = ((self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE) ||
 	             (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE));
-	struct Dee_memloc *type_loc;
+	struct Dee_memloc *loc;
 	if unlikely(Dee_function_generator_vdirect(self, 3))
 		goto err;
 
@@ -1732,10 +2337,10 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 	 * This differs when accessing class members, since for those no "this" argument
 	 * is needed and the entire access can be performed immediately, no matter if
 	 * safe semantics are required or not. */
-	type_loc = Dee_function_generator_vtop(self) - 1;
-	if (type_loc->ml_type == MEMLOC_TYPE_CONST && !safe) {
+	loc = Dee_function_generator_vtop(self) - 1;
+	if (loc->ml_type == MEMLOC_TYPE_CONST && !safe) {
 		struct class_desc *desc;
-		DeeTypeObject *class_type = (DeeTypeObject *)type_loc->ml_value.v_const;
+		DeeTypeObject *class_type = (DeeTypeObject *)loc->ml_value.v_const;
 		if (DeeObject_AssertType(class_type, &DeeType_Type))
 			goto err;
 		if (!DeeType_IsClass(class_type))
@@ -1762,8 +2367,8 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 		goto err; /* type, this, value, addr */
 	if unlikely(Dee_function_generator_vswap(self))
 		goto err; /* type, this, addr, value */
-	type_loc = Dee_function_generator_vtop(self);
-	if (type_loc->ml_type == MEMLOC_TYPE_CONST && type_loc->ml_value.v_const == NULL) {
+	loc = Dee_function_generator_vtop(self);
+	if (Dee_memloc_isnull(loc)) {
 		if unlikely(Dee_function_generator_vpop(self))
 			goto err; /* type, this, addr */
 		return Dee_function_generator_vcallapi(self,
@@ -2341,9 +2946,15 @@ vpush_global_or_extern(struct Dee_function_generator *__restrict self,
 		DeeObject *current_value;
 		DeeModule_LockRead(mod);
 		current_value = mod->mo_globalv[gid];
-		DeeModule_LockEndRead(mod);
-		if (current_value != NULL)
+		if (current_value != NULL) {
+			Dee_Incref(current_value);
+			DeeModule_LockEndRead(mod);
+			current_value = Dee_function_generator_inlineref(self, current_value);
+			if likely(!current_value)
+				goto err;
 			return Dee_function_generator_vpush_const(self, current_value);
+		}
+		DeeModule_LockEndRead(mod);
 	}
 	if unlikely(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]))
 		goto err;
@@ -2396,6 +3007,55 @@ Dee_function_generator_vpush_extern(struct Dee_function_generator *__restrict se
 		return err_illegal_mid(mid);
 	mod = mod->mo_importv[mid];
 	return vpush_global_or_extern(self, mod, gid, ASM_EXTERN, mid, gid, ref);
+}
+
+/* Generate code to check if a global variable is currently bound. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+vbound_global_or_extern(struct Dee_function_generator *__restrict self,
+                        DeeModuleObject *__restrict mod, uint16_t gid) {
+	struct Dee_memloc *loc;
+	struct module_symbol *symbol;
+	symbol = DeeModule_GetSymbolID(mod, gid);
+	if unlikely(!symbol)
+		return err_illegal_gid(mod, gid);
+	ASSERT(symbol->ss_index == gid);
+	/* If the symbol is read-only and bound, then we know it can't be unbound */
+	if ((symbol->ss_flags & Dee_MODSYM_FREADONLY) &&
+	    !(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOROINLINE)) {
+		DeeObject *current_value;
+		DeeModule_LockRead(mod);
+		current_value = mod->mo_globalv[gid];
+		DeeModule_LockEndRead(mod);
+		if (current_value != NULL)
+			return Dee_function_generator_vpush_const(self, Dee_True);
+	}
+	if unlikely(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]))
+		goto err;
+	if unlikely(Dee_function_generator_vind(self, 0))
+		goto err;
+	if unlikely(Dee_function_generator_vdirect(self, 0))
+		goto err;
+	loc = Dee_function_generator_vtop(self);
+	ASSERT(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph));
+	loc->ml_vmorph = MEMLOC_VMORPH_TESTNZ(loc->ml_vmorph);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbound_global(struct Dee_function_generator *__restrict self, uint16_t gid) {
+	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
+	return vbound_global_or_extern(self, mod, gid);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbound_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
+	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
+	if unlikely(mid >= mod->mo_importc)
+		return err_illegal_mid(mid);
+	mod = mod->mo_importv[mid];
+	return vbound_global_or_extern(self, mod, gid);
 }
 
 /* Generate code to pop a global variable from the virtual stack. */
@@ -2657,25 +3317,19 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 
 	case VCALLOP_CC_OBJECT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err;
-		loc = Dee_function_generator_vtop(self);
-		if unlikely(Dee_function_generator_gjz_except(self, loc))
-			goto err;
-		/* Clear the NOREF flag now that we know the return value to be non-NULL */
-		loc = Dee_function_generator_vtop(self);
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		loc->ml_flags &= ~MEMLOC_F_NOREF;
-
-		/* Rotate the return value to be located *below* arguments (which get popped below) */
-rotate_return_register:
+			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err;
-		break;
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		return Dee_function_generator_vcheckobj(self); /* result */
 
 	case VCALLOP_CC_RAWINT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err;
-		goto rotate_return_register;
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		break;
 
 	case VCALLOP_CC_RAWINT_KEEPARGS:
 		return Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0);
@@ -2690,20 +3344,22 @@ rotate_return_register:
 
 	case VCALLOP_CC_INT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err;
-		loc = Dee_function_generator_vtop(self);
-		if unlikely(Dee_function_generator_gjnz_except(self, loc))
-			goto err;
-		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
-		if unlikely(Dee_function_generator_vpop(self))
-			goto err;
-		break;
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		return Dee_function_generator_vcheckint(self); /* - */
 
 	case VCALLOP_CC_NEGINT: {
 		struct Dee_memloc zero;
 		struct Dee_except_exitinfo *info;
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err;
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
 		loc = Dee_function_generator_vtop(self);
 		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
 		zero.ml_type = MEMLOC_TYPE_CONST;
@@ -2712,28 +3368,33 @@ rotate_return_register:
 		if unlikely(!info)
 			goto err;
 		{
-#ifdef DEE_HOST_RELOCVALUE_SECT
-			struct Dee_host_symbol sym;
-			sym.hs_type = DEE_HOST_SYMBOL_SECT;
-			sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-			sym.hs_value.sv_sect.ss_off  = 0;
-			if unlikely(_Dee_function_generator_gjcmp(self, loc, &zero, true, &sym, NULL, NULL))
-				goto err;
-#else /* DEE_HOST_RELOCVALUE_SECT */
-			struct Dee_host_symbol *sym;
-			sym = Dee_function_generator_newsym(self);
-			if unlikely(!sym)
-				goto err;
-			sym->hs_type = DEE_HOST_SYMBOL_SECT;
-			sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-			sym->hs_value.sv_sect.ss_off  = 0;
-			if unlikely(_Dee_function_generator_gjcmp(self, loc, &zero, true, sym, NULL, NULL))
-				goto err;
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
+			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+			return _Dee_function_generator_gjcmp(self, loc, &zero, true, sym, NULL, NULL);
 		}
-		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
-		if unlikely(Dee_function_generator_vpop(self))
+		__builtin_unreachable();
+	}	break;
+
+	case VCALLOP_CC_M1INT: {
+		struct Dee_memloc minus_one;
+		struct Dee_except_exitinfo *info;
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		loc = Dee_function_generator_vtop(self);
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		minus_one.ml_type = MEMLOC_TYPE_CONST;
+		minus_one.ml_value.v_const = (DeeObject *)(uintptr_t)(intptr_t)-1;
+		info = Dee_function_generator_except_exit(self);
+		if unlikely(!info)
 			goto err;
+		{
+			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+			return _Dee_function_generator_gjcmp(self, loc, &minus_one, true, NULL, sym, NULL);
+		}
+		__builtin_unreachable();
 	}	break;
 
 	default: __builtin_unreachable();
@@ -2807,15 +3468,23 @@ err:
  * and STACK[SIZE-argc] appearing at the lowest address). Once that has been accomplished,
  * push a value onto the vstack that describes the base-address (that is a `DeeObject **'
  * pointing to `STACK[SIZE-argc]') of the linear vector.
+ * @param: readonly: Special case to allow the `DeeObject **' vector being generated
+ *                   as `DeeObject *const *'. This in turn makes it possible to not
+ *                   have to construct argument vectors on-stack when all arguments
+ *                   are (re-)compile-time constants.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
-                               Dee_vstackaddr_t argc) {
+                               Dee_vstackaddr_t argc, bool readonly) {
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	if unlikely(Dee_function_generator_vdirect(self, argc))
 		goto err;
+
+	if (readonly) {
+		/* TODO: Check for special case where all arguments are constants. */
+	}
 
 	/* Deal with special argument count cases. */
 	switch (argc) {
@@ -2851,6 +3520,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 	/* TODO */
 	(void)self;
 	(void)argc;
+	(void)readonly;
 	return DeeError_NOTIMPLEMENTED();
 err:
 	return -1;

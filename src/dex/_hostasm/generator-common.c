@@ -28,6 +28,7 @@
 #include <deemon/asm.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
@@ -41,34 +42,131 @@ STATIC_ASSERT(offsetof(struct Dee_memloc, ml_value.v_hreg.r_voff) ==
 /* COMMON CODE GENERATION FUNCTIONS                                     */
 /************************************************************************/
 
-/* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.
- * NOTE: This is the only `Dee_function_generator_g*' function that
- *       doesn't simply assume `MEMLOC_VMORPH_ISDIRECT(ml_vmorph)'. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
-                               struct Dee_memloc *loc) {
-	switch (loc->ml_vmorph) {
-	case MEMLOC_VMORPH_DIRECT:
-	case MEMLOC_VMORPH_DIRECT_01:
-		break;
+#define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
+#define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
 
-		/* NOTE: When normalizing direct value, be sure to kill all aliases
-		 *       *before* calling API function or allocating temp registers.
-		 * Otherwise, aliases will have their non-direct values flushed, which
-		 * is unnecessary as those values will get overwritten in the end! */
-	//TODO: case MEMLOC_VMORPH_BOOL_Z:
-	//TODO: case MEMLOC_VMORPH_BOOL_NZ:
-	//TODO: case MEMLOC_VMORPH_INT:
-	//TODO: case MEMLOC_VMORPH_UINT:
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict self,
+                                    struct Dee_memloc *__restrict loc) {
+	uint8_t vmorph = loc->ml_vmorph;
+	ASSERT(!MEMLOC_VMORPH_ISDIRECT(vmorph));
+	switch (vmorph) {
+
+	case MEMLOC_VMORPH_BOOL_Z:
+	case MEMLOC_VMORPH_BOOL_Z_01:
+	case MEMLOC_VMORPH_BOOL_NZ:
+	case MEMLOC_VMORPH_BOOL_NZ_01:
+	case MEMLOC_VMORPH_BOOL_LZ:
+	case MEMLOC_VMORPH_BOOL_GZ: {
+		Dee_host_register_t retreg;
+		retreg = Dee_function_generator_gallocreg(self, NULL);
+		if unlikely(retreg >= HOST_REGISTER_COUNT)
+			goto err;
+		//TODO: #define MEMLOC_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(value == 0 ? 1 : 0); */
+		//TODO: #define MEMLOC_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For({1,0}[value]); */
+		//TODO: #define MEMLOC_VMORPH_BOOL_NZ    4 /* >> value = DeeBool_For(value != 0 ? 1 : 0); */
+		//TODO: #define MEMLOC_VMORPH_BOOL_NZ_01 5 /* >> value = DeeBool_For(value); */
+		//TODO: #define MEMLOC_VMORPH_BOOL_LZ    6 /* >> value = DeeBool_For((intptr_t)value < 0); */
+		//TODO: #define MEMLOC_VMORPH_BOOL_GZ    7 /* >> value = DeeBool_For((intptr_t)value > 0); */
+		/* TODO */
+		return DeeError_NOTIMPLEMENTED();
+	}	break;
+
+	case MEMLOC_VMORPH_INT:
+	case MEMLOC_VMORPH_UINT: {
+		/* Construct a new deemon integer object. */
+		if unlikely(_Dee_function_generator_gcallapi(self,
+		                                             vmorph == MEMLOC_VMORPH_INT
+		                                             ? (void const *)&DeeInt_NEWSFUNC(HOST_SIZEOF_POINTER)
+		                                             : (void const *)&DeeInt_NEWUFUNC(HOST_SIZEOF_POINTER),
+		                                             1, loc))
+			goto err;
+		loc->ml_flags  = MEMLOC_F_NOREF;
+		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		loc->ml_type   = MEMLOC_TYPE_HREG;
+		loc->ml_value.v_hreg.r_regno = HOST_REGISTER_RETURN;
+		loc->ml_value.v_hreg.r_off   = 0;
+		if unlikely(Dee_function_generator_gjz_except(self, loc))
+			goto err;
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		loc->ml_flags &= ~MEMLOC_F_NOREF;
+	}	break;
 
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Unsupported location value type %#" PRFx8,
 		                       loc->ml_vmorph);
 	}
-	/* TODO */
-	(void)self;
 	return 0;
+err:
+	return -1;
+}
+
+/* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.
+ * NOTE: This is the only `Dee_function_generator_g*' function that
+ *       doesn't simply assume `MEMLOC_VMORPH_ISDIRECT(ml_vmorph)'. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
+                               struct Dee_memloc *loc) {
+	struct Dee_memloc *aliases, *iter, value;
+	struct Dee_memstate *state;
+	if (MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph))
+		return 0; /* Already a direct value. */
+
+	/* Find value-aliases of `loc' and delete them all (for now)
+	 * Reason: When normalizing direct value, be sure to kill all aliases
+	 *         *before* calling API function or allocating temp registers.
+	 *         Otherwise, aliases will have their non-direct values flushed,
+	 *         which is unnecessary as those values will get overwritten
+	 *         in the end! */
+	value = *loc;
+	state = self->fg_state;
+	aliases = NULL;
+	Dee_memstate_foreach(iter, state) {
+		if (Dee_memloc_sameval(iter, &value)) {
+			if (MEMLOC_TYPE_HASREG(iter->ml_type))
+				Dee_memstate_decrinuse(state, iter->ml_value.v_hreg.r_regno);;
+			iter->ml_type   = MEMLOC_TYPE_UNDEFINED;
+			iter->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			iter->ml_value._v_next = aliases;
+			aliases = iter;
+		}
+	}
+	Dee_memstate_foreach_end;
+
+	/* Force the value to become direct. */
+	if unlikely(Dee_function_generator_gdirect_impl(self, &value))
+		goto err;
+
+	/* Write the updated value into all aliases. */
+	ASSERT(MEMLOC_VMORPH_ISDIRECT(value.ml_vmorph));
+	value.ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+	while (aliases) {
+		iter = aliases->ml_value._v_next;
+		ASSERT(aliases->ml_type == MEMLOC_TYPE_UNDEFINED);
+		*aliases = value;
+		aliases->ml_flags |= MEMLOC_F_NOREF; /* Only the original `loc' will be a reference! */
+		if (aliases >= state->ms_localv &&
+		    aliases < state->ms_localv + state->ms_localc) {
+			aliases->ml_flags |= MEMLOC_F_LOCAL_BOUND;
+			goto inc_reguse_for_alias;
+		} else if (aliases >= state->ms_stackv &&
+		           aliases < state->ms_stackv + state->ms_stackc) {
+inc_reguse_for_alias:
+			if (MEMLOC_TYPE_HASREG(value.ml_type))
+				Dee_memstate_incrinuse(state, value.ml_value.v_hreg.r_regno);;
+		}
+		aliases = iter;
+	}
+
+	/* NOTE: If `loc' is part of the tracked state, then register use was already adjusted! */
+	*loc = value;
+	if (loc >= state->ms_localv &&
+	    loc < state->ms_localv + state->ms_localc)
+		loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;
+	return 0;
+err:
+	return -1;
 }
 
 
@@ -1113,26 +1211,10 @@ Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-#ifdef DEE_HOST_RELOCVALUE_SECT
 	{
-		struct Dee_host_symbol sym;
-		sym.hs_type = DEE_HOST_SYMBOL_SECT;
-		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym.hs_value.sv_sect.ss_off  = 0;
-		return _Dee_function_generator_gjz(self, loc, &sym);
-	}
-#else /* DEE_HOST_RELOCVALUE_SECT */
-	{
-		struct Dee_host_symbol *sym;
-		sym = Dee_function_generator_newsym(self);
-		if unlikely(!sym)
-			goto err;
-		sym->hs_type = DEE_HOST_SYMBOL_SECT;
-		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym->hs_value.sv_sect.ss_off  = 0;
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
 		return _Dee_function_generator_gjz(self, loc, sym);
 	}
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }
@@ -1144,26 +1226,10 @@ Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict sel
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-#ifdef DEE_HOST_RELOCVALUE_SECT
 	{
-		struct Dee_host_symbol sym;
-		sym.hs_type = DEE_HOST_SYMBOL_SECT;
-		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym.hs_value.sv_sect.ss_off  = 0;
-		return _Dee_function_generator_gjnz(self, loc, &sym);
-	}
-#else /* DEE_HOST_RELOCVALUE_SECT */
-	{
-		struct Dee_host_symbol *sym;
-		sym = Dee_function_generator_newsym(self);
-		if unlikely(!sym)
-			goto err;
-		sym->hs_type = DEE_HOST_SYMBOL_SECT;
-		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym->hs_value.sv_sect.ss_off  = 0;
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
 		return _Dee_function_generator_gjnz(self, loc, sym);
 	}
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }
@@ -1174,26 +1240,10 @@ Dee_function_generator_gjmp_except(struct Dee_function_generator *__restrict sel
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-#ifdef DEE_HOST_RELOCVALUE_SECT
 	{
-		struct Dee_host_symbol sym;
-		sym.hs_type = DEE_HOST_SYMBOL_SECT;
-		sym.hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym.hs_value.sv_sect.ss_off  = 0;
-		return _Dee_function_generator_gjmp(self, &sym);
-	}
-#else /* DEE_HOST_RELOCVALUE_SECT */
-	{
-		struct Dee_host_symbol *sym;
-		sym = Dee_function_generator_newsym(self);
-		if unlikely(!sym)
-			goto err;
-		sym->hs_type = DEE_HOST_SYMBOL_SECT;
-		sym->hs_value.sv_sect.ss_sect = &info->exi_block->bb_htext;
-		sym->hs_value.sv_sect.ss_off  = 0;
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
 		return _Dee_function_generator_gjmp(self, sym);
 	}
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
 err:
 	return -1;
 }

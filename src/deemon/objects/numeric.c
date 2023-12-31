@@ -1547,26 +1547,36 @@ err:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_tobytes(DeeIntObject *self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw);
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-numeric_tobytes(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+numeric_tobytes(DeeObject *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *as_int, *result;
 	as_int = DeeObject_Int(self);
 	if unlikely(!as_int)
 		goto err;
-	result = DeeObject_CallAttrStringKw(as_int, "tobytes", argc, argv, kw);
+	result = int_tobytes((DeeIntObject *)as_int, argc, argv, kw);
 	Dee_Decref(as_int);
 	return result;
 err:
 	return NULL;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+int_bitcount(DeeIntObject *self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw);
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-numeric_bitcount(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+numeric_bitcount(DeeObject *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *as_int, *result;
 	as_int = DeeObject_Int(self);
 	if unlikely(!as_int)
 		goto err;
-	result = DeeObject_CallAttrStringKw(as_int, "bitcount", argc, argv, kw);
+	result = int_bitcount((DeeIntObject *)as_int, argc, argv, kw);
 	Dee_Decref(as_int);
 	return result;
 err:
