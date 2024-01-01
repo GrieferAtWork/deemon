@@ -86,8 +86,8 @@ DECL_BEGIN
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:wchar_t[]->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
-#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
+#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
+#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
@@ -114,8 +114,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *com
 /*[[[deemon import("rt.gen.dexutils").gw("system", "command:c:char[]->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char const *command);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint") },
-#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FNORMAL, DOC("(command:?Dstring)->?Dint\n" doc) },
+#define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
+#define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
@@ -237,8 +237,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("sched_yield", "", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv);
-#define POSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FNORMAL, DOC("()") },
-#define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FNORMAL, DOC("()\n" doc) },
+#define POSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()") },
+#define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_sched_yield, posix_sched_yield_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sched_yield"))
@@ -264,8 +264,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
 /*[[[deemon import("rt.gen.dexutils").gw("getpid", "->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv);
-#define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FNORMAL, DOC("->?Dint") },
-#define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+#define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint") },
+#define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getpid"))

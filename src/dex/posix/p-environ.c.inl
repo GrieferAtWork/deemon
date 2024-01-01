@@ -2286,8 +2286,8 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 /*[[[deemon import("rt.gen.dexutils").gw("getenv", "varname:?Dstring,defl:?Dstring=NULL->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname, DeeObject *defl);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_GETENV_DEF { "getenv", (DeeObject *)&posix_getenv, MODSYM_FNORMAL, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring") },
-#define POSIX_GETENV_DEF_DOC(doc) { "getenv", (DeeObject *)&posix_getenv, MODSYM_FNORMAL, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc) },
+#define POSIX_GETENV_DEF { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring") },
+#define POSIX_GETENV_DEF_DOC(doc) { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f);
 #ifndef POSIX_KWDS_VARNAME_DEFL_DEFINED
 #define POSIX_KWDS_VARNAME_DEFL_DEFINED
@@ -2316,8 +2316,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("setenv", "varname:?Dstring,value:?Dstring,replace:c:bool=true", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_setenv_f_impl(DeeObject *varname, DeeObject *value, bool replace);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_setenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_SETENV_DEF { "setenv", (DeeObject *)&posix_setenv, MODSYM_FNORMAL, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)") },
-#define POSIX_SETENV_DEF_DOC(doc) { "setenv", (DeeObject *)&posix_setenv, MODSYM_FNORMAL, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)\n" doc) },
+#define POSIX_SETENV_DEF { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)") },
+#define POSIX_SETENV_DEF_DOC(doc) { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_setenv, &posix_setenv_f);
 #ifndef POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
 #define POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
@@ -2353,8 +2353,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("putenv", "envline:?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_putenv_f_impl(DeeObject *envline);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_putenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_PUTENV_DEF { "putenv", (DeeObject *)&posix_putenv, MODSYM_FNORMAL, DOC("(envline:?Dstring)") },
-#define POSIX_PUTENV_DEF_DOC(doc) { "putenv", (DeeObject *)&posix_putenv, MODSYM_FNORMAL, DOC("(envline:?Dstring)\n" doc) },
+#define POSIX_PUTENV_DEF { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)") },
+#define POSIX_PUTENV_DEF_DOC(doc) { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_putenv, &posix_putenv_f);
 #ifndef POSIX_KWDS_ENVLINE_DEFINED
 #define POSIX_KWDS_ENVLINE_DEFINED
@@ -2412,8 +2412,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("unsetenv", "varname:?Dstring->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unsetenv_f_impl(DeeObject *varname);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unsetenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_UNSETENV_DEF { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FNORMAL, DOC("(varname:?Dstring)->?Dbool") },
-#define POSIX_UNSETENV_DEF_DOC(doc) { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FNORMAL, DOC("(varname:?Dstring)->?Dbool\n" doc) },
+#define POSIX_UNSETENV_DEF { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool") },
+#define POSIX_UNSETENV_DEF_DOC(doc) { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_unsetenv, &posix_unsetenv_f);
 #ifndef POSIX_KWDS_VARNAME_DEFINED
 #define POSIX_KWDS_VARNAME_DEFINED
@@ -2445,8 +2445,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("clearenv", "", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_clearenv_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *const *argv);
-#define POSIX_CLEARENV_DEF { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FNORMAL, DOC("()") },
-#define POSIX_CLEARENV_DEF_DOC(doc) { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FNORMAL, DOC("()\n" doc) },
+#define POSIX_CLEARENV_DEF { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()") },
+#define POSIX_CLEARENV_DEF_DOC(doc) { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_clearenv, posix_clearenv_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clearenv"))

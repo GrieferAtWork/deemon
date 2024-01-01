@@ -885,8 +885,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("utime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_UTIME_DEF { "utime", (DeeObject *)&posix_utime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_UTIME_DEF_DOC(doc) { "utime", (DeeObject *)&posix_utime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_utime, &posix_utime_f);
 #ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
@@ -1068,8 +1068,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("lutime", "path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lutime_f_impl(DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lutime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FNORMAL, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_LUTIME_DEF { "lutime", (DeeObject *)&posix_lutime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_LUTIME_DEF_DOC(doc) { "lutime", (DeeObject *)&posix_lutime, MODSYM_FREADONLY, DOC("(path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lutime, &posix_lutime_f);
 #ifndef POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_PATH_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
@@ -1229,8 +1229,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("futime", "fd:?X2?Dint?DFile,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_futime_f_impl(DeeObject *fd, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_futime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
-#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
+#define POSIX_FUTIME_DEF { "futime", (DeeObject *)&posix_futime, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)") },
+#define POSIX_FUTIME_DEF_DOC(doc) { "futime", (DeeObject *)&posix_futime, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_futime, &posix_futime_f);
 #ifndef POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
 #define POSIX_KWDS_FD_ATIME_MTIME_CTIME_BIRTHTIME_DEFINED
@@ -1428,8 +1428,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("utimeat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=Dee_None,mtime:?Etime:Time=Dee_None,ctime:?Etime:Time=Dee_None,birthtime:?Etime:Time=Dee_None,atflags:u=0", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_utimeat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *atime, DeeObject *mtime, DeeObject *ctime, DeeObject *birthtime, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_utimeat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_UTIMEAT_DEF { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)") },
-#define POSIX_UTIMEAT_DEF_DOC(doc) { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)\n" doc) },
+#define POSIX_UTIMEAT_DEF { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)") },
+#define POSIX_UTIMEAT_DEF_DOC(doc) { "utimeat", (DeeObject *)&posix_utimeat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atime:?Etime:Time=!N,mtime:?Etime:Time=!N,ctime:?Etime:Time=!N,birthtime:?Etime:Time=!N,atflags:?Dint=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_utimeat, &posix_utimeat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATIME_MTIME_CTIME_BIRTHTIME_ATFLAGS_DEFINED

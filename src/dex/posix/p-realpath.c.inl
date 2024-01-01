@@ -621,8 +621,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("lrealpath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lrealpath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lrealpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LREALPATH_DEF { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_LREALPATH_DEF_DOC(doc) { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_LREALPATH_DEF { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
+#define POSIX_LREALPATH_DEF_DOC(doc) { "lrealpath", (DeeObject *)&posix_lrealpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lrealpath, &posix_lrealpath_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
@@ -805,8 +805,8 @@ err_printer:
 /*[[[deemon import("rt.gen.dexutils").gw("frealpath", "fd:?X2?DFile?Dint,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frealpath_f_impl(DeeObject *fd, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_frealpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FREALPATH_DEF { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint,atflags:?Dint=!0)->?Dstring") },
-#define POSIX_FREALPATH_DEF_DOC(doc) { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint,atflags:?Dint=!0)->?Dstring\n" doc) },
+#define POSIX_FREALPATH_DEF { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,atflags:?Dint=!0)->?Dstring") },
+#define POSIX_FREALPATH_DEF_DOC(doc) { "frealpath", (DeeObject *)&posix_frealpath, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint,atflags:?Dint=!0)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_frealpath, &posix_frealpath_f);
 #ifndef POSIX_KWDS_FD_ATFLAGS_DEFINED
 #define POSIX_KWDS_FD_ATFLAGS_DEFINED
@@ -915,8 +915,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("realpath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_realpath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_REALPATH_DEF { "realpath", (DeeObject *)&posix_realpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_REALPATH_DEF_DOC(doc) { "realpath", (DeeObject *)&posix_realpath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_REALPATH_DEF { "realpath", (DeeObject *)&posix_realpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
+#define POSIX_REALPATH_DEF_DOC(doc) { "realpath", (DeeObject *)&posix_realpath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_realpath, &posix_realpath_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
@@ -1146,8 +1146,8 @@ err_printer:
 /*[[[deemon import("rt.gen.dexutils").gw("realpathat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_realpathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_realpathat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_REALPATHAT_DEF { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring") },
-#define POSIX_REALPATHAT_DEF_DOC(doc) { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
+#define POSIX_REALPATHAT_DEF { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring") },
+#define POSIX_REALPATHAT_DEF_DOC(doc) { "realpathat", (DeeObject *)&posix_realpathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_realpathat, &posix_realpathat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
@@ -1299,8 +1299,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("lresolvepath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lresolvepath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lresolvepath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LRESOLVEPATH_DEF { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_LRESOLVEPATH_DEF_DOC(doc) { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_LRESOLVEPATH_DEF { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
+#define POSIX_LRESOLVEPATH_DEF_DOC(doc) { "lresolvepath", (DeeObject *)&posix_lresolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lresolvepath, &posix_lresolvepath_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
@@ -1342,8 +1342,8 @@ err_printer:
 /*[[[deemon import("rt.gen.dexutils").gw("resolvepath", "path:?Dstring->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_resolvepath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_RESOLVEPATH_DEF { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
-#define POSIX_RESOLVEPATH_DEF_DOC(doc) { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define POSIX_RESOLVEPATH_DEF { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
+#define POSIX_RESOLVEPATH_DEF_DOC(doc) { "resolvepath", (DeeObject *)&posix_resolvepath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_resolvepath, &posix_resolvepath_f);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
@@ -1384,8 +1384,8 @@ err_printer:
 /*[[[deemon import("rt.gen.dexutils").gw("resolvepathat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:u=0->?Dstring", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_resolvepathat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_resolvepathat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_RESOLVEPATHAT_DEF { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring") },
-#define POSIX_RESOLVEPATHAT_DEF_DOC(doc) { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
+#define POSIX_RESOLVEPATHAT_DEF { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring") },
+#define POSIX_RESOLVEPATHAT_DEF_DOC(doc) { "resolvepathat", (DeeObject *)&posix_resolvepathat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_resolvepathat, &posix_resolvepathat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED

@@ -61,8 +61,8 @@ DECL_BEGIN
 /*[[[deemon import("rt.gen.dexutils").gw("cpu_count", "->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_cpu_count_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv);
-#define POSIX_CPU_COUNT_DEF { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FNORMAL, DOC("->?Dint") },
-#define POSIX_CPU_COUNT_DEF_DOC(doc) { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+#define POSIX_CPU_COUNT_DEF { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint") },
+#define POSIX_CPU_COUNT_DEF_DOC(doc) { "cpu_count", (DeeObject *)&posix_cpu_count, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(posix_cpu_count, posix_cpu_count_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_cpu_count_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":cpu_count"))

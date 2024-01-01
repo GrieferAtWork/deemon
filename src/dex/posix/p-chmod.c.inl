@@ -275,8 +275,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, De
 /*[[[deemon import("rt.gen.dexutils").gw("chmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chmod_f_impl(DeeObject *path, DeeObject *mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_CHMOD_DEF { "chmod", (DeeObject *)&posix_chmod, MODSYM_FNORMAL, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
-#define POSIX_CHMOD_DEF_DOC(doc) { "chmod", (DeeObject *)&posix_chmod, MODSYM_FNORMAL, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_CHMOD_DEF { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
+#define POSIX_CHMOD_DEF_DOC(doc) { "chmod", (DeeObject *)&posix_chmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_chmod, &posix_chmod_f);
 #ifndef POSIX_KWDS_PATH_MODE_DEFINED
 #define POSIX_KWDS_PATH_MODE_DEFINED
@@ -384,8 +384,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("lchmod", "path:?Dstring,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchmod_f_impl(DeeObject *path, DeeObject *mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LCHMOD_DEF { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FNORMAL, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
-#define POSIX_LCHMOD_DEF_DOC(doc) { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FNORMAL, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_LCHMOD_DEF { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)") },
+#define POSIX_LCHMOD_DEF_DOC(doc) { "lchmod", (DeeObject *)&posix_lchmod, MODSYM_FREADONLY, DOC("(path:?Dstring,mode:?X2?Dstring?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lchmod, &posix_lchmod_f);
 #ifndef POSIX_KWDS_PATH_MODE_DEFINED
 #define POSIX_KWDS_PATH_MODE_DEFINED
@@ -470,8 +470,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("fchmod", "fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmod_f_impl(DeeObject *fd, DeeObject *mode);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmod_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHMOD_DEF { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)") },
-#define POSIX_FCHMOD_DEF_DOC(doc) { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc) },
+#define POSIX_FCHMOD_DEF { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)") },
+#define POSIX_FCHMOD_DEF_DOC(doc) { "fchmod", (DeeObject *)&posix_fchmod, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,mode:?X2?Dstring?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fchmod, &posix_fchmod_f);
 #ifndef POSIX_KWDS_FD_MODE_DEFINED
 #define POSIX_KWDS_FD_MODE_DEFINED
@@ -552,8 +552,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("fchmodat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:u=0", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchmodat_f_impl(DeeObject *dfd, DeeObject *path, DeeObject *mode, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchmodat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:?Dint=!0)") },
-#define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:?Dint=!0)\n" doc) },
+#define POSIX_FCHMODAT_DEF { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:?Dint=!0)") },
+#define POSIX_FCHMODAT_DEF_DOC(doc) { "fchmodat", (DeeObject *)&posix_fchmodat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,mode:?X2?Dstring?Dint,atflags:?Dint=!0)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fchmodat, &posix_fchmodat_f);
 #ifndef POSIX_KWDS_DFD_PATH_MODE_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_MODE_ATFLAGS_DEFINED

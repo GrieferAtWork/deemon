@@ -351,8 +351,8 @@ PRIVATE DEFINE_CMETHOD(posix_read, posix_read_f);
 /*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I64d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offset, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
-#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
+#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
+#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
@@ -379,8 +379,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int64_t offs
 /*[[[deemon import("rt.gen.dexutils").gw("lseek", "fd:unix:fd,offset:I32d,whence:d->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lseek_f_impl(int fd, int32_t offset, int whence);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lseek_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
-#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
+#define POSIX_LSEEK_DEF { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint") },
+#define POSIX_LSEEK_DEF_DOC(doc) { "lseek", (DeeObject *)&posix_lseek, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,offset:?Dint,whence:?Dint)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lseek, &posix_lseek_f);
 #ifndef POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
 #define POSIX_KWDS_FD_OFFSET_WHENCE_DEFINED
@@ -686,8 +686,8 @@ PRIVATE DEFINE_CMETHOD(posix_pread, posix_pread_f);
 /*[[[deemon import("rt.gen.dexutils").gw("write", "fd:unix:fd,buf:obj:buffer,count:Iud=-1->?Dint", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_write_f_impl(int fd, DeeObject *buf, size_t count);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_write_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
-#define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FNORMAL, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
+#define POSIX_WRITE_DEF { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint") },
+#define POSIX_WRITE_DEF_DOC(doc) { "write", (DeeObject *)&posix_write, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,buf:?DBytes,count:?Dint=!-1)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_write, &posix_write_f);
 #ifndef POSIX_KWDS_FD_BUF_COUNT_DEFINED
 #define POSIX_KWDS_FD_BUF_COUNT_DEFINED

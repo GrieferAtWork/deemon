@@ -92,8 +92,8 @@ DECL_BEGIN
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FNORMAL, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fcopyfile, &posix_fcopyfile_f);
 #ifndef POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
@@ -180,8 +180,8 @@ err:
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FNORMAL, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FNORMAL, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_copyfile, &posix_copyfile_f);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
@@ -328,8 +328,8 @@ again:
 	"progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpath, DeeObject *newpath, unsigned int flags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FNORMAL, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_lcopyfile, &posix_lcopyfile_f);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
@@ -479,8 +479,8 @@ err:
 	"atflags:u=0,progress:?DCallable=Dee_None,bufsize:?Dint=Dee_None", libname: "posix");]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *olddirfd, DeeObject *oldpath, DeeObject *newdirfd, DeeObject *newpath, unsigned int flags, unsigned int atflags, DeeObject *progress, DeeObject *bufsize);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
-#define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FNORMAL, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
+#define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
+#define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_copyfileat, &posix_copyfileat_f);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED

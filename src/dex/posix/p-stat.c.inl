@@ -1037,8 +1037,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("fstat", "fd:?X2?DFile?Dint->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
-#define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FNORMAL, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
+#define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
+#define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fstat, &posix_fstat_f);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
@@ -1076,8 +1076,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("fstatat", "dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:c:uint=0->?Gstat", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, DeeObject *path, unsigned int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
-#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FNORMAL, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
+#define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
+#define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED

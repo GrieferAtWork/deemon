@@ -905,8 +905,8 @@ done:
 /*[[[deemon import("rt.gen.dexutils").gw("GetHandle", "hHandle:nt:HANDLE->?GHANDLE"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f_impl(HANDLE hHandle);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETHANDLE_DEF { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE") },
-#define LIBWIN32_GETHANDLE_DEF_DOC(doc) { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE\n" doc) },
+#define LIBWIN32_GETHANDLE_DEF { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FREADONLY, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE") },
+#define LIBWIN32_GETHANDLE_DEF_DOC(doc) { "GetHandle", (DeeObject *)&libwin32_GetHandle, MODSYM_FREADONLY, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetHandle, &libwin32_GetHandle_f);
 #ifndef LIBWIN32_KWDS_HHANDLE_DEFINED
 #define LIBWIN32_KWDS_HHANDLE_DEFINED
@@ -932,8 +932,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f_impl(HANDLE hHandl
 /*[[[deemon import("rt.gen.dexutils").gw("GetLastError", "->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETLASTERROR_DEF { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FNORMAL, DOC("->?Dint") },
-#define LIBWIN32_GETLASTERROR_DEF_DOC(doc) { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+#define LIBWIN32_GETLASTERROR_DEF { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FREADONLY, DOC("->?Dint") },
+#define LIBWIN32_GETLASTERROR_DEF_DOC(doc) { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetLastError, libwin32_GetLastError_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLastError"))
@@ -951,8 +951,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void)
 /*[[[deemon import("rt.gen.dexutils").gw("SetLastError", "dwErrCode:nt:DWORD"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f_impl(DWORD dwErrCode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETLASTERROR_DEF { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FNORMAL, DOC("(dwErrCode:?Dint)") },
-#define LIBWIN32_SETLASTERROR_DEF_DOC(doc) { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FNORMAL, DOC("(dwErrCode:?Dint)\n" doc) },
+#define LIBWIN32_SETLASTERROR_DEF { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FREADONLY, DOC("(dwErrCode:?Dint)") },
+#define LIBWIN32_SETLASTERROR_DEF_DOC(doc) { "SetLastError", (DeeObject *)&libwin32_SetLastError, MODSYM_FREADONLY, DOC("(dwErrCode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetLastError, &libwin32_SetLastError_f);
 #ifndef LIBWIN32_KWDS_DWERRCODE_DEFINED
 #define LIBWIN32_KWDS_DWERRCODE_DEFINED
@@ -976,8 +976,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetLastError_f_impl(DWORD dwEr
 /*[[[deemon import("rt.gen.dexutils").gw("CloseHandle", "hObject:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f_impl(HANDLE hObject);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CloseHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CLOSEHANDLE_DEF { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_CLOSEHANDLE_DEF_DOC(doc) { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FNORMAL, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_CLOSEHANDLE_DEF { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FREADONLY, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_CLOSEHANDLE_DEF_DOC(doc) { "CloseHandle", (DeeObject *)&libwin32_CloseHandle, MODSYM_FREADONLY, DOC("(hObject:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CloseHandle, &libwin32_CloseHandle_f);
 #ifndef LIBWIN32_KWDS_HOBJECT_DEFINED
 #define LIBWIN32_KWDS_HOBJECT_DEFINED
@@ -1031,8 +1031,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f_impl(HANDLE hSourceProcessHandle, HANDLE hSourceHandle, HANDLE hTargetProcessHandle, DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwOptions);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DuplicateHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_DUPLICATEHANDLE_DEF { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE") },
-#define LIBWIN32_DUPLICATEHANDLE_DEF_DOC(doc) { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FNORMAL, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE\n" doc) },
+#define LIBWIN32_DUPLICATEHANDLE_DEF { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FREADONLY, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE") },
+#define LIBWIN32_DUPLICATEHANDLE_DEF_DOC(doc) { "DuplicateHandle", (DeeObject *)&libwin32_DuplicateHandle, MODSYM_FREADONLY, DOC("(hSourceProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,hSourceHandle:?X3?Dint?DFile?Ewin32:HANDLE,hTargetProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!0,bInheritHandle:?Dbool=!t,dwOptions:?Dint=!GDUPLICATE_SAME_ACCESS)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_DuplicateHandle, &libwin32_DuplicateHandle_f);
 #ifndef LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
 #define LIBWIN32_KWDS_HSOURCEPROCESSHANDLE_HSOURCEHANDLE_HTARGETPROCESSHANDLE_DWDESIREDACCESS_BINHERITHANDLE_DWOPTIONS_DEFINED
@@ -1115,8 +1115,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, DeeObject *lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEFILE_DEF { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE") },
-#define LIBWIN32_CREATEFILE_DEF_DOC(doc) { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FNORMAL, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATEFILE_DEF { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FREADONLY, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE") },
+#define LIBWIN32_CREATEFILE_DEF_DOC(doc) { "CreateFile", (DeeObject *)&libwin32_CreateFile, MODSYM_FREADONLY, DOC("(lpFileName,dwDesiredAccess:?Dint=!GFILE_GENERIC_READ,dwShareMode:?Dint=FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES,dwCreationDisposition:?Dint=!GOPEN_EXISTING,dwFlagsAndAttributes:?Dint=!GFILE_ATTRIBUTE_NORMAL,hTemplateFile:?X3?Dint?DFile?Ewin32:HANDLE=!0)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFile, &libwin32_CreateFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWDESIREDACCESS_DWSHAREMODE_LPSECURITYATTRIBUTES_DWCREATIONDISPOSITION_DWFLAGSANDATTRIBUTES_HTEMPLATEFILE_DEFINED
@@ -1179,8 +1179,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFile_f_impl(DeeObject *l
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f_impl(HANDLE hFile, DeeObject *lpBuffer, DeeObject *lpOverlapped);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_WRITEFILE_DEF { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
-#define LIBWIN32_WRITEFILE_DEF_DOC(doc) { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
+#define LIBWIN32_WRITEFILE_DEF { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
+#define LIBWIN32_WRITEFILE_DEF_DOC(doc) { "WriteFile", (DeeObject *)&libwin32_WriteFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WriteFile, &libwin32_WriteFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
@@ -1244,8 +1244,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f_impl(HANDLE hFile, DeeObject *lpBuffer, DeeObject *lpOverlapped);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_READFILE_DEF { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
-#define LIBWIN32_READFILE_DEF_DOC(doc) { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
+#define LIBWIN32_READFILE_DEF { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint") },
+#define LIBWIN32_READFILE_DEF_DOC(doc) { "ReadFile", (DeeObject *)&libwin32_ReadFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpBuffer:?DBytes,lpOverlapped?:?GOVERLAPPED)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReadFile, &libwin32_ReadFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPBUFFER_LPOVERLAPPED_DEFINED
@@ -1303,8 +1303,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("CreateDirectory", "lpPathName:nt:LPCWSTR,lpSecurityAttributes:?GSECURITY_ATTRIBUTES=NULL" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f_impl(LPCWSTR lpPathName, DeeObject *lpSecurityAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEDIRECTORY_DEF { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)") },
-#define LIBWIN32_CREATEDIRECTORY_DEF_DOC(doc) { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)\n" doc) },
+#define LIBWIN32_CREATEDIRECTORY_DEF { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)") },
+#define LIBWIN32_CREATEDIRECTORY_DEF_DOC(doc) { "CreateDirectory", (DeeObject *)&libwin32_CreateDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateDirectory, &libwin32_CreateDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_LPSECURITYATTRIBUTES_DEFINED
@@ -1355,8 +1355,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("RemoveDirectory", "lpPathName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f_impl(LPCWSTR lpPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_RemoveDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_REMOVEDIRECTORY_DEF { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
-#define LIBWIN32_REMOVEDIRECTORY_DEF_DOC(doc) { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
+#define LIBWIN32_REMOVEDIRECTORY_DEF { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring)") },
+#define LIBWIN32_REMOVEDIRECTORY_DEF_DOC(doc) { "RemoveDirectory", (DeeObject *)&libwin32_RemoveDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_RemoveDirectory, &libwin32_RemoveDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED
@@ -1405,8 +1405,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("DeleteFile", "lpFileName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f_impl(LPCWSTR lpFileName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_DeleteFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_DELETEFILE_DEF { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)") },
-#define LIBWIN32_DELETEFILE_DEF_DOC(doc) { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)\n" doc) },
+#define LIBWIN32_DELETEFILE_DEF { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)") },
+#define LIBWIN32_DELETEFILE_DEF_DOC(doc) { "DeleteFile", (DeeObject *)&libwin32_DeleteFile, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_DeleteFile, &libwin32_DeleteFile_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
@@ -1455,8 +1455,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetEndOfFile", "hFile:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEndOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETENDOFFILE_DEF { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_SETENDOFFILE_DEF_DOC(doc) { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_SETENDOFFILE_DEF { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_SETENDOFFILE_DEF_DOC(doc) { "SetEndOfFile", (DeeObject *)&libwin32_SetEndOfFile, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetEndOfFile, &libwin32_SetEndOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -1502,8 +1502,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetFilePointer", "hFile:nt:HANDLE,lDistanceToMove:I64d,dwMoveMethod:nt:DWORD=FILE_BEGIN->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f_impl(HANDLE hFile, int64_t lDistanceToMove, DWORD dwMoveMethod);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFilePointer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETFILEPOINTER_DEF { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint") },
-#define LIBWIN32_SETFILEPOINTER_DEF_DOC(doc) { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint\n" doc) },
+#define LIBWIN32_SETFILEPOINTER_DEF { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint") },
+#define LIBWIN32_SETFILEPOINTER_DEF_DOC(doc) { "SetFilePointer", (DeeObject *)&libwin32_SetFilePointer, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lDistanceToMove:?Dint,dwMoveMethod:?Dint=!GFILE_BEGIN)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFilePointer, &libwin32_SetFilePointer_f);
 #ifndef LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
 #define LIBWIN32_KWDS_HFILE_LDISTANCETOMOVE_DWMOVEMETHOD_DEFINED
@@ -1568,8 +1568,8 @@ typedef union {
 /*[[[deemon import("rt.gen.dexutils").gw("GetFileTime", "hFile:nt:HANDLE->" MAYBE_NONE("?T3?Dint?Dint?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileTime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFILETIME_DEF { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint") },
-#define LIBWIN32_GETFILETIME_DEF_DOC(doc) { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint\n" doc) },
+#define LIBWIN32_GETFILETIME_DEF { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint") },
+#define LIBWIN32_GETFILETIME_DEF_DOC(doc) { "GetFileTime", (DeeObject *)&libwin32_GetFileTime, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?T3?Dint?Dint?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileTime, &libwin32_GetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -1626,8 +1626,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetFileTime", "hFile:nt:HANDLE,lpCreationTime:?Dint=NULL,lpLastAccessTime:?Dint=NULL,lpLastWriteTime:?Dint=NULL" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f_impl(HANDLE hFile, DeeObject *lpCreationTime, DeeObject *lpLastAccessTime, DeeObject *lpLastWriteTime);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileTime_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETFILETIME_DEF { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)") },
-#define LIBWIN32_SETFILETIME_DEF_DOC(doc) { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)\n" doc) },
+#define LIBWIN32_SETFILETIME_DEF { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)") },
+#define LIBWIN32_SETFILETIME_DEF_DOC(doc) { "SetFileTime", (DeeObject *)&libwin32_SetFileTime, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpCreationTime?:?Dint,lpLastAccessTime?:?Dint,lpLastWriteTime?:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileTime, &libwin32_SetFileTime_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPCREATIONTIME_LPLASTACCESSTIME_LPLASTWRITETIME_DEFINED
@@ -1690,8 +1690,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetFileValidData", "hFile:nt:HANDLE,ValidDataLength:I64u" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f_impl(HANDLE hFile, uint64_t ValidDataLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileValidData_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETFILEVALIDDATA_DEF { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)") },
-#define LIBWIN32_SETFILEVALIDDATA_DEF_DOC(doc) { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)\n" doc) },
+#define LIBWIN32_SETFILEVALIDDATA_DEF { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)") },
+#define LIBWIN32_SETFILEVALIDDATA_DEF_DOC(doc) { "SetFileValidData", (DeeObject *)&libwin32_SetFileValidData, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,ValidDataLength:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileValidData, &libwin32_SetFileValidData_f);
 #ifndef LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
 #define LIBWIN32_KWDS_HFILE_VALIDDATALENGTH_DEFINED
@@ -1739,8 +1739,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetTempPath", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETTEMPPATH_DEF { "GetTempPath", (DeeObject *)&libwin32_GetTempPath, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETTEMPPATH_DEF_DOC(doc) { "GetTempPath", (DeeObject *)&libwin32_GetTempPath, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETTEMPPATH_DEF { "GetTempPath", (DeeObject *)&libwin32_GetTempPath, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETTEMPPATH_DEF_DOC(doc) { "GetTempPath", (DeeObject *)&libwin32_GetTempPath, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetTempPath, libwin32_GetTempPath_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetTempPath_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetTempPath"))
@@ -1796,8 +1796,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetDllDirectory", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETDLLDIRECTORY_DEF { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETDLLDIRECTORY_DEF_DOC(doc) { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETDLLDIRECTORY_DEF { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETDLLDIRECTORY_DEF_DOC(doc) { "GetDllDirectory", (DeeObject *)&libwin32_GetDllDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetDllDirectory, libwin32_GetDllDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDllDirectory_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetDllDirectory"))
@@ -1871,8 +1871,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetDllDirectory", "lpPathName:nt:LPCWSTR" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f_impl(LPCWSTR lpPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetDllDirectory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)") },
-#define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FNORMAL, DOC("(lpPathName:?Dstring)\n" doc) },
+#define LIBWIN32_SETDLLDIRECTORY_DEF { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring)") },
+#define LIBWIN32_SETDLLDIRECTORY_DEF_DOC(doc) { "SetDllDirectory", (DeeObject *)&libwin32_SetDllDirectory, MODSYM_FREADONLY, DOC("(lpPathName:?Dstring)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetDllDirectory, &libwin32_SetDllDirectory_f);
 #ifndef LIBWIN32_KWDS_LPPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPPATHNAME_DEFINED
@@ -1938,8 +1938,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetDiskFreeSpace", "lpRootPathName:nt:LPCWSTR->" MAYBE_NONE("?T4?Dint?Dint?Dint?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f_impl(LPCWSTR lpRootPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpace_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETDISKFREESPACE_DEF { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint") },
-#define LIBWIN32_GETDISKFREESPACE_DEF_DOC(doc) { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint\n" doc) },
+#define LIBWIN32_GETDISKFREESPACE_DEF { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FREADONLY, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint") },
+#define LIBWIN32_GETDISKFREESPACE_DEF_DOC(doc) { "GetDiskFreeSpace", (DeeObject *)&libwin32_GetDiskFreeSpace, MODSYM_FREADONLY, DOC("(lpRootPathName:?Dstring)->?T4?Dint?Dint?Dint?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpace, &libwin32_GetDiskFreeSpace_f);
 #ifndef LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
@@ -2002,8 +2002,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetDiskFreeSpaceEx", "lpDirectoryName:nt:LPCWSTR->" MAYBE_NONE("?T3?Dint?Dint?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f_impl(LPCWSTR lpDirectoryName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDiskFreeSpaceEx_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETDISKFREESPACEEX_DEF { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FNORMAL, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint") },
-#define LIBWIN32_GETDISKFREESPACEEX_DEF_DOC(doc) { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FNORMAL, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint\n" doc) },
+#define LIBWIN32_GETDISKFREESPACEEX_DEF { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FREADONLY, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint") },
+#define LIBWIN32_GETDISKFREESPACEEX_DEF_DOC(doc) { "GetDiskFreeSpaceEx", (DeeObject *)&libwin32_GetDiskFreeSpaceEx, MODSYM_FREADONLY, DOC("(lpDirectoryName:?Dstring)->?T3?Dint?Dint?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetDiskFreeSpaceEx, &libwin32_GetDiskFreeSpaceEx_f);
 #ifndef LIBWIN32_KWDS_LPDIRECTORYNAME_DEFINED
 #define LIBWIN32_KWDS_LPDIRECTORYNAME_DEFINED
@@ -2062,8 +2062,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetDriveType", "lpRootPathName:nt:LPCWSTR->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f_impl(LPCWSTR lpRootPathName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetDriveType_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETDRIVETYPE_DEF { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?Dint") },
-#define LIBWIN32_GETDRIVETYPE_DEF_DOC(doc) { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FNORMAL, DOC("(lpRootPathName:?Dstring)->?Dint\n" doc) },
+#define LIBWIN32_GETDRIVETYPE_DEF { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FREADONLY, DOC("(lpRootPathName:?Dstring)->?Dint") },
+#define LIBWIN32_GETDRIVETYPE_DEF_DOC(doc) { "GetDriveType", (DeeObject *)&libwin32_GetDriveType, MODSYM_FREADONLY, DOC("(lpRootPathName:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetDriveType, &libwin32_GetDriveType_f);
 #ifndef LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
 #define LIBWIN32_KWDS_LPROOTPATHNAME_DEFINED
@@ -2119,8 +2119,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetModuleFileName", "hModule:nt:HANDLE->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f_impl(HANDLE hModule);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETMODULEFILENAME_DEF { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
-#define LIBWIN32_GETMODULEFILENAME_DEF_DOC(doc) { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FNORMAL, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
+#define LIBWIN32_GETMODULEFILENAME_DEF { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FREADONLY, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
+#define LIBWIN32_GETMODULEFILENAME_DEF_DOC(doc) { "GetModuleFileName", (DeeObject *)&libwin32_GetModuleFileName, MODSYM_FREADONLY, DOC("(hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileName, &libwin32_GetModuleFileName_f);
 #ifndef LIBWIN32_KWDS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HMODULE_DEFINED
@@ -2195,8 +2195,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetSystemDirectory", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETSYSTEMDIRECTORY_DEF { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC(doc) { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETSYSTEMDIRECTORY_DEF { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETSYSTEMDIRECTORY_DEF_DOC(doc) { "GetSystemDirectory", (DeeObject *)&libwin32_GetSystemDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemDirectory, libwin32_GetSystemDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemDirectory_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemDirectory"))
@@ -2255,8 +2255,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetWindowsDirectory", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETWINDOWSDIRECTORY_DEF { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC(doc) { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETWINDOWSDIRECTORY_DEF { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETWINDOWSDIRECTORY_DEF_DOC(doc) { "GetWindowsDirectory", (DeeObject *)&libwin32_GetWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetWindowsDirectory, libwin32_GetWindowsDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetWindowsDirectory_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetWindowsDirectory"))
@@ -2313,8 +2313,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetSystemWindowsDirectory", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC(doc) { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETSYSTEMWINDOWSDIRECTORY_DEF_DOC(doc) { "GetSystemWindowsDirectory", (DeeObject *)&libwin32_GetSystemWindowsDirectory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWindowsDirectory, libwin32_GetSystemWindowsDirectory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWindowsDirectory_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemWindowsDirectory"))
@@ -2373,8 +2373,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetSystemWow64Directory", "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FNORMAL, DOC("->?Dstring") },
-#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC(doc) { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FNORMAL, DOC("->?Dstring\n" doc) },
+#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FREADONLY, DOC("->?Dstring") },
+#define LIBWIN32_GETSYSTEMWOW64DIRECTORY_DEF_DOC(doc) { "GetSystemWow64Directory", (DeeObject *)&libwin32_GetSystemWow64Directory, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetSystemWow64Directory, libwin32_GetSystemWow64Directory_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetSystemWow64Directory_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetSystemWow64Directory"))
@@ -2472,8 +2472,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetLogicalDriveStrings", "->" MAYBE_NONE("?S?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?S?Dstring") },
-#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FNORMAL, DOC("->?S?Dstring\n" doc) },
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FREADONLY, DOC("->?S?Dstring") },
+#define LIBWIN32_GETLOGICALDRIVESTRINGS_DEF_DOC(doc) { "GetLogicalDriveStrings", (DeeObject *)&libwin32_GetLogicalDriveStrings, MODSYM_FREADONLY, DOC("->?S?Dstring\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetLogicalDriveStrings, libwin32_GetLogicalDriveStrings_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLogicalDriveStrings_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLogicalDriveStrings"))
@@ -2535,8 +2535,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("QueryDosDevice", "lpDeviceName:nt:LPCWSTR->" MAYBE_NONE("?S?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f_impl(LPCWSTR lpDeviceName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_QueryDosDevice_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_QUERYDOSDEVICE_DEF { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?S?Dstring") },
-#define LIBWIN32_QUERYDOSDEVICE_DEF_DOC(doc) { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FNORMAL, DOC("(lpDeviceName:?Dstring)->?S?Dstring\n" doc) },
+#define LIBWIN32_QUERYDOSDEVICE_DEF { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FREADONLY, DOC("(lpDeviceName:?Dstring)->?S?Dstring") },
+#define LIBWIN32_QUERYDOSDEVICE_DEF_DOC(doc) { "QueryDosDevice", (DeeObject *)&libwin32_QueryDosDevice, MODSYM_FREADONLY, DOC("(lpDeviceName:?Dstring)->?S?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_QueryDosDevice, &libwin32_QueryDosDevice_f);
 #ifndef LIBWIN32_KWDS_LPDEVICENAME_DEFINED
 #define LIBWIN32_KWDS_LPDEVICENAME_DEFINED
@@ -2618,8 +2618,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetFileType", "hFile:nt:HANDLE->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileType_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFILETYPE_DEF { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
-#define LIBWIN32_GETFILETYPE_DEF_DOC(doc) { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
+#define LIBWIN32_GETFILETYPE_DEF { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
+#define LIBWIN32_GETFILETYPE_DEF_DOC(doc) { "GetFileType", (DeeObject *)&libwin32_GetFileType, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileType, &libwin32_GetFileType_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -2667,8 +2667,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetFileSize", "hFile:nt:HANDLE->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileSize_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFILESIZE_DEF { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
-#define LIBWIN32_GETFILESIZE_DEF_DOC(doc) { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
+#define LIBWIN32_GETFILESIZE_DEF { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
+#define LIBWIN32_GETFILESIZE_DEF_DOC(doc) { "GetFileSize", (DeeObject *)&libwin32_GetFileSize, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileSize, &libwin32_GetFileSize_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -2716,8 +2716,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetFileAttributes", "lpFileName:nt:LPCWSTR->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f_impl(LPCWSTR lpFileName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFileAttributes_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFILEATTRIBUTES_DEF { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint") },
-#define LIBWIN32_GETFILEATTRIBUTES_DEF_DOC(doc) { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
+#define LIBWIN32_GETFILEATTRIBUTES_DEF { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)->?Dint") },
+#define LIBWIN32_GETFILEATTRIBUTES_DEF_DOC(doc) { "GetFileAttributes", (DeeObject *)&libwin32_GetFileAttributes, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFileAttributes, &libwin32_GetFileAttributes_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
@@ -2767,8 +2767,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetFileAttributes", "lpFileName:nt:LPCWSTR,dwFileAttributes:nt:DWORD" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f_impl(LPCWSTR lpFileName, DWORD dwFileAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetFileAttributes_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETFILEATTRIBUTES_DEF { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
-#define LIBWIN32_SETFILEATTRIBUTES_DEF_DOC(doc) { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
+#define LIBWIN32_SETFILEATTRIBUTES_DEF { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)") },
+#define LIBWIN32_SETFILEATTRIBUTES_DEF_DOC(doc) { "SetFileAttributes", (DeeObject *)&libwin32_SetFileAttributes, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring,dwFileAttributes:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetFileAttributes, &libwin32_SetFileAttributes_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DWFILEATTRIBUTES_DEFINED
@@ -2821,8 +2821,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetCompressedFileSize", "lpFileName:nt:LPCWSTR->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f_impl(LPCWSTR lpFileName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCompressedFileSize_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint") },
-#define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF_DOC(doc) { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FNORMAL, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
+#define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)->?Dint") },
+#define LIBWIN32_GETCOMPRESSEDFILESIZE_DEF_DOC(doc) { "GetCompressedFileSize", (DeeObject *)&libwin32_GetCompressedFileSize, MODSYM_FREADONLY, DOC("(lpFileName:?Dstring)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetCompressedFileSize, &libwin32_GetCompressedFileSize_f);
 #ifndef LIBWIN32_KWDS_LPFILENAME_DEFINED
 #define LIBWIN32_KWDS_LPFILENAME_DEFINED
@@ -2874,8 +2874,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("FlushFileBuffers", "hFile:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FlushFileBuffers_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_FLUSHFILEBUFFERS_DEF { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_FLUSHFILEBUFFERS_DEF_DOC(doc) { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_FLUSHFILEBUFFERS_DEF { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_FLUSHFILEBUFFERS_DEF_DOC(doc) { "FlushFileBuffers", (DeeObject *)&libwin32_FlushFileBuffers, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_FlushFileBuffers, &libwin32_FlushFileBuffers_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -2923,8 +2923,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetFinalPathNameByHandle", "hFile:nt:HANDLE,dwFlags:nt:DWORD=0->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f_impl(HANDLE hFile, DWORD dwFlags);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFinalPathNameByHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring") },
-#define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF_DOC(doc) { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring\n" doc) },
+#define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring") },
+#define LIBWIN32_GETFINALPATHNAMEBYHANDLE_DEF_DOC(doc) { "GetFinalPathNameByHandle", (DeeObject *)&libwin32_GetFinalPathNameByHandle, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,dwFlags:?Dint=!0)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFinalPathNameByHandle, &libwin32_GetFinalPathNameByHandle_f);
 #ifndef LIBWIN32_KWDS_HFILE_DWFLAGS_DEFINED
 #define LIBWIN32_KWDS_HFILE_DWFLAGS_DEFINED
@@ -2977,8 +2977,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetFilenameOfHandle", "hFile:nt:HANDLE->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f_impl(HANDLE hFile);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETFILENAMEOFHANDLE_DEF { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
-#define LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC(doc) { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
+#define LIBWIN32_GETFILENAMEOFHANDLE_DEF { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
+#define LIBWIN32_GETFILENAMEOFHANDLE_DEF_DOC(doc) { "GetFilenameOfHandle", (DeeObject *)&libwin32_GetFilenameOfHandle, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetFilenameOfHandle, &libwin32_GetFilenameOfHandle_f);
 #ifndef LIBWIN32_KWDS_HFILE_DEFINED
 #define LIBWIN32_KWDS_HFILE_DEFINED
@@ -3012,8 +3012,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetFilenameOfHandle_f_impl(HAN
 /*[[[deemon import("rt.gen.dexutils").gw("FormatErrorMessage", "dwError:nt:DWORD->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWORD dwError);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_FORMATERRORMESSAGE_DEF { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FNORMAL, DOC("(dwError:?Dint)->?Dstring") },
-#define LIBWIN32_FORMATERRORMESSAGE_DEF_DOC(doc) { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FNORMAL, DOC("(dwError:?Dint)->?Dstring\n" doc) },
+#define LIBWIN32_FORMATERRORMESSAGE_DEF { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FREADONLY, DOC("(dwError:?Dint)->?Dstring") },
+#define LIBWIN32_FORMATERRORMESSAGE_DEF_DOC(doc) { "FormatErrorMessage", (DeeObject *)&libwin32_FormatErrorMessage, MODSYM_FREADONLY, DOC("(dwError:?Dint)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_FormatErrorMessage, &libwin32_FormatErrorMessage_f);
 #ifndef LIBWIN32_KWDS_DWERROR_DEFINED
 #define LIBWIN32_KWDS_DWERROR_DEFINED
@@ -3044,8 +3044,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FormatErrorMessage_f_impl(DWOR
 /*[[[deemon import("rt.gen.dexutils").gw("GetMappedFileName", "hProcess:nt:HANDLE,lpv:c:ptr->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f_impl(HANDLE hProcess, void *lpv);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetMappedFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETMAPPEDFILENAME_DEF { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring") },
-#define LIBWIN32_GETMAPPEDFILENAME_DEF_DOC(doc) { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring\n" doc) },
+#define LIBWIN32_GETMAPPEDFILENAME_DEF { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring") },
+#define LIBWIN32_GETMAPPEDFILENAME_DEF_DOC(doc) { "GetMappedFileName", (DeeObject *)&libwin32_GetMappedFileName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpv:?Aptr?Ectypes:void)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetMappedFileName, &libwin32_GetMappedFileName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPV_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPV_DEFINED
@@ -3100,8 +3100,8 @@ err:
     "->" MAYBE_NONE("?Aptr?Ectypes:void")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f_impl(HANDLE hFileMappingObject, DWORD dwDesiredAccess, uint64_t dwFileOffset, size_t dwNumberOfBytesToMap);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_MapViewOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void") },
-#define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FNORMAL, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void\n" doc) },
+#define LIBWIN32_MAPVIEWOFFILE_DEF { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FREADONLY, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void") },
+#define LIBWIN32_MAPVIEWOFFILE_DEF_DOC(doc) { "MapViewOfFile", (DeeObject *)&libwin32_MapViewOfFile, MODSYM_FREADONLY, DOC("(hFileMappingObject:?X3?Dint?DFile?Ewin32:HANDLE,dwDesiredAccess:?Dint=!GFILE_MAP_READ,dwFileOffset:?Dint=!0,dwNumberOfBytesToMap:?Dint=!0)->?Aptr?Ectypes:void\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_MapViewOfFile, &libwin32_MapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
 #define LIBWIN32_KWDS_HFILEMAPPINGOBJECT_DWDESIREDACCESS_DWFILEOFFSET_DWNUMBEROFBYTESTOMAP_DEFINED
@@ -3168,8 +3168,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("UnmapViewOfFile", "lpBaseAddress:c:ptr" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f_impl(void *lpBaseAddress);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_UnmapViewOfFile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)") },
-#define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FNORMAL, DOC("(lpBaseAddress:?Aptr?Ectypes:void)\n" doc) },
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FREADONLY, DOC("(lpBaseAddress:?Aptr?Ectypes:void)") },
+#define LIBWIN32_UNMAPVIEWOFFILE_DEF_DOC(doc) { "UnmapViewOfFile", (DeeObject *)&libwin32_UnmapViewOfFile, MODSYM_FREADONLY, DOC("(lpBaseAddress:?Aptr?Ectypes:void)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_UnmapViewOfFile, &libwin32_UnmapViewOfFile_f);
 #ifndef LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
 #define LIBWIN32_KWDS_LPBASEADDRESS_DEFINED
@@ -3223,8 +3223,8 @@ err:
     "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f_impl(HANDLE hFile, DeeObject *lpFileMappingAttributes, DWORD flProtect, uint64_t dwMaximumSize, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateFileMapping_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEFILEMAPPING_DEF { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATEFILEMAPPING_DEF_DOC(doc) { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FNORMAL, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATEFILEMAPPING_DEF { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATEFILEMAPPING_DEF_DOC(doc) { "CreateFileMapping", (DeeObject *)&libwin32_CreateFileMapping, MODSYM_FREADONLY, DOC("(hFile:?X3?Dint?DFile?Ewin32:HANDLE,lpFileMappingAttributes?:?GSECURITY_ATTRIBUTES,flProtect:?Dint=!GPAGE_READONLY,dwMaximumSize:?Dint=!0,lpName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateFileMapping, &libwin32_CreateFileMapping_f);
 #ifndef LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_HFILE_LPFILEMAPPINGATTRIBUTES_FLPROTECT_DWMAXIMUMSIZE_LPNAME_DEFINED
@@ -3301,8 +3301,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("GetCurrentProcess", "->?GHANDLE"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETCURRENTPROCESS_DEF { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FNORMAL, DOC("->?GHANDLE") },
-#define LIBWIN32_GETCURRENTPROCESS_DEF_DOC(doc) { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FNORMAL, DOC("->?GHANDLE\n" doc) },
+#define LIBWIN32_GETCURRENTPROCESS_DEF { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FREADONLY, DOC("->?GHANDLE") },
+#define LIBWIN32_GETCURRENTPROCESS_DEF_DOC(doc) { "GetCurrentProcess", (DeeObject *)&libwin32_GetCurrentProcess, MODSYM_FREADONLY, DOC("->?GHANDLE\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcess, libwin32_GetCurrentProcess_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcess"))
@@ -3326,8 +3326,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcess_f_impl(void)
 /*[[[deemon import("rt.gen.dexutils").gw("GetCurrentThread", "->?GHANDLE"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETCURRENTTHREAD_DEF { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FNORMAL, DOC("->?GHANDLE") },
-#define LIBWIN32_GETCURRENTTHREAD_DEF_DOC(doc) { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FNORMAL, DOC("->?GHANDLE\n" doc) },
+#define LIBWIN32_GETCURRENTTHREAD_DEF { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FREADONLY, DOC("->?GHANDLE") },
+#define LIBWIN32_GETCURRENTTHREAD_DEF_DOC(doc) { "GetCurrentThread", (DeeObject *)&libwin32_GetCurrentThread, MODSYM_FREADONLY, DOC("->?GHANDLE\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThread, libwin32_GetCurrentThread_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetCurrentThread"))
@@ -3351,8 +3351,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThread_f_impl(void)
 /*[[[deemon import("rt.gen.dexutils").gw("GetCurrentProcessId", "->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETCURRENTPROCESSID_DEF { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FNORMAL, DOC("->?Dint") },
-#define LIBWIN32_GETCURRENTPROCESSID_DEF_DOC(doc) { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+#define LIBWIN32_GETCURRENTPROCESSID_DEF { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FREADONLY, DOC("->?Dint") },
+#define LIBWIN32_GETCURRENTPROCESSID_DEF_DOC(doc) { "GetCurrentProcessId", (DeeObject *)&libwin32_GetCurrentProcessId, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentProcessId, libwin32_GetCurrentProcessId_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetCurrentProcessId"))
@@ -3376,8 +3376,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentProcessId_f_impl(voi
 /*[[[deemon import("rt.gen.dexutils").gw("GetCurrentThreadId", "->?Dint"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_GETCURRENTTHREADID_DEF { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FNORMAL, DOC("->?Dint") },
-#define LIBWIN32_GETCURRENTTHREADID_DEF_DOC(doc) { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FNORMAL, DOC("->?Dint\n" doc) },
+#define LIBWIN32_GETCURRENTTHREADID_DEF { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FREADONLY, DOC("->?Dint") },
+#define LIBWIN32_GETCURRENTTHREADID_DEF_DOC(doc) { "GetCurrentThreadId", (DeeObject *)&libwin32_GetCurrentThreadId, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_GetCurrentThreadId, libwin32_GetCurrentThreadId_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetCurrentThreadId"))
@@ -3401,8 +3401,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetCurrentThreadId_f_impl(void
 /*[[[deemon import("rt.gen.dexutils").gw("GetStdHandle", "nStdHandle:I32d->?GHANDLE"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f_impl(int32_t nStdHandle);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetStdHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETSTDHANDLE_DEF { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE") },
-#define LIBWIN32_GETSTDHANDLE_DEF_DOC(doc) { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint)->?GHANDLE\n" doc) },
+#define LIBWIN32_GETSTDHANDLE_DEF { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FREADONLY, DOC("(nStdHandle:?Dint)->?GHANDLE") },
+#define LIBWIN32_GETSTDHANDLE_DEF_DOC(doc) { "GetStdHandle", (DeeObject *)&libwin32_GetStdHandle, MODSYM_FREADONLY, DOC("(nStdHandle:?Dint)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetStdHandle, &libwin32_GetStdHandle_f);
 #ifndef LIBWIN32_KWDS_NSTDHANDLE_DEFINED
 #define LIBWIN32_KWDS_NSTDHANDLE_DEFINED
@@ -3460,8 +3460,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("SetStdHandle", "nStdHandle:nt:DWORD,hHandle:nt:HANDLE" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f_impl(DWORD nStdHandle, HANDLE hHandle);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetStdHandle_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETSTDHANDLE_DEF { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_SETSTDHANDLE_DEF_DOC(doc) { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FNORMAL, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_SETSTDHANDLE_DEF { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FREADONLY, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_SETSTDHANDLE_DEF_DOC(doc) { "SetStdHandle", (DeeObject *)&libwin32_SetStdHandle, MODSYM_FREADONLY, DOC("(nStdHandle:?Dint,hHandle:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetStdHandle, &libwin32_SetStdHandle_f);
 #ifndef LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED
 #define LIBWIN32_KWDS_NSTDHANDLE_HHANDLE_DEFINED
@@ -3522,8 +3522,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f_impl(LPCWSTR lpName, DWORD dwOpenMode, DWORD dwPipeMode, DWORD nMaxInstances, DWORD nOutBufferSize, DWORD nInBufferSize, DWORD nDefaultTimeOut, DeeObject *lpSecurityAttributes);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
-#define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FNORMAL, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATENAMEDPIPE_DEF { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE") },
+#define LIBWIN32_CREATENAMEDPIPE_DEF_DOC(doc) { "CreateNamedPipe", (DeeObject *)&libwin32_CreateNamedPipe, MODSYM_FREADONLY, DOC("(lpName:?Dstring,dwOpenMode:?Dint=!GPIPE_ACCESS_DUPLEX,dwPipeMode:?Dint=PIPE_TYPE_BYTE|PIPE_READMODE_BYTE,nMaxInstances:?Dint=!GPIPE_UNLIMITED_INSTANCES,nOutBufferSize:?Dint=!65536,nInBufferSize:?Dint=!65536,nDefaultTimeOut:?Dint=!0,lpSecurityAttributes?:?GSECURITY_ATTRIBUTES)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateNamedPipe, &libwin32_CreateNamedPipe_f);
 #ifndef LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED
 #define LIBWIN32_KWDS_LPNAME_DWOPENMODE_DWPIPEMODE_NMAXINSTANCES_NOUTBUFFERSIZE_NINBUFFERSIZE_NDEFAULTTIMEOUT_LPSECURITYATTRIBUTES_DEFINED
@@ -3598,8 +3598,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f_impl(HANDLE hNamedPipe, DeeObject *lpOverlapped);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ConnectNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CONNECTNAMEDPIPE_DEF { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)") },
-#define LIBWIN32_CONNECTNAMEDPIPE_DEF_DOC(doc) { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FNORMAL, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)\n" doc) },
+#define LIBWIN32_CONNECTNAMEDPIPE_DEF { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FREADONLY, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)") },
+#define LIBWIN32_CONNECTNAMEDPIPE_DEF_DOC(doc) { "ConnectNamedPipe", (DeeObject *)&libwin32_ConnectNamedPipe, MODSYM_FREADONLY, DOC("(hNamedPipe:?X3?Dint?DFile?Ewin32:HANDLE,lpOverlapped?:?GOVERLAPPED)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ConnectNamedPipe, &libwin32_ConnectNamedPipe_f);
 #ifndef LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED
 #define LIBWIN32_KWDS_HNAMEDPIPE_LPOVERLAPPED_DEFINED
@@ -3651,8 +3651,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f_impl(LPCWSTR lpNamedPipeName, DWORD nTimeOut);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitNamedPipe_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_WAITNAMEDPIPE_DEF { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)") },
-#define LIBWIN32_WAITNAMEDPIPE_DEF_DOC(doc) { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FNORMAL, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)\n" doc) },
+#define LIBWIN32_WAITNAMEDPIPE_DEF { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FREADONLY, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)") },
+#define LIBWIN32_WAITNAMEDPIPE_DEF_DOC(doc) { "WaitNamedPipe", (DeeObject *)&libwin32_WaitNamedPipe, MODSYM_FREADONLY, DOC("(lpNamedPipeName:?Dstring,nTimeOut:?Dint=!GNMPWAIT_WAIT_FOREVER)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WaitNamedPipe, &libwin32_WaitNamedPipe_f);
 #ifndef LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED
 #define LIBWIN32_KWDS_LPNAMEDPIPENAME_NTIMEOUT_DEFINED
@@ -3743,8 +3743,8 @@ PRIVATE BOOL DCALL libwin32_AcquireDebugPrivileges(void) {
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, DWORD dwProcessId);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_OPENPROCESS_DEF { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE") },
-#define LIBWIN32_OPENPROCESS_DEF_DOC(doc) { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE\n" doc) },
+#define LIBWIN32_OPENPROCESS_DEF { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE") },
+#define LIBWIN32_OPENPROCESS_DEF_DOC(doc) { "OpenProcess", (DeeObject *)&libwin32_OpenProcess, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,dwProcessId:?Dint)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_OpenProcess, &libwin32_OpenProcess_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_DWPROCESSID_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_DWPROCESSID_DEFINED
@@ -3809,8 +3809,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetExitCodeProcess_f_impl(HANDLE hProcess);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetExitCodeProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETEXITCODEPROCESS_DEF { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
-#define LIBWIN32_GETEXITCODEPROCESS_DEF_DOC(doc) { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
+#define LIBWIN32_GETEXITCODEPROCESS_DEF { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
+#define LIBWIN32_GETEXITCODEPROCESS_DEF_DOC(doc) { "GetExitCodeProcess", (DeeObject *)&libwin32_GetExitCodeProcess, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetExitCodeProcess, &libwin32_GetExitCodeProcess_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DEFINED
@@ -3948,8 +3948,8 @@ done:
      "->" MAYBE_NONE("?S?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f_impl(HANDLE hProcess, DWORD dwFilterFlag);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcessModules_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_ENUMPROCESSMODULES_DEF { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE") },
-#define LIBWIN32_ENUMPROCESSMODULES_DEF_DOC(doc) { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE\n" doc) },
+#define LIBWIN32_ENUMPROCESSMODULES_DEF { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE") },
+#define LIBWIN32_ENUMPROCESSMODULES_DEF_DOC(doc) { "EnumProcessModules", (DeeObject *)&libwin32_EnumProcessModules, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,dwFilterFlag:?Dint=!GLIST_MODULES_DEFAULT)->?S?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_EnumProcessModules, &libwin32_EnumProcessModules_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DWFILTERFLAG_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DWFILTERFLAG_DEFINED
@@ -4054,8 +4054,8 @@ err:
      "->" MAYBE_NONE("?S?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f(size_t argc, DeeObject *const *argv);
-#define LIBWIN32_ENUMPROCESSES_DEF { "EnumProcesses", (DeeObject *)&libwin32_EnumProcesses, MODSYM_FNORMAL, DOC("->?S?Dint") },
-#define LIBWIN32_ENUMPROCESSES_DEF_DOC(doc) { "EnumProcesses", (DeeObject *)&libwin32_EnumProcesses, MODSYM_FNORMAL, DOC("->?S?Dint\n" doc) },
+#define LIBWIN32_ENUMPROCESSES_DEF { "EnumProcesses", (DeeObject *)&libwin32_EnumProcesses, MODSYM_FREADONLY, DOC("->?S?Dint") },
+#define LIBWIN32_ENUMPROCESSES_DEF_DOC(doc) { "EnumProcesses", (DeeObject *)&libwin32_EnumProcesses, MODSYM_FREADONLY, DOC("->?S?Dint\n" doc) },
 PRIVATE DEFINE_CMETHOD(libwin32_EnumProcesses, libwin32_EnumProcesses_f);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_EnumProcesses_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":EnumProcesses"))
@@ -4142,8 +4142,8 @@ err:
      "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetProcessImageFileName_f_impl(HANDLE hProcess);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetProcessImageFileName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
-#define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF_DOC(doc) { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
+#define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
+#define LIBWIN32_GETPROCESSIMAGEFILENAME_DEF_DOC(doc) { "GetProcessImageFileName", (DeeObject *)&libwin32_GetProcessImageFileName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetProcessImageFileName, &libwin32_GetProcessImageFileName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_DEFINED
@@ -4213,8 +4213,8 @@ err:
      "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleBaseName_f_impl(HANDLE hProcess, HANDLE hModule);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleBaseName_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETMODULEBASENAME_DEF { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
-#define LIBWIN32_GETMODULEBASENAME_DEF_DOC(doc) { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
+#define LIBWIN32_GETMODULEBASENAME_DEF { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
+#define LIBWIN32_GETMODULEBASENAME_DEF_DOC(doc) { "GetModuleBaseName", (DeeObject *)&libwin32_GetModuleBaseName, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleBaseName, &libwin32_GetModuleBaseName_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
@@ -4288,8 +4288,8 @@ err:
      "->" MAYBE_NONE("?Dstring")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileNameEx_f_impl(HANDLE hProcess, HANDLE hModule);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetModuleFileNameEx_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_GETMODULEFILENAMEEX_DEF { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
-#define LIBWIN32_GETMODULEFILENAMEEX_DEF_DOC(doc) { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
+#define LIBWIN32_GETMODULEFILENAMEEX_DEF { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring") },
+#define LIBWIN32_GETMODULEFILENAMEEX_DEF_DOC(doc) { "GetModuleFileNameEx", (DeeObject *)&libwin32_GetModuleFileNameEx, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,hModule:?X3?Dint?DFile?Ewin32:HANDLE)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_GetModuleFileNameEx, &libwin32_GetModuleFileNameEx_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_HMODULE_DEFINED
@@ -4362,8 +4362,8 @@ err:
      "->" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f_impl(HANDLE hProcess, UINT uExitCode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_TERMINATEPROCESS_DEF { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)") },
-#define LIBWIN32_TERMINATEPROCESS_DEF_DOC(doc) { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)\n" doc) },
+#define LIBWIN32_TERMINATEPROCESS_DEF { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)") },
+#define LIBWIN32_TERMINATEPROCESS_DEF_DOC(doc) { "TerminateProcess", (DeeObject *)&libwin32_TerminateProcess, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,uExitCode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateProcess, &libwin32_TerminateProcess_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_UEXITCODE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_UEXITCODE_DEFINED
@@ -4414,8 +4414,8 @@ err:
      "->" ERROR_OR_BOOL); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f_impl(HANDLE hThread, DWORD dwExitCode);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_TerminateThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_TERMINATETHREAD_DEF { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)") },
-#define LIBWIN32_TERMINATETHREAD_DEF_DOC(doc) { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)\n" doc) },
+#define LIBWIN32_TERMINATETHREAD_DEF { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)") },
+#define LIBWIN32_TERMINATETHREAD_DEF_DOC(doc) { "TerminateThread", (DeeObject *)&libwin32_TerminateThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE,dwExitCode:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_TerminateThread, &libwin32_TerminateThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DWEXITCODE_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DWEXITCODE_DEFINED
@@ -4465,8 +4465,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SuspendThread_f_impl(HANDLE hThread);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SuspendThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SUSPENDTHREAD_DEF { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
-#define LIBWIN32_SUSPENDTHREAD_DEF_DOC(doc) { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
+#define LIBWIN32_SUSPENDTHREAD_DEF { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
+#define LIBWIN32_SUSPENDTHREAD_DEF_DOC(doc) { "SuspendThread", (DeeObject *)&libwin32_SuspendThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SuspendThread, &libwin32_SuspendThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DEFINED
@@ -4515,8 +4515,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResumeThread_f_impl(HANDLE hThread);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ResumeThread_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_RESUMETHREAD_DEF { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
-#define LIBWIN32_RESUMETHREAD_DEF_DOC(doc) { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FNORMAL, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
+#define LIBWIN32_RESUMETHREAD_DEF { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint") },
+#define LIBWIN32_RESUMETHREAD_DEF_DOC(doc) { "ResumeThread", (DeeObject *)&libwin32_ResumeThread, MODSYM_FREADONLY, DOC("(hThread:?X3?Dint?DFile?Ewin32:HANDLE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ResumeThread, &libwin32_ResumeThread_f);
 #ifndef LIBWIN32_KWDS_HTHREAD_DEFINED
 #define LIBWIN32_KWDS_HTHREAD_DEFINED
@@ -4645,8 +4645,8 @@ PRIVATE LPRTLNTSTATUSTODOSERROR DCALL get_RtlNtStatusToDosError(void) {
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtQueryInformationProcess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
-#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
+#define LIBWIN32_NTQUERYINFORMATIONPROCESS_DEF_DOC(doc) { "NtQueryInformationProcess", (DeeObject *)&libwin32_NtQueryInformationProcess, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtQueryInformationProcess, &libwin32_NtQueryInformationProcess_f);
 #ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 #define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
@@ -4737,8 +4737,8 @@ err:
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f_impl(HANDLE ProcessHandle, unsigned int ProcessInformationClass, size_t ProcessInformationLength);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64QueryInformationProcess64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
-#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FNORMAL, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes") },
+#define LIBWIN32_NTWOW64QUERYINFORMATIONPROCESS64_DEF_DOC(doc) { "NtWow64QueryInformationProcess64", (DeeObject *)&libwin32_NtWow64QueryInformationProcess64, MODSYM_FREADONLY, DOC("(ProcessHandle:?X3?Dint?DFile?Ewin32:HANDLE,ProcessInformationClass:?Dint,ProcessInformationLength:?Dint=!64)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64QueryInformationProcess64, &libwin32_NtWow64QueryInformationProcess64_f);
 #ifndef LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
 #define LIBWIN32_KWDS_PROCESSHANDLE_PROCESSINFORMATIONCLASS_PROCESSINFORMATIONLENGTH_DEFINED
@@ -4829,8 +4829,8 @@ err:
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, SIZE_T nSize);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReadProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_READPROCESSMEMORY_DEF { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
-#define LIBWIN32_READPROCESSMEMORY_DEF_DOC(doc) { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
+#define LIBWIN32_READPROCESSMEMORY_DEF { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
+#define LIBWIN32_READPROCESSMEMORY_DEF_DOC(doc) { "ReadProcessMemory", (DeeObject *)&libwin32_ReadProcessMemory, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReadProcessMemory, &libwin32_ReadProcessMemory_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
@@ -4897,8 +4897,8 @@ err:
      "->" MAYBE_NONE("?DBytes")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, ULONG64 nSize);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64ReadVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
-#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
+#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes") },
+#define LIBWIN32_NTWOW64READVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64ReadVirtualMemory64", (DeeObject *)&libwin32_NtWow64ReadVirtualMemory64, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,nSize:?Dint)->?DBytes\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64ReadVirtualMemory64, &libwin32_NtWow64ReadVirtualMemory64_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_NSIZE_DEFINED
@@ -4974,8 +4974,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f_impl(HANDLE hProcess, uintptr_t lpBaseAddress, DeeObject *lpBuffer);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WriteProcessMemory_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_WRITEPROCESSMEMORY_DEF { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
-#define LIBWIN32_WRITEPROCESSMEMORY_DEF_DOC(doc) { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
+#define LIBWIN32_WRITEPROCESSMEMORY_DEF { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
+#define LIBWIN32_WRITEPROCESSMEMORY_DEF_DOC(doc) { "WriteProcessMemory", (DeeObject *)&libwin32_WriteProcessMemory, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WriteProcessMemory, &libwin32_WriteProcessMemory_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
@@ -5038,8 +5038,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f_impl(HANDLE hProcess, uint64_t lpBaseAddress, DeeObject *lpBuffer);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_NtWow64WriteVirtualMemory64_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
-#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FNORMAL, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
+#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint") },
+#define LIBWIN32_NTWOW64WRITEVIRTUALMEMORY64_DEF_DOC(doc) { "NtWow64WriteVirtualMemory64", (DeeObject *)&libwin32_NtWow64WriteVirtualMemory64, MODSYM_FREADONLY, DOC("(hProcess:?X3?Dint?DFile?Ewin32:HANDLE,lpBaseAddress:?Dint,lpBuffer:?DBytes)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_NtWow64WriteVirtualMemory64, &libwin32_NtWow64WriteVirtualMemory64_f);
 #ifndef LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
 #define LIBWIN32_KWDS_HPROCESS_LPBASEADDRESS_LPBUFFER_DEFINED
@@ -5110,8 +5110,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f_impl(HANDLE hHandle, DWORD dwMilliseconds);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForSingleObject_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_WAITFORSINGLEOBJECT_DEF { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
-#define LIBWIN32_WAITFORSINGLEOBJECT_DEF_DOC(doc) { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FNORMAL, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
+#define LIBWIN32_WAITFORSINGLEOBJECT_DEF { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FREADONLY, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
+#define LIBWIN32_WAITFORSINGLEOBJECT_DEF_DOC(doc) { "WaitForSingleObject", (DeeObject *)&libwin32_WaitForSingleObject, MODSYM_FREADONLY, DOC("(hHandle:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForSingleObject, &libwin32_WaitForSingleObject_f);
 #ifndef LIBWIN32_KWDS_HHANDLE_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_HHANDLE_DWMILLISECONDS_DEFINED
@@ -5166,8 +5166,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f_impl(DeeObject *lpHandles, bool bWaitAll, DWORD dwMilliseconds);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FNORMAL, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
-#define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF_DOC(doc) { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FNORMAL, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
+#define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FREADONLY, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
+#define LIBWIN32_WAITFORMULTIPLEOBJECTS_DEF_DOC(doc) { "WaitForMultipleObjects", (DeeObject *)&libwin32_WaitForMultipleObjects, MODSYM_FREADONLY, DOC("(lpHandles:?S?O,bWaitAll:?Dbool,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_WaitForMultipleObjects, &libwin32_WaitForMultipleObjects_f);
 #ifndef LIBWIN32_KWDS_LPHANDLES_BWAITALL_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_LPHANDLES_BWAITALL_DWMILLISECONDS_DEFINED
@@ -5245,8 +5245,8 @@ err:
      "->" MAYBE_NONE("?Dint")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f_impl(HANDLE hObjectToSignal, HANDLE hObjectToWaitOn, DWORD dwMilliseconds);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SignalObjectAndWait_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SIGNALOBJECTANDWAIT_DEF { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FNORMAL, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
-#define LIBWIN32_SIGNALOBJECTANDWAIT_DEF_DOC(doc) { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FNORMAL, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
+#define LIBWIN32_SIGNALOBJECTANDWAIT_DEF { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FREADONLY, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint") },
+#define LIBWIN32_SIGNALOBJECTANDWAIT_DEF_DOC(doc) { "SignalObjectAndWait", (DeeObject *)&libwin32_SignalObjectAndWait, MODSYM_FREADONLY, DOC("(hObjectToSignal:?X3?Dint?DFile?Ewin32:HANDLE,hObjectToWaitOn:?X3?Dint?DFile?Ewin32:HANDLE,dwMilliseconds:?Dint=!GINFINITE)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SignalObjectAndWait, &libwin32_SignalObjectAndWait_f);
 #ifndef LIBWIN32_KWDS_HOBJECTTOSIGNAL_HOBJECTTOWAITON_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_HOBJECTTOSIGNAL_HOBJECTTOWAITON_DWMILLISECONDS_DEFINED
@@ -5305,8 +5305,8 @@ err:
      "dwMilliseconds:nt:DWORD"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f_impl(DWORD dwMilliseconds);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_Sleep_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SLEEP_DEF { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FNORMAL, DOC("(dwMilliseconds:?Dint)") },
-#define LIBWIN32_SLEEP_DEF_DOC(doc) { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FNORMAL, DOC("(dwMilliseconds:?Dint)\n" doc) },
+#define LIBWIN32_SLEEP_DEF { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FREADONLY, DOC("(dwMilliseconds:?Dint)") },
+#define LIBWIN32_SLEEP_DEF_DOC(doc) { "Sleep", (DeeObject *)&libwin32_Sleep, MODSYM_FREADONLY, DOC("(dwMilliseconds:?Dint)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_Sleep, &libwin32_Sleep_f);
 #ifndef LIBWIN32_KWDS_DWMILLISECONDS_DEFINED
 #define LIBWIN32_KWDS_DWMILLISECONDS_DEFINED
@@ -5347,8 +5347,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateEvent_f_impl(DeeObject *lpEventAttributes, bool bManualReset, bool bInitialState, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEEVENT_DEF { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FNORMAL, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATEEVENT_DEF_DOC(doc) { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FNORMAL, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATEEVENT_DEF { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FREADONLY, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATEEVENT_DEF_DOC(doc) { "CreateEvent", (DeeObject *)&libwin32_CreateEvent, MODSYM_FREADONLY, DOC("(lpEventAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,bInitialState:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateEvent, &libwin32_CreateEvent_f);
 #ifndef LIBWIN32_KWDS_LPEVENTATTRIBUTES_BMANUALRESET_BINITIALSTATE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPEVENTATTRIBUTES_BMANUALRESET_BINITIALSTATE_LPNAME_DEFINED
@@ -5412,8 +5412,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_OPENEVENT_DEF { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
-#define LIBWIN32_OPENEVENT_DEF_DOC(doc) { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_OPENEVENT_DEF { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
+#define LIBWIN32_OPENEVENT_DEF_DOC(doc) { "OpenEvent", (DeeObject *)&libwin32_OpenEvent, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_OpenEvent, &libwin32_OpenEvent_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
@@ -5472,8 +5472,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ResetEvent_f_impl(HANDLE hEvent);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ResetEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_RESETEVENT_DEF { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_RESETEVENT_DEF_DOC(doc) { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_RESETEVENT_DEF { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FREADONLY, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_RESETEVENT_DEF_DOC(doc) { "ResetEvent", (DeeObject *)&libwin32_ResetEvent, MODSYM_FREADONLY, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ResetEvent, &libwin32_ResetEvent_f);
 #ifndef LIBWIN32_KWDS_HEVENT_DEFINED
 #define LIBWIN32_KWDS_HEVENT_DEFINED
@@ -5523,8 +5523,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_SetEvent_f_impl(HANDLE hEvent);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_SetEvent_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_SETEVENT_DEF { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_SETEVENT_DEF_DOC(doc) { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FNORMAL, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_SETEVENT_DEF { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FREADONLY, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_SETEVENT_DEF_DOC(doc) { "SetEvent", (DeeObject *)&libwin32_SetEvent, MODSYM_FREADONLY, DOC("(hEvent:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_SetEvent, &libwin32_SetEvent_f);
 #ifndef LIBWIN32_KWDS_HEVENT_DEFINED
 #define LIBWIN32_KWDS_HEVENT_DEFINED
@@ -5575,8 +5575,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateMutex_f_impl(DeeObject *lpMutexAttributes, bool bInitialOwner, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEMUTEX_DEF { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FNORMAL, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATEMUTEX_DEF_DOC(doc) { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FNORMAL, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATEMUTEX_DEF { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FREADONLY, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATEMUTEX_DEF_DOC(doc) { "CreateMutex", (DeeObject *)&libwin32_CreateMutex, MODSYM_FREADONLY, DOC("(lpMutexAttributes?:?GSECURITY_ATTRIBUTES,bInitialOwner:?Dbool=!f,lpName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateMutex, &libwin32_CreateMutex_f);
 #ifndef LIBWIN32_KWDS_LPMUTEXATTRIBUTES_BINITIALOWNER_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPMUTEXATTRIBUTES_BINITIALOWNER_LPNAME_DEFINED
@@ -5639,8 +5639,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_OPENMUTEX_DEF { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
-#define LIBWIN32_OPENMUTEX_DEF_DOC(doc) { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_OPENMUTEX_DEF { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
+#define LIBWIN32_OPENMUTEX_DEF_DOC(doc) { "OpenMutex", (DeeObject *)&libwin32_OpenMutex, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_OpenMutex, &libwin32_OpenMutex_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
@@ -5698,8 +5698,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseMutex_f_impl(HANDLE hMutex);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReleaseMutex_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_RELEASEMUTEX_DEF { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FNORMAL, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_RELEASEMUTEX_DEF_DOC(doc) { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FNORMAL, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_RELEASEMUTEX_DEF { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FREADONLY, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_RELEASEMUTEX_DEF_DOC(doc) { "ReleaseMutex", (DeeObject *)&libwin32_ReleaseMutex, MODSYM_FREADONLY, DOC("(hMutex:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseMutex, &libwin32_ReleaseMutex_f);
 #ifndef LIBWIN32_KWDS_HMUTEX_DEFINED
 #define LIBWIN32_KWDS_HMUTEX_DEFINED
@@ -5751,8 +5751,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f_impl(DeeObject *lpSemaphoreAttributes, LONG lInitialCount, LONG lMaximumCount, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATESEMAPHORE_DEF { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FNORMAL, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATESEMAPHORE_DEF_DOC(doc) { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FNORMAL, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATESEMAPHORE_DEF { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATESEMAPHORE_DEF_DOC(doc) { "CreateSemaphore", (DeeObject *)&libwin32_CreateSemaphore, MODSYM_FREADONLY, DOC("(lpSemaphoreAttributes?:?GSECURITY_ATTRIBUTES,lInitialCount:?Dint=!0,lMaximumCount:?Dint=!0x10000,lpName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateSemaphore, &libwin32_CreateSemaphore_f);
 #ifndef LIBWIN32_KWDS_LPSEMAPHOREATTRIBUTES_LINITIALCOUNT_LMAXIMUMCOUNT_LPNAME_DEFINED
 #define LIBWIN32_KWDS_LPSEMAPHOREATTRIBUTES_LINITIALCOUNT_LMAXIMUMCOUNT_LPNAME_DEFINED
@@ -5819,8 +5819,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_OPENSEMAPHORE_DEF { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
-#define LIBWIN32_OPENSEMAPHORE_DEF_DOC(doc) { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_OPENSEMAPHORE_DEF { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
+#define LIBWIN32_OPENSEMAPHORE_DEF_DOC(doc) { "OpenSemaphore", (DeeObject *)&libwin32_OpenSemaphore, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_OpenSemaphore, &libwin32_OpenSemaphore_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
@@ -5879,8 +5879,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_ReleaseSemaphore_f_impl(HANDLE hSemaphore, LONG lReleaseCount);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_ReleaseSemaphore_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_RELEASESEMAPHORE_DEF { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FNORMAL, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint") },
-#define LIBWIN32_RELEASESEMAPHORE_DEF_DOC(doc) { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FNORMAL, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint\n" doc) },
+#define LIBWIN32_RELEASESEMAPHORE_DEF { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FREADONLY, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint") },
+#define LIBWIN32_RELEASESEMAPHORE_DEF_DOC(doc) { "ReleaseSemaphore", (DeeObject *)&libwin32_ReleaseSemaphore, MODSYM_FREADONLY, DOC("(hSemaphore:?X3?Dint?DFile?Ewin32:HANDLE,lReleaseCount:?Dint=!1)->?Dint\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_ReleaseSemaphore, &libwin32_ReleaseSemaphore_f);
 #ifndef LIBWIN32_KWDS_HSEMAPHORE_LRELEASECOUNT_DEFINED
 #define LIBWIN32_KWDS_HSEMAPHORE_LRELEASECOUNT_DEFINED
@@ -5933,8 +5933,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CreateWaitableTimer_f_impl(DeeObject *lpTimerAttributes, bool bManualReset, LPCWSTR lpTimerName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CreateWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CREATEWAITABLETIMER_DEF { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FNORMAL, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE") },
-#define LIBWIN32_CREATEWAITABLETIMER_DEF_DOC(doc) { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FNORMAL, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_CREATEWAITABLETIMER_DEF { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FREADONLY, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE") },
+#define LIBWIN32_CREATEWAITABLETIMER_DEF_DOC(doc) { "CreateWaitableTimer", (DeeObject *)&libwin32_CreateWaitableTimer, MODSYM_FREADONLY, DOC("(lpTimerAttributes?:?GSECURITY_ATTRIBUTES,bManualReset:?Dbool=!f,lpTimerName?:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CreateWaitableTimer, &libwin32_CreateWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_LPTIMERATTRIBUTES_BMANUALRESET_LPTIMERNAME_DEFINED
 #define LIBWIN32_KWDS_LPTIMERATTRIBUTES_BMANUALRESET_LPTIMERNAME_DEFINED
@@ -5999,8 +5999,8 @@ err:
      "->" MAYBE_NONE("?GHANDLE")); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f_impl(DWORD dwDesiredAccess, bool bInheritHandle, LPCWSTR lpName);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_OpenWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_OPENWAITABLETIMER_DEF { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
-#define LIBWIN32_OPENWAITABLETIMER_DEF_DOC(doc) { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FNORMAL, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
+#define LIBWIN32_OPENWAITABLETIMER_DEF { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE") },
+#define LIBWIN32_OPENWAITABLETIMER_DEF_DOC(doc) { "OpenWaitableTimer", (DeeObject *)&libwin32_OpenWaitableTimer, MODSYM_FREADONLY, DOC("(dwDesiredAccess:?Dint,bInheritHandle:?Dbool,lpName:?Dstring)->?GHANDLE\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_OpenWaitableTimer, &libwin32_OpenWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
 #define LIBWIN32_KWDS_DWDESIREDACCESS_BINHERITHANDLE_LPNAME_DEFINED
@@ -6059,8 +6059,8 @@ err:
      ); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_CancelWaitableTimer_f_impl(HANDLE hTimer);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_CancelWaitableTimer_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_CANCELWAITABLETIMER_DEF { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FNORMAL, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)") },
-#define LIBWIN32_CANCELWAITABLETIMER_DEF_DOC(doc) { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FNORMAL, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
+#define LIBWIN32_CANCELWAITABLETIMER_DEF { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FREADONLY, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)") },
+#define LIBWIN32_CANCELWAITABLETIMER_DEF_DOC(doc) { "CancelWaitableTimer", (DeeObject *)&libwin32_CancelWaitableTimer, MODSYM_FREADONLY, DOC("(hTimer:?X3?Dint?DFile?Ewin32:HANDLE)\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_CancelWaitableTimer, &libwin32_CancelWaitableTimer_f);
 #ifndef LIBWIN32_KWDS_HTIMER_DEFINED
 #define LIBWIN32_KWDS_HTIMER_DEFINED
@@ -6107,8 +6107,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("FixUncPath", "path:?Dstring->?Dstring"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_FixUncPath_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define LIBWIN32_FIXUNCPATH_DEF { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring") },
-#define LIBWIN32_FIXUNCPATH_DEF_DOC(doc) { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FNORMAL, DOC("(path:?Dstring)->?Dstring\n" doc) },
+#define LIBWIN32_FIXUNCPATH_DEF { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring") },
+#define LIBWIN32_FIXUNCPATH_DEF_DOC(doc) { "FixUncPath", (DeeObject *)&libwin32_FixUncPath, MODSYM_FREADONLY, DOC("(path:?Dstring)->?Dstring\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(libwin32_FixUncPath, &libwin32_FixUncPath_f);
 #ifndef LIBWIN32_KWDS_PATH_DEFINED
 #define LIBWIN32_KWDS_PATH_DEFINED

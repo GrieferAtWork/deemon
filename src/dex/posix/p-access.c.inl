@@ -116,8 +116,8 @@ print "/" "**" "/";
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:wchar_t[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
+#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
@@ -145,8 +145,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *fil
 /*[[[deemon import("rt.gen.dexutils").gw("access", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
+#define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
@@ -230,8 +230,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("euidaccess", "filename:c:char[],how:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_euidaccess_f_impl(/*utf-8*/ char const *filename, int how);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
-#define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FNORMAL, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
+#define POSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
+#define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
@@ -301,8 +301,8 @@ err:
 /*[[[deemon import("rt.gen.dexutils").gw("faccessat", "dfd:d,filename:c:char[],how:d,atflags:d->?Dbool", libname: "posix"); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, /*utf-8*/ char const *filename, int how, int atflags);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define POSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
-#define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FNORMAL, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
+#define POSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
+#define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
 PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f);
 #ifndef POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
