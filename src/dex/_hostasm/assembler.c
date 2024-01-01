@@ -26,9 +26,11 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/alloc.h>
+#include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/none.h>
+#include <deemon/tuple.h>
 
 #include <hybrid/byteswap.h>
 #include <hybrid/limitcore.h>
@@ -138,6 +140,7 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 			result->ms_localv[lid].ml_flags  = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
 			result->ms_localv[lid].ml_vmorph = MEMLOC_VMORPH_DIRECT;
 			result->ms_localv[lid].ml_type   = MEMLOC_TYPE_UNALLOC;
+			result->ms_localv[lid].ml_valtyp = NULL;
 		}
 	}
 done:
@@ -227,6 +230,12 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #else /* ... */
 #error "Initial register state not implemented for this architecture"
 #endif /* !... */
+
+	/* Some arguments have known object types. */
+	if (cc & HOSTFUNC_CC_F_FUNC)
+		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC].ml_valtyp = &DeeFunction_Type;
+	if (cc & HOSTFUNC_CC_F_TUPLE)
+		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS].ml_valtyp = &DeeTuple_Type;
 
 	return state;
 err:
@@ -693,6 +702,7 @@ Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
 	if (MEMLOC_TYPE_HASREG(vloc->ml_type))
 		Dee_memstate_decrinuse(self, vloc->ml_value.v_hreg.r_regno);
 	vloc->ml_type = MEMLOC_TYPE_UNDEFINED;
+	vloc->ml_valtyp = NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -749,6 +759,8 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 		}
 		curinfo_vaddr[cur_loci] = state->ms_stackc;
 		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
+		cur_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		cur_loc.ml_valtyp = NULL;
 		if unlikely(Dee_memstate_vpush(state, &cur_loc))
 			goto err_infostate_state_curinfo_vaddr;
 	}
@@ -799,6 +811,8 @@ offload_cur_locX_to_new_loci:
 				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				curinfo_vaddr[new_loci] = state->ms_stackc;
+				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+				new_loc.ml_valtyp = NULL;
 				if unlikely(Dee_memstate_vpush(state, &new_loc))
 					goto err_infostate_state_curinfo_vaddr;
 				goto next_cur_locX;
@@ -894,6 +908,8 @@ next_cur_locX:;
 				goto err_infostate_state_curinfo_vaddr;
 			ASSERT(curinfo_vaddr[new_locX] == (Dee_vstackaddr_t)-1);
 			curinfo_vaddr[new_locX] = state->ms_stackc;
+			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			new_loc.ml_valtyp = NULL;
 			if unlikely(Dee_memstate_vpush(state, &new_loc))
 				goto err_infostate_state_curinfo_vaddr;
 		} else {

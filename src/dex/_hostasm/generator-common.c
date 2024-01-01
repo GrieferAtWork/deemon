@@ -90,6 +90,7 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 			goto err;
 		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
 		loc->ml_flags &= ~MEMLOC_F_NOREF;
+		loc->ml_valtyp = &DeeInt_Type;
 	}	break;
 
 	default:
@@ -1229,6 +1230,24 @@ Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict sel
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
 		return _Dee_function_generator_gjnz(self, loc, sym);
+	}
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gjeq_except(struct Dee_function_generator *__restrict self,
+                                   struct Dee_memloc *loc, intptr_t except_val) {
+	struct Dee_except_exitinfo *info;
+	struct Dee_memloc except_val_loc;
+	info = Dee_function_generator_except_exit(self);
+	if unlikely(!info)
+		goto err;
+	except_val_loc.ml_type = MEMLOC_TYPE_CONST;
+	except_val_loc.ml_value.v_const = (DeeObject *)(uintptr_t)except_val;
+	{
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+		return _Dee_function_generator_gjcmp(self, loc, &except_val_loc, false, NULL, sym, NULL);
 	}
 err:
 	return -1;

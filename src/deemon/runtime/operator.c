@@ -3921,14 +3921,11 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 	DREF DeeObject *result;
 	if (DeeTuple_CheckExact(other)) {
-		size_t i, count = DeeTuple_SIZE(other);
-		for (i = 0; i < count; ++i)
-			Dee_Incref(DeeTuple_GET(other, i));
+		size_t count = DeeTuple_SIZE(other);
+		Dee_Increfv(DeeTuple_ELEM(other), count);
 		result = DeeObject_ExtendInherited(self, count, DeeTuple_ELEM(other));
-		if unlikely(!result) {
-			for (i = 0; i < count; ++i)
-				Dee_Decref(DeeTuple_GET(other, i));
-		}
+		if unlikely(!result)
+			Dee_Decrefv(DeeTuple_ELEM(other), count);
 		return result;
 	}
 	if (DeeTuple_CheckExact(self))

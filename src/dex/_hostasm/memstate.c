@@ -111,6 +111,9 @@ INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 Dee_memloc_typeof(struct Dee_memloc const *self) {
 	switch (self->ml_vmorph) {
 	case MEMLOC_VMORPH_DIRECT:
+		if (self->ml_type != MEMLOC_TYPE_CONST)
+			return self->ml_valtyp;
+		ATTR_FALLTHROUGH
 	case MEMLOC_VMORPH_DIRECT_01:
 		if (self->ml_type == MEMLOC_TYPE_CONST)
 			return Dee_TYPE(self->ml_value.v_const);
@@ -492,6 +495,18 @@ did_runtime_value_merge:
 			}
 		}
 	}
+
+	/* Merge compile-time known location typing. */
+	if (loc->ml_vmorph == MEMLOC_VMORPH_DIRECT &&
+	    loc->ml_type != MEMLOC_TYPE_CONST && loc->ml_valtyp != NULL) {
+		DeeTypeObject *other_type = Dee_memloc_typeof(other_loc);
+		if (loc->ml_valtyp != other_type) {
+			/* Location has multiple/unknown object types. */
+			loc->ml_valtyp = NULL;
+			result = true;
+		}
+	}
+
 	return result;
 }
 
@@ -565,6 +580,23 @@ Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
 			return result;
 	}
 	return NULL;
+}
+
+/* Check if a reference is being held by `loc' or some other location that may be aliasing it. */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
+                    struct Dee_memloc const *loc) {
+	struct Dee_memloc const *iter;
+	if (!(loc->ml_flags & MEMLOC_F_NOREF))
+		return true;
+	Dee_memstate_foreach(iter, self) {
+		if (!Dee_memloc_sameloc(iter, loc))
+			continue;
+		if (!(iter->ml_flags & MEMLOC_F_NOREF))
+			return true;
+	}
+	Dee_memstate_foreach_end;
+	return false;
 }
 
 
@@ -761,6 +793,7 @@ Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value)
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_CONST;
+	/*loc->ml_valtyp = NULL;*/ /* Not used for constants */
 	loc->ml_value.v_const = value;
 	++self->ms_stackc;
 	return 0;
@@ -781,6 +814,7 @@ Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self,
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_HREG;
+	loc->ml_valtyp = NULL;
 	loc->ml_value.v_hreg.r_regno = regno;
 	loc->ml_value.v_hreg.r_off   = delta;
 	Dee_memstate_incrinuse(self, regno);
@@ -802,6 +836,7 @@ Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self,
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_HREGIND;
+	loc->ml_valtyp = NULL;
 	loc->ml_value.v_hreg.r_regno = regno;
 	loc->ml_value.v_hreg.r_off   = ind_delta;
 	loc->ml_value.v_hreg.r_voff  = val_delta;
@@ -823,6 +858,7 @@ Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self,
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_HSTACK;
+	loc->ml_valtyp = NULL;
 	loc->ml_value.v_hstack.s_cfa = cfa_offset;
 	++self->ms_stackc;
 	return 0;
@@ -841,6 +877,7 @@ Dee_memstate_vpush_hstackind(struct Dee_memstate *__restrict self,
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_HSTACKIND;
+	loc->ml_valtyp = NULL;
 	loc->ml_value.v_hstack.s_cfa = cfa_offset;
 	loc->ml_value.v_hstack.s_off = val_delta;
 	++self->ms_stackc;

@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
@@ -236,6 +237,30 @@ libhostasm_rt_err_invalid_instance_addr(DeeTypeObject *__restrict tp_self,
 	return DeeError_Throwf(&DeeError_TypeError,
 	                       "Invalid class instance address %" PRFu16 " for %k",
 	                       addr, tp_self);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_nonempty_kw(DeeObject *__restrict kw) {
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Keyword arguments %r are not accepted here",
+	                       kw);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw) {
+	size_t kw_length;
+	if (DeeKwds_Check(kw)) {
+		kw_length = DeeKwds_SIZE(kw);
+	} else {
+		kw_length = DeeObject_Size(kw);
+		if unlikely(kw_length == (size_t)-1)
+			goto err;
+	}
+	if unlikely(kw_length != 0)
+		return libhostasm_rt_err_nonempty_kw(kw);
+	return 0;
+err:
+	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

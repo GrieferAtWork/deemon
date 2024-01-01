@@ -2418,6 +2418,27 @@ DeeKwCMethod_New(Dee_kwcmethod_t func) {
 }
 
 
+/* Try to figure out doc information about `func' */
+PUBLIC NONNULL((1, 2)) void DCALL
+DeeCMethod_DocInfo(Dee_cmethod_t func, struct Dee_cmethod_docinfo *__restrict result) {
+	bzero(result, sizeof(*result));
+	result->dmdi_mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&func);
+	if likely(result->dmdi_mod) {
+		result->dmdi_modsym = cmethod_getmodsym(result->dmdi_mod, func);
+		if (result->dmdi_modsym) {
+			result->dmdi_name = result->dmdi_modsym->ss_name;
+			result->dmdi_doc  = result->dmdi_modsym->ss_doc;
+		} else {
+			result->dmdi_typmem = cmethod_gettypefield(result->dmdi_mod, &result->dmdi_typ, func);
+			if (result->dmdi_typmem) {
+				result->dmdi_name = result->dmdi_typmem->m_name;
+				result->dmdi_doc  = result->dmdi_typmem->m_doc;
+			}
+		}
+	}
+}
+
+
 
 
 /* Invoke a given c-function callback.

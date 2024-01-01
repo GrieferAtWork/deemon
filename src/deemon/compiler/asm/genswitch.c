@@ -292,8 +292,8 @@ err_cases:
 		}
 		for (i = 0; i < num_constants; ++i) {
 			if unlikely(emit_runtime_check(self, constant_cases->tl_expr,
-				                            constant_cases->tl_asym))
-			goto err;
+			                               constant_cases->tl_asym))
+				goto err;
 			constant_cases = constant_cases->tl_next;
 		}
 		ASSERT(!constant_cases);

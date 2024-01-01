@@ -292,6 +292,8 @@ gen86_addrname(void const *addr) {
 	CASE(DeeFile_PrintAll, 8);
 	CASE(DeeFile_PrintAllSp, 8);
 	CASE(DeeFile_PrintAllNl, 8);
+	CASE(DeeFile_WriteAll, 12);
+	CASE(DeeFile_Putc, 8);
 	CASE(DeeSharedVector_NewShared, 8);
 	CASE(DeeSharedVector_Decref, 4);
 	CASE(DeeSharedMap_NewShared, 8);
@@ -352,8 +354,8 @@ gen86_symname(struct Dee_host_symbol const *sym) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-_Dee_memloc_debug_print(struct Dee_memloc const *__restrict self,
-                        bool is_local) {
+_Dee_memloc_debug_print2(struct Dee_memloc const *__restrict self,
+                         bool is_local) {
 	if (!(self->ml_flags & MEMLOC_F_NOREF))
 		Dee_DPRINT("r");
 	switch (self->ml_type) {
@@ -410,6 +412,14 @@ _Dee_memloc_debug_print(struct Dee_memloc const *__restrict self,
 			break;
 		}
 	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+_Dee_memloc_debug_print(struct Dee_memloc const *__restrict self,
+                        bool is_local) {
+	_Dee_memloc_debug_print2(self, is_local);
+	/* TODO: Print ml_vmorph */
+	/* TODO: Print ml_valtyp */
 }
 
 /* Return the name of `lid' at `code_addr' in `self' */

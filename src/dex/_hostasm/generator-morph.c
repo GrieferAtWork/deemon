@@ -63,12 +63,6 @@ Dee_memaction_isready(struct Dee_memaction const *__restrict self) {
 	return true;
 }
 
-#ifdef HOSTASM_STACK_GROWS_DOWN
-#define SELECT_STACK_DIRECTION(if_down, if_up) if_down
-#else /* HOSTASM_STACK_GROWS_DOWN */
-#define SELECT_STACK_DIRECTION(if_down, if_up) if_up
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
-
 /* Search for a ready- and not-yet-done memory action where:
  * - the old location is placed such that it can pop from `host_cfa_offset'
  * - the new location is placed such that it can push to `host_cfa_offset'
@@ -83,16 +77,35 @@ Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, size
 			continue;
 		if (!Dee_memaction_isready(act))
 			continue;
-		if ((act->ma_oldloc->ml_type == MEMLOC_TYPE_HSTACKIND &&
-		     act->ma_oldloc->ml_value.v_hstack.s_cfa == host_cfa_offset - SELECT_STACK_DIRECTION(0, HOST_SIZEOF_POINTER)) ||
-		    (act->ma_newloc->ml_type == MEMLOC_TYPE_HSTACKIND &&
-		     act->ma_newloc->ml_value.v_hstack.s_cfa == host_cfa_offset + SELECT_STACK_DIRECTION(HOST_SIZEOF_POINTER, 0)))
+		if ((act->ma_oldloc->ml_type == MEMLOC_TYPE_HSTACKIND && /* Is pop possible? */
+		     Dee_memloc_getcfaend(act->ma_oldloc) == host_cfa_offset) ||
+		    (act->ma_newloc->ml_type == MEMLOC_TYPE_HSTACKIND && /* Is push possible? */
+		     Dee_memloc_getcfastart(act->ma_newloc) == host_cfa_offset))
 			return act;
 	}
 	return NULL;
 }
 
-#undef SELECT_STACK_DIRECTION
+/* Return the action that references the greatest CFA in its `ma_oldloc'
+ * If no such action exists, return `NULL' instead. */
+PRIVATE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
+Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, size_t mactc) {
+	size_t i;
+	struct Dee_memaction *result = NULL;
+	for (i = 0; i < mactc; ++i) {
+		struct Dee_memaction *act = &mactv[i];
+		if (Dee_memaction_isdone(act))
+			continue;
+		if (!Dee_memaction_isready(act))
+			continue;
+		if (act->ma_oldloc->ml_type != MEMLOC_TYPE_HSTACKIND)
+			continue;
+		if (result == NULL ||
+		    result->ma_oldloc->ml_value.v_hstack.s_cfa < act->ma_oldloc->ml_value.v_hstack.s_cfa)
+			result = act;
+	}
+	return result;
+}
 
 /* Remove aliases (and throw an error an error if something is
  * an alias in the new state, but wasn't one in the old state)
@@ -210,6 +223,7 @@ morph_location(struct Dee_function_generator *__restrict self,
 			old_loc->ml_flags |= new_loc->ml_flags & MEMLOC_F_NOREF;
 			old_loc->ml_type = MEMLOC_TYPE_CONST;
 			old_loc->ml_value.v_const = NULL;
+			old_loc->ml_valtyp = NULL;
 			goto do_move_to_new_loc;
 		}
 		if (old_loc->ml_flags & MEMLOC_F_LOCAL_BOUND) {
@@ -390,6 +404,7 @@ again_search_changes:
 		/* NOTE: Before adjusting the CFA, execute actions that can be
 		 *       served by pushing/popping registers at the CFA boundary. */
 		struct Dee_memaction *early_act;
+again_search_for_push_or_pop:
 		while ((early_act = Dee_memaction_find_push_or_pop_at_cfa_boundary(mactv, mactc,
 		                                                                   old_state->ms_host_cfa_offset)) != NULL) {
 			ASSERT(!Dee_memaction_isdone(early_act));
@@ -405,7 +420,7 @@ again_search_changes:
 		cfa_delta = (ptrdiff_t)new_state->ms_host_cfa_offset -
 		            (ptrdiff_t)old_state->ms_host_cfa_offset;
 		if (cfa_delta != 0) {
-			/* FIXME:
+			/* Special case to prevent broken code:
 			 * >> Dee_function_generator_vmorph: 000a -> 0003
 			 * >>     CFA:   #8
 			 * >>     stack: r[#4]
@@ -424,8 +439,20 @@ again_search_changes:
 			 *           `Dee_memaction_find_push_or_pop_at_cfa_boundary()' for
 			 *           another pop-style morph.
 			 */
-			/* TODO */
-
+			if (cfa_delta < 0) {
+				struct Dee_memaction *next_cfa_act;
+				next_cfa_act = Dee_memaction_at_greatest_oldloc_cfa(mactv, mactc);
+				if (next_cfa_act &&
+				    Dee_memloc_getcfaend(next_cfa_act->ma_oldloc) > new_state->ms_host_cfa_offset) {
+					/* This action needs to be performed *before* the stack is adjusted! */
+					ptrdiff_t next_cfa_act_delta;
+					next_cfa_act_delta = (ptrdiff_t)Dee_memloc_getcfaend(next_cfa_act->ma_oldloc) -
+					                     (ptrdiff_t)old_state->ms_host_cfa_offset;
+					if unlikely(Dee_function_generator_ghstack_adjust(self, next_cfa_act_delta))
+						goto err_actv_restore;
+					goto again_search_for_push_or_pop;
+				}
+			}
 			if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
 				goto err_actv_restore;
 		}

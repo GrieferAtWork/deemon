@@ -487,7 +487,7 @@ Dee_inlined_references_rehash(struct Dee_inlined_references *__restrict self) {
 	new_mask = (new_mask << 1) | 1;
 	if unlikely(new_mask == 1)
 		new_mask = 16 - 1; /* Start out bigger than 2. */
-	new_vector = (DREF DeeObject **)Dee_Callocc(new_mask + 1, sizeof(DREF DeeObject *));
+	new_vector = (DREF DeeObject **)Dee_Callocc(new_mask + 2, sizeof(DREF DeeObject *));
 	if unlikely(!new_vector)
 		return false;
 	ASSERT((self->ir_elem == NULL) == (self->ir_mask == 0));

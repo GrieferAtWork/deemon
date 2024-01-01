@@ -23,6 +23,7 @@
 #include "api.h"
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #include "object.h"
@@ -38,6 +39,8 @@ DECL_BEGIN
 #define Dee_clsmember_object   clsmember_object
 #define Dee_cmethod_object     cmethod_object
 #define Dee_kwcmethod_object   kwcmethod_object
+#define Dee_cmethod_docinfo    cmethod_docinfo
+#define Dee_module_object      module_object
 #define DEFINE_OBJMETHOD       Dee_DEFINE_OBJMETHOD
 #define DEFINE_KWOBJMETHOD     Dee_DEFINE_KWOBJMETHOD
 #define DEFINE_CLSMETHOD       Dee_DEFINE_CLSMETHOD
@@ -128,6 +131,10 @@ DeeObjMethod_GetDoc(DeeObject const *__restrict self);
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeObjMethod_GetType(DeeObject const *__restrict self);
 
+#define DeeKwObjMethod_GetName(self) DeeObjMethod_GetName(self)
+#define DeeKwObjMethod_GetDoc(self)  DeeObjMethod_GetDoc(self)
+#define DeeKwObjMethod_GetType(self) DeeObjMethod_GetType(self)
+
 struct Dee_clsmethod_object {
 	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
 	Dee_OBJECT_HEAD
@@ -168,6 +175,8 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetName(DeeObject const *__restrict self);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
 DeeClsMethod_GetDoc(DeeObject const *__restrict self);
+#define DeeKwClsMethod_GetName(self) DeeClsMethod_GetName(self)
+#define DeeKwClsMethod_GetDoc(self)  DeeClsMethod_GetDoc(self)
 
 
 
@@ -258,6 +267,27 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
  * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func);
+
+
+struct Dee_module_object;
+struct Dee_cmethod_docinfo {
+	char const                    *dmdi_name;   /* [0..1] Function name. */
+	char const                    *dmdi_doc;    /* [0..1] Function doc string. */
+	DREF struct Dee_module_object *dmdi_mod;    /* [0..1] Module containing the C-method. */
+	struct module_symbol          *dmdi_modsym; /* [0..1] Module symbol that exposes `func'. */
+	DREF DeeTypeObject            *dmdi_typ;    /* [0..1] Type containing the C-method. */
+	struct type_member const      *dmdi_typmem; /* [0..1] Member of `dmdi_typ' that exposes the C-method. */
+};
+
+#define Dee_cmethod_docinfo_fini(self) \
+	(Dee_XDecref((self)->dmdi_mod),     \
+	 Dee_XDecref((self)->dmdi_typ))
+
+/* Try to figure out doc information about `func' */
+DFUNDEF NONNULL((1, 2)) void DCALL
+DeeCMethod_DocInfo(Dee_cmethod_t func, struct Dee_cmethod_docinfo *__restrict result);
+#define DeeKwCMethod_DocInfo(func, result) \
+	DeeCMethod_DocInfo((Dee_cmethod_t)(void const *)Dee_REQUIRES_KWCMETHOD(func), result)
 
 
 /* Invoke a given c-function callback.

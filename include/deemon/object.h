@@ -566,6 +566,8 @@ Dee_weakref_set(struct Dee_weakref *__restrict self,
 DFUNDEF NONNULL((1)) bool DCALL
 Dee_weakref_clear(struct Dee_weakref *__restrict self);
 
+#define Dee_weakref_getaddr(self) ((DeeObject *)((uintptr_t)__hybrid_atomic_load(&(self)->wr_obj, __ATOMIC_ACQUIRE) & ~1))
+
 /* Lock a weak reference, returning a regular reference to the pointed-to object.
  * @return: * :   A new reference to the pointed-to object.
  * @return: NULL: Failed to lock the weak reference (No error is thrown in this case). */
@@ -2815,10 +2817,12 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
  * requires that all base classes carry the `Dee_TP_FINHERITCTOR' flag; else,
  * a class without this flag cannot inherit constructors from its base, though
  * can still provide its constructors to some derived class that does specify
- * its intend of inheriting constructors) */
+ * its intend of inheriting constructors)
+ *
+ * s.a. `DeeType_InheritOperator()' */
 INTDEF NONNULL((1)) bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str */
-INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr */
+INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str, tp_print */
+INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr, tp_printrepr */
 INTDEF NONNULL((1)) bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
 INTDEF NONNULL((1)) bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
 INTDEF NONNULL((1)) bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
@@ -3038,6 +3042,18 @@ DeeType_Implements(DeeTypeObject const *test_type,
  * NOTE: When `NULL' is returned, _NO_ error is thrown! */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self);
+
+/* Check if the callback slot for `name' in `self' is populated.
+ * If it isn't, then search the MRO of `self' for the first type
+ * that *does* implement said operator, and cache that base's
+ * callback in `self'
+ * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
+ * @return: false: `self' doesn't implement the operator, and neither does one of its bases. In this
+ *                 case, trying to invoke the operator will result in a NotImplemented error. Another
+ *                 possible reason here is that `name' cannot be inherited (meaning that trying to
+ *                 invoke it using `DeeObject_InvokeOperator()' might still succeed). */
+DFUNDEF NONNULL((1)) bool DCALL
+DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);

@@ -4212,6 +4212,122 @@ again:
 	return NULL;
 }
 
+/* Check if the callback slot for `name' in `self' is populated.
+ * If it isn't, then search the MRO of `self' for the first type
+ * that *does* implement said operator, and cache that base's
+ * callback in `self'
+ * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
+ * @return: false: `self' doesn't implement the operator, and neither does one of its bases. In this
+ *                 case, trying to invoke the operator will result in a NotImplemented error. Another
+ *                 possible reason here is that `name' cannot be inherited (meaning that trying to
+ *                 invoke it using `DeeObject_InvokeOperator()' might still succeed). */
+PUBLIC NONNULL((1)) bool DCALL
+DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name) {
+	switch (name) {
+	case OPERATOR_CONSTRUCTOR:
+		return self->tp_init.tp_var.tp_ctor ||
+		       self->tp_init.tp_var.tp_any_ctor ||
+		       self->tp_init.tp_var.tp_any_ctor_kw ||
+		       type_inherit_constructors(self);
+	case OPERATOR_STR:
+		/* "str" and "repr" are special in that we can *always* substitude str<=>print and repr<=>printrepr
+		 * As such, invoke the inherit function even if one has already been implemented, but the other hasn't. */
+		return (self->tp_cast.tp_str && self->tp_cast.tp_print) || type_inherit_str(self);
+	case OPERATOR_REPR:
+		return (self->tp_cast.tp_repr && self->tp_cast.tp_printrepr) || type_inherit_repr(self);
+	case OPERATOR_BOOL:
+		return self->tp_cast.tp_bool || type_inherit_bool(self);
+	case OPERATOR_CALL:
+		return self->tp_call || self->tp_call_kw || type_inherit_call(self);
+	case OPERATOR_HASH:
+		return (self->tp_cmp && (self->tp_cmp->tp_hash)) || type_inherit_hash(self);
+	case OPERATOR_INT:
+		return (self->tp_math && (self->tp_math->tp_int || self->tp_math->tp_int32 ||
+		                          self->tp_math->tp_int64 || self->tp_math->tp_double)) ||
+		       type_inherit_int(self);
+	case OPERATOR_INV:
+		return (self->tp_math && (self->tp_math->tp_inv)) || type_inherit_inv(self);
+	case OPERATOR_POS:
+		return (self->tp_math && (self->tp_math->tp_pos)) || type_inherit_pos(self);
+	case OPERATOR_NEG:
+		return (self->tp_math && (self->tp_math->tp_neg)) || type_inherit_neg(self);
+	case OPERATOR_ADD:
+		return (self->tp_math && (self->tp_math->tp_add || self->tp_math->tp_sub ||
+		                          self->tp_math->tp_inplace_add || self->tp_math->tp_inplace_sub)) ||
+		       type_inherit_add(self);
+	case OPERATOR_MUL:
+		return (self->tp_math && (self->tp_math->tp_mul || self->tp_math->tp_inplace_mul)) || type_inherit_mul(self);
+	case OPERATOR_DIV:
+		return (self->tp_math && (self->tp_math->tp_div || self->tp_math->tp_inplace_div)) || type_inherit_div(self);
+	case OPERATOR_MOD:
+		return (self->tp_math && (self->tp_math->tp_mod || self->tp_math->tp_inplace_mod)) || type_inherit_mod(self);
+	case OPERATOR_SHL:
+		return (self->tp_math && (self->tp_math->tp_shl || self->tp_math->tp_inplace_shl)) || type_inherit_shl(self);
+	case OPERATOR_SHR:
+		return (self->tp_math && (self->tp_math->tp_shr || self->tp_math->tp_inplace_shr)) || type_inherit_shr(self);
+	case OPERATOR_AND:
+		return (self->tp_math && (self->tp_math->tp_and || self->tp_math->tp_inplace_and)) || type_inherit_and(self);
+	case OPERATOR_OR:
+		return (self->tp_math && (self->tp_math->tp_or || self->tp_math->tp_inplace_or)) || type_inherit_or(self);
+	case OPERATOR_XOR:
+		return (self->tp_math && (self->tp_math->tp_xor || self->tp_math->tp_inplace_xor)) || type_inherit_xor(self);
+	case OPERATOR_POW:
+		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || type_inherit_pow(self);
+	case OPERATOR_EQ:
+	case OPERATOR_NE:
+	case OPERATOR_LO:
+	case OPERATOR_LE:
+	case OPERATOR_GR:
+	case OPERATOR_GE:
+		return (self->tp_cmp && (self->tp_cmp->tp_eq || self->tp_cmp->tp_ne ||
+		                         self->tp_cmp->tp_lo || self->tp_cmp->tp_le ||
+		                         self->tp_cmp->tp_gr || self->tp_cmp->tp_ge)) ||
+		       type_inherit_compare(self);
+	case OPERATOR_ITERNEXT:
+		return (self->tp_iter_next) || type_inherit_iternext(self);
+	case OPERATOR_ITERSELF:
+	case OPERATOR_SIZE:
+	case OPERATOR_CONTAINS:
+	case OPERATOR_GETITEM:
+	case OPERATOR_DELITEM:
+	case OPERATOR_SETITEM:
+	case OPERATOR_GETRANGE:
+	case OPERATOR_DELRANGE:
+	case OPERATOR_SETRANGE:
+		if (!self->tp_seq)
+			type_inherit_nsi(self);
+		switch (name) {
+		case OPERATOR_ITERSELF:
+			return (self->tp_seq && (self->tp_seq->tp_iter_self)) || type_inherit_iterself(self);
+		case OPERATOR_SIZE:
+			return (self->tp_seq && (self->tp_seq->tp_size)) || type_inherit_size(self);
+		case OPERATOR_CONTAINS:
+			return (self->tp_seq && (self->tp_seq->tp_contains)) || type_inherit_contains(self);
+		case OPERATOR_GETITEM:
+			return (self->tp_seq && (self->tp_seq->tp_get)) || type_inherit_getitem(self);
+		case OPERATOR_DELITEM:
+			return (self->tp_seq && (self->tp_seq->tp_del)) || type_inherit_delitem(self);
+		case OPERATOR_SETITEM:
+			return (self->tp_seq && (self->tp_seq->tp_set)) || type_inherit_setitem(self);
+		case OPERATOR_GETRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_get)) || type_inherit_getrange(self);
+		case OPERATOR_DELRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_del)) || type_inherit_delrange(self);
+		case OPERATOR_SETRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_set)) || type_inherit_setrange(self);
+		default: __builtin_unreachable();
+		}
+		__builtin_unreachable();
+	case OPERATOR_ENTER:
+	case OPERATOR_LEAVE:
+		return (self->tp_with && (self->tp_with->tp_enter || self->tp_with->tp_leave)) || type_inherit_with(self);
+	case OPERATOR_GETBUF:
+		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) || type_inherit_buffer(self);
+	default: break;
+	}
+	return false;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_module(DeeTypeObject *__restrict self) {
 	DREF DeeObject *result;
