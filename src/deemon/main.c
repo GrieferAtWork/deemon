@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2023 Griefer@Work                                       *
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
  * warranty. In no event will the authors be held liable for any damages      *
@@ -12,7 +12,7 @@
  *    claim that you wrote the original software. If you use this software    *
  *    in a product, an acknowledgement (see the following) in the product     *
  *    documentation is required:                                              *
- *    Portions Copyright (c) 2018-2023 Griefer@Work                           *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
  * 2. Altered source versions must be plainly marked as such, and must not be *
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
@@ -193,11 +193,11 @@ __DATE__ "|"
 PP_STR(DEE_VERSION_API) "/"
 PP_STR(DEE_VERSION_COMPILER) ":"
 PP_STR(DEE_VERSION_REVISION)           " -  Deemon Compiler  - "
-"Copyright (C) 2016-2023 Griefer@Work\n"
+"Copyright (C) 2016-2024 Griefer@Work\n"
 "tpp       version "
 PP_STR(TPP_API_VERSION) "/"
 PP_STR(TPP_PREPROCESSOR_VERSION) "  "  " - Tiny PreProcessor - "
-"Copyright (C) 2015-2023 Griefer@Work\n"
+"Copyright (C) 2015-2024 Griefer@Work\n"
 "\tGithub: https://github.com/GrieferAtWork/deemon\n"
 "\n\n"
 ;
