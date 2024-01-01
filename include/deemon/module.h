@@ -149,6 +149,12 @@ typedef struct Dee_module_path_object DeeModulePathObject;
 
 #define Dee_MODSYM_FNORMAL         0x0000 /* Normal symbol flags. */
 #define Dee_MODSYM_FREADONLY       0x0001 /* Don't allow write-access to this symbol.
+                                           * NOTE: This flag should have really been the default. When not
+                                           *       set, the behavior is as it is for classes/functions defined
+                                           *       as "varying" in user-code (or raw non-final "global foo"
+                                           *       variables). As such, you should probably set this flag at
+                                           *       least for all exported functions/classes (unless you'd mark
+                                           *       the class/function as "varying").
                                            *
                                            * When set, attempting to write/delete to this symbol will cause a
                                            * compiler-error (except for the first assignment when the symbol

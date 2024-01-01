@@ -36,24 +36,24 @@ INTDEF DeeCMethodObject libthreading_lockunion_all;
 
 PRIVATE struct dex_symbol symbols[] = {
 	/* Normal locks */
-	{ "Lock", (DeeObject *)&DeeLock_Type },
-	{ "AtomicLock", (DeeObject *)&DeeAtomicLock_Type },
-	{ "SharedLock", (DeeObject *)&DeeSharedLock_Type },
-	{ "RAtomicLock", (DeeObject *)&DeeRAtomicLock_Type },
-	{ "RSharedLock", (DeeObject *)&DeeRSharedLock_Type },
+	{ "Lock", (DeeObject *)&DeeLock_Type, MODSYM_FREADONLY },
+	{ "AtomicLock", (DeeObject *)&DeeAtomicLock_Type, MODSYM_FREADONLY },
+	{ "SharedLock", (DeeObject *)&DeeSharedLock_Type, MODSYM_FREADONLY },
+	{ "RAtomicLock", (DeeObject *)&DeeRAtomicLock_Type, MODSYM_FREADONLY },
+	{ "RSharedLock", (DeeObject *)&DeeRSharedLock_Type, MODSYM_FREADONLY },
 
 	/* Read/write locks */
-	{ "RWLock", (DeeObject *)&DeeRWLock_Type },
-	{ "RWLockReadLock", (DeeObject *)&DeeRWLockReadLock_Type },
-	{ "RWLockWriteLock", (DeeObject *)&DeeRWLockWriteLock_Type },
-	{ "AtomicRWLock", (DeeObject *)&DeeAtomicRWLock_Type },
-	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type },
-	{ "RAtomicRWLock", (DeeObject *)&DeeRAtomicRWLock_Type },
-	{ "RSharedRWLock", (DeeObject *)&DeeRSharedRWLock_Type },
+	{ "RWLock", (DeeObject *)&DeeRWLock_Type, MODSYM_FREADONLY },
+	{ "RWLockReadLock", (DeeObject *)&DeeRWLockReadLock_Type, MODSYM_FREADONLY },
+	{ "RWLockWriteLock", (DeeObject *)&DeeRWLockWriteLock_Type, MODSYM_FREADONLY },
+	{ "AtomicRWLock", (DeeObject *)&DeeAtomicRWLock_Type, MODSYM_FREADONLY },
+	{ "SharedRWLock", (DeeObject *)&DeeSharedRWLock_Type, MODSYM_FREADONLY },
+	{ "RAtomicRWLock", (DeeObject *)&DeeRAtomicRWLock_Type, MODSYM_FREADONLY },
+	{ "RSharedRWLock", (DeeObject *)&DeeRSharedRWLock_Type, MODSYM_FREADONLY },
 
 	/* LockUnion */
 	{ "LockUnion", (DeeObject *)&DeeLockUnion_Type },
-	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FNORMAL,
+	{ "all", (DeeObject *)&libthreading_lockunion_all, MODSYM_FREADONLY,
 	  DOC("(locks!:?GLock)->?GLock\n"
 	      "#tValueError{No @locks specified (a lock union must contain at least 1 lock)}"
 	      "Return a ?GLockUnion for all of the given @locks, or re-returns ${locks.first} "
@@ -64,16 +64,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "order). For more details on how this is done, see ?GLockUnion") },
 
 	/* Semaphore */
-	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type },
+	{ "Semaphore", (DeeObject *)&DeeSemaphore_Type, MODSYM_FREADONLY },
 
 	/* Event */
-	{ "Event", (DeeObject *)&DeeEvent_Type },
+	{ "Event", (DeeObject *)&DeeEvent_Type, MODSYM_FREADONLY },
 
 	/* Once */
-	{ "Once", (DeeObject *)&DeeOnce_Type },
+	{ "Once", (DeeObject *)&DeeOnce_Type, MODSYM_FREADONLY },
 
 	/* ThreadLocalStorage */
-	{ "TLS", (DeeObject *)&DeeTLS_Type },
+	{ "TLS", (DeeObject *)&DeeTLS_Type, MODSYM_FREADONLY },
 	{ NULL }
 };
 

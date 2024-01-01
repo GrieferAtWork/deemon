@@ -2335,7 +2335,7 @@ PRIVATE DEFINE_KWCMETHOD(dhashmain, &dhashmain_f);
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "hash", (DeeObject *)&dhashmain, MODSYM_FNORMAL,
+	{ "hash", (DeeObject *)&dhashmain, MODSYM_FREADONLY,
 	  DOC("(name:?Dstring,data:?X2?Dstring?DBytes,start?:?Dint)->?Dint\n"
 	      "Calculate the hash of @data using the given hash function @name") },
 	{ NULL }

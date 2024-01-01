@@ -3503,19 +3503,19 @@ PRIVATE DEFINE_CMETHOD(libtime__mkFILETIME, &f_libtime__mkFILETIME);
 #endif /* CONFIG_HOST_WINDOWS */
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FNORMAL },
-	{ "gmtime", (DeeObject *)&libtime_gmtime, MODSYM_FNORMAL,
+	{ "Time", (DeeObject *)&DeeTime_Type, MODSYM_FREADONLY },
+	{ "gmtime", (DeeObject *)&libtime_gmtime, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current time in UTC (s.a. ?Glocaltime)") },
-	{ "localtime", (DeeObject *)&libtime_localtime, MODSYM_FNORMAL,
+	{ "localtime", (DeeObject *)&libtime_localtime, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current time in the host's local timezone (s.a. ?Ggmtime)") },
-	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FNORMAL,
+	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
 	      "The tick itself is offset from some undefined point in time, meaning that the only "
 	      /**/ "meaningful use, is to subtract the return values of two calls to this function.") },
-	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FNORMAL,
+	{ "maketime", (DeeObject *)&libtime_maketime, MODSYM_FREADONLY,
 	  DOC("(hour=!0,minute=!0,second=!0,nanosecond=!0)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
 	      /**/ "sub-day portion, while filling in the remainder as all zeroes:\n"
@@ -3523,7 +3523,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "import Time from time;\n"
 	      /**/ "Time(hour: hour, minute: minute, second: second, nanosecond: nanosecond);"
 	      "}") },
-	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FNORMAL,
+	{ "makedate", (DeeObject *)&libtime_makedate, MODSYM_FREADONLY,
 	  DOC("(year=!0,month=!1,day=!1)->?GTime\n"
 	      "Construct a new ?GTime object using the given arguments for the "
 	      /**/ "post-day portion, while filling in the remainder as all zeroes:\n"
@@ -3546,10 +3546,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * >> Thread.sleep(seconds(2));
 	 * >> begin "Done waiting";
 	 */
-#define DEFINE_DELTA_CALLBACK(name)                        \
-	{ #name, (DeeObject *)&libtime_##name, MODSYM_FNORMAL, \
-	  DOC("(value:?Dint)->?GTime\n"                        \
-		  "#r{A time delta of @value " #name "}") }
+#define DEFINE_DELTA_CALLBACK(name)                          \
+	{ #name, (DeeObject *)&libtime_##name, MODSYM_FREADONLY, \
+	  DOC("(value:?Dint)->?GTime\n"                          \
+	      "#r{A time delta of @value " #name "}") }
 	DEFINE_DELTA_CALLBACK(nanoseconds),
 	DEFINE_DELTA_CALLBACK(microseconds),
 	DEFINE_DELTA_CALLBACK(milliseconds),
@@ -3565,10 +3565,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_DELTA_CALLBACK(millennia),
 #undef DEFINE_DELTA_CALLBACK
 
-#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)         \
-	{ name, (DeeObject *)&libtime_##alias_for, MODSYM_FNORMAL, \
-	  DOC("(value:?Dint)->?GTime\n"                            \
-		  "Deprecated alias for ?G" #alias_for) }
+#define DEFINE_DEPRECATED_DELTA_ALIAS(name, alias_for)           \
+	{ name, (DeeObject *)&libtime_##alias_for, MODSYM_FREADONLY, \
+	  DOC("(value:?Dint)->?GTime\n"                              \
+	      "Deprecated alias for ?G" #alias_for) }
 	DEFINE_DEPRECATED_DELTA_ALIAS("mics", microseconds),
 	DEFINE_DEPRECATED_DELTA_ALIAS("mils", milliseconds),
 	DEFINE_DEPRECATED_DELTA_ALIAS("secs", seconds),
@@ -3582,16 +3582,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	DEFINE_DEPRECATED_DELTA_ALIAS("mlls", millennia),
 #undef DEFINE_DEPRECATED_DELTA_ALIAS
 
-	{ "now", (DeeObject *)&libtime_localtime, MODSYM_FNORMAL,
+	{ "now", (DeeObject *)&libtime_localtime, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Deprecated alias for ?Glocaltime") },
 
-	{ "_mkunix", (DeeObject *)&libtime__mkunix, MODSYM_FNORMAL,
+	{ "_mkunix", (DeeObject *)&libtime__mkunix, MODSYM_FREADONLY,
 	  DOC("(time_t:?Dint,nanosecond=!0)->?GTime\n"
 	      "Construct a new anonymous timestamp object, from @time_t as seconds-"
 	      /**/ "since-#C{01-01-1970}, and the accompanying extra @nanosecond addend.") },
 #ifdef CONFIG_HOST_WINDOWS
-	{ "_mkFILETIME", (DeeObject *)&libtime__mkFILETIME, MODSYM_FNORMAL,
+	{ "_mkFILETIME", (DeeObject *)&libtime__mkFILETIME, MODSYM_FREADONLY,
 	  DOC("(FILETIME:?Dint)->?GTime\n"
 	      "Construct a new anonymous timestamp object, from 1/100th nanoseconds since #C{01-01-1601}") },
 #endif /* CONFIG_HOST_WINDOWS */

@@ -3480,7 +3480,7 @@ PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write);
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "parse", (DeeObject *)&libjson_parse, MODSYM_FNORMAL,
+	{ "parse", (DeeObject *)&libjson_parse, MODSYM_FREADONLY,
 	  /* TODO: Add another argument `path' that allows you to only parse certain sub-
 	   *       components of a larger JSON-blob. For this, it's probably best to implement
 	   *       a sub-set of JsonPath: https://github.com/json-path/JsonPath
@@ -3499,7 +3499,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "or it may throw an error should such data exist. The exact behavior is implementation-"
 	      /**/ "specific. Though if no exception is thrown, such trailing data is ignored and has no "
 	      /**/ "effect.") },
-	{ "write", (DeeObject *)&libjson_write, MODSYM_FNORMAL,
+	{ "write", (DeeObject *)&libjson_write, MODSYM_FREADONLY,
 	  DOC("(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,pretty=!f,recursion:?X2?DCallable?N=!N)->?Dstring\n"
 	      "(data:?X8?O?Dfloat?Dint?Dstring?Dbool?N?DSequence?DMapping,into:?DFile,pretty=!f,recursion:?X2?DCallable?N=!N)->?DFile\n"
 	      "#precursion{An optional callback that is invoked to replace inner instances of objects referencing "
@@ -3509,8 +3509,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	      /**/ "into a string which is then returned. In either case, you can use @pretty to specify "
 	      /**/ "if a pretty representation (using newlines, and indentation), or a compact one should "
 	      /**/ "be used in generated JSON. The default is to generate compact JSON.") },
-	{ "Sequence", (DeeObject *)&DeeJsonSequence_Type },
-	{ "Mapping", (DeeObject *)&DeeJsonMapping_Type },
+	{ "Sequence", (DeeObject *)&DeeJsonSequence_Type, MODSYM_FREADONLY },
+	{ "Mapping", (DeeObject *)&DeeJsonMapping_Type, MODSYM_FREADONLY },
 	{ NULL }
 };
 

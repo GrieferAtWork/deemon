@@ -209,7 +209,7 @@ PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f);
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "exec", (DeeObject *)&libjit_exec, MODSYM_FNORMAL,
+	{ "exec", (DeeObject *)&libjit_exec, MODSYM_FREADONLY,
 	  DOC("(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule,import?:?DCallable)->\n"
 	      "Execute a given expression @expr and return the result\n"
 	      "This function is used to implement the builtin ?Dexec function") },
@@ -413,9 +413,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *          thus allowing for a custom implementation which could then set a ceiling on
 	 *          memory allocation
 	 */
-	{ "Function", (DeeObject *)&JITFunction_Type },
-	{ "YieldFunction", (DeeObject *)&JITYieldFunction_Type },
-	{ "YieldFunctionIterator", (DeeObject *)&JITYieldFunctionIterator_Type },
+	{ "Function", (DeeObject *)&JITFunction_Type, MODSYM_FREADONLY },
+	{ "YieldFunction", (DeeObject *)&JITYieldFunction_Type, MODSYM_FREADONLY },
+	{ "YieldFunctionIterator", (DeeObject *)&JITYieldFunctionIterator_Type, MODSYM_FREADONLY },
 	{ NULL }
 };
 

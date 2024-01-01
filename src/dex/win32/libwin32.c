@@ -6143,8 +6143,8 @@ err:
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "HANDLE", (DeeObject *)&DeeHandle_Type, MODSYM_FNORMAL },
-	{ "INVALID_HANDLE_VALUE", (DeeObject *)&Dee_INVALID_HANDLE_VALUE, MODSYM_FNORMAL },
+	{ "HANDLE", (DeeObject *)&DeeHandle_Type, MODSYM_FREADONLY },
+	{ "INVALID_HANDLE_VALUE", (DeeObject *)&Dee_INVALID_HANDLE_VALUE, MODSYM_FREADONLY },
 	/* TODO: Wrapper types for `SECURITY_ATTRIBUTES' and `OVERLAPPED' */
 	/* TODO: Wrapper types for `WIN32_FIND_DATA' */
 

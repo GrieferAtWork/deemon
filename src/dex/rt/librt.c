@@ -1934,13 +1934,13 @@ PRIVATE DEFINE_CMETHOD(librt_argv_set, &librt_argv_set_f);
  *       the symbols to be considered properties during enumeration (`ATTR_PROPERTY'
  *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
 PRIVATE struct dex_symbol symbols[] = {
-	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL,
+	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL, /* varying */
 	  DOC("->?Dint\n"
 	      "Returns the current stack limit, that is the max number of "
 	      /**/ "user-code functions that may be executed consecutively before "
 	      /**/ "a :StackOverflow error is thrown\n"
 	      "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
-	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL,
+	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL, /* varying */
 	  DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
 	      "#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}"
 	      "Set the new stack limit to @new_limit and return the old limit\n"
@@ -1954,7 +1954,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  Dee_False
 #endif /* !CONFIG_HAVE_EXEC_ALTSTACK */
 	  ,
-	  MODSYM_FNORMAL,
+	  MODSYM_FNORMAL, /* varying */
 	  DOC("->?Dbool\n"
 	      "A boolean that is ?t if the deemon interpreter supports "
 	      /**/ "an unlimited stack limit, meaning that #setstacklimit can "

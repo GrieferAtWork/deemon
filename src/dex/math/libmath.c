@@ -789,385 +789,385 @@ PRIVATE struct dex_symbol symbols[] = {
 	 * Other comments I wrote myself.
 	 */
 #ifdef MATH_HAVE_acos
-	{ "acos", (DeeObject *)&math_acos, MODSYM_FNORMAL,
+	{ "acos", (DeeObject *)&math_acos, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the arc cosine of @x") },
 #endif /* MATH_HAVE_acos */
 
 #ifdef MATH_HAVE_acosh
-	{ "acosh", (DeeObject *)&math_acosh, MODSYM_FNORMAL,
+	{ "acosh", (DeeObject *)&math_acosh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the area hyperbolic cosine of @x") },
 #endif /* MATH_HAVE_acosh */
 
 #ifdef MATH_HAVE_asin
-	{ "asin", (DeeObject *)&math_asin, MODSYM_FNORMAL,
+	{ "asin", (DeeObject *)&math_asin, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the arc sinus of @x") },
 #endif /* MATH_HAVE_asin */
 
 #ifdef MATH_HAVE_asinh
-	{ "asinh", (DeeObject *)&math_asinh, MODSYM_FNORMAL,
+	{ "asinh", (DeeObject *)&math_asinh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the area hyperbolic sine of @x") },
 #endif /* MATH_HAVE_asinh */
 
 #ifdef MATH_HAVE_atan
-	{ "atan", (DeeObject *)&math_atan, MODSYM_FNORMAL,
+	{ "atan", (DeeObject *)&math_atan, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the arc tangent of @x") },
 #endif /* MATH_HAVE_atan */
 
 #ifdef MATH_HAVE_atan2
-	{ "atan2", (DeeObject *)&math_atan2, MODSYM_FNORMAL,
+	{ "atan2", (DeeObject *)&math_atan2, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Returns the arc tangent of @x and @y") },
 #endif /* MATH_HAVE_atan2 */
 
 #ifdef MATH_HAVE_atanh
-	{ "atanh", (DeeObject *)&math_atanh, MODSYM_FNORMAL,
+	{ "atanh", (DeeObject *)&math_atanh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the area hyperbolic tangent of @x") },
 #endif /* MATH_HAVE_atanh */
 
 #ifdef MATH_HAVE_cbrt
-	{ "cbrt", (DeeObject *)&math_cbrt, MODSYM_FNORMAL,
+	{ "cbrt", (DeeObject *)&math_cbrt, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the cubic root of @x") },
 #endif /* MATH_HAVE_cbrt */
 
 #ifdef MATH_HAVE_ceil
-	{ "ceil", (DeeObject *)&math_ceil, MODSYM_FNORMAL,
+	{ "ceil", (DeeObject *)&math_ceil, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns @x rounded to the next greater decimal") },
 #endif /* MATH_HAVE_ceil */
 
 #ifdef MATH_HAVE_copysign
-	{ "copysign", (DeeObject *)&math_copysign, MODSYM_FNORMAL,
+	{ "copysign", (DeeObject *)&math_copysign, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Return @x with the sign copied from @y") },
 #endif /* MATH_HAVE_copysign */
 
 #ifdef MATH_HAVE_cos
-	{ "cos", (DeeObject *)&math_cos, MODSYM_FNORMAL,
+	{ "cos", (DeeObject *)&math_cos, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the cosine of @x") },
 #endif /* MATH_HAVE_cos */
 
 #ifdef MATH_HAVE_cosh
-	{ "cosh", (DeeObject *)&math_cosh, MODSYM_FNORMAL,
+	{ "cosh", (DeeObject *)&math_cosh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the hyperbolic cosine of @x") },
 #endif /* MATH_HAVE_cosh */
 
 #ifdef MATH_HAVE_erf
-	{ "erf", (DeeObject *)&math_erf, MODSYM_FNORMAL,
+	{ "erf", (DeeObject *)&math_erf, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the error of @x") },
 #endif /* MATH_HAVE_erf */
 
 #ifdef MATH_HAVE_erfc
-	{ "erfc", (DeeObject *)&math_erfc, MODSYM_FNORMAL,
+	{ "erfc", (DeeObject *)&math_erfc, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the complementary error of @x") },
 #endif /* MATH_HAVE_erfc */
 
 #ifdef MATH_HAVE_exp
-	{ "exp", (DeeObject *)&math_exp, MODSYM_FNORMAL,
+	{ "exp", (DeeObject *)&math_exp, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the exponential of @x") },
 #endif /* MATH_HAVE_exp */
 
 #ifdef MATH_HAVE_exp2
-	{ "exp2", (DeeObject *)&math_exp2, MODSYM_FNORMAL,
+	{ "exp2", (DeeObject *)&math_exp2, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the binary exponential of @x") },
 #endif /* MATH_HAVE_exp2 */
 
 #ifdef MATH_HAVE_expm1
-	{ "expm1", (DeeObject *)&math_expm1, MODSYM_FNORMAL,
+	{ "expm1", (DeeObject *)&math_expm1, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the exponential of @x minus ${1.0}") },
 #endif /* MATH_HAVE_expm1 */
 
 #ifdef MATH_HAVE_fabs
-	{ "fabs", (DeeObject *)&math_fabs, MODSYM_FNORMAL,
+	{ "fabs", (DeeObject *)&math_fabs, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the absolute value of @x") },
 #endif /* MATH_HAVE_fabs */
 
 #ifdef MATH_HAVE_floor
-	{ "floor", (DeeObject *)&math_floor, MODSYM_FNORMAL,
+	{ "floor", (DeeObject *)&math_floor, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns @x rounded to the next smaller decimal") },
 #endif /* MATH_HAVE_floor */
 
 #ifdef MATH_HAVE_fmod
-	{ "fmod", (DeeObject *)&math_fmod, MODSYM_FNORMAL,
+	{ "fmod", (DeeObject *)&math_fmod, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,x:?Dfloat)->?Dfloat\n"
 	      "Returns the floating point remainder of @x divided by @y") },
 #endif /* MATH_HAVE_fmod */
 
 #ifdef MATH_HAVE_frexp
-	{ "frexp", (DeeObject *)&math_frexp, MODSYM_FNORMAL,
+	{ "frexp", (DeeObject *)&math_frexp, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dint\n"
 	      "Returns the mantissa and exponent of @x") },
 #endif /* MATH_HAVE_frexp */
 
 #ifdef MATH_HAVE_ilogb
-	{ "ilogb", (DeeObject *)&math_ilogb, MODSYM_FNORMAL,
+	{ "ilogb", (DeeObject *)&math_ilogb, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dint\n"
 	      "return binary logarithm of @x") },
 #endif /* MATH_HAVE_ilogb */
 
 #ifdef MATH_HAVE_isfinite
-	{ "isfinite", (DeeObject *)&math_isfinite, MODSYM_FNORMAL,
+	{ "isfinite", (DeeObject *)&math_isfinite, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dbool\n"
 	      "Returns ?t if @x is infinite") },
 #endif /* MATH_HAVE_isfinite */
 
 #ifdef MATH_HAVE_isinf
-	{ "isinf", (DeeObject *)&math_isinf, MODSYM_FNORMAL,
+	{ "isinf", (DeeObject *)&math_isinf, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dbool\n"
 	      "Returns ?t if @x is infinite") },
 #endif /* MATH_HAVE_isinf */
 
 #ifdef MATH_HAVE_isnan
-	{ "isnan", (DeeObject *)&math_isnan, MODSYM_FNORMAL,
+	{ "isnan", (DeeObject *)&math_isnan, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dbool\n"
 	      "Returns ?t if @x is NotANumber") },
 #endif /* MATH_HAVE_isnan */
 
 #ifdef MATH_HAVE_isnormal
-	{ "isnormal", (DeeObject *)&math_isnormal, MODSYM_FNORMAL,
+	{ "isnormal", (DeeObject *)&math_isnormal, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dbool\n"
 	      "Returns ?t if @x is a normal number") },
 #endif /* MATH_HAVE_isnormal */
 
 #ifdef MATH_HAVE_ldexp
-	{ "ldexp", (DeeObject *)&math_ldexp, MODSYM_FNORMAL,
+	{ "ldexp", (DeeObject *)&math_ldexp, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(float significand,exponent:?Dint)->?Dfloat\n"
 	      "Generate value from significand and exponent of @x") },
 #endif /* MATH_HAVE_ldexp */
 
 #ifdef MATH_HAVE_log
-	{ "log", (DeeObject *)&math_log, MODSYM_FNORMAL,
+	{ "log", (DeeObject *)&math_log, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the natural logarithm of @x") },
 #endif /* MATH_HAVE_log */
 
 #ifdef MATH_HAVE_log10
-	{ "log10", (DeeObject *)&math_log10, MODSYM_FNORMAL,
+	{ "log10", (DeeObject *)&math_log10, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the common logarithm of @x") },
 #endif /* MATH_HAVE_log10 */
 
 #ifdef MATH_HAVE_log1p
-	{ "log1p", (DeeObject *)&math_log1p, MODSYM_FNORMAL,
+	{ "log1p", (DeeObject *)&math_log1p, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the logarithm of @x logarithm plus ${1.0}") },
 #endif /* MATH_HAVE_log1p */
 
 #ifdef MATH_HAVE_log2
-	{ "log2", (DeeObject *)&math_log2, MODSYM_FNORMAL,
+	{ "log2", (DeeObject *)&math_log2, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the binary logarithm of @x") },
 #endif /* MATH_HAVE_log2 */
 
 #ifdef MATH_HAVE_logb
-	{ "logb", (DeeObject *)&math_logb, MODSYM_FNORMAL,
+	{ "logb", (DeeObject *)&math_logb, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the floating-point base logarithm of @x") },
 #endif /* MATH_HAVE_logb */
 
 #ifdef MATH_HAVE_modf
-	{ "modf", (DeeObject *)&math_modf, MODSYM_FNORMAL,
+	{ "modf", (DeeObject *)&math_modf, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
 	      "Returns the fractional and integral parts of @x") },
 #endif /* MATH_HAVE_modf */
 
 #ifdef MATH_HAVE_pow
-	{ "pow", (DeeObject *)&math_pow, MODSYM_FNORMAL,
+	{ "pow", (DeeObject *)&math_pow, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Returns @x to the power of @y") },
 #endif /* MATH_HAVE_pow */
 
 #ifdef MATH_HAVE_round
-	{ "round", (DeeObject *)&math_round, MODSYM_FNORMAL,
+	{ "round", (DeeObject *)&math_round, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns @x rounded to the next nearest decimal") },
 #endif /* MATH_HAVE_round */
 
 #ifdef MATH_HAVE_sin
-	{ "sin", (DeeObject *)&math_sin, MODSYM_FNORMAL,
+	{ "sin", (DeeObject *)&math_sin, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the sinus of @x") },
 #endif /* MATH_HAVE_sin */
 
 #ifdef MATH_HAVE_sinh
-	{ "sinh", (DeeObject *)&math_sinh, MODSYM_FNORMAL,
+	{ "sinh", (DeeObject *)&math_sinh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the hyperbolic sinus of @x") },
 #endif /* MATH_HAVE_sinh */
 
 #ifdef MATH_HAVE_sqrt
-	{ "sqrt", (DeeObject *)&math_sqrt, MODSYM_FNORMAL,
+	{ "sqrt", (DeeObject *)&math_sqrt, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the square root of @x") },
 #endif /* MATH_HAVE_sqrt */
 
 #ifdef MATH_HAVE_tan
-	{ "tan", (DeeObject *)&math_tan, MODSYM_FNORMAL,
+	{ "tan", (DeeObject *)&math_tan, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the tangent of @x") },
 #endif /* MATH_HAVE_tan */
 
 #ifdef MATH_HAVE_tanh
-	{ "tanh", (DeeObject *)&math_tanh, MODSYM_FNORMAL,
+	{ "tanh", (DeeObject *)&math_tanh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the hyperbolic tangent of @x") },
 #endif /* MATH_HAVE_tanh */
 
 #ifdef MATH_HAVE_sincos
-	{ "sincos", (DeeObject *)&math_sincos, MODSYM_FNORMAL,
+	{ "sincos", (DeeObject *)&math_sincos, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
 	      "Returns a tuple equivalent to ${(sin(x), cos(x))}") },
 #endif /* MATH_HAVE_sincos */
 
 #ifdef MATH_HAVE_asincos
-	{ "asincos", (DeeObject *)&math_asincos, MODSYM_FNORMAL,
+	{ "asincos", (DeeObject *)&math_asincos, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
 	      "Returns a tuple equivalent to ${(asin(x), acos(x))}") },
 #endif /* MATH_HAVE_asincos */
 
 #ifdef MATH_HAVE_sincosh
-	{ "sincosh", (DeeObject *)&math_sincosh, MODSYM_FNORMAL,
+	{ "sincosh", (DeeObject *)&math_sincosh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
 	      "Returns a tuple equivalent to ${(sinh(x), cosh(x))}") },
 #endif /* MATH_HAVE_sincosh */
 
 #ifdef MATH_HAVE_asincosh
-	{ "asincosh", (DeeObject *)&math_asincosh, MODSYM_FNORMAL,
+	{ "asincosh", (DeeObject *)&math_asincosh, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?T2?Dfloat?Dfloat\n"
 	      "Returns a tuple equivalent to ${(asinh(x), acosh(x))}") },
 #endif /* MATH_HAVE_asincosh */
 
 #ifdef MATH_HAVE_scalbn
-	{ "scalbn", (DeeObject *)&math_scalbn, MODSYM_FNORMAL,
+	{ "scalbn", (DeeObject *)&math_scalbn, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,n:?Dint)->?Dfloat\n"
 	      "Scales @x by :float.radix raised to the power of @n") },
 #endif /* MATH_HAVE_scalbn */
 
 #ifdef MATH_HAVE_hypot
-	{ "hypot", (DeeObject *)&math_hypot, MODSYM_FNORMAL,
+	{ "hypot", (DeeObject *)&math_hypot, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Returns the hypotenuse of a right-angled triangle whose legs are @x and @y") },
 #endif /* MATH_HAVE_hypot */
 
 #ifdef MATH_HAVE_tgamma
-	{ "tgamma", (DeeObject *)&math_tgamma, MODSYM_FNORMAL,
+	{ "tgamma", (DeeObject *)&math_tgamma, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the gamma function of @x") },
 #endif /* MATH_HAVE_tgamma */
 
 #ifdef MATH_HAVE_lgamma
-	{ "lgamma", (DeeObject *)&math_lgamma, MODSYM_FNORMAL,
+	{ "lgamma", (DeeObject *)&math_lgamma, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dfloat\n"
 	      "Returns the natural logarithm of the absolute value of the gamma function of @x") },
 #endif /* MATH_HAVE_lgamma */
 
 #ifdef MATH_HAVE_remainder
-	{ "remainder", (DeeObject *)&math_remainder, MODSYM_FNORMAL,
+	{ "remainder", (DeeObject *)&math_remainder, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(numer:?Dfloat,denom:?Dfloat)->?Dfloat\n"
 	      "Returns the floating-point remainder of numer/denom (rounded to nearest)") },
 #endif /* MATH_HAVE_remainder */
 
 #ifdef MATH_HAVE_remquo
-	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FNORMAL,
+	{ "remquo", (DeeObject *)&math_remquo, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(numer:?Dfloat,denom:?Dfloat)->?T2?Dfloat?Dint\n"
 	      "Returns the same as ?#remainder, but additionally returns the quotient internally used to determine its result") },
 #endif /* MATH_HAVE_remquo */
 
 #ifdef MATH_HAVE_nextafter
-	{ "nextafter", (DeeObject *)&math_nextafter, MODSYM_FNORMAL,
+	{ "nextafter", (DeeObject *)&math_nextafter, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Returns the next representable value after @x in the direction of @y") },
 #endif /* MATH_HAVE_nextafter */
 
 #ifdef MATH_HAVE_fdim
-	{ "fdim", (DeeObject *)&math_fdim, MODSYM_FNORMAL,
+	{ "fdim", (DeeObject *)&math_fdim, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dfloat\n"
 	      "Returns the positive difference between @x and @y") },
 #endif /* MATH_HAVE_fdim */
 
 #ifdef MATH_HAVE_signbit
-	{ "signbit", (DeeObject *)&math_signbit, MODSYM_FNORMAL,
+	{ "signbit", (DeeObject *)&math_signbit, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat)->?Dbool\n"
 	      "Returns whether the sign of @x is negative") },
 #endif /* MATH_HAVE_signbit */
 
 #ifdef MATH_HAVE_isgreater
-	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FNORMAL,
+	{ "isgreater", (DeeObject *)&math_isgreater, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns whether @x is greater than @y, returning ?f if either is ?#nan") },
 #endif /* MATH_HAVE_isgreater */
 
 #ifdef MATH_HAVE_isgreaterequal
-	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FNORMAL,
+	{ "isgreaterequal", (DeeObject *)&math_isgreaterequal, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns whether @x is greater than or equal to @y, returning ?f if either is ?#nan") },
 #endif /* MATH_HAVE_isgreaterequal */
 
 #ifdef MATH_HAVE_isless
-	{ "isless", (DeeObject *)&math_isless, MODSYM_FNORMAL,
+	{ "isless", (DeeObject *)&math_isless, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns whether @x is less than @y, returning ?f if either is ?#nan") },
 #endif /* MATH_HAVE_isless */
 
 #ifdef MATH_HAVE_islessequal
-	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FNORMAL,
+	{ "islessequal", (DeeObject *)&math_islessequal, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns whether @x is less than or equal to @y, returning ?f if either is ?#nan") },
 #endif /* MATH_HAVE_islessequal */
 
 #ifdef MATH_HAVE_islessgreater
-	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FNORMAL,
+	{ "islessgreater", (DeeObject *)&math_islessgreater, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns whether @x is less than or greater than @y, returning ?f if either is ?#nan") },
 #endif /* MATH_HAVE_islessgreater */
 
 #ifdef MATH_HAVE_isunordered
-	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FNORMAL,
+	{ "isunordered", (DeeObject *)&math_isunordered, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("(x:?Dfloat,y:?Dfloat)->?Dbool\n"
 	      "Returns ?t if either @x or @y is ?#nan") },
 #endif /* MATH_HAVE_isunordered */
 
 #ifdef MATH_HAVE_inf
-	{ "inf", (DeeObject *)&math_inf, MODSYM_FNORMAL,
+	{ "inf", (DeeObject *)&math_inf, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?Dfloat\n"
 	      "A special floating point value, representing INFinity") },
 #endif /* MATH_HAVE_inf */
 
 #ifdef MATH_HAVE_nan
-	{ "nan", (DeeObject *)&math_nan, MODSYM_FNORMAL,
+	{ "nan", (DeeObject *)&math_nan, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?Dfloat\n"
 	      "A special floating point value, representing NotANumber") },
 #endif /* MATH_HAVE_nan */
 
 #ifdef MATH_HAVE_tau
-	{ "tau", (DeeObject *)&math_tau, MODSYM_FNORMAL,
+	{ "tau", (DeeObject *)&math_tau, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?Dfloat\n"
 	      "The mathematical constant TAU ${pi * 2}") },
 #endif /* MATH_HAVE_tau */
 
 #ifdef MATH_HAVE_pi
-	{ "pi", (DeeObject *)&math_pi, MODSYM_FNORMAL,
+	{ "pi", (DeeObject *)&math_pi, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?Dfloat\n"
 	      "The mathematical constant PI") },
 #endif /* MATH_HAVE_pi */
 
 #ifdef MATH_HAVE_e
-	{ "e", (DeeObject *)&math_e, MODSYM_FNORMAL,
+	{ "e", (DeeObject *)&math_e, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?Dfloat\n"
 	      "The mathematical constant E") },
 #endif /* MATH_HAVE_e */

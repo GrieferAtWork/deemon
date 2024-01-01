@@ -1752,7 +1752,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_ERRNO_DEFS)
 	/* IMPORTANT: errno codes must come first! */
 
-	{ "stubs", &PosixStubsList_Singleton, MODSYM_FNORMAL,
+	{ "stubs", &PosixStubsList_Singleton, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?S?Dstring\n"
 	      "Set of the names of all of the functions that are implemented as stubs\n"
 	      "The names contained within this set are identical to the names of the "
@@ -1991,33 +1991,33 @@ PRIVATE struct dex_symbol symbols[] = {
 
 
 	/* Directory access */
-	D({ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FNORMAL },)
-	D({ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL },)
-	D({ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FNORMAL,
+	D({ "dirent", (DeeObject *)&DeeDirIterator_Type, MODSYM_FREADONLY },)
+	D({ "DIR", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY },)
+	D({ "opendir", (DeeObject *)&DeeDir_Type, MODSYM_FREADONLY,
 	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!f)->?GDIR\n"
 	        "Read the contents of a given directory. The returned "
 	        /**/ "object may be iterated to yield ?Gdirent objects.\n"
 	        "Additionally, you may specify @skipdots as ?f if you "
 	        /**/ "wish to include the special $'.' and $'..' entries.") },)
-	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FNORMAL,
+	D({ "fdopendir", (DeeObject *)&posix_fdopendir, MODSYM_FREADONLY,
 	    DOC("(path:?X3?Dstring?DFile?Dint,skipdots=!t,inheritfd=!t)->?GDIR\n"
 	        "Same as ?Gopendir, but the default value of @inheritfd is ?t, "
 	        /**/ "mimicking the behavior of the native $fdopendir function") },)
 
 	/* File type constants. */
-	D({ "DT_UNKNOWN", (DeeObject *)&posix_DT_UNKNOWN, MODSYM_FNORMAL },)
-	D({ "DT_FIFO", (DeeObject *)&posix_DT_FIFO, MODSYM_FNORMAL },)
-	D({ "DT_CHR", (DeeObject *)&posix_DT_CHR, MODSYM_FNORMAL },)
-	D({ "DT_DIR", (DeeObject *)&posix_DT_DIR, MODSYM_FNORMAL },)
-	D({ "DT_BLK", (DeeObject *)&posix_DT_BLK, MODSYM_FNORMAL },)
-	D({ "DT_REG", (DeeObject *)&posix_DT_REG, MODSYM_FNORMAL },)
-	D({ "DT_LNK", (DeeObject *)&posix_DT_LNK, MODSYM_FNORMAL },)
-	D({ "DT_SOCK", (DeeObject *)&posix_DT_SOCK, MODSYM_FNORMAL },)
-	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FNORMAL },)
-	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FNORMAL,
+	D({ "DT_UNKNOWN", (DeeObject *)&posix_DT_UNKNOWN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_FIFO", (DeeObject *)&posix_DT_FIFO, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_CHR", (DeeObject *)&posix_DT_CHR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_DIR", (DeeObject *)&posix_DT_DIR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_BLK", (DeeObject *)&posix_DT_BLK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_REG", (DeeObject *)&posix_DT_REG, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_LNK", (DeeObject *)&posix_DT_LNK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_SOCK", (DeeObject *)&posix_DT_SOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DT_WHT", (DeeObject *)&posix_DT_WHT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },)
+	D({ "DTTOIF", (DeeObject *)&posix_DTTOIF, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("(dt:?Dint)->?Dint\n"
 	        "Convert a #C{DT_*} constant to #C{S_IF*}") },)
-	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FNORMAL,
+	D({ "IFTODT", (DeeObject *)&posix_IFTODT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("(if:?Dint)->?Dint\n"
 	        "Convert an #C{S_IF*} constant to #C{DT_*}") },)
 
@@ -2076,8 +2076,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "S_ISSOCK", (DeeObject *)&libposix_S_ISSOCK, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("(mode:?Dint)->?Dbool") },
 
 	/* stat & friends */
-	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FNORMAL },)
-	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FNORMAL },)
+	D({ "stat", (DeeObject *)&DeeStat_Type, MODSYM_FREADONLY },)
+	D({ "lstat", (DeeObject *)&DeeLStat_Type, MODSYM_FREADONLY },)
 	D(POSIX_FSTAT_DEF_DOC("More restrictive alias for ?Gstat"))
 	D(POSIX_FSTATAT_DEF_DOC("More restrictive alias for ?Gstat"))
 
@@ -2601,7 +2601,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	                           "#pprogress{Invoked every @bufsize bytes with an instance of ?GCopyFileProgress}"
 	                           "#pbufsize{How many bytes to copy at once (if not given, use a default)}"
 	                           "Copy all data from @olddirfd:@oldpath to @newdirfd:@newpath"))
-	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FNORMAL },)
+	D({ "CopyFileProgress", (DeeObject *)&DeeCopyFileProgress_Type, MODSYM_FREADONLY },)
 
 
 	/************************************************************************/
@@ -2733,34 +2733,34 @@ PRIVATE struct dex_symbol symbols[] = {
 	D(POSIX_JOINPATH_DEF_DOC("Joins all @paths passed through varargs to generate a full path. "
 	                         /**/ "For this purpose, all path elements are joined with ?GSEP, "
 	                         /**/ "after removal of additional slashes and spaces surrounding the given @paths"))
-	D({ "FS_SEP", (DeeObject *)&posix_FS_SEP, MODSYM_FNORMAL,
+	D({ "FS_SEP", (DeeObject *)&posix_FS_SEP, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "The host's primary path separator. On windows that is "
 	        /**/ "$\"\\\" while on most other hosts it is $\"/\"\n"
 	        "If supported by the host, an alternative separator can be read from ?GALTSEP\n"
 	        "Additionally, a string can be testing for being a separator by calling ?Gissep") },)
-	D({ "FS_ALTSEP", (DeeObject *)&posix_FS_ALTSEP, MODSYM_FNORMAL,
+	D({ "FS_ALTSEP", (DeeObject *)&posix_FS_ALTSEP, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "The alternative path separator or an alias for ?GSEP "
 	        /**/ "if the host only supports a single type of separator") },)
-	D({ "FS_DELIM", (DeeObject *)&posix_FS_DELIM, MODSYM_FNORMAL,
+	D({ "FS_DELIM", (DeeObject *)&posix_FS_DELIM, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A string used to delimit individual paths in path-listings often "
 	        /**/ "found in environment variables, most notably ${environ[\"PATH\"]}") },)
-	D({ "DEV_NULL", (DeeObject *)&posix_DEV_NULL, MODSYM_FNORMAL,
+	D({ "DEV_NULL", (DeeObject *)&posix_DEV_NULL, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a data sink") },)
-	D({ "DEV_TTY", (DeeObject *)&posix_DEV_TTY, MODSYM_FNORMAL,
+	D({ "DEV_TTY", (DeeObject *)&posix_DEV_TTY, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a "
 	        /**/ "handle to the calling process's controlling terminal") },)
-	D({ "DEV_STDIN", (DeeObject *)&posix_DEV_STDIN, MODSYM_FNORMAL,
+	D({ "DEV_STDIN", (DeeObject *)&posix_DEV_STDIN, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdin?DFile") },)
-	D({ "DEV_STDOUT", (DeeObject *)&posix_DEV_STDOUT, MODSYM_FNORMAL,
+	D({ "DEV_STDOUT", (DeeObject *)&posix_DEV_STDOUT, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astdout?DFile") },)
-	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FNORMAL,
+	D({ "DEV_STDERR", (DeeObject *)&posix_DEV_STDERR, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	    DOC("->?Dstring\n"
 	        "A special filename accepted by ?Gopen and ?Aopen?DFile to return a handle to ?Astderr?DFile") },)
 
@@ -2772,7 +2772,7 @@ PRIVATE struct dex_symbol symbols[] = {
 #else /* DEE_SYSTEM_FS_ICASE */
 #define posix_FS_ICASE (*Dee_False)
 #endif /* !DEE_SYSTEM_FS_ICASE */
-	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FNORMAL | MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+	{ "FS_ICASE", (DeeObject *)&posix_FS_ICASE, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("Evaluations to true if the host has a case-insensitive file-system") },
 
 	{ NULL }

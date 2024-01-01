@@ -170,7 +170,7 @@ err:
 PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode, libdisasm_public_printcode_f);
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FNORMAL,
+	{ "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FREADONLY,
 	  DOC("(co:?X2?Dfunction?Ert:Code,flags=!0)->?Dstring\n"
 	      "(co:?X2?Dfunction?Ert:Code,flags=!P{})->?Dstring\n"
 	      "(co:?X2?Dfunction?Ert:Code,out:?DFile,flags=!0)->?Dint\n"
