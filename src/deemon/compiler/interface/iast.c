@@ -558,10 +558,6 @@ ast_delreturnast(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_RETURN) {
 		result = err_invalid_ast_type(self, AST_RETURN);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_return) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "returnast");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_return);
 		me->a_return = NULL;
@@ -682,10 +678,6 @@ ast_delthrowast(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_THROW) {
 		result = err_invalid_ast_type(self, AST_THROW);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_throw) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "throwast");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_throw);
 		me->a_throw = NULL;
@@ -1153,10 +1145,6 @@ ast_delloopcond(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_cond) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "loopcond");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_cond);
 		me->a_loop.l_cond = NULL;
@@ -1236,10 +1224,6 @@ ast_delloopnext(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_is_a_foreach_loop(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_next) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "loopnext");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_next);
 		me->a_loop.l_next = NULL;
@@ -1319,10 +1303,6 @@ ast_delloopelem(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (!(me->a_flag & AST_FLOOP_FOREACH)) {
 		result = err_not_a_foreach_loop(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_elem) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "loopelem");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
@@ -1451,10 +1431,6 @@ ast_dellooploop(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_loop) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "looploop");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_loop);
 		me->a_loop.l_loop = NULL;
@@ -1528,10 +1504,6 @@ ast_delloopelemcond(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_LOOP) {
 		result = err_invalid_ast_type(self, AST_LOOP);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_elem) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "loopelemcond");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_elem);
 		me->a_loop.l_elem = NULL;
@@ -1606,10 +1578,6 @@ ast_delloopiternext(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_LOOP);
 	} else if (me->a_flag & AST_FLOOP_FOREACH) {
 		result = err_cant_access_attribute_string(Dee_TYPE(self), "loopiternext", ATTR_ACCESS_DEL);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_loop.l_iter) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "loopiternext");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_loop.l_iter);
 		me->a_loop.l_iter = NULL;
@@ -1774,10 +1742,6 @@ ast_delconditionaltt(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_conditional.c_tt) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "conditionaltt");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_conditional.c_tt);
 		me->a_conditional.c_tt = NULL;
@@ -1850,10 +1814,6 @@ ast_delconditionalff(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_CONDITIONAL) {
 		result = err_invalid_ast_type(self, AST_CONDITIONAL);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_conditional.c_ff) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "conditionalff");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_conditional.c_ff);
 		me->a_conditional.c_ff = NULL;
@@ -2394,10 +2354,6 @@ ast_deloperatorfuncbinding(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_operator_func.of_binding) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorfuncbinding");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator_func.of_binding);
 		me->a_operator_func.of_binding = NULL;
@@ -2562,10 +2518,6 @@ ast_deloperatorb(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_operator.o_op1) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorb");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op1);
 		me->a_operator.o_op1 = NULL;
@@ -2638,10 +2590,6 @@ ast_deloperatorc(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_operator.o_op2) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "operatorc");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op2);
 		me->a_operator.o_op2 = NULL;
@@ -2714,10 +2662,6 @@ ast_deloperatord(Ast *__restrict self) {
 	me = self->ci_value;
 	if unlikely(me->a_type != AST_OPERATOR_FUNC) {
 		result = err_invalid_ast_type(self, AST_OPERATOR_FUNC);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	} else if (!me->a_operator.o_op3) {
-		result = err_unbound_attribute_string(Dee_TYPE(self), "operatord");
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		ast_decref(me->a_operator.o_op3);
 		me->a_operator.o_op3 = NULL;

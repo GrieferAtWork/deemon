@@ -399,19 +399,9 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 		return err_readonly_rvec();
 	RefVector_LockWrite(self);
 	oldobj = self->rv_vector[index];
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!oldobj) {
-		RefVector_LockEndWrite(self);
-		return err_unbound_index((DeeObject *)self, index);
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->rv_vector[index] = NULL;
 	RefVector_LockEndWrite(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	Dee_Decref(oldobj);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldobj);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 }
 

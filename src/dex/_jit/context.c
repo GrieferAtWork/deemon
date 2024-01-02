@@ -300,21 +300,9 @@ fast_DeeInstance_DelAttribute(struct instance_desc *__restrict self,
 		old_value = self->id_vtab[attr->ca_addr];
 		self->id_vtab[attr->ca_addr] = NULL;
 		Dee_instance_desc_lock_endwrite(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-		if unlikely(!old_value)
-			goto unbound;
-		Dee_Decref(old_value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	}
 	return 0;
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-unbound:
-	err_unbound_attribute_string_c(class_desc_from_instance(self, this_arg),
-	                               DeeString_STR(attr->ca_name));
-	goto err;
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
 	err_cant_access_attribute_string_c(class_desc_from_instance(self, this_arg),
 	                                   DeeString_STR(attr->ca_name),

@@ -2294,23 +2294,10 @@ ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
 		goto err_index;
 	Dee_instance_desc_lock_write(self->ot_desc);
 	oldval = self->ot_desc->id_vtab[index];
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!oldval)
-		goto err_unbound;
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->ot_desc->id_vtab[index] = NULL;
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	Dee_Decref(oldval);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldval);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-err_unbound:
-	Dee_instance_desc_lock_endwrite(self->ot_desc);
-	return err_unbound_index((DeeObject *)self, index);
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 err_index:
 	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
 }
@@ -2323,7 +2310,7 @@ ot_nsi_setitem(ObjectTable *__restrict self, size_t index,
 		goto err_index;
 	Dee_Incref(value);
 	Dee_instance_desc_lock_write(self->ot_desc);
-	oldval                        = self->ot_desc->id_vtab[index];
+	oldval = self->ot_desc->id_vtab[index];
 	self->ot_desc->id_vtab[index] = value;
 	Dee_instance_desc_lock_endwrite(self->ot_desc);
 	Dee_XDecref(oldval);
@@ -3773,13 +3760,7 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 		old_value                           = my_class->cd_members[attr->ca_addr];
 		my_class->cd_members[attr->ca_addr] = NULL;
 		Dee_class_desc_lock_endwrite(my_class);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-		if unlikely(!old_value)
-			goto unbound;
-		Dee_Decref(old_value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	} else {
 		/* Property callbacks (delete all bindings, rather than 1) */
 		unsigned int i;
@@ -3790,22 +3771,11 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 			my_class->cd_members[attr->ca_addr + i] = NULL;
 		}
 		Dee_class_desc_lock_endwrite(my_class);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-		/* Only thrown an unbound-error when none of the callbacks were assigned. */
-		if unlikely(!old_value[0] &&
-		            !old_value[1] &&
-		            !old_value[2])
-			goto unbound;
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value[2]);
 		Dee_XDecref(old_value[1]);
 		Dee_XDecref(old_value[0]);
 	}
 	return 0;
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-unbound:
-	return err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 err_noaccess:
 	return err_cant_access_attribute_string(class_type,
 	                                 DeeString_STR(attr->ca_name),
@@ -4312,21 +4282,9 @@ DeeInstance_DelAttribute(struct class_desc *__restrict desc,
 		old_value = self->id_vtab[attr->ca_addr];
 		self->id_vtab[attr->ca_addr] = NULL;
 		Dee_instance_desc_lock_endwrite(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-		if unlikely(!old_value)
-			goto unbound;
-		Dee_Decref(old_value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 		Dee_XDecref(old_value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	}
 	return 0;
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
-	goto err;
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 illegal:
 	err_cant_access_attribute_string_c(desc,
 	                            DeeString_STR(attr->ca_name),
@@ -4688,13 +4646,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	old_value = inst->id_vtab[addr];
 	inst->id_vtab[addr] = NULL;
 	Dee_instance_desc_lock_endwrite(inst);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!old_value)
-		return err_unbound_member(tp_self, desc, addr);
-	Dee_Decref(old_value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(old_value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 }
 

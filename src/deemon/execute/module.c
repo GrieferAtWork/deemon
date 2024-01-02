@@ -518,15 +518,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 	old_value = self->mo_globalv[symbol->ss_index];
 	self->mo_globalv[symbol->ss_index] = NULL;
 	DeeModule_LockEndWrite(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!old_value) {
-		err_unbound_global(self, symbol->ss_index);
-		return -1;
-	}
-	Dee_Decref(old_value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(old_value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 }
 

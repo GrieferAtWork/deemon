@@ -4344,14 +4344,6 @@ process_set_exe(Process *self, DeeObject *value) {
 	if (old_value) {
 		Dee_Decref(old_value);
 	}
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	else if (!value) {
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "exe");
-#define WANT_err
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 err_running:
 	err_cannot_set_attribute_for_running_process(self, "exe");
@@ -4627,17 +4619,7 @@ process_set_argv(Process *self, DeeObject *value)
 	self->p_argv = value;
 #endif /* !ipc_Process_USE_cmdline */
 	Process_LockEndWrite(self);
-	if (old_value) {
-		Dee_Decref(old_value);
-	}
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	else if (!value) {
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "argv");
-#define WANT_err
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+	Dee_XDecref(old_value);
 	return 0;
 err_running:
 	err_cannot_set_attribute_for_running_process(self, "argv");
@@ -4809,16 +4791,7 @@ process_set_environ(Process *self, DeeObject *value) {
 	old_value    = self->p_envp;
 	self->p_envp = value;
 	Process_LockEndWrite(self);
-	if (old_value) {
-		Dee_Decref(old_value);
-	}
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	else if (!value) {
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "environ");
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+	Dee_XDecref(old_value);
 	return 0;
 err_running:
 	err_cannot_set_attribute_for_running_process(self, "environ");
@@ -4952,16 +4925,7 @@ process_set_pwd(Process *self, DeeObject *value) {
 	old_value   = self->p_pwd;
 	self->p_pwd = value;
 	Process_LockEndWrite(self);
-	if (old_value) {
-		Dee_Decref(old_value);
-	}
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	else if (!value) {
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, "pwd");
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+	Dee_XDecref(old_value);
 	return 0;
 err_running:
 	err_cannot_set_attribute_for_running_process(self, "pwd");
@@ -5107,17 +5071,7 @@ process_set_stdfd(Process *self, unsigned int std_handle_id, DeeObject *value) {
 	old_value = self->p_stdfd[std_handle_id];
 	self->p_stdfd[std_handle_id] = value;
 	Process_LockEndWrite(self);
-	if (old_value) {
-		Dee_Decref(old_value);
-	}
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	else if (!value) {
-#define WANT_err_unbound_attribute
-		err_unbound_attribute_string(&DeeProcess_Type, std_handle_names[std_handle_id]);
-#define WANT_err
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
+	Dee_XDecref(old_value);
 	return 0;
 err_running:
 	err_cannot_set_attribute_for_running_process(self, std_handle_names[std_handle_id]);

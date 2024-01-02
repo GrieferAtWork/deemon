@@ -528,20 +528,9 @@ fl_nsi_delitem(FixedList *__restrict self, size_t index) {
 	}
 	FixedList_LockRead(self);
 	oldval = self->fl_elem[index];
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!oldval) {
-		FixedList_LockEndRead(self);
-		err_unbound_index((DeeObject *)self, index);
-		goto err;
-	}
-#endif /* CONFIG_ERROR_DELETE_UNBOUND */
 	self->fl_elem[index] = NULL;
 	FixedList_LockEndRead(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	Dee_Decref(oldval);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(oldval);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 err:
 	return -1;

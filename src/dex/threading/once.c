@@ -406,13 +406,7 @@ once_callback_del(DeeOnceObject *__restrict self) {
 	value = self->o_value;
 	self->o_value = NULL;
 	Dee_once_abort(&self->o_once);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!value)
-		return err_unbound_once_callback();
-	Dee_Decref(value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 err_already_finished:
 	return err_once_already_finished();
@@ -475,13 +469,7 @@ once_result_del(DeeOnceObject *__restrict self) {
 	value = self->o_value;
 	self->o_value = NULL;
 	DeeOnce_InUseWaitFor(self);
-#ifdef CONFIG_ERROR_DELETE_UNBOUND
-	if unlikely(!value)
-		return err_unbound_once_result();
-	Dee_Decref(value);
-#else /* CONFIG_ERROR_DELETE_UNBOUND */
 	Dee_XDecref(value);
-#endif /* !CONFIG_ERROR_DELETE_UNBOUND */
 	return 0;
 err_not_finished:
 	return err_once_not_finished();
