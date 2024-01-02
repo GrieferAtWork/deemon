@@ -1463,12 +1463,12 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL type_obmemb_vcallf(DeeTy
 #define type_getset_doc(desc) DeeString_NewUtf8((desc)->gs_doc, strlen((desc)->gs_doc), STRING_ERROR_FIGNORE)
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_getset_del(struct type_getset const *desc, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_getset_set(struct type_getset const *desc, DeeObject *self, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_member_get(struct type_member const *desc, DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL type_member_bound(struct type_member const *desc, DeeObject *__restrict self);
 #define type_member_doc(desc)       DeeString_NewUtf8((desc)->m_doc, strlen((desc)->m_doc), STRING_ERROR_FIGNORE)
 #define type_member_del(desc, self) type_member_set(desc, self, Dee_None)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_member_set(struct type_member const *desc, DeeObject *self, DeeObject *value);
 
+#define type_member_get(desc, self)        Dee_type_member_get(desc, self)
+#define type_member_bound(desc, self)      Dee_type_member_bound(desc, self)
+#define type_member_set(desc, self, value) Dee_type_member_set(desc, self, value)
 
 /* Static (class) attribute access for type objects. */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeType_GetAttrStringHash)(DeeTypeObject *self, char const *__restrict attr, dhash_t hash);
@@ -1581,6 +1581,12 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeType_SetInstanceAttrStringHash)(
 #endif /* !__INTELLISENSE__ */
 
 #endif /* CONFIG_BUILDING_DEEMON */
+
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL Dee_type_member_get(struct Dee_type_member const *desc, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL Dee_type_member_bound(struct Dee_type_member const *desc, DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_type_member_set(struct Dee_type_member const *desc, DeeObject *self, DeeObject *value);
+#define Dee_type_member_del(desc, self) Dee_type_member_set(desc, self, Dee_None)
+
 
 DECL_END
 

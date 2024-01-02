@@ -31,7 +31,7 @@
 //#define DEFINE_DeeType_CallAttrStringLenHashTuple
 //#define DEFINE_DeeType_CallAttrStringHashTupleKw
 //#define DEFINE_DeeType_CallAttrStringLenHashTupleKw
-#define DEFINE_DeeType_VCallAttrStringHashf
+//#define DEFINE_DeeType_VCallAttrStringHashf
 //#define DEFINE_DeeType_VCallAttrStringLenHashf
 //#define DEFINE_DeeType_HasAttrStringHash
 //#define DEFINE_DeeType_HasAttrStringLenHash
@@ -39,7 +39,7 @@
 //#define DEFINE_DeeType_DelAttrStringLenHash
 //#define DEFINE_DeeType_SetAttrStringHash
 //#define DEFINE_DeeType_SetAttrStringLenHash
-//#define DEFINE_DeeType_FindAttr
+#define DEFINE_DeeType_FindAttr
 //#define DEFINE_DeeType_EnumAttr
 #endif /* __INTELLISENSE__ */
 

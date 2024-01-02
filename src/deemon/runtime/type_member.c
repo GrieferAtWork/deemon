@@ -597,9 +597,9 @@ err:
 
 #define FIELD(T)  (*(T *)((uintptr_t)self + desc->m_field.m_offset))
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_member_get(struct type_member const *desc,
-                DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+Dee_type_member_get(struct type_member const *desc,
+                    DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		ASSERT_OBJECT(desc->m_const);
 		return_reference_(desc->m_const);
@@ -741,9 +741,9 @@ is_unbound:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-type_member_bound(struct type_member const *desc,
-                  DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_type_member_bound(struct type_member const *desc,
+                      DeeObject *__restrict self) {
 	if (TYPE_MEMBER_ISCONST(desc)) {
 		ASSERT_OBJECT(desc->m_const);
 		return true;
@@ -782,10 +782,10 @@ type_member_bound(struct type_member const *desc,
 	CASE(STRUCT_INT64):
 	CASE(STRUCT_UNSIGNED|STRUCT_INT128):
 	CASE(STRUCT_INT128):
+	CASE(STRUCT_WOBJECT_OPT):
 		return true;
 
 	CASE(STRUCT_WOBJECT):
-	CASE(STRUCT_WOBJECT_OPT):
 		return Dee_weakref_bound(&FIELD(struct weakref));
 
 	CASE(STRUCT_OBJECT):
@@ -798,9 +798,9 @@ type_member_bound(struct type_member const *desc,
 	return false;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-type_member_set(struct type_member const *desc,
-                DeeObject *self, DeeObject *value) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_type_member_set(struct type_member const *desc,
+                    DeeObject *self, DeeObject *value) {
 	if (TYPE_MEMBER_ISCONST(desc))
 		goto cant_access;
 	if (desc->m_field.m_type & STRUCT_CONST)

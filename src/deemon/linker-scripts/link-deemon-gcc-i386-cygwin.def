@@ -45,6 +45,7 @@ EXPORTS
 	_DeeClassDescriptor_QueryInstanceAttributeHash@12=DeeClassDescriptor_QueryInstanceAttributeHash@12
 	_DeeClassDescriptor_QueryInstanceAttributeStringHash@12=DeeClassDescriptor_QueryInstanceAttributeStringHash@12
 	_DeeClassDescriptor_QueryInstanceAttributeStringLenHash@16=DeeClassDescriptor_QueryInstanceAttributeStringLenHash@16
+	_DeeClass_BoundMemberSafe@8=DeeClass_BoundMemberSafe@8
 	_DeeClass_GetMember@8=DeeClass_GetMember@8
 	_DeeClass_GetMemberSafe@8=DeeClass_GetMemberSafe@8
 	_DeeClass_GetOperator@8=DeeClass_GetOperator@8
@@ -1044,6 +1045,9 @@ EXPORTS
 	_Dee_shared_rwlock_waitwrite_timed@12=Dee_shared_rwlock_waitwrite_timed@12
 	_Dee_shared_rwlock_write@4=Dee_shared_rwlock_write@4
 	_Dee_shared_rwlock_write_timed@12=Dee_shared_rwlock_write_timed@12
+	_Dee_type_member_bound@8=Dee_type_member_bound@8
+	_Dee_type_member_get@8=Dee_type_member_get@8
+	_Dee_type_member_set@12=Dee_type_member_set@12
 	_Dee_unicode_printer_alloc_utf16@8=Dee_unicode_printer_alloc_utf16@8
 	_Dee_unicode_printer_alloc_utf32@8=Dee_unicode_printer_alloc_utf32@8
 	_Dee_unicode_printer_alloc_utf8@8=Dee_unicode_printer_alloc_utf8@8

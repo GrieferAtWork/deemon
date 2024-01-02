@@ -49,12 +49,12 @@ DECL_BEGIN
 
 struct asm_locuse {
 	/* NOTE: When it comes to ordering, *all* reads *always* happen before writes. */
-	size_t alu_rd[ASM_RDMAX]; /* LIDs read by the instruction (unused slots are set to `(size_t)-1') */
-	size_t alu_wr[ASM_WRMAX]; /* LIDs written by the instruction (unused slots are set to `(size_t)-1') */
+	Dee_lid_t alu_rd[ASM_RDMAX]; /* LIDs read by the instruction (unused slots are set to `(Dee_lid_t)-1') */
+	Dee_lid_t alu_wr[ASM_WRMAX]; /* LIDs written by the instruction (unused slots are set to `(Dee_lid_t)-1') */
 };
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-asm_locuse_isreading(struct asm_locuse const *__restrict self, size_t lid) {
+asm_locuse_isreading(struct asm_locuse const *__restrict self, Dee_lid_t lid) {
 	size_t i;
 	for (i = 0; i < ASM_RDMAX; ++i) {
 		if (self->alu_rd[i] == lid)
@@ -133,9 +133,9 @@ scan_instr:
 			/* Optional argument */
 			result->alu_rd[2] = xlid(MEMSTATE_XLOCAL_DEFARG(aid - self->fa_code->co_argc_min));
 			/* XXX: ARGS/ARGC/ARGV isn't only needed if DEFARG isn't unconditionally bound at this point! */
-			if (result->alu_rd[1] == (size_t)-1) {
+			if (result->alu_rd[1] == (Dee_lid_t)-1) {
 				result->alu_rd[1] = result->alu_rd[2];
-				result->alu_rd[2] = (size_t)-1;
+				result->alu_rd[2] = (Dee_lid_t)-1;
 			}
 		}
 	}	break;
@@ -241,27 +241,7 @@ scan_instr:
 
 
 
-		/* All other prefixes (simply skip and re-parse since these don't affect how/which locals are used) */
-	case ASM_GLOBAL:
-	case ASM_STATIC:
-	case ASM_STACK:
-		instr += 2;
-		__IF0 {
-	case ASM_EXTERN:
-			instr += 3;
-		}
-		__IF0 {
-	case ASM16_GLOBAL:
-	case ASM16_STATIC:
-	case ASM16_STACK:
-			instr += 4;
-		}
-		__IF0 {
-	case ASM16_EXTERN:
-			instr += 6;
-		}
-		goto scan_instr;
-
+		/* Special case for when a local variable prefix is being used. */
 	case ASM_LOCAL: {
 		uint16_t prefix_lid;
 		prefix_lid = instr[1];
@@ -299,7 +279,7 @@ scan_instr:
 		case ASM_UNPACK:       /* unpack PREFIX, #<imm8> */
 		case ASM_POP_N:        /* mov #SP - <imm8> - 2, PREFIX */
 			/* Insert an extra read at the start */
-			memmoveupc(&result->alu_rd[1], &result->alu_rd[0], ASM_RDMAX - 1, sizeof(size_t));
+			memmoveupc(&result->alu_rd[1], &result->alu_rd[0], ASM_RDMAX - 1, sizeof(Dee_lid_t));
 			result->alu_rd[0] = prefix_lid;
 			break;
 
@@ -339,7 +319,7 @@ scan_instr:
 		case ASM16_OPERATOR:     /* PREFIX: push op $<imm16>, #<imm8> */
 		case ASM_OPERATOR_TUPLE: /* PREFIX: push op $<imm8>, pop... */
 			/* Insert an extra read at the start, and then a write at the end */
-			memmoveupc(&result->alu_rd[1], &result->alu_rd[0], ASM_RDMAX - 1, sizeof(size_t));
+			memmoveupc(&result->alu_rd[1], &result->alu_rd[0], ASM_RDMAX - 1, sizeof(Dee_lid_t));
 			result->alu_rd[0] = prefix_lid;
 			ATTR_FALLTHROUGH
 		case ASM_DUP:                /* mov  PREFIX, top', `mov PREFIX, #SP - 1 */
@@ -378,7 +358,7 @@ scan_instr:
 			/* Append an extra write at the end. */
 			size_t i;
 			for (i = 0; i < ASM_WRMAX - 1; ++i) {
-				if (result->alu_wr[i] == (size_t)-1)
+				if (result->alu_wr[i] == (Dee_lid_t)-1)
 					break;
 			}
 			result->alu_wr[i] = prefix_lid;
@@ -387,6 +367,28 @@ scan_instr:
 		default: break;
 		}
 	}	break;
+
+		/* All other prefixes (simply skip and re-parse since
+		 * these don't affect how/which locals are used) */
+	case ASM_GLOBAL:
+	case ASM_STATIC:
+	case ASM_STACK:
+		instr += 2;
+		__IF0 {
+	case ASM_EXTERN:
+			instr += 3;
+		}
+		__IF0 {
+	case ASM16_GLOBAL:
+	case ASM16_STATIC:
+	case ASM16_STACK:
+			instr += 4;
+		}
+		__IF0 {
+	case ASM16_EXTERN:
+			instr += 6;
+		}
+		goto scan_instr;
 
 	default: break;
 	}
@@ -406,7 +408,7 @@ Dee_basic_block_locuse_pass1(struct Dee_function_assembler *__restrict assembler
                              struct Dee_basic_block *__restrict block,
                              byte_t *b_written) {
 	Dee_instruction_t const *instr;
-	size_t n_locals = assembler->fa_xlocalc;
+	Dee_lid_t n_locals = assembler->fa_xlocalc;
 	bitset_clearall(b_written, n_locals);
 	bitset_clearall(block->bb_locuse, n_locals);
 	for (instr = block->bb_deemon_start;
@@ -416,12 +418,12 @@ Dee_basic_block_locuse_pass1(struct Dee_function_assembler *__restrict assembler
 		struct asm_locuse use;
 		asm_get_locuse(assembler, instr, &use);
 		for (i = 0; i < ASM_RDMAX; ++i) {
-			size_t lid = use.alu_rd[i];
+			Dee_lid_t lid = use.alu_rd[i];
 			if (lid < n_locals && !bitset_test(b_written, lid))
 				bitset_set(block->bb_locuse, lid);
 		}
 		for (i = 0; i < ASM_WRMAX; ++i) {
-			size_t lid = use.alu_wr[i];
+			Dee_lid_t lid = use.alu_wr[i];
 			if (lid < n_locals)
 				bitset_set(b_written, lid);
 		}
@@ -434,9 +436,8 @@ Dee_basic_block_locuse_or(struct Dee_function_assembler *__restrict assembler,
                           struct Dee_basic_block const *__restrict other,
                           byte_t const *b_written) {
 	bool result = false;
-	size_t n_locals = assembler->fa_xlocalc;
-	size_t n_bytes  = _bitset_sizeof(n_locals);
-	size_t i;
+	Dee_lid_t n_locals = assembler->fa_xlocalc;
+	size_t i, n_bytes = _bitset_sizeof(n_locals);
 	for (i = 0; i < n_bytes; ++i) {
 		byte_t old_byte = block->bb_locuse[i];
 		byte_t oth_byte = other->bb_locuse[i];
@@ -464,7 +465,7 @@ Dee_basic_block_locuse_pass2(struct Dee_function_assembler *__restrict assembler
 	bool result = false;
 	Dee_instruction_t const *instr;
 	struct Dee_jump_descriptor **exit_iter, **exit_end;
-	size_t n_locals = assembler->fa_xlocalc;
+	Dee_lid_t n_locals = assembler->fa_xlocalc;
 	bitset_clearall(b_written, n_locals);
 	exit_iter = block->bb_exits.jds_list;
 	exit_end  = exit_iter + block->bb_exits.jds_size;
@@ -482,7 +483,7 @@ Dee_basic_block_locuse_pass2(struct Dee_function_assembler *__restrict assembler
 		}
 		asm_get_locuse(assembler, instr, &use);
 		for (i = 0; i < ASM_WRMAX; ++i) {
-			size_t lid = use.alu_wr[i];
+			Dee_lid_t lid = use.alu_wr[i];
 			if (lid < n_locals)
 				bitset_set(b_written, lid);
 		}
@@ -521,7 +522,7 @@ Dee_basic_block_loclastread_compare(void const *a, void const *b) {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_basic_block_bb_locreadv_append(struct Dee_basic_block *__restrict self,
                                    size_t *__restrict p_bb_locreada,
-                                   Dee_instruction_t const *instr, size_t lid) {
+                                   Dee_instruction_t const *instr, Dee_lid_t lid) {
 	size_t bb_locreada = *p_bb_locreada;
 	ASSERT((self->bb_locreadc + 1) <= bb_locreada || !self->bb_locreadc);
 	if ((self->bb_locreadc + 1) >= bb_locreada) {
@@ -566,7 +567,7 @@ err:
  *     >>     block->bb_locreadv.append(Dee_basic_block_loclastread { i_lastread[lid], lid });
  *     >> i_lastread[lid] = instr;
  * - At the end of the block, do:
- *   >> size_t i;
+ *   >> Dee_lid_t i;
  *   >> for (i = 0; i < ms_localc; ++i) {
  *   >>     Dee_instruction_t const *lr = i_lastread[i];
  *   >>     if (lr == NULL)
@@ -585,10 +586,10 @@ Dee_basic_block_locuse_pass3(struct Dee_function_assembler *__restrict assembler
 		if unlikely(Dee_basic_block_bb_locreadv_append(block, &bb_locreada, instr, lid)) \
 			goto err;                                                                    \
 	}	__WHILE0
-	size_t bb_locreada = 0;
+	size_t i, bb_locreada = 0;
 	Dee_instruction_t const *instr;
 	struct Dee_jump_descriptor **exit_iter, **exit_end;
-	size_t i, n_locals = assembler->fa_xlocalc;
+	Dee_lid_t n_locals = assembler->fa_xlocalc;
 	ASSERT(block->bb_locreadc == 0);
 	ASSERT(block->bb_locreadv == NULL);
 	bzeroc(i_lastread, n_locals, sizeof(Dee_instruction_t const *));
@@ -602,24 +603,25 @@ Dee_basic_block_locuse_pass3(struct Dee_function_assembler *__restrict assembler
 		struct asm_locuse use;
 		asm_get_locuse(assembler, instr, &use);
 		for (i = 0; i < ASM_RDMAX; ++i) {
-			size_t lid = use.alu_rd[i];
+			Dee_lid_t lid = use.alu_rd[i];
 			if (lid < n_locals)
 				i_lastread[lid] = instr;
 		}
 		for (; exit_iter < exit_end; ++exit_iter) {
+			Dee_lid_t lid;
 			struct Dee_jump_descriptor *exit_jmp;
 			struct Dee_basic_block *to;
 			exit_jmp = *exit_iter;
 			if (exit_jmp->jd_from > instr)
 				break;
 			to = exit_jmp->jd_to;
-			for (i = 0; i < n_locals; ++i) {
-				if (bitset_test(to->bb_locuse, i))
-					i_lastread[i] = instr;
+			for (lid = 0; lid < n_locals; ++lid) {
+				if (bitset_test(to->bb_locuse, lid))
+					i_lastread[lid] = instr;
 			}
 		}
 		for (i = 0; i < ASM_WRMAX; ++i) {
-			size_t lid = use.alu_wr[i];
+			Dee_lid_t lid = use.alu_wr[i];
 			if (lid < n_locals) {
 				if (i_lastread[lid] != NULL && !asm_locuse_isreading(&use, lid))
 					LOCAL_append_lastreadat(i_lastread[lid], lid);
@@ -639,13 +641,16 @@ Dee_basic_block_locuse_pass3(struct Dee_function_assembler *__restrict assembler
 	}
 
 	/* Deal with locals that aren't used by fallthru blocks. */
-	for (i = 0; i < n_locals; ++i) {
-		Dee_instruction_t const *lr = i_lastread[i];
-		if (lr == NULL)
-			continue;
-		if (block->bb_next != NULL && bitset_test(block->bb_next->bb_locuse, i))
-			continue;
-		LOCAL_append_lastreadat(lr, i);
+	{
+		Dee_lid_t lid;
+		for (lid = 0; lid < n_locals; ++lid) {
+			Dee_instruction_t const *lr = i_lastread[lid];
+			if (lr == NULL)
+				continue;
+			if (block->bb_next != NULL && bitset_test(block->bb_next->bb_locuse, lid))
+				continue;
+			LOCAL_append_lastreadat(lr, lid);
+		}
 	}
 
 	if (block->bb_locreadc > 0) {
@@ -673,9 +678,9 @@ err:
 	return -1;
 }
 
-/* Step #1.1 (optional: `DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL'):
+/* Step #1.1 [optional; disabled by: `DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL']
  * Figure out all the instructions that read from a local the last time before
- * the function ends, or the variable gets b_written to again. By using this info,
+ * the function ends, or the variable gets written to again. By using this info,
  * `Dee_function_generator_geninstr()' emits extra instrumentation in order to
  * delete local variables earlier than usual, which in turn significantly lowers
  * the overhead associated with keeping objects alive longer than strictly
@@ -724,7 +729,7 @@ Dee_function_assembler_loadlocuse(struct Dee_function_assembler *__restrict self
 	 *       >>     block->bb_locreadv.append(Dee_basic_block_loclastread { i_lastread[lid], lid });
 	 *       >> i_lastread[lid] = instr;
 	 *   - At the end of the block, do:
-	 *     >> size_t i;
+	 *     >> Dee_lid_t i;
 	 *     >> for (i = 0; i < ms_localc; ++i) {
 	 *     >>     Dee_instruction_t const *lr = i_lastread[i];
 	 *     >>     if (lr == NULL)

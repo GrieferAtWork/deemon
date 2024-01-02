@@ -135,7 +135,7 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 
 	/* Initially, all variables are unbound */
 	{
-		size_t lid;
+		Dee_lid_t lid;
 		for (lid = 0; lid < result->ms_localc; ++lid) {
 			result->ms_localv[lid].ml_flags  = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
 			result->ms_localv[lid].ml_vmorph = MEMLOC_VMORPH_DIRECT;
@@ -188,7 +188,8 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	 (self)->ml_value.v_hstack.s_cfa = (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
 	 (self)->ml_value.v_hstack.s_off = 0)
 #endif /* !HOSTASM_X86_64 */
-		size_t argi = 0, extra_base = self->fa_localc;
+		size_t argi = 0;
+		Dee_lid_t extra_base = self->fa_localc;
 		if (cc & HOSTFUNC_CC_F_FUNC) {
 			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
 			++argi;
@@ -254,7 +255,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_makeprolog_cleanup(struct Dee_function_generator *__restrict self) {
 	/* Delete all locals initialized by the prolog
 	 * that aren't used within the function. */
-	size_t lid;
+	Dee_lid_t lid;
 	struct Dee_memstate *state = self->fg_state;
 	struct Dee_basic_block *block0 = self->fg_block;
 	for (lid = 0; lid < state->ms_localc; ++lid) {
@@ -1066,20 +1067,20 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict self) {
-	size_t i;
+	size_t block_i;
 	/* Initial morph after the prolog to match the start-state of the first block. */
 	if unlikely(assemble_morph(self, &self->fa_prolog, self->fa_prolog_end,
 	                           self->fa_blockv[0],
 	                           self->fa_blockv[0]->bb_deemon_start))
 		goto err;
-	for (i = 0; i < self->fa_blockc; ++i) {
-		size_t j;
-		struct Dee_basic_block *block = self->fa_blockv[i];
+	for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
+		size_t exit_i;
+		struct Dee_basic_block *block = self->fa_blockv[block_i];
 		ASSERT(block);
 		ASSERT(block->bb_mem_start);
 		ASSERT(block->bb_mem_end);
-		for (j = 0; j < block->bb_exits.jds_size; ++j) {
-			struct Dee_jump_descriptor *jd = block->bb_exits.jds_list[j];
+		for (exit_i = 0; exit_i < block->bb_exits.jds_size; ++exit_i) {
+			struct Dee_jump_descriptor *jd = block->bb_exits.jds_list[exit_i];
 			ASSERT(jd);
 			ASSERT(jd->jd_from >= block->bb_deemon_start);
 			ASSERT(jd->jd_from < block->bb_deemon_end);

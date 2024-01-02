@@ -767,7 +767,7 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
                                 Dee_host_register_t regno) {
 #define MEMSTATE_XLOCAL_A_MIN MEMSTATE_XLOCAL_A_THIS
 #define MEMSTATE_XLOCAL_A_MAX MEMSTATE_XLOCAL_A_KW
-	size_t i, xloc_base = self->fg_assembler->fa_localc;
+	Dee_lid_t i, xloc_base = self->fg_assembler->fa_localc;
 	struct Dee_memstate *state = self->fg_state;
 	for (i = MEMSTATE_XLOCAL_A_MIN; i <= MEMSTATE_XLOCAL_A_MAX; ++i) {
 		struct Dee_memloc *xloc = &state->ms_localv[xloc_base + i];
@@ -901,7 +901,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self,
                                   Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                   bool only_if_reference) {
-	size_t i;
+	Dee_lid_t i;
 	uintptr_t register_cfa[HOST_REGISTER_COUNT];
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
@@ -984,7 +984,7 @@ nullable_host_register_list_contains(Dee_host_register_t const *list,
 INTERN WUNUSED NONNULL((1)) Dee_host_register_t DCALL
 Dee_function_generator_gallocreg(struct Dee_function_generator *__restrict self,
                                  Dee_host_register_t const *not_these) {
-	size_t i;
+	Dee_lid_t i;
 	struct Dee_memstate *state;
 	Dee_host_register_t result;
 	result = Dee_function_generator_gtryallocreg(self, not_these);
@@ -1149,7 +1149,7 @@ err:
  * an exception handler. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restrict self,
-                                          Dee_instruction_t const *instr, uint16_t aid) {
+                                          Dee_instruction_t const *instr, Dee_aid_t aid) {
 	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_addr(self, instr))
@@ -1163,7 +1163,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__restrict self,
-                                            Dee_instruction_t const *instr, uint16_t lid) {
+                                            Dee_instruction_t const *instr, Dee_ulid_t lid) {
 	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_addr(self, instr))

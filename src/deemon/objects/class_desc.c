@@ -4125,13 +4125,12 @@ DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -4890,6 +4889,23 @@ err_req_class:
 	err_requires_class(self);
 err:
 	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeClass_BoundMemberSafe)(DeeTypeObject *__restrict self, uint16_t addr) {
+	if (DeeObject_AssertType(self, &DeeType_Type))
+		goto err;
+	if (!DeeType_IsClass(self))
+		goto err_req_class;
+	if (addr >= DeeClass_DESC(self)->cd_desc->cd_cmemb_size)
+		goto err_bad_index;
+	return DeeClass_BoundMember(self, addr);
+err_bad_index:
+	return err_invalid_class_addr(self, addr);
+err_req_class:
+	return err_requires_class(self);
+err:
+	return -1;
 }
 
 

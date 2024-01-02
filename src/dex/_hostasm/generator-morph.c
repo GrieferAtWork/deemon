@@ -68,9 +68,9 @@ Dee_memaction_isready(struct Dee_memaction const *__restrict self) {
  * - the new location is placed such that it can push to `host_cfa_offset'
  */
 PRIVATE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
-Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, size_t mactc,
+Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, Dee_lid_t mactc,
                                                uintptr_t host_cfa_offset) {
-	size_t i;
+	Dee_lid_t i;
 	for (i = 0; i < mactc; ++i) {
 		struct Dee_memaction *act = &mactv[i];
 		if (Dee_memaction_isdone(act))
@@ -89,8 +89,8 @@ Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, size
 /* Return the action that references the greatest CFA in its `ma_oldloc'
  * If no such action exists, return `NULL' instead. */
 PRIVATE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
-Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, size_t mactc) {
-	size_t i;
+Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, Dee_lid_t mactc) {
+	Dee_lid_t i;
 	struct Dee_memaction *result = NULL;
 	for (i = 0; i < mactc; ++i) {
 		struct Dee_memaction *act = &mactv[i];
@@ -109,22 +109,22 @@ Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, size_t mactc) 
 
 /* Remove aliases (and throw an error an error if something is
  * an alias in the new state, but wasn't one in the old state)
- * @return: * :         The new # of actions
- * @return: (size_t)-1: Error */
-PRIVATE ATTR_INOUTS(1, 2) size_t DCALL
-Dee_memaction_remove_aliases(struct Dee_memaction *mactv, size_t mactc) {
-	size_t i;
+ * @return: * :            The new # of actions
+ * @return: (Dee_lid_t)-1: Error */
+PRIVATE ATTR_INOUTS(1, 2) Dee_lid_t DCALL
+Dee_memaction_remove_aliases(struct Dee_memaction *mactv, Dee_lid_t mactc) {
+	Dee_lid_t i;
 	for (i = 0; i < mactc; ++i) {
-		size_t j;
+		Dee_lid_t j;
 		struct Dee_memaction *act = &mactv[i];
 		for (j = i + 1; j < mactc;) {
 			struct Dee_memaction *alias = &mactv[j];
 			if (Dee_memloc_samemem(act->ma_newloc, alias->ma_newloc)) {
 				if (!Dee_memloc_samemem(act->ma_oldloc, alias->ma_oldloc)) {
 cannot_morph:
-					return (size_t)DeeError_Throwf(&DeeError_IllegalInstruction,
-					                               "Cannot morph memory state. Have at least 2 "
-					                               "distinct values for singular memory location.");
+					return (Dee_lid_t)DeeError_Throwf(&DeeError_IllegalInstruction,
+					                                  "Cannot morph memory state. Have at least 2 "
+					                                  "distinct values for singular memory location.");
 				}
 				/* Make sure that value-addend-deltas between the original action and its alias are identical:
 				 * >> old_state = [%eax+4, %eax+8]
@@ -186,8 +186,8 @@ cannot_morph:
  * that (if you look at the pseudo-code above), every `ma_oldloc' can equal at most
  * one `ma_newloc'. */
 PRIVATE ATTR_INOUTS(1, 2) void DCALL
-Dee_memaction_assign_before(struct Dee_memaction *mactv, size_t mactc) {
-	size_t i, j;
+Dee_memaction_assign_before(struct Dee_memaction *mactv, Dee_lid_t mactc) {
+	Dee_lid_t i, j;
 	for (i = 0; i < mactc; ++i) {
 		struct Dee_memaction *act = &mactv[i];
 		for (j = 0; j < mactc; ++j) {
@@ -274,7 +274,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
                               struct Dee_memstate const *new_state) {
-	size_t i, j, mactc, finished;
+	Dee_lid_t i, j, mactc, finished;
 	struct Dee_memaction *mactv;
 	struct Dee_memstate *old_state;
 	struct Dee_memstate const *saved_fg_state_hstack_res;
@@ -389,7 +389,7 @@ again_search_changes:
 	}
 	ASSERT(j == mactc);
 	mactc = Dee_memaction_remove_aliases(mactv, mactc);
-	if unlikely(mactc == (size_t)-1)
+	if unlikely(mactc == (Dee_lid_t)-1)
 		goto err_actv;
 	Dee_memaction_assign_before(mactv, mactc);
 

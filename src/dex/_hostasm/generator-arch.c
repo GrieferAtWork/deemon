@@ -464,7 +464,7 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
 		Dee_DPRINT("\n");
 	}
 	if (self->ms_localc > 0) {
-		size_t i;
+		Dee_lid_t i;
 		bool is_first = true;
 		for (i = 0; i < self->ms_localc; ++i) {
 			char const *lid_name;
@@ -473,12 +473,12 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
 				continue;
 			Dee_DPRINT(is_first ? "\tlocal: " : ", ");
 			lid_name = NULL;
-			if (assembler && i < (size_t)assembler->fa_localc && instr) {
+			if (assembler && i < assembler->fa_localc && instr) {
 				/* Lookup the name of the local in DDI */
 				lid_name = DeeCode_LidNameAtAddr(assembler->fa_code, (uint16_t)i,
 				                                 Dee_function_assembler_addrof(assembler, instr));
-			} else if (assembler && i >= (size_t)assembler->fa_localc) {
-				size_t xlid = i - (size_t)assembler->fa_localc;
+			} else if (assembler && i >= assembler->fa_localc) {
+				Dee_lid_t xlid = i - assembler->fa_localc;
 				switch (xlid) {
 				case MEMSTATE_XLOCAL_A_THIS:
 					lid_name = "@this";
@@ -509,7 +509,7 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
 				default:
 					if (xlid >= MEMSTATE_XLOCAL_DEFARG_MIN) {
 						/* Lookup argument name from keywords */
-						uint16_t aid = (uint16_t)(xlid - MEMSTATE_XLOCAL_DEFARG_MIN);
+						Dee_aid_t aid = (Dee_aid_t)(xlid - MEMSTATE_XLOCAL_DEFARG_MIN);
 						if (assembler->fa_code->co_keywords &&
 						    assembler->fa_code->co_keywords[aid]) {
 							Dee_DPRINTF("@arg(%k)=", assembler->fa_code->co_keywords[aid]);

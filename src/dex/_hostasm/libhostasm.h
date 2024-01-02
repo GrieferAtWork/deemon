@@ -136,6 +136,9 @@ DECL_BEGIN
 
 typedef uint16_t Dee_vstackaddr_t;
 typedef int16_t Dee_vstackoff_t;
+typedef uint16_t Dee_aid_t;
+typedef uint32_t Dee_lid_t;
+typedef uint16_t Dee_ulid_t;
 
 
 union Dee_memloc_value {
@@ -277,7 +280,7 @@ struct Dee_memstate {
 	 * so-long as that alias wasn't clobbered by some later flush. */
 	Dee_refcnt_t                               ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
 	uintptr_t                                  ms_host_cfa_offset; /* Delta between SP to CFA (Canonical Frame Address) */
-	size_t                                     ms_localc;          /* [== :co_localc+MEMSTATE_XLOCAL_MINCOUNT+(:co_argc_max-:co_argc_min)]
+	Dee_lid_t                                  ms_localc;          /* [== :co_localc+MEMSTATE_XLOCAL_MINCOUNT+(:co_argc_max-:co_argc_min)]
 	                                                                * Number of local variables + extra slots. NOTE: Never 0! */
 	Dee_vstackaddr_t                           ms_stackc;          /* Number of (currently) used deemon stack slots in use. */
 	Dee_vstackaddr_t                           ms_stacka;          /* Allocated number of deemon stack slots in use. */
@@ -305,7 +308,7 @@ struct Dee_memstate {
 #define Dee_memstate_foreach(loc, self)                                 \
 	do {                                                                \
 		struct Dee_memloc *_dmfe_v = (self)->ms_stackv;                 \
-		size_t _dmfe_i = 0, _dmfe_c = (self)->ms_stackc;                \
+		Dee_lid_t _dmfe_i = 0, _dmfe_c = (self)->ms_stackc;             \
 		do                                                              \
 			if (_dmfe_i >= _dmfe_c                                      \
 			    ? (_dmfe_v == (self)->ms_stackv                         \
@@ -714,7 +717,7 @@ Dee_jump_descriptors_remove(struct Dee_jump_descriptors *__restrict self,
 struct Dee_basic_block_loclastread {
 	Dee_instruction_t const *bbl_instr; /* [1..1] The instruction that reads the local for the final time
 	                                     * (before noreturn or another instruction writing to the variable) */
-	size_t                   bbl_lid;   /* ID of the variable in question */
+	Dee_lid_t                bbl_lid;   /* ID of the variable in question */
 };
 
 struct Dee_basic_block {
@@ -774,7 +777,7 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self);
 INTDEF WUNUSED NONNULL((1)) struct Dee_basic_block *DCALL
 Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
                         Dee_instruction_t const *addr,
-                        size_t n_locals);
+                        Dee_lid_t n_locals);
 
 /* Constrain or assign `self->bb_mem_start' with the memory state `state'
  * @param: self_start_addr: The starting-address of `self' (for error messages)
@@ -916,8 +919,8 @@ struct Dee_function_assembler {
 #define DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 #define DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE 0x0010 /* Don't use RTTI from dex modules and the deemon core for the purpose of figuring out object types (set to work around buggy RTTI) */
 	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
-	uint16_t                      fa_localc;       /* [const][== fa_code->co_localc] */
-	size_t                        fa_xlocalc;      /* [const][== fa_code->co_localc + MEMSTATE_XLOCAL_MINCOUNT + (fa_code->co_argc_max - fa_code->co_argc_min)] */
+	Dee_ulid_t                    fa_localc;       /* [const][== fa_code->co_localc] */
+	Dee_lid_t                     fa_xlocalc;      /* [const][== fa_code->co_localc + MEMSTATE_XLOCAL_MINCOUNT + (fa_code->co_argc_max - fa_code->co_argc_min)] */
 	Dee_hostfunc_cc_t             fa_cc;           /* [const] Calling convention. */
 	struct Dee_inlined_references fa_irefs;        /* Inlined object references (must be ) */
 	struct Dee_host_section_tailq fa_sections;     /* [0..n] Linked list of output sections (via `hs_link') */
@@ -1068,18 +1071,18 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(str
 #define Dee_function_generator_vpush_Simm32(self, Simm32) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int32_t)(Simm32))
 #define Dee_function_generator_vpush_immSIZ(self, immSIZ) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(size_t)(immSIZ))
 #define Dee_function_generator_vpush_immINT(self, immINT) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int)(immINT))
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t aid); /* `instr' is needed for `libhostasm_rt_err_unbound_arg' */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self, uint16_t aid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restrict self, uint16_t aid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, size_t lid); /* `instr' is needed for `libhostasm_rt_err_unbound_local' (if NULL, no bound-check is done) */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_local(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, size_t lid); /* `instr' is needed for automatic deletion of unused locals */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_aid_t aid); /* `instr' is needed for `libhostasm_rt_err_unbound_arg' */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self, Dee_aid_t aid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restrict self, Dee_aid_t aid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_lid_t lid); /* `instr' is needed for `libhostasm_rt_err_unbound_local' (if NULL, no bound-check is done) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_local(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_lid_t lid); /* `instr' is needed for automatic deletion of unused locals */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdup_n(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 #define Dee_function_generator_vdup(self) Dee_function_generator_vdup_n(self, 1)
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopmany(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_n(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, size_t lid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, size_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
 
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
@@ -1118,6 +1121,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrkw_unche
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuple_unchecked(struct Dee_function_generator *__restrict self);                     /* this, attr, args          -> UNCHECKED(result) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuplekw_unchecked(struct Dee_function_generator *__restrict self);                   /* this, attr, args, kw      -> UNCHECKED(result) */
 
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopgetattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboundattr(struct Dee_function_generator *__restrict self); /* this, attr        -> bound */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self);   /* this, attr, value -> N/A */
+
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* seq -> [elems...] */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self);                     /* lhs, rhs -> result */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* seq, [elems...] -> seq */
@@ -1126,12 +1134,19 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopclassof(struct D
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuperof(struct Dee_function_generator *__restrict self);                    /* ob -> ob.super */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self);                      /* ob, type -> ob as type */
 
-/* Helpers for accessing C-level "struct type_member" */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct Dee_type_member const *__restrict member, bool ref); /* this -> value */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict member, bool ref); /* this -> value  (doesn't look at the doc string to determine typing) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vbound_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict member);           /* this -> bound */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vdel_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict member);             /* this -> - */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpop_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict member);             /* this, value -> - */
+/* Helpers for accessing C-level "struct type_member". NOTE: These don't do type assertions! */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct Dee_type_member const *__restrict desc, bool ref); /* this -> value */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict desc, bool ref);                     /* this -> value  (doesn't look at the doc string to determine typing) */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vbound_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict desc);                               /* this -> bound */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vdel_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict desc);                                 /* this -> - */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpop_type_member(struct Dee_function_generator *__restrict self, struct Dee_type_member const *__restrict desc);                                 /* this, value -> - */
+
+/* Helpers for accessing Class-level "struct class_attribute". NOTE: These don't do type assertions! */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vpush_instance_attr(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct class_attribute const *attr, bool ref);                          /* this -> value */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vbound_instance_attr(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct class_attribute const *attr);                                   /* this -> bound */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vdel_instance_attr(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct class_attribute const *attr);                                     /* this -> - */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vpop_instance_attr(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct class_attribute const *attr);                                     /* this, value -> - */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vcall_instance_attrkw_unchecked(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct class_attribute const *attr, Dee_vstackaddr_t argc); /* this, [args...], kw -> UNCHECKED(result) */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqconstaddr(struct Dee_function_generator *__restrict self, DeeObject *value); /* VTOP = VTOP == <value> */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_function_generator *__restrict self);                        /* PUSH(POP() == POP()); */
@@ -1148,17 +1163,17 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce(struct De
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 
 /* Helper wrappers to do checked operations on local variables as usercode sees them. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t lid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t lid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_ulocal(struct Dee_function_generator *__restrict self, uint16_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_ulid_t ulid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_ulid_t ulid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_ulocal(struct Dee_function_generator *__restrict self, Dee_ulid_t ulid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_ulocal(struct Dee_function_generator *__restrict self, Dee_ulid_t ulid);
 
 /* Helper macros for operating on "extra" locals (s.a. `MEMSTATE_XLOCAL_*') */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, size_t xlid);
-#define _Dee_function_generator_vpush_xlocal(self, xlid)  Dee_function_generator_vpush_local(self, NULL, (size_t)(self)->fg_assembler->fa_localc + (xlid))
-#define _Dee_function_generator_vbound_xlocal(self, xlid) Dee_function_generator_vbound_local(self, NULL, (size_t)(self)->fg_assembler->fa_localc + (xlid))
-#define Dee_function_generator_vpop_xlocal(self, xlid)    Dee_function_generator_vpop_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
-#define Dee_function_generator_vdel_xlocal(self, xlid)    Dee_function_generator_vdel_local(self, (size_t)(self)->fg_assembler->fa_localc + (xlid))
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_lid_t xlid);
+#define _Dee_function_generator_vpush_xlocal(self, xlid)  Dee_function_generator_vpush_local(self, NULL, (Dee_lid_t)(self)->fg_assembler->fa_localc + (xlid))
+#define _Dee_function_generator_vbound_xlocal(self, xlid) Dee_function_generator_vbound_local(self, NULL, (Dee_lid_t)(self)->fg_assembler->fa_localc + (xlid))
+#define Dee_function_generator_vpop_xlocal(self, xlid)    Dee_function_generator_vpop_local(self, (Dee_lid_t)(self)->fg_assembler->fa_localc + (xlid))
+#define Dee_function_generator_vdel_xlocal(self, xlid)    Dee_function_generator_vdel_local(self, (Dee_lid_t)(self)->fg_assembler->fa_localc + (xlid))
 
 /* Push the "this" argument of thiscall functions. */
 #define Dee_function_generator_vpush_this(self) _Dee_function_generator_vpush_xlocal(self, MEMSTATE_XLOCAL_A_THIS)
@@ -1173,6 +1188,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_except(struct
 /* Class/instance member access helpers.
  * @param: flags: Set of `DEE_FUNCTION_GENERATOR_CIMEMBER_F_*' */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* type -> value */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags); /* type -> bound */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* this, type -> value */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags); /* this, type -> bound */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);   /* this, type -> N/A */
@@ -1284,8 +1300,9 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 #define VCALLOP_CC_NEGINTPTR          4 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
 #define VCALLOP_CC_M1INT              5 /* int      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
 #define VCALLOP_CC_M1INTPTR           5 /* intptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALLOP_CC_VOID               6 /* void (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);     [args...] -> N/A */
-#define VCALLOP_CC_EXCEPT             7 /* ? (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]);        [args...] -> N/A      ## Always an error  */
+#define VCALLOP_CC_VOID               6 /* void     (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A */
+#define VCALLOP_CC_EXCEPT             7 /* ?        (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Always an error */
+#define VCALLOP_CC_BOOL               8 /* bool     (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
 
 /* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
  * do the extra trailing checks needed to turn that call into `VCALLOP_CC_OBJECT'
@@ -1314,6 +1331,16 @@ Dee_function_generator_vcheckint(struct Dee_function_generator *__restrict self)
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcheckerr(struct Dee_function_generator *__restrict self,
                                  intptr_t except_val);
+
+/* Generate a call to `DeeObject_MALLOC()' to allocate an uninitialized object that
+ * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
+ * a slap allocator instead (just like the real DeeObject_MALLOC also does).
+ * NOTE: The value pushed onto the V-stack already has its MEMLOC_F_NOREF flag CLEAR!
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__restrict self,
+                                              size_t alloc_size);
 
 /* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
  * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
@@ -1545,7 +1572,7 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
                                      Dee_atomic_rwlock_t *opt_endwrite_before_throw);
 #define Dee_function_generator_gassert_local_bound(self, instr, lid) \
 	((lid) >= (self)->fg_state->ms_localc                            \
-	 ? err_illegal_lid(lid)                                          \
+	 ? err_illegal_ulid(lid)                                          \
 	 : Dee_function_generator_gassert_local_bound_ex(self, &(self)->fg_state->ms_localv[lid], instr, lid))
 #define Dee_function_generator_gassert_local_bound_ex(self, loc, instr, lid) \
 	Dee_function_generator_gassert_bound(self, loc, instr, ASM_LOCAL, lid, 0, NULL, NULL)
@@ -1557,8 +1584,8 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 /* Generate code to throw an error indicating that local variable `lid'
  * is unbound. This includes any necessary jump for the purpose of entering
  * an exception handler. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t aid);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, uint16_t lid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_aid_t aid);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_ulid_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__restrict self, uint16_t gid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_extern_unbound(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid);
 
@@ -1666,7 +1693,7 @@ Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self);
 
-/* Step #1.1 (optional: `DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL'):
+/* Step #1.1 [optional; disabled by: `DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL']
  * Figure out all the instructions that read from a local the last time before
  * the function ends, or the variable gets written to again. By using this info,
  * `Dee_function_generator_geninstr()' emits extra instrumentation in order to
@@ -1796,9 +1823,9 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
 
 /* Error throwing helper functions. */
 INTDEF ATTR_COLD int DCALL err_illegal_stack_effect(void);
-INTDEF ATTR_COLD int DCALL err_illegal_lid(uint16_t lid);
+INTDEF ATTR_COLD int DCALL err_illegal_ulid(Dee_ulid_t lid);
 INTDEF ATTR_COLD int DCALL err_illegal_mid(uint16_t mid);
-INTDEF ATTR_COLD int DCALL err_illegal_aid(uint16_t aid);
+INTDEF ATTR_COLD int DCALL err_illegal_aid(Dee_aid_t aid);
 INTDEF ATTR_COLD int DCALL err_illegal_cid(uint16_t cid);
 #define err_illegal_sid(sid) err_illegal_cid(sid)
 INTDEF ATTR_COLD int DCALL err_illegal_rid(uint16_t rid);

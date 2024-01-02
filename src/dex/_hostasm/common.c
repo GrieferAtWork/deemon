@@ -417,7 +417,7 @@ Dee_jump_descriptors_find_lowest_addr(struct Dee_jump_descriptors const *__restr
 INTERN WUNUSED NONNULL((1)) struct Dee_basic_block *DCALL
 Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
                         Dee_instruction_t const *addr,
-                        size_t n_locals) {
+                        Dee_lid_t n_locals) {
 	size_t exit_split;
 	struct Dee_basic_block *result;
 	ASSERT(addr > self->bb_deemon_start);
@@ -828,13 +828,13 @@ Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self)
 INTERN ATTR_COLD int DCALL err_illegal_stack_effect(void) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal stack effect");
 }
-INTERN ATTR_COLD int DCALL err_illegal_lid(uint16_t lid) {
+INTERN ATTR_COLD int DCALL err_illegal_ulid(Dee_ulid_t lid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal local variable ID: %#" PRFx16, lid);
 }
 INTERN ATTR_COLD int DCALL err_illegal_mid(uint16_t mid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal module ID: %#" PRFx16, mid);
 }
-INTERN ATTR_COLD int DCALL err_illegal_aid(uint16_t aid) {
+INTERN ATTR_COLD int DCALL err_illegal_aid(Dee_aid_t aid) {
 	return DeeError_Throwf(&DeeError_SegFault, "Illegal argument ID: %#" PRFx16, aid);
 }
 INTERN ATTR_COLD int DCALL err_illegal_cid(uint16_t cid) {

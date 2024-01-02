@@ -441,8 +441,9 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vpop(self));                                         /* [File] */
 handle_print_after_and_pop_file:
 		if (print_after != NULL) {
-			DO(Dee_function_generator_vpush_immINT(self, *print_after));
-			return Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALLOP_CC_NEGINT, 2);
+			DO(Dee_function_generator_vpush_immINT(self, *print_after));                    /* File, ch */
+			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALLOP_CC_RAWINT, 2)); /* status */
+			return Dee_function_generator_vcheckerr(self, GETC_ERR);                        /* - */
 		}
 		return 0;
 	}
@@ -1175,22 +1176,20 @@ do_jcc:
 	TARGET(ASM_DEEPCOPY)
 		return Dee_function_generator_vop(self, OPERATOR_DEEPCOPY, 1, true);
 	TARGET(ASM_GETATTR)
-		return Dee_function_generator_vop(self, OPERATOR_GETATTR, 2, true);
+		return Dee_function_generator_vopgetattr(self);
 	TARGET(ASM_DELATTR)
-		return Dee_function_generator_vop(self, OPERATOR_DELATTR, 2, false);
+		return Dee_function_generator_vopdelattr(self);
 	TARGET(ASM_SETATTR)
-		return Dee_function_generator_vop(self, OPERATOR_SETATTR, 3, false);
-
+		return Dee_function_generator_vopsetattr(self);
 	TARGET(ASM_BOUNDATTR)
-		DO(Dee_function_generator_vassert_type_exact(self, &DeeString_Type));
-		return Dee_function_generator_vcallapi(self, &DeeObject_BoundAttr, VCALLOP_CC_M1INT, 2);
+		return Dee_function_generator_vopboundattr(self);
 	
 	TARGET(ASM_GETATTR_C) {
 		uint16_t cid;
 		cid = instr[1];
 		__IF0 { TARGET(ASM16_GETATTR_C) cid = UNALIGNED_GETLE16(instr + 2); }
 		DO(Dee_function_generator_vpush_cid(self, cid));
-		return Dee_function_generator_vop(self, OPERATOR_GETATTR, 2, true);
+		return Dee_function_generator_vopgetattr(self);
 	}	break;
 
 	TARGET(ASM_DELATTR_C) {
@@ -1198,7 +1197,7 @@ do_jcc:
 		cid = instr[1];
 		__IF0 { TARGET(ASM16_DELATTR_C) cid = UNALIGNED_GETLE16(instr + 2); }
 		DO(Dee_function_generator_vpush_cid(self, cid));
-		return Dee_function_generator_vop(self, OPERATOR_DELATTR, 2, false);
+		return Dee_function_generator_vopdelattr(self);
 	}	break;
 
 	TARGET(ASM_SETATTR_C) {
@@ -1207,7 +1206,7 @@ do_jcc:
 		__IF0 { TARGET(ASM16_SETATTR_C) cid = UNALIGNED_GETLE16(instr + 2); }
 		DO(Dee_function_generator_vpush_cid(self, cid));
 		DO(Dee_function_generator_vswap(self));
-		return Dee_function_generator_vop(self, OPERATOR_SETATTR, 3, false);
+		return Dee_function_generator_vopsetattr(self);
 	}	break;
 
 	TARGET(ASM_GETATTR_THIS_C) {
@@ -1216,7 +1215,7 @@ do_jcc:
 		__IF0 { TARGET(ASM16_GETATTR_THIS_C) cid = UNALIGNED_GETLE16(instr + 2); }
 		DO(Dee_function_generator_vpush_this(self));
 		DO(Dee_function_generator_vpush_cid(self, cid));
-		return Dee_function_generator_vop(self, OPERATOR_GETATTR, 2, true);
+		return Dee_function_generator_vopgetattr(self);
 	}	break;
 
 	TARGET(ASM_DELATTR_THIS_C) {
@@ -1225,7 +1224,7 @@ do_jcc:
 		__IF0 { TARGET(ASM16_DELATTR_THIS_C) cid = UNALIGNED_GETLE16(instr + 2); }
 		DO(Dee_function_generator_vpush_this(self));
 		DO(Dee_function_generator_vpush_cid(self, cid));
-		return Dee_function_generator_vop(self, OPERATOR_DELATTR, 2, false);
+		return Dee_function_generator_vopdelattr(self);
 	}	break;
 
 	TARGET(ASM_SETATTR_THIS_C) {
@@ -1235,7 +1234,7 @@ do_jcc:
 		DO(Dee_function_generator_vpush_this(self));
 		DO(Dee_function_generator_vpush_cid(self, cid));
 		DO(Dee_function_generator_vlrot(self, 3));
-		return Dee_function_generator_vop(self, OPERATOR_SETATTR, 3, false);
+		return Dee_function_generator_vopsetattr(self);
 	}	break;
 
 	TARGET(ASM_CMP_EQ)
@@ -1406,17 +1405,17 @@ do_jcc:
 		}
 		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
-		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
-		DO(Dee_function_generator_vcallapi(self, &Dee_Malloc, VCALLOP_CC_OBJECT, 1));     /* [refs...], ref:function */
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* - */
-		DO(Dee_function_generator_vpush_immSIZ(self, 1));                                 /* [refs...], ref:function, 1 */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_refcnt))); /* [refs...], ref:function */
-		DO(Dee_function_generator_vpush_const(self, (DeeObject *)&DeeFunction_Type));     /* [refs...], ref:function, DeeFunction_Type */
-		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:DeeFunction_Type */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_type)));   /* [refs...], ref:function */
-		DO(Dee_function_generator_vpush_cid_t(self, code_cid, &DeeCode_Type));            /* [refs...], ref:function, code */
-		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:code */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));   /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                     /* [refs...], sizeof_function */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALLOP_CC_OBJECT, 1)); /* [refs...], ref:function */
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));            /* - */
+		DO(Dee_function_generator_vpush_immSIZ(self, 1));                                   /* [refs...], ref:function, 1 */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_refcnt)));   /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_const(self, (DeeObject *)&DeeFunction_Type));       /* [refs...], ref:function, DeeFunction_Type */
+		DO(Dee_function_generator_vref(self));                                              /* [refs...], ref:function, ref:DeeFunction_Type */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_type)));     /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_cid_t(self, code_cid, &DeeCode_Type));              /* [refs...], ref:function, code */
+		DO(Dee_function_generator_vref(self));                                              /* [refs...], ref:function, ref:code */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));     /* [refs...], ref:function */
 		while (refc) {
 			--refc;
 			DO(Dee_function_generator_vswap(self)); /* [refs...], ref:function, ref */
@@ -2260,7 +2259,7 @@ do_jcc:
 		}	break;
 		case ASM_LOCAL:
 			if unlikely(id1 >= self->fg_assembler->fa_localc)
-				return err_illegal_lid(id1);
+				return err_illegal_ulid(id1);
 			break;
 		default: __builtin_unreachable();
 		}
@@ -2705,12 +2704,15 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 		                                                     next_block->bb_deemon_start);
 		int error = Dee_basic_block_constrainwith(next_block, block->bb_mem_end, addr);
 		if unlikely(error < 0)
-			goto err;
+			goto err_mem_end;
 		if (error > 0)
 			return 0;
 	}
 
 	return 0;
+err_mem_end:
+	Dee_memstate_decref(block->bb_mem_end);
+	block->bb_mem_end = NULL;
 err:
 	ASSERT(block->bb_mem_end == NULL);
 	return -1;

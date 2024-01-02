@@ -132,7 +132,7 @@
 //#define DEFINE_DeeType_CallCachedAttrStringHashKw
 //#define DEFINE_DeeType_CallCachedAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedClassAttrStringHashKw
-//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
+#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringHashKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedAttrStringHashTuple
@@ -147,7 +147,7 @@
 //#define DEFINE_DeeType_CallCachedClassAttrStringLenHashTupleKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringHashTupleKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashTupleKw
-#define DEFINE_DeeType_VCallCachedAttrStringHashf
+//#define DEFINE_DeeType_VCallCachedAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedAttrStringLenHashf
 //#define DEFINE_DeeType_VCallCachedClassAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedClassAttrStringLenHashf

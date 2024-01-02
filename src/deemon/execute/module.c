@@ -169,7 +169,7 @@ INTERN struct module_symbol empty_module_buckets[] = {
 
 
 PUBLIC WUNUSED NONNULL((1)) struct module_symbol *DCALL
-DeeModule_GetSymbolID(DeeModuleObject *__restrict self, uint16_t gid) {
+DeeModule_GetSymbolID(DeeModuleObject const *__restrict self, uint16_t gid) {
 	struct module_symbol *iter, *end;
 	struct module_symbol *result = NULL;
 
@@ -200,7 +200,7 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-DeeModule_GetSymbol(DeeModuleObject *__restrict self,
+DeeModule_GetSymbol(DeeModuleObject const *__restrict self,
                     /*String*/ DeeObject *__restrict name) {
 	dhash_t i, perturb;
 	dhash_t hash;
@@ -222,7 +222,7 @@ DeeModule_GetSymbol(DeeModuleObject *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-DeeModule_GetSymbolStringHash(DeeModuleObject *__restrict self,
+DeeModule_GetSymbolStringHash(DeeModuleObject const *__restrict self,
                               char const *__restrict attr_name,
                               dhash_t hash) {
 	dhash_t i, perturb;
@@ -243,7 +243,7 @@ DeeModule_GetSymbolStringHash(DeeModuleObject *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
-DeeModule_GetSymbolStringLenHash(DeeModuleObject *__restrict self,
+DeeModule_GetSymbolStringLenHash(DeeModuleObject const *__restrict self,
                                  char const *__restrict attr_name,
                                  size_t attrlen, dhash_t hash) {
 	dhash_t i, perturb;

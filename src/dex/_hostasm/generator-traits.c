@@ -25,10 +25,13 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
 #include <deemon/none.h>
+#include <deemon/rodict.h>
+#include <deemon/roset.h>
 #include <deemon/string.h>
 #include <deemon/tuple.h>
 
@@ -42,6 +45,9 @@ PRIVATE DeeTypeObject *tpconst always_constexpr_types[] = {
 	&DeeBool_Type,
 	&DeeInt_Type,
 	&DeeTuple_Type,
+	&DeeRoDict_Type,
+	&DeeRoSet_Type,
+	&DeeAttribute_Type,
 };
 
 /* Returns `true' if operator `name' of `self' can be invoked without unintended
