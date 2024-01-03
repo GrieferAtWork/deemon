@@ -2252,17 +2252,15 @@ err:
 }
 
 
-/* Generate a call to a C-function `api_function' with `argc'
- * pointer-sized arguments whose values are taken from `argv'.
- * NOTE: The given `api_function' is assumed to use the `DCALL' calling convention. */
-INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
-                                 void const *api_function, size_t argc,
-                                 struct Dee_memloc *argv) {
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcallapi_at(struct Dee_function_generator *__restrict self,
+                                    struct Dee_memloc *api_function_loc, size_t argc,
+                                    struct Dee_memloc *argv) {
 #ifdef HOSTASM_X86_64
 	/* TODO */
 	(void)self;
-	(void)api_function;
+	(void)api_function_loc;
 	(void)argc;
 	(void)argv;
 	return DeeError_NOTIMPLEMENTED();
@@ -2314,6 +2312,8 @@ _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
 					if (MEMLOC_TYPE_HASREG(future_arg->ml_type))
 						BITSET_TURNON(&preserve_regs, future_arg->ml_value.v_hreg.r_regno);
 				}
+				if (MEMLOC_TYPE_HASREG(api_function_loc->ml_type))
+					BITSET_TURNON(&preserve_regs, api_function_loc->ml_value.v_hreg.r_regno);
 				for (temp_regno = 0; temp_regno < HOST_REGISTER_COUNT; ++temp_regno) {
 					if (BITSET_GET(&preserve_regs, temp_regno))
 						continue;
@@ -2377,6 +2377,8 @@ do_push_hind_offset_with_temp_regno:
 				if (MEMLOC_TYPE_HASREG(future_arg->ml_type))
 					BITSET_TURNON(&preserve_regs, future_arg->ml_value.v_hreg.r_regno);
 			}
+			if (MEMLOC_TYPE_HASREG(api_function_loc->ml_type))
+				BITSET_TURNON(&preserve_regs, api_function_loc->ml_value.v_hreg.r_regno);
 			sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 			for (addr_regno = 0; addr_regno < HOST_REGISTER_COUNT; ++addr_regno) {
 				if (!BITSET_GET(&preserve_regs, addr_regno)) {
@@ -2449,10 +2451,13 @@ done_push_argi:
 	/* With everything pushed onto the stack and in the correct position, generate the call.
 	 * Note that because deemon API functions use DCALL (STDCALL), the called function does
 	 * the stack cleanup. */
-	{
+	if unlikely(Dee_host_section_reqx86(sect, 1))
+		goto err;
+	switch (__builtin_expect(api_function_loc->ml_type, MEMLOC_TYPE_CONST)) {
+
+	case MEMLOC_TYPE_CONST: {
 		struct Dee_host_reloc *rel;
-		if unlikely(Dee_host_section_reqx86(sect, 1))
-			goto err;
+		void const *api_function = (void const *)api_function_loc->ml_value.v_const;
 		rel = Dee_host_section_newhostrel(sect);
 		if unlikely(!rel)
 			goto err;
@@ -2462,6 +2467,27 @@ done_push_argi:
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_ABS;
 		rel->hr_value.rv_abs = api_function;
+	}	break;
+
+	case MEMLOC_TYPE_HREG: {
+		Dee_host_register_t regno = api_function_loc->ml_value.v_hreg.r_regno;
+		gen86_printf("calll\t*%s\n", gen86_regname(regno));
+		gen86_callP_mod(p_pc(sect), gen86_modrm_r, gen86_registers[regno]);
+	}	break;
+
+	case MEMLOC_TYPE_HSTACKIND: {
+		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, api_function_loc->ml_value.v_hstack.s_cfa);
+		gen86_printf("calll\t%Id(%%" Per "sp)\n", sp_offset);
+		gen86_callP_mod(p_pc(sect), gen86_modrm_db, sp_offset, GEN86_R_PSP);
+	}	break;
+
+	case MEMLOC_TYPE_HREGIND: {
+		Dee_host_register_t regno = api_function_loc->ml_value.v_hreg.r_regno;
+		gen86_printf("calll\t%Id(%s)\n", api_function_loc->ml_value.v_hreg.r_off, gen86_regname(regno));
+		gen86_callP_mod(p_pc(sect), gen86_modrm_db, api_function_loc->ml_value.v_hreg.r_off, gen86_registers[regno]);
+	}	break;
+
+	default: __builtin_unreachable();
 	}
 
 	/* Adjust the CFA offset to account for the called function having cleaned up stack arguments. */
@@ -2473,6 +2499,50 @@ done_push_argi:
 err:
 	return -1;
 #endif /* !HOSTASM_X86_64 */
+}
+
+
+/* Generate a call to a C-function `api_function' with `argc'
+ * pointer-sized arguments whose values are taken from `argv'.
+ * NOTE: The given `api_function' is assumed to use the `DCALL' calling convention. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
+                                 void const *api_function, size_t argc,
+                                 struct Dee_memloc *argv) {
+	struct Dee_memloc funloc;
+	funloc.ml_type = MEMLOC_TYPE_CONST;
+	funloc.ml_value.v_const = (DeeObject *)api_function;
+	return _Dee_function_generator_gcallapi_at(self, &funloc, argc, argv);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcalldynapi_reg(struct Dee_function_generator *__restrict self,
+                                        Dee_host_register_t api_function_regno,
+                                        size_t argc, struct Dee_memloc *argv) {
+	struct Dee_memloc funloc;
+	funloc.ml_type = MEMLOC_TYPE_HREG;
+	funloc.ml_value.v_hreg.r_regno = api_function_regno;
+	return _Dee_function_generator_gcallapi_at(self, &funloc, argc, argv);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcalldynapi_hstackind(struct Dee_function_generator *__restrict self,
+                                              uintptr_t cfa_offset, size_t argc, struct Dee_memloc *argv) {
+	struct Dee_memloc funloc;
+	funloc.ml_type = MEMLOC_TYPE_HSTACKIND;
+	funloc.ml_value.v_hstack.s_cfa = cfa_offset;
+	return _Dee_function_generator_gcallapi_at(self, &funloc, argc, argv);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcalldynapi_hregind(struct Dee_function_generator *__restrict self,
+                                            Dee_host_register_t api_function_regno, ptrdiff_t ind_offset,
+                                            size_t argc, struct Dee_memloc *argv) {
+	struct Dee_memloc funloc;
+	funloc.ml_type = MEMLOC_TYPE_HREGIND;
+	funloc.ml_value.v_hreg.r_regno = api_function_regno;
+	funloc.ml_value.v_hreg.r_off   = ind_offset;
+	return _Dee_function_generator_gcallapi_at(self, &funloc, argc, argv);
 }
 
 

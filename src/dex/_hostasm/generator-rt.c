@@ -57,7 +57,7 @@ libhostasm_rt_err_unbound_global(DeeModuleObject *__restrict mod,
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-libhostasm_rt_err_unbound_local(struct code_object *code, void *ip, uint16_t local_index) {
+libhostasm_rt_err_unbound_local(DeeCodeObject *code, void *ip, uint16_t local_index) {
 	char const *code_name = NULL;
 	uint8_t *error;
 	struct ddi_state state;
@@ -99,7 +99,7 @@ libhostasm_rt_err_unbound_local(struct code_object *code, void *ip, uint16_t loc
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int DCALL
-libhostasm_rt_err_unbound_arg(struct code_object *code, void *ip, uint16_t arg_index) {
+libhostasm_rt_err_unbound_arg(DeeCodeObject *code, void *ip, uint16_t arg_index) {
 	char const *code_name;
 	(void)ip;
 	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);

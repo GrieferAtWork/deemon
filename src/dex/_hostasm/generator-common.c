@@ -1070,16 +1070,14 @@ err:
 
 
 /* Generate code to assert that location `loc' is non-NULL:
- * >> Dee_function_generator_gassert_bound(self, loc, ASM_LOCAL, lid, <ignored>, NULL, NULL);
- * >> Dee_function_generator_gassert_bound(self, loc, ASM_GLOBAL, gid, <ignored>, NULL, NULL);
- * >> Dee_function_generator_gassert_bound(self, loc, ASM_EXTERN, mid, gid, NULL, NULL);
- * The `kind', `id1' and `id2' arguments simply select `Dee_function_generator_gthrow_*_unbound()'
+ * >> Dee_function_generator_gassert_bound(self, loc, instr, NULL, lid, NULL, NULL);
+ * >> Dee_function_generator_gassert_bound(self, loc, instr, mod, gid, NULL, NULL);
  * @param: opt_endread_before_throw: When non-NULL, emit `Dee_function_generator_grwlock_endread()'
  *                                   before the `Dee_function_generator_gthrow_*_unbound' code. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict self,
                                      struct Dee_memloc *loc, Dee_instruction_t const *instr,
-                                     uint8_t kind, uint16_t id1, uint16_t id2,
+                                     struct Dee_module_object *mod, uint16_t id,
                                      Dee_atomic_rwlock_t *opt_endread_before_throw,
                                      Dee_atomic_rwlock_t *opt_endwrite_before_throw) {
 	int temp;
@@ -1087,7 +1085,6 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	struct Dee_host_symbol *target;
 	struct Dee_host_section *text_sect;
 	struct Dee_host_section *cold_sect;
-	ASSERT(kind == ASM_LOCAL || kind == ASM_GLOBAL || kind == ASM_EXTERN);
 	target = Dee_function_generator_newsym(self);
 	if unlikely(!target)
 		goto err;
@@ -1115,17 +1112,10 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	if (opt_endread_before_throw != NULL &&
 	    unlikely(Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw)))
 		goto err_saved_state;
-	switch (kind) {
-	case ASM_LOCAL:
-		temp = Dee_function_generator_gthrow_local_unbound(self, instr, id1);
-		break;
-	case ASM_GLOBAL:
-		temp = Dee_function_generator_gthrow_global_unbound(self, id1);
-		break;
-	case ASM_EXTERN:
-		temp = Dee_function_generator_gthrow_extern_unbound(self, id1, id2);
-		break;
-	default: __builtin_unreachable();
+	if (mod) {
+		temp = Dee_function_generator_gthrow_global_unbound(self, mod, id);
+	} else {
+		temp = Dee_function_generator_gthrow_local_unbound(self, instr, id);
 	}
 	if unlikely(temp)
 		goto err_saved_state;
@@ -1175,9 +1165,9 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gthrow_global_or_extern_unbound(struct Dee_function_generator *__restrict self,
-                                                       DeeModuleObject *mod, uint16_t gid) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__restrict self,
+                                             struct Dee_module_object *mod, uint16_t gid) {
 	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)mod))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, gid))
@@ -1185,22 +1175,6 @@ Dee_function_generator_gthrow_global_or_extern_unbound(struct Dee_function_gener
 	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_global, VCALLOP_CC_EXCEPT, 2);
 err:
 	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__restrict self,
-                                             uint16_t gid) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	return Dee_function_generator_gthrow_global_or_extern_unbound(self, mod, gid);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gthrow_extern_unbound(struct Dee_function_generator *__restrict self,
-                                             uint16_t mid, uint16_t gid) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	ASSERT(mid < mod->mo_importc);
-	mod = mod->mo_importv[mid];
-	return Dee_function_generator_gthrow_global_or_extern_unbound(self, mod, gid);
 }
 
 

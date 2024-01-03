@@ -2456,7 +2456,6 @@ struct Dee_membercache {
 #define OPTYPE_TRINARY        0x003  /* `...(DeeObject *self, DeeObject *a, DeeObject *b);' */
 #define OPTYPE_QUAD           0x004  /* `...(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c);' */
 #define OPTYPE_INPLACE        0x008  /* FLAG: [override] The first argument is actually `DREF DeeObject **__restrict p_self'. */
-#define OPTYPE_VARIABLE       0x080  /* FLAG: User-code can invoke the operator with a variable number of arguments passed through the last operand. */
 #define OPTYPE_ROBJECT        0x000  /* FLAG: The operator returns `DREF DeeObject *'. */
 #define OPTYPE_RINT32         0x010  /* FLAG: The operator returns `int32_t'. */
 #define OPTYPE_RINT64         0x020  /* FLAG: The operator returns `int64_t'. */

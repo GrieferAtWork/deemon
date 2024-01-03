@@ -610,29 +610,29 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_GetAttribute(struct Dee_class_desc *__restrict desc,
                          struct Dee_instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
-                         struct Dee_class_attribute *__restrict attr);
+                         struct Dee_class_attribute const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_BoundAttribute(struct Dee_class_desc *__restrict desc,
                            struct Dee_instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
-                           struct Dee_class_attribute *__restrict attr);
+                           struct Dee_class_attribute const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttribute(struct Dee_class_desc *__restrict desc,
                           struct Dee_instance_desc *__restrict self,
                           DeeObject *this_arg,
-                          struct Dee_class_attribute *__restrict attr,
+                          struct Dee_class_attribute const *__restrict attr,
                           size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_VCallAttributef(struct Dee_class_desc *__restrict desc,
                             struct Dee_instance_desc *__restrict self,
                             DeeObject *this_arg,
-                            struct Dee_class_attribute *__restrict attr,
+                            struct Dee_class_attribute const *__restrict attr,
                             char const *__restrict format, va_list args);
 PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct Dee_class_desc *__restrict desc,
                             struct Dee_instance_desc *__restrict self,
                             DeeObject *this_arg,
-                            struct Dee_class_attribute *__restrict attr,
+                            struct Dee_class_attribute const *__restrict attr,
                             size_t argc, DeeObject *const *argv, DeeObject *kw);
 
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
@@ -640,13 +640,13 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct Dee_class_desc *__restrict desc,
                                struct Dee_instance_desc *__restrict self,
                                DeeObject *this_arg,
-                               struct Dee_class_attribute *__restrict attr,
+                               struct Dee_class_attribute const *__restrict attr,
                                DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTupleKw(struct Dee_class_desc *__restrict desc,
                                  struct Dee_instance_desc *__restrict self,
                                  DeeObject *this_arg,
-                                 struct Dee_class_attribute *__restrict attr,
+                                 struct Dee_class_attribute const *__restrict attr,
                                  DeeObject *args, DeeObject *kw);
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define DeeInstance_CallAttributeTuple(desc, self, this_arg, attr, args) \
@@ -659,12 +659,12 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct Dee_class_desc *__restrict desc,
                          struct Dee_instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
-                         struct Dee_class_attribute *__restrict attr);
+                         struct Dee_class_attribute const *__restrict attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeInstance_SetAttribute(struct Dee_class_desc *__restrict desc,
                          struct Dee_instance_desc *__restrict self,
                          DeeObject *this_arg,
-                         struct Dee_class_attribute *__restrict attr,
+                         struct Dee_class_attribute const *__restrict attr,
                          DeeObject *value);
 
 
@@ -729,7 +729,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeInstance_SetBasicAttribute(struct Dee_class_desc *__restrict desc,
                               struct Dee_instance_desc *__restrict self,
                               DeeObject *this_arg,
-                              struct Dee_class_attribute *__restrict attr,
+                              struct Dee_class_attribute const *__restrict attr,
                               DeeObject *value);
 #else /* __INTELLISENSE__ */
 #define DeeInstance_SetBasicAttribute(desc, self, this_arg, attr, value) \
@@ -737,24 +737,24 @@ DeeInstance_SetBasicAttribute(struct Dee_class_desc *__restrict desc,
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int
 (DCALL DeeInstance_SetBasicAttribute_)(struct Dee_class_desc *__restrict desc,
                                        struct Dee_instance_desc *__restrict self,
-                                       struct Dee_class_attribute *__restrict attr,
+                                       struct Dee_class_attribute const *__restrict attr,
                                        DeeObject *__restrict value);
 #endif /* !__INTELLISENSE__ */
 
 /* Get/Call/Del/Set a class attribute, as acquired
  * through `DeeClassDescriptor_QueryClassAttribute()'. */
 #ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallClassAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallClassAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallClassAttributef(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallClassAttributef(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelClassAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *value);
 #else /* __INTELLISENSE__ */
 #define DeeClass_GetClassAttribute(class_type, attr)                    DeeInstance_GetAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
 #define DeeClass_BoundClassAttribute(class_type, attr)                  DeeInstance_BoundAttribute(DeeClass_DESC(class_type), class_desc_as_instance(DeeClass_DESC(class_type)), (DeeObject *)(class_type), attr)
@@ -787,17 +787,17 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetClassAttribute(DeeTypeOb
  * >> print MyClass.class_field;     // DeeClass_GetClassAttribute("class_field")
  * >> myclass_field = MyClass.field; // DeeClass_GetInstanceAttribute("field")
  */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *args, DeeObject *kw);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *args);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *args, DeeObject *kw);
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, char const *__restrict format, va_list args);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute *__restrict attr, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, char const *__restrict format, va_list args);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeClass_SetInstanceAttribute(DeeTypeObject *class_type, struct Dee_class_attribute const *__restrict attr, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type, struct Dee_class_attribute const *__restrict attr);
 #define DeeClass_SetBasicInstanceAttribute DeeClass_SetInstanceAttribute
 #endif /* CONFIG_BUILDING_DEEMON */
 
@@ -1526,9 +1526,9 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 typedef struct Dee_instancemember_object DeeInstanceMemberObject;
 struct Dee_instancemember_object {
 	Dee_OBJECT_HEAD
-	DREF DeeTypeObject         *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
-	struct Dee_class_attribute *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
-	                                           * be set, though this isn't asserted) that should be accessed. */
+	DREF DeeTypeObject               *im_type;      /* [1..1][const] The user-class type, instances of which implement this member. */
+	struct Dee_class_attribute const *im_attribute; /* [1..1][const] The instance attribute (`CLASS_ATTRIBUTE_FCLASSMEM' shouldn't
+	                                                 * be set, though this isn't asserted) that should be accessed. */
 };
 
 DDATDEF DeeTypeObject DeeInstanceMember_Type;
@@ -1538,7 +1538,7 @@ DDATDEF DeeTypeObject DeeInstanceMember_Type;
 /* Construct a new instance member for the given `attribute' */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
-                      struct Dee_class_attribute *__restrict attr);
+                      struct Dee_class_attribute const *__restrict attr);
 
 DECL_END
 

@@ -483,9 +483,9 @@ err_r:
 
 /* Concat a list and some generic sequence,
  * inheriting a reference from `self' in the process. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *self,
-               DeeObject *sequence) {
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
+                        DeeObject *sequence) {
 	DREF DeeObject *result;
 	size_t fast_seqlen;
 	if (!DeeObject_IsShared(self)) {
@@ -511,7 +511,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject *const *argv) {
 	List *me = (List *)self;

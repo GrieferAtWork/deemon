@@ -683,9 +683,10 @@ err:
 }
 
 
-/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
+/* Force vtop to one of `MEMLOC_VMORPH_BOOL_*' (only use if you need a bool
+ * morph, and `Dee_function_generator_vopbool()' doesn't give you one) */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vmorphbool(struct Dee_function_generator *__restrict self) {
 	struct Dee_memloc *vtop;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
@@ -697,10 +698,16 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self) {
 	case MEMLOC_VMORPH_BOOL_Z_01:
 	case MEMLOC_VMORPH_BOOL_NZ:
 	case MEMLOC_VMORPH_BOOL_NZ_01:
+	case MEMLOC_VMORPH_BOOL_LZ:
+	case MEMLOC_VMORPH_BOOL_GZ:
 		return 0; /* Already a proper boolean */
 	case MEMLOC_VMORPH_DIRECT:
 	case MEMLOC_VMORPH_DIRECT_01:
 		break;
+	case MEMLOC_VMORPH_INT:
+	case MEMLOC_VMORPH_UINT:
+		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
+		return 0;
 	default:
 		if unlikely(Dee_function_generator_gdirect(self, vtop))
 			goto err;
@@ -711,58 +718,6 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self) {
 	vtop = Dee_function_generator_vtop(self);
 	ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
 	vtop->ml_vmorph = MEMLOC_VMORPH_TESTNZ(vtop->ml_vmorph);
-	return 0;
-err:
-	return -1;
-}
-
-/* Invoke `DeeObject_Bool()' and set vtop to `MEMLOC_VMORPH_BOOL_*' */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopnot(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc *vtop;
-	if unlikely(Dee_function_generator_vopbool(self))
-		goto err;
-	vtop = Dee_function_generator_vtop(self);
-	switch (vtop->ml_vmorph) {
-
-	case MEMLOC_VMORPH_BOOL_Z:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
-		break;
-
-	case MEMLOC_VMORPH_BOOL_Z_01:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
-		break;
-
-	case MEMLOC_VMORPH_BOOL_NZ:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z;
-		break;
-
-	case MEMLOC_VMORPH_BOOL_NZ_01:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_Z_01;
-		break;
-
-	case MEMLOC_VMORPH_BOOL_LZ:
-		/*      !(value < 0)
-		 * <=>  value >= 0
-		 * <=>  (value + 1) > 0 */
-		if unlikely(Dee_function_generator_vdelta(self, 1))
-			goto err;
-		vtop = Dee_function_generator_vtop(self);
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_GZ;
-		break;
-
-	case MEMLOC_VMORPH_BOOL_GZ:
-		/*      !(value > 0)
-		 * <=>  value <= 0
-		 * <=>  (value - 1) < 0 */
-		if unlikely(Dee_function_generator_vdelta(self, -1))
-			goto err;
-		vtop = Dee_function_generator_vtop(self);
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_LZ;
-		break;
-
-	default: __builtin_unreachable();
-	}
 	return 0;
 err:
 	return -1;
@@ -1991,11 +1946,40 @@ reclaim_unused_stack_space(struct Dee_function_generator *__restrict self) {
 	return 0;
 }
 
+/* obj, type -> N/A */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_vassert_type_exact(struct Dee_function_generator *__restrict self) {
+	/* TODO: Must check for `DeeType_IsAbstract(type)' */
+	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+		/* TODO: emit code equivalent to:
+		 * >> if (Dee_TYPE(self) != type) {
+		 * >>     DeeObject_TypeAssertFailed(obj, type);
+		 * >>     HANDLE_EXCEPT();
+		 * >> }
+		 */
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALLOP_CC_INT, 2);
+}
+
+/* obj, type -> N/A */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_vassert_type(struct Dee_function_generator *__restrict self) {
+	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+		/* TODO: emit code equivalent to:
+		 * >> if (!DeeType_InheritsFrom(Dee_TYPE(obj), type)) {
+		 * >>     DeeObject_TypeAssertFailed(obj, type);
+		 * >>     HANDLE_EXCEPT();
+		 * >> }
+		 */
+	}
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALLOP_CC_INT, 2);
+}
+
 
 /* Generate code equivalent to `DeeObject_AssertTypeExact(VTOP, type)', but don't pop `VTOP' from the v-stack. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self,
-                                          DeeTypeObject *__restrict type) {
+Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__restrict self,
+                                            DeeTypeObject *__restrict type) {
 	DeeTypeObject *vtop_type;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
@@ -2004,35 +1988,48 @@ Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restr
 		if (vtop_type != type) {
 			return DeeError_Throwf(&DeeError_TypeError,
 			                       "Expected exact instance of `%r', but got a `%r' object",
-			                       type, Dee_TYPE(vtop_type));
+			                       type, vtop_type);
 		}
 		return 0;
 	}
 	if unlikely(Dee_function_generator_vdirect(self, 1))
 		goto err;
-	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* TODO: emit code equivalent to:
-		 * >> if (Dee_TYPE(self) != <type>) {
-		 * >>     DeeObject_TypeAssertFailed(self, <type>);
-		 * >>     HANDLE_EXCEPT();
-		 * >> }
-		 */
-	}
 	if unlikely(Dee_function_generator_vdup(self))
 		goto err; /* value, value */
 	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
 		goto err; /* value, value, type */
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALLOP_CC_INT, 2))
+	if unlikely(impl_vassert_type_exact(self))
 		goto err; /* value */
 	return Dee_function_generator_vsettyp(self, type);
 err:
 	return -1;
 }
 
+/* obj, type -> N/A */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc *typeloc;
+	if unlikely(Dee_function_generator_vdirect(self, 2))
+		goto err;
+	typeloc = Dee_function_generator_vtop(self);
+	if (typeloc->ml_type == MEMLOC_TYPE_CONST) {
+		DeeTypeObject *type = (DeeTypeObject *)typeloc->ml_value.v_const;
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* obj */
+		if unlikely(Dee_function_generator_vassert_type_exact_c(self, type))
+			goto err; /* obj */
+		return Dee_function_generator_vpop(self); /* N/A */
+	}
+	return impl_vassert_type_exact(self);
+err:
+	return -1;
+}
+
+
 /* Generate code equivalent to `DeeObject_AssertType(VTOP, type)', but don't pop `VTOP' from the v-stack. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self,
-                                    DeeTypeObject *__restrict type) {
+Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict self,
+                                      DeeTypeObject *__restrict type) {
 	DeeTypeObject *vtop_type;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
@@ -2043,28 +2040,42 @@ Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict se
 		if (!DeeType_InheritsFrom(vtop_type, type)) {
 			return DeeError_Throwf(&DeeError_TypeError,
 			                       "Expected instance of `%r', but got a `%r' object",
-			                       type, Dee_TYPE(vtop_type));
+			                       type, vtop_type);
 		}
 		return 0;
 	}
 	if unlikely(Dee_function_generator_vdirect(self, 1))
 		goto err;
-	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* TODO: emit code equivalent to:
-		 * >> if (!DeeType_InheritsFrom(Dee_TYPE(self), <type>)) {
-		 * >>     DeeObject_TypeAssertFailed(self, <type>);
-		 * >>     HANDLE_EXCEPT();
-		 * >> }
-		 */
-	}
 	if unlikely(Dee_function_generator_vdup(self))
 		goto err; /* value, value */
 	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
 		goto err; /* value, value, type */
-	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALLOP_CC_INT, 2);
+	return impl_vassert_type(self);
 err:
 	return -1;
 }
+
+/* obj, type -> N/A */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc *typeloc;
+	if unlikely(Dee_function_generator_vdirect(self, 2))
+		goto err;
+	typeloc = Dee_function_generator_vtop(self);
+	if (typeloc->ml_type == MEMLOC_TYPE_CONST) {
+		DeeTypeObject *type = (DeeTypeObject *)typeloc->ml_value.v_const;
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err; /* obj */
+		if unlikely(Dee_function_generator_vassert_type_c(self, type))
+			goto err; /* obj */
+		return Dee_function_generator_vpop(self); /* N/A */
+	}
+	return impl_vassert_type(self);
+err:
+	return -1;
+}
+
+
 
 
 /* Perform a conditional jump to `desc' based on `jump_if_true'
@@ -2086,7 +2097,8 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 	loc = *Dee_function_generator_vtop(self);
 
 	/* Special case for when the top-element is a constant. */
-	if (loc.ml_type == MEMLOC_TYPE_CONST) {
+	if (loc.ml_type == MEMLOC_TYPE_CONST &&
+	    DeeType_IsOperatorConstexpr(Dee_TYPE(loc.ml_value.v_const), OPERATOR_BOOL)) {
 		temp = DeeObject_Bool(loc.ml_value.v_const);
 		if unlikely(temp < 0) {
 			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
@@ -2548,10 +2560,9 @@ err:
 
 
 /* Generate code to push a global variable onto the virtual stack. */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-vpush_global_or_extern(struct Dee_function_generator *__restrict self,
-                       DeeModuleObject *__restrict mod, uint16_t gid,
-                       uint8_t kind, uint16_t id1, uint16_t id2, bool ref) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vpush_mod_global(struct Dee_function_generator *__restrict self,
+                                        struct Dee_module_object *mod, uint16_t gid, bool ref) {
 	struct Dee_memloc *loc;
 	struct module_symbol *symbol;
 	if unlikely(gid >= mod->mo_globalc)
@@ -2569,7 +2580,7 @@ vpush_global_or_extern(struct Dee_function_generator *__restrict self,
 			Dee_Incref(current_value);
 			DeeModule_LockEndRead(mod);
 			current_value = Dee_function_generator_inlineref(self, current_value);
-			if likely(!current_value)
+			if unlikely(!current_value)
 				goto err;
 			return Dee_function_generator_vpush_const(self, current_value);
 		}
@@ -2587,8 +2598,9 @@ vpush_global_or_extern(struct Dee_function_generator *__restrict self,
 		goto err;
 	loc = Dee_function_generator_vtop(self);
 	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-	if unlikely(Dee_function_generator_gassert_bound(self, loc, NULL, kind, id1, id2,
-	                                                 ref ? &mod->mo_lock : NULL, NULL))
+	if unlikely(Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid,
+	                                                 ref ? &mod->mo_lock : NULL,
+	                                                 NULL))
 		goto err;
 
 	/* Depending on how the value will be used, we may not need a reference.
@@ -2611,40 +2623,21 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpush_global(struct Dee_function_generator *__restrict self,
-                                    uint16_t gid, bool ref) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	return vpush_global_or_extern(self, mod, gid, ASM_GLOBAL, gid, 0, ref);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpush_extern(struct Dee_function_generator *__restrict self,
-                                    uint16_t mid, uint16_t gid, bool ref) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	if unlikely(mid >= mod->mo_importc)
-		return err_illegal_mid(mid);
-	mod = mod->mo_importv[mid];
-	return vpush_global_or_extern(self, mod, gid, ASM_EXTERN, mid, gid, ref);
-}
-
 /* Generate code to check if a global variable is currently bound. */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-vbound_global_or_extern(struct Dee_function_generator *__restrict self,
-                        DeeModuleObject *__restrict mod, uint16_t gid) {
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vbound_mod_global(struct Dee_function_generator *__restrict self,
+                                         struct Dee_module_object *mod, uint16_t gid) {
 	struct Dee_memloc *loc;
 	struct module_symbol *symbol;
-	symbol = DeeModule_GetSymbolID(mod, gid);
-	if unlikely(!symbol)
+	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
-	ASSERT(symbol->ss_index == gid);
+	symbol = DeeModule_GetSymbolID(mod, gid);
+	ASSERT(!symbol || symbol->ss_index == gid);
 	/* If the symbol is read-only and bound, then we know it can't be unbound */
-	if ((symbol->ss_flags & Dee_MODSYM_FREADONLY) &&
+	if (((symbol == NULL) || /* Can be NULL in case it's the DELETE/SETTER of a property */
+	     (symbol->ss_flags & (Dee_MODSYM_FPROPERTY | Dee_MODSYM_FREADONLY))) &&
 	    !(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOROINLINE)) {
-		DeeObject *current_value;
-		DeeModule_LockRead(mod);
-		current_value = mod->mo_globalv[gid];
-		DeeModule_LockEndRead(mod);
+		DeeObject *current_value = atomic_read(&mod->mo_globalv[gid]);
 		if (current_value != NULL)
 			return Dee_function_generator_vpush_const(self, Dee_True);
 	}
@@ -2662,25 +2655,10 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vbound_global(struct Dee_function_generator *__restrict self, uint16_t gid) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	return vbound_global_or_extern(self, mod, gid);
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vbound_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	if unlikely(mid >= mod->mo_importc)
-		return err_illegal_mid(mid);
-	mod = mod->mo_importv[mid];
-	return vbound_global_or_extern(self, mod, gid);
-}
-
 /* Generate code to pop a global variable from the virtual stack. */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-vpop_global_or_extern(struct Dee_function_generator *__restrict self,
-                      DeeModuleObject *__restrict mod, uint16_t gid) {
+vpopref_mod_global(struct Dee_function_generator *__restrict self,
+                   struct Dee_module_object *mod, uint16_t gid) {
 	struct Dee_memloc loc;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
@@ -2707,48 +2685,60 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpop_global(struct Dee_function_generator *__restrict self, uint16_t gid) {
-	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	int result = Dee_function_generator_vref(self);
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vdel_mod_global(struct Dee_function_generator *__restrict self,
+                                       struct Dee_module_object *mod, uint16_t gid) {
+	int result = Dee_function_generator_vpush_addr(self, NULL);
 	if likely(result == 0)
-		result = vpop_global_or_extern(self, mod, gid);
+		result = vpopref_mod_global(self, mod, gid);
 	return result;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vpop_mod_global(struct Dee_function_generator *__restrict self,
+                                       struct Dee_module_object *mod, uint16_t gid) {
+	int result = Dee_function_generator_vref(self);
+	if likely(result == 0)
+		result = vpopref_mod_global(self, mod, gid);
+	return result;
+}
+
+
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpop_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
-	int result;
+Dee_function_generator_vpush_extern(struct Dee_function_generator *__restrict self,
+                                    uint16_t mid, uint16_t gid, bool ref) {
 	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
 	if unlikely(mid >= mod->mo_importc)
 		return err_illegal_mid(mid);
 	mod = mod->mo_importv[mid];
-	result = Dee_function_generator_vref(self);
-	if likely(result == 0)
-		result = vpop_global_or_extern(self, mod, gid);
-	return result;
+	return Dee_function_generator_vpush_mod_global(self, mod, gid, ref);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vdel_global(struct Dee_function_generator *__restrict self, uint16_t gid) {
+Dee_function_generator_vbound_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
 	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
-	int result = Dee_function_generator_vpush_addr(self, NULL);
-	if likely(result == 0)
-		result = vpop_global_or_extern(self, mod, gid);
-	return result;
+	if unlikely(mid >= mod->mo_importc)
+		return err_illegal_mid(mid);
+	mod = mod->mo_importv[mid];
+	return Dee_function_generator_vbound_mod_global(self, mod, gid);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vdel_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
-	int result;
 	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
 	if unlikely(mid >= mod->mo_importc)
 		return err_illegal_mid(mid);
 	mod = mod->mo_importv[mid];
-	result = Dee_function_generator_vpush_addr(self, NULL);
-	if likely(result == 0)
-		result = vpop_global_or_extern(self, mod, gid);
-	return result;
+	return Dee_function_generator_vdel_mod_global(self, mod, gid);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpop_extern(struct Dee_function_generator *__restrict self, uint16_t mid, uint16_t gid) {
+	DeeModuleObject *mod = self->fg_assembler->fa_code->co_module;
+	if unlikely(mid >= mod->mo_importc)
+		return err_illegal_mid(mid);
+	mod = mod->mo_importv[mid];
+	return Dee_function_generator_vpop_mod_global(self, mod, gid);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2878,8 +2868,130 @@ err:
 
 
 
+/* Do calling-convention-specific handling of the return value. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__restrict self,
+                                            unsigned int cc, Dee_vstackaddr_t argc) {
+	switch (cc) {
+
+	case VCALLOP_CC_OBJECT:
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		return Dee_function_generator_vcheckobj(self); /* result */
+
+	case VCALLOP_CC_RAWINT:
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		break;
+
+	case VCALLOP_CC_BOOL:
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		ASSERT(Dee_function_generator_vtop(self)->ml_vmorph == MEMLOC_VMORPH_DIRECT);
+		Dee_function_generator_vtop(self)->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		break;
+
+	case VCALLOP_CC_RAWINT_KEEPARGS:
+		return Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0);
+
+	case VCALLOP_CC_VOID:
+		break;
+
+	case VCALLOP_CC_EXCEPT:
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err;
+		return Dee_function_generator_gjmp_except(self);
+
+	case VCALLOP_CC_INT:
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		return Dee_function_generator_vcheckint(self); /* - */
+
+	case VCALLOP_CC_NEGINT: {
+		struct Dee_memloc *loc;
+		struct Dee_memloc zero;
+		struct Dee_except_exitinfo *info;
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		loc = Dee_function_generator_vtop(self);
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		zero.ml_type = MEMLOC_TYPE_CONST;
+		zero.ml_value.v_const = NULL;
+		info = Dee_function_generator_except_exit(self);
+		if unlikely(!info)
+			goto err;
+		{
+			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+			return _Dee_function_generator_gjcmp(self, loc, &zero, true, sym, NULL, NULL);
+		}
+		__builtin_unreachable();
+	}	break;
+
+	case VCALLOP_CC_M1INT: {
+		struct Dee_memloc *loc;
+		struct Dee_memloc minus_one;
+		struct Dee_except_exitinfo *info;
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err; /* UNCHECKED(result) */
+		loc = Dee_function_generator_vtop(self);
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		minus_one.ml_type = MEMLOC_TYPE_CONST;
+		minus_one.ml_value.v_const = (DeeObject *)(uintptr_t)(intptr_t)-1;
+		info = Dee_function_generator_except_exit(self);
+		if unlikely(!info)
+			goto err;
+		{
+			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+			return _Dee_function_generator_gjcmp(self, loc, &minus_one, true, NULL, sym, NULL);
+		}
+		__builtin_unreachable();
+	}	break;
+
+	case VCALLOP_CC_MORPH_INTPTR:
+	case VCALLOP_CC_MORPH_UINTPTR:
+		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
+			goto err; /* [args...], UNCHECKED(result) */
+		ASSERT(Dee_function_generator_vtop(self)->ml_vmorph == MEMLOC_VMORPH_DIRECT);
+		Dee_function_generator_vtop(self)->ml_vmorph = cc == VCALLOP_CC_MORPH_UINTPTR
+		                                               ? MEMLOC_VMORPH_UINT
+		                                               : MEMLOC_VMORPH_INT;
+		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
+			goto err; /* UNCHECKED(result), [args...] */
+		break;
+
+	default: __builtin_unreachable();
+	}
+
+	/* Pop function arguments. */
+	return Dee_function_generator_vpopmany(self, argc);
+err:
+	return -1;
+}
+
 /* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function' */
+ * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function'.
+ * @return: 0 : Success
+ * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
                                  void const *api_function, unsigned int cc,
@@ -2930,109 +3042,131 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 	Dee_Freea(argv);
 
 	/* Do calling-convention-specific handling of the return value. */
-	switch (cc) {
-
-	case VCALLOP_CC_OBJECT:
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err; /* UNCHECKED(result) */
-		return Dee_function_generator_vcheckobj(self); /* result */
-
-	case VCALLOP_CC_RAWINT:
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		break;
-
-	case VCALLOP_CC_BOOL:
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		ASSERT(Dee_function_generator_vtop(self)->ml_vmorph == MEMLOC_VMORPH_DIRECT);
-		Dee_function_generator_vtop(self)->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		break;
-
-	case VCALLOP_CC_RAWINT_KEEPARGS:
-		return Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0);
-
-	case VCALLOP_CC_VOID:
-		break;
-
-	case VCALLOP_CC_EXCEPT:
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err;
-		return Dee_function_generator_gjmp_except(self);
-
-	case VCALLOP_CC_INT:
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err; /* UNCHECKED(result) */
-		return Dee_function_generator_vcheckint(self); /* - */
-
-	case VCALLOP_CC_NEGINT: {
-		struct Dee_memloc zero;
-		struct Dee_except_exitinfo *info;
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err; /* UNCHECKED(result) */
-		loc = Dee_function_generator_vtop(self);
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		zero.ml_type = MEMLOC_TYPE_CONST;
-		zero.ml_value.v_const = NULL;
-		info = Dee_function_generator_except_exit(self);
-		if unlikely(!info)
-			goto err;
-		{
-			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-			return _Dee_function_generator_gjcmp(self, loc, &zero, true, sym, NULL, NULL);
-		}
-		__builtin_unreachable();
-	}	break;
-
-	case VCALLOP_CC_M1INT: {
-		struct Dee_memloc minus_one;
-		struct Dee_except_exitinfo *info;
-		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-			goto err; /* [args...], UNCHECKED(result) */
-		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
-			goto err; /* UNCHECKED(result), [args...] */
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err; /* UNCHECKED(result) */
-		loc = Dee_function_generator_vtop(self);
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		minus_one.ml_type = MEMLOC_TYPE_CONST;
-		minus_one.ml_value.v_const = (DeeObject *)(uintptr_t)(intptr_t)-1;
-		info = Dee_function_generator_except_exit(self);
-		if unlikely(!info)
-			goto err;
-		{
-			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-			return _Dee_function_generator_gjcmp(self, loc, &minus_one, true, NULL, sym, NULL);
-		}
-		__builtin_unreachable();
-	}	break;
-
-	default: __builtin_unreachable();
-	}
-
-	/* Pop function arguments. */
-	return Dee_function_generator_vpopmany(self, argc);
+	return Dee_function_generator_vcallapi_checkresult(self, cc, argc);
 err_argv:
 	Dee_Freea(argv);
 err:
 	return -1;
 }
+
+/* [args...], funcaddr -> ...
+ * Same as `Dee_function_generator_vcallapi()', but after the normal argument list,
+ * there is an additional item "funcaddr" that contains the (possibly) runtime-
+ * evaluated address of the function that should be called. Also note that said
+ * "funcaddr" location is *always* popped.
+ * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function' 
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict self,
+                                   unsigned int cc, Dee_vstackaddr_t argc) {
+	int temp;
+	struct Dee_memloc *loc, *argv, func;
+	Dee_host_register_t func_regno;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	if unlikely(Dee_function_generator_vdirect(self, argc + 1))
+		goto err;
+	loc = Dee_function_generator_vtop(self);
+	if (loc->ml_type == MEMLOC_TYPE_CONST) {
+		/* Special case: function being called is actually at a constant address. */
+		void const *api_function = (void const *)loc->ml_value.v_const;
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err;
+		return Dee_function_generator_vcallapi(self, api_function, cc, argc);
+	}
+
+	/* Save argument memory locations from before the flush. This is because after the
+	 * flush, registers are written to the stack, and if we were to pass the then-current
+	 * `Dee_memloc' to `_Dee_function_generator_gcallapi', it would have to load those
+	 * values from the stack (when they can also be found in registers) */
+	loc = self->fg_state->ms_stackv;
+	loc += self->fg_state->ms_stackc;
+	loc -= argc + 1;
+	argv = (struct Dee_memloc *)Dee_Mallocac(argc, sizeof(struct Dee_memloc));
+	if unlikely(!argv)
+		goto err;
+	argv = (struct Dee_memloc *)memcpyc(argv, loc, argc, sizeof(struct Dee_memloc));
+
+	/* Flush registers that don't appear in the top `argc' stack locations.
+	 * When the function always throw an exception, we *only* need to preserve
+	 * stuff that contains references! */
+	if unlikely(Dee_function_generator_gflushregs(self, argc + 1, cc == VCALLOP_CC_EXCEPT))
+		goto err_argv;
+	func = *Dee_function_generator_vtop(self);
+	if unlikely(Dee_function_generator_vpop(self))
+		goto err_argv;
+	if (func.ml_type == MEMLOC_TYPE_HREG ||
+	    (func.ml_type == MEMLOC_TYPE_HREGIND && func.ml_value.v_hreg.r_voff == 0) ||
+	    (func.ml_type == MEMLOC_TYPE_HSTACKIND || func.ml_value.v_hstack.s_off != 0)) {
+		/* Function can be generated like this */
+	} else {
+		/* Need to load function into a register. */
+		if unlikely(Dee_function_generator_greg(self, &func, NULL))
+			goto err_argv;
+		ASSERT(func.ml_type == MEMLOC_TYPE_HREG);
+	}
+	func_regno = HOST_REGISTER_COUNT;
+	if (MEMLOC_TYPE_HASREG(func.ml_type))
+		func_regno = func.ml_value.v_hreg.r_regno;
+	if (func.ml_type == MEMLOC_TYPE_HREG && func.ml_value.v_hreg.r_off != 0) {
+		if unlikely(_Dee_function_generator_gmov_regx2reg(self,
+		                                                  func.ml_value.v_hreg.r_regno,
+		                                                  func.ml_value.v_hreg.r_off,
+		                                                  func.ml_value.v_hreg.r_regno))
+			goto err_argv;
+		func.ml_value.v_hreg.r_off = 0;
+	}
+
+	/* Check if any of the argument registers got clobbered by register usage during flushing. */
+	{
+		uint16_t argi;
+		for (argi = 0; argi < argc; ++argi) {
+			struct Dee_memloc *stck_loc;
+			struct Dee_memloc *argv_loc = &argv[argi];
+			if (!MEMLOC_TYPE_HASREG(argv_loc->ml_type))
+				continue;
+			ASSERT(argv_loc->ml_value.v_hreg.r_regno < HOST_REGISTER_COUNT);
+			if (self->fg_state->ms_rusage[argv_loc->ml_value.v_hreg.r_regno] != DEE_HOST_REGUSAGE_GENERIC ||
+			    argv_loc->ml_value.v_hreg.r_regno == func_regno) {
+				/* Register got clobbered */
+				stck_loc = &self->fg_state->ms_stackv[self->fg_state->ms_stackc - (argc + 1) + argi];
+				*argv_loc = *stck_loc;
+			}
+		}
+	}
+
+	/* Call the actual C function */
+	ASSERT(func.ml_type == MEMLOC_TYPE_HREG ||
+	       func.ml_type == MEMLOC_TYPE_HSTACKIND ||
+	       func.ml_type == MEMLOC_TYPE_HREGIND);
+	switch (func.ml_type) {
+	case MEMLOC_TYPE_HREG:
+		temp = _Dee_function_generator_gcalldynapi_reg(self, func.ml_value.v_hreg.r_regno, argc, argv);
+		break;
+	case MEMLOC_TYPE_HSTACKIND:
+		temp = _Dee_function_generator_gcalldynapi_hstackind(self, func.ml_value.v_hstack.s_cfa, argc, argv);
+		break;
+	case MEMLOC_TYPE_HREGIND:
+		temp = _Dee_function_generator_gcalldynapi_hregind(self,
+		                                                   func.ml_value.v_hreg.r_regno,
+		                                                   func.ml_value.v_hreg.r_off,
+		                                                   argc, argv);
+		break;
+	default: __builtin_unreachable();
+	}
+	if unlikely(temp)
+		goto err_argv;
+	Dee_Freea(argv);
+
+	/* Do calling-convention-specific handling of the return value. */
+	return Dee_function_generator_vcallapi_checkresult(self, cc, argc);
+err_argv:
+	Dee_Freea(argv);
+err:
+	return -1;
+}
+
 
 /* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
  * do the extra trailing checks needed to turn that call into `VCALLOP_CC_OBJECT'

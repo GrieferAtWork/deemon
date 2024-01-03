@@ -472,22 +472,22 @@ INTERN DeeTypeObject ClassOperatorTable_Type = {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF ClassDescriptor   *ca_desc; /* [1..1][const] Class descriptor. */
-	struct class_attribute *ca_attr; /* [1..1][const] The attribute that was queried. */
+	DREF ClassDescriptor         *ca_desc; /* [1..1][const] Class descriptor. */
+	struct class_attribute const *ca_attr; /* [1..1][const] The attribute that was queried. */
 } ClassAttribute;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF ClassDescriptor         *ca_desc; /* [1..1][const] Class descriptor. */
-	DWEAK struct class_attribute *ca_iter; /* [1..1] Current iterator position. */
-	struct class_attribute       *ca_end;  /* [1..1][const] Iterator end. */
+	DREF ClassDescriptor               *ca_desc; /* [1..1][const] Class descriptor. */
+	DWEAK struct class_attribute const *ca_iter; /* [1..1] Current iterator position. */
+	struct class_attribute const       *ca_end;  /* [1..1][const] Iterator end. */
 } ClassAttributeTableIterator;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF ClassDescriptor   *ca_desc;  /* [1..1][const] Class descriptor. */
-	struct class_attribute *ca_start; /* [1..1][const] Hash-vector starting pointer. */
-	size_t                  ca_mask;  /* [const] Mask-vector size mask. */
+	DREF ClassDescriptor         *ca_desc;  /* [1..1][const] Class descriptor. */
+	struct class_attribute const *ca_start; /* [1..1][const] Hash-vector starting pointer. */
+	size_t                        ca_mask;  /* [const] Mask-vector size mask. */
 } ClassAttributeTable;
 
 INTDEF DeeTypeObject ClassAttribute_Type;
@@ -496,7 +496,7 @@ INTDEF DeeTypeObject ClassAttributeTableIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF ClassAttribute *DCALL
 cattr_new(ClassDescriptor *__restrict desc,
-          struct class_attribute *__restrict attr) {
+          struct class_attribute const *__restrict attr) {
 	DREF ClassAttribute *result;
 	result = DeeObject_MALLOC(ClassAttribute);
 	if unlikely(!result)
@@ -533,9 +533,9 @@ STATIC_ASSERT(offsetof(ClassOperatorTableIterator, co_end) == offsetof(ClassAttr
 
 #define CATI_GETITER(x) atomic_read(&(x)->ca_iter)
 
-LOCAL struct class_attribute *DCALL
+LOCAL WUNUSED NONNULL((1)) struct class_attribute const *DCALL
 cati_next_ent(ClassAttributeTableIterator *__restrict self) {
-	struct class_attribute *result, *start;
+	struct class_attribute const *result, *start;
 	for (;;) {
 		start  = atomic_read(&self->ca_iter);
 		result = start;
@@ -555,7 +555,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cati_next(ClassAttributeTableIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF ClassAttribute *attr;
-	struct class_attribute *ent;
+	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
@@ -571,7 +571,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cati_next_key(ClassAttributeTableIterator *__restrict self) {
-	struct class_attribute *ent;
+	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
@@ -580,7 +580,7 @@ cati_next_key(ClassAttributeTableIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF ClassAttribute *DCALL
 cati_next_value(ClassAttributeTableIterator *__restrict self) {
-	struct class_attribute *ent;
+	struct class_attribute const *ent;
 	ent = cati_next_ent(self);
 	if (!ent)
 		return (DREF ClassAttribute *)ITER_DONE;
@@ -637,7 +637,7 @@ cat_getitemdef(ClassAttributeTable *__restrict self,
 	hash = DeeString_Hash(key);
 	i = perturb = hash & self->ca_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-		struct class_attribute *at;
+		struct class_attribute const *at;
 		at = &self->ca_start[i & self->ca_mask];
 		if (at->ca_name == NULL)
 			break;
@@ -2907,7 +2907,7 @@ PUBLIC DeeTypeObject DeeInstanceMember_Type = {
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeInstanceMember_New(DeeTypeObject *__restrict class_type,
-                      struct class_attribute *__restrict attr) {
+                      struct class_attribute const *__restrict attr) {
 	DREF DeeInstanceMemberObject *result;
 	ASSERT_OBJECT_TYPE(class_type, &DeeType_Type);
 	ASSERT(DeeType_IsClass(class_type));
@@ -3347,7 +3347,7 @@ not_found:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
-                              struct class_attribute *__restrict attr) {
+                              struct class_attribute const *__restrict attr) {
 	DREF DeePropertyObject *result;
 	struct class_desc *my_class;
 
@@ -3406,7 +3406,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
-                                struct class_attribute *__restrict attr) {
+                                struct class_attribute const *__restrict attr) {
 	int result;
 	struct class_desc *my_class;
 
@@ -3433,7 +3433,7 @@ DeeClass_BoundInstanceAttribute(DeeTypeObject *__restrict class_type,
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
-                               struct class_attribute *__restrict attr,
+                               struct class_attribute const *__restrict attr,
                                size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3494,7 +3494,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
-                                 struct class_attribute *__restrict attr,
+                                 struct class_attribute const *__restrict attr,
                                  size_t argc, DeeObject *const *argv,
                                  DeeObject *kw) {
 	DREF DeeObject *callback, *result;
@@ -3554,7 +3554,7 @@ err:
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
-                                    struct class_attribute *__restrict attr,
+                                    struct class_attribute const *__restrict attr,
                                     DeeObject *args) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3615,7 +3615,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
-                                      struct class_attribute *__restrict attr,
+                                      struct class_attribute const *__restrict attr,
                                       DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *callback, *result;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3675,7 +3675,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
-                                 struct class_attribute *__restrict attr,
+                                 struct class_attribute const *__restrict attr,
                                  char const *__restrict format, va_list args) {
 	DREF DeeObject *callback, *result, *args_tuple;
 	struct class_desc *my_class = DeeClass_DESC(class_type);
@@ -3743,7 +3743,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
-                              struct class_attribute *__restrict attr) {
+                              struct class_attribute const *__restrict attr) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
 		goto err_noaccess;
@@ -3784,7 +3784,7 @@ err_noaccess:
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
-                              struct class_attribute *__restrict attr,
+                              struct class_attribute const *__restrict attr,
                               DeeObject *value) {
 	struct class_desc *my_class = DeeClass_DESC(class_type);
 	if unlikely(!(attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM))
@@ -3847,7 +3847,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_GetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
-                         struct class_attribute *__restrict attr) {
+                         struct class_attribute const *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -3901,7 +3901,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_BoundAttribute(struct class_desc *__restrict desc,
                            struct instance_desc *__restrict self,
                            DeeObject *__restrict this_arg,
-                           struct class_attribute *__restrict attr) {
+                           struct class_attribute const *__restrict attr) {
 	DREF DeeObject *result;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -3941,7 +3941,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttribute(struct class_desc *__restrict desc,
                           struct instance_desc *__restrict self,
                           DeeObject *this_arg,
-                          struct class_attribute *__restrict attr,
+                          struct class_attribute const *__restrict attr,
                           size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
@@ -3997,7 +3997,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *this_arg,
-                            struct class_attribute *__restrict attr,
+                            struct class_attribute const *__restrict attr,
                             char const *__restrict format, va_list args) {
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
@@ -4053,7 +4053,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeKw(struct class_desc *__restrict desc,
                             struct instance_desc *__restrict self,
                             DeeObject *this_arg,
-                            struct class_attribute *__restrict attr,
+                            struct class_attribute const *__restrict attr,
                             size_t argc, DeeObject *const *argv,
                             DeeObject *kw) {
 	DREF DeeObject *result, *callback;
@@ -4110,7 +4110,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
                                DeeObject *this_arg,
-                               struct class_attribute *__restrict attr,
+                               struct class_attribute const *__restrict attr,
                                DeeObject *args) {
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
@@ -4166,7 +4166,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct instance_desc *__restrict self,
                                  DeeObject *this_arg,
-                                 struct class_attribute *__restrict attr,
+                                 struct class_attribute const *__restrict attr,
                                  DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
@@ -4222,7 +4222,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
                                struct instance_desc *__restrict self,
                                DeeObject *this_arg,
-                               struct class_attribute *__restrict attr,
+                               struct class_attribute const *__restrict attr,
                                DeeObject *args) {
 	/* For binary compatibility */
 	return DeeInstance_CallAttribute(desc, self, this_arg, attr,
@@ -4234,7 +4234,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
 DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
                                  struct instance_desc *__restrict self,
                                  DeeObject *this_arg,
-                                 struct class_attribute *__restrict attr,
+                                 struct class_attribute const *__restrict attr,
                                  DeeObject *args, DeeObject *kw) {
 	/* For binary compatibility */
 	return DeeInstance_CallAttributeKw(desc, self, this_arg, attr,
@@ -4249,7 +4249,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *__restrict this_arg,
-                         struct class_attribute *__restrict attr) {
+                         struct class_attribute const *__restrict attr) {
 	ASSERT_OBJECT(this_arg);
 
 	/* Make sure that the access is allowed. */
@@ -4297,7 +4297,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
 DeeInstance_SetAttribute(struct class_desc *__restrict desc,
                          struct instance_desc *__restrict self,
                          DeeObject *this_arg,
-                         struct class_attribute *__restrict attr,
+                         struct class_attribute const *__restrict attr,
                          DeeObject *value) {
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -4353,7 +4353,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
 (DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
                                        struct instance_desc *__restrict self,
-                                       struct class_attribute *__restrict attr,
+                                       struct class_attribute const *__restrict attr,
                                        DeeObject *__restrict value) {
 	DREF DeeObject *old_value;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)

@@ -3931,7 +3931,7 @@ DeeObject_ConcatInherited(DREF DeeObject *self, DeeObject *other) {
 	if (DeeTuple_CheckExact(self))
 		return DeeTuple_ConcatInherited(self, other);
 	if (DeeList_CheckExact(self))
-		return DeeList_Concat(self, other);
+		return DeeList_ConcatInherited(self, other);
 	/* Fallback: perform an arithmetic add operation. */
 	result = DeeObject_Add(self, other);
 	Dee_Decref(self);

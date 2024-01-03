@@ -75,7 +75,11 @@ INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_REPR]         = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type, tp_cast.tp_repr),               "repr",         "repr",        "tp_repr" },
 	/* [OPERATOR_BOOL]         = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_TYPE, 0, offsetof(Type, tp_cast.tp_bool),               "bool",         "bool",        "tp_bool" },
 	/* [OPERATOR_ITERNEXT]     = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type, tp_iter_next),                  "next",         "next",        "tp_iter_next" },
-	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_BINARY | OPTYPE_VARIABLE, OPCLASS_TYPE, 0, offsetof(Type, tp_call),                       "()",           "call",        "tp_call" },
+#if 1 /* Both variants are valid */
+	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_TYPE, 0, offsetof(Type, tp_call),                       "()",           "call",        "tp_call" },
+#else
+	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_TRINARY,                  OPCLASS_TYPE, 0, offsetof(Type, tp_call_kw),                    "()",           "call",        "tp_call_kw" },
+#endif
 	/* [OPERATOR_INT]          = */ { OPTYPE_SPECIAL,                                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_int),            "int",          "int",         "tp_int" },
 	/* [OPERATOR_FLOAT]        = */ { OPTYPE_DOUBLE,                                    OPCLASS_MATH, 0, offsetof(struct type_math, tp_double),         "float",        "float",       "tp_double" },
 	/* [OPERATOR_INV]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_MATH, 0, offsetof(struct type_math, tp_inv),            "~",            "inv",         "tp_inv" },

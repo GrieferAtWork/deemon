@@ -44,6 +44,13 @@
 
 DECL_BEGIN
 
+#ifndef CONFIG_NO_THREADS
+#define IF_THREADS(...) __VA_ARGS__
+#else /* !CONFIG_NO_THREADS */
+#define IF_THREADS(...) /* nothing */
+#endif /* CONFIG_NO_THREADS */
+
+
 /* Ensure that all struct-type-codes have their least significant bits set. */
 STATIC_ASSERT((STRUCT_NONE & 1) == 1);
 STATIC_ASSERT((STRUCT_OBJECT & 1) == 1);
@@ -867,27 +874,20 @@ Dee_type_member_set(struct type_member const *desc,
 		mask = STRUCT_BOOLBITMASK(desc->m_field.m_type & ~STRUCT_ATOMIC);
 		pfield = &FIELD(uint8_t);
 		if (boolval) {
-#ifndef CONFIG_NO_THREADS
-			if (desc->m_field.m_type & STRUCT_ATOMIC) {
+			IF_THREADS(if (desc->m_field.m_type & STRUCT_ATOMIC) {
 				atomic_or(pfield, mask);
-			} else
-#endif /* !CONFIG_NO_THREADS */
-			{
+			} else) {
 				*pfield |= mask;
 			}
 		} else {
-#ifndef CONFIG_NO_THREADS
-			if (desc->m_field.m_type & STRUCT_ATOMIC) {
+			IF_THREADS(if (desc->m_field.m_type & STRUCT_ATOMIC) {
 				atomic_and(pfield, ~mask);
-			} else
-#endif /* !CONFIG_NO_THREADS */
-			{
+			} else) {
 				*pfield &= ~mask;
 			}
 		}
 		return 0;
-	}
-
+	}	break;
 
 	case STRUCT_FLOAT:
 	case STRUCT_DOUBLE:
@@ -909,7 +909,8 @@ Dee_type_member_set(struct type_member const *desc,
 			FIELD(long double) = (long double)data;
 			break;
 		}
-	}	return 0;
+		return 0;
+	}	break;
 
 	{
 		union {
@@ -975,30 +976,21 @@ Dee_type_member_set(struct type_member const *desc,
 	case STRUCT_UNSIGNED | STRUCT_INT128:
 		if (DeeObject_AsUInt128(value, &data.u128))
 			goto err;
-#ifndef CONFIG_NO_THREADS
-		COMPILER_WRITE_BARRIER();
-#endif /* !CONFIG_NO_THREADS */
+		IF_THREADS(COMPILER_WRITE_BARRIER());
 		FIELD(Dee_uint128_t) = data.u128;
-#ifndef CONFIG_NO_THREADS
-		COMPILER_WRITE_BARRIER();
-#endif /* !CONFIG_NO_THREADS */
+		IF_THREADS(COMPILER_WRITE_BARRIER());
 		break;
 
 	case STRUCT_INT128:
 		if (DeeObject_AsInt128(value, &data.s128))
 			goto err;
-#ifndef CONFIG_NO_THREADS
-		COMPILER_WRITE_BARRIER();
-#endif /* !CONFIG_NO_THREADS */
+		IF_THREADS(COMPILER_WRITE_BARRIER());
 		FIELD(Dee_int128_t) = data.s128;
-#ifndef CONFIG_NO_THREADS
-		COMPILER_WRITE_BARRIER();
-#endif /* !CONFIG_NO_THREADS */
+		IF_THREADS(COMPILER_WRITE_BARRIER());
 		break;
 	}
 
 #undef WRITE
-
 	default: break;
 	}
 	return 0;
@@ -1009,7 +1001,7 @@ err:
 	return -1;
 }
 
-
+#undef IF_THREADS
 
 DECL_END
 

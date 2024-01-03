@@ -667,14 +667,14 @@
                                     * >> IF tp === none THEN
                                     * >>     PUSH(POP() === none);
                                     * >> ELSE
-                                    * >>     PUSH(tp.baseof(type POP()));
+                                    * >>     PUSH(tp.baseof(POP().class));
                                     * >> FI */
 #define ASM_IMPLEMENTS        0x4d /* [1][-2,+1]   `implements top, pop'                - Same as `ASM_INSTANCEOF', but supports `tp_mro', whereas `ASM_INSTANCEOF' only supports `tp_base'
                                     * >> Object tp = POP();
                                     * >> IF tp === none THEN
                                     * >>     PUSH(POP() === none);
                                     * >> ELSE
-                                    * >>     PUSH(type(POP()) in Type.__mro__(tp));
+                                    * >>     PUSH(POP().class in Type.__mro__(tp));
                                     * >> FI */
 #define ASM_STR               0x4e /* [1][-1,+1]   `str top'                            - Apply the __str__ operator to the top-most stack entry.
                                     * >> PUSH(str POP()); */
@@ -793,7 +793,7 @@
                                     * >> PUSH(POP() <= POP()); */
 #define ASM_CMP_GR            0x65 /* [1][-2,+1]   `cmp gr, top, pop'                   - Compare the two top-most objects on the stack and push the result.
                                     * >> PUSH(POP() > POP()); */
-#define ASM_CLASS_C           0x66 /* [2][-1,+1]   `class top, const <imm8>'            - Construct a new class type, using `pop' as base, and `const <imm8>' as class's descriptor. */
+#define ASM_CLASS_C           0x66 /* [2][-1,+1]   `class top, const <imm8>'            - Construct a new class type, using `top' as base, and `const <imm8>' as class's descriptor. */
 #define ASM_CLASS_GC          0x67 /* [3][-0,+1]   `push class global <imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `global <imm8>' as base. */
 #define ASM_CLASS_EC          0x68 /* [4][-0,+1]   `push class extern <imm8>:<imm8>, const <imm8>' - Same as `ASM_CLASS_C', however use `extern <imm8>:<imm8>' as base. */
 #define ASM_DEFCMEMBER        0x69 /* [2][-2,+1]   `defcmember top, $<imm8>, pop'       - Initialize a class member variable `<imm8>', using a value from the stack. */

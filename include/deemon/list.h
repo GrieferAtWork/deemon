@@ -114,16 +114,14 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_FinalizeUninitialized(/*inherit(al
 #endif /* !__INTELLISENSE__ */
 
 
-#ifdef CONFIG_BUILDING_DEEMON
 /* Concat a list and some generic sequence,
  * inheriting a reference from `self' in the process. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeList_Concat(/*inherit(on_success)*/ DREF DeeObject *self,
-               DeeObject *sequence);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
+                        DeeObject *sequence);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t argc,
                         /*inherit(on_success)*/ DREF DeeObject *const *argv);
-#endif /* CONFIG_BUILDING_DEEMON */
 
 /* @return: * : The actual number of deleted items.
  * @return: (size_t)-1: Error. */
