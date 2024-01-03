@@ -655,7 +655,7 @@ err:
 
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self,
                                DeeTypeObject *type) {
 	struct Dee_memstate *state;
@@ -681,6 +681,35 @@ Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self,
 err:
 	return -1;
 }
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vsettyp_noalias(struct Dee_function_generator *__restrict self,
+                                       DeeTypeObject *type) {
+	struct Dee_memstate *state;
+	struct Dee_memloc *vtop;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	state = self->fg_state;
+	if unlikely(state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	vtop = Dee_memstate_vtop(state);
+	ASSERTF(vtop->ml_vmorph == MEMLOC_VMORPH_DIRECT,
+	        "Can only assign types to direct values");
+	if (vtop->ml_valtyp != type) {
+#ifndef NDEBUG
+		struct Dee_memloc *alias;
+		Dee_memstate_foreach(alias, state) {
+			ASSERT(alias == vtop || !Dee_memloc_sameloc(alias, vtop));
+		}
+		Dee_memstate_foreach_end;
+#endif /* !NDEBUG */
+		vtop->ml_valtyp = type;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 
 /* Force vtop to one of `MEMLOC_VMORPH_BOOL_*' (only use if you need a bool
@@ -713,7 +742,7 @@ Dee_function_generator_vmorphbool(struct Dee_function_generator *__restrict self
 			goto err;
 		break;
 	}
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALLOP_CC_NEGINT, 1))
+	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALL_CC_NEGINT, 1))
 		goto err;
 	vtop = Dee_function_generator_vtop(self);
 	ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
@@ -1083,7 +1112,7 @@ Dee_function_generator_vpushinit_varargs(struct Dee_function_generator *__restri
 		goto err; /* argc-co_argc_max, argv */
 	if unlikely(Dee_function_generator_vdelta(self, (ptrdiff_t)co_argc_max * sizeof(DeeObject *)))
 		goto err; /* argc-co_argc_max, argv+co_argc_max */
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeTuple_NewVector, VCALLOP_CC_OBJECT, 2))
+	if unlikely(Dee_function_generator_vcallapi(self, &DeeTuple_NewVector, VCALL_CC_OBJECT, 2))
 		goto err; /* varargs */
 	return 0;
 err:
@@ -1101,7 +1130,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpushinit_stdout(struct Dee_function_generator *__restrict self) {
 	int result = Dee_function_generator_vpush_imm32(self, DEE_STDOUT);
 	if likely(result == 0)
-		result = Dee_function_generator_vcallapi(self, &DeeFile_GetStd, VCALLOP_CC_OBJECT, 1);
+		result = Dee_function_generator_vcallapi(self, &DeeFile_GetStd, VCALL_CC_OBJECT, 1);
 	return result;
 }
 
@@ -1301,7 +1330,7 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 			Dee_memstate_incref(saved_state);
 			temp = Dee_function_generator_state_dounshare(self);
 			if likely(temp == 0)
-				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALLOP_CC_EXCEPT, 0);
+				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
 			Dee_memstate_decref(self->fg_state);
 			self->fg_state = saved_state;
 			HA_printf(".Ldone:\n");
@@ -1321,7 +1350,7 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 			Dee_host_symbol_setsect(cold_Lerr_no_active_exception, cold);
 			temp = Dee_function_generator_state_dounshare(self);
 			if likely(temp == 0)
-				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALLOP_CC_EXCEPT, 0);
+				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
 			HA_printf(".section .text\n");
 			self->fg_sect = text;
 			Dee_memstate_decref(self->fg_state);
@@ -1348,7 +1377,7 @@ Dee_function_generator_gunbound_member(struct Dee_function_generator *__restrict
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 		goto err;
-	return Dee_function_generator_vcallapi(self, api_function, VCALLOP_CC_EXCEPT, 2);
+	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_EXCEPT, 2);
 err:
 	return -1;
 }
@@ -1396,7 +1425,7 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 			goto err;
 		if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 			goto err;
-		return Dee_function_generator_vcallapi(self, &DeeClass_GetMember, VCALLOP_CC_OBJECT, 2);
+		return Dee_function_generator_vcallapi(self, &DeeClass_GetMember, VCALL_CC_OBJECT, 2);
 	}
 
 	/* Perform the inline equivalent of `DeeClass_GetMember()':
@@ -1530,7 +1559,7 @@ Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict s
 	                                        (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE))
 	                                       ? (void const *)&DeeClass_GetMemberSafe
 	                                       : (void const *)&DeeClass_GetMember,
-	                                       VCALLOP_CC_OBJECT, 2);
+	                                       VCALL_CC_OBJECT, 2);
 err:
 	return -1;
 }
@@ -1582,7 +1611,7 @@ Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict 
 	    (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE)) {
 		if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 			goto err;
-		if unlikely(Dee_function_generator_vcallapi(self, &DeeClass_BoundMemberSafe, VCALLOP_CC_NEGINT, 2))
+		if unlikely(Dee_function_generator_vcallapi(self, &DeeClass_BoundMemberSafe, VCALL_CC_NEGINT, 2))
 			goto err;
 		vtop = Dee_function_generator_vtop(self);
 		ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
@@ -1629,7 +1658,7 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 			goto err; /* type, this */
 		if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 			goto err; /* type, this, addr */
-		return Dee_function_generator_vcallapi(self, &DeeInstance_GetMember, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeInstance_GetMember, VCALL_CC_OBJECT, 3);
 	}
 
 	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
@@ -1761,7 +1790,7 @@ Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict s
 	return Dee_function_generator_vcallapi(self,
 	                                       safe ? (void const *)&DeeInstance_GetMemberSafe
 	                                            : (void const *)&DeeInstance_GetMember,
-	                                       VCALLOP_CC_OBJECT, 3);
+	                                       VCALL_CC_OBJECT, 3);
 err:
 	return -1;
 }
@@ -1808,9 +1837,9 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 		if (Dee_memloc_isnull(value_loc)) {
 			if unlikely(Dee_function_generator_vpop(self))
 				goto err; /* type, this, addr */
-			return Dee_function_generator_vcallapi(self, &DeeInstance_DelMember, VCALLOP_CC_INT, 3);
+			return Dee_function_generator_vcallapi(self, &DeeInstance_DelMember, VCALL_CC_INT, 3);
 		}
-		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMember, VCALLOP_CC_INT, 4);
+		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMember, VCALL_CC_INT, 4);
 	} else {
 		struct Dee_memloc *value_loc;
 		value_loc = Dee_function_generator_vtop(self);
@@ -1909,12 +1938,12 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 		return Dee_function_generator_vcallapi(self,
 		                                       safe ? (void const *)&DeeInstance_DelMemberSafe
 		                                            : (void const *)&DeeInstance_DelMember,
-		                                       VCALLOP_CC_INT, 3);
+		                                       VCALL_CC_INT, 3);
 	}
 	return Dee_function_generator_vcallapi(self,
 	                                       safe ? (void const *)&DeeInstance_SetMemberSafe
 	                                            : (void const *)&DeeInstance_SetMember,
-	                                       VCALLOP_CC_INT, 4);
+	                                       VCALL_CC_INT, 4);
 err:
 	return -1;
 }
@@ -1958,7 +1987,7 @@ impl_vassert_type_exact(struct Dee_function_generator *__restrict self) {
 		 * >> }
 		 */
 	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALLOP_CC_INT, 2);
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALL_CC_INT, 2);
 }
 
 /* obj, type -> N/A */
@@ -1972,7 +2001,7 @@ impl_vassert_type(struct Dee_function_generator *__restrict self) {
 		 * >> }
 		 */
 	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALLOP_CC_INT, 2);
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALL_CC_INT, 2);
 }
 
 
@@ -1985,11 +2014,25 @@ Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__res
 		return err_illegal_stack_effect();
 	vtop_type = Dee_memloc_typeof(Dee_function_generator_vtop(self));
 	if (vtop_type != NULL) {
-		if (vtop_type != type) {
+		struct Dee_memloc *vtop;
+		if (vtop_type == type)
+			return 0;
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
 			                       "Expected exact instance of `%r', but got a `%r' object",
 			                       type, vtop_type);
 		}
+		/* Other pieces of code are allowed to assume that in case of a compile-time
+		 * constant, the produced type assertions will ensure that constants always
+		 * have the proper types. As such, we mustn't leave the value be a constant,
+		 * so-as not to cause those assertions to fail. */
+		vtop = Dee_function_generator_vtop(self);
+		if (vtop->ml_type == MEMLOC_TYPE_CONST) {
+			if unlikely(Dee_function_generator_greg(self, vtop, NULL))
+				goto err;
+		}
+		ASSERT(vtop->ml_type != MEMLOC_TYPE_CONST);
+		vtop->ml_valtyp = NULL;
 		return 0;
 	}
 	if unlikely(Dee_function_generator_vdirect(self, 1))
@@ -2037,11 +2080,26 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 		return 0; /* Special case: abstract types don't need to be checked! */
 	vtop_type = Dee_memloc_typeof(Dee_function_generator_vtop(self));
 	if (vtop_type != NULL) {
-		if (!DeeType_InheritsFrom(vtop_type, type)) {
+		struct Dee_memloc *vtop;
+		if (DeeType_InheritsFrom(vtop_type, type))
+			return 0;
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,
 			                       "Expected instance of `%r', but got a `%r' object",
 			                       type, vtop_type);
 		}
+
+		/* Other pieces of code are allowed to assume that in case of a compile-time
+		 * constant, the produced type assertions will ensure that constants always
+		 * have the proper types. As such, we mustn't leave the value be a constant,
+		 * so-as not to cause those assertions to fail. */
+		vtop = Dee_function_generator_vtop(self);
+		if (vtop->ml_type == MEMLOC_TYPE_CONST) {
+			if unlikely(Dee_function_generator_greg(self, vtop, NULL))
+				goto err;
+		}
+		ASSERT(vtop->ml_type != MEMLOC_TYPE_CONST);
+		vtop->ml_valtyp = NULL;
 		return 0;
 	}
 	if unlikely(Dee_function_generator_vdirect(self, 1))
@@ -2250,7 +2308,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 		if unlikely(Dee_function_generator_vdup(self))
 			goto err; /* iter, iter */
 	}
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_IterNext, VCALLOP_CC_RAWINT, 1))
+	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_IterNext, VCALL_CC_RAWINT, 1))
 		goto err; /* [if(!always_pop_iterator) iter], UNCHECKED(elem) */
 
 	/* TODO: If this jump might be the result of infinite loops,
@@ -2874,7 +2932,7 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
                                             unsigned int cc, Dee_vstackaddr_t argc) {
 	switch (cc) {
 
-	case VCALLOP_CC_OBJECT:
+	case VCALL_CC_OBJECT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
@@ -2883,14 +2941,14 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 			goto err; /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckobj(self); /* result */
 
-	case VCALLOP_CC_RAWINT:
+	case VCALL_CC_RAWINT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
 			goto err; /* UNCHECKED(result), [args...] */
 		break;
 
-	case VCALLOP_CC_BOOL:
+	case VCALL_CC_BOOL:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		ASSERT(Dee_function_generator_vtop(self)->ml_vmorph == MEMLOC_VMORPH_DIRECT);
@@ -2899,18 +2957,18 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 			goto err; /* UNCHECKED(result), [args...] */
 		break;
 
-	case VCALLOP_CC_RAWINT_KEEPARGS:
+	case VCALL_CC_RAWINT_KEEPARGS:
 		return Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0);
 
-	case VCALLOP_CC_VOID:
+	case VCALL_CC_VOID:
 		break;
 
-	case VCALLOP_CC_EXCEPT:
+	case VCALL_CC_EXCEPT:
 		if unlikely(Dee_function_generator_vpopmany(self, argc))
 			goto err;
 		return Dee_function_generator_gjmp_except(self);
 
-	case VCALLOP_CC_INT:
+	case VCALL_CC_INT:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
@@ -2919,7 +2977,7 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 			goto err; /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckint(self); /* - */
 
-	case VCALLOP_CC_NEGINT: {
+	case VCALL_CC_NEGINT: {
 		struct Dee_memloc *loc;
 		struct Dee_memloc zero;
 		struct Dee_except_exitinfo *info;
@@ -2943,7 +3001,7 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		__builtin_unreachable();
 	}	break;
 
-	case VCALLOP_CC_M1INT: {
+	case VCALL_CC_M1INT: {
 		struct Dee_memloc *loc;
 		struct Dee_memloc minus_one;
 		struct Dee_except_exitinfo *info;
@@ -2967,12 +3025,12 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		__builtin_unreachable();
 	}	break;
 
-	case VCALLOP_CC_MORPH_INTPTR:
-	case VCALLOP_CC_MORPH_UINTPTR:
+	case VCALL_CC_MORPH_INTPTR:
+	case VCALL_CC_MORPH_UINTPTR:
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		ASSERT(Dee_function_generator_vtop(self)->ml_vmorph == MEMLOC_VMORPH_DIRECT);
-		Dee_function_generator_vtop(self)->ml_vmorph = cc == VCALLOP_CC_MORPH_UINTPTR
+		Dee_function_generator_vtop(self)->ml_vmorph = cc == VCALL_CC_MORPH_UINTPTR
 		                                               ? MEMLOC_VMORPH_UINT
 		                                               : MEMLOC_VMORPH_INT;
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
@@ -2989,7 +3047,7 @@ err:
 }
 
 /* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function'.
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'.
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3017,7 +3075,7 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 	/* Flush registers that don't appear in the top `argc' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	if unlikely(Dee_function_generator_gflushregs(self, argc, cc == VCALLOP_CC_EXCEPT))
+	if unlikely(Dee_function_generator_gflushregs(self, argc, cc == VCALL_CC_EXCEPT))
 		goto err_argv;
 
 	/* Check if any of the argument registers got clobbered by register usage during flushing. */
@@ -3054,7 +3112,7 @@ err:
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function' 
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function' 
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3091,7 +3149,7 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 	/* Flush registers that don't appear in the top `argc' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	if unlikely(Dee_function_generator_gflushregs(self, argc + 1, cc == VCALLOP_CC_EXCEPT))
+	if unlikely(Dee_function_generator_gflushregs(self, argc + 1, cc == VCALL_CC_EXCEPT))
 		goto err_argv;
 	func = *Dee_function_generator_vtop(self);
 	if unlikely(Dee_function_generator_vpop(self))
@@ -3168,9 +3226,9 @@ err:
 }
 
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
- * do the extra trailing checks needed to turn that call into `VCALLOP_CC_OBJECT'
- * The difference to directly passing `VCALLOP_CC_OBJECT' is that using this 2-step
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
+ * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  *
  * However: be careful not to do anything that might throw additional exceptions!
@@ -3185,20 +3243,27 @@ Dee_function_generator_vcheckobj(struct Dee_function_generator *__restrict self)
 		return err_illegal_stack_effect();
 	loc = Dee_function_generator_vtop(self);
 	ASSERTF(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph), "non-sensical call: vcheckobj() on non-direct value");
-	if unlikely(Dee_function_generator_gjz_except(self, loc))
-		goto err;
+	if (loc->ml_flags & MEMLOC_F_OBJCHECKED) {
+		/* Check already happend out-of-band somewhere */
+		loc->ml_flags &= ~MEMLOC_F_OBJCHECKED;
+	} else {
+		if unlikely(Dee_function_generator_gjz_except(self, loc))
+			goto err;
+	}
 	/* Clear the NOREF flag now that we know the return value to be non-NULL */
 	loc = Dee_function_generator_vtop(self);
-	ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-	loc->ml_flags &= ~MEMLOC_F_NOREF;
+	if (loc->ml_type != MEMLOC_TYPE_CONST) {
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		loc->ml_flags &= ~MEMLOC_F_NOREF;
+	}
 	return 0;
 err:
 	return -1;
 }
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
- * do the extra trailing checks needed to turn that call into `VCALLOP_CC_INT'
- * The difference to directly passing `VCALLOP_CC_INT' is that using this 2-step
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
+ * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  * NOTE: This function pops one element from the V-stack.
  *
@@ -3260,13 +3325,13 @@ Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__r
 	DeeSlab_ENUMERATE(LOCAL_checkfit);
 #undef LOCAL_checkfit
 	if (api_function != NULL) {
-		result = Dee_function_generator_vcallapi(self, api_function, VCALLOP_CC_OBJECT, 0);
+		result = Dee_function_generator_vcallapi(self, api_function, VCALL_CC_OBJECT, 0);
 	} else
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 	{
 		result = Dee_function_generator_vpush_immSIZ(self, alloc_size);
 		if likely(result == 0)
-			result = Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALLOP_CC_OBJECT, 1);
+			result = Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1);
 	}
 	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
 	ASSERT(result != 0 || !(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));

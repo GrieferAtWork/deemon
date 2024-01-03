@@ -393,7 +393,9 @@ EXPORTS
 	DeeList_AppendSequence@8=_DeeList_AppendSequence@8
 	DeeList_AppendVector@12=_DeeList_AppendVector@12
 	DeeList_Clear@4=_DeeList_Clear@4
+	DeeList_ConcatInherited@8=_DeeList_ConcatInherited@8
 	DeeList_Erase@12=_DeeList_Erase@12
+	DeeList_ExtendInherited@12=_DeeList_ExtendInherited@12
 	DeeList_FreeUninitialized@4=_DeeList_FreeUninitialized@4
 	DeeList_FromIterator@4=_DeeList_FromIterator@4
 	DeeList_FromSequence@4=_DeeList_FromSequence@4

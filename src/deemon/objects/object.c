@@ -1391,16 +1391,8 @@ again:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-object_ctor(DeeObject *__restrict UNUSED(self)) {
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-object_copy_ctor(DeeObject *__restrict UNUSED(self),
-                 DeeObject *__restrict UNUSED(other)) {
-	return 0;
-}
+INTDEF int DCALL none_i1(void *UNUSED(b));
+INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 object_any_ctor(DeeObject *__restrict UNUSED(self),
@@ -2558,9 +2550,9 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&object_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&object_copy_ctor,
-				/* .tp_deep_ctor = */ (dfunptr_t)&object_copy_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)&none_i1,
+				/* .tp_copy_ctor = */ (dfunptr_t)&none_i2,
+				/* .tp_deep_ctor = */ (dfunptr_t)&none_i2,
 				/* .tp_any_ctor  = */ (dfunptr_t)&object_any_ctor,
 				TYPE_FIXED_ALLOCATOR_S(DeeObject)
 			}
@@ -4797,9 +4789,10 @@ free_reftracker(struct Dee_reftracker *__restrict self) {
 }
 
 #define DID_DEFINE_DEEOBJECT_FREETRACKER
-PUBLIC NONNULL((1)) void DCALL
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject *DCALL
 DeeObject_FreeTracker(DeeObject *__restrict self) {
 	free_reftracker(self->ob_trace);
+	return self;
 }
 
 PRIVATE WUNUSED NONNULL((1)) struct Dee_reftracker *DCALL
@@ -5315,10 +5308,10 @@ PUBLIC ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 
 #ifndef DID_DEFINE_DEEOBJECT_FREETRACKER
 #define DID_DEFINE_DEEOBJECT_FREETRACKER
-PUBLIC NONNULL((1)) void /* Defined only for binary compatibility */
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DeeObject * /* Defined only for binary compatibility */
 (DCALL DeeObject_FreeTracker)(DeeObject *__restrict self) {
 	COMPILER_IMPURE();
-	(void)self;
+	return self;
 }
 #endif /* !DID_DEFINE_DEEOBJECT_FREETRACKER */
 

@@ -740,10 +740,18 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 
 	cur_locc = Dee_except_exitinfo_locc(curinfo);
 	new_locc = Dee_except_exitinfo_locc(newinfo);
-	while (cur_locc && !Dee_except_exitinfo_locv(curinfo, cur_locc - 1))
+	while (cur_locc) {
+		size_t cur_locX = Dee_except_exitinfo_loci_revstack(curinfo, cur_locc - 1);
+		if (Dee_except_exitinfo_locv(curinfo, cur_locX))
+			break;
 		--cur_locc;
-	while (new_locc && !Dee_except_exitinfo_locv(curinfo, new_locc - 1))
+	}
+	while (new_locc) {
+		size_t new_locX = Dee_except_exitinfo_loci_revstack(newinfo, new_locc - 1);
+		if (Dee_except_exitinfo_locv(newinfo, new_locX))
+			break;
 		--new_locc;
+	}
 
 	/* Push locations used by the old state onto the V-stack (so they aren't clobbered). */
 	max_locc = MAX(cur_locc, new_locc);

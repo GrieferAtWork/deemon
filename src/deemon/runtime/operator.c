@@ -681,7 +681,7 @@ do_invoke_alloc_copy:
 			goto err_r;
 		/* Begin tracking the returned object. */
 		if (object_type->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 		return result;
 	}
 err_not_implemented:
@@ -697,7 +697,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_Decref(object_type);
+	Dee_Decref_unlikely(object_type);
 	goto err;
 err_no_keywords:
 	err_keywords_ctor_not_accepted(object_type, kw);

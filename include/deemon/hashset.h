@@ -58,6 +58,8 @@ struct Dee_hashset_object {
 	Dee_WEAKREF_SUPPORT
 };
 
+#define DeeHashSet_EmptyItems ((struct Dee_hashset_item const *)DeeDict_EmptyItems)
+
 /* The main `HashSet' container class. */
 DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_Check(ob)      DeeObject_InstanceOf(ob, &DeeHashSet_Type)

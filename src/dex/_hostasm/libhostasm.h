@@ -25,6 +25,8 @@
 
 #include <deemon/api.h>
 #include <deemon/code.h>
+#include <deemon/object.h>
+#include <deemon/objmethod.h> /* Dee_cmethod_t */
 
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
@@ -168,6 +170,7 @@ union Dee_memloc_value {
 struct Dee_memloc {
 #define MEMLOC_F_NORMAL        0x00
 #define MEMLOC_F_NOREF         0x01 /* Slot contains no reference (should always be set when `ml_vmorph != MEMLOC_VMORPH_DIRECT') */
+#define MEMLOC_F_OBJCHECKED    0x02 /* Used internally to get `Dee_function_generator_vcheckobj()' to be a no-op. */
 #define MEMLOC_M_LOCAL_BSTATE  0xc0 /* Mask for the bound-ness of a local variable */
 #define MEMLOC_F_LOCAL_UNKNOWN 0x00 /* Local variable bound-ness is unknown */
 #define MEMLOC_F_LOCAL_BOUND   0x40 /* Local variable is bound */
@@ -925,6 +928,7 @@ struct Dee_function_assembler {
 #define DEE_FUNCTION_ASSEMBLER_F_NOROINLINE 0x0004 /* Don't inline references to already-bound class members/globals, even if the location is `Dee_CLASS_ATTRIBUTE_FREADONLY' / `Dee_MODSYM_FREADONLY' */
 #define DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL 0x0008 /* Don't delete local variables as early as possible (when set, code behaves more closely to original byte-code, but at a significant overhead) */
 #define DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE 0x0010 /* Don't use RTTI from dex modules and the deemon core for the purpose of figuring out object types (set to work around buggy RTTI) */
+#define DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR 0x0020 /* Don't exit early when illegal operations are detected. Instead, generate code that produces the correct runtime error. */
 	uint16_t                      fa_flags;        /* [const] Code generation flags (set of `DEE_FUNCTION_ASSEMBLER_F_*'). */
 	Dee_ulid_t                    fa_localc;       /* [const][== fa_code->co_localc] */
 	Dee_lid_t                     fa_xlocalc;      /* [const][== fa_code->co_localc + MEMSTATE_XLOCAL_MINCOUNT + (fa_code->co_argc_max - fa_code->co_argc_min)] */
@@ -1070,6 +1074,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_regind(struct
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset);                                                /* (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta);                        /* (MEMLOC_F_NOREF) */
 #define Dee_function_generator_vpush_addr(self, addr)     Dee_function_generator_vpush_const(self, (DeeObject *)(void *)(addr))
+#define Dee_function_generator_vpush_NULL(self)           Dee_function_generator_vpush_addr(self, NULL)
 #define Dee_function_generator_vpush_imm8(self, imm8)     Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))
 #define Dee_function_generator_vpush_Simm8(self, Simm8)   Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int8_t)(Simm8))
 #define Dee_function_generator_vpush_imm16(self, imm16)   Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(uint16_t)(imm16))
@@ -1078,6 +1083,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(str
 #define Dee_function_generator_vpush_Simm32(self, Simm32) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int32_t)(Simm32))
 #define Dee_function_generator_vpush_immSIZ(self, immSIZ) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(size_t)(immSIZ))
 #define Dee_function_generator_vpush_immINT(self, immINT) Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int)(immINT))
+#define Dee_function_generator_vpush_WEAKREF_SUPPORT_INIT(self) Dee_function_generator_vpush_NULL(self)
+#ifndef CONFIG_NO_THREADS
+#define Dee_function_generator_vpush_ATOMIC_RWLOCK_INIT(self) Dee_function_generator_vpush_NULL(self)
+#endif /* !CONFIG_NO_THREADS */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_aid_t aid); /* `instr' is needed for `libhostasm_rt_err_unbound_arg' */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self, Dee_aid_t aid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restrict self, Dee_aid_t aid);
@@ -1093,8 +1102,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct D
 
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self, DeeTypeObject *type);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vsettyp_noalias(struct Dee_function_generator *__restrict self, DeeTypeObject *type);
 
 /* Low-level deemon operator invocation. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorphbool(struct Dee_function_generator *__restrict self); /* Force vtop to one of `MEMLOC_VMORPH_BOOL_*' (only use if you need a bool morph, and `Dee_function_generator_vopbool()' doesn't give you one) */
@@ -1137,6 +1148,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);  /* value -> int */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);  /* value -> string */
 
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
+Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
+                                DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc);
+
 /*       [args...]  ->  result       (flags == VOP_F_PUSHRES)
  *       [args...]  ->  N/A          (flags == VOP_F_NORMAL)
  * this, [args...]  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
@@ -1144,7 +1159,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_f
  *
  * For `VOP_F_INPLACE' the first elem of args is "[intout] DREF DeeObject **",
  * and should point to "this". Note however that here, "this" is only used for
- * the purposes of compile-time type deduction, meaning a copy is also OK. */
+ * the purposes of compile-time type deduction, meaning an alias is also OK. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
                            uint16_t operator_name, Dee_vstackaddr_t argc,
@@ -1158,7 +1173,8 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
  * this, p_this, args  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
  * this, p_this, args  ->  this         (flags == VOP_F_INPLACE)
  * Same as `Dee_function_generator_vop()', but arguments are given as via what
- * should be a tuple-object (the type is asserted by this function) in vtop. */
+ * should be a tuple-object (the type is asserted by this function) in vtop.
+ * NOTE: A tuple-type check is only generated if DEE_FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_voptuple(struct Dee_function_generator *__restrict self,
                                 uint16_t operator_name, unsigned int flags);
@@ -1171,6 +1187,12 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_voptypeof(struct De
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self, bool ref);          /* ob -> ob.class */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuperof(struct Dee_function_generator *__restrict self);                    /* ob -> ob.super */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self);                      /* ob, type -> ob as type */
+
+/* Helpers to perform certain operations. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self);          /* instance, type -> instance */
+#define Dee_function_generator_vcall_DeeObject_Init_c(self, type)               \
+	(unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)(type))) || \
+	 unlikely(Dee_function_generator_vcall_DeeObject_Init(self)))
 
 /* Helpers for accessing C-level "struct type_member". NOTE: These don't do type assertions! */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restrict self, DeeTypeObject *type, struct Dee_type_member const *__restrict desc, bool ref); /* this -> value */
@@ -1340,7 +1362,7 @@ Dee_function_generator_vsetloc(struct Dee_function_generator *__restrict self,
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vret(struct Dee_function_generator *__restrict self);
 
 /* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function'.
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'.
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1349,22 +1371,22 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t argc);
 #define Dee_function_generator_vcallapi(self, api_function, cc, argc) \
 	Dee_function_generator_vcallapi_(self, (void const *)(api_function), cc, argc)
-#define VCALLOP_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [...]]);         [args...] -> result   ## Error if NULL/zero, also MEMLOC_F_NOREF is clear */
-#define VCALLOP_CC_INT                1 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALLOP_CC_INTPTR             1 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALLOP_CC_RAWINT             2 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALLOP_CC_RAWINTPTR          2 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALLOP_CC_RAWINT_KEEPARGS    3 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALLOP_CC_RAWINTPTR_KEEPARGS 3 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALLOP_CC_NEGINT             4 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALLOP_CC_NEGINTPTR          4 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALLOP_CC_M1INT              5 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALLOP_CC_M1INTPTR           5 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALLOP_CC_VOID               6 /* void      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A */
-#define VCALLOP_CC_EXCEPT             7 /* ?         (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Always an error */
-#define VCALLOP_CC_BOOL               8 /* bool      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
-#define VCALLOP_CC_MORPH_INTPTR       9 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
-#define VCALLOP_CC_MORPH_UINTPTR     10 /* uintptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
+#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [...]]);         [args...] -> result   ## Error if NULL/zero, also MEMLOC_F_NOREF is clear */
+#define VCALL_CC_INT                1 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_INTPTR             1 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_RAWINT             2 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR          2 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINT_KEEPARGS    3 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR_KEEPARGS 3 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_NEGINT             4 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_NEGINTPTR          4 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_M1INT              5 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_M1INTPTR           5 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_VOID               6 /* void      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A */
+#define VCALL_CC_EXCEPT             7 /* ?         (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Always an error */
+#define VCALL_CC_BOOL               8 /* bool      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_INTPTR       9 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_UINTPTR     10 /* uintptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
 
 
 /* [args...], funcaddr -> ...
@@ -1372,7 +1394,7 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
  * there is an additional item "funcaddr" that contains the (possibly) runtime-
  * evaluated address of the function that should be called. Also note that said
  * "funcaddr" location is *always* popped.
- * @param: cc: One of `VCALLOP_CC_*', describing the calling-convention of `api_function' 
+ * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function' 
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
@@ -1380,9 +1402,9 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
                                    unsigned int cc, Dee_vstackaddr_t argc);
 
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
- * do the extra trailing checks needed to turn that call into `VCALLOP_CC_OBJECT'
- * The difference to directly passing `VCALLOP_CC_OBJECT' is that using this 2-step
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
+ * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  *
  * However: be careful not to do anything that might throw additional exceptions!
@@ -1391,9 +1413,9 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcheckobj(struct Dee_function_generator *__restrict self);
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALLOP_CC_RAWINT',
- * do the extra trailing checks needed to turn that call into `VCALLOP_CC_INT'
- * The difference to directly passing `VCALLOP_CC_INT' is that using this 2-step
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+ * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
+ * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
  * NOTE: This function pops one element from the V-stack.
  *
@@ -1729,7 +1751,23 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
  * an instance of the type at the same time, which must *NOT* affect the result
  * of the operator being invoked (iow: `List.operator +' is not constexpr). */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self, uint16_t name);
+DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
+                            uint16_t name);
+
+/* Check if C-method attached to objects are constant expressions. */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsGetMethodConstexpr(DeeTypeObject const *__restrict self,
+                             Dee_getmethod_t getter);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
+                               Dee_boundmethod_t bound);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
+DeeType_IsObjMethodConstexpr(DeeTypeObject const *__restrict self,
+                             Dee_objmethod_t method);
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
+DeeCMethod_IsConstExpr(Dee_cmethod_t method,
+                       DeeTypeObject const *type,
+                       struct Dee_module_object const *mod);
 
 
 

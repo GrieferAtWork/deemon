@@ -162,12 +162,84 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 		src_loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;
 	}
 
-	/* Prefixed location must contain a reference */
-	if (src_loc->ml_flags & MEMLOC_F_NOREF) {
-		DO(Dee_function_generator_gincref(self, src_loc, 1));
-		src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+	if (src_loc->ml_type == MEMLOC_TYPE_CONST) {
+		/* TODO: Special handling so we don't loose info about constants:
+		 * >> local x = 42;
+		 * >> x += 10;      // "x" can still be a constant after this!
+		 */
 	}
-	DO(Dee_function_generator_gflush(self, src_loc));
+
+	/* Prefixed location must contain a reference and not be aliased. */
+	{
+		struct Dee_memloc *alias;
+		struct Dee_memloc *alias_without_reference = NULL; /* Alias that needs a reference */
+		bool got_alias = false; /* There *are* aliases. */
+		Dee_memstate_foreach(alias, state) {
+			if (alias == src_loc)
+				continue;
+			if (!Dee_memloc_sameloc(alias, src_loc))
+				continue;
+			/* Got an alias! */
+			got_alias = true;
+			if (alias->ml_flags & MEMLOC_F_NOREF) {
+				alias_without_reference = alias;
+			} else if (src_loc->ml_flags & MEMLOC_F_NOREF) {
+				/* Steal reference from alias */
+				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+				alias->ml_flags |= MEMLOC_F_NOREF;
+				alias_without_reference = alias;
+			}
+		}
+		Dee_memstate_foreach_end;
+		if (got_alias) {
+			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
+				/* There are aliases, but no-one is holding a reference.
+				 * This can happen if the location is a constant, in which
+				 * case we only need to force the prefixed location to be
+				 * a reference. */
+				DO(Dee_function_generator_gincref(self, src_loc, 1));
+				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+			} else if (alias_without_reference) {
+				/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
+				ASSERT(alias_without_reference->ml_flags & MEMLOC_F_NOREF);
+				DO(Dee_function_generator_gincref(self, alias_without_reference, 1));
+				alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
+			}
+			if (src_loc->ml_type != MEMLOC_TYPE_HSTACKIND ||
+			    src_loc->ml_value.v_hstack.s_off != 0)
+				goto flush_src_loc; /* Flushing here automatically unshares */
+
+			/* Must generate code to move the value into a second, distinct stack location. */
+			cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
+			if (cfa_offset != (uintptr_t)-1) {
+				if unlikely(Dee_function_generator_gmov_loc2hstackind(self, src_loc, cfa_offset))
+					goto err;
+			} else {
+				if unlikely(Dee_function_generator_ghstack_pushloc(self, src_loc))
+					goto err;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+				cfa_offset = state->ms_host_cfa_offset;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+				cfa_offset = state->ms_host_cfa_offset - HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			}
+
+			/* Note how we *don't* update any of the location's aliases here.
+			 * From this point forth, the location doesn't have *any* aliases! */
+			src_loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+			src_loc->ml_value.v_hstack.s_cfa = cfa_offset;
+			src_loc->ml_value.v_hstack.s_off = 0;
+		} else {
+			/* No aliases exist, so there's no need to force a distinct location. */
+			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
+				DO(Dee_function_generator_gincref(self, src_loc, 1));
+				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+			}
+flush_src_loc:
+			/* Flushing here automatically unshares */
+			DO(Dee_function_generator_gflush(self, src_loc));
+		}
+	}
 	ASSERT(!(src_loc->ml_flags & MEMLOC_F_NOREF));
 	ASSERT(src_loc->ml_type == MEMLOC_TYPE_HSTACKIND);
 	ASSERT(src_loc->ml_value.v_hstack.s_off == 0);
@@ -196,35 +268,35 @@ perform_inplace_math_operation_with_vtop_addr(struct Dee_function_generator *__r
 	case ASM_POW: /* pow PREFIX, pop */
 		switch (prefix_opcode) {
 		case ASM_ADD: /* add PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAdd, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAdd, VCALL_CC_INT, 2);
 		case ASM_SUB: /* sub PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSub, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSub, VCALL_CC_INT, 2);
 		case ASM_MUL: /* mul PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMul, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMul, VCALL_CC_INT, 2);
 		case ASM_DIV: /* div PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDiv, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDiv, VCALL_CC_INT, 2);
 		case ASM_MOD: /* mod PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMod, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMod, VCALL_CC_INT, 2);
 		case ASM_SHL: /* shl PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShl, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShl, VCALL_CC_INT, 2);
 		case ASM_SHR: /* shr PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShr, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShr, VCALL_CC_INT, 2);
 		case ASM_AND: /* and PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAnd, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAnd, VCALL_CC_INT, 2);
 		case ASM_OR:  /* or  PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOr, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOr, VCALL_CC_INT, 2);
 		case ASM_XOR: /* xor PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXor, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXor, VCALL_CC_INT, 2);
 		case ASM_POW: /* pow PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplacePow, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplacePow, VCALL_CC_INT, 2);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();
 
 	case ASM_INC: /* inc PREFIX */
-		return Dee_function_generator_vcallapi(self, &DeeObject_Inc, VCALLOP_CC_INT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeObject_Inc, VCALL_CC_INT, 1);
 	case ASM_DEC: /* dec PREFIX */
-		return Dee_function_generator_vcallapi(self, &DeeObject_Dec, VCALLOP_CC_INT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeObject_Dec, VCALL_CC_INT, 1);
 
 	case ASM_ADD_SIMM8:   /* add PREFIX, $<Simm8> */
 	case ASM_SUB_SIMM8:   /* sub PREFIX, $<Simm8> */
@@ -235,15 +307,15 @@ perform_inplace_math_operation_with_vtop_addr(struct Dee_function_generator *__r
 		DO(Dee_function_generator_vpush_Simm8(self, Simm8));
 		switch (prefix_opcode) {
 		case ASM_ADD_SIMM8: /* add PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddInt8, VCALL_CC_INT, 2);
 		case ASM_SUB_SIMM8: /* sub PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubInt8, VCALL_CC_INT, 2);
 		case ASM_MUL_SIMM8: /* mul PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMulInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMulInt8, VCALL_CC_INT, 2);
 		case ASM_DIV_SIMM8: /* div PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDivInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDivInt8, VCALL_CC_INT, 2);
 		case ASM_MOD_SIMM8: /* mod PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceModInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceModInt8, VCALL_CC_INT, 2);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();
@@ -255,9 +327,9 @@ perform_inplace_math_operation_with_vtop_addr(struct Dee_function_generator *__r
 		DO(Dee_function_generator_vpush_imm8(self, imm8));
 		switch (prefix_opcode) {
 		case ASM_SHL_IMM8: /* shl PREFIX, $<imm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShlUInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShlUInt8, VCALL_CC_INT, 2);
 		case ASM_SHR_IMM8: /* shr PREFIX, $<imm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShrUInt8, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShrUInt8, VCALL_CC_INT, 2);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();
@@ -272,15 +344,15 @@ perform_inplace_math_operation_with_vtop_addr(struct Dee_function_generator *__r
 		DO(Dee_function_generator_vpush_imm32(self, imm32));
 		switch (prefix_opcode) {
 		case ASM_ADD_IMM32: /* add PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddUInt32, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddUInt32, VCALL_CC_INT, 2);
 		case ASM_SUB_IMM32: /* sub PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubUInt32, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubUInt32, VCALL_CC_INT, 2);
 		case ASM_AND_IMM32: /* and PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAndUInt32, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAndUInt32, VCALL_CC_INT, 2);
 		case ASM_OR_IMM32:  /* or  PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOrUInt32, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOrUInt32, VCALL_CC_INT, 2);
 		case ASM_XOR_IMM32: /* xor PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXorUInt32, VCALLOP_CC_INT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXorUInt32, VCALL_CC_INT, 2);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();
@@ -384,12 +456,12 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 				} else if (WSTR_LENGTH(utf8) == 1) {
 					/* Special case: printing a single character allows us to use `DeeFile_Putc()' */
 					DO(Dee_function_generator_vpush_immINT(self, utf8[0]));                         /* [File], File, ch */
-					DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALLOP_CC_RAWINT, 2)); /* [File], status */
+					DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2)); /* [File], status */
 					DO(Dee_function_generator_vcheckerr(self, GETC_ERR));                           /* [File] */
 				} else {
 					DO(Dee_function_generator_vpush_addr(self, utf8));                                    /* [File], File, utf8 */
 					DO(Dee_function_generator_vpush_immSIZ(self, WSTR_LENGTH(utf8)));                     /* [File], File, utf8, length */
-					DO(Dee_function_generator_vcallapi(self, &DeeFile_WriteAll, VCALLOP_CC_M1INTPTR, 3)); /* [File], print_status */
+					DO(Dee_function_generator_vcallapi(self, &DeeFile_WriteAll, VCALL_CC_M1INTPTR, 3)); /* [File], print_status */
 					DO(Dee_function_generator_vpop(self));                                                /* [File] */
 				}
 				goto handle_print_after_and_pop_file;
@@ -413,18 +485,18 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		}
 		DO(Dee_function_generator_vpush_addr(self, (void const *)&DeeFile_WriteAll));  /* [File], value, File, &DeeFile_WriteAll */
 		DO(Dee_function_generator_vswap(self));                                        /* [File], value, &DeeFile_WriteAll, File */
-		DO(Dee_function_generator_vcallapi(self, api_function, VCALLOP_CC_NEGINT, 3)); /* [File], print_status */
+		DO(Dee_function_generator_vcallapi(self, api_function, VCALL_CC_NEGINT, 3)); /* [File], print_status */
 		DO(Dee_function_generator_vpop(self));                                         /* [File] */
 handle_print_after_and_pop_file:
 		if (print_after != NULL) {
 			DO(Dee_function_generator_vpush_immINT(self, *print_after));                    /* File, ch */
-			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALLOP_CC_RAWINT, 2)); /* status */
+			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2)); /* status */
 			return Dee_function_generator_vcheckerr(self, GETC_ERR);                        /* - */
 		}
 		return 0;
 	}
 fallback:
-	return Dee_function_generator_vcallapi(self, api_function, VCALLOP_CC_INT, 2);
+	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_INT, 2);
 handle_error_and_do_fallback:
 	DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 	goto fallback;
@@ -442,7 +514,7 @@ gen_print_with_stdout_in_vtop(struct Dee_function_generator *__restrict self,
 	switch (opcode) {
 
 	TARGET(ASM_PRINTNL)
-		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALLOP_CC_INT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALL_CC_INT, 1);
 
 	TARGET(ASM_PRINT)
 	TARGET(ASM_PRINT_SP)
@@ -882,7 +954,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vret(self);
 
 	TARGET(ASM_THROW)
-		return Dee_function_generator_vcallapi(self, &DeeError_Throw, VCALLOP_CC_EXCEPT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeError_Throw, VCALL_CC_EXCEPT, 1);
 
 	//TODO: TARGET(ASM_SETRET)
 
@@ -1036,46 +1108,24 @@ do_jcc:
 		return Dee_function_generator_vpush_static(self, UNALIGNED_GETLE16(instr + 2));
 
 	TARGET(ASM_CAST_TUPLE)
-		DO(Dee_function_generator_vcallapi(self, &DeeTuple_FromSequence, VCALLOP_CC_OBJECT, 1));
-		return Dee_function_generator_vsettyp(self, &DeeTuple_Type);
+		DO(Dee_function_generator_vcallapi(self, &DeeTuple_FromSequence, VCALL_CC_OBJECT, 1));
+		return Dee_function_generator_vsettyp_noalias(self, &DeeTuple_Type);
 
 	TARGET(ASM_CAST_LIST)
-		DO(Dee_function_generator_vcallapi(self, &DeeList_FromSequence, VCALLOP_CC_OBJECT, 1));
-		return Dee_function_generator_vsettyp(self, &DeeList_Type);
+		DO(Dee_function_generator_vcallapi(self, &DeeList_FromSequence, VCALL_CC_OBJECT, 1));
+		return Dee_function_generator_vsettyp_noalias(self, &DeeList_Type);
 
 	TARGET(ASM_PACK_TUPLE)
 	TARGET(ASM16_PACK_TUPLE)
 	TARGET(ASM_PACK_LIST)
 	TARGET(ASM16_PACK_LIST) {
-		/* Implement these by creating the list/tuple raw, and then filling its items. */
 		uint16_t elemc = instr[1];
-		bool is_list = (opcode & 0xff) == ASM_PACK_LIST;
+		DeeTypeObject *seq_type = &DeeList_Type;
+		if ((opcode & 0xff) != ASM_PACK_LIST)
+			seq_type = &DeeTuple_Type;
 		if (opcode > 0xff)
 			elemc = UNALIGNED_GETLE16(instr + 2);
-		DO(Dee_function_generator_vpush_immSIZ(self, elemc)); /* [elems...], elemc */
-		DO(Dee_function_generator_vcallapi(self, is_list ? (void const *)&DeeList_NewUninitialized
-		                                                 : (void const *)&DeeTuple_NewUninitialized,
-		                                   VCALLOP_CC_OBJECT, 1)); /* [elems...], ref:seq */
-		DO(Dee_function_generator_vdup(self));                     /* [elems...], ref:seq, seq */
-		DO(is_list ? Dee_function_generator_vind(self, offsetof(DeeListObject, l_list.ol_elemv))
-		           : Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [elems...], ref:seq, elemv */
-		DO(Dee_function_generator_vswap(self));                    /* [elems...], elemv, ref:seq */
-		DO(Dee_function_generator_vrrot(self, elemc + 2));         /* ref:seq, [elems...], elemv */
-		while (elemc) {
-			--elemc;
-			DO(Dee_function_generator_vswap(self));                                     /* ref:seq, [elems...], elemv, elem */
-			DO(Dee_function_generator_vref(self));                                      /* ref:seq, [elems...], elemv, ref:elem */
-			DO(Dee_function_generator_vpopind(self, elemc * sizeof(DREF DeeObject *))); /* ref:seq, [elems...], elemv */
-		}
-		DO(Dee_function_generator_vpop(self)); /* ref:seq */
-		DO(Dee_function_generator_vsettyp(self, is_list ? &DeeList_Type : &DeeTuple_Type));
-		if (is_list) {
-			ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
-			Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* Inherited by `DeeGC_Track()' */
-			DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALLOP_CC_RAWINT, 1));
-			ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
-			Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* Returned by `DeeGC_Track()' */
-		}
+		return Dee_function_generator_vpackseq(self, seq_type, elemc);
 	}	break;
 
 	TARGET(ASM_UNPACK)
@@ -1141,13 +1191,13 @@ do_jcc:
 			DO(Dee_function_generator_vswap(self));    /* value, File */
 			DO(Dee_function_generator_vdup(self));     /* value, File, File */
 			DO(Dee_function_generator_vlrot(self, 3)); /* File, File, value */
-			return Dee_function_generator_vcallapi(self, api_function, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_OBJECT, 2);
 		}	break;
 
 		TARGET(ASM_SHL)
 			/* Special handling needed here! */
 			*p_next_instr = DeeAsm_NextInstr(next_instr);
-			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALL_CC_OBJECT, 2);
 
 		default: break;
 		}
@@ -1304,7 +1354,7 @@ do_jcc:
 		 *       we know that the class isn't being shared with anyone, we can track which
 		 *       slots have already been initialized, and do direct writes if they aren't
 		 *       yet. */
-		return Dee_function_generator_vcallapi(self, &DeeClass_New, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeClass_New, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_DEFCMEMBER) {
@@ -1314,8 +1364,8 @@ do_jcc:
 		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, value, addr */
 		DO(Dee_function_generator_vswap(self));             /* type, addr, value */
 		return (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE)
-		       ? Dee_function_generator_vcallapi(self, &DeeClass_SetMemberSafe, VCALLOP_CC_INT, 3)
-		       : Dee_function_generator_vcallapi(self, &DeeClass_SetMember, VCALLOP_CC_VOID, 3);
+		       ? Dee_function_generator_vcallapi(self, &DeeClass_SetMemberSafe, VCALL_CC_INT, 3)
+		       : Dee_function_generator_vcallapi(self, &DeeClass_SetMember, VCALL_CC_VOID, 3);
 	}	break;
 
 	TARGET(ASM16_GETCMEMBER) {
@@ -1398,17 +1448,13 @@ do_jcc:
 		}
 		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
-		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                     /* [refs...], sizeof_function */
-		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALLOP_CC_OBJECT, 1)); /* [refs...], ref:function */
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));            /* - */
-		DO(Dee_function_generator_vpush_immSIZ(self, 1));                                   /* [refs...], ref:function, 1 */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_refcnt)));   /* [refs...], ref:function */
-		DO(Dee_function_generator_vpush_const(self, (DeeObject *)&DeeFunction_Type));       /* [refs...], ref:function, DeeFunction_Type */
-		DO(Dee_function_generator_vref(self));                                              /* [refs...], ref:function, ref:DeeFunction_Type */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, ob_type)));     /* [refs...], ref:function */
-		DO(Dee_function_generator_vpush_cid_t(self, code_cid, &DeeCode_Type));              /* [refs...], ref:function, code */
-		DO(Dee_function_generator_vref(self));                                              /* [refs...], ref:function, ref:code */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));     /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1)); /* [refs...], ref:function */
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* - */
+		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeFunction_Type));       /* [refs...], ref:function */
+		DO(Dee_function_generator_vpush_cid_t(self, code_cid, &DeeCode_Type));            /* [refs...], ref:function, code */
+		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:code */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));   /* [refs...], ref:function */
 		while (refc) {
 			--refc;
 			DO(Dee_function_generator_vswap(self)); /* [refs...], ref:function, ref */
@@ -1461,15 +1507,15 @@ do_jcc:
 		/* TODO: Integration with `Dee_function_generator_vop()' */
 		switch (opcode) {
 		case ASM_ADD_SIMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_AddInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_AddInt8, VCALL_CC_OBJECT, 2);
 		case ASM_SUB_SIMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_SubInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_SubInt8, VCALL_CC_OBJECT, 2);
 		case ASM_MUL_SIMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_MulInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_MulInt8, VCALL_CC_OBJECT, 2);
 		case ASM_DIV_SIMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_DivInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_DivInt8, VCALL_CC_OBJECT, 2);
 		case ASM_MOD_SIMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_ModInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_ModInt8, VCALL_CC_OBJECT, 2);
 		default: __builtin_unreachable();
 		}
 	}	break;
@@ -1481,9 +1527,9 @@ do_jcc:
 		/* TODO: Integration with `Dee_function_generator_vop()' */
 		switch (opcode) {
 		case ASM_SHL_IMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_ShlUInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_ShlUInt8, VCALL_CC_OBJECT, 2);
 		case ASM_SHR_IMM8:
-			return Dee_function_generator_vcallapi(self, &DeeObject_ShrUInt8, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_ShrUInt8, VCALL_CC_OBJECT, 2);
 		default: __builtin_unreachable();
 		}
 	}	break;
@@ -1498,15 +1544,15 @@ do_jcc:
 		/* TODO: Integration with `Dee_function_generator_vop()' */
 		switch (opcode) {
 		case ASM_ADD_IMM32:
-			return Dee_function_generator_vcallapi(self, &DeeObject_AddUInt32, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_AddUInt32, VCALL_CC_OBJECT, 2);
 		case ASM_SUB_IMM32:
-			return Dee_function_generator_vcallapi(self, &DeeObject_SubUInt32, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_SubUInt32, VCALL_CC_OBJECT, 2);
 		case ASM_AND_IMM32:
-			return Dee_function_generator_vcallapi(self, &DeeObject_AndUInt32, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_AndUInt32, VCALL_CC_OBJECT, 2);
 		case ASM_OR_IMM32:
-			return Dee_function_generator_vcallapi(self, &DeeObject_OrUInt32, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_OrUInt32, VCALL_CC_OBJECT, 2);
 		case ASM_XOR_IMM32:
-			return Dee_function_generator_vcallapi(self, &DeeObject_XorUInt32, VCALLOP_CC_OBJECT, 2);
+			return Dee_function_generator_vcallapi(self, &DeeObject_XorUInt32, VCALL_CC_OBJECT, 2);
 		default: __builtin_unreachable();
 		}
 	}	break;
@@ -1553,7 +1599,7 @@ do_jcc:
 
 	TARGET(ASM_FPRINTNL) /* print top, nl */
 		DO(Dee_function_generator_vdup(self)); /* File, File */
-		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALLOP_CC_OBJECT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_FPRINT_C)        /* print top, const <imm8> */
 	TARGET(ASM16_FPRINT_C)      /* print top, const <imm16> */
@@ -1598,15 +1644,15 @@ do_jcc:
 		DO(Dee_function_generator_vcoalesce(self));             /* end, used_start */
 		DO(Dee_function_generator_vswap(self));                 /* used_start, end */
 		DO(Dee_function_generator_vpush_addr(self, NULL));      /* used_start, end, NULL */
-		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALLOP_CC_OBJECT, 3); /* result */
+		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3); /* result */
 
 	TARGET(ASM_RANGE_DEF)                                                                       /* end */
 		DO(Dee_function_generator_vdup(self));                                                  /* end, end */
 		DO(Dee_function_generator_voptypeof(self, false));                                      /* end, type(end) */
-		DO(Dee_function_generator_vcallapi(self, &DeeObject_NewDefault, VCALLOP_CC_OBJECT, 1)); /* end, type(end)() */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_NewDefault, VCALL_CC_OBJECT, 1)); /* end, type(end)() */
 		DO(Dee_function_generator_vswap(self));                                                 /* type(end)(), end */
 		DO(Dee_function_generator_vpush_addr(self, NULL));                                      /* type(end)(), end, NULL */
-		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALLOP_CC_OBJECT, 3);      /* result */
+		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3);      /* result */
 
 	TARGET(ASM_RANGE_STEP)                                      /* start, end, step */
 		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* start, end, step, Dee_None */
@@ -1617,7 +1663,7 @@ do_jcc:
 		DO(Dee_function_generator_vpush_addr(self, NULL));      /* end, used_step, start, Dee_None, NULL */
 		DO(Dee_function_generator_vcoalesce(self));             /* end, used_step, used_start */
 		DO(Dee_function_generator_vrrot(self, 3));              /* used_start, end, used_step */
-		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALLOP_CC_OBJECT, 3); /* result */
+		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3); /* result */
 
 	TARGET(ASM_RANGE_STEP_DEF)                                                                  /* end, step */
 		DO(Dee_function_generator_vpush_const(self, Dee_None));                                 /* end, step, Dee_None */
@@ -1626,10 +1672,10 @@ do_jcc:
 		DO(Dee_function_generator_vswap(self));                                                 /* used_step, end */
 		DO(Dee_function_generator_vdup(self));                                                  /* used_step, end, end */
 		DO(Dee_function_generator_voptypeof(self, false));                                      /* used_step, end, type(end) */
-		DO(Dee_function_generator_vcallapi(self, &DeeObject_NewDefault, VCALLOP_CC_OBJECT, 1)); /* used_step, end, type(end)() */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_NewDefault, VCALL_CC_OBJECT, 1)); /* used_step, end, type(end)() */
 		DO(Dee_function_generator_vswap(self));                                                 /* used_step, type(end)(), end */
 		DO(Dee_function_generator_vlrot(self, 3));                                              /* type(end)(), end, used_step */
-		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALLOP_CC_OBJECT, 3);      /* result */
+		return Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3);      /* result */
 
 	TARGET(ASM_RANGE_0_I16) {
 		uint32_t imm32;
@@ -1638,7 +1684,7 @@ do_jcc:
 		DO(Dee_function_generator_vpush_imm32(self, 0));
 		DO(Dee_function_generator_vpush_imm32(self, imm32));
 		DO(Dee_function_generator_vpush_imm32(self, 1));
-		return Dee_function_generator_vcallapi(self, &DeeRange_NewInt, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeRange_NewInt, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_CONTAINS)
@@ -1659,7 +1705,7 @@ do_jcc:
 	TARGET(ASM_GETITEM_I) {
 		uint16_t imm16 = UNALIGNED_GETLE16(instr + 1);
 		DO(Dee_function_generator_vpush_imm16(self, imm16));
-		return Dee_function_generator_vcallapi(self, &DeeObject_GetItemIndex, VCALLOP_CC_OBJECT, 2);
+		return Dee_function_generator_vcallapi(self, &DeeObject_GetItemIndex, VCALL_CC_OBJECT, 2);
 	}	break;
 
 	TARGET(ASM_GETITEM_C) {
@@ -1677,7 +1723,7 @@ do_jcc:
 		uint16_t imm16 = UNALIGNED_GETLE16(instr + 1);
 		DO(Dee_function_generator_vpush_imm16(self, imm16));
 		DO(Dee_function_generator_vswap(self));
-		return Dee_function_generator_vcallapi(self, &DeeObject_SetItemIndex, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_SetItemIndex, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_SETITEM_C) {
@@ -1713,7 +1759,7 @@ do_jcc:
 			DO(Dee_function_generator_vpush_const(self, Dee_None));
 		}
 		DO(Dee_function_generator_vpush_Simm16(self, Simm16));
-		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeEndIndex, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeEndIndex, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_GETRANGE_IP)
@@ -1725,7 +1771,7 @@ do_jcc:
 		} else {
 			DO(Dee_function_generator_vswap(self));
 		}
-		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeBeginIndex, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeBeginIndex, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_GETRANGE_II) {
@@ -1733,7 +1779,7 @@ do_jcc:
 		int16_t end_Simm16   = (int16_t)UNALIGNED_GETLE16(instr + 3);
 		DO(Dee_function_generator_vpush_Simm16(self, begin_Simm16));
 		DO(Dee_function_generator_vpush_Simm16(self, end_Simm16));
-		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeIndex, VCALLOP_CC_OBJECT, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_GetRangeIndex, VCALL_CC_OBJECT, 3);
 	}	break;
 
 	TARGET(ASM_DELRANGE)
@@ -1757,7 +1803,7 @@ do_jcc:
 			DO(Dee_function_generator_vpush_const(self, Dee_None));
 		}
 		DO(Dee_function_generator_vpush_Simm16(self, Simm16));
-		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeEndIndex, VCALLOP_CC_INT, 4);
+		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeEndIndex, VCALL_CC_INT, 4);
 	}	break;
 
 	TARGET(ASM_SETRANGE_IP)
@@ -1769,7 +1815,7 @@ do_jcc:
 		} else {
 			DO(Dee_function_generator_vswap(self));
 		}
-		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeBeginIndex, VCALLOP_CC_INT, 4);
+		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeBeginIndex, VCALL_CC_INT, 4);
 	}	break;
 
 	TARGET(ASM_SETRANGE_II) {
@@ -1777,7 +1823,7 @@ do_jcc:
 		int16_t end_Simm16   = (int16_t)UNALIGNED_GETLE16(instr + 3);
 		DO(Dee_function_generator_vpush_Simm16(self, begin_Simm16));
 		DO(Dee_function_generator_vpush_Simm16(self, end_Simm16));
-		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeIndex, VCALLOP_CC_INT, 4);
+		return Dee_function_generator_vcallapi(self, &DeeObject_SetRangeIndex, VCALL_CC_INT, 4);
 	}	break;
 
 	//TODO: TARGET(ASM_BREAKPOINT)
@@ -1785,7 +1831,7 @@ do_jcc:
 	TARGET(ASM_UD) {
 		DO(Dee_function_generator_vpush_addr(self, instr));
 		DO(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code));
-		return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_illegal_instruction, VCALLOP_CC_EXCEPT, 2);
+		return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_illegal_instruction, VCALL_CC_EXCEPT, 2);
 	}	break;
 
 	TARGET(ASM_CALLATTR_C_KW) {
@@ -1907,13 +1953,13 @@ do_jcc:
 		DO(Dee_function_generator_vlinear(self, argc, true));                        /* this, [args...], argv */
 		DO(Dee_function_generator_vpush_immSIZ(self, argc));                         /* this, [args...], argv, argc */
 		DO(Dee_function_generator_vswap(self));                                      /* this, [args...], argc, argv */
-		DO(Dee_function_generator_vcallapi(self, api_create, VCALLOP_CC_OBJECT, 2)); /* this, [args...], shared_args */
+		DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* this, [args...], shared_args */
 		DO(Dee_function_generator_vlrot(self, argc + 1));                            /* [args...], shared_args, this */
 		DO(Dee_function_generator_vpush_cid(self, attr_cid));                        /* [args...], shared_args, this, attr */
 		DO(Dee_function_generator_vlrot(self, 3));                                   /* [args...], this, attr, shared_args */
 		DO(Dee_function_generator_vopcallattr_unchecked(self, 1));                   /* [args...], shared_args, UNCHECKED(result) */
 		DO(Dee_function_generator_vrrot(self, argc + 2));                            /* UNCHECKED(result), [args...], shared_args */
-		DO(Dee_function_generator_vcallapi(self, api_decref, VCALLOP_CC_VOID, 1));   /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));   /* UNCHECKED(result), [args...] */
 		DO(Dee_function_generator_vpopmany(self, argc));                             /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckobj(self);                               /* result */
 	}	break;
@@ -1988,12 +2034,12 @@ do_jcc:
 		DO(Dee_function_generator_vlinear(self, argc, true));                        /* func, [args...], argv */
 		DO(Dee_function_generator_vpush_immSIZ(self, argc));                         /* func, [args...], argv, argc */
 		DO(Dee_function_generator_vswap(self));                                      /* func, [args...], argc, argv */
-		DO(Dee_function_generator_vcallapi(self, api_create, VCALLOP_CC_OBJECT, 2)); /* func, [args...], shared_args */
+		DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* func, [args...], shared_args */
 		DO(Dee_function_generator_vlrot(self, argc + 2));                            /* [args...], shared_args, func */
 		DO(Dee_function_generator_vswap(self));                                      /* [args...], func, shared_args */
 		DO(Dee_function_generator_vopcall_unchecked(self, 1));                       /* [args...], shared_args, UNCHECKED(result) */
 		DO(Dee_function_generator_vrrot(self, argc + 2));                            /* UNCHECKED(result), [args...], shared_args */
-		DO(Dee_function_generator_vcallapi(self, api_decref, VCALLOP_CC_VOID, 1));   /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));   /* UNCHECKED(result), [args...] */
 		DO(Dee_function_generator_vpopmany(self, argc));                             /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckobj(self);                               /* result */
 	}	break;
@@ -2009,9 +2055,9 @@ do_jcc:
 	TARGET(ASM_PUSH_THIS)
 		return Dee_function_generator_vpush_this(self);
 	TARGET(ASM_CAST_HASHSET)
-		return Dee_function_generator_vcallapi(self, &DeeHashSet_FromSequence, VCALLOP_CC_OBJECT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeHashSet_FromSequence, VCALL_CC_OBJECT, 1);
 	TARGET(ASM_CAST_DICT)
-		return Dee_function_generator_vcallapi(self, &DeeDict_FromSequence, VCALLOP_CC_OBJECT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeDict_FromSequence, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_PUSH_TRUE)
 		return Dee_function_generator_vpush_const(self, Dee_True);
@@ -2025,7 +2071,7 @@ do_jcc:
 
 	TARGET(ASM_BOUNDITEM) {                             /* seq, index */
 		DO(Dee_function_generator_vpush_imm8(self, 1)); /* seq, index, true */
-		DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundItem, VCALLOP_CC_M1INT, 3)); /* seq, index, true */
+		DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundItem, VCALL_CC_M1INT, 3)); /* seq, index, true */
 		DO(Dee_function_generator_vdirect(self, 1));
 		ASSERT(MEMLOC_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->ml_vmorph));
 		Dee_function_generator_vtop(self)->ml_vmorph = MEMLOC_VMORPH_BOOL_GZ;
@@ -2049,19 +2095,19 @@ do_jcc:
 
 	TARGET(ASM_REDUCE_MIN)
 		DO(Dee_function_generator_vpush_addr(self, NULL));
-		return Dee_function_generator_vcallapi(self, &DeeSeq_Min, VCALLOP_CC_OBJECT, 2);
+		return Dee_function_generator_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 2);
 	TARGET(ASM_REDUCE_MAX)
 		DO(Dee_function_generator_vpush_addr(self, NULL));
-		return Dee_function_generator_vcallapi(self, &DeeSeq_Max, VCALLOP_CC_OBJECT, 2);
+		return Dee_function_generator_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 2);
 	TARGET(ASM_REDUCE_SUM)
-		return Dee_function_generator_vcallapi(self, &DeeSeq_Sum, VCALLOP_CC_OBJECT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_ANY)
 	TARGET(ASM_REDUCE_ALL)
 		DO(Dee_function_generator_vcallapi(self,
 		                                   opcode == ASM_REDUCE_ANY ? (void const *)&DeeSeq_Any
 		                                                            : (void const *)&DeeSeq_All,
-		                                   VCALLOP_CC_NEGINT, 1));
+		                                   VCALL_CC_NEGINT, 1));
 		DO(Dee_function_generator_vdirect(self, 1));
 		ASSERT(MEMLOC_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->ml_vmorph));
 		Dee_function_generator_vtop(self)->ml_vmorph = MEMLOC_VMORPH_BOOL_GZ;
@@ -2513,13 +2559,12 @@ do_jcc:
 		TARGET(ASM_DECPOST) { /* push dec PREFIX' - `PREFIX: push dec */
 			uint16_t opname;
 			int temp;
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* value */
 			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
 			if unlikely(temp < 0)
 				goto err;
+			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* value */
 			opname = opcode == ASM_INCPOST ? OPERATOR_INC : OPERATOR_DEC;
-			if (temp == 0) {                                                           /* value, addrof(ref:value) */
-				DO(Dee_function_generator_vswap(self));                                /* addrof(ref:value), value */
+			if (temp == 0) {                                                           /* addrof(ref:value), value */
 				DO(Dee_function_generator_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES)); /* addrof(ref:value), copy */
 				DO(Dee_function_generator_vswap(self));                                /* copy, addrof(ref:value) */
 				return Dee_function_generator_vop(self, opname, 1, VOP_F_INPLACE);     /* copy */
@@ -2551,13 +2596,13 @@ do_jcc:
 				opname = UNALIGNED_GETLE16(prefix_instr + 2);
 				argc   = prefix_instr[4];
 			}                                                                            /* [args...] */
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* [args...], value */
 			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
 			if unlikely(temp < 0)
 				goto err;
-			if (temp == 0) {                                        /* [args...], value, addrof(value) */
-				DO(Dee_function_generator_vrrot(self, argc + 3));   /* addrof(value), [args...], value */
-				DO(Dee_function_generator_vrrot(self, argc + 3));   /* value, addrof(value), [args...] */
+			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));
+			if (temp == 0) {                                        /* [args...], addrof(value), value */
+				DO(Dee_function_generator_vrrot(self, argc + 2));   /* value, [args...], addrof(value) */
+				DO(Dee_function_generator_vrrot(self, argc + 1));   /* value, addrof(value), [args...] */
 				DO(Dee_function_generator_vop(self, opname, argc + 1, VOP_F_INPLACE | VOP_F_PUSHRES)); /* value, result */
 				DO(Dee_function_generator_vswap(self));             /* result, value */
 				return Dee_function_generator_vpop(self);           /* result */
@@ -2577,11 +2622,12 @@ do_jcc:
 			uint16_t opname;
 			opname = prefix_instr[1];  /* PREFIX: push op $<imm16>, pop */
 			__IF0 { TARGET(ASM16_OPERATOR_TUPLE) opname = UNALIGNED_GETLE16(prefix_instr + 2); }
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* args, value */
 			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
 			if unlikely(temp < 0)
 				goto err;
-			if (temp == 0) {                                        /* args, value, addrof(value) */
+			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));
+			if (temp == 0) {                                        /* args, addrof(value), value */
+				DO(Dee_function_generator_vswap(self));             /* args, value, addrof(value) */
 				DO(Dee_function_generator_vlrot(self, 3));          /* value, addrof(value), args */
 				DO(Dee_function_generator_voptuple(self, opname, VOP_F_INPLACE | VOP_F_PUSHRES)); /* value, result */
 				DO(Dee_function_generator_vswap(self));             /* result, value */

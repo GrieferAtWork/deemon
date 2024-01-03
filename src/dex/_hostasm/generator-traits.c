@@ -29,6 +29,7 @@
 #include <deemon/bool.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
+#include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
@@ -55,7 +56,8 @@ PRIVATE DeeTypeObject *tpconst always_constexpr_types[] = {
  * an instance of the type at the same time, which must *NOT* affect the result
  * of the operator being invoked (iow: `List.operator +' is not constexpr). */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self, uint16_t name) {
+DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
+                            uint16_t name) {
 	size_t i;
 	for (i = 0; i < COMPILER_LENOF(always_constexpr_types); ++i) {
 		if (always_constexpr_types[i] == self)
@@ -67,6 +69,52 @@ DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self, uint16_t name)
 	return false;
 yes:
 	return true;
+}
+
+
+
+/* Check if C-method attached to objects are constant expressions. */
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsGetMethodConstexpr(DeeTypeObject const *__restrict self,
+                             Dee_getmethod_t getter) {
+	/* TODO: Search for getters that are constant expressions.
+	 *       Note that a getter that returns a writable field
+	 *       is NOT a constant expression! Only read-only, or
+	 *       write-once fields (that have already been assigned)
+	 *       can be considered constant expressions! */
+	(void)self;
+	(void)getter;
+	return false;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
+                               Dee_boundmethod_t bound) {
+	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
+	(void)self;
+	(void)bound;
+	return false;
+}
+
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
+DeeType_IsObjMethodConstexpr(DeeTypeObject const *__restrict self,
+                             Dee_objmethod_t method) {
+	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
+	(void)self;
+	(void)method;
+	return false;
+}
+
+INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
+DeeCMethod_IsConstExpr(Dee_cmethod_t method,
+                       DeeTypeObject const *type,
+                       struct Dee_module_object const *mod) {
+	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
+	(void)method;
+	(void)type;
+	(void)mod;
+	return false;
 }
 
 

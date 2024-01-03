@@ -49,11 +49,8 @@ DECL_BEGIN
 
 typedef DeeHashSetObject HashSet;
 
-PRIVATE struct hashset_item empty_hashset_items[1] = {
-	{ NULL, 0 }
-};
-
-#define dummy (&DeeDict_Dummy)
+#define empty_hashset_items ((struct Dee_hashset_item *)DeeHashSet_EmptyItems)
+#define dummy               (&DeeDict_Dummy)
 
 /* Create a new HashSet by inheriting a set of passed key-item pairs.
  * @param: items:     A vector containing `num_items' elements,

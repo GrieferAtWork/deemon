@@ -1146,7 +1146,7 @@ Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restr
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, aid))
 		goto err;
-	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_arg, VCALLOP_CC_EXCEPT, 3);
+	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_arg, VCALL_CC_EXCEPT, 3);
 err:
 	return -1;
 }
@@ -1160,7 +1160,7 @@ Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__res
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, lid))
 		goto err;
-	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_local, VCALLOP_CC_EXCEPT, 3);
+	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_local, VCALL_CC_EXCEPT, 3);
 err:
 	return -1;
 }
@@ -1172,7 +1172,7 @@ Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__re
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, gid))
 		goto err;
-	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_global, VCALLOP_CC_EXCEPT, 2);
+	return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_global, VCALL_CC_EXCEPT, 2);
 err:
 	return -1;
 }
@@ -1183,11 +1183,15 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self,
                                   struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
+	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const != (DeeObject *)0)
+		return 0;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+		if (loc->ml_type == MEMLOC_TYPE_CONST)
+			return _Dee_function_generator_gjmp(self, sym);
 		return _Dee_function_generator_gjz(self, loc, sym);
 	}
 err:
@@ -1198,11 +1202,15 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self,
                                    struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
+	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const == (DeeObject *)0)
+		return 0;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+		if (loc->ml_type == MEMLOC_TYPE_CONST)
+			return _Dee_function_generator_gjmp(self, sym);
 		return _Dee_function_generator_gjnz(self, loc, sym);
 	}
 err:
