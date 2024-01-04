@@ -7,3 +7,6 @@
 [submodule "src/tpp"]
 	path = src/tpp
 	url = https://github.com/GrieferAtWork/tpp.git
+[submodule "src/dex/_hostasm/libgen86"]
+	path = src/dex/_hostasm/libgen86
+	url = https://github.com/GrieferAtWork/kos-libgen86.git
