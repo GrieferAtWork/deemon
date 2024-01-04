@@ -97,7 +97,6 @@
  *
  * ============= FUTURE DIRECTIONS =============
  *
- * - Turn `libgen86' into a git module that is shared between deemon and KOS
  * - Add a heuristic to DeeFunctionObject that keeps track of how often
  *   the function has been called. If that count exceeds some limit,
  *   automatically replace the function with its hostasm version.
