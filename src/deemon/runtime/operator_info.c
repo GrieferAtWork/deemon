@@ -1842,7 +1842,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
 	if (DeeType_IsClass(self)) {
-		/* TODO: Special case: must look at what's implemented by the class! */
+		/* Special case: must look at what's implemented by the class! */
 		DREF DeeObject *op;
 		op = DeeClass_TryGetPrivateOperator((DeeTypeObject *)self, name);
 		if (op) {

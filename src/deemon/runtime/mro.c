@@ -892,6 +892,15 @@ DECL_END
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
 //#include "mro-impl-cache.c.inl"
 
+//#define DEFINE_DeeType_FindCachedAttrInfoStringHash
+//#include "mro-impl-cache.c.inl"
+//#define DEFINE_DeeType_FindCachedClassAttrInfoStringHash
+//#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_FindCachedAttrInfoStringLenHash
+#include "mro-impl-cache.c.inl"
+#define DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash
+#include "mro-impl-cache.c.inl"
+
 #define DEFINE_DeeType_FindCachedAttr
 #include "mro-impl-cache.c.inl"
 #define DEFINE_DeeType_FindCachedClassAttr

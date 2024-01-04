@@ -2671,7 +2671,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 	 * but whose values don't matter as per `self->bb_locuse' */
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
 		struct Dee_memstate *state = self->fg_state;
-		size_t lid;
+		Dee_lid_t lid;
 		for (lid = 0; lid < state->ms_localc; ++lid) {
 			if (state->ms_localv[lid].ml_type == MEMLOC_TYPE_UNALLOC)
 				continue;

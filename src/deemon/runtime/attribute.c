@@ -105,6 +105,10 @@ DECL_END
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericSetAttrStringLenHash
 #include "attribute-access-generic.c.inl"
+//#define DEFINE_DeeObject_TGenericFindAttrInfoStringHash
+//#include "attribute-access-generic.c.inl"
+#define DEFINE_DeeObject_TGenericFindAttrInfoStringLenHash
+#include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericFindAttr
 #include "attribute-access-generic.c.inl"
 #define DEFINE_DeeObject_TGenericEnumAttr
@@ -141,6 +145,10 @@ DECL_END
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_SetAttrStringLenHash
 #include "attribute-access-type.c.inl"
+//#define DEFINE_DeeType_FindAttrInfoStringHash
+//#include "attribute-access-type.c.inl"
+#define DEFINE_DeeType_FindAttrInfoStringLenHash
+#include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_FindAttr
 #include "attribute-access-type.c.inl"
 #define DEFINE_DeeType_EnumAttr
@@ -161,6 +169,10 @@ DECL_END
 #include "attribute-access-type-instance.c.inl"
 
 /* DeeObject_*Attr */
+//#define DEFINE_DeeObject_TFindAttrInfoStringHash
+//#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
+#include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_FindAttr
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_EnumAttr
@@ -488,8 +500,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 	va_end(args);
 	return result;
 }
-
-
 
 DECL_END
 

@@ -761,6 +761,113 @@ NLenHash(DeeType_HasInstanceMemberAttrString)(DeeTypeObject *tp_invoker,
 	return false;
 }
 
+
+
+#ifdef DEFINE_MRO_ATTRLEN_FUNCTIONS
+INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* METHOD */
+N_len_hash(type_method_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                            struct type_method const *chain, uintptr_t type,
+                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addmethod(cache, decl, hash, chain);
+		retinfo->ai_type = type;
+		retinfo->ai_decl = (DeeObject *)decl;
+		retinfo->ai_value.v_method = chain;
+		return true;
+	}
+	return false;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* GETSET */
+N_len_hash(type_getset_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                            struct type_getset const *chain, uintptr_t type,
+                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	for (; chain->gs_name; ++chain) {
+		if (!NAMEEQ(chain->gs_name))
+			continue;
+		Dee_membercache_addgetset(cache, decl, hash, chain);
+		retinfo->ai_type = type;
+		retinfo->ai_decl = (DeeObject *)decl;
+		retinfo->ai_value.v_getset = chain;
+		return true;
+	}
+	return false;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3, 5, IFELSE(7, 8))) bool DCALL /* MEMBER */
+N_len_hash(type_member_findattrinfo_string)(struct Dee_membercache *cache, DeeTypeObject *decl,
+                                            struct type_member const *chain, uintptr_t type,
+                                            ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addmember(cache, decl, hash, chain);
+		retinfo->ai_type = type;
+		retinfo->ai_decl = (DeeObject *)decl;
+		retinfo->ai_value.v_member = chain;
+		return true;
+	}
+	return false;
+}
+
+#undef DeeType_FindInstanceMethodAttrInfoStringHash
+#undef DeeType_FindInstanceMethodAttrInfoStringLenHash
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
+NLenHash(DeeType_FindInstanceMethodAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
+                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	struct type_method const *chain = tp_self->tp_methods;
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addinstancemethod(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		retinfo->ai_type = Dee_ATTRINFO_INSTANCE_METHOD;
+		retinfo->ai_decl = (DeeObject *)tp_self;
+		retinfo->ai_value.v_instance_method = chain;
+		return true;
+	}
+	return false;
+}
+
+#undef DeeType_FindInstanceGetSetAttrInfoStringHash
+#undef DeeType_FindInstanceGetSetAttrInfoStringLenHash
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
+NLenHash(DeeType_FindInstanceGetSetAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
+                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	struct type_getset const *chain = tp_self->tp_getsets;
+	for (; chain->gs_name; ++chain) {
+		if (!NAMEEQ(chain->gs_name))
+			continue;
+		Dee_membercache_addinstancegetset(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		retinfo->ai_type = Dee_ATTRINFO_INSTANCE_GETSET;
+		retinfo->ai_decl = (DeeObject *)tp_self;
+		retinfo->ai_value.v_instance_getset = chain;
+		return true;
+	}
+	return false;
+}
+
+#undef DeeType_FindInstanceMemberAttrInfoStringHash
+#undef DeeType_FindInstanceMemberAttrInfoStringLenHash
+INTERN WUNUSED NONNULL((1, 2, 3, IFELSE(5, 6))) bool DCALL
+NLenHash(DeeType_FindInstanceMemberAttrInfoString)(DeeTypeObject *tp_invoker, DeeTypeObject *tp_self,
+                                                   ATTR_ARG, dhash_t hash, struct attrinfo *__restrict retinfo) {
+	struct type_member const *chain = tp_self->tp_members;
+	for (; chain->m_name; ++chain) {
+		if (!NAMEEQ(chain->m_name))
+			continue;
+		Dee_membercache_addinstancemember(&tp_invoker->tp_class_cache, tp_self, hash, chain);
+		retinfo->ai_type = Dee_ATTRINFO_INSTANCE_MEMBER;
+		retinfo->ai_decl = (DeeObject *)tp_self;
+		retinfo->ai_value.v_instance_member = chain;
+		return true;
+	}
+	return false;
+}
+#endif /* DEFINE_MRO_ATTRLEN_FUNCTIONS */
+
+
 DECL_END
 
 #undef S

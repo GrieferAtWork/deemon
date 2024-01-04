@@ -1166,6 +1166,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeModule_DelAttrStringLenHash(DeeModul
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeModule_SetAttrStringHash(DeeModuleObject *self, char const *__restrict attr, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeModule_SetAttrStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *__restrict self, struct attribute_info *__restrict result, struct attribute_lookup_rules const *__restrict rules);
+INTDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 #define DeeModule_GetAttr(self, attr)                          DeeModule_GetAttrStringHash(self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeModule_GetAttrHash(self, attr, hash)                DeeModule_GetAttrStringHash(self, DeeString_STR(attr), hash)
@@ -1187,6 +1188,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeModule_FindAttr(DeeModuleObject *
 #define DeeModule_SetAttrHash(self, attr, hash, value)         DeeModule_SetAttrStringHash(self, DeeString_STR(attr), hash, value)
 #define DeeModule_SetAttrString(self, attr, value)             DeeModule_SetAttrStringHash(self, attr, Dee_HashStr(attr), value)
 #define DeeModule_SetAttrStringLen(self, attr, attrlen, value) DeeModule_SetAttrStringLenHash(self, attr, attrlen, Dee_HashPtr(attr, attrlen), value)
+#define DeeModule_FindAttrInfoStringHash(self, attr, hash, retinfo) DeeModule_FindAttrInfoStringLenHash(self, attr, strlen(attr), hash, retinfo)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Lookup the module symbol associated with a given its name or GID.

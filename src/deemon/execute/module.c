@@ -30,6 +30,7 @@
 #include <deemon/exec.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
+#include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>
@@ -1327,6 +1328,21 @@ DeeModule_FindAttr(DeeModuleObject *__restrict self,
 err:
 	return -1;
 }
+
+INTERN WUNUSED NONNULL((1, 2, 5)) bool DCALL
+DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restrict attr, size_t attrlen,
+                                    Dee_hash_t hash, struct attrinfo *__restrict retinfo) {
+	struct Dee_module_symbol const *sym;
+	sym = DeeModule_GetSymbolStringLenHash(self, attr, attrlen, hash);
+	if (sym) {
+		retinfo->ai_type = Dee_ATTRINFO_MODSYM;
+		retinfo->ai_decl = (DeeObject *)self;
+		retinfo->ai_value.v_modsym = sym;
+		return true;
+	}
+	return DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
+}
+
 
 PRIVATE struct type_attr tpconst module_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,

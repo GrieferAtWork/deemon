@@ -79,7 +79,9 @@
 //#define DEFINE_DeeObject_TSetAttrStringHash
 //#define DEFINE_DeeObject_SetAttrStringLenHash
 //#define DEFINE_DeeObject_TSetAttrStringLenHash
-#define DEFINE_DeeObject_FindAttr
+//#define DEFINE_DeeObject_TFindAttrInfoStringHash
+#define DEFINE_DeeObject_TFindAttrInfoStringLenHash
+//#define DEFINE_DeeObject_FindAttr
 //#define DEFINE_DeeObject_EnumAttr
 #endif /* __INTELLISENSE__ */
 
@@ -143,6 +145,8 @@
      defined(DEFINE_DeeObject_TSetAttrStringHash) +            \
      defined(DEFINE_DeeObject_SetAttrStringLenHash) +          \
      defined(DEFINE_DeeObject_TSetAttrStringLenHash) +         \
+     defined(DEFINE_DeeObject_TFindAttrInfoStringHash) +       \
+     defined(DEFINE_DeeObject_TFindAttrInfoStringLenHash) +    \
      defined(DEFINE_DeeObject_FindAttr) +                      \
      defined(DEFINE_DeeObject_EnumAttr)) != 1
 #error "Must #define exactly one of these macros"
@@ -418,6 +422,17 @@
 #define LOCAL_HAS_tp_self
 #define LOCAL_HAS_string
 #define LOCAL_HAS_len
+#elif defined(DEFINE_DeeObject_TFindAttrInfoStringHash)
+#define LOCAL_DeeObject_AccessAttr DeeObject_TFindAttrInfoStringHash
+#define LOCAL_IS_FINDINFO
+#define LOCAL_HAS_tp_self
+#define LOCAL_HAS_string
+#elif defined(DEFINE_DeeObject_TFindAttrInfoStringLenHash)
+#define LOCAL_DeeObject_AccessAttr DeeObject_TFindAttrInfoStringLenHash
+#define LOCAL_IS_FINDINFO
+#define LOCAL_HAS_tp_self
+#define LOCAL_HAS_string
+#define LOCAL_HAS_len
 #elif defined(DEFINE_DeeObject_FindAttr)
 #define LOCAL_DeeObject_AccessAttr DeeObject_FindAttr
 #define LOCAL_IS_FIND
@@ -455,6 +470,10 @@ DECL_BEGIN
 #define LOCAL_return_t              int
 #define LOCAL_ATTR_NOT_FOUND_RESULT 1
 #define LOCAL_ERROR_RESULT          (-1)
+#elif defined(LOCAL_IS_FINDINFO)
+#define LOCAL_return_t              bool
+#define LOCAL_ATTR_NOT_FOUND_RESULT false
+#define LOCAL_ERROR_RESULT          DONT_USE_THIS_MACRO
 #elif defined(LOCAL_IS_ENUM)
 #define LOCAL_return_t              dssize_t
 #define LOCAL_ATTR_NOT_FOUND_RESULT DONT_USE_THIS_MACRO
@@ -642,6 +661,23 @@ DECL_BEGIN
 #define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_SetGetSetAttrStringHash(tp_invoker, tp_self, self, attr, hash, value)
 #define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_SetMemberAttrStringHash(tp_invoker, tp_self, self, attr, hash, value)
 #endif /* !... */
+#elif defined(LOCAL_IS_FINDINFO)
+#ifndef LOCAL_HAS_string
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttrInfo(tp_self, self, attr, retinfo)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttrInfo(tp_invoker, tp_self, attr, retinfo)
+#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttrInfo(tp_invoker, tp_self, attr, retinfo)
+#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfo(tp_invoker, tp_self, attr, retinfo)
+#elif defined(LOCAL_HAS_len)
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttrInfoStringLenHash(tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfoStringLenHash(tp_invoker, tp_self, attr, attrlen, hash, retinfo)
+#else /* ... */
+#define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttrInfoStringHash(tp_self, self, attr, hash, retinfo)
+#define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#define LOCAL_DeeType_AccessGetSetAttr(tp_invoker, tp_self, self) DeeType_FindGetSetAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#define LOCAL_DeeType_AccessMemberAttr(tp_invoker, tp_self, self) DeeType_FindMemberAttrInfoStringHash(tp_invoker, tp_self, attr, hash, retinfo)
+#endif /* !... */
 #elif defined(LOCAL_IS_FIND)
 #define LOCAL_DeeType_AccessCachedAttr(tp_self, self)             DeeType_FindCachedAttr(tp_self, self, retinfo, rules)
 #define LOCAL_DeeType_AccessMethodAttr(tp_invoker, tp_self, self) DeeType_FindMethodAttr(tp_invoker, tp_self, retinfo, rules)
@@ -811,6 +847,17 @@ DECL_BEGIN
 #define LOCAL_DeeModule_AccessAttr(self)     DeeModule_SetAttrString(self, attr, value)
 #define LOCAL_DeeType_AccessAttrHash(self)   DeeType_SetAttrStringHash(self, attr, hash, value)
 #define LOCAL_DeeModule_AccessAttrHash(self) DeeModule_SetAttrStringHash(self, attr, hash, value)
+#elif defined(LOCAL_IS_FINDINFO) && !defined(LOCAL_HAS_string)
+#define LOCAL_DeeType_AccessAttr(self)   DeeType_FindAttrInfo(self, attr, retinfo)
+#define LOCAL_DeeModule_AccessAttr(self) DeeModule_FindAttrInfo(self, attr, retinfo)
+#elif defined(LOCAL_IS_FINDINFO) && defined(LOCAL_HAS_len)
+#define LOCAL_DeeType_AccessAttr(self)       DeeType_FindAttrInfoStringLen(self, attr, attrlen, retinfo)
+#define LOCAL_DeeModule_AccessAttr(self)     DeeModule_FindAttrInfoStringLen(self, attr, attrlen, retinfo)
+#define LOCAL_DeeType_AccessAttrHash(self)   DeeType_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)
+#define LOCAL_DeeModule_AccessAttrHash(self) DeeModule_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)
+#elif defined(LOCAL_IS_FINDINFO)
+#define LOCAL_DeeType_AccessAttr(self)   DeeType_FindAttrInfoStringHash(self, attr, hash, retinfo)
+#define LOCAL_DeeModule_AccessAttr(self) DeeModule_FindAttrInfoStringHash(self, attr, hash, retinfo)
 #elif defined(LOCAL_IS_FIND)
 #define LOCAL_DeeType_AccessAttr(self)   DeeType_FindAttr(self, retinfo, rules)
 #define LOCAL_DeeModule_AccessAttr(self) DeeModule_FindAttr(self, retinfo, rules)
@@ -881,7 +928,7 @@ DECL_BEGIN
 
 
 /* What visibility should the function have? */
-#if defined(LOCAL_HAS_tp_self) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND)
+#if defined(LOCAL_HAS_tp_self) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
 #define LOCAL_DECL INTERN
 #else /* ... */
 #define LOCAL_DECL PUBLIC
@@ -892,18 +939,30 @@ DECL_BEGIN
 #define LOCAL_ATTR_NONNULL NONNULL((1, 3, 4))
 #elif defined(DEFINE_DeeObject_EnumAttr)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2))
+#elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 3, 6))
 #elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
+#elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 3, 5))
 #elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 5))
+#elif defined(LOCAL_HAS_tp_self) && defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 3, 4))
 #elif defined(LOCAL_HAS_tp_self) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 4))
 #elif defined(LOCAL_HAS_tp_self)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3))
+#elif defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 5))
 #elif defined(LOCAL_HAS_len) && defined(LOCAL_HAS_hash) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 5))
+#elif (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 4))
 #elif (defined(LOCAL_HAS_len) || defined(LOCAL_HAS_hash)) && (defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW))
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 4))
+#elif defined(LOCAL_IS_FINDINFO)
+#define LOCAL_ATTR_NONNULL NONNULL((1, 3))
 #elif defined(LOCAL_IS_SET) || defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3))
 #else /* ... */
@@ -1015,6 +1074,9 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 #elif defined(LOCAL_IS_SET)
                                    , DeeObject *value
 #endif /* ... */
+#ifdef LOCAL_IS_FINDINFO
+                                   , struct Dee_attrinfo *__restrict retinfo
+#endif /* LOCAL_IS_FINDINFO */
 #endif /* !LOCAL_IS_FIND */
 #endif /* !LOCAL_IS_ENUM */
                                    ) {
@@ -1062,7 +1124,11 @@ LOCAL_DECL WUNUSED LOCAL_ATTR_NONNULL LOCAL_return_t
 	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
 #endif /* LOCAL_HAS_tp_self */
 #ifdef LOCAL_HAS_tp_self
+#ifdef LOCAL_IS_FINDINFO
+	ASSERT_OBJECT_TYPE_A_OPT(self, tp_self);
+#else /* LOCAL_IS_FINDINFO */
 	ASSERT_OBJECT_TYPE_A(self, tp_self);
+#endif /* !LOCAL_IS_FINDINFO */
 #else /* LOCAL_HAS_tp_self */
 	ASSERT_OBJECT(self);
 #endif /* !LOCAL_HAS_tp_self */
@@ -1129,6 +1195,11 @@ continue_at_iter:
 			if (cattr != NULL) {
 #ifdef LOCAL_IS_HAS
 				return 1;
+#elif defined(LOCAL_IS_FINDINFO)
+				retinfo->ai_type = Dee_ATTRINFO_ATTR;
+				retinfo->ai_decl = (DeeObject *)tp_iter;
+				retinfo->ai_value.v_attr = cattr;
+				return true;
 #else /* LOCAL_IS_HAS */
 				struct class_desc *desc;
 				/* Check if we're allowed to access this cattr. */
@@ -1175,38 +1246,48 @@ continue_at_iter:
 do_tp_iter_attr:
 			tp_accessattr = tp_iter->tp_attr->LOCAL_tp_accessattr;
 
-			/* Special optimizations for certain object types. */
-
+#ifdef LOCAL_IS_FINDINFO
+			if (self != NULL)
+#endif /* LOCAL_IS_FINDINFO */
+			{
+				/* Special optimizations for certain object types. */
 #ifdef LOCAL_DeeType_AccessAttr
-			if (tp_accessattr == &LOCAL_type_accessattr)
-				return LOCAL_DeeType_AccessAttr_LOCAL((DeeTypeObject *)self);
+				if (tp_accessattr == &LOCAL_type_accessattr)
+					return LOCAL_DeeType_AccessAttr_LOCAL((DeeTypeObject *)self);
 #endif /* LOCAL_DeeType_AccessAttr */
 
 #ifdef LOCAL_DeeModule_AccessAttr
-			if (tp_accessattr == &LOCAL_module_accessattr) {
-				result = LOCAL_DeeModule_AccessAttr_LOCAL((DeeModuleObject *)self);
-				goto LOCAL_invoke_result_OR_done;
-			}
+				if (tp_accessattr == &LOCAL_module_accessattr) {
+					result = LOCAL_DeeModule_AccessAttr_LOCAL((DeeModuleObject *)self);
+					goto LOCAL_invoke_result_OR_done;
+				}
 #endif /* LOCAL_DeeModule_AccessAttr */
 
-			/* Operations that can't be mapped directly to the actual operators have super-optimizations */
+				/* Operations that can't be mapped directly to the actual operators have super-optimizations */
 #ifdef LOCAL_HAS_super_optimizations
-			if (tp_accessattr == &LOCAL_super_accessattr) {
-				tp_iter = DeeSuper_TYPE(self);
-				self    = DeeSuper_SELF(self);
-				tp_self = tp_iter;
-				goto again;
-			}
+				if (tp_accessattr == &LOCAL_super_accessattr) {
+					tp_iter = DeeSuper_TYPE(self);
+					self    = DeeSuper_SELF(self);
+					tp_self = tp_iter;
+					goto again;
+				}
 #endif /* LOCAL_HAS_super_optimizations */
 
-			/* More special handling for `Sequence.each' */
+				/* More special handling for `Sequence.each' */
 #if defined(LOCAL_DeeSeqEach_AccessAttr) && defined(LOCAL_seqeach_accessattr)
-			if (tp_accessattr == &LOCAL_seqeach_accessattr)
-				return LOCAL_DeeSeqEach_AccessAttr(((SeqEachBase *)self)->se_seq);
-			if (tp_accessattr == &LOCAL_seqeachw_accessattr)
-				return LOCAL_DeeSeqEach_AccessAttr(self);
+				if (tp_accessattr == &LOCAL_seqeach_accessattr)
+					return LOCAL_DeeSeqEach_AccessAttr(((SeqEachBase *)self)->se_seq);
+				if (tp_accessattr == &LOCAL_seqeachw_accessattr)
+					return LOCAL_DeeSeqEach_AccessAttr(self);
 #endif /* LOCAL_DeeSeqEach_AccessAttr && LOCAL_seqeach_accessattr */
+			}
 
+#ifdef LOCAL_IS_FINDINFO
+			retinfo->ai_type = Dee_ATTRINFO_CUSTOM;
+			retinfo->ai_decl = (DeeObject *)tp_iter;
+			retinfo->ai_value.v_custom = tp_iter->tp_attr;
+			return true;
+#else /* LOCAL_IS_FINDINFO */
 			/* Check for special case: the required operator isn't implemented. */
 			if unlikely(!tp_accessattr) {
 #if defined(LOCAL_IS_TEST_FUNCTION) || defined(LOCAL_IS_FIND)
@@ -1281,15 +1362,16 @@ do_tp_iter_attr:
 #else /* ... */
 			goto LOCAL_invoke_result_OR_done;
 #endif /* !... */
+#endif /* !LOCAL_IS_FINDINFO */
 #undef LOCAL_result_OR_found_object
 		}
 	}
 
-#if !defined(LOCAL_IS_TEST_FUNCTION) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND)
+#if !defined(LOCAL_IS_TEST_FUNCTION) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
 	LOCAL_err_unknown_attribute(tp_self, LOCAL_ATTR_ACCESS_OP);
 err:
 	return LOCAL_ERROR_RESULT;
-#endif /* !LOCAL_IS_TEST_FUNCTION && !LOCAL_IS_ENUM && !LOCAL_IS_FIND */
+#endif /* !LOCAL_IS_TEST_FUNCTION && !LOCAL_IS_ENUM && !LOCAL_IS_FIND && !LOCAL_IS_FINDINFO */
 #ifndef LOCAL_IS_ENUM
 #ifdef LOCAL_IS_CALL_LIKE
 invoke_result:
@@ -1369,6 +1451,7 @@ err:
 #undef LOCAL_IS_DEL
 #undef LOCAL_IS_SET
 #undef LOCAL_IS_FIND
+#undef LOCAL_IS_FINDINFO
 #undef LOCAL_IS_ENUM
 #undef LOCAL_HAS_string
 #undef LOCAL_HAS_hash
@@ -1441,5 +1524,7 @@ DECL_END
 #undef DEFINE_DeeObject_TSetAttrStringHash
 #undef DEFINE_DeeObject_SetAttrStringLenHash
 #undef DEFINE_DeeObject_TSetAttrStringLenHash
+#undef DEFINE_DeeObject_TFindAttrInfoStringHash
+#undef DEFINE_DeeObject_TFindAttrInfoStringLenHash
 #undef DEFINE_DeeObject_FindAttr
 #undef DEFINE_DeeObject_EnumAttr

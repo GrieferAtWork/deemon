@@ -59,7 +59,7 @@ LOCAL_Dee_Strtod(char const *str, char **p_endptr) {
 			numsys = 2;
 		} else if (ch == '.') {
 			numsys = 10;
-		} else if (!isdigit(ch)) {
+		} else if (!isdigit((unsigned char)ch)) {
 			goto done;
 		} else {
 			numsys = 8;
@@ -69,7 +69,7 @@ LOCAL_Dee_Strtod(char const *str, char **p_endptr) {
 		if ((ch == 'i' || ch == 'I') &&
 		    (str[1] == 'n' || str[1] == 'N') &&
 		    (str[2] == 'f' || str[2] == 'F') &&
-		    !isalnum(str[3])) {
+		    !isalnum((unsigned char)str[3])) {
 			str += 3;
 			if (p_endptr)
 				*p_endptr = (char *)str;
@@ -81,7 +81,7 @@ LOCAL_Dee_Strtod(char const *str, char **p_endptr) {
 		if ((ch == 'n' || ch == 'N') &&
 		    (str[1] == 'a' || str[1] == 'A') &&
 		    (str[2] == 'n' || str[2] == 'N') &&
-		    !isalnum(str[3])) {
+		    !isalnum((unsigned char)str[3])) {
 			str += 3;
 			if (p_endptr)
 				*p_endptr = (char *)str;

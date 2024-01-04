@@ -117,12 +117,13 @@ typedef __UINTPTR_TYPE__ uintptr_t;
 #define Dee_opinfo                 opinfo
 #define Dee_attribute_info         attribute_info
 #define Dee_attribute_lookup_rules attribute_lookup_rules
+#define Dee_attrinfo               attrinfo
 #endif /* DEE_SOURCE */
 
 
-struct Dee_type_object;
-struct Dee_object;
 struct Dee_weakref;
+struct Dee_object;
+struct Dee_type_object;
 struct Dee_class_desc;
 
 typedef struct Dee_type_object DeeTypeObject;
@@ -2789,7 +2790,7 @@ DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
 
 #define DeeType_mro_foreach_start(tp_iter)  \
 	do {                                    \
-		DeeTypeMRO _tp_mro;          \
+		DeeTypeMRO _tp_mro;                 \
 		DeeTypeMRO_Init(&_tp_mro, tp_iter); \
 		do
 #define DeeType_mro_foreach_end(tp_iter)                                  \
@@ -2857,6 +2858,7 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict sel
 
 struct Dee_attribute_info;
 struct Dee_attribute_lookup_rules;
+struct Dee_attrinfo;
 
 /* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
  * @return: -1 / ---   / NULL:          Error.
@@ -2880,6 +2882,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TGenericBoundAttrStringLe
 
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_TGenericEnumAttr(DeeTypeObject *tp_self, Dee_enum_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
+DFUNDEF WUNUSED NONNULL((1, 2, 5)) bool DCALL DeeObject_TGenericFindAttrInfoStringLenHash(DeeTypeObject *tp_self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
 
 #define DeeObject_TGenericGetAttr(tp_self, self, attr)                                      DeeObject_TGenericGetAttrStringHash(tp_self, self, DeeString_STR(attr), DeeString_Hash(attr))
 #define DeeObject_TGenericGetAttrHash(tp_self, self, attr, hash)                            DeeObject_TGenericGetAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
@@ -2912,6 +2915,11 @@ DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeO
 #define DeeObject_TGenericBoundAttrHash(tp_self, self, attr, hash)                          DeeObject_TGenericBoundAttrStringHash(tp_self, self, DeeString_STR(attr), hash)
 #define DeeObject_TGenericBoundAttrString(tp_self, self, attr)                              DeeObject_TGenericBoundAttrStringHash(tp_self, self, attr, Dee_HashStr(attr))
 #define DeeObject_TGenericBoundAttrStringLen(tp_self, self, attr, attrlen)                  DeeObject_TGenericBoundAttrStringLenHash(tp_self, self, attr, attrlen, Dee_HashPtr(attr, attrlen))
+#define DeeObject_TGenericFindAttrInfo(tp_self, attr, retinfo)                              DeeObject_TGenericFindAttrInfoStringLenHash(tp_self, attr, DeeString_STR(attr), DeeString_SIZE(attr), DeeString_Hash(attr), retinfo)
+#define DeeObject_TGenericFindAttrInfoHash(tp_self, attr, hash, retinfo)                    DeeObject_TGenericFindAttrInfoStringLenHash(tp_self, attr, DeeString_STR(attr), DeeString_SIZE(attr), hash, retinfo)
+#define DeeObject_TGenericFindAttrInfoString(tp_self, attr, retinfo)                        DeeObject_TGenericFindAttrInfoStringLenHash(tp_self, attr, strlen(attr), Dee_HashStr(attr), retinfo)
+#define DeeObject_TGenericFindAttrInfoStringHash(tp_self, attr, hash, retinfo)              DeeObject_TGenericFindAttrInfoStringLenHash(tp_self, attr, strlen(attr), hash, retinfo)
+#define DeeObject_TGenericFindAttrInfoStringLen(tp_self, attr, attrlen, retinfo)            DeeObject_TGenericFindAttrInfoStringLenHash(tp_self, attr, attrlen, Dee_HashPtr(attr, attrlen), retinfo)
 
 #define DeeObject_GenericGetAttr(self, attr)                                                DeeObject_TGenericGetAttr(Dee_TYPE(self), self, attr)
 #define DeeObject_GenericGetAttrHash(self, attr, hash)                                      DeeObject_TGenericGetAttrHash(Dee_TYPE(self), self, attr, hash)
@@ -2961,6 +2969,12 @@ DFUNDEF WUNUSED NONNULL((1, 3, 4)) int DCALL DeeObject_TGenericFindAttr(DeeTypeO
 #define DeeObject_GenericBoundAttrStringLenHash(self, attr, attrlen, hash)                  DeeObject_TGenericBoundAttrStringLenHash(Dee_TYPE(self), self, attr, attrlen, hash)
 #define DeeObject_GenericEnumAttr(self, proc, arg)                                          DeeObject_TGenericEnumAttr(Dee_TYPE(self), proc, arg)
 #define DeeObject_GenericFindAttr(self, result, rules)                                      DeeObject_TGenericFindAttr(Dee_TYPE(self), self, result, rules)
+#define DeeObject_GenericFindAttrInfo(self, attr, retinfo)                                  DeeObject_TGenericFindAttrInfo(Dee_TYPE(self), attr, retinfo)
+#define DeeObject_GenericFindAttrInfoHash(self, attr, hash, retinfo)                        DeeObject_TGenericFindAttrInfoHash(Dee_TYPE(self), attr, hash, retinfo)
+#define DeeObject_GenericFindAttrInfoString(self, attr, retinfo)                            DeeObject_TGenericFindAttrInfoString(Dee_TYPE(self), attr, retinfo)
+#define DeeObject_GenericFindAttrInfoStringHash(self, attr, hash, retinfo)                  DeeObject_TGenericFindAttrInfoStringHash(Dee_TYPE(self), attr, hash, retinfo)
+#define DeeObject_GenericFindAttrInfoStringLen(self, attr, attrlen, retinfo)                DeeObject_TGenericFindAttrInfoStringLen(Dee_TYPE(self), attr, attrlen, retinfo)
+#define DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo)      DeeObject_TGenericFindAttrInfoStringLenHash(Dee_TYPE(self), attr, attrlen, hash, retinfo)
 
 
 

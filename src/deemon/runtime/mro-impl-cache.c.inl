@@ -86,6 +86,10 @@
 #undef DeeType_VCallCachedClassAttrStringLenHashf
 #undef DeeType_VCallCachedInstanceAttrStringHashf
 #undef DeeType_VCallCachedInstanceAttrStringLenHashf
+#undef DeeType_FindCachedAttrInfoStringHash
+#undef DeeType_FindCachedClassAttrInfoStringHash
+#undef DeeType_FindCachedAttrInfoStringLenHash
+#undef DeeType_FindCachedClassAttrInfoStringLenHash
 #undef DeeType_FindCachedAttr
 #undef DeeType_FindCachedClassAttr
 
@@ -132,7 +136,7 @@
 //#define DEFINE_DeeType_CallCachedAttrStringHashKw
 //#define DEFINE_DeeType_CallCachedAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedClassAttrStringHashKw
-#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
+//#define DEFINE_DeeType_CallCachedClassAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringHashKw
 //#define DEFINE_DeeType_CallCachedInstanceAttrStringLenHashKw
 //#define DEFINE_DeeType_CallCachedAttrStringHashTuple
@@ -153,6 +157,10 @@
 //#define DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
 //#define DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
+//#define DEFINE_DeeType_FindCachedAttrInfoStringHash
+//#define DEFINE_DeeType_FindCachedClassAttrInfoStringHash
+#define DEFINE_DeeType_FindCachedAttrInfoStringLenHash
+//#define DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash
 //#define DEFINE_DeeType_FindCachedAttr
 //#define DEFINE_DeeType_FindCachedClassAttr
 #endif /* __INTELLISENSE__ */
@@ -221,7 +229,11 @@
      defined(DEFINE_DeeType_VCallCachedClassAttrStringLenHashf) +         \
      defined(DEFINE_DeeType_VCallCachedInstanceAttrStringHashf) +         \
      defined(DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf) +      \
-     defined(DEFINE_DeeType_FindCachedAttr) +                   \
+     defined(DEFINE_DeeType_FindCachedAttrInfoStringHash) +               \
+     defined(DEFINE_DeeType_FindCachedClassAttrInfoStringHash) +          \
+     defined(DEFINE_DeeType_FindCachedAttrInfoStringLenHash) +            \
+     defined(DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash) +      \
+     defined(DEFINE_DeeType_FindCachedAttr) +                            \
      defined(DEFINE_DeeType_FindCachedClassAttr)) != 1
 #error "Must #define exactly one of these macros"
 #endif /* ... */
@@ -504,6 +516,22 @@ DECL_BEGIN
 #define LOCAL_IS_VCALLF
 #define LOCAL_IS_INSTANCE
 #define LOCAL_HAS_len
+#elif defined(DEFINE_DeeType_FindCachedAttrInfoStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_FindCachedAttrInfoStringHash
+#define LOCAL_IS_FINDINFO
+#elif defined(DEFINE_DeeType_FindCachedClassAttrInfoStringHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_FindCachedClassAttrInfoStringHash
+#define LOCAL_IS_FINDINFO
+#define LOCAL_IS_CLASS
+#elif defined(DEFINE_DeeType_FindCachedAttrInfoStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_FindCachedAttrInfoStringLenHash
+#define LOCAL_IS_FINDINFO
+#define LOCAL_HAS_len
+#elif defined(DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash)
+#define LOCAL_DeeType_AccessCachedAttr DeeType_FindCachedClassAttrInfoStringLenHash
+#define LOCAL_IS_FINDINFO
+#define LOCAL_IS_CLASS
+#define LOCAL_HAS_len
 #elif defined(DEFINE_DeeType_FindCachedAttr)
 #define LOCAL_DeeType_AccessCachedAttr DeeType_FindCachedAttr
 #define LOCAL_IS_FIND
@@ -515,9 +543,9 @@ DECL_BEGIN
 #error "Invalid configuration"
 #endif /* !... */
 
-#if !defined(LOCAL_IS_CLASS) && !defined(LOCAL_IS_INSTANCE) && !defined(LOCAL_IS_HAS)
+#if !defined(LOCAL_IS_CLASS) && !defined(LOCAL_IS_INSTANCE) && !defined(LOCAL_IS_HAS) && !defined(LOCAL_IS_FINDINFO)
 #define LOCAL_HAS_self
-#endif /* !LOCAL_IS_CLASS && !LOCAL_IS_INSTANCE && !LOCAL_IS_HAS */
+#endif /* !LOCAL_IS_CLASS && !LOCAL_IS_INSTANCE && !LOCAL_IS_HAS && !LOCAL_IS_FINDINFO */
 
 #ifdef LOCAL_IS_CLASS
 #define LOCAL_tp_cache tp_class_cache
@@ -525,9 +553,9 @@ DECL_BEGIN
 #define LOCAL_tp_cache tp_cache
 #endif /* !LOCAL_IS_CLASS */
 
-#if (defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC) ||            \
-     defined(LOCAL_IS_CALL_TUPLE) || defined(LOCAL_IS_CALL_TUPLE_KW) || \
-     defined(LOCAL_IS_VCALLF))
+#if (defined(LOCAL_IS_SET) || defined(LOCAL_IS_FINDINFO) || \
+     defined(LOCAL_IS_SET_BASIC) || defined(LOCAL_IS_CALL_TUPLE) || \
+     defined(LOCAL_IS_CALL_TUPLE_KW) || defined(LOCAL_IS_VCALLF))
 #if defined(LOCAL_HAS_self) && defined(LOCAL_HAS_len)
 #define LOCAL_ATTR_NONNULL NONNULL((1, 2, 3, 6))
 #elif defined(LOCAL_HAS_self)
@@ -862,6 +890,10 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
  * @return: NULL:      An error occurred.
  * @return: ITER_DONE: The attribute could not be found in the cache. */
 INTERN WUNUSED LOCAL_ATTR_NONNULL DREF DeeObject *
+#elif defined(LOCAL_IS_FINDINFO)
+/* @return: true:  Attribute was found.
+ * @return: false: Attribute wasn't found. */
+INTDEF WUNUSED LOCAL_ATTR_NONNULL bool
 #elif defined(LOCAL_IS_FIND)
 INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #else /* ... */
@@ -895,6 +927,9 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifdef LOCAL_HAS_kw
                                        , DeeObject *kw
 #endif /* LOCAL_HAS_kw */
+#ifdef LOCAL_IS_FINDINFO
+                                       , struct attrinfo *__restrict retinfo
+#endif /* LOCAL_IS_FINDINFO */
 #endif /* !LOCAL_IS_FIND */
                                        ) {
 #if defined(LOCAL_IS_CLASS) && !defined(LOCAL_IS_HAS)
@@ -980,7 +1015,146 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 #ifdef LOCAL_IS_HAS
 		Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 		return true;
-#else /* LOCAL_IS_HAS */
+#elif defined(LOCAL_IS_FINDINFO)
+		STATIC_ASSERT(Dee_ATTRINFO_METHOD == MEMBERCACHE_METHOD);
+		STATIC_ASSERT(Dee_ATTRINFO_GETSET == MEMBERCACHE_GETSET);
+		STATIC_ASSERT(Dee_ATTRINFO_MEMBER == MEMBERCACHE_MEMBER);
+		STATIC_ASSERT(Dee_ATTRINFO_ATTR == MEMBERCACHE_ATTRIB);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_METHOD == MEMBERCACHE_INSTANCE_METHOD);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_GETSET == MEMBERCACHE_INSTANCE_GETSET);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_MEMBER == MEMBERCACHE_INSTANCE_MEMBER);
+		STATIC_ASSERT(Dee_ATTRINFO_INSTANCE_ATTR == MEMBERCACHE_INSTANCE_ATTRIB);
+		retinfo->ai_type = type;
+		retinfo->ai_decl = (DeeObject *)item->mcs_decl;
+		switch (type) {
+
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_INSTANCE_ATTRIB:
+#endif /* LOCAL_IS_CLASS */
+		case MEMBERCACHE_ATTRIB:
+			retinfo->ai_value.v_attr = item->mcs_attrib.a_attr;
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			break;
+
+			/* Because the cache only stores copies of method/getset/member items,
+			 * we have to find the address of the original declaration, since the
+			 * cache's only remains valid until the lock is released.
+			 *
+			 * This overhead is OK because FindAttrInfo isn't called during normal
+			 * code execution, but is instead used by _hostasm and AST optimization,
+			 * and overall, doing it this was is still faster that not using the
+			 * cache at all! */
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_METHOD: {
+			struct Dee_type_method memb;
+			struct Dee_type_method const *iter;
+			memcpy(&memb, &item->mcs_method, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_methods;
+			ASSERT(iter);
+			ASSERT(iter->m_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->m_name);
+			}
+			retinfo->ai_value.v_method = iter;
+		}	break;
+
+		case MEMBERCACHE_GETSET: {
+			struct Dee_type_getset memb;
+			struct Dee_type_getset const *iter;
+			memcpy(&memb, &item->mcs_getset, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_getsets;
+			ASSERT(iter);
+			ASSERT(iter->gs_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->gs_name);
+			}
+			retinfo->ai_value.v_getset = iter;
+		}	break;
+
+		case MEMBERCACHE_MEMBER: {
+			struct Dee_type_member memb;
+			struct Dee_type_member const *iter;
+			memcpy(&memb, &item->mcs_member, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_class_members;
+			ASSERT(iter);
+			ASSERT(iter->m_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->m_name);
+			}
+			retinfo->ai_value.v_member = iter;
+		}	break;
+#endif /* LOCAL_IS_CLASS */
+
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_INSTANCE_METHOD:
+#else /* LOCAL_IS_CLASS */
+		case MEMBERCACHE_METHOD:
+#endif /* !LOCAL_IS_CLASS */
+		{
+			struct Dee_type_method memb;
+			struct Dee_type_method const *iter;
+			memcpy(&memb, &item->mcs_method, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_methods;
+			ASSERT(iter);
+			ASSERT(iter->m_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->m_name);
+			}
+			retinfo->ai_value.v_method = iter;
+		}	break;
+
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_INSTANCE_GETSET:
+#else /* LOCAL_IS_CLASS */
+		case MEMBERCACHE_GETSET:
+#endif /* !LOCAL_IS_CLASS */
+		{
+			struct Dee_type_getset memb;
+			struct Dee_type_getset const *iter;
+			memcpy(&memb, &item->mcs_getset, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_getsets;
+			ASSERT(iter);
+			ASSERT(iter->gs_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->gs_name);
+			}
+			retinfo->ai_value.v_getset = iter;
+		}	break;
+
+#ifdef LOCAL_IS_CLASS
+		case MEMBERCACHE_INSTANCE_MEMBER:
+#else /* LOCAL_IS_CLASS */
+		case MEMBERCACHE_MEMBER:
+#endif /* !LOCAL_IS_CLASS */
+		{
+			struct Dee_type_member memb;
+			struct Dee_type_member const *iter;
+			memcpy(&memb, &item->mcs_member, sizeof(memb));
+			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
+			iter = ((DeeTypeObject *)retinfo->ai_decl)->tp_members;
+			ASSERT(iter);
+			ASSERT(iter->m_name);
+			while (memcmp(iter, &memb, sizeof(memb)) != 0) {
+				++iter;
+				ASSERT(iter->m_name);
+			}
+			retinfo->ai_value.v_member = iter;
+		}	break;
+
+		default: __builtin_unreachable();
+		}
+		return true;
+#else /* ... */
 		switch (type) {
 
 #if (defined(LOCAL_IS_GET) || defined(LOCAL_IS_CALL) || defined(LOCAL_IS_CALL_KW) || \
@@ -1700,7 +1874,7 @@ check_and_invoke_callback:
 		default: __builtin_unreachable();
 #endif /* !LOCAL_IS_SET_BASIC */
 		}
-#endif /* !LOCAL_IS_HAS */
+#endif /* !... */
 
 #ifdef LOCAL_IS_FIND
 		/* If the caller is looking for an attribute with
@@ -1731,7 +1905,7 @@ cache_miss:
 	return ITER_DONE;
 #elif defined(LOCAL_IS_BOUND)
 	return -2;
-#elif defined(LOCAL_IS_HAS)
+#elif defined(LOCAL_IS_HAS) || defined(LOCAL_IS_FINDINFO)
 	return false;
 #elif defined(LOCAL_IS_DEL) || defined(LOCAL_IS_SET) || defined(LOCAL_IS_SET_BASIC)
 	return 1;
@@ -1816,6 +1990,8 @@ err:
 #undef LOCAL_HAS_len
 #undef LOCAL_IS_CLASS
 #undef LOCAL_IS_INSTANCE
+#undef LOCAL_IS_FIND
+#undef LOCAL_IS_FINDINFO
 #undef LOCAL_HAS_self
 #undef LOCAL_tp_cache
 
@@ -1885,5 +2061,9 @@ DECL_END
 #undef DEFINE_DeeType_VCallCachedClassAttrStringLenHashf
 #undef DEFINE_DeeType_VCallCachedInstanceAttrStringHashf
 #undef DEFINE_DeeType_VCallCachedInstanceAttrStringLenHashf
+#undef DEFINE_DeeType_FindCachedAttrInfoStringHash
+#undef DEFINE_DeeType_FindCachedClassAttrInfoStringHash
+#undef DEFINE_DeeType_FindCachedAttrInfoStringLenHash
+#undef DEFINE_DeeType_FindCachedClassAttrInfoStringLenHash
 #undef DEFINE_DeeType_FindCachedAttr
 #undef DEFINE_DeeType_FindCachedClassAttr
