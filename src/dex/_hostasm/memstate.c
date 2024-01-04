@@ -132,6 +132,49 @@ Dee_memloc_typeof(struct Dee_memloc const *self) {
 }
 
 
+/* Get/set the delta added to pre-morph final value.
+ * Returns "0" for locations MEMLOC_TYPE_UNALLOC/MEMLOC_TYPE_UNDEFINED */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) ptrdiff_t DCALL
+Dee_memloc_getvaldelta(struct Dee_memloc const *self) {
+	switch (self->ml_type) {
+	case MEMLOC_TYPE_HREG:
+	case MEMLOC_TYPE_HSTACK:
+		return self->ml_value.v_hreg.r_off;
+	case MEMLOC_TYPE_HREGIND:
+	case MEMLOC_TYPE_HSTACKIND:
+		return self->ml_value.v_hreg.r_voff;
+	case MEMLOC_TYPE_CONST:
+		return (ptrdiff_t)(uintptr_t)self->ml_value.v_const;
+	case MEMLOC_TYPE_UNALLOC:
+	case MEMLOC_TYPE_UNDEFINED:
+		return 0;
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+}
+
+INTERN NONNULL((1)) void DCALL
+Dee_memloc_setvaldelta(struct Dee_memloc *self, ptrdiff_t delta) {
+	switch (self->ml_type) {
+	case MEMLOC_TYPE_HREG:
+	case MEMLOC_TYPE_HSTACK:
+		self->ml_value.v_hreg.r_off = delta;
+		break;
+	case MEMLOC_TYPE_HREGIND:
+	case MEMLOC_TYPE_HSTACKIND:
+		self->ml_value.v_hreg.r_voff = delta;
+		break;
+	case MEMLOC_TYPE_CONST:
+		self->ml_value.v_const = (DeeObject *)(uintptr_t)delta;
+		break;
+	case MEMLOC_TYPE_UNALLOC:
+	case MEMLOC_TYPE_UNDEFINED:
+		break;
+	default: __builtin_unreachable();
+	}
+}
+
+
 /* Check if there is a register that contains `usage'.
  * Returns some value `>= HOST_REGISTER_COUNT' if non-existent. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_host_register_t DCALL
@@ -777,6 +820,7 @@ Dee_memstate_vpush_undefined(struct Dee_memstate *__restrict self) {
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_UNDEFINED;
+	loc->ml_valtyp = NULL;
 	++self->ms_stackc;
 	return 0;
 err:
@@ -784,6 +828,24 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vpush_addr(struct Dee_memstate *__restrict self, void const *addr) {
+	struct Dee_memloc *loc;
+	if unlikely(self->ms_stackc >= self->ms_stacka &&
+	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+		goto err;
+	loc = &self->ms_stackv[self->ms_stackc];
+	loc->ml_flags  = MEMLOC_F_NOREF;
+	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+	loc->ml_type   = MEMLOC_TYPE_CONST;
+	loc->ml_valtyp = NULL;
+	loc->ml_value.v_const = (DeeObject *)addr;
+	++self->ms_stackc;
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value) {
 	struct Dee_memloc *loc;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
@@ -793,7 +855,7 @@ Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value)
 	loc->ml_flags  = MEMLOC_F_NOREF;
 	loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
 	loc->ml_type   = MEMLOC_TYPE_CONST;
-	/*loc->ml_valtyp = NULL;*/ /* Not used for constants */
+	loc->ml_valtyp = Dee_TYPE(value);
 	loc->ml_value.v_const = value;
 	++self->ms_stackc;
 	return 0;

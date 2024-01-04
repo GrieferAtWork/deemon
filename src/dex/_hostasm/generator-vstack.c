@@ -101,8 +101,17 @@ Dee_function_generator_vpush_undefined(struct Dee_function_generator *__restrict
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpush_const(struct Dee_function_generator *__restrict self,
-                                   DeeObject *value) {
+Dee_function_generator_vpush_addr(struct Dee_function_generator *__restrict self,
+                                  void const *addr) {
+	int result = Dee_function_generator_state_unshare(self);
+	if likely(result == 0)
+		result = Dee_memstate_vpush_addr(self->fg_state, addr);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vpush_const_(struct Dee_function_generator *__restrict self,
+                                    DeeObject *value) {
 	int result = Dee_function_generator_state_unshare(self);
 	if likely(result == 0)
 		result = Dee_memstate_vpush_const(self->fg_state, value);
@@ -711,50 +720,6 @@ err:
 }
 
 
-
-/* Force vtop to one of `MEMLOC_VMORPH_BOOL_*' (only use if you need a bool
- * morph, and `Dee_function_generator_vopbool()' doesn't give you one) */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vmorphbool(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc *vtop;
-	if unlikely(self->fg_state->ms_stackc < 1)
-		return err_illegal_stack_effect();
-	if unlikely(Dee_function_generator_state_unshare(self))
-		goto err;
-	vtop = Dee_function_generator_vtop(self);
-	switch (vtop->ml_vmorph) {
-	case MEMLOC_VMORPH_BOOL_Z:
-	case MEMLOC_VMORPH_BOOL_Z_01:
-	case MEMLOC_VMORPH_BOOL_NZ:
-	case MEMLOC_VMORPH_BOOL_NZ_01:
-	case MEMLOC_VMORPH_BOOL_LZ:
-	case MEMLOC_VMORPH_BOOL_GZ:
-		return 0; /* Already a proper boolean */
-	case MEMLOC_VMORPH_DIRECT:
-	case MEMLOC_VMORPH_DIRECT_01:
-		break;
-	case MEMLOC_VMORPH_INT:
-	case MEMLOC_VMORPH_UINT:
-		vtop->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ;
-		return 0;
-	default:
-		if unlikely(Dee_function_generator_gdirect(self, vtop))
-			goto err;
-		break;
-	}
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALL_CC_NEGINT, 1))
-		goto err;
-	vtop = Dee_function_generator_vtop(self);
-	ASSERT(MEMLOC_VMORPH_ISDIRECT(vtop->ml_vmorph));
-	vtop->ml_vmorph = MEMLOC_VMORPH_TESTNZ(vtop->ml_vmorph);
-	return 0;
-err:
-	return -1;
-}
-
-
-
-
 /* VTOP = VTOP == <value> */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_veqconstaddr(struct Dee_function_generator *__restrict self,
@@ -1263,7 +1228,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_this_function(struct Dee_function_generator *__restrict self) {
 	if (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_FUNC)
 		return _Dee_function_generator_vpush_xlocal(self, MEMSTATE_XLOCAL_A_FUNC);
-	return Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_function);
+	return Dee_function_generator_vpush_const(self, self->fg_assembler->fa_function);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1373,7 +1338,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gunbound_member(struct Dee_function_generator *__restrict self,
                                        DeeTypeObject *__restrict class_type, uint16_t addr,
                                        void const *api_function) {
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)class_type))
+	if unlikely(Dee_function_generator_vpush_const(self, class_type))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 		goto err;
@@ -1421,7 +1386,7 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 	/* When optimizing for size, generate a (smaller) call to
 	 * `DeeClass_GetMember()', instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) {
-		if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)class_type))
+		if unlikely(Dee_function_generator_vpush_const(self, class_type))
 			goto err;
 		if unlikely(Dee_function_generator_vpush_imm16(self, addr))
 			goto err;
@@ -1652,7 +1617,7 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 	/* When optimizing for size, generate a (smaller) call to
 	 * `DeeInstance_GetMember()', instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) {
-		if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
+		if unlikely(Dee_function_generator_vpush_const(self, type))
 			goto err; /* this, type */
 		if unlikely(Dee_function_generator_vswap(self))
 			goto err; /* type, this */
@@ -1825,7 +1790,7 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 	 * `DeeInstance_GetMember()', instead of inlining the function. */
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) {
 		struct Dee_memloc *value_loc;
-		if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
+		if unlikely(Dee_function_generator_vpush_const(self, type))
 			goto err; /* this, value, type */
 		if unlikely(Dee_function_generator_vrrot(self, 3))
 			goto err; /* type, this, value */
@@ -2039,7 +2004,7 @@ Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__res
 		goto err;
 	if unlikely(Dee_function_generator_vdup(self))
 		goto err; /* value, value */
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
+	if unlikely(Dee_function_generator_vpush_const(self, type))
 		goto err; /* value, value, type */
 	if unlikely(impl_vassert_type_exact(self))
 		goto err; /* value */
@@ -2106,7 +2071,7 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 		goto err;
 	if unlikely(Dee_function_generator_vdup(self))
 		goto err; /* value, value */
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)type))
+	if unlikely(Dee_function_generator_vpush_const(self, type))
 		goto err; /* value, value, type */
 	return impl_vassert_type(self);
 err:
@@ -2144,58 +2109,34 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
                             struct Dee_jump_descriptor *desc,
                             Dee_instruction_t const *instr, bool jump_if_true) {
-	int temp;
+	struct Dee_host_symbol *Ljmp;
+	int bool_status;
 	struct Dee_basic_block *target = desc->jd_to;
-	struct Dee_except_exitinfo *except_exit;
 	struct Dee_memloc loc;
-	if unlikely(Dee_function_generator_vdirect(self, 1))
-		goto err; /* TODO: Optimization for `MEMLOC_VMORPH_BOOL_Z' / `MEMLOC_VMORPH_BOOL_NZ' */
+#ifdef DEE_HOST_RELOCVALUE_SECT
+	struct Dee_host_symbol _Ljmp;
+#endif /* DEE_HOST_RELOCVALUE_SECT */
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
+
+	/* TODO: If this jump might be the result of infinite loops,
+	 *       must emit a call to `DeeThread_CheckInterrupt()' */
+
+	bool_status = Dee_function_generator_vopbool(self, VOPBOOL_F_NOFALLBACK | VOPBOOL_F_FORCE_MORPH);
+	if unlikely(bool_status < 0)
+		goto err; /* Force vtop into a bool constant, or a MEMLOC_VMORPH_ISBOOL-style morph */
 	loc = *Dee_function_generator_vtop(self);
 
 	/* Special case for when the top-element is a constant. */
-	if (loc.ml_type == MEMLOC_TYPE_CONST &&
-	    DeeType_IsOperatorConstexpr(Dee_TYPE(loc.ml_value.v_const), OPERATOR_BOOL)) {
-		temp = DeeObject_Bool(loc.ml_value.v_const);
-		if unlikely(temp < 0) {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-		} else {
-			bool should_jump = (temp > 0) == jump_if_true;
-			if (should_jump) {
-				/* Unconditional jump -> the block ends here and falls into the next one */
-				self->fg_block->bb_next       = target;
-				self->fg_block->bb_deemon_end = instr; /* The jump doesn't exist anymore now! */
-			}
-			return Dee_function_generator_vpop(self);
+	if (loc.ml_type == MEMLOC_TYPE_CONST && likely(MEMLOC_VMORPH_ISDIRECT(loc.ml_vmorph))) {
+		ASSERT(DeeBool_Check(loc.ml_value.v_const));
+		if (loc.ml_value.v_const != Dee_False) {
+			/* Unconditional jump -> the block ends here and falls into the next one */
+			self->fg_block->bb_next       = target;
+			self->fg_block->bb_deemon_end = instr; /* The jump doesn't exist anymore now! */
 		}
+		return Dee_function_generator_vpop(self);
 	}
-
-	/* Evaluate the top stack-object to a boolean (via `DeeObject_Bool'). */
-	if unlikely(Dee_function_generator_gflushregs(self, 1, false))
-		goto err;
-
-	/* Check if the location was clobbered by the register flush. */
-	if (loc.ml_type == MEMLOC_TYPE_HREG &&
-		self->fg_state->ms_rusage[loc.ml_value.v_hreg.r_regno] != DEE_HOST_REGUSAGE_GENERIC)
-		loc = *Dee_function_generator_vtop(self);
-
-	/* Emit the actual call. */
-	if unlikely(_Dee_function_generator_gcallapi(self, (void *)&DeeObject_Bool, 1, &loc))
-		goto err;
-	if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
-		goto err;
-	if unlikely(Dee_function_generator_vswap(self))
-		goto err;
-	if unlikely(Dee_function_generator_vpop(self))
-		goto err;
-
-	/* At this point, the stack-top location contains the -1/0/1 returned by `DeeObject_Bool()' */
-	except_exit = Dee_function_generator_except_exit(self);
-	if unlikely(!except_exit)
-		goto err;
-	if unlikely(Dee_function_generator_state_unshare(self))
-		goto err;
 
 	/* If the jump target location already has its starting memory state generated,
 	 * and that state requires a small CFA offset than we currently have, then try
@@ -2209,63 +2150,150 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 			goto err;
 	}
 
-	/* Silently remove the -1/0/1 from DeeObject_Bool from the vstack. */
-	ASSERT(self->fg_state->ms_stackc >= 1);
-	loc = *Dee_function_generator_vtop(self);
-	ASSERT(loc.ml_flags & MEMLOC_F_NOREF);
-	--self->fg_state->ms_stackc;
-	if (MEMLOC_TYPE_HASREG(loc.ml_type))
-		Dee_memstate_decrinuse(self->fg_state, loc.ml_value.v_hreg.r_regno);
+	/* Initialize the symbol for jumping to `desc'. */
+#ifdef DEE_HOST_RELOCVALUE_SECT
+	Ljmp = &_Ljmp;
+#else /* DEE_HOST_RELOCVALUE_SECT */
+	Ljmp = Dee_function_generator_newsym(self);
+	if unlikely(!Ljmp)
+		goto err;
+#endif /* !DEE_HOST_RELOCVALUE_SECT */
+	Dee_host_symbol_setjump(Ljmp, desc);
 
-	/* TODO: If this jump might be the result of infinite loops,
-	 *       must emit a call to `DeeThread_CheckInterrupt()' */
-
-	/* Generate code to branch depending on the value of `loc' */
-	{
+	/* Check for special case: `Dee_function_generator_vopbool()' needed to do its fallback operation.
+	 * Handle this case by doing the call to `DeeObject_Bool()' ourselves, so we can combine the bool
+	 * branch with the except branch, thus saving on a couple of otherwise redundant instructions. */
+	if (bool_status > 0) {
+		bool hasbool;
+		DeeTypeObject *loctype;
 		struct Dee_memloc zero;
+		struct Dee_except_exitinfo *except_exit;
+		struct Dee_host_symbol *Lexcept;
+#ifdef DEE_HOST_RELOCVALUE_SECT
+		struct Dee_host_symbol _Lexcept;
+		Lexcept = &_Lexcept;
+#else /* DEE_HOST_RELOCVALUE_SECT */
+		Lexcept = Dee_function_generator_newsym(self);
+		if unlikely(!Lexcept)
+			goto err;
+#endif /* !DEE_HOST_RELOCVALUE_SECT */
+		except_exit = Dee_function_generator_except_exit(self);
+		if unlikely(!except_exit)
+			goto err;
+		Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+
+		loctype = Dee_memloc_typeof(&loc);
+		hasbool = loctype && DeeType_InheritOperator(loctype, OPERATOR_BOOL);
+		ASSERT(!hasbool || (loctype->tp_cast.tp_bool != NULL));
+		if unlikely(Dee_function_generator_vcallapi(self,
+		                                            hasbool ? (void const *)loctype->tp_cast.tp_bool
+		                                                    : (void const *)&DeeObject_Bool,
+		                                            VCALL_CC_RAWINT, 1))
+			goto err;
+		loc = *Dee_function_generator_vtop(self);
+
+		/* Silently remove the bool-morph location from the v-stack. */
+		ASSERT(self->fg_state->ms_stackc >= 1);
+		--self->fg_state->ms_stackc;
+		if (MEMLOC_TYPE_HASREG(loc.ml_type))
+			Dee_memstate_decrinuse(self->fg_state, loc.ml_value.v_hreg.r_regno);
+
+		/* Generate code to branch depending on the value of `loc' */
 		zero.ml_type = MEMLOC_TYPE_CONST;
 		zero.ml_value.v_const = NULL;
-		{
-#ifdef DEE_HOST_RELOCVALUE_SECT
-			struct Dee_host_symbol tsym;
-			struct Dee_host_symbol xsym;
-			Dee_host_symbol_setjump(tsym, desc);
-			Dee_host_symbol_setsect_ex(&xsym, &except_exit->exi_block->bb_htext, 0);
-			if unlikely(_Dee_function_generator_gjcmp(self, &loc, &zero, true,
-			                                          &xsym,                        /* loc < 0 */
-			                                          jump_if_true ? NULL : &tsym,  /* loc == 0 */
-			                                          jump_if_true ? &tsym : NULL)) /* loc > 0 */
-				goto err;
-#else /* DEE_HOST_RELOCVALUE_SECT */
-			struct Dee_host_symbol *tsym;
-			struct Dee_host_symbol *xsym;
-			tsym = Dee_function_generator_newsym(self);
-			if unlikely(!tsym)
-				goto err;
-			xsym = Dee_function_generator_newsym(self);
-			if unlikely(!xsym)
-				goto err;
-			Dee_host_symbol_setjump(tsym, desc);
-			Dee_host_symbol_setsect_ex(xsym, &except_exit->exi_block->bb_htext, 0);
-			if unlikely(_Dee_function_generator_gjcmp(self, &loc, &zero, true,
-			                                          xsym,                        /* loc < 0 */
-			                                          jump_if_true ? NULL : tsym,  /* loc == 0 */
-			                                          jump_if_true ? tsym : NULL)) /* loc > 0 */
-				goto err;
-#endif /* !DEE_HOST_RELOCVALUE_SECT */
-		} /* Scope... */
-	}     /* Scope... */
+		if unlikely(_Dee_function_generator_gjcmp(self, &loc, &zero, true,
+		                                          Lexcept,                     /* loc < 0 */
+		                                          jump_if_true ? NULL : Ljmp,  /* loc == 0 */
+		                                          jump_if_true ? Ljmp : NULL)) /* loc > 0 */
+			goto err;
+	} else {
+		struct Dee_memloc cmp_lhs, cmp_rhs;
+		struct Dee_host_symbol *Llo, *Leq, *Lgr;
+
+		/* In this case, `Dee_function_generator_vopbool()' already created a morph. */
+		ASSERT(MEMLOC_VMORPH_ISBOOL(loc.ml_vmorph));
+		ASSERT(loc.ml_flags & MEMLOC_F_NOREF);
+
+		/* Silently remove the bool-morph location from the v-stack. */
+		ASSERT(self->fg_state->ms_stackc >= 1);
+		--self->fg_state->ms_stackc;
+		if (MEMLOC_TYPE_HASREG(loc.ml_type))
+			Dee_memstate_decrinuse(self->fg_state, loc.ml_value.v_hreg.r_regno);
+
+		/* Compute compare operands and target labels. */
+		Llo = NULL;
+		Leq = NULL;
+		Lgr = NULL;
+		cmp_lhs = loc;
+		cmp_rhs.ml_type = MEMLOC_TYPE_CONST;
+		cmp_rhs.ml_value.v_const = NULL;
+		switch (loc.ml_vmorph) {
+		case MEMLOC_VMORPH_BOOL_Z:
+		case MEMLOC_VMORPH_BOOL_Z_01:
+			/* Jump-if-zero */
+			Leq = Ljmp;
+			break;
+		case MEMLOC_VMORPH_BOOL_NZ:
+		case MEMLOC_VMORPH_BOOL_NZ_01:
+			Llo = Ljmp;
+			Lgr = Ljmp;
+			break;
+		case MEMLOC_VMORPH_BOOL_LZ:
+			Llo = Ljmp;
+			/* (X-1) < 0   <=>   X <= 0 */
+			if (Dee_memloc_getvaldelta(&cmp_lhs) == -1) {
+				Dee_memloc_setvaldelta(&cmp_lhs, 0);
+				Leq = Ljmp;
+			}
+			break;
+		case MEMLOC_VMORPH_BOOL_GZ:
+			Lgr = Ljmp;
+			/* (X+1) > 0   <=>   X >= 0 */
+			if (Dee_memloc_getvaldelta(&cmp_lhs) == 1) {
+				Dee_memloc_setvaldelta(&cmp_lhs, 0);
+				Leq = Ljmp;
+			}
+			break;
+		default: __builtin_unreachable();
+		}
+
+		if (!jump_if_true) {
+			/* Invert the logical meaning of the jump. */
+			struct Dee_host_symbol *temp;
+			if (Llo == Lgr) {
+				temp = Leq;
+				Leq = Llo;
+				Llo = temp;
+				Lgr = temp;
+			} else if (Leq == Llo) {
+				temp = Lgr;
+				Lgr = Leq;
+				Llo = temp;
+				Leq = temp;
+			} else {
+				ASSERT(Leq == Lgr);
+				temp = Llo;
+				Llo = Leq;
+				Leq = temp;
+				Lgr = temp;
+			}
+		}
+
+		/* Emit the jump */
+		if unlikely(_Dee_function_generator_gjcmp(self, &cmp_lhs, &cmp_rhs, true, Llo, Leq, Lgr))
+			goto err;
+	}
 
 	/* Remember the memory-state as it is when the jump is made. */
 	ASSERTF(!desc->jd_stat, "Who assigned this? Doing that is *my* job!");
 	desc->jd_stat = self->fg_state;
 	Dee_memstate_incref(self->fg_state);
 
-	temp = Dee_basic_block_constrainwith(target, desc->jd_stat,
-	                                     Dee_function_assembler_addrof(self->fg_assembler,
-	                                                                   target->bb_deemon_start));
-	if (temp > 0) {
-		temp = 0;
+	bool_status = Dee_basic_block_constrainwith(target, desc->jd_stat,
+	                                            Dee_function_assembler_addrof(self->fg_assembler,
+	                                                                          target->bb_deemon_start));
+	if (bool_status > 0) {
+		bool_status = 0;
 		if (target == self->fg_block) {
 			/* Special case for when the block that's currently being
 			 * compiled had to constrain itself a little further. */
@@ -2278,7 +2306,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		}
 	}
 
-	return temp;
+	return bool_status;
 err:
 	return -1;
 }

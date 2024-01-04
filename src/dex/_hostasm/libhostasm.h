@@ -184,6 +184,7 @@ struct Dee_memloc {
 #define MEMLOC_VMORPH_ISDIRECT(vmorph) ((vmorph) <= MEMLOC_VMORPH_DIRECT_01)
 #define MEMLOC_VMORPH_TESTZ(direct_vmorph)  ((direct_vmorph) | MEMLOC_VMORPH_BOOL_Z)  /* Assume that `MEMLOC_VMORPH_ISDIRECT(direct_vmorph)' */
 #define MEMLOC_VMORPH_TESTNZ(direct_vmorph) ((direct_vmorph) | MEMLOC_VMORPH_BOOL_NZ) /* Assume that `MEMLOC_VMORPH_ISDIRECT(direct_vmorph)' */
+#define MEMLOC_VMORPH_ISBOOL(vmorph)   ((vmorph) >= MEMLOC_VMORPH_BOOL_Z && (vmorph) <= MEMLOC_VMORPH_BOOL_GZ)
 #define MEMLOC_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(value == 0 ? 1 : 0); */
 #define MEMLOC_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For({1,0}[value]); */
 #define MEMLOC_VMORPH_BOOL_NZ    4 /* >> value = DeeBool_For(value != 0 ? 1 : 0); */
@@ -207,7 +208,7 @@ struct Dee_memloc {
 #define MEMLOC_TYPE_CASEREG     case MEMLOC_TYPE_HREG: case MEMLOC_TYPE_HREGIND
 	uint16_t               ml_type;   /* Location kind (one of `MEMLOC_TYPE_*') */
 	union Dee_memloc_value ml_value;  /* Location value */
-	DeeTypeObject         *ml_valtyp; /* [0..1][valid_if(ml_vmorph == MEMLOC_VMORPH_DIRECT && ml_type != MEMLOC_TYPE_CONST)]
+	DeeTypeObject         *ml_valtyp; /* [0..1][valid_if(MEMLOC_VMORPH_ISDIRECT(ml_vmorph))]
 	                                   * If non-null, the guarantied correct object type of this location (assumed value for
 	                                   * the "ob_type" of this memory location, and used for inlining operator calls).
 	                                   * DON'T SET THIS TO SOMETHING STUPID LIKE "DeeObject_Type" -- NO BASE CLASSES ALLOWED!
@@ -238,6 +239,11 @@ Dee_memloc_samemem(struct Dee_memloc const *a, struct Dee_memloc const *b);
 /* Try to figure out the guarantied runtime object type of `gdirect(self)' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 Dee_memloc_typeof(struct Dee_memloc const *self);
+
+/* Get/set the delta added to pre-morph final value.
+ * Returns "0" for locations MEMLOC_TYPE_UNALLOC/MEMLOC_TYPE_UNDEFINED */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) ptrdiff_t DCALL Dee_memloc_getvaldelta(struct Dee_memloc const *self);
+INTDEF NONNULL((1)) void DCALL Dee_memloc_setvaldelta(struct Dee_memloc *self, ptrdiff_t delta);
 
 /* Return the CFA start/end addresses. */
 #ifdef HOSTASM_STACK_GROWS_DOWN
@@ -494,7 +500,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vlrot(struct Dee_memstate *__
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vrrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush(struct Dee_memstate *__restrict self, struct Dee_memloc *loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_undefined(struct Dee_memstate *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_addr(struct Dee_memstate *__restrict self, void const *addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_reg(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t delta);                             /* (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_regind(struct Dee_memstate *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self, uintptr_t cfa_offset);                                                /* (MEMLOC_F_NOREF) */
@@ -1064,7 +1071,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_fu
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_undefined(struct Dee_function_generator *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_const(struct Dee_function_generator *__restrict self, DeeObject *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_addr(struct Dee_function_generator *__restrict self, void const *addr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_const_(struct Dee_function_generator *__restrict self, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cid(struct Dee_function_generator *__restrict self, uint16_t cid);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_vpush_cid_t(struct Dee_function_generator *__restrict self, uint16_t cid, DeeTypeObject *__restrict type);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_rid(struct Dee_function_generator *__restrict self, uint16_t rid);
@@ -1072,7 +1080,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_reg(struct De
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_regind(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* *(%regno + ind_delta) + val_delta (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset);                                                /* (MEMLOC_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta);                        /* (MEMLOC_F_NOREF) */
-#define Dee_function_generator_vpush_addr(self, addr)     Dee_function_generator_vpush_const(self, (DeeObject *)(void *)(addr))
+#define Dee_function_generator_vpush_const(self, value)   Dee_function_generator_vpush_const_(self, (DeeObject *)Dee_REQUIRES_OBJECT(value))
 #define Dee_function_generator_vpush_NULL(self)           Dee_function_generator_vpush_addr(self, NULL)
 #define Dee_function_generator_vpush_imm8(self, imm8)     Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))
 #define Dee_function_generator_vpush_Simm8(self, Simm8)   Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(intptr_t)(int8_t)(Simm8))
@@ -1106,9 +1114,6 @@ Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self, D
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vsettyp_noalias(struct Dee_function_generator *__restrict self, DeeTypeObject *type);
 
-/* Low-level deemon operator invocation. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorphbool(struct Dee_function_generator *__restrict self); /* Force vtop to one of `MEMLOC_VMORPH_BOOL_*' (only use if you need a bool morph, and `Dee_function_generator_vopbool()' doesn't give you one) */
-
 /* Helpers for invoking certain operators. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcall(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc);       /* func, [args...]           -> result -- Invoke `DeeObject_Call()' and push the result */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallkw(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc);     /* func, [args...], kw       -> result -- Invoke `DeeObject_CallKw()' and push the result */
@@ -1141,11 +1146,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboundattr(struct
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self);   /* this, attr, value -> N/A */
 
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self); /* value -> bool */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopnot(struct Dee_function_generator *__restrict self);  /* value -> !bool */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self); /* value -> size */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);  /* value -> int */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);  /* value -> string */
+#define VOPBOOL_F_NORMAL      0x0000 /* Normal flags */
+#define VOPBOOL_F_FORCE_MORPH 0x0001 /* Ensure that vtop is a constant Dee_True/Dee_False or MEMLOC_VMORPH_ISBOOL */
+#define VOPBOOL_F_NOFALLBACK  0x0002 /* Instead of generating a call to `tp_bool' (when not noexcept) or `DeeObject_Bool', return "1" */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self, unsigned int flags); /* value -> bool */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopnot(struct Dee_function_generator *__restrict self);                      /* value -> !bool */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self);                     /* value -> size */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);                      /* value -> int */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);                      /* value -> string */
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
@@ -1189,8 +1197,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee
 
 /* Helpers to perform certain operations. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self);          /* instance, type -> instance */
-#define Dee_function_generator_vcall_DeeObject_Init_c(self, type)               \
-	(unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)(type))) || \
+#define Dee_function_generator_vcall_DeeObject_Init_c(self, type) \
+	(unlikely(Dee_function_generator_vpush_const(self, type)) ||  \
 	 unlikely(Dee_function_generator_vcall_DeeObject_Init(self)))
 
 /* Helpers for accessing C-level "struct type_member". NOTE: These don't do type assertions! */
@@ -1621,22 +1629,18 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gmov_loc2loci
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gret(struct Dee_function_generator *__restrict self, /*inherit_ref*/ struct Dee_memloc *__restrict loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gret(struct Dee_function_generator *__restrict self);
 
-//TODO:/* Arch-specific morph helpers. */
-//TODO:
-//TODO:/* dst_regno = Dee_FalseTrue[src_value_is_01 ? (src_regno + src_delta)
-//TODO: *                                           : (src_regno + src_delta ? 1 : 0)] - dst_delta */
-//TODO:INTDEF WUNUSED NONNULL((1)) int DCALL
-//TODO:_Dee_host_section_gmorphbool_reg2reg(struct Dee_host_section *__restrict self,
-//TODO:                                     Dee_host_register_t src_regno, ptrdiff_t src_delta,
-//TODO:                                     Dee_host_register_t dst_regno, ptrdiff_t dst_delta,
-//TODO:                                     bool src_value_is_01);
-//TODO:/* dst_regno = Dee_FalseTrue[src_value_is_01 ? (*(src_regno + ind_delta) + src_delta)
-//TODO: *                                           : (*(src_regno + ind_delta) + src_delta ? 1 : 0)] - dst_delta */
-//TODO:INTDEF WUNUSED NONNULL((1)) int DCALL
-//TODO:_Dee_host_section_gmorphbool_regind2reg(struct Dee_host_section *__restrict self,
-//TODO:                                        Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t src_delta,
-//TODO:                                        Dee_host_register_t dst_regno, ptrdiff_t dst_delta,
-//TODO:                                        bool src_value_is_01);
+//TODO: /* Helpers for transforming locations into deemon boolean objects. */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                             /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_loc2regbool(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                           /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0]; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_loc012regbool(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, Dee_host_register_t dst_regno);                                           /* dst_regno = &Dee_FalseTrue[src_loc + src_delta]; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regx2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                        /* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno); /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_hstackind2reg01(struct Dee_function_generator *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                             /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
+//TODO: INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_reg012regbool(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno);                                       /* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
+//TODO: #define GMORPHBOOL_CC_EQ 0 /* Compare: "==" */
+//TODO: #define GMORPHBOOL_CC_NE 1 /* Compare: "!=" */
+//TODO: #define GMORPHBOOL_CC_LO 2 /* Compare: "<" */
+//TODO: #define GMORPHBOOL_CC_GR 3 /* Compare: ">" */
 
 /* Allocate at host register, possibly flushing an already used register to stack.
  * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGISTER_COUNT'.
@@ -1752,6 +1756,10 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
                             uint16_t name);
+
+/* Check if the C-implementation of `OPERATOR_BOOL' for `self' never returns <0 */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self);
 
 /* Check if C-method attached to objects are constant expressions. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL

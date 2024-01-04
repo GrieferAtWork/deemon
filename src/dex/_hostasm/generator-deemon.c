@@ -891,7 +891,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 	TARGET(ASM_PUSH_NONE)
 		return Dee_function_generator_vpush_const(self, Dee_None);
 	TARGET(ASM_PUSH_THIS_MODULE)
-		return Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code->co_module);
+		return Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code->co_module);
 	TARGET(ASM_PUSH_THIS_FUNCTION)
 		return Dee_function_generator_vpush_this_function(self);
 
@@ -905,7 +905,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		if unlikely(mid >= code_module->mo_importc)
 			return err_illegal_mid(mid);
 		push_module = code_module->mo_importv[mid];
-		return Dee_function_generator_vpush_const(self, (DeeObject *)push_module);
+		return Dee_function_generator_vpush_const(self, push_module);
 	}	break;
 
 	TARGET(ASM_PUSH_ARG)
@@ -1154,7 +1154,7 @@ do_jcc:
 	TARGET(ASM_STR)
 		return Dee_function_generator_vopstr(self);
 	TARGET(ASM_BOOL)
-		return Dee_function_generator_vopbool(self);
+		return Dee_function_generator_vopbool(self, false);
 	TARGET(ASM_NOT)
 		return Dee_function_generator_vopnot(self);
 
@@ -1348,7 +1348,7 @@ do_jcc:
 	TARGET(ASM_CLASS)
 			DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeClassDescriptor_Type)); /* base, desc */
 		}
-		DO(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code->co_module));
+		DO(Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code->co_module));
 		/* TODO: Optimize succeeding ASM_DEFCMEMBER instructions by forgoing locking the
 		 *       class, and not needing to call `DeeClass_SetMember*'. Since at this point,
 		 *       we know that the class isn't being shared with anyone, we can track which
@@ -1830,7 +1830,7 @@ do_jcc:
 
 	TARGET(ASM_UD) {
 		DO(Dee_function_generator_vpush_addr(self, instr));
-		DO(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code));
+		DO(Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code));
 		return Dee_function_generator_vcallapi(self, &libhostasm_rt_err_illegal_instruction, VCALL_CC_EXCEPT, 2);
 	}	break;
 

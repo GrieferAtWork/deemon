@@ -1140,7 +1140,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restrict self,
                                           Dee_instruction_t const *instr, Dee_aid_t aid) {
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code))
+	if unlikely(Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_addr(self, instr))
 		goto err;
@@ -1154,7 +1154,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__restrict self,
                                             Dee_instruction_t const *instr, Dee_ulid_t lid) {
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)self->fg_assembler->fa_code))
+	if unlikely(Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_addr(self, instr))
 		goto err;
@@ -1168,7 +1168,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__restrict self,
                                              struct Dee_module_object *mod, uint16_t gid) {
-	if unlikely(Dee_function_generator_vpush_const(self, (DeeObject *)mod))
+	if unlikely(Dee_function_generator_vpush_const(self, mod))
 		goto err;
 	if unlikely(Dee_function_generator_vpush_imm16(self, gid))
 		goto err;
