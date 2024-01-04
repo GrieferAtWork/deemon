@@ -55,20 +55,21 @@ PRIVATE DeeTypeObject *tpconst always_constexpr_types[] = {
 	&DeeAttribute_Type,
 };
 
-/* Returns `true' if operator `name' of `self' can be invoked without unintended
- * side-effects, which includes the possibility of other threads accessing any
- * an instance of the type at the same time, which must *NOT* affect the result
- * of the operator being invoked (iow: `List.operator +' is not constexpr). */
+/* Returns `true' if operator `operator_name' of `self' can be invoked without
+ * unintended side-effects, which includes the possibility of other threads
+ * accessing any an instance of the type at the same time, which must *NOT*
+ * affect the result of the operator being invoked (iow: `List.operator +' is
+ * not constexpr). */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
-                            uint16_t name) {
+                            uint16_t operator_name) {
 	size_t i;
 	for (i = 0; i < COMPILER_LENOF(always_constexpr_types); ++i) {
 		if (always_constexpr_types[i] == self)
 			goto yes;
 	}
 
-	(void)name;
+	(void)operator_name;
 
 	return false;
 yes:
@@ -105,6 +106,19 @@ DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self) {
 	return false;
 yes:
 	return true;
+}
+
+
+/* Check if operator `operator_name' of `self' doesn't let references to the "this"
+ * argument escape. (this is a more fine-grained version of Dee_TF_NOREFESCAPE) */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
+                              uint16_t operator_name) {
+	if (operator_name == OPERATOR_ITERSELF)
+		return false;
+	if (self->tp_features & Dee_TF_NOREFESCAPE)
+		return true;
+	return false;
 }
 
 

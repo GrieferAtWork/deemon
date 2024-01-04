@@ -169,7 +169,8 @@ union Dee_memloc_value {
 struct Dee_memloc {
 #define MEMLOC_F_NORMAL        0x00
 #define MEMLOC_F_NOREF         0x01 /* Slot contains no reference (should always be set when `ml_vmorph != MEMLOC_VMORPH_DIRECT') */
-#define MEMLOC_F_OBJCHECKED    0x02 /* Used internally to get `Dee_function_generator_vcheckobj()' to be a no-op. */
+#define MEMLOC_F_ONEREF        0x02 /* [valid_if(!MEMLOC_F_NOREF)] Slot contains the only reference that exists for some given object (decref can use decref_dokill) */
+#define MEMLOC_F_OBJCHECKED    0x04 /* Used internally to get `Dee_function_generator_vcheckobj()' to be a no-op. */
 #define MEMLOC_M_LOCAL_BSTATE  0xc0 /* Mask for the bound-ness of a local variable */
 #define MEMLOC_F_LOCAL_UNKNOWN 0x00 /* Local variable bound-ness is unknown */
 #define MEMLOC_F_LOCAL_BOUND   0x40 /* Local variable is bound */
@@ -181,10 +182,10 @@ struct Dee_memloc {
 	 *       Only the `Dee_function_generator_v*' functions actually check for `ml_vmorph'! */
 #define MEMLOC_VMORPH_DIRECT     0 /* >> value = value; // Location contains a direct value (usually an object pointer, but can also be anything else) */
 #define MEMLOC_VMORPH_DIRECT_01  1 /* >> value = value; __assume(value == 0 || value == 1); */
-#define MEMLOC_VMORPH_ISDIRECT(vmorph) ((vmorph) <= MEMLOC_VMORPH_DIRECT_01)
+#define MEMLOC_VMORPH_ISDIRECT(vmorph)      ((vmorph) <= MEMLOC_VMORPH_DIRECT_01)
 #define MEMLOC_VMORPH_TESTZ(direct_vmorph)  ((direct_vmorph) | MEMLOC_VMORPH_BOOL_Z)  /* Assume that `MEMLOC_VMORPH_ISDIRECT(direct_vmorph)' */
 #define MEMLOC_VMORPH_TESTNZ(direct_vmorph) ((direct_vmorph) | MEMLOC_VMORPH_BOOL_NZ) /* Assume that `MEMLOC_VMORPH_ISDIRECT(direct_vmorph)' */
-#define MEMLOC_VMORPH_ISBOOL(vmorph)   ((vmorph) >= MEMLOC_VMORPH_BOOL_Z && (vmorph) <= MEMLOC_VMORPH_BOOL_GZ)
+#define MEMLOC_VMORPH_ISBOOL(vmorph)        ((vmorph) >= MEMLOC_VMORPH_BOOL_Z && (vmorph) <= MEMLOC_VMORPH_BOOL_GZ)
 #define MEMLOC_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(value == 0 ? 1 : 0); */
 #define MEMLOC_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For({1,0}[value]); */
 #define MEMLOC_VMORPH_BOOL_NZ    4 /* >> value = DeeBool_For(value != 0 ? 1 : 0); */
@@ -889,6 +890,12 @@ Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
                              struct Dee_except_exitinfo const *__restrict to);
 
 struct Dee_inlined_references {
+	/* TODO: Need some way to find out which objects actually end up being used
+	 *       by the final host code. When a basic block needs to be re-compiled,
+	 *       or when constants end up unused because they could be propagated
+	 *       further, then they still remain in this set, which is sub-optimal.
+	 * IMPORTANT: Given a constant tuple "t", host text referencing `DeeTuple_ELEM(t)'
+	 *            is *also* a valid usage! */
 	size_t           ir_mask; /* [> ir_size || ir_mask == 0] Allocated set size. */
 	size_t           ir_size; /* [< ir_mask || ir_mask == 0] Amount of non-NULL keys. */
 #ifdef __INTELLISENSE__
@@ -1146,14 +1153,18 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboundattr(struct
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self);   /* this, attr, value -> N/A */
 
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict self); /* seq, key_or_index -> bound */
+
 #define VOPBOOL_F_NORMAL      0x0000 /* Normal flags */
 #define VOPBOOL_F_FORCE_MORPH 0x0001 /* Ensure that vtop is a constant Dee_True/Dee_False or MEMLOC_VMORPH_ISBOOL */
 #define VOPBOOL_F_NOFALLBACK  0x0002 /* Instead of generating a call to `tp_bool' (when not noexcept) or `DeeObject_Bool', return "1" */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self, unsigned int flags); /* value -> bool */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopnot(struct Dee_function_generator *__restrict self);                      /* value -> !bool */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self);                     /* value -> size */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);                      /* value -> int */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);                      /* value -> string */
+
+/* Misc operators that can be optimized-, or behave in special ways. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self); /* value -> size */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);  /* value -> int */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);  /* value -> string */
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
@@ -1165,8 +1176,9 @@ INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
                            uint16_t operator_name, Dee_vstackaddr_t argc,
                            unsigned int flags);
-#define VOP_F_NORMAL  0x0000 /* Normal flags */
-#define VOP_F_PUSHRES 0x0001 /* Push the operator's result */
+#define VOP_F_NORMAL      0x0000 /* Normal flags */
+#define VOP_F_PUSHRES     0x0001 /* Push the operator's result */
+#define VOP_F_ALLOWNATIVE 0x0002 /* Allow (e.g.) use of `DeeObject_SetRangeIndex()' instead of `DeeObject_SetRange()' */
 
 /* this, args  ->  result (flags == VOP_F_PUSHRES)
  * this, args  ->  N/A    (flags == VOP_F_NORMAL)
@@ -1204,6 +1216,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_voptypeof(struct De
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self, bool ref);          /* ob -> ob.class */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuperof(struct Dee_function_generator *__restrict self);                    /* ob -> ob.super */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self);                      /* ob, type -> ob as type */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self, DeeTypeObject *type); /* obj -> type(obj) */
 
 /* Helpers to perform certain operations. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self);          /* instance, type -> instance */
@@ -1251,6 +1264,22 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce(struct De
  * Any memory locations that might alias one of those locations is also changed.
  * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+
+/* Clear the `MEMLOC_F_ONEREF' flag for the top `n' v-stack elements,
+ * as well as any other memory location that might be aliasing them. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t off);
+
+/* Same as `Dee_function_generator_vnotoneref()', but only clear when
+ * types are unknown, or don't have the "Dee_TF_NOREFESCAPE" flag. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t off);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_operator(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_operator_at(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t off);
+
+/* Set the `MEMLOC_F_ONEREF' flag for VTOP. */
+#define Dee_function_generator_voneref_noalias(self) \
+	(Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_ONEREF, 0)
 
 /* Helper wrappers to do checked operations on local variables as usercode sees them. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_ulid_t ulid);
@@ -1346,6 +1375,12 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswapind(struct Dee
 
 /* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref2(struct Dee_function_generator *__restrict self);
+
+/* Ensure that `loc' is holding a reference. If said location has aliases,
+ * and isn't a constant, then also ensure that at least one of those aliases
+ * also contains a second reference. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gref2(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
 
 /* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vreg(struct Dee_function_generator *__restrict self, Dee_host_register_t const *not_these);
@@ -1480,6 +1515,14 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
                                struct Dee_memloc *loc);
 
+/* Clear the `MEMLOC_F_ONEREF' flag from `loc', as well
+ * as any other memory location that might be aliasing it. */
+INTDEF /*WUNUSED*/ NONNULL((1, 2)) int DCALL
+Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict self,
+                                       struct Dee_memloc *loc);
+#define Dee_function_generator_gnotoneref(self, loc) \
+	(((loc)->ml_flags & MEMLOC_F_ONEREF) ? Dee_function_generator_gnotoneref_impl(self, loc) : 0)
+
 
 /* Generate a call to a C-function `api_function' with `argc'
  * pointer-sized arguments whose values are taken from `argv'.
@@ -1503,11 +1546,12 @@ _Dee_function_generator_gcalldynapi_hregind(struct Dee_function_generator *__res
 
 
 /* Object reference count incref/decref */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gincref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);  /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);  /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gincref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);         /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);         /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_dokill(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);                  /* NOTE: Might alter `loc' into a register! */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_nokill(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);  /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxincref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n); /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n); /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxincref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);        /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);        /* NOTE: Might alter `loc' into a register! */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_nokill(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n); /* NOTE: Might alter `loc' into a register! */
 #define _Dee_function_generator_gincref_regx(self, regno, reg_offset, n)         _Dee_host_section_gincref_regx((self)->fg_sect, regno, reg_offset, n)
 #define _Dee_function_generator_gdecref_regx_nokill(self, regno, reg_offset, n)  _Dee_host_section_gdecref_regx_nokill((self)->fg_sect, regno, reg_offset, n)
@@ -1518,6 +1562,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_nokill(
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gincref_regx(struct Dee_host_section *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gdecref_regx_nokill(struct Dee_host_section *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gdecref_regx(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gdecref_dokill_regx(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gincref_const(struct Dee_host_section *__restrict self, DeeObject *value, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gdecref_const(struct Dee_host_section *__restrict self, DeeObject *value, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gxincref_regx(struct Dee_host_section *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
@@ -1759,17 +1804,24 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 /* Type traits                                                          */
 /************************************************************************/
 
-/* Returns `true' if operator `name' of `self' can be invoked without unintended
- * side-effects, which includes the possibility of other threads accessing any
- * an instance of the type at the same time, which must *NOT* affect the result
- * of the operator being invoked (iow: `List.operator +' is not constexpr). */
+/* Returns `true' if operator `operator_name' of `self' can be invoked without
+ * unintended side-effects, which includes the possibility of other threads
+ * accessing any an instance of the type at the same time, which must *NOT*
+ * affect the result of the operator being invoked (iow: `List.operator +' is
+ * not constexpr). */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
-                            uint16_t name);
+                            uint16_t operator_name);
 
 /* Check if the C-implementation of `OPERATOR_BOOL' for `self' never returns <0 */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self);
+
+/* Check if operator `operator_name' of `self' doesn't let references to the "this"
+ * argument escape. (this is a more fine-grained version of Dee_TF_NOREFESCAPE) */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
+                              uint16_t operator_name);
 
 /* Check if C-method attached to objects are constant expressions. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL

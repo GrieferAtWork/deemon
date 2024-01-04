@@ -2617,6 +2617,12 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                                             * An example for where this flag should be used would be an object that only ever
                                             * holds references to `String' or `int' objects, but not to objects of its own type,
                                             * or any sort of container object capable of holding instances of the same type. */
+#define Dee_TF_NOREFESCAPE      0x40000000 /* None of the type's getsets/methods/operators ever do `Dee_Incref(this)', so-long as `this' isn't
+                                            * aliased by other arguments passed to getsets/methods/operators. When this flag is set, _hostasm
+                                            * may be able to more easily track the lifetime of objects, and might even be able to allocate some
+                                            * objects on the stack instead of the heap.
+                                            * IMPORTANT: OPERATOR_ITERSELF is exluded here. If implemented, OPERATOR_ITERSELF *is* allowed to
+                                            *            incref the sequence in question (i.e. the this-argument). */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
@@ -2635,6 +2641,7 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
 #define TP_FINTERHITABLE    Dee_TP_FINTERHITABLE
 #define TF_NONE             Dee_TF_NONE
 #define TF_NONLOOPING       Dee_TF_NONLOOPING
+#define TF_NOREFESCAPE      Dee_TF_NOREFESCAPE
 #define TF_SINGLETON        Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */
 

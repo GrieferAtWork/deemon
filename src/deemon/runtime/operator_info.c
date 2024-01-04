@@ -1825,6 +1825,17 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	info = Dee_OperatorInfo(Dee_TYPE(self), name);
 	if (info) {
 		DeeType_mro_foreach_start(self) {
+			/* TODO: This produces false positives for operators that can only be inherited in groups:
+			 * >> class Base {
+			 * >>     operator == (other: Base) { ... }
+			 * >>     operator < (other: Base) { ... }
+			 * >> }
+			 * >> class Sub: Base {
+			 * >>     operator == (other: Sub) { ... }
+			 * >> }
+			 * >> // Presence of "operator ==" in `Sub' would prevent inheritance of "operator <".
+			 * >> assert !Sub.hasoperator("<");
+			 */
 			if (DeeType_GetOpPointer(self, info) != NULL)
 				return true;
 		}

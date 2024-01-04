@@ -171,6 +171,23 @@ err:
 }
 
 
+/* Clear the `MEMLOC_F_ONEREF' flag from `loc', as well
+ * as any other memory location that might be aliasing it. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict self,
+                                       struct Dee_memloc *loc) {
+	struct Dee_memloc *alias;
+	ASSERT(loc->ml_flags & MEMLOC_F_ONEREF);
+	Dee_memstate_foreach(alias, self->fg_state) {
+		if (Dee_memloc_sameloc(alias, loc))
+			alias->ml_flags &= ~MEMLOC_F_ONEREF;
+	}
+	Dee_memstate_foreach_end;
+	loc->ml_flags &= ~MEMLOC_F_ONEREF;
+	return 0;
+}
+
+
 
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
@@ -1288,6 +1305,30 @@ Dee_function_generator_gdecref(struct Dee_function_generator *__restrict self,
 		                                            n);
 	case MEMLOC_TYPE_CONST:
 		return _Dee_function_generator_gdecref_const(self, loc->ml_value.v_const, n);
+	case MEMLOC_TYPE_UNDEFINED:
+		return 0;
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gdecref_dokill(struct Dee_function_generator *__restrict self,
+                                      struct Dee_memloc *__restrict loc) {
+	switch (loc->ml_type) {
+	default:
+		if unlikely(Dee_function_generator_greg(self, loc, NULL))
+			goto err;
+		ATTR_FALLTHROUGH
+	case MEMLOC_TYPE_HREG:
+		return _Dee_function_generator_gdecref_dokill_regx(self,
+		                                                   loc->ml_value.v_hreg.r_regno,
+		                                                   loc->ml_value.v_hreg.r_off);
+	case MEMLOC_TYPE_CONST:
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "decref_dokill called on CONST location. "
+		                       "Constants can never be destroyed");
 	case MEMLOC_TYPE_UNDEFINED:
 		return 0;
 	}

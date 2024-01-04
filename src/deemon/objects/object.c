@@ -2483,6 +2483,9 @@ instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
+	/* NOTE: This singular member right here is allowed to break the Dee_TF_NOREFESCAPE rule.
+	 *       That is because the _hostasm re-compiler includes special handling to detect the
+	 *       C-level getter "&DeeObject_NewRef". */
 	TYPE_GETTER(STR_this, &DeeObject_NewRef, "Always re-return @this object"),
 	TYPE_GETTER(STR_class, &object_class_get,
 	            "->?DType\n"

@@ -942,6 +942,36 @@ _Dee_function_generator_gdecref_regx(struct Dee_function_generator *__restrict s
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gdecref_dokill_regx(struct Dee_function_generator *__restrict self,
+                                            Dee_host_register_t regno, ptrdiff_t reg_offset) {
+#ifndef NO_HOSTASM_DEBUG_PRINT
+#ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
+	if (reg_offset == 0) {
+		gen86_printf("decref_dokill\t(%s)", gen86_regname(regno));
+	} else {
+		gen86_printf("decref_dokill\t%Id(%s)", reg_offset, gen86_regname(regno));
+	}
+	log_compact_decref_register_preserve_list(self, regno);
+	Dee_DPRINT("\n");
+#else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+	if (reg_offset == 0) {
+		gen86_printf("mov" Plq "\t$0, ob_refcnt(%s)\n", gen86_regname(regno));
+	} else {
+		gen86_printf("mov" Plq "\t$0, ob_refcnt+%Id(%s)\n", reg_offset, gen86_regname(regno));
+	}
+#endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	if unlikely(Dee_host_section_reqx86(self->fg_sect, 1))
+		goto err;
+	gen86_movP_imm_mod(p_pc(self->fg_sect), gen86_modrm_db, 0,
+	                   reg_offset + (ptrdiff_t)offsetof(DeeObject, ob_refcnt),
+	                   gen86_registers[regno]);
+	return _Dee_function_generator_gdestroy_regx(self, self->fg_sect, regno, reg_offset);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gincref_const(struct Dee_host_section *__restrict self,
                                 DeeObject *value, Dee_refcnt_t n) {
 	if unlikely(Dee_host_section_reqx86(self, 2))

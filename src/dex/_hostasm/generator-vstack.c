@@ -503,8 +503,11 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 		Dee_memstate_foreach_end;
 
 		/* No-where to shift the reference to -> must decref the object ourselves. */
-		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc, 1)
-		                          : Dee_function_generator_gdecref(self, loc, 1)) {
+		if unlikely(has_ref_alias
+		            ? Dee_function_generator_gdecref_nokill(self, loc, 1)
+		            : (loc->ml_flags & MEMLOC_F_ONEREF)
+		              ? Dee_function_generator_gdecref_dokill(self, loc)
+		              : Dee_function_generator_gdecref(self, loc, 1)) {
 			if (MEMLOC_TYPE_HASREG(loc->ml_type))
 				Dee_memstate_incrinuse(state, loc->ml_value.v_hreg.r_regno);
 			++state->ms_stackc;
@@ -571,8 +574,11 @@ Dee_function_generator_decref_local(struct Dee_function_generator *__restrict se
 			return 0;
 		}
 		Dee_memstate_foreach_end;
-		if unlikely(has_ref_alias ? Dee_function_generator_gdecref_nokill(self, loc, 1)
-		                          : Dee_function_generator_gdecref(self, loc, 1))
+		if unlikely(has_ref_alias
+		            ? Dee_function_generator_gdecref_nokill(self, loc, 1)
+		            : (loc->ml_flags & MEMLOC_F_ONEREF)
+		              ? Dee_function_generator_gdecref_dokill(self, loc)
+		              : Dee_function_generator_gdecref(self, loc, 1))
 			goto err;
 	} else {
 		/* Location is conditionally bound.
@@ -912,6 +918,178 @@ err:
 	return -1;
 }
 
+/* Clear the `MEMLOC_F_ONEREF' flag for the top `n' v-stack elements,
+ * as well as any other memory location that might be aliasing them. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref(struct Dee_function_generator *__restrict self,
+                                  Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t i;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < n)
+		return err_illegal_stack_effect();
+	for (i = state->ms_stackc - n; i < state->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &state->ms_stackv[i];
+		if (loc->ml_flags & MEMLOC_F_ONEREF) {
+			if (Dee_memstate_isshared(state)) {
+				state = Dee_memstate_copy(state);
+				if unlikely(!state)
+					goto err;
+				Dee_memstate_decref_nokill(self->fg_state);
+				self->fg_state = state;
+				loc = &state->ms_stackv[i];
+			}
+			if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref_at(struct Dee_function_generator *__restrict self,
+                                     Dee_vstackaddr_t off) {
+	struct Dee_memloc *loc;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < off)
+		return err_illegal_stack_effect();
+	loc = &state->ms_stackv[state->ms_stackc - off];
+	if (loc->ml_flags & MEMLOC_F_ONEREF) {
+		if (Dee_memstate_isshared(state)) {
+			state = Dee_memstate_copy(state);
+			if unlikely(!state)
+				goto err;
+			Dee_memstate_decref_nokill(self->fg_state);
+			self->fg_state = state;
+			loc = &state->ms_stackv[state->ms_stackc - off];
+		}
+		if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Same as `Dee_function_generator_vnotoneref()', but only clear when
+ * types are unknown, or don't have the "Dee_TF_NOREFESCAPE" flag. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref_if_type_refescape(struct Dee_function_generator *__restrict self,
+                                                    Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t i;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < n)
+		return err_illegal_stack_effect();
+	for (i = state->ms_stackc - n; i < state->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &state->ms_stackv[i];
+		if (loc->ml_flags & MEMLOC_F_ONEREF) {
+			DeeTypeObject *loctype = Dee_memloc_typeof(loc);
+			if (loctype != NULL && (loctype->tp_features & Dee_TF_NOREFESCAPE))
+				continue; /* Type is known to not let references to its instances escape. */
+			if (Dee_memstate_isshared(state)) {
+				state = Dee_memstate_copy(state);
+				if unlikely(!state)
+					goto err;
+				Dee_memstate_decref_nokill(self->fg_state);
+				self->fg_state = state;
+				loc = &state->ms_stackv[i];
+			}
+			if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref_if_type_refescape_at(struct Dee_function_generator *__restrict self,
+                                                       Dee_vstackaddr_t off) {
+	struct Dee_memloc *loc;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < off)
+		return err_illegal_stack_effect();
+	loc = &state->ms_stackv[state->ms_stackc - off];
+	if (loc->ml_flags & MEMLOC_F_ONEREF) {
+		DeeTypeObject *loctype = Dee_memloc_typeof(loc);
+		if (loctype != NULL && (loctype->tp_features & Dee_TF_NOREFESCAPE))
+			return 0; /* Type is known to not let references to its instances escape. */
+		if (Dee_memstate_isshared(state)) {
+			state = Dee_memstate_copy(state);
+			if unlikely(!state)
+				goto err;
+			Dee_memstate_decref_nokill(self->fg_state);
+			self->fg_state = state;
+			loc = &state->ms_stackv[state->ms_stackc - off];
+		}
+		if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref_if_type_refescape_operator(struct Dee_function_generator *__restrict self,
+                                                             uint16_t operator_name, Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t i;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < n)
+		return err_illegal_stack_effect();
+	for (i = state->ms_stackc - n; i < state->ms_stackc; ++i) {
+		struct Dee_memloc *loc = &state->ms_stackv[i];
+		if (loc->ml_flags & MEMLOC_F_ONEREF) {
+			DeeTypeObject *loctype = Dee_memloc_typeof(loc);
+			if (loctype != NULL && DeeType_IsOperatorNoRefEscape(loctype, operator_name))
+				continue; /* Type is known to not let references to its instances escape. */
+			if (Dee_memstate_isshared(state)) {
+				state = Dee_memstate_copy(state);
+				if unlikely(!state)
+					goto err;
+				Dee_memstate_decref_nokill(self->fg_state);
+				self->fg_state = state;
+				loc = &state->ms_stackv[i];
+			}
+			if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+				goto err;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vnotoneref_if_type_refescape_operator_at(struct Dee_function_generator *__restrict self,
+                                                                uint16_t operator_name, Dee_vstackaddr_t off) {
+	struct Dee_memloc *loc;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < off)
+		return err_illegal_stack_effect();
+	loc = &state->ms_stackv[state->ms_stackc - off];
+	if (loc->ml_flags & MEMLOC_F_ONEREF) {
+		DeeTypeObject *loctype = Dee_memloc_typeof(loc);
+		if (loctype != NULL && DeeType_IsOperatorNoRefEscape(loctype, operator_name))
+			return 0; /* Type is known to not let references to its instances escape. */
+		if (Dee_memstate_isshared(state)) {
+			state = Dee_memstate_copy(state);
+			if unlikely(!state)
+				goto err;
+			Dee_memstate_decref_nokill(self->fg_state);
+			self->fg_state = state;
+			loc = &state->ms_stackv[state->ms_stackc - off];
+		}
+		if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_ulocal(struct Dee_function_generator *__restrict self,
@@ -1079,6 +1257,7 @@ Dee_function_generator_vpushinit_varargs(struct Dee_function_generator *__restri
 		goto err; /* argc-co_argc_max, argv+co_argc_max */
 	if unlikely(Dee_function_generator_vcallapi(self, &DeeTuple_NewVector, VCALL_CC_OBJECT, 2))
 		goto err; /* varargs */
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_ONEREF;
 	return 0;
 err:
 	return -1;
@@ -1804,6 +1983,8 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 				goto err; /* type, this, addr */
 			return Dee_function_generator_vcallapi(self, &DeeInstance_DelMember, VCALL_CC_INT, 3);
 		}
+		if unlikely(Dee_function_generator_vnotoneref(self, 1))
+			goto err; /* type, this, addr, value */
 		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMember, VCALL_CC_INT, 4);
 	} else {
 		struct Dee_memloc *value_loc;
@@ -1905,6 +2086,8 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 		                                            : (void const *)&DeeInstance_DelMember,
 		                                       VCALL_CC_INT, 3);
 	}
+	if unlikely(Dee_function_generator_vnotoneref(self, 1))
+		goto err; /* type, this, addr, value */
 	return Dee_function_generator_vcallapi(self,
 	                                       safe ? (void const *)&DeeInstance_SetMemberSafe
 	                                            : (void const *)&DeeInstance_SetMember,
@@ -2183,6 +2366,12 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		if unlikely(!except_exit)
 			goto err;
 		Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+		if (loc.ml_flags & MEMLOC_F_ONEREF) {
+			ASSERT(Dee_memloc_sameloc(&loc, Dee_function_generator_vtop(self)));
+			if unlikely(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, OPERATOR_BOOL, 1))
+				goto err;
+			loc = *Dee_function_generator_vtop(self);
+		}
 
 		loctype = Dee_memloc_typeof(&loc);
 		hasbool = loctype && DeeType_InheritOperator(loctype, OPERATOR_BOOL);
@@ -2335,6 +2524,8 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	struct Dee_except_exitinfo *except_exit;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
+	if unlikely(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, OPERATOR_ITERNEXT, 1))
+		goto err;
 	if (!always_pop_iterator) {
 		if unlikely(Dee_function_generator_vdup(self))
 			goto err; /* iter, iter */
@@ -2473,9 +2664,11 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self,
                                ptrdiff_t ind_delta) {
 	struct Dee_memloc src, *loc;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
 	if unlikely(Dee_function_generator_vdirect(self, 2))
 		goto err;
-	if unlikely(Dee_function_generator_state_unshare(self))
+	if unlikely(Dee_function_generator_vnotoneref(self, 1))
 		goto err;
 	src = *Dee_function_generator_vtop(self);
 	--self->fg_state->ms_stackc;
@@ -2528,6 +2721,8 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vswapind(struct Dee_function_generator *__restrict self,
                                 ptrdiff_t ind_delta) {
+	if unlikely(Dee_function_generator_vnotoneref(self, 1))
+		goto err; /* dst, src */
 	if unlikely(Dee_function_generator_vswap(self))
 		goto err; /* src, dst */
 	if unlikely(Dee_function_generator_vdup(self))
@@ -2595,13 +2790,33 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 		ASSERT(loc == Dee_memstate_vtop(state));
 		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
 		loc->ml_flags &= ~MEMLOC_F_NOREF;
+		return Dee_function_generator_gnotoneref(self, loc);
 	}
 	return 0;
 err:
 	return -1;
 }
 
-#if 0 /* Never needed... */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vref2(struct Dee_function_generator *__restrict self) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *loc;
+	if unlikely(state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	loc = Dee_memstate_vtop(state);
+	if (loc->ml_flags & MEMLOC_F_NOREF) {
+		if unlikely(Dee_function_generator_state_unshare(self))
+			goto err;
+		if unlikely(Dee_function_generator_vdirect(self, 1))
+			goto err;
+		return Dee_function_generator_gref2(self, loc);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Ensure that `loc' is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
  * also contains a second reference. */
@@ -2646,6 +2861,8 @@ Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
 			if unlikely(Dee_function_generator_gincref(self, loc, 1))
 				goto err;
 			loc->ml_flags &= ~MEMLOC_F_NOREF;
+			if unlikely(Dee_function_generator_gnotoneref(self, loc))
+				goto err;
 		} else if (alias_without_reference && !alias_with_reference &&
 		           /* When it's a constant, there is already an extra reference through code dependencies */
 		           loc->ml_type != MEMLOC_TYPE_CONST) {
@@ -2655,6 +2872,8 @@ Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
 			if unlikely(Dee_function_generator_gincref(self, alias_without_reference, 1))
 				goto err;
 			alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
+			if unlikely(Dee_function_generator_gnotoneref(self, alias_without_reference))
+				goto err;
 		}
 	} else {
 		/* No aliases exist, so there's no need to force a distinct location. */
@@ -2663,13 +2882,14 @@ Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
 			if unlikely(Dee_function_generator_gincref(self, loc, 1))
 				goto err;
 			loc->ml_flags &= ~MEMLOC_F_NOREF;
+			if unlikely(Dee_function_generator_gnotoneref(self, loc))
+				goto err;
 		}
 	}
 	return 0;
 err:
 	return -1;
 }
-#endif
 
 /* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3350,12 +3570,12 @@ Dee_function_generator_vcheckobj(struct Dee_function_generator *__restrict self)
 	} else {
 		if unlikely(Dee_function_generator_gjz_except(self, loc))
 			goto err;
-	}
-	/* Clear the NOREF flag now that we know the return value to be non-NULL */
-	loc = Dee_function_generator_vtop(self);
-	if (loc->ml_type != MEMLOC_TYPE_CONST) {
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		loc->ml_flags &= ~MEMLOC_F_NOREF;
+		/* Clear the NOREF flag now that we know the return value to be non-NULL */
+		loc = Dee_function_generator_vtop(self);
+		if (loc->ml_type != MEMLOC_TYPE_CONST) {
+			ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+			loc->ml_flags &= ~MEMLOC_F_NOREF;
+		}
 	}
 	return 0;
 err:
@@ -3415,7 +3635,6 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__restrict self,
                                               size_t alloc_size) {
-	int result;
 #ifndef CONFIG_NO_OBJECT_SLABS
 	void const *api_function = NULL;
 	size_t alloc_pointers = CEILDIV(alloc_size, sizeof(void *));
@@ -3426,17 +3645,22 @@ Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__r
 	DeeSlab_ENUMERATE(LOCAL_checkfit);
 #undef LOCAL_checkfit
 	if (api_function != NULL) {
-		result = Dee_function_generator_vcallapi(self, api_function, VCALL_CC_OBJECT, 0);
+		if unlikely(Dee_function_generator_vcallapi(self, api_function, VCALL_CC_OBJECT, 0))
+			goto err;
 	} else
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 	{
-		result = Dee_function_generator_vpush_immSIZ(self, alloc_size);
-		if likely(result == 0)
-			result = Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1);
+		if unlikely(Dee_function_generator_vpush_immSIZ(self, alloc_size))
+			goto err;
+		if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1))
+			goto err;
 	}
 	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
-	ASSERT(result != 0 || !(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
-	return result;
+	ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_ONEREF; /* Initial reference -> oneref */
+	return 0;
+err:
+	return -1;
 }
 
 

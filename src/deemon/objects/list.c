@@ -3825,7 +3825,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "Perform a lexicographical comparison between @this List and the given @other sequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(List),
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NOREFESCAPE, /* TODO: This flag can be set for pretty much *everything* */
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
