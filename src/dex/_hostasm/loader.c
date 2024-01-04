@@ -279,6 +279,7 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 		ASSERT(block);
 		has_noreturn = scan_block_for_noreturn(block, self->fa_code->co_flags);
 		block->bb_deemon_end_r = block->bb_deemon_end;
+		block->bb_next_r       = block->bb_next;
 		if (has_noreturn)
 			Dee_basic_block_trim_unused_exits(block);
 	}

@@ -3772,93 +3772,89 @@ struct host_operator_specs {
 	void const *hos_apifunc; /* [0..1] API function (or NULL if fallback handling must be used) */
 	uint8_t     hos_argc;    /* Argument count (1-4) */
 	uint8_t     hos_cc;      /* Operator calling convention (one of `VCALL_CC_*') */
-	uint16_t    hos_flags;   /* Either `VOP_F_NORMAL' or `VOP_F_INPLACE' */
+	bool        hos_inplace; /* Is this an inplace operator? */
 };
-STATIC_ASSERT(VOP_F_NORMAL <= 0xffff);
-STATIC_ASSERT(VOP_F_INPLACE <= 0xffff);
 
 PRIVATE struct host_operator_specs const operator_apis[] = {
-	/* [OPERATOR_CONSTRUCTOR]  = */ { (void const *)NULL, VOP_F_NORMAL },
-	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_DESTRUCTOR]   = */ { (void const *)NULL, VOP_F_NORMAL },
-	/* [OPERATOR_ASSIGN]       = */ { (void const *)&DeeObject_Assign, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_MOVEASSIGN]   = */ { (void const *)&DeeObject_MoveAssign, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
+	/* [OPERATOR_CONSTRUCTOR]  = */ { (void const *)NULL },
+	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DESTRUCTOR]   = */ { (void const *)NULL },
+	/* [OPERATOR_ASSIGN]       = */ { (void const *)&DeeObject_Assign, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_MOVEASSIGN]   = */ { (void const *)&DeeObject_MoveAssign, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_STR]          = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_REPR]         = */ { (void const *)&DeeObject_Repr, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
+	/* [OPERATOR_REPR]         = */ { (void const *)&DeeObject_Repr, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_BOOL]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_ITERNEXT]     = */ { (void const *)NULL, VOP_F_NORMAL }, /* Special handling (because `DeeObject_IterNext' can return ITER_DONE) */
+	/* [OPERATOR_ITERNEXT]     = */ { (void const *)NULL }, /* Special handling (because `DeeObject_IterNext' can return ITER_DONE) */
 	/* [OPERATOR_CALL]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_INT]          = */ { (void const *)&DeeObject_Int, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
+	/* [OPERATOR_INT]          = */ { (void const *)&DeeObject_Int, 1, VCALL_CC_OBJECT, false },
 #ifdef CONFIG_HAVE_FPU
-	/* [OPERATOR_FLOAT]        = */ { (void const *)&api_object_as_float, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
+	/* [OPERATOR_FLOAT]        = */ { (void const *)&api_object_as_float, 1, VCALL_CC_OBJECT, false },
 #else /* CONFIG_HAVE_FPU */
-	/* [OPERATOR_FLOAT]        = */ { (void const *)NULL, VOP_F_NORMAL },
+	/* [OPERATOR_FLOAT]        = */ { (void const *)NULL },
 #endif /* !CONFIG_HAVE_FPU */
-	/* [OPERATOR_INV]          = */ { (void const *)&DeeObject_Inv, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_POS]          = */ { (void const *)&DeeObject_Pos, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_NEG]          = */ { (void const *)&DeeObject_Neg, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_ADD]          = */ { (void const *)&DeeObject_Add, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_SUB]          = */ { (void const *)&DeeObject_Sub, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_MUL]          = */ { (void const *)&DeeObject_Mul, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_DIV]          = */ { (void const *)&DeeObject_Div, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_MOD]          = */ { (void const *)&DeeObject_Mod, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_SHL]          = */ { (void const *)&DeeObject_Shl, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_SHR]          = */ { (void const *)&DeeObject_Shr, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_AND]          = */ { (void const *)&DeeObject_And, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_OR]           = */ { (void const *)&DeeObject_Or, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_XOR]          = */ { (void const *)&DeeObject_Xor, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_POW]          = */ { (void const *)&DeeObject_Pow, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_INC]          = */ { (void const *)&DeeObject_Inc, 1, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_DEC]          = */ { (void const *)&DeeObject_Dec, 1, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_ADD]  = */ { (void const *)&DeeObject_InplaceAdd, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_SUB]  = */ { (void const *)&DeeObject_InplaceSub, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_MUL]  = */ { (void const *)&DeeObject_InplaceMul, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_DIV]  = */ { (void const *)&DeeObject_InplaceDiv, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_MOD]  = */ { (void const *)&DeeObject_InplaceMod, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_SHL]  = */ { (void const *)&DeeObject_InplaceShl, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_SHR]  = */ { (void const *)&DeeObject_InplaceShr, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_AND]  = */ { (void const *)&DeeObject_InplaceAnd, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_OR]   = */ { (void const *)&DeeObject_InplaceOr, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_XOR]  = */ { (void const *)&DeeObject_InplaceXor, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_INPLACE_POW]  = */ { (void const *)&DeeObject_InplacePow, 2, VCALL_CC_INT, VOP_F_INPLACE },
-	/* [OPERATOR_HASH]         = */ { (void const *)&DeeObject_Hash, 1, VCALL_CC_MORPH_UINTPTR, VOP_F_NORMAL },
-	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CompareEqObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CompareNeObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CompareLoObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_ITERSELF]     = */ { (void const *)&DeeObject_IterSelf, 1, VCALL_CC_OBJECT, VOP_F_NORMAL },
+	/* [OPERATOR_INV]          = */ { (void const *)&DeeObject_Inv, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_POS]          = */ { (void const *)&DeeObject_Pos, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_NEG]          = */ { (void const *)&DeeObject_Neg, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_ADD]          = */ { (void const *)&DeeObject_Add, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SUB]          = */ { (void const *)&DeeObject_Sub, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_MUL]          = */ { (void const *)&DeeObject_Mul, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DIV]          = */ { (void const *)&DeeObject_Div, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_MOD]          = */ { (void const *)&DeeObject_Mod, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SHL]          = */ { (void const *)&DeeObject_Shl, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SHR]          = */ { (void const *)&DeeObject_Shr, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_AND]          = */ { (void const *)&DeeObject_And, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_OR]           = */ { (void const *)&DeeObject_Or, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_XOR]          = */ { (void const *)&DeeObject_Xor, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_POW]          = */ { (void const *)&DeeObject_Pow, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_INC]          = */ { (void const *)&DeeObject_Inc, 1, VCALL_CC_INT, true },
+	/* [OPERATOR_DEC]          = */ { (void const *)&DeeObject_Dec, 1, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_ADD]  = */ { (void const *)&DeeObject_InplaceAdd, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SUB]  = */ { (void const *)&DeeObject_InplaceSub, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_MUL]  = */ { (void const *)&DeeObject_InplaceMul, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_DIV]  = */ { (void const *)&DeeObject_InplaceDiv, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_MOD]  = */ { (void const *)&DeeObject_InplaceMod, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SHL]  = */ { (void const *)&DeeObject_InplaceShl, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SHR]  = */ { (void const *)&DeeObject_InplaceShr, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_AND]  = */ { (void const *)&DeeObject_InplaceAnd, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_OR]   = */ { (void const *)&DeeObject_InplaceOr, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_XOR]  = */ { (void const *)&DeeObject_InplaceXor, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_POW]  = */ { (void const *)&DeeObject_InplacePow, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_HASH]         = */ { (void const *)&DeeObject_Hash, 1, VCALL_CC_MORPH_UINTPTR, false },
+	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CompareEqObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CompareNeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CompareLoObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_ITERSELF]     = */ { (void const *)&DeeObject_IterSelf, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_SIZE]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_Contains, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, 2, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_DELITEM]      = */ { (void const *)&DeeObject_DelItem, 2, VCALL_CC_INT, VOP_F_NORMAL },
-	/* [OPERATOR_SETITEM]      = */ { (void const *)&DeeObject_SetItem, 3, VCALL_CC_INT, VOP_F_NORMAL },
-	/* [OPERATOR_GETRANGE]     = */ { (void const *)&DeeObject_GetRange, 3, VCALL_CC_OBJECT, VOP_F_NORMAL },
-	/* [OPERATOR_DELRANGE]     = */ { (void const *)&DeeObject_DelRange, 3, VCALL_CC_INT, VOP_F_NORMAL },
-	/* [OPERATOR_SETRANGE]     = */ { (void const *)&DeeObject_SetRange, 4, VCALL_CC_INT, VOP_F_NORMAL },
+	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_Contains, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DELITEM]      = */ { (void const *)&DeeObject_DelItem, 2, VCALL_CC_INT, false },
+	/* [OPERATOR_SETITEM]      = */ { (void const *)&DeeObject_SetItem, 3, VCALL_CC_INT, false },
+	/* [OPERATOR_GETRANGE]     = */ { (void const *)&DeeObject_GetRange, 3, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DELRANGE]     = */ { (void const *)&DeeObject_DelRange, 3, VCALL_CC_INT, false },
+	/* [OPERATOR_SETRANGE]     = */ { (void const *)&DeeObject_SetRange, 4, VCALL_CC_INT, false },
 	/* [OPERATOR_GETATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_DELATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_SETATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_ENUMATTR]     = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_ENTER]        = */ { (void const *)&DeeObject_Enter, 1, VCALL_CC_INT, VOP_F_NORMAL },
-	/* [OPERATOR_LEAVE]        = */ { (void const *)&DeeObject_Leave, 1, VCALL_CC_INT, VOP_F_NORMAL },
+	/* [OPERATOR_ENTER]        = */ { (void const *)&DeeObject_Enter, 1, VCALL_CC_INT, false },
+	/* [OPERATOR_LEAVE]        = */ { (void const *)&DeeObject_Leave, 1, VCALL_CC_INT, false },
 };
 
-/* [args...]  ->  [args...]
- * Try to lookup the inlined API function belonging to `operator_name' with `p_argc'
- * @assume(Dee_memloc_typeof(Dee_function_generator_vtop(self) - (*p_argc - 1)) == type);
- * @param: flags: Set of `VOP_F_*'
+/* this, [args...]  ->  this, [args...]
+ * Try to lookup the inlined API function belonging to `operator_name' with `p_extra_argc'
+ * @assume(Dee_memloc_typeof(Dee_function_generator_vtop(self) - *p_extra_argc) == type);
  * @return: 0 :   Dedicated operator API exists
  * @return: 1 :   No dedicated operator API exists
  * @return: -1:   Error */
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 vtype_get_operator_api_function(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject const *__restrict type,
-                                uint16_t operator_name, Dee_vstackaddr_t *__restrict p_argc,
-                                struct host_operator_specs *__restrict result,
-                                unsigned int flags) {
+                                uint16_t operator_name, Dee_vstackaddr_t *__restrict p_extra_argc,
+                                struct host_operator_specs *__restrict result, bool inplace) {
 	void const *api_function;
 	byte_t const *field_base;
 	struct opinfo const *info;
@@ -3876,16 +3872,16 @@ vtype_get_operator_api_function(struct Dee_function_generator *__restrict self,
 
 	case OPERATOR_CALL:
 		api_function = NULL;
-		if (*p_argc == 2) {
+		if (*p_extra_argc == 1) {
 			api_function = type->tp_call;
-		} else if (*p_argc == 3) {
+		} else if (*p_extra_argc == 2) {
 			api_function = type->tp_call_kw;
 		}
-		if (api_function && !(flags & VOP_F_INPLACE)) {
+		if (api_function && !inplace) {
 			result->hos_apifunc = api_function;
-			result->hos_argc    = (uint8_t)*p_argc;
+			result->hos_argc    = (uint8_t)*p_extra_argc + 1;
 			result->hos_cc      = VCALL_CC_OBJECT;
-			result->hos_flags   = VOP_F_NORMAL;
+			result->hos_inplace = false;
 			return 0;
 		}
 		break;
@@ -3920,9 +3916,9 @@ vtype_get_operator_api_function(struct Dee_function_generator *__restrict self,
 
 	/* Translate C RTTI info into a VCALL calling convention (an potentially rotate arguments) */
 	optype = info->oi_type;
-	if (!!(flags & VOP_F_INPLACE) != !!(optype & OPTYPE_INPLACE))
+	result->hos_inplace = !!(optype & OPTYPE_INPLACE);
+	if unlikely(!!inplace != result->hos_inplace)
 		goto nope;
-	result->hos_flags = flags & VOP_F_INPLACE;
 	optype &= ~OPTYPE_INPLACE;
 	switch (optype) {
 
@@ -3956,21 +3952,15 @@ vtype_get_operator_api_function(struct Dee_function_generator *__restrict self,
 
 	default: goto nope;
 	}
-	if (result->hos_argc != (*p_argc))
+	if (result->hos_argc != (*p_extra_argc + 1))
 		goto nope;
 	return 0;
 nope:
 	return 1;
 }
 
-/*       [args...]  ->  result       (flags == VOP_F_PUSHRES)
- *       [args...]  ->  N/A          (flags == VOP_F_NORMAL)
- * this, [args...]  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
- * this, [args...]  ->  this         (flags == VOP_F_INPLACE)
- *
- * For `VOP_F_INPLACE' the first elem of args is "[intout] DREF DeeObject **",
- * and should point to "this". Note however that here, "this" is only used for
- * the purposes of compile-time type deduction, meaning an alias is also OK. */
+/* [args...]  ->  result (flags == VOP_F_PUSHRES)
+ * [args...]  ->  N/A    (flags == VOP_F_NORMAL) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
                            uint16_t operator_name, Dee_vstackaddr_t argc,
@@ -3979,84 +3969,78 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_state_unshare(self));
 
 	/* Special handling for certain operators. */
-	if (flags & VOP_F_INPLACE) {
-		if unlikely(self->fg_state->ms_stackc < (argc + 1))
-			return err_illegal_stack_effect();
-		/* ... */
-	} else {
-		if unlikely(self->fg_state->ms_stackc < argc)
-			return err_illegal_stack_effect();
-		switch (operator_name) {
+	if unlikely(self->fg_state->ms_stackc < argc)
+		return err_illegal_stack_effect();
+	switch (operator_name) {
 
-		case OPERATOR_STR:
-			if (argc == 1) {
-				DO(Dee_function_generator_vopstr(self));
-				goto done_with_result;
-			}
-			return_type = &DeeString_Type;
-			break;
-
-		case OPERATOR_REPR:
-			return_type = &DeeString_Type;
-			break;
-
-		case OPERATOR_BOOL:
-			if (argc == 1) {
-				DO(Dee_function_generator_vopbool(self, false));
-				goto done_with_result;
-			}
-			return_type = &DeeBool_Type;
-			break;
-
-		case OPERATOR_CALL:
-			if (argc == 2) {
-				DO(Dee_function_generator_vopcalltuple(self));
-				goto done_with_result;
-			}
-			if (argc == 3) {
-				DO(Dee_function_generator_vopcalltuplekw(self));
-				goto done_with_result;
-			}
-			break;
-
-		case OPERATOR_INT:
-			if (argc == 1) {
-				DO(Dee_function_generator_vopint(self));
-				goto done_with_result;
-			}
-			return_type = &DeeInt_Type;
-			break;
-
-		case OPERATOR_SIZE:
-			if (argc == 1) {
-				DO(Dee_function_generator_vopsize(self));
-				goto done_with_result;
-			}
-			break;
-
-		case OPERATOR_GETATTR:
-			if (argc == 2) {
-				DO(Dee_function_generator_vopgetattr(self));
-				goto done_with_result;
-			}
-			break;
-
-		case OPERATOR_DELATTR:
-			if (argc == 2) {
-				DO(Dee_function_generator_vopdelattr(self));
-				goto done_without_result;
-			}
-			break;
-
-		case OPERATOR_SETATTR:
-			if (argc == 3) {
-				DO(Dee_function_generator_vopsetattr(self));
-				goto done_without_result;
-			}
-			break;
-
-		default: break;
+	case OPERATOR_STR:
+		if (argc == 1) {
+			DO(Dee_function_generator_vopstr(self));
+			goto done_with_result;
 		}
+		return_type = &DeeString_Type;
+		break;
+
+	case OPERATOR_REPR:
+		return_type = &DeeString_Type;
+		break;
+
+	case OPERATOR_BOOL:
+		if (argc == 1) {
+			DO(Dee_function_generator_vopbool(self, false));
+			goto done_with_result;
+		}
+		return_type = &DeeBool_Type;
+		break;
+
+	case OPERATOR_CALL:
+		if (argc == 2) {
+			DO(Dee_function_generator_vopcalltuple(self));
+			goto done_with_result;
+		}
+		if (argc == 3) {
+			DO(Dee_function_generator_vopcalltuplekw(self));
+			goto done_with_result;
+		}
+		break;
+
+	case OPERATOR_INT:
+		if (argc == 1) {
+			DO(Dee_function_generator_vopint(self));
+			goto done_with_result;
+		}
+		return_type = &DeeInt_Type;
+		break;
+
+	case OPERATOR_SIZE:
+		if (argc == 1) {
+			DO(Dee_function_generator_vopsize(self));
+			goto done_with_result;
+		}
+		break;
+
+	case OPERATOR_GETATTR:
+		if (argc == 2) {
+			DO(Dee_function_generator_vopgetattr(self));
+			goto done_with_result;
+		}
+		break;
+
+	case OPERATOR_DELATTR:
+		if (argc == 2) {
+			DO(Dee_function_generator_vopdelattr(self));
+			goto done_without_result;
+		}
+		break;
+
+	case OPERATOR_SETATTR:
+		if (argc == 3) {
+			DO(Dee_function_generator_vopsetattr(self));
+			goto done_without_result;
+		}
+		break;
+
+	default: break;
 	}
 
 	DO(Dee_function_generator_vdirect(self, argc));
@@ -4067,9 +4051,7 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
 		struct Dee_memloc *this_loc;
 		DeeTypeObject *this_type;
 		this_loc = Dee_function_generator_vtop(self) - (argc - 1);
-		if (flags & VOP_F_INPLACE)
-			--this_loc;
-		if (this_loc->ml_type == MEMLOC_TYPE_CONST && !(flags & VOP_F_INPLACE)) {
+		if (this_loc->ml_type == MEMLOC_TYPE_CONST) {
 			DeeObject *thisval = this_loc->ml_value.v_const;
 			/* Try to produce a compile-time call if the operator is
 			 * constexpr, and all arguments are constants as well. */
@@ -4085,7 +4067,7 @@ Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
 						goto not_all_args_are_constant;
 					constant_argv[i - 1] = this_loc[i].ml_value.v_const;
 				}
-				op_result = DeeObject_InvokeOperator(thisval, operator_name, argc, constant_argv);
+				op_result = DeeObject_InvokeOperator(thisval, operator_name, argc - 1, constant_argv);
 				if unlikely(!op_result) {
 					if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 						Dee_Freea(constant_argv);
@@ -4122,13 +4104,15 @@ not_all_args_are_constant:
 
 			/* Try to produce an inlined operator call. */
 			if (DeeType_InheritOperator(this_type, operator_name)) {
-				int temp = vtype_get_operator_api_function(self, this_type, operator_name,
-				                                           &argc, &specs, flags);
+				int temp;
+				--argc;
+				temp = vtype_get_operator_api_function(self, this_type, operator_name,
+				                                       &argc, &specs, false);
+				++argc;
 				if (temp <= 0) {
 					if unlikely(temp < 0)
 						goto err;
 					ASSERT(specs.hos_argc == argc);
-					ASSERT(specs.hos_flags == (flags & VOP_F_INPLACE));
 					DO(Dee_function_generator_vcallapi(self, specs.hos_apifunc,
 					                                   specs.hos_cc, argc));
 					if (specs.hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
@@ -4136,27 +4120,18 @@ not_all_args_are_constant:
 					goto done_without_result;
 				}
 			}
-
-			if (flags & VOP_F_INPLACE) {
-				/* TODO: If we know the type won't implement (e.g. OPERATOR_INPLACE_ADD),
-				 *       then we can instead generate code to do OPERATOR_ADD, and re-assign
-				 *       the result to the indirection of the p_this argument. */
-			}
 		}
 	}
 
 	/* Check if there is a dedicated API function. */
 	if (operator_name < COMPILER_LENOF(operator_apis)) {
 		struct host_operator_specs const *specs = &operator_apis[operator_name];
-		if (specs->hos_apifunc != NULL && specs->hos_argc == argc &&
-		    specs->hos_flags == (flags & VOP_F_INPLACE)) {
+		if (specs->hos_apifunc != NULL && specs->hos_argc == argc && !specs->hos_inplace) {
 			DO(Dee_function_generator_vcallapi(self, specs->hos_apifunc,
 			                                   specs->hos_cc, argc));
 			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
 				goto done_with_result;
 done_without_result:
-			if (flags & VOP_F_INPLACE)
-				DO(Dee_function_generator_vsettyp(self, return_type)); /* this */
 			if (flags & VOP_F_PUSHRES) {
 				/* Always make sure to return some value on-stack. */
 				return Dee_function_generator_vpush_const(self, Dee_None);
@@ -4165,7 +4140,7 @@ done_without_result:
 		}
 	}
 
-	/* Fallback: encode a call to `DeeObject_InvokeOperator()' / `DeeObject_PInvokeOperator()' */
+	/* Fallback: encode a call to `DeeObject_InvokeOperator()' */
 	if unlikely(argc < 1)
 		return err_illegal_stack_effect();
 	--argc; /* The "this"-argument is passed individually */
@@ -4174,38 +4149,260 @@ done_without_result:
 	DO(Dee_function_generator_vpush_imm16(self, operator_name)); /* [args...], argv, this, opname */
 	DO(Dee_function_generator_vpush_immSIZ(self, argc));         /* [args...], argv, this, opname, argc */
 	DO(Dee_function_generator_vlrot(self, 4));                   /* [args...], this, opname, argc, argv */
-	DO(Dee_function_generator_vcallapi(self,                     /* [args...], UNCHECKED(result) */
-	                                   (flags & VOP_F_INPLACE) ? (void const *)&DeeObject_PInvokeOperator
-	                                                           : (void const *)&DeeObject_InvokeOperator,
-	                                   VCALL_CC_RAWINTPTR, 4));
-	DO(Dee_function_generator_vrrot(self, argc + 1)); /* UNCHECKED(result), [args...] */
-	DO(Dee_function_generator_vpopmany(self, argc));  /* UNCHECKED(result) */
-	DO(Dee_function_generator_vcheckobj(self));       /* result */
-done_with_result:                                     /* [this], result */
-	if (!(flags & VOP_F_PUSHRES)) {                   /* [this], result */
-		DO(Dee_function_generator_vpop(self));        /* [this] */
-		if (flags & VOP_F_INPLACE)
-			return Dee_function_generator_vsettyp(self, return_type); /* this */
-		return 0;
-	}
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_InvokeOperator, VCALL_CC_RAWINTPTR, 4)); /* [args...], UNCHECKED(result) */
+	DO(Dee_function_generator_vrrot(self, argc + 1));            /* UNCHECKED(result), [args...] */
+	DO(Dee_function_generator_vpopmany(self, argc));             /* UNCHECKED(result) */
+	DO(Dee_function_generator_vcheckobj(self));                  /* result */
+done_with_result:                                                /* result */
+	if (!(flags & VOP_F_PUSHRES))
+		return Dee_function_generator_vpop(self);
 	if (return_type)
-		DO(Dee_function_generator_vsettyp_noalias(self, return_type)); /* [this], result */
-	if (flags & VOP_F_INPLACE) {
-		DO(Dee_function_generator_vswap(self));                /* result, this */
-		DO(Dee_function_generator_vsettyp(self, return_type)); /* result, this */
-		return Dee_function_generator_vswap(self);             /* this, result */
-	}
+		return Dee_function_generator_vsettyp_noalias(self, return_type); /* result */
 	return 0;
 err:
 	return -1;
 }
 
 
+/* [ref]:this, [args...]  ->  ref:this, result
+ * [ref]:this, [args...]  ->  ref:this
+ * NOTE: This function doesn't assign the new assumed object type to this/result! */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+vinplaceop_invoke_specs(struct Dee_function_generator *__restrict self,
+                        struct host_operator_specs const *__restrict specs) {
+	Dee_vstackaddr_t argc = specs->hos_argc - 1;
+	DO(Dee_function_generator_vlrot(self, argc + 1));   /* [args...], [ref]:this */
+	DO(Dee_function_generator_vref(self));              /* [args...], ref:this */
+	DO(Dee_function_generator_vlinear(self, 1, false)); /* [args...], ref:this, p_this */
+	DO(Dee_function_generator_vswap(self));             /* [args...], p_this, ref:this */
+	DO(Dee_function_generator_vrrot(self, argc + 2));   /* ref:this, [args...], p_this */
+	DO(Dee_function_generator_vrrot(self, argc + 1));   /* ref:this, p_this, [args...] */
+	return Dee_function_generator_vcallapi(self, specs->hos_apifunc, specs->hos_cc, argc + 1); /* ref:this, [result] */
+err:
+	return -1;
+}
 
-/*         this, args  ->  result       (flags == VOP_F_PUSHRES)
- *         this, args  ->  N/A          (flags == VOP_F_NORMAL)
- * this, p_this, args  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
- * this, p_this, args  ->  this         (flags == VOP_F_INPLACE)
+/* [ref]:this, [args...]  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
+ * [ref]:this, [args...]  ->  [ref]:this         (flags == VOP_F_NORMAL) */
+INTERN WUNUSED NONNULL((1)) int DCALL
+vinplaceop_with_vop(struct Dee_function_generator *__restrict self,
+                    uint16_t operator_name, Dee_vstackaddr_t argc,
+                    unsigned int flags) {
+	int result = Dee_function_generator_vop(self, operator_name, argc + 1, flags | VOP_F_PUSHRES);
+	if (likely(result == 0) && (flags & VOP_F_PUSHRES))
+		result = Dee_function_generator_vdup(self);
+	return result;
+}
+
+/* [ref]:this, [args...]  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
+ * [ref]:this, [args...]  ->  [ref]:this         (flags == VOP_F_NORMAL)
+ * NOTE: If "this" isn't a constant, it is the caller's responsibility to
+ *       ensure that "this" doesn't have any aliases. Otherwise, aliases
+ *       might inadvertently also receive the updated object. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vinplaceop(struct Dee_function_generator *__restrict self,
+                                  uint16_t operator_name, Dee_vstackaddr_t argc,
+                                  unsigned int flags) {
+	struct Dee_memloc *this_loc;
+	DeeTypeObject *this_type;
+	DeeTypeObject *return_type = NULL;
+	DO(Dee_function_generator_state_unshare(self));
+
+	/* Special handling for certain operators. */
+	/*switch (operator_name) {
+	default: break;
+	}*/
+
+	DO(Dee_function_generator_vdirect(self, argc + 1));
+	this_loc = Dee_function_generator_vtop(self) - argc;
+	if (this_loc->ml_type == MEMLOC_TYPE_CONST) {
+		DeeObject *thisval = this_loc->ml_value.v_const;
+		/* Try to produce a compile-time call if the operator is
+		 * constexpr, and all arguments are constants as well. */
+		if (DeeType_IsOperatorConstexpr(Dee_TYPE(thisval), operator_name)) {
+			size_t i;
+			DeeObject **constant_argv;
+			DREF DeeObject *op_result, *new_thisval;
+			constant_argv = (DeeObject **)Dee_Mallocac(argc, sizeof(DeeObject *));
+			if unlikely(!constant_argv)
+				goto err;
+			for (i = 0; i < argc; ++i) {
+				if (this_loc[i + 1].ml_type != MEMLOC_TYPE_CONST)
+					goto not_all_args_are_constant;
+				constant_argv[i] = this_loc[i + 1].ml_value.v_const;
+			}
+			new_thisval = thisval;
+			Dee_Incref(new_thisval);
+			op_result = DeeObject_PInvokeOperator(&new_thisval, operator_name, argc, constant_argv);
+			if unlikely(!op_result) {
+				Dee_Decref(new_thisval);
+				if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
+					Dee_Freea(constant_argv);
+					goto err;
+				}
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				goto not_all_args_are_constant;
+			}
+			Dee_Freea(constant_argv);
+			ASSERT(new_thisval);
+			if (new_thisval == thisval) {
+				Dee_DecrefNokill(new_thisval);
+			} else {
+				new_thisval = Dee_function_generator_inlineref(self, new_thisval);
+				if unlikely(!new_thisval) {
+					Dee_Decref(op_result);
+					goto err;
+				}
+			}
+			ASSERT(this_loc->ml_type == MEMLOC_TYPE_CONST);
+			ASSERT(this_loc->ml_value.v_const == thisval);
+			this_loc->ml_value.v_const = new_thisval;
+			this_loc->ml_valtyp = Dee_TYPE(new_thisval);
+			if (flags & VOP_F_PUSHRES) {
+				op_result = Dee_function_generator_inlineref(self, op_result);
+				if unlikely(!op_result)
+					goto err;
+			} else {
+				Dee_Decref_likely(op_result);
+			}
+			DO(Dee_function_generator_vpopmany(self, argc));
+			if (flags & VOP_F_PUSHRES)
+				return Dee_function_generator_vpush_const(self, op_result);
+			return 0;
+not_all_args_are_constant:
+			Dee_Freea(constant_argv);
+		}
+	}
+
+	this_type = Dee_memloc_typeof(this_loc);
+	if (this_type != NULL) {
+		uint16_t non_inplace_operator_name;
+
+		/* Try to determine the operator's return type from doc info. */
+		return_type = vget_operator_return_type(self, this_type, operator_name, argc);
+		if unlikely(return_type == (DeeTypeObject *)ITER_DONE)
+			goto err;
+
+		/* Try to produce an inlined operator call. */
+		if (DeeType_InheritOperator(this_type, operator_name)) {
+			struct host_operator_specs specs;
+			int temp = vtype_get_operator_api_function(self, this_type, operator_name,
+			                                           &argc, &specs, true);
+			if (temp <= 0) {
+				if unlikely(temp < 0)
+					goto err;
+				ASSERT(specs.hos_argc == argc + 1);
+				ASSERT(specs.hos_inplace);                 /* [ref]:this, [args...] */
+				DO(vinplaceop_invoke_specs(self, &specs)); /* ref:this, [result] */
+				if (specs.hos_cc != VCALL_CC_INT)          /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+					goto done_with_result;
+				goto done_without_result;
+			}
+		}
+
+		/* If we know the type won't implement (e.g. OPERATOR_INPLACE_ADD),
+		 * then we can instead generate code to do OPERATOR_ADD, and re-assign
+		 * the result to the indirection of the p_this argument. */
+		non_inplace_operator_name = 0;
+		switch (operator_name) {
+		case OPERATOR_INC:
+		case OPERATOR_DEC:
+			if (argc == 0) {
+				uint16_t operator_inplace_add = OPERATOR_INPLACE_ADD;
+				uint16_t operator_inplace_sub = OPERATOR_INPLACE_SUB;
+				uint16_t operator_add         = OPERATOR_ADD;
+				uint16_t operator_sub         = OPERATOR_SUB;
+				if (operator_name == OPERATOR_DEC) {
+					operator_inplace_add = OPERATOR_INPLACE_SUB;
+					operator_inplace_sub = OPERATOR_INPLACE_ADD;
+					operator_add         = OPERATOR_SUB;
+					operator_sub         = OPERATOR_ADD;
+				}
+				if (DeeType_HasOperator(this_type, operator_inplace_add)) {
+					DO(Dee_function_generator_vpush_const(self, DeeInt_One));                       /* [ref]:this, DeeInt_One */
+					return Dee_function_generator_vinplaceop(self, operator_inplace_add, 1, flags); /* [ref]:this, [result] */
+				} else if (DeeType_HasOperator(this_type, operator_add)) {
+					DO(Dee_function_generator_vpush_const(self, DeeInt_One)); /* [ref]:this, DeeInt_One */
+					return vinplaceop_with_vop(self, operator_add, 1, flags); /* result, [result] */
+				} else if (DeeType_HasOperator(this_type, operator_inplace_sub)) {
+					DO(Dee_function_generator_vpush_const(self, DeeInt_MinusOne));                  /* [ref]:this, DeeInt_MinusOne */
+					return Dee_function_generator_vinplaceop(self, operator_inplace_sub, 1, flags); /* [ref]:this, [result] */
+				} else if (DeeType_HasOperator(this_type, operator_sub)) {
+					DO(Dee_function_generator_vpush_const(self, DeeInt_MinusOne)); /* [ref]:this, DeeInt_MinusOne */
+					return vinplaceop_with_vop(self, operator_sub, 1, flags);      /* result, [result] */
+				}
+			}
+			break;
+
+		case OPERATOR_INPLACE_ADD: non_inplace_operator_name = OPERATOR_ADD; break;
+		case OPERATOR_INPLACE_SUB: non_inplace_operator_name = OPERATOR_SUB; break;
+		case OPERATOR_INPLACE_MUL: non_inplace_operator_name = OPERATOR_MUL; break;
+		case OPERATOR_INPLACE_DIV: non_inplace_operator_name = OPERATOR_DIV; break;
+		case OPERATOR_INPLACE_MOD: non_inplace_operator_name = OPERATOR_MOD; break;
+		case OPERATOR_INPLACE_SHL: non_inplace_operator_name = OPERATOR_SHL; break;
+		case OPERATOR_INPLACE_SHR: non_inplace_operator_name = OPERATOR_SHR; break;
+		case OPERATOR_INPLACE_AND: non_inplace_operator_name = OPERATOR_AND; break;
+		case OPERATOR_INPLACE_OR: non_inplace_operator_name = OPERATOR_OR; break;
+		case OPERATOR_INPLACE_XOR: non_inplace_operator_name = OPERATOR_XOR; break;
+		case OPERATOR_INPLACE_POW: non_inplace_operator_name = OPERATOR_POW; break;
+		default: break;
+		}
+
+		/* Try to encode as the non-inplace equivalent, if we can determine that the type supports it. */
+		if (non_inplace_operator_name != 0 && DeeType_HasOperator(this_type, non_inplace_operator_name))
+			return vinplaceop_with_vop(self, non_inplace_operator_name, argc, flags);
+	}
+
+	/* Check if there is a dedicated API function. */
+	if (operator_name < COMPILER_LENOF(operator_apis)) {
+		struct host_operator_specs const *specs = &operator_apis[operator_name];
+		if (specs->hos_apifunc != NULL && specs->hos_argc == argc + 1 && specs->hos_inplace) {
+			DO(vinplaceop_invoke_specs(self, specs)); /* ref:this, [result] */
+			if (specs->hos_cc != VCALL_CC_INT) /* `VCALL_CC_INT' is the only one used that doesn't have a return value */
+				goto done_with_result;
+done_without_result:
+			DO(Dee_function_generator_vsettyp(self, return_type)); /* [ref]:this */
+			if (flags & VOP_F_PUSHRES) {
+				/* Always make sure to return some value on-stack. */
+				return Dee_function_generator_vpush_const(self, Dee_None);
+			}
+			return 0;
+		}
+	}
+
+	/* Fallback: encode a call to `DeeObject_PInvokeOperator()' */
+	DO(Dee_function_generator_vlinear(self, argc, true));        /* [ref]:this, [args...], argv */
+	DO(Dee_function_generator_vlrot(self, argc + 2));            /* [args...], argv, [ref]:this */
+	DO(Dee_function_generator_vref(self));                       /* [args...], argv, ref:this */
+	DO(Dee_function_generator_vlinear(self, 1, false));          /* [args...], argv, ref:this, p_this */
+	DO(Dee_function_generator_vswap(self));                      /* [args...], argv, p_this, ref:this */
+	DO(Dee_function_generator_vrrot(self, argc + 3));            /* ref:this, [args...], argv, p_this */
+	DO(Dee_function_generator_vpush_imm16(self, operator_name)); /* ref:this, [args...], argv, p_this, opname */
+	DO(Dee_function_generator_vpush_immSIZ(self, argc));         /* ref:this, [args...], argv, p_this, opname, argc */
+	DO(Dee_function_generator_vlrot(self, 4));                   /* ref:this, [args...], p_this, opname, argc, argv */
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_PInvokeOperator, VCALL_CC_RAWINTPTR, 4)); /* ref:this, [args...], UNCHECKED(result) */
+	DO(Dee_function_generator_vrrot(self, argc + 1));            /* ref:this, UNCHECKED(result), [args...] */
+	DO(Dee_function_generator_vpopmany(self, argc));             /* ref:this, UNCHECKED(result) */
+	DO(Dee_function_generator_vcheckobj(self));                  /* ref:this, result */
+done_with_result:                                                /* ref:this, result */
+	if (!(flags & VOP_F_PUSHRES)) {                              /* ref:this, result */
+		DO(Dee_function_generator_vpop(self));                   /* ref:this */
+		return Dee_function_generator_vsettyp(self, return_type); /* ref:this */
+	}
+	/* NOTE: When return types are known, the that return type always
+	 *       matches the type of object that got assigned to `*p_this' */
+	DO(Dee_function_generator_vsettyp_noalias(self, return_type)); /* ref:this, result */
+	DO(Dee_function_generator_vswap(self));                        /* result, ref:this */
+	DO(Dee_function_generator_vsettyp(self, return_type));         /* result, ref:this */
+	return Dee_function_generator_vswap(self);                     /* ref:this, result */
+err:
+	return -1;
+}
+
+
+
+/* this, args  ->  result (flags == VOP_F_PUSHRES)
+ * this, args  ->  N/A    (flags == VOP_F_NORMAL)
  * Same as `Dee_function_generator_vop()', but arguments are given as via what
  * should be a tuple-object (the type is asserted by this function) in vtop.
  * NOTE: A tuple-type check is only generated if DEE_FUNCTION_ASSEMBLER_F_SAFE is set. */
@@ -4213,8 +4410,6 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_voptuple(struct Dee_function_generator *__restrict self,
                                 uint16_t operator_name, unsigned int flags) {
 	struct Dee_memloc *args_loc;
-	if unlikely(self->fg_state->ms_stackc < (flags & VOP_F_INPLACE ? 3 : 2))
-		return err_illegal_stack_effect();
 	DO(Dee_function_generator_vdirect(self, 2));
 	DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeTuple_Type));
 	DO(Dee_function_generator_state_unshare(self));
@@ -4236,16 +4431,56 @@ Dee_function_generator_voptuple(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vind(self, offsetof(DeeTupleObject, t_size)));   /* [this], args, this/p_this, operator_name, argc */
 	DO(Dee_function_generator_vdup_n(self, 4));                                /* [this], args, this/p_this, operator_name, argc, args */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [this], args, this/p_this, operator_name, argc, argv */
-	DO(Dee_function_generator_vcallapi(self, (flags & VOP_F_INPLACE)           /* [this], args, UNCHECKED(result) */
-	                                         ? (void const *)&DeeObject_PInvokeOperator
-	                                         : (void const *)&DeeObject_InvokeOperator,
-	                                   VCALL_CC_RAWINTPTR, 4));
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_InvokeOperator, VCALL_CC_RAWINTPTR, 4)); /* [this], args, UNCHECKED(result) */
 	DO(Dee_function_generator_vswap(self));                                    /* [this], UNCHECKED(result), args */
 	DO(Dee_function_generator_vpop(self));                                     /* [this], UNCHECKED(result) */
 	DO(Dee_function_generator_vcheckobj(self));                                /* [this], result */
 	if (!(flags & VOP_F_PUSHRES))
 		return Dee_function_generator_vpop(self); /* [this] */
 	return 0;
+err:
+	return -1;
+}
+
+
+/* [ref]:this, args  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
+ * [ref]:this, args  ->  [ref]:this         (flags == VOP_F_NORMAL)
+ * NOTE: If "this" isn't a constant, it is the caller's responsibility to
+ *       ensure that "this" doesn't have any aliases. Otherwise, aliases
+ *       might inadvertently also receive the updated object. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vinplaceoptuple(struct Dee_function_generator *__restrict self,
+                                       uint16_t operator_name, unsigned int flags) {
+	struct Dee_memloc *args_loc;
+	DO(Dee_function_generator_vdirect(self, 2));
+	DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeTuple_Type));
+	DO(Dee_function_generator_state_unshare(self));
+	args_loc = Dee_function_generator_vtop(self);
+	if (args_loc->ml_type == MEMLOC_TYPE_CONST) {
+		/* Inline arguments so we can do regular operator invocation. */
+		size_t i;
+		DeeTupleObject *args = (DeeTupleObject *)args_loc->ml_value.v_const;
+		ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type); /* Could only fail in SAFE code, but there it's already checked-for above */
+		DO(Dee_function_generator_vpop(self));          /* [ref]:this */
+		for (i = 0; i < DeeTuple_SIZE(args); ++i)
+			DO(Dee_function_generator_vpush_const(self, DeeTuple_GET(args, i))); /* [ref]:this, [args...] */
+		return Dee_function_generator_vinplaceop(self, operator_name, (Dee_vstackaddr_t)DeeTuple_SIZE(args), flags);
+	}                                                                          /* [ref]:this, args */
+	DO(Dee_function_generator_vswap(self));                                    /* args, [ref]:this */
+	DO(Dee_function_generator_vref(self));                                     /* args, ref:this */
+	DO(Dee_function_generator_vlinear(self, 1, false));                        /* args, ref:this, p_this */
+	DO(Dee_function_generator_vpush_imm16(self, operator_name));               /* args, ref:this, p_this, operator_name */
+	DO(Dee_function_generator_vdup_n(self, 4));                                /* args, ref:this, p_this, operator_name, args */
+	DO(Dee_function_generator_vind(self, offsetof(DeeTupleObject, t_size)));   /* args, ref:this, p_this, operator_name, argc */
+	DO(Dee_function_generator_vdup_n(self, 5));                                /* args, ref:this, p_this, operator_name, argc, args */
+	DO(Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* args, ref:this, p_this, operator_name, argc, argv */
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_PInvokeOperator, VCALL_CC_RAWINTPTR, 4)); /* args, ref:this, UNCHECKED(result) */
+	DO(Dee_function_generator_vlrot(self, 3));                                 /* ref:this, UNCHECKED(result), args */
+	DO(Dee_function_generator_vpop(self));                                     /* ref:this, UNCHECKED(result) */
+	DO(Dee_function_generator_vcheckobj(self));                                /* ref:this, result */
+	if (!(flags & VOP_F_PUSHRES))
+		return Dee_function_generator_vpop(self); /* ref:this */
+	return 0;                                     /* ref:this, result */
 err:
 	return -1;
 }

@@ -203,7 +203,6 @@ struct Dee_memloc {
 #define MEMLOC_TYPE_CONST     4 /* >> value = v_const; */
 #define MEMLOC_TYPE_UNALLOC   5 /* >> value = ???;  // Not allocated (only valid for local variables) */
 #define MEMLOC_TYPE_UNDEFINED 6 /* >> value = ???;  // Not defined (value can be anything at runtime) */
-#define MEMLOC_TYPE_HASTYP(typ) ((typ) <= MEMLOC_TYPE_HSTACKIND)
 #define MEMLOC_TYPE_HASREG(typ) ((typ) <= MEMLOC_TYPE_HREGIND)
 #define MEMLOC_TYPE_CASEREG     case MEMLOC_TYPE_HREG: case MEMLOC_TYPE_HREGIND
 	uint16_t               ml_type;   /* Location kind (one of `MEMLOC_TYPE_*') */
@@ -743,6 +742,7 @@ struct Dee_basic_block {
 	struct Dee_jump_descriptors bb_entries;      /* All of the possible ways this basic block can be entered (at `bb_deemon_start' / `bb_host_start'; this one owns descriptors). */
 	struct Dee_jump_descriptors bb_exits;        /* All of the possible ways this basic block can be exited (via deemon code). */
 	struct Dee_basic_block     *bb_next;         /* [0..1] Fallthru exit of this basic block (or NULL if there is none, which happens for the last block and blocks that end with NORETURN instructions) */
+	struct Dee_basic_block     *bb_next_r;       /* [0..1] Real fallthru exit of this basic block */
 #ifdef __INTELLISENSE__
 	struct Dee_memstate        *bb_mem_start;    /* [0..1] Memory state at start of basic block (or NULL if not yet assembled) */
 	struct Dee_memstate        *bb_mem_end;      /* [0..1] Memory state at end of basic block (or NULL if not yet assembled) */
@@ -1159,32 +1159,42 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be 
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc);
 
-/*       [args...]  ->  result       (flags == VOP_F_PUSHRES)
- *       [args...]  ->  N/A          (flags == VOP_F_NORMAL)
- * this, [args...]  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
- * this, [args...]  ->  this         (flags == VOP_F_INPLACE)
- *
- * For `VOP_F_INPLACE' the first elem of args is "[intout] DREF DeeObject **",
- * and should point to "this". Note however that here, "this" is only used for
- * the purposes of compile-time type deduction, meaning an alias is also OK. */
+/* [args...]  ->  result (flags == VOP_F_PUSHRES)
+ * [args...]  ->  N/A    (flags == VOP_F_NORMAL) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vop(struct Dee_function_generator *__restrict self,
                            uint16_t operator_name, Dee_vstackaddr_t argc,
                            unsigned int flags);
 #define VOP_F_NORMAL  0x0000 /* Normal flags */
 #define VOP_F_PUSHRES 0x0001 /* Push the operator's result */
-#define VOP_F_INPLACE 0x0002 /* First argument is "[inout] DREF DeeObject **" */
 
-/*         this, args  ->  result       (flags == VOP_F_PUSHRES)
- *         this, args  ->  N/A          (flags == VOP_F_NORMAL)
- * this, p_this, args  ->  this, result (flags == VOP_F_INPLACE | VOP_F_PUSHRES)
- * this, p_this, args  ->  this         (flags == VOP_F_INPLACE)
+/* this, args  ->  result (flags == VOP_F_PUSHRES)
+ * this, args  ->  N/A    (flags == VOP_F_NORMAL)
  * Same as `Dee_function_generator_vop()', but arguments are given as via what
  * should be a tuple-object (the type is asserted by this function) in vtop.
  * NOTE: A tuple-type check is only generated if DEE_FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_voptuple(struct Dee_function_generator *__restrict self,
                                 uint16_t operator_name, unsigned int flags);
+
+/* [ref]:this, [args...]  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
+ * [ref]:this, [args...]  ->  [ref]:this         (flags == VOP_F_NORMAL)
+ * NOTE: If "this" isn't a constant, it is the caller's responsibility to
+ *       ensure that "this" doesn't have any aliases. Otherwise, aliases
+ *       might inadvertently also receive the updated object. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vinplaceop(struct Dee_function_generator *__restrict self,
+                                  uint16_t operator_name, Dee_vstackaddr_t argc,
+                                  unsigned int flags);
+
+/* [ref]:this, args  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
+ * [ref]:this, args  ->  [ref]:this         (flags == VOP_F_NORMAL)
+ * NOTE: If "this" isn't a constant, it is the caller's responsibility to
+ *       ensure that "this" doesn't have any aliases. Otherwise, aliases
+ *       might inadvertently also receive the updated object. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vinplaceoptuple(struct Dee_function_generator *__restrict self,
+                                       uint16_t operator_name, unsigned int flags);
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* seq -> [elems...] */

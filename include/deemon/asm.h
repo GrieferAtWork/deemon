@@ -1156,8 +1156,8 @@
                                       * >> REG_PC = new_ip; */
 #define ASM16_OPERATOR        0xf019 /* [5][-1-n,+1] `op top, $<imm16>, #<imm8>'          - Same as `ASM_OPERATOR', but can be used to invoke extended operator codes.
                                       * [5][-n,+1]   `PREFIX: push op $<imm16>, #<imm8>' */
-#define ASM16_OPERATOR_TUPLE  0xf01a /* [4][-2,+1]   `op top, $<imm16>, pop'              - Same as `ASM_OPERATOR_TUPLE', but can be used to invoke extended operator codes.
-                                      * [4][-1,+1]   `PREFIX: push op $<imm16>, pop' */
+#define ASM16_OPERATOR_TUPLE  0xf01a /* [4][-2,+1]   `op top, $<imm16>, pop...'           - Same as `ASM_OPERATOR_TUPLE', but can be used to invoke extended operator codes.
+                                      * [4][-1,+1]   `PREFIX: push op $<imm16>, pop...' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
 #define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of inserting `pop' before `pop...', then using the result as argument list).

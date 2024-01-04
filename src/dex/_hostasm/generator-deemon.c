@@ -34,6 +34,7 @@
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
+#include <deemon/int.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
@@ -88,6 +89,79 @@ err:
 }
 
 
+#define ASM_MATHBLOCK_MIN ASM_CAST_INT
+#define ASM_MATHBLOCK_MAX ASM_XOR_IMM32
+#define ASM_MATHBLOCK_CONTAINS(opcode) ((opcode) >= ASM_MATHBLOCK_MIN && (opcode) <= ASM_MATHBLOCK_MAX)
+struct opname_pair {
+	uint16_t op_normal;  /* Normal operator (or 0 if undefined) */
+	uint16_t op_inplace; /* Inplace operator (or 0 if undefined) */
+};
+
+#define ASM_MATHBLOCK_OPCODE2OPERATOR(opcode)  asm_mathblock_opnames[(opcode) - ASM_MATHBLOCK_MIN].op_normal
+#define ASM_MATHBLOCK_OPCODE2IOPERATOR(opcode) asm_mathblock_opnames[(opcode) - ASM_MATHBLOCK_MIN].op_inplace
+PRIVATE struct opname_pair const asm_mathblock_opnames[(ASM_MATHBLOCK_MAX - ASM_MATHBLOCK_MIN) + 1] = {
+	/* [ASM_CAST_INT]  = */ { OPERATOR_INT, 0 },
+	/* [ASM_INV]       = */ { OPERATOR_INV, 0 },
+	/* [ASM_POS]       = */ { OPERATOR_POS, 0 },
+	/* [ASM_NEG]       = */ { OPERATOR_NEG, 0 },
+	/* [ASM_ADD]       = */ { OPERATOR_ADD, OPERATOR_INPLACE_ADD },
+	/* [ASM_SUB]       = */ { OPERATOR_SUB, OPERATOR_INPLACE_SUB },
+	/* [ASM_MUL]       = */ { OPERATOR_MUL, OPERATOR_INPLACE_MUL },
+	/* [ASM_DIV]       = */ { OPERATOR_DIV, OPERATOR_INPLACE_DIV },
+	/* [ASM_MOD]       = */ { OPERATOR_MOD, OPERATOR_INPLACE_MOD },
+	/* [ASM_SHL]       = */ { OPERATOR_SHL, OPERATOR_INPLACE_SHL },
+	/* [ASM_SHR]       = */ { OPERATOR_SHR, OPERATOR_INPLACE_SHR },
+	/* [ASM_AND]       = */ { OPERATOR_AND, OPERATOR_INPLACE_AND },
+	/* [ASM_OR]        = */ { OPERATOR_OR, OPERATOR_INPLACE_OR },
+	/* [ASM_XOR]       = */ { OPERATOR_XOR, OPERATOR_INPLACE_XOR },
+	/* [ASM_POW]       = */ { OPERATOR_POW, OPERATOR_INPLACE_POW },
+	/* [ASM_INC]       = */ { 0, OPERATOR_INC },
+	/* [ASM_DEC]       = */ { 0, OPERATOR_DEC },
+	/* [ASM_ADD_SIMM8] = */ { OPERATOR_ADD, OPERATOR_INPLACE_ADD },
+	/* [ASM_ADD_IMM32] = */ { OPERATOR_ADD, OPERATOR_INPLACE_ADD },
+	/* [ASM_SUB_SIMM8] = */ { OPERATOR_SUB, OPERATOR_INPLACE_SUB },
+	/* [ASM_SUB_IMM32] = */ { OPERATOR_SUB, OPERATOR_INPLACE_SUB },
+	/* [ASM_MUL_SIMM8] = */ { OPERATOR_MUL, OPERATOR_INPLACE_MUL },
+	/* [ASM_DIV_SIMM8] = */ { OPERATOR_DIV, OPERATOR_INPLACE_DIV },
+	/* [ASM_MOD_SIMM8] = */ { OPERATOR_MOD, OPERATOR_INPLACE_MOD },
+	/* [ASM_SHL_IMM8]  = */ { OPERATOR_SHL, OPERATOR_INPLACE_SHL },
+	/* [ASM_SHR_IMM8]  = */ { OPERATOR_SHR, OPERATOR_INPLACE_SHR },
+	/* [ASM_AND_IMM32] = */ { OPERATOR_AND, OPERATOR_INPLACE_AND },
+	/* [ASM_OR_IMM32]  = */ { OPERATOR_OR, OPERATOR_INPLACE_OR },
+	/* [ASM_XOR_IMM32] = */ { OPERATOR_XOR, OPERATOR_INPLACE_XOR },
+};
+
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_CAST_INT));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_INV) && (ASM_CAST_INT + 1 == ASM_INV));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_POS) && (ASM_INV + 1 == ASM_POS));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_NEG) && (ASM_POS + 1 == ASM_NEG));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_ADD) && (ASM_NEG + 1 == ASM_ADD));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SUB) && (ASM_ADD + 1 == ASM_SUB));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_MUL) && (ASM_SUB + 1 == ASM_MUL));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_DIV) && (ASM_MUL + 1 == ASM_DIV));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_MOD) && (ASM_DIV + 1 == ASM_MOD));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SHL) && (ASM_MOD + 1 == ASM_SHL));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SHR) && (ASM_SHL + 1 == ASM_SHR));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_AND) && (ASM_SHR + 1 == ASM_AND));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_OR) && (ASM_AND + 1 == ASM_OR));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_XOR) && (ASM_OR + 1 == ASM_XOR));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_POW) && (ASM_XOR + 1 == ASM_POW));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_INC) && (ASM_POW + 1 == ASM_INC));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_DEC) && (ASM_INC + 1 == ASM_DEC));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_ADD_SIMM8) && (ASM_DEC + 1 == ASM_ADD_SIMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_ADD_IMM32) && (ASM_ADD_SIMM8 + 1 == ASM_ADD_IMM32));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SUB_SIMM8) && (ASM_ADD_IMM32 + 1 == ASM_SUB_SIMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SUB_IMM32) && (ASM_SUB_SIMM8 + 1 == ASM_SUB_IMM32));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_MUL_SIMM8) && (ASM_SUB_IMM32 + 1 == ASM_MUL_SIMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_DIV_SIMM8) && (ASM_MUL_SIMM8 + 1 == ASM_DIV_SIMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_MOD_SIMM8) && (ASM_DIV_SIMM8 + 1 == ASM_MOD_SIMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SHL_IMM8) && (ASM_MOD_SIMM8 + 1 == ASM_SHL_IMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_SHR_IMM8) && (ASM_SHL_IMM8 + 1 == ASM_SHR_IMM8));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_AND_IMM32) && (ASM_SHR_IMM8 + 1 == ASM_AND_IMM32));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_OR_IMM32) && (ASM_AND_IMM32 + 1 == ASM_OR_IMM32));
+STATIC_ASSERT(ASM_MATHBLOCK_CONTAINS(ASM_XOR_IMM32) && (ASM_OR_IMM32 + 1 == ASM_XOR_IMM32));
+
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_prefix(struct Dee_function_generator *__restrict self,
                                     Dee_instruction_t const *instr,
@@ -125,20 +199,20 @@ Dee_function_generator_vpop_prefix(struct Dee_function_generator *__restrict sel
 	}
 }
 
-/* If possible, push a `DREF DeeObject **' for the prefix (only for STACK/LOCALS)
- * @return: 1 : Prefix doesn't support direct addressing
+/* Push the prefixed object as a `DREF DeeObject *'. In case of ASM_STACK/ASM_LOCAL,
+ * make sure that no other memory location is aliasing the prefixed location.
  * @return: 0 : Success 
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restrict self,
-                                         Dee_instruction_t const *instr,
-                                         uint8_t prefix_type, uint16_t id1, uint16_t id2) {
+Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__restrict self,
+                                            Dee_instruction_t const *instr,
+                                            uint8_t prefix_type, uint16_t id1, uint16_t id2) {
 	uintptr_t cfa_offset;
-	struct Dee_memloc *src_loc;
+	struct Dee_memloc *src_loc, *dst_loc;
 	struct Dee_memstate *state;
-	(void)id2;
 	DO(Dee_function_generator_state_unshare(self));
 	state = self->fg_state;
+	DO(Dee_memstate_reqvstack(state, state->ms_stackc + 1)); /* Pre-allocate for below */
 	switch (prefix_type) {
 	case ASM_STACK:
 		ASSERTF(id1 < state->ms_stackc, "Should have been checked by the caller");
@@ -149,8 +223,8 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 		src_loc = &state->ms_localv[id1];
 		break;
 	default:
-		/* Direct addressing not support for this type of prefix. */
-		return 1;
+		/* Fallback: other types of prefixes can never be aliased, so they can be pushed as-is */
+		return Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2);
 	}
 
 	/* In case of a local, assert that the local is currently bound. */
@@ -162,16 +236,10 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 		src_loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;
 	}
 
-	if (src_loc->ml_type == MEMLOC_TYPE_CONST) {
-		/* TODO: Special handling so we don't loose info about constants:
-		 * >> local x = 42;
-		 * >> x += 10;      // "x" can still be a constant after this!
-		 */
-	}
-
 	/* Prefixed location must contain a reference and not be aliased. */
-	{
+	if (src_loc->ml_type != MEMLOC_TYPE_CONST) {
 		struct Dee_memloc *alias;
+		struct Dee_memloc *alias_with_reference = NULL;    /* Alias that has a reference */
 		struct Dee_memloc *alias_without_reference = NULL; /* Alias that needs a reference */
 		bool got_alias = false; /* There *are* aliases. */
 		Dee_memstate_foreach(alias, state) {
@@ -188,26 +256,29 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
 				alias->ml_flags |= MEMLOC_F_NOREF;
 				alias_without_reference = alias;
+			} else {
+				alias_with_reference = alias;
 			}
 		}
 		Dee_memstate_foreach_end;
 		if (got_alias) {
+			ASSERT(!alias_with_reference || !(alias_with_reference->ml_flags & MEMLOC_F_NOREF));
+			ASSERT(!alias_without_reference || (alias_without_reference->ml_flags & MEMLOC_F_NOREF));
 			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
 				/* There are aliases, but no-one is holding a reference.
-				 * This can happen if the location is a constant, in which
-				 * case we only need to force the prefixed location to be
-				 * a reference. */
+				 * This can happen if the location points to a constant
+				 * that got flushed, in which case we only need a single
+				 * reference. */
+				ASSERT(alias_without_reference);
+				ASSERT(!alias_with_reference);
 				DO(Dee_function_generator_gincref(self, src_loc, 1));
 				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
-			} else if (alias_without_reference) {
+			} else if (alias_without_reference && !alias_with_reference) {
 				/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
 				ASSERT(alias_without_reference->ml_flags & MEMLOC_F_NOREF);
 				DO(Dee_function_generator_gincref(self, alias_without_reference, 1));
 				alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
 			}
-			if (src_loc->ml_type != MEMLOC_TYPE_HSTACKIND ||
-			    src_loc->ml_value.v_hstack.s_off != 0)
-				goto flush_src_loc; /* Flushing here automatically unshares */
 
 			/* Must generate code to move the value into a second, distinct stack location. */
 			cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
@@ -235,132 +306,19 @@ Dee_function_generator_vpush_prefix_addr(struct Dee_function_generator *__restri
 				DO(Dee_function_generator_gincref(self, src_loc, 1));
 				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
 			}
-flush_src_loc:
-			/* Flushing here automatically unshares */
-			DO(Dee_function_generator_gflush(self, src_loc));
 		}
 	}
-	ASSERT(!(src_loc->ml_flags & MEMLOC_F_NOREF));
-	ASSERT(src_loc->ml_type == MEMLOC_TYPE_HSTACKIND);
-	ASSERT(src_loc->ml_value.v_hstack.s_off == 0);
-	cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
-	return Dee_memstate_vpush_hstack(state, cfa_offset);
-err:
-	return -1;
-}
 
-
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-perform_inplace_math_operation_with_vtop_addr(struct Dee_function_generator *__restrict self,
-                                              uint16_t prefix_opcode, Dee_instruction_t const *prefix_instr) {
-	/* TODO: Inline operator optimizations, and having a dedicatd `Dee_function_generator_vinplaceop()' */
-	switch (prefix_opcode) {
-	case ASM_ADD: /* add PREFIX, pop */
-	case ASM_SUB: /* sub PREFIX, pop */
-	case ASM_MUL: /* mul PREFIX, pop */
-	case ASM_DIV: /* div PREFIX, pop */
-	case ASM_MOD: /* mod PREFIX, pop */
-	case ASM_SHL: /* shl PREFIX, pop */
-	case ASM_SHR: /* shr PREFIX, pop */
-	case ASM_AND: /* and PREFIX, pop */
-	case ASM_OR:  /* or  PREFIX, pop */
-	case ASM_XOR: /* xor PREFIX, pop */
-	case ASM_POW: /* pow PREFIX, pop */
-		switch (prefix_opcode) {
-		case ASM_ADD: /* add PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAdd, VCALL_CC_INT, 2);
-		case ASM_SUB: /* sub PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSub, VCALL_CC_INT, 2);
-		case ASM_MUL: /* mul PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMul, VCALL_CC_INT, 2);
-		case ASM_DIV: /* div PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDiv, VCALL_CC_INT, 2);
-		case ASM_MOD: /* mod PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMod, VCALL_CC_INT, 2);
-		case ASM_SHL: /* shl PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShl, VCALL_CC_INT, 2);
-		case ASM_SHR: /* shr PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShr, VCALL_CC_INT, 2);
-		case ASM_AND: /* and PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAnd, VCALL_CC_INT, 2);
-		case ASM_OR:  /* or  PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOr, VCALL_CC_INT, 2);
-		case ASM_XOR: /* xor PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXor, VCALL_CC_INT, 2);
-		case ASM_POW: /* pow PREFIX, pop */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplacePow, VCALL_CC_INT, 2);
-		default: __builtin_unreachable();
-		}
-		__builtin_unreachable();
-
-	case ASM_INC: /* inc PREFIX */
-		return Dee_function_generator_vcallapi(self, &DeeObject_Inc, VCALL_CC_INT, 1);
-	case ASM_DEC: /* dec PREFIX */
-		return Dee_function_generator_vcallapi(self, &DeeObject_Dec, VCALL_CC_INT, 1);
-
-	case ASM_ADD_SIMM8:   /* add PREFIX, $<Simm8> */
-	case ASM_SUB_SIMM8:   /* sub PREFIX, $<Simm8> */
-	case ASM_MUL_SIMM8:   /* mul PREFIX, $<Simm8> */
-	case ASM_DIV_SIMM8:   /* div PREFIX, $<Simm8> */
-	case ASM_MOD_SIMM8: { /* mod PREFIX, $<Simm8> */
-		int8_t Simm8 = (int8_t)prefix_instr[1];
-		DO(Dee_function_generator_vpush_Simm8(self, Simm8));
-		switch (prefix_opcode) {
-		case ASM_ADD_SIMM8: /* add PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddInt8, VCALL_CC_INT, 2);
-		case ASM_SUB_SIMM8: /* sub PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubInt8, VCALL_CC_INT, 2);
-		case ASM_MUL_SIMM8: /* mul PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceMulInt8, VCALL_CC_INT, 2);
-		case ASM_DIV_SIMM8: /* div PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceDivInt8, VCALL_CC_INT, 2);
-		case ASM_MOD_SIMM8: /* mod PREFIX, $<Simm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceModInt8, VCALL_CC_INT, 2);
-		default: __builtin_unreachable();
-		}
-		__builtin_unreachable();
-	}	break;
-
-	case ASM_SHL_IMM8:   /* shl PREFIX, $<imm8> */
-	case ASM_SHR_IMM8: { /* shr PREFIX, $<imm8> */
-		uint8_t imm8 = (uint8_t)prefix_instr[1];
-		DO(Dee_function_generator_vpush_imm8(self, imm8));
-		switch (prefix_opcode) {
-		case ASM_SHL_IMM8: /* shl PREFIX, $<imm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShlUInt8, VCALL_CC_INT, 2);
-		case ASM_SHR_IMM8: /* shr PREFIX, $<imm8> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceShrUInt8, VCALL_CC_INT, 2);
-		default: __builtin_unreachable();
-		}
-		__builtin_unreachable();
-	}	break;
-
-	case ASM_ADD_IMM32:   /* add PREFIX, $<imm32> */
-	case ASM_SUB_IMM32:   /* sub PREFIX, $<imm32> */
-	case ASM_AND_IMM32:   /* and PREFIX, $<imm32> */
-	case ASM_OR_IMM32:    /* or  PREFIX, $<imm32> */
-	case ASM_XOR_IMM32: { /* xor PREFIX, $<imm32> */
-		uint32_t imm32 = (uint32_t)UNALIGNED_GETLE32(prefix_instr + 1);
-		DO(Dee_function_generator_vpush_imm32(self, imm32));
-		switch (prefix_opcode) {
-		case ASM_ADD_IMM32: /* add PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAddUInt32, VCALL_CC_INT, 2);
-		case ASM_SUB_IMM32: /* sub PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceSubUInt32, VCALL_CC_INT, 2);
-		case ASM_AND_IMM32: /* and PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceAndUInt32, VCALL_CC_INT, 2);
-		case ASM_OR_IMM32:  /* or  PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceOrUInt32, VCALL_CC_INT, 2);
-		case ASM_XOR_IMM32: /* xor PREFIX, $<imm32> */
-			return Dee_function_generator_vcallapi(self, &DeeObject_InplaceXorUInt32, VCALL_CC_INT, 2);
-		default: __builtin_unreachable();
-		}
-		__builtin_unreachable();
-	}	break;
-
-	default: __builtin_unreachable();
-	}
-	__builtin_unreachable();
+	/* Push the addressed location onto the stack, thus creating a singular alias.
+	 * Said alias then gets to inherit the reference currently held in `src_loc'. */
+	ASSERT(state->ms_stackc < state->ms_stacka);
+	dst_loc = &state->ms_stackv[state->ms_stackc];
+	*dst_loc = *src_loc;
+	src_loc->ml_flags |= MEMLOC_F_NOREF; /* Reference was stolen (if there was one) */
+	if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
+		Dee_memstate_incrinuse(state, dst_loc->ml_value.v_hreg.r_regno);
+	++state->ms_stackc;
+	return 0;
 err:
 	return -1;
 }
@@ -2508,75 +2466,54 @@ do_jcc:
 		TARGET(ASM_AND_IMM32)   /* and PREFIX, $<imm32> */
 		TARGET(ASM_OR_IMM32)    /* or  PREFIX, $<imm32> */
 		TARGET(ASM_XOR_IMM32) { /* xor PREFIX, $<imm32> */
-			int temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
-			if unlikely(temp < 0)
-				goto err;
-			if (temp == 0) {
-				/* Prefix supports direct addressing (and the `DREF DeeObject **' was already pushed) */
-				switch (prefix_opcode) {
-				case ASM_ADD: /* add PREFIX, pop */
-				case ASM_SUB: /* sub PREFIX, pop */
-				case ASM_MUL: /* mul PREFIX, pop */
-				case ASM_DIV: /* div PREFIX, pop */
-				case ASM_MOD: /* mod PREFIX, pop */
-				case ASM_SHL: /* shl PREFIX, pop */
-				case ASM_SHR: /* shr PREFIX, pop */
-				case ASM_AND: /* and PREFIX, pop */
-				case ASM_OR:  /* or  PREFIX, pop */
-				case ASM_XOR: /* xor PREFIX, pop */
-				case ASM_POW: /* pow PREFIX, pop */
-					DO(Dee_function_generator_vswap(self));
-					break;
-				default: break;
-				}
-				return perform_inplace_math_operation_with_vtop_addr(self, prefix_opcode, prefix_instr);
-			} else {
-				DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* value */
-				DO(Dee_function_generator_vref(self));                                       /* ref:value */
-				DO(Dee_function_generator_vlinear(self, 1, false));                          /* ref:value, addrof(ref:value) */
-				switch (prefix_opcode) {
-				case ASM_ADD: /* add PREFIX, pop */
-				case ASM_SUB: /* sub PREFIX, pop */
-				case ASM_MUL: /* mul PREFIX, pop */
-				case ASM_DIV: /* div PREFIX, pop */
-				case ASM_MOD: /* mod PREFIX, pop */
-				case ASM_SHL: /* shl PREFIX, pop */
-				case ASM_SHR: /* shr PREFIX, pop */
-				case ASM_AND: /* and PREFIX, pop */
-				case ASM_OR:  /* or  PREFIX, pop */
-				case ASM_XOR: /* xor PREFIX, pop */
-				case ASM_POW: /* pow PREFIX, pop */
-					DO(Dee_function_generator_vlrot(self, 3)); /* ref:value, addrof(ref:value), operand */
-					break;
-				default: break;
-				}
-				DO(perform_inplace_math_operation_with_vtop_addr(self, prefix_opcode, prefix_instr)); /* ref:value */
-				return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2);               /* - */
+			uint16_t opname;
+			DREF DeeObject *const_operand;
+			DO(Dee_function_generator_vpush_prefix_noalias(self, instr, prefix_type, id1, id2));
+			/* Prefix supports direct addressing (and the `DREF DeeObject **' was already pushed) */
+			switch (prefix_opcode) {
+			case ASM_ADD_SIMM8: /* add PREFIX, $<Simm8> */
+			case ASM_SUB_SIMM8: /* sub PREFIX, $<Simm8> */
+			case ASM_MUL_SIMM8: /* mul PREFIX, $<Simm8> */
+			case ASM_DIV_SIMM8: /* div PREFIX, $<Simm8> */
+			case ASM_MOD_SIMM8: /* mod PREFIX, $<Simm8> */
+				const_operand = DeeInt_NewInt8((int8_t)prefix_instr[1]);
+do_push_const_operand:
+				if unlikely(!const_operand)
+					goto err;
+				const_operand = Dee_function_generator_inlineref(self, const_operand);
+				if unlikely(!const_operand)
+					goto err;
+				DO(Dee_function_generator_vpush_const(self, const_operand)); /* ref:this, value */
+				break;
+			case ASM_SHL_IMM8:  /* shl PREFIX, $<Simm8> */
+			case ASM_SHR_IMM8:  /* shr PREFIX, $<Simm8> */
+				const_operand = DeeInt_NewUInt8((uint8_t)prefix_instr[1]);
+				goto do_push_const_operand;
+			case ASM_ADD_IMM32: /* add PREFIX, $<imm32> */
+			case ASM_SUB_IMM32: /* sub PREFIX, $<imm32> */
+			case ASM_AND_IMM32: /* and PREFIX, $<imm32> */
+			case ASM_OR_IMM32:  /* or  PREFIX, $<imm32> */
+			case ASM_XOR_IMM32: /* xor PREFIX, $<imm32> */
+				const_operand = DeeInt_NewUInt32((uint32_t)UNALIGNED_GETLE32(prefix_instr + 1));
+				goto do_push_const_operand;
+			default:
+				DO(Dee_function_generator_vswap(self)); /* ref:this, value */
+				break;
 			}
+			opname = ASM_MATHBLOCK_OPCODE2IOPERATOR(prefix_opcode);                 /* ref:this, value */
+			DO(Dee_function_generator_vinplaceop(self, opname, 1, VOP_F_NORMAL));   /* ref:this */
+			return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2); /* N/A */
 		}	break;
 
 		TARGET(ASM_INCPOST)   /* push inc PREFIX' - `PREFIX: push inc */
 		TARGET(ASM_DECPOST) { /* push dec PREFIX' - `PREFIX: push dec */
-			uint16_t opname;
-			int temp;
-			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
-			if unlikely(temp < 0)
-				goto err;
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2)); /* value */
-			opname = opcode == ASM_INCPOST ? OPERATOR_INC : OPERATOR_DEC;
-			if (temp == 0) {                                                           /* addrof(ref:value), value */
-				DO(Dee_function_generator_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES)); /* addrof(ref:value), copy */
-				DO(Dee_function_generator_vswap(self));                                /* copy, addrof(ref:value) */
-				return Dee_function_generator_vop(self, opname, 1, VOP_F_INPLACE);     /* copy */
-			} else {
-				DO(Dee_function_generator_vref(self));                                  /* ref:value */
-				DO(Dee_function_generator_vdup(self));                                  /* ref:value, value */
-				DO(Dee_function_generator_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES));  /* ref:value, copy */
-				DO(Dee_function_generator_vswap(self));                                 /* copy, ref:value */
-				DO(Dee_function_generator_vlinear(self, 1, false));                     /* copy, ref:value, addrof(ref:value) */
-				DO(Dee_function_generator_vop(self, opname, 1, VOP_F_INPLACE));         /* copy, ref:value */
-				return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2); /* N/A */
-			}
+			uint16_t opname = opcode == ASM_INCPOST ? OPERATOR_INC : OPERATOR_DEC;
+			DO(Dee_function_generator_vpush_prefix_noalias(self, instr, prefix_type, id1, id2)); /* ref:this */
+			DO(Dee_function_generator_vdup(self));                                  /* ref:this, this */
+			DO(Dee_function_generator_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES));  /* ref:this, ref:copy */
+			DO(Dee_function_generator_vswap(self));                                 /* ref:copy, ref:this */
+			DO(Dee_function_generator_vinplaceop(self, opname, 0, VOP_F_NORMAL));   /* ref:copy, ref:this */
+			return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2); /* ref:copy */
 		}	break;
 
 		TARGET(ASM_DELOP)
@@ -2588,58 +2525,32 @@ do_jcc:
 		TARGET(ASM_OPERATOR) { /* PREFIX: push op $<imm8>, #<imm8> */
 			uint16_t opname;
 			uint8_t argc;
-			int temp;
 			opname = prefix_instr[1];
 			argc   = prefix_instr[2];
 			__IF0 {
 		TARGET(ASM16_OPERATOR) /* PREFIX: push op $<imm16>, #<imm8> */
 				opname = UNALIGNED_GETLE16(prefix_instr + 2);
 				argc   = prefix_instr[4];
-			}                                                                            /* [args...] */
-			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
-			if unlikely(temp < 0)
-				goto err;
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));
-			if (temp == 0) {                                        /* [args...], addrof(value), value */
-				DO(Dee_function_generator_vrrot(self, argc + 2));   /* value, [args...], addrof(value) */
-				DO(Dee_function_generator_vrrot(self, argc + 1));   /* value, addrof(value), [args...] */
-				DO(Dee_function_generator_vop(self, opname, argc + 1, VOP_F_INPLACE | VOP_F_PUSHRES)); /* value, result */
-				DO(Dee_function_generator_vswap(self));             /* result, value */
-				return Dee_function_generator_vpop(self);           /* result */
-			} else {                                                /* [args...], value */
-				DO(Dee_function_generator_vref(self));              /* [args...], ref:value */
-				DO(Dee_function_generator_vlinear(self, 1, false)); /* [args...], ref:value, addrof(value) */
-				DO(Dee_function_generator_vrrot(self, argc + 3));   /* addrof(value), [args...], ref:value */
-				DO(Dee_function_generator_vrrot(self, argc + 3));   /* ref:value, addrof(value), [args...] */
-				DO(Dee_function_generator_vop(self, opname, argc + 1, VOP_F_INPLACE | VOP_F_PUSHRES)); /* ref:value, result */
-				DO(Dee_function_generator_vswap(self));             /* result, ref:value */
-				return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2); /* result */
-			}
+			}                                                                                    /* [args...] */
+			DO(Dee_function_generator_vpush_prefix_noalias(self, instr, prefix_type, id1, id2)); /* [args...], ref:this */
+			DO(Dee_function_generator_vrrot(self, argc + 1));                                    /* ref:this, [args...] */
+			DO(Dee_function_generator_vinplaceop(self, opname, argc, VOP_F_PUSHRES));            /* ref:this, result */
+			DO(Dee_function_generator_vswap(self));                                              /* result, ref:this */
+			return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2);              /* result */
 		}	break;
 
 		TARGET(ASM_OPERATOR_TUPLE) { /* PREFIX: push op $<imm8>, pop... */
-			int temp;
 			uint16_t opname;
-			opname = prefix_instr[1];  /* PREFIX: push op $<imm16>, pop */
-			__IF0 { TARGET(ASM16_OPERATOR_TUPLE) opname = UNALIGNED_GETLE16(prefix_instr + 2); }
-			temp = Dee_function_generator_vpush_prefix_addr(self, instr, prefix_type, id1, id2);
-			if unlikely(temp < 0)
-				goto err;
-			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));
-			if (temp == 0) {                                        /* args, addrof(value), value */
-				DO(Dee_function_generator_vswap(self));             /* args, value, addrof(value) */
-				DO(Dee_function_generator_vlrot(self, 3));          /* value, addrof(value), args */
-				DO(Dee_function_generator_voptuple(self, opname, VOP_F_INPLACE | VOP_F_PUSHRES)); /* value, result */
-				DO(Dee_function_generator_vswap(self));             /* result, value */
-				return Dee_function_generator_vpop(self);           /* result */
-			} else {                                                /* args, value */
-				DO(Dee_function_generator_vref(self));              /* args, ref:value */
-				DO(Dee_function_generator_vlinear(self, 1, false)); /* args, ref:value, addrof(value) */
-				DO(Dee_function_generator_vlrot(self, 3));          /* value, addrof(value), args */
-				DO(Dee_function_generator_voptuple(self, opname, VOP_F_INPLACE | VOP_F_PUSHRES)); /* value, result */
-				DO(Dee_function_generator_vswap(self));             /* result, value */
-				return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2); /* result */
-			}
+			opname = prefix_instr[1]; /* PREFIX: push op $<imm16>, pop... */
+			__IF0 {
+		TARGET(ASM16_OPERATOR_TUPLE)
+				opname = UNALIGNED_GETLE16(prefix_instr + 2);
+			}                                                                                    /* args */
+			DO(Dee_function_generator_vpush_prefix_noalias(self, instr, prefix_type, id1, id2)); /* args, ref:this */
+			DO(Dee_function_generator_vswap(self));                                              /* ref:this, args */
+			DO(Dee_function_generator_vinplaceoptuple(self, opname, VOP_F_PUSHRES));             /* ref:this, result */
+			DO(Dee_function_generator_vswap(self));                                              /* result, ref:this */
+			return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2);              /* result */
 		}	break;
 
 		default:
@@ -2687,6 +2598,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 
 	/* Generate text. */
 	block->bb_deemon_end = block->bb_deemon_end_r;
+	block->bb_next       = block->bb_next_r;
 	self->fg_nextlastloc = block->bb_locreadv;
 	for (instr = block->bb_deemon_start; instr < block->bb_deemon_end;) {
 		Dee_instruction_t const *next_instr = DeeAsm_NextInstr(instr);

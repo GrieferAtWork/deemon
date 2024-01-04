@@ -4244,26 +4244,41 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name) {
 	case OPERATOR_NEG:
 		return (self->tp_math && (self->tp_math->tp_neg)) || type_inherit_neg(self);
 	case OPERATOR_ADD:
+	case OPERATOR_SUB:
+	case OPERATOR_INC:
+	case OPERATOR_DEC:
+	case OPERATOR_INPLACE_ADD:
+	case OPERATOR_INPLACE_SUB:
 		return (self->tp_math && (self->tp_math->tp_add || self->tp_math->tp_sub ||
+		                          self->tp_math->tp_inc || self->tp_math->tp_dec ||
 		                          self->tp_math->tp_inplace_add || self->tp_math->tp_inplace_sub)) ||
 		       type_inherit_add(self);
 	case OPERATOR_MUL:
+	case OPERATOR_INPLACE_MUL:
 		return (self->tp_math && (self->tp_math->tp_mul || self->tp_math->tp_inplace_mul)) || type_inherit_mul(self);
 	case OPERATOR_DIV:
+	case OPERATOR_INPLACE_DIV:
 		return (self->tp_math && (self->tp_math->tp_div || self->tp_math->tp_inplace_div)) || type_inherit_div(self);
 	case OPERATOR_MOD:
+	case OPERATOR_INPLACE_MOD:
 		return (self->tp_math && (self->tp_math->tp_mod || self->tp_math->tp_inplace_mod)) || type_inherit_mod(self);
 	case OPERATOR_SHL:
+	case OPERATOR_INPLACE_SHL:
 		return (self->tp_math && (self->tp_math->tp_shl || self->tp_math->tp_inplace_shl)) || type_inherit_shl(self);
 	case OPERATOR_SHR:
+	case OPERATOR_INPLACE_SHR:
 		return (self->tp_math && (self->tp_math->tp_shr || self->tp_math->tp_inplace_shr)) || type_inherit_shr(self);
 	case OPERATOR_AND:
+	case OPERATOR_INPLACE_AND:
 		return (self->tp_math && (self->tp_math->tp_and || self->tp_math->tp_inplace_and)) || type_inherit_and(self);
 	case OPERATOR_OR:
+	case OPERATOR_INPLACE_OR:
 		return (self->tp_math && (self->tp_math->tp_or || self->tp_math->tp_inplace_or)) || type_inherit_or(self);
 	case OPERATOR_XOR:
+	case OPERATOR_INPLACE_XOR:
 		return (self->tp_math && (self->tp_math->tp_xor || self->tp_math->tp_inplace_xor)) || type_inherit_xor(self);
 	case OPERATOR_POW:
+	case OPERATOR_INPLACE_POW:
 		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || type_inherit_pow(self);
 	case OPERATOR_EQ:
 	case OPERATOR_NE:

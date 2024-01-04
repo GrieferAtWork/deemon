@@ -2135,7 +2135,9 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 			self->fg_block->bb_next       = target;
 			self->fg_block->bb_deemon_end = instr; /* The jump doesn't exist anymore now! */
 		}
-		return Dee_function_generator_vpop(self);
+		if unlikely(Dee_function_generator_vpop(self))
+			goto err;
+		goto assign_desc_stat;
 	}
 
 	/* If the jump target location already has its starting memory state generated,
@@ -2285,6 +2287,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 	}
 
 	/* Remember the memory-state as it is when the jump is made. */
+assign_desc_stat:
 	ASSERTF(!desc->jd_stat, "Who assigned this? Doing that is *my* job!");
 	desc->jd_stat = self->fg_state;
 	Dee_memstate_incref(self->fg_state);
@@ -2597,6 +2600,76 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 err:
 	return -1;
 }
+
+#if 0 /* Never needed... */
+/* Ensure that `loc' is holding a reference. If said location has aliases,
+ * and isn't a constant, then also ensure that at least one of those aliases
+ * also contains a second reference. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
+                             struct Dee_memloc *loc) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *alias;
+	struct Dee_memloc *alias_with_reference = NULL;    /* Alias that has a reference */
+	struct Dee_memloc *alias_without_reference = NULL; /* Alias that needs a reference */
+	bool got_alias = false; /* There *are* aliases. */
+	Dee_memstate_foreach(alias, state) {
+		if (alias == loc)
+			continue;
+		if (!Dee_memloc_sameloc(alias, loc))
+			continue;
+		/* Got an alias! */
+		got_alias = true;
+		if (alias->ml_flags & MEMLOC_F_NOREF) {
+			alias_without_reference = alias;
+		} else if (loc->ml_flags & MEMLOC_F_NOREF) {
+			/* Steal reference from alias */
+			loc->ml_flags &= ~MEMLOC_F_NOREF;
+			alias->ml_flags |= MEMLOC_F_NOREF;
+			alias_without_reference = alias;
+		} else {
+			alias_with_reference = alias;
+		}
+	}
+	Dee_memstate_foreach_end;
+	if (got_alias) {
+		ASSERT(!alias_with_reference || !(alias_with_reference->ml_flags & MEMLOC_F_NOREF));
+		ASSERT(!alias_without_reference || (alias_without_reference->ml_flags & MEMLOC_F_NOREF));
+		if (loc->ml_flags & MEMLOC_F_NOREF) {
+			/* There are aliases, but no-one is holding a reference.
+			 * This can happen if the location points to a constant
+			 * that got flushed, in which case we only need a single
+			 * reference. */
+			ASSERT(alias_without_reference);
+			ASSERT(!alias_with_reference);
+			ASSERT(!Dee_memstate_isshared(state));
+			if unlikely(Dee_function_generator_gincref(self, loc, 1))
+				goto err;
+			loc->ml_flags &= ~MEMLOC_F_NOREF;
+		} else if (alias_without_reference && !alias_with_reference &&
+		           /* When it's a constant, there is already an extra reference through code dependencies */
+		           loc->ml_type != MEMLOC_TYPE_CONST) {
+			/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
+			ASSERT(!Dee_memstate_isshared(state));
+			ASSERT(alias_without_reference->ml_flags & MEMLOC_F_NOREF);
+			if unlikely(Dee_function_generator_gincref(self, alias_without_reference, 1))
+				goto err;
+			alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
+		}
+	} else {
+		/* No aliases exist, so there's no need to force a distinct location. */
+		if (loc->ml_flags & MEMLOC_F_NOREF) {
+			ASSERT(!Dee_memstate_isshared(state));
+			if unlikely(Dee_function_generator_gincref(self, loc, 1))
+				goto err;
+			loc->ml_flags &= ~MEMLOC_F_NOREF;
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif
 
 /* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
 INTERN WUNUSED NONNULL((1)) int DCALL
