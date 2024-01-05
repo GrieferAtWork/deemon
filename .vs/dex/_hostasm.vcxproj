@@ -51,6 +51,7 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-morph.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-rt.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-traits.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ccall.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ex.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />

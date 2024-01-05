@@ -2849,13 +2849,18 @@ DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
 
 
 /* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
+
+/* Return the type from `self' inherited its operator `name'.
+ * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Inherit different groups of operators from base-classes, returning `true' if

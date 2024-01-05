@@ -76,39 +76,6 @@ yes:
 	return true;
 }
 
-
-PRIVATE DeeTypeObject *tpconst noexcept_operator_bool_types[] = {
-	/* Immutable builtin types implement all operators with constexpr semantics. */
-	&DeeNone_Type,
-	&DeeString_Type,
-	&DeeFloat_Type,
-	&DeeBool_Type,
-	&DeeInt_Type,
-	&DeeTuple_Type,
-	&DeeRoDict_Type,
-	&DeeRoSet_Type,
-	&DeeBytes_Type,
-	&DeeList_Type,
-	&DeeHashSet_Type,
-	&DeeDict_Type,
-};
-
-
-/* Check if the C-implementation of `OPERATOR_BOOL' for `self' never returns <0 */
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self) {
-	size_t i;
-	int (DCALL *tp_bool)(DeeObject *__restrict self) = self->tp_cast.tp_bool;
-	for (i = 0; i < COMPILER_LENOF(noexcept_operator_bool_types); ++i) {
-		if (noexcept_operator_bool_types[i]->tp_cast.tp_bool == tp_bool)
-			goto yes;
-	}
-	return false;
-yes:
-	return true;
-}
-
-
 /* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape.
  * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL

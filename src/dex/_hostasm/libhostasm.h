@@ -1814,6 +1814,53 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 
 
 /************************************************************************/
+/* Dedicated type method/getset optimizations                           */
+/************************************************************************/
+
+/* this, [args...] -> UNCHECKED(result)  // For attribute generators
+ * this, [args...] -> result             // For operator generators
+ * this, [args...] -> N/A                // For operator generators where the operator has no return value
+ * this, [args...] -> this, [this]       // For inplace operator generators
+ * @return: 0 : Optimization applied
+ * @return: 1 : Optimization not possible
+ * @return: -1: Error */
+typedef WUNUSED_T NONNULL_T((1)) int
+(DCALL *Dee_ccall_optigen_t)(struct Dee_function_generator *__restrict self,
+                             Dee_vstackaddr_t argc);
+struct Dee_ccall_optimization {
+	union {
+		char const     *n_attr;    /* [1..1] Expected function name (attribute name). */
+		uintptr_t       n_opname;  /* Expected operator ID. */
+	}                   tcco_name; /* Name of the attribute/operator being optimized. */
+	Dee_ccall_optigen_t tcco_func; /* [1..1] Optimized generator. */
+	Dee_vstackaddr_t    tcco_argc; /* Expected argument count, or `Dee_CCALL_ARGC_ANY'. */
+#define Dee_CCALL_ARGC_ANY    ((Dee_vstackaddr_t)-1)
+#define Dee_CCALL_ARGC_GETTER ((Dee_vstackaddr_t)-2)
+#define Dee_CCALL_ARGC_DELETE ((Dee_vstackaddr_t)-3)
+#define Dee_CCALL_ARGC_SETTER ((Dee_vstackaddr_t)-4)
+#define Dee_CCALL_ARGC_BOUND  ((Dee_vstackaddr_t)-5)
+#define Dee_CCALL_ARGC_MAX    ((Dee_vstackaddr_t)-6)
+};
+
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).<name>(argc...)' */
+INTDEF WUNUSED NONNULL((1, 2)) struct Dee_ccall_optimization const *DCALL
+Dee_ccall_find_attr_optimization(DeeTypeObject *__restrict type,
+                                 char const *name, Dee_vstackaddr_t argc);
+
+/* Try to find a dedicated optimization for `INSTANCEOF(<type>).operator <operator_name> (argc...)'
+ * NOTE: Optimizations returned type this one may or may not push a result onto the stack,
+ *       depending on the operator in question (`operator_name')! Because of this, if the
+ *       operator is generic, the caller needs to check how the vstack depth is altered.
+ *       For inplace operators, the same applies, but the "this" argument always remains
+ *       on-stack as well! */
+INTDEF WUNUSED NONNULL((1)) struct Dee_ccall_optimization const *DCALL
+Dee_ccall_find_operator_optimization(DeeTypeObject *__restrict type,
+                                     uint16_t operator_name, Dee_vstackaddr_t argc);
+
+
+
+
+/************************************************************************/
 /* Type traits                                                          */
 /************************************************************************/
 
@@ -1825,10 +1872,6 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
                             uint16_t operator_name);
-
-/* Check if the C-implementation of `OPERATOR_BOOL' for `self' never returns <0 */
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self);
 
 /* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape.
  * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */

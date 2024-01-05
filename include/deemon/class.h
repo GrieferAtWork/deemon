@@ -845,6 +845,10 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 
 #ifdef CONFIG_BUILDING_DEEMON
 
+/* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
+DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t name);
+
 /* The functions bound to the C-level type callbacks when a
  * user-defined class provides the associated operator.
  * All of the `instance_*' functions simply call the associated

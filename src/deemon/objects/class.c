@@ -545,7 +545,6 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
  * that has been inherited from a base-class, but return `NULL' instead. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
-	DREF DeeObject *result;
 	DeeClassDescriptorObject *desc;
 	uint16_t i, perturb;
 	struct class_desc *self_class;
@@ -555,6 +554,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 	desc = self_class->cd_desc;
 	i = perturb = name & desc->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
+		DREF DeeObject *result;
 		struct class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		if (entry->co_name != name) {
@@ -574,6 +574,33 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 		Dee_Incref(result);
 		Dee_class_desc_lock_endread(self_class);
 		return result;
+	}
+	return NULL;
+}
+
+/* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
+DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t name) {
+	DeeClassDescriptorObject *desc;
+	uint16_t i, perturb;
+	struct class_desc *self_class;
+	self_class = DeeClass_DESC(self);
+
+	/* Lookup extended, or un-cached operators. */
+	desc = self_class->cd_desc;
+	i = perturb = name & desc->cd_clsop_mask;
+	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
+		struct class_operator *entry;
+		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
+		if (entry->co_name != name) {
+			if (entry->co_name == (uint16_t)-1)
+				break; /* Not implemented! */
+			continue;
+		}
+
+		/* Found the entry! */
+		ASSERT(entry->co_addr < desc->cd_cmemb_size);
+		return atomic_read(&self_class->cd_members[entry->co_addr]);
 	}
 	return NULL;
 }

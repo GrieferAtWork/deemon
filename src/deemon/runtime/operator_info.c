@@ -1788,7 +1788,7 @@ DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
 }
 
 /* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
-PUBLIC WUNUSED NONNULL((1)) bool DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	struct opinfo const *info;
 	switch (name) {
@@ -1846,22 +1846,15 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
-PUBLIC WUNUSED NONNULL((1)) bool DCALL
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 	void const *my_ptr;
 	struct opinfo const *info;
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
-	if (DeeType_IsClass(self)) {
-		/* Special case: must look at what's implemented by the class! */
-		DREF DeeObject *op;
-		op = DeeClass_TryGetPrivateOperator((DeeTypeObject *)self, name);
-		if (op) {
-			Dee_Decref(op);
-			return true;
-		}
-		return false;
-	}
+	/* Special case: must look at what's implemented by the class! */
+	if (DeeType_IsClass(self))
+		return DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name) != NULL;
 	switch (name) {
 
 	case OPERATOR_CONSTRUCTOR:
@@ -1874,8 +1867,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		/* Special case: `operator str' can be implemented in 2 ways */
 		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
 			return false;
-		base = (DeeTypeObject *)self;
-		DeeTypeMRO_Init(&mro, base);
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
 			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
 			    self->tp_cast.tp_print == base->tp_cast.tp_print)
@@ -1887,8 +1879,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		/* Special case: `operator repr' can be implemented in 2 ways */
 		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
 			return false;
-		base = (DeeTypeObject *)self;
-		DeeTypeMRO_Init(&mro, base);
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
 			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
 			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
@@ -1905,14 +1896,92 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
 		return false; /* Operator not implemented */
-	base = (DeeTypeObject *)self;
-	DeeTypeMRO_Init(&mro, base);
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
 		if (my_ptr == DeeType_GetOpPointer(base, info))
 			return false; /* Base has same impl -> operator was inherited */
 	}
 	return true; /* Operator is distinct from all bases. */
 }
+
+/* Return the type from `self' inherited its operator `name'.
+ * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
+	void const *my_ptr;
+	struct opinfo const *info;
+	DeeTypeObject *base, *result;
+	DeeTypeMRO mro;
+	/* Special case: must look at what's implemented by the class! */
+	if (DeeType_IsClass(self)) {
+		if (!DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name)) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (DeeType_HasPrivateOperator(base, name))
+					return base;
+			}
+		}
+		return (DeeTypeObject *)self;
+	}
+	switch (name) {
+
+	case OPERATOR_CONSTRUCTOR:
+		/* Special case: the constructor operator (which cannot be inherited). */
+		return (DeeTypeObject *)self;
+
+	case OPERATOR_STR:
+		/* Special case: `operator str' can be implemented in 2 ways */
+		result = (DeeTypeObject *)self;
+		if (self->tp_cast.tp_str || self->tp_cast.tp_print) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
+				    self->tp_cast.tp_print == base->tp_cast.tp_print) {
+					result = base;
+				} else {
+					break;
+				}
+			}
+		}
+		return result;
+
+	case OPERATOR_REPR:
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		result = (DeeTypeObject *)self;
+		if (self->tp_cast.tp_repr || self->tp_cast.tp_printrepr) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
+				    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr) {
+					result = base;
+				} else {
+					break;
+				}
+			}
+		}
+		return result;
+
+	default:
+		break;
+	}
+	info = Dee_OperatorInfo(Dee_TYPE(self), name);
+	if (info == NULL)
+		return false; /* No such operator */
+	my_ptr = DeeType_GetOpPointer(self, info);
+	if (my_ptr == NULL)
+		return false; /* Operator not implemented */
+	result = (DeeTypeObject *)self;
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		if (my_ptr == DeeType_GetOpPointer(base, info)) {
+			result = base;
+		} else {
+			break;
+		}
+	}
+	return result; /* Operator is distinct from all bases. */
+}
+
 
 /* Advance an MRO enumerator, returning the next type in MRO order.
  * @param: tp_iter: The previously enumerated type

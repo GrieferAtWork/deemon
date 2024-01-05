@@ -4402,11 +4402,6 @@ INTERN_TPCONST struct type_method tpconst seq_methods[] = {
 };
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seq_length_get(DeeObject *__restrict self) {
-	return DeeObject_SizeObject(self);
-}
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 seq_del_first(DeeObject *__restrict self) {
 	int result;
@@ -4503,7 +4498,7 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_getsets[] = {
-	TYPE_GETTER("length", &seq_length_get, "->?Dint\nAlias for ${##this}"),
+	TYPE_GETTER("length", &DeeObject_SizeObject, "->?Dint\nAlias for ${##this}"),
 	TYPE_GETSET(STR_first, &DeeSeq_Front, &seq_del_first, &seq_set_first,
 	            "->\n"
 	            "Access the first item of the Sequence\n"

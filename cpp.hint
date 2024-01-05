@@ -1596,5 +1596,9 @@
 #define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
 #define DEFINE_FILTERITERATOR_COMPARE(n,...) DeeObject*n(FilterIterator*self,FilterIterator*other){}
 
+#define DEFINE_UNCHECKED_OPTIMIZATION(name,...) int name(struct Dee_function_generator*self,struct ccall_info const*info){}
+#define DEFINE_CHECKED_OPTIMIZATION(name,...) int name(struct Dee_function_generator*self,struct ccall_info const*info){}
+#define DEFINE_CHECKED_OPERATOR(name,...) int name(struct Dee_function_generator*self,struct ccall_info const*info){}
+
 #define Dee_memstate_foreach(...) for(;;)
 #define Dee_memstate_foreach_end

@@ -410,6 +410,8 @@ EXPORTS
 	DeeList_NewVectorInheritedHeap2@8=_DeeList_NewVectorInheritedHeap2@8
 	DeeList_NewVectorInheritedHeap@12=_DeeList_NewVectorInheritedHeap@12
 	DeeList_Pop@8=_DeeList_Pop@8
+	DeeList_RemoveIf@16=_DeeList_RemoveIf@16
+	DeeList_Resize@12=_DeeList_Resize@12
 	DeeList_Reverse@4=_DeeList_Reverse@4
 	DeeList_Sort@8=_DeeList_Sort@8
 	DeeMapFile_Fini@4=_DeeMapFile_Fini@4
@@ -907,6 +909,7 @@ EXPORTS
 	DeeTuple_VTryPack@8=_DeeTuple_VTryPack@8
 	DeeTuple_VTryPackSymbolic@8=_DeeTuple_VTryPackSymbolic@8
 	DeeType_GetModule@4=_DeeType_GetModule@4
+	DeeType_GetOperatorOrigin@8=_DeeType_GetOperatorOrigin@8
 	DeeType_HasOperator@8=_DeeType_HasOperator@8
 	DeeType_HasPrivateOperator@8=_DeeType_HasPrivateOperator@8
 	DeeType_Implements@8=_DeeType_Implements@8
