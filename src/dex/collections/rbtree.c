@@ -1008,46 +1008,46 @@ PRIVATE struct type_cmp rbtreeiter_cmp = {
 };
 
 PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
-	TYPE_METHOD("removenode", &rbtreeiter_removenode,
-	            "()\n"
-	            "#tValueError{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "Remove the node selected by @this ?. from the associated ?#seq. "
-	            /**/ "Upon success, the node selected by @this ?. will be cleared"),
+	TYPE_METHOD_F("removenode", &rbtreeiter_removenode, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "#tValueError{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "Remove the node selected by @this ?. from the associated ?#seq. "
+	              /**/ "Upon success, the node selected by @this ?. will be cleared"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rbtreeiter_getsets[] = {
-	TYPE_GETTER("minkey", &rbtreeiter_get_minkey,
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "The lower-bound key of the selected node"),
-	TYPE_GETTER("maxkey", &rbtreeiter_get_maxkey,
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "The upper-bound key of the selected node"),
-	TYPE_GETSET("value", &rbtreeiter_get_value, NULL, &rbtreeiter_set_value,
-	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "Get or set the value of the selected node"),
-	TYPE_GETTER("__lhs__", &rbtreeiter_get_lhs,
-	            "->?.\n"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            "The left child of the selected node (or ?N if no such node exists)"),
-	TYPE_GETTER("__rhs__", &rbtreeiter_get_rhs,
-	            "->?.\n"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            "The right child of the selected node (or ?N if no such node exists)"),
-	TYPE_GETTER("__parent__", &rbtreeiter_get_parent,
-	            "->?.\n"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            "The parent of the selected node (or ?N if the node is the root node)"),
-	TYPE_GETTER("__isred__", &rbtreeiter_get_isred,
-	            "->?DBool\n"
-	            DOC_ERROR_RuntimeError_CHANGED
-	            "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
-	            "Evaluates to ?t if the selected node is red"),
+	TYPE_GETTER_F("minkey", &rbtreeiter_get_minkey, TYPE_GETSET_FNOREFESCAPE,
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "The lower-bound key of the selected node"),
+	TYPE_GETTER_F("maxkey", &rbtreeiter_get_maxkey, TYPE_GETSET_FNOREFESCAPE,
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "The upper-bound key of the selected node"),
+	TYPE_GETSET_F("value", &rbtreeiter_get_value, NULL, &rbtreeiter_set_value, TYPE_GETSET_FNOREFESCAPE,
+	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "Get or set the value of the selected node"),
+	TYPE_GETTER_F("__lhs__", &rbtreeiter_get_lhs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?.\n"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              "The left child of the selected node (or ?N if no such node exists)"),
+	TYPE_GETTER_F("__rhs__", &rbtreeiter_get_rhs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?.\n"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              "The right child of the selected node (or ?N if no such node exists)"),
+	TYPE_GETTER_F("__parent__", &rbtreeiter_get_parent, TYPE_GETSET_FNOREFESCAPE,
+	              "->?.\n"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              "The parent of the selected node (or ?N if the node is the root node)"),
+	TYPE_GETTER_F("__isred__", &rbtreeiter_get_isred, TYPE_GETSET_FNOREFESCAPE,
+	              "->?DBool\n"
+	              DOC_ERROR_RuntimeError_CHANGED
+	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
+	              "Evaluates to ?t if the selected node is red"),
 	TYPE_GETSET_END
 };
 
@@ -3494,33 +3494,33 @@ PRIVATE struct type_gc tpconst rbtree_gc = {
 
 PRIVATE struct type_method tpconst rbtree_methods[] = {
 	/* RBTree-specific methods */
-	TYPE_METHOD("locate", &rbtree_locate,
-	            "(key)->?X2?T3?O?O?O?N\n"
-	            "#r{The ${minkey,maxkey,value} triple where @key is located within $minkey and $maxkey, "
-	            /**/ "or ?N when no node contains @key}"),
-	TYPE_METHOD("rlocate", &rbtree_rlocate,
-	            "(minkey,maxkey)->?S?T3?O?O?O\n"
-	            "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlap with the given key-range}"),
+	TYPE_METHOD_F("locate", &rbtree_locate, TYPE_METHOD_FNOREFESCAPE,
+	              "(key)->?X2?T3?O?O?O?N\n"
+	              "#r{The ${minkey,maxkey,value} triple where @key is located within $minkey and $maxkey, "
+	              /**/ "or ?N when no node contains @key}"),
+	TYPE_METHOD_F("rlocate", &rbtree_rlocate, TYPE_METHOD_FNOREFESCAPE,
+	              "(minkey,maxkey)->?S?T3?O?O?O\n"
+	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlap with the given key-range}"),
 	TYPE_METHOD("itlocate", &rbtree_itlocate,
 	            "(key)->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node containing @key, or ?N when no node contains @key}"),
-	TYPE_METHOD("remove", &rbtree_remove,
-	            "(key)->?X2?T3?O?O?O?N\n"
-	            "#r{The ${minkey,maxkey,value} triple where @key was located within $minkey and $maxkey, "
-	            /**/ "or ?N when no node contained @key}"
-	            "Like ?#locate, but also remove the node"),
-	TYPE_METHOD("rremove", &rbtree_rremove,
-	            "(minkey,maxkey)->?S?T3?O?O?O\n"
-	            "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlapped with the given key-range}"
-	            "Like ?#rlocate, but also remove the nodes"),
-	TYPE_METHOD("prevnode", &rbtree_prevnode,
-	            "(key)->?X2?T3?O?O?O?N\n"
-	            "#r{The ${minkey,maxkey,value} triple of the node that comes before "
-	            /**/ "the one containing @key, or ?N when no such node exists}"),
-	TYPE_METHOD("nextnode", &rbtree_nextnode,
-	            "(key)->?X2?T3?O?O?O?N\n"
-	            "#r{The ${minkey,maxkey,value} triple of the node that comes after "
-	            /**/ "the one containing @key, or ?N when no such node exists}"),
+	TYPE_METHOD_F("remove", &rbtree_remove, TYPE_METHOD_FNOREFESCAPE,
+	              "(key)->?X2?T3?O?O?O?N\n"
+	              "#r{The ${minkey,maxkey,value} triple where @key was located within $minkey and $maxkey, "
+	              /**/ "or ?N when no node contained @key}"
+	              "Like ?#locate, but also remove the node"),
+	TYPE_METHOD_F("rremove", &rbtree_rremove, TYPE_METHOD_FNOREFESCAPE,
+	              "(minkey,maxkey)->?S?T3?O?O?O\n"
+	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlapped with the given key-range}"
+	              "Like ?#rlocate, but also remove the nodes"),
+	TYPE_METHOD_F("prevnode", &rbtree_prevnode, TYPE_METHOD_FNOREFESCAPE,
+	              "(key)->?X2?T3?O?O?O?N\n"
+	              "#r{The ${minkey,maxkey,value} triple of the node that comes before "
+	              /**/ "the one containing @key, or ?N when no such node exists}"),
+	TYPE_METHOD_F("nextnode", &rbtree_nextnode, TYPE_METHOD_FNOREFESCAPE,
+	              "(key)->?X2?T3?O?O?O?N\n"
+	              "#r{The ${minkey,maxkey,value} triple of the node that comes after "
+	              /**/ "the one containing @key, or ?N when no such node exists}"),
 	TYPE_METHOD("itprevnode", &rbtree_itprevnode,
 	            "(key)->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node that comes before "
@@ -3530,82 +3530,82 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	            "#r{An ?#Iterator bound to the node that comes after "
 	            /**/ "the one containing @key, or ?N when no such node exists}"),
 
-	TYPE_METHOD("popfront", &rbtree_popfront,
-	            "->?T3?O?O?O\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "#r{the lowest element that used to be stored in @this ?. (s.a. ?#first)}"),
-	TYPE_METHOD("popback", &rbtree_popback,
-	            "->?T3?O?O?O\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"),
-	TYPE_METHOD("optimize", &rbtree_optimize,
-	            "()\n"
-	            "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
-	            /**/ "values, as well as consecutive key-ranges. By default, this sort of optimization "
-	            /**/ "is only done when using ?Dint as key type, though if custom key types are used, "
-	            /**/ "then this function may be used to perform that same optimization.\n"
-	            "The reason why this is only done for ?Dint by default, is because that is the only "
-	            /**/ "builtin type where there can truly be distinct predecessor/successor elements. "
-	            /**/ "For example, $\"bar\" has no successor. $\"bas\" would come after it, but in-"
-	            /**/ "between the two lies an infinite number of other strings, like $\"bara\" or $\"barfoo\". "
-	            /**/ "Additionally, doing this sort of thing may trigger user-defined operators, which in "
-	            /**/ "turn may call back to @this ?., which would prevent ?#op:setrange to function as an "
-	            /**/ "atomic operation in regards to all other APIs (since it would be possible to access "
-	            /**/ "the tree in an inconsistent state where nodes haven't been merged, yet).\n"
-	            "As such, only ?Dint is merged automatically while all other types need to make use of "
-	            /**/ "this function to perform that operation, though do note that this function will throw "
-	            /**/ "an exception if it encounters a key that doesn't implement ${operator copy} or "
-	            /**/ "${operator ++} / ${operator --} (which is another reason why auto-merging is only "
-	            /**/ "done for ?Dint by default).\n"
-	            "#T{There is #Bno need to call this function when using ?Dint as keys, or some type "
-	            /**/ "that does not implement ${operator ++} and ${operator --} (like ?Dstring)}"),
+	TYPE_METHOD_F("popfront", &rbtree_popfront, TYPE_METHOD_FNOREFESCAPE,
+	              "->?T3?O?O?O\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "#r{the lowest element that used to be stored in @this ?. (s.a. ?#first)}"),
+	TYPE_METHOD_F("popback", &rbtree_popback, TYPE_METHOD_FNOREFESCAPE,
+	              "->?T3?O?O?O\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"),
+	TYPE_METHOD_F("optimize", &rbtree_optimize, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
+	              /**/ "values, as well as consecutive key-ranges. By default, this sort of optimization "
+	              /**/ "is only done when using ?Dint as key type, though if custom key types are used, "
+	              /**/ "then this function may be used to perform that same optimization.\n"
+	              "The reason why this is only done for ?Dint by default, is because that is the only "
+	              /**/ "builtin type where there can truly be distinct predecessor/successor elements. "
+	              /**/ "For example, $\"bar\" has no successor. $\"bas\" would come after it, but in-"
+	              /**/ "between the two lies an infinite number of other strings, like $\"bara\" or $\"barfoo\". "
+	              /**/ "Additionally, doing this sort of thing may trigger user-defined operators, which in "
+	              /**/ "turn may call back to @this ?., which would prevent ?#op:setrange to function as an "
+	              /**/ "atomic operation in regards to all other APIs (since it would be possible to access "
+	              /**/ "the tree in an inconsistent state where nodes haven't been merged, yet).\n"
+	              "As such, only ?Dint is merged automatically while all other types need to make use of "
+	              /**/ "this function to perform that operation, though do note that this function will throw "
+	              /**/ "an exception if it encounters a key that doesn't implement ${operator copy} or "
+	              /**/ "${operator ++} / ${operator --} (which is another reason why auto-merging is only "
+	              /**/ "done for ?Dint by default).\n"
+	              "#T{There is #Bno need to call this function when using ?Dint as keys, or some type "
+	              /**/ "that does not implement ${operator ++} and ${operator --} (like ?Dstring)}"),
 
 	/* Generic methods */
-	TYPE_METHOD("clear", &rbtree_doclear,
-	            "()\n"
-	            "Clear all values from @this ?."),
-	TYPE_METHOD("pop", &rbtree_pop,
-	            "(key)->\n"
-	            "(key,def)->\n"
-	            DOC_ERROR_NotImplemented_CANNOT_SPLIT
-	            "#tKeyError{No @def was given and @key was not found}"
-	            "Delete @key from @this and return its previously assigned "
-	            /**/ "value or @def when @key had no item associated"),
-	TYPE_METHOD("popitem", &rbtree_popitem,
-	            "->?T3?O?O?O\n"
-	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
-	            "#r{A random pair minkey-maxkey-value pair that has been removed}"),
-	TYPE_METHOD("setdefault", &rbtree_setdefault,
-	            "(key,def=!N)->\n"
-	            "#r{The object currently assigned to @key}"
-	            "Lookup @key in @this ?. and return its value if found. "
-	            /**/ "Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD("update", &rbtree_update,
-	            "(items:?S?T3?O?O?O)\n"
-	            DOC_ERROR_NotImplemented_CANNOT_SPLIT
-	            "Iterate @items and unpack each element into 3 others, "
-	            /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
+	TYPE_METHOD_F("clear", &rbtree_doclear, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Clear all values from @this ?."),
+	TYPE_METHOD_F("pop", &rbtree_pop, TYPE_METHOD_FNOREFESCAPE,
+	              "(key)->\n"
+	              "(key,def)->\n"
+	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
+	              "#tKeyError{No @def was given and @key was not found}"
+	              "Delete @key from @this and return its previously assigned "
+	              /**/ "value or @def when @key had no item associated"),
+	TYPE_METHOD_F("popitem", &rbtree_popitem, TYPE_METHOD_FNOREFESCAPE,
+	              "->?T3?O?O?O\n"
+	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
+	              "#r{A random pair minkey-maxkey-value pair that has been removed}"),
+	TYPE_METHOD_F("setdefault", &rbtree_setdefault, TYPE_METHOD_FNOREFESCAPE,
+	              "(key,def=!N)->\n"
+	              "#r{The object currently assigned to @key}"
+	              "Lookup @key in @this ?. and return its value if found. "
+	              /**/ "Otherwise, assign @def to @key and return it instead"),
+	TYPE_METHOD_F("update", &rbtree_update, TYPE_METHOD_FNOREFESCAPE,
+	              "(items:?S?T3?O?O?O)\n"
+	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
+	              "Iterate @items and unpack each element into 3 others, "
+	              /**/ "using them as #C{minkey,maxkey,value} to insert into @this ?."),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rbtree_getsets[] = {
-	TYPE_GETTER("first", &rbtree_get_first,
+	TYPE_GETTER_F("first", &rbtree_get_first, TYPE_GETSET_FNOREFESCAPE,
 	            "->?T3?O?O?O\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the lowest range in @this ?."),
-	TYPE_GETTER("last", &rbtree_get_last,
+	TYPE_GETTER_F("last", &rbtree_get_last, TYPE_GETSET_FNOREFESCAPE,
 	            "->?T3?O?O?O\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the greatest range in @this ?."),
-	TYPE_GETTER("__root__", &rbtree_get_itroot,
+	TYPE_GETTER_F("__root__", &rbtree_get_itroot, TYPE_GETSET_FNOREFESCAPE,
 	            "->?#Iterator\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return an ?#Iterator for the root node of the tree"),
-	TYPE_GETTER("__depth__", &rbtree_get_depth,
+	TYPE_GETTER_F("__depth__", &rbtree_get_depth, TYPE_GETSET_FNOREFESCAPE,
 	            "->?Dint\n"
 	            "Depth of the left-most tree node (since the tree is balanced, "
 	            /**/ "this is either the tree's max-depth, or one less than that)"),
-	TYPE_GETTER("__sizeof__", &rbtree_sizeof, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &rbtree_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

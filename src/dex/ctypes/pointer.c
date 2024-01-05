@@ -271,9 +271,9 @@ pointer_del_deref(struct pointer_object *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst pointer_getsets[] = {
-	TYPE_GETSET("ind", &pointer_get_deref, &pointer_del_deref, &pointer_set_deref,
-	            "->?GLValue\n"
-	            "Get/clear/set the dereferenced memory location of @this pointer"),
+	TYPE_GETSET_F("ind", &pointer_get_deref, &pointer_del_deref, &pointer_set_deref, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GLValue\n"
+	              "Get/clear/set the dereferenced memory location of @this pointer"),
 	TYPE_GETSET_END
 };
 
@@ -670,12 +670,12 @@ PRIVATE struct type_getset tpconst lvalue_getsets[] = {
 	TYPE_GETTER("ref", &lvalue_ref,
 	            "->?Gpointer\n"
 	            "Returns a pointer for the object referred to by @this ?GLValue"),
-	TYPE_GETTER("sizeof", &lvalue_sizeof,
-	            "->?Dint\n"
-	            "Returns the size of the structured objected pointed to by @this ?GLValue"),
-	TYPE_GETTER("alignof", &lvalue_alignof,
-	            "->?Dint\n"
-	            "Returns the alignment of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETTER_F("sizeof", &lvalue_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the size of the structured objected pointed to by @this ?GLValue"),
+	TYPE_GETTER_F("alignof", &lvalue_alignof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the alignment of the structured objected pointed to by @this ?GLValue"),
 	TYPE_GETSET_END
 };
 

@@ -617,12 +617,12 @@ PRIVATE struct type_cmp jmapiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst jseqiter_getsets[] = {
-	TYPE_GETTER("seq", &jseqiter_getseq, "->?GSequence"),
+	TYPE_GETTER_F("seq", &jseqiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?GSequence"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst jmapiter_getsets[] = {
-	TYPE_GETTER("seq", &jmapiter_getseq, "->?GMapping"),
+	TYPE_GETTER_F("seq", &jmapiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?GMapping"),
 	TYPE_GETSET_END
 };
 

@@ -259,27 +259,27 @@ jy_getrefsbyname(JITYieldFunction *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst jy_getsets[] = {
-	TYPE_GETTER("__name__", &jy_getname,
-	            "->?X2?Dstring?N\n"
-	            "Alias for ?A__name__?GFunction though ?#__func__"),
-	TYPE_GETTER("__doc__", &jy_getdoc,
-	            "->?X2?Dstring?N\n"
-	            "Alias for ?A__doc__?GFunction though ?#__func__"),
-	TYPE_GETTER("__kwds__", &jy_getkwds,
-	            "->?S?Dstring\n"
-	            "Alias for ?A__kwds__?GFunction though ?#__func__"),
-	TYPE_GETTER("__text__", &jy_gettext,
-	            "->?Dstring\n"
-	            "Alias for ?A__text__?GFunction though ?#__func__"),
-	TYPE_GETTER("__args__", &jy_getargs,
-	            "->?S?O\n"
-	            "Returns a sequence representing the positional arguments passed to the function"),
-	TYPE_GETTER("__refs__", &jy_getrefs,
-	            "->?S?O\n"
-	            "Alias for ?A__refs__?GFunction though ?#__func__"),
-	TYPE_GETTER("__refsbyname__", &jy_getrefsbyname,
-	            "->?M?Dstring?O\n"
-	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__name__", &jy_getname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Alias for ?A__name__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__doc__", &jy_getdoc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Alias for ?A__doc__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__kwds__", &jy_getkwds, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?Dstring\n"
+	              "Alias for ?A__kwds__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__text__", &jy_gettext, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Alias for ?A__text__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__args__", &jy_getargs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Returns a sequence representing the positional arguments passed to the function"),
+	TYPE_GETTER_F("__refs__", &jy_getrefs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Alias for ?A__refs__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__refsbyname__", &jy_getrefsbyname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?M?Dstring?O\n"
+	              "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 
@@ -1917,30 +1917,30 @@ ji_getrefsbyname(JITYieldFunctionIterator *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst ji_getsets[] = {
-	TYPE_GETTER("__func__", &ji_getfunc,
-	            "->?GFunction\n"
-	            "The JIT function that is being executed"),
-	TYPE_GETTER("__args__", &ji_getargs,
-	            "->?S?O\n"
-	            "Returns a sequence representing the positional arguments passed to the function"),
-	TYPE_GETTER("__name__", &ji_getname,
-	            "->?X2?Dstring?N\n"
-	            "Alias for ?A__name__?GFunction though ?#__func__"),
-	TYPE_GETTER("__doc__", &ji_getdoc,
-	            "->?X2?Dstring?N\n"
-	            "Alias for ?A__doc__?GFunction though ?#__func__"),
-	TYPE_GETTER("__kwds__", &ji_getkwds,
-	            "->?S?Dstring\n"
-	            "Alias for ?A__kwds__?GFunction though ?#__func__"),
-	TYPE_GETTER("__text__", &ji_gettext,
-	            "->?Dstring\n"
-	            "Alias for ?A__text__?GFunction though ?#__func__"),
-	TYPE_GETTER("__refs__", &ji_getrefs,
-	            "->?S?O\n"
-	            "Alias for ?A__refs__?GFunction though ?#__func__"),
-	TYPE_GETTER("__refsbyname__", &ji_getrefsbyname,
-	            "->?M?Dstring?O\n"
-	            "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__func__", &ji_getfunc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GFunction\n"
+	              "The JIT function that is being executed"),
+	TYPE_GETTER_F("__args__", &ji_getargs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Returns a sequence representing the positional arguments passed to the function"),
+	TYPE_GETTER_F("__name__", &ji_getname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Alias for ?A__name__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__doc__", &ji_getdoc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Alias for ?A__doc__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__kwds__", &ji_getkwds, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?Dstring\n"
+	              "Alias for ?A__kwds__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__text__", &ji_gettext, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Alias for ?A__text__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__refs__", &ji_getrefs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Alias for ?A__refs__?GFunction though ?#__func__"),
+	TYPE_GETTER_F("__refsbyname__", &ji_getrefsbyname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?M?Dstring?O\n"
+	              "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 

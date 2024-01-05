@@ -1011,38 +1011,38 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * Properties matching these names can be found in a variety of other
 	 * types, including `Function', `ObjMethod', etc.
 	 */
-	TYPE_GETTER(STR___name__, &code_get_name,
-	            "->?X2?Dstring?N\n"
-	            "Returns the name of @this code object, or ?N if unknown (s.a. ?A__name__?DFunction)"),
-	TYPE_GETTER(STR___doc__, &code_get_doc,
-	            "->?X2?Dstring?N\n"
-	            "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
-	TYPE_GETTER(STR___type__, &code_get_type,
-	            "->?X2?DType?N\n"
-	            "Try to determine if @this code object is defined as part of a user-defined class, "
-	            /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
-	            /**/ "or if @this code object is defined as stand-alone (s.a. ?A__type__?DFunction)"),
+	TYPE_GETTER_F(STR___name__, &code_get_name, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Returns the name of @this code object, or ?N if unknown (s.a. ?A__name__?DFunction)"),
+	TYPE_GETTER_F(STR___doc__, &code_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
+	TYPE_GETTER_F(STR___type__, &code_get_type, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?DType?N\n"
+	              "Try to determine if @this code object is defined as part of a user-defined class, "
+	              /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
+	              /**/ "or if @this code object is defined as stand-alone (s.a. ?A__type__?DFunction)"),
 	TYPE_GETTER(STR___kwds__, &code_get_kwds,
 	            "->?S?Dstring\n"
 	            "Returns a sequence of keyword argument names accepted by @this code object\n"
 	            "If @this code doesn't accept keyword arguments, an empty sequence is returned"),
-	TYPE_GETTER("__operator__", &code_get_operator,
-	            "->?X2?Dint?N\n"
-	            "Try to determine if @this code object is defined as part of a user-defined class, "
-	            /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	            /**/ "return the internal ID of the operator that @this code object provides, or ?N "
-	            /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
-	            /**/ "defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
-	TYPE_GETTER("__operatorname__", &code_get_operatorname,
-	            "->?X3?Dstring?Dint?N\n"
-	            "Same as ?#__operator__, but instead try to return the unambiguous name of the "
-	            /**/ "operator, though still return its ID if the operator isn't recognized as being "
-	            /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
-	TYPE_GETTER("__property__", &code_get_property,
-	            "->?X2?Dint?N\n"
-	            "Returns an integer describing the kind if @this code is part of a property or getset, "
-	            /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
-	            /**/ "declared as a property callback (s.a. ?A__property__?DFunction)"),
+	TYPE_GETTER_F("__operator__", &code_get_operator, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?N\n"
+	              "Try to determine if @this code object is defined as part of a user-defined class, "
+	              /**/ "and if so, if it is used to define an operator callback. If that is the case, "
+	              /**/ "return the internal ID of the operator that @this code object provides, or ?N "
+	              /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
+	              /**/ "defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
+	TYPE_GETTER_F("__operatorname__", &code_get_operatorname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X3?Dstring?Dint?N\n"
+	              "Same as ?#__operator__, but instead try to return the unambiguous name of the "
+	              /**/ "operator, though still return its ID if the operator isn't recognized as being "
+	              /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
+	TYPE_GETTER_F("__property__", &code_get_property, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?N\n"
+	              "Returns an integer describing the kind if @this code is part of a property or getset, "
+	              /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
+	              /**/ "declared as a property callback (s.a. ?A__property__?DFunction)"),
 	TYPE_GETTER("__default__", &code_getdefault,
 	            "->?S?O\n"
 	            "Access to the default values of arguments"),

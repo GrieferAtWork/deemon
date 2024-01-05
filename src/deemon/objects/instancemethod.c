@@ -319,26 +319,26 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst im_getsets[] = {
-	TYPE_GETTER(STR___name__, &instancemethod_get_name,
-	            "->?X2?Dstring?N\n"
-	            "The name of the function being bound, or ?N if unknown"),
-	TYPE_GETTER(STR___doc__, &instancemethod_get_doc,
-	            "->?X2?Dstring?N\n"
-	            "The documentation string of the function being bound, or ?N if unknown"),
-	TYPE_GETTER(STR___kwds__, &instancemethod_get_kwds,
-	            "->?S?Dstring\n"
-	            "Returns a sequence of keyword argument names accepted by @this function\n"
-	            "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
-	TYPE_GETTER(STR___type__, &instancemethod_get_type,
-	            "->?X2?DType?N\n"
-	            "The type implementing the function that is being bound, or ?N if unknown"),
-	TYPE_GETTER(STR___module__, &instancemethod_get_module,
-	            "->?X2?DModule?N\n"
-	            "The type within which the bound function was defined "
-	            "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
-	            "If something other than a user-level function was set for ?#__func__, "
-	            /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
-	            /**/ "then forwarded"),
+	TYPE_GETTER_F(STR___name__, &instancemethod_get_name, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "The name of the function being bound, or ?N if unknown"),
+	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N\n"
+	              "The documentation string of the function being bound, or ?N if unknown"),
+	TYPE_GETTER_F(STR___kwds__, &instancemethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?Dstring\n"
+	              "Returns a sequence of keyword argument names accepted by @this function\n"
+	              "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
+	TYPE_GETTER_F(STR___type__, &instancemethod_get_type, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?DType?N\n"
+	              "The type implementing the function that is being bound, or ?N if unknown"),
+	TYPE_GETTER_F(STR___module__, &instancemethod_get_module, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?DModule?N\n"
+	              "The type within which the bound function was defined "
+	              "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
+	              "If something other than a user-level function was set for ?#__func__, "
+	              /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
+	              /**/ "then forwarded"),
 	TYPE_GETSET_END
 };
 

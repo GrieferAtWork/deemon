@@ -824,13 +824,13 @@ LOCAL_lockapi_available_get(LOCAL_DeeLockObject *self) {
 	return_bool(LOCAL_lock_available(&self->l_lock));
 }
 
-PRIVATE struct type_method LOCAL_lockapi_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &LOCAL_lockapi_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &LOCAL_lockapi_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &LOCAL_lockapi_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &LOCAL_lockapi_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &LOCAL_lockapi_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &LOCAL_lockapi_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+PRIVATE struct type_method tpconst LOCAL_lockapi_methods[] = {
+	TYPE_METHOD_F(STR_tryacquire, &LOCAL_lockapi_tryacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD_F(STR_acquire, &LOCAL_lockapi_acquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD_F(STR_release, &LOCAL_lockapi_release, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_release)),
+	TYPE_METHOD_F(STR_timedacquire, &LOCAL_lockapi_timedacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD_F(STR_waitfor, &LOCAL_lockapi_waitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD_F(STR_timedwaitfor, &LOCAL_lockapi_timedwaitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 #endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
@@ -876,10 +876,10 @@ LOCAL_lockapi_acquired_get(LOCAL_DeeLockObject *self) {
 
 
 #ifndef LOCAL_IS_ATOMIC_AS_SHARED
-PRIVATE struct type_getset LOCAL_lockapi_getsets[] = {
-	TYPE_GETTER(STR_available, &LOCAL_lockapi_available_get, DOC_GET(doc_lock_available)),
+PRIVATE struct type_getset tpconst LOCAL_lockapi_getsets[] = {
+	TYPE_GETTER_F(STR_available, &LOCAL_lockapi_available_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_available)),
 #ifdef LOCAL_lockapi_acquired_get
-	TYPE_GETTER(STR_acquired, &LOCAL_lockapi_acquired_get, DOC_GET(doc_lock_acquired)),
+	TYPE_GETTER_F(STR_acquired, &LOCAL_lockapi_acquired_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
 #endif /* LOCAL_lockapi_acquired_get */
 	TYPE_GETSET_END
 };
@@ -1291,33 +1291,33 @@ done:
 	return result;
 }
 
-PRIVATE struct type_method LOCAL_rwlockapi_methods[] = {
-	TYPE_METHOD(STR_tryread, &LOCAL_rwlockapi_tryread, DOC_GET(doc_rwlock_tryread)),
-	TYPE_METHOD(STR_trywrite, &LOCAL_rwlockapi_trywrite, DOC_GET(doc_rwlock_trywrite)),
-	TYPE_METHOD(STR_tryupgrade, &LOCAL_rwlockapi_tryupgrade, DOC_GET(doc_rwlock_tryupgrade)),
-	TYPE_METHOD(STR_endread, &LOCAL_rwlockapi_endread, DOC_GET(doc_rwlock_endread)),
-	TYPE_METHOD(STR_endwrite, &LOCAL_rwlockapi_endwrite, DOC_GET(doc_rwlock_endwrite)),
-	TYPE_METHOD(STR_downgrade, &LOCAL_rwlockapi_downgrade, DOC_GET(doc_rwlock_downgrade)),
-	TYPE_METHOD(STR_read, &LOCAL_rwlockapi_read, DOC_GET(doc_rwlock_read)),
-	TYPE_METHOD(STR_write, &LOCAL_rwlockapi_write, DOC_GET(doc_rwlock_write)),
-	TYPE_METHOD(STR_end, &LOCAL_rwlockapi_end, DOC_GET(doc_rwlock_end)),
-	TYPE_METHOD(STR_upgrade, &LOCAL_rwlockapi_upgrade, DOC_GET(doc_rwlock_upgrade)),
-	TYPE_METHOD(STR_timedread, &LOCAL_rwlockapi_timedread, DOC_GET(doc_rwlock_timedread)),
-	TYPE_METHOD(STR_timedwrite, &LOCAL_rwlockapi_timedwrite, DOC_GET(doc_rwlock_timedwrite)),
-	TYPE_METHOD(STR_waitread, &LOCAL_rwlockapi_waitread, DOC_GET(doc_rwlock_waitread)),
-	TYPE_METHOD(STR_waitwrite, &LOCAL_rwlockapi_waitwrite, DOC_GET(doc_rwlock_waitwrite)),
-	TYPE_METHOD(STR_timedwaitread, &LOCAL_rwlockapi_timedwaitread, DOC_GET(doc_rwlock_timedwaitread)),
-	TYPE_METHOD(STR_timedwaitwrite, &LOCAL_rwlockapi_timedwaitwrite, DOC_GET(doc_rwlock_timedwaitwrite)),
+PRIVATE struct type_method tpconst LOCAL_rwlockapi_methods[] = {
+	TYPE_METHOD_F(STR_tryread, &LOCAL_rwlockapi_tryread, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_tryread)),
+	TYPE_METHOD_F(STR_trywrite, &LOCAL_rwlockapi_trywrite, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_trywrite)),
+	TYPE_METHOD_F(STR_tryupgrade, &LOCAL_rwlockapi_tryupgrade, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_tryupgrade)),
+	TYPE_METHOD_F(STR_endread, &LOCAL_rwlockapi_endread, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_endread)),
+	TYPE_METHOD_F(STR_endwrite, &LOCAL_rwlockapi_endwrite, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_endwrite)),
+	TYPE_METHOD_F(STR_downgrade, &LOCAL_rwlockapi_downgrade, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_downgrade)),
+	TYPE_METHOD_F(STR_read, &LOCAL_rwlockapi_read, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_read)),
+	TYPE_METHOD_F(STR_write, &LOCAL_rwlockapi_write, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_write)),
+	TYPE_METHOD_F(STR_end, &LOCAL_rwlockapi_end, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_end)),
+	TYPE_METHOD_F(STR_upgrade, &LOCAL_rwlockapi_upgrade, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_upgrade)),
+	TYPE_METHOD_F(STR_timedread, &LOCAL_rwlockapi_timedread, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_timedread)),
+	TYPE_METHOD_F(STR_timedwrite, &LOCAL_rwlockapi_timedwrite, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_timedwrite)),
+	TYPE_METHOD_F(STR_waitread, &LOCAL_rwlockapi_waitread, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_waitread)),
+	TYPE_METHOD_F(STR_waitwrite, &LOCAL_rwlockapi_waitwrite, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_waitwrite)),
+	TYPE_METHOD_F(STR_timedwaitread, &LOCAL_rwlockapi_timedwaitread, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_timedwaitread)),
+	TYPE_METHOD_F(STR_timedwaitwrite, &LOCAL_rwlockapi_timedwaitwrite, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_rwlock_timedwaitwrite)),
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_getset LOCAL_rwlockapi_getsets[] = {
-	TYPE_GETTER(STR_reading, &LOCAL_rwlockapi_reading_get, DOC_GET(doc_rwlock_reading)),
-	TYPE_GETTER(STR_writing, &LOCAL_rwlockapi_writing_get, DOC_GET(doc_rwlock_writing)),
-	TYPE_GETTER(STR_canread, &LOCAL_rwlockapi_canread_get, DOC_GET(doc_rwlock_canread)),
-	TYPE_GETTER(STR_canwrite, &LOCAL_rwlockapi_canwrite_get, DOC_GET(doc_rwlock_canwrite)),
-	TYPE_GETTER(STR_readlock, &LOCAL_rwlockapi_readlock_get, DOC_GET(doc_rwlock_readlock)),
-	TYPE_GETTER(STR_writelock, &LOCAL_rwlockapi_writelock_get, DOC_GET(doc_rwlock_writelock)),
+PRIVATE struct type_getset tpconst LOCAL_rwlockapi_getsets[] = {
+	TYPE_GETTER_F(STR_reading, &LOCAL_rwlockapi_reading_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_reading)),
+	TYPE_GETTER_F(STR_writing, &LOCAL_rwlockapi_writing_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_writing)),
+	TYPE_GETTER_F(STR_canread, &LOCAL_rwlockapi_canread_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_canread)),
+	TYPE_GETTER_F(STR_canwrite, &LOCAL_rwlockapi_canwrite_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_canwrite)),
+	TYPE_GETTER_F(STR_readlock, &LOCAL_rwlockapi_readlock_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_readlock)),
+	TYPE_GETTER_F(STR_writelock, &LOCAL_rwlockapi_writelock_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_rwlock_writelock)),
 	TYPE_GETSET_END
 };
 #endif /* !LOCAL_IS_ATOMIC_AS_SHARED */
@@ -1591,35 +1591,35 @@ PRIVATE struct type_with LOCAL_rwlockapi_writelock_with = {
 	/* .tp_leave = */ (int (DCALL *)(DeeObject *__restrict))&LOCAL_rwlockapi_writelock_leave
 };
 
-PRIVATE struct type_method LOCAL_rwlockapi_readlock_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &LOCAL_rwlockapi_readlock_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &LOCAL_rwlockapi_readlock_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &LOCAL_rwlockapi_readlock_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &LOCAL_rwlockapi_readlock_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &LOCAL_rwlockapi_readlock_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &LOCAL_rwlockapi_readlock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+PRIVATE struct type_method tpconst LOCAL_rwlockapi_readlock_methods[] = {
+	TYPE_METHOD_F(STR_tryacquire, &LOCAL_rwlockapi_readlock_tryacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD_F(STR_acquire, &LOCAL_rwlockapi_readlock_acquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD_F(STR_release, &LOCAL_rwlockapi_readlock_release, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_release)),
+	TYPE_METHOD_F(STR_timedacquire, &LOCAL_rwlockapi_readlock_timedacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD_F(STR_waitfor, &LOCAL_rwlockapi_readlock_waitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD_F(STR_timedwaitfor, &LOCAL_rwlockapi_readlock_timedwaitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_method LOCAL_rwlockapi_writelock_methods[] = {
-	TYPE_METHOD(STR_tryacquire, &LOCAL_rwlockapi_writelock_tryacquire, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD(STR_acquire, &LOCAL_rwlockapi_writelock_acquire, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD(STR_release, &LOCAL_rwlockapi_writelock_release, DOC_GET(doc_lock_release)),
-	TYPE_METHOD(STR_timedacquire, &LOCAL_rwlockapi_writelock_timedacquire, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD(STR_waitfor, &LOCAL_rwlockapi_writelock_waitfor, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD(STR_timedwaitfor, &LOCAL_rwlockapi_writelock_timedwaitfor, DOC_GET(doc_lock_timedwaitfor)),
+PRIVATE struct type_method tpconst LOCAL_rwlockapi_writelock_methods[] = {
+	TYPE_METHOD_F(STR_tryacquire, &LOCAL_rwlockapi_writelock_tryacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD_F(STR_acquire, &LOCAL_rwlockapi_writelock_acquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD_F(STR_release, &LOCAL_rwlockapi_writelock_release, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_release)),
+	TYPE_METHOD_F(STR_timedacquire, &LOCAL_rwlockapi_writelock_timedacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD_F(STR_waitfor, &LOCAL_rwlockapi_writelock_waitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD_F(STR_timedwaitfor, &LOCAL_rwlockapi_writelock_timedwaitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
-PRIVATE struct type_getset LOCAL_rwlockapi_readlock_getsets[] = {
-	TYPE_GETTER(STR_available, &LOCAL_rwlockapi_readlock_available_get, DOC_GET(doc_lock_available)),
-	TYPE_GETTER(STR_acquired, &LOCAL_rwlockapi_readlock_acquired_get, DOC_GET(doc_lock_acquired)),
+PRIVATE struct type_getset tpconst LOCAL_rwlockapi_readlock_getsets[] = {
+	TYPE_GETTER_F(STR_available, &LOCAL_rwlockapi_readlock_available_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_available)),
+	TYPE_GETTER_F(STR_acquired, &LOCAL_rwlockapi_readlock_acquired_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_END
 };
 
-PRIVATE struct type_getset LOCAL_rwlockapi_writelock_getsets[] = {
-	TYPE_GETTER(STR_available, &LOCAL_rwlockapi_writelock_available_get, DOC_GET(doc_lock_available)),
-	TYPE_GETTER(STR_acquired, &LOCAL_rwlockapi_writelock_acquired_get, DOC_GET(doc_lock_acquired)),
+PRIVATE struct type_getset tpconst LOCAL_rwlockapi_writelock_getsets[] = {
+	TYPE_GETTER_F(STR_available, &LOCAL_rwlockapi_writelock_available_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_available)),
+	TYPE_GETTER_F(STR_acquired, &LOCAL_rwlockapi_writelock_acquired_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_END
 };
 #endif /* !LOCAL_IS_ATOMIC_AS_SHARED */

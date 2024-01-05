@@ -199,7 +199,7 @@ err:
 
 
 PRIVATE struct type_getset tpconst filteriterator_getsets[] = {
-	TYPE_GETTER(STR_seq, &filteriterator_seq_get, "->?Ert:SeqFilter"),
+	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqFilter"),
 	TYPE_GETSET_END
 };
 

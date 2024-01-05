@@ -343,12 +343,12 @@ PRIVATE struct type_cmp refaiter_cmp = {
 
 
 PRIVATE struct type_getset tpconst refaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &refaiter_getseq, "->?Ert:ReFindAll"),
+	TYPE_GETTER_F(STR_seq, &refaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReFindAll"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst rebfaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &rebfaiter_getseq, "->?Ert:ReBytesFindAll"),
+	TYPE_GETTER_F(STR_seq, &rebfaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReBytesFindAll"),
 	TYPE_GETSET_END
 };
 
@@ -576,12 +576,12 @@ regbfaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst regfaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &regfaiter_getseq, "->?Ert:RegFindAll"),
+	TYPE_GETTER_F(STR_seq, &regfaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:RegFindAll"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst regbfaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &regbfaiter_getseq, "->?Ert:RegBytesFindAll"),
+	TYPE_GETTER_F(STR_seq, &regbfaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:RegBytesFindAll"),
 	TYPE_GETSET_END
 };
 
@@ -744,12 +744,12 @@ reblaiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst relaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &relaiter_getseq, "->?Ert:ReLocateAll"),
+	TYPE_GETTER_F(STR_seq, &relaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReLocateAll"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst reblaiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &reblaiter_getseq, "->?Ert:ReBytesLocateAll"),
+	TYPE_GETTER_F(STR_seq, &reblaiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReBytesLocateAll"),
 	TYPE_GETSET_END
 };
 
@@ -976,12 +976,12 @@ rebspiter_getseq(ReSequenceIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst respiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &respiter_getseq, "->?Ert:ReSplit"),
+	TYPE_GETTER_F(STR_seq, &respiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReSplit"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst rebspiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &rebspiter_getseq, "->?Ert:ReBytesSplit"),
+	TYPE_GETTER_F(STR_seq, &rebspiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ReBytesSplit"),
 	TYPE_GETSET_END
 };
 

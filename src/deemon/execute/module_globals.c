@@ -230,7 +230,7 @@ mei_getseq(ModuleExportsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst mei_getsets[] = {
-	TYPE_GETTER(STR_seq, &mei_getseq, "->?Ert:ModuleExports"),
+	TYPE_GETTER_F(STR_seq, &mei_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:ModuleExports"),
 	TYPE_GETSET_END
 };
 
@@ -686,7 +686,7 @@ mgi_getseq(ModuleGlobalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst mgi_getsets[] = {
-	TYPE_GETTER_NODOC(STR_seq, &mgi_getseq),
+	TYPE_GETTER_F_NODOC(STR_seq, &mgi_getseq, TYPE_GETSET_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 #undef READ_INDEX

@@ -475,7 +475,7 @@ PRIVATE struct type_member tpconst si_members[] = {
 };
 
 PRIVATE struct type_getset tpconst si_getsets[] = {
-#define DEFINE_FIELD(name, doc) TYPE_GETTER(#name, &si_get_##name, "->?Dint\n" doc)
+#define DEFINE_FIELD(name, doc) TYPE_GETTER_F(#name, &si_get_##name, TYPE_GETSET_FNOREFESCAPE, "->?Dint\n" doc)
 	DEFINE_FIELD(slabsize, "Total size of the slab (in bytes)"),
 	DEFINE_FIELD(itemsize, "Slab item size (in bytes)"),
 	DEFINE_FIELD(items_per_page, "Number of items per page"),
@@ -492,9 +492,9 @@ PRIVATE struct type_getset tpconst si_getsets[] = {
 	DEFINE_FIELD(usedpages, "Number of pages which are currently being used (@cur_fullpages + @cur_freepages)"),
 	DEFINE_FIELD(tailpages, "Number of pages which haven't been allocated, yet"),
 #undef DEFINE_FIELD
-	TYPE_GETTER("__index__", &si_get_index,
-	            "->?Dint\n"
-	            "Index of @this slab within ?GSlabStat"),
+	TYPE_GETTER_F("__index__", &si_get_index, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Index of @this slab within ?GSlabStat"),
 	TYPE_GETSET_END
 };
 

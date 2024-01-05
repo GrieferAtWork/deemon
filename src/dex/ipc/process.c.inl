@@ -5139,98 +5139,98 @@ process_set_stderr(Process *self, DeeObject *value) {
 
 
 PRIVATE struct type_method tpconst process_methods[] = {
-	TYPE_METHOD("start", &process_start,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "#tFileNotFound{The specified executable could not be found}"
-	            "#tFileAccessError{The current user does not have permissions to access the "
-	            /*                  */ "executable, or the executable is lacking execute permissions}"
-	            "#tSystemError{Failed to start the process for some reason}"
-	            "Begin execution of the process"),
-	TYPE_METHOD("join", &process_join,
-	            "->?Dint\n"
-	            "#t{:Interrupt}"
-	            "#tValueError{@this process was never started}"
-	            "#tValueError{@this process as already detached or joined}"
-	            "#tSystemError{Failed to join @this process for some reason}"
-	            "#r{The exit code of the process}"
-	            "Joins @this process and returns the return value of its main function"),
-	TYPE_METHOD("tryjoin", &process_tryjoin,
-	            "->?X2?Dint?N\n"
-	            "#tValueError{@this process was never started}"
-	            "#tValueError{@this process as already detached or joined}"
-	            "#tSystemError{Failed to join @this process for some reason}"
-	            "Same as ?#join, but don't check for interrupts and fail immediately"),
-	TYPE_METHOD("timedjoin", &process_timedjoin,
-	            "(timeout_in_nanoseconds:?Dint)->?X2?Dint?N\n"
-	            "#tValueError{@this process was never started}"
-	            "#tValueError{@this process as already detached or joined}"
-	            "#tSystemError{Failed to join @this process for some reason}"
-	            "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
-	TYPE_METHOD("detach", &process_detach,
-	            "->?Dbool\n"
-	            "#tValueError{@this process was never started}"
-	            "#tSystemError{Failed to detach @this process for some reason}"
-	            "#r{true The ?. has been detached}"
-	            "#r{false The ?. had already been detached or joined}"
-	            "Detaches @this process"),
-	TYPE_KWMETHOD("kill", &process_kill,
-	              "(exitcode=!0,signal=!9)->?Dbool\n"
+	TYPE_METHOD_F("start", &process_start, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "#tFileNotFound{The specified executable could not be found}"
+	              "#tFileAccessError{The current user does not have permissions to access the "
+	              /*                  */ "executable, or the executable is lacking execute permissions}"
+	              "#tSystemError{Failed to start the process for some reason}"
+	              "Begin execution of the process"),
+	TYPE_METHOD_F("join", &process_join, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#t{:Interrupt}"
 	              "#tValueError{@this process was never started}"
-	              "#tSystemError{Failed to terminate @this process for some reason}"
-	              "#r{true The ?. has been terminated}"
-	              "#r{false The ?. was already terminated}"
-	              "Terminate @this process with the given @exitcode or @signal"),
-	TYPE_KWMETHOD("terminate", &process_kill,
-	              "(exitcode=!0,signal=!9)->?Dbool\n"
-	              "Deprecated alias for ?#kill"),
+	              "#tValueError{@this process as already detached or joined}"
+	              "#tSystemError{Failed to join @this process for some reason}"
+	              "#r{The exit code of the process}"
+	              "Joins @this process and returns the return value of its main function"),
+	TYPE_METHOD_F("tryjoin", &process_tryjoin, TYPE_METHOD_FNOREFESCAPE,
+	              "->?X2?Dint?N\n"
+	              "#tValueError{@this process was never started}"
+	              "#tValueError{@this process as already detached or joined}"
+	              "#tSystemError{Failed to join @this process for some reason}"
+	              "Same as ?#join, but don't check for interrupts and fail immediately"),
+	TYPE_METHOD_F("timedjoin", &process_timedjoin, TYPE_METHOD_FNOREFESCAPE,
+	              "(timeout_in_nanoseconds:?Dint)->?X2?Dint?N\n"
+	              "#tValueError{@this process was never started}"
+	              "#tValueError{@this process as already detached or joined}"
+	              "#tSystemError{Failed to join @this process for some reason}"
+	              "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
+	TYPE_METHOD_F("detach", &process_detach, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#tValueError{@this process was never started}"
+	              "#tSystemError{Failed to detach @this process for some reason}"
+	              "#r{true The ?. has been detached}"
+	              "#r{false The ?. had already been detached or joined}"
+	              "Detaches @this process"),
+	TYPE_KWMETHOD_F("kill", &process_kill, TYPE_METHOD_FNOREFESCAPE,
+	                "(exitcode=!0,signal=!9)->?Dbool\n"
+	                "#tValueError{@this process was never started}"
+	                "#tSystemError{Failed to terminate @this process for some reason}"
+	                "#r{true The ?. has been terminated}"
+	                "#r{false The ?. was already terminated}"
+	                "Terminate @this process with the given @exitcode or @signal"),
+	TYPE_KWMETHOD_F("terminate", &process_kill, TYPE_METHOD_FNOREFESCAPE,
+	                "(exitcode=!0,signal=!9)->?Dbool\n"
+	                "Deprecated alias for ?#kill"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst process_getsets[] = {
-	TYPE_GETSET("exe", &process_get_exe, &process_del_exe, &process_set_exe,
-	            "->?X3?Dint?DFile?Dstring\n"
-	            "The filename of the image being executed by the ?.\n"
-	            "When constructing a new ?., this can also be a file descriptor or ?DFile"),
-	TYPE_GETSET("argv", &process_get_argv, &process_del_argv, &process_set_argv,
-	            "->?S?Dstring\n"
-	            "The argument vector passed to the programms #C{main()} method"),
-	TYPE_GETSET("environ", &process_get_environ, &process_del_environ, &process_set_environ,
-	            "->?M?Dstring?Dstring\n"
-	            "The state of environment variables in the given ?.\n"
-	            "When constructing a new ?., or leaving this unset, the contents of "
-	            /**/ "?Eposix:environ at the time of ?#start being called is used instead"),
-	TYPE_GETSET("pwd", &process_get_pwd, &process_del_pwd, &process_set_pwd,
-	            "->?X3?Dint?DFile?Dstring\n"
-	            "Get or set the path to the ?. working directory used by the ?.\n"
-	            "When constructing a new ?., this can also be a file descriptor or ?DFile"),
-	TYPE_GETSET("stdin", &process_get_stdin, &process_del_stdin, &process_set_stdin,
-	            "->?X2?Dint?DFile\n"
-	            "Get or set the standard input stream used by the ?.\n"
-	            "When constructing a new ?., this can also be a file descriptor"),
-	TYPE_GETSET("stdout", &process_get_stdout, &process_del_stdout, &process_set_stdout,
-	            "->?X2?Dint?DFile\n"
-	            "Get or set the standard output stream used by the ?.\n"
-	            "When constructing a new ?., this can also be a file descriptor"),
-	TYPE_GETSET("stderr", &process_get_stderr, &process_del_stderr, &process_set_stderr,
-	            "->?X2?Dint?DFile\n"
-	            "Get or set the standard error stream used by the ?.\n"
-	            "When constructing a new ?., this can also be a file descriptor"),
-	TYPE_GETTER("hasterminated", &process_hasterminated,
-	            "->?Dbool\n"
-	            "Returns ?t if @this ?. has terminated"),
-	TYPE_GETTER("id", &process_id,
-	            "->?Dint\n"
-	            "#tValueError{The ?. hasn't been started yet}"
-	            "Returns an operating-system specific id of @this ?."),
+	TYPE_GETSET_F("exe", &process_get_exe, &process_del_exe, &process_set_exe, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X3?Dint?DFile?Dstring\n"
+	              "The filename of the image being executed by the ?.\n"
+	              "When constructing a new ?., this can also be a file descriptor or ?DFile"),
+	TYPE_GETSET_F("argv", &process_get_argv, &process_del_argv, &process_set_argv, TYPE_GETSET_FNOREFESCAPE,
+	              "->?S?Dstring\n"
+	              "The argument vector passed to the programms #C{main()} method"),
+	TYPE_GETSET_F("environ", &process_get_environ, &process_del_environ, &process_set_environ, TYPE_GETSET_FNOREFESCAPE,
+	              "->?M?Dstring?Dstring\n"
+	              "The state of environment variables in the given ?.\n"
+	              "When constructing a new ?., or leaving this unset, the contents of "
+	              /**/ "?Eposix:environ at the time of ?#start being called is used instead"),
+	TYPE_GETSET_F("pwd", &process_get_pwd, &process_del_pwd, &process_set_pwd, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X3?Dint?DFile?Dstring\n"
+	              "Get or set the path to the ?. working directory used by the ?.\n"
+	              "When constructing a new ?., this can also be a file descriptor or ?DFile"),
+	TYPE_GETSET_F("stdin", &process_get_stdin, &process_del_stdin, &process_set_stdin, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?DFile\n"
+	              "Get or set the standard input stream used by the ?.\n"
+	              "When constructing a new ?., this can also be a file descriptor"),
+	TYPE_GETSET_F("stdout", &process_get_stdout, &process_del_stdout, &process_set_stdout, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?DFile\n"
+	              "Get or set the standard output stream used by the ?.\n"
+	              "When constructing a new ?., this can also be a file descriptor"),
+	TYPE_GETSET_F("stderr", &process_get_stderr, &process_del_stderr, &process_set_stderr, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?DFile\n"
+	              "Get or set the standard error stream used by the ?.\n"
+	              "When constructing a new ?., this can also be a file descriptor"),
+	TYPE_GETTER_F("hasterminated", &process_hasterminated, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this ?. has terminated"),
+	TYPE_GETTER_F("id", &process_id, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{The ?. hasn't been started yet}"
+	              "Returns an operating-system specific id of @this ?."),
 
 #ifdef ipc_Process_USE_cmdline
-	TYPE_GETSET("cmdline_np", &process_get_cmdline, &process_del_cmdline, &process_set_cmdline,
-	            "->?Dstring\n"
-	            "The commandline used to package ?#argv"),
+	TYPE_GETSET_F("cmdline_np", &process_get_cmdline, &process_del_cmdline, &process_set_cmdline, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "The commandline used to package ?#argv"),
 #endif /* ipc_Process_USE_cmdline */
 #ifdef ipc_Process_USE_CreateProcessW
-	TYPE_GETTER(Dee_fd_osfhandle_GETSET, &process_osfhandle_np, "->?Dint"),
+	TYPE_GETTER_F(Dee_fd_osfhandle_GETSET, &process_osfhandle_np, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 #endif /* ipc_Process_USE_CreateProcessW */
 
 	/* TODO: vvv re-implement these at a later point in time. */

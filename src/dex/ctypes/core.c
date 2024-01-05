@@ -401,12 +401,12 @@ PRIVATE struct type_getset tpconst stype_getsets[] = {
 	TYPE_GETTER("lvalue", &DeeSType_LValue,
 	            "->?GLValueType\n"
 	            "Returns the l-value type associated with @this ?GStructuredType"),
-	TYPE_GETTER("sizeof", &stype_sizeof,
-	            "->?Dint\n"
-	            "Returns the size of @this ?GStructuredType in bytes"),
-	TYPE_GETTER("alignof", &stype_alignof,
-	            "->?Dint\n"
-	            "Returns the alignment of @this ?GStructuredType in bytes"),
+	TYPE_GETTER_F("sizeof", &stype_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the size of @this ?GStructuredType in bytes"),
+	TYPE_GETTER_F("alignof", &stype_alignof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the alignment of @this ?GStructuredType in bytes"),
 	TYPE_GETTER("pointer", &DeeSType_Pointer,
 	            "->?GPointerType\n"
 	            "Alias for ?#ptr"),
@@ -674,9 +674,9 @@ PRIVATE struct type_method tpconst ltype_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst ltype_getsets[] = {
-	TYPE_GETTER("sizeof", &ltype_sizeof,
-	            "->?Dint\n"
-	            "Returns the size of the base of @this ?GLValueType in bytes"),
+	TYPE_GETTER_F("sizeof", &ltype_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the size of the base of @this ?GLValueType in bytes"),
 	TYPE_GETSET_END
 };
 
@@ -1258,12 +1258,12 @@ err:
 
 
 PRIVATE struct type_getset tpconst struct_getsets[] = {
-	TYPE_GETTER("sizeof", &struct_sizeof,
-	            "->?Dint\n"
-	            "Returns the size of @this ?GStructured object"),
-	TYPE_GETTER("alignof", &struct_alignof,
-	            "->?Dint\n"
-	            "Returns the alignment of @this ?GStructured object"),
+	TYPE_GETTER_F("sizeof", &struct_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the size of @this ?GStructured object"),
+	TYPE_GETTER_F("alignof", &struct_alignof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the alignment of @this ?GStructured object"),
 	TYPE_GETTER("ref", &struct_ref,
 	            "->?GPointer\n"
 	            "Returns a pointer to @this ?GStructured object"),

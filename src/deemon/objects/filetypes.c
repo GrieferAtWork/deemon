@@ -721,8 +721,8 @@ err:
 }
 
 PRIVATE struct type_getset tpconst reader_getsets[] = {
-	TYPE_GETSET("owner", &reader_getowner, &reader_close, &reader_setowner,
-	            "Assign the object from which data is being read"),
+	TYPE_GETSET_F("owner", &reader_getowner, &reader_close, &reader_setowner, TYPE_GETSET_FNOREFESCAPE,
+	              "Assign the object from which data is being read"),
 	TYPE_GETSET_END
 };
 
@@ -1112,10 +1112,10 @@ writer_sizeof(Writer *self) {
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
-	TYPE_GETSET(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring,
-	            "->?Dstring\n"
-	            "Get/set the currently written text string"),
-	TYPE_GETTER("__sizeof__", &writer_sizeof, "->?Dint"),
+	TYPE_GETSET_F(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Get/set the currently written text string"),
+	TYPE_GETTER_F("__sizeof__", &writer_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1155,18 +1155,18 @@ err:
 }
 
 PRIVATE struct type_method tpconst writer_methods[] = {
-	TYPE_METHOD(STR_get, &writer_get,
-	            "->?Dstring\n"
-	            "Synchronize and retrieve all data that has already been written"),
-	TYPE_METHOD("pack", &writer_get,
-	            "->?Dstring\n"
-	            "Deprecated alias for reading from ?#string"),
-	TYPE_METHOD(STR_size, &writer_size,
-	            "->?Dint\n"
-	            "Return the total amount of written bytes"),
-	TYPE_METHOD("allocated", &writer_allocated,
-	            "->?Dint\n"
-	            "Returns the currently allocated buffer size (in bytes)"),
+	TYPE_METHOD_F(STR_get, &writer_get, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Synchronize and retrieve all data that has already been written"),
+	TYPE_METHOD_F("pack", &writer_get, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Deprecated alias for reading from ?#string"),
+	TYPE_METHOD_F(STR_size, &writer_size, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Return the total amount of written bytes"),
+	TYPE_METHOD_F("allocated", &writer_allocated, TYPE_METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the currently allocated buffer size (in bytes)"),
 	TYPE_METHOD_END
 };
 
@@ -2019,9 +2019,9 @@ PRIVATE struct type_method tpconst mapfile_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst mapfile_getsets[] = {
-	TYPE_GETTER("ismmap", &mapfile_get_ismmap,
-	            "->?Dbool\n"
-	            "Returns ?t if @this file map uses mmap to implement its buffer"),
+	TYPE_GETTER_F("ismmap", &mapfile_get_ismmap, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this file map uses mmap to implement its buffer"),
 	TYPE_GETSET_END
 };
 

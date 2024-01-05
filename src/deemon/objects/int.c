@@ -4320,68 +4320,68 @@ DOC_REF(numeric_islessgreater_doc);
 DOC_REF(numeric_isunordered_doc);
 
 PRIVATE struct type_method tpconst int_methods[] = {
-	TYPE_KWMETHOD(STR_tostr, &int_tostr,
-	              "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
-	              "#pprecision{The minimum number of digits (excluding radix/sign "
-	              /*            */ "prefixes) to print. Padding is done using $'0'-chars.}"
-	              "#tValueError{The given @mode was not recognized}"
-	              "#tNotImplemented{The given @radix cannot be represented}"
-	              "Convert @this integer to a string, using @radix as base and a "
-	              /**/ "character-options set @mode for which the following control "
-	              /**/ "characters are recognized\n"
-	              "#T{Option|Description~"
-	              "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
-	              "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
-	              "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers&"
-	              "$\"_\"|Include canonical thousands/group-separators}"),
-	TYPE_KWMETHOD("hex", &int_hex, numeric_hex_doc),
-	TYPE_KWMETHOD("bin", &int_bin, numeric_bin_doc),
-	TYPE_KWMETHOD("oct", &int_oct, numeric_oct_doc),
-	TYPE_KWMETHOD("tobytes", &int_tobytes,
-	              "(length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f)->?DBytes\n"
-	              "#pbyteorder{The byteorder encoding used by the returned bytes. "
-	              /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
-	              /*            */ "or ?N (for host-endian)}"
-	              "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
-	              "#tValueError{The given @byteorder string isn't recognized}"
-	              "Returns the data of @this integer as a @length bytes long "
-	              /**/ "writable Bytes object that is disjunct from @this integer.\n"
-	              "When @signed is ?f, throw an :IntegerOverflow if @this "
-	              /**/ "integer is negative. Otherwise use two's complement to encode "
-	              /**/ "negative integers"),
-	TYPE_KWMETHOD("bitcount", &int_bitcount,
-	              "(signed=!f)->?.\n"
-	              "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
-	              "Return the number of bits needed to represent @this integer in base-2"),
-	TYPE_METHOD("divmod", &int_divmod_f, numeric_divmod_doc),
-	TYPE_METHOD("nextafter", &int_nextafter,
-	            "(y:?.)->?.\n"
-	            "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
-	TYPE_METHOD("isgreater", &int_isgreater,
-	            "(y:?.)->?Dbool\n"
-	            "Same as ${this > y}"),
-	TYPE_METHOD("isgreaterequal", &int_isgreaterequal,
-	            "(y:?.)->?Dbool\n"
-	            "Same as ${this >= y}"),
-	TYPE_METHOD("isless", &int_isless,
-	            "(y:?.)->?Dbool\n"
-	            "Same as ${this < y}"),
-	TYPE_METHOD("islessequal", &int_islessequal,
-	            "(y:?.)->?Dbool\n"
-	            "Same as ${this <= y}"),
-	TYPE_METHOD("islessgreater", &int_islessgreater,
-	            "(y:?.)->?Dbool\n"
-	            "Same as ${this != y}"),
-	TYPE_METHOD("isunordered", &int_isunordered,
-	            "(y:?X2?.?Dfloat)->?Dbool\n"
-	            "Same as ${y is float && y.isnan}"),
-	TYPE_METHOD("__forcecopy__", &int_forcecopy,
-	            "->?.\n"
-	            "Internal function to force the creation of a copy of @this "
-	            /**/ "integer without performing aliasing for known constants.\n"
-	            "This function is implementation-specific and used by tests "
-	            /**/ "in order to ensure that inplace-optimization of certain "
-	            /**/ "operators functions correctly"),
+	TYPE_KWMETHOD_F(STR_tostr, &int_tostr, TYPE_METHOD_FNOREFESCAPE,
+	                "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
+	                "#pprecision{The minimum number of digits (excluding radix/sign "
+	                /*            */ "prefixes) to print. Padding is done using $'0'-chars.}"
+	                "#tValueError{The given @mode was not recognized}"
+	                "#tNotImplemented{The given @radix cannot be represented}"
+	                "Convert @this integer to a string, using @radix as base and a "
+	                /**/ "character-options set @mode for which the following control "
+	                /**/ "characters are recognized\n"
+	                "#T{Option|Description~"
+	                "$\"u\", $\"X\"|Digits above $10 are printed in upper-case&"
+	                "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
+	                "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers&"
+	                "$\"_\"|Include canonical thousands/group-separators}"),
+	TYPE_KWMETHOD_F("hex", &int_hex, TYPE_METHOD_FNOREFESCAPE, numeric_hex_doc),
+	TYPE_KWMETHOD_F("bin", &int_bin, TYPE_METHOD_FNOREFESCAPE, numeric_bin_doc),
+	TYPE_KWMETHOD_F("oct", &int_oct, TYPE_METHOD_FNOREFESCAPE, numeric_oct_doc),
+	TYPE_KWMETHOD_F("tobytes", &int_tobytes, TYPE_METHOD_FNOREFESCAPE,
+	                "(length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f)->?DBytes\n"
+	                "#pbyteorder{The byteorder encoding used by the returned bytes. "
+	                /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
+	                /*            */ "or ?N (for host-endian)}"
+	                "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
+	                "#tValueError{The given @byteorder string isn't recognized}"
+	                "Returns the data of @this integer as a @length bytes long "
+	                /**/ "writable Bytes object that is disjunct from @this integer.\n"
+	                "When @signed is ?f, throw an :IntegerOverflow if @this "
+	                /**/ "integer is negative. Otherwise use two's complement to encode "
+	                /**/ "negative integers"),
+	TYPE_KWMETHOD_F("bitcount", &int_bitcount, TYPE_METHOD_FNOREFESCAPE,
+	                "(signed=!f)->?.\n"
+	                "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
+	                "Return the number of bits needed to represent @this integer in base-2"),
+	TYPE_METHOD_F("divmod", &int_divmod_f, TYPE_METHOD_FNOREFESCAPE, numeric_divmod_doc),
+	TYPE_METHOD_F("nextafter", &int_nextafter, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?.\n"
+	              "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
+	TYPE_METHOD_F("isgreater", &int_isgreater, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?Dbool\n"
+	              "Same as ${this > y}"),
+	TYPE_METHOD_F("isgreaterequal", &int_isgreaterequal, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?Dbool\n"
+	              "Same as ${this >= y}"),
+	TYPE_METHOD_F("isless", &int_isless, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?Dbool\n"
+	              "Same as ${this < y}"),
+	TYPE_METHOD_F("islessequal", &int_islessequal, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?Dbool\n"
+	              "Same as ${this <= y}"),
+	TYPE_METHOD_F("islessgreater", &int_islessgreater, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?.)->?Dbool\n"
+	              "Same as ${this != y}"),
+	TYPE_METHOD_F("isunordered", &int_isunordered, TYPE_METHOD_FNOREFESCAPE,
+	              "(y:?X2?.?Dfloat)->?Dbool\n"
+	              "Same as ${y is float && y.isnan}"),
+	TYPE_METHOD_F("__forcecopy__", &int_forcecopy, TYPE_METHOD_FNOREFESCAPE,
+	              "->?.\n"
+	              "Internal function to force the creation of a copy of @this "
+	              /**/ "integer without performing aliasing for known constants.\n"
+	              "This function is implementation-specific and used by tests "
+	              /**/ "in order to ensure that inplace-optimization of certain "
+	              /**/ "operators functions correctly"),
 	TYPE_METHOD_END
 };
 
@@ -4574,58 +4574,58 @@ err_printer:
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	TYPE_GETTER("__sizeof__", &int_sizeof, "->?."),
+	TYPE_GETTER_F("__sizeof__", &int_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?."),
 	TYPE_GETTER("abs", &int_get_abs, "->?."),
 	TYPE_GETTER("trunc", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("floor", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("ceil", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("round", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER("isnormal", &int_return_nonzero, "->?Dbool\nSame as {this != 0}"),
+	TYPE_GETTER_F("isnormal", &int_return_nonzero, TYPE_GETSET_FNOREFESCAPE, "->?Dbool\nSame as {this != 0}"),
 
 	/* Binary property helper functions */
-	TYPE_GETTER("popcount", &int_get_popcount,
-	            "->?Dint\n"
-	            "#tIntegerOverflow{When ${this < 0}}"
-	            "Return the number of 1-bits in this integer"),
-	TYPE_GETTER("ffs", &int_get_ffs,
-	            "->?Dint\n"
-	            "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER("fls", &int_get_fls,
-	            "->?Dint\n"
-	            "#tIntegerOverflow{When ${this < 0}}"
-	            "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER("partity", &int_get_partity,
-	            "->?Dint\n"
-	            "#tIntegerOverflow{When ${this < 0}}"
-	            "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
-	TYPE_GETTER("ctz", &int_get_ctz,
-	            "->?Dint\n"
-	            "#tIntegerOverflow{When ${this == 0}}"
-	            "CountTrailingZeros: return the number of trailing zero-bits:\n"
-	            "${"
-	            /**/ "local n = this.ctz;\n"
-	            /**/ "assert this == (this >> n) << n;"
-	            "}"),
-	TYPE_GETTER("msb", &int_get_msb,
-	            "->?Dint\n"
-	            "#tIntegerOverflow{When ${this <= 0}}"
-	            "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
-	            "${"
-	            /**/ "assert (this >> this.msb) == 1;"
-	            "}"),
+	TYPE_GETTER_F("popcount", &int_get_popcount, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this < 0}}"
+	              "Return the number of 1-bits in this integer"),
+	TYPE_GETTER_F("ffs", &int_get_ffs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER_F("fls", &int_get_fls, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this < 0}}"
+	              "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
+	TYPE_GETTER_F("partity", &int_get_partity, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this < 0}}"
+	              "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
+	TYPE_GETTER_F("ctz", &int_get_ctz, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this == 0}}"
+	              "CountTrailingZeros: return the number of trailing zero-bits:\n"
+	              "${"
+	              /**/ "local n = this.ctz;\n"
+	              /**/ "assert this == (this >> n) << n;"
+	              "}"),
+	TYPE_GETTER_F("msb", &int_get_msb, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tIntegerOverflow{When ${this <= 0}}"
+	              "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
+	              "${"
+	              /**/ "assert (this >> this.msb) == 1;"
+	              "}"),
 
-	TYPE_GETTER("nth", &int_get_nth,
-	            "->?Dstring\n"
-	            "Returns the value of @this ?. as a string (as per ?#op:str), with the "
-	            /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
-	            "#T{Value|Return~"
-	            "$-3|$\"-3rd\"&"
-	            "$-2|$\"-2nd\"&"
-	            "$-1|$\"-1st\"&"
-	            "$1|$\"1st\"&"
-	            "$2|$\"2nd\"&"
-	            "$3|$\"3rd\"}\n"
-	            "All other integer values are returned as ${f\"{this}th\"}"),
+	TYPE_GETTER_F("nth", &int_get_nth, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Returns the value of @this ?. as a string (as per ?#op:str), with the "
+	              /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"
+	              "#T{Value|Return~"
+	              "$-3|$\"-3rd\"&"
+	              "$-2|$\"-2nd\"&"
+	              "$-1|$\"-1st\"&"
+	              "$1|$\"1st\"&"
+	              "$2|$\"2nd\"&"
+	              "$3|$\"3rd\"}\n"
+	              "All other integer values are returned as ${f\"{this}th\"}"),
 
 	TYPE_GETTER(STR_int, &DeeObject_NewRef,
 	            "->?Dint\n"

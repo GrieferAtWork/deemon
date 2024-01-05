@@ -429,13 +429,13 @@ err_already_finished:
 	return err_once_already_finished();
 }
 
-PRIVATE struct type_method once_methods[] = {
-	TYPE_KWMETHOD("finish", &once_finish,
-	              "(result,override=!f)\n"
-	              "#tValueError{@this ?GOnce-object has already finished, and @override is false}"
-	              "By-pass any stored callback and force @this ?GOnce-object to finish with "
-	              /**/ "the given @result. When @override is true, override a stored ?#result "
-	              /**/ "with the given @result in case the ?GOnce-object has already completed."),
+PRIVATE struct type_method tpconst once_methods[] = {
+	TYPE_KWMETHOD_F("finish", &once_finish, TYPE_METHOD_FNOREFESCAPE,
+	                "(result,override=!f)\n"
+	                "#tValueError{@this ?GOnce-object has already finished, and @override is false}"
+	                "By-pass any stored callback and force @this ?GOnce-object to finish with "
+	                /**/ "the given @result. When @override is true, override a stored ?#result "
+	                /**/ "with the given @result in case the ?GOnce-object has already completed."),
 	TYPE_METHOD_END
 };
 
@@ -597,29 +597,29 @@ once_printrepr(DeeOnceObject *__restrict self, dformatprinter printer, void *arg
 }
 
 
-PRIVATE struct type_getset once_getsets[] = {
-	TYPE_GETSET("callback", &once_callback_get, &once_callback_del, &once_callback_set,
-	            "->?DCallable\n"
-	            "#tUnboundAttribute{No callback has been assigned}"
-	            "#tValueError{The ?GOnce-object has already been invoked (or is being "
-	            /*             */ "invoked right now), and the callback can no longer be "
-	            /*             */ "accessed or modified.}"
-	            "Get/set the callback invoked by this ?GOnce-object"),
-	TYPE_GETSET("result", &once_result_get, &once_result_del, &once_result_set,
-	            "->\n"
-	            "#tUnboundAttribute{No result has been assigned}"
-	            "#tValueError{The ?GOnce-object has not yet been invoked, "
-	            /*             */ "so the result cannot be accessed (yet).}"
-	            "Get/set the result of this ?GOnce-object"),
-	TYPE_GETTER("hasrun", &once_hasrun_get,
-	            "->?Dbool\n"
-	            "Returns ?t if @this ?GOnce-object has already been executed (same as ?#{op:bool})"),
-	TYPE_GETTER("isrunning", &once_isrunning_get,
-	            "->?Dbool\n"
-	            "Returns ?t if @this ?GOnce-object is currently running"),
-	TYPE_GETTER("ispending", &once_ispending_get,
-	            "->?Dbool\n"
-	            "Returns ?t if @this ?GOnce-object is currently pending execution"),
+PRIVATE struct type_getset tpconst once_getsets[] = {
+	TYPE_GETSET_F("callback", &once_callback_get, &once_callback_del, &once_callback_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->?DCallable\n"
+	              "#tUnboundAttribute{No callback has been assigned}"
+	              "#tValueError{The ?GOnce-object has already been invoked (or is being "
+	              /*             */ "invoked right now), and the callback can no longer be "
+	              /*             */ "accessed or modified.}"
+	              "Get/set the callback invoked by this ?GOnce-object"),
+	TYPE_GETSET_F("result", &once_result_get, &once_result_del, &once_result_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->\n"
+	              "#tUnboundAttribute{No result has been assigned}"
+	              "#tValueError{The ?GOnce-object has not yet been invoked, "
+	              /*             */ "so the result cannot be accessed (yet).}"
+	              "Get/set the result of this ?GOnce-object"),
+	TYPE_GETTER_F("hasrun", &once_hasrun_get, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this ?GOnce-object has already been executed (same as ?#{op:bool})"),
+	TYPE_GETTER_F("isrunning", &once_isrunning_get, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this ?GOnce-object is currently running"),
+	TYPE_GETTER_F("ispending", &once_ispending_get, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this ?GOnce-object is currently pending execution"),
 	TYPE_GETSET_END
 };
 

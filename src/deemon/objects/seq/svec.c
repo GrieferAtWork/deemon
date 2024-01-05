@@ -877,7 +877,7 @@ rvec_get_writable(RefVector *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst rvec_getsets[] = {
-	TYPE_GETTER("__writable__", &rvec_get_writable, "->?Dbool"),
+	TYPE_GETTER_F("__writable__", &rvec_get_writable, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 	TYPE_GETSET_END
 };
 

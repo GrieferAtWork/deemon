@@ -1770,14 +1770,20 @@ sockaddr_inet6_scope_id(DeeSockAddrObject *__restrict self) {
 
 PRIVATE struct type_getset tpconst sockaddr_getsets[] = {
 #ifdef AF_INET
-	TYPE_GETTER("inet_host", &sockaddr_inet_host, "->?Dint\nFor $\"AF_INET\": The host address in host endian"),
-	TYPE_GETTER("inet_port", &sockaddr_inet_port, "->?Dint\nFor $\"AF_INET\": The port number in host endian"),
+	TYPE_GETTER_F("inet_host", &sockaddr_inet_host, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET\": The host address in host endian"),
+	TYPE_GETTER_F("inet_port", &sockaddr_inet_port, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET\": The port number in host endian"),
 #endif /* AF_INET */
 #ifdef AF_INET6
-	TYPE_GETTER("inet6_port", &sockaddr_inet6_port, "->?Dint\nFor $\"AF_INET6\": The port number in host endian"),
-	TYPE_GETTER("inet6_host", &sockaddr_inet6_host, "->?Dint\nFor $\"AF_INET6\": The host address"),
-	TYPE_GETTER("inet6_flowinfo", &sockaddr_inet6_flowinfo, "->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier"),
-	TYPE_GETTER("inet6_scope_id", &sockaddr_inet6_scope_id, "->?Dint\nFor $\"AF_INET6\": The IPv6 scope id"),
+	TYPE_GETTER_F("inet6_port", &sockaddr_inet6_port, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET6\": The port number in host endian"),
+	TYPE_GETTER_F("inet6_host", &sockaddr_inet6_host, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET6\": The host address"),
+	TYPE_GETTER_F("inet6_flowinfo", &sockaddr_inet6_flowinfo, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET6\": The IPv6 flow identifier"),
+	TYPE_GETTER_F("inet6_scope_id", &sockaddr_inet6_scope_id, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\nFor $\"AF_INET6\": The IPv6 scope id"),
 #endif /* AF_INET6 */
 	TYPE_GETSET_END
 };

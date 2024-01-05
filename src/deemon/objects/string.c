@@ -1670,24 +1670,25 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	            "->?S?Dint\n"
 	            "Returns a proxy view for the characters of @this ?. as a sequence of "
 	            /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)"),
-	TYPE_GETTER("__hashed__", &string_hashed,
-	            "->?Dbool\n"
-	            "Evaluates to ?t if @this ?. has been hashed"),
-	TYPE_GETTER("__hasutf__", &string_hasutf,
-	            "->?Dbool\n"
-	            "Evaluates to ?t if @this ?. owns a UTF container"),
-	TYPE_GETTER("__hasregex__", &string_hasregex,
-	            "->?Dbool\n"
-	            "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
-	TYPE_GETTER(STR_first, &string_getfirst,
-	            "->?.\n"
-	            "#tValueError{@this ?. is empty}"
-	            "Returns the first character of @this ?."),
-	TYPE_GETTER(STR_last, &string_getlast,
-	            "->?.\n"
-	            "#tValueError{@this ?. is empty}"
-	            "Returns the last character of @this ?."),
-	TYPE_GETTER("__sizeof__", &string_sizeof, "->?Dint"),
+	TYPE_GETTER_F("__hashed__", &string_hashed, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Evaluates to ?t if @this ?. has been hashed"),
+	TYPE_GETTER_F("__hasutf__", &string_hasutf, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Evaluates to ?t if @this ?. owns a UTF container"),
+	TYPE_GETTER_F("__hasregex__", &string_hasregex, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
+	TYPE_GETTER_F(STR_first, &string_getfirst, TYPE_GETSET_FNOREFESCAPE,
+	              "->?.\n"
+	              "#tValueError{@this ?. is empty}"
+	              "Returns the first character of @this ?."),
+	TYPE_GETTER_F(STR_last, &string_getlast, TYPE_GETSET_FNOREFESCAPE,
+	              "->?.\n"
+	              "#tValueError{@this ?. is empty}"
+	              "Returns the last character of @this ?."),
+	TYPE_GETTER_F("__sizeof__", &string_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint"),
 
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS
 	TYPE_GETTER("__str_bytes__", &string_audit_str_bytes,

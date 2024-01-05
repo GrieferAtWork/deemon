@@ -983,69 +983,9 @@ err:
 	return -1;
 }
 
-/* Same as `Dee_function_generator_vnotoneref()', but only clear when
- * types are unknown, or don't have the "Dee_TF_NOREFESCAPE" flag. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vnotoneref_if_type_refescape(struct Dee_function_generator *__restrict self,
-                                                    Dee_vstackaddr_t n) {
-	Dee_vstackaddr_t i;
-	struct Dee_memstate *state = self->fg_state;
-	if unlikely(state->ms_stackc < n)
-		return err_illegal_stack_effect();
-	for (i = state->ms_stackc - n; i < state->ms_stackc; ++i) {
-		struct Dee_memloc *loc = &state->ms_stackv[i];
-		if (loc->ml_flags & MEMLOC_F_ONEREF) {
-			DeeTypeObject *loctype = Dee_memloc_typeof(loc);
-			if (loctype != NULL && (loctype->tp_features & Dee_TF_NOREFESCAPE))
-				continue; /* Type is known to not let references to its instances escape. */
-			if (Dee_memstate_isshared(state)) {
-				state = Dee_memstate_copy(state);
-				if unlikely(!state)
-					goto err;
-				Dee_memstate_decref_nokill(self->fg_state);
-				self->fg_state = state;
-				loc = &state->ms_stackv[i];
-			}
-			if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
-				goto err;
-		}
-	}
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vnotoneref_if_type_refescape_at(struct Dee_function_generator *__restrict self,
-                                                       Dee_vstackaddr_t off) {
-	struct Dee_memloc *loc;
-	struct Dee_memstate *state = self->fg_state;
-	if unlikely(state->ms_stackc < off)
-		return err_illegal_stack_effect();
-	loc = &state->ms_stackv[state->ms_stackc - off];
-	if (loc->ml_flags & MEMLOC_F_ONEREF) {
-		DeeTypeObject *loctype = Dee_memloc_typeof(loc);
-		if (loctype != NULL && (loctype->tp_features & Dee_TF_NOREFESCAPE))
-			return 0; /* Type is known to not let references to its instances escape. */
-		if (Dee_memstate_isshared(state)) {
-			state = Dee_memstate_copy(state);
-			if unlikely(!state)
-				goto err;
-			Dee_memstate_decref_nokill(self->fg_state);
-			self->fg_state = state;
-			loc = &state->ms_stackv[state->ms_stackc - off];
-		}
-		if unlikely(Dee_function_generator_gnotoneref_impl(self, loc))
-			goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vnotoneref_if_type_refescape_operator(struct Dee_function_generator *__restrict self,
-                                                             uint16_t operator_name, Dee_vstackaddr_t n) {
+Dee_function_generator_vnotoneref_if_operator(struct Dee_function_generator *__restrict self,
+                                              uint16_t operator_name, Dee_vstackaddr_t n) {
 	Dee_vstackaddr_t i;
 	struct Dee_memstate *state = self->fg_state;
 	if unlikely(state->ms_stackc < n)
@@ -1074,8 +1014,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vnotoneref_if_type_refescape_operator_at(struct Dee_function_generator *__restrict self,
-                                                                uint16_t operator_name, Dee_vstackaddr_t off) {
+Dee_function_generator_vnotoneref_if_operator_at(struct Dee_function_generator *__restrict self,
+                                                 uint16_t operator_name, Dee_vstackaddr_t off) {
 	struct Dee_memloc *loc;
 	struct Dee_memstate *state = self->fg_state;
 	if unlikely(state->ms_stackc < off)
@@ -2379,7 +2319,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
 		if (loc.ml_flags & MEMLOC_F_ONEREF) {
 			ASSERT(Dee_memloc_sameloc(&loc, Dee_function_generator_vtop(self)));
-			if unlikely(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, OPERATOR_BOOL, 1))
+			if unlikely(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_BOOL, 1))
 				goto err;
 			loc = *Dee_function_generator_vtop(self);
 		}
@@ -2535,7 +2475,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	struct Dee_except_exitinfo *except_exit;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
-	if unlikely(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, OPERATOR_ITERNEXT, 1))
+	if unlikely(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_ITERNEXT, 1))
 		goto err;
 	if (!always_pop_iterator) {
 		if unlikely(Dee_function_generator_vdup(self))

@@ -1736,12 +1736,12 @@ time_isdst(DeeTimeObject *__restrict self) {
 }
 
 PRIVATE struct type_method tpconst time_methods[] = {
-	TYPE_METHOD("format", &time_doformat,
-	            "(format:?Dstring)->?Dstring\n"
-	            "Format @this ?. object using a given strftime-style @format string"),
-	TYPE_METHOD("__format__", &time_doformat,
-	            "(format:?Dstring)->?Dstring\n"
-	            "Internal alias for ?#format"),
+	TYPE_METHOD_F("format", &time_doformat, TYPE_METHOD_FNOREFESCAPE,
+	              "(format:?Dstring)->?Dstring\n"
+	              "Format @this ?. object using a given strftime-style @format string"),
+	TYPE_METHOD_F("__format__", &time_doformat, TYPE_METHOD_FNOREFESCAPE,
+	              "(format:?Dstring)->?Dstring\n"
+	              "Internal alias for ?#format"),
 	TYPE_METHOD_END
 };
 
@@ -1978,7 +1978,7 @@ time_get_asdelta(DeeTimeObject *__restrict self) {
 PRIVATE struct type_getset tpconst time_getsets[] = {
 	/* Access to individual time parts by name */
 #define DEFINE_LIBTIME_AS_FIELD(name, doc) \
-	TYPE_GETSET(#name, &time_getval_##name, &time_delval_##name, &time_setval_##name, DOC("->?Dint\n" doc))
+	TYPE_GETSET_F(#name, &time_getval_##name, &time_delval_##name, &time_setval_##name, TYPE_GETSET_FNOREFESCAPE, DOC("->?Dint\n" doc))
 	DEFINE_LIBTIME_AS_FIELD(nanosecond, "Nanosecond of second"),
 	DEFINE_LIBTIME_AS_FIELD(microsecond, "Microsecond of second"),
 	DEFINE_LIBTIME_AS_FIELD(millisecond, "Millisecond of second"),
@@ -2010,16 +2010,16 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	DEFINE_LIBTIME_AS_FIELD(millennia, "Total millennia (since #C{01-01-0000}, using the average of $31_556_952_000 seconds per millennium)"),
 #undef DEFINE_LIBTIME_AS_FIELD
 
-	TYPE_GETSET("time_t", &time_get_time_t, &time_del_time_t, &time_set_time_t,
-	            "->?Dint\n"
-	            "Get/set the time as the number of seconds since #C{01-01-1970}"),
+	TYPE_GETSET_F("time_t", &time_get_time_t, &time_del_time_t, &time_set_time_t, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Get/set the time as the number of seconds since #C{01-01-1970}"),
 
-	TYPE_GETTER("istimestamp", &time_get_istimestamp,
-	            "->?Dbool\n"
-	            "Check if @this ?. object represents a timestamp (as opposed to ?#isdelta)"),
-	TYPE_GETTER("isdelta", &time_get_isdelta,
-	            "->?Dbool\n"
-	            "Check if @this ?. object represents a delta (as opposed to ?#istimestamp)"),
+	TYPE_GETTER_F("istimestamp", &time_get_istimestamp, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Check if @this ?. object represents a timestamp (as opposed to ?#isdelta)"),
+	TYPE_GETTER_F("isdelta", &time_get_isdelta, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Check if @this ?. object represents a delta (as opposed to ?#istimestamp)"),
 	TYPE_GETTER("astimestamp", &time_get_astimestamp,
 	            "->?.\n"
 	            "Re-return @this ?. object as a timestamp object. If @this is already a timestamp "
@@ -2034,13 +2034,13 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	            /**/ "object that is equal to ${this - Time(year: 0, month: 1, day: 1)}"),
 
 	/* Deprecated aliases */
-	TYPE_GETSET("time", &time_timepart_get, &time_timepart_del, &time_timepart_set,
-	            "->?GTime\nDeprecated alias for ?#timepart"),
-	TYPE_GETSET("part", &time_datepart_get, &time_datepart_del, &time_datepart_set,
-	            "->?GTime\nDeprecated alias for ?#datepart"),
-#define DEFINE_DEPRECATED_TIME_AS_FIELD(name, alias_for)                                            \
-	TYPE_GETSET(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, \
-	            "->?Dint\nDeprecated alias for ?#" #alias_for)
+	TYPE_GETSET_F("time", &time_timepart_get, &time_timepart_del, &time_timepart_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GTime\nDeprecated alias for ?#timepart"),
+	TYPE_GETSET_F("part", &time_datepart_get, &time_datepart_del, &time_datepart_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GTime\nDeprecated alias for ?#datepart"),
+#define DEFINE_DEPRECATED_TIME_AS_FIELD(name, alias_for)                                                                        \
+	TYPE_GETSET_F(name, &time_getval_##alias_for, &time_delval_##alias_for, &time_setval_##alias_for, TYPE_GETSET_FNOREFESCAPE, \
+	              "->?Dint\nDeprecated alias for ?#" #alias_for)
 	DEFINE_DEPRECATED_TIME_AS_FIELD("mic", microsecond),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("mil", millisecond),
 	DEFINE_DEPRECATED_TIME_AS_FIELD("sec", second),
@@ -2076,31 +2076,31 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	DEFINE_DEPRECATED_TIME_AS_FIELD("millenia", millennia),
 #undef DEFINE_DEPRECATED_TIME_AS_FIELD
 
-	TYPE_GETSET("timepart", &time_timepart_get, &time_timepart_del, &time_timepart_set,
-	            "->?GTime\n"
-	            "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
-	            "Read/write the time portion of @this time object, that is everything below the "
-	            /**/ "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
-	            "When setting, the passed objected is interpreted as an integer describing the "
-	            /**/ "number of microsecond since the day began"),
-	TYPE_GETSET("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set,
-	            "->?GTime\n"
-	            "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
-	            "#tValueError{Attempted to assign a time value with a non-zero ?#timepart}"
-	            "Read/write the date portion of @this time object, that is everything "
-	            /**/ "above the day-threshold, including ?#mday, ?#month and ?#year\n"
-	            "When setting, the passed objected is interpreted as an integer "
-	            /**/ "describing the number of microsecond since #C{01-01-0000}"),
+	TYPE_GETSET_F("timepart", &time_timepart_get, &time_timepart_del, &time_timepart_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GTime\n"
+	              "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
+	              "Read/write the time portion of @this time object, that is everything below the "
+	              /**/ "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
+	              "When setting, the passed objected is interpreted as an integer describing the "
+	              /**/ "number of microsecond since the day began"),
+	TYPE_GETSET_F("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set, TYPE_GETSET_FNOREFESCAPE,
+	              "->?GTime\n"
+	              "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
+	              "#tValueError{Attempted to assign a time value with a non-zero ?#timepart}"
+	              "Read/write the date portion of @this time object, that is everything "
+	              /**/ "above the day-threshold, including ?#mday, ?#month and ?#year\n"
+	              "When setting, the passed objected is interpreted as an integer "
+	              /**/ "describing the number of microsecond since #C{01-01-0000}"),
 
-	TYPE_GETTER("isdst", &time_isdst,
-	            "->?Dbool\n"
-	            "Returns ?t if DaylightSavingsTime is in active at @this time\n"
-	            "Note that this implementation does not perform any special "
-	            /**/ "handling no matter if daylight savings is active or not.\n"
-	            "Also note that this implementation does not account for different "
-	            /**/ "algorithms that may be used around the world to determine isdst "
-	            /**/ "being enabled, or certain countries/timezones that may not even "
-	            /**/ "have daylight savings time."),
+	TYPE_GETTER_F("isdst", &time_isdst, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if DaylightSavingsTime is in active at @this time\n"
+	              "Note that this implementation does not perform any special "
+	              /**/ "handling no matter if daylight savings is active or not.\n"
+	              "Also note that this implementation does not account for different "
+	              /**/ "algorithms that may be used around the world to determine isdst "
+	              /**/ "being enabled, or certain countries/timezones that may not even "
+	              /**/ "have daylight savings time."),
 	TYPE_GETSET_END
 };
 

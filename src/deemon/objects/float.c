@@ -598,31 +598,31 @@ float_get_isnormal(Float *__restrict self) {
 
 PRIVATE struct type_getset tpconst float_getsets[] = {
 #ifdef HAVE_float_get_abs
-	TYPE_GETTER("abs", &float_get_abs, "->?."),
+	TYPE_GETTER_F("abs", &float_get_abs, TYPE_GETSET_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_abs */
 #ifdef HAVE_float_get_trunc
-	TYPE_GETTER("trunc", &float_get_trunc, "->?."),
+	TYPE_GETTER_F("trunc", &float_get_trunc, TYPE_GETSET_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_trunc */
 #ifdef HAVE_float_get_floor
-	TYPE_GETTER("floor", &float_get_floor, "->?."),
+	TYPE_GETTER_F("floor", &float_get_floor, TYPE_GETSET_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_floor */
 #ifdef HAVE_float_get_ceil
-	TYPE_GETTER("ceil", &float_get_ceil, "->?."),
+	TYPE_GETTER_F("ceil", &float_get_ceil, TYPE_GETSET_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_ceil */
 #ifdef HAVE_float_get_round
-	TYPE_GETTER("round", &float_get_round, "->?."),
+	TYPE_GETTER_F("round", &float_get_round, TYPE_GETSET_FNOREFESCAPE, "->?."),
 #endif /* HAVE_float_get_round */
 #ifdef HAVE_float_get_isnan
-	TYPE_GETTER("isnan", &float_get_isnan, "->?Dbool"),
+	TYPE_GETTER_F("isnan", &float_get_isnan, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isnan */
 #ifdef HAVE_float_get_isinf
-	TYPE_GETTER("isinf", &float_get_isinf, "->?Dbool"),
+	TYPE_GETTER_F("isinf", &float_get_isinf, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isinf */
 #ifdef HAVE_float_get_isfinite
-	TYPE_GETTER("isfinite", &float_get_isfinite, "->?Dbool"),
+	TYPE_GETTER_F("isfinite", &float_get_isfinite, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isfinite */
 #ifdef HAVE_float_get_isnormal
-	TYPE_GETTER("isnormal", &float_get_isnormal, "->?Dbool"),
+	TYPE_GETTER_F("isnormal", &float_get_isnormal, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 #endif /* HAVE_float_get_isnormal */
 	TYPE_GETSET_END
 };
@@ -730,25 +730,25 @@ err:
 
 PRIVATE struct type_method tpconst float_methods[] = {
 #ifdef HAVE_float_nextafter
-	TYPE_METHOD("nextafter", &float_nextafter, "(y:?.)->?."),
+	TYPE_METHOD_F("nextafter", &float_nextafter, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?."),
 #endif /* HAVE_float_nextafter */
 #ifdef HAVE_float_isgreater
-	TYPE_METHOD("isgreater", &float_isgreater, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isgreater", &float_isgreater, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isgreater */
 #ifdef HAVE_float_isgreaterequal
-	TYPE_METHOD("isgreaterequal", &float_isgreaterequal, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isgreaterequal", &float_isgreaterequal, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isgreaterequal */
 #ifdef HAVE_float_isless
-	TYPE_METHOD("isless", &float_isless, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("isless", &float_isless, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_isless */
 #ifdef HAVE_float_islessequal
-	TYPE_METHOD("islessequal", &float_islessequal, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("islessequal", &float_islessequal, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_islessequal */
 #ifdef HAVE_float_islessgreater
-	TYPE_METHOD("islessgreater", &float_islessgreater, "(y:?.)->?Dbool"),
+	TYPE_METHOD_F("islessgreater", &float_islessgreater, TYPE_METHOD_FNOREFESCAPE, "(y:?.)->?Dbool"),
 #endif /* HAVE_float_islessgreater */
 #ifdef HAVE_float_isunordered
-	TYPE_METHOD("isunordered", &float_isunordered, "(y:?X2?.?Dint)->?Dbool"),
+	TYPE_METHOD_F("isunordered", &float_isunordered, TYPE_METHOD_FNOREFESCAPE, "(y:?X2?.?Dint)->?Dbool"),
 #endif /* HAVE_float_isunordered */
 	TYPE_METHOD_END
 };

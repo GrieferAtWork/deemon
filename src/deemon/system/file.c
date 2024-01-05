@@ -228,7 +228,7 @@ debugfile_isatty(DeeObject *__restrict UNUSED(self)) {
 }
 
 PRIVATE struct type_getset tpconst debug_file_getsets[] = {
-	TYPE_GETTER(STR_isatty, &debugfile_isatty, "->?Dbool"),
+	TYPE_GETTER_F(STR_isatty, &debugfile_isatty, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 	TYPE_GETSET_END
 };
 
@@ -2653,15 +2653,15 @@ is_an_std_file:
 
 
 PRIVATE struct type_getset tpconst sysfile_getsets[] = {
-	TYPE_GETTER(STR_isatty, &sysfile_isatty, "->?Dbool"),
+	TYPE_GETTER_F(STR_isatty, &sysfile_isatty, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 #ifndef DEESYSTEM_FILE_USE_STDIO /* In the stdio-backend, "filename" is a member instead of a getset! */
-	TYPE_GETTER(STR_filename, &DeeSystemFile_Filename, "->?Dstring"),
+	TYPE_GETTER_F(STR_filename, &DeeSystemFile_Filename, TYPE_GETSET_FNOREFESCAPE, "->?Dstring"),
 #endif /* !DEESYSTEM_FILE_USE_STDIO */
 #ifdef DEESYSTEM_FILE_USE_WINDOWS
-	TYPE_GETTER(STR_osfhandle_np, &sysfile_osfhandle_np, "->?Dint"),
+	TYPE_GETTER_F(STR_osfhandle_np, &sysfile_osfhandle_np, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 #endif /* DEESYSTEM_FILE_USE_WINDOWS */
 #ifdef DEESYSTEM_FILE_USE_UNIX
-	TYPE_GETTER(STR_fileno_np, &sysfile_fileno_np, "->?Dint"),
+	TYPE_GETTER_F(STR_fileno_np, &sysfile_fileno_np, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 #endif /* DEESYSTEM_FILE_USE_UNIX */
 #ifdef DEESYSTEM_FILE_USE_STDIO
 	TYPE_GETTER("file", &DeeObject_NewRef,
@@ -3043,12 +3043,12 @@ err:
 
 #define deemon_file_HAVE_sysfile_methods
 PRIVATE struct type_method tpconst sysfile_methods[] = {
-	TYPE_METHOD("flush", &sysfile_flush,
-	            "()\n"
-	            "An alias for #sync used for compatibility with ?ABuffer?DFile"),
-	TYPE_METHOD("setbuf", &sysfile_setbuf,
-	            "(string mode,size=!0)\n"
-	            "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile"),
+	TYPE_METHOD_F("flush", &sysfile_flush, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "An alias for #sync used for compatibility with ?ABuffer?DFile"),
+	TYPE_METHOD_F("setbuf", &sysfile_setbuf, TYPE_METHOD_FNOREFESCAPE,
+	              "(string mode,size=!0)\n"
+	              "Set the buffering mode in a manner that is compatible with ?Asetbuf?ABuffer?DFile"),
 	TYPE_METHOD_END
 };
 

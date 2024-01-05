@@ -658,12 +658,13 @@ PRIVATE struct type_member tpconst copyfile_progress_members[] = {
 };
 
 PRIVATE struct type_getset tpconst copyfile_progress_getsets[] = {
-	TYPE_GETSET("total",
-	            &copyfile_progress_total_get,
-	            &copyfile_progress_total_del,
-	            &copyfile_progress_total_set,
-	            "->?Dint\n"
-	            "Total total number of bytes that need to be copied"),
+	TYPE_GETSET_F("total",
+	              &copyfile_progress_total_get,
+	              &copyfile_progress_total_del,
+	              &copyfile_progress_total_set,
+	              TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Total total number of bytes that need to be copied"),
 	TYPE_GETSET_END
 };
 

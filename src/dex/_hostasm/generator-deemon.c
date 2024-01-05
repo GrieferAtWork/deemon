@@ -353,7 +353,7 @@ err:
 /* File, value  ->  N/A */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gen_print_to_file(struct Dee_function_generator *__restrict self,
-                  void const *api_function) {
+                  void const *api_function, uint16_t value_operator) {
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 		bool repr = false;
 		char const *print_after = NULL; /* 1-character string to print *after* the object (or NULL) */
@@ -413,12 +413,12 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vpop(self)); /* [File] */
 				} else if (WSTR_LENGTH(utf8) == 1) {
 					/* Special case: printing a single character allows us to use `DeeFile_Putc()' */
-					DO(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
+					DO(Dee_function_generator_vnotoneref_if_operator(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
 					DO(Dee_function_generator_vpush_immINT(self, utf8[0]));                       /* [File], File, ch */
 					DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2)); /* [File], status */
 					DO(Dee_function_generator_vcheckerr(self, GETC_ERR));                         /* [File] */
 				} else {
-					DO(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, FILE_OPERATOR_WRITE, 1)); /* [File], File */
+					DO(Dee_function_generator_vnotoneref_if_operator(self, FILE_OPERATOR_WRITE, 1)); /* [File], File */
 					DO(Dee_function_generator_vpush_addr(self, utf8));                                  /* [File], File, utf8 */
 					DO(Dee_function_generator_vpush_immSIZ(self, WSTR_LENGTH(utf8)));                   /* [File], File, utf8, length */
 					DO(Dee_function_generator_vcallapi(self, &DeeFile_WriteAll, VCALL_CC_M1INTPTR, 3)); /* [File], print_status */
@@ -439,7 +439,7 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		}
 
 		DO(Dee_function_generator_vswap(self));            /* value, File */
-		DO(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, repr ? OPERATOR_REPR : OPERATOR_STR, 1)); /* File, value */
+		DO(Dee_function_generator_vnotoneref_if_operator(self, repr ? OPERATOR_REPR : OPERATOR_STR, 1)); /* File, value */
 		DO(Dee_function_generator_vnotoneref_at(self, 2)); /* File, value */
 		if (print_after != NULL) {
 			DO(Dee_function_generator_vdup(self));     /* value, File, File */
@@ -451,7 +451,7 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vpop(self));                                        /* [File] */
 handle_print_after_and_pop_file:
 		if (print_after != NULL) {
-			DO(Dee_function_generator_vnotoneref_if_type_refescape_operator_at(self, FILE_OPERATOR_PUTC, 2)); /* File, ch */
+			DO(Dee_function_generator_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 2)); /* File, ch */
 			DO(Dee_function_generator_vpush_immINT(self, *print_after));                                      /* File, ch */
 			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));                     /* status */
 			return Dee_function_generator_vcheckerr(self, GETC_ERR);                                          /* - */
@@ -459,8 +459,8 @@ handle_print_after_and_pop_file:
 		return 0;
 	}
 fallback:
-	DO(Dee_function_generator_vnotoneref_if_type_refescape(self, 1)); /* File, value */
-	DO(Dee_function_generator_vnotoneref_at(self, 2));                /* File, value */
+	DO(Dee_function_generator_vnotoneref_if_operator_at(self, value_operator, 1)); /* File, value */
+	DO(Dee_function_generator_vnotoneref_at(self, 2));                             /* File, value */
 	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_INT, 2);
 handle_error_and_do_fallback:
 	DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
@@ -476,10 +476,11 @@ gen_print_with_stdout_in_vtop(struct Dee_function_generator *__restrict self,
                               Dee_instruction_t const *instr, uint16_t opcode,
                               bool repr) {
 	void const *api_function;
+	uint16_t value_operators;
 	switch (opcode) {
 
 	TARGET(ASM_PRINTNL)
-		DO(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, FILE_OPERATOR_PUTC, 1)); /* File */
+		DO(Dee_function_generator_vnotoneref_if_operator(self, FILE_OPERATOR_PUTC, 1)); /* File */
 		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALL_CC_INT, 1);
 
 	TARGET(ASM_PRINT)
@@ -489,6 +490,7 @@ gen_print_with_stdout_in_vtop(struct Dee_function_generator *__restrict self,
 	TARGET(ASM_PRINTALL_SP)
 	TARGET(ASM_PRINTALL_NL)
 		DO(Dee_function_generator_vswap(self)); /* File, value */
+		value_operators = repr ? OPERATOR_REPR : OPERATOR_STR;
 		switch (opcode) {
 		case ASM_PRINT:
 			api_function = repr ? (void const *)&DeeFile_PrintObjectRepr
@@ -504,12 +506,15 @@ gen_print_with_stdout_in_vtop(struct Dee_function_generator *__restrict self,
 			break;
 		case ASM_PRINTALL:
 			api_function = (void const *)&DeeFile_PrintAll;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		case ASM_PRINTALL_SP:
 			api_function = (void const *)&DeeFile_PrintAllSp;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		case ASM_PRINTALL_NL:
 			api_function = (void const *)&DeeFile_PrintAllNl;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		default: __builtin_unreachable();
 		}
@@ -540,11 +545,12 @@ gen_print_with_stdout_in_vtop(struct Dee_function_generator *__restrict self,
 			break;
 		default: __builtin_unreachable();
 		}
+		value_operators = OPERATOR_STR;
 	}	break;
 
 	default: __builtin_unreachable();
 	}
-	return gen_print_to_file(self, api_function);
+	return gen_print_to_file(self, api_function, value_operators);
 err:
 	return -1;
 }
@@ -1153,7 +1159,7 @@ do_jcc:
 				break;
 			default: __builtin_unreachable();
 			}
-			DO(Dee_function_generator_vnotoneref_if_type_refescape_operator(self, OPERATOR_REPR, 1)); /* File, value */
+			DO(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_REPR, 1)); /* File, value */
 			DO(Dee_function_generator_vnotoneref_at(self, 2)); /* File, value */
 			DO(Dee_function_generator_vswap(self));            /* value, File */
 			DO(Dee_function_generator_vdup(self));             /* value, File, File */
@@ -1167,7 +1173,7 @@ do_jcc:
 			/* TODO: Optimizations when the type of rhs is a constant. */
 			/* TODO: Optimizations when the type of lhs is known. */
 			DO(Dee_function_generator_vnotoneref(self, 1)); /* lhs, rhs */
-			DO(Dee_function_generator_vnotoneref_if_type_refescape_operator_at(self, OPERATOR_REPR, 2)); /* lhs, rhs */
+			DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_REPR, 2)); /* lhs, rhs */
 			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALL_CC_OBJECT, 2);
 
 		default: break;
@@ -1539,6 +1545,7 @@ do_jcc:
 	TARGET(ASM_FPRINTALL_SP)   /* print top, pop..., sp */
 	TARGET(ASM_FPRINTALL_NL) { /* print top, pop..., nl */
 		void const *api_function;
+		uint16_t value_operators = OPERATOR_STR;
 		switch (opcode) {
 		case ASM_FPRINT: /* print top, pop */
 			api_function = (void const *)&DeeFile_PrintObject;
@@ -1551,19 +1558,22 @@ do_jcc:
 			break;
 		case ASM_FPRINTALL: /* print top, pop... */
 			api_function = (void const *)&DeeFile_PrintAll;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		case ASM_FPRINTALL_SP: /* print top, pop..., sp */
 			api_function = (void const *)&DeeFile_PrintAllSp;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		case ASM_FPRINTALL_NL: /* print top, pop..., nl */
 			api_function = (void const *)&DeeFile_PrintAllNl;
+			value_operators = OPERATOR_SEQ_ENUMERATE;
 			break;
 		default: __builtin_unreachable();
 		}
 		DO(Dee_function_generator_vswap(self));    /* value, File */
 		DO(Dee_function_generator_vdup(self));     /* value, File, File */
 		DO(Dee_function_generator_vlrot(self, 3)); /* File, File, value */
-		return gen_print_to_file(self, api_function);
+		return gen_print_to_file(self, api_function, value_operators);
 	}	break;
 
 	TARGET(ASM_FPRINTNL) /* print top, nl */
@@ -1597,7 +1607,7 @@ do_jcc:
 		}
 		DO(Dee_function_generator_vdup(self));           /* File, File */
 		DO(Dee_function_generator_vpush_cid(self, cid)); /* File, File, value */
-		return gen_print_to_file(self, api_function);
+		return gen_print_to_file(self, api_function, OPERATOR_STR);
 	}	break;
 
 	TARGET(ASM_ENTER)
@@ -2135,22 +2145,22 @@ do_jcc:
 	//TODO: TARGET(ASM16_SUPERCALLATTR_THIS_RC)
 
 	TARGET(ASM_REDUCE_MIN)
-		DO(Dee_function_generator_vnotoneref_if_type_refescape(self, 1));
+		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 		DO(Dee_function_generator_vpush_addr(self, NULL));
 		return Dee_function_generator_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_MAX)
-		DO(Dee_function_generator_vnotoneref_if_type_refescape(self, 1));
+		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 		DO(Dee_function_generator_vpush_addr(self, NULL));
 		return Dee_function_generator_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_SUM)
-		DO(Dee_function_generator_vnotoneref_if_type_refescape(self, 1));
+		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 		return Dee_function_generator_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_ANY)
 	TARGET(ASM_REDUCE_ALL)
-		DO(Dee_function_generator_vnotoneref_if_type_refescape(self, 1));
+		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 		DO(Dee_function_generator_vcallapi(self,
 		                                   opcode == ASM_REDUCE_ANY ? (void const *)&DeeSeq_Any
 		                                                            : (void const *)&DeeSeq_All,

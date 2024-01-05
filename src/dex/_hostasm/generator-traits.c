@@ -109,15 +109,18 @@ yes:
 }
 
 
-/* Check if operator `operator_name' of `self' doesn't let references to the "this"
- * argument escape. (this is a more fine-grained version of Dee_TF_NOREFESCAPE) */
+/* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape.
+ * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
                               uint16_t operator_name) {
 	if (operator_name == OPERATOR_ITERSELF)
-		return false;
-	if (self->tp_features & Dee_TF_NOREFESCAPE)
-		return true;
+		return false; /* Creating iterators raw usually incref's the sequence */
+
+	/* TODO: Figure out a way for types to provide this information. */
+	(void)self;
+	(void)operator_name;
+
 	return false;
 }
 

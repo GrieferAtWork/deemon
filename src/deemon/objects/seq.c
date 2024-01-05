@@ -557,11 +557,12 @@ err:
 }
 
 PRIVATE struct type_getset tpconst seqiterator_getsets[] = {
-	TYPE_GETSET(STR_index,
-	            &seqiterator_index_get,
-	            &seqiterator_index_del,
-	            &seqiterator_index_set,
-	            "->?Dint"),
+	TYPE_GETSET_F(STR_index,
+	              &seqiterator_index_get,
+	              &seqiterator_index_del,
+	              &seqiterator_index_set,
+	              TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint"),
 	TYPE_GETSET_END
 };
 

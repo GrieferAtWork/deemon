@@ -129,7 +129,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst subrangeiterator_getsets[] = {
-	TYPE_GETTER(STR_seq, &subrangeiterator_seq_get, "->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN"),
+	TYPE_GETTER_F(STR_seq, &subrangeiterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN"),
 	TYPE_GETSET_END
 };
 
@@ -310,6 +310,10 @@ subrange_get_frozen(SubRange *__restrict self) {
 	inner_frozen = DeeObject_GetAttr(self->sr_seq, (DeeObject *)&str_seq);
 	if unlikely(!inner_frozen)
 		goto err;
+	if (inner_frozen == self->sr_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
 	result = DeeObject_MALLOC(SubRange);
 	if unlikely(!result)
 		goto err_inner;
@@ -787,6 +791,10 @@ subrangen_get_frozen(SubRangeN *__restrict self) {
 	inner_frozen = DeeObject_GetAttr(self->sr_seq, (DeeObject *)&str_seq);
 	if unlikely(!inner_frozen)
 		goto err;
+	if (inner_frozen == self->sr_seq) {
+		Dee_DecrefNokill(inner_frozen);
+		return_reference_(self);
+	}
 	result = DeeObject_MALLOC(SubRangeN);
 	if unlikely(!result)
 		goto err_inner;

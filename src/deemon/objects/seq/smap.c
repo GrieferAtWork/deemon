@@ -667,7 +667,7 @@ PRIVATE struct type_member tpconst smap_class_members[] = {
 DOC_REF(map_get_doc);
 
 PRIVATE struct type_method tpconst smap_methods[] = {
-	TYPE_METHOD(STR_get, &smap_get, DOC_GET(map_get_doc)),
+	TYPE_METHOD_F(STR_get, &smap_get, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
 	/* TODO: _SharedMap.byhash(template:?O)->?DSequence */
 	TYPE_METHOD_END
 };

@@ -1284,12 +1284,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t off);
 
-/* Same as `Dee_function_generator_vnotoneref()', but only clear when
- * types are unknown, or don't have the "Dee_TF_NOREFESCAPE" flag. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t off);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_operator(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t n);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_type_refescape_operator_at(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t off);
+/* Same as `Dee_function_generator_vnotoneref()', but only clear when the
+ * types aren't known, or the type's `operator_name' lets references escape.
+ * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_operator(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vnotoneref_if_operator_at(struct Dee_function_generator *__restrict self, uint16_t operator_name, Dee_vstackaddr_t off);
 
 /* Set the `MEMLOC_F_ONEREF' flag for VTOP. */
 #define Dee_function_generator_voneref_noalias(self) \
@@ -1831,11 +1830,13 @@ DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_IsOperatorBoolNoExcept(DeeTypeObject const *__restrict self);
 
-/* Check if operator `operator_name' of `self' doesn't let references to the "this"
- * argument escape. (this is a more fine-grained version of Dee_TF_NOREFESCAPE) */
+/* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape.
+ * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
                               uint16_t operator_name);
+#define OPERATOR_SEQ_ENUMERATE OPERATOR_VISIT /* Special operator to check if references leak if the object is enumerated
+                                               * via OPERATOR_ITER (though the created iterator is destroyed at the end). */
 
 /* Check if C-method attached to objects are constant expressions. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL

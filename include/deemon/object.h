@@ -1971,13 +1971,24 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 
 
 
-#define Dee_TYPE_METHOD_FNORMAL 0x0000 /* Normal type method flags. */
-#define Dee_TYPE_METHOD_FKWDS   0x0001 /* `m_func' takes a keywords argument.
-                                        * When set, `m_func' is actually a `dkwobjmethod_t' */
+/* Possible values for `struct Dee_type_method::m_flag' */
+#define Dee_TYPE_METHOD_FNORMAL      0x0000 /* Normal type method flags. */
+#define Dee_TYPE_METHOD_FKWDS        0x0001 /* `m_func' takes a keywords argument.
+                                             * When set, `m_func' is actually a `dkwobjmethod_t' */
+#define Dee_TYPE_METHOD_FNOREFESCAPE 0x8000 /* Optimizer hint flag: when invoked, this method never incref's
+                                             * the "this" argument (unless it also appears in argv/kw, or "this"
+                                             * has an accessible reference via some other operator chain that
+                                             * does not involve "this" directly)
+                                             * Note that if an incref does happen, it must *always* be followed
+                                             * by another decref before the function returns (i.e. refcnt on
+                                             * entry must match refcnt on exit (except as listed above))
+                                             *
+                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
 
 #ifdef DEE_SOURCE
-#define TYPE_METHOD_FNORMAL Dee_TYPE_METHOD_FNORMAL
-#define TYPE_METHOD_FKWDS   Dee_TYPE_METHOD_FKWDS
+#define TYPE_METHOD_FNORMAL      Dee_TYPE_METHOD_FNORMAL
+#define TYPE_METHOD_FKWDS        Dee_TYPE_METHOD_FKWDS
+#define TYPE_METHOD_FNOREFESCAPE Dee_TYPE_METHOD_FNOREFESCAPE
 #endif /* DEE_SOURCE */
 
 struct Dee_type_method {
@@ -1986,22 +1997,42 @@ struct Dee_type_method {
 	/*utf-8*/ char const *m_doc;    /* [0..1] Documentation string. */
 	uintptr_t             m_flag;   /* Method flags (Set of `Dee_TYPE_METHOD_F*'). */
 };
-#define Dee_TYPE_METHOD(name, func, doc) \
-	{ name, Dee_REQUIRES_OBJMETHOD(func), DOC(doc), Dee_TYPE_METHOD_FNORMAL }
-#define Dee_TYPE_METHOD_NODOC(name, func) \
-	{ name, Dee_REQUIRES_OBJMETHOD(func), NULL, Dee_TYPE_METHOD_FNORMAL }
-#define Dee_TYPE_KWMETHOD(name, func, doc) \
-	{ name, Dee_REQUIRES_KWOBJMETHOD_(func), DOC(doc), Dee_TYPE_METHOD_FKWDS }
-#define Dee_TYPE_KWMETHOD_NODOC(name, func) \
-	{ name, Dee_REQUIRES_KWOBJMETHOD_(func), NULL, Dee_TYPE_METHOD_FKWDS }
-#define Dee_TYPE_METHOD_END \
-	{ NULL, NULL, NULL, 0 }
+#define Dee_TYPE_METHOD(name, func, doc)             { name, Dee_REQUIRES_OBJMETHOD(func), DOC(doc), Dee_TYPE_METHOD_FNORMAL }
+#define Dee_TYPE_METHOD_NODOC(name, func)            { name, Dee_REQUIRES_OBJMETHOD(func), NULL, Dee_TYPE_METHOD_FNORMAL }
+#define Dee_TYPE_KWMETHOD(name, func, doc)           { name, Dee_REQUIRES_KWOBJMETHOD_(func), DOC(doc), Dee_TYPE_METHOD_FKWDS }
+#define Dee_TYPE_KWMETHOD_NODOC(name, func)          { name, Dee_REQUIRES_KWOBJMETHOD_(func), NULL, Dee_TYPE_METHOD_FKWDS }
+#define Dee_TYPE_METHOD_F(name, func, flags, doc)    { name, Dee_REQUIRES_OBJMETHOD(func), DOC(doc), (flags) }
+#define Dee_TYPE_METHOD_F_NODOC(name, func, flags)   { name, Dee_REQUIRES_OBJMETHOD(func), NULL, (flags) }
+#define Dee_TYPE_KWMETHOD_F(name, func, flags, doc)  { name, Dee_REQUIRES_KWOBJMETHOD_(func), DOC(doc), Dee_TYPE_METHOD_FKWDS | (flags) }
+#define Dee_TYPE_KWMETHOD_F_NODOC(name, func, flags) { name, Dee_REQUIRES_KWOBJMETHOD_(func), NULL, Dee_TYPE_METHOD_FKWDS | (flags) }
+#define Dee_TYPE_METHOD_END                          { NULL, NULL, NULL, 0 }
 #ifdef DEE_SOURCE
-#define TYPE_METHOD         Dee_TYPE_METHOD
-#define TYPE_METHOD_NODOC   Dee_TYPE_METHOD_NODOC
-#define TYPE_KWMETHOD       Dee_TYPE_KWMETHOD
-#define TYPE_KWMETHOD_NODOC Dee_TYPE_KWMETHOD_NODOC
-#define TYPE_METHOD_END     Dee_TYPE_METHOD_END
+#define TYPE_METHOD           Dee_TYPE_METHOD
+#define TYPE_METHOD_NODOC     Dee_TYPE_METHOD_NODOC
+#define TYPE_KWMETHOD         Dee_TYPE_KWMETHOD
+#define TYPE_KWMETHOD_NODOC   Dee_TYPE_KWMETHOD_NODOC
+#define TYPE_METHOD_F         Dee_TYPE_METHOD_F
+#define TYPE_METHOD_F_NODOC   Dee_TYPE_METHOD_F_NODOC
+#define TYPE_KWMETHOD_F       Dee_TYPE_KWMETHOD_F
+#define TYPE_KWMETHOD_F_NODOC Dee_TYPE_KWMETHOD_F_NODOC
+#define TYPE_METHOD_END       Dee_TYPE_METHOD_END
+#endif /* DEE_SOURCE */
+
+/* Possible values for `struct Dee_type_getset::gs_flag' */
+#define Dee_TYPE_GETSET_FNORMAL      0x0000 /* Normal type method flags. */
+#define Dee_TYPE_GETSET_FNOREFESCAPE 0x8000 /* Optimizer hint flag: none of the getset's callbacks ever incref(this)
+                                             * unless `gs_set's "value" is an alias of "this", or "this" has
+                                             * an accessible reference via some other operator chain that does
+                                             * not involve "this" directly)
+                                             * Note that if an incref does happen, it must *always* be followed
+                                             * by another decref before callbacks returns (i.e. refcnt on entry
+                                             * must match refcnt on exit (except as listed above))
+                                             *
+                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
+
+#ifdef DEE_SOURCE
+#define TYPE_GETSET_FNORMAL      Dee_TYPE_GETSET_FNORMAL
+#define TYPE_GETSET_FNOREFESCAPE Dee_TYPE_GETSET_FNOREFESCAPE
 #endif /* DEE_SOURCE */
 
 struct Dee_type_getset {
@@ -2012,26 +2043,43 @@ struct Dee_type_getset {
 	Dee_setmethod_t       gs_set;   /* [0..1] Setter callback. */
 	Dee_boundmethod_t     gs_bound; /* [0..1] Is-bound callback. (optional; if not given, call `gs_get' and see if it throws `UnboundAttribute' or `AttributeError' / `NotImplemented') */
 	/*utf-8*/ char const *gs_doc;   /* [0..1] Documentation string. */
+	uintptr_t             gs_flags; /* Getset flags (set of `Dee_TYPE_GETSET_F*') */
 };
-#define Dee_TYPE_GETSET(name, get, del, set, doc)               { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc) }
-#define Dee_TYPE_GETSET_NODOC(name, get, del, set)              { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL }
-#define Dee_TYPE_GETSET_BOUND(name, get, del, set, bound, doc)  { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc) }
-#define Dee_TYPE_GETSET_BOUND_NODOC(name, get, del, set, bound) { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL }
-#define Dee_TYPE_GETTER(name, get, doc)                         { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc) }
-#define Dee_TYPE_GETTER_NODOC(name, get)                        { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL }
-#define Dee_TYPE_GETTER_BOUND(name, get, doc)                   { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc) }
-#define Dee_TYPE_GETTER_BOUND_NODOC(name, get)                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL }
-#define Dee_TYPE_GETSET_END                                     { NULL, NULL, NULL, NULL, NULL, NULL }
+#define Dee_TYPE_GETSET(name, get, del, set, doc)                        { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_NODOC(name, get, del, set)                       { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_BOUND(name, get, del, set, bound, doc)           { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_BOUND_NODOC(name, get, del, set, bound)          { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER(name, get, doc)                                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_NODOC(name, get)                                 { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_BOUND(name, get, doc)                            { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_BOUND_NODOC(name, get)                           { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETSET_F(name, get, del, set, flags, doc)               { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), flags }
+#define Dee_TYPE_GETSET_F_NODOC(name, get, del, set, flags)              { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, flags }
+#define Dee_TYPE_GETSET_BOUND_F(name, get, del, set, bound, flags, doc)  { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), flags }
+#define Dee_TYPE_GETSET_BOUND_F_NODOC(name, get, del, set, bound, flags) { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL, flags }
+#define Dee_TYPE_GETTER_F(name, get, flags, doc)                         { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), flags }
+#define Dee_TYPE_GETTER_F_NODOC(name, get, flags)                        { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
+#define Dee_TYPE_GETTER_BOUND_F(name, get, flags, doc)                   { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), flags }
+#define Dee_TYPE_GETTER_BOUND_F_NODOC(name, get, flags)                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
+#define Dee_TYPE_GETSET_END                                              { NULL, NULL, NULL, NULL, NULL, NULL, 0 }
 #ifdef DEE_SOURCE
-#define TYPE_GETSET             Dee_TYPE_GETSET
-#define TYPE_GETSET_NODOC       Dee_TYPE_GETSET_NODOC
-#define TYPE_GETSET_BOUND       Dee_TYPE_GETSET_BOUND
-#define TYPE_GETSET_BOUND_NODOC Dee_TYPE_GETSET_BOUND_NODOC
-#define TYPE_GETTER             Dee_TYPE_GETTER
-#define TYPE_GETTER_NODOC       Dee_TYPE_GETTER_NODOC
-#define TYPE_GETTER_BOUND       Dee_TYPE_GETTER_BOUND
-#define TYPE_GETTER_BOUND_NODOC Dee_TYPE_GETTER_BOUND_NODOC
-#define TYPE_GETSET_END         Dee_TYPE_GETSET_END
+#define TYPE_GETSET               Dee_TYPE_GETSET
+#define TYPE_GETSET_NODOC         Dee_TYPE_GETSET_NODOC
+#define TYPE_GETSET_BOUND         Dee_TYPE_GETSET_BOUND
+#define TYPE_GETSET_BOUND_NODOC   Dee_TYPE_GETSET_BOUND_NODOC
+#define TYPE_GETTER               Dee_TYPE_GETTER
+#define TYPE_GETTER_NODOC         Dee_TYPE_GETTER_NODOC
+#define TYPE_GETTER_BOUND         Dee_TYPE_GETTER_BOUND
+#define TYPE_GETTER_BOUND_NODOC   Dee_TYPE_GETTER_BOUND_NODOC
+#define TYPE_GETSET_F             Dee_TYPE_GETSET_F
+#define TYPE_GETSET_F_NODOC       Dee_TYPE_GETSET_F_NODOC
+#define TYPE_GETSET_BOUND_F       Dee_TYPE_GETSET_BOUND_F
+#define TYPE_GETSET_BOUND_F_NODOC Dee_TYPE_GETSET_BOUND_F_NODOC
+#define TYPE_GETTER_F             Dee_TYPE_GETTER_F
+#define TYPE_GETTER_F_NODOC       Dee_TYPE_GETTER_F_NODOC
+#define TYPE_GETTER_BOUND_F       Dee_TYPE_GETTER_BOUND_F
+#define TYPE_GETTER_BOUND_F_NODOC Dee_TYPE_GETTER_BOUND_F_NODOC
+#define TYPE_GETSET_END           Dee_TYPE_GETSET_END
 #endif /* DEE_SOURCE */
 
 
@@ -2617,12 +2665,6 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                                             * An example for where this flag should be used would be an object that only ever
                                             * holds references to `String' or `int' objects, but not to objects of its own type,
                                             * or any sort of container object capable of holding instances of the same type. */
-#define Dee_TF_NOREFESCAPE      0x40000000 /* None of the type's getsets/methods/operators ever do `Dee_Incref(this)', so-long as `this' isn't
-                                            * aliased by other arguments passed to getsets/methods/operators. When this flag is set, _hostasm
-                                            * may be able to more easily track the lifetime of objects, and might even be able to allocate some
-                                            * objects on the stack instead of the heap.
-                                            * IMPORTANT: OPERATOR_ITERSELF is exluded here. If implemented, OPERATOR_ITERSELF *is* allowed to
-                                            *            incref the sequence in question (i.e. the this-argument). */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
@@ -2641,7 +2683,6 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
 #define TP_FINTERHITABLE    Dee_TP_FINTERHITABLE
 #define TF_NONE             Dee_TF_NONE
 #define TF_NONLOOPING       Dee_TF_NONLOOPING
-#define TF_NOREFESCAPE      Dee_TF_NOREFESCAPE
 #define TF_SINGLETON        Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */
 

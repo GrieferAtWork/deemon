@@ -148,7 +148,7 @@ stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst stringordinalsiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &stringordinalsiter_seq, "->?Ert:StringOrdinals"),
+	TYPE_GETTER_F(STR_seq, &stringordinalsiter_seq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:StringOrdinals"),
 	TYPE_GETSET_END
 };
 

@@ -175,12 +175,12 @@ typebasesiter_getseq(TypeMROIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst typemroiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &typemroiter_getseq, "->?Ert:TypeMRO"),
+	TYPE_GETTER_F(STR_seq, &typemroiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:TypeMRO"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst typebasesiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &typebasesiter_getseq, "->?Ert:TypeBases"),
+	TYPE_GETTER_F(STR_seq, &typebasesiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:TypeBases"),
 	TYPE_GETSET_END
 };
 

@@ -2483,15 +2483,12 @@ instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
-	/* NOTE: This singular member right here is allowed to break the Dee_TF_NOREFESCAPE rule.
-	 *       That is because the _hostasm re-compiler includes special handling to detect the
-	 *       C-level getter "&DeeObject_NewRef". */
 	TYPE_GETTER(STR_this, &DeeObject_NewRef, "Always re-return @this object"),
-	TYPE_GETTER(STR_class, &object_class_get,
-	            "->?DType\n"
-	            "Returns the class of @this Type, which is usually identical to "
-	            /**/ "?#type, however in the case of a super-proxy, the viewed "
-	            /**/ "Type is returned, rather than the actual Type."),
+	TYPE_GETTER_F(STR_class, &object_class_get, TYPE_GETSET_FNOREFESCAPE,
+	              "->?DType\n"
+	              "Returns the class of @this Type, which is usually identical to "
+	              /**/ "?#type, however in the case of a super-proxy, the viewed "
+	              /**/ "Type is returned, rather than the actual Type."),
 	TYPE_GETTER("super", &DeeSuper_Of,
 	            "->?DSuper\n"
 	            "Returns a view for the super-instance of @this object"),
@@ -2504,14 +2501,14 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            "The class-attribute table can be accessed through ?A__ctable__?DType."),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
-	TYPE_GETTER("id", &object_id_get,
-	            "->?Dint\n"
-	            "Returns a unique id identifying @this specific object instance"),
+	TYPE_GETTER_F("id", &object_id_get, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns a unique id identifying @this specific object instance"),
 
 	/* Utility function: Return the size of a given object (in bytes) */
-	TYPE_GETTER("__sizeof__", &object_sizeof,
-	            "->?Dint\n"
-	            "Return the size of @this object in bytes."),
+	TYPE_GETTER_F("__sizeof__", &object_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Return the size of @this object in bytes."),
 	TYPE_GETSET_END
 };
 
@@ -3798,21 +3795,21 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst type_methods[] = {
-	TYPE_KWMETHOD("baseof", &type_baseof,
-	              "(other:?.)->?Dbool\n"
-	              "Returns ?t if @this ?. is equal to, or a base of @other.\n"
-	              "If @other isn't a ?., ?f is returned.\n"
-	              "Using baseof, the behavior of ${x is y} can be approximated as:\n"
-	              "${"
-	              /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
-	              "}"),
-	TYPE_KWMETHOD("derivedfrom", &type_derivedfrom,
-	              "(other:?.)->?Dbool\n"
-	              "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
-	              "If @other isn't a ?., ?f is returned."),
-	TYPE_KWMETHOD("implements", &type_implements,
-	              "(other:?.)->?Dbool\n"
-	              "Check if @other appears in ?#__mro__"),
+	TYPE_KWMETHOD_F("baseof", &type_baseof, TYPE_METHOD_FNOREFESCAPE,
+	                "(other:?.)->?Dbool\n"
+	                "Returns ?t if @this ?. is equal to, or a base of @other.\n"
+	                "If @other isn't a ?., ?f is returned.\n"
+	                "Using baseof, the behavior of ${x is y} can be approximated as:\n"
+	                "${"
+	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
+	                "}"),
+	TYPE_KWMETHOD_F("derivedfrom", &type_derivedfrom, TYPE_METHOD_FNOREFESCAPE,
+	                "(other:?.)->?Dbool\n"
+	                "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
+	                "If @other isn't a ?., ?f is returned."),
+	TYPE_KWMETHOD_F("implements", &type_implements, TYPE_METHOD_FNOREFESCAPE,
+	                "(other:?.)->?Dbool\n"
+	                "Check if @other appears in ?#__mro__"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
 	              "(fields!!)->\n"
 	              "Allocate a new instance of @this ?. and initialize members in accordance to @fields.\n"
@@ -3860,120 +3857,120 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "x.appendmember();\n"
 	              /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
 	              "}"),
-	TYPE_KWMETHOD("hasattribute", &type_hasattribute,
-	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if this type, or one of its super-classes defines an "
-	              /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
-	              /**/ "Otherwise, return ?f:\n"
-	              "${"
-	              /**/ "function hasattribute(name: string): bool {\n"
-	              /**/ "	import attribute from deemon;\n"
-	              /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
-	              /**/ "}"
-	              "}\n"
-	              "Note that this function only searches instance-attributes, meaning that class/static "
-	              /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something \n"
-	              /**/ "like ?Afind?Dstring is.\n"
-	              "Note that this function is quite similar to #hasinstanceattr, however unlike "
-	              /**/ "that function, this function will stop searching the base-classes of @this ?. "
-	              /**/ "when one of that types implements one of the attribute operators."),
-	TYPE_KWMETHOD("hasprivateattribute", &type_hasprivateattribute,
-	              "(name:?Dstring)->?Dbool\n"
-	              "Similar to #hasattribute, but only looks at attributes declared "
-	              /**/ "by @this ?., excluding any defined by a super-class.\n"
-	              "${"
-	              /**/ "function hasprivateattribute(name: string): bool {\n"
-	              /**/ "	import attribute from deemon;\n"
-	              /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
-	              /**/ "}"
-	              "}"),
-	TYPE_KWMETHOD("hasoperator", &type_hasoperator,
-	              "(name:?Dint)->?Dbool\n"
-	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if instances of @this ?. implement an operator @name, "
-	              /**/ "or ?f if not, or if @name is not recognized as an operator "
-	              /**/ "available for the Type-Type that is ${type this}\n"
-	              "Note that this function also looks at the operators of "
-	              /**/ "base-classes, as well as that a user-defined class that has "
-	              /**/ "explicitly deleted an operator will cause this function to "
-	              /**/ "return true, indicative of that operator being implemented "
-	              /**/ "to cause an error to be thrown when invoked.\n"
-	              "The given @name is the so-called real operator name, "
-	              /**/ "as listed under Name in the following table:\n"
-	              "#T{Name|Symbolical name|Prototype~"
-	              /**/ "$\"constructor\"|$\"this\"|${this(args..., **kwds)}&"
-	              /**/ "$\"copy\"|$\"copy\"|${copy()}&"
-	              /**/ "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
-	              /**/ "$\"destructor\"|$\"#~this\"|${##~this()}&"
-	              /**/ "$\"assign\"|$\":=\"|${operator := (other)}&"
-	              /**/ "$\"str\"|$\"str\"|${operator str(): string}&"
-	              /**/ "$\"repr\"|$\"repr\"|${operator repr(): string}&"
-	              /**/ "$\"bool\"|$\"bool\"|${operator bool(): bool}&"
-	              /**/ "$\"call\"|$\"()\"|${operator ()(args!): Object}&"
-	              /**/ "$\"next\"|$\"next\"|${operator next(): Object}&"
-	              /**/ "$\"int\"|$\"int\"|${operator int(): int}&"
-	              /**/ "$\"float\"|$\"float\"|${operator float(): float}&"
-	              /**/ "$\"inv\"|$\"#~\"|${operator #~ (): Object}&"
-	              /**/ "$\"pos\"|$\"+\"|${operator + (): Object}&"
-	              /**/ "$\"neg\"|$\"-\"|${operator - (): Object}&"
-	              /**/ "$\"add\"|$\"+\"|${operator + (other): Object}&"
-	              /**/ "$\"sub\"|$\"-\"|${operator - (other): Object}&"
-	              /**/ "$\"mul\"|$\"*\"|${operator * (other): Object}&"
-	              /**/ "$\"div\"|$\"/\"|${operator / (other): Object}&"
-	              /**/ "$\"mod\"|$\"%\"|${operator % (other): Object}&"
-	              /**/ "$\"shl\"|$\"<<\"|${operator << (other): Object}&"
-	              /**/ "$\"shr\"|$\">>\"|${operator >> (other): Object}&"
-	              /**/ "$\"and\"|$\"#&\"|${operator #& (other): Object}&"
-	              /**/ "$\"or\"|$\"#|\"|${operator #| (other): Object}&"
-	              /**/ "$\"xor\"|$\"^\"|${operator ^ (other): Object}&"
-	              /**/ "$\"pow\"|$\"**\"|${operator ** (other): Object}&"
-	              /**/ "$\"inc\"|$\"++\"|${operator ++ (): Object}&"
-	              /**/ "$\"dec\"|$\"--\"|${operator -- (): Object}&"
-	              /**/ "$\"iadd\"|$\"+=\"|${operator += (other): Object}&"
-	              /**/ "$\"isub\"|$\"-=\"|${operator -= (other): Object}&"
-	              /**/ "$\"imul\"|$\"*=\"|${operator *= (other): Object}&"
-	              /**/ "$\"idiv\"|$\"/=\"|${operator /= (other): Object}&"
-	              /**/ "$\"imod\"|$\"%=\"|${operator %= (other): Object}&"
-	              /**/ "$\"ishl\"|$\"<<=\"|${operator <<= (other): Object}&"
-	              /**/ "$\"ishr\"|$\">>=\"|${operator >>= (other): Object}&"
-	              /**/ "$\"iand\"|$\"#&=\"|${operator #&= (other): Object}&"
-	              /**/ "$\"ior\"|$\"#|=\"|${operator #|= (other): Object}&"
-	              /**/ "$\"ixor\"|$\"^=\"|${operator ^= (other): Object}&"
-	              /**/ "$\"ipow\"|$\"**=\"|${operator **= (other): Object}&"
-	              /**/ "$\"hash\"|$\"hash\"|${operator hash(): int}&"
-	              /**/ "$\"eq\"|$\"==\"|${operator == (other): Object}&"
-	              /**/ "$\"ne\"|$\"!=\"|${operator != (other): Object}&"
-	              /**/ "$\"lo\"|$\"<\"|${operator < (other): Object}&"
-	              /**/ "$\"le\"|$\"<=\"|${operator <= (other): Object}&"
-	              /**/ "$\"gr\"|$\">\"|${operator > (other): Object}&"
-	              /**/ "$\"ge\"|$\">=\"|${operator >= (other): Object}&"
-	              /**/ "$\"iter\"|$\"iter\"|${operator iter(): Object}&"
-	              /**/ "$\"size\"|$\"##\"|${operator ## (): Object}&"
-	              /**/ "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
-	              /**/ "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
-	              /**/ "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"
-	              /**/ "$\"setitem\"|$\"[]=\"|${operator []= (index, value): none}&"
-	              /**/ "$\"getrange\"|$\"[:]\"|${operator [:] (start, end): Object}&"
-	              /**/ "$\"delrange\"|$\"del[:]\"|${operator del[:] (start, end): none}&"
-	              /**/ "$\"setrange\"|$\"[:]=\"|${operator [:]= (start, end, value): none}&"
-	              /**/ "$\"getattr\"|$\".\"|${operator . (name: string): Object}&"
-	              /**/ "$\"delattr\"|$\"del.\"|${operator del. (name: string): none}&"
-	              /**/ "$\"setattr\"|$\".=\"|${operator .= (name: string, value): none}&"
-	              /**/ "$\"enumattr\"|$\"enumattr\"|${operator enumattr(): {attribute...}}&"
-	              /**/ "$\"enter\"|$\"enter\"|${operator enter(): none}&"
-	              /**/ "$\"leave\"|$\"leave\"|${operator leave(): none}"
-	              "}"),
-	TYPE_KWMETHOD("hasprivateoperator", &type_hasprivateoperator,
-	              "(name:?Dint)->?Dbool\n"
-	              "(name:?Dstring)->?Dbool\n"
-	              "Returns ?t if instances of @this ?. implement an operator @name, "
-	              /**/ "or ?f if not, or if @name is not recognized as an operator provided "
-	              /**/ "available for the Type-Type that is ${type this}.\n"
-	              "Note that this function intentionally don't look at operators of "
-	              /**/ "base-classes (which is instead done by #hasoperator), meaning that "
-	              /**/ "inherited operators are not included, with the exception of explicitly "
-	              /**/ "inherited constructors.\n"
-	              "For a list of operator names, see #hasoperator."),
+	TYPE_KWMETHOD_F("hasattribute", &type_hasattribute, TYPE_METHOD_FNOREFESCAPE,
+	                "(name:?Dstring)->?Dbool\n"
+	                "Returns ?t if this type, or one of its super-classes defines an "
+	                /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
+	                /**/ "Otherwise, return ?f:\n"
+	                "${"
+	                /**/ "function hasattribute(name: string): bool {\n"
+	                /**/ "	import attribute from deemon;\n"
+	                /**/ "	return attribute.exists(this, name, \"ic\", \"ic\")\n"
+	                /**/ "}"
+	                "}\n"
+	                "Note that this function only searches instance-attributes, meaning that class/static "
+	                /**/ "attributes/members such as ?AIterator?Dstring. are not matched, whereas something \n"
+	                /**/ "like ?Afind?Dstring is.\n"
+	                "Note that this function is quite similar to #hasinstanceattr, however unlike "
+	                /**/ "that function, this function will stop searching the base-classes of @this ?. "
+	                /**/ "when one of that types implements one of the attribute operators."),
+	TYPE_KWMETHOD_F("hasprivateattribute", &type_hasprivateattribute, TYPE_METHOD_FNOREFESCAPE,
+	                "(name:?Dstring)->?Dbool\n"
+	                "Similar to #hasattribute, but only looks at attributes declared "
+	                /**/ "by @this ?., excluding any defined by a super-class.\n"
+	                "${"
+	                /**/ "function hasprivateattribute(name: string): bool {\n"
+	                /**/ "	import attribute from deemon;\n"
+	                /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
+	                /**/ "}"
+	                "}"),
+	TYPE_KWMETHOD_F("hasoperator", &type_hasoperator, TYPE_METHOD_FNOREFESCAPE,
+	                "(name:?Dint)->?Dbool\n"
+	                "(name:?Dstring)->?Dbool\n"
+	                "Returns ?t if instances of @this ?. implement an operator @name, "
+	                /**/ "or ?f if not, or if @name is not recognized as an operator "
+	                /**/ "available for the Type-Type that is ${type this}\n"
+	                "Note that this function also looks at the operators of "
+	                /**/ "base-classes, as well as that a user-defined class that has "
+	                /**/ "explicitly deleted an operator will cause this function to "
+	                /**/ "return true, indicative of that operator being implemented "
+	                /**/ "to cause an error to be thrown when invoked.\n"
+	                "The given @name is the so-called real operator name, "
+	                /**/ "as listed under Name in the following table:\n"
+	                "#T{Name|Symbolical name|Prototype~"
+	                /**/ "$\"constructor\"|$\"this\"|${this(args..., **kwds)}&"
+	                /**/ "$\"copy\"|$\"copy\"|${copy()}&"
+	                /**/ "$\"deepcopy\"|$\"deepcopy\"|${deepcopy()}&"
+	                /**/ "$\"destructor\"|$\"#~this\"|${##~this()}&"
+	                /**/ "$\"assign\"|$\":=\"|${operator := (other)}&"
+	                /**/ "$\"str\"|$\"str\"|${operator str(): string}&"
+	                /**/ "$\"repr\"|$\"repr\"|${operator repr(): string}&"
+	                /**/ "$\"bool\"|$\"bool\"|${operator bool(): bool}&"
+	                /**/ "$\"call\"|$\"()\"|${operator ()(args!): Object}&"
+	                /**/ "$\"next\"|$\"next\"|${operator next(): Object}&"
+	                /**/ "$\"int\"|$\"int\"|${operator int(): int}&"
+	                /**/ "$\"float\"|$\"float\"|${operator float(): float}&"
+	                /**/ "$\"inv\"|$\"#~\"|${operator #~ (): Object}&"
+	                /**/ "$\"pos\"|$\"+\"|${operator + (): Object}&"
+	                /**/ "$\"neg\"|$\"-\"|${operator - (): Object}&"
+	                /**/ "$\"add\"|$\"+\"|${operator + (other): Object}&"
+	                /**/ "$\"sub\"|$\"-\"|${operator - (other): Object}&"
+	                /**/ "$\"mul\"|$\"*\"|${operator * (other): Object}&"
+	                /**/ "$\"div\"|$\"/\"|${operator / (other): Object}&"
+	                /**/ "$\"mod\"|$\"%\"|${operator % (other): Object}&"
+	                /**/ "$\"shl\"|$\"<<\"|${operator << (other): Object}&"
+	                /**/ "$\"shr\"|$\">>\"|${operator >> (other): Object}&"
+	                /**/ "$\"and\"|$\"#&\"|${operator #& (other): Object}&"
+	                /**/ "$\"or\"|$\"#|\"|${operator #| (other): Object}&"
+	                /**/ "$\"xor\"|$\"^\"|${operator ^ (other): Object}&"
+	                /**/ "$\"pow\"|$\"**\"|${operator ** (other): Object}&"
+	                /**/ "$\"inc\"|$\"++\"|${operator ++ (): Object}&"
+	                /**/ "$\"dec\"|$\"--\"|${operator -- (): Object}&"
+	                /**/ "$\"iadd\"|$\"+=\"|${operator += (other): Object}&"
+	                /**/ "$\"isub\"|$\"-=\"|${operator -= (other): Object}&"
+	                /**/ "$\"imul\"|$\"*=\"|${operator *= (other): Object}&"
+	                /**/ "$\"idiv\"|$\"/=\"|${operator /= (other): Object}&"
+	                /**/ "$\"imod\"|$\"%=\"|${operator %= (other): Object}&"
+	                /**/ "$\"ishl\"|$\"<<=\"|${operator <<= (other): Object}&"
+	                /**/ "$\"ishr\"|$\">>=\"|${operator >>= (other): Object}&"
+	                /**/ "$\"iand\"|$\"#&=\"|${operator #&= (other): Object}&"
+	                /**/ "$\"ior\"|$\"#|=\"|${operator #|= (other): Object}&"
+	                /**/ "$\"ixor\"|$\"^=\"|${operator ^= (other): Object}&"
+	                /**/ "$\"ipow\"|$\"**=\"|${operator **= (other): Object}&"
+	                /**/ "$\"hash\"|$\"hash\"|${operator hash(): int}&"
+	                /**/ "$\"eq\"|$\"==\"|${operator == (other): Object}&"
+	                /**/ "$\"ne\"|$\"!=\"|${operator != (other): Object}&"
+	                /**/ "$\"lo\"|$\"<\"|${operator < (other): Object}&"
+	                /**/ "$\"le\"|$\"<=\"|${operator <= (other): Object}&"
+	                /**/ "$\"gr\"|$\">\"|${operator > (other): Object}&"
+	                /**/ "$\"ge\"|$\">=\"|${operator >= (other): Object}&"
+	                /**/ "$\"iter\"|$\"iter\"|${operator iter(): Object}&"
+	                /**/ "$\"size\"|$\"##\"|${operator ## (): Object}&"
+	                /**/ "$\"contains\"|$\"contains\"|${operator contains(item): Object}&"
+	                /**/ "$\"getitem\"|$\"[]\"|${operator [] (index): Object}&"
+	                /**/ "$\"delitem\"|$\"del[]\"|${operator del[] (index): none}&"
+	                /**/ "$\"setitem\"|$\"[]=\"|${operator []= (index, value): none}&"
+	                /**/ "$\"getrange\"|$\"[:]\"|${operator [:] (start, end): Object}&"
+	                /**/ "$\"delrange\"|$\"del[:]\"|${operator del[:] (start, end): none}&"
+	                /**/ "$\"setrange\"|$\"[:]=\"|${operator [:]= (start, end, value): none}&"
+	                /**/ "$\"getattr\"|$\".\"|${operator . (name: string): Object}&"
+	                /**/ "$\"delattr\"|$\"del.\"|${operator del. (name: string): none}&"
+	                /**/ "$\"setattr\"|$\".=\"|${operator .= (name: string, value): none}&"
+	                /**/ "$\"enumattr\"|$\"enumattr\"|${operator enumattr(): {attribute...}}&"
+	                /**/ "$\"enter\"|$\"enter\"|${operator enter(): none}&"
+	                /**/ "$\"leave\"|$\"leave\"|${operator leave(): none}"
+	                "}"),
+	TYPE_KWMETHOD_F("hasprivateoperator", &type_hasprivateoperator, TYPE_METHOD_FNOREFESCAPE,
+	                "(name:?Dint)->?Dbool\n"
+	                "(name:?Dstring)->?Dbool\n"
+	                "Returns ?t if instances of @this ?. implement an operator @name, "
+	                /**/ "or ?f if not, or if @name is not recognized as an operator provided "
+	                /**/ "available for the Type-Type that is ${type this}.\n"
+	                "Note that this function intentionally don't look at operators of "
+	                /**/ "base-classes (which is instead done by #hasoperator), meaning that "
+	                /**/ "inherited operators are not included, with the exception of explicitly "
+	                /**/ "inherited constructors.\n"
+	                "For a list of operator names, see #hasoperator."),
 	TYPE_KWMETHOD(STR_getinstanceattr, &type_getinstanceattr,
 	              "(name:?Dstring)->\n"
 	              "Lookup an attribute @name that is implemented by instances of @this ?.\n"
@@ -4007,23 +4004,23 @@ PRIVATE struct type_method tpconst type_methods[] = {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	TYPE_KWMETHOD("same_or_derived_from", &type_derivedfrom, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
-	TYPE_METHOD("derived_from", &type_derivedfrom_not_same, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
-	TYPE_METHOD("is_vartype", &type_is_vartype, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
-	TYPE_METHOD("is_heaptype", &type_is_heaptype, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
-	TYPE_METHOD("is_gctype", &type_is_gctype, "->?Dbool\nDeprecated alias for ?#__isgc__"),
-	TYPE_METHOD("is_final", &type_is_final, "->?Dbool\nDeprecated alias for ?#isfinal"),
-	TYPE_METHOD("is_class", &type_is_class, "->?Dbool\nDeprecated alias for ?#__isclass__"),
-	TYPE_METHOD("is_complete", &type_is_complete, "->?Dbool\nDeprecated (always returns ?t)"),
-	TYPE_METHOD("is_classtype", &type_is_classtype, "->?Dbool\nDeprecated (always returns ?f)"),
+	TYPE_KWMETHOD_F("same_or_derived_from", &type_derivedfrom, TYPE_METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD_F("derived_from", &type_derivedfrom_not_same, TYPE_METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_METHOD_F("is_vartype", &type_is_vartype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
+	TYPE_METHOD_F("is_heaptype", &type_is_heaptype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
+	TYPE_METHOD_F("is_gctype", &type_is_gctype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isgc__"),
+	TYPE_METHOD_F("is_final", &type_is_final, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#isfinal"),
+	TYPE_METHOD_F("is_class", &type_is_class, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isclass__"),
+	TYPE_METHOD_F("is_complete", &type_is_complete, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?t)"),
+	TYPE_METHOD_F("is_classtype", &type_is_classtype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?f)"),
 	TYPE_METHOD("is_pointer", &type_is_pointer, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_lvalue", &type_is_lvalue, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_structured", &type_is_structured, "->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_struct", &type_is_struct, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD("is_file", &type_is_filetype, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
-	TYPE_METHOD("is_super_base", &type_is_superbase, "->?Dbool\nDeprecated alias for ${this.__base__ !is bound}"),
+	TYPE_METHOD_F("is_file", &type_is_filetype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
+	TYPE_METHOD_F("is_super_base", &type_is_superbase, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ !is bound}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	TYPE_METHOD_END
@@ -4434,32 +4431,32 @@ PRIVATE struct type_member tpconst type_members[] = {
 };
 
 PRIVATE struct type_getset tpconst type_getsets[] = {
-	TYPE_GETTER("isbuffer", &type_isbuffer,
-	            "->?Dbool\n"
-	            "Returns ?t if @this Type implements the buffer interface\n"
-	            "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
+	TYPE_GETTER_F("isbuffer", &type_isbuffer, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Returns ?t if @this Type implements the buffer interface\n"
+	              "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
 	TYPE_GETTER("__bases__", &TypeBases_New,
 	            "->?Ert:TypeBases\n"
 	            "Returns a sequence type ?S?DType that represents all immediate bases of @this ?DType"),
 	TYPE_GETTER("__mro__", &TypeMRO_New,
 	            "->?Ert:TypeMRO\n"
 	            "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
-	TYPE_GETTER("__class__", &type_get_classdesc,
-	            "->?Ert:ClassDescriptor\n"
-	            "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
-	            "Returns the internal class-descriptor descriptor for a user-defined class"),
-	TYPE_GETTER("__issingleton__", &type_issingleton,
-	            "->?Dbool\n"
-	            "Check if @this Type describes a singleton object, requiring that @this type not be "
-	            /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
-	            /**/ "of the special internal types used to represent implementation-specific wrapper "
-	            /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
-	            /**/ "class descriptors or DDI information providers"),
-	TYPE_GETTER(STR___module__, &type_get_module,
-	            "->?X2?DModule?N\n"
-	            "Return the module used to define @this Type, or ?N if the module cannot "
-	            /**/ "be determined, which may be the case if the type doesn't have any defining "
-	            /**/ "features such as operators, or class/instance member functions"),
+	TYPE_GETTER_F("__class__", &type_get_classdesc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Ert:ClassDescriptor\n"
+	              "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
+	              "Returns the internal class-descriptor descriptor for a user-defined class"),
+	TYPE_GETTER_F("__issingleton__", &type_issingleton, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Check if @this Type describes a singleton object, requiring that @this type not be "
+	              /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
+	              /**/ "of the special internal types used to represent implementation-specific wrapper "
+	              /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
+	              /**/ "class descriptors or DDI information providers"),
+	TYPE_GETTER_F(STR___module__, &type_get_module, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?DModule?N\n"
+	              "Return the module used to define @this Type, or ?N if the module cannot "
+	              /**/ "be determined, which may be the case if the type doesn't have any defining "
+	              /**/ "features such as operators, or class/instance member functions"),
 	TYPE_GETTER("__ctable__", &type_get_ctable,
 	            "->?AObjectTable?Ert:ClassDescriptor\n"
 	            "Returns an indexable sequence describing the class object table, "
@@ -4490,20 +4487,20 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	            "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
 	            "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
 	            /**/ "operator ids to their user-friendly name, as described in ?#hasoperator"),
-	TYPE_GETTER("__instancesize__", &type_get_instancesize,
-	            "->?X2?Dint?N\n"
-	            "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
-	            /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)"),
+	TYPE_GETTER_F("__instancesize__", &type_get_instancesize, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?N\n"
+	              "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
+	              /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETTER("__instance_size__", &type_get_instancesize,
-	            "->?X2?Dint?N\n"
-	            "Deprecated alias for ?#__instancesize__"),
+	TYPE_GETTER_F("__instance_size__", &type_get_instancesize, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dint?N\n"
+	              "Deprecated alias for ?#__instancesize__"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER("__istypetype__", &type_istypetype, "->?Dbool"),
-	TYPE_GETTER("__isvarargconstructible__", &type_isvarargconstructible, "->?Dbool"),
-	TYPE_GETTER("__isconstructible__", &type_isconstructible, "->?Dbool"),
-	TYPE_GETTER("__iscopyable__", &type_iscopyable, "->?Dbool"),
-	TYPE_GETTER("__gcpriority__", &type_gcpriority, "->?Dint"),
+	TYPE_GETTER_F("__istypetype__", &type_istypetype, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

@@ -3042,144 +3042,144 @@ err:
 
 
 PRIVATE struct type_getset tpconst list_getsets[] = {
-	TYPE_GETSET("allocated", &list_getallocated, &list_delallocated, &list_setallocated,
-	            "->?Dint\n"
-	            "#tValueError{Attmpted to set the List preallocation size to a value lower than ${##this}}"
-	            "The number of allocated items\n"
-	            "When using performing a del-operation on this property, the allocation will "
-	            /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
-	            "Note however that when lowering the amount of allocated vector space, failure to "
-	            /**/ "reallocate the internal List vector is ignored, and the allocated List size will "
-	            /**/ "not be modified\n"
-	            "Similarly, failure to allocate more memory when increasing the allocated size "
-	            /**/ "of a List is ignored, with the previously allocated size remaining unchanged.\n"
-	            "${"
-	            /**/ "del mylist.allocated;\n"
-	            /**/ "/* Same as this: */\n"
-	            /**/ "mylist.shrink();\n"
-	            /**/ "/* And same as an atomic variant of: */\n"
-	            /**/ "mylist.allocated = ##mylist;"
-	            "}"),
-	TYPE_GETSET(STR_first, &list_get_first, &list_del_first, &list_set_first,
-	            "->\n"
-	            "#r{The first item from @this List}"),
-	TYPE_GETSET(STR_last, &list_get_last, &list_del_last, &list_set_last,
-	            "->\n"
-	            "#r{The last item from @this List}"),
-	TYPE_GETTER(STR_frozen, &list_get_frozen,
-	            "->?DTuple\n"
-	            "Return a copy of the contents of @this List as an immutable sequence"),
-	TYPE_GETTER("__sizeof__", &list_sizeof, "->?Dint"),
+	TYPE_GETSET_F("allocated", &list_getallocated, &list_delallocated, &list_setallocated, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{Attmpted to set the List preallocation size to a value lower than ${##this}}"
+	              "The number of allocated items\n"
+	              "When using performing a del-operation on this property, the allocation will "
+	              /**/ "be set to use the least amount of memory, which is achived by setting it to ${##this}.\n"
+	              "Note however that when lowering the amount of allocated vector space, failure to "
+	              /**/ "reallocate the internal List vector is ignored, and the allocated List size will "
+	              /**/ "not be modified\n"
+	              "Similarly, failure to allocate more memory when increasing the allocated size "
+	              /**/ "of a List is ignored, with the previously allocated size remaining unchanged.\n"
+	              "${"
+	              /**/ "del mylist.allocated;\n"
+	              /**/ "/* Same as this: */\n"
+	              /**/ "mylist.shrink();\n"
+	              /**/ "/* And same as an atomic variant of: */\n"
+	              /**/ "mylist.allocated = ##mylist;"
+	              "}"),
+	TYPE_GETSET_F(STR_first, &list_get_first, &list_del_first, &list_set_first, TYPE_GETSET_FNOREFESCAPE,
+	              "->\n"
+	              "#r{The first item from @this List}"),
+	TYPE_GETSET_F(STR_last, &list_get_last, &list_del_last, &list_set_last, TYPE_GETSET_FNOREFESCAPE,
+	              "->\n"
+	              "#r{The last item from @this List}"),
+	TYPE_GETTER_F(STR_frozen, &list_get_frozen, TYPE_GETSET_FNOREFESCAPE,
+	              "->?DTuple\n"
+	              "Return a copy of the contents of @this List as an immutable sequence"),
+	TYPE_GETTER_F("__sizeof__", &list_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_method tpconst list_methods[] = {
-	TYPE_METHOD(STR_append, &list_append,
-	            "(items!)\n"
-	            "Append all the given @items at the end of @this List"),
-	TYPE_METHOD(STR_extend, &list_extend,
-	            "(items:?S?O)\n"
-	            "Append all elements from @items to the end of @this List"),
-	TYPE_KWMETHOD(STR_resize, &list_resize,
-	              "(newsize:?Dint,filler=!N)\n"
-	              "#tIntegerOverflow{The given @newsize is lower than $0}"
-	              "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
-	TYPE_KWMETHOD(STR_insert, &list_insert,
-	              "(index:?Dint,item)\n"
-	              "#tIntegerOverflow{The given @index is too large}"
-	              "Insert the given @item at the specified @index\n"
-	              "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
-	TYPE_KWMETHOD(STR_insertall, &list_insertall,
-	              "(index:?Dint,seq:?S?O)\n"
-	              "#tIntegerOverflow{The given @index is too large}"
-	              "Insert all items from a sequence @seq at the specified @index\n"
-	              "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
-	TYPE_KWMETHOD(STR_erase, &list_erase,
-	              "(index:?Dint,count=!1)->?Dint\n"
-	              "#tIntegerOverflow{The given @index or @count are lower than $0, or too large}"
-	              "#r{The number of erased items (Zero when @index is out of bounds)}"
-	              "Erase up to @count items starting at the given @index"),
-	TYPE_KWMETHOD(STR_pop, &list_pop,
-	              "(index=!-1)->\n"
-	              "#tIndexError{The given @index is out of bounds}"
-	              "#r{Items that was removed}"
-	              "Pops an item at the given @{index}. When @index is lower "
-	              "than $0, add ${##this} prior to evaluation, meaning that "
-	              "negative numbers pop items relative to the end of the List"),
-	TYPE_KWMETHOD(STR_xch, &list_xch,
-	              "(index:?Dint,value)->\n"
-	              "#tIndexError{The given @index is out of bounds}"
-	              "Exchange the @index'th item of @this List with @value, returning the item's old value"),
-	TYPE_METHOD(STR_clear, &list_clear,
-	            "()\n"
-	            "Clear all items from @this List"),
-	TYPE_KWMETHOD(STR_removeif, &list_removeif,
-	              "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
-	              "#r{The number of removed items}"
-	              "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
-	TYPE_METHOD(STR_pushfront, &list_pushfront,
-	            "(item)\n"
-	            "Inserts @item at the fron of this @this List. Same as ${this.insert(0,item)}"),
-	TYPE_METHOD(STR_pushback, &list_pushback,
-	            "(item)\n"
-	            "Inserts @item at the end of this @this List. Same as ?#append"),
-	TYPE_METHOD(STR_popfront, &list_popfront,
-	            "->\n"
-	            "Same as ${this.pop(0)}"),
-	TYPE_METHOD(STR_popback, &list_popback,
-	            "->\n"
-	            "Same as ${this.pop(-1)}"),
+	TYPE_METHOD_F(STR_append, &list_append, TYPE_METHOD_FNOREFESCAPE,
+	              "(items!)\n"
+	              "Append all the given @items at the end of @this List"),
+	TYPE_METHOD_F(STR_extend, &list_extend, TYPE_METHOD_FNOREFESCAPE,
+	              "(items:?S?O)\n"
+	              "Append all elements from @items to the end of @this List"),
+	TYPE_KWMETHOD_F(STR_resize, &list_resize, TYPE_METHOD_FNOREFESCAPE,
+	                "(newsize:?Dint,filler=!N)\n"
+	                "#tIntegerOverflow{The given @newsize is lower than $0}"
+	                "Resize the size of @this List to match @newsize, using @filler to initialize new items"),
+	TYPE_KWMETHOD_F(STR_insert, &list_insert, TYPE_METHOD_FNOREFESCAPE,
+	                "(index:?Dint,item)\n"
+	                "#tIntegerOverflow{The given @index is too large}"
+	                "Insert the given @item at the specified @index\n"
+	                "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
+	TYPE_KWMETHOD_F(STR_insertall, &list_insertall, TYPE_METHOD_FNOREFESCAPE,
+	                "(index:?Dint,seq:?S?O)\n"
+	                "#tIntegerOverflow{The given @index is too large}"
+	                "Insert all items from a sequence @seq at the specified @index\n"
+	                "When @index is lower than $0, or greater thatn ${##this}, append items at the end"),
+	TYPE_KWMETHOD_F(STR_erase, &list_erase, TYPE_METHOD_FNOREFESCAPE,
+	                "(index:?Dint,count=!1)->?Dint\n"
+	                "#tIntegerOverflow{The given @index or @count are lower than $0, or too large}"
+	                "#r{The number of erased items (Zero when @index is out of bounds)}"
+	                "Erase up to @count items starting at the given @index"),
+	TYPE_KWMETHOD_F(STR_pop, &list_pop, TYPE_METHOD_FNOREFESCAPE,
+	                "(index=!-1)->\n"
+	                "#tIndexError{The given @index is out of bounds}"
+	                "#r{Items that was removed}"
+	                "Pops an item at the given @{index}. When @index is lower "
+	                "than $0, add ${##this} prior to evaluation, meaning that "
+	                "negative numbers pop items relative to the end of the List"),
+	TYPE_KWMETHOD_F(STR_xch, &list_xch, TYPE_METHOD_FNOREFESCAPE,
+	                "(index:?Dint,value)->\n"
+	                "#tIndexError{The given @index is out of bounds}"
+	                "Exchange the @index'th item of @this List with @value, returning the item's old value"),
+	TYPE_METHOD_F(STR_clear, &list_clear, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Clear all items from @this List"),
+	TYPE_KWMETHOD_F(STR_removeif, &list_removeif, TYPE_METHOD_FNOREFESCAPE,
+	                "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
+	                "#r{The number of removed items}"
+	                "Remove all elements within the given sub-range for which ${!!should(elem)} is true"),
+	TYPE_METHOD_F(STR_pushfront, &list_pushfront, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Inserts @item at the fron of this @this List. Same as ${this.insert(0,item)}"),
+	TYPE_METHOD_F(STR_pushback, &list_pushback, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Inserts @item at the end of this @this List. Same as ?#append"),
+	TYPE_METHOD_F(STR_popfront, &list_popfront, TYPE_METHOD_FNOREFESCAPE,
+	              "->\n"
+	              "Same as ${this.pop(0)}"),
+	TYPE_METHOD_F(STR_popback, &list_popback, TYPE_METHOD_FNOREFESCAPE,
+	              "->\n"
+	              "Same as ${this.pop(-1)}"),
 
 	/* List ordering functions. */
-	TYPE_METHOD("reverse", &list_reverse,
-	            "()\n"
-	            "Reverse the order of all the elements of @this List"),
-	TYPE_KWMETHOD("sort", &list_sort,
+	TYPE_METHOD_F("reverse", &list_reverse, TYPE_METHOD_FNOREFESCAPE,
 	              "()\n"
-	              "(key:?DCallable)\n"
-	              "Sort the elements of @this List in ascending order, or in accordance to @key"),
-	TYPE_KWMETHOD("sorted", &list_sorted,
-	              "->?S?O\n"
-	              "(key:?DCallable)->?S?O\n"
-	              "Return a sequence that contains all elements from @this sequence, "
-	              /**/ "but sorted in ascending order, or in accordance to @key\n"
-	              "The type of sequence returned is implementation-defined"),
+	              "Reverse the order of all the elements of @this List"),
+	TYPE_KWMETHOD_F("sort", &list_sort, TYPE_METHOD_FNOREFESCAPE,
+	                "()\n"
+	                "(key:?DCallable)\n"
+	                "Sort the elements of @this List in ascending order, or in accordance to @key"),
+	TYPE_KWMETHOD_F("sorted", &list_sorted, TYPE_METHOD_FNOREFESCAPE,
+	                "->?S?O\n"
+	                "(key:?DCallable)->?S?O\n"
+	                "Return a sequence that contains all elements from @this sequence, "
+	                /**/ "but sorted in ascending order, or in accordance to @key\n"
+	                "The type of sequence returned is implementation-defined"),
 
 	/* List buffer functions. */
-	TYPE_METHOD("reserve", &list_reserve,
-	            "(size:?Dint)\n"
-	            "Reserve (preallocate) memory for @size items\n"
-	            "Failures to pre-allocate memory are silently ignored, in which case ?#allocated will remain unchanged\n"
-	            "If @size is lower than the currently ?#allocated size, the function becomes a no-op"),
-	TYPE_METHOD("shrink", &list_shrink,
-	            "()\n"
-	            "Release any pre-allocated, but unused memory, setting ?#allocated to the length of @this List"),
+	TYPE_METHOD_F("reserve", &list_reserve, TYPE_METHOD_FNOREFESCAPE,
+	              "(size:?Dint)\n"
+	              "Reserve (preallocate) memory for @size items\n"
+	              "Failures to pre-allocate memory are silently ignored, in which case ?#allocated will remain unchanged\n"
+	              "If @size is lower than the currently ?#allocated size, the function becomes a no-op"),
+	TYPE_METHOD_F("shrink", &list_shrink, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Release any pre-allocated, but unused memory, setting ?#allocated to the length of @this List"),
 
 	/* Deprecated aliases / functions. */
-	TYPE_KWMETHOD("remove_if", &list_removeif,
-	              "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
-	              "Deprecated alias for ?#removeif"),
-	TYPE_KWMETHOD("insert_list", &list_insertall,
-	              "(index:?Dint,items:?S?O)\n"
-	              "Deprecated alias for ?#insertall"),
-	TYPE_METHOD("insert_iter", &list_insertiter_deprecated,
-	            "(index:?Dint,iter:?DIterator)\n"
-	            "Deprecated alias for ${this.insertall(index, (iter as iterator from deemon).future)}"),
-	TYPE_METHOD("push_front", &list_pushfront,
-	            "(item)\n"
-	            "Deprecated alias for ?#pushfront"),
-	TYPE_METHOD("push_back", &list_pushback,
-	            "(item)\n"
-	            "Deprecated alias for ?#pushback"),
-	TYPE_METHOD("pop_front", &list_popfront,
-	            "(item)\n"
-	            "Deprecated alias for ?#popfront"),
-	TYPE_METHOD("pop_back", &list_popback,
-	            "(item)\n"
-	            "Deprecated alias for ?#popback"),
-	TYPE_METHOD("shrink_to_fit", &list_shrink,
-	            "()\n"
-	            "Deprecated alias for ?#shrink"),
+	TYPE_KWMETHOD_F("remove_if", &list_removeif, TYPE_METHOD_FNOREFESCAPE,
+	                "(should:?DCallable,start=!0,end=!-1)->?Dint\n"
+	                "Deprecated alias for ?#removeif"),
+	TYPE_KWMETHOD_F("insert_list", &list_insertall, TYPE_METHOD_FNOREFESCAPE,
+	                "(index:?Dint,items:?S?O)\n"
+	                "Deprecated alias for ?#insertall"),
+	TYPE_METHOD_F("insert_iter", &list_insertiter_deprecated, TYPE_METHOD_FNOREFESCAPE,
+	              "(index:?Dint,iter:?DIterator)\n"
+	              "Deprecated alias for ${this.insertall(index, (iter as iterator from deemon).future)}"),
+	TYPE_METHOD_F("push_front", &list_pushfront, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Deprecated alias for ?#pushfront"),
+	TYPE_METHOD_F("push_back", &list_pushback, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Deprecated alias for ?#pushback"),
+	TYPE_METHOD_F("pop_front", &list_popfront, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Deprecated alias for ?#popfront"),
+	TYPE_METHOD_F("pop_back", &list_popback, TYPE_METHOD_FNOREFESCAPE,
+	              "(item)\n"
+	              "Deprecated alias for ?#popback"),
+	TYPE_METHOD_F("shrink_to_fit", &list_shrink, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Deprecated alias for ?#shrink"),
 	/* TODO: DEE_METHODDEF_v100("sorted_insert", member(&_deelist_sorted_insert), DEE_DOC_AUTO),
 	 * TODO: DEE_METHODDEF_v100("fill", member(&_deelist_fill), DEE_DOC_AUTO),
 	 * TODO: DEE_METHODDEF_v100("unique", member(&_deelist_unique), DEE_DOC_AUTO),
@@ -3842,7 +3842,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 	                         "Perform a lexicographical comparison between @this List and the given @other sequence"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
 	/* .tp_weakrefs = */ WEAKREF_SUPPORT_ADDR(List),
-	/* .tp_features = */ TF_NOREFESCAPE, /* TODO: This flag can be set for pretty much *everything* */
+	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{

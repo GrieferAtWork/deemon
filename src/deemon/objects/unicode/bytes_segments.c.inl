@@ -142,7 +142,7 @@ bsegiter_getseq(BytesSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst bsegiter_getsets[] = {
-	TYPE_GETTER(STR_seq, &bsegiter_getseq, "->?Ert:BytesSegments"),
+	TYPE_GETTER_F(STR_seq, &bsegiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:BytesSegments"),
 	TYPE_GETSET_END
 };
 

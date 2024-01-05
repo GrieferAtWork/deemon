@@ -1216,15 +1216,15 @@ err_r:
 }
 
 PRIVATE struct type_getset tpconst jf_getsets[] = {
-	TYPE_GETTER("__name__", &jf_getname,
-	            "->?X2?Dstring?N"),
-	TYPE_GETTER("__doc__", &jf_getdoc,
-	            "->?N\nAlways returns ?N (doc strings aren't processed in JIT code)"),
+	TYPE_GETTER_F("__name__", &jf_getname, TYPE_GETSET_FNOREFESCAPE,
+	              "->?X2?Dstring?N"),
+	TYPE_GETTER_F("__doc__", &jf_getdoc, TYPE_GETSET_FNOREFESCAPE,
+	              "->?N\nAlways returns ?N (doc strings aren't processed in JIT code)"),
 	TYPE_GETTER("__kwds__", &jf_getkwds,
 	            "->?S?Dstring"),
-	TYPE_GETTER("__text__", &jf_gettext,
-	            "->?Dstring\n"
-	            "Returns the source text executed by @this function"),
+	TYPE_GETTER_F("__text__", &jf_gettext, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dstring\n"
+	              "Returns the source text executed by @this function"),
 	/* TODO: __default__ */
 	TYPE_GETTER("__refs__", &jf_getrefs,
 	            "->?S?O\n"
@@ -1237,12 +1237,12 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	/* TODO: __operatorname__ */
 	/* TODO: __property__ */
 	/* etc... */
-	TYPE_GETTER("hasvarargs", &jf_hasvarargs,
-	            "->?Dbool\n"
-	            "Check if @this function accepts variable arguments as overflow"),
-	TYPE_GETTER("hasvarkwds", &jf_hasvarkwds,
-	            "->?Dbool\n"
-	            "Check if @this function accepts variable keyword arguments as overflow"),
+	TYPE_GETTER_F("hasvarargs", &jf_hasvarargs, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Check if @this function accepts variable arguments as overflow"),
+	TYPE_GETTER_F("hasvarkwds", &jf_hasvarkwds, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Check if @this function accepts variable keyword arguments as overflow"),
 	TYPE_GETSET_END
 };
 

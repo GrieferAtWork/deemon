@@ -2404,105 +2404,105 @@ err:
 
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	TYPE_GETTER("st_dev", &stat_get_dev,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid device information}"
-	            "Return the device number of the storage device on which the stat-file is located"),
-	TYPE_GETTER("st_ino", &stat_get_ino,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid inode information}"
-	            "Returns the inode number or file-id of the stat-file"),
-	TYPE_GETTER("st_mode", &stat_get_mode,
-	            "->?Dint\n"
-	            "Returns a bitset describing the access permissions and mode of the stat-file. "
-	            "For more information, see ?GS_IFMT"),
-	TYPE_GETTER("st_nlink", &stat_get_nlink,
-	            "->?Dint\n"
-	            "Returns the number of existing hard-links to this stat-file"),
-	TYPE_GETTER("st_uid", &stat_get_uid,
-	            "->?Guser\n"
-	            "Returns a descriptor for the user owning this file"),
-	TYPE_GETTER("st_gid", &stat_get_gid,
-	            "->?Ggroup\n"
-	            "Returns a descriptor for the group owning this file"),
-	TYPE_GETTER("st_rdev", &stat_get_rdev,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid r-dev information}"
-	            "Returns the device ID of the character/block device described by this stat-file"),
-	TYPE_GETTER("st_size", &stat_get_size,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid size information}"
-	            "Returns the size of the stat-file in bytes"),
-	TYPE_GETTER("st_blocks", &stat_get_blocks,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid block-count information}"
-	            "Returns the number of filesystem blocks used by the stat-file"),
-	TYPE_GETTER("st_blksize", &stat_get_blksize,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid block-count information}"
-	            "Returns the size of a filesystem blocks, as used by the stat-file"),
-	TYPE_GETTER("st_atime", &stat_get_atime,
-	            "->?Etime:Time\n"
-	            "#tValueError{@this stat-file does not contain valid time information}"
-	            "Return the last-accessed time of the stat-file"),
-	TYPE_GETTER("st_mtime", &stat_get_mtime,
-	            "->?Etime:Time\n"
-	            "#tValueError{@this stat-file does not contain valid time information}"
-	            "Return the last-modified (file content only) time of the stat-file"),
-	TYPE_GETTER("st_ctime", &stat_get_ctime,
-	            "->?Etime:Time\n"
-	            "#tValueError{@this stat-file does not contain valid time information}"
-	            "Return the lsat-changed (file content & file attributes) time of the stat-file"),
-	TYPE_GETTER("st_birthtime", &stat_get_birthtime,
-	            "->?Etime:Time\n"
-	            "#tValueError{@this stat-file does not contain valid time information}"
-	            "Return the creation (birth) time of the stat-file"),
-	TYPE_GETTER("isdir", &stat_isdir,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a directory"),
-	TYPE_GETTER("ischr", &stat_ischr,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a character-device"),
-	TYPE_GETTER("isblk", &stat_isblk,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a block-device"),
-	TYPE_GETTER("isdev", &stat_isdev,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a character- or block-device"),
-	TYPE_GETTER("isreg", &stat_isreg,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a regular file"),
-	TYPE_GETTER("isfifo", &stat_isfifo,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a pipe"),
-	TYPE_GETTER("islnk", &stat_islnk,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a symbolic link"),
-	TYPE_GETTER("issock", &stat_issock,
-	            "->?Dbool\n"
-	            "#t{:Interrupt}"
-	            "Check if @this stat-file refers to a socket"),
+	TYPE_GETTER_F("st_dev", &stat_get_dev, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid device information}"
+	              "Return the device number of the storage device on which the stat-file is located"),
+	TYPE_GETTER_F("st_ino", &stat_get_ino, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid inode information}"
+	              "Returns the inode number or file-id of the stat-file"),
+	TYPE_GETTER_F("st_mode", &stat_get_mode, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns a bitset describing the access permissions and mode of the stat-file. "
+	              "For more information, see ?GS_IFMT"),
+	TYPE_GETTER_F("st_nlink", &stat_get_nlink, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Returns the number of existing hard-links to this stat-file"),
+	TYPE_GETTER_F("st_uid", &stat_get_uid, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Guser\n"
+	              "Returns a descriptor for the user owning this file"),
+	TYPE_GETTER_F("st_gid", &stat_get_gid, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Ggroup\n"
+	              "Returns a descriptor for the group owning this file"),
+	TYPE_GETTER_F("st_rdev", &stat_get_rdev, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid r-dev information}"
+	              "Returns the device ID of the character/block device described by this stat-file"),
+	TYPE_GETTER_F("st_size", &stat_get_size, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid size information}"
+	              "Returns the size of the stat-file in bytes"),
+	TYPE_GETTER_F("st_blocks", &stat_get_blocks, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid block-count information}"
+	              "Returns the number of filesystem blocks used by the stat-file"),
+	TYPE_GETTER_F("st_blksize", &stat_get_blksize, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid block-count information}"
+	              "Returns the size of a filesystem blocks, as used by the stat-file"),
+	TYPE_GETTER_F("st_atime", &stat_get_atime, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Etime:Time\n"
+	              "#tValueError{@this stat-file does not contain valid time information}"
+	              "Return the last-accessed time of the stat-file"),
+	TYPE_GETTER_F("st_mtime", &stat_get_mtime, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Etime:Time\n"
+	              "#tValueError{@this stat-file does not contain valid time information}"
+	              "Return the last-modified (file content only) time of the stat-file"),
+	TYPE_GETTER_F("st_ctime", &stat_get_ctime, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Etime:Time\n"
+	              "#tValueError{@this stat-file does not contain valid time information}"
+	              "Return the lsat-changed (file content & file attributes) time of the stat-file"),
+	TYPE_GETTER_F("st_birthtime", &stat_get_birthtime, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Etime:Time\n"
+	              "#tValueError{@this stat-file does not contain valid time information}"
+	              "Return the creation (birth) time of the stat-file"),
+	TYPE_GETTER_F("isdir", &stat_isdir, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a directory"),
+	TYPE_GETTER_F("ischr", &stat_ischr, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a character-device"),
+	TYPE_GETTER_F("isblk", &stat_isblk, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a block-device"),
+	TYPE_GETTER_F("isdev", &stat_isdev, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a character- or block-device"),
+	TYPE_GETTER_F("isreg", &stat_isreg, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a regular file"),
+	TYPE_GETTER_F("isfifo", &stat_isfifo, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a pipe"),
+	TYPE_GETTER_F("islnk", &stat_islnk, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a symbolic link"),
+	TYPE_GETTER_F("issock", &stat_issock, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "#t{:Interrupt}"
+	              "Check if @this stat-file refers to a socket"),
 
 	/* Non-portable NT extensions. */
 #ifdef HAVE_stat_getntattr_np
-	TYPE_GETTER("ntattr_np", &stat_getntattr_np,
-	            "->?Dint\n"
-	            "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
-	            /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
+	TYPE_GETTER_F("ntattr_np", &stat_getntattr_np, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
+	              /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getntattr_np */
 #ifdef HAVE_stat_getnttype_np
-	TYPE_GETTER("nttype_np", &stat_getnttype_np,
-	            "->?Dint\n"
-	            "#tValueError{@this stat-file does not contain valid NT-type information}"
-	            "Non-portable windows extension for retrieving the NT type of this stat-file, that "
-	            /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
+	TYPE_GETTER_F("nttype_np", &stat_getnttype_np, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "#tValueError{@this stat-file does not contain valid NT-type information}"
+	              "Non-portable windows extension for retrieving the NT type of this stat-file, that "
+	              /**/ "type being one of the `FILE_TYPE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getnttype_np */
 	TYPE_GETSET_END
 };

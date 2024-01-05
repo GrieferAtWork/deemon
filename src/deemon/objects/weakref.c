@@ -317,28 +317,28 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst ob_weakref_methods[] = {
-	TYPE_METHOD("lock", &ob_weakref_lock,
-	            "->\n"
-	            "(def)->\n"
-	            "#tReferenceError{The weak reference is no longer bound and no @def was given}"
-	            "Lock the weak reference and return the pointed-to object"),
+	TYPE_METHOD_F("lock", &ob_weakref_lock, TYPE_METHOD_FNOREFESCAPE,
+	              "->\n"
+	              "(def)->\n"
+	              "#tReferenceError{The weak reference is no longer bound and no @def was given}"
+	              "Lock the weak reference and return the pointed-to object"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD("try_lock", &ob_weakref_try_lock,
-	            "()\n"
-	            "->\n"
-	            "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})"),
+	TYPE_METHOD_F("try_lock", &ob_weakref_try_lock, TYPE_METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "->\n"
+	              "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	TYPE_GETSET("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set,
-	            "#tReferenceError{Attempted to get the value after the reference has been unbound}"
-	            "#tValueError{Attempted to set an object that does not support weak referencing}"
-	            "Access to the referenced object"),
-	TYPE_GETTER("alive", &ob_weakref_alive,
-	            "->?Dbool\n"
-	            "Alias for ?#{op:bool}"),
+	TYPE_GETSET_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, TYPE_GETSET_FNOREFESCAPE,
+	              "#tReferenceError{Attempted to get the value after the reference has been unbound}"
+	              "#tValueError{Attempted to set an object that does not support weak referencing}"
+	              "Access to the referenced object"),
+	TYPE_GETTER_F("alive", &ob_weakref_alive, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Alias for ?#{op:bool}"),
 	TYPE_GETSET_END
 };
 
