@@ -147,6 +147,20 @@ DeeList_Sort(DeeObject *self, DeeObject *key);
 DFUNDEF NONNULL((1)) void DCALL
 DeeList_Reverse(DeeObject *__restrict self);
 
+/* Remove all items matching `!!should(item)'
+ * @return: * : The number of removed items.
+ * @return: -1: An error occurred. */
+DFUNDEF WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeList_RemoveIf(DeeObject *self, size_t start,
+                 size_t end, DeeObject *should);
+
+/* Resize `self' to have a length of `newsize'.
+ * If the size increases, use `filler' for new items.
+ * @return: 0 : Success.
+ * @return: -1: Error. */
+DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL
+DeeList_Resize(DeeObject *self, size_t newsize, DeeObject *filler);
+
 /* Append objects to a given list. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_Append(DeeObject *self, DeeObject *elem);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeList_AppendIterator(DeeObject *self, DeeObject *iterator);

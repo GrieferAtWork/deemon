@@ -493,6 +493,13 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
                     struct Dee_memloc const *loc);
 
+/* Check if `loc' has an alias. */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memstate_haslias(struct Dee_memstate const *__restrict self,
+                     struct Dee_memloc const *loc);
+#define Dee_memstate_isoneref(self, loc) \
+	(((loc)->ml_flags & MEMLOC_F_ONEREF) && !Dee_memstate_haslias(self, loc))
+
 /* Functions to manipulate the virtual deemon object stack. */
 #define Dee_memstate_vtop(self) (&(self)->ms_stackv[(self)->ms_stackc - 1])
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vswap(struct Dee_memstate *__restrict self); /* ASM_SWAP */
@@ -1073,6 +1080,7 @@ struct Dee_function_generator {
 /* Code generator helpers to manipulate the V-stack. */
 #define Dee_function_generator_vtop(self)     Dee_memstate_vtop((self)->fg_state)
 #define Dee_function_generator_vtoptype(self) Dee_memloc_typeof(Dee_function_generator_vtop(self))
+#define Dee_function_generator_isoneref(self, loc) Dee_memstate_isoneref((self)->fg_state, loc)
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswap(struct Dee_function_generator *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
@@ -1149,6 +1157,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuple_un
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuplekw_unchecked(struct Dee_function_generator *__restrict self);                   /* this, attr, args, kw      -> UNCHECKED(result) */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopgetattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vophasattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> hasattr */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboundattr(struct Dee_function_generator *__restrict self); /* this, attr        -> bound */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self);   /* this, attr, value -> N/A */
@@ -1165,6 +1174,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopnot(struct Dee_f
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self); /* value -> size */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);  /* value -> int */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);  /* value -> string */
+
+/* Helpers to evaluate an object into a C integer */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorph_int(struct Dee_function_generator *__restrict self);  /* value -> DeeObject_AsIntptr(value) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorph_uint(struct Dee_function_generator *__restrict self); /* value -> DeeObject_AsUIntptr(value) */
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
@@ -1259,6 +1272,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_
  * >> POP();
  * >> POP(); */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce_c(struct Dee_function_generator *__restrict self, void const *from, void const *to);
 
 /* Force the top `n' elements of the v-stack to use `MEMLOC_VMORPH_ISDIRECT'.
  * Any memory locations that might alias one of those locations is also changed.

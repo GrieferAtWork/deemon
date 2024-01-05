@@ -798,8 +798,8 @@ again:
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
  * @return: -1: An error occurred. */
-PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
-DeeList_RemoveIf(List *self, size_t start,
+PUBLIC WUNUSED NONNULL((1, 4)) size_t DCALL
+DeeList_RemoveIf(DeeObject *self, size_t start,
                  size_t end, DeeObject *should) {
 	List *me = (List *)self;
 	DeeObject **vector;
@@ -867,6 +867,101 @@ again:
 err:
 	return (size_t)-1;
 }
+
+/* Resize `self' to have a length of `newsize'.
+ * If the size increases, use `filler' for new items.
+ * @return: 0 : Success.
+ * @return: -1: Error. */
+PUBLIC WUNUSED NONNULL((1, 3)) int DCALL
+DeeList_Resize(DeeObject *self, size_t newsize, DeeObject *filler) {
+	List *me = (List *)self;
+again:
+	DeeList_LockWrite(me);
+	if (newsize > DeeList_SIZE(me)) {
+		size_t old_elema;
+		size_t num_more;
+		old_elema = DeeList_GetAlloc(me);
+		if (old_elema < newsize) {
+			/* Try to resize the list to make it bigger. */
+			DREF DeeObject **new_elemv;
+			new_elemv = (DREF DeeObject **)Dee_TryReallocc(me->l_list.ol_elemv, newsize,
+			                                               sizeof(DREF DeeObject *));
+			if unlikely(!new_elemv) {
+				DeeList_LockEndWrite(me);
+				if (Dee_CollectMemoryc(newsize, sizeof(DREF DeeObject *)))
+					goto again;
+				goto err;
+			}
+			me->l_list.ol_elemv = new_elemv;
+			_DeeList_SetAlloc(me, newsize);
+		}
+
+		/* Fill in the new items. */
+		num_more = newsize - me->l_list.ol_elemc;
+		memsetp(me->l_list.ol_elemv + me->l_list.ol_elemc, filler, num_more);
+		Dee_Incref_n(filler, num_more);
+		me->l_list.ol_elemc = newsize;
+		DeeList_LockEndWrite(me);
+	} else if (newsize == me->l_list.ol_elemc) {
+		/* Size didn't change */
+		DeeList_LockEndWrite(me);
+	} else if (!newsize) {
+		/* Clear the list of all items. */
+		DREF DeeObject **old_elemv;
+		size_t old_elemc;
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+		size_t old_elema;
+#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+
+		/* Remove everything */
+		old_elemv = me->l_list.ol_elemv;
+		old_elemc = me->l_list.ol_elemc;
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+		old_elema = DeeList_GetAlloc(me);
+#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+		Dee_objectlist_init(&me->l_list);
+		DeeList_LockEndWrite(me);
+		Dee_Decrefv(old_elemv, old_elemc);
+		DeeList_LockWrite(me);
+		if likely(!me->l_list.ol_elemv) {
+			ASSERT(me->l_list.ol_elemc == 0);
+
+			/* Allow the list to re-use its old vector. */
+			me->l_list.ol_elemv = old_elemv;
+#ifdef DEE_OBJECTLIST_HAVE_ELEMA
+			_DeeList_SetAlloc(me, old_elema);
+#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
+			old_elemv = NULL; /* Inherit the old vector. */
+		}
+		DeeList_LockEndWrite(me);
+		/* Free the old vector. */
+		Dee_Free(old_elemv);
+	} else {
+		/* Must remove items. */
+		DREF DeeObject **old_obj;
+		size_t num_del;
+		num_del = me->l_list.ol_elemc - newsize;
+		old_obj = (DREF DeeObject **)Dee_TryMallocac(num_del, sizeof(DREF DeeObject *));
+		if unlikely(!old_obj) {
+			DeeList_LockEndWrite(me);
+			if (Dee_CollectMemoryc(newsize, sizeof(DREF DeeObject *)))
+				goto again;
+			goto err;
+		}
+		memcpyc(old_obj, &me->l_list.ol_elemv[newsize],
+		        num_del, sizeof(DREF DeeObject *));
+		me->l_list.ol_elemc = newsize;
+		DeeList_LockEndWrite(me);
+
+		/* Drop references from all objects that were deleted. */
+		Dee_Decrefv(old_obj, num_del);
+		Dee_Freea(old_obj);
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 /* Remove all items matching `!!should(item)'
  * @return: * : The number of removed items.
@@ -2394,7 +2489,7 @@ list_insertall(List *me, size_t argc,
 	size_t index;
 	DeeObject *items;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_insertall_kwlist,
-	                    UNPdSIZ "o:insertall", &index, &items))
+	                    UNPuSIZ "o:insertall", &index, &items))
 		goto err;
 	if (DeeList_InsertSequence((DeeObject *)me, index, items))
 		goto err;
@@ -2409,10 +2504,10 @@ list_removeif(List *me, size_t argc,
 	DeeObject *should;
 	size_t result, start = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, seq_removeif_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":removeif",
+	                    "o|" UNPuSIZ UNPuSIZ ":removeif",
 	                    &should, &start, &end))
 		goto err;
-	result = DeeList_RemoveIf(me, start, end, should);
+	result = DeeList_RemoveIf((DeeObject *)me, start, end, should);
 	if unlikely(result == (size_t)-1)
 		goto err;
 	return DeeInt_NewSize(result);
@@ -2425,7 +2520,7 @@ list_insertiter_deprecated(List *me,
                            size_t argc, DeeObject *const *argv) {
 	size_t index;
 	DeeObject *seq;
-	if (DeeArg_Unpack(argc, argv, UNPdSIZ "o:insert_iter", &index, &seq))
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ "o:insert_iter", &index, &seq))
 		goto err;
 	if (DeeList_InsertIterator((DeeObject *)me, index, seq))
 		goto err;
@@ -2932,92 +3027,14 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_resize(List *me, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
-	size_t new_elemc;
+	size_t newsize;
 	DeeObject *filler = Dee_None;
-	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist, UNPuSIZ "|o:resize", &new_elemc, &filler))
+	if (DeeArg_UnpackKw(argc, argv, kw, seq_resize_kwlist,
+	                    UNPuSIZ "|o:resize",
+	                    &newsize, &filler))
 		goto err;
-again:
-	DeeList_LockWrite(me);
-	if (new_elemc > DeeList_SIZE(me)) {
-		size_t old_elema;
-		size_t num_more;
-		old_elema = DeeList_GetAlloc(me);
-		if (old_elema < new_elemc) {
-			/* Try to resize the list to make it bigger. */
-			DREF DeeObject **new_elemv;
-			new_elemv = (DREF DeeObject **)Dee_TryReallocc(me->l_list.ol_elemv, new_elemc,
-			                                               sizeof(DREF DeeObject *));
-			if unlikely(!new_elemv) {
-				DeeList_LockEndWrite(me);
-				if (Dee_CollectMemoryc(new_elemc, sizeof(DREF DeeObject *)))
-					goto again;
-				goto err;
-			}
-			me->l_list.ol_elemv = new_elemv;
-			_DeeList_SetAlloc(me, new_elemc);
-		}
-
-		/* Fill in the new items. */
-		num_more = new_elemc - me->l_list.ol_elemc;
-		memsetp(me->l_list.ol_elemv + me->l_list.ol_elemc, filler, num_more);
-		Dee_Incref_n(filler, num_more);
-		me->l_list.ol_elemc = new_elemc;
-		DeeList_LockEndWrite(me);
-	} else if (new_elemc == me->l_list.ol_elemc) {
-		/* Size didn't change */
-		DeeList_LockEndWrite(me);
-	} else if (!new_elemc) {
-		/* Clear the list of all items. */
-		DREF DeeObject **old_elemv;
-		size_t old_elemc;
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
-		size_t old_elema;
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
-
-		/* Remove everything */
-		old_elemv = me->l_list.ol_elemv;
-		old_elemc = me->l_list.ol_elemc;
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
-		old_elema = DeeList_GetAlloc(me);
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
-		Dee_objectlist_init(&me->l_list);
-		DeeList_LockEndWrite(me);
-		Dee_Decrefv(old_elemv, old_elemc);
-		DeeList_LockWrite(me);
-		if likely(!me->l_list.ol_elemv) {
-			ASSERT(me->l_list.ol_elemc == 0);
-
-			/* Allow the list to re-use its old vector. */
-			me->l_list.ol_elemv = old_elemv;
-#ifdef DEE_OBJECTLIST_HAVE_ELEMA
-			_DeeList_SetAlloc(me, old_elema);
-#endif /* DEE_OBJECTLIST_HAVE_ELEMA */
-			old_elemv = NULL; /* Inherit the old vector. */
-		}
-		DeeList_LockEndWrite(me);
-		/* Free the old vector. */
-		Dee_Free(old_elemv);
-	} else {
-		/* Must remove items. */
-		DREF DeeObject **old_obj;
-		size_t num_del;
-		num_del = me->l_list.ol_elemc - new_elemc;
-		old_obj = (DREF DeeObject **)Dee_TryMallocac(num_del, sizeof(DREF DeeObject *));
-		if unlikely(!old_obj) {
-			DeeList_LockEndWrite(me);
-			if (Dee_CollectMemoryc(new_elemc, sizeof(DREF DeeObject *)))
-				goto again;
-			goto err;
-		}
-		memcpyc(old_obj, &me->l_list.ol_elemv[new_elemc],
-		        num_del, sizeof(DREF DeeObject *));
-		me->l_list.ol_elemc = new_elemc;
-		DeeList_LockEndWrite(me);
-
-		/* Drop references from all objects that were deleted. */
-		Dee_Decrefv(old_obj, num_del);
-		Dee_Freea(old_obj);
-	}
+	if unlikely(DeeList_Resize((DeeObject *)me, newsize, filler))
+		goto err;
 	return_none;
 err:
 	return NULL;

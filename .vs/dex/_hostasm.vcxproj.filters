@@ -35,4 +35,12 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
 	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\src\dex\_hostasm\libgen86\.git">
+			<Filter>libgen86</Filter>
+		</None>
+		<None Include="..\..\src\dex\_hostasm\libgen86\README.md">
+			<Filter>libgen86</Filter>
+		</None>
+	</ItemGroup>
 </Project>

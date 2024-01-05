@@ -317,7 +317,7 @@ Dee_memstate_hstack_unused(struct Dee_memstate const *__restrict self,
  * @return: * :            The base-CFA offset of the free section of memory
  * @return: (uintptr_t)-1: There is no free section of at least `n_bytes' bytes.
  *                         In this case, allocate using `Dee_memstate_hstack_alloca()' */
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
 Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
                          struct Dee_memstate const *hstack_reserved,
                          size_t n_bytes) {
@@ -636,6 +636,19 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 		if (!Dee_memloc_sameloc(iter, loc))
 			continue;
 		if (!(iter->ml_flags & MEMLOC_F_NOREF))
+			return true;
+	}
+	Dee_memstate_foreach_end;
+	return false;
+}
+
+/* Check if `loc' has an alias. */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memstate_haslias(struct Dee_memstate const *__restrict self,
+                     struct Dee_memloc const *loc) {
+	struct Dee_memloc const *iter;
+	Dee_memstate_foreach(iter, self) {
+		if (iter != loc && Dee_memloc_sameloc(iter, loc))
 			return true;
 	}
 	Dee_memstate_foreach_end;

@@ -506,7 +506,7 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 		if unlikely(has_ref_alias
 		            ? Dee_function_generator_gdecref_nokill(self, loc, 1)
 		            : (loc->ml_flags & MEMLOC_F_ONEREF)
-		              ? Dee_function_generator_gdecref_dokill(self, loc)
+		              ? Dee_function_generator_gdecref_dokill(self, loc) /* TODO: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
 		              : Dee_function_generator_gdecref(self, loc, 1)) {
 			if (MEMLOC_TYPE_HASREG(loc->ml_type))
 				Dee_memstate_incrinuse(state, loc->ml_value.v_hreg.r_regno);
@@ -577,7 +577,7 @@ Dee_function_generator_decref_local(struct Dee_function_generator *__restrict se
 		if unlikely(has_ref_alias
 		            ? Dee_function_generator_gdecref_nokill(self, loc, 1)
 		            : (loc->ml_flags & MEMLOC_F_ONEREF)
-		              ? Dee_function_generator_gdecref_dokill(self, loc)
+		              ? Dee_function_generator_gdecref_dokill(self, loc) /* TODO: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
 		              : Dee_function_generator_gdecref(self, loc, 1))
 			goto err;
 	} else {
@@ -615,12 +615,11 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self,
                                   Dee_lid_t lid) {
 	struct Dee_memstate *state;
-	struct Dee_memloc *src, *dst;
+	struct Dee_memloc *dst;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	state = self->fg_state;
 	ASSERT(lid < state->ms_localc);
-	src = Dee_memstate_vtop(state);
 	dst = &state->ms_localv[lid];
 	if (dst->ml_type != MEMLOC_TYPE_UNALLOC && !(dst->ml_flags & MEMLOC_F_NOREF)) {
 		if unlikely(Dee_function_generator_decref_local(self, dst))
@@ -632,7 +631,7 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 	/* Because stack elements are always bound, the local is guarantied bound at this point. */
 	if (MEMLOC_TYPE_HASREG(dst->ml_type))
 		Dee_memstate_decrinuse(state, dst->ml_value.v_hreg.r_regno);
-	*dst = *src;
+	*dst = *Dee_memstate_vtop(state);
 	dst->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
 	dst->ml_flags |= MEMLOC_F_LOCAL_BOUND;
 	--state->ms_stackc;
@@ -883,6 +882,18 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	return Dee_function_generator_vpop(self);
 err_common_state:
 	Dee_memstate_decref(common_state);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcoalesce_c(struct Dee_function_generator *__restrict self,
+                                   void const *from, void const *to) {
+	if unlikely(Dee_function_generator_vpush_addr(self, from))
+		goto err;
+	if unlikely(Dee_function_generator_vpush_addr(self, to))
+		goto err;
+	return Dee_function_generator_vcoalesce(self);
 err:
 	return -1;
 }

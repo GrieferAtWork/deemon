@@ -58,6 +58,10 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
 	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\src\dex\_hostasm\libgen86\.git" />
+		<None Include="..\..\src\dex\_hostasm\libgen86\README.md" />
+	</ItemGroup>
 	<PropertyGroup Label="Globals">
 		<ProjectGuid>{85DE4E2D-552A-48E3-A320-00000A7043B5}</ProjectGuid>
 		<RootNamespace>_hostasm</RootNamespace>
