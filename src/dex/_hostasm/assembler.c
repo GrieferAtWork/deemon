@@ -809,15 +809,17 @@ offload_cur_locX_to_new_loci:
 				Dee_except_exitinfo_asloc(cur_locX, &cur_loc);
 				Dee_except_exitinfo_asloc(new_loci, &new_loc);
 				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_locX]);
-				curinfo_vaddr[cur_locX] = (Dee_vstackaddr_t)-1;
+				if (curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1) {
+					Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
+					curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+				}
 				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
-				                                                     old_refcnt, new_refcnt))
+				                                                     old_refcnt, new_refcnt_i))
 					goto err_infostate_state_curinfo_vaddr;
 				ASSERT(Dee_except_exitinfo_locv(curinfo, cur_locX) != 0);
 				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
 				Dee_except_exitinfo_locv(curinfo, cur_locX) = 0;
-				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
+				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt_i;
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				curinfo_vaddr[new_loci] = state->ms_stackc;
 				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
@@ -858,8 +860,10 @@ offload_cur_locX_to_new_loci:
 				goto err_infostate_state_curinfo_vaddr;
 		} else {
 			/* Value doesn't matter anymore. */
-			Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_locX]);
-			curinfo_vaddr[cur_locX] = (Dee_vstackaddr_t)-1;
+			if (curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1) {
+				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
+				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+			}
 			if unlikely(Dee_function_generator_gexcept_morph_decref(self, &cur_loc, old_refcnt))
 				goto err_infostate_state_curinfo_vaddr;
 		}
@@ -915,8 +919,8 @@ next_cur_locX:;
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
 			                                                     1, new_refcnt + 1))
 				goto err_infostate_state_curinfo_vaddr;
-			ASSERT(curinfo_vaddr[new_locX] == (Dee_vstackaddr_t)-1);
-			curinfo_vaddr[new_locX] = state->ms_stackc;
+			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+			curinfo_vaddr[new_loci] = state->ms_stackc;
 			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
 			new_loc.ml_valtyp = NULL;
 			if unlikely(Dee_memstate_vpush(state, &new_loc))

@@ -405,20 +405,22 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 				utf8 = DeeString_AsUtf8(constval);
 				if unlikely(!utf8)
 					goto handle_error_and_do_fallback;
-				if (print_after != NULL)
-					DO(Dee_function_generator_vdup(self));
-				DO(Dee_function_generator_vpop(self)); /* [File], File */
+				if (print_after != NULL) {
+					DO(Dee_function_generator_vdup_n(self, 2)); /* File, value, File */
+					DO(Dee_function_generator_vswap(self));     /* File, File, value */
+				}
+				DO(Dee_function_generator_vpop(self));          /* [File], File */
 				if (WSTR_LENGTH(utf8) == 0) {
 					/* Special case: printing an empty string does nothing */
 					DO(Dee_function_generator_vpop(self)); /* [File] */
 				} else if (WSTR_LENGTH(utf8) == 1) {
 					/* Special case: printing a single character allows us to use `DeeFile_Putc()' */
-					DO(Dee_function_generator_vnotoneref_if_operator(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
-					DO(Dee_function_generator_vpush_immINT(self, utf8[0]));                       /* [File], File, ch */
-					DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2)); /* [File], status */
-					DO(Dee_function_generator_vcheckerr(self, GETC_ERR));                         /* [File] */
+					DO(Dee_function_generator_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 1)); /* [File], File */
+					DO(Dee_function_generator_vpush_immINT(self, utf8[0]));                            /* [File], File, ch */
+					DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));      /* [File], status */
+					DO(Dee_function_generator_vcheckerr(self, GETC_ERR));                              /* [File] */
 				} else {
-					DO(Dee_function_generator_vnotoneref_if_operator(self, FILE_OPERATOR_WRITE, 1)); /* [File], File */
+					DO(Dee_function_generator_vnotoneref_if_operator_at(self, FILE_OPERATOR_WRITE, 1)); /* [File], File */
 					DO(Dee_function_generator_vpush_addr(self, utf8));                                  /* [File], File, utf8 */
 					DO(Dee_function_generator_vpush_immSIZ(self, WSTR_LENGTH(utf8)));                   /* [File], File, utf8, length */
 					DO(Dee_function_generator_vcallapi(self, &DeeFile_WriteAll, VCALL_CC_M1INTPTR, 3)); /* [File], print_status */
@@ -451,10 +453,10 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vpop(self));                                        /* [File] */
 handle_print_after_and_pop_file:
 		if (print_after != NULL) {
-			DO(Dee_function_generator_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 2)); /* File, ch */
-			DO(Dee_function_generator_vpush_immINT(self, *print_after));                                      /* File, ch */
-			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));                     /* status */
-			return Dee_function_generator_vcheckerr(self, GETC_ERR);                                          /* - */
+			DO(Dee_function_generator_vnotoneref_if_operator_at(self, FILE_OPERATOR_PUTC, 1)); /* File */
+			DO(Dee_function_generator_vpush_immINT(self, *print_after));                       /* File, ch */
+			DO(Dee_function_generator_vcallapi(self, &DeeFile_Putc, VCALL_CC_RAWINT, 2));      /* status */
+			return Dee_function_generator_vcheckerr(self, GETC_ERR);                           /* - */
 		}
 		return 0;
 	}

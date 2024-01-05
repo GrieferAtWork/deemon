@@ -875,8 +875,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vinline_kwds_and_replace_with_null(struct Dee_function_generator *__restrict self,
                                    Dee_vstackaddr_t *p_argc, struct docinfo *doc, DeeObject *func) {
 	int result = vinline_kwds(self, p_argc, doc, func);
-	if (result > 0)
+	if (result == 0) {
 		result = Dee_function_generator_vpush_NULL(self);
+	} else if (result > 0) {
+		result = 0; /* Inlining was not possible. */
+	}
 	return result;
 }
 
