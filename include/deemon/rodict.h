@@ -92,7 +92,9 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeRoDict_GetItemStringD
 INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeRoDict_GetItemStringLenDef(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-#endif /* CONFIG_BUILDING_DEEMON */
+#else /* CONFIG_BUILDING_DEEMON */
+/*#define DeeRoDict_GetItemDef (*DeeRoDict_Type.tp_seq->tp_nsi->nsi_maplike.nsi_getdefault)*/
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */
 #define DeeRoDict_HashSt(self, hash)  ((hash) & (self)->rd_mask)

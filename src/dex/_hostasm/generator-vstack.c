@@ -669,6 +669,22 @@ err:
 }
 
 
+/* Check if top `n' elements are all `MEMLOC_TYPE_CONST' */
+INTDEF WUNUSED NONNULL((1)) bool DCALL
+Dee_function_generator_vallconst(struct Dee_function_generator *__restrict self,
+                                 Dee_vstackaddr_t n) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *itemv;
+	Dee_vstackaddr_t i;
+	ASSERT(n <= state->ms_stackc);
+	itemv = state->ms_stackv + state->ms_stackc - n;
+	for (i = 0; i < n; ++i) {
+		if (itemv[i].ml_type != MEMLOC_TYPE_CONST)
+			return false;
+	}
+	return true;
+}
+
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -2607,7 +2623,11 @@ Dee_function_generator_vind(struct Dee_function_generator *__restrict self,
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	loc = Dee_function_generator_vtop(self);
-	return Dee_function_generator_gind(self, loc, ind_delta);
+	ASSERTF(loc->ml_flags & MEMLOC_F_NOREF, "Cannot do indirection on location holding a reference");
+	if unlikely(Dee_function_generator_gind(self, loc, ind_delta))
+		goto err;
+	loc->ml_valtyp = NULL; /* Unknown */
+	return 0;
 err:
 	return -1;
 }
@@ -2643,6 +2663,7 @@ Dee_function_generator_vdelta(struct Dee_function_generator *__restrict self,
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	loc = Dee_function_generator_vtop(self);
+	ASSERTF(loc->ml_flags & MEMLOC_F_NOREF, "Cannot add delta to location holding a reference");
 	switch (loc->ml_type) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
@@ -2661,21 +2682,20 @@ Dee_function_generator_vdelta(struct Dee_function_generator *__restrict self,
 		loc->ml_value.v_const = (DeeObject *)((uintptr_t)loc->ml_value.v_const + val_delta);
 		break;
 	}
+	loc->ml_valtyp = NULL; /* Unknown */
 	return 0;
 err:
 	return -1;
 }
 
 /* >> temp = *(SECOND + ind_delta);
- * >> *(THIRD + ind_delta) = FIRST;
+ * >> *(SECOND + ind_delta) = FIRST;
  * >> POP();
  * >> POP();
  * >> PUSH(temp, MEMLOC_F_NOREF); */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vswapind(struct Dee_function_generator *__restrict self,
                                 ptrdiff_t ind_delta) {
-	if unlikely(Dee_function_generator_vnotoneref(self, 1))
-		goto err; /* dst, src */
 	if unlikely(Dee_function_generator_vswap(self))
 		goto err; /* src, dst */
 	if unlikely(Dee_function_generator_vdup(self))
@@ -3119,6 +3139,50 @@ Dee_function_generator_vpop_static(struct Dee_function_generator *__restrict sel
 		goto err;
 	ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;
+	return Dee_function_generator_vpop(self);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vrwlock_read(struct Dee_function_generator *__restrict self) {
+	if unlikely(Dee_function_generator_vdirect(self, 1))
+		goto err;
+	if unlikely(Dee_function_generator_grwlock_read(self, Dee_function_generator_vtop(self)))
+		goto err;
+	return Dee_function_generator_vpop(self);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vrwlock_write(struct Dee_function_generator *__restrict self) {
+	if unlikely(Dee_function_generator_vdirect(self, 1))
+		goto err;
+	if unlikely(Dee_function_generator_grwlock_write(self, Dee_function_generator_vtop(self)))
+		goto err;
+	return Dee_function_generator_vpop(self);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vrwlock_endread(struct Dee_function_generator *__restrict self) {
+	if unlikely(Dee_function_generator_vdirect(self, 1))
+		goto err;
+	if unlikely(Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtop(self)))
+		goto err;
+	return Dee_function_generator_vpop(self);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vrwlock_endwrite(struct Dee_function_generator *__restrict self) {
+	if unlikely(Dee_function_generator_vdirect(self, 1))
+		goto err;
+	if unlikely(Dee_function_generator_grwlock_endwrite(self, Dee_function_generator_vtop(self)))
+		goto err;
 	return Dee_function_generator_vpop(self);
 err:
 	return -1;

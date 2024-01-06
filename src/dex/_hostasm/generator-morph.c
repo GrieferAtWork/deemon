@@ -53,7 +53,7 @@ struct Dee_memaction {
 #define Dee_memaction_isdone(self) ((self)->ma_oldloc == NULL)
 
 /* Check if all actions that need to happen before `self' already have. */
-PRIVATE WUNUSED NONNULL((1)) bool DCALL
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_memaction_isready(struct Dee_memaction const *__restrict self) {
 	struct Dee_memaction *iter;
 	SLIST_FOREACH (iter, &self->ma_before, ma_bflink) {
@@ -67,7 +67,7 @@ Dee_memaction_isready(struct Dee_memaction const *__restrict self) {
  * - the old location is placed such that it can pop from `host_cfa_offset'
  * - the new location is placed such that it can push to `host_cfa_offset'
  */
-PRIVATE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
 Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, Dee_lid_t mactc,
                                                uintptr_t host_cfa_offset) {
 	Dee_lid_t i;

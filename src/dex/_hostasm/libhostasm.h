@@ -31,6 +31,9 @@
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
+#include <stdbool.h>
+#include <stdint.h>
+
 /* Convert compiled deemon code to host machine assembly (currently: only x86)
  *
  *
@@ -550,6 +553,8 @@ struct Dee_host_symbol {
 
 #define _Dee_host_symbol_alloc()    ((struct Dee_host_symbol *)Dee_Malloc(sizeof(struct Dee_host_symbol)))
 #define _Dee_host_symbol_free(self) Dee_Free(self)
+
+#define Dee_host_symbol_setname(self, name)(void)0
 
 #define Dee_host_symbol_isdefined(self) ((self)->hs_type == DEE_HOST_SYMBOL_UNDEF)
 #define Dee_host_symbol_setabs(self, addr)                \
@@ -1121,6 +1126,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopmany(struct Dee
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_n(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
+INTDEF WUNUSED NONNULL((1)) bool DCALL Dee_function_generator_vallconst(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Check if top `n' elements are all `MEMLOC_TYPE_CONST' */
 
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
@@ -1162,7 +1168,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopboundattr(struct
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self);   /* this, attr, value -> N/A */
 
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict self); /* seq, key_or_index -> bound */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopgetitemdef(struct Dee_function_generator *__restrict self); /* seq, key_or_index, def -> result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict self);  /* seq, key_or_index      -> bound */
 
 #define VOPBOOL_F_NORMAL      0x0000 /* Normal flags */
 #define VOPBOOL_F_FORCE_MORPH 0x0001 /* Ensure that vtop is a constant Dee_True/Dee_False or MEMLOC_VMORPH_ISBOOL */
@@ -1380,7 +1387,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopind(struct Dee_
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdelta(struct Dee_function_generator *__restrict self, ptrdiff_t val_delta);
 
 /* >> temp = *(SECOND + ind_delta);
- * >> *(THIRD + ind_delta) = FIRST;
+ * >> *(SECOND + ind_delta) = FIRST;
  * >> POP();
  * >> POP();
  * >> PUSH(temp, MEMLOC_F_NOREF); */
@@ -1415,6 +1422,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_extern(struct 
 #define Dee_function_generator_vpop_global(self, gid)       Dee_function_generator_vpop_mod_global(self, (self)->fg_assembler->fa_code->co_module, gid)
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_static(struct Dee_function_generator *__restrict self, uint16_t sid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_static(struct Dee_function_generator *__restrict self, uint16_t sid);
+
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_read(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_write(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endread(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endwrite(struct Dee_function_generator *__restrict self);
 
 /* Check if `loc' differs from vtop, and if so: move vtop
  * *into* `loc', the assign the *exact* given `loc' to vtop. */
@@ -1817,7 +1829,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self);
 /* Dedicated type method/getset optimizations                           */
 /************************************************************************/
 
-/* this, [args...] -> UNCHECKED(result)  // For attribute generators
+/* this, [args...] -> UNCHECKED(result)  // For call/Dee_CCALL_ARGC_GETTER generators
  * this, [args...] -> result             // For operator generators
  * this, [args...] -> N/A                // For operator generators where the operator has no return value
  * this, [args...] -> this, [this]       // For inplace operator generators
@@ -2095,6 +2107,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_requires_class(DeeType
 INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_class_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_instance_addr(DeeTypeObject *__restrict tp_self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_nonempty_kw(DeeObject *__restrict kw);
+INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_ValueError(void);
+INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_UnboundAttribute(void);
 INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
 

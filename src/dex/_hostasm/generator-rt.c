@@ -246,6 +246,18 @@ libhostasm_rt_err_nonempty_kw(DeeObject *__restrict kw) {
 	                       kw);
 }
 
+INTERN ATTR_COLD int DCALL
+libhostasm_rt_err_cell_empty_ValueError(void) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "The cell is empty");
+}
+
+INTERN ATTR_COLD int DCALL
+libhostasm_rt_err_cell_empty_UnboundAttribute(void) {
+	return DeeError_Throwf(&DeeError_UnboundAttribute,
+	                       "The cell is empty");
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw) {
 	size_t kw_length;
