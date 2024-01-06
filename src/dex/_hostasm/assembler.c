@@ -669,6 +669,16 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 	}
 	if unlikely(temp)
 		goto err;
+
+	/* Check for special case: if the location lies further out on the hstack than
+	 * is reachable by doing a direct push, then adjust the stack such that a direct
+	 * push becomes possible. */
+	if (newloc->ml_type == MEMLOC_TYPE_HSTACKIND &&
+	    Dee_memloc_getcfastart(newloc) > self->fg_state->ms_host_cfa_offset) {
+		uintptr_t adjust_delta = Dee_memloc_getcfastart(newloc) - self->fg_state->ms_host_cfa_offset;
+		if unlikely(Dee_function_generator_ghstack_adjust(self, adjust_delta))
+			goto err;
+	}
 	return Dee_function_generator_gmov_loc2loc(self, oldloc, newloc);
 err:
 	return -1;
@@ -706,21 +716,36 @@ Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
 	vloc->ml_valtyp = NULL;
 }
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_except_exitinfo_contains_refcnt_after(struct Dee_except_exitinfo const *__restrict self,
+                                          uint16_t refcnt, size_t i) {
+	size_t c = Dee_except_exitinfo_locc(self);
+	for (; i < c; ++i) {
+		if (Dee_except_exitinfo_locv(self, i) == refcnt)
+			return true;
+	}
+	return false;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict self,
                                      struct Dee_except_exitinfo const *__restrict oldinfo,
                                      struct Dee_except_exitinfo const *__restrict newinfo) {
-	Dee_vstackaddr_t *curinfo_vaddr; /* Map from `i < Dee_except_exitinfo_locc()' -> `state->ms_stackv' */
+	Dee_vstackaddr_t *curinfo_vaddr; /* Map from `i < Dee_except_exitinfo_locc(curinfo)' -> `state->ms_stackv' */
 	struct Dee_memstate *state;
 	size_t cur_loci, cur_locc;
 	size_t new_loci, new_locc, max_locc;
-	size_t cursize;
+	size_t oldsize, newsize, cursize;
 	struct Dee_except_exitinfo *curinfo;
-	cursize = Dee_except_exitinfo_sizeof(oldinfo->exi_cfa_offset);
+	oldsize = Dee_except_exitinfo_sizeof(oldinfo->exi_cfa_offset);
+	newsize = Dee_except_exitinfo_sizeof(newinfo->exi_cfa_offset);
+	cursize = oldsize > newsize ? oldsize : newsize;
 	curinfo = (struct Dee_except_exitinfo *)Dee_Malloca(cursize);
 	if unlikely(!curinfo)
 		goto err;
-	curinfo = (struct Dee_except_exitinfo *)memcpy(curinfo, oldinfo, cursize);
+	curinfo = (struct Dee_except_exitinfo *)memcpy(curinfo, oldinfo, oldsize);
+	if (newsize > oldsize)
+		bzero((byte_t *)curinfo + oldsize, newsize - oldsize);
 
 	/* Allocate a mem-state and then push all registers containing references
 	 * onto the v-stack, so they get saved properly in case they need to be
@@ -740,18 +765,10 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 
 	cur_locc = Dee_except_exitinfo_locc(curinfo);
 	new_locc = Dee_except_exitinfo_locc(newinfo);
-	while (cur_locc) {
-		size_t cur_locX = Dee_except_exitinfo_loci_revstack(curinfo, cur_locc - 1);
-		if (Dee_except_exitinfo_locv(curinfo, cur_locX))
-			break;
+	while (cur_locc && !Dee_except_exitinfo_locv(curinfo, cur_locc - 1))
 		--cur_locc;
-	}
-	while (new_locc) {
-		size_t new_locX = Dee_except_exitinfo_loci_revstack(newinfo, new_locc - 1);
-		if (Dee_except_exitinfo_locv(newinfo, new_locX))
-			break;
+	while (new_locc && !Dee_except_exitinfo_locv(newinfo, new_locc - 1))
 		--new_locc;
-	}
 
 	/* Push locations used by the old state onto the V-stack (so they aren't clobbered). */
 	max_locc = MAX(cur_locc, new_locc);
@@ -760,7 +777,8 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 		goto err_infostate_state;
 	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
 		struct Dee_memloc cur_loc;
-		uint16_t old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
+		uint16_t old_refcnt;
+		old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
 		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
 		if (!old_refcnt) {
 			curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
@@ -776,161 +794,397 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 	for (; cur_loci < max_locc; ++cur_loci)
 		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
 
-	/* Try to shift values between locations. */
-	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-		size_t cur_locX;
+	/* Shift/decref locations that no longer appear in the new state. */
+again_move_removed_location:
+	while (cur_locc > new_locc) {
 		struct Dee_memloc cur_loc;
-		uint16_t cur_refcnt_i, new_refcnt_i;
-		uint16_t old_refcnt;
-		uint16_t new_refcnt;
-		cur_locX   = Dee_except_exitinfo_loci_revstack(curinfo, cur_loci);
-		old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_locX);
-		new_refcnt = 0;
-		if (cur_locX < new_locc)
-			new_refcnt = Dee_except_exitinfo_locv(newinfo, cur_locX);
-		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		if (old_refcnt == 0)
-			continue; /* Nothing here */
-		if (old_refcnt == (new_refcnt) ||
-		    old_refcnt == (new_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
-			continue; /* Location already matches target perfectly. */
-
-		/* Check if we can off-load to a different location. */
-		Dee_except_exitinfo_asloc(cur_locX, &cur_loc);
+		uint16_t cur_refcnt;
+		cur_loci = cur_locc - 1;
+		cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
+		if unlikely(cur_refcnt == 0) {
+			ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
+			--cur_locc;
+			continue;
+		}
+		ASSERT(cur_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
 		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_i = 0;
-			if (new_loci < cur_locc)
-				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_i == old_refcnt && !cur_refcnt_i) {
+			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			ASSERT(cur_refcnt_new_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
+			ASSERT(new_refcnt_new_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
+			if (cur_refcnt_new_loci == 0 && new_refcnt_new_loci == cur_refcnt) {
 				struct Dee_memloc new_loc;
-offload_cur_locX_to_new_loci:
-				Dee_except_exitinfo_asloc(cur_locX, &cur_loc);
+				uint16_t new_refcnt;
+offload_cur_loci_to_new_loci_for_trunc:
 				Dee_except_exitinfo_asloc(new_loci, &new_loc);
 				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-				if (curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1) {
-					Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
-					curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-				}
+				ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
+				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
+				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+				new_refcnt = Dee_except_exitinfo_locv(newinfo, new_loci);
+				ASSERT(new_refcnt != 0);
 				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
-				                                                     old_refcnt, new_refcnt_i))
+				                                                     cur_refcnt, new_refcnt))
 					goto err_infostate_state_curinfo_vaddr;
-				ASSERT(Dee_except_exitinfo_locv(curinfo, cur_locX) != 0);
-				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-				Dee_except_exitinfo_locv(curinfo, cur_locX) = 0;
-				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt_i;
+				Dee_except_exitinfo_locv(curinfo, cur_loci) = 0; /* Moved to "new_loci" */
+				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				curinfo_vaddr[new_loci] = state->ms_stackc;
 				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
 				new_loc.ml_valtyp = NULL;
 				if unlikely(Dee_memstate_vpush(state, &new_loc))
 					goto err_infostate_state_curinfo_vaddr;
-				goto next_cur_locX;
+				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
+				--cur_locc;
+				goto again_move_removed_location;
 			}
 		}
 		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_i = 0;
-			if (new_loci < cur_locc)
-				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_i == (old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_i)
-				goto offload_cur_locX_to_new_loci;
+			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == (cur_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_new_loci)
+				goto offload_cur_loci_to_new_loci_for_trunc;
 		}
 		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_i = 0;
-			if (new_loci < cur_locc)
-				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_i >= old_refcnt && !cur_refcnt_i)
-				goto offload_cur_locX_to_new_loci;
+			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci >= cur_refcnt && !cur_refcnt_new_loci)
+				goto offload_cur_loci_to_new_loci_for_trunc;
 		}
 		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_i = 0;
-			if (new_loci < cur_locc)
-				cur_refcnt_i = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_i = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_i >= (old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_i)
-				goto offload_cur_locX_to_new_loci;
+			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci >= (cur_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_new_loci)
+				goto offload_cur_loci_to_new_loci_for_trunc;
 		}
 
-		/* Nowhere to off-load to -> must do the (possibly partial) decref ourselves. */
-		if (new_refcnt != 0) {
-			if unlikely(Dee_function_generator_gexcept_morph_adjref(self, &cur_loc, old_refcnt, new_refcnt))
-				goto err_infostate_state_curinfo_vaddr;
-		} else {
-			/* Value doesn't matter anymore. */
-			if (curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1) {
+		/* No suitable position in the new state -> drop references *now* */
+		ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
+		ASSERT(cur_refcnt == Dee_except_exitinfo_locv(curinfo, cur_loci));
+		Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
+		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+		if unlikely(Dee_function_generator_gexcept_morph_decref(self, &cur_loc, cur_refcnt))
+			goto err_infostate_state_curinfo_vaddr;
+		Dee_except_exitinfo_locv(curinfo, cur_loci) = 0;
+		--cur_locc;
+	}
+	ASSERT(cur_locc <= new_locc);
+	
+	/* Move references in order to fill newly added memory locations. */
+again_move_added_location:
+	while (cur_locc < new_locc) {
+		struct Dee_memloc new_loc;
+		uint16_t new_refcnt;
+		new_loci   = cur_locc;
+		new_refcnt = Dee_except_exitinfo_locv(newinfo, new_loci);
+		if unlikely(new_refcnt == 0) {
+			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+			++cur_locc;
+			continue;
+		}
+		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		Dee_except_exitinfo_asloc(new_loci, &new_loc);
+		for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
+			uint16_t cur_refcnt_cur_loci = Dee_except_exitinfo_locv(curinfo, cur_loci);
+			uint16_t new_refcnt_cur_loci = Dee_except_exitinfo_locv(newinfo, cur_loci);
+			ASSERT(cur_refcnt_cur_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
+			ASSERT(new_refcnt_cur_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
+			if (cur_refcnt_cur_loci > new_refcnt_cur_loci && cur_refcnt_cur_loci == new_refcnt) {
+				struct Dee_memloc cur_loc;
+				uint16_t cur_refcnt;
+/*offload_cur_loci_to_new_loci_for_expand:*/
+				Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
+				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
+				ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
+				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
 				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-			}
-			if unlikely(Dee_function_generator_gexcept_morph_decref(self, &cur_loc, old_refcnt))
-				goto err_infostate_state_curinfo_vaddr;
-		}
-		Dee_except_exitinfo_locv(curinfo, cur_locX) = new_refcnt;
-next_cur_locX:;
-	}
-
-	/* With value shifting down, force same-slot locations to have the proper reference counts. */
-	for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-		struct Dee_memloc new_loc;
-		size_t new_locX;
-		uint16_t old_refcnt = 0;
-		uint16_t new_refcnt;
-		new_locX   = Dee_except_exitinfo_loci_revstack(newinfo, new_loci);
-		new_refcnt = Dee_except_exitinfo_locv(newinfo, new_locX);
-		old_refcnt = 0;
-		if (new_locX < cur_locc)
-			old_refcnt = Dee_except_exitinfo_locv(curinfo, new_locX);
-		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		if (new_refcnt == 0) {
-			ASSERT(old_refcnt == 0);
-			continue; /* Nothing here */
-		}
-		if (old_refcnt == (new_refcnt) ||
-		    old_refcnt == (new_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
-			continue; /* Location already matches target perfectly. */
-		Dee_except_exitinfo_asloc(new_locX, &new_loc);
-
-		/* Handle special case: "push" only gets used if at the CFA boundary.
-		 * So if the target is a stack location that is out-of-bounds (and not
-		 * at the boundary), then allocate the remaining stack. */
-		if (new_loc.ml_type == MEMLOC_TYPE_HSTACKIND) {
-			uintptr_t loc_cfa = new_loc.ml_value.v_hstack.s_cfa;
-			uintptr_t cur_cfa = state->ms_host_cfa_offset;
-#ifdef HOSTASM_STACK_GROWS_DOWN
-			if (loc_cfa > cur_cfa)
-#else /* HOSTASM_STACK_GROWS_DOWN */
-			if (loc_cfa >= cur_cfa)
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
-			{
-				uintptr_t new_cfa = newinfo->exi_cfa_offset;
-				ptrdiff_t cfa_delta = (ptrdiff_t)new_cfa - (ptrdiff_t)cur_cfa;
-				if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
+				cur_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
+				ASSERT(cur_refcnt != 0);
+				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
+				                                                     cur_refcnt, new_refcnt))
 					goto err_infostate_state_curinfo_vaddr;
+				Dee_except_exitinfo_locv(curinfo, cur_loci) = 0; /* Moved to "new_loci" */
+				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
+				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+				curinfo_vaddr[new_loci] = state->ms_stackc;
+				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+				new_loc.ml_valtyp = NULL;
+				if unlikely(Dee_memstate_vpush(state, &new_loc))
+					goto err_infostate_state_curinfo_vaddr;
+				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
+				++cur_locc;
+				goto again_move_added_location;
 			}
 		}
-		if (old_refcnt == 0) {
+
+		/* No suitable value to move into the state's required reference -> create a reference to "Dee_None" */
+		{
 			/* Need to get an object out of the void. */
 			struct Dee_memloc none;
 			none.ml_type = MEMLOC_TYPE_CONST;
 			none.ml_value.v_const = Dee_None;
+			ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
 			                                                     1, new_refcnt + 1))
 				goto err_infostate_state_curinfo_vaddr;
+			Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 			curinfo_vaddr[new_loci] = state->ms_stackc;
 			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
 			new_loc.ml_valtyp = NULL;
 			if unlikely(Dee_memstate_vpush(state, &new_loc))
 				goto err_infostate_state_curinfo_vaddr;
-		} else {
-			if unlikely(Dee_function_generator_gexcept_morph_adjref(self, &new_loc, old_refcnt, new_refcnt))
-				goto err_infostate_state_curinfo_vaddr;
 		}
-		/*if (new_locX < cur_locc)
-			Dee_except_exitinfo_locv(curinfo, new_locX) = new_refcnt;*/
+		++cur_locc;
+	}
+	ASSERT(cur_locc == new_locc);
+	curinfo->exi_cfa_offset = 0;
+	if (cur_locc > HOST_REGISTER_COUNT)
+		curinfo->exi_cfa_offset = (cur_locc - HOST_REGISTER_COUNT) * HOST_SIZEOF_POINTER;
+
+	/* Try to shift values between locations that appear in both states. */
+	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
+		struct Dee_memloc *p_cur_loc, new_loc;
+		uint16_t cur_refcnt_cur_loci = Dee_except_exitinfo_locv(curinfo, cur_loci);
+		uint16_t new_refcnt_cur_loci = Dee_except_exitinfo_locv(newinfo, cur_loci);
+		uint16_t cur_refcnt_new_loci;
+		uint16_t new_refcnt_new_loci;
+		if (cur_refcnt_cur_loci == 0)
+			continue; /* Nothing here, so also nothing to move. */
+		if (cur_refcnt_cur_loci == new_refcnt_cur_loci)
+			continue; /* Location already matches target perfectly. */
+
+		/* See if there is a location in "newinfo" that matches "cur_refcnt"
+		 * perfectly, and that isn't already matched perfectly in "curinfo". */
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci != cur_refcnt_cur_loci)
+				continue; /* Wouldn't be a perfect match... */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Would be a perfect match, but already *has* a perfect match */
+			goto move_cur_loci_to_new_loci;
+		}
+		if (cur_refcnt_cur_loci & DEE_EXCEPT_EXITINFO_NULLFLAG) {
+			/* With the current value may be NULL, only perfect matches are acceptable as
+			 * move-targets (because otherwise we'd need to encode a null-check anyways) */
+			continue;
+		}
+		if (cur_refcnt_cur_loci == (new_refcnt_cur_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
+			continue; /* No perfect (and unused) candidate found -> target will just have to do an unnecessary NULL-check... */
+
+		/* See if there is a candidate that will simply do an unnecessary NULL-check. */
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (new_refcnt_new_loci != (cur_refcnt_cur_loci | DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Wouldn't be a perfect match... */
+			goto move_cur_loci_to_new_loci;
+		}
+
+		/* See if there is a candidate with a refcnt that is +1/-1 compared to "new_refcnt_cur_loci",
+		 * but where there isn't another location > cur_loci in curinfo that would match perfectly to *it* */
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG)
+				continue; /* Try to not go for nullable locations (yet) */
+			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
+			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked... */
+			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
+			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked */
+			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
+			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked */
+			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
+			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+
+		/* Same as before, but allow arbitrary refcnt deltas! */
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG)
+				continue; /* Try to not go for nullable locations (yet) */
+			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked... */
+			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked */
+			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
+			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
+			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
+			if (new_refcnt_new_loci == 0)
+				continue; /* Not a suitable target location */
+			if (new_refcnt_new_loci == cur_refcnt_new_loci)
+				continue; /* Location is already perfectly matched. */
+			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
+				continue; /* Already checked */
+			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
+			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
+				goto move_cur_loci_to_new_loci; /* Move here! */
+		}
+
+		continue;
+move_cur_loci_to_new_loci:
+		ASSERT(cur_refcnt_cur_loci == Dee_except_exitinfo_locv(curinfo, cur_loci));
+		ASSERT(cur_refcnt_cur_loci != 0);
+		ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
+		ASSERT(cur_refcnt_new_loci == Dee_except_exitinfo_locv(curinfo, new_loci));
+		ASSERT(new_refcnt_new_loci == Dee_except_exitinfo_locv(newinfo, new_loci));
+		ASSERT(new_refcnt_new_loci != 0);
+
+		/* Do moves:
+		 * - new_loci -> [...]     (Dee_except_exitinfo_locv(curinfo, new_loci) != 0)
+		 * - cur_loci -> new_loci */
+		if (cur_refcnt_new_loci != 0) {
+			ASSERT(curinfo_vaddr[new_loci] != (Dee_vstackaddr_t)-1);
+			p_cur_loc = &state->ms_stackv[curinfo_vaddr[new_loci]];
+			/* Move "p_cur_loc" to a location somewhere further up the stack, or just decref() it. */
+
+			/* TODO: Try to move "p_cur_loc" elsewhere */
+
+			/* Fallback: just kill "p_cur_loc" */
+			if unlikely(Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt_new_loci))
+				goto err_infostate_state_curinfo_vaddr;
+			Dee_except_exitinfo_locv(curinfo, new_loci) = 0;
+			p_cur_loc->ml_type = MEMLOC_TYPE_UNDEFINED;
+			curinfo_vaddr[new_loci] = (Dee_vstackaddr_t)-1;
+		}
+		ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
+
+		/* Move cur_loci -> new_loci */
+		p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]];
+		Dee_except_exitinfo_asloc(new_loci, &new_loc);
+		if unlikely(Dee_function_generator_gexcept_morph_mov(self, p_cur_loc, &new_loc,
+		                                                     cur_refcnt_cur_loci,
+		                                                     new_refcnt_new_loci))
+			goto err_infostate_state_curinfo_vaddr;
+
+		/* Updated meta-data to reflect the move. */
+		if (MEMLOC_TYPE_HASREG(p_cur_loc->ml_type))
+			Dee_memstate_decrinuse(state, p_cur_loc->ml_value.v_hreg.r_regno);
+		ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]]);
+		curinfo_vaddr[new_loci] = curinfo_vaddr[cur_loci];
+		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+		new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		new_loc.ml_valtyp = NULL;
+		*p_cur_loc = new_loc;
+		if (MEMLOC_TYPE_HASREG(new_loc.ml_type))
+			Dee_memstate_incrinuse(state, new_loc.ml_value.v_hreg.r_regno);
+		Dee_except_exitinfo_locv(curinfo, cur_loci) = 0;
+		Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt_new_loci;
+	}
+
+	/* All feasible shifts have been performed -> simply ensure that all locations
+	 * match their expected reference counts in "newinfo", without shifting values. */
+	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
+		uint16_t cur_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
+		uint16_t new_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
+		ASSERT(cur_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
+		if (cur_refcnt == new_refcnt)
+			continue;
+		if (cur_refcnt == (new_refcnt | DEE_EXCEPT_EXITINFO_NULLFLAG))
+			continue;
+		if (cur_refcnt == 0) {
+			/* Nothing here, yet -> incref(none), and move to the target location */
+			struct Dee_memloc new_loc, none;
+			ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
+			Dee_except_exitinfo_asloc(cur_loci, &new_loc);
+			none.ml_type = MEMLOC_TYPE_CONST;
+			none.ml_value.v_const = Dee_None;
+			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
+			                                                     1, new_refcnt + 1))
+				goto err_infostate_state_curinfo_vaddr;
+		} else {
+			struct Dee_memloc *p_cur_loc;
+			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
+			p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]];
+			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
+			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
+				goto err;
+		}
+		Dee_except_exitinfo_locv(curinfo, cur_loci) = new_refcnt;
 	}
 
 	/* Load register-references needed by the new state into registers (if they were flushed). */

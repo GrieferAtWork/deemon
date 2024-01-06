@@ -2231,8 +2231,6 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gmov_regind2reg(struct Dee_host_section *__restrict self,
                                   Dee_host_register_t src_regno, ptrdiff_t src_delta,
                                   Dee_host_register_t dst_regno) {
-	if unlikely(src_regno == dst_regno)
-		return 0;
 	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
 	gen86_printf("mov" Plq "\t%Id(%s), %s\n", src_delta, gen86_regname(src_regno), gen86_regname(dst_regno));

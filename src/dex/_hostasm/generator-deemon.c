@@ -1455,9 +1455,9 @@ do_jcc:
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));   /* [refs...], ref:function */
 		while (refc) {
 			--refc;
-			DO(Dee_function_generator_vswap(self)); /* [refs...], ref:function, ref */
-			DO(Dee_function_generator_vref2(self)); /* [refs...], ref:function, ref:ref */
-			DO(Dee_function_generator_vpopind(self, /* [refs...], ref:function */
+			DO(Dee_function_generator_vswap(self));    /* [refs...], ref:function, ref */
+			DO(Dee_function_generator_vref2(self, 2)); /* [refs...], ref:function, ref:ref */
+			DO(Dee_function_generator_vpopind(self,    /* [refs...], ref:function */
 			                                  offsetof(DeeFunctionObject, fo_refv) +
 			                                  (refc * sizeof(DREF DeeObject *))));
 		}
@@ -2447,7 +2447,7 @@ do_jcc:
 				default: break;
 				}
 
-				DO(Dee_function_generator_vref2(self));                               /* ..., ref:value */
+				DO(Dee_function_generator_vref2(self, 0));                            /* ..., ref:value */
 				DO(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]));   /* ..., ref:value, p_global */
 				DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));  /* - */
 				DO(Dee_function_generator_vind(self, 0));                             /* ..., ref:value, *p_global */

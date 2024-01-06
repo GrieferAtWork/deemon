@@ -874,8 +874,6 @@ struct Dee_except_exitinfo {
 #define Dee_except_exitinfo_locc(self)    (((self)->exi_cfa_offset / HOST_SIZEOF_POINTER) + HOST_REGISTER_COUNT)
 #define Dee_except_exitinfo_locv(self, i) (_Dee_except_exitinfo_locv(self)[i])
 #define _Dee_except_exitinfo_locv(self)   ((uint16_t *)((byte_t *)(self) + offsetof(struct Dee_except_exitinfo, exi_regs)))
-#define Dee_except_exitinfo_loci_revstack(self, i) \
-	((i) < HOST_REGISTER_COUNT ? (i) : (HOST_REGISTER_COUNT + ((((self)->exi_cfa_offset / HOST_SIZEOF_POINTER) - 1) - ((i) - HOST_REGISTER_COUNT))))
 
 #define Dee_except_exitinfo_asloc(i, loc)                                                              \
 	(Dee_except_exitinfo_isreg(i)                                                                      \
@@ -1466,12 +1464,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswapind(struct Dee
 
 /* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref(struct Dee_function_generator *__restrict self);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref2(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref2(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t dont_steal_from_vtop_n);
 
 /* Ensure that `loc' is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
- * also contains a second reference. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gref2(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
+ * also contains a second reference.
+ * @param: dont_steal_from_vtop_n: Ignore the top n v-stack items when searching for aliases. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gref2(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc, Dee_vstackaddr_t dont_steal_from_vtop_n);
 
 /* Force vtop into a register (ensuring it has type `MEMLOC_TYPE_HREG') */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vreg(struct Dee_function_generator *__restrict self, Dee_host_register_t const *not_these);

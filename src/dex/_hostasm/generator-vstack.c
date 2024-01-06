@@ -2765,7 +2765,8 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vref2(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vref2(struct Dee_function_generator *__restrict self,
+                             Dee_vstackaddr_t dont_steal_from_vtop_n) {
 	struct Dee_memstate *state = self->fg_state;
 	struct Dee_memloc *loc;
 	if unlikely(state->ms_stackc < 1)
@@ -2776,7 +2777,7 @@ Dee_function_generator_vref2(struct Dee_function_generator *__restrict self) {
 			goto err;
 		if unlikely(Dee_function_generator_vdirect(self, 1))
 			goto err;
-		return Dee_function_generator_gref2(self, loc);
+		return Dee_function_generator_gref2(self, loc, dont_steal_from_vtop_n);
 	}
 	return 0;
 err:
@@ -2786,15 +2787,19 @@ err:
 
 /* Ensure that `loc' is holding a reference. If said location has aliases,
  * and isn't a constant, then also ensure that at least one of those aliases
- * also contains a second reference. */
+ * also contains a second reference.
+ * @param: dont_steal_from_vtop_n: Ignore the top n v-stack items when searching for aliases.*/
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
-                             struct Dee_memloc *loc) {
+                             struct Dee_memloc *loc,
+                             Dee_vstackaddr_t dont_steal_from_vtop_n) {
 	struct Dee_memstate *state = self->fg_state;
 	struct Dee_memloc *alias;
 	struct Dee_memloc *alias_with_reference = NULL;    /* Alias that has a reference */
 	struct Dee_memloc *alias_without_reference = NULL; /* Alias that needs a reference */
 	bool got_alias = false; /* There *are* aliases. */
+	ASSERT(state->ms_stackc <= dont_steal_from_vtop_n);
+	state->ms_stackc -= dont_steal_from_vtop_n;
 	Dee_memstate_foreach(alias, state) {
 		if (alias == loc)
 			continue;
@@ -2814,14 +2819,15 @@ Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
 		}
 	}
 	Dee_memstate_foreach_end;
+	state->ms_stackc += dont_steal_from_vtop_n;
 	if (got_alias) {
 		ASSERT(!alias_with_reference || !(alias_with_reference->ml_flags & MEMLOC_F_NOREF));
 		ASSERT(!alias_without_reference || (alias_without_reference->ml_flags & MEMLOC_F_NOREF));
 		if (loc->ml_flags & MEMLOC_F_NOREF) {
 			/* There are aliases, but no-one is holding a reference.
 			 * This can happen if the location points to a constant
-			 * that got flushed, in which case we only need a single
-			 * reference. */
+			 * that got flushed, or is a function argument, in which
+			 * case we only need a single reference. */
 			ASSERT(alias_without_reference);
 			ASSERT(!alias_with_reference);
 			ASSERT(!Dee_memstate_isshared(state));

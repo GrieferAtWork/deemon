@@ -2239,7 +2239,7 @@ vnew_ObjMethod(struct Dee_function_generator *__restrict self,
 		STATIC_ASSERT(sizeof(DeeObjMethodObject) == sizeof(DeeKwObjMethodObject));
 		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeObjMethodObject))); /* this, ref:result */
 		DO(Dee_function_generator_vswap(self));                                              /* ref:result, this */
-		DO(Dee_function_generator_vref2(self));                                              /* ref:result, ref:this */
+		DO(Dee_function_generator_vref2(self, 2));                                           /* ref:result, ref:this */
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_this)));     /* ref:result */
 		DO(Dee_function_generator_vpush_addr(self, (void const *)method));                   /* ref:result, method */
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_func)));     /* ref:result */
@@ -2284,10 +2284,10 @@ vnew_InstanceMethod(struct Dee_function_generator *__restrict self) {
 		/* Inline the behavior of `DeeInstanceMethod_New()' */
 		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeInstanceMethodObject))); /* this, func, ref:result */
 		DO(Dee_function_generator_vswap(self));                                                   /* this, ref:result, func */
-		DO(Dee_function_generator_vref2(self));                                                   /* this, ref:result, ref:func */
+		DO(Dee_function_generator_vref2(self, 3));                                                /* this, ref:result, ref:func */
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_func)));     /* this, ref:result */
 		DO(Dee_function_generator_vswap(self));                                                   /* ref:result, this */
-		DO(Dee_function_generator_vref2(self));                                                   /* ref:result, ref:this */
+		DO(Dee_function_generator_vref2(self, 2));                                                /* ref:result, ref:this */
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_this)));     /* ref:result */
 		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeInstanceMethod_Type));         /* ref:result */
 	} else {
@@ -3042,22 +3042,123 @@ err:
 }
 
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+visspare_location(struct Dee_memstate const *__restrict self,
+                  struct Dee_memloc const *__restrict loc,
+                  Dee_vstackaddr_t ms_stackc_override) {
+	Dee_lid_t i;
+	size_t n_aliases = 0;
+	size_t n_references = 0;
+	for (i = 0; i < ms_stackc_override; ++i) {
+		struct Dee_memloc const *alias = &self->ms_stackv[i];
+		if (!Dee_memloc_sameloc(loc, alias))
+			continue;
+		++n_aliases;
+		if (!(alias->ml_flags & MEMLOC_F_NOREF))
+			++n_references;
+	}
+	for (i = 0; i < self->ms_localc; ++i) {
+		struct Dee_memloc const *alias = &self->ms_localv[i];
+		if (!Dee_memloc_sameloc(loc, alias))
+			continue;
+		++n_aliases;
+		if (!(alias->ml_flags & MEMLOC_F_NOREF))
+			++n_references;
+	}
+	if (!(loc->ml_flags & MEMLOC_F_NOREF))
+		++n_references;
+	if (loc->ml_type == MEMLOC_TYPE_CONST && n_references)
+		return true;
+	return n_aliases > 0 ? n_references >= 2
+	                     : n_references >= 1;
+}
+
+/* Check the top "n" v-stack elements and count how many
+ * are currently holding a "spare" object reference:
+ * >> GIVEN MEMLOC L;
+ * >> LET N_ALIASES    = NUMBER OF ALIASES (NOT IN VTOP(n)) FOR L;
+ * >> LET N_REFERENCES = NUMBER OF ALIASES (NOT IN VTOP(n)) WITHOUT "MEMLOC_F_NOREF" FOR L;
+ * >> IF L DOES NOT HAVE "MEMLOC_F_NOREF" THEN
+ * >>     N_REFERENCES = N_REFERENCES + 1;
+ * >> FI
+ * >> IF L IS "MEMLOC_TYPE_CONST" AND N_REFERENCES >= 1 THEN
+ * >>     N_REFERENCES = INT_MAX;
+ * >> FI
+ * >> LET L_HAS_SPARE_REFERENCES = N_ALIASES > 0 ? N_REFERENCES >= 2
+ * >>                                            : N_REFERENCES >= 1;
+ * In practice, this means:
+ *  - the # of locations that are holding references and aren't aliased
+ *  - plus: the # of locations that have aliases outside the top "n" v-stack
+ *          elements, with this set of aliases having at least 2 references.
+ *  - A special case is made for constants, where there simply needs to be
+ *    at least 1 reference somewhere in "L" or the previously mentioned set
+ *    of aliases. */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) Dee_vstackaddr_t DCALL
+vspare_location_count(struct Dee_memstate const *__restrict self,
+                      Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t vbase_offset, i, result = 0;
+	struct Dee_memloc const *vbase;
+	vbase_offset = self->ms_stackc - n;
+	vbase = self->ms_stackv + vbase_offset;
+	for (i = 0; i < n; ++i) {
+		if (visspare_location(self, &vbase[i], vbase_offset))
+			++result;
+	}
+	return result;
+}
+
 
 /* func, [attr], [items...] -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
                    Dee_vstackaddr_t itemc, bool asmap, bool hasattr) {
 	struct Dee_function_exceptinject_callvoidapi ij;
-	DeeTypeObject *shared_type = &DeeSharedVector_Type;
-	void const *api_create = (void const *)&DeeSharedVector_NewShared;
-	void const *api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
+	DeeTypeObject *shared_type;
+	void const *api_create;
+	void const *api_decref;
+	Dee_vstackaddr_t n_spare_refs;
+	bool gift_references;
+	if (itemc == 0) {
+		/* TODO */
+	}
+
+	/* TODO: Optimization when top "itemc" items are constants */
+	/* TODO: Optimization when "func" is a constant (like DeeList_Type, which can be optimized to a list pack) */
+
+
+	/* Fallback: Generate code similar to what the deemon interpreter already does.
+	 *           The only exception here is that we're also able to choose if we
+	 *           want the vector to inherit references or not. */
+	shared_type = &DeeSharedVector_Type;
+	api_create = (void const *)&DeeSharedVector_NewShared;
+	api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
 	if (asmap) {
 		shared_type = &DeeSharedMap_Type;
 		api_create = (void const *)&DeeSharedMap_NewShared;
 		api_decref = (void const *)&DeeSharedMap_DecrefNoGiftItems;
 	}
-	/* TODO: Optimization when top "itemc" items are constants */
-	/* TODO: Optimization when "func" is a constant (like DeeList_Type, which can be optimized to a list pack) */
+
+	/* Figure out how many spare references there are within the items that are
+	 * supposed to end up as part of the Shared{Vector|Map}. If at least half of
+	 * those items can act as spare references, then force all items to  */
+	n_spare_refs = vspare_location_count(self->fg_state, itemc);
+	gift_references = true; // (n_spare_refs * 2) >= itemc;
+	if (gift_references) {
+		Dee_vstackaddr_t i, total = hasattr ? itemc + 2 : itemc + 1;
+		for (i = 0; i < itemc; ++i) {
+			DO(Dee_function_generator_vlrot(self, itemc)); /* func, [attr], [items...] */
+			DO(Dee_function_generator_vref2(self, total)); /* func, [attr], [items...] */
+		}                                                  /* func, [attr], [items...] */
+		api_decref = asmap ? (void const *)&DeeSharedMap_Decref
+		                   : (void const *)&DeeSharedVector_Decref;
+#ifndef NDEBUG
+		for (i = 0; i < itemc; ++i) {
+			struct Dee_memloc *item_loc;
+			item_loc = self->fg_state->ms_stackv + self->fg_state->ms_stackc - (itemc + 1) + i;
+			ASSERT(!(item_loc->ml_flags & MEMLOC_F_NOREF));
+		}
+#endif /* !NDEBUG */
+	}                                                                          /* func, [attr], [items...] */
 
 	DO(Dee_function_generator_vnotoneref(self, itemc));                        /* func, [attr], [items...] */
 	DO(Dee_function_generator_vlinear(self, itemc, true));                     /* func, [attr], [items...], itemv */
@@ -3070,6 +3171,21 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 	if (hasattr)                                                               /* attr, [items...], custom:seq, func */
 		DO(Dee_function_generator_vlrot(self, itemc + 3));                     /* [items...], custom:seq, func, attr */
 	Dee_function_generator_xinject_push_callvoidapi(self, &ij, api_decref, 1); /* [items...], custom:seq, func, [attr] */
+	ij.fei_cva_base.fei_stack -= hasattr ? 2 : 1; /* Fix stack address to point at "custom:seq" */
+
+	/* Mark all of the items as (no longer) holding any references. */
+	if (gift_references) {
+		Dee_vstackaddr_t i;
+		struct Dee_memloc *itemv;
+		itemv = self->fg_state->ms_stackv + self->fg_state->ms_stackc - (itemc + 2);
+		if (hasattr)
+			--itemv;
+		for (i = 0; i < itemc; ++i) {
+			struct Dee_memloc *loc = &itemv[i];
+			ASSERT(!(loc->ml_flags & MEMLOC_F_NOREF));
+			loc->ml_flags |= MEMLOC_F_NOREF; /* Reference got stolen by the shared vector/map. */
+		}
+	}
 	if (hasattr) {                                                             /* [items...], custom:seq, func, attr */
 		DO(Dee_function_generator_vdup_n(self, 3));                            /* [items...], custom:seq, func, attr, custom:seq */
 		DO(Dee_function_generator_vopcallattr(self, 1));                       /* [items...], custom:seq, result */
@@ -4134,7 +4250,7 @@ Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
 	while (elemc) {
 		--elemc;
 		DO(Dee_function_generator_vswap(self));                                     /* ref:seq, [elems...], elemv, elem */
-		DO(Dee_function_generator_vref2(self));                                     /* ref:seq, [elems...], elemv, ref:elem */
+		DO(Dee_function_generator_vref2(self, elemc + 3));                          /* ref:seq, [elems...], elemv, ref:elem */
 		DO(Dee_function_generator_vpopind(self, elemc * sizeof(DREF DeeObject *))); /* ref:seq, [elems...], elemv */
 	}
 	DO(Dee_function_generator_vpop(self)); /* ref:seq */
@@ -5068,7 +5184,7 @@ Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self)
 		concat_inherited_api_function = (void const *)&DeeObject_ConcatInherited;
 	}
 	DO(Dee_function_generator_vswap(self));            /* rhs, lhs */
-	DO(Dee_function_generator_vref2(self));            /* rhs, ref:lhs */
+	DO(Dee_function_generator_vref2(self, 2));         /* rhs, ref:lhs */
 	DO(Dee_function_generator_vnotoneref_at(self, 1)); /* rhs, ref:lhs */
 	DO(Dee_function_generator_vswap(self));            /* ref:lhs, rhs */
 	if (concat_inherited_api_function == (void const *)&DeeObject_ConcatInherited)
@@ -5096,7 +5212,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DeeTypeObject *seq_type;
 	uint16_t old_seqflags;
 	for (i = 0; i < n; ++i) {
-		DO(Dee_function_generator_vref2(self));
+		DO(Dee_function_generator_vref2(self, n + 1));
 		DO(Dee_function_generator_vlrot(self, n));
 	}
 	seq_type = Dee_memloc_typeof(Dee_function_generator_vtop(self) - n);
@@ -5127,7 +5243,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vcallapi(self, &DeeSharedVector_Decref, VCALL_CC_VOID, 1)); /* [elems...], result */
 		goto rotate_result_and_pop_elems;
 	}
-	DO(Dee_function_generator_vref2(self));            /* [elems...], elemv, ref:seq */
+	DO(Dee_function_generator_vref2(self, n + 2));     /* [elems...], elemv, ref:seq */
 	if (extend_inherited_api_function == (void const *)&DeeObject_ExtendInherited)
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_ADD, 1)); /* [elems...], elemv, ref:seq */
 	DO(Dee_function_generator_vpush_immSIZ(self, n));  /* [elems...], elemv, ref:seq, elemc */

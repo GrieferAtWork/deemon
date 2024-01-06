@@ -1150,7 +1150,7 @@ cca_Cell_value_setter(struct Dee_function_generator *__restrict self, Dee_vstack
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
 		return Dee_function_generator_vcallapi(self, &DeeCell_Set, VCALL_CC_VOID, 2);
 	DO(Dee_function_generator_vnotoneref_at(self, 1)); /* cell, value */
-	DO(Dee_function_generator_vref2(self));            /* cell, ref:value */
+	DO(Dee_function_generator_vref2(self, 2));         /* cell, ref:value */
 	return vcall_DeeCell_DelOrSet(self);
 err:
 	return -1;
