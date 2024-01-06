@@ -111,13 +111,8 @@ INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 Dee_memloc_typeof(struct Dee_memloc const *self) {
 	switch (self->ml_vmorph) {
 	case MEMLOC_VMORPH_DIRECT:
-		if (self->ml_type != MEMLOC_TYPE_CONST)
-			return self->ml_valtyp;
-		ATTR_FALLTHROUGH
 	case MEMLOC_VMORPH_DIRECT_01:
-		if (self->ml_type == MEMLOC_TYPE_CONST)
-			return Dee_TYPE(self->ml_value.v_const);
-		break;
+		return self->ml_valtyp;
 	case MEMLOC_VMORPH_BOOL_Z:
 	case MEMLOC_VMORPH_BOOL_Z_01:
 	case MEMLOC_VMORPH_BOOL_NZ:

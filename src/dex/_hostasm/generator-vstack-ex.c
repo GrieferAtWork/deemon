@@ -3113,17 +3113,103 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
                    Dee_vstackaddr_t itemc, bool asmap, bool hasattr) {
 	struct Dee_function_exceptinject_callvoidapi ij;
+	struct Dee_memloc *func_loc;
+	DeeTypeObject *func_type;
 	DeeTypeObject *shared_type;
 	void const *api_create;
 	void const *api_decref;
 	Dee_vstackaddr_t n_spare_refs;
 	bool gift_references;
-	if (itemc == 0) {
-		/* TODO */
+	if (Dee_function_generator_vallconst(self, itemc)) {
+		if (itemc == 0) {
+			/* Special case: use an empty sequence */
+			DeeObject *seq_or_map = asmap ? Dee_EmptyMapping : Dee_EmptyTuple;
+			DO(Dee_function_generator_vpush_const(self, seq_or_map));
+			return hasattr ? Dee_function_generator_vopcallattr(self, 1)
+			               : Dee_function_generator_vopcall(self, 1);
+		}
+		/* TODO: Special case: all items are constants
+		 * -> Pack into either a tuple, or an RoDict */
 	}
 
-	/* TODO: Optimization when top "itemc" items are constants */
-	/* TODO: Optimization when "func" is a constant (like DeeList_Type, which can be optimized to a list pack) */
+	/* Optimization when "func" is a constant (like
+	 * DeeList_Type, which can be optimized to a list pack) */
+	func_loc = Dee_function_generator_vtop(self) - (hasattr ? (itemc + 1) : itemc);
+	if (func_loc->ml_type == MEMLOC_TYPE_CONST) {
+		DeeObject *func = func_loc->ml_value.v_const;
+		if (!hasattr && (func == (DeeObject *)&DeeList_Type ||
+		                 func == (DeeObject *)&DeeTuple_Type)) {
+			/* TODO: Expand `Dee_function_generator_vpackseq()' to also work for HashSet and Dict */
+			return Dee_function_generator_vpackseq(self, &DeeList_Type, itemc);
+		}
+		/* XXX: More optimizations */
+	}
+	func_type = Dee_memloc_typeof(func_loc);
+	if (func_type) {
+		if (func_type == &DeeString_Type && hasattr &&
+		    func_loc[1].ml_type == MEMLOC_TYPE_CONST &&
+		    DeeString_Check(func_loc[1].ml_value.v_const) &&
+		    DeeString_EQUALS_ASCII(func_loc[1].ml_value.v_const, "format")) {
+			/* Special optimization for template strings:
+			 * >> function foo(a, b, c) {
+			 * >>     return f"Function foo({a}, {b}, {c}) called";
+			 * >> }
+			 *
+			 * ASM (deemon):
+			 * >> push  @const "Function foo({}, {}, {}) called"
+			 * >> push  @arg a
+			 * >> push  @arg b
+			 * >> push  @arg c
+			 * >> callattr top, @"format", [#2]
+			 * >> ret   pop
+			 *
+			 * Since we know that "String.format" never incref's its args-sequence
+			 * (without later decref'ing it), we can cheat a bit here and push a
+			 * couple more things in order to create an in-line Tuple:
+			 * >> 1                 (ob_refcnt)
+			 * >> &DeeTuple_Type    (ob_type)
+			 * >> itemc             (t_size)
+			 * >> [items...]
+			 *
+			 * ASM (i386):
+			 * >>     movl  8(%esp), %eax // argv
+			 * >>     pushl 8(%eax)       // c
+			 * >>     pushl 4(%eax)       // b
+			 * >>     pushl 0(%eax)       // a
+			 * >>     pushl $3            // # of arguments
+			 * >>     pushl $DeeTuple_Type
+			 * >>     pushl $1            // Fake tuple: ob_refcnt
+			 * >>     pushl %esp          // argv[0]   (DeeTupleObject *)
+			 * >>     pushl %esp          // argv      (DeeTupleObject **)
+			 * >>     pushl $1            // argc
+			 * >>     pushl $ADDROF("Function foo({}, {}, {}) called")
+			 * >>     call  string_format
+			 * >>     testl %eax, %eax    // TODO: Add a way to skip null-check when a value is only ever used by "return"
+			 * >>     jz    1f
+			 * >>     addl  $28, %esp
+			 * >>     ret   $8
+			 * >> 1:  addl  $28, %esp
+			 * >>     xorl  %eax, %eax
+			 * >>     ret   $8
+			 */
+#ifndef CONFIG_TRACE_REFCHANGES                                               /* func, attr, [items...] */
+			DO(Dee_function_generator_vpush_addr(self, (void const *)itemc)); /* func, attr, [items...], t_size */
+			DO(Dee_function_generator_vrrot(self, itemc + 1));                /* func, attr, t_size, [items...] */
+			DO(Dee_function_generator_vpush_const(self, &DeeTuple_Type));     /* func, attr, t_size, [items...], ob_type */
+			DO(Dee_function_generator_vrrot(self, itemc + 2));                /* func, attr, ob_type, t_size, [items...] */
+			DO(Dee_function_generator_vpush_addr(self, (void const *)1));     /* func, attr, ob_type, t_size, [items...], 1 */
+			DO(Dee_function_generator_vrrot(self, itemc + 3));                /* func, attr, 1, ob_type, t_size, [items...] */
+			DO(Dee_function_generator_vlinear(self, itemc + 3, false));       /* func, attr, 1, ob_type, t_size, [items...], fake_tuple */
+			DO(Dee_function_generator_vsettyp_noalias(self, &DeeTuple_Type)); /* func, attr, 1, ob_type, t_size, [items...], fake_tuple */
+			DO(Dee_function_generator_vlrot(self, itemc + 6));                /* attr, 1, ob_type, t_size, [items...], fake_tuple, func */
+			DO(Dee_function_generator_vlrot(self, itemc + 6));                /* 1, ob_type, t_size, [items...], fake_tuple, func, attr */
+			DO(Dee_function_generator_vlrot(self, 3));                        /* 1, ob_type, t_size, [items...], func, attr, fake_tuple */
+			DO(Dee_function_generator_vopcallattr(self, 1));                  /* 1, ob_type, t_size, [items...], result */
+			DO(Dee_function_generator_vrrot(self, itemc + 4));                /* result, 1, ob_type, t_size, [items...] */
+			return Dee_function_generator_vpopmany(self, itemc + 3);          /* result */
+#endif /* !CONFIG_TRACE_REFCHANGES */
+		}
+	}
 
 
 	/* Fallback: Generate code similar to what the deemon interpreter already does.
@@ -3142,7 +3228,7 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 	 * supposed to end up as part of the Shared{Vector|Map}. If at least half of
 	 * those items can act as spare references, then force all items to  */
 	n_spare_refs = vspare_location_count(self->fg_state, itemc);
-	gift_references = true; // (n_spare_refs * 2) >= itemc;
+	gift_references = (n_spare_refs * 2) >= itemc;
 	if (gift_references) {
 		Dee_vstackaddr_t i, total = hasattr ? itemc + 2 : itemc + 1;
 		for (i = 0; i < itemc; ++i) {
@@ -4261,7 +4347,7 @@ Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
 		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
 		Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* Returned by `DeeGC_Track()' */
 	}
-	DO(Dee_function_generator_vsettyp_noalias(self, is_list ? &DeeList_Type : &DeeTuple_Type));
+	DO(Dee_function_generator_vsettyp_noalias(self, seq_type));
 	return Dee_function_generator_voneref_noalias(self);
 err:
 	return -1;
@@ -5212,8 +5298,9 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DeeTypeObject *seq_type;
 	uint16_t old_seqflags;
 	for (i = 0; i < n; ++i) {
-		DO(Dee_function_generator_vref2(self, n + 1));
+		/* TODO: Don't create references here if `DeeSharedVector_NewShared()' gets used below! */
 		DO(Dee_function_generator_vlrot(self, n));
+		DO(Dee_function_generator_vref2(self, n + 1));
 	}
 	seq_type = Dee_memloc_typeof(Dee_function_generator_vtop(self) - n);
 	if (seq_type != &DeeTuple_Type)
@@ -5240,7 +5327,8 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vswap(self));           /* [elems...], result, svec */
 		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
 		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;
-		DO(Dee_function_generator_vcallapi(self, &DeeSharedVector_Decref, VCALL_CC_VOID, 1)); /* [elems...], result */
+		/* TODO: Use `DeeSharedVector_Decref()' if more than half of "elemv" are references. */
+		DO(Dee_function_generator_vcallapi(self, &DeeSharedVector_DecrefNoGiftItems, VCALL_CC_VOID, 1)); /* [elems...], result */
 		goto rotate_result_and_pop_elems;
 	}
 	DO(Dee_function_generator_vref2(self, n + 2));     /* [elems...], elemv, ref:seq */
@@ -5251,22 +5339,23 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	old_seqflags = Dee_function_generator_vtop(self)[-2].ml_flags;
 	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINT_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
+	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
 		Dee_function_generator_vtop(self)->ml_flags |= n ? MEMLOC_F_ONEREF : (old_seqflags & MEMLOC_F_ONEREF);
-	DO(Dee_function_generator_vrrot(self, 4));         /* [[valid_if(false)] elems...], result, [valid_if(false)] ref:seq, elemc, elemv */
-	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], result, [valid_if(false)] ref:seq, elemc */
-	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], result, [valid_if(false)] ref:seq */
-	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;
-	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], result */
-rotate_result_and_pop_elems:                           /* [[valid_if(false)] elems...], result */
-	DO(Dee_function_generator_vrrot(self, n + 1));     /* result, [[valid_if(false)] elems...] */
+	DO(Dee_function_generator_vrrot(self, 4));         /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc, elemv */
+	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc */
+	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq */
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] seq */
+	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], ref:result */
+rotate_result_and_pop_elems:                           /* [[valid_if(false)] elems...], ref:result */
+	DO(Dee_function_generator_vrrot(self, n + 1));     /* ref:result, [[valid_if(false)] elems...] */
 	for (i = 0; i < n; ++i) {
 		/* In the success-case, references were inherited! */
 		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
 		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;
 		DO(Dee_function_generator_vpop(self));
 	}
-	return 0; /* result */
+	return 0; /* ref:result */
 err:
 	return -1;
 }

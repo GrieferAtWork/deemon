@@ -567,6 +567,15 @@ Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restric
 		return Dee_function_generator_ghstack_pushhstackind(self, cfa_offset);
 	}	break;
 
+#ifdef Dee_function_generator_ghstack_pushhstack_at_cfa_boundary
+	case MEMLOC_TYPE_HSTACK: {
+		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
+		if (cfa_offset == self->fg_state->ms_host_cfa_offset) /* Special case: push current CFA offset */
+			return Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(self);
+		goto fallback;
+	}	break;
+#endif /* Dee_function_generator_ghstack_pushhstack_at_cfa_boundary */
+
 	case MEMLOC_TYPE_CONST: {
 		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
 		return Dee_function_generator_ghstack_pushconst(self, (DeeObject *)value);

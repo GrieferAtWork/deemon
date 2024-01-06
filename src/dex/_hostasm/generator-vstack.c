@@ -685,6 +685,58 @@ Dee_function_generator_vallconst(struct Dee_function_generator *__restrict self,
 	return true;
 }
 
+/* Check if top `n' elements are all `MEMLOC_TYPE_CONST' and have the `MEMLOC_F_NOREF' flag set. */
+INTERN WUNUSED NONNULL((1)) bool DCALL
+Dee_function_generator_vallconst_noref(struct Dee_function_generator *__restrict self,
+                                       Dee_vstackaddr_t n) {
+	struct Dee_memstate *state = self->fg_state;
+	struct Dee_memloc *itemv;
+	Dee_vstackaddr_t i;
+	bool has_refs = false;
+	ASSERT(n <= state->ms_stackc);
+	itemv = state->ms_stackv + state->ms_stackc - n;
+	for (i = 0; i < n; ++i) {
+		if (itemv[i].ml_type != MEMLOC_TYPE_CONST)
+			return false;
+		if (!(itemv[i].ml_flags & MEMLOC_F_NOREF))
+			has_refs = true;
+	}
+	if (has_refs) {
+		for (i = 0; i < n; ++i) {
+			Dee_vstackaddr_t j;
+			Dee_lid_t lid;
+			struct Dee_memloc *loc = &itemv[i];
+			ASSERT(loc->ml_type == MEMLOC_TYPE_CONST);
+			if (loc->ml_flags & MEMLOC_F_NOREF)
+				continue;
+			/* See if there is some alias which we can off-load the reference on-to. */
+			for (j = 0; j < state->ms_stackc - n; ++j) {
+				struct Dee_memloc *alias = &state->ms_stackv[j];
+				if ((alias->ml_type == MEMLOC_TYPE_CONST) &&
+				    (alias->ml_value.v_const == loc->ml_value.v_const) &&
+				    (alias->ml_flags & MEMLOC_F_NOREF)) {
+					alias->ml_flags &= ~MEMLOC_F_NOREF;
+					loc->ml_flags |= MEMLOC_F_NOREF;
+					goto check_next_vstack_item;
+				}
+			}
+			for (lid = 0; lid < state->ms_localc; ++lid) {
+				struct Dee_memloc *alias = &state->ms_localv[lid];
+				if ((alias->ml_type == MEMLOC_TYPE_CONST) &&
+				    (alias->ml_value.v_const == loc->ml_value.v_const) &&
+				    (alias->ml_flags & MEMLOC_F_NOREF)) {
+					alias->ml_flags &= ~MEMLOC_F_NOREF;
+					loc->ml_flags |= MEMLOC_F_NOREF;
+					goto check_next_vstack_item;
+				}
+			}
+			return false; /* Cannot off-load this reference :( */
+check_next_vstack_item:;
+		}
+	}
+	return true;
+}
+
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -3797,24 +3849,26 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 	if unlikely(!argc) {
 		/* The base address of an empty vector doesn't matter, meaning it's undefined */
 		return Dee_function_generator_vpush_undefined(self);
-	} else if (readonly && Dee_function_generator_vallconst(self, argc)) {
+	} else if (readonly && Dee_function_generator_vallconst_noref(self, argc)) {
 		/* Dynamically allocate a dummy object which includes space
 		 * for "argc" pointers. Then, fill those pointers with values
 		 * from the v-stack, inline the reference to dummy object, and
 		 * finally: push a pointer to the base address of the dummy's
 		 * value array. */
 		Dee_vstackaddr_t i;
-		struct Dee_memloc *cbase = self->fg_state->ms_stackv + self->fg_state->ms_stackc - argc;
+		struct Dee_memloc *cbase;
 		DREF DummyVectorObject *vec = DummyVector_New(argc);
 		if unlikely(!vec)
 			goto err;
 		vec = (DREF DummyVectorObject *)Dee_function_generator_inlineref(self, (DREF DeeObject *)vec);
 		if unlikely(!vec)
 			goto err;
-		for (i = 0; i < argc; ++i)
+		cbase = self->fg_state->ms_stackv + self->fg_state->ms_stackc - argc;
+		for (i = 0; i < argc; ++i) {
 			vec->dvo_items[i] = (void *)cbase[i].ml_value.v_const;
-		if unlikely(Dee_function_generator_vpopmany(self, argc))
-			goto err;
+			if unlikely(cbase[i].ml_flags) {
+			}
+		}
 		return Dee_function_generator_vpush_addr(self, vec->dvo_items);
 	} else if (argc == 1) {
 		/* Deal with simple case: caller only wants the address of a single location.
