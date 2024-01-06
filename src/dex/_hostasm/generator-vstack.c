@@ -837,7 +837,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self) {
 	DREF struct Dee_memstate *common_state;
-	struct Dee_host_symbol *text_already_equal;
+	struct Dee_host_symbol *text_Lalready_equal;
 	struct Dee_memloc *dst, *p_coalesce_from, *p_coalesce_to;
 	struct Dee_memloc coalesce_from;
 	if unlikely(self->fg_state->ms_stackc < 3)
@@ -877,14 +877,14 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 		goto err; /* reg:dst, to */
 	ASSERT(p_coalesce_from == Dee_function_generator_vtop(self));
 	ASSERT(p_coalesce_to == Dee_function_generator_vtop(self) + 1);
-	text_already_equal = Dee_function_generator_newsym(self);
-	if unlikely(!text_already_equal)
+	text_Lalready_equal = Dee_function_generator_newsym_named(self, ".Lalready_equal");
+	if unlikely(!text_Lalready_equal)
 		goto err;
 	common_state = Dee_memstate_copy(self->fg_state);
 	if unlikely(!common_state)
 		goto err;
 	if unlikely(_Dee_function_generator_gjcmp(self, dst, &coalesce_from, false,
-	                                          NULL, text_already_equal, NULL))
+	                                          NULL, text_Lalready_equal, NULL))
 		goto err_common_state;
 	if unlikely(Dee_function_generator_vswap(self))
 		goto err_common_state; /* to, reg:dst */
@@ -895,8 +895,7 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	if unlikely(Dee_function_generator_vmorph(self, common_state))
 		goto err_common_state; /* ... */
 	Dee_memstate_decref(common_state);
-	HA_printf(".Ltext_already_equal:\n");
-	Dee_host_symbol_setsect(text_already_equal, self->fg_sect);
+	Dee_host_symbol_setsect(text_Lalready_equal, self->fg_sect);
 	return Dee_function_generator_vpop(self);
 err_common_state:
 	Dee_memstate_decref(common_state);
@@ -1105,7 +1104,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 	ASSERT(lid < self->fg_state->ms_localc);
 	default_value = self->fg_assembler->fa_code->co_defaultv[opt_aid];
 	if (default_value) {
-		struct Dee_host_symbol *use_default_sym;
+		struct Dee_host_symbol *Luse_default;
 
 		/* Load the default value into a register and into the local */
 		if unlikely(Dee_function_generator_vpush_const(self, default_value))
@@ -1116,8 +1115,8 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 		/* Check if the caller has provided enough arguments. */
 		if unlikely(Dee_function_generator_vpush_argc(self))
 			goto err; /* reg:default_value, argc */
-		use_default_sym = Dee_function_generator_newsym(self);
-		if unlikely(!use_default_sym)
+		Luse_default = Dee_function_generator_newsym_named(self, ".Luse_default");
+		if unlikely(!Luse_default)
 			goto err;
 		{
 			struct Dee_memloc l_argc, l_aid;
@@ -1131,7 +1130,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			l_aid.ml_type          = MEMLOC_TYPE_CONST;
 			l_aid.ml_value.v_const = (DeeObject *)(uintptr_t)aid;
 			if unlikely(_Dee_function_generator_gjcmp(self, &l_aid, &l_argc, false, NULL,
-			                                          use_default_sym, use_default_sym))
+			                                          Luse_default, Luse_default))
 				goto err;
 		}
 		common_state = self->fg_state;
@@ -1145,15 +1144,15 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 		if unlikely(Dee_function_generator_vmorph(self, common_state))
 			goto err_common_state; /* reg:value */
 		Dee_memstate_decref(common_state);
-		Dee_host_symbol_setsect(use_default_sym, self->fg_sect);
+		Dee_host_symbol_setsect(Luse_default, self->fg_sect);
 	} else {
 		if (self->fg_state->ms_uargc_min <= aid) {
 			struct Dee_host_section *text;
 			struct Dee_host_section *cold;
-			struct Dee_host_symbol *target_sym;
+			struct Dee_host_symbol *Ltarget;
 			struct Dee_memloc l_argc, l_aid;
-			target_sym = Dee_function_generator_newsym(self);
-			if unlikely(!target_sym)
+			Ltarget = Dee_function_generator_newsym_named(self, ".Ltarget");
+			if unlikely(!Ltarget)
 				goto err;
 			text = self->fg_sect;
 			cold = text;
@@ -1172,33 +1171,34 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			l_aid.ml_type          = MEMLOC_TYPE_CONST;
 			l_aid.ml_value.v_const = (DeeObject *)(uintptr_t)aid;
 			if unlikely(_Dee_function_generator_gjcmp(self, &l_aid, &l_argc, false,
-			                                          text != cold ? NULL : target_sym,
-			                                          text != cold ? target_sym : NULL,
-			                                          text != cold ? target_sym : NULL))
+			                                          text != cold ? NULL : Ltarget,
+			                                          text != cold ? Ltarget : NULL,
+			                                          text != cold ? Ltarget : NULL))
 				goto err;
+			common_state = self->fg_state;
+			Dee_memstate_incref(common_state);
 			HA_printf(".section .cold\n");
 			self->fg_sect = cold;
-			if (text != cold) {
-				HA_printf(".Ltarget_sym:\n");
-				Dee_host_symbol_setsect(target_sym, cold);
-			}
+			if (text != cold)
+				Dee_host_symbol_setsect(Ltarget, cold);
 			if unlikely(Dee_function_generator_gthrow_arg_unbound(self, instr, aid))
-				goto err;
-			if (text == cold) {
-				HA_printf(".Ltarget_sym:\n");
-				Dee_host_symbol_setsect(target_sym, self->fg_sect);
-			}
+				goto err_common_state;
+			if (text == cold)
+				Dee_host_symbol_setsect(Ltarget, self->fg_sect);
 			HA_printf(".section .text\n");
 			self->fg_sect = text;
 			/* After the check above, we're allowed to remember that the argument
 			 * count is great enough to always include the accessed argument. */
 			self->fg_state->ms_uargc_min = aid + 1;
+
+			/* Restore state from before exception handling was entered. */
+			Dee_memstate_decref(self->fg_state);
+			self->fg_state = common_state;
 		}
 		if unlikely(Dee_function_generator_vpush_argv(self))
 			goto err; /* argv */
 		if unlikely(Dee_function_generator_vind(self, (ptrdiff_t)aid * sizeof(DeeObject *)))
 			goto err; /* argv[aid] */
-		self->fg_state->ms_uargc_min;
 	}
 	return 0;
 err_common_state:
@@ -1330,17 +1330,17 @@ Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict se
 		if unlikely(Dee_function_generator_vinit_xlocal(self, instr, xlid))
 			goto err;
 	} else if (!(loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
-		struct Dee_host_symbol *skipinit;
+		struct Dee_host_symbol *Lskipinit;
 		if (loc->ml_type != MEMLOC_TYPE_HSTACKIND &&
 		    loc->ml_type != MEMLOC_TYPE_HREG) {
 			if unlikely(Dee_function_generator_greg(self, loc, NULL))
 				goto err;
 			ASSERT(loc->ml_type == MEMLOC_TYPE_HREG);
 		}
-		skipinit = Dee_function_generator_newsym(self);
-		if unlikely(!skipinit)
+		Lskipinit = Dee_function_generator_newsym_named(self, ".Lskipinit");
+		if unlikely(!Lskipinit)
 			goto err;
-		if unlikely(_Dee_function_generator_gjnz(self, loc, skipinit))
+		if unlikely(_Dee_function_generator_gjnz(self, loc, Lskipinit))
 			goto err;
 		if unlikely(Dee_function_generator_state_unshare(self))
 			goto err;
@@ -1360,7 +1360,7 @@ Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict se
 		if unlikely(Dee_function_generator_vmorph(self, common_state))
 			goto err_common_state;
 		Dee_memstate_decref(common_state);
-		Dee_host_symbol_setsect(skipinit, self->fg_sect);
+		Dee_host_symbol_setsect(Lskipinit, self->fg_sect);
 	}
 	ASSERT(!(self->fg_state->ms_localv[self->fg_assembler->fa_localc + xlid].ml_flags & MEMLOC_F_LOCAL_UNBOUND));
 	ASSERT(self->fg_state->ms_localv[self->fg_assembler->fa_localc + xlid].ml_flags & MEMLOC_F_LOCAL_BOUND);
@@ -1434,7 +1434,7 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 			goto err;
 		if (text == cold) {
 			struct Dee_host_symbol *text_Ldone;
-			text_Ldone = Dee_function_generator_newsym(self);
+			text_Ldone = Dee_function_generator_newsym_named(self, ".Ldone");
 			if unlikely(!text_Ldone)
 				goto err;
 			if unlikely(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), text_Ldone))
@@ -1446,21 +1446,19 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
 			Dee_memstate_decref(self->fg_state);
 			self->fg_state = saved_state;
-			HA_printf(".Ldone:\n");
 			Dee_host_symbol_setsect(text_Ldone, text);
 		} else {
-			struct Dee_host_symbol *cold_Lerr_no_active_exception;
-			cold_Lerr_no_active_exception = Dee_function_generator_newsym(self);
-			if unlikely(!cold_Lerr_no_active_exception)
+			struct Dee_host_symbol *Lerr_no_active_exception;
+			Lerr_no_active_exception = Dee_function_generator_newsym_named(self, ".Lerr_no_active_exception");
+			if unlikely(!Lerr_no_active_exception)
 				goto err;
-			if unlikely(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), cold_Lerr_no_active_exception))
+			if unlikely(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), Lerr_no_active_exception))
 				goto err;
 			saved_state = self->fg_state;
 			Dee_memstate_incref(saved_state);
 			HA_printf(".section .cold\n");
 			self->fg_sect = cold;
-			HA_printf(".Lerr_no_active_exception:\n");
-			Dee_host_symbol_setsect(cold_Lerr_no_active_exception, cold);
+			Dee_host_symbol_setsect(Lerr_no_active_exception, cold);
 			temp = Dee_function_generator_state_dounshare(self);
 			if likely(temp == 0)
 				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
@@ -1568,7 +1566,7 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		cold = text;
 	if (cold == text) {
 		struct Dee_host_symbol *text_Lbound;
-		text_Lbound = Dee_function_generator_newsym(self);
+		text_Lbound = Dee_function_generator_newsym_named(self, ".Lbound");
 		if unlikely(!text_Lbound)
 			goto err;
 		if unlikely(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), text_Lbound))
@@ -1580,11 +1578,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 			temp = Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock);
 		if likely(temp == 0)
 			temp = Dee_function_generator_gunbound_class_member(self, class_type, addr);
-		HA_printf(".Lbound:\n");
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
 		struct Dee_host_symbol *cold_Lunbound_member;
-		cold_Lunbound_member = Dee_function_generator_newsym(self);
+		cold_Lunbound_member = Dee_function_generator_newsym_named(self, ".Lunbound_member");
 		if unlikely(!cold_Lunbound_member)
 			goto err;
 		if unlikely(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), cold_Lunbound_member))
@@ -1593,7 +1590,6 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
 		self->fg_sect = cold;
-		HA_printf(".Lunbound_member:\n");
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
 		temp = Dee_function_generator_state_dounshare(self);
 		if ((flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF) && likely(temp == 0))
@@ -1804,7 +1800,7 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		cold = text;
 	if (cold == text) {
 		struct Dee_host_symbol *text_Lbound;
-		text_Lbound = Dee_function_generator_newsym(self);
+		text_Lbound = Dee_function_generator_newsym_named(self, ".Lbound");
 		if unlikely(!text_Lbound)
 			goto err;
 		if unlikely(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), text_Lbound))
@@ -1816,11 +1812,10 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 			temp = Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtop(self) - 1);
 		if likely(temp == 0)
 			temp = Dee_function_generator_gunbound_instance_member(self, type, addr);
-		HA_printf(".Lbound:\n");
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
 		struct Dee_host_symbol *cold_Lunbound_member;
-		cold_Lunbound_member = Dee_function_generator_newsym(self);
+		cold_Lunbound_member = Dee_function_generator_newsym_named(self, ".Lunbound_member");
 		if unlikely(!cold_Lunbound_member)
 			goto err;
 		if unlikely(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), cold_Lunbound_member))
@@ -1829,7 +1824,6 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
 		self->fg_sect = cold;
-		HA_printf(".Lunbound_member:\n");
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
 		temp = Dee_function_generator_state_dounshare(self);
 		if likely(temp == 0)
@@ -2306,9 +2300,10 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 
 	/* Initialize the symbol for jumping to `desc'. */
 #ifdef DEE_HOST_RELOCVALUE_SECT
+	Dee_host_symbol_initcommon_named(&_Ljmp, ".Ljmp");
 	Ljmp = &_Ljmp;
 #else /* DEE_HOST_RELOCVALUE_SECT */
-	Ljmp = Dee_function_generator_newsym(self);
+	Ljmp = Dee_function_generator_newsym_named(self, ".Ljmp");
 	if unlikely(!Ljmp)
 		goto err;
 #endif /* !DEE_HOST_RELOCVALUE_SECT */
@@ -2325,16 +2320,23 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		struct Dee_host_symbol *Lexcept;
 #ifdef DEE_HOST_RELOCVALUE_SECT
 		struct Dee_host_symbol _Lexcept;
+		Dee_host_symbol_initcommon_named(&_Lexcept, ".Lexcept");
 		Lexcept = &_Lexcept;
 #else /* DEE_HOST_RELOCVALUE_SECT */
-		Lexcept = Dee_function_generator_newsym(self);
+		Lexcept = Dee_function_generator_newsym_named(self, ".Lexcept");
 		if unlikely(!Lexcept)
 			goto err;
 #endif /* !DEE_HOST_RELOCVALUE_SECT */
 		except_exit = Dee_function_generator_except_exit(self);
 		if unlikely(!except_exit)
 			goto err;
-		Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+		if (self->fg_exceptinject != NULL) {
+			/* TODO: Must also inject custom exception handling code! */
+			DeeError_NOTIMPLEMENTED();
+			goto err;
+		} else {
+			Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+		}
 		if (loc.ml_flags & MEMLOC_F_ONEREF) {
 			ASSERT(Dee_memloc_sameloc(&loc, Dee_function_generator_vtop(self)));
 			if unlikely(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_BOOL, 1))
@@ -2490,7 +2492,6 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	DREF struct Dee_memstate *desc_state;
 	struct Dee_host_symbol *sym;
 	struct Dee_basic_block *target = desc->jd_to;
-	struct Dee_except_exitinfo *except_exit;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	if unlikely(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_ITERNEXT, 1))
@@ -2518,14 +2519,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	}
 
 	/* >> if (elem == NULL) HANDLE_EXCEPT(); */
-	sym = Dee_function_generator_newsym(self);
-	if unlikely(!sym)
-		goto err;
-	except_exit = Dee_function_generator_except_exit(self);
-	if unlikely(!except_exit)
-		goto err;
-	Dee_host_symbol_setsect_ex(sym, &except_exit->exi_block->bb_htext, 0);
-	if unlikely(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), sym))
+	if unlikely(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self)))
 		goto err;
 
 	/* >> if (elem == ITER_DONE) goto <desc>; */
@@ -3316,51 +3310,24 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		return Dee_function_generator_vcheckint(self); /* - */
 
 	case VCALL_CC_NEGINT: {
-		struct Dee_memloc *loc;
-		struct Dee_memloc zero;
-		struct Dee_except_exitinfo *info;
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
 			goto err; /* UNCHECKED(result), [args...] */
 		if unlikely(Dee_function_generator_vpopmany(self, argc))
 			goto err; /* UNCHECKED(result) */
-		loc = Dee_function_generator_vtop(self);
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		zero.ml_type = MEMLOC_TYPE_CONST;
-		zero.ml_value.v_const = NULL;
-		info = Dee_function_generator_except_exit(self);
-		if unlikely(!info)
-			goto err;
-		{
-			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-			return _Dee_function_generator_gjcmp(self, loc, &zero, true, sym, NULL, NULL);
-		}
-		__builtin_unreachable();
+		return Dee_function_generator_gjcmp_except(self, Dee_function_generator_vtop(self), 0,
+		                                           Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO);
 	}	break;
 
 	case VCALL_CC_M1INT: {
-		struct Dee_memloc *loc;
-		struct Dee_memloc minus_one;
-		struct Dee_except_exitinfo *info;
 		if unlikely(Dee_function_generator_vpush_reg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
 			goto err; /* UNCHECKED(result), [args...] */
 		if unlikely(Dee_function_generator_vpopmany(self, argc))
 			goto err; /* UNCHECKED(result) */
-		loc = Dee_function_generator_vtop(self);
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		minus_one.ml_type = MEMLOC_TYPE_CONST;
-		minus_one.ml_value.v_const = (DeeObject *)(uintptr_t)(intptr_t)-1;
-		info = Dee_function_generator_except_exit(self);
-		if unlikely(!info)
-			goto err;
-		{
-			Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-			return _Dee_function_generator_gjcmp(self, loc, &minus_one, true, NULL, sym, NULL);
-		}
-		__builtin_unreachable();
+		return Dee_function_generator_gjeq_except(self, Dee_function_generator_vtop(self), -1);
 	}	break;
 
 	case VCALL_CC_MORPH_INTPTR:
@@ -3581,18 +3548,13 @@ Dee_function_generator_vcheckobj(struct Dee_function_generator *__restrict self)
 		return err_illegal_stack_effect();
 	loc = Dee_function_generator_vtop(self);
 	ASSERTF(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph), "non-sensical call: vcheckobj() on non-direct value");
-	if (loc->ml_flags & MEMLOC_F_OBJCHECKED) {
-		/* Check already happend out-of-band somewhere */
-		loc->ml_flags &= ~MEMLOC_F_OBJCHECKED;
-	} else {
-		if unlikely(Dee_function_generator_gjz_except(self, loc))
-			goto err;
-		/* Clear the NOREF flag now that we know the return value to be non-NULL */
-		loc = Dee_function_generator_vtop(self);
-		if (loc->ml_type != MEMLOC_TYPE_CONST) {
-			ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-			loc->ml_flags &= ~MEMLOC_F_NOREF;
-		}
+	if unlikely(Dee_function_generator_gjz_except(self, loc))
+		goto err;
+	/* Clear the NOREF flag now that we know the return value to be non-NULL */
+	loc = Dee_function_generator_vtop(self);
+	if (loc->ml_type != MEMLOC_TYPE_CONST) {
+		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
+		loc->ml_flags &= ~MEMLOC_F_NOREF;
 	}
 	return 0;
 err:
@@ -3988,7 +3950,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			if (loc->ml_type == TYPE_LINLOC) {
 				struct Dee_memloc *next;
 #ifdef HOSTASM_STACK_GROWS_DOWN
-				uintptr_t dst_cfa_offset = result_cfa_offset - ((argc - 1) - i) * HOST_SIZEOF_POINTER;
+				uintptr_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
 				uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
@@ -4006,7 +3968,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		/* Fix locations where linear elements were aliasing each other. */
 		for (i = 0; i < argc; ++i) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
-			uintptr_t dst_cfa_offset = result_cfa_offset - ((argc - 1) - i) * HOST_SIZEOF_POINTER;
+			uintptr_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
 			uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */

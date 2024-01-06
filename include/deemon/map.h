@@ -112,9 +112,10 @@ typedef struct {
 
 /* Create a new shared map that will inherit elements from
  * the given vector once `DeeSharedMap_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself!
+ * NOTE: This function can implicitly inherit a reference to each item of the
+ *       given vector, though does not actually inherit the vector itself:
+ *       - DeeSharedMap_Decref:            The `vector' arg here is `DREF DeeSharedItem *const *'
+ *       - DeeSharedMap_DecrefNoGiftItems: The `vector' arg here is `DeeSharedItem *const *'
  * NOTE: Do NOT free the given `vector' before calling `DeeSharedMap_Decref'
  *       on the returned object, as `vector' will be shared with it until
  *       that point in time! */
@@ -140,6 +141,11 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector);
  *       mirroring the behavior of adjstack/pop instructions. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedMap_Decref(DREF DeeObject *__restrict self);
+
+/* Same as `DeeSharedMap_Decref()', but should be used if the caller
+ * does *not* want to gift the vector references to all of its items. */
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedMap_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
 DECL_END
 

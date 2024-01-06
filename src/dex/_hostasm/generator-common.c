@@ -1102,13 +1102,13 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	struct Dee_host_symbol *target;
 	struct Dee_host_section *text_sect;
 	struct Dee_host_section *cold_sect;
-	target = Dee_function_generator_newsym(self);
-	if unlikely(!target)
-		goto err;
 	text_sect = self->fg_sect;
 	cold_sect = text_sect;
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE))
 		cold_sect = &self->fg_block->bb_hcold;
+	target = Dee_function_generator_newsym_named(self, text_sect == cold_sect ? ".Lbound" : ".Lunbound");
+	if unlikely(!target)
+		goto err;
 	if unlikely(text_sect == cold_sect
 	            ? _Dee_function_generator_gjnz(self, loc, target)
 	            : _Dee_function_generator_gjz(self, loc, target))
@@ -1119,8 +1119,10 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 		goto err_saved_state;
 
 	self->fg_sect = cold_sect;
-	if (text_sect != cold_sect)
+	if (text_sect != cold_sect) {
+		HA_printf(".section .cold\n");
 		Dee_host_symbol_setsect(target, cold_sect);
+	}
 
 	/* Location isn't bound -> generate code to throw an exception. */
 	if (opt_endwrite_before_throw != NULL &&
@@ -1141,9 +1143,13 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
 	self->fg_sect = text_sect;
+
 	ASSERT((text_sect == cold_sect) == !!Dee_host_symbol_isdefined(target));
-	if (text_sect == cold_sect)
+	if (text_sect != cold_sect) {
+		HA_printf(".section .text\n");
+	} else {
 		Dee_host_symbol_setsect(target, text_sect);
+	}
 	return 0;
 err_saved_state:
 	Dee_memstate_decref(self->fg_state);
@@ -1195,10 +1201,9 @@ err:
 }
 
 
-/* Generate checks to enter exception handling mode. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self,
-                                  struct Dee_memloc *loc) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+do_gjz_except(struct Dee_function_generator *__restrict self,
+              struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
 	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const != (DeeObject *)0)
 		return 0;
@@ -1206,18 +1211,18 @@ Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self
 	if unlikely(!info)
 		goto err;
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
 		if (loc->ml_type == MEMLOC_TYPE_CONST)
-			return _Dee_function_generator_gjmp(self, sym);
-		return _Dee_function_generator_gjz(self, loc, sym);
+			return _Dee_function_generator_gjmp(self, Lexcept);
+		return _Dee_function_generator_gjz(self, loc, Lexcept);
 	}
 err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self,
-                                   struct Dee_memloc *loc) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+do_gjnz_except(struct Dee_function_generator *__restrict self,
+               struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
 	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const == (DeeObject *)0)
 		return 0;
@@ -1225,43 +1230,185 @@ Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict sel
 	if unlikely(!info)
 		goto err;
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
 		if (loc->ml_type == MEMLOC_TYPE_CONST)
-			return _Dee_function_generator_gjmp(self, sym);
-		return _Dee_function_generator_gjnz(self, loc, sym);
+			return _Dee_function_generator_gjmp(self, Lexcept);
+		return _Dee_function_generator_gjnz(self, loc, Lexcept);
 	}
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+do_gjcmp_except(struct Dee_function_generator *__restrict self,
+                struct Dee_memloc *loc, intptr_t threshold,
+                unsigned int flags) {
+	struct Dee_except_exitinfo *info;
+	struct Dee_memloc threshold_loc;
+	info = Dee_function_generator_except_exit(self);
+	if unlikely(!info)
+		goto err;
+	threshold_loc.ml_type = MEMLOC_TYPE_CONST;
+	threshold_loc.ml_value.v_const = (DeeObject *)(uintptr_t)threshold;
+	{
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		return _Dee_function_generator_gjcmp(self, loc, &threshold_loc,
+		                                     !(flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED),
+		                                     (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO) ? Lexcept : NULL,
+		                                     (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ) ? Lexcept : NULL,
+		                                     (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) ? Lexcept : NULL);
+	}
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+do_gjmp_except(struct Dee_function_generator *__restrict self) {
+	struct Dee_except_exitinfo *info;
+	info = Dee_function_generator_except_exit(self);
+	if unlikely(!info)
+		goto err;
+	{
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		return _Dee_function_generator_gjmp(self, Lexcept);
+	}
+err:
+	return -1;
+}
+
+/* save the current mem-state and execute injected exception cleanup. */
+PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
+gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) {
+	struct Dee_function_exceptinject *chain;
+	DREF struct Dee_memstate *saved_state;
+	ASSERT(self->fg_exceptinject != NULL);
+
+	/* Generate code that needed for custom exception handling. */
+	saved_state = self->fg_state;
+	Dee_memstate_incref(saved_state);
+	chain = self->fg_exceptinject;
+	do {
+		Dee_vstackaddr_t npop;
+		ASSERT(self->fg_state->ms_stackc >= chain->fei_stack);
+		npop = self->fg_state->ms_stackc - chain->fei_stack;
+		if (npop != 0 && unlikely(Dee_function_generator_vpopmany(self, npop)))
+			goto err_saved_state;
+		if unlikely((*chain->fei_inject)(self, chain))
+			goto err_saved_state;
+	} while ((chain = chain->fei_next) != NULL);
+	return saved_state;
+err_saved_state:
+	Dee_memstate_decref(self->fg_state);
+/*err:*/
+	return NULL;
+}
+
+
+
+
+
+/* Generate checks to enter exception handling mode. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self,
+                                  struct Dee_memloc *loc) {
+	if likely(self->fg_exceptinject == NULL)
+		return do_gjz_except(self, loc);
+	return Dee_function_generator_gjeq_except(self, loc, 0);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self,
+                                   struct Dee_memloc *loc) {
+	if likely(self->fg_exceptinject == NULL)
+		return do_gjnz_except(self, loc);
+	return Dee_function_generator_gjne_except(self, loc, 0);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
+                     struct Dee_memloc *loc, intptr_t threshold,
+                     unsigned int flags) {
+	bool signed_cmp = !(flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED);
+	struct Dee_host_section *text = self->fg_sect;
+	struct Dee_host_section *cold = &self->fg_block->bb_hcold;
+	struct Dee_memloc compare_value_loc;
+	compare_value_loc.ml_type = MEMLOC_TYPE_CONST;
+	compare_value_loc.ml_value.v_const = (DeeObject *)(uintptr_t)threshold;
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
+		cold = text;
+	if (cold == text) {
+		struct Dee_host_symbol *Lno_except;
+		Lno_except = Dee_function_generator_newsym_named(self, ".Lno_except");
+		if unlikely(!Lno_except)
+			goto err;
+		if unlikely(_Dee_function_generator_gjcmp(self, loc, &compare_value_loc, signed_cmp,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO) ? NULL : Lno_except,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ) ? NULL : Lno_except,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) ? NULL : Lno_except))
+			goto err;
+		if unlikely(Dee_function_generator_gjmp_except(self))
+			goto err;
+		Dee_host_symbol_setsect(Lno_except, self->fg_sect);
+	} else {
+		struct Dee_host_symbol *Ldo_except;
+		Ldo_except = Dee_function_generator_newsym_named(self, ".Ldo_except");
+		if unlikely(!Ldo_except)
+			goto err;
+		if unlikely(_Dee_function_generator_gjcmp(self, loc, &compare_value_loc, false,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO) ? Ldo_except : NULL,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ) ? Ldo_except : NULL,
+		                                          (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) ? Ldo_except : NULL))
+			goto err;
+		HA_printf(".section .cold\n");
+		self->fg_sect = cold;
+		Dee_host_symbol_setsect(Ldo_except, self->fg_sect);
+		if unlikely(Dee_function_generator_gjmp_except(self))
+			goto err;
+		HA_printf(".section .text\n");
+		self->fg_sect = text;
+	}
+	return 0;
 err:
 	return -1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gjeq_except(struct Dee_function_generator *__restrict self,
-                                   struct Dee_memloc *loc, intptr_t except_val) {
-	struct Dee_except_exitinfo *info;
-	struct Dee_memloc except_val_loc;
-	info = Dee_function_generator_except_exit(self);
-	if unlikely(!info)
-		goto err;
-	except_val_loc.ml_type = MEMLOC_TYPE_CONST;
-	except_val_loc.ml_value.v_const = (DeeObject *)(uintptr_t)except_val;
-	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-		return _Dee_function_generator_gjcmp(self, loc, &except_val_loc, false, NULL, sym, NULL);
+Dee_function_generator_gjcmp_except(struct Dee_function_generator *__restrict self,
+                                    struct Dee_memloc *loc, intptr_t threshold,
+                                    unsigned int flags) {
+	if likely(self->fg_exceptinject == NULL)
+		return do_gjcmp_except(self, loc, threshold, flags);
+	if (loc->ml_type == MEMLOC_TYPE_CONST) {
+		bool should_jump_except = false;
+		intptr_t lhs = (intptr_t)(uintptr_t)loc->ml_value.v_const;
+		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO)
+			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED) ? ((uintptr_t)lhs < (uintptr_t)threshold) : (lhs < threshold);
+		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ)
+			should_jump_except |= lhs == threshold;
+		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR)
+			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED) ? ((uintptr_t)lhs > (uintptr_t)threshold) : (lhs > threshold);
+		return should_jump_except
+		       ? Dee_function_generator_gjmp_except(self)
+		       : 0;
 	}
-err:
-	return -1;
+	return do_slow_gjcmp_except(self, loc, threshold, flags);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gjmp_except(struct Dee_function_generator *__restrict self) {
-	struct Dee_except_exitinfo *info;
-	info = Dee_function_generator_except_exit(self);
-	if unlikely(!info)
+	DREF struct Dee_memstate *saved_state;
+	if unlikely(self->fg_exceptinject == NULL)
+		return do_gjmp_except(self);
+	saved_state = gsave_state_and_do_exceptinject(self);
+	if unlikely(!saved_state)
 		goto err;
-	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, sym, &info->exi_block->bb_htext, 0);
-		return _Dee_function_generator_gjmp(self, sym);
-	}
+	if unlikely(do_gjmp_except(self))
+		goto err_saved_state;
+	Dee_memstate_decref(self->fg_state);
+	self->fg_state = saved_state;
+	return 0;
+err_saved_state:
+	Dee_memstate_decref(self->fg_state);
 err:
 	return -1;
 }

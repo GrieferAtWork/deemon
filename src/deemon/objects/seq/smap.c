@@ -722,9 +722,10 @@ INTERN DeeTypeObject SharedMap_Type = {
 
 /* Create a new shared map that will inherit elements from
  * the given vector once `DeeSharedMap_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself!
+ * NOTE: This function can implicitly inherit a reference to each item of the
+ *       given vector, though does not actually inherit the vector itself:
+ *       - DeeSharedMap_Decref:            The `vector' arg here is `DREF DeeSharedItem *const *'
+ *       - DeeSharedMap_DecrefNoGiftItems: The `vector' arg here is `DeeSharedItem *const *'
  * NOTE: Do NOT free the given `vector' before calling `DeeSharedMap_Decref'
  *       on the returned object, as `vector' will be shared with it until
  *       that point in time! */
@@ -766,60 +767,95 @@ done:
  *       mirroring the behavior of adjstack/pop instructions. */
 PUBLIC NONNULL((1)) void DCALL
 DeeSharedMap_Decref(DeeObject *__restrict self) {
-	size_t count;
-	DREF DeeObject **vector;
+	size_t length;
+	DREF DeeSharedItem const *vector;
+	DREF DeeSharedItem *vector_copy;
 	SharedMap *me = (SharedMap *)self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &SharedMap_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
-		vector = (DREF DeeObject **)me->sm_vector;
-		count  = me->sm_length * 2;
+		Dee_Decrefv((DREF DeeObject **)me->sm_vector, me->sm_length * 2);
 		Dee_DecrefNokill(&SharedMap_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
-done_decref_vector:
-		Dee_Decrefv(vector, count);
 		return;
 	}
 
 	/* Difficult case: must duplicate the vector. */
 	SharedMap_LockWrite(me);
-	if (!me->sm_length) {
-		me->sm_vector = NULL;
-	} else {
-		ASSERT(me->sm_length == me->sm_length);
-		vector = (DREF DeeObject **)Dee_TryMallocc(me->sm_length * 2,
-		                                           sizeof(DREF DeeObject *));
-		if unlikely(!vector)
-			goto err_cannot_inherit;
+	vector_copy = (DREF DeeSharedItem *)Dee_TryMallocc(me->sm_length,
+	                                                   sizeof(DREF DeeSharedItem *));
+	if unlikely(!vector_copy)
+		goto err_cannot_inherit;
 
-		/* Simply copy all the elements, transferring
-		 * all the references that they represent. */
-		vector = (DREF DeeObject **)memcpyc(vector, me->sm_vector,
-		                                    me->sm_length * 2,
-		                                    sizeof(DREF DeeObject *));
+	/* Simply copy all the elements, transferring
+	 * all the references that they represent. */
+	vector_copy = (DREF DeeSharedItem *)memcpyc(vector_copy, me->sm_vector,
+	                                            me->sm_length * 2, sizeof(DREF DeeObject *));
 
-		/* Give the SharedMap its very own copy
-		 * which it will take to its grave. */
-		me->sm_vector = (DeeSharedItem *)vector;
-	}
+	/* Give the SharedMap its very own copy
+	 * which it will take to its grave. */
+	me->sm_vector = vector_copy;
 	SharedMap_LockEndWrite(me);
 	Dee_Decref(me);
 	return;
 
 err_cannot_inherit:
 	/* Special case: failed to create a copy that the vector may call its own. */
-	vector = (DREF DeeObject **)me->sm_vector;
-	count  = me->sm_length * 2;
+	vector = me->sm_vector;
+	length = me->sm_length;
 
 	/* Override with an empty vector. */
 	me->sm_vector = NULL;
 	me->sm_length = 0;
 	SharedMap_LockEndWrite(me);
-	Dee_Decref(me);
 
 	/* Destroy the items that the caller wanted the vector to inherit. */
-	goto done_decref_vector;
+	Dee_Decrefv((DREF DeeObject **)vector, length * 2);
+	Dee_Decref(me);
+}
+
+/* Same as `DeeSharedMap_Decref()', but should be used if the caller
+ * does *not* want to gift the vector references to all of its items. */
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedMap_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
+	DREF DeeSharedItem *vector_copy;
+	SharedMap *me = (SharedMap *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &SharedMap_Type);
+	if (!DeeObject_IsShared(me)) {
+		/* Simple case: The vector isn't being shared. */
+		Dee_DecrefNokill(&SharedMap_Type);
+		DeeObject_FreeTracker((DeeObject *)me);
+		DeeObject_Free(me);
+		return;
+	}
+
+	/* Difficult case: must duplicate the vector. */
+	SharedMap_LockWrite(me);
+	vector_copy = (DREF DeeSharedItem *)Dee_TryMallocc(me->sm_length,
+	                                                   sizeof(DREF DeeSharedItem *));
+	if unlikely(!vector_copy)
+		goto err_cannot_inherit;
+
+	/* Simply copy all the elements, transferring
+	 * all the references that they represent. */
+	vector_copy = (DREF DeeSharedItem *)Dee_Movrefv((DREF DeeObject **)vector_copy,
+	                                                (DREF DeeObject **)me->sm_vector,
+	                                                me->sm_length * 2);
+
+	/* Give the SharedMap its very own copy
+	 * which it will take to its grave. */
+	me->sm_vector = vector_copy;
+	SharedMap_LockEndWrite(me);
+	Dee_Decref(me);
+	return;
+
+err_cannot_inherit:
+	/* Override with an empty vector. */
+	me->sm_vector = NULL;
+	me->sm_length = 0;
+	SharedMap_LockEndWrite(me);
+	Dee_Decref(me);
 }
 
 

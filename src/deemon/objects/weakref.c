@@ -332,10 +332,10 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	TYPE_GETSET_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, TYPE_GETSET_FNOREFESCAPE,
-	              "#tReferenceError{Attempted to get the value after the reference has been unbound}"
-	              "#tValueError{Attempted to set an object that does not support weak referencing}"
-	              "Access to the referenced object"),
+	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bool, TYPE_GETSET_FNOREFESCAPE,
+	                    "#tReferenceError{Attempted to get the value after the reference has been unbound}"
+	                    "#tValueError{Attempted to set an object that does not support weak referencing}"
+	                    "Access to the referenced object"),
 	TYPE_GETTER_F("alive", &ob_weakref_alive, TYPE_GETSET_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for ?#{op:bool}"),

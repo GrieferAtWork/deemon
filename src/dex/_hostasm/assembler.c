@@ -59,7 +59,7 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
 	generator.fg_sect      = &self->bb_htext;
 	generator.fg_assembler = assembler;
 	generator.fg_state     = self->bb_mem_start;
-	generator.fg_state_hstack_res = NULL;
+	_Dee_function_generator_initcommon(&generator);
 	ASSERT(generator.fg_state);
 	Dee_memstate_incref(generator.fg_state);
 	result = Dee_function_generator_genall(&generator);
@@ -288,7 +288,7 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
 	gen.fg_block     = self->fa_blockv[0];
 	gen.fg_sect      = &self->fa_prolog;
 	gen.fg_state     = state; /* Inherit reference */
-	gen.fg_state_hstack_res = NULL;
+	_Dee_function_generator_initcommon(&gen);
 	ASSERT(gen.fg_block);
 	ASSERT(self->fa_prolog_end == NULL);
 	ASSERT(gen.fg_state != NULL);
@@ -602,7 +602,7 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 	gen.fg_block     = to_block;
 	gen.fg_sect      = sect;
 	gen.fg_state     = from_state;
-	gen.fg_state_hstack_res = NULL;
+	_Dee_function_generator_initcommon(&gen);
 	Dee_memstate_incref(gen.fg_state);
 	result = Dee_function_generator_vmorph(&gen, to_block->bb_mem_start);
 	Dee_memstate_decref(gen.fg_state);
@@ -631,17 +631,17 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 		/* New state expects the value to never be NULL
 		 * -> Handle this by loading the proper refcnt and `Dee_None' into `oldloc' if it's NULL
 		 */
-		struct Dee_host_symbol *not_null_sym;
-		not_null_sym = Dee_function_generator_newsym(self);
-		if unlikely(!not_null_sym)
+		struct Dee_host_symbol *Lnot_null_sym;
+		Lnot_null_sym = Dee_function_generator_newsym_named(self, ".Lnot_null_sym");
+		if unlikely(!Lnot_null_sym)
 			goto err;
-		if unlikely(_Dee_function_generator_gjnz(self, oldloc, not_null_sym))
+		if unlikely(_Dee_function_generator_gjnz(self, oldloc, Lnot_null_sym))
 			goto err;
 		old_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* No longer nullable! */
 		_Dee_function_generator_gincref_const(self, Dee_None, old_refcnt);
 		if unlikely(Dee_function_generator_gmov_const2loc(self, Dee_None, oldloc))
 			goto err;
-		Dee_host_symbol_setsect(not_null_sym, self->fg_sect);
+		Dee_host_symbol_setsect(Lnot_null_sym, self->fg_sect);
 	}
 	new_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* Don't care about nullable here anymore! */
 
@@ -1008,11 +1008,11 @@ Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict s
 		goto err;
 
 	/* Generate code for `return NULL' */
-	gen.fg_assembler        = self;
-	gen.fg_block            = last_info->exi_block;
-	gen.fg_sect             = &gen.fg_block->bb_htext;
-	gen.fg_state            = gen.fg_block->bb_mem_start;
-	gen.fg_state_hstack_res = NULL;
+	gen.fg_assembler = self;
+	gen.fg_block     = last_info->exi_block;
+	gen.fg_sect      = &gen.fg_block->bb_htext;
+	gen.fg_state     = gen.fg_block->bb_mem_start;
+	_Dee_function_generator_initcommon(&gen);
 	ASSERT(gen.fg_state != NULL);
 	Dee_memstate_incref(gen.fg_state);
 	if unlikely(Dee_function_generator_gretNULL(&gen))
@@ -1297,14 +1297,14 @@ do_move_section:
 
 		/* Must generate a jump */
 		{
-			Dee_function_assembler_DEFINE_Dee_host_symbol_section(self, err, dst, want_next, 0);
+			Dee_function_assembler_DEFINE_Dee_host_symbol_section(self, err, Lnext_dst, want_next, 0);
 #ifdef Dee_MallocUsableSize
 			sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
 			ASSERT(sect->hs_alend >= sect->hs_end);
 #else /* Dee_MallocUsableSize */
 			sect->hs_alend = sect->hs_end;
 #endif /* !Dee_MallocUsableSize */
-			if unlikely(_Dee_host_section_gjmp(sect, dst))
+			if unlikely(_Dee_host_section_gjmp(sect, Lnext_dst))
 				goto err;
 		}
 		/*sect->hs_fallthru = NULL;*/

@@ -339,6 +339,8 @@ gen86_addrname(void const *addr) {
 PRIVATE ATTR_RETNONNULL WUNUSED char const *DCALL
 gen86_symname(struct Dee_host_symbol const *sym) {
 	static char buf[sizeof("[sect:+0x]") + 2 * (sizeof(void *) * 2)];
+	if (sym->hs_name != NULL)
+		return sym->hs_name;
 	switch (sym->hs_type) {
 	case DEE_HOST_SYMBOL_ABS:
 		return gen86_addrname(sym->hs_value.sv_abs);
@@ -855,7 +857,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 		if unlikely(_Dee_function_generator_gdestroy_regx(self, sect, regno, reg_offset))
 			goto err;
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
-		Dee_host_symbol_setsect(sym_1f, sect);
+		_Dee_host_symbol_setsect(sym_1f, sect);
 	} else {
 		struct Dee_host_section *cold = &self->fg_block->bb_hcold;
 		struct Dee_host_reloc *enter_rel, *leave_rel;
@@ -877,7 +879,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf(".section .cold\n"));
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
-		Dee_host_symbol_setsect(enter_sym, cold);
+		_Dee_host_symbol_setsect(enter_sym, cold);
 
 		/* Generate the destroy-code *within* the cold section. */
 		if unlikely(_Dee_function_generator_gdestroy_regx(self, cold, regno, reg_offset))
@@ -1166,7 +1168,7 @@ _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict 
 	if unlikely(_Dee_function_generator_gdecref_regx_impl(self, regno, reg_offset, n))
 		goto err;
 	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("1:\n"));
-	Dee_host_symbol_setsect(sym_1f, sect);
+	_Dee_host_symbol_setsect(sym_1f, sect);
 	return 0;
 err:
 	return -1;
@@ -1381,7 +1383,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 	text_Lfull_retry = Dee_function_generator_newsym(self);
 	if unlikely(!text_Lfull_retry)
 		goto err;
-	Dee_host_symbol_setsect(text_Lfull_retry, text);
+	_Dee_host_symbol_setsect(text_Lfull_retry, text);
 	if (LOCAL_loc_isreg()) {
 		IF_VERBOSE_LOCK_LOGGING(gen86_printf("mov" Plq "\tarw_lock%+Id(%s), %%" Per "ax\n", LOCAL_loc_regbas(), LOCAL_loc_regnam()));
 		gen86_movP_db_r(p_pc(text), LOCAL_loc_regoff(), LOCAL_loc_reg86(), GEN86_R_PAX);
@@ -1394,7 +1396,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		text_LPax_retry = Dee_function_generator_newsym(self);
 		if unlikely(!text_LPax_retry)
 			goto err;
-		Dee_host_symbol_setsect(text_LPax_retry, text);
+		_Dee_host_symbol_setsect(text_LPax_retry, text);
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifndef NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY
 		gen86_printf(".LPax_retry:");
@@ -1495,7 +1497,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 #endif /* !NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY */
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 		self->fg_sect = cold;
-		Dee_host_symbol_setsect(cold_Lpause_and_full_retry, cold);
+		_Dee_host_symbol_setsect(cold_Lpause_and_full_retry, cold);
 		IF_VERBOSE_LOCK_LOGGING(gen86_printf("Lpause_and_full_retry:\n"));
 		if unlikely(_Dee_function_generator_gpause_or_yield(self,
 		                                                    LOCAL_loc_isreg()
@@ -1535,7 +1537,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		self->fg_sect = text;
 	}
 	if (text_Ldone != NULL) {
-		Dee_host_symbol_setsect(text_Ldone, text);
+		_Dee_host_symbol_setsect(text_Ldone, text);
 		IF_VERBOSE_LOCK_LOGGING(gen86_printf("Ldone:\n"));
 	}
 	return 0;
@@ -1596,7 +1598,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 	text_Lfull_retry = Dee_function_generator_newsym(self);
 	if unlikely(!text_Lfull_retry)
 		goto err;
-	Dee_host_symbol_setsect(text_Lfull_retry, text);
+	_Dee_host_symbol_setsect(text_Lfull_retry, text);
 
 	IF_VERBOSE_LOCK_LOGGING(gen86_printf("xor" Plq "\t%%" Per "ax, %%" Per "ax\n"));
 	gen86_xorP_r_r(p_pc(text), GEN86_R_PAX, GEN86_R_PAX);
@@ -1664,7 +1666,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			IF_VERBOSE_LOCK_LOGGING(gen86_printf(".section .cold\n"));
 			self->fg_sect = cold;
 			IF_VERBOSE_LOCK_LOGGING(gen86_printf(".Lpause_and_full_retry:\n"));
-			Dee_host_symbol_setsect(cold_Lpause_and_full_retry, cold);
+			_Dee_host_symbol_setsect(cold_Lpause_and_full_retry, cold);
 		}
 		if unlikely(_Dee_function_generator_gpause_or_yield(self,
 		                                                    LOCAL_loc_isreg()
@@ -1685,7 +1687,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			rel->hr_value.rv_sym = text_Lfull_retry;
 			IF_VERBOSE_LOCK_LOGGING(gen86_printf(".Ldone:\n"));
 			ASSERT(text_Ldone);
-			Dee_host_symbol_setsect(text_Ldone, text);
+			_Dee_host_symbol_setsect(text_Ldone, text);
 		} else {
 			IF_VERBOSE_LOCK_LOGGING(gen86_printf("jmpl\t.Lfull_retry\n"));
 			gen86_jmpl_offset(p_pc(cold), -4);

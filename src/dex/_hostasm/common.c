@@ -799,16 +799,29 @@ err:
  * @return: * :   The newly allocated host text symbol
  * @return: NULL: Error */
 #ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
+#ifdef NO_HOSTASM_DEBUG_PRINT
 INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
 Dee_function_assembler_newsym_dbg(struct Dee_function_assembler *__restrict self,
                                   char const *file, int line)
-#else /* HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
+#else /* NO_HOSTASM_DEBUG_PRINT */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
+Dee_function_assembler_newsym_named_dbg(struct Dee_function_assembler *__restrict self,
+                                        char const *name, char const *file, int line)
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+#elif defined(NO_HOSTASM_DEBUG_PRINT)
 INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
 Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self)
-#endif /* !HAVE_DEE_HOST_SYMBOL_ALLOC_INFO */
+#else /* ... */
+INTERN WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
+Dee_function_assembler_newsym_named(struct Dee_function_assembler *__restrict self,
+                                    char const *name)
+#endif /* !... */
 {
 	struct Dee_host_symbol *result = _Dee_host_symbol_alloc();
 	if likely(result) {
+#ifndef NO_HOSTASM_DEBUG_PRINT
+		result->hs_name = name;
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
 #ifdef HAVE_DEE_HOST_SYMBOL_ALLOC_INFO
 		result->hs_file = file;
 		result->hs_line = line;

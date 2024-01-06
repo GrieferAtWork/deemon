@@ -258,6 +258,12 @@ libhostasm_rt_err_cell_empty_UnboundAttribute(void) {
 	                       "The cell is empty");
 }
 
+INTERN ATTR_COLD int DCALL
+libhostasm_rt_err_cannot_lock_weakref(void) {
+	return DeeError_Throwf(&DeeError_ReferenceError,
+	                       "Cannot lock weak reference");
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw) {
 	size_t kw_length;

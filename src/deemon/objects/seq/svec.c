@@ -1556,9 +1556,10 @@ INTERN DeeTypeObject SharedVector_Type = {
 
 /* Create a new shared vector that will inherit elements
  * from the given vector once `DeeSharedVector_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself!
+ * NOTE: This function can implicitly inherit a reference to each item of the
+ *       given vector, though does not actually inherit the vector itself:
+ *       - DeeSharedVector_Decref:            The `vector' arg here is `DREF DeeObject *const *'
+ *       - DeeSharedVector_DecrefNoGiftItems: The `vector' arg here is `DeeObject *const *'
  * NOTE: The returned object cannot be used to change out the elements
  *       of the given `vector', meaning that _it_ can still be [const] */
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -1638,6 +1639,46 @@ err_cannot_inherit:
 
 	/* Destroy the items that the caller wanted the vector to inherit. */
 	Dee_Decrefv(vector, length);
+	Dee_Decref(me);
+}
+
+/* Same as `DeeSharedVector_Decref()', but should be used if the caller
+ * does *not* want to gift the vector references to all of its items. */
+PUBLIC NONNULL((1)) void DCALL
+DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
+	DREF DeeObject **vector_copy;
+	SharedVector *me = (SharedVector *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &SharedVector_Type);
+	if (!DeeObject_IsShared(me)) {
+		/* Simple case: The vector isn't being shared. */
+		Dee_DecrefNokill(&SharedVector_Type);
+		DeeObject_FreeTracker((DeeObject *)me);
+		DeeObject_Free(me);
+		return;
+	}
+
+	/* Difficult case: must duplicate the vector. */
+	SharedVector_LockWrite(me);
+	vector_copy = (DREF DeeObject **)Dee_TryMallocc(me->sv_length,
+	                                                sizeof(DREF DeeObject *));
+	if unlikely(!vector_copy)
+		goto err_cannot_inherit;
+
+	/* Copy all the elements, but also incref them at the same time. */
+	vector_copy = Dee_Movrefv(vector_copy, me->sv_vector, me->sv_length);
+
+	/* Give the SharedVector its very own copy
+	 * which it will take to its grave. */
+	me->sv_vector = vector_copy;
+	SharedVector_LockEndWrite(me);
+	Dee_Decref(me);
+	return;
+
+err_cannot_inherit:
+	/* Override with an empty vector. */
+	me->sv_vector = NULL;
+	me->sv_length = 0;
+	SharedVector_LockEndWrite(me);
 	Dee_Decref(me);
 }
 

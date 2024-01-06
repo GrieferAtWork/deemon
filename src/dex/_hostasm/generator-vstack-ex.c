@@ -82,16 +82,6 @@ dee_strchrnul(char const *haystack, int needle) {
 #endif /* !__INTELLISENSE__ */
 #define EDO(err, x) if unlikely(x) goto err
 
-/* [args...], UNCHECKED(result) -> UNCHECKED(result) */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-vpop_args_before_unchecked_result(struct Dee_function_generator *__restrict self,
-                                  Dee_vstackaddr_t argc) {
-	DO(Dee_function_generator_vrrot(self, argc + 1));   /* UNCHECKED(result), [args...] */
-	return Dee_function_generator_vpopmany(self, argc); /* UNCHECKED(result) */
-err:
-	return -1;
-}
-
 
 /* Pop "kw" (as used for `DeeObject_CallKw') and assert that it is NULL or empty:
  * >> if (__builtin_constant_p(kw) ? kw != NULL : 1) {
@@ -130,10 +120,10 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 		struct Dee_memloc loc_DeeKwds_Type, loc_kwds_ob_type, loc_size;
 		struct Dee_host_symbol *Lnot_kwds;
 		struct Dee_host_symbol *Lgot_size;
-		Lnot_kwds = Dee_function_generator_newsym(self);
+		Lnot_kwds = Dee_function_generator_newsym_named(self, ".Lnot_kwds");
 		if unlikely(!Lnot_kwds)
 			goto err;
-		Lgot_size = Dee_function_generator_newsym(self);
+		Lgot_size = Dee_function_generator_newsym_named(self, ".Lgot_size");
 		if unlikely(!Lgot_size)
 			goto err;
 		DO(Dee_function_generator_vdup(self));             /* kw, kw */
@@ -158,14 +148,12 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			EDO(err_enter_state, _Dee_function_generator_gjmp(self, Lgot_size));
 			leave_state = self->fg_state; /* Inherit reference */
 			self->fg_state = enter_state; /* Inherit reference */
-			HA_printf(".Lnot_kwds:\n");
 			Dee_host_symbol_setsect(Lnot_kwds, self->fg_sect);       /* kw */
 			EDO(err_leave_state, Dee_function_generator_vdup(self)); /* kw, kw */
 			EDO(err_leave_state, Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SIZE, 1)); /* kw, kw */
 			EDO(err_leave_state, Dee_function_generator_vcallapi(self, &DeeObject_Size, VCALL_CC_M1INT, 1)); /* kw, size */
 			EDO(err_leave_state, Dee_function_generator_vmorph(self, leave_state));
 			EDO(err_leave_state, _Dee_function_generator_gjmp(self, Lgot_size));
-			HA_printf(".Lgot_size:\n");
 			Dee_host_symbol_setsect(Lgot_size, self->fg_sect);
 		} else {
 			struct Dee_host_section *old_text;
@@ -180,7 +168,6 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			self->fg_sect = &self->fg_block->bb_hcold;
 			leave_state = self->fg_state; /* Inherit reference */
 			self->fg_state = enter_state; /* Inherit reference */
-			HA_printf(".Lnot_kwds:\n");
 			Dee_host_symbol_setsect(Lnot_kwds, self->fg_sect);       /* kw */
 			EDO(err_leave_state, Dee_function_generator_vdup(self)); /* kw, kw */
 			EDO(err_leave_state, Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_SIZE, 1)); /* kw, kw */
@@ -189,7 +176,6 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			EDO(err_leave_state, _Dee_function_generator_gjmp(self, Lgot_size));
 			HA_printf(".section .text\n");
 			self->fg_sect = old_text;
-			HA_printf(".Lgot_size:\n");
 			Dee_host_symbol_setsect(Lgot_size, self->fg_sect);
 		}
 		Dee_memstate_decref(self->fg_state);
@@ -204,14 +190,13 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			/* >>     jz <loc_size>, .Lsize_is_zero
 			 * >>     ...
 			 * >> .Lsize_is_zero: */
-			Lsize_is_zero = Dee_function_generator_newsym(self);
+			Lsize_is_zero = Dee_function_generator_newsym_named(self, ".Lsize_is_zero");
 			if unlikely(!Lsize_is_zero)
 				goto err;
 			DO(_Dee_function_generator_gjz(self, &loc_size, Lsize_is_zero));
 			enter_state = self->fg_state;
 			Dee_memstate_incref(enter_state);
 			EDO(err_enter_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_nonempty_kw, VCALL_CC_EXCEPT, 1));
-			HA_printf(".Lsize_is_zero:\n");
 			Dee_host_symbol_setsect(Lsize_is_zero, self->fg_sect);
 		} else {
 			struct Dee_host_symbol *Lsize_is_not_zero;
@@ -222,7 +207,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			 * >>     ...
 			 * >> .section .text
 			 */
-			Lsize_is_not_zero = Dee_function_generator_newsym(self);
+			Lsize_is_not_zero = Dee_function_generator_newsym_named(self, ".Lsize_is_not_zero");
 			if unlikely(!Lsize_is_not_zero)
 				goto err;
 			DO(_Dee_function_generator_gjnz(self, &loc_size, Lsize_is_not_zero));
@@ -231,7 +216,6 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			HA_printf(".section .cold\n");
 			old_text = self->fg_sect;
 			self->fg_sect = &self->fg_block->bb_hcold;
-			HA_printf(".Lsize_is_not_zero:\n");
 			Dee_host_symbol_setsect(Lsize_is_not_zero, self->fg_sect);
 			EDO(err_enter_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_nonempty_kw, VCALL_CC_EXCEPT, 1));
 			HA_printf(".section .text\n");
@@ -813,10 +797,21 @@ unknown:
 
 
 
-/* [args...], UNCHECKED(result) -> UNCHECKED(result) */
+/* [args...], UNCHECKED(result) -> result */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+vpop_args_and_check_result(struct Dee_function_generator *__restrict self,
+                           Dee_vstackaddr_t argc) {
+	DO(Dee_function_generator_vrrot(self, argc + 1)); /* UNCHECKED(result), [args...] */
+	DO(Dee_function_generator_vpopmany(self, argc));  /* UNCHECKED(result) */
+	return Dee_function_generator_vcheckobj(self);    /* result */
+err:
+	return -1;
+}
+
+/* [args...], UNCHECKED(result) -> result */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-vpop_args_before_unchecked_result_with_doc(struct Dee_function_generator *__restrict self,
-                                           Dee_vstackaddr_t argc, struct docinfo *doc) {
+vpop_args_and_check_result_with_doc(struct Dee_function_generator *__restrict self,
+                                    Dee_vstackaddr_t argc, struct docinfo *doc) {
 	ASSERT(doc);
 	if (doc->di_doc != NULL && !(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
 		DeeTypeObject *result_type;
@@ -830,7 +825,7 @@ vpop_args_before_unchecked_result_with_doc(struct Dee_function_generator *__rest
 			DO(Dee_function_generator_vsettyp_noalias(self, result_type));
 		}
 	}
-	return vpop_args_before_unchecked_result(self, argc);
+	return vpop_args_and_check_result(self, argc);
 err:
 	return -1;
 }
@@ -883,12 +878,12 @@ vinline_kwds_and_replace_with_null(struct Dee_function_generator *__restrict sel
 	return result;
 }
 
-/* this, [args...] -> UNCHECKED(result) */
+/* this, [args...] -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-vcall_objmethod_unchecked(struct Dee_function_generator *__restrict self,
-                          Dee_objmethod_t func, Dee_vstackaddr_t argc,
-                          struct docinfo *doc, char const *funcname,
-                          uintptr_t func_flags) {
+vcall_objmethod(struct Dee_function_generator *__restrict self,
+                Dee_objmethod_t func, Dee_vstackaddr_t argc,
+                struct docinfo *doc, char const *funcname,
+                uintptr_t func_flags) {
 	DeeTypeObject *type = doc->di_typ;
 	if (type) {
 		if (Dee_function_generator_vallconst(self, argc + 1) &&
@@ -951,17 +946,17 @@ vcall_objmethod_unchecked(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vpush_immSIZ(self, argc));                    /* [args...], argv, this, argc */
 	DO(Dee_function_generator_vlrot(self, 3));                              /* [args...], this, argc, argv */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECKED(result) */
-	return vpop_args_before_unchecked_result_with_doc(self, argc, doc);     /* UNCHECKED(result) */
+	return vpop_args_and_check_result_with_doc(self, argc, doc);            /* result */
 err:
 	return -1;
 }
 
-/* this, [args...], kw -> UNCHECKED(result) */
+/* this, [args...], kw -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-vcall_kwobjmethod_unchecked(struct Dee_function_generator *__restrict self,
-                            Dee_kwobjmethod_t func, Dee_vstackaddr_t argc,
-                            struct docinfo *doc, char const *funcname,
-                            uintptr_t func_flags) {
+vcall_kwobjmethod(struct Dee_function_generator *__restrict self,
+                  Dee_kwobjmethod_t func, Dee_vstackaddr_t argc,
+                  struct docinfo *doc, char const *funcname,
+                  uintptr_t func_flags) {
 	DeeTypeObject *type;
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL)); /* this, [args...], kw */
 	type = doc->di_typ;
@@ -1034,55 +1029,38 @@ vcall_kwobjmethod_unchecked(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vlrot(self, 3));                              /* kw, [args...], this, argc, argv */
 	DO(Dee_function_generator_vlrot(self, argc + 4));                       /* [args...], this, argc, argv, kw */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 4)); /* [args...], UNCHECKED(result) */
-	return vpop_args_before_unchecked_result_with_doc(self, argc, doc);     /* UNCHECKED(result) */
+	return vpop_args_and_check_result_with_doc(self, argc, doc);            /* result */
 err:
 	return -1;
 }
 
-/* this -> UNCHECKED(result) */
+/* this -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-vcall_getmethod_unchecked(struct Dee_function_generator *__restrict self,
-                          Dee_getmethod_t func, struct docinfo *doc,
-                          char const *getset_name, uintptr_t getset_flags) {
+vcall_getmethod(struct Dee_function_generator *__restrict self,
+                Dee_getmethod_t func, struct docinfo *doc,
+                char const *getset_name, uintptr_t getset_flags) {
 	DeeTypeObject *type;
 
 	/* Optimizations for some well-known getter-like functions. */
 	if (func == &DeeObject_NewRef) {
 		/* This right here optimizes stuff like `Object.this' */
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
 		return 0;
 	} else if (func == &DeeObject_SizeObject) {
-		DO(Dee_function_generator_vopsize(self));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopsize(self);
 	} else if (func == &DeeObject_IterSelf) {
-		DO(Dee_function_generator_vop(self, OPERATOR_ITERSELF, 1, VOP_F_PUSHRES));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vop(self, OPERATOR_ITERSELF, 1, VOP_F_PUSHRES);
 	} else if (func == &DeeTuple_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeTuple_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeTuple_Type);
 	} else if (func == &DeeList_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeList_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeList_Type);
 	} else if (func == &DeeDict_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeDict_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeDict_Type);
 	} else if (func == &DeeHashSet_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeHashSet_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeHashSet_Type);
 	} else if (func == &DeeRoDict_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeRoDict_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeRoDict_Type);
 	} else if (func == &DeeRoSet_FromSequence) {
-		DO(Dee_function_generator_vopcast(self, &DeeRoSet_Type));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		return Dee_function_generator_vopcast(self, &DeeRoSet_Type);
 	}
 
 	/* Do certain optimizations when the type is known. */
@@ -1130,20 +1108,9 @@ vcall_getmethod_unchecked(struct Dee_function_generator *__restrict self,
 	if (!(getset_flags & TYPE_GETSET_FNOREFESCAPE))
 		DO(Dee_function_generator_vnotoneref_at(self, 1));                  /* this */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 1)); /* result */
-	return vpop_args_before_unchecked_result_with_doc(self, 0, doc);
+	return vpop_args_and_check_result_with_doc(self, 0, doc);
 err:
 	return -1;
-}
-
-/* this -> result */
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-vcall_getmethod(struct Dee_function_generator *__restrict self,
-                Dee_getmethod_t func, struct docinfo *doc,
-                char const *getset_name, uintptr_t getset_flags) {
-	int result = vcall_getmethod_unchecked(self, func, doc, getset_name, getset_flags);
-	if likely(result == 0)
-		result = Dee_function_generator_vcheckobj(self);
-	return result;
 }
 
 /* this -> result */
@@ -1274,11 +1241,11 @@ err:
 
 
 
-/* [args...] -> UNCHECKED(result) */
+/* [args...] -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-vcall_cmethod_unchecked(struct Dee_function_generator *__restrict self,
-                        Dee_cmethod_t func, Dee_vstackaddr_t argc,
-                        struct docinfo *doc) {
+vcall_cmethod(struct Dee_function_generator *__restrict self,
+              Dee_cmethod_t func, Dee_vstackaddr_t argc,
+              struct docinfo *doc) {
 	if (Dee_function_generator_vallconst(self, argc) &&
 	    DeeCMethod_IsConstExpr(func, doc->di_typ, doc->di_mod)) {
 		/* Inline the c-method call. */
@@ -1311,16 +1278,16 @@ vcall_cmethod_unchecked(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vpush_immSIZ(self, argc));                    /* [args...], argv, argc */
 	DO(Dee_function_generator_vswap(self));                                 /* [args...], argc, argv */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 2)); /* [args...], UNCHECKED(result) */
-	return vpop_args_before_unchecked_result_with_doc(self, argc, doc);     /* UNCHECKED(result) */
+	return vpop_args_and_check_result_with_doc(self, argc, doc);            /* result */
 err:
 	return -1;
 }
 
-/* [args...], kw -> UNCHECKED(result) */
+/* [args...], kw -> result */
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
-vcall_kwcmethod_unchecked(struct Dee_function_generator *__restrict self,
-                          Dee_kwcmethod_t func, Dee_vstackaddr_t argc,
-                          struct docinfo *doc) {
+vcall_kwcmethod(struct Dee_function_generator *__restrict self,
+                Dee_kwcmethod_t func, Dee_vstackaddr_t argc,
+                struct docinfo *doc) {
 	if (Dee_function_generator_vallconst(self, argc + 1) &&
 	    DeeCMethod_IsConstExpr((Dee_cmethod_t)(void const *)func, doc->di_typ, doc->di_mod)) {
 		/* Inline the c-method call. */
@@ -1357,7 +1324,7 @@ vcall_kwcmethod_unchecked(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vswap(self));                                 /* kw, [args...], argc, argv */
 	DO(Dee_function_generator_vlrot(self, argc + 3));                       /* [args...], argc, argv, kw */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECKED(result) */
-	return vpop_args_before_unchecked_result_with_doc(self, argc, doc);     /* UNCHECKED(result) */
+	return vpop_args_and_check_result_with_doc(self, argc, doc);            /* result */
 err:
 	return -1;
 }
@@ -1472,7 +1439,7 @@ err:
 }
 
 /* instance, [args...]  ->  instance, UNCHECKED(status_int)   (return == 0)
- * instance, [args...]  ->  instance                      (return == 1)
+ * instance, [args...]  ->  instance                          (return == 1)
  * @return: 1 : Success (no "status" was pushed because none was needed)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -1497,7 +1464,7 @@ err:
 }
 
 /* instance, [args...], kw  ->  instance, UNCHECKED(status_int)   (return == 0)
- * instance, [args...], kw  ->  instance                      (return == 1)
+ * instance, [args...], kw  ->  instance                          (return == 1)
  * @return: 1 : Success (no "status" was pushed because none was needed)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -1562,13 +1529,13 @@ vcall_DeeType_FreeInstance(struct Dee_function_generator *__restrict self,
 	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_VOID, 1);
 }
 
-/* func, [args...], kw -> UNCHECKED(result)
+/* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
  * @return: 1 : No dedicated optimization available for `Dee_TYPE(func_obj)'
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
-                              DeeObject *func_obj, Dee_vstackaddr_t true_argc) {
+vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
+                    DeeObject *func_obj, Dee_vstackaddr_t true_argc) {
 	struct docinfo doc;
 	DeeTypeObject *func_type = Dee_TYPE(func_obj);
 	bzero(&doc, sizeof(doc));
@@ -1584,7 +1551,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 			if (doc.di_doc != NULL)
 				doc.di_typ = DeeObjMethod_GetType((DeeObject *)func);
 		}
-		return vcall_objmethod_unchecked(self, func->om_func, true_argc, &doc, NULL, 0);
+		return vcall_objmethod(self, func->om_func, true_argc, &doc, NULL, 0);
 	} else if (func_type == &DeeKwObjMethod_Type) {
 		DeeKwObjMethodObject *func = (DeeKwObjMethodObject *)func_obj;
 		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
@@ -1597,7 +1564,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vpop(self));                       /* [args...], kw */
 		DO(Dee_function_generator_vpush_const(self, func->om_this)); /* [args...], kw, this */
 		DO(Dee_function_generator_vrrot(self, true_argc + 2));       /* this, [args...], kw */
-		return vcall_kwobjmethod_unchecked(self, func->om_func, true_argc, &doc, NULL, 0);
+		return vcall_kwobjmethod(self, func->om_func, true_argc, &doc, NULL, 0);
 	} else if (func_type == &DeeClsMethod_Type) {
 		DeeClsMethodObject *func = (DeeClsMethodObject *)func_obj;
 		if (true_argc >= 1) {
@@ -1612,7 +1579,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 				doc.di_doc = DeeClsMethod_GetDoc((DeeObject *)func);
 				doc.di_typ = func->cm_type;
 			}
-			return vcall_objmethod_unchecked(self, func->cm_func, argc, &doc, NULL, 0);
+			return vcall_objmethod(self, func->cm_func, argc, &doc, NULL, 0);
 		}
 	} else if (func_type == &DeeKwClsMethod_Type) {
 		DeeKwClsMethodObject *func = (DeeKwClsMethodObject *)func_obj;
@@ -1623,12 +1590,12 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 				doc.di_typ = func->cm_type;
 				DO(vinline_kwds_and_replace_with_null(self, &argc, &doc, NULL)); /* func, this, [args...], kw */
 			}
-			DO(Dee_function_generator_vlrot(self, argc + 3));               /* this, [args...], kw, func */
-			DO(Dee_function_generator_vpop(self));                          /* this, [args...], kw */
-			DO(Dee_function_generator_vlrot(self, argc + 2));               /* [args...], kw, this */
-			DO(Dee_function_generator_vassert_type_c(self, func->ob_type)); /* [args...], kw, this */
-			DO(Dee_function_generator_vrrot(self, argc + 2));               /* this, [args...], kw */
-			return vcall_kwobjmethod_unchecked(self, func->cm_func, argc, &doc, NULL, 0);
+			DO(Dee_function_generator_vlrot(self, argc + 3));                   /* this, [args...], kw, func */
+			DO(Dee_function_generator_vpop(self));                              /* this, [args...], kw */
+			DO(Dee_function_generator_vlrot(self, argc + 2));                   /* [args...], kw, this */
+			DO(Dee_function_generator_vassert_type_c(self, func->ob_type));     /* [args...], kw, this */
+			DO(Dee_function_generator_vrrot(self, argc + 2));                   /* this, [args...], kw */
+			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, NULL, 0); /* result */
 		}
 	} else if (func_type == &DeeClsProperty_Type) {
 		DeeClsPropertyObject *func = (DeeClsPropertyObject *)func_obj;
@@ -1640,7 +1607,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 			doc.di_typ = func->cp_type;
 			if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE))
 				doc.di_doc = DeeClsProperty_GetDoc((DeeObject *)func);
-			return vcall_getmethod_unchecked(self, func->cp_get, &doc, NULL, 0);
+			return vcall_getmethod(self, func->cp_get, &doc, NULL, 0);
 		}
 	} else if (func_type == &DeeClsMember_Type) {
 		DeeClsMemberObject *func = (DeeClsMemberObject *)func_obj;
@@ -1663,7 +1630,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 		doc.di_doc = di.dmdi_doc;
 		doc.di_mod = di.dmdi_mod;
 		doc.di_typ = di.dmdi_typ;
-		result = vcall_cmethod_unchecked(self, func->cm_func, true_argc, &doc);
+		result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
 		Dee_cmethod_docinfo_fini(&di);
 		return result;
 	} else if (func_type == &DeeKwCMethod_Type) {
@@ -1672,7 +1639,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vlrot(self, true_argc + 2)); /* [args...], kw, func */
 		DO(Dee_function_generator_vpop(self));                 /* [args...], kw */
 		if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE) {
-			result = vcall_kwcmethod_unchecked(self, func->cm_func, true_argc, &doc);
+			result = vcall_kwcmethod(self, func->cm_func, true_argc, &doc);
 		} else {
 			struct cmethod_docinfo di;
 			DeeKwCMethod_DocInfo(func->cm_func, &di);
@@ -1681,7 +1648,7 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 			doc.di_typ = di.dmdi_typ;
 			result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL); /* [args...], kw */
 			if likely(result == 0)
-				result = vcall_kwcmethod_unchecked(self, func->cm_func, true_argc, &doc);
+				result = vcall_kwcmethod(self, func->cm_func, true_argc, &doc);
 			Dee_cmethod_docinfo_fini(&di);
 		}
 		return result;
@@ -1793,15 +1760,15 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 						ASSERT(true_argc == 0);                /* type, kw */
 						DO(vpop_empty_kwds(self));             /* type */
 						DO(Dee_function_generator_vpop(self)); /* N/A */
-						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_ctor, VCALL_CC_RAWINTPTR, 0)); /* UNCHECKED(result) */
-						return Dee_function_generator_vsettyp_noalias(self, type); /* UNCHECKED(result) */
+						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_ctor, VCALL_CC_OBJECT, 0)); /* result */
+						return Dee_function_generator_vsettyp_noalias(self, type); /* result */
 					case CTOR_TYPE_COPY:
 						ASSERT(true_argc == 1);                 /* type, copyme, kw */
 						DO(vpop_empty_kwds(self));              /* type, copyme */
 						DO(Dee_function_generator_vswap(self)); /* copyme, type */
 						DO(Dee_function_generator_vpop(self));  /* copyme */
-						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_copy_ctor, VCALL_CC_RAWINTPTR, 1)); /* UNCHECKED(result) */
-						return Dee_function_generator_vsettyp_noalias(self, type); /* UNCHECKED(result) */
+						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_copy_ctor, VCALL_CC_OBJECT, 1)); /* result */
+						return Dee_function_generator_vsettyp_noalias(self, type); /* result */
 					case CTOR_TYPE_VARARGS:                                        /* type, [args...], kw */
 						DO(vpop_empty_kwds(self));                                 /* type, [args...] */
 						DO(Dee_function_generator_vlrot(self, true_argc + 1));     /* [args...], type */
@@ -1810,9 +1777,8 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 						DO(Dee_function_generator_vpush_immSIZ(self, true_argc));  /* [args...], argv, argc */
 						DO(Dee_function_generator_vswap(self));                    /* [args...], argc, argv */
 						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_any_ctor, VCALL_CC_RAWINTPTR, 2)); /* [args...], UNCHECKED(result) */
-						DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-						DO(Dee_function_generator_vpopmany(self, true_argc));      /* UNCHECKED(result) */
-						return Dee_function_generator_vsettyp_noalias(self, type); /* UNCHECKED(result) */
+						DO(vpop_args_and_check_result(self, true_argc));           /* result */
+						return Dee_function_generator_vsettyp_noalias(self, type); /* result */
 					case CTOR_TYPE_VARARGS_KW:                                     /* type, [args...], kw */
 						DO(Dee_function_generator_vlrot(self, true_argc + 2));     /* [args...], kw, type */
 						DO(Dee_function_generator_vpop(self));                     /* [args...], kw */
@@ -1822,9 +1788,8 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 						DO(Dee_function_generator_vswap(self));                    /* kw, [args...], argc, argv */
 						DO(Dee_function_generator_vlrot(self, true_argc + 3));     /* [args...], argc, argv, kw */
 						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_any_ctor_kw, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECKED(result) */
-						DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-						DO(Dee_function_generator_vpopmany(self, true_argc));      /* UNCHECKED(result) */
-						return Dee_function_generator_vsettyp_noalias(self, type); /* UNCHECKED(result) */
+						DO(vpop_args_and_check_result(self, true_argc));           /* result */
+						return Dee_function_generator_vsettyp_noalias(self, type); /* result */
 					default: __builtin_unreachable();
 					}
 				} else if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
@@ -1882,6 +1847,8 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vpush_const(self, type));    /* [args...], kw, instance, type */
 					DO(Dee_function_generator_vcall_DeeObject_Init(self)); /* [args...], kw, instance */
 					DO(Dee_function_generator_vrrot(self, true_argc + 2)); /* instance, [args...], kw */
+
+					/* TODO: Push custom exception cleanup handler */
 					switch (ctor_type) {
 					case CTOR_TYPE_NOARGS:
 						ASSERT(true_argc == 0);
@@ -1916,7 +1883,8 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 						struct Dee_memloc status_loc;
 						status_loc = *Dee_function_generator_vtop(self); /* instance, UNCHECKED(status_int) */
 						DO(Dee_function_generator_vpop(self));           /* instance */
-						sym = Dee_function_generator_newsym(self);
+						sym = Dee_function_generator_newsym_named(self, text == cold ? ".Lobject_init_ok"
+						                                                             : ".Lobject_init_err");
 						DO(text == cold ? _Dee_function_generator_gjz(self, &status_loc, sym)
 						                : _Dee_function_generator_gjnz(self, &status_loc, sym));
 						saved_state = self->fg_state;
@@ -1924,7 +1892,6 @@ vopcallkw_constfunc_unchecked(struct Dee_function_generator *__restrict self,
 						if (text != cold) {
 							HA_printf(".section .cold\n");
 							self->fg_sect = cold;
-							HA_printf(".Lobject_init_err:\n");
 							Dee_host_symbol_setsect(sym, self->fg_sect);
 						}
 						if unlikely(Dee_function_generator_state_unshare(self)) {
@@ -1953,7 +1920,6 @@ err_saved_state:
 							HA_printf(".section .text\n");
 							self->fg_sect = text;
 						} else {
-							HA_printf(".Lobject_init_ok:\n");
 							Dee_host_symbol_setsect(sym, self->fg_sect);
 						}
 					}
@@ -1968,12 +1934,9 @@ err_saved_state:
 						ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
 					}
 
-					/* Cause `Dee_function_generator_vcheckobj()' to be a no-op that simply
-					 * clears these 2 flags. Additionally, remember that this memory location
-					 * now contains an instance of "type" */
 					DO(Dee_function_generator_vsettyp_noalias(self, type)); /* Instance */
 					ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
-					Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED | MEMLOC_F_ONEREF;
+					Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_ONEREF;
 					return 0;
 				}
 			} /* if (ctor_type != CTOR_TYPE_UNKNOWN) */
@@ -1991,13 +1954,13 @@ err:
 	return -1;
 }
 
-/* func, [args...], kw -> UNCHECKED(result)
+/* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
  * @return: 1 : No dedicated optimization available for `func_type'
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
-                              DeeTypeObject *func_type, Dee_vstackaddr_t true_argc) {
+vopcallkw_consttype(struct Dee_function_generator *__restrict self,
+                    DeeTypeObject *func_type, Dee_vstackaddr_t true_argc) {
 	if (func_type == &DeeObjMethod_Type) {
 		DO(vpop_empty_kwds(self));                                                    /* orig_func, [args...] */
 		DO(Dee_function_generator_vnotoneref(self, true_argc));                       /* orig_func, [args...] */
@@ -2013,8 +1976,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vlrot(self, 4));                                    /* orig_func, [args...], func->om_this, argc, argv, func */
 		DO(Dee_function_generator_vind(self, offsetof(DeeObjMethodObject, om_func))); /* orig_func, [args...], func->om_this, argc, argv, func->om_func */
 		DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 3));          /* orig_func, [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, true_argc + 2));                        /* UNCHECKED(result), orig_func, [args...] */
-		return Dee_function_generator_vpopmany(self, true_argc + 1);                  /* UNCHECKED(result) */
+		return vpop_args_and_check_result(self, true_argc + 1);                       /* result */
 	} else if (func_type == &DeeKwObjMethod_Type) {
 		DO(Dee_function_generator_vnotoneref(self, true_argc + 1));                     /* orig_func, [args...], kw */
 		DO(Dee_function_generator_vrrot(self, true_argc + 1));                          /* orig_func, kw, [args...] */
@@ -2031,8 +1993,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vlrot(self, 4));                                      /* orig_func, [args...], func->om_this, argc, argv, kw, func */
 		DO(Dee_function_generator_vind(self, offsetof(DeeKwObjMethodObject, om_func))); /* orig_func, [args...], func->om_this, argc, argv, kw, func->om_func */
 		DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 4));            /* orig_func, [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, true_argc + 2));                          /* UNCHECKED(result), orig_func, [args...] */
-		return Dee_function_generator_vpopmany(self, true_argc + 1);                    /* UNCHECKED(result) */
+		return vpop_args_and_check_result(self, true_argc + 1);                         /* result */
 	} else if (func_type == &DeeClsMethod_Type) {
 		if (true_argc >= 1) {
 			--true_argc;
@@ -2054,8 +2015,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 			DO(Dee_function_generator_vlrot(self, 4));                 /* orig_func, [args...], this, argc, argv, func */
 			DO(Dee_function_generator_vind(self, offsetof(DeeClsMethodObject, cm_func))); /* orig_func, [args...], this, argc, argv, func->cm_func */
 			DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 3)); /* orig_func, [args...], UNCHECKED(result) */
-			DO(Dee_function_generator_vrrot(self, true_argc + 2));     /* UNCHECKED(result), orig_func, [args...] */
-			return Dee_function_generator_vpopmany(self, true_argc + 1); /* UNCHECKED(result) */
+			return vpop_args_and_check_result(self, true_argc + 1);    /* result */
 		}
 	} else if (func_type == &DeeKwClsMethod_Type) {
 		if (true_argc >= 1) {
@@ -2079,8 +2039,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 			DO(Dee_function_generator_vlrot(self, 5));                 /* orig_func, [args...], this, argc, argv, kw, func */
 			DO(Dee_function_generator_vind(self, offsetof(DeeKwClsMethodObject, cm_func))); /* orig_func, [args...], this, argc, argv, kw, func->cm_func */
 			DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 4)); /* orig_func, [args...], UNCHECKED(result) */
-			DO(Dee_function_generator_vrrot(self, true_argc + 2));     /* UNCHECKED(result), orig_func, [args...] */
-			return Dee_function_generator_vpopmany(self, true_argc + 1); /* UNCHECKED(result) */
+			return vpop_args_and_check_result(self, true_argc + 1);    /* result */
 		}
 	} else if (func_type == &DeeClsMember_Type) {
 		if (true_argc == 1) {
@@ -2093,7 +2052,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 			DO(Dee_function_generator_vswap(self));         /* this, func */
 			DO(Dee_function_generator_vdelta(self, offsetof(DeeClsMemberObject, cm_memb))); /* this, &func->cm_memb */
 			DO(Dee_function_generator_vswap(self));         /* &func->cm_memb, this */
-			return Dee_function_generator_vcallapi(self, &Dee_type_member_get, VCALL_CC_RAWINTPTR, 2); /* UNCHECKED(result) */
+			return Dee_function_generator_vcallapi(self, &Dee_type_member_get, VCALL_CC_OBJECT, 2); /* UNCHECKED(result) */
 		}
 	} else if (func_type == &DeeCMethod_Type) {
 		DO(vpop_empty_kwds(self));                                 /* func, [args...] */
@@ -2104,8 +2063,7 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vlrot(self, true_argc + 3));     /* [args...], argc, argv, func */
 		DO(Dee_function_generator_vind(self, offsetof(DeeCMethodObject, cm_func))); /* [args...], argc, argv, func->cm_func */
 		DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 2)); /* [args...], UNCHECEKD(result) */
-		DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-		return Dee_function_generator_vpopmany(self, true_argc);   /* UNCHECKED(result) */
+		return vpop_args_and_check_result(self, true_argc);        /* result */
 	} else if (func_type == &DeeKwCMethod_Type) {
 		DO(Dee_function_generator_vnotoneref(self, true_argc + 1));/* func, [args...], kw */
 		DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* func, kw, [args...] */
@@ -2116,14 +2074,11 @@ vopcallkw_consttype_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vlrot(self, true_argc + 4));     /* [args...], argc, argv, kw, func */
 		DO(Dee_function_generator_vind(self, offsetof(DeeKwCMethodObject, cm_func))); /* [args...], argc, argv, kw, func->cm_func */
 		DO(Dee_function_generator_vcalldynapi(self, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECEKD(result) */
-		DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-		return Dee_function_generator_vpopmany(self, true_argc);   /* UNCHECKED(result) */
+		return vpop_args_and_check_result(self, true_argc);        /* result */
 	} else if (func_type == &DeeNone_Type) {
 		/* Special case: call where this-argument is "none" -> pop all arguments and re-return "none" */
-		DO(Dee_function_generator_vpopmany(self, true_argc + 2)); /* N/A */
-		DO(Dee_function_generator_vpush_const(self, Dee_None));   /* Dee_None */
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_OBJCHECKED;
-		return 0;
+		DO(Dee_function_generator_vpopmany(self, true_argc + 2));  /* N/A */
+		return Dee_function_generator_vpush_const(self, Dee_None); /* Dee_None */
 	} else if (DeeType_InheritOperator(func_type, OPERATOR_CALL)) {
 		ASSERT(func_type->tp_call || func_type->tp_call_kw);
 		if (func_type == &DeeFunction_Type) {
@@ -2146,8 +2101,7 @@ do_inline_tp_call:
 			DO(Dee_function_generator_vpush_immSIZ(self, true_argc));  /* [args...], argv, func, argc */
 			DO(Dee_function_generator_vlrot(self, 3));                 /* [args...], func, argc, argv */
 			DO(Dee_function_generator_vcallapi(self, func_type->tp_call, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECEKD(result) */
-			DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-			return Dee_function_generator_vpopmany(self, true_argc);   /* UNCHECKED(result) */
+			return vpop_args_and_check_result(self, true_argc);        /* result */
 		} else if (func_type->tp_call == NULL) {
 do_inline_tp_call_kw:
 			ASSERT(func_type->tp_call_kw);
@@ -2160,8 +2114,7 @@ do_inline_tp_call_kw:
 			DO(Dee_function_generator_vlrot(self, 3));                 /* kw, [args...], func, argc, argv */
 			DO(Dee_function_generator_vlrot(self, true_argc + 4));     /* [args...], func, argc, argv, kw */
 			DO(Dee_function_generator_vcallapi(self, func_type->tp_call_kw, VCALL_CC_RAWINTPTR, 3)); /* [args...], UNCHECEKD(result) */
-			DO(Dee_function_generator_vrrot(self, true_argc + 1));     /* UNCHECKED(result), [args...] */
-			return Dee_function_generator_vpopmany(self, true_argc);   /* UNCHECKED(result) */
+			return vpop_args_and_check_result(self, true_argc);        /* result */
 		} else {
 			/* Both calls are possible. Check if the caller-given "kw" is empty. */
 			struct Dee_memloc *kwloc = Dee_function_generator_vtop(self);
@@ -2175,10 +2128,10 @@ err:
 	return -1;
 }
 
-/* func, [args...], kw -> UNCHECKED(result) */
+/* func, [args...], kw -> result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-impl_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
-                         Dee_vstackaddr_t true_argc, bool prefer_thiscall) {
+impl_vopcallkw(struct Dee_function_generator *__restrict self,
+               Dee_vstackaddr_t true_argc, bool prefer_thiscall) {
 	DeeTypeObject *func_type;
 	struct Dee_memloc *funcloc;
 	if unlikely(self->fg_state->ms_stackc < (true_argc + 2))
@@ -2193,7 +2146,7 @@ impl_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
 	/* Optimizations for when the is a constant. (e.g. `DeeObjMethodObject') */
 	if (funcloc->ml_type == MEMLOC_TYPE_CONST) {
 		DeeObject *func_obj = funcloc->ml_value.v_const;
-		int temp = vopcallkw_constfunc_unchecked(self, func_obj, true_argc);
+		int temp = vopcallkw_constfunc(self, func_obj, true_argc);
 		if (temp <= 0)
 			return temp; /* Optimized call encoded, or error */
 		/* Try to inline keyword arguments. */
@@ -2204,7 +2157,7 @@ impl_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
 	 * resolution and directly invoking the tp_call[_kw]-operator. */
 	func_type = Dee_memloc_typeof(funcloc);
 	if (func_type != NULL) {
-		int temp = vopcallkw_consttype_unchecked(self, func_type, true_argc);
+		int temp = vopcallkw_consttype(self, func_type, true_argc);
 		if (temp <= 0)
 			return temp; /* Optimized call encoded, or error */
 	}
@@ -2248,8 +2201,8 @@ impl_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
 		} else {
 			DO(Dee_function_generator_vcallapi(self, &DeeObject_CallKw, VCALL_CC_RAWINTPTR, 4)); /* [args...], UNCHECKED(result) */
 		}
-	}                                                          /* [args...], UNCHECKED(result) */
-	return vpop_args_before_unchecked_result(self, true_argc); /* UNCHECKED(result) */
+	}                                                   /* [args...], UNCHECKED(result) */
+	return vpop_args_and_check_result(self, true_argc); /* result */
 err:
 	return -1;
 }
@@ -2781,22 +2734,22 @@ err:
 }
 
 
-/* this, attr, [args...], kw -> UNCHECKED(result)
+/* this, attr, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
  * @return: 1 : No dedicated optimization available for `attr'
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self,
-                                  Dee_vstackaddr_t argc,
-                                  struct attrinfo const *__restrict attr) {
+vopcallattrkw_constattr(struct Dee_function_generator *__restrict self,
+                        Dee_vstackaddr_t argc,
+                        struct attrinfo const *__restrict attr) {
 	switch (attr->ai_type) {
 
 	case Dee_ATTRINFO_ATTR:
 		/* NOTE: In this case, we're allowed to assume that "this" is an instance of "attr->ai_decl" */
 		DO(Dee_function_generator_vlrot(self, argc + 2)); /* this, [args...], kw, attr */
 		DO(Dee_function_generator_vpop(self));            /* this, [args...], kw */
-		return Dee_function_generator_vcall_instance_attrkw_unchecked(self, (DeeTypeObject *)attr->ai_decl,
-		                                                              attr->ai_value.v_attr, argc);
+		return Dee_function_generator_vcall_instance_attrkw(self, (DeeTypeObject *)attr->ai_decl,
+		                                                    attr->ai_value.v_attr, argc);
 
 	case Dee_ATTRINFO_METHOD: {
 		struct docinfo di;
@@ -2807,11 +2760,11 @@ vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self
 		DO(Dee_function_generator_vlrot(self, argc + 2)); /* this, [args...], kw, attr */
 		DO(Dee_function_generator_vpop(self));            /* this, [args...], kw */
 		if (item->m_flag & Dee_TYPE_METHOD_FKWDS) {
-			return vcall_kwobjmethod_unchecked(self, (Dee_kwobjmethod_t)(void const *)item->m_func,
-			                                   argc, &di, item->m_name, item->m_flag);
+			return vcall_kwobjmethod(self, (Dee_kwobjmethod_t)(void const *)item->m_func,
+			                         argc, &di, item->m_name, item->m_flag);
 		}
 		DO(vpop_empty_kwds(self)); /* this, [args...] */
-		return vcall_objmethod_unchecked(self, item->m_func, argc, &di, item->m_name, item->m_flag);
+		return vcall_objmethod(self, item->m_func, argc, &di, item->m_name, item->m_flag);
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_ATTR: {
@@ -2847,8 +2800,8 @@ vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self
 			callback_addr += CLASS_GETSET_GET;
 #endif /* CLASS_GETSET_GET != 0 */
 		DO(Dee_function_generator_vpush_imember(self, callback_addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)); /* [args...], kw, func */
-		DO(Dee_function_generator_vlrot(self, argc + 2)); /* func, [args...], kw */
-		return Dee_function_generator_vopcallkw_unchecked(self, argc); /* UNCHECKED(result) */
+		DO(Dee_function_generator_vlrot(self, argc + 2));    /* func, [args...], kw */
+		return Dee_function_generator_vopcallkw(self, argc); /* result */
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_METHOD: {
@@ -2868,11 +2821,11 @@ vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self
 		DO(Dee_function_generator_vassert_type_c(self, (DeeTypeObject *)attr->ai_decl)); /* [args...], kw, this */
 		DO(Dee_function_generator_vrrot(self, argc + 2)); /* this, [args...], kw */
 		if (item->m_flag & Dee_TYPE_METHOD_FKWDS) {
-			return vcall_kwobjmethod_unchecked(self, (Dee_kwobjmethod_t)(void const *)item->m_func,
-			                                   argc, &di, item->m_name, item->m_flag);
+			return vcall_kwobjmethod(self, (Dee_kwobjmethod_t)(void const *)item->m_func,
+			                         argc, &di, item->m_name, item->m_flag);
 		}
 		DO(vpop_empty_kwds(self)); /* this, [args...] */
-		return vcall_objmethod_unchecked(self, item->m_func, argc, &di, item->m_name, item->m_flag);
+		return vcall_objmethod(self, item->m_func, argc, &di, item->m_name, item->m_flag); /* result */
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_GETSET: {
@@ -2890,7 +2843,7 @@ vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self
 		DO(Dee_function_generator_vpop(self));            /* this, type */
 		DO(Dee_function_generator_vpop(self));            /* this */
 		DO(Dee_function_generator_vassert_type_c(self, (DeeTypeObject *)attr->ai_decl)); /* this */
-		return vcall_getmethod_unchecked(self, item->gs_get, &di, item->gs_name, item->gs_flags);
+		return vcall_getmethod(self, item->gs_get, &di, item->gs_name, item->gs_flags);  /* result */
 	}	break;
 
 	case Dee_ATTRINFO_INSTANCE_MEMBER: {
@@ -2915,9 +2868,9 @@ vopcallattrkw_constattr_unchecked(struct Dee_function_generator *__restrict self
 		result = vopgetattr_constattr(self, attr);
 		if (result <= 0) {
 			if unlikely(result < 0)
-				goto err;                                                  /* [args...], kw, func */
-			DO(Dee_function_generator_vrrot(self, argc + 2));              /* func, [args...], kw */
-			return Dee_function_generator_vopcallkw_unchecked(self, argc); /* UNCHECKED(result) */
+				goto err;                                        /* [args...], kw, func */
+			DO(Dee_function_generator_vrrot(self, argc + 2));    /* func, [args...], kw */
+			return Dee_function_generator_vopcallkw(self, argc); /* result */
 		}
 	}	break;
 
@@ -2927,10 +2880,10 @@ err:
 	return -1;
 }
 
-/* this, attr, [args...], kw -> UNCHECKED(result) */
+/* this, attr, [args...], kw -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-impl_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
-                             Dee_vstackaddr_t argc) {
+impl_vopcallattrkw(struct Dee_function_generator *__restrict self,
+                   Dee_vstackaddr_t argc) {
 	struct attrinfo attr;
 	DeeTypeObject *this_type;
 	struct Dee_memloc *thisloc;
@@ -2969,7 +2922,7 @@ impl_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
 		if (thisloc->ml_type == MEMLOC_TYPE_CONST)
 			this_value_or_null = thisloc->ml_value.v_const;
 		if (DeeObject_TFindAttrInfo(this_type, this_value_or_null, (DeeObject *)attr_obj, &attr)) {
-			int temp = vopcallattrkw_constattr_unchecked(self, argc, &attr);
+			int temp = vopcallattrkw_constattr(self, argc, &attr);
 			if (temp <= 0)
 				return temp; /* Optimization applied, or error */
 		}
@@ -2981,7 +2934,7 @@ impl_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
 		attr.ai_type = Dee_ATTRINFO_CUSTOM;
 		attr.ai_decl = (DeeObject *)this_type;
 		attr.ai_value.v_custom = this_type->tp_attr;
-		temp = vopcallattrkw_constattr_unchecked(self, argc, &attr);
+		temp = vopcallattrkw_constattr(self, argc, &attr);
 		if (temp <= 0)
 			return temp; /* Optimization applied, or error */
 	}
@@ -3001,22 +2954,22 @@ impl_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_CallAttr, VCALL_CC_RAWINTPTR, 4)); /* [args...], UNCHECKED(result) */
 	} else {
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_CallAttrKw, VCALL_CC_RAWINTPTR, 5)); /* [args...], UNCHECKED(result) */
-	}
-	return vpop_args_before_unchecked_result(self, argc); /* UNCHECKED(result) */
+	}                                              /* [args...], UNCHECKED(result) */
+	return vpop_args_and_check_result(self, argc); /* result */
 err:
 	return -1;
 }
 
-/* func, [args...], kw -> UNCHECKED(result) -- Invoke `DeeObject_CallKw()' and push the result */
+/* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallkw_unchecked(struct Dee_function_generator *__restrict self,
-                                           Dee_vstackaddr_t argc) {
-	return impl_vopcallkw_unchecked(self, argc, false);
+Dee_function_generator_vopcallkw(struct Dee_function_generator *__restrict self,
+                                 Dee_vstackaddr_t argc) {
+	return impl_vopcallkw(self, argc, false);
 }
 
-/* func, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_CallTupleKw()' and push the result */
+/* func, args, kw -> result -- Invoke `DeeObject_CallTupleKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcalltuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vopcalltuplekw(struct Dee_function_generator *__restrict self) {
 	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeObjMethodObject') */
 	DO(Dee_function_generator_vswap(self));                                /* func, kw, args */
 	DO(Dee_function_generator_vassert_type_exact_c(self, &DeeTuple_Type)); /* func, kw, args */
@@ -3025,49 +2978,49 @@ Dee_function_generator_vopcalltuplekw_unchecked(struct Dee_function_generator *_
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_CALL, 3)); /* func, args, kw */
 	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
 		DO(Dee_function_generator_vpop(self)); /* func, args */
-		return Dee_function_generator_vcallapi(self, &DeeObject_CallTuple, VCALL_CC_RAWINTPTR, 2);
+		return Dee_function_generator_vcallapi(self, &DeeObject_CallTuple, VCALL_CC_OBJECT, 2);
 	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_CallTupleKw, VCALL_CC_RAWINTPTR, 3);
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallTupleKw, VCALL_CC_OBJECT, 3);
 err:
 	return -1;
 }
 
-/* func, this, [args...], kw -> UNCHECKED(result) -- Invoke `DeeObject_ThisCallKw()' and push the result */
+/* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscallkw_unchecked(struct Dee_function_generator *__restrict self,
+Dee_function_generator_vopthiscallkw(struct Dee_function_generator *__restrict self,
                                                Dee_vstackaddr_t argc) {
-	return impl_vopcallkw_unchecked(self, argc + 1, true);
+	return impl_vopcallkw(self, argc + 1, true);
 }
 
-/* func, this, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
+/* func, this, args, kw -> result -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscalltuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vopthiscalltuplekw(struct Dee_function_generator *__restrict self) {
 	/* TODO: Optimizations for MEMLOC_TYPE_CONST functions with certain types. (e.g. `DeeClsMethodObject') */
 	/* TODO: Optimizations when `type(func)' is known by skipping operator resolution and directly invoking the call-operator */
 	DO(Dee_function_generator_vswap(self));                                        /* func, this, kw, args */
 	DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeTuple_Type)); /* func, this, kw, args */
 	DO(Dee_function_generator_vswap(self));                                        /* func, this, args, kw */
 	DO(Dee_function_generator_vnotoneref(self, 3));                                /* func, this, args, kw */
-	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_CALL, 4)); /* func, this, args, kw */
+	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_CALL, 4));  /* func, this, args, kw */
 	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
 		DO(Dee_function_generator_vpop(self)); /* func, this, args */
-		return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTuple, VCALL_CC_RAWINTPTR, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTuple, VCALL_CC_OBJECT, 3);
 	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTupleKw, VCALL_CC_RAWINTPTR, 4);
+	return Dee_function_generator_vcallapi(self, &DeeObject_ThisCallTupleKw, VCALL_CC_OBJECT, 4);
 err:
 	return -1;
 }
 
-/* this, attr, [args...], kw -> UNCHECKED(result) -- Invoke `DeeObject_CallAttrKw()' and push the result */
+/* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattrkw_unchecked(struct Dee_function_generator *__restrict self,
-                                               Dee_vstackaddr_t argc) {
-	return impl_vopcallattrkw_unchecked(self, argc);
+Dee_function_generator_vopcallattrkw(struct Dee_function_generator *__restrict self,
+                                     Dee_vstackaddr_t argc) {
+	return impl_vopcallattrkw(self, argc);
 }
 
-/* this, attr, args, kw -> UNCHECKED(result) -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+/* this, attr, args, kw -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattrtuplekw_unchecked(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restrict self) {
 	/* TODO: Optimization for when `attr' and the type of `this' is known:
 	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()',
 	 * >>                          // bypassing the complete attribute lookup */
@@ -3080,184 +3033,69 @@ Dee_function_generator_vopcallattrtuplekw_unchecked(struct Dee_function_generato
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 4)); /* this, attr, args, kw */
 	if (Dee_memloc_isnull(Dee_function_generator_vtop(self))) {
 		DO(Dee_function_generator_vpop(self)); /* this, attr, args */
-		return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTuple, VCALL_CC_RAWINTPTR, 3);
+		return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTuple, VCALL_CC_OBJECT, 3);
 	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTupleKw, VCALL_CC_RAWINTPTR, 4);
+	return Dee_function_generator_vcallapi(self, &DeeObject_CallAttrTupleKw, VCALL_CC_OBJECT, 4);
 err:
 	return -1;
 }
 
 
 
-/* func, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_Call()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcall_unchecked(struct Dee_function_generator *__restrict self,
-                                         Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* func, [args...], kw=NULL */
-		result = Dee_function_generator_vopcallkw_unchecked(self, argc);
-	return result;
-}
-
-/* func, args -> UNCHECKED(result) -- Invoke `DeeObject_CallTuple()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcalltuple_unchecked(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* func, args, kw=NULL */
-		result = Dee_function_generator_vopcalltuplekw_unchecked(self);
-	return result;
-}
-
-/* func, this, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_ThisCall()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscall_unchecked(struct Dee_function_generator *__restrict self,
-                                             Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* func, this, [args...], kw=NULL */
-		result = Dee_function_generator_vopthiscallkw_unchecked(self, argc);
-	return result;
-}
-
-/* func, this, args -> UNCHECKED(result) -- Invoke `DeeObject_ThisCallTuple()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscalltuple_unchecked(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* func, this, args, kw=NULL */
-		result = Dee_function_generator_vopthiscalltuplekw_unchecked(self);
-	return result;
-}
-
-/* this, attr, [args...] -> [args...], UNCHECKED(result) -- Invoke `DeeObject_CallAttr()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattr_unchecked(struct Dee_function_generator *__restrict self,
-                                             Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* this, attr, [args...], kw=NULL */
-		result = Dee_function_generator_vopcallattrkw_unchecked(self, argc);
-	return result;
-}
-
-/* this, attr, args -> UNCHECKED(result) -- Invoke `DeeObject_CallAttrTuple()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattrtuple_unchecked(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vpush_NULL(self);
-	if likely(result == 0) /* this, attr, args, kw=NULL */
-		result = Dee_function_generator_vopcallattrtuplekw_unchecked(self);
-	return result;
-}
-
-/* func, [args...] -> result -- Invoke `DeeObject_Call()' and push the result */
+/* func, [args...] -> [args...], result -- Invoke `DeeObject_Call()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcall(struct Dee_function_generator *__restrict self,
                                Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopcall_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-/* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallkw(struct Dee_function_generator *__restrict self,
-                                 Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopcallkw_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* func, [args...], kw=NULL */
+		result = Dee_function_generator_vopcallkw(self, argc);
 	return result;
 }
 
 /* func, args -> result -- Invoke `DeeObject_CallTuple()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcalltuple(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopcalltuple_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* func, args, kw=NULL */
+		result = Dee_function_generator_vopcalltuplekw(self);
 	return result;
 }
 
-/* func, args, kw -> result -- Invoke `DeeObject_CallTupleKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcalltuplekw(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopcalltuplekw_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-/* func, this, [args...] -> result -- Invoke `DeeObject_ThisCall()' and push the result */
+/* func, this, [args...] -> [args...], result -- Invoke `DeeObject_ThisCall()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopthiscall(struct Dee_function_generator *__restrict self,
                                    Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopthiscall_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-/* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscallkw(struct Dee_function_generator *__restrict self,
-                                     Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopthiscallkw_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* func, this, [args...], kw=NULL */
+		result = Dee_function_generator_vopthiscallkw(self, argc);
 	return result;
 }
 
 /* func, this, args -> result -- Invoke `DeeObject_ThisCallTuple()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopthiscalltuple(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopthiscalltuple_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* func, this, args, kw=NULL */
+		result = Dee_function_generator_vopthiscalltuplekw(self);
 	return result;
 }
 
-/* func, this, args, kw -> result -- Invoke `DeeObject_ThisCallTupleKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopthiscalltuplekw(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopthiscalltuplekw_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-
-/* this, attr, [args...] -> result -- Invoke `DeeObject_CallAttr()' and push the result */
+/* this, attr, [args...] -> [args...], result -- Invoke `DeeObject_CallAttr()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallattr(struct Dee_function_generator *__restrict self,
                                    Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopcallattr_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-/* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattrkw(struct Dee_function_generator *__restrict self,
-                                     Dee_vstackaddr_t argc) {
-	int result = Dee_function_generator_vopcallattrkw_unchecked(self, argc);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* this, attr, [args...], kw=NULL */
+		result = Dee_function_generator_vopcallattrkw(self, argc);
 	return result;
 }
 
 /* this, attr, args -> result -- Invoke `DeeObject_CallAttrTuple()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallattrtuple(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopcallattrtuple_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
-	return result;
-}
-
-/* this, attr, args, kw -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restrict self) {
-	int result = Dee_function_generator_vopcallattrtuplekw_unchecked(self);
-	if likely(result == 0) /* UNCHECKED(result) */
-		result = Dee_function_generator_vcheckobj(self); /* result */
+	int result = Dee_function_generator_vpush_NULL(self);
+	if likely(result == 0) /* this, attr, args, kw=NULL */
+		result = Dee_function_generator_vopcallattrtuplekw(self);
 	return result;
 }
 
@@ -5838,7 +5676,7 @@ err:
 	return -1;
 }
 
-/* this -> - */
+/* this -> N/A */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_vdel_instance_attr(struct Dee_function_generator *__restrict self,
                                           DeeTypeObject *type, struct Dee_class_attribute const *attr) {
@@ -5898,7 +5736,7 @@ err:
 	return -1;
 }
 
-/* this, value -> - */
+/* this, value -> N/A */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 Dee_function_generator_vpop_instance_attr(struct Dee_function_generator *__restrict self,
                                           DeeTypeObject *type, struct Dee_class_attribute const *attr) {
@@ -5967,10 +5805,10 @@ err:
 	return -1;
 }
 
-/* this, [args...], kw -> UNCHECKED(result) */
+/* this, [args...], kw -> result */
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-Dee_function_generator_vcall_instance_attrkw_unchecked(struct Dee_function_generator *__restrict self, DeeTypeObject *type,
-                                                       struct Dee_class_attribute const *attr, Dee_vstackaddr_t argc) {
+Dee_function_generator_vcall_instance_attrkw(struct Dee_function_generator *__restrict self, DeeTypeObject *type,
+                                             struct Dee_class_attribute const *attr, Dee_vstackaddr_t argc) {
 	uint16_t field_addr;
 	/* Behavior here mirrors `DeeInstance_CallAttributeKw()' */
 	DO(Dee_function_generator_vlrot(self, argc + 2)); /* [args...], kw, this */
@@ -5998,17 +5836,18 @@ Dee_function_generator_vcall_instance_attrkw_unchecked(struct Dee_function_gener
 			DO(Dee_function_generator_vopcall(self, 0)); /* [args...], kw, func */
 		}
 		DO(Dee_function_generator_vrrot(self, argc + 2)); /* func, [args...], kw */
-		return Dee_function_generator_vopcallkw_unchecked(self, argc);
+		return Dee_function_generator_vopcallkw(self, argc);
 	} else {
 		if (attr->ca_flag & CLASS_ATTRIBUTE_FMETHOD) {        /* [args...], kw, this, func */
 			DO(Dee_function_generator_vrrot(self, argc + 3)); /* func, [args...], kw, this */
 			DO(Dee_function_generator_vrrot(self, argc + 2)); /* func, this, [args...], kw */
-			return Dee_function_generator_vopthiscallkw_unchecked(self, argc);
+			return Dee_function_generator_vopthiscallkw(self, argc);
 		} else {                                              /* [args...], kw, this, func */
 			DO(Dee_function_generator_vrrot(self, argc + 3)); /* func, [args...], kw, this */
 			DO(Dee_function_generator_vpop(self));            /* func, [args...], kw */
-			return Dee_function_generator_vopcallkw_unchecked(self, argc);
+			return Dee_function_generator_vopcallkw(self, argc);
 		}
+		__builtin_unreachable();
 	}
 	__builtin_unreachable();
 err:

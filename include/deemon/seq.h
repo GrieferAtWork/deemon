@@ -867,13 +867,14 @@ DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
 
 /* Create a new shared vector that will inherit elements
  * from the given vector once `DeeSharedVector_Decref()' is called.
- * NOTE: This function implicitly inherits a reference to each item
- *       of the given vector, though does not actually inherit the
- *       vector itself!
+ * NOTE: This function can implicitly inherit a reference to each item of the
+ *       given vector, though does not actually inherit the vector itself:
+ *       - DeeSharedVector_Decref:            The `vector' arg here is `DREF DeeObject *const *'
+ *       - DeeSharedVector_DecrefNoGiftItems: The `vector' arg here is `DeeObject *const *'
  * NOTE: The returned object cannot be used to change out the elements
  *       of the given `vector', meaning that _it_ can still be [const] */
 DFUNDEF WUNUSED DREF DeeObject *DCALL
-DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector);
+DeeSharedVector_NewShared(size_t length, /*maybe*/ DREF DeeObject *const *vector);
 
 /* Check if the reference counter of `self' is 1. When it is,
  * simply destroy the shared vector without freeing `sv_vector',
@@ -893,6 +894,11 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector);
  *       mirroring the behavior of adjstack/pop instructions. */
 DFUNDEF NONNULL((1)) void DCALL
 DeeSharedVector_Decref(DREF DeeObject *__restrict self);
+
+/* Same as `DeeSharedVector_Decref()', but should be used if the caller
+ * does *not* want to gift the vector references to all of its items. */
+DFUNDEF NONNULL((1)) void DCALL
+DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
 
 

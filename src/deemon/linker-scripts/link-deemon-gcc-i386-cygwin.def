@@ -784,8 +784,10 @@ EXPORTS
 	_DeeSeq_Min@8=DeeSeq_Min@8
 	_DeeSeq_Sum@4=DeeSeq_Sum@4
 	_DeeSharedMap_Decref@4=DeeSharedMap_Decref@4
+	_DeeSharedMap_DecrefNoGiftItems@4=DeeSharedMap_DecrefNoGiftItems@4
 	_DeeSharedMap_NewShared@8=DeeSharedMap_NewShared@8
 	_DeeSharedVector_Decref@4=DeeSharedVector_Decref@4
+	_DeeSharedVector_DecrefNoGiftItems@4=DeeSharedVector_DecrefNoGiftItems@4
 	_DeeSharedVector_NewShared@8=DeeSharedVector_NewShared@8
 	_DeeSlab_Calloc10@0=DeeSlab_Calloc10@0
 	_DeeSlab_Calloc4@0=DeeSlab_Calloc4@0
