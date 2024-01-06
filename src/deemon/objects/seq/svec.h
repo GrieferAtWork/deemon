@@ -142,9 +142,6 @@ typedef struct {
 #define SharedVector_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->sv_lock)
 #define SharedVector_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sv_lock)
 
-INTDEF DeeTypeObject SharedVector_Type;
-
-
 typedef struct {
 	OBJECT_HEAD
 	DREF SharedVector *si_seq;   /* [1..1][const] The shared-vector that is being iterated. */
@@ -154,7 +151,6 @@ typedef struct {
 } SharedVectorIterator;
 
 INTDEF DeeTypeObject SharedVectorIterator_Type;
-
 
 DECL_END
 

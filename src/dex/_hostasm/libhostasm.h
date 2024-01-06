@@ -194,6 +194,7 @@ struct Dee_memloc {
 #define MEMLOC_F_NORMAL        0x00
 #define MEMLOC_F_NOREF         0x01 /* Slot contains no reference (should always be set when `ml_vmorph != MEMLOC_VMORPH_DIRECT') */
 #define MEMLOC_F_ONEREF        0x02 /* [valid_if(!MEMLOC_F_NOREF)] Slot contains the only reference that exists for some given object (decref can use decref_dokill) */
+#define MEMLOC_F_LINEAR        0x04 /* Only for MEMLOC_TYPE_HSTACKIND vstack items: location is part of a linear vector. It must not be moved to a different cfa offset */
 #define MEMLOC_M_LOCAL_BSTATE  0xc0 /* Mask for the bound-ness of a local variable */
 #define MEMLOC_F_LOCAL_UNKNOWN 0x00 /* Local variable bound-ness is unknown */
 #define MEMLOC_F_LOCAL_BOUND   0x40 /* Local variable is bound */
@@ -1155,6 +1156,15 @@ struct Dee_function_generator {
 #define Dee_function_generator_inlineref(self, inherit_me) \
 	Dee_function_assembler_inlineref((self)->fg_assembler, inherit_me)
 
+/* Push/pop exception handler injections. */
+#define Dee_function_generator_xinject_push(self, ij)             \
+	(void)((ij)->fei_next          = (self)->fg_exceptinject,     \
+	       (ij)->fei_stack         = (self)->fg_state->ms_stackc, \
+	       (self)->fg_exceptinject = (ij))
+#define Dee_function_generator_xinject_pop(self, ij)    \
+	(void)(Dee_ASSERT((self)->fg_exceptinject == (ij)), \
+	       (self)->fg_exceptinject = (ij)->fei_next)
+
 
 /* Code generator helpers to manipulate the V-stack. */
 #define Dee_function_generator_vtop(self)     Dee_memstate_vtop((self)->fg_state)
@@ -1222,6 +1232,11 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattr(struct 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrkw(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc); /* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuple(struct Dee_function_generator *__restrict self);                     /* this, attr, args          -> result -- Invoke `DeeObject_CallAttrTuple()' and push the result */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restrict self);                   /* this, attr, args, kw      -> result -- Invoke `DeeObject_CallAttrTupleKw()' and push the result */
+
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallseq(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t itemc);     /* func, [items...]              -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))' and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallmap(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t pairc);     /* func, [[key, value]...]       -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrseq(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t itemc); /* func, attr, [items...]        -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcallattrmap(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t pairc); /* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopgetattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> result */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vophasattr(struct Dee_function_generator *__restrict self);   /* this, attr        -> hasattr */
@@ -1587,6 +1602,26 @@ Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__r
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
                                Dee_vstackaddr_t argc, bool readonly);
+
+
+/* Pre-defined exception injectors. */
+struct Dee_function_exceptinject_callvoidapi {
+	struct Dee_function_exceptinject fei_cva_base; /* Underlying injector */
+	void const                      *fei_cva_func; /* [1..1] API function to call (with `VCALL_CC_VOID' semantics) */
+	Dee_vstackaddr_t                 fei_cva_argc; /* # of arguments taken by `fei_cva_func' */
+};
+#define Dee_function_generator_xinject_push_callvoidapi(self, ij, api_func, argc) \
+	((ij)->fei_cva_base.fei_inject = &Dee_function_exceptinject_callvoidapi_f,    \
+	 (ij)->fei_cva_func            = (void const *)(api_func),                    \
+	 (ij)->fei_cva_argc            = (argc),                                      \
+	 Dee_function_generator_xinject_push(self, &(ij)->fei_cva_base))
+#define Dee_function_generator_xinject_pop_callvoidapi(self, ij)    \
+	Dee_function_generator_xinject_pop(self, &(ij)->fei_cva_base)
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_function_exceptinject_callvoidapi' */
+Dee_function_exceptinject_callvoidapi_f(struct Dee_function_generator *__restrict self,
+                                        struct Dee_function_exceptinject *__restrict inject);
+
 
 
 /* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.

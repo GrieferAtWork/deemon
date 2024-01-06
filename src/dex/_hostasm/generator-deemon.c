@@ -1983,39 +1983,22 @@ do_jcc:
 	TARGET(ASM_CALLATTR_C_SEQ)
 	TARGET(ASM_CALLATTR_C_MAP) {
 		uint16_t attr_cid;
-		uint16_t argc;
-		void const *api_create;
-		void const *api_decref;
+		uint16_t itemc;
+		Dee_vstackaddr_t elemc;
 		attr_cid = instr[1];
-		argc     = instr[2];
+		itemc    = instr[2];
 		__IF0 {
 	TARGET(ASM16_CALLATTR_C_SEQ)
 	TARGET(ASM16_CALLATTR_C_MAP)
 			attr_cid = UNALIGNED_GETLE16(instr + 2);
-			argc     = instr[4];
+			itemc    = instr[4];
 		}
-		if ((opcode & 0xff) == ASM_CALLATTR_C_MAP) {
-			argc *= 2;
-			api_create = (void const *)&DeeSharedMap_NewShared;
-			api_decref = (void const *)&DeeSharedMap_DecrefNoGiftItems;
-		} else {
-			api_create = (void const *)&DeeSharedVector_NewShared;
-			api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
-		}
-		DO(Dee_function_generator_vnotoneref(self, argc));                         /* this, [args...] */
-		DO(Dee_function_generator_vlinear(self, argc, true));                      /* this, [args...], argv */
-		DO(Dee_function_generator_vpush_immSIZ(self, argc));                       /* this, [args...], argv, argc */
-		DO(Dee_function_generator_vswap(self));                                    /* this, [args...], argc, argv */
-		DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* this, [args...], shared_args */
-		/* TODO: Push custom exception cleanup */
-		DO(Dee_function_generator_vlrot(self, argc + 1));                          /* [args...], shared_args, this */
-		DO(Dee_function_generator_vpush_cid(self, attr_cid));                      /* [args...], shared_args, this, attr */
-		DO(Dee_function_generator_vlrot(self, 3));                                 /* [args...], this, attr, shared_args */
-		DO(Dee_function_generator_vopcallattr(self, 1));                           /* [args...], shared_args, result */
-		DO(Dee_function_generator_vrrot(self, argc + 2));                          /* result, [args...], shared_args */
-		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));   /* result, [args...] */
-		/* TODO: Pop custom exception cleanup */
-		return Dee_function_generator_vpopmany(self, argc);                        /* result */
+		elemc = (opcode & 0xff) == ASM_CALLATTR_C_MAP ? itemc * 2 : itemc;
+		DO(Dee_function_generator_vpush_cid(self, attr_cid)); /* this, [args...], attr */
+		DO(Dee_function_generator_vrrot(self, elemc + 1));    /* this, attr, [args...] */
+		return (opcode & 0xff) == ASM_CALLATTR_C_MAP
+		       ? Dee_function_generator_vopcallattrmap(self, itemc)
+		       : Dee_function_generator_vopcallattrseq(self, itemc);
 	}	break;
 
 	TARGET(ASM_CALLATTR_KWDS) {
@@ -2072,36 +2055,11 @@ do_jcc:
 		return Dee_function_generator_vopcall(self, argc); /* result */
 	}	break;
 
-	TARGET(ASM_CALL_SEQ) {
-		uint16_t argc;
-		void const *api_create;
-		void const *api_decref;
-		argc = instr[2];
-		api_create = (void const *)&DeeSharedVector_NewShared;
-		api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
-		__IF0 {
+	TARGET(ASM_CALL_SEQ)
+		return Dee_function_generator_vopcallseq(self, instr[2]);
+
 	TARGET(ASM_CALL_MAP)
-			argc = instr[2] * 2;
-			api_create = (void const *)&DeeSharedMap_NewShared;
-			api_decref = (void const *)&DeeSharedMap_DecrefNoGiftItems;
-		}
-		/* TODO: Optimization when top "argc" items are constants */
-		/* TODO: Optimization when "func" is a constant (like DeeList_Type, which can be optimized to a list pack) */
-		                                                                           /* func, [args...] */
-		DO(Dee_function_generator_vnotoneref(self, argc));                         /* func, [args...] */
-		DO(Dee_function_generator_vlinear(self, argc, true));                      /* func, [args...], argv */
-		DO(Dee_function_generator_vpush_immSIZ(self, argc));                       /* func, [args...], argv, argc */
-		DO(Dee_function_generator_vswap(self));                                    /* func, [args...], argc, argv */
-		DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* func, [args...], shared_args */
-		/* TODO: Push custom exception cleanup */
-		DO(Dee_function_generator_vlrot(self, argc + 2));                          /* [args...], shared_args, func */
-		DO(Dee_function_generator_vdup_n(self, 2));                                /* [args...], shared_args, func, shared_args */
-		DO(Dee_function_generator_vopcall(self, 1));                               /* [args...], shared_args, result */
-		DO(Dee_function_generator_vrrot(self, argc + 2));                          /* result, [args...], shared_args */
-		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));   /* result, [args...] */
-		/* TODO: Pop custom exception cleanup */
-		return Dee_function_generator_vpopmany(self, argc);                        /* result */
-	}	break;
+		return Dee_function_generator_vopcallmap(self, instr[2]);
 
 	TARGET(ASM_THISCALL_TUPLE)
 		return Dee_function_generator_vopthiscalltuple(self);

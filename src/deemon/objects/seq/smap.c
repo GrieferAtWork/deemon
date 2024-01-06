@@ -162,7 +162,7 @@ smapiter_ctor(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedMapIterator", &self->si_seq))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->si_seq, &SharedMap_Type))
+	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedMap_Type))
 		goto err;
 	Dee_Incref(self->si_seq);
 	self->si_index = 0;
@@ -660,7 +660,7 @@ PRIVATE struct type_getset tpconst smap_getsets[] = {
 
 PRIVATE struct type_member tpconst smap_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedMapIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SharedMap_Type),
+	TYPE_MEMBER_CONST("Frozen", &DeeSharedMap_Type),
 	TYPE_MEMBER_END
 };
 
@@ -672,7 +672,7 @@ PRIVATE struct type_method tpconst smap_methods[] = {
 	TYPE_METHOD_END
 };
 
-INTERN DeeTypeObject SharedMap_Type = {
+PUBLIC DeeTypeObject DeeSharedMap_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SharedMap",
 	/* .tp_doc      = */ NULL,
@@ -743,7 +743,7 @@ DeeSharedMap_NewShared(size_t length, DREF DeeSharedItem const *vector) {
 	result->sm_loaded = 0;
 	result->sm_mask   = mask;
 	Dee_atomic_rwlock_cinit(&result->sm_lock);
-	DeeObject_Init(result, &SharedMap_Type);
+	DeeObject_Init(result, &DeeSharedMap_Type);
 done:
 	return (DREF DeeObject *)result;
 }
@@ -771,11 +771,11 @@ DeeSharedMap_Decref(DeeObject *__restrict self) {
 	DREF DeeSharedItem const *vector;
 	DREF DeeSharedItem *vector_copy;
 	SharedMap *me = (SharedMap *)self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &SharedMap_Type);
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedMap_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
 		Dee_Decrefv((DREF DeeObject **)me->sm_vector, me->sm_length * 2);
-		Dee_DecrefNokill(&SharedMap_Type);
+		Dee_DecrefNokill(&DeeSharedMap_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
@@ -821,10 +821,10 @@ DFUNDEF NONNULL((1)) void DCALL
 DeeSharedMap_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	DREF DeeSharedItem *vector_copy;
 	SharedMap *me = (SharedMap *)self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &SharedMap_Type);
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedMap_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
-		Dee_DecrefNokill(&SharedMap_Type);
+		Dee_DecrefNokill(&DeeSharedMap_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;

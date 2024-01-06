@@ -110,6 +110,9 @@ typedef struct {
 	DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
 } DeeSharedItem;
 
+/* Type of object returned by `DeeSharedMap_NewShared()' */
+DDATDEF DeeTypeObject DeeSharedMap_Type;
+
 /* Create a new shared map that will inherit elements from
  * the given vector once `DeeSharedMap_Decref()' is called.
  * NOTE: This function can implicitly inherit a reference to each item of the

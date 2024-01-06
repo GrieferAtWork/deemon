@@ -1219,52 +1219,14 @@ librt_get_SetDifferenceIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 	return get_iterator_of(librt_get_SetDifference_impl_f());
 }
 
-
-
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedVector_impl_f(void) {
-	DREF DeeObject *ob, *result = NULL;
-	ob = DeeSharedVector_NewShared(0, NULL);
-	if likely(ob) {
-		result = (DREF DeeObject *)Dee_TYPE(ob);
-		Dee_Incref(result);
-		DeeSharedVector_Decref(ob);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedVector_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_SharedVector_impl_f();
-}
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SharedVectorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_SharedVector_impl_f());
-}
-
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedMap_impl_f(void) {
-	DREF DeeObject *ob, *result = NULL;
-	ob = DeeSharedMap_NewShared(0, NULL);
-	if likely(ob) {
-		result = (DREF DeeObject *)Dee_TYPE(ob);
-		Dee_Incref(result);
-		DeeSharedMap_Decref(ob);
-	}
-	return result;
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_SharedMap_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_SharedMap_impl_f();
+	return DeeObject_GetAttr((DeeObject *)&DeeSharedVector_Type, (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SharedMapIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_SharedMap_impl_f());
+	return DeeObject_GetAttr((DeeObject *)&DeeSharedMap_Type, (DeeObject *)&str_Iterator);
 }
 
 
@@ -1830,9 +1792,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_MappingItemsIterator, &librt_get_MappingItemsIt
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilter, &librt_get_MappingHashFilter_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingHashFilterIterator, &librt_get_MappingHashFilterIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_MappingByAttr, &librt_get_MappingByAttr_f);
-PRIVATE DEFINE_CMETHOD(librt_get_SharedVector, &librt_get_SharedVector_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedVectorIterator, &librt_get_SharedVectorIterator_f);
-PRIVATE DEFINE_CMETHOD(librt_get_SharedMap, &librt_get_SharedMap_f);
 PRIVATE DEFINE_CMETHOD(librt_get_SharedMapIterator, &librt_get_SharedMapIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_RefVector, &librt_get_RefVector_f);
 PRIVATE DEFINE_CMETHOD(librt_get_RefVectorIterator, &librt_get_RefVectorIterator_f);
@@ -2073,9 +2033,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "MappingByAttr", (DeeObject *)&librt_get_MappingByAttr, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* MapByAttr_Type */
 
 	/* Internal types used for safe & fast passing of temporary sequences */
-	{ "SharedVector", (DeeObject *)&librt_get_SharedVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SharedVector_Type */
+	{ "SharedVector", (DeeObject *)&DeeSharedVector_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },                                      /* DeeSharedVector_Type */
 	{ "SharedVectorIterator", (DeeObject *)&librt_get_SharedVectorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* SharedVectorIterator_Type */
-	{ "SharedMap", (DeeObject *)&librt_get_SharedMap, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SharedMap_Type */
+	{ "SharedMap", (DeeObject *)&DeeSharedMap_Type, MODSYM_FREADONLY | MODSYM_FCONSTEXPR },                                            /* DeeSharedMap_Type */
 	{ "SharedMapIterator", (DeeObject *)&librt_get_SharedMapIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* SharedMapIterator_Type */
 	{ "RefVector", (DeeObject *)&librt_get_RefVector, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* RefVector_Type */
 	{ "RefVectorIterator", (DeeObject *)&librt_get_RefVectorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },       /* RefVectorIterator_Type */

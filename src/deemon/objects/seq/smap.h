@@ -72,7 +72,6 @@ typedef struct {
 #define SharedMap_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->sm_lock)
 
 #define SHAREDMAP_SIZEOF(mask) (offsetof(SharedMap, sm_map) + ((mask) + 1) * sizeof(SharedItemEx))
-INTDEF DeeTypeObject SharedMap_Type;
 
 
 

@@ -994,7 +994,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 sveciter_ctor(SharedVectorIterator *__restrict self) {
-	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&SharedVector_Type);
+	self->si_seq = (DREF SharedVector *)DeeObject_NewDefault(&DeeSharedVector_Type);
 	if unlikely(!self->si_seq)
 		goto err;
 	self->si_index = 0;
@@ -1008,7 +1008,7 @@ sveciter_init(SharedVectorIterator *__restrict self,
               size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_SharedVectorIterator", &self->si_seq))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->si_seq, &SharedVector_Type))
+	if (DeeObject_AssertTypeExact(self->si_seq, &DeeSharedVector_Type))
 		goto err;
 	Dee_Incref(self->si_seq);
 	self->si_index = 0;
@@ -1450,7 +1450,7 @@ PRIVATE struct type_getset tpconst svec_getsets[] = {
 
 PRIVATE struct type_member tpconst svec_class_members[] = {
 	TYPE_MEMBER_CONST(STR_Iterator, &SharedVectorIterator_Type),
-	TYPE_MEMBER_CONST("Frozen", &SharedVector_Type),
+	TYPE_MEMBER_CONST("Frozen", &DeeSharedVector_Type),
 	TYPE_MEMBER_END
 };
 
@@ -1508,7 +1508,7 @@ svec_bool(SharedVector *__restrict self) {
 	return atomic_read(&self->sv_length) != 0;
 }
 
-INTERN DeeTypeObject SharedVector_Type = {
+PUBLIC DeeTypeObject DeeSharedVector_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SharedVector",
 	/* .tp_doc      = */ NULL,
@@ -1568,7 +1568,7 @@ DeeSharedVector_NewShared(size_t length, DREF DeeObject *const *vector) {
 	result = DeeObject_MALLOC(SharedVector);
 	if unlikely(!result)
 		goto done;
-	DeeObject_Init(result, &SharedVector_Type);
+	DeeObject_Init(result, &DeeSharedVector_Type);
 	Dee_atomic_rwlock_init(&result->sv_lock);
 	result->sv_length = length;
 	result->sv_vector = vector;
@@ -1598,11 +1598,11 @@ DeeSharedVector_Decref(DREF DeeObject *__restrict self) {
 	DREF DeeObject *const *vector;
 	DREF DeeObject **vector_copy;
 	SharedVector *me = (SharedVector *)self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &SharedVector_Type);
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedVector_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
 		Dee_Decrefv(me->sv_vector, me->sv_length);
-		Dee_DecrefNokill(&SharedVector_Type);
+		Dee_DecrefNokill(&DeeSharedVector_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;
@@ -1648,10 +1648,10 @@ PUBLIC NONNULL((1)) void DCALL
 DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self) {
 	DREF DeeObject **vector_copy;
 	SharedVector *me = (SharedVector *)self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &SharedVector_Type);
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeSharedVector_Type);
 	if (!DeeObject_IsShared(me)) {
 		/* Simple case: The vector isn't being shared. */
-		Dee_DecrefNokill(&SharedVector_Type);
+		Dee_DecrefNokill(&DeeSharedVector_Type);
 		DeeObject_FreeTracker((DeeObject *)me);
 		DeeObject_Free(me);
 		return;

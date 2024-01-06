@@ -42,6 +42,7 @@
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
 #include <deemon/list.h>
+#include <deemon/map.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -3039,6 +3040,80 @@ Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restr
 err:
 	return -1;
 }
+
+
+
+/* func, [attr], [items...] -> result */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
+                   Dee_vstackaddr_t itemc, bool asmap, bool hasattr) {
+	struct Dee_function_exceptinject_callvoidapi ij;
+	DeeTypeObject *shared_type = &DeeSharedVector_Type;
+	void const *api_create = (void const *)&DeeSharedVector_NewShared;
+	void const *api_decref = (void const *)&DeeSharedVector_DecrefNoGiftItems;
+	if (asmap) {
+		shared_type = &DeeSharedMap_Type;
+		api_create = (void const *)&DeeSharedMap_NewShared;
+		api_decref = (void const *)&DeeSharedMap_DecrefNoGiftItems;
+	}
+	/* TODO: Optimization when top "itemc" items are constants */
+	/* TODO: Optimization when "func" is a constant (like DeeList_Type, which can be optimized to a list pack) */
+
+	DO(Dee_function_generator_vnotoneref(self, itemc));                        /* func, [attr], [items...] */
+	DO(Dee_function_generator_vlinear(self, itemc, true));                     /* func, [attr], [items...], itemv */
+	DO(Dee_function_generator_vpush_immSIZ(self, itemc));                      /* func, [attr], [items...], itemv, itemc */
+	DO(Dee_function_generator_vswap(self));                                    /* func, [attr], [items...], itemc, itemv */
+	DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* func, [attr], [items...], custom:seq */
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;             /* func, [attr], [items...], custom:seq */ /* Not a "normal" reference */
+	DO(Dee_function_generator_vsettyp_noalias(self, shared_type));             /* func, [attr], [items...], custom:seq */
+	DO(Dee_function_generator_vlrot(self, hasattr ? itemc + 3 : itemc + 2));   /* [attr], [items...], custom:seq, func */
+	if (hasattr)                                                               /* attr, [items...], custom:seq, func */
+		DO(Dee_function_generator_vlrot(self, itemc + 3));                     /* [items...], custom:seq, func, attr */
+	Dee_function_generator_xinject_push_callvoidapi(self, &ij, api_decref, 1); /* [items...], custom:seq, func, [attr] */
+	if (hasattr) {                                                             /* [items...], custom:seq, func, attr */
+		DO(Dee_function_generator_vdup_n(self, 3));                            /* [items...], custom:seq, func, attr, custom:seq */
+		DO(Dee_function_generator_vopcallattr(self, 1));                       /* [items...], custom:seq, result */
+	} else {                                                                   /* [items...], custom:seq, func */
+		DO(Dee_function_generator_vdup_n(self, 2));                            /* [items...], custom:seq, func, custom:seq */
+		DO(Dee_function_generator_vopcall(self, 1));                           /* [items...], custom:seq, result */
+	}                                                                          /* [items...], custom:seq, result */
+	Dee_function_generator_xinject_pop_callvoidapi(self, &ij);                 /* [items...], custom:seq, result */
+	DO(Dee_function_generator_vrrot(self, itemc + 2));                         /* result, [items...], custom:seq */
+	DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));   /* result, [items...] */
+	return Dee_function_generator_vpopmany(self, itemc);                       /* result */
+err:
+	return -1;
+}
+
+
+/* func, [items...] -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallseq(struct Dee_function_generator *__restrict self,
+                                  Dee_vstackaddr_t itemc) {
+	return vopcallseqmap_impl(self, itemc, false, false);
+}
+
+/* func, [[key, value]...] -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallmap(struct Dee_function_generator *__restrict self,
+                                  Dee_vstackaddr_t pairc) {
+	return vopcallseqmap_impl(self, pairc * 2, true, false);
+}
+
+/* func, attr, [items...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrseq(struct Dee_function_generator *__restrict self,
+                                      Dee_vstackaddr_t itemc) {
+	return vopcallseqmap_impl(self, itemc, false, true);
+}
+
+/* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcallattrmap(struct Dee_function_generator *__restrict self,
+                                      Dee_vstackaddr_t pairc) {
+	return vopcallseqmap_impl(self, pairc * 2, true, true);
+}
+
 
 
 

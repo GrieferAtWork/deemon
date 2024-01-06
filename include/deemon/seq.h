@@ -864,6 +864,8 @@ DeeRefVector_NewReadonly(DeeObject *__restrict owner, size_t length,
 #endif /* !CONFIG_NO_THREADS */
 
 
+/* Type of object returned by `DeeSharedVector_NewShared()' */
+DDATDEF DeeTypeObject DeeSharedVector_Type;
 
 /* Create a new shared vector that will inherit elements
  * from the given vector once `DeeSharedVector_Decref()' is called.

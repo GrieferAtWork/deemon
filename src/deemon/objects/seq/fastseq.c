@@ -164,7 +164,7 @@ DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
 	tp_self = Dee_TYPE(self);
 	if (tp_self == &DeeTuple_Type)
 		return DeeTuple_SIZE(self);
-	if (tp_self == &SharedVector_Type)
+	if (tp_self == &DeeSharedVector_Type)
 		return ((SharedVector *)self)->sv_length;
 	return DEE_FASTSEQ_NOTFAST;
 }
@@ -179,7 +179,7 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 		result = DeeTuple_GET(self, index);
 		return_reference_(result);
 	}
-	ASSERT(tp_self == &SharedVector_Type);
+	ASSERT(tp_self == &DeeSharedVector_Type);
 	SharedVector_LockRead((SharedVector *)self);
 	if unlikely(index >= ((SharedVector *)self)->sv_length) {
 		SharedVector_LockEndRead((SharedVector *)self);

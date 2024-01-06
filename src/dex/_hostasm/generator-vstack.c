@@ -3720,9 +3720,11 @@ DummyVector_New(size_t num_items) {
 
 /* Calculate a score describing the complexity of shifting memory
  * in order to construct a linear vector of `linbase...+=linsize' at `cfa_offset'
- * @param: hstack_inuse: Cache of currently in-use hstack location (see `LOCAL_hstack_cfa_*' macros) */
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+ * @param: hstack_inuse:    Cache of currently in-use hstack location (see `LOCAL_hstack_cfa_*' macros)
+ * @param: hstack_reserved: Cache of currently reserved hstack location (s.a. `MEMLOC_F_LINEAR') */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) ATTR_INS(4, 5) size_t DCALL
 hstack_linear_score(bitset_t const *__restrict hstack_inuse,
+                    bitset_t const *__restrict hstack_reserved,
                     uintptr_t hstack_cfa_offset,
                     struct Dee_memloc const *linbase,
                     Dee_vstackaddr_t linsize,
@@ -3748,6 +3750,8 @@ hstack_linear_score(bitset_t const *__restrict hstack_inuse,
 			/* If there's something there already, it must be moved. */
 			if (LOCAL_hstack_cfa_inuse(hstack_inuse, dst_cfa_offset))
 				result += HSTACK_LINEAR_SCORE_MOV_UNRELATED;
+			if (LOCAL_hstack_cfa_inuse(hstack_reserved, dst_cfa_offset))
+				return (size_t)-1; /* This would conflict with a reserved location */
 		}
 		result += HSTACK_LINEAR_SCORE_MOV_LINEAR;
 	}
@@ -3858,17 +3862,21 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			uintptr_t cfa_offset_min;
 			uintptr_t cfa_offset;
 			struct Dee_memloc *loc;
-			bitset_t *hstack_inuse; /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
+			bitset_t *hstack_inuse;    /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
+			bitset_t *hstack_reserved; /* Bitset of hstack locations that can never be used (because they belong to `MEMLOC_F_LINEAR' items) */
 			size_t hstack_inuse_sizeof;
 			hstack_inuse_sizeof = _bitset_sizeof((state->ms_host_cfa_offset / HOST_SIZEOF_POINTER) * 2);
-			hstack_inuse = (bitset_t *)Dee_Calloca(hstack_inuse_sizeof);
+			hstack_inuse = (bitset_t *)Dee_Calloca(hstack_inuse_sizeof * 2);
 			if unlikely(!hstack_inuse)
 				goto err;
+			hstack_reserved = hstack_inuse + hstack_inuse_sizeof;
 			Dee_memstate_foreach(loc, state) {
 				if (loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
 					uintptr_t cfa = Dee_memloc_getcfastart(loc);
 					ASSERT(cfa < state->ms_host_cfa_offset);
 					bitset_set(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
+					if (loc->ml_flags & MEMLOC_F_LINEAR)
+						bitset_set(hstack_reserved, cfa / HOST_SIZEOF_POINTER);
 				}
 			}
 			Dee_memstate_foreach_end;
@@ -3892,12 +3900,14 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			/* Enumerate candidates starting with low CFA offsets.
 			 * That way, we prefer equally complex candidates that are closer to the frame base. */
 			result_cfa_offset = cfa_offset_min;
-			result_cfa_offset_score = hstack_linear_score(hstack_inuse, state->ms_host_cfa_offset,
+			result_cfa_offset_score = hstack_linear_score(hstack_inuse, hstack_reserved,
+			                                              state->ms_host_cfa_offset,
 			                                              linbase, argc, result_cfa_offset);
 			if likely(result_cfa_offset_score != 0) {
 				for (cfa_offset = cfa_offset_min + HOST_SIZEOF_POINTER;
 				     cfa_offset <= cfa_offset_max; cfa_offset += HOST_SIZEOF_POINTER) {
-					size_t score = hstack_linear_score(hstack_inuse, state->ms_host_cfa_offset,
+					size_t score = hstack_linear_score(hstack_inuse, hstack_reserved,
+					                                   state->ms_host_cfa_offset,
 					                                   linbase, argc, cfa_offset);
 					if (result_cfa_offset_score > score) {
 						result_cfa_offset_score = score;
@@ -3907,6 +3917,10 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 					}
 				}
 			}
+			ASSERTF(result_cfa_offset_score != (size_t)-1,
+			        "Not possible! The combination where we'd be pushing everything into a "
+			        "freshly allocated portion of the hstack shouldn't have hit any reserved "
+			        "locations!");
 			Dee_Freea(hstack_inuse);
 			if unlikely(result_cfa_offset_score == 0) {
 				/* Special case: the score only becomes 0 when no morph is needed.
@@ -3975,6 +3989,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			struct Dee_memloc *loc = &linbase[i];
 			ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
 			loc->ml_value.v_hstack.s_cfa = dst_cfa_offset;
+			loc->ml_flags |= MEMLOC_F_LINEAR; /* Not allowed to move until popped */
 		}
 
 		/* Make sure that `linear_state's CFA offset is large enough to hold the linear vector. */
@@ -4005,6 +4020,19 @@ err:
 
 #undef LOCAL_hstack_lowcfa_inuse
 #undef LOCAL_hstack_cfa_inuse
+
+
+/* Pre-defined exception injectors. */
+
+/* `fei_inject' value for `struct Dee_function_exceptinject_callvoidapi' */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_exceptinject_callvoidapi_f(struct Dee_function_generator *__restrict self,
+                                        struct Dee_function_exceptinject *__restrict inject) {
+	struct Dee_function_exceptinject_callvoidapi *me;
+	me = (struct Dee_function_exceptinject_callvoidapi *)inject;
+	return Dee_function_generator_vcallapi(self, me->fei_cva_func, VCALL_CC_VOID, me->fei_cva_argc);
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */
