@@ -44,6 +44,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
+#include "utils.h"
+
 DECL_BEGIN
 
 /************************************************************************/
@@ -3616,6 +3618,128 @@ err:
 
 
 
+typedef struct {
+	OBJECT_HEAD
+	COMPILER_FLEXIBLE_ARRAY(void *, dvo_items);
+} DummyVectorObject;
+
+PRIVATE DeeTypeObject DeeVectorDummy_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_VectorDummy",
+	/* .tp_doc      = */ DOC("Used for storing dummy vector in _hostasm"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				/* .tp_free      = */ (dfunptr_t)NULL
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+PRIVATE WUNUSED DREF DummyVectorObject *DCALL
+DummyVector_New(size_t num_items) {
+	DREF DummyVectorObject *result;
+	result = (DREF DummyVectorObject *)DeeObject_Malloc(offsetof(DummyVectorObject, dvo_items) +
+	                                                    (num_items * sizeof(void *)));
+	if likely(result)
+		DeeObject_Init(result, &DeeVectorDummy_Type);
+	return result;
+}
+
+
+#define LOCAL_hstack_lowcfa_inuse(bitset, low_cfa_offset) bitset_test(bitset, (low_cfa_offset) / HOST_SIZEOF_POINTER)
+#ifdef HOSTASM_STACK_GROWS_DOWN
+#define LOCAL_hstack_cfa_inuse(bitset, cfa_offset) LOCAL_hstack_lowcfa_inuse(bitset, (cfa_offset) - HOST_SIZEOF_POINTER)
+#else /* HOSTASM_STACK_GROWS_DOWN */
+#define LOCAL_hstack_cfa_inuse(bitset, cfa_offset) LOCAL_hstack_lowcfa_inuse(bitset, cfa_offset)
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+
+
+#define HSTACK_LINEAR_SCORE_MOV_LINEAR    1 /* Move a location to make it linear */
+#define HSTACK_LINEAR_SCORE_MOV_UNRELATED 2 /* Move an unrelated location out of the way */
+
+/* Calculate a score describing the complexity of shifting memory
+ * in order to construct a linear vector of `linbase...+=linsize' at `cfa_offset'
+ * @param: hstack_inuse: Cache of currently in-use hstack location (see `LOCAL_hstack_cfa_*' macros) */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+hstack_linear_score(bitset_t const *__restrict hstack_inuse,
+                    uintptr_t hstack_cfa_offset,
+                    struct Dee_memloc const *linbase,
+                    Dee_vstackaddr_t linsize,
+                    uintptr_t cfa_offset) {
+	Dee_vstackaddr_t i;
+	size_t result = 0;
+	for (i = 0; i < linsize; ++i) {
+		struct Dee_memloc const *src = &linbase[i];
+#ifdef HOSTASM_STACK_GROWS_DOWN
+		uintptr_t dst_cfa_offset = cfa_offset - i * HOST_SIZEOF_POINTER;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+		uintptr_t dst_cfa_offset = cfa_offset + i * HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+		if (src->ml_type == MEMLOC_TYPE_HSTACKIND &&
+		    src->ml_value.v_hstack.s_cfa == dst_cfa_offset)
+			continue; /* Already at the perfect location! */
+#ifdef HOSTASM_STACK_GROWS_DOWN
+		if (dst_cfa_offset <= hstack_cfa_offset)
+#else /* HOSTASM_STACK_GROWS_DOWN */
+		if (dst_cfa_offset < hstack_cfa_offset)
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+		{
+			/* If there's something there already, it must be moved. */
+			if (LOCAL_hstack_cfa_inuse(hstack_inuse, dst_cfa_offset))
+				result += HSTACK_LINEAR_SCORE_MOV_UNRELATED;
+		}
+		result += HSTACK_LINEAR_SCORE_MOV_LINEAR;
+	}
+	return result;
+}
+
+/* Check if any of the given locations are HSTACKIND */
+PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) bool DCALL
+Dee_memlocs_anyhstackind(struct Dee_memloc const *__restrict base,
+                         Dee_vstackaddr_t count) {
+	Dee_vstackaddr_t i;
+	for (i = 0; i < count; ++i) {
+		if (base[i].ml_type == MEMLOC_TYPE_HSTACKIND)
+			return true;
+	}
+	return false;
+}
+
 /* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
  * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
  * and STACK[SIZE-argc] appearing at the lowest address). Once that has been accomplished,
@@ -3634,20 +3758,33 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		goto err;
 	if unlikely(Dee_function_generator_vdirect(self, argc))
 		goto err;
-
-	if (readonly) {
-		/* TODO: Check for special case where all arguments are constants. */
-	}
-
-	/* Deal with special argument count cases. */
-	switch (argc) {
-
-	case 0:
+	if unlikely(!argc) {
 		/* The base address of an empty vector doesn't matter, meaning it's undefined */
 		return Dee_function_generator_vpush_undefined(self);
-
-	case 1: {
-		/* Simple case: form a 1-element vector */
+	} else if (readonly && Dee_function_generator_vallconst(self, argc)) {
+		/* Dynamically allocate a dummy object which includes space
+		 * for "argc" pointers. Then, fill those pointers with values
+		 * from the v-stack, inline the reference to dummy object, and
+		 * finally: push a pointer to the base address of the dummy's
+		 * value array. */
+		Dee_vstackaddr_t i;
+		struct Dee_memloc *cbase = self->fg_state->ms_stackv + self->fg_state->ms_stackc - argc;
+		DREF DummyVectorObject *vec = DummyVector_New(argc);
+		if unlikely(!vec)
+			goto err;
+		vec = (DREF DummyVectorObject *)Dee_function_generator_inlineref(self, (DREF DeeObject *)vec);
+		if unlikely(!vec)
+			goto err;
+		for (i = 0; i < argc; ++i)
+			vec->dvo_items[i] = (void *)cbase[i].ml_value.v_const;
+		if unlikely(Dee_function_generator_vpopmany(self, argc))
+			goto err;
+		return Dee_function_generator_vpush_addr(self, vec->dvo_items);
+	} else if (argc == 1) {
+		/* Deal with simple case: caller only wants the address of a single location.
+		 * In this case, we only need to make sure that said location resides in
+		 * memory (which is even allowed to be a REGIND location), and then push
+		 * the address of that location. */
 		uintptr_t cfa_offset;
 		struct Dee_memloc *loc = Dee_function_generator_vtop(self);
 		if (loc->ml_type == MEMLOC_TYPE_HREGIND && loc->ml_value.v_hreg.r_voff == 0) {
@@ -3664,21 +3801,184 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		ASSERT(Dee_function_generator_vtop(self)->ml_value.v_hstack.s_off == 0);
 		cfa_offset = Dee_function_generator_vtop(self)->ml_value.v_hstack.s_cfa;
 		return Dee_function_generator_vpush_hstack(self, cfa_offset);
-	}	break;
+	} else {
+		/* General case: figure out the optimal CFA base address of the linear vector. */
+		Dee_vstackaddr_t i;
+		uintptr_t result_cfa_offset;
+		DREF struct Dee_memstate *linear_state;
+		struct Dee_memstate *state = self->fg_state;
+		struct Dee_memloc *linbase = state->ms_stackv + state->ms_stackc - argc;
 
-	default:
-		break;
+		/* Check for special case: if none of the linear locations are HSTACKIND,
+		 * then the optimal target location is always either a sufficiently large
+		 * free region, or new newly alloca'd region. */
+		if (!Dee_memlocs_anyhstackind(linbase, argc)) {
+			size_t num_bytes = argc * sizeof(void *);
+			result_cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, num_bytes);
+			if (result_cfa_offset == (uintptr_t)-1) {
+				uintptr_t saved_cfa = state->ms_host_cfa_offset;
+				Dee_memstate_hstack_free(state);
+				result_cfa_offset = state->ms_host_cfa_offset;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+				result_cfa_offset += num_bytes;
+#endif /* HOSTASM_STACK_GROWS_DOWN */
+				state->ms_host_cfa_offset = saved_cfa;
+			}
+		} else {
+			/* Fallback: Assign scores to all possible CFA offsets for the linear vector.
+			 *           Then, choose whatever CFA offset has the lowest score. */
+			size_t result_cfa_offset_score;
+			uintptr_t cfa_offset_max;
+			uintptr_t cfa_offset_min;
+			uintptr_t cfa_offset;
+			struct Dee_memloc *loc;
+			bitset_t *hstack_inuse; /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
+			size_t hstack_inuse_sizeof;
+			hstack_inuse_sizeof = _bitset_sizeof((state->ms_host_cfa_offset / HOST_SIZEOF_POINTER) * 2);
+			hstack_inuse = (bitset_t *)Dee_Calloca(hstack_inuse_sizeof);
+			if unlikely(!hstack_inuse)
+				goto err;
+			Dee_memstate_foreach(loc, state) {
+				if (loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
+					uintptr_t cfa = Dee_memloc_getcfastart(loc);
+					ASSERT(cfa < state->ms_host_cfa_offset);
+					bitset_set(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
+				}
+			}
+			Dee_memstate_foreach_end;
+			/* hstack locations currently in use by the linear portion don't count as in-use.
+			 * NOTE: We do this in a second pass, so we also hit all of the aliases. */
+			for (i = 0; i < argc; ++i) {
+				if (linbase[i].ml_type == MEMLOC_TYPE_HSTACKIND) {
+					uintptr_t cfa = Dee_memloc_getcfastart(&linbase[i]);
+					ASSERT(cfa < state->ms_host_cfa_offset);
+					bitset_clear(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
+				}
+			}
+#ifdef HOSTASM_STACK_GROWS_DOWN
+			cfa_offset_min = argc * HOST_SIZEOF_POINTER;
+			cfa_offset_max = state->ms_host_cfa_offset + cfa_offset_min;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+			cfa_offset_min = 0;
+			cfa_offset_max = state->ms_host_cfa_offset;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+
+			/* Enumerate candidates starting with low CFA offsets.
+			 * That way, we prefer equally complex candidates that are closer to the frame base. */
+			result_cfa_offset = cfa_offset_min;
+			result_cfa_offset_score = hstack_linear_score(hstack_inuse, state->ms_host_cfa_offset,
+			                                              linbase, argc, result_cfa_offset);
+			if likely(result_cfa_offset_score != 0) {
+				for (cfa_offset = cfa_offset_min + HOST_SIZEOF_POINTER;
+				     cfa_offset <= cfa_offset_max; cfa_offset += HOST_SIZEOF_POINTER) {
+					size_t score = hstack_linear_score(hstack_inuse, state->ms_host_cfa_offset,
+					                                   linbase, argc, cfa_offset);
+					if (result_cfa_offset_score > score) {
+						result_cfa_offset_score = score;
+						result_cfa_offset = cfa_offset;
+						if (score == 0)
+							break;
+					}
+				}
+			}
+			Dee_Freea(hstack_inuse);
+			if unlikely(result_cfa_offset_score == 0) {
+				/* Special case: the score only becomes 0 when no morph is needed.
+				 * This means that everything is already in place such that a linear
+				 * vector is formed at `result_cfa_offset'! */
+				return Dee_function_generator_vpush_hstack(self, result_cfa_offset);
+			}
+
+		}
+
+		/* Construct a memstate that puts the linear items along `result_cfa_offset' */
+		linear_state = Dee_memstate_copy(state);
+		if unlikely(!linear_state)
+			goto err;
+
+		/* Collect all locations that are aliases to those that should become linear.
+		 * Then, assign intended target locations to aliases as far as possible. */
+		linbase = linear_state->ms_stackv + linear_state->ms_stackc - argc;
+
+		/* Gather aliases */
+#define TYPE_LINLOC MEMLOC_TYPE_UNALLOC
+#define TYPE_ALIAS  MEMLOC_TYPE_UNDEFINED
+		for (i = 0; i < argc; ++i) {
+			struct Dee_memloc *alias, *loc = &linbase[i];
+			struct Dee_memloc locval = *loc;
+			loc->ml_type = TYPE_LINLOC;
+			loc->ml_value._v_next = NULL;
+			Dee_memstate_foreach(alias, linear_state) {
+				if (alias->ml_type == TYPE_LINLOC || alias->ml_type == TYPE_ALIAS)
+					continue;
+				if (Dee_memloc_sameloc(alias, &locval)) {
+					alias->ml_type = TYPE_ALIAS;
+					alias->ml_value._v_next = loc->ml_value._v_next;
+					loc->ml_value._v_next = alias;
+				}
+			}
+			Dee_memstate_foreach_end;
+		}
+		for (i = 0; i < argc; ++i) {
+			struct Dee_memloc *loc = &linbase[i];
+			if (loc->ml_type == TYPE_LINLOC) {
+				struct Dee_memloc *next;
+#ifdef HOSTASM_STACK_GROWS_DOWN
+				uintptr_t dst_cfa_offset = result_cfa_offset - ((argc - 1) - i) * HOST_SIZEOF_POINTER;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+				uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+				do {
+					next = loc->ml_value._v_next;
+					loc->ml_type = MEMLOC_TYPE_HSTACKIND;
+					loc->ml_value.v_hstack.s_cfa = dst_cfa_offset;
+					loc->ml_value.v_hstack.s_off = 0;
+				} while ((loc = next) != NULL);
+			}
+		}
+#undef TYPE_LINLOC
+#undef TYPE_ALIAS
+
+		/* Fix locations where linear elements were aliasing each other. */
+		for (i = 0; i < argc; ++i) {
+#ifdef HOSTASM_STACK_GROWS_DOWN
+			uintptr_t dst_cfa_offset = result_cfa_offset - ((argc - 1) - i) * HOST_SIZEOF_POINTER;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+			uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			struct Dee_memloc *loc = &linbase[i];
+			ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
+			loc->ml_value.v_hstack.s_cfa = dst_cfa_offset;
+		}
+
+		/* Make sure that `linear_state's CFA offset is large enough to hold the linear vector. */
+		{
+#ifdef HOSTASM_STACK_GROWS_DOWN
+			uintptr_t req_min_host_cfa = result_cfa_offset;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+			uintptr_t req_min_host_cfa = result_cfa_offset + argc * HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+			if (linear_state->ms_host_cfa_offset < req_min_host_cfa)
+				linear_state->ms_host_cfa_offset = req_min_host_cfa;
+		}
+
+		/* Generate code to morph the current memory state to that of `linear_state'. */
+		{
+			int temp = Dee_function_generator_vmorph(self, linear_state);
+			Dee_memstate_decref(linear_state);
+			if likely(temp == 0)
+				temp = Dee_function_generator_vpush_hstack(self, result_cfa_offset);
+			return temp;
+		}
+		__builtin_unreachable();
 	}
-
-	/* TODO */
-	(void)self;
-	(void)argc;
-	(void)readonly;
-	return DeeError_NOTIMPLEMENTED();
+	__builtin_unreachable();
 err:
 	return -1;
 }
 
+#undef LOCAL_hstack_lowcfa_inuse
+#undef LOCAL_hstack_cfa_inuse
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */
