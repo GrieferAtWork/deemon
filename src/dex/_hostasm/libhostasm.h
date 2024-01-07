@@ -1618,7 +1618,7 @@ struct Dee_function_exceptinject_callvoidapi {
 	 (ij)->fei_cva_func            = (void const *)(api_func),                    \
 	 (ij)->fei_cva_argc            = (argc),                                      \
 	 Dee_function_generator_xinject_push(self, &(ij)->fei_cva_base))
-#define Dee_function_generator_xinject_pop_callvoidapi(self, ij)    \
+#define Dee_function_generator_xinject_pop_callvoidapi(self, ij) \
 	Dee_function_generator_xinject_pop(self, &(ij)->fei_cva_base)
 
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_function_exceptinject_callvoidapi' */

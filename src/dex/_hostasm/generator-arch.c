@@ -2445,7 +2445,7 @@ _Dee_host_section_gmorph_regxCreg2reg01(struct Dee_host_section *__restrict self
 		gen86_printf("cmp" Plq "\t%s, %s\n", gen86_regname(rhs_regno), gen86_regname(src_regno));
 		gen86_cmpP_r_r(p_pc(self), gen86_registers[rhs_regno], gen86_registers[src_regno]);
 	} else {
-		if unlikely(Dee_host_section_reqx86(self, src_delta ? 4 : 3))
+		if unlikely(Dee_host_section_reqx86(self, (size_t)(src_delta ? 4 : 3)))
 			goto err;
 		if (src_delta != 0) {
 			gen86_printf("lea" Plq "\t%Id(%s), %s\n", src_delta, gen86_regname(src_regno), gen86_regname(dst_regno));

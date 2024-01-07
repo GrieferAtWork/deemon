@@ -1533,6 +1533,33 @@ vcall_DeeType_FreeInstance(struct Dee_function_generator *__restrict self,
 	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_VOID, 1);
 }
 
+struct Dee_function_exceptinject_fini_and_freeinstance {
+	struct Dee_function_exceptinject fei_fafi_base; /* Underlying injector */
+	DeeTypeObject                   *fei_fafi_type; /* [1..1] The type of whom an instance should be free'd */
+};
+
+#define Dee_function_generator_xinject_push_fini_and_freeinstance(self, ij, type)         \
+	((ij)->fei_fafi_base.fei_inject = &Dee_function_exceptinject_fini_and_freeinstance_f, \
+	 (ij)->fei_fafi_type            = (type),                                             \
+	 Dee_function_generator_xinject_push(self, &(ij)->fei_fafi_base))
+#define Dee_function_generator_xinject_pop_fini_and_freeinstance(self, ij) \
+	Dee_function_generator_xinject_pop(self, &(ij)->fei_fafi_base)
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_function_exceptinject_fini_and_freeinstance' */
+Dee_function_exceptinject_fini_and_freeinstance_f(struct Dee_function_generator *__restrict self,
+                                                  struct Dee_function_exceptinject *__restrict inject) {
+	struct Dee_function_exceptinject_fini_and_freeinstance *me;
+	me = (struct Dee_function_exceptinject_fini_and_freeinstance *)inject;
+#ifdef CONFIG_TRACE_REFCHANGES
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_FreeTracker, VCALL_CC_RAWINTPTR, 1)); /* instance */
+#endif /* CONFIG_TRACE_REFCHANGES */
+	DO(vcall_DeeType_FreeInstance(self, me->fei_fafi_type)); /* N/A */
+	return _Dee_function_generator_gdecref_const(self, (DeeObject *)me->fei_fafi_type, 1);
+err:
+	return -1;
+}
+
+
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
  * @return: 1 : No dedicated optimization available for `Dee_TYPE(func_obj)'
@@ -1798,6 +1825,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 					}
 				} else if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 					int temp;
+					struct Dee_function_exceptinject_fini_and_freeinstance ij;
 					/* TODO: If we knew that the newly constructed object never ends up in a place
 					 *       where it needs to be constrained with another memory location such that
 					 *       it loses its typing, and isn't returned or ever passed to a function or
@@ -1852,7 +1880,9 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vcall_DeeObject_Init(self)); /* [args...], kw, instance */
 					DO(Dee_function_generator_vrrot(self, true_argc + 2)); /* instance, [args...], kw */
 
-					/* TODO: Push custom exception cleanup handler */
+					/* Push custom exception cleanup handler to do the proper FreeInstance */
+					Dee_function_generator_xinject_push_fini_and_freeinstance(self, &ij, type);
+					ij.fei_fafi_base.fei_stack -= (true_argc + 1); /* Point at the "instance" object. */
 					switch (ctor_type) {
 					case CTOR_TYPE_NOARGS:
 						ASSERT(true_argc == 0);
@@ -1873,60 +1903,19 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 						break;
 					default: __builtin_unreachable();
 					}
-
 					if (temp != 0) {
 						if unlikely(temp < 0)
 							goto err; /* instance */
-						/* Simple case: the constructor could be inlined in such a way as to make it noexcept. */
+						/* Simple case: the constructor could be inlined in such a way as to make it
+						 * noexcept, or such that it doesn't return a "normal" 0/-1 status integer. */
 					} else {
-						/* Generate the custom exception handling code. */
-						DREF struct Dee_memstate *saved_state;
-						struct Dee_host_symbol *sym;
-						struct Dee_host_section *text = self->fg_sect;
-						struct Dee_host_section *cold = &self->fg_block->bb_hcold;
-						struct Dee_memloc status_loc;
-						status_loc = *Dee_function_generator_vtop(self); /* instance, UNCHECKED(status_int) */
-						DO(Dee_function_generator_vpop(self));           /* instance */
-						sym = Dee_function_generator_newsym_named(self, text == cold ? ".Lobject_init_ok"
-						                                                             : ".Lobject_init_err");
-						DO(text == cold ? _Dee_function_generator_gjz(self, &status_loc, sym)
-						                : _Dee_function_generator_gjnz(self, &status_loc, sym));
-						saved_state = self->fg_state;
-						Dee_memstate_incref(saved_state);
-						if (text != cold) {
-							HA_printf(".section .cold\n");
-							self->fg_sect = cold;
-							Dee_host_symbol_setsect(sym, self->fg_sect);
-						}
-						if unlikely(Dee_function_generator_state_unshare(self)) {
-err_saved_state:
-							Dee_memstate_decref(saved_state);
-							goto err;
-						}
-
-						/* Implement the code for:
-						 * >> DeeObject_FreeTracker(result);
-						 * >> DeeType_FreeInstance(type, result);
-						 * >> Dee_Decref_unlikely(type);
-						 * >> HANDLE_EXCEPT(); */
-#ifdef CONFIG_TRACE_REFCHANGES
-						EDO(err_saved_state, Dee_function_generator_vcallapi(self, &DeeObject_FreeTracker,
-						                                                     VCALL_CC_RAWINTPTR, 1)); /* instance */
-#endif /* CONFIG_TRACE_REFCHANGES */
-						EDO(err_saved_state, vcall_DeeType_FreeInstance(self, type)); /* N/A */
-						EDO(err_saved_state, _Dee_function_generator_gdecref_const(self, (DeeObject *)type, 1));
-						EDO(err_saved_state, Dee_function_generator_gjmp_except(self));
-
-						/* Restore state. */
-						Dee_memstate_decref(self->fg_state);
-						self->fg_state = saved_state;
-						if (text != cold) {
-							HA_printf(".section .text\n");
-							self->fg_sect = text;
-						} else {
-							Dee_host_symbol_setsect(sym, self->fg_sect);
-						}
+						/* Generate exception handling code while our custom exception injection is still active! */
+						DO(Dee_function_generator_gjnz_except(self, Dee_function_generator_vtop(self))); /* instance, UNCHECKED(status_int) */
+						DO(Dee_function_generator_vpop(self));                                           /* instance */
 					}
+
+					/* Now that the object has been fully initialized, get rid of the exception injection. */
+					Dee_function_generator_xinject_pop_fini_and_freeinstance(self, &ij);
 
 					/* Finalize the state of the produced object to indicate
 					 * that it's been checked and contains a proper reference. */
