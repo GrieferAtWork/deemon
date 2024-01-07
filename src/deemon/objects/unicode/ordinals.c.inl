@@ -53,6 +53,7 @@ typedef struct {
 } StringOrdinals;
 
 INTDEF DeeTypeObject StringOrdinals_Type;
+
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_Ordinals(DeeObject *__restrict self) {
 	DREF StringOrdinals *result;
@@ -207,7 +208,8 @@ stringordinals_fini(StringOrdinals *__restrict self) {
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-stringordinals_visit(StringOrdinals *__restrict self, dvisit_t proc, void *arg) {
+stringordinals_visit(StringOrdinals *__restrict self,
+                     dvisit_t proc, void *arg) {
 	Dee_Visit(self->so_str);
 }
 
@@ -275,8 +277,8 @@ stringordinals_get(StringOrdinals *self,
 		goto err;
 	}
 	return DeeInt_NewUInt32(STRING_WIDTH_GETCHAR(self->so_width,
-	                                          self->so_ptr.ptr,
-	                                          index));
+	                                             self->so_ptr.ptr,
+	                                             index));
 err:
 	return NULL;
 }

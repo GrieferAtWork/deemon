@@ -113,7 +113,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 /* The basic HashSet item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
  * >>     Dee_hash_t i, perturb;
- * >>     Dee_hash_t hash = DeeObject_Hash(0, key);
+ * >>     Dee_hash_t hash = DeeObject_Hash(key);
  * >>     perturb = i = DeeHashSet_HashSt(self, hash);
  * >>     for (;; i = DeeHashSet_HashNx(i, perturb), DeeHashSet_HashPt(perturb)) {
  * >>          struct hashset_item *item = DeeHashSet_HashIt(self, i);

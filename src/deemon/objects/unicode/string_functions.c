@@ -7897,7 +7897,7 @@ err:
 }
 
 
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3, 5)) dssize_t DCALL
 DeeString_Format(dformatprinter printer, void *arg,
                  /*utf-8*/ char const *__restrict format,
                  size_t format_len, DeeObject *__restrict args);
@@ -11785,7 +11785,7 @@ string_cat(String *__restrict self, DeeObject *__restrict other) {
 	if (DeeString_Check(other)) {
 		/* In the likely case of `other' also being a string, we can
 		 * try to perform some optimizations by looking at the common,
-		 * required character width, and creating the resulting ?.
+		 * required character width, and creating the resulting string
 		 * in accordance to what _it_ requires (bypassing the need of
 		 * a printer). */
 		struct string_utf *lhs_utf;

@@ -485,10 +485,10 @@ extern DREF DeeObject *const DeeFile_DefaultStdout;
 extern DREF DeeObject *const DeeFile_DefaultStderr;
 extern DREF DeeObject *const DeeFile_DefaultStddbg;
 #else /* __INTELLISENSE__ */
-#define DeeFile_DefaultStdin   DeeFile_DefaultStd(DEE_STDIN)
-#define DeeFile_DefaultStdout  DeeFile_DefaultStd(DEE_STDOUT)
-#define DeeFile_DefaultStderr  DeeFile_DefaultStd(DEE_STDERR)
-#define DeeFile_DefaultStddbg  DeeFile_DefaultStd(DEE_STDDBG)
+#define DeeFile_DefaultStdin  DeeFile_DefaultStd(DEE_STDIN)
+#define DeeFile_DefaultStdout DeeFile_DefaultStd(DEE_STDOUT)
+#define DeeFile_DefaultStderr DeeFile_DefaultStd(DEE_STDERR)
+#define DeeFile_DefaultStddbg DeeFile_DefaultStd(DEE_STDDBG)
 #endif /* !__INTELLISENSE__ */
 
 

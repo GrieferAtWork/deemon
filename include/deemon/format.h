@@ -481,18 +481,18 @@ Dee_VPPackf_Cleanup(char const *__restrict format, va_list args);
 /* Unpack values from an object.
  * Format language syntax:
  *     __main__   ::= object;
- *     object     ::= ('n' | '-')          // Ignore / skip this object. (Do not advance `va_arg')
- *                  | ref_object           // `va_arg(DeeObject **)'
- *                  | ref_int              //
- *                  | ref_float            //
- *                  | ref_bool             //
- *                  | ref_str              // `char **'
- *                  | '(' [objects...] ')' // Enumerate elements of a sequence
+ *     object     ::= ('n' | '-')     // Ignore / skip this object. (Do not advance `va_arg')
+ *                  | ref_object      // `va_arg(DeeObject **)'
+ *                  | ref_int         //
+ *                  | ref_float       //
+ *                  | ref_bool        //
+ *                  | ref_str         // `char **'
+ *                  | '(' objects ')' // Enumerate elements of a sequence
  *     ;
  *     objects    ::= [(object   // Parse some object from the sequence.
  *                    | ','      // `,' is simply ignored, but can be used to prevent ambiguity.
  *                    | '|'      // Any following objects are optional (va_arg() is still invoked, but non-present elements are skipped)
- *                      )...];
+ *                    )...];
  *     ref_object ::= 'o'; // `va_arg(DeeObject **)'
  *     ref_int    ::= [ref_intlen] ('d' | 'u' | 'i' | 'x'); // `u' and `x' read unsigned integers
  *     ref_str    ::= ['$']      // `va_arg(size_t *)' (Store the length of the string)

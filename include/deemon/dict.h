@@ -144,7 +144,7 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems,
 /* The basic dictionary item lookup algorithm:
  * >> DeeObject *get_item(DeeObject *self, DeeObject *key) {
  * >>     Dee_hash_t i, perturb;
- * >>     Dee_hash_t hash = DeeObject_Hash(0, key);
+ * >>     Dee_hash_t hash = DeeObject_Hash(key);
  * >>     perturb = i = DeeDict_HashSt(self, hash);
  * >>     for (;; i = DeeDict_HashNx(i, perturb), DeeDict_HashPt(perturb)) {
  * >>          struct Dee_dict_item *item = DeeDict_HashIt(self, i);

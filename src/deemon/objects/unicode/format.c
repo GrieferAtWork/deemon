@@ -47,14 +47,14 @@ struct formatter {
 	DeeObject      *f_args;        /* [1..1][const] A user-given sequence object used to index format arguments. */
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 error_unused_format_string(char *start, char *end) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Unused/unrecognized format string %$q in string.format",
 	                       (size_t)(end - start), start);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Formatter_GetUnaryArg(struct formatter *__restrict self,
                       char **__restrict p_fmt_start,
                       bool do_eval) {
@@ -166,7 +166,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Formatter_GetUnaryIndex(char **__restrict p_fmt_start) {
 	char *fmt_start = *p_fmt_start;
 	char ch         = *fmt_start;
@@ -205,7 +205,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 Formatter_GetUnaryKey(char **__restrict p_fmt_start) {
 	char *fmt_start = *p_fmt_start;
 	char ch         = *fmt_start;
@@ -234,11 +234,11 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
                  char **__restrict p_fmt_start,
                  bool do_eval);
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Formatter_GetValue(struct formatter *__restrict self,
                    char **__restrict p_fmt_start,
                    bool do_eval) {
@@ -275,7 +275,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Formatter_GetExpr(struct formatter *__restrict self,
                   char **__restrict p_fmt_start,
                   bool do_eval) {
@@ -285,15 +285,15 @@ Formatter_GetExpr(struct formatter *__restrict self,
 }
 
 struct object_vector {
-	size_t ov_cnt;           /* Number of vector elements in use. */
-	size_t ov_siz;           /* Allocated vector size. */
+	size_t           ov_cnt; /* Number of vector elements in use. */
+	size_t           ov_siz; /* Allocated vector size. */
 	DREF DeeObject **ov_vec; /* [1..1][0..ov_cnt|alloc(ov_siz)][owned] Object vector. */
 };
 #define OBJECT_VECTOR_INIT \
 	{ 0, 0, NULL }
 
 /* NOTE: A reference to `ob' is inherited in all cases! */
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 object_vector_append(struct object_vector *__restrict self,
                      DREF DeeObject *__restrict ob) {
 	if (self->ov_cnt == self->ov_siz) {
@@ -315,7 +315,7 @@ object_vector_append(struct object_vector *__restrict self,
 	return 0;
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 object_vector_extend(struct object_vector *__restrict self,
                      DeeObject *__restrict ob) {
 	int result = 0;
@@ -338,11 +338,9 @@ err:
 	return -1;
 }
 
-LOCAL void DCALL
+LOCAL NONNULL((1)) void DCALL
 object_vector_fini(struct object_vector *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->ov_cnt; ++i)
-		Dee_Decref(self->ov_vec[i]);
+	Dee_Decrefv(self->ov_vec, self->ov_cnt);
 	Dee_Free(self->ov_vec);
 }
 
@@ -352,7 +350,7 @@ object_vector_fini(struct object_vector *__restrict self) {
 #endif /* !CONFIG_NO_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 Formatter_GetOne(struct formatter *__restrict self,
                  char **__restrict p_fmt_start,
                  bool do_eval) {
@@ -688,7 +686,7 @@ err:
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 format_impl(struct formatter *__restrict self,
             dformatprinter printer, void *arg) {
 	DREF DeeObject *in_arg;
@@ -811,6 +809,7 @@ check_print_error:
 		self->f_iter        = format_end + 1;
 		self->f_flush_start = self->f_iter;
 	}
+
 	/* Flush the remainder. */
 	return (int)(*printer)(arg, self->f_flush_start,
 	                       (size_t)(self->f_iter -
@@ -827,7 +826,7 @@ err:
  * NOTE: This is the function called by `.format' for strings.
  * @param: args: A sequence (usually a Dict, or a List) used for
  *               providing input values to the format string. */
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 5)) dssize_t DCALL
 DeeString_Format(dformatprinter printer, void *arg,
                  /*utf-8*/ char const *__restrict format,
                  size_t format_len, DeeObject *__restrict args) {
@@ -845,7 +844,7 @@ DeeString_Format(dformatprinter printer, void *arg,
 
 
 
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 format_bytes_impl(struct formatter *__restrict self,
                   dformatprinter printer,
                   dformatprinter format_printer,
@@ -989,7 +988,7 @@ err:
 }
 
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2, 4, 6)) dssize_t DCALL
 DeeBytes_Format(dformatprinter printer,
                 dformatprinter format_printer, void *arg,
                 char const *__restrict format,
