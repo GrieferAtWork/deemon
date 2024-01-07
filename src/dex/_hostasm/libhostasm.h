@@ -1786,6 +1786,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_reg2constind(struct
 /* Arithmetic helpers. */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_regreg2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno1, Dee_host_register_t src_regno2, Dee_host_register_t dst_regno); /* dst_regno = src_regno1 + src_regno2; */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gumul_regconst2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, uintptr_t n, Dee_host_register_t dst_regno);                  /* dst_regno = src_regno * n; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_const2hstackind(struct Dee_host_section *__restrict self, DeeObject *value, ptrdiff_t sp_offset);                                                    /* *(SP + sp_offset) = *(SP + sp_offset) + <value>; */
+#define HAVE__Dee_host_section_gadd_const2hstackind
 
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_const2loc(struct Dee_function_generator *__restrict self, DeeObject *value, struct Dee_memloc const *__restrict dst_loc);                                                   /* <dst_loc> = value; */
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, struct Dee_memloc const *__restrict dst_loc);                  /* <dst_loc> = src_regno + src_delta; */

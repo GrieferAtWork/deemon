@@ -1213,19 +1213,33 @@ done:
 }
 
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+gmov_usage2reg(struct Dee_function_generator *__restrict self,
+               Dee_host_regusage_t usage,
+               Dee_host_register_t result_regno) {
+	/* TODO */
+	(void)self;
+	(void)usage;
+	(void)result_regno;
+	return DeeError_Throwf(&DeeError_IllegalInstruction,
+	                       "Unknown usage code: %u",
+	                       (unsigned int)usage);
+}
+
 /* Helper that returns a register that's been populated for `usage' */
 INTERN WUNUSED NONNULL((1)) Dee_host_register_t DCALL
 Dee_function_generator_gusagereg(struct Dee_function_generator *__restrict self,
                                  Dee_host_regusage_t usage,
                                  Dee_host_register_t const *dont_alloc_these) {
-	struct Dee_memstate *state = self->fg_state;
 	Dee_host_register_t regno;
-	regno = Dee_memstate_hregs_find_usage(state, usage);
+	regno = Dee_memstate_hregs_find_usage(self->fg_state, usage);
 	if (regno >= HOST_REGISTER_COUNT) {
-		(void)dont_alloc_these;
-		/* TODO */
-		DeeError_NOTIMPLEMENTED();
-		goto err;
+		regno = Dee_function_generator_gallocreg(self, dont_alloc_these);
+		if likely(regno < HOST_REGISTER_COUNT) {
+			if unlikely(gmov_usage2reg(self, usage, regno))
+				goto err;
+			self->fg_state->ms_rusage[regno] = usage;
+		}
 	}
 	return regno;
 err:
@@ -1864,9 +1878,14 @@ Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
 		if (loc->ml_value.v_hstack.s_off == 0)
 			return 0; /* Already on-stack at offset=0 */
 
-		/* TODO: emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
-		 *       Afterwards, go through all stack/local variables and adjust value offsets
-		 *       wherever the same CFA offset is referenced. */
+#ifdef HAVE__Dee_host_section_gadd_const2hstackind
+		/* emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
+		 * Afterwards, go through all stack/local variables and adjust value offsets
+		 * wherever the same CFA offset is referenced. */
+		return _Dee_host_section_gadd_const2hstackind(self->fg_sect,
+		                                              (DeeObject *)(uintptr_t)(intptr_t)loc->ml_value.v_hstack.s_off,
+		                                              Dee_memstate_hstack_cfa2sp(self->fg_state, loc->ml_value.v_hstack.s_cfa));
+#endif /* HAVE__Dee_host_section_gadd_const2hstackind */
 	}
 
 	/* Figure out where we want to allocate the value. */

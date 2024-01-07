@@ -2364,6 +2364,22 @@ err:
 }
 
 
+/* *(SP + sp_offset) = *(SP + sp_offset) + <value>; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gadd_const2hstackind(struct Dee_host_section *__restrict self,
+                                       DeeObject *value, ptrdiff_t sp_offset) {
+	if unlikely((uintptr_t)value == 0)
+		return 0;
+	if unlikely(Dee_host_section_reqx86(self, 1))
+		goto err;
+	gen86_printf("add" Plq "\t$%Id, %Id(%%" Per "sp)\n", (intptr_t)(uintptr_t)value, sp_offset);
+	gen86_addP_imm_mod(p_pc(self), gen86_modrm_db, (intptr_t)(uintptr_t)value, sp_offset, GEN86_R_PSP);
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Helpers for transforming locations into deemon boolean objects. */
 
 STATIC_ASSERT(GMORPHBOOL_CC_EQ == 0); /* Compare: "==" */
