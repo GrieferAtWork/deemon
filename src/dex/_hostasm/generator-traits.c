@@ -64,6 +64,9 @@ INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
                             uint16_t operator_name) {
 	size_t i;
+	/* FIXME: The constexpr-ness of operators also depends on the object types
+	 *        that are passed via arguments! E.g. `"foo" + ob' isn't a constant
+	 *        expression if "ob.operator str()" isn't constexpr! */
 	for (i = 0; i < COMPILER_LENOF(always_constexpr_types); ++i) {
 		if (always_constexpr_types[i] == self)
 			goto yes;

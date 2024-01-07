@@ -1865,7 +1865,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 					 * >> if unlikely(temp) {
 					 * >>     DeeObject_FreeTracker(result);
 					 * >>     DeeType_FreeInstance(type, result);
-					 * >>     Dee_Decref_unlikely(type);
+					 * >>     Dee_DecrefNokill(type);
 					 * >>     HANDLE_EXCEPT();
 					 * >> }
 					 * >> if (type->tp_flags & TP_FGC)

@@ -425,7 +425,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_Decref(object_type);
+	Dee_DecrefNokill(object_type);
 	goto err;
 }
 
@@ -520,7 +520,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_Decref(object_type);
+	Dee_DecrefNokill(object_type);
 	goto err;
 }
 
@@ -697,7 +697,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(object_type, result);
 err_object_type:
-	Dee_Decref_unlikely(object_type);
+	Dee_DecrefNokill(object_type);
 	goto err;
 err_no_keywords:
 	err_keywords_ctor_not_accepted(object_type, kw);
@@ -862,7 +862,7 @@ got_deep_copy:
 			/* Undo allocating and base-initializing the new object. */
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(tp_self, result);
-			Dee_Decref(tp_self);
+			Dee_DecrefNokill(tp_self);
 			result = NULL;
 			goto done_endcopy;
 		}
@@ -1022,7 +1022,7 @@ err_r:
 	DeeObject_FreeTracker(result);
 	DeeType_FreeInstance(tp_self, result);
 err_object_type:
-	Dee_Decref(tp_self);
+	Dee_DecrefNokill(tp_self);
 	goto err;
 }
 
