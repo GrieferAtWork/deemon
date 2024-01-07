@@ -2406,8 +2406,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		bool hasbool;
 		DeeTypeObject *loctype;
 		struct Dee_memloc zero;
-		struct Dee_except_exitinfo *except_exit;
-		struct Dee_host_symbol *Lexcept;
+		struct Dee_host_symbol *Lexcept, *Lnot_except;
 #ifdef DEE_HOST_RELOCVALUE_SECT
 		struct Dee_host_symbol _Lexcept;
 		Dee_host_symbol_initcommon_named(&_Lexcept, ".Lexcept");
@@ -2417,16 +2416,6 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		if unlikely(!Lexcept)
 			goto err;
 #endif /* !DEE_HOST_RELOCVALUE_SECT */
-		except_exit = Dee_function_generator_except_exit(self);
-		if unlikely(!except_exit)
-			goto err;
-		if (self->fg_exceptinject != NULL) {
-			/* TODO: Must also inject custom exception handling code! */
-			DeeError_NOTIMPLEMENTED();
-			goto err;
-		} else {
-			Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
-		}
 		if (loc.ml_flags & MEMLOC_F_ONEREF) {
 			ASSERT(Dee_memloc_sameloc(&loc, Dee_function_generator_vtop(self)));
 			if unlikely(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_BOOL, 1))
@@ -2450,14 +2439,57 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		if (MEMLOC_TYPE_HASREG(loc.ml_type))
 			Dee_memstate_decrinuse(self->fg_state, loc.ml_value.v_hreg.r_regno);
 
+		/* Figure out how to do exception handling. */
+		Lnot_except = NULL;
+		if (self->fg_exceptinject != NULL) {
+			/* Prepare stuff so we can inject custom exception handling code. */
+			if (self->fg_sect == &self->fg_block->bb_hcold) {
+				Lnot_except = Lexcept;
+				Lexcept     = NULL;
+				Dee_host_symbol_setname(Lnot_except, ".Lnot_except");
+			}
+		}
+
 		/* Generate code to branch depending on the value of `loc' */
 		zero.ml_type = MEMLOC_TYPE_CONST;
 		zero.ml_value.v_const = NULL;
 		if unlikely(_Dee_function_generator_gjcmp(self, &loc, &zero, true,
-		                                          Lexcept,                     /* loc < 0 */
-		                                          jump_if_true ? NULL : Ljmp,  /* loc == 0 */
-		                                          jump_if_true ? Ljmp : NULL)) /* loc > 0 */
+		                                          Lexcept,                            /* loc < 0 */
+		                                          jump_if_true ? Lnot_except : Ljmp,  /* loc == 0 */
+		                                          jump_if_true ? Ljmp : Lnot_except)) /* loc > 0 */
 			goto err;
+
+		if (self->fg_exceptinject != NULL) {
+			/* Must inject custom exception handling code! */
+			ASSERT((Lnot_except == NULL) || (Lnot_except == NULL));
+			ASSERT((Lnot_except != NULL) || (Lnot_except != NULL));
+			if (Lnot_except) {
+				ASSERT(!Lexcept);
+				ASSERT(!Dee_host_symbol_isdefined(Lnot_except));
+				if unlikely(Dee_function_generator_gjmp_except(self))
+					goto err;
+				Dee_host_symbol_setsect(Lnot_except, self->fg_sect);
+			} else {
+				struct Dee_host_section *text;
+				ASSERT(Lexcept);
+				ASSERT(!Dee_host_symbol_isdefined(Lexcept));
+				ASSERT(self->fg_sect != &self->fg_block->bb_hcold);
+				text = self->fg_sect;
+				HA_printf(".section .cold\n");
+				self->fg_sect = &self->fg_block->bb_hcold;
+				Dee_host_symbol_setsect(Lexcept, self->fg_sect);
+				if unlikely(Dee_function_generator_gjmp_except(self))
+					goto err;
+				HA_printf(".section .text\n");
+				self->fg_sect = text;
+			}
+		} else {
+			struct Dee_except_exitinfo *except_exit;
+			except_exit = Dee_function_generator_except_exit(self);
+			if unlikely(!except_exit)
+				goto err;
+			Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+		}
 	} else {
 		struct Dee_memloc cmp_lhs, cmp_rhs;
 		struct Dee_host_symbol *Llo, *Leq, *Lgr;

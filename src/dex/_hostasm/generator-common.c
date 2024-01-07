@@ -1546,10 +1546,10 @@ gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) 
 	Dee_memstate_incref(saved_state);
 	chain = self->fg_exceptinject;
 	do {
-		Dee_vstackaddr_t npop;
+		Dee_vstackaddr_t n_pop;
 		ASSERT(self->fg_state->ms_stackc >= chain->fei_stack);
-		npop = self->fg_state->ms_stackc - chain->fei_stack;
-		if (npop != 0 && unlikely(Dee_function_generator_vpopmany(self, npop)))
+		n_pop = self->fg_state->ms_stackc - chain->fei_stack;
+		if (n_pop != 0 && unlikely(Dee_function_generator_vpopmany(self, n_pop)))
 			goto err_saved_state;
 		if unlikely((*chain->fei_inject)(self, chain))
 			goto err_saved_state;
