@@ -218,6 +218,7 @@ struct Dee_memloc {
 #define MEMLOC_VMORPH_BOOL_GZ    7 /* >> value = DeeBool_For((intptr_t)value > 0); */
 #define MEMLOC_VMORPH_INT        8 /* >> value = DeeInt_NewIntptr(value); */
 #define MEMLOC_VMORPH_UINT       9 /* >> value = DeeInt_NewUIntptr(value); */
+#define MEMLOC_VMORPH_NULLABLE  10 /* >> value = value ? value : HANDLE_EXCEPT(); // Only allowed for stack locations (so exceptions aren't delayed too long) */
 	uint8_t                ml_vmorph; /* Location value type (set of `MEMLOC_VMORPH_*') */
 
 	/* NOTE: *IND location types are *never* used as store targets (they only act as lazily loaded cache locations) */
@@ -1450,7 +1451,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 /* >> TOP = *(TOP + ind_delta); */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vind(struct Dee_function_generator *__restrict self, ptrdiff_t ind_delta);
 
-/* >> *(SECOND + ind_delta) = POP(); */
+/* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `ml_vmorph' in SECOND */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self, ptrdiff_t ind_delta);
 
 /* >> TOP = TOP + val_delta; // NOTE: Ignores `ml_vmorph' */
@@ -1519,7 +1520,7 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t argc);
 #define Dee_function_generator_vcallapi(self, api_function, cc, argc) \
 	Dee_function_generator_vcallapi_(self, (void const *)(api_function), cc, argc)
-#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [...]]);         [args...] -> result   ## Error if NULL/zero, also MEMLOC_F_NOREF is clear */
+#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [...]]);          [args...] -> result   ## Error if NULL/zero (via `MEMLOC_VMORPH_NULLABLE'), also MEMLOC_F_NOREF is clear */
 #define VCALL_CC_INT                1 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
 #define VCALL_CC_INTPTR             1 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
 #define VCALL_CC_RAWINT             2 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
@@ -1581,7 +1582,9 @@ Dee_function_generator_vcheckerr(struct Dee_function_generator *__restrict self,
 /* Generate a call to `DeeObject_MALLOC()' to allocate an uninitialized object that
  * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
  * a slap allocator instead (just like the real DeeObject_MALLOC also does).
- * NOTE: The value pushed onto the V-stack already has its MEMLOC_F_NOREF flag CLEAR!
+ * NOTE: The value pushed onto the V-stack...
+ *       - ... already has its MEMLOC_F_NOREF flag CLEAR!
+ *       - ... has already been NULL-checked (i.e. already is a direct value)
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL

@@ -1158,7 +1158,7 @@ move_cur_loci_to_new_loci:
 	/* All feasible shifts have been performed -> simply ensure that all locations
 	 * match their expected reference counts in "newinfo", without shifting values. */
 	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-		uint16_t cur_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
+		uint16_t cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
 		uint16_t new_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
 		ASSERT(cur_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
 		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
@@ -1176,6 +1176,11 @@ move_cur_loci_to_new_loci:
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
 			                                                     1, new_refcnt + 1))
 				goto err_infostate_state_curinfo_vaddr;
+			curinfo_vaddr[cur_loci] = state->ms_stackc;
+			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
+			new_loc.ml_valtyp = NULL;
+			if unlikely(Dee_memstate_vpush(state, &new_loc))
+				goto err_infostate_state_curinfo_vaddr;
 		} else {
 			struct Dee_memloc *p_cur_loc;
 			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
@@ -1183,6 +1188,10 @@ move_cur_loci_to_new_loci:
 			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
 			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
 				goto err;
+			if (new_refcnt == 0) {
+				p_cur_loc->ml_type = MEMLOC_TYPE_UNDEFINED;
+				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
+			}
 		}
 		Dee_except_exitinfo_locv(curinfo, cur_loci) = new_refcnt;
 	}

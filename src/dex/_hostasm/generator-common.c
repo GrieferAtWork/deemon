@@ -52,6 +52,12 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 	ASSERT(!MEMLOC_VMORPH_ISDIRECT(vmorph));
 	switch (vmorph) {
 
+	case MEMLOC_VMORPH_NULLABLE:
+		if unlikely(Dee_function_generator_gjz_except(self, loc))
+			goto err;
+		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		break;
+
 	case MEMLOC_VMORPH_BOOL_Z:
 	case MEMLOC_VMORPH_BOOL_Z_01:
 	case MEMLOC_VMORPH_BOOL_NZ:
@@ -109,59 +115,41 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
                                struct Dee_memloc *loc) {
-	struct Dee_memloc *aliases, *iter, value;
+	struct Dee_memloc *alias, oldloc;
 	struct Dee_memstate *state;
 	if (MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph))
 		return 0; /* Already a direct value. */
 
-	/* Find value-aliases of `loc' and delete them all (for now)
-	 * Reason: When normalizing direct value, be sure to kill all aliases
-	 *         *before* calling API function or allocating temp registers.
-	 *         Otherwise, aliases will have their non-direct values flushed,
-	 *         which is unnecessary as those values will get overwritten
-	 *         in the end! */
-	value = *loc;
-	state = self->fg_state;
-	aliases = NULL;
-	Dee_memstate_foreach(iter, state) {
-		if (Dee_memloc_sameval(iter, &value)) {
-			if (MEMLOC_TYPE_HASREG(iter->ml_type))
-				Dee_memstate_decrinuse(state, iter->ml_value.v_hreg.r_regno);;
-			iter->ml_type   = MEMLOC_TYPE_UNDEFINED;
-			iter->ml_vmorph = MEMLOC_VMORPH_DIRECT;
-			iter->ml_value._v_next = aliases;
-			aliases = iter;
-		}
-	}
-	Dee_memstate_foreach_end;
-
 	/* Force the value to become direct. */
-	if unlikely(Dee_function_generator_gdirect_impl(self, &value))
+	oldloc = *loc;
+	if unlikely(Dee_function_generator_gdirect_impl(self, loc))
 		goto err;
 
 	/* Write the updated value into all aliases. */
-	ASSERT(MEMLOC_VMORPH_ISDIRECT(value.ml_vmorph));
-	value.ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
-	while (aliases) {
-		iter = aliases->ml_value._v_next;
-		ASSERT(aliases->ml_type == MEMLOC_TYPE_UNDEFINED);
-		*aliases = value;
-		aliases->ml_flags |= MEMLOC_F_NOREF; /* Only the original `loc' will be a reference! */
-		if (aliases >= state->ms_localv &&
-		    aliases < state->ms_localv + state->ms_localc) {
-			aliases->ml_flags |= MEMLOC_F_LOCAL_BOUND;
-			goto inc_reguse_for_alias;
-		} else if (aliases >= state->ms_stackv &&
-		           aliases < state->ms_stackv + state->ms_stackc) {
-inc_reguse_for_alias:
-			if (MEMLOC_TYPE_HASREG(value.ml_type))
-				Dee_memstate_incrinuse(state, value.ml_value.v_hreg.r_regno);;
+	ASSERT(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph));
+	oldloc.ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+	state = self->fg_state;
+	Dee_memstate_foreach(alias, state) {
+		if (alias->ml_vmorph != oldloc.ml_vmorph)
+			continue;
+		if (!Dee_memloc_sameloc(alias, &oldloc))
+			continue;
+		if (alias == loc)
+			continue;
+		if (MEMLOC_TYPE_HASREG(alias->ml_type))
+			Dee_memstate_decrinuse(state, alias->ml_value.v_hreg.r_regno);;
+		if (Dee_memstate_foreach_islocal(alias, state)) {
+			alias->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+			alias->ml_flags |= MEMLOC_F_LOCAL_BOUND;
 		}
-		aliases = iter;
+		alias->ml_vmorph = loc->ml_vmorph;
+		alias->ml_type   = loc->ml_type;
+		alias->ml_value  = loc->ml_value;
+		alias->ml_valtyp = loc->ml_valtyp;
+		if (MEMLOC_TYPE_HASREG(alias->ml_type))
+			Dee_memstate_incrinuse(state, alias->ml_value.v_hreg.r_regno);;
 	}
-
-	/* NOTE: If `loc' is part of the tracked state, then register use was already adjusted! */
-	*loc = value;
+	Dee_memstate_foreach_end;
 	if (loc >= state->ms_localv &&
 	    loc < state->ms_localv + state->ms_localc)
 		loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;

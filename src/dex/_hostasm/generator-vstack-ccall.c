@@ -364,7 +364,8 @@ PRIVATE struct Dee_ccall_optimization tpconst cca_Sequence[] = {
 	CCA_OPTIMIZATION("min", &cca_Sequence_min, 0),
 	CCA_OPTIMIZATION("min", &cca_Sequence_min, 1),
 	CCA_OPTIMIZATION("sum", &cca_Sequence_sum, 0),
-	/* TODO: When types are known, we can pretty much fully inline stuff like "Sequence.insert()" */
+	/* TODO: When types are known, we can pretty much fully inline stuff like "Sequence.insert()",
+	 *       assuming that NSI operators have been defined. */
 };
 
 
@@ -656,7 +657,7 @@ cca_List_resize(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		DO(Dee_function_generator_vswap(self));       /* this, uint:newsize, filler */
 	} else {
 		DO(Dee_function_generator_vmorph_uint(self));           /* this, uint:newsize */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* this, uint:newsize, fillter */
+		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* this, uint:newsize, filler */
 	}
 	DO(Dee_function_generator_vcallapi(self, &DeeList_Resize, VCALL_CC_INT, 3)); /* N/A */
 	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
@@ -729,6 +730,7 @@ PRIVATE struct Dee_ccall_optimization tpconst cco_String[] = {
 	/* IMPORTANT: Keep sorted! */
 	CCO_OPTIMIZATION(OPERATOR_0008_BOOL, &cco_String_bool, 0),
 	CCO_OPTIMIZATION(OPERATOR_0030_SIZE, &cco_String_size, 0),
+	/* TODO: operator+ if lhs/rhs is an empty string */
 };
 
 

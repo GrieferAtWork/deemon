@@ -1431,7 +1431,8 @@ do_jcc:
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
 		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1)); /* [refs...], ref:function */
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* - */
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* [refs...], ref:function */
+		DO(Dee_function_generator_voneref_noalias(self));                                 /* [refs...], ref:function */
 		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeFunction_Type));       /* [refs...], ref:function */
 		/* TODO: When "DEE_FUNCTION_ASSEMBLER_F_SAFE" isn't set, check if the
 		 *       associated code object is used by any other ASM_FUNCTION instruction.
@@ -1580,7 +1581,7 @@ do_jcc:
 
 	TARGET(ASM_FPRINTNL) /* print top, nl */
 		DO(Dee_function_generator_vdup(self)); /* File, File */
-		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALL_CC_OBJECT, 1);
+		return Dee_function_generator_vcallapi(self, &DeeFile_PrintNl, VCALL_CC_INT, 1);
 
 	TARGET(ASM_FPRINT_C)        /* print top, const <imm8> */
 	TARGET(ASM16_FPRINT_C)      /* print top, const <imm16> */
