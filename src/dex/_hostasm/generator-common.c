@@ -961,15 +961,15 @@ Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__rest
 #ifndef HAVE__Dee_host_section_gmorph_reg012regbool
 /* dst_regno = &Dee_FalseTrue[src_regno + src_delta] - *p_dst_delta; */
 INTERN WUNUSED NONNULL((1, 5)) int DCALL
-Dee_function_generator_gmorph_reg012regbool(struct Dee_function_generator *__restrict self,
-                                            Dee_host_register_t src_regno, ptrdiff_t src_delta,
-                                            Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
-	STATIC_ASSERT(sizeof(DeeBoolObject) == SIZEOF_DeeBoolObject);
+Dee_function_generator_gmorph_reg012regbooly(struct Dee_function_generator *__restrict self,
+                                             Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                             Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
 	if unlikely(_Dee_host_section_gumul_regconst2reg(self->fg_sect, src_regno,
 	                                                 sizeof(DeeBoolObject), dst_regno))
 		goto err;
 	src_delta *= sizeof(DeeBoolObject);
 	src_delta += (ptrdiff_t)(uintptr_t)Dee_FalseTrue;
+	*p_dst_delta = 0;
 	return _Dee_host_section_gmov_regx2reg(self->fg_sect, dst_regno, src_delta, dst_regno);
 err:
 	return -1;

@@ -77,7 +77,7 @@ delete_unused_locals(struct Dee_function_generator *__restrict self,
 	if (self->fg_nextlastloc != NULL) {
 		while (self->fg_nextlastloc->bbl_instr < next_instr) {
 			/* Delete local after the last time it was read. */
-			size_t lid = self->fg_nextlastloc->bbl_lid;
+			Dee_lid_t lid = self->fg_nextlastloc->bbl_lid;
 			if unlikely(Dee_function_generator_vdel_local(self, lid))
 				goto err;
 			++self->fg_nextlastloc;

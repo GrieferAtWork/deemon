@@ -1648,7 +1648,7 @@ err:
 /* Delete the specified address range, and adjust  */
 PRIVATE NONNULL((1)) void DCALL
 Dee_host_section_deltext(struct Dee_host_section *__restrict self,
-                         uintptr_t sectrel_addr, size_t num_bytes) {
+                         uint32_t sectrel_addr, uint32_t num_bytes) {
 	struct Dee_host_section *sect;
 	struct Dee_host_symbol *sym;
 	size_t i;

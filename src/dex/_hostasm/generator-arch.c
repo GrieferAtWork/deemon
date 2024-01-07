@@ -753,7 +753,7 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 			goto err;
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("calll\t" gen86_format_symname("DeeObject_Destroy", 4) "\n"));
 		gen86_calll_offset(p_pc(sect), -4);
-		rel->hr_offset = p_off(sect) - 4;
+		rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_ABS;
 		rel->hr_value.rv_abs = (void *)&DeeObject_Destroy;
@@ -851,7 +851,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 		sym_1f = Dee_function_generator_newsym(self);
 		if unlikely(!sym_1f)
 			goto err;
-		rel->hr_offset = p_off(sect) - 1;
+		rel->hr_offset = (uint32_t)(p_off(sect) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		rel->hr_value.rv_sym = sym_1f;
@@ -873,7 +873,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 		enter_sym = Dee_function_generator_newsym(self);
 		if unlikely(!enter_sym)
 			goto err;
-		enter_rel->hr_offset = p_off(sect) - 4;
+		enter_rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 		enter_rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		enter_rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		enter_rel->hr_value.rv_sym = enter_sym;
@@ -897,7 +897,7 @@ _Dee_function_generator_gdecref_regx_impl(struct Dee_function_generator *__restr
 		leave_sym = Dee_function_generator_newsym(self);
 		if unlikely(!leave_sym)
 			goto err;
-		leave_rel->hr_offset = p_off(cold) - 4;
+		leave_rel->hr_offset = (uint32_t)(p_off(cold) - 4);
 		leave_rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		leave_rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		leave_rel->hr_value.rv_sym = leave_sym;
@@ -1162,7 +1162,7 @@ _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict 
 	sym_1f = Dee_function_generator_newsym(self);
 	if unlikely(!sym_1f)
 		goto err;
-	rel->hr_offset = p_off(sect) - 1;
+	rel->hr_offset = (uint32_t)(p_off(sect) - 1);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 	rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 	rel->hr_value.rv_sym = sym_1f;
@@ -1282,7 +1282,7 @@ _Dee_function_generator_gpause_or_yield(struct Dee_function_generator *__restric
 	rel = Dee_host_section_newhostrel(sect);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(sect) - 4;
+	rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 	rel->hr_vtype  = DEE_HOST_RELOCVALUE_ABS;
 	rel->hr_value.rv_abs = (void const *)&SleepEx;
@@ -1298,7 +1298,7 @@ _Dee_function_generator_gpause_or_yield(struct Dee_function_generator *__restric
 	rel = Dee_host_section_newhostrel(sect);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(sect) - 4;
+	rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 	rel->hr_vtype  = DEE_HOST_RELOCVALUE_ABS;
 	rel->hr_value.rv_abs = (void const *)&rt_sched_yield;
@@ -1412,7 +1412,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 4;
+		rel->hr_offset = (uint32_t)(p_off(text) - 4);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		rel->hr_value.rv_sym = cold_Lpause_and_full_retry;
@@ -1422,7 +1422,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 1;
+		rel->hr_offset = (uint32_t)(p_off(text) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		rel->hr_value.rv_sym = cold_Lpause_and_full_retry;
@@ -1432,7 +1432,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 1;
+		rel->hr_offset = (uint32_t)(p_off(text) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		ASSERT(text_Lfull_retry);
@@ -1460,7 +1460,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 1;
+		rel->hr_offset = (uint32_t)(p_off(text) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		ASSERT(text_LPax_retry);
@@ -1472,7 +1472,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 1;
+		rel->hr_offset = (uint32_t)(p_off(text) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		rel->hr_value.rv_sym = text_Ldone;
@@ -1483,7 +1483,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 4;
+		rel->hr_offset = (uint32_t)(p_off(text) - 4);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		rel->hr_value.rv_sym = cold_Lpause_and_full_retry;
@@ -1513,7 +1513,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 			rel = Dee_host_section_newhostrel(text);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(text) - 1;
+			rel->hr_offset = (uint32_t)(p_off(text) - 1);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			ASSERT(text_Lfull_retry);
@@ -1524,7 +1524,7 @@ _Dee_function_generator_grwlock_read_impl2(struct Dee_function_generator *__rest
 			rel = Dee_host_section_newhostrel(cold);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(cold) - 4;
+			rel->hr_offset = (uint32_t)(p_off(cold) - 4);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			rel->hr_value.rv_sym = text_Lfull_retry;
@@ -1625,7 +1625,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 		rel = Dee_host_section_newhostrel(text);
 		if unlikely(!rel)
 			goto err;
-		rel->hr_offset = p_off(text) - 1;
+		rel->hr_offset = (uint32_t)(p_off(text) - 1);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 		ASSERT(text_Lfull_retry);
@@ -1646,7 +1646,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			rel = Dee_host_section_newhostrel(text);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(text) - 1;
+			rel->hr_offset = (uint32_t)(p_off(text) - 1);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			rel->hr_value.rv_sym = text_Ldone;
@@ -1660,7 +1660,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			rel = Dee_host_section_newhostrel(text);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(text) - 4;
+			rel->hr_offset = (uint32_t)(p_off(text) - 4);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			rel->hr_value.rv_sym = cold_Lpause_and_full_retry;
@@ -1682,7 +1682,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			rel = Dee_host_section_newhostrel(cold);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(cold) - 1;
+			rel->hr_offset = (uint32_t)(p_off(cold) - 1);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL8;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			rel->hr_value.rv_sym = text_Lfull_retry;
@@ -1695,7 +1695,7 @@ _Dee_function_generator_grwlock_write_impl2(struct Dee_function_generator *__res
 			rel = Dee_host_section_newhostrel(cold);
 			if unlikely(!rel)
 				goto err;
-			rel->hr_offset = p_off(cold) - 4;
+			rel->hr_offset = (uint32_t)(p_off(cold) - 4);
 			rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 			rel->hr_vtype  = DEE_HOST_RELOCVALUE_SYM;
 			rel->hr_value.rv_sym = text_Lfull_retry;
@@ -2819,7 +2819,7 @@ done_push_argi:
 			goto err;
 		gen86_printf("calll\t%s\n", gen86_addrname(api_function));
 		gen86_calll_offset(p_pc(sect), -4);
-		rel->hr_offset = p_off(sect) - 4;
+		rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 		rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 		rel->hr_vtype  = DEE_HOST_RELOCVALUE_ABS;
 		rel->hr_value.rv_abs = api_function;
@@ -2964,7 +2964,7 @@ always_jump:
 	rel = Dee_host_section_newhostrel(sect);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(sect) - 4;
+	rel->hr_offset = (uint32_t)(p_off(sect) - 4);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 	Dee_host_reloc_setsym(rel, dst);
 	return 0;
@@ -2996,7 +2996,7 @@ _Dee_host_section_gjmp(struct Dee_host_section *__restrict self,
 	rel = Dee_host_section_newhostrel(self);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(self) - 4;
+	rel->hr_offset = (uint32_t)(p_off(self) - 4);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 	Dee_host_reloc_setsym(rel, dst);
 	return 0;
@@ -3015,7 +3015,7 @@ _Dee_host_section_gjcc(struct Dee_host_section *__restrict self,
 	rel = Dee_host_section_newhostrel(self);
 	if unlikely(!rel)
 		goto err;
-	rel->hr_offset = p_off(self) - 4;
+	rel->hr_offset = (uint32_t)(p_off(self) - 4);
 	rel->hr_rtype  = DEE_HOST_RELOC_PCREL32;
 	Dee_host_reloc_setsym(rel, dst);
 	return 0;
