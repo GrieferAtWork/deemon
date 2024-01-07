@@ -843,10 +843,11 @@ err:
 	return -1;
 }
 
-/* PUSH(POP() == POP()); */
+/* PUSH(POP() == POP()); // Based on address */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_veqaddr(struct Dee_function_generator *__restrict self) {
 	DeeObject *retval;
+	Dee_host_register_t result_regno;
 	struct Dee_memloc *a, *b;
 	if unlikely(self->fg_state->ms_stackc < 2)
 		return err_illegal_stack_effect();
@@ -897,21 +898,31 @@ do_return_retval:
 		goto do_return_retval;
 	}
 
-	/* TODO: Arch-specific code here:
-	 * >> xorP  %retreg, %retreg
-	 * >> cmpP  <a>, <b>
-	 * >> sete  %retreg
-	 *
-	 * Note that when ASM_CMP_SO/ASM_CMP_DO is followed by ASM_JT/ASM_JF, then
-	 * `Dee_function_generator_veqaddr()' isn't used and `_Dee_function_generator_gjcmp()'
-	 * is used to do the compare+jump between the 2 operands. */
-	return DeeError_NOTIMPLEMENTED();
+	/* Fallback: allocate a result register, then generate code to fill that
+	 * register with a 0/1 value indicative of the 2 memory location being equal. */
+	result_regno = Dee_function_generator_gallocreg(self, NULL);
+	if unlikely(result_regno >= HOST_REGISTER_COUNT)
+		goto err;
+	if unlikely(Dee_function_generator_gmorph_locCloc2reg01(self, a, 0, GMORPHBOOL_CC_EQ, b, result_regno))
+		goto err;
+	if unlikely(Dee_function_generator_vpush_reg(self, result_regno, 0))
+		goto err;
+	a = Dee_function_generator_vtop(self);
+	ASSERT(a->ml_type == MEMLOC_TYPE_HREG);
+	ASSERT(a->ml_value.v_hreg.r_regno == result_regno);
+	ASSERT(a->ml_value.v_hreg.r_off == 0);
+	a->ml_vmorph = MEMLOC_VMORPH_BOOL_NZ_01;
+	if unlikely(Dee_function_generator_vrrot(self, 3))
+		goto err;
+	if unlikely(Dee_function_generator_vpop(self))
+		goto err;
+	return Dee_function_generator_vpop(self);
 err:
 	return -1;
 }
 
 
-/* >> if (THIRD == SECOND) // Address-based
+/* >> if (THIRD == SECOND) // Based on address
  * >>     THIRD = FIRST;
  * >> POP();
  * >> POP(); */

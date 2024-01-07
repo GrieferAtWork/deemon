@@ -1343,9 +1343,9 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_vcall_instanc
 	(Dee_function_generator_vpush_addr(self, NULL) || Dee_function_generator_vcall_instance_attrkw(self, type, attr, argc))
 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqconstaddr(struct Dee_function_generator *__restrict self, DeeObject *value); /* VTOP = VTOP == <value> */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_function_generator *__restrict self);                        /* PUSH(POP() == POP()); */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_function_generator *__restrict self);                        /* PUSH(POP() == POP()); // Based on address */
 
-/* >> if (THIRD == SECOND) // Address-based
+/* >> if (THIRD == SECOND) // Based on address
  * >>     THIRD = FIRST;
  * >> POP();
  * >> POP(); */
@@ -1520,22 +1520,22 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t argc);
 #define Dee_function_generator_vcallapi(self, api_function, cc, argc) \
 	Dee_function_generator_vcallapi_(self, (void const *)(api_function), cc, argc)
-#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(DeeObject *, [DeeObject *, [...]]);          [args...] -> result   ## Error if NULL/zero (via `MEMLOC_VMORPH_NULLABLE'), also MEMLOC_F_NOREF is clear */
-#define VCALL_CC_INT                1 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALL_CC_INTPTR             1 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALL_CC_RAWINT             2 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALL_CC_RAWINTPTR          2 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALL_CC_RAWINT_KEEPARGS    3 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_RAWINTPTR_KEEPARGS 3 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_NEGINT             4 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_NEGINTPTR          4 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_M1INT              5 /* int       (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_M1INTPTR           5 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_VOID               6 /* void      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A */
-#define VCALL_CC_EXCEPT             7 /* ?         (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> N/A      ## Always an error */
-#define VCALL_CC_BOOL               8 /* bool      (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_INTPTR       9 /* intptr_t  (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_UINTPTR     10 /* uintptr_t (DCALL *api_function)(DeeObject *, [DeeObject *, [DeeObject *, [...]]]); [args...] -> result */
+#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMLOC_VMORPH_NULLABLE'), also MEMLOC_F_NOREF is clear */
+#define VCALL_CC_INT                1 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_INTPTR             1 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_RAWINT             2 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR          2 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINT_KEEPARGS    3 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR_KEEPARGS 3 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_NEGINT             4 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_NEGINTPTR          4 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_M1INT              5 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_M1INTPTR           5 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_VOID               6 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A */
+#define VCALL_CC_EXCEPT             7 /* ?               (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Always an error */
+#define VCALL_CC_BOOL               8 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_INTPTR       9 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_UINTPTR     10 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
 
 
 /* [args...], funcaddr -> ...
@@ -1814,14 +1814,22 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gret(struct Dee_fu
 
 /* Helpers for transforming locations into deemon boolean objects. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                          /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);       /* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, struct Dee_memloc *rhs_loc, Dee_host_register_t dst_regno);          /* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
-#define Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno)              _Dee_host_section_gmorph_regx2reg01((self)->fg_sect, src_regno, src_delta, cmp, dst_regno)
-#define Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno) _Dee_host_section_gmorph_regind2reg01((self)->fg_sect, src_regno, ind_delta, val_delta, cmp, dst_regno)
-#define Dee_function_generator_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno)         _Dee_host_section_gmorph_hstackind2reg01((self)->fg_sect, sp_offset, val_delta, cmp, dst_regno)
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regx2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                    /* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regind2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                             /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_hstackind2reg01(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                         /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
+#define Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno)                             _Dee_host_section_gmorph_regx2reg01((self)->fg_sect, src_regno, src_delta, cmp, dst_regno)
+#define Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno)                _Dee_host_section_gmorph_regind2reg01((self)->fg_sect, src_regno, ind_delta, val_delta, cmp, dst_regno)
+#define Dee_function_generator_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno)                        _Dee_host_section_gmorph_hstackind2reg01((self)->fg_sect, sp_offset, val_delta, cmp, dst_regno)
+#define Dee_function_generator_gmorph_regxCreg2reg01(self, src_regno, src_delta, cmp, rhs_regno, dst_regno)              _Dee_host_section_gmorph_regxCreg2reg01((self)->fg_sect, src_regno, src_delta, cmp, rhs_regno, dst_regno)
+#define Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, val_delta, cmp, rhs_regno, dst_regno) _Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, val_delta, cmp, rhs_regno, dst_regno)
+#define Dee_function_generator_gmorph_hstackindCreg2reg01(self, sp_offset, val_delta, cmp, rhs_regno, dst_regno)         _Dee_function_generator_gmorph_hstackindCreg2reg01(self, sp_offset, val_delta, cmp, rhs_regno, dst_regno)
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regx2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                                       /* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regxCreg2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                                    /* dst_regno = (src_regno + src_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regind2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno); /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_hstackind2reg01(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                                            /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                             /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> rhs_regno ? 1 : 0; */
 #if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64) && !defined(CONFIG_TRACE_REFCHANGES)
 #define HAVE__Dee_host_section_gmorph_reg012regbool
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_reg012regbool(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno); /* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */

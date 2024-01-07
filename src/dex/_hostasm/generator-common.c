@@ -847,6 +847,100 @@ err:
 	return -1;
 }
 
+/* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__restrict self,
+                                            struct Dee_memloc *src_loc, ptrdiff_t src_delta,
+                                            unsigned int cmp, Dee_host_register_t rhs_regno,
+                                            Dee_host_register_t dst_regno) {
+	switch (src_loc->ml_type) {
+	default: {
+		Dee_host_register_t not_these[3];
+		not_these[0] = rhs_regno;
+		not_these[1] = dst_regno;
+		not_these[2] = HOST_REGISTER_COUNT;
+		if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
+			goto err;
+	}	ATTR_FALLTHROUGH
+	case MEMLOC_TYPE_HREG:
+		return Dee_function_generator_gmorph_regxCreg2reg01(self,
+		                                                    src_loc->ml_value.v_hreg.r_regno,
+		                                                    src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                    cmp, rhs_regno, dst_regno);
+	case MEMLOC_TYPE_HREGIND:
+		return Dee_function_generator_gmorph_regindCreg2reg01(self,
+		                                                      src_loc->ml_value.v_hreg.r_regno,
+		                                                      src_loc->ml_value.v_hreg.r_off,
+		                                                      src_loc->ml_value.v_hreg.r_voff + src_delta,
+		                                                      cmp, rhs_regno, dst_regno);
+	case MEMLOC_TYPE_HSTACKIND:
+		return Dee_function_generator_gmorph_hstackindCreg2reg01(self,
+		                                                         Dee_memstate_hstack_cfa2sp(self->fg_state, src_loc->ml_value.v_hstack.s_cfa),
+		                                                         src_loc->ml_value.v_hstack.s_off + src_delta,
+		                                                         cmp, rhs_regno, dst_regno);
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+
+
+/* Flip the calling convention such that LHS and RHS can be swapped. */
+PRIVATE NONNULL((1)) unsigned int DCALL
+flip_gmorphbool_cc(unsigned int cc, ptrdiff_t *__restrict p_src_delta) {
+	*p_src_delta = -*p_src_delta;
+	switch (cc) {
+	case GMORPHBOOL_CC_EQ:
+	case GMORPHBOOL_CC_NE:
+		return cc;
+	case GMORPHBOOL_CC_LO:
+		/*     LHS + *p_src_delta < RHS
+		 * <=> RHS > LHS + *p_src_delta
+		 * <=> RHS - *p_src_delta > LHS
+		 * <=> LHS < RHS - *p_src_delta */
+		return GMORPHBOOL_CC_GR;
+	case GMORPHBOOL_CC_GR:
+		return GMORPHBOOL_CC_LO;
+	default: __builtin_unreachable();
+	}
+}
+
+/* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__restrict self,
+                                            struct Dee_memloc *src_loc, ptrdiff_t src_delta,
+                                            unsigned int cmp, struct Dee_memloc *rhs_loc,
+                                            Dee_host_register_t dst_regno) {
+	if (rhs_loc->ml_type != MEMLOC_TYPE_HREG) {
+		if (src_loc->ml_type == MEMLOC_TYPE_HREG) {
+			/* Flip operands so the register appears in "rhs_loc" */
+			struct Dee_memloc *temp;
+			cmp = flip_gmorphbool_cc(cmp, &src_delta);
+			temp    = src_loc;
+			src_loc = rhs_loc;
+			rhs_loc = temp;
+		} else {
+			/* Force "rhs_loc" into a register. */
+			Dee_host_register_t not_these[3];
+			not_these[0] = dst_regno;
+			not_these[1] = HOST_REGISTER_COUNT;
+			not_these[2] = HOST_REGISTER_COUNT;
+			if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
+				not_these[1] = src_loc->ml_value.v_hreg.r_regno;
+			if unlikely(Dee_function_generator_greg(self, rhs_loc, not_these))
+				goto err;
+		}
+	}
+	ASSERT(rhs_loc->ml_type == MEMLOC_TYPE_HREG);
+	return Dee_function_generator_gmorph_locCreg2reg01(self, src_loc,
+	                                                   src_delta - rhs_loc->ml_value.v_hreg.r_off, cmp,
+	                                                   rhs_loc->ml_value.v_hreg.r_regno, dst_regno);
+err:
+	return -1;
+}
+
+
 /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self,
