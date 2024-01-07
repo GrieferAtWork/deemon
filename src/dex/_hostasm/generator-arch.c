@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -2292,6 +2293,180 @@ _Dee_function_generator_gret(struct Dee_function_generator *__restrict self) {
 err:
 	return -1;
 }
+
+
+/* Arithmetic helpers. */
+
+/* dst_regno = src_regno1 + src_regno2; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gadd_regreg2reg(struct Dee_host_section *__restrict self,
+                                  Dee_host_register_t src_regno1, Dee_host_register_t src_regno2,
+                                  Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 1))
+		goto err;
+	gen86_printf("lea" Plq "\t(%s,%s), %s\n", gen86_regname(src_regno1), gen86_regname(src_regno2), gen86_regname(dst_regno));
+	gen86_leaP_bi_r(p_pc(self), gen86_registers[src_regno1], gen86_registers[src_regno2], gen86_registers[dst_regno]);
+	return 0;
+err:
+	return -1;
+}
+
+/* dst_regno = src_regno * n; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gumul_regconst2reg(struct Dee_host_section *__restrict self,
+                                     Dee_host_register_t src_regno, uintptr_t n,
+                                     Dee_host_register_t dst_regno) {
+	if (n == 1 && src_regno == dst_regno)
+		return 0; /* Special case: nothing to do here. */
+	if unlikely(Dee_host_section_reqx86(self, 1))
+		goto err;
+	switch (n) {
+	case 0:
+		gen86_printf("xor" Plq "\t%s, %s\n", gen86_regname(dst_regno), gen86_regname(dst_regno));
+		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
+		break;
+	case 1:
+		gen86_printf("mov" Plq "\t%s, %s\n", gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_movP_r_r(p_pc(self), gen86_registers[src_regno], gen86_registers[dst_regno]);
+		break;
+	case 2:
+		gen86_printf("lea" Plq "\t(%s,%s), %s\n", gen86_regname(src_regno), gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_bi_r(p_pc(self), gen86_registers[src_regno], gen86_registers[src_regno], gen86_registers[dst_regno]);
+		break;
+	case 3:
+		gen86_printf("lea" Plq "\t(%s,%s,2), %s\n", gen86_regname(src_regno), gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_bis_r(p_pc(self), gen86_registers[src_regno], gen86_registers[src_regno], 2, gen86_registers[dst_regno]);
+		break;
+	case 4:
+		gen86_printf("lea" Plq "\t(,%s,4), %s\n", gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_is_r(p_pc(self), gen86_registers[src_regno], 4, gen86_registers[dst_regno]);
+		break;
+	case 5:
+		gen86_printf("lea" Plq "\t(%s,%s,4), %s\n", gen86_regname(src_regno), gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_bis_r(p_pc(self), gen86_registers[src_regno], gen86_registers[src_regno], 4, gen86_registers[dst_regno]);
+		break;
+	case 8:
+		gen86_printf("lea" Plq "\t(%s,8), %s\n", gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_is_r(p_pc(self), gen86_registers[src_regno], 8, gen86_registers[dst_regno]);
+		break;
+	case 9:
+		gen86_printf("lea" Plq "\t(%s,%s,8), %s\n", gen86_regname(src_regno), gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_leaP_bis_r(p_pc(self), gen86_registers[src_regno], gen86_registers[src_regno], 8, gen86_registers[dst_regno]);
+		break;
+	default:
+		gen86_printf("imul" Plq "\t%$Id, %s, %s\n", (intptr_t)n, gen86_regname(src_regno), gen86_regname(dst_regno));
+		gen86_imulP_imm_mod_r(p_pc(self), gen86_modrm_r, (intptr_t)n, gen86_registers[dst_regno], gen86_registers[src_regno]);
+		break;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+
+/* Helpers for transforming locations into deemon boolean objects. */
+
+STATIC_ASSERT(GMORPHBOOL_CC_EQ == 0); /* Compare: "==" */
+STATIC_ASSERT(GMORPHBOOL_CC_NE == 1); /* Compare: "!=" */
+STATIC_ASSERT(GMORPHBOOL_CC_LO == 2); /* Compare: "<" (signed) */
+STATIC_ASSERT(GMORPHBOOL_CC_GR == 3); /* Compare: ">" (signed) */
+PRIVATE uint8_t const gmorphbool_cc_86[] = {
+	/* [GMORPHBOOL_CC_EQ] = */ GEN86_CC_E,  /* Compare: "==" */
+	/* [GMORPHBOOL_CC_NE] = */ GEN86_CC_NE, /* Compare: "!=" */
+	/* [GMORPHBOOL_CC_LO] = */ GEN86_CC_L,  /* Compare: "<" (signed) */
+	/* [GMORPHBOOL_CC_GR] = */ GEN86_CC_G,  /* Compare: ">" (signed) */
+};
+
+/* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gmorph_regx2reg01(struct Dee_host_section *__restrict self,
+                                    Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                    unsigned int cmp, Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 3))
+		goto err;
+	if (src_regno != dst_regno) {
+		gen86_printf("xor" Plq "\t%s, %s\n", gen86_regname(dst_regno), gen86_regname(dst_regno));
+		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
+	}
+	if (src_delta == 0 && (cmp == GMORPHBOOL_CC_EQ || cmp == GMORPHBOOL_CC_NE)) {
+		gen86_printf("test" Plq "\t%s, %s\n", gen86_regname(src_regno), gen86_regname(src_regno));
+		gen86_testP_r_r(p_pc(self), gen86_registers[src_regno], gen86_registers[src_regno]);
+	} else {
+		gen86_printf("cmp" Plq "\t$%Id, %s\n", -src_delta, gen86_regname(src_regno));
+		gen86_cmpP_imm_r(p_pc(self), -src_delta, gen86_registers[src_regno]);
+	}
+	if (src_regno == dst_regno) {
+		gen86_printf("mov" Plq "\t$0, %s\n", gen86_regname(dst_regno));
+		gen86_movP_imm_r(p_pc(self), 0, gen86_registers[dst_regno]);
+	}
+	gen86_printf("set%s\t%s\n", gen86_ccnames[gmorphbool_cc_86[cmp]], gen86_regname(dst_regno));
+	gen86_setcc_r(p_pc(self), gmorphbool_cc_86[cmp], gen86_registers[dst_regno]);
+	return 0;
+err:
+	return -1;
+}
+
+/* dst_regno = (*(src_regno86 + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_gmorph_reg86ind2reg01(struct Dee_host_section *__restrict self,
+                           uint8_t src_regno86, ptrdiff_t ind_delta,
+                           ptrdiff_t val_delta, unsigned int cmp,
+                           Dee_host_register_t dst_regno) {
+	if unlikely(Dee_host_section_reqx86(self, 3))
+		goto err;
+	if (src_regno86 != gen86_registers[dst_regno]) {
+		gen86_printf("xor" Plq "\t%s, %s\n", gen86_regname(dst_regno), gen86_regname(dst_regno));
+		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
+	}
+	gen86_printf("cmp" Plq "\t$%Id, %Id(%s)\n", -val_delta, ind_delta, gen86_regnames[src_regno86]);
+	gen86_cmpP_imm_mod(p_pc(self), gen86_modrm_db, -val_delta, ind_delta, src_regno86);
+	if (src_regno86 == gen86_registers[dst_regno]) {
+		gen86_printf("mov" Plq "\t$0, %s\n", gen86_regname(dst_regno));
+		gen86_movP_imm_r(p_pc(self), 0, gen86_registers[dst_regno]);
+	}
+	gen86_printf("set%s\t%s\n", gen86_ccnames[gmorphbool_cc_86[cmp]], gen86_regname(dst_regno));
+	gen86_setcc_r(p_pc(self), gmorphbool_cc_86[cmp], gen86_registers[dst_regno]);
+	return 0;
+err:
+	return -1;
+}
+
+/* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gmorph_regind2reg01(struct Dee_host_section *__restrict self,
+                                      Dee_host_register_t src_regno, ptrdiff_t ind_delta,
+                                      ptrdiff_t val_delta, unsigned int cmp,
+                                      Dee_host_register_t dst_regno) {
+	return impl_gmorph_reg86ind2reg01(self, gen86_registers[src_regno], ind_delta, val_delta, cmp, dst_regno);
+}
+
+/* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gmorph_hstackind2reg01(struct Dee_host_section *__restrict self,
+                                         ptrdiff_t sp_offset, ptrdiff_t val_delta,
+                                         unsigned int cmp, Dee_host_register_t dst_regno) {
+	return impl_gmorph_reg86ind2reg01(self, GEN86_R_PSP, sp_offset, val_delta, cmp, dst_regno);
+}
+
+#ifdef HAVE__Dee_host_section_gmorph_reg012regbool
+/* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_host_section_gmorph_reg012regbool(struct Dee_host_section *__restrict self,
+                                       Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                       Dee_host_register_t dst_regno) {
+	STATIC_ASSERT(sizeof(DeeBoolObject) == 8);
+	src_delta *= 8;
+	src_delta += (uintptr_t)Dee_FalseTrue;
+	if unlikely(Dee_host_section_reqx86(self, 1))
+		goto err;
+	gen86_printf("lea" Plq "\t%Id(,%s,8), %s\n", src_delta, gen86_regname(src_regno), gen86_regname(dst_regno));
+	gen86_leaP_dis_r(p_pc(self), src_delta, gen86_registers[src_regno], 8, gen86_registers[dst_regno]);
+	return 0;
+err:
+	return -1;
+}
+#endif /* HAVE__Dee_host_section_gmorph_reg012regbool */
+
 
 
 

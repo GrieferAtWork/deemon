@@ -26,6 +26,7 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/asm.h>
+#include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -64,18 +65,56 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 	case MEMLOC_VMORPH_BOOL_NZ_01:
 	case MEMLOC_VMORPH_BOOL_LZ:
 	case MEMLOC_VMORPH_BOOL_GZ: {
+		int temp;
 		Dee_host_register_t retreg;
-		retreg = Dee_function_generator_gallocreg(self, NULL);
-		if unlikely(retreg >= HOST_REGISTER_COUNT)
+		ptrdiff_t retreg_delta;
+		if (loc->ml_type == MEMLOC_TYPE_HREG) {
+			retreg = loc->ml_value.v_hreg.r_regno;
+		} else {
+			Dee_host_register_t not_these[2];
+			not_these[0] = HOST_REGISTER_COUNT;
+			not_these[1] = HOST_REGISTER_COUNT;
+			if (MEMLOC_TYPE_HASREG(loc->ml_type))
+				not_these[0] = loc->ml_value.v_hreg.r_regno;
+			retreg = Dee_function_generator_gallocreg(self, not_these);
+			if unlikely(retreg >= HOST_REGISTER_COUNT)
+				goto err;
+		}
+		if (vmorph == MEMLOC_VMORPH_BOOL_NZ_01) {
+			temp = Dee_function_generator_gmorph_loc012regbooly(self, loc, 0, retreg, &retreg_delta);
+		} else {
+			unsigned int cmp;
+			switch (vmorph) {
+			case MEMLOC_VMORPH_BOOL_Z:
+			case MEMLOC_VMORPH_BOOL_Z_01:
+				cmp = GMORPHBOOL_CC_EQ;
+				break;
+			case MEMLOC_VMORPH_BOOL_NZ:
+				cmp = GMORPHBOOL_CC_NE;
+				break;
+			case MEMLOC_VMORPH_BOOL_LZ:
+				cmp = GMORPHBOOL_CC_LO;
+				break;
+			case MEMLOC_VMORPH_BOOL_GZ:
+				cmp = GMORPHBOOL_CC_GR;
+				break;
+			default: __builtin_unreachable();
+			}
+			temp = Dee_function_generator_gmorph_loc2regbooly(self, loc, 0, cmp, retreg, &retreg_delta);
+		}
+		if unlikely(temp)
 			goto err;
-		//TODO: #define MEMLOC_VMORPH_BOOL_Z     2 /* >> value = DeeBool_For(value == 0 ? 1 : 0); */
-		//TODO: #define MEMLOC_VMORPH_BOOL_Z_01  3 /* >> value = DeeBool_For({1,0}[value]); */
-		//TODO: #define MEMLOC_VMORPH_BOOL_NZ    4 /* >> value = DeeBool_For(value != 0 ? 1 : 0); */
-		//TODO: #define MEMLOC_VMORPH_BOOL_NZ_01 5 /* >> value = DeeBool_For(value); */
-		//TODO: #define MEMLOC_VMORPH_BOOL_LZ    6 /* >> value = DeeBool_For((intptr_t)value < 0); */
-		//TODO: #define MEMLOC_VMORPH_BOOL_GZ    7 /* >> value = DeeBool_For((intptr_t)value > 0); */
-		/* TODO */
-		return DeeError_NOTIMPLEMENTED();
+		if (Dee_memstate_isinstate(self->fg_state, loc)) {
+			if (MEMLOC_TYPE_HASREG(loc->ml_type))
+				Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+			Dee_memstate_incrinuse(self->fg_state, retreg);
+		}
+		loc->ml_type = MEMLOC_TYPE_HREG;
+		loc->ml_value.v_hreg.r_regno = retreg;
+		loc->ml_value.v_hreg.r_off   = retreg_delta;
+		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		loc->ml_valtyp = &DeeBool_Type;
+		return 0;
 	}	break;
 
 	case MEMLOC_VMORPH_INT:
@@ -768,6 +807,120 @@ Dee_function_generator_gret(struct Dee_function_generator *__restrict self,
 done:
 	return result;
 }
+
+
+
+/* Helpers for transforming locations into deemon boolean objects. */
+
+/* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self,
+                                        struct Dee_memloc *src_loc, ptrdiff_t src_delta,
+                                        unsigned int cmp, Dee_host_register_t dst_regno) {
+	switch (src_loc->ml_type) {
+	default: {
+		Dee_host_register_t not_these[2];
+		not_these[0] = dst_regno;
+		not_these[1] = HOST_REGISTER_COUNT;
+		if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
+			goto err;
+	}	ATTR_FALLTHROUGH
+	case MEMLOC_TYPE_HREG:
+		return Dee_function_generator_gmorph_regx2reg01(self,
+		                                                src_loc->ml_value.v_hreg.r_regno,
+		                                                src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                cmp, dst_regno);
+	case MEMLOC_TYPE_HREGIND:
+		return Dee_function_generator_gmorph_regind2reg01(self,
+		                                                  src_loc->ml_value.v_hreg.r_regno,
+		                                                  src_loc->ml_value.v_hreg.r_off,
+		                                                  src_loc->ml_value.v_hreg.r_voff + src_delta,
+		                                                  cmp, dst_regno);
+	case MEMLOC_TYPE_HSTACKIND:
+		return Dee_function_generator_gmorph_hstackind2reg01(self,
+		                                                     Dee_memstate_hstack_cfa2sp(self->fg_state, src_loc->ml_value.v_hstack.s_cfa),
+		                                                     src_loc->ml_value.v_hstack.s_off + src_delta,
+		                                                     cmp, dst_regno);
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+/* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self,
+                                           struct Dee_memloc *src_loc, ptrdiff_t src_delta,
+                                           unsigned int cmp, Dee_host_register_t dst_regno,
+                                           ptrdiff_t *__restrict p_dst_delta) {
+	int result = Dee_function_generator_gmorph_loc2reg01(self, src_loc, src_delta, cmp, dst_regno);
+	if likely(result == 0) {
+		struct Dee_memloc uloc;
+		uloc.ml_type = MEMLOC_TYPE_HREG;
+		uloc.ml_value.v_hreg.r_regno = dst_regno;
+		uloc.ml_value.v_hreg.r_off = 0;
+		result = Dee_function_generator_gmorph_loc012regbooly(self, &uloc, 0, dst_regno, p_dst_delta);
+	}
+	return result;
+}
+
+#ifndef HAVE__Dee_host_section_gmorph_reg012regbool
+/* dst_regno = &Dee_FalseTrue[src_regno + src_delta] - *p_dst_delta; */
+INTERN WUNUSED NONNULL((1, 5)) int DCALL
+Dee_function_generator_gmorph_reg012regbool(struct Dee_function_generator *__restrict self,
+                                            Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                            Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
+	STATIC_ASSERT(sizeof(DeeBoolObject) == SIZEOF_DeeBoolObject);
+	if unlikely(_Dee_host_section_gumul_regconst2reg(self->fg_sect, src_regno,
+	                                                 sizeof(DeeBoolObject), dst_regno))
+		goto err;
+	src_delta *= sizeof(DeeBoolObject);
+	src_delta += (ptrdiff_t)(uintptr_t)Dee_FalseTrue;
+	return _Dee_host_section_gmov_regx2reg(self->fg_sect, dst_regno, src_delta, dst_regno);
+err:
+	return -1;
+}
+#endif /* !HAVE__Dee_host_section_gmorph_reg012regbool */
+
+/* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
+INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
+Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self,
+                                             struct Dee_memloc *src_loc, ptrdiff_t src_delta,
+                                             Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
+	switch (src_loc->ml_type) {
+	case MEMLOC_TYPE_HREG:
+		return Dee_function_generator_gmorph_reg012regbooly(self,
+		                                                    src_loc->ml_value.v_hreg.r_regno,
+		                                                    src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                    dst_regno, p_dst_delta);
+
+	case MEMLOC_TYPE_CONST: {
+		DeeObject *value = Dee_False;
+		if (((uintptr_t)src_loc->ml_value.v_const + src_delta) != 0)
+			value = Dee_True;
+		*p_dst_delta = 0;
+		return Dee_function_generator_gmov_const2reg(self, value, dst_regno);
+	}	break;
+
+	case MEMLOC_TYPE_UNDEFINED:
+		*p_dst_delta = 0;
+		return Dee_function_generator_gmov_const2reg(self, Dee_False, dst_regno);
+
+	default: {
+		ptrdiff_t dst_delta;
+		if unlikely(Dee_function_generator_gmov_loc2regy(self, src_loc, dst_regno, &dst_delta))
+			goto err;
+		src_delta -= dst_delta;
+		return Dee_function_generator_gmorph_reg012regbooly(self, dst_regno, src_delta, dst_regno, p_dst_delta);
+	}	break;
+
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
+
+
 
 #if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64)
 #define HAVE_try_restore_xloc_arg_cfa_offset

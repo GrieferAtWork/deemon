@@ -443,12 +443,11 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;                   /* this, key, value, ref:value */
 	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state));         /* this, key, value, ref:current_value */
 	Dee_memstate_decref(common_state);
-	Dee_host_symbol_setsect(Lnot_ITER_DONE, self->fg_sect);
-	HA_printf("Lnot_ITER_DONE:\n");            /* this, key, value, ref:current_value */
-	DO(Dee_function_generator_vrrot(self, 4)); /* ref:current_value, this, key, value */
-	DO(Dee_function_generator_vpop(self));     /* ref:current_value, this, key */
-	DO(Dee_function_generator_vpop(self));     /* ref:current_value, this */
-	return Dee_function_generator_vpop(self);  /* ref:current_value */
+	Dee_host_symbol_setsect(Lnot_ITER_DONE, self->fg_sect); /* this, key, value, ref:current_value */
+	DO(Dee_function_generator_vrrot(self, 4));              /* ref:current_value, this, key, value */
+	DO(Dee_function_generator_vpop(self));                  /* ref:current_value, this, key */
+	DO(Dee_function_generator_vpop(self));                  /* ref:current_value, this */
+	return Dee_function_generator_vpop(self);               /* ref:current_value */
 err_common_state:
 	Dee_memstate_decref(common_state);
 err:
@@ -1368,7 +1367,6 @@ struct ccall_optimizations_struct {
 
 /* Attribute optimizations for known types. */
 PRIVATE struct ccall_optimizations_struct tpconst cca_optimizations[] = {
-	/* TODO: Optimize known functions from deemon.Sequence into their NSI equivalents (if available) */
 #define DEFINE_OBJMETHOD_OPTIMIZATIIONS(type, vec) { type, vec, COMPILER_LENOF(vec) }
 	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeObject_Type, cca_Object),
 	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeSeq_Type, cca_Sequence),

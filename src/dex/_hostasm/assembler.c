@@ -901,7 +901,7 @@ again_move_added_location:
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
 				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-				cur_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
+				cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
 				ASSERT(cur_refcnt != 0);
 				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
 				                                                     cur_refcnt, new_refcnt))
