@@ -2971,7 +2971,7 @@ unpack_init_info(DeeObject *__restrict info,
                  DREF DeeObject **__restrict p_init_args,
                  DREF DeeObject **__restrict p_init_kw) {
 	DREF DeeObject *iterator;
-	DREF DeeObject *sentinal;
+	DREF DeeObject *sentinel;
 	if likely(DeeTuple_Check(info)) {
 		switch (DeeTuple_SIZE(info)) {
 
@@ -3078,10 +3078,10 @@ unpack_init_info(DeeObject *__restrict info,
 			Dee_Decref(iterator);
 			goto err_args;
 		}
-		sentinal = DeeObject_IterNext(iterator);
-		if unlikely(sentinal != ITER_DONE) {
-			if (sentinal) {
-				Dee_Decref(sentinal);
+		sentinel = DeeObject_IterNext(iterator);
+		if unlikely(sentinel != ITER_DONE) {
+			if (sentinel) {
+				Dee_Decref(sentinel);
 				err_invalid_unpack_iter_size_minmax(info, iterator, 1, 3);
 			}
 			Dee_XDecref(*p_init_kw);

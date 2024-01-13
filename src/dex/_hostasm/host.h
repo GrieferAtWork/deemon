@@ -95,6 +95,9 @@
 
 #ifdef HOSTASM_X86_64
 #define HOST_SIZEOF_POINTER 8
+#ifdef HOSTASM_X86_64_SYSVABI
+#define HOSTASM_REDZONE_SIZE 128
+#endif /* HOSTASM_X86_64_SYSVABI */
 #elif defined(HOSTASM_X86)
 #define HOST_SIZEOF_POINTER 4
 #endif /* ... */
@@ -112,6 +115,13 @@
 #endif /* HOSTASM_X86 */
 
 #define HOSTASM_STACK_GROWS_DOWN
+
+#ifndef HOSTASM_REDZONE_SIZE
+#define HOSTASM_REDZONE_SIZE 0
+#elif defined(__KERNEL__)
+#undef HOSTASM_REDZONE_SIZE
+#define HOSTASM_REDZONE_SIZE 0
+#endif /* ... */
 
 
 /* Figure out how many scratch registers this host gives us. */

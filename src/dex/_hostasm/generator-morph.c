@@ -243,12 +243,12 @@ morph_location(struct Dee_function_generator *__restrict self,
 		 *       if the location isn't being aliased elsewhere. As such, the decref *can*
 		 *       kill if there isn't an alias. */
 		if (is_local && !(old_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
-			if unlikely(must_incref ? Dee_function_generator_gxincref(self, old_loc, 1)
-			                        : Dee_function_generator_gxdecref_nokill(self, old_loc, 1))
+			if unlikely(must_incref ? Dee_function_generator_gxincref_loc(self, old_loc, 1)
+			                        : Dee_function_generator_gxdecref_nokill_loc(self, old_loc, 1))
 				goto err;
 		} else {
-			if unlikely(must_incref ? Dee_function_generator_gincref(self, old_loc, 1)
-			                        : Dee_function_generator_gdecref_nokill(self, old_loc, 1))
+			if unlikely(must_incref ? Dee_function_generator_gincref_loc(self, old_loc, 1)
+			                        : Dee_function_generator_gdecref_nokill_loc(self, old_loc, 1))
 				goto err;
 		}
 		old_loc->ml_flags &= ~MEMLOC_F_NOREF;
@@ -272,8 +272,8 @@ err:
 
 /* Generate code in `self->fg_sect' to morph `self->fg_state' into `new_state' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
-                              struct Dee_memstate const *new_state) {
+Dee_function_generator_vmorph_no_constrain_equivalences(struct Dee_function_generator *__restrict self,
+                                                        struct Dee_memstate const *new_state) {
 	Dee_lid_t i, j, mactc, finished;
 	struct Dee_memaction *mactv;
 	struct Dee_memstate *old_state;
@@ -524,6 +524,17 @@ err_actv:
 	Dee_Freea(mactv);
 err:
 	return -1;
+}
+
+/* Same as `Dee_function_generator_vmorph_no_constrain_equivalences()', but also
+ * generate code to constrain the equivalences from `new_state' into "self". */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
+                              struct Dee_memstate const *new_state) {
+	int result = Dee_function_generator_vmorph_no_constrain_equivalences(self, new_state);
+	if likely(result == 0)
+		Dee_memequivs_constrainwith(&self->fg_state->ms_memequiv, &new_state->ms_memequiv);
+	return result;
 }
 
 

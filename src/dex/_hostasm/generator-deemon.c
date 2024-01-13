@@ -271,12 +271,12 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
 				 * reference. */
 				ASSERT(alias_without_reference);
 				ASSERT(!alias_with_reference);
-				DO(Dee_function_generator_gincref(self, src_loc, 1));
+				DO(Dee_function_generator_gincref_loc(self, src_loc, 1));
 				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
 			} else if (alias_without_reference && !alias_with_reference) {
 				/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
 				ASSERT(alias_without_reference->ml_flags & MEMLOC_F_NOREF);
-				DO(Dee_function_generator_gincref(self, alias_without_reference, 1));
+				DO(Dee_function_generator_gincref_loc(self, alias_without_reference, 1));
 				alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
 			}
 
@@ -303,7 +303,7 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
 		} else {
 			/* No aliases exist, so there's no need to force a distinct location. */
 			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
-				DO(Dee_function_generator_gincref(self, src_loc, 1));
+				DO(Dee_function_generator_gincref_loc(self, src_loc, 1));
 				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
 			}
 		}
@@ -1123,6 +1123,7 @@ do_jcc:
 
 	//TODO: TARGET(ASM_INSTANCEOF)
 	//TODO: TARGET(ASM_IMPLEMENTS)
+		/* TODO: Remember: in "x is int", we can compile as "type(x) === int", because "int" is TP_FFINAL! */
 
 	TARGET(ASM_STR)
 		return Dee_function_generator_vopstr(self);
@@ -1172,7 +1173,7 @@ do_jcc:
 		TARGET(ASM_SHL)
 			/* Special handling needed here! */
 			*p_next_instr = DeeAsm_NextInstr(next_instr);
-			/* TODO: Optimizations when the type of rhs is a constant. */
+			/* TODO: Optimizations when rhs is a constant. */
 			/* TODO: Optimizations when the type of lhs is known. */
 			DO(Dee_function_generator_vnotoneref(self, 1)); /* lhs, rhs */
 			DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_REPR, 2)); /* lhs, rhs */

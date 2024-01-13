@@ -67,7 +67,7 @@ struct Dee_dex_notification {
 #error FIXME
 #endif /* __SIZEOF_POINTER__ < ... */
 	struct Dee_string_object
-	                     *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinal). */
+	                     *dn_name;     /* [0..1] Notification name (`NULL' indicates sentinel). */
 	Dee_notify_t          dn_callback; /* [1..1][valid_if(dn_name)] Notification callback. */
 	DeeObject            *dn_arg;      /* [0..1][valid_if(dn_name)] Notification argument. */
 };

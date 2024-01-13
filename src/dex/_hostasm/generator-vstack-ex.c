@@ -134,8 +134,8 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 		DO(Dee_function_generator_vpop(self)); /* kw */
 		loc_DeeKwds_Type.ml_type = MEMLOC_TYPE_CONST;
 		loc_DeeKwds_Type.ml_value.v_const = (DeeObject *)&DeeKwds_Type;
-		DO(_Dee_function_generator_gjcmp(self, &loc_kwds_ob_type, &loc_DeeKwds_Type, false,
-		                                 NULL, Lnot_kwds, NULL));
+		DO(Dee_function_generator_gjcmp(self, &loc_kwds_ob_type, &loc_DeeKwds_Type, false,
+		                                NULL, Lnot_kwds, NULL));
 		enter_state = self->fg_state; /* kw */
 		Dee_memstate_incref(enter_state);
 		EDO(err_enter_state, Dee_function_generator_vdup(self));                                   /* kw, kw */
@@ -146,7 +146,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			 * >> .Lnot_kwds:
 			 * >>     ...
 			 * >> .Lgot_size: */
-			EDO(err_enter_state, _Dee_function_generator_gjmp(self, Lgot_size));
+			EDO(err_enter_state, Dee_function_generator_gjmp(self, Lgot_size));
 			leave_state = self->fg_state; /* Inherit reference */
 			self->fg_state = enter_state; /* Inherit reference */
 			Dee_host_symbol_setsect(Lnot_kwds, self->fg_sect);       /* kw */
@@ -154,7 +154,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			EDO(err_leave_state, Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SIZE, 1)); /* kw, kw */
 			EDO(err_leave_state, Dee_function_generator_vcallapi(self, &DeeObject_Size, VCALL_CC_M1INT, 1)); /* kw, size */
 			EDO(err_leave_state, Dee_function_generator_vmorph(self, leave_state));
-			EDO(err_leave_state, _Dee_function_generator_gjmp(self, Lgot_size));
+			EDO(err_leave_state, Dee_function_generator_gjmp(self, Lgot_size));
 			Dee_host_symbol_setsect(Lgot_size, self->fg_sect);
 		} else {
 			struct Dee_host_section *old_text;
@@ -174,7 +174,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			EDO(err_leave_state, Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_SIZE, 1)); /* kw, kw */
 			EDO(err_leave_state, Dee_function_generator_vcallapi(self, &DeeObject_Size, VCALL_CC_M1INT, 1)); /* kw, size */
 			EDO(err_leave_state, Dee_function_generator_vmorph(self, leave_state));
-			EDO(err_leave_state, _Dee_function_generator_gjmp(self, Lgot_size));
+			EDO(err_leave_state, Dee_function_generator_gjmp(self, Lgot_size));
 			HA_printf(".section .text\n");
 			self->fg_sect = old_text;
 			Dee_host_symbol_setsect(Lgot_size, self->fg_sect);
@@ -194,7 +194,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			Lsize_is_zero = Dee_function_generator_newsym_named(self, ".Lsize_is_zero");
 			if unlikely(!Lsize_is_zero)
 				goto err;
-			DO(_Dee_function_generator_gjz(self, &loc_size, Lsize_is_zero));
+			DO(Dee_function_generator_gjz(self, &loc_size, Lsize_is_zero));
 			enter_state = self->fg_state;
 			Dee_memstate_incref(enter_state);
 			EDO(err_enter_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_nonempty_kw, VCALL_CC_EXCEPT, 1));
@@ -211,7 +211,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			Lsize_is_not_zero = Dee_function_generator_newsym_named(self, ".Lsize_is_not_zero");
 			if unlikely(!Lsize_is_not_zero)
 				goto err;
-			DO(_Dee_function_generator_gjnz(self, &loc_size, Lsize_is_not_zero));
+			DO(Dee_function_generator_gjnz(self, &loc_size, Lsize_is_not_zero));
 			enter_state = self->fg_state;
 			Dee_memstate_incref(enter_state);
 			HA_printf(".section .cold\n");
@@ -765,7 +765,8 @@ extra_return_type_from_doc(struct Dee_function_generator *__restrict self,
 	} else {
 		result = impl_extra_return_type_from_doc(self, argc, info);
 	}
-	if (result && result != (DeeTypeObject *)ITER_DONE && DeeType_IsAbstract(result)) {
+	if (result && result != (DeeTypeObject *)ITER_DONE &&
+	    DeeType_IsAbstract(result) && result != &DeeNone_Type) {
 		/* Ignore abstract return type information (like sequence proxies).
 		 * We want the *exact* return type (not some base class). As such,
 		 * simply disregard abstract types.
@@ -823,7 +824,8 @@ vpop_args_and_check_result_with_doc(struct Dee_function_generator *__restrict se
 		if (result_type != NULL) {
 			if unlikely(result_type == (DeeTypeObject *)ITER_DONE)
 				goto err;
-			DO(Dee_function_generator_vsettyp_noalias(self, result_type));
+			DO(vpop_args_and_check_result(self, argc));
+			return Dee_function_generator_vsettyp_noalias(self, result_type);
 		}
 	}
 	return vpop_args_and_check_result(self, argc);
@@ -1554,7 +1556,7 @@ Dee_function_exceptinject_fini_and_freeinstance_f(struct Dee_function_generator 
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_FreeTracker, VCALL_CC_RAWINTPTR, 1)); /* instance */
 #endif /* CONFIG_TRACE_REFCHANGES */
 	DO(vcall_DeeType_FreeInstance(self, me->fei_fafi_type)); /* N/A */
-	return _Dee_function_generator_gdecref_const(self, (DeeObject *)me->fei_fafi_type, 1);
+	return Dee_function_generator_gdecref_const(self, (DeeObject *)me->fei_fafi_type, 1);
 err:
 	return -1;
 }
@@ -2411,7 +2413,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 				DO(Dee_function_generator_grwlock_read_const(self, &desc->cd_lock));             /* ref:result */
 				DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[item->ca_addr + Dee_CLASS_GETSET_GET])); /* ref:result, &GETTER */
 				DO(Dee_function_generator_vind(self, 0));                                        /* ref:result, GETTER */
-				DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:GETTER */
+				DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:GETTER */
 				if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
 					DO(Dee_function_generator_vreg(self, NULL));                                  /* ref:result, ref:GETTER */
 					DO(Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));       /* ref:result, ref:GETTER */
@@ -2420,11 +2422,11 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_get)));    /* ref:result */
 					DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[item->ca_addr + Dee_CLASS_GETSET_DEL])); /* ref:result, &DELETE */
 					DO(Dee_function_generator_vind(self, 0));                                        /* ref:result, DELETE */
-					DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:DELETE */
+					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:DELETE */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_del)));    /* ref:result */
 					DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[item->ca_addr + Dee_CLASS_GETSET_SET])); /* ref:result, &SETTER */
 					DO(Dee_function_generator_vind(self, 0));                                        /* ref:result, SETTER */
-					DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:SETTER */
+					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* ref:result, ref:SETTER */
 					DO(Dee_function_generator_vreg(self, NULL));                                     /* ref:result, ref:SETTER */
 					DO(Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));          /* ref:result, ref:SETTER */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_set)));    /* ref:result */
@@ -2441,7 +2443,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 				                                     (item->ca_addr + Dee_CLASS_GETSET_GET) *
 				                                     sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), GETTER */
 				if (!(item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
-					DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
+					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
 					DO(Dee_function_generator_vdup_n(self, 3));           /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER, result */
 					DO(Dee_function_generator_vswap(self));               /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:GETTER */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_get))); /* this, ref:result, DeeInstance_DESC(desc, this), result */
@@ -2449,7 +2451,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vind(self, offsetof(struct Dee_instance_desc, id_vtab) +
 					                                     (item->ca_addr + Dee_CLASS_GETSET_DEL) *
 					                                     sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), result, DELETE */
-					DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:DELETE */
+					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:DELETE */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_del))); /* this, ref:result, DeeInstance_DESC(desc, this), result */
 					DO(Dee_function_generator_vpop(self));                /* this, ref:result, DeeInstance_DESC(desc, this) */
 					DO(Dee_function_generator_vdup(self));                /* this, ref:result, DeeInstance_DESC(desc, this), DeeInstance_DESC(desc, this) */
@@ -2457,7 +2459,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 					                                     (item->ca_addr + Dee_CLASS_GETSET_SET) *
 					                                     sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), SETTER */
 				}                                                         /* this, ref:result, DeeInstance_DESC(desc, this), GETTER_OR_SETTER */
-				DO(Dee_function_generator_gxincref(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
+				DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtop(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
 				DO(Dee_function_generator_vreg(self, NULL));              /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
 				DO(Dee_function_generator_vswap(self));                   /* this, ref:result, ref:GETTER_OR_SETTER, DeeInstance_DESC(desc, this) */
 				DO(Dee_function_generator_vdelta(self, offsetof(struct Dee_instance_desc, id_lock))); /* this, ref:result, ref:GETTER_OR_SETTER, &DeeInstance_DESC(desc, this)->id_lock */
@@ -3140,7 +3142,10 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 	}
 	func_type = Dee_memloc_typeof(func_loc);
 	if (func_type) {
-		if (func_type == &DeeString_Type && hasattr &&
+		/* TODO: this optimization is possible whenever the function doesn't let passed arguments escape!
+		 *    -> optimize this by adding another flag `Dee_TYPE_METHOD_FNOARGREFESCAPE' that can then be
+		 *       set on a per-function basis. */
+		if (func_type == &DeeString_Type && hasattr && !asmap &&
 		    func_loc[1].ml_type == MEMLOC_TYPE_CONST &&
 		    DeeString_Check(func_loc[1].ml_value.v_const) &&
 		    DeeString_EQUALS_ASCII(func_loc[1].ml_value.v_const, "format")) {
@@ -3163,7 +3168,7 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 			 * >> 1                 (ob_refcnt)
 			 * >> &DeeTuple_Type    (ob_type)
 			 * >> itemc             (t_size)
-			 * >> [items...]
+			 * >> [items...]        (t_elem)
 			 *
 			 * ASM (i386):
 			 * >>     movl  8(%esp), %eax // argv
@@ -3237,7 +3242,7 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 
 	DO(Dee_function_generator_vnotoneref(self, itemc));                        /* func, [attr], [items...] */
 	DO(Dee_function_generator_vlinear(self, itemc, true));                     /* func, [attr], [items...], itemv */
-	DO(Dee_function_generator_vpush_immSIZ(self, itemc));                      /* func, [attr], [items...], itemv, itemc */
+	DO(Dee_function_generator_vpush_immSIZ(self, asmap ? itemc / 2 : itemc));  /* func, [attr], [items...], itemv, itemc */
 	DO(Dee_function_generator_vswap(self));                                    /* func, [attr], [items...], itemc, itemv */
 	DO(Dee_function_generator_vcallapi(self, api_create, VCALL_CC_OBJECT, 2)); /* func, [attr], [items...], custom:seq */
 	DO(Dee_function_generator_vdirect(self, 1));                               /* func, [attr], [items...], custom:seq */
@@ -3841,7 +3846,7 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self,
 			if (!(vtop->ml_flags & MEMLOC_F_NOREF)) {
 				/* Make sure to drop the reference from the bool. Note that this is nokill
 				 * since we know that booleans are singletons that can never be destroyed. */
-				DO(Dee_function_generator_gdecref_nokill(self, vtop, 1));
+				DO(Dee_function_generator_gdecref_nokill_loc(self, vtop, 1));
 				vtop->ml_flags |= MEMLOC_F_NOREF;
 			}
 			ASSERT(vtop == Dee_function_generator_vtop(self));
@@ -4241,7 +4246,7 @@ vmorph_int(struct Dee_function_generator *__restrict self, uint8_t wanted_morph)
 	result_cfa = Dee_memstate_hstack_find(self->fg_state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
 	if (result_cfa == (uintptr_t)-1) {
 		result_cfa = Dee_memstate_hstack_alloca(self->fg_state, HOST_SIZEOF_POINTER);
-		DO(_Dee_function_generator_ghstack_adjust(self, HOST_SIZEOF_POINTER));
+		DO(Dee_function_generator_ghstack_adjust(self, HOST_SIZEOF_POINTER));
 	}
 	DO(Dee_function_generator_vpush_hstackind(self, result_cfa, 0)); /* obj, result */
 	DO(Dee_function_generator_vswap(self));                          /* result, obj */
@@ -5212,8 +5217,11 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 	alloc_size = n * sizeof(DREF DeeObject *);
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state, self->fg_state_hstack_res, alloc_size);
 	if (cfa_offset == (uintptr_t)-1) {
-		cfa_offset = Dee_memstate_hstack_alloca(self->fg_state, alloc_size);
-		DO(_Dee_function_generator_ghstack_adjust(self, alloc_size));
+		DO(Dee_function_generator_ghstack_adjust(self, alloc_size));
+		cfa_offset = self->fg_state->ms_host_cfa_offset;
+#ifndef HOSTASM_STACK_GROWS_DOWN
+		cfa_offset -= alloc_size;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
 	}
 	for (i = 0; i < n; ++i) {
 		uintptr_t n_cfa_offset;

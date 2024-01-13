@@ -130,6 +130,7 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	result->ms_flags     = MEMSTATE_F_NORMAL;
 	result->ms_uargc_min = self->fa_code->co_argc_min;
 	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
+	Dee_memequivs_init(&result->ms_memequiv);
 	Dee_memstate_hregs_clear_usage(result);
 	result->ms_stackv = NULL;
 
@@ -604,7 +605,8 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 	gen.fg_state     = from_state;
 	_Dee_function_generator_initcommon(&gen);
 	Dee_memstate_incref(gen.fg_state);
-	result = Dee_function_generator_vmorph(&gen, to_block->bb_mem_start);
+	/* Since we just throw the mem-state away anyways, we don't need to do equivalence constraining here. */
+	result = Dee_function_generator_vmorph_no_constrain_equivalences(&gen, to_block->bb_mem_start);
 	Dee_memstate_decref(gen.fg_state);
 	return result;
 }
@@ -649,20 +651,20 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 		ptrdiff_t refcnt_delta = (ptrdiff_t)(new_refcnt) -
 		                         (ptrdiff_t)(old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
 		if (refcnt_delta > 0) {
-			temp = Dee_function_generator_gxincref(self, oldloc, (Dee_refcnt_t)refcnt_delta);
+			temp = Dee_function_generator_gxincref_loc(self, oldloc, (Dee_refcnt_t)refcnt_delta);
 		} else if (refcnt_delta < 0) {
-			temp = new_refcnt ? Dee_function_generator_gxdecref_nokill(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
-			                  : Dee_function_generator_gxdecref(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
+			temp = new_refcnt ? Dee_function_generator_gxdecref_nokill_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
+			                  : Dee_function_generator_gxdecref_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
 		} else {
 			temp = 0;
 		}
 	} else {
 		ptrdiff_t refcnt_delta = (ptrdiff_t)new_refcnt - (ptrdiff_t)old_refcnt;
 		if (refcnt_delta > 0) {
-			temp = Dee_function_generator_gincref(self, oldloc, (Dee_refcnt_t)refcnt_delta);
+			temp = Dee_function_generator_gincref_loc(self, oldloc, (Dee_refcnt_t)refcnt_delta);
 		} else if (refcnt_delta < 0) {
-			temp = new_refcnt ? Dee_function_generator_gdecref_nokill(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
-			                  : Dee_function_generator_gdecref(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
+			temp = new_refcnt ? Dee_function_generator_gdecref_nokill_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
+			                  : Dee_function_generator_gdecref_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
 		} else {
 			temp = 0;
 		}
@@ -697,9 +699,9 @@ Dee_function_generator_gexcept_morph_decref(struct Dee_function_generator *__res
                                             uint16_t old_refcnt) {
 	ASSERT(old_refcnt != 0);
 	if (old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) {
-		return Dee_function_generator_gxdecref(self, loc, old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
+		return Dee_function_generator_gxdecref_loc(self, loc, old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
 	} else {
-		return Dee_function_generator_gdecref(self, loc, old_refcnt);
+		return Dee_function_generator_gdecref_loc(self, loc, old_refcnt);
 	}
 }
 
@@ -761,6 +763,7 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 	state->ms_stackv          = NULL;
 	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
 	bzero(state->ms_rusage, sizeof(state->ms_rusage));
+	Dee_memequivs_init(&state->ms_memequiv);
 	self->fg_state = state;
 
 	cur_locc = Dee_except_exitinfo_locc(curinfo);
@@ -1237,6 +1240,7 @@ move_cur_loci_to_new_loci:
 
 	/* Cleanup... */
 	Dee_Freea(curinfo_vaddr);
+	Dee_memequivs_fini(&state->ms_memequiv);
 	ASSERT(self->fg_state == state);
 	ASSERT(state->ms_refcnt == 1);
 	Dee_Free(state->ms_stackv);
@@ -1246,6 +1250,7 @@ move_cur_loci_to_new_loci:
 err_infostate_state_curinfo_vaddr:
 	Dee_Freea(curinfo_vaddr);
 err_infostate_state:
+	Dee_memequivs_fini(&state->ms_memequiv);
 	ASSERT(self->fg_state == state);
 	ASSERT(state->ms_refcnt == 1);
 	Dee_Free(state->ms_stackv);

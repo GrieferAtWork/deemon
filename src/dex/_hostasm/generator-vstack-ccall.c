@@ -425,8 +425,8 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 		goto err;
 	l_ITER_DONE.ml_type = MEMLOC_TYPE_CONST;
 	l_ITER_DONE.ml_value.v_const = ITER_DONE;
-	DO(_Dee_function_generator_gjcmp(self, Dee_function_generator_vtop(self), &l_ITER_DONE,
-	                                 false, Lnot_ITER_DONE, NULL, Lnot_ITER_DONE));
+	DO(Dee_function_generator_gjcmp(self, Dee_function_generator_vtop(self), &l_ITER_DONE,
+	                                false, Lnot_ITER_DONE, NULL, Lnot_ITER_DONE));
 	DO(Dee_function_generator_state_unshare(self));
 	common_state = self->fg_state;
 	Dee_memstate_vtop(common_state)->ml_flags &= ~MEMLOC_F_NOREF;
@@ -439,7 +439,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));                    /* this, key, value, this, key, value */
 	EDO(err_common_state, Dee_function_generator_vop(self, OPERATOR_SETITEM, 3, VOP_F_NORMAL)); /* this, key, value */
 	EDO(err_common_state, Dee_function_generator_vdup(self));                         /* this, key, value, value */
-	EDO(err_common_state, Dee_function_generator_gincref(self, Dee_function_generator_vtop(self), 1)); /* this, key, value, value */
+	EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtop(self), 1)); /* this, key, value, value */
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;                   /* this, key, value, ref:value */
 	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state));         /* this, key, value, ref:current_value */
 	Dee_memstate_decref(common_state);
@@ -953,7 +953,7 @@ cco_WeakRef_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		Lcan_lock = Dee_function_generator_newsym_named(self, ".Lcan_lock");
 		if unlikely(!Lcan_lock)
 			goto err;
-		DO(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lcan_lock)); /* nullable:result */
+		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lcan_lock)); /* nullable:result */
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_cannot_lock_weakref, VCALL_CC_EXCEPT, 0));
@@ -963,7 +963,7 @@ cco_WeakRef_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		Lcannot_lock = Dee_function_generator_newsym_named(self, ".Lcannot_lock");
 		if unlikely(!Lcannot_lock)
 			goto err;
-		DO(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), Lcannot_lock)); /* nullable:result */
+		DO(Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), Lcannot_lock)); /* nullable:result */
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
@@ -975,7 +975,7 @@ cco_WeakRef_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 	}
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;                                                   /* result */
-	DO(Dee_function_generator_gincref(self, Dee_function_generator_vtop(self), 1)); /* result */
+	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtop(self), 1)); /* result */
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;                 /* ref:result */
 	return 0;
 err_saved_state:
@@ -1030,7 +1030,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 		Lcell_not_empty = Dee_function_generator_newsym_named(self, ".Lcell_not_empty");
 		if unlikely(!Lcell_not_empty)
 			goto err;
-		DO(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lcell_not_empty)); /* cell, reg:cell->c_item */
+		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lcell_not_empty)); /* cell, reg:cell->c_item */
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		EDO(err_saved_state, Dee_function_generator_vcallapi(self, except_api, VCALL_CC_EXCEPT, 0));
@@ -1040,7 +1040,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 		Lcell_empty = Dee_function_generator_newsym_named(self, ".Lcell_empty");
 		if unlikely(!Lcell_empty)
 			goto err;
-		DO(_Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), Lcell_empty)); /* cell, reg:cell->c_item */
+		DO(Dee_function_generator_gjz(self, Dee_function_generator_vtop(self), Lcell_empty)); /* cell, reg:cell->c_item */
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
@@ -1052,7 +1052,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	}
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;                                                   /* cell, reg:cell->c_item */
-	DO(Dee_function_generator_gincref(self, Dee_function_generator_vtop(self), 1)); /* cell, ref:cell->c_item */
+	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtop(self), 1)); /* cell, ref:cell->c_item */
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;                 /* cell, ref:cell->c_item */
 	DO(Dee_function_generator_vswap(self));                                         /* ref:cell->c_item, cell */
 	DO(Dee_function_generator_vdup(self));                                          /* ref:cell->c_item, cell, cell */
@@ -1080,7 +1080,7 @@ vcall_DeeCell_DelOrSet(struct Dee_function_generator *__restrict self) {
 	DO(Dee_function_generator_vswap(self));                                          /* ref:old_value, cell */
 	DO(Dee_function_generator_vpop(self));                                           /* ref:old_value */
 	ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);            /* ref:old_value */
-	DO(Dee_function_generator_gxdecref(self, Dee_function_generator_vtop(self), 1)); /* old_value */
+	DO(Dee_function_generator_gxdecref_loc(self, Dee_function_generator_vtop(self), 1)); /* old_value */
 	return Dee_function_generator_vpop(self);
 err:
 	return -1;
@@ -1099,7 +1099,7 @@ cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t ar
 		Lpresent = Dee_function_generator_newsym_named(self, ".Lpresent");
 		if unlikely(!Lpresent)
 			goto err;
-		DO(_Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lpresent)); /* def, result */
+		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtop(self), Lpresent)); /* def, result */
 		DO(Dee_function_generator_state_unshare(self));
 		common_state = self->fg_state;
 		Dee_memstate_vtop(common_state)->ml_flags &= ~MEMLOC_F_NOREF;
@@ -1108,7 +1108,7 @@ cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t ar
 		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;
 		EDO(err_common_state, Dee_function_generator_vpop(self));                 /* def */
 		EDO(err_common_state, Dee_function_generator_vdup(self));                 /* def, def */
-		EDO(err_common_state, Dee_function_generator_gincref(self, Dee_function_generator_vtop(self), 1)); /* def, def */
+		EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtop(self), 1)); /* def, def */
 		Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;           /* def, ref:def */
 		EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* def, result */
 		Dee_memstate_decref(common_state);

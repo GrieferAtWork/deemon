@@ -535,6 +535,67 @@ do_print_memloc_desc:
 			Dee_DPRINT("\n");
 	}
 }
+
+INTERN NONNULL((1)) void DCALL
+_Dee_memequiv_loc_debug_print(struct Dee_memequiv_loc const *__restrict self,
+                              ptrdiff_t val_delta) {
+	switch (self->meql_type) {
+	case MEMEQUIV_TYPE_HREG:
+		Dee_DPRINT(gen86_regname(self->meql_regno));
+		break;
+	case MEMEQUIV_TYPE_HREGIND:
+		Dee_DPRINT("[");
+		Dee_DPRINT(gen86_regname(self->meql_regno));
+		if (self->meql_value.v_indoff != 0)
+			Dee_DPRINTF("%+Id", self->meql_value.v_indoff);
+		Dee_DPRINT("]");
+		break;
+	case MEMEQUIV_TYPE_HSTACKIND:
+		Dee_DPRINTF("[#%Id]", (ptrdiff_t)self->meql_value.v_cfa);
+		break;
+	case MEMEQUIV_TYPE_CONST:
+		Dee_DPRINTF("%#Ix", (uintptr_t)self->meql_value.v_const);
+		break;
+	default: __builtin_unreachable();
+	}
+	if (val_delta != 0)
+		Dee_DPRINTF("%+Id", val_delta);
+}
+
+INTERN NONNULL((1)) void DCALL
+_Dee_memequiv_debug_print(struct Dee_memequiv const *__restrict self) {
+	_Dee_memequiv_loc_debug_print(&self->meq_loc, self->meq_valoff);
+}
+
+INTERN NONNULL((1)) void DCALL
+_Dee_memequivs_debug_print(struct Dee_memequivs *__restrict self) {
+	size_t i;
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *iter, *eq = &self->meqs_list[i];
+		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+			continue;
+		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+			continue;
+		if (eq->meq_loc.meql_type & 0x8000)
+			continue;
+		iter = eq;
+		do {
+			if (iter == eq) {
+				HA_print("\t{");
+			} else {
+				Dee_DPRINT(" <=> ");
+			}
+			_Dee_memequiv_debug_print(iter);
+			iter->meq_loc.meql_type |= 0x8000;
+		} while ((iter = Dee_memequiv_next(iter)) != eq);
+		Dee_DPRINT("}\n");
+	}
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		if (eq->meq_loc.meql_type & 0x8000)
+			eq->meq_loc.meql_type &= ~0x8000;
+	}
+}
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
@@ -578,7 +639,7 @@ do_Dee_host_section_gadjust_reg_delta_impl(struct Dee_host_section *__restrict s
 }
 
 /* Object reference count incref/decref */
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gincref_regx_impl(struct Dee_host_section *__restrict self,
                                     Dee_host_register_t regno,
                                     ptrdiff_t reg_offset, Dee_refcnt_t n) {
@@ -632,7 +693,7 @@ _Dee_host_section_gincref_regx(struct Dee_host_section *__restrict self,
 	return _Dee_host_section_gincref_regx_impl(self, regno, reg_offset, n);
 }
 
-INTERN WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_gdecref_regx_nokill_impl(struct Dee_host_section *__restrict self,
                                            Dee_host_register_t regno,
                                            ptrdiff_t reg_offset, Dee_refcnt_t n) {
@@ -654,7 +715,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_host_section_gdecref_regx_nokill(struct Dee_host_section *__restrict self,
+_Dee_host_section_gdecref_nokill_regx(struct Dee_host_section *__restrict self,
                                       Dee_host_register_t regno,
                                       ptrdiff_t reg_offset, Dee_refcnt_t n) {
 #ifndef NO_HOSTASM_DEBUG_PRINT
@@ -785,6 +846,9 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 		gen86_popP_r(p_pc(sect), gen86_registers[save_regno]);
 		Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
 	}
+
+	/* Unused registers are now undefined (used registers were saved and restored) */
+	Dee_function_generator_remember_undefined_unusedregs(self);
 
 	return 0;
 err:
@@ -945,7 +1009,7 @@ _Dee_function_generator_gdecref_regx(struct Dee_function_generator *__restrict s
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_function_generator_gdecref_dokill_regx(struct Dee_function_generator *__restrict self,
+_Dee_function_generator_gdecref_regx_dokill(struct Dee_function_generator *__restrict self,
                                             Dee_host_register_t regno, ptrdiff_t reg_offset) {
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
@@ -1083,7 +1147,7 @@ err:
 }
 
 INTDEF WUNUSED NONNULL((1)) int DCALL
-_Dee_host_section_gxdecref_regx_nokill(struct Dee_host_section *__restrict self,
+_Dee_host_section_gxdecref_nokill_regx(struct Dee_host_section *__restrict self,
                                        Dee_host_register_t regno,
                                        ptrdiff_t reg_offset, Dee_refcnt_t n) {
 	uint8_t reg86;
@@ -1190,7 +1254,7 @@ _Dee_function_generator_gloc_no_Pax(struct Dee_function_generator *__restrict se
 		lockreg = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(lockreg >= HOST_REGISTER_COUNT)
 			goto err;
-		if unlikely(_Dee_function_generator_gmov_reg2reg(self, HOST_REGISTER_PAX, lockreg))
+		if unlikely(Dee_function_generator_gmov_reg2reg(self, HOST_REGISTER_PAX, lockreg))
 			goto err;
 		state = self->fg_state;
 		if (Dee_memstate_isinstate(state, loc)) {
@@ -2016,20 +2080,21 @@ err:
  * If stack memory gets allocated, zero-initialize it. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_host_section_ghstack_adjust(struct Dee_host_section *__restrict self,
-                                 ptrdiff_t alloc_delta) {
-	if (alloc_delta < 0) {
+                                 ptrdiff_t sp_delta) {
+	if (sp_delta > 0) {
 		/* Release stack memory. */
-		ASSERT(IS_ALIGNED((uintptr_t)(-alloc_delta), HOST_SIZEOF_POINTER));
+		ASSERT(IS_ALIGNED((uintptr_t)sp_delta, HOST_SIZEOF_POINTER));
 		if unlikely(Dee_host_section_reqx86(self, 1))
 			goto err;
-		gen86_printf("add" Plq "\t$%Id, %%" Per "sp\n", -alloc_delta);
-		gen86_addP_imm_r(p_pc(self), -alloc_delta, GEN86_R_PSP);
-	} else if (alloc_delta > 0) {
+		gen86_printf("add" Plq "\t$%Id, %%" Per "sp\n", sp_delta);
+		gen86_addP_imm_r(p_pc(self), sp_delta, GEN86_R_PSP);
+	} else if (sp_delta < 0) {
 		/* Acquire stack memory. */
+		ASSERT(IS_ALIGNED((uintptr_t)(-sp_delta), HOST_SIZEOF_POINTER));
 		if unlikely(Dee_host_section_reqx86(self, 1))
 			goto err;
-		gen86_printf("sub" Plq "\t$%Id, %%" Per "sp\n", alloc_delta);
-		gen86_subP_imm_r(p_pc(self), alloc_delta, GEN86_R_PSP);
+		gen86_printf("sub" Plq "\t$%Id, %%" Per "sp\n", -sp_delta);
+		gen86_subP_imm_r(p_pc(self), -sp_delta, GEN86_R_PSP);
 	}
 	return 0;
 err:

@@ -46,6 +46,12 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
 /* Check if `a' and `b' describe the same host memory location (i.e. are aliasing each other). */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memloc_sameloc(struct Dee_memloc const *a,
@@ -167,6 +173,25 @@ Dee_memloc_setvaldelta(struct Dee_memloc *self, ptrdiff_t delta) {
 		break;
 	default: __builtin_unreachable();
 	}
+}
+
+/* Same as `Dee_memloc_getvaldelta()', but also returns "0" for MEMLOC_TYPE_CONST */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) ptrdiff_t DCALL
+Dee_memloc_getvaldelta_c0(struct Dee_memloc const *self) {
+	switch (self->ml_type) {
+	case MEMLOC_TYPE_HREG:
+	case MEMLOC_TYPE_HSTACK:
+		return self->ml_value.v_hreg.r_off;
+	case MEMLOC_TYPE_HREGIND:
+	case MEMLOC_TYPE_HSTACKIND:
+		return self->ml_value.v_hreg.r_voff;
+	case MEMLOC_TYPE_CONST:
+	case MEMLOC_TYPE_UNALLOC:
+	case MEMLOC_TYPE_UNDEFINED:
+		return 0;
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
 }
 
 
@@ -588,6 +613,10 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 		result = true;
 	}
 
+	/* Constrain memory equivalences by deleting all
+	 * equivalences that aren't present in both states. */
+	result |= Dee_memequivs_constrainwith(&self->ms_memequiv, &other->ms_memequiv);
+
 	return result;
 }
 
@@ -760,6 +789,51 @@ Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
 	        "Incorrect register-in-use numbers");
 }
 #endif /* !NDEBUG */
+
+/* Mark all register equivalences undefined for registers that are not in active use:
+ * >> FOREACH REGNO DO
+ * >>     IF self->ms_rinuse[REGNO] == 0 THEN
+ * >>         Dee_memequivs_undefined_reg(&self->ms_memequiv, REGNO);
+ * >>     FI
+ * >> DONE */
+INTERN NONNULL((1)) void DCALL
+Dee_memstate_remember_undefined_unusedregs(struct Dee_memstate *__restrict self) {
+	size_t i;
+	if (!Dee_memequivs_hasregs(&self->ms_memequiv))
+		return; /* Fast-pass: no registers are in use. */
+	for (i = 0; i <= self->ms_memequiv.meqs_mask; ++i) {
+		struct Dee_memequiv *prev, *next;
+		struct Dee_memequiv *eq = &self->ms_memequiv.meqs_list[i];
+		if (!MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+			continue; /* Not a register location */
+		if (self->ms_rinuse[eq->meq_loc.meql_regno] != 0)
+			continue; /* Register is in use -> don't mark as undefined */
+
+		/* Remove this equivalence entry. */
+		prev = RINGQ_PREV(eq, meq_class);
+		next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->ms_memequiv.meqs_used >= 2);
+		_Dee_memequivs_decrinuse(&self->ms_memequiv, eq->meq_loc.meql_regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(&self->ms_memequiv, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->ms_memequiv.meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->ms_memequiv.meqs_used;
+		}
+	}
+}
+
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL

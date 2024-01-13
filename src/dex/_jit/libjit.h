@@ -624,7 +624,7 @@ struct jit_object_entry {
 	 bcmpc((self)->oe_namestr, rhs_str, rhs_len, sizeof(char)) == 0)
 
 	/*utf-8*/ char const       *oe_namestr;    /* [0..oe_namelen] Name of the object
-	                                            * NOTE: `NULL' indicates an unused/sentinal entry;
+	                                            * NOTE: `NULL' indicates an unused/sentinel entry;
 	                                            *       `ITER_DONE' indicates a deleted entry. */
 	size_t                      oe_namelen;    /* Length of the object name. */
 	dhash_t                     oe_namehsh;    /* Hash of the object name. */
@@ -669,7 +669,7 @@ struct jit_object_entry {
 	 (self)->oe_type == JIT_OBJECT_ENTRY_EXTERN_ATTR    \
 	 ? (void)Dee_Decref((self)->oe_extern_attr.ea_name) \
 	 : (void)0)
-#define jit_object_entry_visit(self)                     \
+#define jit_object_entry_visit(self) \
 	Dee_XVisit((self)->oe_value) /* No need to visit `oe_extern_attr.ea_name' (it's always a string) */
 
 
@@ -1409,7 +1409,7 @@ JITLexer_EvalRValueDecl(JITLexer *__restrict self) {
 
 #define JIT_FUNCTION_FNORMAL   0x0000 /* Normal function flags. */
 #define JIT_FUNCTION_FRETEXPR  0x0001 /* The function's source text describes an arrow-like return expression */
-#define JIT_FUNCTION_FYIELDING 0x0002 /* The function's contains a yield statement. */
+#define JIT_FUNCTION_FYIELDING 0x0002 /* The function contains a yield statement. */
 struct jit_function_object {
 	OBJECT_HEAD
 	/*utf-8*/ char const   *jf_source_start; /* [1..1][const] Source start pointer. */

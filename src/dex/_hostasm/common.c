@@ -38,8 +38,664 @@ DECL_BEGIN
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
+
+/************************************************************************/
+/* Dee_memequivs                                                        */
+/************************************************************************/
+
+INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
+	/* [0] = */ {
+		/* .meq_loc = */ {
+			/* .meql_type  = */ MEMEQUIV_TYPE_UNUSED,
+			/* .meql_regno = */ 0,
+			/* ._meq_zro   = */ { 0, },
+			/* .meql_value = */ { NULL },
+		},
+		/* .meq_valoff = */ 0,
+		/* .meq_class  = */ RINGQ_ENTRY_UNBOUND_INITIALIZER,
+	}
+};
+
+/* Inplace-replace `self->meqs_list' with a copy of itself. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_memequivs_inplace_copy(struct Dee_memequivs *__restrict self) {
+	size_t i, mask = self->meqs_mask;
+	intptr_t delta;
+	struct Dee_memequiv *newmap;
+	newmap = (struct Dee_memequiv *)Dee_Mallocc(mask + 1, sizeof(struct Dee_memequiv));
+	if unlikely(!newmap)
+		goto err;
+
+	/* Copy over the map 1-to-1. */
+	newmap = (struct Dee_memequiv *)memcpyc(newmap, self->meqs_list, mask + 1,
+	                                        sizeof(struct Dee_memequiv));
+
+	/* Adjust ring pointer deltas to point into the map copy. */
+	delta = (intptr_t)((byte_t *)newmap - (byte_t *)self->meqs_list);
+	for (i = 0; i <= mask; ++i) {
+		struct Dee_memequiv *it = &newmap[i];
+		it->meq_class.rqe_prev = (struct Dee_memequiv *)((uintptr_t)it->meq_class.rqe_prev + delta);
+		it->meq_class.rqe_next = (struct Dee_memequiv *)((uintptr_t)it->meq_class.rqe_next + delta);
+	}
+	self->meqs_list = newmap;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
+Dee_memequivs_find(struct Dee_memequivs const *__restrict self,
+                   struct Dee_memequiv_loc const *__restrict eqloc) {
+	uintptr_t hash, perturb, i;
+	hash    = Dee_memequiv_loc_hashof(eqloc);
+	perturb = i = Dee_memequivs_hashst(self, hash);
+	for (;; Dee_memequivs_hashnx(i, perturb)) {
+		struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
+		if (Dee_memequiv_loc_equals(&result->meq_loc, eqloc))
+			return result;
+		if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+			break;
+	}
+	return NULL;
+}
+
+
+PRIVATE NONNULL((1, 2)) void DCALL
+Dee_memequiv_make_undefined(struct Dee_memequivs *__restrict self,
+                            struct Dee_memequiv *__restrict eq) {
+	struct Dee_memequiv *prev = RINGQ_PREV(eq, meq_class);
+	struct Dee_memequiv *next = RINGQ_NEXT(eq, meq_class);
+	ASSERT(self->meqs_used >= 2);
+	if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+	if (prev == next) {
+		/* Removal would leave the class containing only 1 more element
+		 * -> get rid of the class entirely! */
+		if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+			_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+		DBG_memset(prev, 0xcc, sizeof(*prev));
+		DBG_memset(eq, 0xcc, sizeof(*eq));
+		prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+		eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+		self->meqs_used -= 2;
+	} else {
+		/* Remove entry from the class. */
+		RINGQ_REMOVE(eq, meq_class);
+		DBG_memset(eq, 0xcc, sizeof(*eq));
+		eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+		--self->meqs_used;
+	}
+}
+
+/* Check if "ring" contains an element that is *identical*
+ * to "ietm" (including having the same value-offset) */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memequiv_ring_contains_identical(struct Dee_memequiv const *__restrict ring,
+                                     struct Dee_memequiv const *__restrict item) {
+	struct Dee_memequiv const *iter = ring;
+	do {
+		if (Dee_memequiv_loc_equals(&iter->meq_loc, &item->meq_loc))
+			return iter->meq_valoff == item->meq_valoff;
+	} while ((iter = Dee_memequiv_next(iter)) != ring);
+	return false;
+}
+
+/* Constrain equivalences in `self' by deleting all that aren't also present in `other'
+ * @return: true:  At least 1 equivalence had to be deleted.
+ * @return: false: Everything is good! */
+INTERN NONNULL((1, 2)) bool DCALL
+Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
+                            struct Dee_memequivs const *__restrict other) {
+	size_t i;
+	bool result = false;
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		struct Dee_memequiv *eq_other, *eq_iter, *eq_next;
+		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+			continue;
+		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+			continue;
+		eq_other = Dee_memequivs_find(other, &eq->meq_loc);
+		if (!eq_other) {
+			/* Equivalence doesn't exist in "other" -> delete it */
+			Dee_memequiv_make_undefined(self, eq);
+			result = true;
+			continue;
+		}
+
+		/* If value deltas between the 2 equivalences don't match, then
+		 * adjust the delta of all equivalence items in "self" such that
+		 * the delta of "eq" matches "other".
+		 *
+		 * Example:
+		 *    self:  A + 1 <=> B + 2 <=> C + 2
+		 *    other: A + 5 <=> B + 6 <=> C + 7
+		 * The value offsets differ, but the equivalences being described
+		 * are compatible! */
+		if (eq->meq_valoff != eq_other->meq_valoff) {
+			struct Dee_memequiv *iter = eq;
+			ptrdiff_t delta = eq_other->meq_valoff - eq->meq_valoff;
+			do {
+				if (iter->meq_loc.meql_type == MEMEQUIV_TYPE_CONST) {
+					iter->meq_loc.meql_value.v_const = (DeeObject *)((uintptr_t)iter->meq_loc.meql_value.v_const + delta);
+				} else {
+					iter->meq_valoff += delta;
+				}
+			} while ((iter = Dee_memequiv_next(iter)) != eq);
+		}
+
+		/* Compare the equivalence rings of "eq" and "eq_other", and
+		 * remove all locations from "eq" that don't appear *exactly*
+		 * the same way in "eq_other" (including having to have equal
+		 * value offsets) */
+		ASSERT(Dee_memequiv_ring_contains_identical(eq_other, eq));
+		eq_iter = Dee_memequiv_next(eq);
+		ASSERT(eq_iter != eq);
+		do {
+			eq_next = Dee_memequiv_next(eq_iter);
+			if (!Dee_memequiv_ring_contains_identical(eq_other, eq_iter)) {
+				/* Must remove "eq_iter" from "self". */
+				if (MEMEQUIV_TYPE_HASREG(eq_iter->meq_loc.meql_type))
+					_Dee_memequivs_decrinuse(self, eq_iter->meq_loc.meql_regno);
+				ASSERT(RINGQ_PREV(eq_iter, meq_class) != eq_iter);
+				ASSERT(RINGQ_NEXT(eq_iter, meq_class) != eq_iter);
+				ASSERT(RINGQ_NEXT(eq_iter, meq_class) != RINGQ_PREV(eq_iter, meq_class));
+				RINGQ_REMOVE(eq_iter, meq_class);
+				DBG_memset(eq_iter, 0xcc, sizeof(*eq_iter));
+				eq_iter->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+				--self->meqs_used;
+				result = true;
+			}
+		} while ((eq_iter = eq_next) != eq);
+
+		/* Check for special case: "eq" was the only equivalence present in "other"
+		 * -> In this case, we must delete "eq" as well because an equivalence class
+		 *    must always contain at least 2 items! */
+		if (Dee_memequiv_next(eq) == eq) {
+			ASSERT(result);
+			ASSERT(RINGQ_PREV(eq, meq_class) == eq);
+			ASSERT(RINGQ_NEXT(eq, meq_class) == eq);
+			if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+	return result;
+}
+
+
+PRIVATE ATTR_RETNONNULL NONNULL((1, 3)) struct Dee_memequiv *DCALL
+Dee_memequiv_find_insert_dst(struct Dee_memequiv *__restrict map, size_t mask,
+                             struct Dee_memequiv const *item) {
+	uintptr_t hash, perturb, i;
+	hash    = Dee_memequiv_loc_hashof(&item->meq_loc);
+	perturb = i = hash & mask;
+	for (;; Dee_memequivs_hashnx(i, perturb)) {
+		struct Dee_memequiv *dst = &map[i & mask];
+		ASSERT(dst->meq_loc.meql_type != MEMEQUIV_TYPE_DUMMY);
+		if (dst->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+			return dst;
+	}
+}
+
+PRIVATE NONNULL((1, 3)) void DCALL
+Dee_memequiv_rehash(struct Dee_memequiv *__restrict oldmap, size_t oldmask,
+                    struct Dee_memequiv *__restrict newmap, size_t newmask) {
+	size_t i;
+	for (i = 0; i <= newmask; ++i)
+		newmap[i].meq_loc.meql_type = MEMEQUIV_TYPE_UNUSED;
+	for (i = 0; i <= oldmask; ++i) {
+		struct Dee_memequiv *dst_next, *dst_iter, *dst;
+		struct Dee_memequiv *src_next, *src_iter, *src = &oldmap[i];
+		if (src->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED ||
+		    src->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+			continue;
+		ASSERT(RINGQ_PREV(src, meq_class) != src);
+		ASSERT(RINGQ_NEXT(src, meq_class) != src);
+		/* Transfer whole classes at-a-time, so we can easily migrate ring pointers. */
+		src_iter = RINGQ_NEXT(src, meq_class);
+		dst = Dee_memequiv_find_insert_dst(newmap, newmask, src);
+		*dst = *src;
+		src->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+		dst_iter = dst;
+		do {
+			src_next = RINGQ_NEXT(src_iter, meq_class);
+			dst_next = Dee_memequiv_find_insert_dst(newmap, newmask, src_iter);
+			ASSERT(src_iter->meq_loc.meql_type != MEMEQUIV_TYPE_DUMMY);
+			*dst_next = *src_iter;
+			src_iter->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			RINGQ_NEXT(dst_iter, meq_class) = dst_next;
+			RINGQ_PREV(dst_next, meq_class) = dst_iter;
+			dst_iter = dst_next;
+		} while ((src_iter = src_next) != src);
+		RINGQ_NEXT(dst_next, meq_class) = dst;
+		RINGQ_PREV(dst, meq_class) = dst_next;
+	}
+}
+
+/* Search for "eqloc", or create an entry for it if none exists, yet. */
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
+Dee_memequivs_find_or_insert(struct Dee_memequivs *__restrict self,
+                             struct Dee_memequiv_loc const *__restrict eqloc,
+                             bool remove_from_old_class_if_already_present) {
+	struct Dee_memequiv *newslot = NULL;
+	uintptr_t hash, perturb, i;
+	hash    = Dee_memequiv_loc_hashof(eqloc);
+	perturb = i = Dee_memequivs_hashst(self, hash);
+	for (;; Dee_memequivs_hashnx(i, perturb)) {
+		struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
+		if (Dee_memequiv_loc_equals(&result->meq_loc, eqloc)) {
+			if (remove_from_old_class_if_already_present) {
+				struct Dee_memequiv *prev = RINGQ_PREV(result, meq_class);
+				struct Dee_memequiv *next = RINGQ_NEXT(result, meq_class);
+				ASSERT(self->meqs_used >= 2);
+				if (prev == next) {
+					/* Removal would leave the class containing only 1 more element
+					 * -> get rid of the class entirely! */
+					if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+						_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+					DBG_memset(prev, 0xcc, sizeof(*prev));
+					prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+					self->meqs_used -= 1;
+				} else {
+					/* Remove entry from the class, turning it into its own class. */
+					RINGQ_REMOVE(result, meq_class);
+				}
+				RINGQ_INIT(result, meq_class);
+			}
+			return result;
+		}
+		if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED) {
+			if (newslot == NULL) {
+				++self->meqs_size;
+				newslot = result;
+			}
+			break;
+		}
+		if (newslot == NULL && result->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+			newslot = result;
+	}
+
+	/* Location isn't being tracked, yet -> create it now. */
+	newslot->meq_loc    = *eqloc;
+	newslot->meq_valoff = 0;
+	RINGQ_INIT(newslot, meq_class); /* New item is part of a 1-element ring (by default) */
+	++self->meqs_used;
+	if (MEMEQUIV_TYPE_HASREG(eqloc->meql_type))
+		_Dee_memequivs_incrinuse(self, eqloc->meql_regno);
+	return newslot;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+Dee_memequivs_undefined_hregind_for_hreg(struct Dee_memequivs *__restrict self,
+                                         Dee_host_register_t regno) {
+	size_t i;
+	ASSERT(regno < HOST_REGISTER_COUNT);
+	if (self->meqs_regs[regno] == 0)
+		return; /* Nothing uses this register -> nothing to do! */
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *prev, *next;
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HREGIND)
+			continue;
+		if (eq->meq_loc.meql_regno != regno)
+			continue;
+
+		/* Remove this equivalence entry. */
+		prev = RINGQ_PREV(eq, meq_class);
+		next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->meqs_used >= 2);
+		_Dee_memequivs_decrinuse(self, regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+}
+
+
+/* Remember that "to" now contains the same value as "from".
+ * In the even that "to" was already part of another equivalence
+ * class, it will first be removed from that class the same way
+ * a call to `Dee_memequivs_undefined(self, to)' would.
+ * @return: 0 : Success
+ * @return: -1: Error */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_memequivs_movevalue(struct Dee_memequivs *__restrict self,
+                        struct Dee_memloc const *__restrict from,
+                        struct Dee_memloc const *__restrict to) {
+	struct Dee_memequiv *from_eq, *to_eq;
+	struct Dee_memequiv_loc fromloc, toloc;
+	ptrdiff_t from_delta, to_delta;
+	if (!Dee_memequiv_loc_fromloc(&fromloc, from))
+		return 0;
+	if (!Dee_memequiv_loc_fromloc(&toloc, to))
+		return 0;
+	ASSERTF(toloc.meql_type != MEMEQUIV_TYPE_CONST,
+	        "Bad usage: can't move *into* a constant");
+	from_delta = Dee_memloc_getvaldelta_c0(from);
+	to_delta   = Dee_memloc_getvaldelta_c0(to);
+#if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
+	HA_printf("Dee_memequivs_movevalue(");
+	_Dee_memequiv_loc_debug_print(&fromloc, from_delta);
+	Dee_DPRINT(" <=> ");
+	_Dee_memequiv_loc_debug_print(&toloc, to_delta);
+	Dee_DPRINT(")\n");
+	_Dee_memequivs_debug_print(self);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+
+	/* Check for special case: "from" and "to" are the same memory locations.
+	 * In this case, see if there's a difference in value delta between the
+	 * two, and if so: remember that value shift. */
+	if (Dee_memequiv_loc_equals(&fromloc, &toloc)) {
+		ptrdiff_t change_delta = to_delta - from_delta;
+		/* >> ... <==> LOC + X;
+		 * >> LOC + to_delta := LOC + from_delta;
+		 * >> ... <==> LOC + X - from_delta + to_delta; */
+		if (change_delta != 0)
+			Dee_memequivs_deltavalue(self, to, change_delta);
+		return 0;
+	}
+
+	/* Make sure there is enough space in the hash-vector. */
+	ASSERT(self->meqs_used <= self->meqs_size);
+	if (self->meqs_mask <= ((self->meqs_size + 3) * 2)) { /* +3 for +2 (max new entries), +1 (mandatory sentinel) */
+		size_t new_mask = 1;
+		struct Dee_memequiv *new_list;
+		while (new_mask <= ((self->meqs_used + 3) * 2))
+			new_mask = (new_mask << 1) | 1;
+		if (new_mask < 7)
+			new_mask = 7;
+		new_list = (struct Dee_memequiv *)Dee_TryMallocc(new_mask + 1, sizeof(struct Dee_memequiv));
+		if unlikely(!new_list) {
+			new_mask = 1;
+			while (new_mask <= self->meqs_used + 3)
+				new_mask = (new_mask << 1) | 1;
+			if (new_mask == self->meqs_mask)
+				goto vector_is_ready;
+			new_list = (struct Dee_memequiv *)Dee_Mallocc(new_mask + 1, sizeof(struct Dee_memequiv));
+			if unlikely(!new_list)
+				goto err;
+		}
+		Dee_memequiv_rehash(self->meqs_list, self->meqs_mask,
+		                    new_list, new_mask);
+		if (self->meqs_list != (struct Dee_memequiv *)Dee_memequivs_dummy_list)
+			Dee_Free(self->meqs_list);
+		self->meqs_list = new_list;
+		self->meqs_mask = new_mask;
+		self->meqs_used = self->meqs_size; /* Because dummy items were removed. */
+	}
+vector_is_ready:
+
+	/* NOTE: Order here is important in case "to" was already linked to "from",
+	 *       in which case the lookup of "to" might end up making the (old) link
+	 *       of "from" undefined. */
+	to_eq   = Dee_memequivs_find_or_insert(self, &toloc, true);
+	from_eq = Dee_memequivs_find_or_insert(self, &fromloc, false);
+
+	/* Calculate the correct value-offset-delta for "to_eq" */
+	to_eq->meq_valoff = to_delta;
+	to_eq->meq_valoff -= from_delta;
+	to_eq->meq_valoff += from_eq->meq_valoff;
+
+	/* Append `to_eq' onto the equivalence class of `from_eq' */
+	RINGQ_INSERT_AFTER(from_eq, to_eq, meq_class);
+
+	if (to->ml_type == MEMLOC_TYPE_HREG) {
+		/* Special case: when a register value becomes undefined, any knowledge
+		 * about stuff that might be located at indirect locations addressable
+		 * from that register also become undefined. */
+		Dee_memequivs_undefined_hregind_for_hreg(self, to->ml_value.v_hreg.r_regno);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Remember that a value change happend: "loc = loc + delta" */
+INTERN NONNULL((1, 2)) void DCALL
+Dee_memequivs_deltavalue(struct Dee_memequivs *__restrict self,
+                         struct Dee_memloc const *__restrict loc,
+                         ptrdiff_t delta) {
+	struct Dee_memequiv *eq;
+	/* Update the equivalence relation (if there is one) */
+	eq = Dee_memequivs_getclassof(self, loc);
+	if (eq != NULL)
+		eq->meq_valoff += delta;
+}
+
+/* Check if "self" might use register locations. */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+Dee_memequivs_hasregs(struct Dee_memequivs const *__restrict self) {
+	Dee_host_register_t regno;
+	for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
+		if (self->meqs_regs[regno] != 0)
+			return true;
+	}
+	return false;
+}
+
+/* Remember that "loc" contains an undefined value (remove
+ * from its equivalence class, should that class still exist).
+ * NOTE: This function ignores the value-delta of "loc" */
+INTERN NONNULL((1, 2)) void DCALL
+Dee_memequivs_undefined(struct Dee_memequivs *__restrict self,
+                        struct Dee_memloc const *__restrict loc) {
+	struct Dee_memequiv *eq;
+#if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
+	struct Dee_memequiv_loc _dbgloc;
+	if likely(Dee_memequiv_loc_fromloc(&_dbgloc, loc)) {
+		HA_printf("Dee_memequivs_undefined(");
+		_Dee_memequiv_loc_debug_print(&_dbgloc, 0);
+		Dee_DPRINT(")\n");
+		_Dee_memequivs_debug_print(self);
+	}
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	eq = Dee_memequivs_getclassof(self, loc);
+	if (eq != NULL) {
+		struct Dee_memequiv *prev = RINGQ_PREV(eq, meq_class);
+		struct Dee_memequiv *next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->meqs_used >= 2);
+		if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+			_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+	if (loc->ml_type == MEMLOC_TYPE_HREG) {
+		/* Special case: when a register value becomes undefined, any knowledge
+		 * about stuff that might be located at indirect locations addressable
+		 * from that register also become undefined. */
+		Dee_memequivs_undefined_hregind_for_hreg(self, loc->ml_value.v_hreg.r_regno);
+	}
+}
+
+/* Mark all HREG and HREGIND locations as undefined. */
+INTERN NONNULL((1)) void DCALL
+Dee_memequivs_undefined_allregs(struct Dee_memequivs *__restrict self) {
+	size_t i;
+#if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
+	HA_printf("Dee_memequivs_undefined_allregs()\n");
+	_Dee_memequivs_debug_print(self);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+	if (!Dee_memequivs_hasregs(self))
+		return; /* Fast-pass: no registers are in use. */
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *prev, *next;
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		if (!MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+			continue;
+
+		/* Remove this equivalence entry. */
+		prev = RINGQ_PREV(eq, meq_class);
+		next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->meqs_used >= 2);
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+}
+
+/* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset' as undefined. */
+INTERN NONNULL((1)) void DCALL
+Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
+                                        uintptr_t min_cfa_offset) {
+	size_t i;
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *prev, *next;
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HSTACKIND)
+			continue;
+		if (eq->meq_loc.meql_value.v_cfa < min_cfa_offset)
+			continue;
+
+		/* Remove this equivalence entry. */
+		prev = RINGQ_PREV(eq, meq_class);
+		next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->meqs_used >= 2);
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+}
+
+/* Mark all HSTACKIND locations where [Dee_memequiv_getcfastart()...Dee_memequiv_getcfaend())
+ * overlaps with [start_cfa_offset, end_cfa_offset) as undefined. */
+INTERN NONNULL((1)) void DCALL
+Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
+                                          uintptr_t start_cfa_offset,
+                                          uintptr_t end_cfa_offset) {
+	size_t i;
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv *prev, *next;
+		struct Dee_memequiv *eq = &self->meqs_list[i];
+		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HSTACKIND)
+			continue;
+		if (!(Dee_memequiv_getcfaend(eq) > start_cfa_offset &&
+		      Dee_memequiv_getcfastart(eq) < end_cfa_offset))
+			continue; /* Not affected */
+
+		/* Remove this equivalence entry. */
+		prev = RINGQ_PREV(eq, meq_class);
+		next = RINGQ_NEXT(eq, meq_class);
+		ASSERT(self->meqs_used >= 2);
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		if (prev == next) {
+			/* Removal would leave the class containing only 1 more element
+			 * -> get rid of the class entirely! */
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			DBG_memset(prev, 0xcc, sizeof(*prev));
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			self->meqs_used -= 2;
+		} else {
+			/* Remove entry from the class. */
+			RINGQ_REMOVE(eq, meq_class);
+			DBG_memset(eq, 0xcc, sizeof(*eq));
+			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			--self->meqs_used;
+		}
+	}
+}
+
+
+
+
+/* Return a pointer to the equivalence location of "loc" (ignoring
+ * value offsets), or `NULL' if there aren't any additional locations
+ * that are known to be equivalent to "loc".
+ *
+ * Equivalent locations can be enumerated via the `meq_class' ring.
+ * NOTE: This function ignores the value-delta of "loc" */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
+Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
+                         struct Dee_memloc const *__restrict loc) {
+	struct Dee_memequiv_loc eqloc;
+	if likely(Dee_memequiv_loc_fromloc(&eqloc, loc)) {
+		uintptr_t hash, perturb, i;
+		hash    = Dee_memequiv_loc_hashof(&eqloc);
+		perturb = i = Dee_memequivs_hashst(self, hash);
+		for (;; Dee_memequivs_hashnx(i, perturb)) {
+			struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
+			if (Dee_memequiv_loc_equals(&result->meq_loc, &eqloc))
+				return result;
+			if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+				break;
+		}
+	}
+	return NULL;
+}
+
+
+
+/************************************************************************/
+/* Dee_memstate                                                         */
+/************************************************************************/
+
 INTERN NONNULL((1)) void DCALL
 Dee_memstate_destroy(struct Dee_memstate *__restrict self) {
+	Dee_memequivs_fini(&self->ms_memequiv);
 	Dee_Free(self->ms_stackv);
 	Dee_memstate_free(self);
 }
@@ -79,7 +735,11 @@ Dee_memstate_copy(struct Dee_memstate *__restrict self) {
 	result->ms_stacka = self->ms_stackc;
 	memcpyc(result->ms_stackv, self->ms_stackv,
 	        self->ms_stackc, sizeof(struct Dee_memloc));
+	if unlikely(_Dee_memequivs_inplace_copy(&result->ms_memequiv))
+		goto err_r_stack;
 	return result;
+err_r_stack:
+	Dee_Free(result->ms_stackv);
 err_r:
 	Dee_memstate_free(result);
 err:
@@ -430,7 +1090,7 @@ Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
 	exit_split = Dee_jump_descriptors_find_lowest_addr(&self->bb_exits, addr);
 	if (exit_split >= self->bb_exits.jds_size) {
 		/* Special case: nothing to transfer */
-		Dee_jump_descriptors_init(&result->bb_exits); /* TODO */
+		Dee_jump_descriptors_init(&result->bb_exits);
 	} else if (exit_split == 0) {
 		/* Special case: transfer everything */
 		memcpy(&result->bb_exits, &self->bb_exits, sizeof(struct Dee_jump_descriptors));
