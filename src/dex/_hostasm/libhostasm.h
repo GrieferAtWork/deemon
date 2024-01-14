@@ -2170,7 +2170,10 @@ Dee_function_generator_vcheckerr(struct Dee_function_generator *__restrict self,
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__restrict self,
-                                              size_t alloc_size);
+                                              size_t alloc_size, bool do_calloc);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcall_DeeObject_Malloc(struct Dee_function_generator *__restrict self,
+                                              size_t alloc_size, bool do_calloc);
 
 /* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
  * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
@@ -2829,6 +2832,16 @@ INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_UnboundAttribute(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cannot_lock_weakref(void);
 INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
+
+/* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.
+ * These functions operate in a situation where "self" hasn't been fully initialized yet (i.e. don't do
+ * locking, and can assume that "self != key && self != value")
+ * @return: * :   Always re-return `self' on success.
+ * @return: NULL: Error (in this case "self" was freed). */
+INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeRoDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeHashSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL libhostasm_rt_DeeRoSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key);
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

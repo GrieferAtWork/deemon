@@ -25,13 +25,18 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/format.h>
+#include <deemon/hashset.h>
 #include <deemon/module.h>
+#include <deemon/rodict.h>
+#include <deemon/roset.h>
 #include <deemon/string.h>
 
 DECL_BEGIN
@@ -318,6 +323,191 @@ libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs) {
 	Dee_Decref(rhs);
 	return result;
 }
+
+
+/* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.
+ * These functions operate in a situation where "self" hasn't been fully initialized yet (i.e. don't do
+ * locking, and can assume that "self != key && self != value")
+ * @return: * :   Always re-return `self' on success.
+ * @return: NULL: Error (in this case "self" was freed). */
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self,
+                                 /*inherit(always)*/ DREF DeeObject *key,
+                                 /*inherit(always)*/ DREF DeeObject *value) {
+	struct Dee_dict_item *it;
+	DeeDictObject *me = (DeeDictObject *)self;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+	ASSERTF(me->d_size == me->d_used, "Should always be equal at this point");
+	ASSERTF(me->d_size < me->d_mask, "Dict too small? (the assembler should have noticed this...)");
+	perturb = i = hash & me->d_mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		it = DeeDict_HashIt(me, i);
+		if (it->di_key == NULL)
+			break;
+		if (it->di_hash == hash) {
+			/* Check for duplicate key. */
+			int temp = DeeObject_CompareEq(it->di_key, key);
+			if unlikely(temp < 0)
+				goto err;
+			if (temp) {
+				/* Duplicate key */
+				Dee_Decref_unlikely(key);
+				Dee_Decref_unlikely(value);
+				return (DeeObject *)me;
+			}
+		}
+	}
+	it->di_key   = key;   /* Inherit reference */
+	it->di_value = value; /* Inherit reference */
+	it->di_hash  = hash;
+	++me->d_size;
+	++me->d_used;
+	return (DeeObject *)me;
+err:
+	/* Decref already-inserted key/value-s */
+	for (i = 0; i <= me->d_mask; ++i) {
+		it = &me->d_elem[i];
+		if (it->di_key) {
+			Dee_Decref_unlikely(it->di_value);
+			Dee_Decref_unlikely(it->di_key);
+		}
+	}
+	Dee_Decref_unlikely(key);
+	Dee_Decref_unlikely(value);
+	Dee_Free(me->d_elem);
+	DeeGCObject_FREE(me); /* DeeType_FreeInstance(&DeeDict_Type, me); */
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+libhostasm_rt_DeeRoDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self,
+                                   /*inherit(always)*/ DREF DeeObject *key,
+                                   /*inherit(always)*/ DREF DeeObject *value) {
+	struct Dee_rodict_item *it;
+	DeeRoDictObject *me = (DeeRoDictObject *)self;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+	ASSERTF(me->rd_size < me->rd_mask, "RoDict too small? (the assembler should have noticed this...)");
+	perturb = i = hash & me->rd_mask;
+	for (;; DeeRoDict_HashNx(i, perturb)) {
+		it = DeeRoDict_HashIt(me, i);
+		if (it->rdi_key == NULL)
+			break;
+		if (it->rdi_hash == hash) {
+			/* Check for duplicate key. */
+			int temp = DeeObject_CompareEq(it->rdi_key, key);
+			if unlikely(temp < 0)
+				goto err;
+			if (temp) {
+				/* Duplicate key */
+				Dee_Decref_unlikely(key);
+				Dee_Decref_unlikely(value);
+				return (DeeObject *)me;
+			}
+		}
+	}
+	it->rdi_key   = key;   /* Inherit reference */
+	it->rdi_value = value; /* Inherit reference */
+	it->rdi_hash  = hash;
+	++me->rd_size;
+	return (DeeObject *)me;
+err:
+	/* Decref already-inserted key/value-s */
+	for (i = 0; i <= me->rd_mask; ++i) {
+		it = &me->rd_elem[i];
+		if (it->rdi_key) {
+			Dee_Decref_unlikely(it->rdi_value);
+			Dee_Decref_unlikely(it->rdi_key);
+		}
+	}
+	Dee_Decref_unlikely(key);
+	Dee_Decref_unlikely(value);
+	DeeObject_Free(me); /* DeeType_FreeInstance(&DeeRoDict_Type, me); */
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+libhostasm_rt_DeeHashSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self,
+                                    /*inherit(always)*/ DREF DeeObject *key) {
+	struct Dee_hashset_item *it;
+	DeeHashSetObject *me = (DeeHashSetObject *)self;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+	ASSERTF(me->hs_size == me->hs_used, "Should always be equal at this point");
+	ASSERTF(me->hs_size < me->hs_mask, "Dict too small? (the assembler should have noticed this...)");
+	perturb = i = hash & me->hs_mask;
+	for (;; DeeHashSet_HashNx(i, perturb)) {
+		it = DeeHashSet_HashIt(me, i);
+		if (it->hsi_key == NULL)
+			break;
+		if (it->hsi_hash == hash) {
+			/* Check for duplicate key. */
+			int temp = DeeObject_CompareEq(it->hsi_key, key);
+			if unlikely(temp < 0)
+				goto err;
+			if (temp) {
+				/* Duplicate key */
+				Dee_Decref_unlikely(key);
+				return (DeeObject *)me;
+			}
+		}
+	}
+	it->hsi_key  = key; /* Inherit reference */
+	it->hsi_hash = hash;
+	++me->hs_size;
+	++me->hs_used;
+	return (DeeObject *)me;
+err:
+	/* Decref already-inserted keys */
+	for (i = 0; i <= me->hs_mask; ++i) {
+		it = &me->hs_elem[i];
+		if (it->hsi_key)
+			Dee_Decref_unlikely(it->hsi_key);
+	}
+	Dee_Decref_unlikely(key);
+	Dee_Free(me->hs_elem);
+	DeeGCObject_FREE(me); /* DeeType_FreeInstance(&DeeHashSet_Type, me); */
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+libhostasm_rt_DeeRoSet_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self,
+                                  /*inherit(always)*/ DREF DeeObject *key) {
+	struct Dee_roset_item *it;
+	DeeRoSetObject *me = (DeeRoSetObject *)self;
+	Dee_hash_t i, perturb, hash = DeeObject_Hash(key);
+	ASSERTF(me->rs_size < me->rs_mask, "Dict too small? (the assembler should have noticed this...)");
+	perturb = i = hash & me->rs_mask;
+	for (;; DeeRoSet_HashNx(i, perturb)) {
+		it = DeeRoSet_HashIt(me, i);
+		if (it->rsi_key == NULL)
+			break;
+		if (it->rsi_hash == hash) {
+			/* Check for duplicate key. */
+			int temp = DeeObject_CompareEq(it->rsi_key, key);
+			if unlikely(temp < 0)
+				goto err;
+			if (temp) {
+				/* Duplicate key */
+				Dee_Decref_unlikely(key);
+				return (DeeObject *)me;
+			}
+		}
+	}
+	it->rsi_key  = key; /* Inherit reference */
+	it->rsi_hash = hash;
+	++me->rs_size;
+	return (DeeObject *)me;
+err:
+	/* Decref already-inserted keys */
+	for (i = 0; i <= me->rs_mask; ++i) {
+		it = &me->rs_elem[i];
+		if (it->rsi_key)
+			Dee_Decref_unlikely(it->rsi_key);
+	}
+	Dee_Decref_unlikely(key);
+	DeeObject_Free(me); /* DeeType_FreeInstance(&DeeRoSet_Type, me); */
+	return NULL;
+}
+
 
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */

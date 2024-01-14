@@ -1536,6 +1536,26 @@ vcall_DeeType_FreeInstance(struct Dee_function_generator *__restrict self,
 	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_VOID, 1);
 }
 
+struct Dee_function_exceptinject_freeinstance {
+	struct Dee_function_exceptinject fei_fi_base; /* Underlying injector */
+	DeeTypeObject                   *fei_fi_type; /* [1..1] The type of whom an instance should be free'd */
+};
+
+#define Dee_function_generator_xinject_push_freeinstance(self, ij, type)       \
+	((ij)->fei_fi_base.fei_inject = &Dee_function_exceptinject_freeinstance_f, \
+	 (ij)->fei_fi_type            = (type),                                    \
+	 Dee_function_generator_xinject_push(self, &(ij)->fei_fi_base))
+#define Dee_function_generator_xinject_pop_freeinstance(self, ij) \
+	Dee_function_generator_xinject_pop(self, &(ij)->fei_fi_base)
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_function_exceptinject_freeinstance' */
+Dee_function_exceptinject_freeinstance_f(struct Dee_function_generator *__restrict self,
+                                         struct Dee_function_exceptinject *__restrict inject) {
+	struct Dee_function_exceptinject_freeinstance *me;
+	me = (struct Dee_function_exceptinject_freeinstance *)inject;
+	return vcall_DeeType_FreeInstance(self, me->fei_fi_type);
+}
+
 struct Dee_function_exceptinject_fini_and_freeinstance {
 	struct Dee_function_exceptinject fei_fafi_base; /* Underlying injector */
 	DeeTypeObject                   *fei_fafi_type; /* [1..1] The type of whom an instance should be free'd */
@@ -2282,13 +2302,13 @@ vnew_ObjMethod(struct Dee_function_generator *__restrict self,
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 		/* Inline the call to `DeeObjMethod_New()' / `DeeKwObjMethod_New()' */
 		STATIC_ASSERT(sizeof(DeeObjMethodObject) == sizeof(DeeKwObjMethodObject));
-		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeObjMethodObject))); /* this, ref:result */
-		DO(Dee_function_generator_vswap(self));                                              /* ref:result, this */
-		DO(Dee_function_generator_vref2(self, 2));                                           /* ref:result, ref:this */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_this)));     /* ref:result */
-		DO(Dee_function_generator_vpush_addr(self, (void const *)method));                   /* ref:result, method */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_func)));     /* ref:result */
-		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, wrapper_type));               /* ref:result */
+		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeObjMethodObject), false)); /* this, ref:result */
+		DO(Dee_function_generator_vswap(self));                                                     /* ref:result, this */
+		DO(Dee_function_generator_vref2(self, 2));                                                  /* ref:result, ref:this */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_this)));            /* ref:result */
+		DO(Dee_function_generator_vpush_addr(self, (void const *)method));                          /* ref:result, method */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeObjMethodObject, om_func)));            /* ref:result */
+		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, wrapper_type));                      /* ref:result */
 	} else {
 		DO(Dee_function_generator_vpush_addr(self, (void const *)method)); /* this, method */
 		DO(Dee_function_generator_vswap(self));                            /* method, this */
@@ -2327,14 +2347,14 @@ vnew_InstanceMethod(struct Dee_function_generator *__restrict self) {
 	}
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 		/* Inline the behavior of `DeeInstanceMethod_New()' */
-		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeInstanceMethodObject))); /* func, this, ref:result */
-		DO(Dee_function_generator_vlrot(self, 3));                                                /* this, ref:result, func */
-		DO(Dee_function_generator_vref2(self, 3));                                                /* this, ref:result, ref:func */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_func)));     /* this, ref:result */
-		DO(Dee_function_generator_vswap(self));                                                   /* ref:result, this */
-		DO(Dee_function_generator_vref2(self, 2));                                                /* ref:result, ref:this */
-		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_this)));     /* ref:result */
-		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeInstanceMethod_Type));         /* ref:result */
+		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeInstanceMethodObject), false)); /* func, this, ref:result */
+		DO(Dee_function_generator_vlrot(self, 3));                                                       /* this, ref:result, func */
+		DO(Dee_function_generator_vref2(self, 3));                                                       /* this, ref:result, ref:func */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_func)));            /* this, ref:result */
+		DO(Dee_function_generator_vswap(self));                                                          /* ref:result, this */
+		DO(Dee_function_generator_vref2(self, 2));                                                       /* ref:result, ref:this */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeInstanceMethodObject, im_this)));            /* ref:result */
+		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeInstanceMethod_Type));                /* ref:result */
 	} else {
 		DO(Dee_function_generator_vnotoneref(self, 2));                                        /* func, this */
 		DO(Dee_function_generator_vcallapi(self, &DeeInstanceMethod_New, VCALL_CC_OBJECT, 2)); /* result */
@@ -2458,7 +2478,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 			/* Construct the object at runtime. */
 			if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM)
 				DO(Dee_function_generator_vpop(self)); /* N/A */
-			DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeePropertyObject))); /* [this], ref:result */
+			DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeePropertyObject), false)); /* [this], ref:result */
 			if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
 				DO(Dee_function_generator_grwlock_read_const(self, &desc->cd_lock));             /* ref:result */
 				DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[item->ca_addr + Dee_CLASS_GETSET_GET])); /* ref:result, &GETTER */
@@ -4364,6 +4384,397 @@ Dee_function_generator_vmorph_uint(struct Dee_function_generator *__restrict sel
 
 
 /* [elems...] -> seq */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+vpack_map_or_set_at_runtime(struct Dee_function_generator *__restrict self,
+                            DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc) {
+	/* Initialize a known built-in mapping/set type from a set of keys[/values] stored on the v-stack.
+	 * NOTE: items where the key is a constant (and has a constexpr OPERATOR_HASH) can
+	 *       have their hash values be calculated at compile-time and filled in as-is.
+	 *
+	 * Example:
+	 * >> local x = Dict({ "a": x, foo: bar, "c": y });
+	 *
+	 * Compile as:
+	 * >> DeeDictObject *d = DeeType_AllocInstance(&DeeDict_Type);
+	 * >> if (!d) HANDLE_EXCEPT();
+	 * >> d->d_elem = Dee_Callocc(REQ_MASK, sizeof(struct Dee_dict_item));
+	 * >> if (!d->d_elem) { DeeType_FreeInstance(d); HANDLE_EXCEPT(); }
+	 * >> d->d_mask = REQ_MASK;
+	 * >> d->d_size = NUMBER_OF_DISTINCT_CONSTANT_KEYS;
+	 * >> d->d_used = NUMBER_OF_DISTINCT_CONSTANT_KEYS;
+	 * >> d->d_elem[HASHOF_CONSTANT_key1 & REQ_MASK].di_key   = CONSTANT_key1;       // inherit reference
+	 * >> d->d_elem[HASHOF_CONSTANT_key1 & REQ_MASK].di_value = CONSTANT_key1_value; // inherit reference
+	 * >> d->d_elem[HASHOF_CONSTANT_key1 & REQ_MASK].di_hash  = HASHOF_CONSTANT_key1;
+	 * >> d->d_elem[HASHOF_CONSTANT_key2 & REQ_MASK].di_key   = CONSTANT_key2;       // inherit reference
+	 * >> d->d_elem[HASHOF_CONSTANT_key2 & REQ_MASK].di_value = CONSTANT_key2_value; // inherit reference
+	 * >> d->d_elem[HASHOF_CONSTANT_key2 & REQ_MASK].di_hash  = HASHOF_CONSTANT_key2;
+	 * >> [...] // Repeat for all constant keys
+	 * >>
+	 * >> DeeDictObject *chain_d = d;
+	 * >> chain_d = libhostasm_rt_DeeDict_InsertFast(chain_d, NON_CONSTANT_key1, NON_CONSTANT_key1_value);
+	 * >> if (!chain_d) HANDLE_EXCEPT();
+	 * >> chain_d = libhostasm_rt_DeeDict_InsertFast(chain_d, NON_CONSTANT_key2, NON_CONSTANT_key2_value);
+	 * >> if (!chain_d) HANDLE_EXCEPT();
+	 * >> [...] // Repeat for all non-constant keys
+	 * >>
+	 * >> d->d_lock = DEE_ATOMIC_RWLOCK_INIT;
+	 * >> d->ob_weakrefs = Dee_WEAKREF_SUPPORT_INIT;
+	 * >> DeeObject_Init(d, &DeeDict_Type);
+	 * >> RESULT = DeeGC_Track(d);
+	 */
+	struct hashmap_template_item {
+		DeeObject       *ti_key;   /* [0..1] Compile-time constant key (or NULL if this is a dummy item) */
+		Dee_hash_t       ti_hash;  /* [valid_if(ti_key)] The hash for "ti_key" (in the form of a snapshot) */
+		Dee_vstackaddr_t ti_value; /* [valid_if(:asmap)] V-stack address of the value linked to "ti_key" */
+	};
+	struct seq_object_info {
+		size_t      soi_sizeof_DeeSeqObject;                 /* sizeof(DeeDictObject)  (set to 0 if TP_FVARIABLE) */
+		size_t      soi_offsetof_d_mask;                     /* offsetof(DeeDictObject, d_mask) */
+		size_t      soi_offsetof_d_size;                     /* offsetof(DeeDictObject, d_size) */
+		size_t      soi_offsetof_d_used;                     /* offsetof(DeeDictObject, d_used) (set to 0 for read-only types) */
+		size_t      soi_offsetof_d_elem;                     /* offsetof(DeeDictObject, d_elem) */
+		size_t      soi_sizeof_dict_item;                    /* sizeof(struct Dee_dict_item) */
+		size_t      soi_offsetof_dict_item__di_key;          /* offsetof(struct Dee_dict_item, di_key) */
+		size_t      soi_offsetof_dict_item__di_hash;         /* offsetof(struct Dee_dict_item, di_hash) */
+		size_t      soi_offsetof_dict_item__di_value;        /* offsetof(struct Dee_dict_item, di_value)  (set to 0 for set types) */
+		void const *soi_libhostasm_rt_DeeSeqType_InsertFast; /* &libhostasm_rt_DeeDict_InsertFast */
+	};
+	struct seq_object_info const *soi;
+	struct hashmap_template_item *result_d_elem_template;
+	struct Dee_memloc *elemv;
+	bool asmap = (seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type);
+	bool is_ro = (seq_type->tp_flags & TP_FVARIABLE) != 0;
+	bool use_calloc_for_d_elem;
+	size_t result_d_size, result_d_maxsize;
+	size_t result_d_mask, result_d_minmask;
+	Dee_vstackaddr_t i;
+
+	ASSERT(!!is_ro == !!(seq_type == &DeeRoDict_Type || seq_type == &DeeRoSet_Type));
+	if (seq_type == &DeeDict_Type) {
+		PRIVATE struct seq_object_info dict_soi = {
+			/* .soi_sizeof_DeeSeqObject                 = */ sizeof(DeeDictObject),
+			/* .soi_offsetof_d_mask                     = */ offsetof(DeeDictObject, d_mask),
+			/* .soi_offsetof_d_size                     = */ offsetof(DeeDictObject, d_size),
+			/* .soi_offsetof_d_used                     = */ offsetof(DeeDictObject, d_used),
+			/* .soi_offsetof_d_elem                     = */ offsetof(DeeDictObject, d_elem),
+			/* .soi_sizeof_dict_item                    = */ sizeof(struct Dee_dict_item),
+			/* .soi_offsetof_dict_item__di_key          = */ offsetof(struct Dee_dict_item, di_key),
+			/* .soi_offsetof_dict_item__di_hash         = */ offsetof(struct Dee_dict_item, di_hash),
+			/* .soi_offsetof_dict_item__di_value        = */ offsetof(struct Dee_dict_item, di_value),
+			/* .soi_libhostasm_rt_DeeSeqType_InsertFast = */ (void const *)&libhostasm_rt_DeeDict_InsertFast
+		};
+		soi = &dict_soi;
+	} else if (seq_type == &DeeRoDict_Type) {
+		PRIVATE struct seq_object_info rodict_soi = {
+			/* .soi_sizeof_DeeSeqObject                 = */ 0,
+			/* .soi_offsetof_d_mask                     = */ offsetof(DeeRoDictObject, rd_mask),
+			/* .soi_offsetof_d_size                     = */ offsetof(DeeRoDictObject, rd_size),
+			/* .soi_offsetof_d_used                     = */ 0,
+			/* .soi_offsetof_d_elem                     = */ offsetof(DeeRoDictObject, rd_elem),
+			/* .soi_sizeof_dict_item                    = */ sizeof(struct Dee_rodict_item),
+			/* .soi_offsetof_dict_item__di_key          = */ offsetof(struct Dee_rodict_item, rdi_key),
+			/* .soi_offsetof_dict_item__di_hash         = */ offsetof(struct Dee_rodict_item, rdi_hash),
+			/* .soi_offsetof_dict_item__di_value        = */ offsetof(struct Dee_rodict_item, rdi_value),
+			/* .soi_libhostasm_rt_DeeSeqType_InsertFast = */ (void const *)&libhostasm_rt_DeeRoDict_InsertFast
+		};
+		soi = &rodict_soi;
+	} else if (seq_type == &DeeHashSet_Type) {
+		PRIVATE struct seq_object_info hashset_soi = {
+			/* .soi_sizeof_DeeSeqObject                 = */ sizeof(DeeHashSetObject),
+			/* .soi_offsetof_d_mask                     = */ offsetof(DeeHashSetObject, hs_mask),
+			/* .soi_offsetof_d_size                     = */ offsetof(DeeHashSetObject, hs_size),
+			/* .soi_offsetof_d_used                     = */ offsetof(DeeHashSetObject, hs_used),
+			/* .soi_offsetof_d_elem                     = */ offsetof(DeeHashSetObject, hs_elem),
+			/* .soi_sizeof_dict_item                    = */ sizeof(struct Dee_hashset_item),
+			/* .soi_offsetof_dict_item__di_key          = */ offsetof(struct Dee_hashset_item, hsi_key),
+			/* .soi_offsetof_dict_item__di_hash         = */ offsetof(struct Dee_hashset_item, hsi_hash),
+			/* .soi_offsetof_dict_item__di_value        = */ 0,
+			/* .soi_libhostasm_rt_DeeSeqType_InsertFast = */ (void const *)&libhostasm_rt_DeeHashSet_InsertFast
+		};
+		soi = &hashset_soi;
+	} else {
+		PRIVATE struct seq_object_info roset_soi = {
+			/* .soi_sizeof_DeeSeqObject                 = */ 0,
+			/* .soi_offsetof_d_mask                     = */ offsetof(DeeRoSetObject, rs_mask),
+			/* .soi_offsetof_d_size                     = */ offsetof(DeeRoSetObject, rs_size),
+			/* .soi_offsetof_d_used                     = */ 0,
+			/* .soi_offsetof_d_elem                     = */ offsetof(DeeRoSetObject, rs_elem),
+			/* .soi_sizeof_dict_item                    = */ sizeof(struct Dee_roset_item),
+			/* .soi_offsetof_dict_item__di_key          = */ offsetof(struct Dee_roset_item, rsi_key),
+			/* .soi_offsetof_dict_item__di_hash         = */ offsetof(struct Dee_roset_item, rsi_hash),
+			/* .soi_offsetof_dict_item__di_value        = */ 0,
+			/* .soi_libhostasm_rt_DeeSeqType_InsertFast = */ (void const *)&libhostasm_rt_DeeRoSet_InsertFast
+		};
+		ASSERT(seq_type == &DeeRoSet_Type);
+		soi = &roset_soi;
+	}
+
+again:
+	use_calloc_for_d_elem = true;
+	result_d_maxsize = asmap ? (size_t)(elemc / 2) : (size_t)elemc;
+	result_d_minmask = 1;
+	while ((result_d_maxsize & result_d_minmask) != result_d_maxsize)
+		result_d_minmask = (result_d_minmask << 1) | 1;
+	result_d_mask = result_d_minmask;
+	if (!is_ro) {
+		if (result_d_mask < 16 - 1)
+			result_d_mask = 16 - 1;
+		/* Prefer using a mask of one greater level to improve performance. */
+		result_d_mask = (result_d_mask << 1) | 1;
+	}
+
+	/* Figure out the template for how the initial result map should look like. */
+	result_d_elem_template = (struct hashmap_template_item *)Dee_Callocac(result_d_mask + 1,
+	                                                                      sizeof(struct hashmap_template_item));
+	if unlikely(!result_d_elem_template)
+		goto err_no_result_d_elem_template;
+	result_d_size = 0;
+	elemv = self->fg_state->ms_stackv + self->fg_state->ms_stackc - elemc;
+	for (i = 0; i < elemc;) {
+		struct Dee_memloc *keyloc = &elemv[i];
+		if (keyloc->ml_type == MEMLOC_TYPE_CONST &&
+		    DeeType_IsOperatorConstexpr(Dee_TYPE(keyloc->ml_value.v_const), OPERATOR_HASH) &&
+		    DeeType_IsOperatorConstexpr(Dee_TYPE(keyloc->ml_value.v_const), OPERATOR_EQ)) {
+			struct hashmap_template_item *it;
+			Dee_vstackaddr_t key_voffset;
+			DeeObject *key = keyloc->ml_value.v_const;
+			Dee_hash_t template_i, perturb, hash = DeeObject_Hash(key);
+			key_voffset = (Dee_vstackaddr_t)((self->fg_state->ms_stackv +
+			                                  self->fg_state->ms_stackc) -
+			                                 keyloc);
+			perturb = template_i = hash & result_d_mask;
+			for (;; seq_type == &DeeDict_Type
+			        ? DeeDict_HashNx(template_i, perturb)
+			        : seq_type == &DeeHashSet_Type
+			          ? DeeHashSet_HashNx(template_i, perturb)
+			          : seq_type == &DeeRoDict_Type
+			            ? DeeRoDict_HashNx(template_i, perturb)
+			            : DeeRoSet_HashNx(template_i, perturb)) {
+				it = &result_d_elem_template[template_i & result_d_mask];
+				if (!it->ti_key)
+					break;
+
+				if (it->ti_hash == hash) {
+					/* Check if this is a duplicate key. */
+					int temp = DeeObject_CompareEq(it->ti_key, key);
+					if unlikely(temp < 0) {
+						if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR))
+							goto err;
+						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+						goto next_key;
+					} else if (temp) {
+						/* Duplicate key (just get rid of this second instance by removing it from the v-stack) */
+						if (asmap) {
+							ASSERT(key_voffset >= 2);
+							DO(Dee_function_generator_vlrot(self, key_voffset - 1));
+							DO(Dee_function_generator_vpop(self));
+							--key_voffset;
+							--elemc;
+						}
+						DO(Dee_function_generator_vlrot(self, key_voffset));
+						DO(Dee_function_generator_vpop(self));
+						Dee_Freea(result_d_elem_template);
+						--elemc;
+						goto again;
+					}
+				}
+			}
+
+			/* Remember where this key goes in the template. */
+			it->ti_key   = key;
+			it->ti_hash  = hash;
+			it->ti_value = (Dee_vstackaddr_t)(keyloc - self->fg_state->ms_stackv);
+			++result_d_size;
+			ASSERT(result_d_size < result_d_mask);
+
+			/* Pop the key from the v-stack (but keep the value in case this is a map). */
+			DO(Dee_function_generator_vlrot(self, key_voffset));
+			DO(Dee_function_generator_vpop(self));
+			--elemc;
+		} else {
+next_key:
+			++i;
+		}
+		if (asmap)
+			++i;
+	}
+
+	/* HINT: At this point, the vstack looks like this:
+	 * >> CONSTANT_key1_value, CONSTANT_key2_value, [...], NON_CONSTANT_key1, NON_CONSTANT_key1_value, [...] */
+
+	/* If less than 1/3 of elements in the template are NULL-entries, then don't use CALLOC
+	 * when allocating the d_elem vector, but MALLOC, and generate code to NULL out the keys
+	 * of unused template elements. */
+	{
+		size_t num_items = (result_d_mask + 1);
+		size_t num_null_items;
+		ASSERT(num_items > result_d_size); /* > because there always needs to be 1 extra NULL item */
+		num_null_items = num_items - result_d_size;
+		if ((num_null_items * 3) <= result_d_size)
+			use_calloc_for_d_elem = false;
+	}
+
+	/* Generate code to allocate an instance of the dict/set. */
+	if (is_ro) {
+		size_t sz = soi->soi_offsetof_d_elem + ((result_d_mask + 1) * soi->soi_sizeof_dict_item);
+		ASSERT(seq_type == &DeeRoDict_Type || seq_type == &DeeRoSet_Type);
+		DO(Dee_function_generator_vcall_DeeObject_Malloc(self, sz, use_calloc_for_d_elem)); /* [elems...], d */
+		DO(Dee_function_generator_vdup(self));                                              /* [elems...], d, d */
+		DO(Dee_function_generator_vdelta(self, soi->soi_offsetof_d_elem));                  /* [elems...], d, d->d_elem */
+	} else {
+		struct Dee_function_exceptinject_freeinstance ij;
+		size_t sz = (result_d_mask + 1) * soi->soi_sizeof_dict_item;
+		ASSERT(seq_type == &DeeDict_Type || seq_type == &DeeHashSet_Type);
+
+		/* Allocate the hash-vector for the dict/hashset */
+		DO(vcall_DeeType_AllocInstance(self, seq_type));   /* [elems...], d */
+		Dee_function_generator_xinject_push_freeinstance(self, &ij, seq_type);
+		DO(Dee_function_generator_vpush_immSIZ(self, sz)); /* [elems...], d, sz */
+		DO(Dee_function_generator_vcallapi(self,           /* [elems...], d, UNCHECKED(d_elem) */
+		                                   use_calloc_for_d_elem ? &Dee_Calloc
+		                                                         : &Dee_Malloc,
+		                                   VCALL_CC_OBJECT, 1));
+		DO(Dee_function_generator_vdirect(self, 1));                        /* [elems...], d, NOT_ASSIGNED(d_elem) */
+		Dee_function_generator_xinject_pop_freeinstance(self, &ij);
+		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;      /* [elems...], d, NOT_ASSIGNED(d_elem) */
+		DO(Dee_function_generator_vswap(self));                             /* [elems...], NOT_ASSIGNED(d_elem), d */
+		DO(Dee_function_generator_vdup_n(self, 2));                         /* [elems...], NOT_ASSIGNED(d_elem), d, NOT_ASSIGNED(d_elem) */
+		DO(Dee_function_generator_vpopind(self, soi->soi_offsetof_d_elem)); /* [elems...], d_elem, d */
+		DO(Dee_function_generator_vswap(self));                             /* [elems...], d, d_elem */
+	}                                                                       /* [elems...], d, d_elem */
+
+	/* Initialize fields of the dict:
+	 * - d_mask = result_d_mask
+	 * - d_size = result_d_size
+	 * - d_used = result_d_size
+	 * These fields must be initialized before we fill in non-constant keys,
+	 * as `soi_libhostasm_rt_DeeSeqType_InsertFast()' relies on these fields
+	 * already being initialized. */
+	DO(Dee_function_generator_vswap(self));                             /* [elems...], d_elem, d */
+	DO(Dee_function_generator_vpush_immSIZ(self, result_d_mask));       /* [elems...], d_elem, d, result_d_mask */
+	DO(Dee_function_generator_vpopind(self, soi->soi_offsetof_d_mask)); /* [elems...], d_elem, d */
+	DO(Dee_function_generator_vpush_immSIZ(self, result_d_size));       /* [elems...], d_elem, d, result_d_size */
+	DO(Dee_function_generator_vpopind(self, soi->soi_offsetof_d_size)); /* [elems...], d_elem, d */
+	if (soi->soi_offsetof_d_used) {
+		DO(Dee_function_generator_vpush_immSIZ(self, result_d_size));       /* [elems...], d_elem, d, result_d_size */
+		DO(Dee_function_generator_vpopind(self, soi->soi_offsetof_d_used)); /* [elems...], d_elem, d */
+	}
+	DO(Dee_function_generator_vswap(self));                             /* [elems...], d, d_elem */
+
+	/* Generate code to populate "d_elem" from the template. */
+	{
+		size_t template_i;
+		for (template_i = 0; template_i <= result_d_mask; ++template_i) {
+			struct hashmap_template_item *it = &result_d_elem_template[template_i];
+			size_t offsetof_it;
+			if (it->ti_key == NULL && use_calloc_for_d_elem)
+				continue; /* Already correctly initialized. */
+			offsetof_it = soi->soi_sizeof_dict_item * (size_t)(it - result_d_elem_template);
+			DO(Dee_function_generator_vpush_addr(self, it->ti_key));                                      /* [elems...], d, d_elem, key */
+			DO(Dee_function_generator_vref2(self, 1));                                                    /* [elems...], d, d_elem, ref:key */
+			DO(Dee_function_generator_vpopind(self, offsetof_it + soi->soi_offsetof_dict_item__di_key));  /* [elems...], d, d_elem */
+			if (it->ti_key == NULL)
+				continue; /* Filling in the key is enough. */
+			if (asmap) {
+				size_t template_j;
+				Dee_vstackaddr_t it_value_offset;
+				/* Rotate the value for the key into VTOP */
+				it_value_offset = self->fg_state->ms_stackc - it->ti_value;
+				DO(Dee_function_generator_vlrot(self, it_value_offset));                                       /* [elems...], d, d_elem, value */
+				DO(Dee_function_generator_vref2(self, 1));                                                     /* [elems...], d, d_elem, ref:value */
+				DO(Dee_function_generator_vpopind(self, offsetof_it + soi->soi_offsetof_dict_item__di_value)); /* [elems...], d, d_elem */
+				--elemc;
+				/* Adjust VSTACK addresses of template items that still need to be written to the dict. */
+				for (template_j = template_i + 1; template_j <= result_d_mask; ++template_j) {
+					struct hashmap_template_item *it_j = &result_d_elem_template[template_j];
+					if (it_j->ti_key && it_j->ti_value >= it->ti_value)
+						--it_j->ti_value;
+				}
+			}
+			DO(Dee_function_generator_vpush_immSIZ(self, it->ti_hash));                                   /* [elems...], d, d_elem, hash */
+			DO(Dee_function_generator_vpopind(self, offsetof_it + soi->soi_offsetof_dict_item__di_hash)); /* [elems...], d, d_elem */
+		}
+	}
+
+	/* HINT: At this point, the vstack looks like this (with "elemc" non-constant key[/value-pair]s):
+	 * >> NON_CONSTANT_key1, NON_CONSTANT_key1_value, [...], d, d_elem  */
+
+	/* Generate code to insert all of the non-constant key[/value-pair]s */
+	ASSERT(!asmap || (elemc % 2) == 0);    /* [elems...], d, d_elem */
+	DO(Dee_function_generator_vpop(self)); /* [elems...], d */
+	ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* The "reference" is always inherited by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+	while (elemc) {
+		DO(Dee_function_generator_vlrot(self, elemc + 1)); /* [elems...], d, key */
+		if (asmap) {
+			DO(Dee_function_generator_vlrot(self, elemc + 1)); /* [elems...], d, key, value */
+			DO(Dee_function_generator_vref2(self, 2));         /* [elems...], d, key, ref:value */
+			DO(Dee_function_generator_vswap(self));            /* [elems...], d, ref:value, key */
+			DO(Dee_function_generator_vref2(self, 2));         /* [elems...], d, ref:value, ref:key */
+			DO(Dee_function_generator_vswap(self));            /* [elems...], d, ref:key, ref:value */
+			ASSERT(!(Dee_function_generator_vtop(self)[-1].ml_flags & MEMLOC_F_NOREF));
+			ASSERT(!(Dee_function_generator_vtop(self)[-0].ml_flags & MEMLOC_F_NOREF));
+			Dee_function_generator_vtop(self)[-1].ml_flags |= MEMLOC_F_NOREF; /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+			Dee_function_generator_vtop(self)[-0].ml_flags |= MEMLOC_F_NOREF; /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+			DO(Dee_function_generator_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
+			                                   VCALL_CC_RAWINTPTR, 3)); /* [elems...], UNCHECKED(d) */
+			--elemc;
+		} else {
+			DO(Dee_function_generator_vref2(self, 1)); /* [elems...], d, ref:key */
+			ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+			Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
+			DO(Dee_function_generator_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
+			                                   VCALL_CC_RAWINTPTR, 2)); /* [elems...], UNCHECKED(d) */
+		}
+		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self))); /* [elems...], d */
+		--elemc;
+	}
+
+	/* At this point, the v-stack only contains "d", which currently contains all relevant
+	 * items. However, there are still some extra fields (possibly type-specific) fields
+	 * that need to be initialized, including a call to `DeeObject_Init()' */
+	if (seq_type == &DeeDict_Type) {
+#ifndef CONFIG_NO_THREADS
+		DO(Dee_function_generator_vpush_ATOMIC_RWLOCK_INIT(self));
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeDictObject, d_lock)));
+#endif /* !CONFIG_NO_THREADS */
+		DO(Dee_function_generator_vpush_WEAKREF_SUPPORT_INIT(self));
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeDictObject, ob_weakrefs)));
+	} else if (seq_type == &DeeHashSet_Type) {
+#ifndef CONFIG_NO_THREADS
+		DO(Dee_function_generator_vpush_ATOMIC_RWLOCK_INIT(self));
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeHashSetObject, hs_lock)));
+#endif /* !CONFIG_NO_THREADS */
+		DO(Dee_function_generator_vpush_WEAKREF_SUPPORT_INIT(self));
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeHashSetObject, ob_weakrefs)));
+	} else {
+		/* The read-only dict/set types don't feature additional fields. */
+		ASSERT(seq_type == &DeeRoDict_Type || seq_type == &DeeRoSet_Type);
+	}
+
+	/* Do the common object init (which also assigns the proper type) */
+	DO(Dee_function_generator_vcall_DeeObject_Init_c(self, seq_type));
+
+	/* If the sequence type is a GC object, emit code to start tracking it. */
+	if (seq_type->tp_flags & TP_FGC) {
+		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+		DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR, 1));
+		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+	}
+
+	/* Now that the object is fully ready, mark its location as containing a reference. */
+	ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* d */
+	Dee_Freea(result_d_elem_template);
+	return 0;
+err:
+	Dee_Freea(result_d_elem_template);
+err_no_result_d_elem_template:
+	return -1;
+}
+
+/* [elems...] -> seq */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc) {
@@ -4470,12 +4881,13 @@ err_cseq:
 		}
 		DO(Dee_function_generator_vsettyp_noalias(self, seq_type));
 		return Dee_function_generator_voneref_noalias(self);
-	} else if (seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type ||
-	           seq_type == &DeeHashSet_Type || seq_type == &DeeRoSet_Type) {
-		/* TODO: DeeRoDict_NewWithHint() + DeeRoDict_Insert() */
-		/* TODO: DeeDict_NewWithHint() + DeeDict_Insert()  (or DeeDict_NewKeyItemsInherited()) */
-		/* TODO: DeeRoSet_NewWithHint() + DeeRoSet_Insert() */
-		/* TODO: DeeHashSet_NewWithHint() + DeeHashSet_Insert()  (or DeeHashSet_NewItemsInherited()) */
+	} else if ((seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type ||
+	            seq_type == &DeeHashSet_Type || seq_type == &DeeRoSet_Type) &&
+	           !(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+		return vpack_map_or_set_at_runtime(self, seq_type, elemc);
+	} else if (seq_type == &DeeDict_Type || seq_type == &DeeHashSet_Type) {
+		/* TODO: DeeDict_NewKeyItemsInherited() */
+		/* TODO: DeeHashSet_NewItemsInherited() */
 	}
 
 	/* Fallback: Generate a constructor call "seq_type({ elems... })" */

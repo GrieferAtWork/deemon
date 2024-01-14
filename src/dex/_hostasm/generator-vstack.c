@@ -3775,13 +3775,14 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__restrict self,
-                                              size_t alloc_size) {
+                                              size_t alloc_size, bool do_calloc) {
 #ifndef CONFIG_NO_OBJECT_SLABS
 	void const *api_function = NULL;
 	size_t alloc_pointers = CEILDIV(alloc_size, sizeof(void *));
-#define LOCAL_checkfit(_, num_pointers)                                   \
-	if (alloc_pointers <= (num_pointers))                                 \
-		api_function = (void const *)&DeeObject_SlabMalloc##num_pointers; \
+#define LOCAL_checkfit(_, num_pointers)                                               \
+	if (alloc_pointers <= (num_pointers))                                             \
+		api_function = do_calloc ? (void const *)&DeeObject_SlabCalloc##num_pointers  \
+		                         : (void const *)&DeeObject_SlabMalloc##num_pointers; \
 	else
 	DeeSlab_ENUMERATE(LOCAL_checkfit);
 #undef LOCAL_checkfit
@@ -3793,9 +3794,34 @@ Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__r
 	{
 		if unlikely(Dee_function_generator_vpush_immSIZ(self, alloc_size))
 			goto err;
-		if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1))
+		if unlikely(Dee_function_generator_vcallapi(self,
+		                                            do_calloc ? (void const *)&DeeObject_Calloc
+		                                                      : (void const *)&DeeObject_Malloc,
+		                                            VCALL_CC_OBJECT, 1))
 			goto err;
 	}
+	if unlikely(Dee_function_generator_vdirect(self, 1))
+		goto err;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
+	ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+	Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_ONEREF; /* Initial reference -> oneref */
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcall_DeeObject_Malloc(struct Dee_function_generator *__restrict self,
+                                              size_t alloc_size, bool do_calloc) {
+	if unlikely(Dee_function_generator_vpush_immSIZ(self, alloc_size))
+		goto err;
+	if unlikely(Dee_function_generator_vcallapi(self,
+	                                            do_calloc ? (void const *)&DeeObject_Calloc
+	                                                      : (void const *)&DeeObject_Malloc,
+	                                            VCALL_CC_OBJECT, 1))
+		goto err;
 	if unlikely(Dee_function_generator_vdirect(self, 1))
 		goto err;
 	if unlikely(Dee_function_generator_state_unshare(self))

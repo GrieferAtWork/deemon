@@ -1956,8 +1956,33 @@ gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) 
 		Dee_vstackaddr_t n_pop;
 		ASSERT(self->fg_state->ms_stackc >= chain->fei_stack);
 		n_pop = self->fg_state->ms_stackc - chain->fei_stack;
-		if (n_pop != 0 && unlikely(Dee_function_generator_vpopmany(self, n_pop)))
-			goto err_saved_state;
+		if (n_pop != 0) {
+			Dee_vstackaddr_t i;
+			struct Dee_memloc *pop_base;
+			if unlikely(Dee_function_generator_state_unshare(self))
+				goto err_saved_state;
+
+			/* If any of the memory locations that need to be popped is
+			 * MEMLOC_VMORPH_NULLABLE, then we must alter it to become
+			 * MEMLOC_VMORPH_DIRECT with the MEMLOC_F_NOREF flag set.
+			 *
+			 * Because we're allowed to assume that only 1 exception
+			 * may be pending handling at a time, and given the fact
+			 * that at this point in the code we know that an exception
+			 * is active, we can infer that no other NULLABLE vstack
+			 * item can actually be NULL at runtime. */
+			pop_base = self->fg_state->ms_stackv + self->fg_state->ms_stackc - n_pop;
+			for (i = 0; i < n_pop; ++i) {
+				if (pop_base[i].ml_vmorph == MEMLOC_VMORPH_NULLABLE) {
+					pop_base[i].ml_flags |= MEMLOC_F_NOREF;
+					pop_base[i].ml_vmorph = MEMLOC_VMORPH_DIRECT;
+				}
+			}
+
+			/* Pop vstack items which the injection handler doesn't care about. */
+			if unlikely(Dee_function_generator_vpopmany(self, n_pop))
+				goto err_saved_state;
+		}
 		if unlikely((*chain->fei_inject)(self, chain))
 			goto err_saved_state;
 	} while ((chain = chain->fei_next) != NULL);
@@ -2453,6 +2478,8 @@ no_equivalence:
 				continue;
 			if (alias == loc)
 				continue;
+			if (alias->ml_type == MEMLOC_TYPE_HSTACKIND && (alias->ml_flags & MEMLOC_F_LINEAR))
+				continue; /* The alias must remain on-stack (don't update it) */
 			if (MEMLOC_TYPE_HASREG(alias->ml_type))
 				Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
 			alias->ml_type = MEMLOC_TYPE_HREG;
