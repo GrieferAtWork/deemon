@@ -2087,10 +2087,15 @@ do_jcc:
 	TARGET(ASM_PUSH_FALSE)
 		return Dee_function_generator_vpush_const(self, Dee_False);
 
-	//TODO: TARGET(ASM_PACK_HASHSET)
-	//TODO: TARGET(ASM16_PACK_HASHSET)
-	//TODO: TARGET(ASM_PACK_DICT)
-	//TODO: TARGET(ASM16_PACK_DICT)
+	TARGET(ASM_PACK_HASHSET)
+		return Dee_function_generator_vpackseq(self, &DeeHashSet_Type, instr[2]);
+	TARGET(ASM16_PACK_HASHSET)
+		return Dee_function_generator_vpackseq(self, &DeeHashSet_Type, UNALIGNED_GETLE16(instr + 2));
+
+	TARGET(ASM_PACK_DICT)
+		return Dee_function_generator_vpackseq(self, &DeeDict_Type, instr[2] * 2);
+	TARGET(ASM16_PACK_DICT)
+		return Dee_function_generator_vpackseq(self, &DeeDict_Type, UNALIGNED_GETLE16(instr + 2) * 2);
 
 	TARGET(ASM_BOUNDITEM)
 		return Dee_function_generator_vopbounditem(self);

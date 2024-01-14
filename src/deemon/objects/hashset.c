@@ -52,6 +52,77 @@ typedef DeeHashSetObject HashSet;
 #define empty_hashset_items ((struct Dee_hashset_item *)DeeHashSet_EmptyItems)
 #define dummy               (&DeeDict_Dummy)
 
+
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
+hashset_insert_remainder_with_duplicates(HashSet *self, size_t num_items,
+                                         /*inhert(on_success)*/ DREF DeeObject **items) {
+	size_t key_i = 1;
+	size_t extra_duplicates_c = 0;
+	size_t extra_duplicates_a = 0;
+	DREF DeeObject **extra_duplicates_v = NULL;
+next_keyitem:
+	while (key_i < num_items) {
+		DREF DeeObject *key = *items++;
+		dhash_t i, perturb, hash = DeeObject_Hash(key);
+		perturb = i = hash & self->hs_mask;
+		for (;; DeeHashSet_HashNx(i, perturb)) {
+			struct hashset_item *item = &self->hs_elem[i & self->hs_mask];
+			if (item->hsi_key) { /* Already in use */
+				int temp;
+				if likely(item->hsi_hash != hash)
+					continue;
+				temp = DeeObject_CompareEq(item->hsi_key, key);
+				if likely(temp == 0)
+					continue;
+				if unlikely(temp < 0)
+					goto err;
+
+				/* Another duplicate key. */
+				ASSERT(extra_duplicates_c <= extra_duplicates_a);
+				if (extra_duplicates_c >= extra_duplicates_a) {
+					size_t min_alloc = extra_duplicates_c + 1;
+					size_t new_alloc = extra_duplicates_a * 2;
+					DREF DeeObject **newvec;
+					if (new_alloc < 4)
+						new_alloc = 4;
+					if (new_alloc < min_alloc)
+						new_alloc = min_alloc;
+					newvec = (DREF DeeObject **)Dee_TryReallocc(extra_duplicates_v, new_alloc, sizeof(DREF DeeObject *));
+					if unlikely(!newvec) {
+						new_alloc = min_alloc;
+						newvec = (DREF DeeObject **)Dee_Reallocc(extra_duplicates_v, new_alloc, sizeof(DREF DeeObject *));
+						if unlikely(!newvec)
+							goto err;
+					}
+					extra_duplicates_v = newvec;
+					extra_duplicates_a = new_alloc;
+				}
+				extra_duplicates_v[extra_duplicates_c] = key;
+				++extra_duplicates_c;
+				--self->hs_used;
+				--self->hs_size;
+				goto next_keyitem;
+			}
+			item->hsi_hash = hash;
+			item->hsi_key  = key; /* Inherit reference. */
+			break;
+		}
+	}
+	Dee_Decref_unlikely(items[0]);
+#ifndef __OPTIMIZE_SIZE__
+	if (extra_duplicates_c)
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		Dee_Decrefv_unlikely(extra_duplicates_v, extra_duplicates_c);
+		Dee_Free(extra_duplicates_v);
+	}
+	return 0;
+err:
+	Dee_Free(extra_duplicates_v);
+	return -1;
+}
+
+
 /* Create a new HashSet by inheriting a set of passed key-item pairs.
  * @param: items:     A vector containing `num_items' elements,
  *                    even ones being keys and odd ones being items.
@@ -65,7 +136,7 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 	/* Allocate the set object. */
 	result = DeeGCObject_MALLOC(HashSet);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if unlikely(!num_items) {
 		/* Special case: allocate an empty set. */
 		result->hs_mask = 0;
@@ -80,11 +151,11 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 			min_mask = (min_mask << 1) | 1;
 
 		/* Prefer using a mask of one greater level to improve performance. */
-		mask           = (min_mask << 1) | 1;
+		mask = (min_mask << 1) | 1;
 		result->hs_elem = (struct hashset_item *)Dee_TryCallocc(mask + 1, sizeof(struct hashset_item));
 		if unlikely(!result->hs_elem) {
 			/* Try one level less if that failed. */
-			mask           = min_mask;
+			mask = min_mask;
 			result->hs_elem = (struct hashset_item *)Dee_Callocc(mask + 1, sizeof(struct hashset_item));
 			if unlikely(!result->hs_elem)
 				goto err_r;
@@ -94,7 +165,6 @@ DeeHashSet_NewItemsInherited(size_t num_items,
 		result->hs_mask = mask;
 		result->hs_used = num_items;
 		result->hs_size = num_items;
-next_key:
 		while (num_items--) {
 			DREF DeeObject *key = *items++;
 			dhash_t i, perturb, hash = DeeObject_Hash(key);
@@ -109,30 +179,33 @@ next_key:
 					if likely(temp == 0)
 						continue;
 					if unlikely(temp < 0)
-						goto err_r;
+						goto err_r_elem;
 
 					/* Duplicate key. */
-					--result->hs_used;
-					--result->hs_size;
-					goto next_key;
+					--items;
+					++num_items;
+					if unlikely(hashset_insert_remainder_with_duplicates(result, num_items, items))
+						goto err_r_elem;
+					goto done_populate_result;
 				}
 				item->hsi_hash = hash;
 				item->hsi_key  = key; /* Inherit reference. */
 				break;
 			}
 		}
+done_populate_result:;
 	}
 	Dee_atomic_rwlock_init(&result->hs_lock);
 
 	/* Initialize and start tracking the new set. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeHashSet_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
-err_r:
+	return DeeGC_Track((DeeObject *)result);
+err_r_elem:
 	Dee_Free(result->hs_elem);
+err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -222,15 +295,60 @@ DeeHashSet_FromIterator(DeeObject *__restrict self) {
 	DREF HashSet *result;
 	result = DeeGCObject_MALLOC(HashSet);
 	if unlikely(!result)
-		goto done;
-	if unlikely(hashset_init_iterator(result, self))
 		goto err;
+	if unlikely(hashset_init_iterator(result, self))
+		goto err_r;
 	DeeObject_Init(result, &DeeHashSet_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
-err:
+	return DeeGC_Track((DeeObject *)result);
+err_r:
 	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeHashSet_NewWithHint(size_t num_items) {
+	DREF HashSet *result;
+
+	/* Allocate the set object. */
+	result = DeeGCObject_MALLOC(HashSet);
+	if unlikely(!result)
+		goto err;
+	if unlikely(!num_items) {
+		/* Special case: allocate an empty set. */
+return_empty_set:
+		result->hs_mask = 0;
+		result->hs_elem = empty_hashset_items;
+	} else {
+		size_t min_mask = 16 - 1, mask;
+
+		/* Figure out how large the mask of the set is going to be. */
+		while ((num_items & min_mask) != num_items)
+			min_mask = (min_mask << 1) | 1;
+
+		/* Prefer using a mask of one greater level to improve performance. */
+		mask = (min_mask << 1) | 1;
+		result->hs_elem = (struct hashset_item *)Dee_TryCallocc(mask + 1, sizeof(struct hashset_item));
+		if unlikely(!result->hs_elem) {
+			/* Try one level less if that failed. */
+			mask = min_mask;
+			result->hs_elem = (struct hashset_item *)Dee_TryCallocc(mask + 1, sizeof(struct hashset_item));
+			if unlikely(!result->hs_elem)
+				goto return_empty_set;
+		}
+
+		/* Without any dummy items, these are identical. */
+		result->hs_mask = mask;
+	}
+	result->hs_used = 0;
+	result->hs_size = 0;
+	Dee_atomic_rwlock_init(&result->hs_lock);
+
+	/* Initialize and start tracking the new set. */
+	weakref_support_init(result);
+	DeeObject_Init(result, &DeeHashSet_Type);
+	return DeeGC_Track((DeeObject *)result);
+err:
 	return NULL;
 }
 
@@ -239,15 +357,49 @@ DeeHashSet_FromSequence(DeeObject *__restrict self) {
 	DREF HashSet *result;
 	result = DeeGCObject_MALLOC(HashSet);
 	if unlikely(!result)
-		goto done;
-	if unlikely(hashset_init_sequence(result, self))
 		goto err;
+	if unlikely(hashset_init_sequence(result, self))
+		goto err_r;
 	DeeObject_Init(result, &DeeHashSet_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
-err:
+	return DeeGC_Track((DeeObject *)result);
+err_r:
 	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeHashSet_FromRoSet(DeeObject *__restrict self) {
+	struct hashset_item *iter, *end;
+	DeeRoSetObject *src = (DeeRoSetObject *)self;
+	DREF HashSet *result;
+	ASSERT_OBJECT_TYPE_EXACT(src, &DeeRoSet_Type);
+	result = DeeGCObject_MALLOC(HashSet);
+	if unlikely(!result)
+		goto err;
+	result->hs_mask = src->rs_mask;
+	result->hs_used = result->hs_size = src->rs_size;
+	if unlikely(!result->hs_size) {
+		result->hs_elem = (struct hashset_item *)empty_hashset_items;
+	} else {
+		result->hs_elem = (struct hashset_item *)Dee_Mallocc(src->rs_mask + 1,
+		                                                     sizeof(struct hashset_item));
+		if unlikely(!result->hs_elem)
+			goto err_r;
+		iter = (struct hashset_item *)memcpyc(result->hs_elem, src->rs_elem,
+		                                      result->hs_mask + 1,
+		                                      sizeof(struct hashset_item));
+		end  = iter + (result->hs_mask + 1);
+		for (; iter < end; ++iter)
+			Dee_XIncref(iter->hsi_key);
+	}
+	Dee_atomic_rwlock_init(&result->hs_lock);
+	weakref_support_init(result);
+	DeeObject_Init(result, &DeeHashSet_Type);
+	return DeeGC_Track((DeeObject *)result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 

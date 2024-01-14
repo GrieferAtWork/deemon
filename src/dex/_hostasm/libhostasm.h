@@ -310,7 +310,7 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1)) ptrdiff_t DCALL Dee_memloc_getvaldelta_c0(
 #define MEMEQUIV_TYPE_HASREG(typ) MEMLOC_TYPE_HASREG(typ)
 struct Dee_memequiv_loc {
 	uint16_t                  meql_type;  /* Type of location described (one of `MEMEQUIV_TYPE_*') */
-	Dee_host_register_t       meql_regno; /* [valid_if(meq_type in [MEMEQUIV_TYPE_HREG, MEMEQUIV_TYPE_HREGIND])] Register number (or 0 if unused). */
+	Dee_host_register_t       meql_regno; /* [if(meq_type in [MEMEQUIV_TYPE_HSTACKIND, MEMEQUIV_TYPE_CONST], [== 0])] Register number (or 0 if not used by class). */
 	uint8_t _meq_zro[sizeof(void *) - 3]; /* Extra padding space (must be 0-initialized) */
 	union {
 		DeeObject            *v_const;    /* [valid_if(meq_type == MEMEQUIV_TYPE_CONST)] Known, constant value (max 1x per equivalence class) */
@@ -464,6 +464,13 @@ INTDEF struct Dee_memequiv const Dee_memequivs_dummy_list[1];
 
 #define _Dee_memequivs_incrinuse(self, regno) (void)++(self)->meqs_regs[regno]
 #define _Dee_memequivs_decrinuse(self, regno) (void)(ASSERT((self)->meqs_regs[regno] > 0), --(self)->meqs_regs[regno])
+#if defined(NDEBUG) || 1
+#define _Dee_memequivs_verifyrinuse(self) (void)0
+#else /* NDEBUG */
+#define HAVE__Dee_memequivs_verifyrinuse_d
+#define _Dee_memequivs_verifyrinuse(self) _Dee_memequivs_verifyrinuse_d(self)
+INTDEF NONNULL((1)) void DCALL _Dee_memequivs_verifyrinuse_d(struct Dee_memequivs const *__restrict self);
+#endif /* !NDEBUG */
 
 
 /* Inplace-replace `self->meqs_list' with a copy of itself. */
@@ -874,13 +881,13 @@ INTDEF WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
 Dee_memstate_copy(struct Dee_memstate *__restrict self);
 #define Dee_memstate_isshared(self) ((self)->ms_refcnt > 1)
 #define Dee_memstate_unshare(p_self)                             \
-	(Dee_memstate_verifyrinuse(*(p_self)), /* TODO: REMOVE ME */ \
+	(_Dee_memstate_verifyrinuse(*(p_self)),                      \
 	 unlikely(Dee_memstate_isshared(*(p_self))                   \
 	          ? Dee_memstate_inplace_copy_because_shared(p_self) \
 	          : 0))
-#define Dee_memstate_dounshare(p_self)                           \
-	(Dee_memstate_verifyrinuse(*(p_self)), /* TODO: REMOVE ME */ \
-	 ASSERT(Dee_memstate_isshared(*(p_self))),                   \
+#define Dee_memstate_dounshare(p_self)         \
+	(_Dee_memstate_verifyrinuse(*(p_self)),    \
+	 ASSERT(Dee_memstate_isshared(*(p_self))), \
 	 Dee_memstate_inplace_copy_because_shared(p_self))
 
 /* Ensure that at least `min_alloc' stack slots are allocated. */
@@ -891,16 +898,15 @@ Dee_memstate_reqvstack(struct Dee_memstate *__restrict self,
 /* Account for register usage. */
 #define Dee_memstate_incrinuse(self, regno) (void)++(self)->ms_rinuse[regno]
 #define Dee_memstate_decrinuse(self, regno) (void)(ASSERT((self)->ms_rinuse[regno] > 0), --(self)->ms_rinuse[regno])
-#ifdef NDEBUG
-#define Dee_memstate_verifyrinuse(self) (void)0
+#if defined(NDEBUG) || 0
+#define _Dee_memstate_verifyrinuse(self) (void)0
 #else /* NDEBUG */
-#define Dee_memstate_verifyrinuse(self) Dee_memstate_verifyrinuse_d(self)
-INTDEF NONNULL((1)) void DCALL Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self);
+#define HAVE__Dee_memstate_verifyrinuse_d
+#define _Dee_memstate_verifyrinuse(self) _Dee_memstate_verifyrinuse_d(self)
+INTDEF NONNULL((1)) void DCALL _Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self);
 #endif /* !NDEBUG */
 
 /* Memory equivalence helpers. */
-/* TODO: Call these macros from `Dee_function_generator_g*' functions whenever a
- *       value is moved, and whenever a register/memory location gets clobbered. */
 #define Dee_memstate_remember_getclassof(self, loc)                                               Dee_memequivs_getclassof(&(self)->ms_memequiv, loc)
 #define Dee_memstate_remember_getclassof_reg(self, regno)                                         Dee_memequivs_getclassof_reg(&(self)->ms_memequiv, regno)
 #define Dee_memstate_remember_getclassof_regind(self, regno, ind_delta)                           Dee_memequivs_getclassof_regind(&(self)->ms_memequiv, regno, ind_delta)
@@ -1056,10 +1062,10 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 
 /* Check if `loc' has an alias. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-Dee_memstate_haslias(struct Dee_memstate const *__restrict self,
-                     struct Dee_memloc const *loc);
-#define Dee_memstate_isoneref(self, loc) \
-	(((loc)->ml_flags & MEMLOC_F_ONEREF) && !Dee_memstate_haslias(self, loc))
+Dee_memstate_hasalias(struct Dee_memstate const *__restrict self,
+                      struct Dee_memloc const *loc);
+#define Dee_memstate_isoneref_noalias(self, loc) \
+	(((loc)->ml_flags & MEMLOC_F_ONEREF) && !Dee_memstate_hasalias(self, loc))
 
 /* Functions to manipulate the virtual deemon object stack. */
 #define Dee_memstate_vtop(self) (&(self)->ms_stackv[(self)->ms_stackc - 1])
@@ -1739,7 +1745,7 @@ struct Dee_function_generator {
 /* Code generator helpers to manipulate the V-stack. */
 #define Dee_function_generator_vtop(self)     Dee_memstate_vtop((self)->fg_state)
 #define Dee_function_generator_vtoptype(self) Dee_memloc_typeof(Dee_function_generator_vtop(self))
-#define Dee_function_generator_isoneref(self, loc) Dee_memstate_isoneref((self)->fg_state, loc)
+#define Dee_function_generator_isoneref_noalias(self, loc) Dee_memstate_isoneref_noalias((self)->fg_state, loc)
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswap(struct Dee_function_generator *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
@@ -1876,14 +1882,18 @@ Dee_function_generator_vinplaceoptuple(struct Dee_function_generator *__restrict
                                        uint16_t operator_name, unsigned int flags);
 
 
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* seq -> [elems...] */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self);                     /* lhs, rhs -> result */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* seq, [elems...] -> seq */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_voptypeof(struct Dee_function_generator *__restrict self, bool ref);           /* ob -> type(ob) */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self, bool ref);          /* ob -> ob.class */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuperof(struct Dee_function_generator *__restrict self);                    /* ob -> ob.super */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self);                      /* ob, type -> ob as type */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self, DeeTypeObject *type); /* obj -> type(obj) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);      /* seq -> [elems...] */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self);                          /* lhs, rhs -> result */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);      /* seq, [elems...] -> seq */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_voptypeof(struct Dee_function_generator *__restrict self, bool ref);                /* ob -> type(ob) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self, bool ref);               /* ob -> ob.class */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuperof(struct Dee_function_generator *__restrict self);                         /* ob -> ob.super */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self);                           /* ob, type -> ob as type */
+
+/* Implement type casts. These functions should only be used for built-in, known types. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self, DeeTypeObject *newtype); /* obj -> newtype(obj) */
+/* Like Dee_function_generator_vopcast(), but return 1 if the fallback (1-arg ctor-call) would be used. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast_nofallback(struct Dee_function_generator *__restrict self, DeeTypeObject *newtype);
 
 /* Helpers to perform certain operations. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self);          /* instance, type -> instance */
@@ -1989,7 +1999,7 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 #define Dee_function_generator_vassert_type_exact_if_safe_c(self, type) \
 	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE     \
 	 ? Dee_function_generator_vassert_type_exact_c(self, type)          \
-	 : 0)
+	 : Dee_function_generator_vsettyp(self, type))
 #define Dee_function_generator_vassert_type_if_safe_c(self, type)   \
 	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE \
 	 ? Dee_function_generator_vassert_type_c(self, type)            \

@@ -56,6 +56,32 @@ INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
 	}
 };
 
+#ifdef HAVE__Dee_memequivs_verifyrinuse_d
+INTERN NONNULL((1)) void DCALL
+_Dee_memequivs_verifyrinuse_d(struct Dee_memequivs const *__restrict self) {
+	size_t i, correct_rinuse[HOST_REGISTER_COUNT];
+	bzero(correct_rinuse, sizeof(correct_rinuse));
+	for (i = 0; i <= self->meqs_mask; ++i) {
+		struct Dee_memequiv const *eq = &self->meqs_list[i];
+		switch (eq->meq_loc.meql_type) {
+		case MEMEQUIV_TYPE_HREG:
+		case MEMEQUIV_TYPE_HREGIND:
+			ASSERT(eq->meq_loc.meql_regno < HOST_REGISTER_COUNT);
+			++correct_rinuse[eq->meq_loc.meql_regno];
+			break;
+		case MEMEQUIV_TYPE_HSTACKIND:
+		case MEMEQUIV_TYPE_CONST:
+			ASSERT(eq->meq_loc.meql_regno == 0);
+			break;
+		default: break;
+		}
+	}
+	ASSERTF(memcmp(self->meqs_regs, correct_rinuse, sizeof(correct_rinuse)) == 0,
+	        "Incorrect register-in-use numbers");
+}
+#endif /* HAVE__Dee_memequivs_verifyrinuse_d */
+
+
 /* Inplace-replace `self->meqs_list' with a copy of itself. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_memequivs_inplace_copy(struct Dee_memequivs *__restrict self) {
@@ -78,6 +104,7 @@ _Dee_memequivs_inplace_copy(struct Dee_memequivs *__restrict self) {
 		it->meq_class.rqe_next = (struct Dee_memequiv *)((uintptr_t)it->meq_class.rqe_next + delta);
 	}
 	self->meqs_list = newmap;
+	_Dee_memequivs_verifyrinuse(self);
 	return 0;
 err:
 	return -1;
@@ -148,6 +175,7 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
                             struct Dee_memequivs const *__restrict other) {
 	size_t i;
 	bool result = false;
+	_Dee_memequivs_verifyrinuse(self);
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *eq = &self->meqs_list[i];
 		struct Dee_memequiv *eq_other, *eq_iter, *eq_next;
@@ -222,6 +250,7 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 			--self->meqs_used;
 		}
 	}
+	_Dee_memequivs_verifyrinuse(self);
 	return result;
 }
 
@@ -382,6 +411,7 @@ Dee_memequivs_movevalue(struct Dee_memequivs *__restrict self,
 	struct Dee_memequiv *from_eq, *to_eq;
 	struct Dee_memequiv_loc fromloc, toloc;
 	ptrdiff_t from_delta, to_delta;
+	_Dee_memequivs_verifyrinuse(self);
 	if (!Dee_memequiv_loc_fromloc(&fromloc, from))
 		return 0;
 	if (!Dee_memequiv_loc_fromloc(&toloc, to))
@@ -462,8 +492,10 @@ vector_is_ready:
 		 * from that register also become undefined. */
 		Dee_memequivs_undefined_hregind_for_hreg(self, to->ml_value.v_hreg.r_regno);
 	}
+	_Dee_memequivs_verifyrinuse(self);
 	return 0;
 err:
+	_Dee_memequivs_verifyrinuse(self);
 	return -1;
 }
 
@@ -477,6 +509,7 @@ Dee_memequivs_deltavalue(struct Dee_memequivs *__restrict self,
 	eq = Dee_memequivs_getclassof(self, loc);
 	if (eq != NULL)
 		eq->meq_valoff += delta;
+	_Dee_memequivs_verifyrinuse(self);
 }
 
 /* Check if "self" might use register locations. */
@@ -506,6 +539,7 @@ Dee_memequivs_undefined(struct Dee_memequivs *__restrict self,
 		_Dee_memequivs_debug_print(self);
 	}
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
+	_Dee_memequivs_verifyrinuse(self);
 	eq = Dee_memequivs_getclassof(self, loc);
 	if (eq != NULL) {
 		struct Dee_memequiv *prev = RINGQ_PREV(eq, meq_class);
@@ -537,6 +571,7 @@ Dee_memequivs_undefined(struct Dee_memequivs *__restrict self,
 		 * from that register also become undefined. */
 		Dee_memequivs_undefined_hregind_for_hreg(self, loc->ml_value.v_hreg.r_regno);
 	}
+	_Dee_memequivs_verifyrinuse(self);
 }
 
 /* Mark all HREG and HREGIND locations as undefined. */
@@ -547,6 +582,7 @@ Dee_memequivs_undefined_allregs(struct Dee_memequivs *__restrict self) {
 	HA_printf("Dee_memequivs_undefined_allregs()\n");
 	_Dee_memequivs_debug_print(self);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
+	_Dee_memequivs_verifyrinuse(self);
 	if (!Dee_memequivs_hasregs(self))
 		return; /* Fast-pass: no registers are in use. */
 	for (i = 0; i <= self->meqs_mask; ++i) {
@@ -578,6 +614,7 @@ Dee_memequivs_undefined_allregs(struct Dee_memequivs *__restrict self) {
 			--self->meqs_used;
 		}
 	}
+	_Dee_memequivs_verifyrinuse(self);
 }
 
 /* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset' as undefined. */
@@ -585,6 +622,7 @@ INTERN NONNULL((1)) void DCALL
 Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
                                         uintptr_t min_cfa_offset) {
 	size_t i;
+	_Dee_memequivs_verifyrinuse(self);
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
@@ -597,7 +635,6 @@ Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
 		prev = RINGQ_PREV(eq, meq_class);
 		next = RINGQ_NEXT(eq, meq_class);
 		ASSERT(self->meqs_used >= 2);
-		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
@@ -616,6 +653,7 @@ Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
 			--self->meqs_used;
 		}
 	}
+	_Dee_memequivs_verifyrinuse(self);
 }
 
 /* Mark all HSTACKIND locations where [Dee_memequiv_getcfastart()...Dee_memequiv_getcfaend())
@@ -625,6 +663,7 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
                                           uintptr_t start_cfa_offset,
                                           uintptr_t end_cfa_offset) {
 	size_t i;
+	_Dee_memequivs_verifyrinuse(self);
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
@@ -638,7 +677,6 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
 		prev = RINGQ_PREV(eq, meq_class);
 		next = RINGQ_NEXT(eq, meq_class);
 		ASSERT(self->meqs_used >= 2);
-		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
@@ -657,6 +695,7 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
 			--self->meqs_used;
 		}
 	}
+	_Dee_memequivs_verifyrinuse(self);
 }
 
 

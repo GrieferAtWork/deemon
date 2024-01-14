@@ -66,23 +66,19 @@ DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeHashSet_Type)
 
 #define DeeHashSet_New() DeeObject_NewDefault(&DeeHashSet_Type)
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromIterator(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromRoSet(DeeObject *__restrict self);
 
 
 /* @return:  1: Successfully inserted/removed the object.
  * @return:  0: An identical object already exists/was already removed.
  * @return: -1: An error occurred. */
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Insert(DeeObject *self, DeeObject *item);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_Remove(DeeObject *self, DeeObject *item);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_InsertString(DeeObject *__restrict self,
-                        char const *__restrict item, size_t item_length);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeHashSet_RemoveString(DeeObject *__restrict self,
-                        char const *__restrict item, size_t item_length);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Insert(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_Remove(DeeObject *self, DeeObject *item);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_InsertString(DeeObject *__restrict self, char const *__restrict item, size_t item_length);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeHashSet_RemoveString(DeeObject *__restrict self, char const *__restrict item, size_t item_length);
 
 /* @return:  1/true:  The object exists.
  * @return:  0/false: No such object exists.
@@ -98,8 +94,7 @@ DeeHashSet_ContainsString(DeeObject *__restrict self,
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeHashSet_Unify(DeeObject *self, DeeObject *search_item);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*String*/ DeeObject *DCALL
-DeeHashSet_UnifyString(DeeObject *__restrict self,
-                       char const *__restrict item, size_t item_length);
+DeeHashSet_UnifyString(DeeObject *__restrict self, char const *__restrict item, size_t item_length);
 
 /* Create a new HashSet by inheriting a set of passed key-item pairs.
  * @param: items:     A vector containing `num_items' elements,

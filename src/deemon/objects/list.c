@@ -280,11 +280,11 @@ err:
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeList_NewHint(size_t n_prealloc) {
+DeeList_NewWithHint(size_t n_prealloc) {
 	DREF List *result;
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	DeeObject_Init(result, &DeeList_Type);
 	_DeeList_SetAlloc(result, n_prealloc);
 	result->l_list.ol_elemc  = 0;
@@ -297,9 +297,9 @@ DeeList_NewHint(size_t n_prealloc) {
 	} else {
 		result->l_list.ol_elemv = NULL;
 	}
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 PUBLIC WUNUSED DREF List *DCALL
@@ -339,15 +339,14 @@ DeeList_FromIterator(DeeObject *__restrict self) {
 	DREF List *result;
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if unlikely(list_init_iterator(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -366,8 +365,34 @@ DeeList_FromSequence(DeeObject *__restrict self) {
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
-	DeeGC_Track((DeeObject *)result);
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeList_FromTuple(DeeObject *__restrict self) {
+	DeeObject **elemv;
+	DREF List *result;
+	size_t elemc;
+	ASSERT_OBJECT_TYPE_EXACT(self, &DeeTuple_Type);
+	result = DeeGCObject_MALLOC(List);
+	if unlikely(!result)
+		goto err;
+	elemc = DeeTuple_SIZE(self);
+	elemv = (DREF DeeObject **)Dee_Mallocc(elemc, sizeof(DREF DeeObject *));
+	if unlikely(!elemv)
+		goto err_r;
+	elemv = Dee_Movrefv(elemv, DeeTuple_ELEM(self), elemc);
+	result->l_list.ol_elemv = elemv;
+	result->l_list.ol_elemc = elemc;
+	_DeeList_SetAlloc(result, elemc);
+	DeeObject_Init(result, &DeeList_Type);
+	weakref_support_init(result);
+	Dee_atomic_rwlock_init(&result->l_lock);
+	return DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
 err:
@@ -427,7 +452,7 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 #endif /* DEE_OBJECTLIST_HAVE_ELEMA */
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	result->l_list.ol_elemv = objv; /* Inherit */
 	result->l_list.ol_elemc = objc;
 #ifdef DEE_OBJECTLIST_HAVE_ELEMA
@@ -440,9 +465,9 @@ DeeList_NewVectorInheritedHeap(/*inherit(on_success)*/ DREF DeeObject **objv,
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 /* Create a new list object from a vector. */
@@ -466,17 +491,16 @@ DeeList_Copy(DeeObject *__restrict self) {
 	ASSERT_OBJECT_TYPE(self, &DeeList_Type);
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if unlikely(list_copy(result, (List *)self))
 		goto err_r;
 	DeeObject_Init(result, &DeeList_Type);
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -581,7 +605,7 @@ allocate_new_vector:
 		_DeeList_SetAlloc(result, list_size + argc);
 		weakref_support_init(result);
 		Dee_atomic_rwlock_init(&result->l_lock);
-		DeeGC_Track((DeeObject *)result);
+		result = (DREF List *)DeeGC_Track((DeeObject *)result);
 	}
 	return (DREF DeeObject *)result;
 err:
@@ -1576,8 +1600,7 @@ again:
 	result->l_list.ol_elemv = new_elemv;
 
 	/* Start tracking it as a GC object. */
-	DeeGC_Track((DeeObject *)result);
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 
 err_elemv:
 	/* Cleanup on error. */
@@ -1630,8 +1653,7 @@ again:
 	result->l_list.ol_elemv = new_elemv;
 
 	/* Start tracking it as a GC object. */
-	DeeGC_Track((DeeObject *)result);
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 
 err_elemv:
 	/* Cleanup on error. */
@@ -3267,8 +3289,7 @@ again:
 	weakref_support_init(result);
 	Dee_atomic_rwlock_init(&result->l_lock);
 	DeeObject_Init(result, &DeeList_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF List *)DeeGC_Track((DeeObject *)result);
 err_elem:
 	Dee_Decrefv(res_elemv, res_elemc);
 	Dee_Free(res_elemv);

@@ -668,7 +668,7 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 
 /* Check if `loc' has an alias. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-Dee_memstate_haslias(struct Dee_memstate const *__restrict self,
+Dee_memstate_hasalias(struct Dee_memstate const *__restrict self,
                      struct Dee_memloc const *loc) {
 	struct Dee_memloc const *iter;
 	Dee_memstate_foreach(iter, self) {
@@ -772,9 +772,9 @@ err:
 	return -1;
 }
 
-#ifndef NDEBUG
+#ifdef HAVE__Dee_memstate_verifyrinuse_d
 INTERN NONNULL((1)) void DCALL
-Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
+_Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
 	struct Dee_memloc const *loc;
 	size_t correct_rinuse[HOST_REGISTER_COUNT];
 	bzero(correct_rinuse, sizeof(correct_rinuse));
@@ -788,7 +788,7 @@ Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
 	ASSERTF(memcmp(self->ms_rinuse, correct_rinuse, sizeof(correct_rinuse)) == 0,
 	        "Incorrect register-in-use numbers");
 }
-#endif /* !NDEBUG */
+#endif /* HAVE__Dee_memstate_verifyrinuse_d */
 
 /* Mark all register equivalences undefined for registers that are not in active use:
  * >> FOREACH REGNO DO

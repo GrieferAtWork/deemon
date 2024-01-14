@@ -97,10 +97,11 @@ DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
 #endif /* !DEE_OBJECTLIST_HAVE_ELEMA */
 
 /* Create a new List object. */
-#define DeeList_New()   DeeObject_NewDefault(&DeeList_Type)
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewHint(size_t n_prealloc);
+#define DeeList_New() DeeObject_NewDefault(&DeeList_Type)
+DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewWithHint(size_t n_prealloc);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromIterator(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromTuple(DeeObject *__restrict self);
 
 /* WARNING: The caller must start gc-tracking the list once elements are initialized. */
 DFUNDEF WUNUSED DREF DeeListObject *DCALL DeeList_NewUninitialized(size_t n_elem);

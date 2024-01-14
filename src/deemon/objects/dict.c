@@ -71,8 +71,92 @@ PUBLIC_CONST struct Dee_dict_item const DeeDict_EmptyItems[1] = {
 	{ NULL, NULL, 0 }
 };
 
+PRIVATE ATTR_NOINLINE WUNUSED NONNULL((1)) int DCALL
+dict_insert_remainder_with_duplicates(Dict *self, size_t num_keyitems,
+                                      /*inhert(on_success)*/ DREF DeeObject **key_items) {
+	size_t keyitem_i = 1;
+	size_t extra_duplicates_c = 0;
+	size_t extra_duplicates_a = 0;
+	size_t *extra_duplicates_v = NULL;
+next_keyitem:
+	while (keyitem_i < num_keyitems) {
+		DREF DeeObject *key   = key_items[keyitem_i * 2 + 0];
+		DREF DeeObject *value = key_items[keyitem_i * 2 + 1];
+		dhash_t i, perturb, hash;
+		++keyitem_i;
+		hash = DeeObject_Hash(key);
+		perturb = i = hash & self->d_mask;
+		for (;; DeeDict_HashNx(i, perturb)) {
+			struct dict_item *item = &self->d_elem[i & self->d_mask];
+			if (item->di_key) { /* Already in use */
+				int temp;
+				if likely(item->di_hash != hash)
+					continue;
+				temp = DeeObject_CompareEq(item->di_key, key);
+				if likely(temp == 0)
+					continue;
+				if unlikely(temp < 0)
+					goto err;
+
+				/* Another duplicate key. */
+				ASSERT(extra_duplicates_c <= extra_duplicates_a);
+				if (extra_duplicates_c >= extra_duplicates_a) {
+					size_t min_alloc = extra_duplicates_c + 1;
+					size_t new_alloc = extra_duplicates_a * 2;
+					size_t *newvec;
+					if (new_alloc < 4)
+						new_alloc = 4;
+					if (new_alloc < min_alloc)
+						new_alloc = min_alloc;
+					newvec = (size_t *)Dee_TryReallocc(extra_duplicates_v, new_alloc, sizeof(size_t));
+					if unlikely(!newvec) {
+						new_alloc = min_alloc;
+						newvec = (size_t *)Dee_Reallocc(extra_duplicates_v, new_alloc, sizeof(size_t));
+						if unlikely(!newvec)
+							goto err;
+					}
+					extra_duplicates_v = newvec;
+					extra_duplicates_a = new_alloc;
+				}
+				extra_duplicates_v[extra_duplicates_c] = keyitem_i;
+				++extra_duplicates_c;
+				--self->d_used;
+				--self->d_size;
+				goto next_keyitem;
+			}
+			item->di_hash  = hash;
+			item->di_key   = key;   /* Inherit reference. */
+			item->di_value = value; /* Inherit reference. */
+			break;
+		}
+	}
+	Dee_Decref_unlikely(key_items[0]);
+	Dee_Decref_unlikely(key_items[1]);
+#ifndef __OPTIMIZE_SIZE__
+	if (extra_duplicates_c)
+#endif /* !__OPTIMIZE_SIZE__ */
+	{
+		for (keyitem_i = 0; keyitem_i < extra_duplicates_c; ++keyitem_i) {
+			size_t index = extra_duplicates_v[keyitem_i];
+			Dee_Decref_unlikely(key_items[index * 2 + 0]);
+			Dee_Decref_unlikely(key_items[index * 2 + 1]);
+		}
+		Dee_Free(extra_duplicates_v);
+	}
+	return 0;
+err:
+	Dee_Free(extra_duplicates_v);
+	return -1;
+}
+
+/* Create a new Dict by inheriting a set of passed key-item pairs.
+ * @param: key_items:    A vector containing `num_keyitems*2' elements,
+ *                       even ones being keys and odd ones being items.
+ * @param: num_keyitems: The number of key-item pairs passed.
+ * WARNING: This function does _NOT_ inherit the passed vector, but _ONLY_ its elements! */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
+DeeDict_NewKeyItemsInherited(size_t num_keyitems,
+                             /*inhert(on_success)*/ DREF DeeObject **key_items) {
 	DREF Dict *result;
 	/* Allocate the Dict object. */
 	result = DeeGCObject_MALLOC(Dict);
@@ -92,11 +176,11 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 			min_mask = (min_mask << 1) | 1;
 
 		/* Prefer using a mask of one greater level to improve performance. */
-		mask           = (min_mask << 1) | 1;
+		mask = (min_mask << 1) | 1;
 		result->d_elem = (struct dict_item *)Dee_TryCallocc(mask + 1, sizeof(struct dict_item));
 		if unlikely(!result->d_elem) {
 			/* Try one level less if that failed. */
-			mask           = min_mask;
+			mask = min_mask;
 			result->d_elem = (struct dict_item *)Dee_Callocc(mask + 1, sizeof(struct dict_item));
 			if unlikely(!result->d_elem)
 				goto err_r;
@@ -109,28 +193,45 @@ DeeDict_NewKeyItemsInherited(size_t num_keyitems, DREF DeeObject **key_items) {
 		while (num_keyitems--) {
 			DREF DeeObject *key   = *key_items++;
 			DREF DeeObject *value = *key_items++;
-			dhash_t i, perturb, hash = DeeObject_Hash(key);
+			dhash_t i, perturb, hash;
+			hash = DeeObject_Hash(key);
 			perturb = i = hash & mask;
 			for (;; DeeDict_HashNx(i, perturb)) {
 				struct dict_item *item = &result->d_elem[i & mask];
-				if (item->di_key)
-					continue; /* Already in use (XXX: Check for duplicates?) */
+				if (item->di_key) { /* Already in use */
+					int temp;
+					if likely(item->di_hash != hash)
+						continue;
+					temp = DeeObject_CompareEq(item->di_key, key);
+					if likely(temp == 0)
+						continue;
+					if unlikely(temp < 0)
+						goto err_r_elem;
+
+					/* Duplicate key. */
+					key_items -= 2;
+					++num_keyitems;
+					if unlikely(dict_insert_remainder_with_duplicates(result, num_keyitems, key_items))
+						goto err_r_elem;
+					goto done_populate_result;
+				}
 				item->di_hash  = hash;
 				item->di_key   = key;   /* Inherit reference. */
 				item->di_value = value; /* Inherit reference. */
 				break;
 			}
 		}
+done_populate_result:;
 	}
 	Dee_atomic_rwlock_init(&result->d_lock);
 
 	/* Initialize and start tracking the new Dict. */
 	weakref_support_init(result);
 	DeeObject_Init(result, &DeeDict_Type);
-	DeeGC_Track((DeeObject *)result);
-	return (DREF DeeObject *)result;
-err_r:
+	return DeeGC_Track((DeeObject *)result);
+err_r_elem:
 	Dee_Free(result->d_elem);
+err_r:
 	DeeGCObject_FREE(result);
 err:
 	return NULL;
@@ -247,15 +348,57 @@ DeeDict_FromIterator(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if unlikely(dict_init_iterator(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeDict_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED DREF DeeObject *DCALL
+DeeDict_NewWithHint(size_t num_keyitems) {
+	DREF Dict *result;
+	/* Allocate the Dict object. */
+	result = DeeGCObject_MALLOC(Dict);
+	if unlikely(!result)
+		goto err;
+	if (!num_keyitems) {
+		/* Special case: allocate an empty Dict. */
+return_empty_dict:
+		result->d_mask = 0;
+		result->d_elem = empty_dict_items;
+	} else {
+		size_t min_mask = 16 - 1, mask;
+
+		/* Figure out how large the mask of the Dict is going to be. */
+		while ((num_keyitems & min_mask) != num_keyitems)
+			min_mask = (min_mask << 1) | 1;
+
+		/* Prefer using a mask of one greater level to improve performance. */
+		mask = (min_mask << 1) | 1;
+		result->d_elem = (struct dict_item *)Dee_TryCallocc(mask + 1, sizeof(struct dict_item));
+		if unlikely(!result->d_elem) {
+			/* Try one level less if that failed. */
+			mask = min_mask;
+			result->d_elem = (struct dict_item *)Dee_TryCallocc(mask + 1, sizeof(struct dict_item));
+			if unlikely(!result->d_elem)
+				goto return_empty_dict;
+		}
+
+		/* Without any dummy items, these are identical. */
+		result->d_mask = mask;
+	}
+	result->d_size = 0;
+	result->d_used = 0;
+	Dee_atomic_rwlock_init(&result->d_lock);
+	weakref_support_init(result);
+	DeeObject_Init(result, &DeeDict_Type);
+	return DeeGC_Track((DeeObject *)result);
+err:
 	return NULL;
 }
 
@@ -264,18 +407,55 @@ DeeDict_FromSequence(DeeObject *__restrict self) {
 	DREF Dict *result;
 	result = DeeGCObject_MALLOC(Dict);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	if unlikely(dict_init_sequence(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeDict_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDict_FromRoDict(DeeObject *__restrict self) {
+	DREF Dict *result;
+	struct dict_item *iter, *end;
+	DeeRoDictObject *src = (DeeRoDictObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(src, &DeeRoDict_Type);
+	result = DeeGCObject_MALLOC(Dict);
+	if unlikely(!result)
+		goto err;
+	Dee_atomic_rwlock_init(&result->d_lock);
+	result->d_mask = src->rd_mask;
+	result->d_used = result->d_size = src->rd_size;
+	if unlikely(!result->d_size) {
+		result->d_elem = empty_dict_items;
+	} else {
+		result->d_elem = (struct dict_item *)Dee_Mallocc(src->rd_mask + 1,
+		                                                 sizeof(struct dict_item));
+		if unlikely(!result->d_elem)
+			goto err_r;
+		iter = (struct dict_item *)memcpyc(result->d_elem, src->rd_elem,
+		                                   result->d_mask + 1,
+		                                   sizeof(struct dict_item));
+		end = iter + (result->d_mask + 1);
+		for (; iter < end; ++iter) {
+			if (!iter->di_key)
+				continue;
+			Dee_Incref(iter->di_key);
+			Dee_Incref(iter->di_value);
+		}
+	}
+	weakref_support_init(result);
+	DeeObject_Init(result, &DeeDict_Type);
+	return DeeGC_Track((DeeObject *)result);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
+}
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

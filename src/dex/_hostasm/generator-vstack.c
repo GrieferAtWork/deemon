@@ -496,6 +496,8 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 		loc->ml_flags = saved_flags;
 		/*loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;*/
 		if (loc->ml_valtyp == &DeeNone_Type) {
+			if (MEMLOC_TYPE_HASREG(loc->ml_type))
+				Dee_memstate_decrinuse(state, loc->ml_value.v_hreg.r_regno);
 			loc->ml_type = MEMLOC_TYPE_CONST;
 			loc->ml_value.v_const = Dee_None;
 		}
@@ -814,6 +816,7 @@ Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self,
 				memloc_setvaltype(state, alias, type);
 		}
 		Dee_memstate_foreach_end;
+		/* TODO: Check for equivalences of "vtop" and assign the type to those as well! */
 		ASSERT(vtop->ml_valtyp == type);
 	}
 	return 0;
@@ -2645,7 +2648,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 		if unlikely(Dee_function_generator_vdup(self))
 			goto err; /* iter, iter */
 	}
-	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_IterNext, VCALL_CC_RAWINT, 1))
+	if unlikely(Dee_function_generator_vcallapi(self, &DeeObject_IterNext, VCALL_CC_RAWINTPTR, 1))
 		goto err; /* [if(!always_pop_iterator) iter], UNCHECKED(elem) */
 
 	/* TODO: If this jump might be the result of infinite loops,
@@ -3904,6 +3907,7 @@ hstack_linear_score(bitset_t const *__restrict hstack_inuse,
 		if (src->ml_type == MEMLOC_TYPE_HSTACKIND &&
 		    src->ml_value.v_hstack.s_cfa == dst_cfa_offset)
 			continue; /* Already at the perfect location! */
+		/* TODO: Check if "src" has an equivalence alias at the correct HSTACKIND location. */
 #ifdef HOSTASM_STACK_GROWS_DOWN
 		if (dst_cfa_offset <= hstack_cfa_offset)
 #else /* HOSTASM_STACK_GROWS_DOWN */

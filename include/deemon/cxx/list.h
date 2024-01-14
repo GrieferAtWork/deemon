@@ -51,7 +51,7 @@ public:
 		return inherit(DeeList_New());
 	}
 	static WUNUSED Ref<List<T> > of(size_t n_prealloc) {
-		return inherit(DeeList_NewHint(n_prealloc));
+		return inherit(DeeList_NewWithHint(n_prealloc));
 	}
 	static WUNUSED Ref<List<T> > of_vector(size_t objc, DeeObject *const *objv) {
 		return inherit(DeeList_NewVector(objc, objv));

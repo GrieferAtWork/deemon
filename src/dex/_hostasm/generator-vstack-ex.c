@@ -51,6 +51,7 @@
 #include <deemon/property.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
+#include <deemon/set.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
@@ -1561,6 +1562,27 @@ err:
 	return -1;
 }
 
+/* func, arg, kw -> result          (return == 0)
+ * func, arg, kw -> func, arg, kw   (return > 0)
+ * @return: 0 : Optimization successfully applied
+ * @return: 1 : Type cannot be encoded as a cast.
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+do_attempt_vopcallkw_as_vopcast(struct Dee_function_generator *__restrict self,
+                                DeeTypeObject *type) {
+	int temp;
+	DO(vpop_empty_kwds(self));              /* &DeeXXX_Type, obj */
+	DO(Dee_function_generator_vswap(self)); /* obj, &DeeXXX_Type */
+	DO(Dee_function_generator_vpop(self));  /* obj */
+	temp = Dee_function_generator_vopcast_nofallback(self, type);
+	if (temp > 0) {
+		DO(Dee_function_generator_vpush_const(self, type)); /* obj, type */
+		DO(Dee_function_generator_vpush_NULL(self));        /* obj, type, kw */
+	}
+	return temp;
+err:
+	return -1;
+}
 
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
@@ -1702,26 +1724,54 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 		}
 
 		/* Check for constructor calls to specific types. */
-		if (type == &DeeString_Type) {
-			if (true_argc == 1) {
+		if (true_argc == 1) {
+			if (type == &DeeString_Type) {
 				/* The string constructor acts just like `OPERATOR_STR' */
 				DO(vpop_empty_kwds(self));                  /* &DeeString_Type, obj */
 				DO(Dee_function_generator_vswap(self));     /* obj, &DeeString_Type */
 				DO(Dee_function_generator_vpop(self));      /* obj */
 				return Dee_function_generator_vopstr(self); /* result */
-			}
-		} else if (type == &DeeInt_Type) {
-			if (true_argc == 1) {
-				/* The int constructor acts just like `OPERATOR_INT', so-long as the passed argument isn't a string */
+			} else if (type == &DeeBool_Type) {
+				/* The bool constructor acts just like `OPERATOR_BOOL' */
+				DO(vpop_empty_kwds(self));                   /* &DeeBool_Type, obj */
+				DO(Dee_function_generator_vswap(self));      /* obj, &DeeBool_Type */
+				DO(Dee_function_generator_vpop(self));       /* obj */
+				return Dee_function_generator_vopbool(self, VOPBOOL_F_NORMAL); /* result */
+			} else if (type == &DeeInt_Type
+#ifdef CONFIG_HAVE_FPU
+			           || type == &DeeFloat_Type
+#endif /* CONFIG_HAVE_FPU */
+			           ) {
+				/* The int/float constructor acts just like `OPERATOR_INT/FLOAT',
+				 * so-long as the passed argument isn't a string */
 				DeeTypeObject *arg_type = Dee_memloc_typeof(Dee_function_generator_vtop(self) - 1);
 				if (arg_type != NULL && arg_type != &DeeString_Type) {
-					DO(vpop_empty_kwds(self));                  /* &DeeInt_Type, obj */
-					DO(Dee_function_generator_vswap(self));     /* obj, &DeeInt_Type */
+					DO(vpop_empty_kwds(self));                  /* &DeeXXX_Type, obj */
+					DO(Dee_function_generator_vswap(self));     /* obj, &DeeXXX_Type */
 					DO(Dee_function_generator_vpop(self));      /* obj */
+#ifdef CONFIG_HAVE_FPU
+					if (type == &DeeFloat_Type)
+						return Dee_function_generator_vop(self, OPERATOR_FLOAT, 1, VOP_F_PUSHRES); /* result */
+#endif /* CONFIG_HAVE_FPU */
 					return Dee_function_generator_vopint(self); /* result */
 				}
+			} else if (type == &DeeList_Type) { /* Check for sequence casts. */
+				/* The constructor of "List(a)" acts just like "[a...]", except when "a" is an integer */
+				DeeTypeObject *arg_type = Dee_memloc_typeof(Dee_function_generator_vtop(self) - 1);
+				if (arg_type != NULL && arg_type != &DeeInt_Type) {
+					int temp = do_attempt_vopcallkw_as_vopcast(self, &DeeList_Type);
+					if (temp <= 0)
+						return temp;
+				}
+			} else if (type == &DeeTuple_Type ||
+			           type == &DeeDict_Type || type == &DeeRoDict_Type ||
+			           type == &DeeHashSet_Type || type == &DeeRoSet_Type) {
+				int temp = do_attempt_vopcallkw_as_vopcast(self, type);
+				if (temp <= 0)
+					return temp;
 			}
-		}
+		} /* if (true_argc == 1) */
+
 
 		/* Check if the constructor call can be inlined. */
 		if (DeeType_InheritOperator(type, OPERATOR_CONSTRUCTOR)) {
@@ -3107,7 +3157,8 @@ vspare_location_count(struct Dee_memstate const *__restrict self,
 /* func, [attr], [items...] -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
-                   Dee_vstackaddr_t itemc, bool asmap, bool hasattr) {
+                   Dee_vstackaddr_t itemc, bool asmap, bool hasattr,
+                   bool allow_vpackseq) {
 	struct Dee_function_exceptinject_callvoidapi ij;
 	struct Dee_memloc *func_loc;
 	DeeTypeObject *func_type;
@@ -3116,30 +3167,35 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 	void const *api_decref;
 	Dee_vstackaddr_t n_spare_refs;
 	bool gift_references;
-	if (Dee_function_generator_vallconst(self, itemc)) {
-		if (itemc == 0) {
-			/* Special case: use an empty sequence */
-			DeeObject *seq_or_map = asmap ? Dee_EmptyMapping : Dee_EmptyTuple;
-			DO(Dee_function_generator_vpush_const(self, seq_or_map));
-			return hasattr ? Dee_function_generator_vopcallattr(self, 1)
-			               : Dee_function_generator_vopcall(self, 1);
-		}
-		/* TODO: Special case: all items are constants
-		 * -> Pack into either a tuple, or an RoDict */
+	ASSERTF(!asmap || (itemc % 2) == 0,
+	        "Need an even number of elements for a mapping type");
+
+	if (itemc == 0) {
+		/* Special case: use an empty sequence */
+		DeeObject *seq_or_map = asmap ? Dee_EmptyMapping : Dee_EmptyTuple;
+		DO(Dee_function_generator_vpush_const(self, seq_or_map));
+		return hasattr ? Dee_function_generator_vopcallattr(self, 1)
+		               : Dee_function_generator_vopcall(self, 1);
 	}
 
-	/* Optimization when "func" is a constant (like
-	 * DeeList_Type, which can be optimized to a list pack) */
+	/* Check if "func" is a known sequence type. If so, then try to
+	 * encode the call as an optimized sequence pack expression. */
 	func_loc = Dee_function_generator_vtop(self) - (hasattr ? (itemc + 1) : itemc);
 	if (func_loc->ml_type == MEMLOC_TYPE_CONST) {
 		DeeObject *func = func_loc->ml_value.v_const;
-		if (!hasattr && (func == (DeeObject *)&DeeList_Type ||
-		                 func == (DeeObject *)&DeeTuple_Type)) {
-			/* TODO: Expand `Dee_function_generator_vpackseq()' to also work for HashSet and Dict */
-			return Dee_function_generator_vpackseq(self, &DeeList_Type, itemc);
+		if (!hasattr && allow_vpackseq && DeeType_Check(func) &&
+		    (!!asmap == !!DeeType_InheritsFrom((DeeTypeObject *)func, &DeeMapping_Type)) &&
+		    ((DeeTypeObject *)func == &DeeList_Type || (DeeTypeObject *)func == &DeeTuple_Type ||
+		     (DeeTypeObject *)func == &DeeDict_Type || (DeeTypeObject *)func == &DeeRoDict_Type ||
+		     (DeeTypeObject *)func == &DeeHashSet_Type || (DeeTypeObject *)func == &DeeRoSet_Type)) {
+			DO(Dee_function_generator_vlrot(self, itemc + 1)); /* [items...], func */
+			DO(Dee_function_generator_vpop(self));             /* [items...] */
+			return Dee_function_generator_vpackseq(self, (DeeTypeObject *)func, itemc);
 		}
-		/* XXX: More optimizations */
+
+		/* XXX: More optimizations? */
 	}
+
 	func_type = Dee_memloc_typeof(func_loc);
 	if (func_type) {
 		/* TODO: this optimization is possible whenever the function doesn't let passed arguments escape!
@@ -3205,6 +3261,44 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 		}
 	}
 
+	/* Check for special case: all items are constants
+	 * -> Pack into either a tuple, or an RoDict, then call the function like that. */
+	if (Dee_function_generator_vallconst(self, itemc)) {
+		size_t i;
+		struct Dee_memloc *elemv;
+		DREF DeeObject *cseq;
+		elemv = Dee_function_generator_vtop(self) - (itemc - 1);
+		if (asmap) {
+			cseq = (DREF DeeObject *)DeeRoDict_NewWithHint((size_t)(itemc / 2));
+			if unlikely(!cseq)
+				goto err;
+			for (i = 0; i < (size_t)(itemc / 2); ++i) {
+				DeeObject *key   = elemv[(i * 2) + 0].ml_value.v_const;
+				DeeObject *value = elemv[(i * 2) + 1].ml_value.v_const;
+				if unlikely(DeeRoDict_Insert((DeeRoDictObject **)&cseq, key, value)) {
+/*err_cseq:*/
+					Dee_Decref_likely(cseq);
+					goto err;
+				}
+			}
+		} else {
+			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(itemc);
+			if unlikely(!cseq)
+				goto err;
+			for (i = 0; i < itemc; ++i) {
+				DeeObject *elem = elemv[i].ml_value.v_const;
+				Dee_Incref(elem);
+				DeeTuple_SET(cseq, i, elem); /* Inherit reference */
+			}
+		}
+		cseq = Dee_function_generator_inlineref(self, cseq);
+		if unlikely(!cseq)
+			goto err;
+		DO(Dee_function_generator_vpopmany(self, itemc));   /* func, [attr] */
+		DO(Dee_function_generator_vpush_const(self, cseq)); /* func, [attr], cseq */
+		return hasattr ? Dee_function_generator_vopcallattr(self, 1)
+		               : Dee_function_generator_vopcall(self, 1);
+	}
 
 	/* Fallback: Generate code similar to what the deemon interpreter already does.
 	 *           The only exception here is that we're also able to choose if we
@@ -3287,28 +3381,28 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallseq(struct Dee_function_generator *__restrict self,
                                   Dee_vstackaddr_t itemc) {
-	return vopcallseqmap_impl(self, itemc, false, false);
+	return vopcallseqmap_impl(self, itemc, false, false, true);
 }
 
 /* func, [[key, value]...] -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallmap(struct Dee_function_generator *__restrict self,
                                   Dee_vstackaddr_t pairc) {
-	return vopcallseqmap_impl(self, pairc * 2, true, false);
+	return vopcallseqmap_impl(self, pairc * 2, true, false, true);
 }
 
 /* func, attr, [items...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallattrseq(struct Dee_function_generator *__restrict self,
                                       Dee_vstackaddr_t itemc) {
-	return vopcallseqmap_impl(self, itemc, false, true);
+	return vopcallseqmap_impl(self, itemc, false, true, true);
 }
 
 /* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopcallattrmap(struct Dee_function_generator *__restrict self,
                                       Dee_vstackaddr_t pairc) {
-	return vopcallseqmap_impl(self, pairc * 2, true, true);
+	return vopcallseqmap_impl(self, pairc * 2, true, true, true);
 }
 
 
@@ -4269,15 +4363,16 @@ Dee_function_generator_vmorph_uint(struct Dee_function_generator *__restrict sel
 }
 
 
-/* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
+/* [elems...] -> seq */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc) {
-	bool is_list = seq_type == &DeeList_Type;
-	ASSERT(seq_type == &DeeList_Type || seq_type == &DeeTuple_Type);
+	bool asmap = DeeType_InheritsFrom(seq_type, &DeeMapping_Type);
+	ASSERTF(!asmap || (elemc % 2) == 0,
+	        "Need an even number of elements for a mapping type");
 	DO(Dee_function_generator_vdirect(self, elemc));
 
-	/* Check for special case: construct an empty List/Tuple */
+	/* Check for special case: construct an empty sequence */
 	if (elemc == 0) {
 		if (seq_type == &DeeTuple_Type)
 			return Dee_function_generator_vpush_const(self, Dee_EmptyTuple);
@@ -4287,64 +4382,106 @@ Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vopcall(self, 0);
 	}
 
-	/* Check for special case: supposed to create a tuple, and all elements are constants.
-	 * Note that we don't optimize this in case of a list. Since lists are mutable, we'd
-	 * need to follow up the push of the constant list with a call to OPERATOR_COPY, which
-	 * ends up producing slightly slower code that simply putting the list together by hand
-	 * does below. However, when optimizing for size, we *do* produce that code, because
-	 * it ends up being smaller. */
-	if (((seq_type == &DeeTuple_Type) ||
+	/* Check for special case: when all elements are constants, we can create the
+	 * sequence as its frozen equivalent, and then (if necessary) cast it to its
+	 * unfrozen, caller-given type.
+	 *
+	 * The only type we don't do this for is List when not optimizing for size,
+	 * since the list would need to be copied, and putting it together by hand
+	 * is faster, as we're able to let the list inherit references to individual
+	 * items (if possible). */
+	if (((seq_type != &DeeList_Type) ||
 	     (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) &&
 	    Dee_function_generator_vallconst(self, elemc)) {
 		size_t i;
 		struct Dee_memloc *elemv;
-		DREF DeeTupleObject *ctuple;
-		ctuple = DeeTuple_NewUninitialized(elemc);
-		if unlikely(!ctuple)
-			goto err;
+		DREF DeeObject *cseq;
 		elemv  = Dee_function_generator_vtop(self) - (elemc - 1);
-		for (i = 0; i < elemc; ++i) {
-			DeeObject *elem = elemv[i].ml_value.v_const;
-			Dee_Incref(elem);
-			ctuple->t_elem[i] = elem; /* Inherit reference */
+		if (asmap) {
+			cseq = (DREF DeeObject *)DeeRoDict_NewWithHint((size_t)(elemc / 2));
+			if unlikely(!cseq)
+				goto err;
+			for (i = 0; i < (size_t)(elemc / 2); ++i) {
+				DeeObject *key   = elemv[(i * 2) + 0].ml_value.v_const;
+				DeeObject *value = elemv[(i * 2) + 1].ml_value.v_const;
+				if unlikely(DeeRoDict_Insert((DeeRoDictObject **)&cseq, key, value)) {
+err_cseq:
+					Dee_Decref_likely(cseq);
+					goto err;
+				}
+			}
+		} else if (DeeType_InheritsFrom(seq_type, &DeeSet_Type)) {
+			cseq = (DREF DeeObject *)DeeRoSet_NewWithHint(elemc);
+			if unlikely(!cseq)
+				goto err;
+			for (i = 0; i < elemc; ++i) {
+				DeeObject *key = elemv[i].ml_value.v_const;
+				if unlikely(DeeRoSet_Insert((DeeRoSetObject **)&cseq, key))
+					goto err_cseq;
+			}
+		} else {
+			cseq = (DREF DeeObject *)DeeTuple_NewUninitialized(elemc);
+			if unlikely(!cseq)
+				goto err;
+			for (i = 0; i < elemc; ++i) {
+				DeeObject *elem = elemv[i].ml_value.v_const;
+				Dee_Incref(elem);
+				DeeTuple_SET(cseq, i, elem); /* Inherit reference */
+			}
 		}
-		ctuple = (DeeTupleObject *)Dee_function_generator_inlineref(self, (DREF DeeObject *)ctuple);
-		if unlikely(!ctuple)
+
+		cseq = Dee_function_generator_inlineref(self, cseq);
+		if unlikely(!cseq)
 			goto err;
 		DO(Dee_function_generator_vpopmany(self, elemc));
-		DO(Dee_function_generator_vpush_const(self, (DeeObject *)ctuple));
-		if (seq_type == &DeeTuple_Type)
+		DO(Dee_function_generator_vpush_const(self, cseq));
+		if (Dee_TYPE(cseq) == seq_type)
 			return 0;
 		return Dee_function_generator_vopcast(self, seq_type);
 	}
 
-	/* Construct the list/tuple as an uninitialized list/tuple object, and then filling its items. */
-	DO(Dee_function_generator_vpush_immSIZ(self, elemc));    /* [elems...], elemc */
-	DO(Dee_function_generator_vcallapi(self, is_list ? (void const *)&DeeList_NewUninitialized
-	                                                 : (void const *)&DeeTuple_NewUninitialized,
-	                                   VCALL_CC_OBJECT, 1)); /* [elems...], ref:seq */
-	DO(Dee_function_generator_vdirect(self, 1));             /* [elems...], ref:seq */
-	DO(Dee_function_generator_vdup(self));                   /* [elems...], ref:seq, seq */
-	DO(is_list ? Dee_function_generator_vind(self, offsetof(DeeListObject, l_list.ol_elemv))
-	           : Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [elems...], ref:seq, elemv */
-	DO(Dee_function_generator_vswap(self));                  /* [elems...], elemv, ref:seq */
-	DO(Dee_function_generator_vrrot(self, elemc + 2));       /* ref:seq, [elems...], elemv */
-	while (elemc) {
-		--elemc;
-		DO(Dee_function_generator_vswap(self));                                     /* ref:seq, [elems...], elemv, elem */
-		DO(Dee_function_generator_vref2(self, elemc + 3));                          /* ref:seq, [elems...], elemv, ref:elem */
-		DO(Dee_function_generator_vpopind(self, elemc * sizeof(DREF DeeObject *))); /* ref:seq, [elems...], elemv */
+	/* Special handling when constructing a runtime List/Tuple.
+	 * These, we allocate as uninitialized and then fill in. */
+	if (seq_type == &DeeList_Type || seq_type == &DeeTuple_Type) {
+		bool is_list = seq_type == &DeeList_Type;
+		DO(Dee_function_generator_vpush_immSIZ(self, elemc));    /* [elems...], elemc */
+		DO(Dee_function_generator_vcallapi(self, is_list ? (void const *)&DeeList_NewUninitialized
+		                                                 : (void const *)&DeeTuple_NewUninitialized,
+		                                   VCALL_CC_OBJECT, 1)); /* [elems...], ref:seq */
+		DO(Dee_function_generator_vdirect(self, 1));             /* [elems...], ref:seq */
+		DO(Dee_function_generator_vdup(self));                   /* [elems...], ref:seq, seq */
+		DO(is_list ? Dee_function_generator_vind(self, offsetof(DeeListObject, l_list.ol_elemv))
+		           : Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [elems...], ref:seq, elemv */
+		DO(Dee_function_generator_vswap(self));                  /* [elems...], elemv, ref:seq */
+		DO(Dee_function_generator_vrrot(self, elemc + 2));       /* ref:seq, [elems...], elemv */
+		while (elemc) {
+			--elemc;
+			DO(Dee_function_generator_vswap(self));                                     /* ref:seq, [elems...], elemv, elem */
+			DO(Dee_function_generator_vref2(self, elemc + 3));                          /* ref:seq, [elems...], elemv, ref:elem */
+			DO(Dee_function_generator_vpopind(self, elemc * sizeof(DREF DeeObject *))); /* ref:seq, [elems...], elemv */
+		}
+		DO(Dee_function_generator_vpop(self)); /* ref:seq */
+		if (is_list) {
+			ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
+			Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* Inherited by `DeeGC_Track()' */
+			DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR, 1));
+			ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
+			Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* Returned by `DeeGC_Track()' */
+		}
+		DO(Dee_function_generator_vsettyp_noalias(self, seq_type));
+		return Dee_function_generator_voneref_noalias(self);
+	} else if (seq_type == &DeeDict_Type || seq_type == &DeeRoDict_Type ||
+	           seq_type == &DeeHashSet_Type || seq_type == &DeeRoSet_Type) {
+		/* TODO: DeeRoDict_NewWithHint() + DeeRoDict_Insert() */
+		/* TODO: DeeDict_NewWithHint() + DeeDict_Insert()  (or DeeDict_NewKeyItemsInherited()) */
+		/* TODO: DeeRoSet_NewWithHint() + DeeRoSet_Insert() */
+		/* TODO: DeeHashSet_NewWithHint() + DeeHashSet_Insert()  (or DeeHashSet_NewItemsInherited()) */
 	}
-	DO(Dee_function_generator_vpop(self)); /* ref:seq */
-	if (is_list) {
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));
-		Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF; /* Inherited by `DeeGC_Track()' */
-		DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINT, 1));
-		ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF);
-		Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* Returned by `DeeGC_Track()' */
-	}
-	DO(Dee_function_generator_vsettyp_noalias(self, seq_type));
-	return Dee_function_generator_voneref_noalias(self);
+
+	/* Fallback: Generate a constructor call "seq_type({ elems... })" */
+	DO(Dee_function_generator_vpush_const(self, seq_type)); /* [elems...], seq_type */
+	DO(Dee_function_generator_vrrot(self, elemc + 1));      /* seq_type, [elems...] */
+	return vopcallseqmap_impl(self, elemc, asmap, false, false);
 err:
 	return -1;
 }
@@ -5274,7 +5411,7 @@ Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self)
 	DO(Dee_function_generator_vswap(self));            /* ref:lhs, rhs */
 	if (concat_inherited_api_function == (void const *)&DeeObject_ConcatInherited)
 		DO(Dee_function_generator_vnotoneref_at(self, 1));
-	DO(Dee_function_generator_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINT_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, UNCHECKED(result) */
+	DO(Dee_function_generator_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, UNCHECKED(result) */
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self))); /* ([valid_if(false)] ref:lhs), rhs, result */
 	if (concat_inherited_api_function != (void const *)&DeeObject_ConcatInherited)
 		DO(Dee_function_generator_voneref_noalias(self));
@@ -5350,7 +5487,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vpush_immSIZ(self, n));  /* [elems...], elemv, ref:seq, elemc */
 	DO(Dee_function_generator_vlrot(self, 3));         /* [elems...], ref:seq, elemc, elemv */
 	old_seqflags = Dee_function_generator_vtop(self)[-2].ml_flags;
-	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINT_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
+	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtop(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
 	Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF; /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
@@ -5427,7 +5564,7 @@ Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self
 		return Dee_function_generator_vpush_const(self, known_type);
 	}
 
-	DO(Dee_function_generator_vcallapi(self, &DeeObject_Class, VCALL_CC_RAWINT_KEEPARGS, 1)); /* obj, obj.class */
+	DO(Dee_function_generator_vcallapi(self, &DeeObject_Class, VCALL_CC_RAWINTPTR_KEEPARGS, 1)); /* obj, obj.class */
 	/* If we're not holding any kind of reference, or the caller pinky-promises that
 	 * they don't need a reference because they know that "obj" stays alive long enough,
 	 * then we don't need to give the type a new reference. */
@@ -5479,31 +5616,79 @@ err:
 	return -1;
 }
 
-/* obj -> type(obj) */
+/* @return: 0 : No
+ * @return: 1 : Yes
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+is_constexpr_empty_sequence(struct Dee_function_generator *__restrict gen,
+                            DeeObject *__restrict self) {
+	STATIC_ASSERT((int)true > 0);
+	STATIC_ASSERT((int)false == 0);
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (tp_self == &DeeNone_Type)
+		return true;
+	if (tp_self == &DeeTuple_Type)
+		return DeeTuple_IsEmpty(self);
+	if (tp_self == &DeeString_Type)
+		return DeeString_IsEmpty(self);
+	if (tp_self == &DeeSeq_Type)
+		return true;
+	if (tp_self == &DeeSet_Type)
+		return true;
+	if (tp_self == &DeeMapping_Type)
+		return true;
+	if (tp_self == &DeeRoDict_Type)
+		return ((DeeRoDictObject *)self)->rd_size == 0;
+	if (tp_self == &DeeRoSet_Type)
+		return ((DeeRoSetObject *)self)->rs_size == 0;
+	if (DeeType_IsOperatorConstexpr(tp_self, OPERATOR_SEQ_ENUMERATE)) {
+		/* Construct an iterator to see if the sequence is empty. */
+		DREF DeeObject *elem = NULL;
+		DREF DeeObject *iter = DeeObject_IterSelf(self);
+		if likely(iter) {
+			elem = DeeObject_IterNext(iter);
+			Dee_Decref(iter);
+		}
+		if (elem == ITER_DONE) {
+			return true;
+		} else if (elem) {
+			Dee_Decref(elem);
+			return false;
+		} else if (gen->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+		} else {
+			return -1;
+		}
+	}
+	return false;
+}
+
+/* Like Dee_function_generator_vopcast(), but return 1
+ * if the fallback (1-arg ctor-call) would be used. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
-                               DeeTypeObject *type) {
+Dee_function_generator_vopcast_nofallback(struct Dee_function_generator *__restrict self,
+                                          DeeTypeObject *newtype) {
 	void const *cast_api_function;
 	struct Dee_memloc *objloc;
-	DeeTypeObject *objtype;
+	DeeTypeObject *oldtype;
 
 	/* Special handling for certain types. */
-	if (type == &DeeInt_Type)
+	if (newtype == &DeeInt_Type)
 		return Dee_function_generator_vopint(self);
-	if (type == &DeeBool_Type)
+	if (newtype == &DeeBool_Type)
 		return Dee_function_generator_vopbool(self, VOPBOOL_F_NORMAL);
-	if (type == &DeeString_Type)
+	if (newtype == &DeeString_Type)
 		return Dee_function_generator_vopstr(self);
-	if (type == &DeeFloat_Type)
+	if (newtype == &DeeFloat_Type)
 		return Dee_function_generator_vop(self, OPERATOR_FLOAT, 1, VOP_F_PUSHRES);
 
 	DO(Dee_function_generator_vdirect(self, 1));
 	objloc = Dee_function_generator_vtop(self);
-	objtype = Dee_memloc_typeof(objloc);
-	if (objtype == type) {
-		if (Dee_function_generator_isoneref(self, objloc))
+	oldtype = Dee_memloc_typeof(objloc);
+	if (oldtype == newtype) {
+		if (Dee_function_generator_isoneref_noalias(self, objloc))
 			return 0; /* location is already distinct and of the proper type -> no-op */
-		if (DeeType_IsOperatorConstexpr(type, OPERATOR_COPY))
+		if (DeeType_IsOperatorConstexpr(newtype, OPERATOR_COPY))
 			return 0; /* Copy doesn't have side-effects, and type already matches -> no-op */
 		/* Types already match, but object isn't distinct -> must create a copy. */
 		return Dee_function_generator_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES);
@@ -5513,11 +5698,23 @@ Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
 	 * NOTE: Other object types aren't constexpr, so can't be inlined here! */
 	if (objloc->ml_type == MEMLOC_TYPE_CONST) {
 		DeeObject *obj = objloc->ml_value.v_const;
+		if (DeeType_InheritsFrom(newtype, &DeeSeq_Type)) {
+			int temp = is_constexpr_empty_sequence(self, obj);
+			if (temp) {
+				if unlikely(temp < 0)
+					goto err;
+				/* Special case: casting an empty sequence to another can be optimized to
+				 *               produce a default-constructed instance of the target type. */
+				DO(Dee_function_generator_vpop(self)); /* N/A */
+				return Dee_function_generator_vpackseq(self, newtype, 0);
+			}
+		}
+
 		if (DeeType_IsOperatorConstexpr(Dee_TYPE(obj), OPERATOR_COPY) &&
-		    DeeType_IsOperatorConstexpr(type, OPERATOR_COPY)) {
+		    DeeType_IsOperatorConstexpr(newtype, OPERATOR_COPY)) {
 			/* Cast the object at compile-time. */
 			DREF DeeObject *cast_result;
-			cast_result = DeeObject_New(type, 1, &obj);
+			cast_result = DeeObject_New(newtype, 1, &obj);
 			if likely(cast_result != NULL) {
 				cast_result = Dee_function_generator_inlineref(self, cast_result);
 				if unlikely(!cast_result)
@@ -5525,31 +5722,43 @@ Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
 				DO(Dee_function_generator_vpop(self));
 				return Dee_function_generator_vpush_const(self, cast_result);
 			} else if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-				goto err;
-			} else {
 				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			} else {
+				goto err;
 			}
 		}
 	}
 
+	/* Special optimizations for certain types of casts. */
+	if (oldtype == &DeeRoDict_Type && newtype == &DeeDict_Type) {
+		DO(Dee_function_generator_vcallapi(self, &DeeDict_FromRoDict, VCALL_CC_OBJECT, 1)); /* result */
+		goto set_vtop_to_type;
+	} else if (oldtype == &DeeRoSet_Type && newtype == &DeeHashSet_Type) {
+		DO(Dee_function_generator_vcallapi(self, &DeeHashSet_FromRoSet, VCALL_CC_OBJECT, 1)); /* result */
+		goto set_vtop_to_type;
+	} else if (oldtype == &DeeTuple_Type && newtype == &DeeList_Type) {
+		DO(Dee_function_generator_vcallapi(self, &DeeList_FromTuple, VCALL_CC_OBJECT, 1)); /* result */
+		goto set_vtop_to_type;
+	}
+
 	/* Encode a runtime cast */
-	if (type == &DeeList_Type) {
+	if (newtype == &DeeList_Type) {
 		cast_api_function = &DeeList_FromSequence;
-	} else if (type == &DeeTuple_Type) {
+	} else if (newtype == &DeeTuple_Type) {
 		cast_api_function = &DeeTuple_FromSequence;
-	} else if (type == &DeeDict_Type) {
+	} else if (newtype == &DeeDict_Type) {
 		cast_api_function = &DeeDict_FromSequence;
-	} else if (type == &DeeHashSet_Type) {
+	} else if (newtype == &DeeHashSet_Type) {
 		cast_api_function = &DeeHashSet_FromSequence;
-	} else if (type == &DeeRoDict_Type) {
+	} else if (newtype == &DeeRoDict_Type) {
 		cast_api_function = &DeeRoDict_FromSequence;
-	} else if (type == &DeeRoSet_Type) {
+	} else if (newtype == &DeeRoSet_Type) {
 		cast_api_function = &DeeRoSet_FromSequence;
 	} else {
 		cast_api_function = NULL;
 	}
 	if (cast_api_function) {
-		if (cast_api_function == &DeeTuple_FromSequence && objtype == &DeeList_Type) {
+		if (cast_api_function == &DeeTuple_FromSequence && oldtype == &DeeList_Type) {
 			/* Special optimization: casting a List to a Tuple can be done
 			 *                       most optimally with List.frozen */
 			struct type_getset const *list_frozen = DeeList_Type.tp_getsets;
@@ -5568,11 +5777,27 @@ Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
 		    cast_api_function != &DeeRoDict_FromSequence &&
 		    cast_api_function != &DeeRoSet_FromSequence)
 			Dee_function_generator_voneref_noalias(self);
-		return Dee_function_generator_vsettyp_noalias(self, type);
+set_vtop_to_type:
+		return Dee_function_generator_vsettyp_noalias(self, newtype);
 	}
-	DO(Dee_function_generator_vpush_const(self, type)); /* seq, type */
-	DO(Dee_function_generator_vswap(self));             /* type, seq */
-	return Dee_function_generator_vopcall(self, 1);     /* result */
+
+	/* No dedicated optimization available -> tell the caller that the fallback needs to be used. */
+	return 1;
+err:
+	return -1;
+}
+
+/* obj -> newtype(obj) */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
+                               DeeTypeObject *newtype) {
+	int result = Dee_function_generator_vopcast_nofallback(self, newtype);
+	if (result > 0) {
+		DO(Dee_function_generator_vpush_const(self, newtype)); /* obj, type */
+		DO(Dee_function_generator_vswap(self));                /* type, obj */
+		result = Dee_function_generator_vopcall(self, 1);      /* result */
+	}
+	return result;
 err:
 	return -1;
 }
