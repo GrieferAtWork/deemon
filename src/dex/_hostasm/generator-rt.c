@@ -32,6 +32,7 @@
 #include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
+#include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/module.h>
@@ -323,6 +324,18 @@ libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs) {
 	Dee_Decref(rhs);
 	return result;
 }
+
+#ifdef CONFIG_HAVE_FPU
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+libhostasm_rt_DeeObject_Float(DeeObject *__restrict self) {
+	double result;
+	if unlikely(DeeObject_AsDouble(self, &result))
+		goto err;
+	return DeeFloat_New(result);
+err:
+	return NULL;
+}
+#endif /* CONFIG_HAVE_FPU */
 
 
 /* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.

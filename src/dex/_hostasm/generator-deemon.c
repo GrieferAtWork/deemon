@@ -1121,14 +1121,18 @@ do_jcc:
 	TARGET(ASM_SUPEROF)
 		return Dee_function_generator_vopsuperof(self);
 
-	//TODO: TARGET(ASM_INSTANCEOF)
-	//TODO: TARGET(ASM_IMPLEMENTS)
-		/* TODO: Remember: in "x is int", we can compile as "type(x) === int", because "int" is TP_FFINAL! */
+	TARGET(ASM_INSTANCEOF)
+		return Dee_function_generator_vopinstanceof(self);
+
+	TARGET(ASM_IMPLEMENTS)
+		return Dee_function_generator_vopimplements(self);
 
 	TARGET(ASM_STR)
 		return Dee_function_generator_vopstr(self);
+
 	TARGET(ASM_BOOL)
 		return Dee_function_generator_vopbool(self, false);
+
 	TARGET(ASM_NOT)
 		return Dee_function_generator_vopnot(self);
 
@@ -2111,10 +2115,42 @@ do_jcc:
 		break;
 
 
-	//TODO: TARGET(ASM_SUPERGETATTR_THIS_RC)
-	//TODO: TARGET(ASM16_SUPERGETATTR_THIS_RC)
-	//TODO: TARGET(ASM_SUPERCALLATTR_THIS_RC)
-	//TODO: TARGET(ASM16_SUPERCALLATTR_THIS_RC)
+	TARGET(ASM_SUPERGETATTR_THIS_RC) {
+		uint16_t type_rid, attr_cid;
+		type_rid = instr[2];
+		attr_cid = instr[3];
+		__IF0 {
+	TARGET(ASM16_SUPERGETATTR_THIS_RC)
+			type_rid = UNALIGNED_GETLE16(instr + 2);
+			attr_cid = UNALIGNED_GETLE16(instr + 4);
+		}
+		DO(Dee_function_generator_vpush_this(self));          /* this */
+		DO(Dee_function_generator_vpush_rid(self, type_rid)); /* this, super */
+		DO(Dee_function_generator_vopsuper(self));            /* this as super */
+		DO(Dee_function_generator_vpush_cid(self, attr_cid)); /* this as super, attr */
+		return Dee_function_generator_vopgetattr(self);       /* result */
+	}	break;
+
+	TARGET(ASM_SUPERCALLATTR_THIS_RC) {
+		uint16_t type_rid, attr_cid;
+		uint8_t argc;
+		type_rid = instr[2];
+		attr_cid = instr[3];
+		argc     = instr[4];
+		__IF0 {
+	TARGET(ASM16_SUPERCALLATTR_THIS_RC)
+			type_rid = UNALIGNED_GETLE16(instr + 2);
+			attr_cid = UNALIGNED_GETLE16(instr + 4);
+			argc     = instr[6];
+		}
+		DO(Dee_function_generator_vpush_this(self));           /* [args...], this */
+		DO(Dee_function_generator_vpush_rid(self, type_rid));  /* [args...], this, super */
+		DO(Dee_function_generator_vopsuper(self));             /* [args...], this as super */
+		DO(Dee_function_generator_vrrot(self, argc + 1));      /* this as super, [args...] */
+		DO(Dee_function_generator_vpush_cid(self, attr_cid));  /* this as super, [args...], attr */
+		DO(Dee_function_generator_vrrot(self, argc + 1));      /* this as super, attr, [args...] */
+		return Dee_function_generator_vopcallattr(self, argc); /* result */
+	}	break;
 
 	TARGET(ASM_REDUCE_MIN)
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
@@ -2676,7 +2712,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 	for (instr = block->bb_deemon_start; instr < block->bb_deemon_end;) {
 		Dee_instruction_t const *next_instr = DeeAsm_NextInstr(instr);
 
-		/* TODO: If this function throw an exception that isn't an interrupt or BadAlloc,
+		/* TODO: If this function throws an exception that isn't an interrupt or BadAlloc,
 		 *       re-wrap that exception as an IllegalInstruction, whilst also appending
 		 *       DDI debug information about the origin of `instr' */
 		DO(Dee_function_generator_geninstr(self, instr, &next_instr));
@@ -2686,7 +2722,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 		if (block->bb_mem_end == (DREF struct Dee_memstate *)-1) {
 			/* Special indicator meaning that this block needs to be re-compiled
 			 * because its starting memory state had to be constrained. This can
-			 * happen (e.g.) in cod like this:
+			 * happen (e.g.) in code like this:
 			 * >> local x = "foo";
 			 * >> do {
 			 * >>     print x;    // In the first pass, "x" is the constant "foo"

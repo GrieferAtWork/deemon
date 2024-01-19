@@ -107,6 +107,8 @@ DECL_BEGIN
 #define Dee_thread_object         thread_object
 #define Dee_compiler_error_object compiler_error_object
 #define Dee_compiler_options      compiler_options
+#define Dee_cmethod_object        cmethod_object
+#define Dee_kwcmethod_object      kwcmethod_object
 #define MODSYM_FNORMAL            Dee_MODSYM_FNORMAL
 #define MODSYM_FREADONLY          Dee_MODSYM_FREADONLY
 #define MODSYM_FCONSTEXPR         Dee_MODSYM_FCONSTEXPR
@@ -144,6 +146,8 @@ DECL_BEGIN
 
 struct Dee_string_object;
 struct Dee_code_object;
+struct Dee_cmethod_object;
+struct Dee_kwcmethod_object;
 typedef struct Dee_module_object DeeModuleObject;
 typedef struct Dee_module_path_object DeeModulePathObject;
 
@@ -396,6 +400,17 @@ DDATDEF struct Dee_static_module_struct DeeModule_Deemon;
 
 /* The module of builtin objects accessible by opening `deemon'. */
 #define DeeModule_GetDeemon() (&DeeModule_Deemon)
+
+/* Special functions exported by `DeeModule_Deemon'.
+ * These are here so that dex modules (like _hostasm) can detect calls to these functions. */
+DDATDEF struct Dee_cmethod_object DeeBuiltin_HasAttr;
+DDATDEF struct Dee_cmethod_object DeeBuiltin_HasItem;
+DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundAttr;
+DDATDEF struct Dee_cmethod_object DeeBuiltin_BoundItem;
+DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Compare;
+DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Import;
+DDATDEF struct Dee_cmethod_object DeeBuiltin_Hash;
+DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Exec;
 
 
 

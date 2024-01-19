@@ -61,8 +61,6 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_CMETHOD(builtin_hasattr, &f_builtin_hasattr);
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 	DeeObject *self, *key;
@@ -76,8 +74,6 @@ f_builtin_hasitem(size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
-INTERN DEFINE_CMETHOD(builtin_hasitem, &f_builtin_hasitem);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_boundattr(size_t argc, DeeObject *const *argv) {
@@ -101,7 +97,6 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_CMETHOD(builtin_boundattr, &f_builtin_boundattr);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
@@ -117,8 +112,6 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
-INTERN DEFINE_CMETHOD(builtin_bounditem, &f_builtin_bounditem);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -137,8 +130,6 @@ f_builtin_compare(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 err:
 	return NULL;
 }
-
-INTERN DEFINE_KWCMETHOD(builtin_compare, &f_builtin_compare);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -161,15 +152,11 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWCMETHOD(builtin_import, &f_builtin_import);
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_hash(size_t argc, DeeObject *const *argv) {
 	dssize_t result = DeeObject_Hashv(argv, argc);
 	return DeeInt_NewHash(result);
 }
-
-INTERN DEFINE_CMETHOD(builtin_hash, &f_builtin_hash);
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 builtin_exec_fallback(size_t argc,
@@ -196,15 +183,8 @@ builtin_exec_fallback(size_t argc,
 		expr = DeeFile_ReadBytes(expr, (size_t)-1, true);
 		if unlikely(!expr)
 			goto err;
-		if (DeeString_Check(expr)) {
-			usertext = DeeString_AsUtf8(expr);
-			if unlikely(!usertext)
-				goto err_expr;
-			usersize = WSTR_LENGTH(usertext);
-		} else {
-			usertext = (char *)DeeBytes_DATA(expr);
-			usersize = DeeBytes_SIZE(expr);
-		}
+		usertext = (char *)DeeBytes_DATA(expr);
+		usersize = DeeBytes_SIZE(expr);
 	}
 	result = DeeExec_RunMemory(usertext,
 	                           usersize,
@@ -219,8 +199,6 @@ builtin_exec_fallback(size_t argc,
 	                           NULL);
 	Dee_Decref_unlikely(expr);
 	return result;
-err_expr:
-	Dee_Decref(expr);
 err:
 	return NULL;
 }
@@ -371,8 +349,6 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWCMETHOD(builtin_exec, &f_builtin_exec);
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 get_expression_repr(uint16_t operator_name,
                     size_t argc, DeeObject *const *argv) {
@@ -445,8 +421,6 @@ f_rt_assert(size_t argc, DeeObject *const *argv) {
 err:
 	return NULL;
 }
-
-INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
 
 
 /* The compiler will generate calls to these functions during explicit
@@ -527,16 +501,6 @@ err:
 	return NULL;
 }
 
-/* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
- * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
-INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad);
-INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb);
-INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi);
-INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr);
-INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa);
-
-
-
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_badcall(size_t argc, DeeObject *const *argv) {
 	DeeThreadObject *ts;
@@ -562,8 +526,6 @@ done:
 	return NULL;
 }
 
-INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall);
-
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 f_rt_roloc(size_t argc, DeeObject *const *argv) {
@@ -585,9 +547,27 @@ done:
 	return NULL;
 }
 
+
+/* These functions are exported by the C api. */
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasAttr, &f_builtin_hasattr);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &f_builtin_hasitem);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &f_builtin_boundattr);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &f_builtin_bounditem);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &f_builtin_compare);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &f_builtin_import);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &f_builtin_hash);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec);
+
+/* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
+ * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
+INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
+INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad);
+INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb);
+INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi);
+INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr);
+INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa);
+INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall);
 INTERN DEFINE_CMETHOD(rt_roloc, &f_rt_roloc);
-
-
 
 DECL_END
 

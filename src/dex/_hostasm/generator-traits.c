@@ -119,23 +119,28 @@ DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
 	return false;
 }
 
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
-DeeType_IsObjMethodConstexpr(DeeTypeObject const *__restrict self,
-                             Dee_objmethod_t method) {
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
+DeeType_IsObjMethodConstexpr(DeeTypeObject *decl_type, Dee_objmethod_t method,
+                             DeeObject *thisarg, size_t argc,
+                             DeeObject *const *argv, DeeObject *kw) {
 	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
-	(void)self;
+	(void)decl_type;
 	(void)method;
+	(void)thisarg;
+	(void)argc;
+	(void)argv;
+	(void)kw;
 	return false;
 }
 
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
-DeeCMethod_IsConstExpr(Dee_cmethod_t method,
-                       DeeTypeObject const *type,
-                       struct Dee_module_object const *mod) {
+DeeCMethod_IsConstExpr(Dee_cmethod_t method, size_t argc,
+                       DeeObject *const *argv, DeeObject *kw) {
 	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
 	(void)method;
-	(void)type;
-	(void)mod;
+	(void)argc;
+	(void)argv;
+	(void)kw;
 	return false;
 }
 

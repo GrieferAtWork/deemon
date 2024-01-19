@@ -148,33 +148,25 @@ INTDEF DeeCMethodObject rt_gaosa;
 INTDEF DeeCMethodObject rt_assert;
 INTDEF DeeCMethodObject rt_badcall;
 INTDEF DeeCMethodObject rt_roloc;
-INTDEF DeeCMethodObject builtin_hasattr;
-INTDEF DeeCMethodObject builtin_hasitem;
-INTDEF DeeCMethodObject builtin_boundattr;
-INTDEF DeeCMethodObject builtin_bounditem;
-INTDEF DeeKwCMethodObject builtin_compare;
-INTDEF DeeKwCMethodObject builtin_import;
-INTDEF DeeKwCMethodObject builtin_hash;
-INTDEF DeeKwCMethodObject builtin_exec;
 
 DECL_END
 #endif /* !BUILTIN_RUNTIME_DEFINED */
 
 /* Check if an object has a given attribute.
  * >> hasattr(ob: Object, attr: string): bool; */
-BUILTIN_DOC(hasattr, &builtin_hasattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hasattr, &DeeBuiltin_HasAttr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring)->?Dbool\n"
             "#r{Indicative of @ob containing an attribute @attr}")
 
 /* Check if an object has a given item */
-BUILTIN_DOC(hasitem, &builtin_hasitem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hasitem, &DeeBuiltin_HasItem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,key:?O)->?Dbool\n"
             "(ob,index:?Dint)->?Dbool\n"
             "#r{Indicative of @ob containing an item @key or @index}")
 
 /* Check if a given object attribute is bound.
  * >> boundattr(ob: Object, attr: string, allow_missing: bool = true): bool; */
-BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(boundattr, &DeeBuiltin_BoundAttr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,attr:?Dstring,allow_missing=!t)->?Dbool\n"
             "#tAttributeError{The attribute doesn't exist, and @allow_missing is ?f}"
             "#r{Indicative of attribute @attr of @ob currently being bound}"
@@ -188,7 +180,7 @@ BUILTIN_DOC(boundattr, &builtin_boundattr, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 /* Check if a given object item is bound.
  * >> bounditem(ob: Object, index: int | Object, allow_missing: bool = true): bool; */
-BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(bounditem, &DeeBuiltin_BoundItem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(ob,index:?Dint,allow_missing=!t)->?Dbool\n"
             "(ob,key:?O,allow_missing=!t)->?Dbool\n"
             "#tIndexError{The given @index doesn't exist, and @allow_missing is ?f}"
@@ -204,7 +196,7 @@ BUILTIN_DOC(bounditem, &builtin_bounditem, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 /* Compare 2 objects, returning one of -1, 0 or 1.
  * >> compare(lhs: Object, rhs: Object): int; */
-BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(lhs,rhs)->?Dint\n"
             "#tNotImplemented{The type of @lhs does not implement comparison}"
             "#tTypeError{The types of @lhs and @rhs cannot be compared}"
@@ -219,7 +211,7 @@ BUILTIN_DOC(compare, &builtin_compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
  * >> import(module_name: string, base?: Module): string;
  * NOTE: This is what `import' links against when used
  *       as a stand-alone within an expression. */
-BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
+BUILTIN_DOC(import, &DeeBuiltin_Import, MODSYM_FNORMAL,
             "(module_name:?Dstring,base?:?DModule)->?DModule\n"
             "#tValueError{The given @module_name is invalid}"
             "#tFileNotFound{The named @module_name could not be found}"
@@ -230,7 +222,7 @@ BUILTIN_DOC(import, &builtin_import, MODSYM_FNORMAL,
  * >> import(module_name: string, base?: Module): string;
  * NOTE: This is what `import' links against when
  *       as a stand-alone within an expression. */
-BUILTIN_DOC(hash, &builtin_hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+BUILTIN_DOC(hash, &DeeBuiltin_Hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "(objects!)->?Dint\n"
             "Combine the hashes of a given set of objects in a way that also "
             /**/ "tries to preserve the order in which objects are being hashed.\n"
@@ -241,7 +233,7 @@ BUILTIN_DOC(hash, &builtin_hash, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 
 
 /* TODO: Add more options to this function */
-BUILTIN_DOC(exec, &builtin_exec, MODSYM_FNORMAL,
+BUILTIN_DOC(exec, &DeeBuiltin_Exec, MODSYM_FNORMAL,
             "(expr:?X3?Dstring?DBytes?DFile,globals?:?M?Dstring?O,base?:?DModule)->?O\n"
             "Evaluate a user-code deemon expression and return the result\n"
             "This type of evaluation is much more restrictive than evaluation of "

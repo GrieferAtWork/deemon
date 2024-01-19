@@ -398,8 +398,9 @@ _Dee_memloc_debug_print2(struct Dee_memloc const *__restrict self,
 		}
 		ATTR_FALLTHROUGH
 	default:
-		Dee_DPRINTF("{%I16u:%p,%p}", self->ml_type,
+		Dee_DPRINTF("{%I16u:%p,%p,%p}", self->ml_type,
 		            self->ml_value._v_data[0],
+		            self->ml_value._v_data[1],
 		            self->ml_value._v_data[1]);
 		break;
 	}

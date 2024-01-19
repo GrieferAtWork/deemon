@@ -27,6 +27,7 @@
 #include <deemon/code.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h> /* Dee_cmethod_t */
+#include <deemon/system-features.h>
 
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
@@ -186,7 +187,7 @@ typedef uint16_t Dee_ulid_t;
 
 
 union Dee_memloc_value {
-	uintptr_t _v_data[2];
+	uintptr_t _v_data[3];
 	struct {
 		Dee_host_register_t r_regno; /* Host register number */
 		byte_t             _r_pad[sizeof(uintptr_t) - sizeof(Dee_host_register_t)];
@@ -203,6 +204,15 @@ union Dee_memloc_value {
 };
 
 struct Dee_memloc {
+	/* TODO: This struct needs to be split into 2 parts:
+	 * - struct Dee_memloc  (everything needed by `Dee_function_generator_g*')
+	 * - struct Dee_memval  (encapsulating `struct Dee_memloc', and including `ml_flags', `ml_vmorph' and `ml_valtyp')
+	 * Once that is done, make it possible for `struct Dee_memval' to have up
+	 * to 2 `struct Dee_memloc', then use that functionality to for a new morph
+	 * class `MEMLOC_VMORPH_SUPER' (to represent `foo as bar' expressions)
+	 * XXX: Or maybe even make it support N `struct Dee_memloc'? (to optimize stuff like `[a, b, c..., d]')
+	 */
+
 #define MEMLOC_F_NORMAL        0x00
 #define MEMLOC_F_NOREF         0x01 /* Slot contains no reference (should always be set when `ml_vmorph != MEMLOC_VMORPH_DIRECT') */
 #define MEMLOC_F_ONEREF        0x02 /* [valid_if(!MEMLOC_F_NOREF)] Slot contains the only reference that exists for some given object (decref can use decref_dokill) */
@@ -1405,6 +1415,31 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self);
 
 /* Small descriptor for what needs to be cleaned up in a `struct Dee_memstate' */
 struct Dee_except_exitinfo {
+	/* TODO: This needs to be able to hold references to constants as well:
+	 * >> push   const @(10, 20)
+	 * >> push   arg @foo
+	 * >> concat top, pop
+	 *
+	 * Generated code:
+	 * >> movl    8(%esp), %eax
+	 * >> incref  ADDROF(@(10, 20))
+	 * >> pushl   0(%eax)
+	 * >> pushl   $ADDROF(@(10, 20))
+	 * >> calll   DeeTuple_ConcatInherited
+	 * >> testl   %eax, %eax
+	 * >> jz      .Lexcept
+	 *
+	 * Here, the exception handler *always* holds a reference to the constant,
+	 * and that's not because code is being generated less efficiently than
+	 * possible (because the general case where ASM_CONCAT's lhs operand is
+	 * a constant still needs to incref that constant and decref if the call
+	 * fails)
+	 *
+	 * It would also be cool to be able to inject extra code at the start of
+	 * exception handlers (making it possible to move xinject code into the
+	 * exception handler and get rid of the redundant jump that is created
+	 * whenever that feature gets used at the moment).
+	 */
 	struct Dee_basic_block           *exi_block;                     /* [1..1][owned] Block implementing this exit state. */
 	uintptr_t                         exi_cfa_offset;                /* [== exi_block->bb_mem_start->ms_host_cfa_offset]. */
 #define DEE_EXCEPT_EXITINFO_NULLFLAG 0x8000 /* If or'd with `exi_regs[*]' or `exi_stack[*]', means that location may be null */
@@ -1834,6 +1869,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopnot(struct Dee_f
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self); /* value -> size */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopint(struct Dee_function_generator *__restrict self);  /* value -> int */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self);  /* value -> string */
+
+/* Helpers to implement "is" */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopinstanceof(struct Dee_function_generator *__restrict self); /* this, type -> bool */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopimplements(struct Dee_function_generator *__restrict self); /* this, type -> bool */
 
 /* Helpers to evaluate an object into a C integer */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorph_int(struct Dee_function_generator *__restrict self);  /* value -> DeeObject_AsIntptr(value) */
@@ -2639,13 +2678,13 @@ DeeType_IsGetMethodConstexpr(DeeTypeObject const *__restrict self,
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
                                Dee_boundmethod_t bound);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
-DeeType_IsObjMethodConstexpr(DeeTypeObject const *__restrict self,
-                             Dee_objmethod_t method);
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
+DeeType_IsObjMethodConstexpr(DeeTypeObject *decl_type, Dee_objmethod_t method,
+                             DeeObject *thisarg, size_t argc,
+                             DeeObject *const *argv, DeeObject *kw);
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
-DeeCMethod_IsConstExpr(Dee_cmethod_t method,
-                       DeeTypeObject const *type,
-                       struct Dee_module_object const *mod);
+DeeCMethod_IsConstExpr(Dee_cmethod_t method, size_t argc,
+                       DeeObject *const *argv, DeeObject *kw);
 
 
 
@@ -2832,10 +2871,15 @@ INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_UnboundAttribute(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cannot_lock_weakref(void);
 INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
+#ifdef CONFIG_HAVE_FPU
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Float(DeeObject *__restrict self);
+#endif /* CONFIG_HAVE_FPU */
+
 
 /* Helpers for quickly filling in dict/set items where the key wasn't a compile-time constant expression.
  * These functions operate in a situation where "self" hasn't been fully initialized yet (i.e. don't do
- * locking, and can assume that "self != key && self != value")
+ * locking, and can assume that "self != key && self != value"), as well as that "self" always has enough
+ * space to hold he extra key (and associated value, if any)
  * @return: * :   Always re-return `self' on success.
  * @return: NULL: Error (in this case "self" was freed). */
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL libhostasm_rt_DeeDict_InsertFast(/*inherit(on_error)*/ DeeObject *__restrict self, /*inherit(always)*/ DREF DeeObject *key, /*inherit(always)*/ DREF DeeObject *value);
