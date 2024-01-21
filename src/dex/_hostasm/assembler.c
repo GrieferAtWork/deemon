@@ -694,12 +694,12 @@ Dee_function_generator_gexcept_morph_decref(struct Dee_function_generator *__res
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
                         Dee_vstackaddr_t i) {
-	struct Dee_memval *vval;
+	struct Dee_memval *mval;
 	ASSERT(i < self->ms_stackc);
-	vval = &self->ms_stackv[i];
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(vval->mv_vmorph));
-	Dee_memstate_decrinuse_for_memloc(self, &vval->mv_loc0);
-	Dee_memval_init_undefined(vval);
+	mval = &self->ms_stackv[i];
+	ASSERT(Dee_memval_isdirect(mval));
+	Dee_memstate_decrinuse_for_memloc(self, &mval->mv_loc0);
+	Dee_memval_init_undefined(mval);
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL

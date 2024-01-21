@@ -161,16 +161,16 @@ Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
                                struct Dee_memval *mval) {
 	struct Dee_memval *alias, oldval;
 	struct Dee_memstate *state;
-	if (MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph))
+	if (Dee_memval_isdirect(mval))
 		return 0; /* Already a direct value. */
 
 	/* Force the value to become direct. */
-	oldval = *mval;
+	Dee_memval_initcopy(&oldval, mval);
 	if unlikely(Dee_function_generator_gdirect_impl(self, mval))
-		goto err;
+		goto err_oldval;
 
 	/* Write the updated value into all aliases. */
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(mval));
 	oldval.mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
 	state = self->fg_state;
 	Dee_memstate_foreach(alias, state) {
@@ -178,22 +178,25 @@ Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
 			continue;
 		if (alias == mval)
 			continue;
-		Dee_memstate_decrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for multi-location morphs */
+		Dee_memstate_decrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for mem values with multiple locations */
 		if (Dee_memstate_foreach_islocal(alias, state)) {
 			alias->mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
 			alias->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 		}
-		alias->mv_loc0   = mval->mv_loc0; /* TODO: Support for multi-location morphs */
+		alias->mv_loc0   = mval->mv_loc0; /* TODO: Support for mem values with multiple locations */
 		alias->mv_vmorph = mval->mv_vmorph;
 		alias->mv_valtyp = mval->mv_valtyp;
-		Dee_memstate_incrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for multi-location morphs */
+		Dee_memstate_incrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for mem values with multiple locations */
 	}
 	Dee_memstate_foreach_end;
+	Dee_memval_fini(&oldval);
 	if (mval >= state->ms_localv &&
 	    mval < state->ms_localv + state->ms_localc)
 		mval->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 	return 0;
-err:
+err_oldval:
+	Dee_memval_fini(&oldval);
+/*err:*/
 	return -1;
 }
 
@@ -2043,9 +2046,9 @@ gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) 
 			 * item can actually be NULL at runtime. */
 			pop_base = self->fg_state->ms_stackv + self->fg_state->ms_stackc - n_pop;
 			for (i = 0; i < n_pop; ++i) {
-				if (pop_base[i].mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
+				if (Dee_memval_isnullable(&pop_base[i])) {
+					Dee_memval_nullable_makedirect(&pop_base[i]);
 					pop_base[i].mv_flags |= MEMVAL_F_NOREF;
-					pop_base[i].mv_vmorph = MEMVAL_VMORPH_DIRECT;
 				}
 			}
 
@@ -2576,10 +2579,13 @@ err:
 	return -1;
 }
 
-/* Force `loc' to reside on the stack, giving it an address (`MEMADR_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
+/* Force `loc' to reside on the stack, giving it an address
+ * (`MEMADR_TYPE_HSTACKIND, Dee_memloc_hstackind_getvaloff = 0').
+ * @param: require_valoff_0: When false, forgo the exit requirement of `Dee_memloc_hstackind_getvaloff = 0' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc *loc) {
+                              struct Dee_memloc *loc, bool require_valoff_0) {
+	ptrdiff_t val_offset;
 	uintptr_t cfa_offset;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
@@ -2587,6 +2593,8 @@ Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
 handle_hstackind_loc:
 		if (Dee_memloc_hstackind_getvaloff(loc) == 0)
 			return 0; /* Already on-stack at offset=0 */
+		if (require_valoff_0)
+			return 0; /* Caller doesn't care about value offset */
 
 #ifdef HAVE__Dee_host_section_gadd_const2hstackind
 		/* emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
@@ -2602,12 +2610,13 @@ handle_hstackind_loc:
 #ifdef HAVE_try_restore_xloc_arg_cfa_offset
 	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG &&
 		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, Dee_memloc_hreg_getreg(loc))) != (uintptr_t)-1) {
-		/* CFA offset restored */
+		val_offset = 0; /* CFA offset restored */
 	} else
 #endif /* HAVE_try_restore_xloc_arg_cfa_offset */
 	{
 		/* Check if "loc" has a known HSTACKIND equivalence. */
 		struct Dee_memequiv *eq;
+
 		eq = Dee_function_generator_remember_getclassof(self, Dee_memloc_getadr(loc));
 		if (eq != NULL) {
 			ptrdiff_t val_delta = Dee_memloc_getoff(loc);
@@ -2644,18 +2653,27 @@ handle_hstackind_loc:
 
 		/* Search for a currently free stack location. */
 		cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
+		val_offset = loc->ml_off;
+		if (!require_valoff_0)
+			loc->ml_off = 0; /* Don't include value offset when saving location */
 		if (cfa_offset != (uintptr_t)-1) {
-			if unlikely(Dee_function_generator_gmov_loc2hstackind(self, loc, cfa_offset))
+			if unlikely(Dee_function_generator_gmov_loc2hstackind(self, loc, cfa_offset)) {
+err_restore_val_offset:
+				loc->ml_off = val_offset;
 				goto err;
+			}
 		} else {
 			if unlikely(Dee_function_generator_ghstack_pushloc(self, loc))
-				goto err;
+				goto err_restore_val_offset;
 #ifdef HOSTASM_STACK_GROWS_DOWN
 			cfa_offset = state->ms_host_cfa_offset;
 #else /* HOSTASM_STACK_GROWS_DOWN */
 			cfa_offset = state->ms_host_cfa_offset - HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 		}
+		loc->ml_off = val_offset;
+		if (require_valoff_0)
+			val_offset = 0;
 	}
 
 	/* If the location used to be a writable location, then we must
@@ -2664,9 +2682,11 @@ handle_hstackind_loc:
 	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG ||
 	    Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
 		ptrdiff_t val_delta_change = -Dee_memloc_getoff(loc);
-		if (val_delta_change != 0) {
+		if (val_delta_change != val_offset) {
 			struct Dee_memval *alias_val;
 			struct Dee_memloc *alias_loc;
+			ASSERT(val_offset == 0);
+			val_delta_change += val_offset;
 			Dee_memstate_foreach(alias_val, state) {
 				Dee_memval_foreach_loc(alias_loc, alias_val) {
 					if (Dee_memloc_gettyp(alias_loc) != Dee_memloc_gettyp(loc))
@@ -2688,8 +2708,8 @@ handle_hstackind_loc:
 	if (Dee_memloc_hasreg(loc) && Dee_memstate_ismemlocinstate(state, loc))
 		Dee_memstate_decrinuse(self->fg_state, Dee_memloc_getreg(loc));
 
-	/* Remember that `loc' now lies on-stack (with an offset of `0') */
-	Dee_memloc_init_hstackind(loc, cfa_offset, 0);
+	/* Remember that `loc' now lies on-stack (with an offset of `val_offset') */
+	Dee_memloc_init_hstackind(loc, cfa_offset, val_offset);
 	return 0;
 err:
 	return -1;

@@ -139,17 +139,13 @@ DECL_BEGIN
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vbool_field_nonzero(struct Dee_function_generator *__restrict self,
                     ptrdiff_t offsetof_field) {
-	struct Dee_memval *vtop;
 	DO(Dee_function_generator_vdup(self));                 /* value, value */
 	DO(Dee_function_generator_vind(self, offsetof_field)); /* value, value->xx_field */
 	DO(Dee_function_generator_vreg(self, NULL));           /* value, reg:value->xx_field */
 	DO(Dee_function_generator_vdirect(self, 1));           /* value, reg:value->xx_field */
 	DO(Dee_function_generator_vswap(self));                /* reg:value->xx_field, value */
 	DO(Dee_function_generator_vpop(self));                 /* reg:value->xx_field */
-	vtop = Dee_function_generator_vtop(self);
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
-	vtop->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
-	return 0;
+	return Dee_function_generator_vcall_DeeBool_For(self); /* result */
 err:
 	return -1;
 }
@@ -157,17 +153,13 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vsize_field_uint(struct Dee_function_generator *__restrict self,
                  ptrdiff_t offsetof_size_field) {
-	struct Dee_memval *loc;
-	DO(Dee_function_generator_vdup(self));                      /* value, value */
-	DO(Dee_function_generator_vind(self, offsetof_size_field)); /* value, value->xx_size */
-	DO(Dee_function_generator_vreg(self, NULL));                /* value, reg:value->xx_size */
-	DO(Dee_function_generator_vdirect(self, 1));                /* value, reg:value->xx_size */
-	DO(Dee_function_generator_vswap(self));                     /* reg:value->xx_size, value */
-	DO(Dee_function_generator_vpop(self));                      /* reg:value->xx_size */
-	loc = Dee_function_generator_vtop(self);
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(loc->mv_vmorph));
-	loc->mv_vmorph = MEMVAL_VMORPH_UINT;
-	return 0;
+	DO(Dee_function_generator_vdup(self));                       /* value, value */
+	DO(Dee_function_generator_vind(self, offsetof_size_field));  /* value, value->xx_size */
+	DO(Dee_function_generator_vreg(self, NULL));                 /* value, reg:value->xx_size */
+	DO(Dee_function_generator_vdirect(self, 1));                 /* value, reg:value->xx_size */
+	DO(Dee_function_generator_vswap(self));                      /* reg:value->xx_size, value */
+	DO(Dee_function_generator_vpop(self));                       /* reg:value->xx_size */
+	return Dee_function_generator_vcall_DeeInt_NewUIntptr(self); /* result */
 err:
 	return -1;
 }

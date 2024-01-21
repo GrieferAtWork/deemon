@@ -819,7 +819,7 @@ struct Dee_memval {
 #define Dee_memval_direct_hashofadr(a)  Dee_memloc_hashofadr(Dee_memval_direct_getloc(a))
 #define Dee_memval_direct_sameadr(a, b) Dee_memloc_sameadr(Dee_memval_direct_getloc(a), Dee_memval_direct_getloc(b))
 #define Dee_memval_direct_sameloc(a, b) Dee_memloc_sameloc(Dee_memval_direct_getloc(a), Dee_memval_direct_getloc(b))
-#define Dee_memval_sameval(a, b)        ((a)->mv_vmorph == (b)->mv_vmorph && Dee_memval_direct_sameloc(a, b)) /* TODO: Support for multi-location morphs */
+#define Dee_memval_sameval(a, b)        ((a)->mv_vmorph == (b)->mv_vmorph && Dee_memval_direct_sameloc(a, b)) /* TODO: Support for mem values with multiple locations */
 
 /* Try to figure out the guarantied runtime object type of `gdirect(self)' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
@@ -932,7 +932,7 @@ struct Dee_memstate {
 #define Dee_memstate_ismemvalinstate(self, val)                                       \
 	(((val) >= (self)->ms_stackv && (val) < (self)->ms_stackv + (self)->ms_stackc) || \
 	 ((val) >= (self)->ms_localv && (val) < (self)->ms_localv + (self)->ms_localc))
-#define Dee_memstate_ismemlocinstate(self, loc) /* TODO: Support for memvals with multiple locations */ \
+#define Dee_memstate_ismemlocinstate(self, loc) /* TODO: Support for mem values with multiple locations */ \
 	Dee_memstate_ismemvalinstate(self, COMPILER_CONTAINER_OF(loc, struct Dee_memval, mv_loc0))
 
 
@@ -1142,25 +1142,25 @@ INTDEF NONNULL((1, 2)) bool DCALL
 Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
                            struct Dee_memstate const *__restrict other);
 
-/* Find the next alias (that is holding a reference) for `loc' after `after'
+/* Find the next alias (that is holding a reference) for `mval' after `after'
  * @return: * :   The newly discovered alias
- * @return: NULL: No (more) aliases exist for `loc' */
+ * @return: NULL: No (more) aliases exist for `mval' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memval *DCALL
 Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
-                          struct Dee_memval const *loc,
+                          struct Dee_memval const *mval,
                           struct Dee_memval *after);
 
-/* Check if a reference is being held by `loc' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mval' or some other location that may be aliasing it. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
-                    struct Dee_memval const *loc);
+                    struct Dee_memval const *mval);
 
-/* Check if `loc' has an alias. */
+/* Check if `mval' has an alias. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasalias(struct Dee_memstate const *__restrict self,
-                      struct Dee_memval const *loc);
-#define Dee_memstate_isoneref_noalias(self, loc) \
-	(((loc)->mv_flags & MEMVAL_F_ONEREF) && !Dee_memstate_hasalias(self, loc))
+                      struct Dee_memval const *mval);
+#define Dee_memstate_isoneref_noalias(self, mval) \
+	(((mval)->mv_flags & MEMVAL_F_ONEREF) && !Dee_memstate_hasalias(self, mval))
 
 /* Functions to manipulate the virtual deemon object stack. */
 #define Dee_memstate_vtop(self) (&(self)->ms_stackv[(self)->ms_stackc - 1])
@@ -1968,6 +1968,12 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopimplements(struc
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorph_int(struct Dee_function_generator *__restrict self);  /* value -> DeeObject_AsIntptr(value) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmorph_uint(struct Dee_function_generator *__restrict self); /* value -> DeeObject_AsUIntptr(value) */
 
+/* Helpers for wrapping values as simple object morphs */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_vmakemorph(struct Dee_function_generator *__restrict self, uint8_t morph); /* value -> ...(value) */
+#define Dee_function_generator_vcall_DeeInt_NewIntptr(self)  _Dee_function_generator_vmakemorph(self, MEMVAL_VMORPH_INT)
+#define Dee_function_generator_vcall_DeeInt_NewUIntptr(self) _Dee_function_generator_vmakemorph(self, MEMVAL_VMORPH_UINT)
+#define Dee_function_generator_vcall_DeeBool_For(self)       _Dee_function_generator_vmakemorph(self, MEMVAL_VMORPH_BOOL_NZ)
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* [elems...] -> seq (seq_type must be &DeeList_Type or &DeeTuple_Type) */
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc);
@@ -2187,7 +2193,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gref2(struct Dee
 /* Force vtop into a register (ensuring it has type `MEMADR_TYPE_HREG' for all locations used by VTOP) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vreg(struct Dee_function_generator *__restrict self, Dee_host_register_t const *not_these);
 /* Force vtop onto the stack (ensuring it has type `MEMADR_TYPE_HSTACKIND, Dee_memloc_hstackind_getvaloff = 0' for all locations used by VTOP) */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vflush(struct Dee_function_generator *__restrict self); /* TODO: Add param "bool require_valoff_0" */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vflush(struct Dee_function_generator *__restrict self, bool require_valoff_0);
 
 /* Generate code to push a global variable onto the virtual stack. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_mod_global(struct Dee_function_generator *__restrict self, struct Dee_module_object *mod, uint16_t gid, bool ref);
@@ -2425,7 +2431,7 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
 /* Force `loc' to reside on the stack, giving it an address (`MEMADR_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc *loc);
+                              struct Dee_memloc *loc, bool require_valoff_0);
 
 /* Controls for operating with R/W-locks (as needed for accessing global/extern variables) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self, Dee_atomic_rwlock_t *__restrict lock);

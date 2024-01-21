@@ -511,12 +511,12 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 	return result;
 }
 
-/* Find the next alias (that is holding a reference) for `loc' after `after'
+/* Find the next alias (that is holding a reference) for `mval' after `after'
  * @return: * :   The newly discovered alias
- * @return: NULL: No (more) aliases exist for `loc' */
+ * @return: NULL: No (more) aliases exist for `mval' */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memval *DCALL
 Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
-                          struct Dee_memval const *loc,
+                          struct Dee_memval const *mval,
                           struct Dee_memval *after) {
 	size_t i;
 	if (after >= self->ms_localv && after < self->ms_localv + self->ms_localc) {
@@ -531,9 +531,9 @@ Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
 				continue;
 			if (result->mv_flags & MEMVAL_F_NOREF)
 				continue;
-			if (result == loc)
+			if (result == mval)
 				continue;
-			if (Dee_memloc_sameloc(&result->mv_loc0, &loc->mv_loc0))
+			if (Dee_memloc_sameloc(&result->mv_loc0, &mval->mv_loc0))
 				return result;
 		}
 		i = 0;
@@ -544,27 +544,27 @@ Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
 			continue;
 		if (result->mv_flags & MEMVAL_F_NOREF)
 			continue;
-		if (result == loc)
+		if (result == mval)
 			continue;
-		if (Dee_memloc_sameloc(&result->mv_loc0, &loc->mv_loc0))
+		if (Dee_memloc_sameloc(&result->mv_loc0, &mval->mv_loc0))
 			return result;
 	}
 	return NULL;
 }
 
-/* Check if a reference is being held by `loc' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mval' or some other location that may be aliasing it. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
-                    struct Dee_memval const *loc) {
+                    struct Dee_memval const *mval) {
 	struct Dee_memval const *iter;
-	if (!(loc->mv_flags & MEMVAL_F_NOREF))
+	if (!(mval->mv_flags & MEMVAL_F_NOREF))
 		return true;
-	if (!MEMVAL_VMORPH_ISDIRECT(loc->mv_vmorph))
+	if (!MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph))
 		return false; /* Virtual object */
 	Dee_memstate_foreach(iter, self) {
 		if (!MEMVAL_VMORPH_ISDIRECT(iter->mv_vmorph))
 			continue;
-		if (!Dee_memloc_sameloc(&iter->mv_loc0, &loc->mv_loc0))
+		if (!Dee_memloc_sameloc(&iter->mv_loc0, &mval->mv_loc0))
 			continue;
 		if (!(iter->mv_flags & MEMVAL_F_NOREF))
 			return true;
@@ -573,13 +573,13 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 	return false;
 }
 
-/* Check if `loc' has an alias. */
+/* Check if `mval' has an alias. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasalias(struct Dee_memstate const *__restrict self,
-                      struct Dee_memval const *loc) {
+                      struct Dee_memval const *mval) {
 	struct Dee_memval const *iter;
 	Dee_memstate_foreach(iter, self) {
-		if (iter != loc && Dee_memval_sameval(iter, loc))
+		if (iter != mval && Dee_memval_sameval(iter, mval))
 			return true;
 	}
 	Dee_memstate_foreach_end;
@@ -751,9 +751,9 @@ Dee_memstate_vswap(struct Dee_memstate *__restrict self) {
 	struct Dee_memval temp;
 	if unlikely(self->ms_stackc < 2)
 		return err_illegal_stack_effect();
-	temp = self->ms_stackv[self->ms_stackc - 2];
-	self->ms_stackv[self->ms_stackc - 2] = self->ms_stackv[self->ms_stackc - 1];
-	self->ms_stackv[self->ms_stackc - 1] = temp;
+	Dee_memval_initmove(&temp, &self->ms_stackv[self->ms_stackc - 2]);
+	Dee_memval_initmove(&self->ms_stackv[self->ms_stackc - 2], &self->ms_stackv[self->ms_stackc - 1]);
+	Dee_memval_initmove(&self->ms_stackv[self->ms_stackc - 1], &temp);
 	return 0;
 }
 
@@ -763,11 +763,11 @@ Dee_memstate_vlrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 		struct Dee_memval temp;
 		if unlikely(self->ms_stackc < n)
 			return err_illegal_stack_effect();
-		temp = self->ms_stackv[self->ms_stackc - n];
+		Dee_memval_initmove(&temp, &self->ms_stackv[self->ms_stackc - n]);
 		memmovedownc(&self->ms_stackv[self->ms_stackc - n],
 		             &self->ms_stackv[self->ms_stackc - (n - 1)],
 		             n - 1, sizeof(struct Dee_memval));
-		self->ms_stackv[self->ms_stackc - 1] = temp;
+		Dee_memval_initmove(&self->ms_stackv[self->ms_stackc - 1], &temp);
 	}
 	return 0;
 }
@@ -778,11 +778,11 @@ Dee_memstate_vrrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 		struct Dee_memval temp;
 		if unlikely(self->ms_stackc < n)
 			return err_illegal_stack_effect();
-		temp = self->ms_stackv[self->ms_stackc - 1];
+		Dee_memval_initmove(&temp, &self->ms_stackv[self->ms_stackc - 1]);
 		memmoveupc(&self->ms_stackv[self->ms_stackc - (n - 1)],
 		           &self->ms_stackv[self->ms_stackc - n],
 		           n - 1, sizeof(struct Dee_memval));
-		self->ms_stackv[self->ms_stackc - n] = temp;
+		Dee_memval_initmove(&self->ms_stackv[self->ms_stackc - n], &temp);
 	}
 	return 0;
 }
@@ -956,7 +956,7 @@ Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
 		goto err;
 	dst = &self->ms_stackv[self->ms_stackc];
-	*dst = self->ms_stackv[index];
+	Dee_memval_initcopy(dst, &self->ms_stackv[index]);
 	dst->mv_flags |= MEMVAL_F_NOREF; /* alias! (so no reference) */
 	Dee_memval_foreach_loc(loc, dst) {
 		Dee_memstate_incrinuse_for_memloc(self, loc);
@@ -984,30 +984,30 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 	       (self->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t)));
 	for (i = 0; i < state->ms_localc; ++i) {
 		uint16_t nullflag;
-		struct Dee_memval *loc = &state->ms_localv[i];
-		if (loc->mv_flags & (MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND))
+		struct Dee_memval *mval = &state->ms_localv[i];
+		if (mval->mv_flags & (MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND))
 			continue;
 		nullflag = 0;
-		if (!(loc->mv_flags & MEMVAL_F_LOCAL_BOUND))
+		if (!(mval->mv_flags & MEMVAL_F_LOCAL_BOUND))
 			nullflag = DEE_EXCEPT_EXITINFO_NULLFLAG;
-		switch (loc->mv_loc0.ml_adr.ma_typ) {
+		switch (mval->mv_loc0.ml_adr.ma_typ) {
 
 		case MEMADR_TYPE_HSTACKIND: {
 			size_t index;
-			if unlikely(loc->mv_loc0.ml_off != 0)
+			if unlikely(mval->mv_loc0.ml_off != 0)
 				goto err_bad_loc;
-			index = Dee_except_exitinfo_cfa2index(loc->mv_loc0.ml_adr.ma_val.v_cfa);
+			index = Dee_except_exitinfo_cfa2index(mval->mv_loc0.ml_adr.ma_val.v_cfa);
 			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
 			self->exi_stack[index] |= nullflag;
 			++self->exi_stack[index];
 		}	break;
 
 		case MEMADR_TYPE_HREG:
-			ASSERT(loc->mv_loc0.ml_adr.ma_reg < HOST_REGISTER_COUNT);
-			if unlikely(loc->mv_loc0.ml_adr.ma_val.v_indoff != 0)
+			ASSERT(mval->mv_loc0.ml_adr.ma_reg < HOST_REGISTER_COUNT);
+			if unlikely(mval->mv_loc0.ml_adr.ma_val.v_indoff != 0)
 				goto err_bad_loc;
-			self->exi_regs[loc->mv_loc0.ml_adr.ma_reg] |= nullflag;
-			++self->exi_regs[loc->mv_loc0.ml_adr.ma_reg];
+			self->exi_regs[mval->mv_loc0.ml_adr.ma_reg] |= nullflag;
+			++self->exi_regs[mval->mv_loc0.ml_adr.ma_reg];
 			break;
 
 		case MEMADR_TYPE_UNALLOC:
@@ -1017,25 +1017,25 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 		}
 	}
 	for (i = 0; i < state->ms_stackc; ++i) {
-		struct Dee_memval *loc = &state->ms_stackv[i];
-		if (loc->mv_flags & MEMVAL_F_NOREF)
+		struct Dee_memval *mval = &state->ms_stackv[i];
+		if (mval->mv_flags & MEMVAL_F_NOREF)
 			continue;
-		switch (loc->mv_loc0.ml_adr.ma_typ) {
+		switch (mval->mv_loc0.ml_adr.ma_typ) {
 
 		case MEMADR_TYPE_HSTACKIND: {
 			size_t index;
-			if unlikely(loc->mv_loc0.ml_off != 0)
+			if unlikely(mval->mv_loc0.ml_off != 0)
 				goto err_bad_loc;
-			index = Dee_except_exitinfo_cfa2index(loc->mv_loc0.ml_adr.ma_val.v_cfa);
+			index = Dee_except_exitinfo_cfa2index(mval->mv_loc0.ml_adr.ma_val.v_cfa);
 			ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
 			++self->exi_stack[index];
 		}	break;
 
 		case MEMADR_TYPE_HREG:
-			ASSERT(loc->mv_loc0.ml_adr.ma_reg < HOST_REGISTER_COUNT);
-			if unlikely(loc->mv_loc0.ml_adr.ma_val.v_indoff != 0)
+			ASSERT(mval->mv_loc0.ml_adr.ma_reg < HOST_REGISTER_COUNT);
+			if unlikely(mval->mv_loc0.ml_adr.ma_val.v_indoff != 0)
 				goto err_bad_loc;
-			++self->exi_regs[loc->mv_loc0.ml_adr.ma_reg];
+			++self->exi_regs[mval->mv_loc0.ml_adr.ma_reg];
 			break;
 
 		default: goto err_bad_loc;

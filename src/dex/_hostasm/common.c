@@ -781,6 +781,7 @@ Dee_memstate_copy(struct Dee_memstate *__restrict self) {
 	        self->ms_stackc, sizeof(struct Dee_memval));
 	if unlikely(_Dee_memequivs_inplace_copy(&result->ms_memequiv))
 		goto err_r_stack;
+	/* TODO: Inplace-copy Dee_memval-s that use a variable number of memory locations. */
 	return result;
 err_r_stack:
 	Dee_Free(result->ms_stackv);
