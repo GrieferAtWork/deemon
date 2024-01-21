@@ -297,7 +297,7 @@ Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self
 			if unlikely(Dee_function_generator_state_unshare(self))
 				goto err;
 			val = Dee_function_generator_vtop(self);
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(val->mv_vmorph));
+			ASSERT(Dee_memval_isdirect(val));
 			val->mv_vmorph = MEMVAL_VMORPH_TESTNZ(val->mv_vmorph);
 			return 0;
 		}
@@ -313,7 +313,7 @@ Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self
 		if unlikely(Dee_function_generator_vdelta(self, -((ptrdiff_t)aid - 1)))
 			goto err;
 		val = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(val->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(val));
 		val->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 		return 0;
 	}
@@ -477,7 +477,7 @@ Dee_function_generator_vbound_local(struct Dee_function_generator *__restrict se
 		goto err;
 	if unlikely(Dee_function_generator_gdirect(self, dst_val))
 		goto err;
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(dst_val->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(dst_val));
 	dst_val->mv_vmorph = MEMVAL_VMORPH_TESTNZ(dst_val->mv_vmorph);
 	return 0;
 err:
@@ -862,8 +862,7 @@ Dee_function_generator_vsettyp_noalias(struct Dee_function_generator *__restrict
 	if unlikely(state->ms_stackc < 1)
 		return err_illegal_stack_effect();
 	vtop = Dee_memstate_vtop(state);
-	ASSERTF(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph) ||
-	        (vtop->mv_vmorph == MEMVAL_VMORPH_NULLABLE),
+	ASSERTF(Dee_memval_isdirect(vtop) || Dee_memval_isnullable(vtop),
 	        "Can only assign types to direct or nullable values");
 	if (vtop->mv_valtyp != type) {
 #ifndef NDEBUG
@@ -1873,7 +1872,7 @@ Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict 
 		if unlikely(Dee_function_generator_vreg(self, NULL))
 			goto err; /* reg:*p_valloc */
 		vtop = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 		return 0;
 	}
@@ -1886,7 +1885,7 @@ Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict 
 		if unlikely(Dee_function_generator_vcallapi(self, &DeeClass_BoundMemberSafe, VCALL_CC_NEGINT, 2))
 			goto err;
 		vtop = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_TESTNZ(vtop->mv_vmorph);
 	} else {
 		if unlikely(Dee_function_generator_vind(self, offsetof(DeeTypeObject, tp_class)))
@@ -1898,7 +1897,7 @@ Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict 
 		if unlikely(Dee_function_generator_vreg(self, NULL))
 			goto err; /* reg:type->tp_class->cd_members[addr] */
 		vtop = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 	}
 	return 0;
@@ -3438,8 +3437,7 @@ Dee_function_generator_vret(struct Dee_function_generator *__restrict self) {
 
 	/* Special case: NULLABLE locations can be returned as-is */
 	p_mval = &self->fg_state->ms_stackv[stackc - 1];
-	if (!MEMVAL_VMORPH_ISDIRECT(p_mval->mv_vmorph) &&
-	    p_mval->mv_vmorph != MEMVAL_VMORPH_NULLABLE) {
+	if (!Dee_memval_isdirect(p_mval) && !Dee_memval_isnullable(p_mval)) {
 		if unlikely(Dee_function_generator_vdirect(self, 1))
 			goto err;
 	}

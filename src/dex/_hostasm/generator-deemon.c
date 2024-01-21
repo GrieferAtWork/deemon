@@ -2180,7 +2180,7 @@ do_jcc:
 		                                                            : (void const *)&DeeSeq_All,
 		                                   VCALL_CC_NEGINT, 1));
 		DO(Dee_function_generator_vdirect(self, 1));
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 		break;
 

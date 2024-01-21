@@ -1170,7 +1170,7 @@ vcall_boundmethod(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vnotoneref_at(self, 1));              /* this */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_M1INT, 1)); /* result */
 	DO(Dee_function_generator_vdirect(self, 1));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -2272,7 +2272,7 @@ impl_vopcallkw(struct Dee_function_generator *__restrict self,
 		return err_illegal_stack_effect();
 	DO(Dee_function_generator_state_unshare(self));
 	funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
-	if (!MEMVAL_VMORPH_ISDIRECT(funcval->mv_vmorph)) {
+	if (!Dee_memval_isdirect(funcval)) {
 		DO(Dee_function_generator_gdirect(self, funcval));
 		funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
 	}
@@ -3041,18 +3041,18 @@ impl_vopcallattrkw(struct Dee_function_generator *__restrict self,
 	/* Normalize the "this" and "attr" memory locations. */
 	DO(Dee_function_generator_state_unshare(self));
 	attrval = Dee_function_generator_vtop(self) - (argc + 1);
-	if (!MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph)) {
+	if (!Dee_memval_isdirect(attrval)) {
 		DO(Dee_function_generator_gdirect(self, attrval));
 		attrval = Dee_function_generator_vtop(self) - (argc + 1);
 	}
 	thisval = attrval - 1;
-	if (!MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph)) {
+	if (!Dee_memval_isdirect(thisval)) {
 		DO(Dee_function_generator_gdirect(self, thisval));
 		attrval = Dee_function_generator_vtop(self) - (argc + 1);
 		thisval = attrval - 1;
 	}
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(thisval));
+	ASSERT(Dee_memval_isdirect(attrval));
 
 	/* Check if the type of "this", as well as the attribute being accessed is known.
 	 * If they are, then we might be able to inline the attribute access! */
@@ -3577,8 +3577,8 @@ Dee_function_generator_vopgetattr(struct Dee_function_generator *__restrict self
 	/* Load value locations. */
 	attrval = Dee_function_generator_vtop(self);
 	thisval = attrval - 1;
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(thisval));
+	ASSERT(Dee_memval_isdirect(attrval));
 
 	/* Check if the type of "this", as well as the attribute being accessed is known.
 	 * If they are, then we might be able to inline the attribute access! */
@@ -3625,7 +3625,7 @@ Dee_function_generator_vophasattr(struct Dee_function_generator *__restrict self
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 2)); /* this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_HasAttr, VCALL_CC_NEGINT, 2));
 	DO(Dee_function_generator_vdirect(self, 1));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 	return 0;
 err:
@@ -3646,8 +3646,8 @@ Dee_function_generator_vopboundattr(struct Dee_function_generator *__restrict se
 	/* Load value locations. */
 	attrval = Dee_function_generator_vtop(self);
 	thisval = attrval - 1;
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(thisval));
+	ASSERT(Dee_memval_isdirect(attrval));
 
 	/* Check if the type of "this", as well as the attribute being accessed is known.
 	 * If they are, then we might be able to inline the attribute access! */
@@ -3681,7 +3681,7 @@ Dee_function_generator_vopboundattr(struct Dee_function_generator *__restrict se
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 2)); /* this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundAttr, VCALL_CC_M1INT, 2));
 	DO(Dee_function_generator_vdirect(self, 1));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -3702,8 +3702,8 @@ Dee_function_generator_vopdelattr(struct Dee_function_generator *__restrict self
 	/* Load value locations. */
 	attrval = Dee_function_generator_vtop(self);
 	thisval = attrval - 1;
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(thisval));
+	ASSERT(Dee_memval_isdirect(attrval));
 
 	/* Check if the type of "this", as well as the attribute being accessed is known.
 	 * If they are, then we might be able to inline the attribute access! */
@@ -3757,18 +3757,18 @@ Dee_function_generator_vopsetattr(struct Dee_function_generator *__restrict self
 	/* Normalize the "this" and "attr" memory locations. */
 	DO(Dee_function_generator_state_unshare(self));
 	attrval = Dee_function_generator_vtop(self) - 1;
-	if (!MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph)) {
+	if (!Dee_memval_isdirect(attrval)) {
 		DO(Dee_function_generator_gdirect(self, attrval));
 		attrval = Dee_function_generator_vtop(self) - 1;
 	}
 	thisval = attrval - 1;
-	if (!MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph)) {
+	if (!Dee_memval_isdirect(thisval)) {
 		DO(Dee_function_generator_gdirect(self, thisval));
 		attrval = Dee_function_generator_vtop(self) - 1;
 		thisval = attrval - 1;
 	}
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(thisval->mv_vmorph));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(attrval->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(thisval));
+	ASSERT(Dee_memval_isdirect(attrval));
 
 	/* Check if the type of "this", as well as the attribute being accessed is known.
 	 * If they are, then we might be able to inline the attribute access! */
@@ -3883,7 +3883,7 @@ Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict se
 	DO(Dee_function_generator_vpush_imm8(self, 1));                                     /* seq, index, true */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundItem, VCALL_CC_M1INT, 3)); /* result */
 	DO(Dee_function_generator_vdirect(self, 1));                                        /* result */
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -4033,7 +4033,7 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self,
 			 *               <=> (obj - Dee_False) != 0 */
 			DO(Dee_function_generator_vdirect(self, 1)); /* bool */
 			ASSERT(vtop == Dee_function_generator_vtop(self));
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+			ASSERT(Dee_memval_isdirect(vtop));
 			if (!(vtop->mv_flags & MEMVAL_F_NOREF)) {
 				/* Make sure to drop the reference from the bool. Note that this is nokill
 				 * since we know that booleans are singletons that can never be destroyed. */
@@ -4041,7 +4041,7 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self,
 				vtop->mv_flags |= MEMVAL_F_NOREF;
 			}
 			ASSERT(vtop == Dee_function_generator_vtop(self));
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+			ASSERT(Dee_memval_isdirect(vtop));
 			DO(Dee_function_generator_vdelta(self, -(ptrdiff_t)(uintptr_t)Dee_False));
 			vtop->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ; /* (bool - Dee_False) != 0 */
 		}
@@ -4071,7 +4071,7 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_BOOL, 1));
 		DO(Dee_function_generator_vcallapi(self, vtop_type->tp_cast.tp_bool, VCALL_CC_NEGINT, 1)); /* result */
 		vtop = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_TESTNZ(vtop->mv_vmorph);
 		return 0;
 	}
@@ -4082,7 +4082,7 @@ Dee_function_generator_vopbool(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vnotoneref_if_operator(self, OPERATOR_BOOL, 1));
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_Bool, VCALL_CC_NEGINT, 1));
 	vtop = Dee_function_generator_vtop(self);
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(vtop));
 	vtop->mv_vmorph = MEMVAL_VMORPH_TESTNZ(vtop->mv_vmorph);
 	return 0;
 err:
@@ -4168,7 +4168,7 @@ Dee_function_generator_vopsize(struct Dee_function_generator *__restrict self) {
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	vtop = Dee_function_generator_vtop(self);
-	if (MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph)) {
+	if (Dee_memval_isdirect(vtop)) {
 		DeeTypeObject *vtop_type;
 
 		/* Optimization when operands are constant. */
@@ -4250,7 +4250,7 @@ Dee_function_generator_vopint(struct Dee_function_generator *__restrict self) {
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 	vtop = Dee_function_generator_vtop(self);
-	if (MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph)) {
+	if (Dee_memval_isdirect(vtop)) {
 		DeeTypeObject *vtop_type;
 		/* Optimizations when types are known */
 		if (Dee_memval_direct_isconst(vtop)) {
@@ -4328,7 +4328,7 @@ Dee_function_generator_vopstr(struct Dee_function_generator *__restrict self) {
 		return err_illegal_stack_effect();
 	DO(Dee_function_generator_state_unshare(self));
 	vtop = Dee_function_generator_vtop(self);
-	if (MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph)) {
+	if (Dee_memval_isdirect(vtop)) {
 		DeeTypeObject *vtop_type;
 		/* Optimizations when types are known */
 		if (Dee_memval_direct_isconst(vtop)) {
@@ -4520,7 +4520,7 @@ vmorph_int(struct Dee_function_generator *__restrict self, uint8_t wanted_morph)
 	DO(Dee_function_generator_state_unshare(self));
 	DO(Dee_function_generator_vdirect(self, 1));
 	vtop = Dee_function_generator_vtop(self);
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(vtop));
 	api_function = wanted_morph == MEMVAL_VMORPH_UINT
 	               ? (void const *)&LOCAL_DeeObject_AsTUINT(HOST_SIZEOF_POINTER)
 	               : (void const *)&LOCAL_DeeObject_AsTINT(HOST_SIZEOF_POINTER);
@@ -4922,7 +4922,7 @@ next_key:
 			DO(Dee_function_generator_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
 			                                   VCALL_CC_RAWINTPTR, 2));                     /* [elems...], UNCHECKED(d) */
 		}                                                                                   /* [elems...], UNCHECKED(d) */
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));       /* [elems...], UNCHECKED(d) */
+		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));       /* [elems...], UNCHECKED(d) */
 		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [elems...], d */
 		--elemc;
 	}
@@ -6031,7 +6031,7 @@ Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self)
 	if (concat_inherited_api_function == (void const *)&DeeObject_ConcatInherited)
 		DO(Dee_function_generator_vnotoneref_at(self, 1));
 	DO(Dee_function_generator_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, UNCHECKED(result) */
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* ([valid_if(false)] ref:lhs), rhs, result */
 	if (concat_inherited_api_function != (void const *)&DeeObject_ConcatInherited)
 		DO(Dee_function_generator_voneref_noalias(self));
@@ -6108,7 +6108,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vlrot(self, 3));         /* [elems...], ref:seq, elemc, elemv */
 	old_seqflags = Dee_function_generator_vtop(self)[-2].mv_flags;
 	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
 	Dee_function_generator_vtop(self)->mv_flags &= ~MEMVAL_F_NOREF; /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
@@ -6509,7 +6509,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
 		DO(Dee_function_generator_vdirect(self, 1));                   /* reg:FIELD */
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 		return 0;
 	}	break;
@@ -6519,7 +6519,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
 		DO(Dee_function_generator_vdirect(self, 1));                   /* reg:FIELD */
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 		Dee_function_generator_vtop(self)->mv_vmorph = (desc->m_field.m_type & Dee_STRUCT_UNSIGNED)
 		                                               ? MEMVAL_VMORPH_UINT
 		                                               : MEMVAL_VMORPH_INT;
@@ -6598,7 +6598,7 @@ push_true:
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
 		DO(Dee_function_generator_vdirect(self, 1));                   /* reg:FIELD */
 		vtop = Dee_function_generator_vtop(self);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(vtop->mv_vmorph));
+		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_TESTNZ(vtop->mv_vmorph);
 		return 0;
 	}	break;
@@ -6688,7 +6688,7 @@ Dee_function_generator_vbound_module_symbol(struct Dee_function_generator *__res
 	DO(Dee_function_generator_vpush_addr(self, sym));  /* mod, sym */
 	DO(Dee_function_generator_vcallapi(self, &DeeModule_BoundAttrSymbol, VCALL_CC_M1INT, 2));
 	DO(Dee_function_generator_vdirect(self, 1));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -6817,7 +6817,7 @@ Dee_function_generator_vbound_instance_attr(struct Dee_function_generator *__res
 	DO(Dee_function_generator_vnotoneref(self, 2));           /* desc, DeeInstance_DESC(desc, this), this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeInstance_BoundAttribute, VCALL_CC_M1INT, 4)); /* result */
 	DO(Dee_function_generator_vdirect(self, 1));              /* result */
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:

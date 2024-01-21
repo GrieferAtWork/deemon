@@ -1098,7 +1098,7 @@ move_cur_loci_to_new_loci:
 		 * - cur_loci -> new_loci */
 		if (cur_refcnt_new_loci != 0) {
 			ASSERT(curinfo_vaddr[new_loci] != (Dee_vstackaddr_t)-1);
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[new_loci]].mv_vmorph));
+			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_loci]]));
 			p_cur_loc = &state->ms_stackv[curinfo_vaddr[new_loci]].mv_loc0;
 			/* Move "p_cur_loc" to a location somewhere further up the stack, or just decref() it. */
 
@@ -1114,7 +1114,7 @@ move_cur_loci_to_new_loci:
 		ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 
 		/* Move cur_loci -> new_loci */
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
 		p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
 		Dee_except_exitinfo_asloc(new_loci, &new_loc);
 		if unlikely(Dee_function_generator_gexcept_morph_mov(self, p_cur_loc, &new_loc,
@@ -1124,7 +1124,7 @@ move_cur_loci_to_new_loci:
 
 		/* Updated meta-data to reflect the move. */
 		Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
-		ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
 		ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0);
 		curinfo_vaddr[new_loci] = curinfo_vaddr[cur_loci];
 		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
@@ -1160,7 +1160,7 @@ move_cur_loci_to_new_loci:
 		} else {
 			struct Dee_memloc *p_cur_loc;
 			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
 			p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
 			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
 			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
@@ -1190,7 +1190,7 @@ move_cur_loci_to_new_loci:
 				continue;
 			ASSERT(curinfo_vaddr[new_regi] != (Dee_vstackaddr_t)-1);
 			ASSERT(curinfo_vaddr[new_regi] < state->ms_stackc);
-			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[new_regi]].mv_vmorph));
+			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_regi]]));
 			loc = &state->ms_stackv[curinfo_vaddr[new_regi]].mv_loc0;
 			ASSERT(loc->ml_adr.ma_typ == MEMADR_TYPE_HREG ||
 			       loc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);

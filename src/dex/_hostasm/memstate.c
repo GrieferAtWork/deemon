@@ -527,7 +527,7 @@ Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
 			i = (size_t)(after - self->ms_stackv) + 1;
 		for (; i < self->ms_stackc; ++i) {
 			struct Dee_memval *result = &self->ms_stackv[i];
-			if (!MEMVAL_VMORPH_ISDIRECT(result->mv_vmorph))
+			if (!Dee_memval_isdirect(result))
 				continue;
 			if (result->mv_flags & MEMVAL_F_NOREF)
 				continue;
@@ -540,7 +540,7 @@ Dee_memstate_findrefalias(struct Dee_memstate *__restrict self,
 	}
 	for (; i < self->ms_localc; ++i) {
 		struct Dee_memval *result = &self->ms_localv[i];
-		if (!MEMVAL_VMORPH_ISDIRECT(result->mv_vmorph))
+		if (!Dee_memval_isdirect(result))
 			continue;
 		if (result->mv_flags & MEMVAL_F_NOREF)
 			continue;
@@ -559,10 +559,10 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 	struct Dee_memval const *iter;
 	if (!(mval->mv_flags & MEMVAL_F_NOREF))
 		return true;
-	if (!MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph))
+	if (!Dee_memval_isdirect(mval))
 		return false; /* Virtual object */
 	Dee_memstate_foreach(iter, self) {
-		if (!MEMVAL_VMORPH_ISDIRECT(iter->mv_vmorph))
+		if (!Dee_memval_isdirect(iter))
 			continue;
 		if (!Dee_memloc_sameloc(&iter->mv_loc0, &mval->mv_loc0))
 			continue;

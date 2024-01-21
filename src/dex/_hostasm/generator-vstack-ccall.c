@@ -297,7 +297,7 @@ impl_cca_Sequence_anyall(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 	DO(Dee_function_generator_vcallapi(self, api_function, VCALL_CC_NEGINT, 1));
 	DO(Dee_function_generator_vdirect(self, 1));
-	ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:

@@ -171,22 +171,22 @@ Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
 
 	/* Write the updated value into all aliases. */
 	ASSERT(Dee_memval_isdirect(mval));
-	oldval.mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
+	/*oldval.mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;*/ /* Not needed */
 	state = self->fg_state;
 	Dee_memstate_foreach(alias, state) {
 		if (!Dee_memval_sameval(alias, &oldval))
 			continue;
 		if (alias == mval)
 			continue;
-		Dee_memstate_decrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for mem values with multiple locations */
+		Dee_memstate_decrinuse_for_memval(state, alias);
 		if (Dee_memstate_foreach_islocal(alias, state)) {
 			alias->mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
 			alias->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 		}
-		alias->mv_loc0   = mval->mv_loc0; /* TODO: Support for mem values with multiple locations */
+		alias->mv_loc0   = mval->mv_loc0;
 		alias->mv_vmorph = mval->mv_vmorph;
 		alias->mv_valtyp = mval->mv_valtyp;
-		Dee_memstate_incrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for mem values with multiple locations */
+		Dee_memstate_incrinuse_for_memloc(state, Dee_memval_direct_getloc(alias));
 	}
 	Dee_memstate_foreach_end;
 	Dee_memval_fini(&oldval);
@@ -430,7 +430,7 @@ Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restr
 				    Dee_memloc_hstackind_getcfa(loc) == cfa_offset) {
 					STATIC_ASSERT(offsetof(struct Dee_memloc, ml_adr.ma_val.v_cfa) ==
 					              offsetof(struct Dee_memloc, ml_adr.ma_val._v_nextloc));
-					if (MEMVAL_VMORPH_ISDIRECT(val->mv_vmorph) && (val->mv_flags & MEMVAL_F_LINEAR)) {
+					if (val->mv_flags & MEMVAL_F_LINEAR) {
 						/* Ooops: not allowed. (Location must not be moved to a register) */
 						while (cfa_locs) {
 							loc = cfa_locs->ml_adr.ma_val._v_nextloc;
@@ -1436,7 +1436,7 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 	struct Dee_memstate *state = self->fg_state;
 	for (i = MEMSTATE_XLOCAL_A_MIN; i <= MEMSTATE_XLOCAL_A_MAX; ++i) {
 		struct Dee_memval *xval = &state->ms_localv[xloc_base + i];
-		if (MEMVAL_VMORPH_ISDIRECT(xval->mv_vmorph) &&
+		if (Dee_memval_isdirect(xval) &&
 		    Dee_memloc_gettyp(&xval->mv_loc0) == MEMADR_TYPE_HREG &&
 		    Dee_memloc_hreg_getreg(&xval->mv_loc0) == regno) {
 			uintptr_t cfa_offset;
@@ -2554,7 +2554,6 @@ no_equivalence:
 				if (alias_loc == loc)
 					continue;
 				if (Dee_memloc_gettyp(alias_loc) == MEMADR_TYPE_HSTACKIND &&
-				    MEMVAL_VMORPH_ISDIRECT(alias_val->mv_vmorph) &&
 				    (alias_val->mv_flags & MEMVAL_F_LINEAR))
 					continue; /* The alias must remain on-stack (don't update it) */
 				Dee_memstate_decrinuse_for_memloc(self->fg_state, alias_loc);
