@@ -137,12 +137,8 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	/* Initially, all variables are unbound */
 	{
 		Dee_lid_t lid;
-		for (lid = 0; lid < result->ms_localc; ++lid) {
-			result->ms_localv[lid].ml_flags  = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_UNBOUND;
-			result->ms_localv[lid].ml_vmorph = MEMLOC_VMORPH_DIRECT;
-			result->ms_localv[lid].ml_type   = MEMLOC_TYPE_UNALLOC;
-			result->ms_localv[lid].ml_valtyp = NULL;
-		}
+		for (lid = 0; lid < result->ms_localc; ++lid)
+			Dee_memval_init_unalloc(&result->ms_localv[lid]);
 	}
 done:
 	return result;
@@ -167,12 +163,8 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #ifdef HOSTASM_X86
 	{
 #ifdef HOSTASM_X86_64
-#define Dee_memloc_set_x86_arg(self, argi)                     \
-	((self)->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND, \
-	 (self)->ml_type  = MEMLOC_TYPE_HREG,                      \
-	 (self)->ml_value.v_hreg.r_regno = truearg_regno[argi],    \
-	 (self)->ml_value.v_hreg.r_off   = 0,                      \
-	 Dee_memstate_incrinuse(state, truearg_regno[argi]))
+#define Dee_memval_set_x86_arg(self, argi) \
+	Dee_memval_init_hreg(self, truearg_regno[argi], 0, MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND, NULL)
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,
@@ -183,51 +175,46 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #endif /* HOST_REGISTER_R_ARG4 */
 		};
 #else /* HOSTASM_X86_64 */
-#define Dee_memloc_set_x86_arg(self, argi)                                          \
-	((self)->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND,                      \
-	 (self)->ml_type  = MEMLOC_TYPE_HSTACKIND,                                      \
-	 (self)->ml_value.v_hstack.s_cfa = (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
-	 (self)->ml_value.v_hstack.s_off = 0)
+#define Dee_memval_set_x86_arg(self, argi)                                       \
+	Dee_memval_init_hstackind(self, (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
+	                          0, MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND, NULL)
 #endif /* !HOSTASM_X86_64 */
 		size_t argi = 0;
 		Dee_lid_t extra_base = self->fa_localc;
 		if (cc & HOSTFUNC_CC_F_FUNC) {
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
+			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
 			++argi;
 		}
 		if (cc & HOSTFUNC_CC_F_THIS) {
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_THIS], argi);
+			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_THIS], argi);
 			++argi;
 		}
 		if (cc & HOSTFUNC_CC_F_TUPLE) {
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGS], argi);
+			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGS], argi);
 			++argi;
 		} else {
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGC], argi);
+			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGC], argi);
 			++argi;
-			Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGV], argi);
+			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGV], argi);
 			++argi;
 		}
 		if (cc & HOSTFUNC_CC_F_KW) {
 #if defined(HOSTASM_X86_64) && !defined(HOST_REGISTER_R_ARG4)
 			if (argi == 5) {
-				struct Dee_memloc *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
-				/*  */
-				a_kw->ml_flags = MEMLOC_F_NOREF | MEMLOC_F_LOCAL_BOUND;
-				a_kw->ml_type  = MEMLOC_TYPE_HSTACKIND;
+				struct Dee_memval *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
+				a_kw->mv_flags = MEMVAL_F_NOREF | MEMVAL_F_LOCAL_BOUND;
 #ifdef HOSTASM_X86_64_MSABI
-				a_kw->ml_value.v_hstack.s_cfa = (uintptr_t)(-(5 * HOST_SIZEOF_POINTER));
+				Dee_memloc_init_hstackind(&a_kw->mv_loc0, (uintptr_t)(-(5 * HOST_SIZEOF_POINTER)), 0);
 #else /* HOSTASM_X86_64_MSABI */
-				a_kw->ml_value.v_hstack.s_cfa = (uintptr_t)(-(1 * HOST_SIZEOF_POINTER));
+				Dee_memloc_init_hstackind(&a_kw->mv_loc0, (uintptr_t)(-(1 * HOST_SIZEOF_POINTER)), 0);
 #endif /* !HOSTASM_X86_64_MSABI */
-				a_kw->ml_value.v_hstack.s_off = 0;
 			} else
 #endif /* HOSTASM_X86_64 && !HOST_REGISTER_R_ARG4 */
 			{
-				Dee_memloc_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
+				Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
 			}
 		}
-#undef Dee_memloc_set_x86_arg
+#undef Dee_memval_set_x86_arg
 	}
 #else /* ... */
 #error "Initial register state not implemented for this architecture"
@@ -235,9 +222,9 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 
 	/* Some arguments have known object types. */
 	if (cc & HOSTFUNC_CC_F_FUNC)
-		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC].ml_valtyp = &DeeFunction_Type;
+		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC].mv_valtyp = &DeeFunction_Type;
 	if (cc & HOSTFUNC_CC_F_TUPLE)
-		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS].ml_valtyp = &DeeTuple_Type;
+		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS].mv_valtyp = &DeeTuple_Type;
 
 	return state;
 err:
@@ -262,7 +249,7 @@ Dee_function_generator_makeprolog_cleanup(struct Dee_function_generator *__restr
 	for (lid = 0; lid < state->ms_localc; ++lid) {
 		if (bitset_test(block0->bb_locuse, lid))
 			continue;
-		if (state->ms_localv[lid].ml_type == MEMLOC_TYPE_UNALLOC)
+		if (Dee_memval_isunalloc(&state->ms_localv[lid]))
 			continue;
 		if unlikely(Dee_function_generator_vdel_local(self, lid))
 			goto err;
@@ -315,7 +302,7 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
  * - self->fa_blockv[*]->bb_host_start
  * - self->fa_blockv[*]->bb_host_end
  * Also makes sure that memory states at start/end of basic blocks are
- * always identical (or compatible; i.e.: MEMLOC_F_LOCAL_UNKNOWN can
+ * always identical (or compatible; i.e.: MEMVAL_F_LOCAL_UNKNOWN can
  * be set at the start of a block, but doesn't need to be set at the
  * end of a preceding block). When not compatible, extra block(s) are
  * inserted with `bb_deemon_start==bb_deemon_end', but non-empty host
@@ -614,9 +601,7 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) {
 	struct Dee_memloc zero;
-	zero.ml_flags = MEMLOC_F_NORMAL;
-	zero.ml_type  = MEMLOC_TYPE_CONST;
-	zero.ml_value.v_const = NULL;
+	Dee_memloc_init_const(&zero, 0);
 	return Dee_function_generator_gret(self, &zero);
 }
 
@@ -675,7 +660,7 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 	/* Check for special case: if the location lies further out on the hstack than
 	 * is reachable by doing a direct push, then adjust the stack such that a direct
 	 * push becomes possible. */
-	if (newloc->ml_type == MEMLOC_TYPE_HSTACKIND &&
+	if (newloc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND &&
 	    Dee_memloc_getcfastart(newloc) > self->fg_state->ms_host_cfa_offset) {
 		uintptr_t adjust_delta = Dee_memloc_getcfastart(newloc) - self->fg_state->ms_host_cfa_offset;
 		if unlikely(Dee_function_generator_ghstack_adjust(self, adjust_delta))
@@ -709,13 +694,12 @@ Dee_function_generator_gexcept_morph_decref(struct Dee_function_generator *__res
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
                         Dee_vstackaddr_t i) {
-	struct Dee_memloc *vloc;
+	struct Dee_memval *vval;
 	ASSERT(i < self->ms_stackc);
-	vloc = &self->ms_stackv[i];
-	if (MEMLOC_TYPE_HASREG(vloc->ml_type))
-		Dee_memstate_decrinuse(self, vloc->ml_value.v_hreg.r_regno);
-	vloc->ml_type = MEMLOC_TYPE_UNDEFINED;
-	vloc->ml_valtyp = NULL;
+	vval = &self->ms_stackv[i];
+	ASSERT(MEMVAL_VMORPH_ISDIRECT(vval->mv_vmorph));
+	Dee_memstate_decrinuse_for_memloc(self, &vval->mv_loc0);
+	Dee_memval_init_undefined(vval);
 }
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -789,9 +773,7 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 		}
 		curinfo_vaddr[cur_loci] = state->ms_stackc;
 		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
-		cur_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-		cur_loc.ml_valtyp = NULL;
-		if unlikely(Dee_memstate_vpush(state, &cur_loc))
+		if unlikely(Dee_memstate_vpush_memloc(state, &cur_loc))
 			goto err_infostate_state_curinfo_vaddr;
 	}
 	for (; cur_loci < max_locc; ++cur_loci)
@@ -835,9 +817,7 @@ offload_cur_loci_to_new_loci_for_trunc:
 				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				curinfo_vaddr[new_loci] = state->ms_stackc;
-				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-				new_loc.ml_valtyp = NULL;
-				if unlikely(Dee_memstate_vpush(state, &new_loc))
+				if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
 					goto err_infostate_state_curinfo_vaddr;
 				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
 				--cur_locc;
@@ -913,9 +893,7 @@ again_move_added_location:
 				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 				curinfo_vaddr[new_loci] = state->ms_stackc;
-				new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-				new_loc.ml_valtyp = NULL;
-				if unlikely(Dee_memstate_vpush(state, &new_loc))
+				if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
 					goto err_infostate_state_curinfo_vaddr;
 				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
 				++cur_locc;
@@ -927,8 +905,7 @@ again_move_added_location:
 		{
 			/* Need to get an object out of the void. */
 			struct Dee_memloc none;
-			none.ml_type = MEMLOC_TYPE_CONST;
-			none.ml_value.v_const = Dee_None;
+			Dee_memloc_init_const(&none, Dee_None);
 			ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
 			                                                     1, new_refcnt + 1))
@@ -936,9 +913,7 @@ again_move_added_location:
 			Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
 			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 			curinfo_vaddr[new_loci] = state->ms_stackc;
-			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-			new_loc.ml_valtyp = NULL;
-			if unlikely(Dee_memstate_vpush(state, &new_loc))
+			if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
 				goto err_infostate_state_curinfo_vaddr;
 		}
 		++cur_locc;
@@ -1115,13 +1090,16 @@ move_cur_loci_to_new_loci:
 		ASSERT(cur_refcnt_new_loci == Dee_except_exitinfo_locv(curinfo, new_loci));
 		ASSERT(new_refcnt_new_loci == Dee_except_exitinfo_locv(newinfo, new_loci));
 		ASSERT(new_refcnt_new_loci != 0);
+		if (cur_loci == new_loci)
+			continue; /* Will be done by the next pass. */
 
 		/* Do moves:
 		 * - new_loci -> [...]     (Dee_except_exitinfo_locv(curinfo, new_loci) != 0)
 		 * - cur_loci -> new_loci */
 		if (cur_refcnt_new_loci != 0) {
 			ASSERT(curinfo_vaddr[new_loci] != (Dee_vstackaddr_t)-1);
-			p_cur_loc = &state->ms_stackv[curinfo_vaddr[new_loci]];
+			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[new_loci]].mv_vmorph));
+			p_cur_loc = &state->ms_stackv[curinfo_vaddr[new_loci]].mv_loc0;
 			/* Move "p_cur_loc" to a location somewhere further up the stack, or just decref() it. */
 
 			/* TODO: Try to move "p_cur_loc" elsewhere */
@@ -1130,13 +1108,14 @@ move_cur_loci_to_new_loci:
 			if unlikely(Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt_new_loci))
 				goto err_infostate_state_curinfo_vaddr;
 			Dee_except_exitinfo_locv(curinfo, new_loci) = 0;
-			p_cur_loc->ml_type = MEMLOC_TYPE_UNDEFINED;
+			p_cur_loc->ml_adr.ma_typ = MEMADR_TYPE_UNDEFINED;
 			curinfo_vaddr[new_loci] = (Dee_vstackaddr_t)-1;
 		}
 		ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
 
 		/* Move cur_loci -> new_loci */
-		p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]];
+		ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+		p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
 		Dee_except_exitinfo_asloc(new_loci, &new_loc);
 		if unlikely(Dee_function_generator_gexcept_morph_mov(self, p_cur_loc, &new_loc,
 		                                                     cur_refcnt_cur_loci,
@@ -1144,16 +1123,13 @@ move_cur_loci_to_new_loci:
 			goto err_infostate_state_curinfo_vaddr;
 
 		/* Updated meta-data to reflect the move. */
-		if (MEMLOC_TYPE_HASREG(p_cur_loc->ml_type))
-			Dee_memstate_decrinuse(state, p_cur_loc->ml_value.v_hreg.r_regno);
-		ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]]);
+		Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
+		ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+		ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0);
 		curinfo_vaddr[new_loci] = curinfo_vaddr[cur_loci];
 		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-		new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-		new_loc.ml_valtyp = NULL;
 		*p_cur_loc = new_loc;
-		if (MEMLOC_TYPE_HASREG(new_loc.ml_type))
-			Dee_memstate_incrinuse(state, new_loc.ml_value.v_hreg.r_regno);
+		Dee_memstate_incrinuse_for_memloc(state, &new_loc);
 		Dee_except_exitinfo_locv(curinfo, cur_loci) = 0;
 		Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt_new_loci;
 	}
@@ -1174,25 +1150,26 @@ move_cur_loci_to_new_loci:
 			struct Dee_memloc new_loc, none;
 			ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
 			Dee_except_exitinfo_asloc(cur_loci, &new_loc);
-			none.ml_type = MEMLOC_TYPE_CONST;
-			none.ml_value.v_const = Dee_None;
+			Dee_memloc_init_const(&none, Dee_None);
 			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
 			                                                     1, new_refcnt + 1))
 				goto err_infostate_state_curinfo_vaddr;
 			curinfo_vaddr[cur_loci] = state->ms_stackc;
-			new_loc.ml_vmorph = MEMLOC_VMORPH_DIRECT;
-			new_loc.ml_valtyp = NULL;
-			if unlikely(Dee_memstate_vpush(state, &new_loc))
+			if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
 				goto err_infostate_state_curinfo_vaddr;
 		} else {
 			struct Dee_memloc *p_cur_loc;
 			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-			p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]];
+			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[cur_loci]].mv_vmorph));
+			p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
 			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
 			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
 				goto err;
 			if (new_refcnt == 0) {
-				p_cur_loc->ml_type = MEMLOC_TYPE_UNDEFINED;
+				ASSERT(state == self->fg_state);
+				ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0);
+				Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
+				Dee_memloc_init_undefined(p_cur_loc);
 				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
 			}
 		}
@@ -1213,18 +1190,19 @@ move_cur_loci_to_new_loci:
 				continue;
 			ASSERT(curinfo_vaddr[new_regi] != (Dee_vstackaddr_t)-1);
 			ASSERT(curinfo_vaddr[new_regi] < state->ms_stackc);
-			loc = &state->ms_stackv[curinfo_vaddr[new_regi]];
-			ASSERT(loc->ml_type == MEMLOC_TYPE_HREG ||
-			       loc->ml_type == MEMLOC_TYPE_HSTACKIND);
-			ASSERT(loc->ml_type != MEMLOC_TYPE_HREG ||
-			       (loc->ml_value.v_hreg.r_regno == new_regi ||
-			        loc->ml_value.v_hreg.r_off == 0));
-			if (loc->ml_type != MEMLOC_TYPE_HREG) {
+			ASSERT(MEMVAL_VMORPH_ISDIRECT(state->ms_stackv[curinfo_vaddr[new_regi]].mv_vmorph));
+			loc = &state->ms_stackv[curinfo_vaddr[new_regi]].mv_loc0;
+			ASSERT(loc->ml_adr.ma_typ == MEMADR_TYPE_HREG ||
+			       loc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
+			ASSERT(loc->ml_adr.ma_typ != MEMADR_TYPE_HREG ||
+			       (loc->ml_adr.ma_reg == new_regi ||
+			        loc->ml_adr.ma_val.v_indoff == 0));
+			if (loc->ml_adr.ma_typ != MEMADR_TYPE_HREG) {
 				if unlikely(Dee_function_generator_gmov_loc2regx(self, loc, new_regi, 0))
 					goto err_infostate_state_curinfo_vaddr;
-				loc->ml_type = MEMLOC_TYPE_HREG;
-				loc->ml_value.v_hreg.r_regno = new_regi;
-				loc->ml_value.v_hreg.r_off   = 0;
+				loc->ml_adr.ma_typ = MEMADR_TYPE_HREG;
+				loc->ml_adr.ma_reg = new_regi;
+				loc->ml_adr.ma_val.v_indoff = 0;
 			}
 		}
 	}

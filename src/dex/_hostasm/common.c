@@ -43,16 +43,27 @@ DECL_BEGIN
 /* Dee_memequivs                                                        */
 /************************************************************************/
 
+STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_UNALLOC));
+STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_UNDEFINED));
+STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HSTACK));
+STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HREG));
+STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HREGIND));
+STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HSTACKIND));
+STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_CONST));
+
+
 INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
 	/* [0] = */ {
 		/* .meq_loc = */ {
-			/* .meql_type  = */ MEMEQUIV_TYPE_UNUSED,
-			/* .meql_regno = */ 0,
-			/* ._meq_zro   = */ { 0, },
-			/* .meql_value = */ { NULL },
+			/* .ml_adr = */ {
+				/* .ma_typ  = */ MEMEQUIV_TYPE_UNUSED,
+				/* .ma_reg  = */ 0,
+				/* ._ma_zro = */ { 0, },
+				/* .ma_val  = */ { 0 },
+			},
+			/* .ml_off = */ 0,
 		},
-		/* .meq_valoff = */ 0,
-		/* .meq_class  = */ RINGQ_ENTRY_UNBOUND_INITIALIZER,
+		/* .meq_class = */ RINGQ_ENTRY_UNBOUND_INITIALIZER,
 	}
 };
 
@@ -63,15 +74,15 @@ _Dee_memequivs_verifyrinuse_d(struct Dee_memequivs const *__restrict self) {
 	bzero(correct_rinuse, sizeof(correct_rinuse));
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv const *eq = &self->meqs_list[i];
-		switch (eq->meq_loc.meql_type) {
+		switch (eq->meq_loc.ml_adr.ma_typ) {
 		case MEMEQUIV_TYPE_HREG:
 		case MEMEQUIV_TYPE_HREGIND:
-			ASSERT(eq->meq_loc.meql_regno < HOST_REGISTER_COUNT);
-			++correct_rinuse[eq->meq_loc.meql_regno];
+			ASSERT(eq->meq_loc.ml_adr.ma_reg < HOST_REGISTER_COUNT);
+			++correct_rinuse[eq->meq_loc.ml_adr.ma_reg];
 			break;
 		case MEMEQUIV_TYPE_HSTACKIND:
 		case MEMEQUIV_TYPE_CONST:
-			ASSERT(eq->meq_loc.meql_regno == 0);
+			ASSERT(eq->meq_loc.ml_adr.ma_reg == 0);
 			break;
 		default: break;
 		}
@@ -110,59 +121,44 @@ err:
 	return -1;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
-Dee_memequivs_find(struct Dee_memequivs const *__restrict self,
-                   struct Dee_memequiv_loc const *__restrict eqloc) {
-	uintptr_t hash, perturb, i;
-	hash    = Dee_memequiv_loc_hashof(eqloc);
-	perturb = i = Dee_memequivs_hashst(self, hash);
-	for (;; Dee_memequivs_hashnx(i, perturb)) {
-		struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
-		if (Dee_memequiv_loc_equals(&result->meq_loc, eqloc))
-			return result;
-		if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
-			break;
-	}
-	return NULL;
-}
-
-
 PRIVATE NONNULL((1, 2)) void DCALL
 Dee_memequiv_make_undefined(struct Dee_memequivs *__restrict self,
                             struct Dee_memequiv *__restrict eq) {
 	struct Dee_memequiv *prev = RINGQ_PREV(eq, meq_class);
 	struct Dee_memequiv *next = RINGQ_NEXT(eq, meq_class);
 	ASSERT(self->meqs_used >= 2);
-	if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
-		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+	if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.ml_adr.ma_typ))
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.ml_adr.ma_reg);
 	if (prev == next) {
 		/* Removal would leave the class containing only 1 more element
 		 * -> get rid of the class entirely! */
-		if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-			_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+		if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+			_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 		DBG_memset(prev, 0xcc, sizeof(*prev));
 		DBG_memset(eq, 0xcc, sizeof(*eq));
-		prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-		eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+		prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+		eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 		self->meqs_used -= 2;
 	} else {
 		/* Remove entry from the class. */
 		RINGQ_REMOVE(eq, meq_class);
 		DBG_memset(eq, 0xcc, sizeof(*eq));
-		eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+		eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 		--self->meqs_used;
 	}
 }
 
 /* Check if "ring" contains an element that is *identical*
- * to "ietm" (including having the same value-offset) */
+ * to "item" (including having the same value-offset) */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memequiv_ring_contains_identical(struct Dee_memequiv const *__restrict ring,
-                                     struct Dee_memequiv const *__restrict item) {
+                                     struct Dee_memloc const *__restrict item) {
 	struct Dee_memequiv const *iter = ring;
 	do {
-		if (Dee_memequiv_loc_equals(&iter->meq_loc, &item->meq_loc))
-			return iter->meq_valoff == item->meq_valoff;
+		if (Dee_memloc_sameadr(&iter->meq_loc, item)) {
+			return Dee_memloc_getoff(&iter->meq_loc) ==
+			       Dee_memloc_getoff(item);
+		}
 	} while ((iter = Dee_memequiv_next(iter)) != ring);
 	return false;
 }
@@ -176,14 +172,21 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 	size_t i;
 	bool result = false;
 	_Dee_memequivs_verifyrinuse(self);
+#if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
+	HA_printf("Dee_memequivs_constrainwith:self:");
+	_Dee_memequivs_debug_print(self);
+	HA_printf("Dee_memequivs_constrainwith:other:");
+	_Dee_memequivs_debug_print(other);
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
+
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *eq = &self->meqs_list[i];
 		struct Dee_memequiv *eq_other, *eq_iter, *eq_next;
-		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+		if (eq->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED)
 			continue;
-		if (eq->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+		if (eq->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_DUMMY)
 			continue;
-		eq_other = Dee_memequivs_find(other, &eq->meq_loc);
+		eq_other = Dee_memequivs_getclassof(other, &eq->meq_loc.ml_adr);
 		if (!eq_other) {
 			/* Equivalence doesn't exist in "other" -> delete it */
 			Dee_memequiv_make_undefined(self, eq);
@@ -200,15 +203,12 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 		 *    other: A + 5 <=> B + 6 <=> C + 7
 		 * The value offsets differ, but the equivalences being described
 		 * are compatible! */
-		if (eq->meq_valoff != eq_other->meq_valoff) {
+		if (Dee_memloc_getoff(&eq->meq_loc) != Dee_memloc_getoff(&eq_other->meq_loc)) {
 			struct Dee_memequiv *iter = eq;
-			ptrdiff_t delta = eq_other->meq_valoff - eq->meq_valoff;
+			ptrdiff_t delta = Dee_memloc_getoff(&eq_other->meq_loc) -
+			                  Dee_memloc_getoff(&eq->meq_loc);
 			do {
-				if (iter->meq_loc.meql_type == MEMEQUIV_TYPE_CONST) {
-					iter->meq_loc.meql_value.v_const = (DeeObject *)((uintptr_t)iter->meq_loc.meql_value.v_const + delta);
-				} else {
-					iter->meq_valoff += delta;
-				}
+				Dee_memloc_adjoff(&iter->meq_loc, delta);
 			} while ((iter = Dee_memequiv_next(iter)) != eq);
 		}
 
@@ -216,21 +216,20 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 		 * remove all locations from "eq" that don't appear *exactly*
 		 * the same way in "eq_other" (including having to have equal
 		 * value offsets) */
-		ASSERT(Dee_memequiv_ring_contains_identical(eq_other, eq));
+		ASSERT(Dee_memequiv_ring_contains_identical(eq_other, &eq->meq_loc));
 		eq_iter = Dee_memequiv_next(eq);
 		ASSERT(eq_iter != eq);
 		do {
 			eq_next = Dee_memequiv_next(eq_iter);
-			if (!Dee_memequiv_ring_contains_identical(eq_other, eq_iter)) {
+			if (!Dee_memequiv_ring_contains_identical(eq_other, &eq_iter->meq_loc)) {
 				/* Must remove "eq_iter" from "self". */
-				if (MEMEQUIV_TYPE_HASREG(eq_iter->meq_loc.meql_type))
-					_Dee_memequivs_decrinuse(self, eq_iter->meq_loc.meql_regno);
+				if (MEMEQUIV_TYPE_HASREG(eq_iter->meq_loc.ml_adr.ma_typ))
+					_Dee_memequivs_decrinuse(self, eq_iter->meq_loc.ml_adr.ma_reg);
 				ASSERT(RINGQ_PREV(eq_iter, meq_class) != eq_iter);
 				ASSERT(RINGQ_NEXT(eq_iter, meq_class) != eq_iter);
-				ASSERT(RINGQ_NEXT(eq_iter, meq_class) != RINGQ_PREV(eq_iter, meq_class));
 				RINGQ_REMOVE(eq_iter, meq_class);
 				DBG_memset(eq_iter, 0xcc, sizeof(*eq_iter));
-				eq_iter->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+				eq_iter->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 				--self->meqs_used;
 				result = true;
 			}
@@ -243,10 +242,10 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 			ASSERT(result);
 			ASSERT(RINGQ_PREV(eq, meq_class) == eq);
 			ASSERT(RINGQ_NEXT(eq, meq_class) == eq);
-			if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, eq->meq_loc.ml_adr.ma_reg);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
@@ -257,14 +256,14 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 
 PRIVATE ATTR_RETNONNULL NONNULL((1, 3)) struct Dee_memequiv *DCALL
 Dee_memequiv_find_insert_dst(struct Dee_memequiv *__restrict map, size_t mask,
-                             struct Dee_memequiv const *item) {
+                             struct Dee_memadr const *item) {
 	uintptr_t hash, perturb, i;
-	hash    = Dee_memequiv_loc_hashof(&item->meq_loc);
+	hash    = Dee_memadr_hashof(item);
 	perturb = i = hash & mask;
 	for (;; Dee_memequivs_hashnx(i, perturb)) {
 		struct Dee_memequiv *dst = &map[i & mask];
-		ASSERT(dst->meq_loc.meql_type != MEMEQUIV_TYPE_DUMMY);
-		if (dst->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+		ASSERT(dst->meq_loc.ml_adr.ma_typ != MEMEQUIV_TYPE_DUMMY);
+		if (dst->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED)
 			return dst;
 	}
 }
@@ -274,27 +273,27 @@ Dee_memequiv_rehash(struct Dee_memequiv *__restrict oldmap, size_t oldmask,
                     struct Dee_memequiv *__restrict newmap, size_t newmask) {
 	size_t i;
 	for (i = 0; i <= newmask; ++i)
-		newmap[i].meq_loc.meql_type = MEMEQUIV_TYPE_UNUSED;
+		newmap[i].meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_UNUSED;
 	for (i = 0; i <= oldmask; ++i) {
 		struct Dee_memequiv *dst_next, *dst_iter, *dst;
 		struct Dee_memequiv *src_next, *src_iter, *src = &oldmap[i];
-		if (src->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED ||
-		    src->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+		if (src->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED ||
+		    src->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_DUMMY)
 			continue;
 		ASSERT(RINGQ_PREV(src, meq_class) != src);
 		ASSERT(RINGQ_NEXT(src, meq_class) != src);
 		/* Transfer whole classes at-a-time, so we can easily migrate ring pointers. */
 		src_iter = RINGQ_NEXT(src, meq_class);
-		dst = Dee_memequiv_find_insert_dst(newmap, newmask, src);
+		dst = Dee_memequiv_find_insert_dst(newmap, newmask, &src->meq_loc.ml_adr);
 		*dst = *src;
-		src->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+		src->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 		dst_iter = dst;
 		do {
 			src_next = RINGQ_NEXT(src_iter, meq_class);
-			dst_next = Dee_memequiv_find_insert_dst(newmap, newmask, src_iter);
-			ASSERT(src_iter->meq_loc.meql_type != MEMEQUIV_TYPE_DUMMY);
+			dst_next = Dee_memequiv_find_insert_dst(newmap, newmask, &src_iter->meq_loc.ml_adr);
+			ASSERT(src_iter->meq_loc.ml_adr.ma_typ != MEMEQUIV_TYPE_DUMMY);
 			*dst_next = *src_iter;
-			src_iter->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			src_iter->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			RINGQ_NEXT(dst_iter, meq_class) = dst_next;
 			RINGQ_PREV(dst_next, meq_class) = dst_iter;
 			dst_iter = dst_next;
@@ -304,18 +303,18 @@ Dee_memequiv_rehash(struct Dee_memequiv *__restrict oldmap, size_t oldmask,
 	}
 }
 
-/* Search for "eqloc", or create an entry for it if none exists, yet. */
+/* Search for "eqadr", or create an entry for it if none exists, yet. */
 PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
 Dee_memequivs_find_or_insert(struct Dee_memequivs *__restrict self,
-                             struct Dee_memequiv_loc const *__restrict eqloc,
+                             struct Dee_memadr const *__restrict eqadr,
                              bool remove_from_old_class_if_already_present) {
 	struct Dee_memequiv *newslot = NULL;
 	uintptr_t hash, perturb, i;
-	hash    = Dee_memequiv_loc_hashof(eqloc);
+	hash    = Dee_memadr_hashof(eqadr);
 	perturb = i = Dee_memequivs_hashst(self, hash);
 	for (;; Dee_memequivs_hashnx(i, perturb)) {
 		struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
-		if (Dee_memequiv_loc_equals(&result->meq_loc, eqloc)) {
+		if (Dee_memadr_sameadr(&result->meq_loc.ml_adr, eqadr)) {
 			if (remove_from_old_class_if_already_present) {
 				struct Dee_memequiv *prev = RINGQ_PREV(result, meq_class);
 				struct Dee_memequiv *next = RINGQ_NEXT(result, meq_class);
@@ -323,10 +322,10 @@ Dee_memequivs_find_or_insert(struct Dee_memequivs *__restrict self,
 				if (prev == next) {
 					/* Removal would leave the class containing only 1 more element
 					 * -> get rid of the class entirely! */
-					if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-						_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+					if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+						_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 					DBG_memset(prev, 0xcc, sizeof(*prev));
-					prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+					prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 					self->meqs_used -= 1;
 				} else {
 					/* Remove entry from the class, turning it into its own class. */
@@ -336,24 +335,23 @@ Dee_memequivs_find_or_insert(struct Dee_memequivs *__restrict self,
 			}
 			return result;
 		}
-		if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED) {
+		if (result->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED) {
 			if (newslot == NULL) {
 				++self->meqs_size;
 				newslot = result;
 			}
 			break;
 		}
-		if (newslot == NULL && result->meq_loc.meql_type == MEMEQUIV_TYPE_DUMMY)
+		if (newslot == NULL && result->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_DUMMY)
 			newslot = result;
 	}
 
 	/* Location isn't being tracked, yet -> create it now. */
-	newslot->meq_loc    = *eqloc;
-	newslot->meq_valoff = 0;
+	Dee_memloc_init_memadr(&newslot->meq_loc, eqadr, 0);
 	RINGQ_INIT(newslot, meq_class); /* New item is part of a 1-element ring (by default) */
 	++self->meqs_used;
-	if (MEMEQUIV_TYPE_HASREG(eqloc->meql_type))
-		_Dee_memequivs_incrinuse(self, eqloc->meql_regno);
+	if (MEMEQUIV_TYPE_HASREG(eqadr->ma_typ))
+		_Dee_memequivs_incrinuse(self, eqadr->ma_reg);
 	return newslot;
 }
 
@@ -367,9 +365,9 @@ Dee_memequivs_undefined_hregind_for_hreg(struct Dee_memequivs *__restrict self,
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
-		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HREGIND)
+		if (eq->meq_loc.ml_adr.ma_typ != MEMEQUIV_TYPE_HREGIND)
 			continue;
-		if (eq->meq_loc.meql_regno != regno)
+		if (eq->meq_loc.ml_adr.ma_reg != regno)
 			continue;
 
 		/* Remove this equivalence entry. */
@@ -380,18 +378,18 @@ Dee_memequivs_undefined_hregind_for_hreg(struct Dee_memequivs *__restrict self,
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
-			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 			DBG_memset(prev, 0xcc, sizeof(*prev));
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 			self->meqs_used -= 2;
 		} else {
 			/* Remove entry from the class. */
 			RINGQ_REMOVE(eq, meq_class);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
@@ -409,22 +407,18 @@ Dee_memequivs_movevalue(struct Dee_memequivs *__restrict self,
                         struct Dee_memloc const *__restrict from,
                         struct Dee_memloc const *__restrict to) {
 	struct Dee_memequiv *from_eq, *to_eq;
-	struct Dee_memequiv_loc fromloc, toloc;
-	ptrdiff_t from_delta, to_delta;
 	_Dee_memequivs_verifyrinuse(self);
-	if (!Dee_memequiv_loc_fromloc(&fromloc, from))
+	if (!MEMEQUIV_TYPE_SUPPORTED(from->ml_adr.ma_typ))
 		return 0;
-	if (!Dee_memequiv_loc_fromloc(&toloc, to))
+	if (!MEMEQUIV_TYPE_SUPPORTED(to->ml_adr.ma_typ))
 		return 0;
-	ASSERTF(toloc.meql_type != MEMEQUIV_TYPE_CONST,
+	ASSERTF(to->ml_adr.ma_typ != MEMEQUIV_TYPE_CONST,
 	        "Bad usage: can't move *into* a constant");
-	from_delta = Dee_memloc_getvaldelta_c0(from);
-	to_delta   = Dee_memloc_getvaldelta_c0(to);
 #if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
 	HA_printf("Dee_memequivs_movevalue(");
-	_Dee_memequiv_loc_debug_print(&fromloc, from_delta);
-	Dee_DPRINT(" <=> ");
-	_Dee_memequiv_loc_debug_print(&toloc, to_delta);
+	_Dee_memloc_debug_print(from);
+	Dee_DPRINT(" => ");
+	_Dee_memloc_debug_print(to);
 	Dee_DPRINT(")\n");
 	_Dee_memequivs_debug_print(self);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
@@ -432,13 +426,15 @@ Dee_memequivs_movevalue(struct Dee_memequivs *__restrict self,
 	/* Check for special case: "from" and "to" are the same memory locations.
 	 * In this case, see if there's a difference in value delta between the
 	 * two, and if so: remember that value shift. */
-	if (Dee_memequiv_loc_equals(&fromloc, &toloc)) {
+	if (Dee_memloc_sameadr(from, to)) {
+		ptrdiff_t from_delta   = Dee_memloc_getoff(from);
+		ptrdiff_t to_delta     = Dee_memloc_getoff(to);
 		ptrdiff_t change_delta = to_delta - from_delta;
 		/* >> ... <==> LOC + X;
 		 * >> LOC + to_delta := LOC + from_delta;
 		 * >> ... <==> LOC + X - from_delta + to_delta; */
 		if (change_delta != 0)
-			Dee_memequivs_deltavalue(self, to, change_delta);
+			Dee_memequivs_deltavalue(self, &to->ml_adr, change_delta);
 		return 0;
 	}
 
@@ -475,22 +471,26 @@ vector_is_ready:
 	/* NOTE: Order here is important in case "to" was already linked to "from",
 	 *       in which case the lookup of "to" might end up making the (old) link
 	 *       of "from" undefined. */
-	to_eq   = Dee_memequivs_find_or_insert(self, &toloc, true);
-	from_eq = Dee_memequivs_find_or_insert(self, &fromloc, false);
+	to_eq   = Dee_memequivs_find_or_insert(self, &to->ml_adr, true);
+	from_eq = Dee_memequivs_find_or_insert(self, &from->ml_adr, false);
 
 	/* Calculate the correct value-offset-delta for "to_eq" */
-	to_eq->meq_valoff = to_delta;
-	to_eq->meq_valoff -= from_delta;
-	to_eq->meq_valoff += from_eq->meq_valoff;
+	ASSERTF(to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND ||
+	        to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HREG ||
+	        to_eq->meq_loc.ml_adr.ma_typ == MEMADR_TYPE_HREGIND,
+	        "This must be the case for us to directly modify `to_eq->meq_loc.ml_off'");
+	to_eq->meq_loc.ml_off = Dee_memloc_getoff(to);
+	to_eq->meq_loc.ml_off -= Dee_memloc_getoff(from);
+	to_eq->meq_loc.ml_off += Dee_memloc_getoff(&from_eq->meq_loc);
 
 	/* Append `to_eq' onto the equivalence class of `from_eq' */
 	RINGQ_INSERT_AFTER(from_eq, to_eq, meq_class);
 
-	if (to->ml_type == MEMLOC_TYPE_HREG) {
+	if (to->ml_adr.ma_typ == MEMADR_TYPE_HREG) {
 		/* Special case: when a register value becomes undefined, any knowledge
 		 * about stuff that might be located at indirect locations addressable
 		 * from that register also become undefined. */
-		Dee_memequivs_undefined_hregind_for_hreg(self, to->ml_value.v_hreg.r_regno);
+		Dee_memequivs_undefined_hregind_for_hreg(self, to->ml_adr.ma_reg);
 	}
 	_Dee_memequivs_verifyrinuse(self);
 	return 0;
@@ -499,16 +499,20 @@ err:
 	return -1;
 }
 
-/* Remember that a value change happend: "loc = loc + delta" */
+/* Remember that a value change happened: "loc = loc + delta" */
 INTERN NONNULL((1, 2)) void DCALL
 Dee_memequivs_deltavalue(struct Dee_memequivs *__restrict self,
-                         struct Dee_memloc const *__restrict loc,
+                         struct Dee_memadr const *__restrict loc,
                          ptrdiff_t delta) {
 	struct Dee_memequiv *eq;
+	ASSERTF(loc->ma_typ != MEMADR_TYPE_CONST,
+	        "How can you \"move\" the value of a constant? "
+	        "That doesn't make any sense!");
+
 	/* Update the equivalence relation (if there is one) */
 	eq = Dee_memequivs_getclassof(self, loc);
 	if (eq != NULL)
-		eq->meq_valoff += delta;
+		eq->meq_loc.ml_off += delta;
 	_Dee_memequivs_verifyrinuse(self);
 }
 
@@ -524,17 +528,16 @@ Dee_memequivs_hasregs(struct Dee_memequivs const *__restrict self) {
 }
 
 /* Remember that "loc" contains an undefined value (remove
- * from its equivalence class, should that class still exist).
- * NOTE: This function ignores the value-delta of "loc" */
+ * from its equivalence class, should that class still exist). */
 INTERN NONNULL((1, 2)) void DCALL
 Dee_memequivs_undefined(struct Dee_memequivs *__restrict self,
-                        struct Dee_memloc const *__restrict loc) {
+                        struct Dee_memadr const *__restrict loc) {
 	struct Dee_memequiv *eq;
 #if !defined(NO_HOSTASM_DEBUG_PRINT) && 0
 	struct Dee_memequiv_loc _dbgloc;
-	if likely(Dee_memequiv_loc_fromloc(&_dbgloc, loc)) {
+	if likely(Dee_memloc_fromloc(&_dbgloc, loc)) {
 		HA_printf("Dee_memequivs_undefined(");
-		_Dee_memequiv_loc_debug_print(&_dbgloc, 0);
+		_Dee_memloc_debug_print(&_dbgloc, 0);
 		Dee_DPRINT(")\n");
 		_Dee_memequivs_debug_print(self);
 	}
@@ -545,31 +548,31 @@ Dee_memequivs_undefined(struct Dee_memequivs *__restrict self,
 		struct Dee_memequiv *prev = RINGQ_PREV(eq, meq_class);
 		struct Dee_memequiv *next = RINGQ_NEXT(eq, meq_class);
 		ASSERT(self->meqs_used >= 2);
-		if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
-			_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		if (MEMEQUIV_TYPE_HASREG(eq->meq_loc.ml_adr.ma_typ))
+			_Dee_memequivs_decrinuse(self, eq->meq_loc.ml_adr.ma_reg);
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
-			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 			DBG_memset(prev, 0xcc, sizeof(*prev));
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 			self->meqs_used -= 2;
 		} else {
 			/* Remove entry from the class. */
 			RINGQ_REMOVE(eq, meq_class);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
-	if (loc->ml_type == MEMLOC_TYPE_HREG) {
+	if (loc->ma_typ == MEMADR_TYPE_HREG) {
 		/* Special case: when a register value becomes undefined, any knowledge
 		 * about stuff that might be located at indirect locations addressable
 		 * from that register also become undefined. */
-		Dee_memequivs_undefined_hregind_for_hreg(self, loc->ml_value.v_hreg.r_regno);
+		Dee_memequivs_undefined_hregind_for_hreg(self, loc->ma_reg);
 	}
 	_Dee_memequivs_verifyrinuse(self);
 }
@@ -588,29 +591,29 @@ Dee_memequivs_undefined_allregs(struct Dee_memequivs *__restrict self) {
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
-		if (!MEMEQUIV_TYPE_HASREG(eq->meq_loc.meql_type))
+		if (!MEMEQUIV_TYPE_HASREG(eq->meq_loc.ml_adr.ma_typ))
 			continue;
 
 		/* Remove this equivalence entry. */
 		prev = RINGQ_PREV(eq, meq_class);
 		next = RINGQ_NEXT(eq, meq_class);
 		ASSERT(self->meqs_used >= 2);
-		_Dee_memequivs_decrinuse(self, eq->meq_loc.meql_regno);
+		_Dee_memequivs_decrinuse(self, eq->meq_loc.ml_adr.ma_reg);
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
-			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 			DBG_memset(prev, 0xcc, sizeof(*prev));
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 			self->meqs_used -= 2;
 		} else {
 			/* Remove entry from the class. */
 			RINGQ_REMOVE(eq, meq_class);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
@@ -626,9 +629,9 @@ Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
-		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HSTACKIND)
+		if (eq->meq_loc.ml_adr.ma_typ != MEMEQUIV_TYPE_HSTACKIND)
 			continue;
-		if (eq->meq_loc.meql_value.v_cfa < min_cfa_offset)
+		if (eq->meq_loc.ml_adr.ma_val.v_cfa < min_cfa_offset)
 			continue;
 
 		/* Remove this equivalence entry. */
@@ -638,18 +641,18 @@ Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
-			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 			DBG_memset(prev, 0xcc, sizeof(*prev));
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 			self->meqs_used -= 2;
 		} else {
 			/* Remove entry from the class. */
 			RINGQ_REMOVE(eq, meq_class);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
@@ -667,7 +670,7 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
 	for (i = 0; i <= self->meqs_mask; ++i) {
 		struct Dee_memequiv *prev, *next;
 		struct Dee_memequiv *eq = &self->meqs_list[i];
-		if (eq->meq_loc.meql_type != MEMEQUIV_TYPE_HSTACKIND)
+		if (eq->meq_loc.ml_adr.ma_typ != MEMEQUIV_TYPE_HSTACKIND)
 			continue;
 		if (!(Dee_memequiv_getcfaend(eq) > start_cfa_offset &&
 		      Dee_memequiv_getcfastart(eq) < end_cfa_offset))
@@ -680,18 +683,18 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
 		if (prev == next) {
 			/* Removal would leave the class containing only 1 more element
 			 * -> get rid of the class entirely! */
-			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.meql_type))
-				_Dee_memequivs_decrinuse(self, prev->meq_loc.meql_regno);
+			if (MEMEQUIV_TYPE_HASREG(prev->meq_loc.ml_adr.ma_typ))
+				_Dee_memequivs_decrinuse(self, prev->meq_loc.ml_adr.ma_reg);
 			DBG_memset(prev, 0xcc, sizeof(*prev));
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			prev->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
-			eq->meq_loc.meql_type   = MEMEQUIV_TYPE_DUMMY;
+			prev->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ   = MEMEQUIV_TYPE_DUMMY;
 			self->meqs_used -= 2;
 		} else {
 			/* Remove entry from the class. */
 			RINGQ_REMOVE(eq, meq_class);
 			DBG_memset(eq, 0xcc, sizeof(*eq));
-			eq->meq_loc.meql_type = MEMEQUIV_TYPE_DUMMY;
+			eq->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;
 			--self->meqs_used;
 		}
 	}
@@ -709,17 +712,19 @@ Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
  * NOTE: This function ignores the value-delta of "loc" */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_memequiv *DCALL
 Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
-                         struct Dee_memloc const *__restrict loc) {
-	struct Dee_memequiv_loc eqloc;
-	if likely(Dee_memequiv_loc_fromloc(&eqloc, loc)) {
+                         struct Dee_memadr const *__restrict loc) {
+#if 0 /* Not needed (also checked by `Dee_memadr_sameadr()') */
+	if likely(MEMEQUIV_TYPE_SUPPORTED(loc->ma_typ))
+#endif
+	{
 		uintptr_t hash, perturb, i;
-		hash    = Dee_memequiv_loc_hashof(&eqloc);
+		hash    = Dee_memadr_hashof(loc);
 		perturb = i = Dee_memequivs_hashst(self, hash);
 		for (;; Dee_memequivs_hashnx(i, perturb)) {
 			struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
-			if (Dee_memequiv_loc_equals(&result->meq_loc, &eqloc))
+			if (Dee_memadr_sameadr(&result->meq_loc.ml_adr, loc))
 				return result;
-			if (result->meq_loc.meql_type == MEMEQUIV_TYPE_UNUSED)
+			if (result->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED)
 				break;
 		}
 	}
@@ -765,15 +770,15 @@ Dee_memstate_copy(struct Dee_memstate *__restrict self) {
 		goto err;
 	memcpy(result, self,
 	       offsetof(struct Dee_memstate, ms_localv) +
-	       self->ms_localc * sizeof(struct Dee_memloc));
-	result->ms_stackv = (struct Dee_memloc *)Dee_Mallocc(self->ms_stackc,
-	                                                     sizeof(struct Dee_memloc));
+	       self->ms_localc * sizeof(struct Dee_memval));
+	result->ms_stackv = (struct Dee_memval *)Dee_Mallocc(self->ms_stackc,
+	                                                     sizeof(struct Dee_memval));
 	if unlikely(!result->ms_stackv)
 		goto err_r;
 	result->ms_refcnt = 1;
 	result->ms_stacka = self->ms_stackc;
 	memcpyc(result->ms_stackv, self->ms_stackv,
-	        self->ms_stackc, sizeof(struct Dee_memloc));
+	        self->ms_stackc, sizeof(struct Dee_memval));
 	if unlikely(_Dee_memequivs_inplace_copy(&result->ms_memequiv))
 		goto err_r_stack;
 	return result;

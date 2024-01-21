@@ -64,8 +64,10 @@ DEFINE_CMETHOD(test_compile_and_run_o, &test_compile_and_run);
 
 PRIVATE struct dex_symbol symbols[] = {
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#ifndef __x86_64__ /* TODO: REMOVE ME */
 	{ "test_compile_and_run", (DeeObject *)&test_compile_and_run_o, MODSYM_FNORMAL,
 	  DOC("(func:?DFunction,args=!T0)->") },
+#endif /* !__x86_64__ */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 	{ NULL }
 };

@@ -38,9 +38,6 @@
 
 DECL_BEGIN
 
-STATIC_ASSERT(offsetof(struct Dee_memloc, ml_value.v_hreg.r_voff) ==
-              offsetof(struct Dee_memloc, ml_value.v_hstack.s_off));
-
 /************************************************************************/
 /* COMMON CODE GENERATION FUNCTIONS                                     */
 /************************************************************************/
@@ -48,175 +45,172 @@ STATIC_ASSERT(offsetof(struct Dee_memloc, ml_value.v_hreg.r_voff) ==
 #define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
 #define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict self,
-                                    struct Dee_memloc *__restrict loc) {
-	uint8_t vmorph = loc->ml_vmorph;
-	ASSERT(!MEMLOC_VMORPH_ISDIRECT(vmorph));
+                                    struct Dee_memval *__restrict mval) {
+	uint8_t vmorph = mval->mv_vmorph;
+	ASSERT(!MEMVAL_VMORPH_ISDIRECT(vmorph));
 	switch (vmorph) {
 
-	case MEMLOC_VMORPH_NULLABLE: {
+	case MEMVAL_VMORPH_NULLABLE: {
 		int result;
-		uint8_t saved_flags = loc->ml_flags;
-		loc->ml_flags |= MEMLOC_F_NOREF;
-		result = Dee_function_generator_gjz_except(self, loc);
-		loc->ml_flags  = saved_flags;
-		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
+		uint8_t saved_flags = mval->mv_flags;
+		mval->mv_flags |= MEMVAL_F_NOREF;
+		result = Dee_function_generator_gjz_except(self, &mval->mv_loc0);
+		mval->mv_flags  = saved_flags;
+		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 		return result;
 	}	break;
 
-	case MEMLOC_VMORPH_BOOL_Z:
-	case MEMLOC_VMORPH_BOOL_Z_01:
-	case MEMLOC_VMORPH_BOOL_NZ:
-	case MEMLOC_VMORPH_BOOL_NZ_01:
-	case MEMLOC_VMORPH_BOOL_LZ:
-	case MEMLOC_VMORPH_BOOL_GZ: {
+	case MEMVAL_VMORPH_BOOL_Z:
+	case MEMVAL_VMORPH_BOOL_Z_01:
+	case MEMVAL_VMORPH_BOOL_NZ:
+	case MEMVAL_VMORPH_BOOL_NZ_01:
+	case MEMVAL_VMORPH_BOOL_LZ:
+	case MEMVAL_VMORPH_BOOL_GZ: {
 		int temp;
 		Dee_host_register_t retreg;
 		ptrdiff_t retreg_delta;
-		if (loc->ml_type == MEMLOC_TYPE_HREG) {
-			retreg = loc->ml_value.v_hreg.r_regno;
+		if (mval->mv_loc0.ml_adr.ma_typ == MEMADR_TYPE_HREG) {
+			retreg = mval->mv_loc0.ml_adr.ma_reg;
 		} else {
 			Dee_host_register_t not_these[2];
 			not_these[0] = HOST_REGISTER_COUNT;
 			not_these[1] = HOST_REGISTER_COUNT;
-			if (MEMLOC_TYPE_HASREG(loc->ml_type))
-				not_these[0] = loc->ml_value.v_hreg.r_regno;
+			if (MEMADR_TYPE_HASREG(mval->mv_loc0.ml_adr.ma_typ))
+				not_these[0] = mval->mv_loc0.ml_adr.ma_reg;
 			retreg = Dee_function_generator_gallocreg(self, not_these);
 			if unlikely(retreg >= HOST_REGISTER_COUNT)
 				goto err;
 		}
-		if (vmorph == MEMLOC_VMORPH_BOOL_NZ_01) {
-			temp = Dee_function_generator_gmorph_loc012regbooly(self, loc, 0, retreg, &retreg_delta);
+		if (vmorph == MEMVAL_VMORPH_BOOL_NZ_01) {
+			temp = Dee_function_generator_gmorph_loc012regbooly(self, &mval->mv_loc0, 0,
+			                                                    retreg, &retreg_delta);
 		} else {
 			unsigned int cmp;
 			switch (vmorph) {
-			case MEMLOC_VMORPH_BOOL_Z:
-			case MEMLOC_VMORPH_BOOL_Z_01:
+			case MEMVAL_VMORPH_BOOL_Z:
+			case MEMVAL_VMORPH_BOOL_Z_01:
 				cmp = GMORPHBOOL_CC_EQ;
 				break;
-			case MEMLOC_VMORPH_BOOL_NZ:
+			case MEMVAL_VMORPH_BOOL_NZ:
 				cmp = GMORPHBOOL_CC_NE;
 				break;
-			case MEMLOC_VMORPH_BOOL_LZ:
+			case MEMVAL_VMORPH_BOOL_LZ:
 				cmp = GMORPHBOOL_CC_LO;
 				break;
-			case MEMLOC_VMORPH_BOOL_GZ:
+			case MEMVAL_VMORPH_BOOL_GZ:
 				cmp = GMORPHBOOL_CC_GR;
 				break;
 			default: __builtin_unreachable();
 			}
-			temp = Dee_function_generator_gmorph_loc2regbooly(self, loc, 0, cmp, retreg, &retreg_delta);
+			temp = Dee_function_generator_gmorph_loc2regbooly(self, &mval->mv_loc0, 0, cmp,
+			                                                  retreg, &retreg_delta);
 		}
 		if unlikely(temp)
 			goto err;
-		if (Dee_memstate_isinstate(self->fg_state, loc)) {
-			if (MEMLOC_TYPE_HASREG(loc->ml_type))
-				Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+		if (Dee_memstate_ismemvalinstate(self->fg_state, mval)) {
+			if (MEMADR_TYPE_HASREG(mval->mv_loc0.ml_adr.ma_typ))
+				Dee_memstate_decrinuse(self->fg_state, mval->mv_loc0.ml_adr.ma_reg);
 			Dee_memstate_incrinuse(self->fg_state, retreg);
 		}
-		loc->ml_type = MEMLOC_TYPE_HREG;
-		loc->ml_value.v_hreg.r_regno = retreg;
-		loc->ml_value.v_hreg.r_off   = retreg_delta;
-		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
-		loc->ml_valtyp = &DeeBool_Type;
+		Dee_memval_init_hreg(mval, retreg, retreg_delta, MEMVAL_F_NOREF, &DeeBool_Type);
 		return 0;
 	}	break;
 
-	case MEMLOC_VMORPH_INT:
-	case MEMLOC_VMORPH_UINT: {
+	case MEMVAL_VMORPH_INT:
+	case MEMVAL_VMORPH_UINT: {
 		/* Construct a new deemon integer object. */
 		if unlikely(Dee_function_generator_gcallapi(self,
-		                                            vmorph == MEMLOC_VMORPH_INT
+		                                            vmorph == MEMVAL_VMORPH_INT
 		                                            ? (void const *)&DeeInt_NEWSFUNC(HOST_SIZEOF_POINTER)
 		                                            : (void const *)&DeeInt_NEWUFUNC(HOST_SIZEOF_POINTER),
-		                                            1, loc))
+		                                            1, &mval->mv_loc0))
 			goto err;
-		loc->ml_flags  = MEMLOC_F_NOREF;
-		loc->ml_vmorph = MEMLOC_VMORPH_DIRECT;
-		loc->ml_type   = MEMLOC_TYPE_HREG;
-		loc->ml_value.v_hreg.r_regno = HOST_REGISTER_RETURN;
-		loc->ml_value.v_hreg.r_off   = 0;
-		if unlikely(Dee_function_generator_gjz_except(self, loc))
+		mval->mv_flags  = MEMVAL_F_NOREF;
+		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
+		if (Dee_memstate_ismemvalinstate(self->fg_state, mval)) {
+			if (MEMADR_TYPE_HASREG(mval->mv_loc0.ml_adr.ma_typ))
+				Dee_memstate_decrinuse(self->fg_state, mval->mv_loc0.ml_adr.ma_reg);
+			Dee_memstate_incrinuse(self->fg_state, HOST_REGISTER_RETURN);
+		}
+		Dee_memval_init_hreg(mval, HOST_REGISTER_RETURN, 0, MEMVAL_F_NOREF, NULL);
+		if unlikely(Dee_function_generator_gjz_except(self, &mval->mv_loc0))
 			goto err;
-		ASSERT(loc->ml_flags & MEMLOC_F_NOREF);
-		loc->ml_flags &= ~MEMLOC_F_NOREF;
-		loc->ml_valtyp = &DeeInt_Type;
+		ASSERT(mval->mv_flags & MEMVAL_F_NOREF);
+		ASSERT(mval->mv_valtyp == NULL);
+		mval->mv_flags &= ~MEMVAL_F_NOREF;
+		mval->mv_valtyp = &DeeInt_Type;
 	}	break;
 
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Unsupported location value type %#" PRFx8,
-		                       loc->ml_vmorph);
+		                       mval->mv_vmorph);
 	}
 	return 0;
 err:
 	return -1;
 }
 
-/* Force `loc' to use `MEMLOC_VMORPH_ISDIRECT'.
+/* Force `mval' to use `MEMVAL_VMORPH_ISDIRECT'.
  * NOTE: This is the only `Dee_function_generator_g*' function that
- *       doesn't simply assume `MEMLOC_VMORPH_ISDIRECT(ml_vmorph)'. */
+ *       doesn't simply assume `MEMVAL_VMORPH_ISDIRECT(mv_vmorph)'. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
-                               struct Dee_memloc *loc) {
-	struct Dee_memloc *alias, oldloc;
+                               struct Dee_memval *mval) {
+	struct Dee_memval *alias, oldval;
 	struct Dee_memstate *state;
-	if (MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph))
+	if (MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph))
 		return 0; /* Already a direct value. */
 
 	/* Force the value to become direct. */
-	oldloc = *loc;
-	if unlikely(Dee_function_generator_gdirect_impl(self, loc))
+	oldval = *mval;
+	if unlikely(Dee_function_generator_gdirect_impl(self, mval))
 		goto err;
 
 	/* Write the updated value into all aliases. */
-	ASSERT(MEMLOC_VMORPH_ISDIRECT(loc->ml_vmorph));
-	oldloc.ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
+	ASSERT(MEMVAL_VMORPH_ISDIRECT(mval->mv_vmorph));
+	oldval.mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
 	state = self->fg_state;
 	Dee_memstate_foreach(alias, state) {
-		if (alias->ml_vmorph != oldloc.ml_vmorph)
+		if (!Dee_memval_sameval(alias, &oldval))
 			continue;
-		if (!Dee_memloc_sameloc(alias, &oldloc))
+		if (alias == mval)
 			continue;
-		if (alias == loc)
-			continue;
-		if (MEMLOC_TYPE_HASREG(alias->ml_type))
-			Dee_memstate_decrinuse(state, alias->ml_value.v_hreg.r_regno);;
+		Dee_memstate_decrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for multi-location morphs */
 		if (Dee_memstate_foreach_islocal(alias, state)) {
-			alias->ml_flags &= ~MEMLOC_M_LOCAL_BSTATE;
-			alias->ml_flags |= MEMLOC_F_LOCAL_BOUND;
+			alias->mv_flags &= ~MEMVAL_M_LOCAL_BSTATE;
+			alias->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 		}
-		alias->ml_vmorph = loc->ml_vmorph;
-		alias->ml_type   = loc->ml_type;
-		alias->ml_value  = loc->ml_value;
-		alias->ml_valtyp = loc->ml_valtyp;
-		if (MEMLOC_TYPE_HASREG(alias->ml_type))
-			Dee_memstate_incrinuse(state, alias->ml_value.v_hreg.r_regno);;
+		alias->mv_loc0   = mval->mv_loc0; /* TODO: Support for multi-location morphs */
+		alias->mv_vmorph = mval->mv_vmorph;
+		alias->mv_valtyp = mval->mv_valtyp;
+		Dee_memstate_incrinuse_for_memloc(state, &alias->mv_loc0); /* TODO: Support for multi-location morphs */
 	}
 	Dee_memstate_foreach_end;
-	if (loc >= state->ms_localv &&
-	    loc < state->ms_localv + state->ms_localc)
-		loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;
+	if (mval >= state->ms_localv &&
+	    mval < state->ms_localv + state->ms_localc)
+		mval->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 	return 0;
 err:
 	return -1;
 }
 
 
-/* Clear the `MEMLOC_F_ONEREF' flag from `loc', as well
+/* Clear the `MEMVAL_F_ONEREF' flag from `mval', as well
  * as any other memory location that might be aliasing it. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict self,
-                                       struct Dee_memloc *loc) {
-	struct Dee_memloc *alias;
-	ASSERT(loc->ml_flags & MEMLOC_F_ONEREF);
+                                       struct Dee_memval *mval) {
+	struct Dee_memval *alias;
+	ASSERT(mval->mv_flags & MEMVAL_F_ONEREF);
 	Dee_memstate_foreach(alias, self->fg_state) {
-		if (Dee_memloc_sameloc(alias, loc))
-			alias->ml_flags &= ~MEMLOC_F_ONEREF;
+		if (Dee_memval_sameval(alias, mval))
+			alias->mv_flags &= ~MEMVAL_F_ONEREF;
 	}
 	Dee_memstate_foreach_end;
-	loc->ml_flags &= ~MEMLOC_F_ONEREF;
+	mval->mv_flags &= ~MEMVAL_F_ONEREF;
 	return 0;
 }
 
@@ -303,7 +297,7 @@ Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restr
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restrict self,
-                                         DeeObject *value) {
+                                         void const *value) {
 	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result;
 #if HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER
@@ -422,29 +416,37 @@ Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restr
 		 *       memory equivalences and find the HSTACKIND.
 		 *
 		 * !!! HOWEVER !!!
-		 * If there is a memory location with the MEMLOC_F_LINEAR flag
+		 * If there is a memory location with the MEMVAL_F_LINEAR flag
 		 * set, then we MUST NOT use pop (since the location can't be
 		 * altered) */
+		struct Dee_memval *val;
 		struct Dee_memloc *loc, *cfa_locs = NULL;
-		Dee_memstate_foreach(loc, self->fg_state) {
-			if (loc->ml_type == MEMLOC_TYPE_HSTACKIND &&
-			    loc->ml_value.v_hstack.s_cfa == cfa_offset) {
-				STATIC_ASSERT(offsetof(union Dee_memloc_value, _v_next) != offsetof(union Dee_memloc_value, v_hstack.s_cfa));
-				STATIC_ASSERT(offsetof(union Dee_memloc_value, _v_next) != offsetof(union Dee_memloc_value, v_hstack.s_off));
-				if (loc->ml_flags & MEMLOC_F_LINEAR)
-					goto do_use_mov; /* Ooops: not allowed. (Location must not be moved to a register) */
-				loc->ml_value._v_next = cfa_locs;
-				cfa_locs = loc;
+		Dee_memstate_foreach(val, self->fg_state) {
+			Dee_memval_foreach_loc(loc, val) {
+				if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND &&
+				    Dee_memloc_hstackind_getcfa(loc) == cfa_offset) {
+					STATIC_ASSERT(offsetof(struct Dee_memloc, ml_adr.ma_val.v_cfa) ==
+					              offsetof(struct Dee_memloc, ml_adr.ma_val._v_nextloc));
+					if (MEMVAL_VMORPH_ISDIRECT(val->mv_vmorph) && (val->mv_flags & MEMVAL_F_LINEAR)) {
+						/* Ooops: not allowed. (Location must not be moved to a register) */
+						while (cfa_locs) {
+							loc = cfa_locs->ml_adr.ma_val._v_nextloc;
+							cfa_locs->ml_adr.ma_val.v_cfa = cfa_offset;
+							cfa_locs = loc;
+						}
+						goto do_use_mov;
+					}
+					loc->ml_adr.ma_val._v_nextloc = cfa_locs;
+					cfa_locs = loc;
+				}
 			}
 		}
 		Dee_memstate_foreach_end;
 		if (cfa_locs != NULL) {
 			struct Dee_memloc *next;
 			do {
-				next = cfa_locs->ml_value._v_next;
-				cfa_locs->ml_type = MEMLOC_TYPE_HREG;
-				cfa_locs->ml_value.v_hreg.r_off   = cfa_locs->ml_value.v_hstack.s_off;
-				cfa_locs->ml_value.v_hreg.r_regno = dst_regno;
+				next = cfa_locs->ml_adr.ma_val._v_nextloc;
+				Dee_memloc_init_hreg(cfa_locs, dst_regno, Dee_memloc_getoff(cfa_locs));
 				Dee_memstate_incrinuse(self->fg_state, dst_regno);
 			} while ((cfa_locs = next) != NULL);
 		}
@@ -462,7 +464,7 @@ do_use_mov:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2reg(struct Dee_function_generator *__restrict self,
-                                      DeeObject *value, Dee_host_register_t dst_regno) {
+                                      void const *value, Dee_host_register_t dst_regno) {
 	/* TODO: If "dst_regno" is a known equivalence of "value", do nothing */
 	int result = _Dee_function_generator_gmov_const2reg(self, value, dst_regno);
 	if likely(result == 0) {
@@ -474,7 +476,7 @@ Dee_function_generator_gmov_const2reg(struct Dee_function_generator *__restrict 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2regind(struct Dee_function_generator *__restrict self,
-                                         DeeObject *value, Dee_host_register_t dst_regno,
+                                         void const *value, Dee_host_register_t dst_regno,
                                          ptrdiff_t dst_delta) {
 	int result = _Dee_function_generator_gmov_const2regind(self, value, dst_regno, dst_delta);
 	if likely(result == 0)
@@ -484,7 +486,7 @@ Dee_function_generator_gmov_const2regind(struct Dee_function_generator *__restri
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2hstackind(struct Dee_function_generator *__restrict self,
-                                            DeeObject *value, uintptr_t cfa_offset) {
+                                            void const *value, uintptr_t cfa_offset) {
 	ptrdiff_t sp_offset;
 	int result;
 	/* TODO: If "[#cfa_offset]" is a known equivalence of "value", do nothing */
@@ -507,7 +509,7 @@ Dee_function_generator_gmov_const2hstackind(struct Dee_function_generator *__res
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2constind(struct Dee_function_generator *__restrict self,
-                                           DeeObject *value, DeeObject **p_value) {
+                                           void const *value, void const **p_value) {
 	int result = _Dee_function_generator_gmov_const2constind(self, value, p_value);
 	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_const2constind(self, value, p_value);
@@ -566,7 +568,7 @@ Dee_function_generator_gmov_reg2regind(struct Dee_function_generator *__restrict
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_constind2reg(struct Dee_function_generator *__restrict self,
-                                         DeeObject **p_value, Dee_host_register_t dst_regno) {
+                                         void const **p_value, Dee_host_register_t dst_regno) {
 	int result = _Dee_function_generator_gmov_constind2reg(self, p_value, dst_regno);
 	if likely(result == 0) {
 		self->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC;
@@ -577,7 +579,7 @@ Dee_function_generator_gmov_constind2reg(struct Dee_function_generator *__restri
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_reg2constind(struct Dee_function_generator *__restrict self,
-                                         Dee_host_register_t src_regno, DeeObject **p_value) {
+                                         Dee_host_register_t src_regno, void const **p_value) {
 	int result = _Dee_function_generator_gmov_reg2constind(self, src_regno, p_value);
 	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_reg2constind(self, src_regno, p_value);
@@ -592,34 +594,34 @@ Dee_function_generator_gmov_reg2constind(struct Dee_function_generator *__restri
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 Dee_function_generator_gmov_const2loc(struct Dee_function_generator *__restrict self,
-                                      DeeObject *value, struct Dee_memloc const *__restrict dst_loc) {
+                                      void const *value, struct Dee_memloc const *__restrict dst_loc) {
 	/* TODO: If "dst_loc" is a known equivalence of "value", do nothing */
-	switch (dst_loc->ml_type) {
+	switch (Dee_memloc_gettyp(dst_loc)) {
 
-	case MEMLOC_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = dst_loc->ml_value.v_hstack.s_cfa;
-		DeeObject *final_value = (DeeObject *)((uintptr_t)value - dst_loc->ml_value.v_hstack.s_off);
+	case MEMADR_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
+		void const *final_value = (byte_t const *)value - Dee_memloc_getoff(dst_loc);
 		return Dee_function_generator_gmov_const2hstackind(self, final_value, cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_HREGIND: {
-		DeeObject *final_value = (DeeObject *)((uintptr_t)value - dst_loc->ml_value.v_hreg.r_voff);
+	case MEMADR_TYPE_HREGIND: {
+		void const *final_value = (byte_t const *)value - Dee_memloc_getoff(dst_loc);
 		return Dee_function_generator_gmov_const2regind(self, final_value,
-		                                                dst_loc->ml_value.v_hreg.r_regno,
-		                                                dst_loc->ml_value.v_hreg.r_off);
+		                                                Dee_memloc_hregind_getreg(dst_loc),
+		                                                Dee_memloc_hregind_getindoff(dst_loc));
 	}	break;
 
-	case MEMLOC_TYPE_HREG: {
-		DeeObject *final_value = (DeeObject *)((uintptr_t)value - dst_loc->ml_value.v_hreg.r_off);
-		return Dee_function_generator_gmov_const2reg(self, final_value, dst_loc->ml_value.v_hreg.r_regno);
+	case MEMADR_TYPE_HREG: {
+		void const *final_value = (byte_t const *)value - Dee_memloc_getoff(dst_loc);
+		return Dee_function_generator_gmov_const2reg(self, final_value, Dee_memloc_hreg_getreg(dst_loc));
 	}	break;
 
 	default: {
 		Dee_host_register_t temp_regno, not_these[2];
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
-			not_these[0] = dst_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(dst_loc))
+			not_these[0] = Dee_memloc_getreg(dst_loc);
 		temp_regno = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
@@ -638,23 +640,23 @@ INTERN WUNUSED NONNULL((1, 3)) int DCALL
 Dee_function_generator_gmov_hstack2loc(struct Dee_function_generator *__restrict self,
                                        uintptr_t cfa_offset,
                                        struct Dee_memloc const *__restrict dst_loc) {
-	switch (dst_loc->ml_type) {
+	switch (Dee_memloc_gettyp(dst_loc)) {
 
-	case MEMLOC_TYPE_HREG: {
-		cfa_offset = HA_cfa_offset_PLUS_sp_offset(cfa_offset, -dst_loc->ml_value.v_hreg.r_off);
-		return Dee_function_generator_gmov_hstack2reg(self, cfa_offset, dst_loc->ml_value.v_hreg.r_regno);
+	case MEMADR_TYPE_HREG: {
+		cfa_offset = HA_cfa_offset_PLUS_sp_offset(cfa_offset, -Dee_memloc_hreg_getvaloff(dst_loc));
+		return Dee_function_generator_gmov_hstack2reg(self, cfa_offset, Dee_memloc_hreg_getreg(dst_loc));
 	}	break;
 
 	default: {
 		Dee_host_register_t temp_regno, not_these[2];
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
-			not_these[0] = dst_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(dst_loc))
+			not_these[0] = Dee_memloc_getreg(dst_loc);
 		temp_regno = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
-		cfa_offset = HA_cfa_offset_PLUS_sp_offset(cfa_offset, -dst_loc->ml_value.v_hreg.r_voff);
+		cfa_offset = HA_cfa_offset_PLUS_sp_offset(cfa_offset, -Dee_memloc_getoff(dst_loc));
 		if unlikely(Dee_function_generator_gmov_hstack2reg(self, cfa_offset, temp_regno))
 			goto err;
 		return Dee_function_generator_gmov_reg2loc(self, temp_regno, dst_loc);
@@ -670,11 +672,11 @@ INTERN WUNUSED NONNULL((1, 4)) int DCALL
 Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict self,
                                      Dee_host_register_t src_regno, ptrdiff_t src_delta,
                                      struct Dee_memloc const *__restrict dst_loc) {
-	switch (dst_loc->ml_type) {
+	switch (Dee_memloc_gettyp(dst_loc)) {
 
-	case MEMLOC_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = dst_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t delta_delta = dst_loc->ml_value.v_hstack.s_off - src_delta;
+	case MEMADR_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
+		ptrdiff_t delta_delta = Dee_memloc_hstackind_getvaloff(dst_loc) - src_delta;
 		if (delta_delta != 0) {
 			/* Adjust `src_regno' to have the correct value-delta */
 			if unlikely(Dee_function_generator_gmov_regx2reg(self, src_regno, delta_delta, src_regno))
@@ -683,27 +685,27 @@ Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict s
 		return Dee_function_generator_gmov_reg2hstackind(self, src_regno, cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_HREGIND: {
-		ptrdiff_t delta_delta = dst_loc->ml_value.v_hreg.r_voff - src_delta;
+	case MEMADR_TYPE_HREGIND: {
+		ptrdiff_t delta_delta = Dee_memloc_hregind_getvaloff(dst_loc) - src_delta;
 		if (delta_delta != 0) {
 			if unlikely(Dee_function_generator_gmov_regx2reg(self, src_regno, delta_delta, src_regno))
 				goto err;
 		}
 		return Dee_function_generator_gmov_reg2regind(self, src_regno,
-		                                              dst_loc->ml_value.v_hreg.r_regno,
-		                                              dst_loc->ml_value.v_hreg.r_off);
+		                                              Dee_memloc_hregind_getreg(dst_loc),
+		                                              Dee_memloc_hregind_getindoff(dst_loc));
 	}	break;
 
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gmov_regx2reg(self, src_regno,
-		                                            src_delta - dst_loc->ml_value.v_hreg.r_off,
-		                                            dst_loc->ml_value.v_hreg.r_regno);
+		                                            src_delta - Dee_memloc_hreg_getvaloff(dst_loc),
+		                                            Dee_memloc_hreg_getreg(dst_loc));
 
 	default: break;
 	}
 	return DeeError_Throwf(&DeeError_IllegalInstruction,
 	                       "Cannot move register to location type %" PRFu16,
-	                       dst_loc->ml_type);
+	                       Dee_memloc_gettyp(dst_loc));
 err:
 	return -1;
 }
@@ -714,52 +716,51 @@ Dee_function_generator_gmov_loc2regx(struct Dee_function_generator *__restrict s
                                      Dee_host_register_t dst_regno, ptrdiff_t dst_delta) {
 	int result;
 	/* TODO: Go through equivalences of "src_loc" and pick the best one for the move */
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t delta_delta = src_loc->ml_value.v_hstack.s_off - dst_delta;
+	case MEMADR_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
+		ptrdiff_t delta_delta = Dee_memloc_hstackind_getvaloff(src_loc) - dst_delta;
 		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
 		if likely(result == 0 && delta_delta != 0)
 			result = Dee_function_generator_gmov_regx2reg(self, dst_regno, delta_delta, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(src_loc->ml_value.v_hstack.s_cfa, -dst_delta);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), -dst_delta);
 		result = Dee_function_generator_gmov_hstack2reg(self, cfa_offset, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_HREGIND: {
-		ptrdiff_t delta_delta = src_loc->ml_value.v_hreg.r_voff - dst_delta;
+	case MEMADR_TYPE_HREGIND: {
+		ptrdiff_t delta_delta = Dee_memloc_hregind_getvaloff(src_loc) - dst_delta;
 		result = Dee_function_generator_gmov_regind2reg(self,
-		                                                src_loc->ml_value.v_hreg.r_regno,
-		                                                src_loc->ml_value.v_hreg.r_off,
+		                                                Dee_memloc_hregind_getreg(src_loc),
+		                                                Dee_memloc_hregind_getindoff(src_loc),
 		                                                dst_regno);
 		if likely(result == 0 && delta_delta != 0)
 			result = Dee_function_generator_gmov_regx2reg(self, dst_regno, delta_delta, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		result = Dee_function_generator_gmov_regx2reg(self,
-		                                              src_loc->ml_value.v_hreg.r_regno,
-		                                              src_loc->ml_value.v_hreg.r_off - dst_delta,
+		                                              Dee_memloc_hreg_getreg(src_loc),
+		                                              Dee_memloc_hreg_getvaloff(src_loc) - dst_delta,
 		                                              dst_regno);
 		break;
 
-	case MEMLOC_TYPE_CONST:
+	case MEMADR_TYPE_CONST:
 		result = Dee_function_generator_gmov_const2reg(self,
-		                                               (DeeObject *)((uintptr_t)src_loc->ml_value.v_const -
-		                                                             dst_delta),
+		                                               Dee_memloc_const_getaddr(src_loc) - dst_delta,
 		                                               dst_regno);
 		break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Cannot move location type %" PRFu16 " to register",
-		                       src_loc->ml_type);
+		                       Dee_memloc_gettyp(src_loc));
 	}
 	if likely(result == 0)
 		self->fg_state->ms_rusage[dst_regno] = DEE_HOST_REGUSAGE_GENERIC;
@@ -774,37 +775,37 @@ Dee_function_generator_gmov_loc2regy(struct Dee_function_generator *__restrict s
 	int result;
 	/* TODO: Check if (%dst_regno + dst_delta) is an equivalence of "src_loc" */
 	/* TODO: Go through equivalences of "src_loc" and pick the best one for the move */
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
+	case MEMADR_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
 		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
-		*p_dst_delta = src_loc->ml_value.v_hstack.s_off;
+		*p_dst_delta = Dee_memloc_hstackind_getvaloff(src_loc);
 	}	break;
 
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset  = Dee_memloc_hstack_getcfa(src_loc);
+		ptrdiff_t sp_offset   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 		uintptr_t cfa0_offset = Dee_memstate_hstack_sp2cfa(self->fg_state, 0);
 		result = Dee_function_generator_gmov_hstack2reg(self, cfa0_offset, dst_regno);
 		*p_dst_delta = sp_offset;
 	}	break;
 
-	case MEMLOC_TYPE_HREGIND:
+	case MEMADR_TYPE_HREGIND:
 		result = Dee_function_generator_gmov_regind2reg(self,
-		                                                src_loc->ml_value.v_hreg.r_regno,
-		                                                src_loc->ml_value.v_hreg.r_off,
+		                                                Dee_memloc_hregind_getreg(src_loc),
+		                                                Dee_memloc_hregind_getindoff(src_loc),
 		                                                dst_regno);
-		*p_dst_delta = src_loc->ml_value.v_hreg.r_voff;
+		*p_dst_delta = Dee_memloc_hregind_getvaloff(src_loc);
 		break;
 
-	case MEMLOC_TYPE_HREG:
-		result = Dee_function_generator_gmov_reg2reg(self, src_loc->ml_value.v_hreg.r_regno, dst_regno);
-		*p_dst_delta = src_loc->ml_value.v_hreg.r_off;
+	case MEMADR_TYPE_HREG:
+		result = Dee_function_generator_gmov_reg2reg(self, Dee_memloc_hreg_getreg(src_loc), dst_regno);
+		*p_dst_delta = Dee_memloc_hreg_getvaloff(src_loc);
 		break;
 
-	case MEMLOC_TYPE_CONST:
-		result = Dee_function_generator_gmov_const2reg(self, src_loc->ml_value.v_const, dst_regno);
+	case MEMADR_TYPE_CONST:
+		result = Dee_function_generator_gmov_const2reg(self, Dee_memloc_const_getaddr(src_loc), dst_regno);
 		*p_dst_delta = 0;
 		break;
 
@@ -823,27 +824,26 @@ Dee_function_generator_gmov_locind2reg(struct Dee_function_generator *__restrict
                                        struct Dee_memloc const *__restrict src_loc, ptrdiff_t src_delta,
                                        Dee_host_register_t dst_regno) {
 	int result;
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		result = Dee_function_generator_gmov_regind2reg(self,
-		                                                src_loc->ml_value.v_hreg.r_regno,
-		                                                src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                Dee_memloc_hreg_getreg(src_loc),
+		                                                Dee_memloc_hreg_getvaloff(src_loc) + src_delta,
 		                                                dst_regno);
 		break;
 
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
-		result = Dee_function_generator_gmov_hstackind2reg(self, sp_offset + src_delta, dst_regno);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), src_delta);
+		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		DeeObject **value = (DeeObject **)((uintptr_t)src_loc->ml_value.v_const + src_delta);
-		result = Dee_function_generator_gmov_constind2reg(self, value, dst_regno);
+	case MEMADR_TYPE_CONST: {
+		void const *value = Dee_memloc_const_getaddr(src_loc) + src_delta;
+		result = Dee_function_generator_gmov_constind2reg(self, (void const **)value, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default: {
@@ -865,26 +865,25 @@ Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict
                                        struct Dee_memloc const *__restrict dst_loc,
                                        ptrdiff_t dst_delta) {
 	int result;
-	switch (dst_loc->ml_type) {
+	switch (Dee_memloc_gettyp(dst_loc)) {
 
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		result = Dee_function_generator_gmov_reg2regind(self, src_regno,
-		                                                dst_loc->ml_value.v_hreg.r_regno,
-		                                                dst_loc->ml_value.v_hreg.r_off + dst_delta);
+		                                                Dee_memloc_hreg_getreg(dst_loc),
+		                                                Dee_memloc_hreg_getvaloff(dst_loc) + dst_delta);
 		break;
 
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = dst_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
-		result = Dee_function_generator_gmov_reg2hstackind(self, src_regno, sp_offset + dst_delta);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
+		result = Dee_function_generator_gmov_reg2hstackind(self, src_regno, cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		uintptr_t value = (uintptr_t)dst_loc->ml_value.v_const + dst_delta;
-		result = Dee_function_generator_gmov_reg2constind(self, src_regno, (DeeObject **)value);
+	case MEMADR_TYPE_CONST: {
+		void const *value = Dee_memloc_const_getaddr(dst_loc) + dst_delta;
+		result = Dee_function_generator_gmov_reg2constind(self, src_regno, (void const **)value);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default: {
@@ -894,18 +893,19 @@ Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict
 		struct Dee_memequiv *eq;
 
 		/* See if "dst_loc" has a register/const equivalence. */
-		eq = Dee_function_generator_remember_getclassof(self, dst_loc);
+		eq = Dee_function_generator_remember_getclassof(self, Dee_memloc_getadr(dst_loc));
 		if (eq != NULL) {
 			struct Dee_memequiv *iter = Dee_memequiv_next(eq);
 			do {
-				if (iter->meq_loc.meql_type == MEMEQUIV_TYPE_HREG ||
-				    iter->meq_loc.meql_type == MEMEQUIV_TYPE_CONST) {
+				if (Dee_memloc_gettyp(&iter->meq_loc) == MEMEQUIV_TYPE_HREG ||
+				    Dee_memloc_gettyp(&iter->meq_loc) == MEMEQUIV_TYPE_CONST) {
 					struct Dee_memloc reg_loc;
-					ptrdiff_t val_delta = Dee_memloc_getvaldelta_c0(dst_loc);
-					val_delta -= eq->meq_valoff;
-					Dee_memequiv_asloc(iter, &reg_loc, val_delta);
-					ASSERT(reg_loc.ml_type == MEMLOC_TYPE_HREG ||
-					       reg_loc.ml_type == MEMLOC_TYPE_CONST);
+					ptrdiff_t val_delta = Dee_memloc_getoff(dst_loc);
+					val_delta -= Dee_memloc_getoff(&eq->meq_loc);
+					reg_loc = iter->meq_loc;
+					ASSERT(Dee_memloc_gettyp(&reg_loc) == MEMADR_TYPE_HREG ||
+					       Dee_memloc_gettyp(&reg_loc) == MEMADR_TYPE_CONST);
+					Dee_memloc_adjoff(&reg_loc, val_delta);
 					return Dee_function_generator_gmov_reg2locind(self, src_regno, &reg_loc, dst_delta);
 				}
 			} while ((iter = Dee_memequiv_next(iter)) != eq);
@@ -932,55 +932,55 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restrict self,
                                         struct Dee_memloc *__restrict src_loc,
                                         ptrdiff_t dst_delta) {
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HREG: {
-		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_off - dst_delta;
+	case MEMADR_TYPE_HREG: {
+		ptrdiff_t final_delta = Dee_memloc_hreg_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0) {
-			ptrdiff_t writeback_delta = src_loc->ml_value.v_hreg.r_off + final_delta;
+			ptrdiff_t writeback_delta = Dee_memloc_hreg_getvaloff(src_loc) + final_delta;
 			if unlikely(Dee_function_generator_gmov_regx2reg(self,
-			                                                 src_loc->ml_value.v_hreg.r_regno,
+			                                                 Dee_memloc_hreg_getreg(src_loc),
 			                                                 final_delta,
-			                                                 src_loc->ml_value.v_hreg.r_regno))
+			                                                 Dee_memloc_hreg_getreg(src_loc)))
 				goto err;
-			Dee_memstate_hregs_adjust_delta(self->fg_state, src_loc->ml_value.v_hreg.r_regno, final_delta);
-			src_loc->ml_value.v_hreg.r_off = writeback_delta;
+			Dee_memstate_hregs_adjust_delta(self->fg_state, Dee_memloc_hreg_getreg(src_loc), final_delta);
+			Dee_memloc_hreg_setvaloff(src_loc, writeback_delta);
 		}
-		return Dee_function_generator_ghstack_pushreg(self, src_loc->ml_value.v_hreg.r_regno);
+		return Dee_function_generator_ghstack_pushreg(self, Dee_memloc_hreg_getreg(src_loc));
 	}	break;
 
-	case MEMLOC_TYPE_HREGIND: {
-		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_voff - dst_delta;
+	case MEMADR_TYPE_HREGIND: {
+		ptrdiff_t final_delta = Dee_memloc_hregind_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0)
 			goto fallback;
 		return Dee_function_generator_ghstack_pushregind(self,
-		                                                 src_loc->ml_value.v_hreg.r_regno,
-		                                                 src_loc->ml_value.v_hreg.r_off);
+		                                                 Dee_memloc_hregind_getreg(src_loc),
+		                                                 Dee_memloc_hregind_getindoff(src_loc));
 	}	break;
 
-	case MEMLOC_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
-		ptrdiff_t final_delta = src_loc->ml_value.v_hstack.s_off - dst_delta;
+	case MEMADR_TYPE_HSTACKIND: {
+		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
+		ptrdiff_t final_delta = Dee_memloc_hstackind_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0)
 			goto fallback;
 		return Dee_function_generator_ghstack_pushhstackind(self, cfa_offset);
 	}	break;
 
 #ifdef Dee_function_generator_ghstack_pushhstack_at_cfa_boundary
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = src_loc->ml_value.v_hstack.s_cfa;
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = Dee_memloc_hstack_getcfa(src_loc);
 		if (cfa_offset == self->fg_state->ms_host_cfa_offset) /* Special case: push current CFA offset */
 			return Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(self);
 		goto fallback;
 	}	break;
 #endif /* Dee_function_generator_ghstack_pushhstack_at_cfa_boundary */
 
-	case MEMLOC_TYPE_CONST: {
-		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
-		return Dee_function_generator_ghstack_pushconst(self, (DeeObject *)value);
+	case MEMADR_TYPE_CONST: {
+		void const *value = Dee_memloc_const_getaddr(src_loc) - dst_delta;
+		return Dee_function_generator_ghstack_pushconst(self, value);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return Dee_function_generator_ghstack_adjust(self, HOST_SIZEOF_POINTER);
 
 	default: {
@@ -989,8 +989,8 @@ Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restric
 fallback:
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
-			not_these[0] = src_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(src_loc))
+			not_these[0] = Dee_memloc_getreg(src_loc);
 		temp_regno = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
@@ -1018,29 +1018,29 @@ Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__rest
 		/* Push the value instead! */
 		return Dee_function_generator_ghstack_pushlocx(self, src_loc, dst_delta);
 	}
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HREG: {
-		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_off - dst_delta;
+	case MEMADR_TYPE_HREG: {
+		ptrdiff_t final_delta = Dee_memloc_hreg_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0) {
-			ptrdiff_t writeback_delta = src_loc->ml_value.v_hreg.r_off + final_delta;
+			ptrdiff_t writeback_delta = Dee_memloc_hreg_getvaloff(src_loc) + final_delta;
 			if unlikely(Dee_function_generator_gmov_regx2reg(self,
-			                                                 src_loc->ml_value.v_hreg.r_regno,
+			                                                 Dee_memloc_hreg_getreg(src_loc),
 			                                                 final_delta,
-			                                                 src_loc->ml_value.v_hreg.r_regno))
+			                                                 Dee_memloc_hreg_getreg(src_loc)))
 				goto err;
-			Dee_memstate_hregs_adjust_delta(self->fg_state, src_loc->ml_value.v_hreg.r_regno, final_delta);
-			src_loc->ml_value.v_hreg.r_off = writeback_delta;
+			Dee_memstate_hregs_adjust_delta(self->fg_state, Dee_memloc_hreg_getreg(src_loc), final_delta);
+			Dee_memloc_hreg_setvaloff(src_loc, writeback_delta);
 		}
-		return Dee_function_generator_gmov_reg2hstackind(self, src_loc->ml_value.v_hreg.r_regno, dst_cfa_offset);
+		return Dee_function_generator_gmov_reg2hstackind(self, Dee_memloc_hreg_getreg(src_loc), dst_cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
-		return Dee_function_generator_gmov_const2hstackind(self, (DeeObject *)value, dst_cfa_offset);
+	case MEMADR_TYPE_CONST: {
+		void const *value = Dee_memloc_const_getaddr(src_loc) - dst_delta;
+		return Dee_function_generator_gmov_const2hstackind(self, value, dst_cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default: {
@@ -1049,8 +1049,8 @@ Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__rest
 /*fallback:*/
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
-			not_these[0] = src_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(src_loc))
+			not_these[0] = Dee_memloc_getreg(src_loc);
 		temp_regno = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
@@ -1068,32 +1068,32 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gmov_loc2constind(struct Dee_function_generator *__restrict self,
                                          struct Dee_memloc *__restrict src_loc,
-                                         DeeObject **p_value, ptrdiff_t dst_delta) {
-	switch (src_loc->ml_type) {
+                                         void const **p_value, ptrdiff_t dst_delta) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 
-	case MEMLOC_TYPE_HREG: {
-		/*     *p_value + dst_delta = src_loc->ml_value.v_hreg.r_regno + src_loc->ml_value.v_hreg.r_off
-		 * <=> *p_value = src_loc->ml_value.v_hreg.r_regno + src_loc->ml_value.v_hreg.r_off - dst_delta */
-		ptrdiff_t final_delta = src_loc->ml_value.v_hreg.r_off - dst_delta;
+	case MEMADR_TYPE_HREG: {
+		/*     *p_value + dst_delta = Dee_memloc_hreg_getreg(src_loc) + Dee_memloc_hreg_getvaloff(src_loc)
+		 * <=> *p_value = Dee_memloc_hreg_getreg(src_loc) + Dee_memloc_hreg_getvaloff(src_loc) - dst_delta */
+		ptrdiff_t final_delta = Dee_memloc_hreg_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0) {
-			ptrdiff_t writeback_delta = src_loc->ml_value.v_hreg.r_off + final_delta;
+			ptrdiff_t writeback_delta = Dee_memloc_hreg_getvaloff(src_loc) + final_delta;
 			if unlikely(Dee_function_generator_gmov_regx2reg(self,
-			                                                 src_loc->ml_value.v_hreg.r_regno,
+			                                                 Dee_memloc_hreg_getreg(src_loc),
 			                                                 final_delta,
-			                                                 src_loc->ml_value.v_hreg.r_regno))
+			                                                 Dee_memloc_hreg_getreg(src_loc)))
 				goto err;
-			Dee_memstate_hregs_adjust_delta(self->fg_state, src_loc->ml_value.v_hreg.r_regno, final_delta);
-			src_loc->ml_value.v_hreg.r_off = writeback_delta;
+			Dee_memstate_hregs_adjust_delta(self->fg_state, Dee_memloc_hreg_getreg(src_loc), final_delta);
+			Dee_memloc_hreg_setvaloff(src_loc, writeback_delta);
 		}
-		return Dee_function_generator_gmov_reg2constind(self, src_loc->ml_value.v_hreg.r_regno, p_value);
+		return Dee_function_generator_gmov_reg2constind(self, Dee_memloc_hreg_getreg(src_loc), p_value);
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		uintptr_t value = (uintptr_t)src_loc->ml_value.v_const - dst_delta;
-		return Dee_function_generator_gmov_const2constind(self, (DeeObject *)value, p_value);
+	case MEMADR_TYPE_CONST: {
+		void const *value = Dee_memloc_const_getaddr(src_loc) - dst_delta;
+		return Dee_function_generator_gmov_const2constind(self, value, p_value);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default: {
@@ -1102,8 +1102,8 @@ Dee_function_generator_gmov_loc2constind(struct Dee_function_generator *__restri
 /*fallback:*/
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
-			not_these[0] = src_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(src_loc))
+			not_these[0] = Dee_memloc_getreg(src_loc);
 		temp_regno = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
@@ -1119,28 +1119,28 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
-Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restrict self, DeeObject *value,
+Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restrict self, void const *value,
                                          struct Dee_memloc const *__restrict dst_loc, ptrdiff_t dst_delta) {
 	int result;
-	switch (dst_loc->ml_type) {
+	switch (Dee_memloc_gettyp(dst_loc)) {
 
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		result = Dee_function_generator_gmov_const2regind(self, value,
-		                                                  dst_loc->ml_value.v_hreg.r_regno,
-		                                                  dst_loc->ml_value.v_hreg.r_off + dst_delta);
+		                                                  Dee_memloc_hreg_getreg(dst_loc),
+		                                                  Dee_memloc_hreg_getvaloff(dst_loc) + dst_delta);
 		break;
 
-	case MEMLOC_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(dst_loc->ml_value.v_hstack.s_cfa, dst_delta);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
 		result = Dee_function_generator_gmov_const2hstackind(self, value, cfa_offset);
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		uintptr_t dst_value = (uintptr_t)dst_loc->ml_value.v_const + dst_delta;
-		result = Dee_function_generator_gmov_const2constind(self, value, (DeeObject **)dst_value);
+	case MEMADR_TYPE_CONST: {
+		void const *dst_value = Dee_memloc_const_getaddr(dst_loc) + dst_delta;
+		result = Dee_function_generator_gmov_const2constind(self, value, (void const **)dst_value);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default: {
@@ -1149,18 +1149,19 @@ Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restri
 		struct Dee_memequiv *eq;
 
 		/* See if "dst_loc" has a register/const equivalence. */
-		eq = Dee_function_generator_remember_getclassof(self, dst_loc);
+		eq = Dee_function_generator_remember_getclassof(self, Dee_memloc_getadr(dst_loc));
 		if (eq != NULL) {
 			struct Dee_memequiv *iter = Dee_memequiv_next(eq);
 			do {
-				if (iter->meq_loc.meql_type == MEMEQUIV_TYPE_HREG ||
-				    iter->meq_loc.meql_type == MEMEQUIV_TYPE_CONST) {
+				if (Dee_memloc_gettyp(&iter->meq_loc) == MEMEQUIV_TYPE_HREG ||
+				    Dee_memloc_gettyp(&iter->meq_loc) == MEMEQUIV_TYPE_CONST) {
 					struct Dee_memloc reg_loc;
-					ptrdiff_t val_delta = Dee_memloc_getvaldelta_c0(dst_loc);
-					val_delta -= eq->meq_valoff;
-					Dee_memequiv_asloc(iter, &reg_loc, val_delta);
-					ASSERT(reg_loc.ml_type == MEMLOC_TYPE_HREG ||
-					       reg_loc.ml_type == MEMLOC_TYPE_CONST);
+					ptrdiff_t val_delta = Dee_memloc_getoff(dst_loc);
+					val_delta -= Dee_memloc_getoff(&eq->meq_loc);
+					reg_loc = iter->meq_loc;
+					ASSERT(Dee_memloc_gettyp(&reg_loc) == MEMADR_TYPE_HREG ||
+					       Dee_memloc_gettyp(&reg_loc) == MEMADR_TYPE_CONST);
+					Dee_memloc_adjoff(&reg_loc, val_delta);
 					return Dee_function_generator_gmov_const2locind(self, value, &reg_loc, dst_delta);
 				}
 			} while ((iter = Dee_memequiv_next(iter)) != eq);
@@ -1218,7 +1219,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self,
                                         struct Dee_memloc *src_loc, ptrdiff_t src_delta,
                                         unsigned int cmp, Dee_host_register_t dst_regno) {
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 	default: {
 		Dee_host_register_t not_these[2];
 		not_these[0] = dst_regno;
@@ -1226,21 +1227,21 @@ Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restric
 		if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
 			goto err;
 	}	ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gmorph_regx2reg01(self,
-		                                                src_loc->ml_value.v_hreg.r_regno,
-		                                                src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                Dee_memloc_hreg_getreg(src_loc),
+		                                                Dee_memloc_hreg_getvaloff(src_loc) + src_delta,
 		                                                cmp, dst_regno);
-	case MEMLOC_TYPE_HREGIND:
+	case MEMADR_TYPE_HREGIND:
 		return Dee_function_generator_gmorph_regind2reg01(self,
-		                                                  src_loc->ml_value.v_hreg.r_regno,
-		                                                  src_loc->ml_value.v_hreg.r_off,
-		                                                  src_loc->ml_value.v_hreg.r_voff + src_delta,
+		                                                  Dee_memloc_hregind_getreg(src_loc),
+		                                                  Dee_memloc_hregind_getindoff(src_loc),
+		                                                  Dee_memloc_hregind_getvaloff(src_loc) + src_delta,
 		                                                  cmp, dst_regno);
-	case MEMLOC_TYPE_HSTACKIND:
+	case MEMADR_TYPE_HSTACKIND:
 		return Dee_function_generator_gmorph_hstackind2reg01(self,
-		                                                     Dee_memstate_hstack_cfa2sp(self->fg_state, src_loc->ml_value.v_hstack.s_cfa),
-		                                                     src_loc->ml_value.v_hstack.s_off + src_delta,
+		                                                     Dee_memloc_hstackind_getcfa(src_loc),
+		                                                     Dee_memloc_hstackind_getvaloff(src_loc) + src_delta,
 		                                                     cmp, dst_regno);
 	}
 	__builtin_unreachable();
@@ -1254,7 +1255,7 @@ Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__res
                                             struct Dee_memloc *src_loc, ptrdiff_t src_delta,
                                             unsigned int cmp, Dee_host_register_t rhs_regno,
                                             Dee_host_register_t dst_regno) {
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 	default: {
 		Dee_host_register_t not_these[3];
 		not_these[0] = rhs_regno;
@@ -1263,21 +1264,21 @@ Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__res
 		if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
 			goto err;
 	}	ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gmorph_regxCreg2reg01(self,
-		                                                    src_loc->ml_value.v_hreg.r_regno,
-		                                                    src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                    Dee_memloc_hreg_getreg(src_loc),
+		                                                    Dee_memloc_hreg_getvaloff(src_loc) + src_delta,
 		                                                    cmp, rhs_regno, dst_regno);
-	case MEMLOC_TYPE_HREGIND:
+	case MEMADR_TYPE_HREGIND:
 		return Dee_function_generator_gmorph_regindCreg2reg01(self,
-		                                                      src_loc->ml_value.v_hreg.r_regno,
-		                                                      src_loc->ml_value.v_hreg.r_off,
-		                                                      src_loc->ml_value.v_hreg.r_voff + src_delta,
+		                                                      Dee_memloc_hregind_getreg(src_loc),
+		                                                      Dee_memloc_hregind_getindoff(src_loc),
+		                                                      Dee_memloc_hregind_getvaloff(src_loc) + src_delta,
 		                                                      cmp, rhs_regno, dst_regno);
-	case MEMLOC_TYPE_HSTACKIND:
+	case MEMADR_TYPE_HSTACKIND:
 		return Dee_function_generator_gmorph_hstackindCreg2reg01(self,
-		                                                         Dee_memstate_hstack_cfa2sp(self->fg_state, src_loc->ml_value.v_hstack.s_cfa),
-		                                                         src_loc->ml_value.v_hstack.s_off + src_delta,
+		                                                         Dee_memloc_hstackind_getcfa(src_loc),
+		                                                         Dee_memloc_hstackind_getvaloff(src_loc) + src_delta,
 		                                                         cmp, rhs_regno, dst_regno);
 	}
 	__builtin_unreachable();
@@ -1313,8 +1314,8 @@ Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__res
                                             struct Dee_memloc *src_loc, ptrdiff_t src_delta,
                                             unsigned int cmp, struct Dee_memloc *rhs_loc,
                                             Dee_host_register_t dst_regno) {
-	if (rhs_loc->ml_type != MEMLOC_TYPE_HREG) {
-		if (src_loc->ml_type == MEMLOC_TYPE_HREG) {
+	if (Dee_memloc_gettyp(rhs_loc) != MEMADR_TYPE_HREG) {
+		if (Dee_memloc_gettyp(src_loc) == MEMADR_TYPE_HREG) {
 			/* Flip operands so the register appears in "rhs_loc" */
 			struct Dee_memloc *temp;
 			cmp = flip_gmorphbool_cc(cmp, &src_delta);
@@ -1327,16 +1328,17 @@ Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__res
 			not_these[0] = dst_regno;
 			not_these[1] = HOST_REGISTER_COUNT;
 			not_these[2] = HOST_REGISTER_COUNT;
-			if (MEMLOC_TYPE_HASREG(src_loc->ml_type))
-				not_these[1] = src_loc->ml_value.v_hreg.r_regno;
+			if (Dee_memloc_hasreg(src_loc))
+				not_these[1] = Dee_memloc_getreg(src_loc);
 			if unlikely(Dee_function_generator_greg(self, rhs_loc, not_these))
 				goto err;
 		}
 	}
-	ASSERT(rhs_loc->ml_type == MEMLOC_TYPE_HREG);
+	ASSERT(Dee_memloc_gettyp(rhs_loc) == MEMADR_TYPE_HREG);
 	return Dee_function_generator_gmorph_locCreg2reg01(self, src_loc,
-	                                                   src_delta - rhs_loc->ml_value.v_hreg.r_off, cmp,
-	                                                   rhs_loc->ml_value.v_hreg.r_regno, dst_regno);
+	                                                   src_delta - Dee_memloc_hreg_getvaloff(rhs_loc),
+	                                                   cmp,
+	                                                   Dee_memloc_hreg_getreg(rhs_loc), dst_regno);
 err:
 	return -1;
 }
@@ -1351,9 +1353,7 @@ Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__rest
 	int result = Dee_function_generator_gmorph_loc2reg01(self, src_loc, src_delta, cmp, dst_regno);
 	if likely(result == 0) {
 		struct Dee_memloc uloc;
-		uloc.ml_type = MEMLOC_TYPE_HREG;
-		uloc.ml_value.v_hreg.r_regno = dst_regno;
-		uloc.ml_value.v_hreg.r_off = 0;
+		Dee_memloc_init_hreg(&uloc, dst_regno, 0);
 		result = Dee_function_generator_gmorph_loc012regbooly(self, &uloc, 0, dst_regno, p_dst_delta);
 	}
 	return result;
@@ -1382,22 +1382,22 @@ INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
 Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self,
                                              struct Dee_memloc *src_loc, ptrdiff_t src_delta,
                                              Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
-	switch (src_loc->ml_type) {
-	case MEMLOC_TYPE_HREG:
+	switch (Dee_memloc_gettyp(src_loc)) {
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gmorph_reg012regbooly(self,
-		                                                    src_loc->ml_value.v_hreg.r_regno,
-		                                                    src_loc->ml_value.v_hreg.r_off + src_delta,
+		                                                    Dee_memloc_hreg_getreg(src_loc),
+		                                                    Dee_memloc_hreg_getvaloff(src_loc) + src_delta,
 		                                                    dst_regno, p_dst_delta);
 
-	case MEMLOC_TYPE_CONST: {
+	case MEMADR_TYPE_CONST: {
 		DeeObject *value = Dee_False;
-		if (((uintptr_t)src_loc->ml_value.v_const + src_delta) != 0)
+		if ((uintptr_t)(Dee_memloc_const_getaddr(src_loc) + src_delta) != 0)
 			value = Dee_True;
 		*p_dst_delta = 0;
 		return Dee_function_generator_gmov_const2reg(self, value, dst_regno);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		*p_dst_delta = 0;
 		return Dee_function_generator_gmov_const2reg(self, Dee_False, dst_regno);
 
@@ -1432,9 +1432,10 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 	Dee_lid_t i, xloc_base = self->fg_assembler->fa_localc;
 	struct Dee_memstate *state = self->fg_state;
 	for (i = MEMSTATE_XLOCAL_A_MIN; i <= MEMSTATE_XLOCAL_A_MAX; ++i) {
-		struct Dee_memloc *xloc = &state->ms_localv[xloc_base + i];
-		if (xloc->ml_type == MEMLOC_TYPE_HREG &&
-		    xloc->ml_value.v_hreg.r_regno == regno) {
+		struct Dee_memval *xval = &state->ms_localv[xloc_base + i];
+		if (MEMVAL_VMORPH_ISDIRECT(xval->mv_vmorph) &&
+		    Dee_memloc_gettyp(&xval->mv_loc0) == MEMADR_TYPE_HREG &&
+		    Dee_memloc_hreg_getreg(&xval->mv_loc0) == regno) {
 			uintptr_t cfa_offset;
 			Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
 			size_t true_argi = 0;
@@ -1473,8 +1474,8 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 
 /* Push/move `regno' onto the host stack, returning the CFA offset of the target location. */
 PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
-Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
-                                 Dee_host_register_t regno) {
+Dee_function_generator_gsavereg(struct Dee_function_generator *__restrict self,
+                                Dee_host_register_t regno) {
 	uintptr_t cfa_offset;
 	ASSERT(!Dee_memstate_isshared(self->fg_state));
 #ifdef HAVE_try_restore_xloc_arg_cfa_offset
@@ -1505,12 +1506,12 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict self,
                                     struct Dee_memloc *flush_loc) {
-	struct Dee_memloc *loc;
+	struct Dee_memval *val;
 	struct Dee_memstate *state = self->fg_state;
-	Dee_host_register_t regno = flush_loc->ml_value.v_hreg.r_regno;
-	ptrdiff_t off = flush_loc->ml_value.v_hreg.r_off;
+	Dee_host_register_t regno = Dee_memloc_hregind_getreg(flush_loc);
+	ptrdiff_t ind_offset = Dee_memloc_hregind_getindoff(flush_loc);
 	uintptr_t cfa_offset;
-	ASSERT(flush_loc->ml_type == MEMLOC_TYPE_HREGIND);
+	ASSERT(Dee_memloc_gettyp(flush_loc) == MEMADR_TYPE_HREGIND);
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state,
 	                                      self->fg_state_hstack_res,
 	                                      HOST_SIZEOF_POINTER);
@@ -1519,12 +1520,12 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 		Dee_host_register_t temp_regno;
 		temp_regno = Dee_memstate_hregs_find_unused(state, true);
 		if (temp_regno >= HOST_REGISTER_COUNT) {
-			temp_regno = flush_loc->ml_value.v_hreg.r_regno;
+			temp_regno = regno;
 			did_save_temp_regno = true;
 			if unlikely(Dee_function_generator_ghstack_pushreg(self, temp_regno))
 				goto err;
 		}
-		if unlikely(Dee_function_generator_gmov_regind2reg(self, regno, off, temp_regno))
+		if unlikely(Dee_function_generator_gmov_regind2reg(self, regno, ind_offset, temp_regno))
 			goto err;
 		if unlikely(Dee_function_generator_gmov_reg2hstackind(self, temp_regno, cfa_offset))
 			goto err;
@@ -1533,7 +1534,7 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 				goto err;
 		}
 	} else {
-		if unlikely(Dee_function_generator_ghstack_pushregind(self, regno, off))
+		if unlikely(Dee_function_generator_ghstack_pushregind(self, regno, ind_offset))
 			goto err;
 		cfa_offset = self->fg_state->ms_host_cfa_offset;
 #ifndef HOSTASM_STACK_GROWS_DOWN
@@ -1541,20 +1542,21 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 #endif /* HOSTASM_STACK_GROWS_DOWN */
 	}
 
-	/* Convert all locations that use `MEMLOC_TYPE_HREGIND:regno:off' to `MEMLOC_TYPE_HSTACKIND' */
-	Dee_memstate_foreach(loc, state) {
-		if (loc->ml_type == MEMLOC_TYPE_HREGIND &&
-		    loc->ml_value.v_hreg.r_regno == regno &&
-		    loc->ml_value.v_hreg.r_off == off) {
-			loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-			loc->ml_value.v_hstack.s_off = loc->ml_value.v_hreg.r_voff;
-			loc->ml_value.v_hstack.s_cfa = cfa_offset;
-			Dee_memstate_decrinuse(state, regno);
+	/* Convert all locations that use `MEMADR_TYPE_HREGIND:regno:off' to `MEMADR_TYPE_HSTACKIND' */
+	Dee_memstate_foreach(val, state) {
+		struct Dee_memloc *loc;
+		Dee_memval_foreach_loc(loc, val) {
+			if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND &&
+			    Dee_memloc_hregind_getreg(loc) == regno &&
+			    Dee_memloc_hregind_getindoff(loc) == ind_offset) {
+				Dee_memstate_decrinuse(state, regno);
+				Dee_memloc_init_hstackind(loc, cfa_offset, Dee_memloc_hregind_getvaloff(loc));
+			}
 		}
 	}
 	Dee_memstate_foreach_end;
 
-	ASSERT(flush_loc->ml_type == MEMLOC_TYPE_HSTACKIND);
+	ASSERT(Dee_memloc_gettyp(flush_loc) == MEMADR_TYPE_HSTACKIND);
 	return 0;
 err:
 	return -1;
@@ -1578,51 +1580,53 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 	for (i = 0; i < HOST_REGISTER_COUNT; ++i)
 		register_cfa[i] = (uintptr_t)-1;
 	for (i = 0; i < state->ms_localc; ++i) {
-		struct Dee_memloc *loc = &state->ms_localv[i];
-		if (only_if_reference && (loc->ml_flags & MEMLOC_F_NOREF))
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_localv[i];
+		if (only_if_reference && (val->mv_flags & MEMVAL_F_NOREF))
 			continue;
-		if (loc->ml_type == MEMLOC_TYPE_HREG) {
-			Dee_host_register_t regno = loc->ml_value.v_hreg.r_regno;
-			ASSERT(regno < HOST_REGISTER_COUNT);
-			if (register_cfa[regno] == (uintptr_t)-1) {
-				register_cfa[regno] = Dee_function_generator_gflushreg(self, regno);
-				if unlikely(register_cfa[regno] == (uintptr_t)-1)
+		Dee_memval_foreach_loc(loc, val) {
+			if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG) {
+				Dee_host_register_t regno = Dee_memloc_hreg_getreg(loc);
+				ASSERT(regno < HOST_REGISTER_COUNT);
+				if (register_cfa[regno] == (uintptr_t)-1) {
+					register_cfa[regno] = Dee_function_generator_gsavereg(self, regno);
+					if unlikely(register_cfa[regno] == (uintptr_t)-1)
+						goto err;
+				}
+				Dee_memstate_decrinuse(state, regno);
+				Dee_memloc_init_hstackind(loc, register_cfa[regno], Dee_memloc_hreg_getvaloff(loc));
+			} else if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
+				if unlikely(Dee_function_generator_gflushregind(self, loc))
 					goto err;
+				ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
 			}
-			loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-			loc->ml_value.v_hstack.s_off = loc->ml_value.v_hreg.r_off;
-			loc->ml_value.v_hstack.s_cfa = register_cfa[regno];
-			Dee_memstate_decrinuse(state, regno);
-		} else if (loc->ml_type == MEMLOC_TYPE_HREGIND) {
-			if unlikely(Dee_function_generator_gflushregind(self, loc))
-				goto err;
-			ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
 		}
 	}
 	for (i = 0; i < state->ms_stackc; ++i) {
-		struct Dee_memloc *loc = &state->ms_stackv[i];
-		if (loc->ml_flags & MEMLOC_F_NOREF) {
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_stackv[i];
+		if (val->mv_flags & MEMVAL_F_NOREF) {
 			if (i >= (Dee_vstackaddr_t)(state->ms_stackc - ignore_top_n_stack_if_not_ref))
 				continue; /* Slot contains no reference and is in top-most n of stack. */
 			if (only_if_reference)
 				continue;
 		}
-		if (loc->ml_type == MEMLOC_TYPE_HREG) {
-			Dee_host_register_t regno = loc->ml_value.v_hreg.r_regno;
-			ASSERT(regno < HOST_REGISTER_COUNT);
-			if (register_cfa[regno] == (uintptr_t)-1) {
-				register_cfa[regno] = Dee_function_generator_gflushreg(self, regno);
-				if unlikely(register_cfa[regno] == (uintptr_t)-1)
+		Dee_memval_foreach_loc(loc, val) {
+			if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG) {
+				Dee_host_register_t regno = Dee_memloc_hreg_getreg(loc);
+				ASSERT(regno < HOST_REGISTER_COUNT);
+				if (register_cfa[regno] == (uintptr_t)-1) {
+					register_cfa[regno] = Dee_function_generator_gsavereg(self, regno);
+					if unlikely(register_cfa[regno] == (uintptr_t)-1)
+						goto err;
+				}
+				Dee_memstate_decrinuse(state, regno);
+				Dee_memloc_init_hstackind(loc, register_cfa[regno], Dee_memloc_hreg_getvaloff(loc));
+			} else if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
+				if unlikely(Dee_function_generator_gflushregind(self, loc))
 					goto err;
+				ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
 			}
-			loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-			loc->ml_value.v_hstack.s_off = loc->ml_value.v_hreg.r_off;
-			loc->ml_value.v_hstack.s_cfa = register_cfa[regno];
-			Dee_memstate_decrinuse(state, regno);
-		} else if (loc->ml_type == MEMLOC_TYPE_HREGIND) {
-			if unlikely(Dee_function_generator_gflushregind(self, loc))
-				goto err;
-			ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
 		}
 	}
 
@@ -1631,6 +1635,73 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 err:
 	return -1;
 }
+
+/* Flush memory locations that make use of `regno' onto the hstack. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
+                                 Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
+                                 bool only_if_reference, Dee_host_register_t regno) {
+	Dee_lid_t i;
+	uintptr_t regno_cfa = (uintptr_t)-1;
+	struct Dee_memstate *state = self->fg_state;
+	ASSERT(!Dee_memstate_isshared(state));
+	ASSERT(regno < HOST_REGISTER_COUNT);
+
+	for (i = 0; i < state->ms_localc; ++i) {
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_localv[i];
+		if (only_if_reference && (val->mv_flags & MEMVAL_F_NOREF))
+			continue;
+		Dee_memval_foreach_loc(loc, val) {
+			if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG &&
+			    Dee_memloc_hreg_getreg(loc) == regno) {
+				if (regno_cfa == (uintptr_t)-1) {
+					regno_cfa = Dee_function_generator_gsavereg(self, regno);
+					if unlikely(regno_cfa == (uintptr_t)-1)
+						goto err;
+				}
+				Dee_memstate_decrinuse(state, regno);
+				Dee_memloc_init_hstackind(loc, regno_cfa, Dee_memloc_hreg_getvaloff(loc));
+			} else if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
+				if unlikely(Dee_function_generator_gflushregind(self, loc))
+					goto err;
+				ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
+			}
+		}
+	}
+	for (i = 0; i < state->ms_stackc; ++i) {
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_stackv[i];
+		if (val->mv_flags & MEMVAL_F_NOREF) {
+			if (i >= (Dee_vstackaddr_t)(state->ms_stackc - ignore_top_n_stack_if_not_ref))
+				continue; /* Slot contains no reference and is in top-most n of stack. */
+			if (only_if_reference)
+				continue;
+		}
+		Dee_memval_foreach_loc(loc, val) {
+			if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG &&
+			    Dee_memloc_hreg_getreg(loc) == regno) {
+				if (regno_cfa == (uintptr_t)-1) {
+					regno_cfa = Dee_function_generator_gsavereg(self, regno);
+					if unlikely(regno_cfa == (uintptr_t)-1)
+						goto err;
+				}
+				Dee_memstate_decrinuse(state, regno);
+				Dee_memloc_init_hstackind(loc, regno_cfa, Dee_memloc_hreg_getvaloff(loc));
+			} else if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
+				if unlikely(Dee_function_generator_gflushregind(self, loc))
+					goto err;
+				ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
+			}
+		}
+	}
+
+	/* NOTE: Usage-registers must be cleared by the caller! */
+	return 0;
+err:
+	return -1;
+}
+
 
 PRIVATE ATTR_PURE WUNUSED bool DCALL
 nullable_host_register_list_contains(Dee_host_register_t const *list,
@@ -1659,49 +1730,47 @@ Dee_function_generator_gallocreg(struct Dee_function_generator *__restrict self,
 	if (result < HOST_REGISTER_COUNT)
 		goto done;
 
+	/* TODO: Figure out which register requires the least amount of flushes.
+	 * For this purpose, every HREGIND with a distinct v_indoff requires an
+	 * additional flush for the corresponding register. */
+
 	/* Find something to write to the stack.
 	 * For this purpose, try to flush local variables first. */
 	state = self->fg_state;
 	for (i = 0; i < state->ms_localc; ++i) {
-		uintptr_t cfa_offset;
-		struct Dee_memloc *loc = &state->ms_localv[i];
-		if (!MEMLOC_TYPE_HASREG(loc->ml_type))
-			continue;
-		result = loc->ml_value.v_hreg.r_regno;
-		if (nullable_host_register_list_contains(not_these, result))
-			continue;
-
-		/* Flush this one! */
-		cfa_offset = Dee_function_generator_gflushreg(self, result);
-		if unlikely(cfa_offset == (uintptr_t)-1)
-			goto err;
-		Dee_memstate_decrinuse(state, loc->ml_value.v_hreg.r_regno);
-		loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-		loc->ml_value.v_hstack.s_cfa = cfa_offset;
-		loc->ml_value.v_hstack.s_off = 0;
-		goto done;
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_localv[i];
+		Dee_memval_foreach_loc(loc, val) {
+			if (!Dee_memloc_hasreg(loc))
+				continue;
+			result = Dee_memloc_getreg(loc);
+			if (nullable_host_register_list_contains(not_these, result))
+				continue;
+	
+			/* Use this one! */
+			if unlikely(Dee_function_generator_gflushreg(self, 0, false, result))
+				goto err;
+			return result;
+		}
 	}
 
 	/* ... then check for stack slots (starting with older ones first) */
 	state = self->fg_state;
 	for (i = 0; i < state->ms_stackc; ++i) {
-		uintptr_t cfa_offset;
-		struct Dee_memloc *loc = &state->ms_stackv[i];
-		if (!MEMLOC_TYPE_HASREG(loc->ml_type))
-			continue;
-		result = loc->ml_value.v_hreg.r_regno;
-		if (nullable_host_register_list_contains(not_these, result))
-			continue;
-
-		/* Flush this one! */
-		cfa_offset = Dee_function_generator_gflushreg(self, result);
-		if unlikely(cfa_offset == (uintptr_t)-1)
-			goto err;
-		Dee_memstate_decrinuse(state, loc->ml_value.v_hreg.r_regno);
-		loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-		loc->ml_value.v_hstack.s_cfa = cfa_offset;
-		loc->ml_value.v_hstack.s_off = 0;
-		goto done;
+		struct Dee_memloc *loc;
+		struct Dee_memval *val = &state->ms_stackv[i];
+		Dee_memval_foreach_loc(loc, val) {
+			if (!Dee_memloc_hasreg(loc))
+				continue;
+			result = Dee_memloc_getreg(loc);
+			if (nullable_host_register_list_contains(not_these, result))
+				continue;
+	
+			/* Use this one! */
+			if unlikely(Dee_function_generator_gflushreg(self, 0, false, result))
+				goto err;
+			return result;
+		}
 	}
 
 	/* Impossible to allocate register. */
@@ -1870,14 +1939,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 do_gjz_except(struct Dee_function_generator *__restrict self,
               struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
-	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const != (DeeObject *)0)
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST &&
+	    Dee_memloc_const_getaddr(loc) != 0)
 		return 0;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
-		if (loc->ml_type == MEMLOC_TYPE_CONST)
+		if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST)
 			return Dee_function_generator_gjmp(self, Lexcept);
 		return Dee_function_generator_gjz(self, loc, Lexcept);
 	}
@@ -1889,14 +1959,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 do_gjnz_except(struct Dee_function_generator *__restrict self,
                struct Dee_memloc *loc) {
 	struct Dee_except_exitinfo *info;
-	if (loc->ml_type == MEMLOC_TYPE_CONST && loc->ml_value.v_const == (DeeObject *)0)
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST &&
+	    Dee_memloc_const_getaddr(loc) == 0)
 		return 0;
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
-		if (loc->ml_type == MEMLOC_TYPE_CONST)
+		if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST)
 			return Dee_function_generator_gjmp(self, Lexcept);
 		return Dee_function_generator_gjnz(self, loc, Lexcept);
 	}
@@ -1913,8 +1984,7 @@ do_gjcmp_except(struct Dee_function_generator *__restrict self,
 	info = Dee_function_generator_except_exit(self);
 	if unlikely(!info)
 		goto err;
-	threshold_loc.ml_type = MEMLOC_TYPE_CONST;
-	threshold_loc.ml_value.v_const = (DeeObject *)(uintptr_t)threshold;
+	Dee_memloc_init_const(&threshold_loc, (byte_t const *)(uintptr_t)threshold);
 	{
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
 		return Dee_function_generator_gjcmp(self, loc, &threshold_loc,
@@ -1958,13 +2028,13 @@ gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) 
 		n_pop = self->fg_state->ms_stackc - chain->fei_stack;
 		if (n_pop != 0) {
 			Dee_vstackaddr_t i;
-			struct Dee_memloc *pop_base;
+			struct Dee_memval *pop_base;
 			if unlikely(Dee_function_generator_state_unshare(self))
 				goto err_saved_state;
 
 			/* If any of the memory locations that need to be popped is
-			 * MEMLOC_VMORPH_NULLABLE, then we must alter it to become
-			 * MEMLOC_VMORPH_DIRECT with the MEMLOC_F_NOREF flag set.
+			 * MEMVAL_VMORPH_NULLABLE, then we must alter it to become
+			 * MEMVAL_VMORPH_DIRECT with the MEMVAL_F_NOREF flag set.
 			 *
 			 * Because we're allowed to assume that only 1 exception
 			 * may be pending handling at a time, and given the fact
@@ -1973,9 +2043,9 @@ gsave_state_and_do_exceptinject(struct Dee_function_generator *__restrict self) 
 			 * item can actually be NULL at runtime. */
 			pop_base = self->fg_state->ms_stackv + self->fg_state->ms_stackc - n_pop;
 			for (i = 0; i < n_pop; ++i) {
-				if (pop_base[i].ml_vmorph == MEMLOC_VMORPH_NULLABLE) {
-					pop_base[i].ml_flags |= MEMLOC_F_NOREF;
-					pop_base[i].ml_vmorph = MEMLOC_VMORPH_DIRECT;
+				if (pop_base[i].mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
+					pop_base[i].mv_flags |= MEMVAL_F_NOREF;
+					pop_base[i].mv_vmorph = MEMVAL_VMORPH_DIRECT;
 				}
 			}
 
@@ -2022,8 +2092,7 @@ do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
 	struct Dee_host_section *text = self->fg_sect;
 	struct Dee_host_section *cold = &self->fg_block->bb_hcold;
 	struct Dee_memloc compare_value_loc;
-	compare_value_loc.ml_type = MEMLOC_TYPE_CONST;
-	compare_value_loc.ml_value.v_const = (DeeObject *)(uintptr_t)threshold;
+	Dee_memloc_init_const(&compare_value_loc, (byte_t const *)(uintptr_t)threshold);
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
 		cold = text;
 	if (cold == text) {
@@ -2068,9 +2137,9 @@ Dee_function_generator_gjcmp_except(struct Dee_function_generator *__restrict se
                                     unsigned int flags) {
 	if likely(self->fg_exceptinject == NULL)
 		return do_gjcmp_except(self, loc, threshold, flags);
-	if (loc->ml_type == MEMLOC_TYPE_CONST) {
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST) {
 		bool should_jump_except = false;
-		intptr_t lhs = (intptr_t)(uintptr_t)loc->ml_value.v_const;
+		intptr_t lhs = (intptr_t)(uintptr_t)Dee_memloc_const_getaddr(loc);
 		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO)
 			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED) ? ((uintptr_t)lhs < (uintptr_t)threshold) : (lhs < threshold);
 		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ)
@@ -2119,7 +2188,7 @@ Dee_function_generator_gcalldynapi(struct Dee_function_generator *__restrict sel
                                    struct Dee_memloc *api_function_loc,
                                    size_t argc, struct Dee_memloc *argv) {
 	int result;
-	switch (api_function_loc->ml_type) {
+	switch (Dee_memloc_gettyp(api_function_loc)) {
 	default: {
 		size_t i;
 		Dee_host_register_t regno, not_these[HOST_REGISTER_COUNT + 1];
@@ -2128,8 +2197,8 @@ fallback:
 		bitset_clearall(not_these_bitset, HOST_REGISTER_COUNT);
 		for (i = 0; i < argc; ++i) {
 			struct Dee_memloc *arg = &argv[i];
-			if (MEMLOC_TYPE_HASREG(arg->ml_type))
-				bitset_set(not_these_bitset, arg->ml_value.v_hreg.r_regno);
+			if (Dee_memloc_hasreg(arg))
+				bitset_set(not_these_bitset, Dee_memloc_getreg(arg));
 		}
 		for (i = 0, regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
 			if (bitset_test(not_these_bitset, regno)) {
@@ -2142,36 +2211,36 @@ fallback:
 		if unlikely(result != 0)
 			break;
 	}	ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
-		if unlikely(api_function_loc->ml_value.v_hreg.r_off != 0) {
+	case MEMADR_TYPE_HREG:
+		if unlikely(Dee_memloc_hreg_getvaloff(api_function_loc) != 0) {
 			result = Dee_function_generator_gmov_regx2reg(self,
-			                                              api_function_loc->ml_value.v_hreg.r_regno,
-			                                              api_function_loc->ml_value.v_hreg.r_off,
-			                                              api_function_loc->ml_value.v_hreg.r_regno);
+			                                              Dee_memloc_hreg_getreg(api_function_loc),
+			                                              Dee_memloc_hreg_getvaloff(api_function_loc),
+			                                              Dee_memloc_hreg_getreg(api_function_loc));
 			if unlikely(result != 0)
 				break;
 			Dee_memstate_hregs_adjust_delta(self->fg_state,
-			                                api_function_loc->ml_value.v_hreg.r_regno,
-			                                api_function_loc->ml_value.v_hreg.r_off);
-			api_function_loc->ml_value.v_hreg.r_off = 0;
+			                                Dee_memloc_hreg_getreg(api_function_loc),
+			                                Dee_memloc_hreg_getvaloff(api_function_loc));
+			Dee_memloc_hreg_setvaloff(api_function_loc, 0);
 		}
-		result = _Dee_function_generator_gcalldynapi_reg(self, api_function_loc->ml_value.v_hreg.r_regno, argc, argv);
+		result = _Dee_function_generator_gcalldynapi_reg(self, Dee_memloc_hreg_getreg(api_function_loc), argc, argv);
 		break;
-	case MEMLOC_TYPE_HSTACKIND:
-		if unlikely(api_function_loc->ml_value.v_hstack.s_off != 0)
+	case MEMADR_TYPE_HSTACKIND:
+		if unlikely(Dee_memloc_hstackind_getvaloff(api_function_loc) != 0)
 			goto fallback;
-		result = _Dee_function_generator_gcalldynapi_hstackind(self, api_function_loc->ml_value.v_hstack.s_cfa, argc, argv);
+		result = _Dee_function_generator_gcalldynapi_hstackind(self, Dee_memloc_hstackind_getcfa(api_function_loc), argc, argv);
 		break;
-	case MEMLOC_TYPE_HREGIND:
-		if unlikely(api_function_loc->ml_value.v_hreg.r_voff != 0)
+	case MEMADR_TYPE_HREGIND:
+		if unlikely(Dee_memloc_hregind_getvaloff(api_function_loc) != 0)
 			goto fallback;
 		result = _Dee_function_generator_gcalldynapi_hregind(self,
-		                                                     api_function_loc->ml_value.v_hreg.r_regno,
-		                                                     api_function_loc->ml_value.v_hreg.r_off,
+		                                                     Dee_memloc_hregind_getreg(api_function_loc),
+		                                                     Dee_memloc_hregind_getindoff(api_function_loc),
 		                                                     argc, argv);
 		break;
-	case MEMLOC_TYPE_CONST:
-		result = _Dee_function_generator_gcallapi(self, (void const *)api_function_loc->ml_value.v_const, argc, argv);
+	case MEMADR_TYPE_CONST:
+		result = _Dee_function_generator_gcallapi(self, (void const *)Dee_memloc_const_getaddr(api_function_loc), argc, argv);
 		break;
 	}
 	if likely(result == 0)
@@ -2182,19 +2251,19 @@ fallback:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gincref_loc(struct Dee_function_generator *__restrict self,
                                    struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gincref_regx(self,
-		                                           loc->ml_value.v_hreg.r_regno,
-		                                           loc->ml_value.v_hreg.r_off,
+		                                           Dee_memloc_hreg_getreg(loc),
+		                                           Dee_memloc_hreg_getvaloff(loc),
 		                                           n);
-	case MEMLOC_TYPE_CONST:
-		return Dee_function_generator_gincref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_CONST:
+		return Dee_function_generator_gincref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2205,19 +2274,19 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdecref_loc(struct Dee_function_generator *__restrict self,
                                    struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gdecref_regx(self,
-		                                           loc->ml_value.v_hreg.r_regno,
-		                                           loc->ml_value.v_hreg.r_off,
+		                                           Dee_memloc_hreg_getreg(loc),
+		                                           Dee_memloc_hreg_getvaloff(loc),
 		                                           n);
-	case MEMLOC_TYPE_CONST:
-		return Dee_function_generator_gdecref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_CONST:
+		return Dee_function_generator_gdecref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2228,20 +2297,20 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdecref_dokill_loc(struct Dee_function_generator *__restrict self,
                                           struct Dee_memloc *__restrict loc) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gdecref_regx_dokill(self,
-		                                                  loc->ml_value.v_hreg.r_regno,
-		                                                  loc->ml_value.v_hreg.r_off);
-	case MEMLOC_TYPE_CONST:
+		                                                  Dee_memloc_hreg_getreg(loc),
+		                                                  Dee_memloc_hreg_getvaloff(loc));
+	case MEMADR_TYPE_CONST:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "decref_dokill called on CONST location. "
 		                       "Constants can never be destroyed");
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2252,19 +2321,19 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gdecref_nokill_loc(struct Dee_function_generator *__restrict self,
                                           struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gdecref_nokill_regx(self,
-		                                                  loc->ml_value.v_hreg.r_regno,
-		                                                  loc->ml_value.v_hreg.r_off,
+		                                                  Dee_memloc_hreg_getreg(loc),
+		                                                  Dee_memloc_hreg_getvaloff(loc),
 		                                                  n);
-	case MEMLOC_TYPE_CONST:
-		return Dee_function_generator_gdecref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_CONST:
+		return Dee_function_generator_gdecref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2275,21 +2344,21 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gxincref_loc(struct Dee_function_generator *__restrict self,
                                     struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gxincref_regx(self,
-		                                            loc->ml_value.v_hreg.r_regno,
-		                                            loc->ml_value.v_hreg.r_off,
+		                                            Dee_memloc_hreg_getreg(loc),
+		                                            Dee_memloc_hreg_getvaloff(loc),
 		                                            n);
-	case MEMLOC_TYPE_CONST:
-		if (!loc->ml_value.v_const)
+	case MEMADR_TYPE_CONST:
+		if (Dee_memloc_const_getaddr(loc) == NULL)
 			return 0;
-		return Dee_function_generator_gincref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+		return Dee_function_generator_gincref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2300,21 +2369,21 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gxdecref_loc(struct Dee_function_generator *__restrict self,
                                     struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gxdecref_regx(self,
-		                                            loc->ml_value.v_hreg.r_regno,
-		                                            loc->ml_value.v_hreg.r_off,
+		                                            Dee_memloc_hreg_getreg(loc),
+		                                            Dee_memloc_hreg_getvaloff(loc),
 		                                            n);
-	case MEMLOC_TYPE_CONST:
-		if (!loc->ml_value.v_const)
+	case MEMADR_TYPE_CONST:
+		if (Dee_memloc_const_getaddr(loc) == NULL)
 			return 0;
-		return Dee_function_generator_gdecref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+		return Dee_function_generator_gdecref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2325,21 +2394,21 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gxdecref_nokill_loc(struct Dee_function_generator *__restrict self,
                                            struct Dee_memloc *__restrict loc, Dee_refcnt_t n) {
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
 		return Dee_function_generator_gxdecref_nokill_regx(self,
-		                                                   loc->ml_value.v_hreg.r_regno,
-		                                                   loc->ml_value.v_hreg.r_off,
+		                                                   Dee_memloc_hreg_getreg(loc),
+		                                                   Dee_memloc_hreg_getvaloff(loc),
 		                                                   n);
-	case MEMLOC_TYPE_CONST:
-		if (!loc->ml_value.v_const)
+	case MEMADR_TYPE_CONST:
+		if (Dee_memloc_const_getaddr(loc) == NULL)
 			return 0;
-		return Dee_function_generator_gdecref_const(self, loc->ml_value.v_const, n);
-	case MEMLOC_TYPE_UNDEFINED:
+		return Dee_function_generator_gdecref_const(self, (DeeObject *)Dee_memloc_const_getaddr(loc), n);
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	}
 	__builtin_unreachable();
@@ -2349,72 +2418,71 @@ err:
 
 /* Change `loc' into the value of `<loc> = *(<loc> + ind_delta)'
  * Note that unlike the `Dee_function_generator_gmov*' functions, this
- * one may use `MEMLOC_TYPE_*IND' to defer the indirection until later. */
+ * one may use `MEMADR_TYPE_*IND' to defer the indirection until later. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gind(struct Dee_function_generator *__restrict self,
                             struct Dee_memloc *loc, ptrdiff_t ind_delta) {
 	struct Dee_memequiv *eq;
-	ASSERTF(loc->ml_flags & MEMLOC_F_NOREF, "Dee_function_generator_gind() called on reference");
-	switch (loc->ml_type) {
+	switch (Dee_memloc_gettyp(loc)) {
 
-	case MEMLOC_TYPE_HSTACK: {
-		loc->ml_value.v_hstack.s_cfa = HA_cfa_offset_PLUS_sp_offset(loc->ml_value.v_hstack.s_cfa, ind_delta);
-		eq = Dee_function_generator_remember_getclassof_hstackind(self, loc->ml_value.v_hstack.s_cfa);
+	case MEMADR_TYPE_HSTACK: {
+		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(loc), ind_delta);
+		eq = Dee_function_generator_remember_getclassof_hstackind(self, cfa_offset);
 		if (eq != NULL) {
 			Dee_memequiv_next_asloc(eq, loc);
+			if (Dee_memstate_ismemlocinstate(self->fg_state, loc))
+				Dee_memstate_incrinuse_for_memloc(self->fg_state, loc);
 			return 0;
 		}
-		loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-		loc->ml_value.v_hstack.s_off = 0;
+		Dee_memloc_init_hstackind(loc, cfa_offset, 0);
 		return 0;
 	}	break;
 
-	case MEMLOC_TYPE_CONST: {
-		struct Dee_memstate *state = self->fg_state;
-		DeeObject **p_value;
+	case MEMADR_TYPE_CONST: {
+		void const *p_value = Dee_memloc_const_getaddr(loc) + ind_delta;
 		Dee_host_register_t temp_regno;
 		temp_regno = Dee_function_generator_gallocreg(self, NULL);
 		if unlikely(temp_regno >= HOST_REGISTER_COUNT)
 			goto err;
-		p_value = (DeeObject **)((uintptr_t)loc->ml_value.v_const + ind_delta);
-		if unlikely(Dee_function_generator_gmov_constind2reg(self, p_value, temp_regno))
+		if unlikely(Dee_function_generator_gmov_constind2reg(self, (void const **)p_value, temp_regno))
 			goto err;
-		loc->ml_type = MEMLOC_TYPE_HREG;
-		loc->ml_value.v_hreg.r_regno = temp_regno;
-		loc->ml_value.v_hreg.r_off   = 0;
-		loc->ml_value.v_hreg.r_voff  = 0;
-		if (Dee_memstate_isinstate(state, loc))
-			Dee_memstate_incrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+		Dee_memloc_init_hreg(loc, temp_regno, 0);
+		if (Dee_memstate_ismemlocinstate(self->fg_state, loc))
+			Dee_memstate_incrinuse(self->fg_state, temp_regno);
 	}	break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
 	default:
 		if unlikely(Dee_function_generator_greg(self, loc, NULL))
 			goto err;
-		ASSERT(loc->ml_type == MEMLOC_TYPE_HREG);
+		ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG);
 		ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG:
-		loc->ml_value.v_hreg.r_off += ind_delta;
-		eq = Dee_function_generator_remember_getclassof_regind(self,
-		                                                       loc->ml_value.v_hreg.r_regno,
-		                                                       loc->ml_value.v_hreg.r_off);
+	case MEMADR_TYPE_HREG: {
+		Dee_host_register_t regno = Dee_memloc_hreg_getreg(loc);
+		ptrdiff_t final_ind_delta = Dee_memloc_hreg_getvaloff(loc) + ind_delta;
+		eq = Dee_function_generator_remember_getclassof_regind(self, regno, final_ind_delta);
 		if (eq != NULL) {
+			bool is_in_state = Dee_memstate_ismemlocinstate(self->fg_state, loc);
+			if (is_in_state)
+				Dee_memstate_decrinuse(self->fg_state, regno);
 			Dee_memequiv_next_asloc(eq, loc);
+			if (is_in_state)
+				Dee_memstate_incrinuse_for_memloc(self->fg_state, loc);
 			return 0;
 		}
 		/* Turn the location from an HREG into HREGIND */
-		loc->ml_type = MEMLOC_TYPE_HREGIND;
-		loc->ml_value.v_hreg.r_voff = 0;
-		break;
+		Dee_memloc_init_hregind(loc, regno, final_ind_delta, 0);
+	}	break;
+
 	}
 	return 0;
 err:
 	return -1;
 }
 
-/* Force `loc' to become a register (`MEMLOC_TYPE_HREG'). */
+/* Force `loc' to become a register (`MEMADR_TYPE_HREG'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
                             struct Dee_memloc *loc,
@@ -2424,30 +2492,37 @@ Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
 	Dee_host_register_t regno;
 	ptrdiff_t val_delta;
 	bool is_in_state;
-	if (loc->ml_type == MEMLOC_TYPE_HREG)
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG)
 		return 0; /* Already in a register! */
 
 	/* Check if "loc" has a known register equivalence. */
-	eq = Dee_function_generator_remember_getclassof(self, loc);
+	eq = Dee_function_generator_remember_getclassof(self, Dee_memloc_getadr(loc));
 	if (eq != NULL) {
 		struct Dee_memequiv *reg_eq = Dee_memequiv_next(eq);
-		while (reg_eq->meq_loc.meql_type != MEMEQUIV_TYPE_HREG) {
+		while (Dee_memloc_gettyp(&reg_eq->meq_loc) != MEMEQUIV_TYPE_HREG) {
 			if (reg_eq == eq)
 				goto no_equivalence;
 			reg_eq = Dee_memequiv_next(reg_eq);
 		}
+
 		/* Example:
 		 * >> eq(FOO + 3)  == reg_eq(BAR + 5)
 		 * >> loc(FOO + 7) == reg_eq(BAR + 9)
 		 * >> 9 = 7 - 3 + 5
 		 * >> 9 == RESULT_VAL_DELTA
-		 * >> 7 == Dee_memloc_getvaldelta_c0(loc)
-		 * >> 3 == eq->meq_valoff
-		 * >> 5 == reg_eq->meq_valoff   (gets added in `Dee_memequiv_asloc()') */
-		val_delta = Dee_memloc_getvaldelta_c0(loc);
-		val_delta -= eq->meq_valoff;
-		Dee_memequiv_asloc(reg_eq, loc, val_delta);
-		ASSERT(loc->ml_type == MEMLOC_TYPE_HREG);
+		 * >> 7 == Dee_memloc_getoff(loc)
+		 * >> 3 == Dee_memloc_getoff(&eq->meq_loc)
+		 * >> 5 == Dee_memloc_getoff(&reg_eq->meq_loc)   (gets added in `Dee_memequiv_asloc()') */
+		val_delta = Dee_memloc_getoff(loc);
+		val_delta -= Dee_memloc_getoff(&eq->meq_loc);
+		is_in_state = Dee_memstate_ismemlocinstate(self->fg_state, loc);
+		if (is_in_state)
+			Dee_memstate_decrinuse_for_memloc(self->fg_state, loc);
+		*loc = reg_eq->meq_loc;
+		ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG);
+		Dee_memloc_adjoff(loc, val_delta);
+		if (is_in_state)
+			Dee_memstate_incrinuse(self->fg_state, Dee_memloc_hreg_getreg(loc));
 		return 0;
 	}
 no_equivalence:
@@ -2464,41 +2539,36 @@ no_equivalence:
 	/* If the location used to be a writable location, then we must
 	 * also update any other location that used to alias `loc'. */
 	state = self->fg_state;
-	if (loc->ml_type == MEMLOC_TYPE_HREGIND ||
-	    loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
-		ptrdiff_t delta_change = val_delta - loc->ml_value.v_hreg.r_voff;
-		struct Dee_memloc *alias;
-		Dee_memstate_foreach(alias, state) {
-			if (alias->ml_type != loc->ml_type)
-				continue;
-			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
-				continue;
-			if (loc->ml_type == MEMLOC_TYPE_HREGIND &&
-			    (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno))
-				continue;
-			if (alias == loc)
-				continue;
-			if (alias->ml_type == MEMLOC_TYPE_HSTACKIND && (alias->ml_flags & MEMLOC_F_LINEAR))
-				continue; /* The alias must remain on-stack (don't update it) */
-			if (MEMLOC_TYPE_HASREG(alias->ml_type))
-				Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
-			alias->ml_type = MEMLOC_TYPE_HREG;
-			alias->ml_value.v_hreg.r_regno = regno;
-			alias->ml_value.v_hreg.r_off   = alias->ml_value.v_hreg.r_voff + delta_change;
-			Dee_memstate_incrinuse(self->fg_state, regno);
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND ||
+	    Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND) {
+		ptrdiff_t delta_change = val_delta - Dee_memloc_getoff(loc);
+		struct Dee_memval *alias_val;
+		struct Dee_memloc *alias_loc;
+		Dee_memstate_foreach(alias_val, state) {
+			Dee_memval_foreach_loc(alias_loc, alias_val) {
+				if (!Dee_memloc_sameadr(alias_loc, loc))
+					continue;
+				if (alias_loc == loc)
+					continue;
+				if (Dee_memloc_gettyp(alias_loc) == MEMADR_TYPE_HSTACKIND &&
+				    MEMVAL_VMORPH_ISDIRECT(alias_val->mv_vmorph) &&
+				    (alias_val->mv_flags & MEMVAL_F_LINEAR))
+					continue; /* The alias must remain on-stack (don't update it) */
+				Dee_memstate_decrinuse_for_memloc(self->fg_state, alias_loc);
+				Dee_memloc_init_hreg(alias_loc, regno, Dee_memloc_getoff(alias_loc) + delta_change);
+				Dee_memstate_incrinuse(self->fg_state, regno);
+			}
 		}
 		Dee_memstate_foreach_end;
 	}
 
 	/* Adjust register usage if `loc' is tracked by the memory state. */
-	is_in_state = Dee_memstate_isinstate(state, loc);
-	if (is_in_state && MEMLOC_TYPE_HASREG(loc->ml_type))
-		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+	is_in_state = Dee_memstate_ismemlocinstate(state, loc);
+	if (is_in_state)
+		Dee_memstate_decrinuse_for_memloc(self->fg_state, loc);
 
 	/* Remember that `loc' now lies in a register. */
-	loc->ml_type = MEMLOC_TYPE_HREG;
-	loc->ml_value.v_hreg.r_regno = regno;
-	loc->ml_value.v_hreg.r_off   = val_delta;
+	Dee_memloc_init_hreg(loc, regno, val_delta);
 	if (is_in_state)
 		Dee_memstate_incrinuse(self->fg_state, regno);
 	return 0;
@@ -2506,16 +2576,16 @@ err:
 	return -1;
 }
 
-/* Force `loc' to reside on the stack, giving it an address (`MEMLOC_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
+/* Force `loc' to reside on the stack, giving it an address (`MEMADR_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
                               struct Dee_memloc *loc) {
 	uintptr_t cfa_offset;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
-	if (loc->ml_type == MEMLOC_TYPE_HSTACKIND) {
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND) {
 handle_hstackind_loc:
-		if (loc->ml_value.v_hstack.s_off == 0)
+		if (Dee_memloc_hstackind_getvaloff(loc) == 0)
 			return 0; /* Already on-stack at offset=0 */
 
 #ifdef HAVE__Dee_host_section_gadd_const2hstackind
@@ -2523,44 +2593,51 @@ handle_hstackind_loc:
 		 * Afterwards, go through all stack/local variables and adjust value offsets
 		 * wherever the same CFA offset is referenced. */
 		return _Dee_host_section_gadd_const2hstackind(self->fg_sect,
-		                                              (DeeObject *)(uintptr_t)(intptr_t)loc->ml_value.v_hstack.s_off,
-		                                              Dee_memstate_hstack_cfa2sp(self->fg_state, loc->ml_value.v_hstack.s_cfa));
+		                                              (void const *)(uintptr_t)(intptr_t)Dee_memloc_hstackind_getvaloff(loc),
+		                                              Dee_memstate_hstack_cfa2sp(self->fg_state, Dee_memloc_hstackind_getcfa(loc)));
 #endif /* HAVE__Dee_host_section_gadd_const2hstackind */
 	}
 
 	/* Figure out where we want to allocate the value. */
 #ifdef HAVE_try_restore_xloc_arg_cfa_offset
-	if (loc->ml_type == MEMLOC_TYPE_HREG &&
-		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, loc->ml_value.v_hreg.r_regno)) != (uintptr_t)-1) {
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG &&
+		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, Dee_memloc_hreg_getreg(loc))) != (uintptr_t)-1) {
 		/* CFA offset restored */
 	} else
 #endif /* HAVE_try_restore_xloc_arg_cfa_offset */
 	{
 		/* Check if "loc" has a known HSTACKIND equivalence. */
 		struct Dee_memequiv *eq;
-		eq = Dee_function_generator_remember_getclassof(self, loc);
+		eq = Dee_function_generator_remember_getclassof(self, Dee_memloc_getadr(loc));
 		if (eq != NULL) {
-			ptrdiff_t val_delta = Dee_memloc_getvaldelta_c0(loc);
+			ptrdiff_t val_delta = Dee_memloc_getoff(loc);
 			struct Dee_memequiv *hstackind_eq_any = NULL;
 			struct Dee_memequiv *hstackind_eq;
-			val_delta -= eq->meq_valoff;
+			val_delta -= Dee_memloc_getoff(&eq->meq_loc);
 			for (hstackind_eq = Dee_memequiv_next(eq); hstackind_eq != eq;
 			     hstackind_eq = Dee_memequiv_next(hstackind_eq)) {
-				if (hstackind_eq->meq_loc.meql_type == MEMEQUIV_TYPE_HSTACKIND) {
-					if ((hstackind_eq->meq_valoff + val_delta) == 0) {
+				if (Dee_memloc_gettyp(&hstackind_eq->meq_loc) == MEMEQUIV_TYPE_HSTACKIND) {
+					if ((Dee_memloc_getoff(&hstackind_eq->meq_loc) + val_delta) == 0) {
 						/* Perfect match: this equivalence allows for `v_hstack.s_off = 0' */
-						Dee_memequiv_asloc(hstackind_eq, loc, val_delta);
-						ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
-						ASSERT(loc->ml_value.v_hstack.s_off == 0);
+						if (Dee_memstate_ismemlocinstate(state, loc))
+							Dee_memstate_decrinuse_for_memloc(state, loc);
+						*loc = hstackind_eq->meq_loc;
+						ASSERT((Dee_memloc_getoff(loc) + val_delta) == 0);
+						Dee_memloc_setoff(loc, 0);
+						ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
+						ASSERT(Dee_memloc_getoff(loc) == 0);
 						return 0;
 					}
 					hstackind_eq_any = hstackind_eq;
 				}
 			}
 			if (hstackind_eq_any) {
-				Dee_memequiv_asloc(hstackind_eq_any, loc, val_delta);
-				ASSERT(loc->ml_type == MEMLOC_TYPE_HSTACKIND);
-				ASSERT(loc->ml_value.v_hstack.s_off != 0);
+				if (Dee_memstate_ismemlocinstate(state, loc))
+					Dee_memstate_decrinuse_for_memloc(state, loc);
+				*loc = hstackind_eq->meq_loc;
+				Dee_memloc_setoff(loc, Dee_memloc_getoff(loc) + val_delta);
+				ASSERT(Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND);
+				ASSERT(Dee_memloc_getoff(loc) != 0);
 				goto handle_hstackind_loc;
 			}
 		}
@@ -2584,36 +2661,35 @@ handle_hstackind_loc:
 	/* If the location used to be a writable location, then we must
 	 * also update any other location that used to alias `loc'. */
 	state = self->fg_state;
-	if (loc->ml_type == MEMLOC_TYPE_HREG ||
-	    loc->ml_type == MEMLOC_TYPE_HREGIND) {
-		ptrdiff_t delta_change = -loc->ml_value.v_hreg.r_voff;
-		struct Dee_memloc *alias;
-		Dee_memstate_foreach(alias, state) {
-			if (alias->ml_type != loc->ml_type)
-				continue;
-			if (alias->ml_value.v_hreg.r_regno != loc->ml_value.v_hreg.r_regno)
-				continue;
-			if (alias->ml_value.v_hreg.r_off != loc->ml_value.v_hreg.r_off)
-				continue;
-			if (alias == loc)
-				continue;
-			ASSERT(MEMLOC_TYPE_HASREG(alias->ml_type));
-			Dee_memstate_decrinuse(self->fg_state, alias->ml_value.v_hreg.r_regno);
-			alias->ml_type = MEMLOC_TYPE_HSTACKIND;
-			alias->ml_value.v_hstack.s_off = alias->ml_value.v_hreg.r_voff + delta_change;
-			alias->ml_value.v_hstack.s_cfa = cfa_offset;
+	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG ||
+	    Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND) {
+		ptrdiff_t val_delta_change = -Dee_memloc_getoff(loc);
+		if (val_delta_change != 0) {
+			struct Dee_memval *alias_val;
+			struct Dee_memloc *alias_loc;
+			Dee_memstate_foreach(alias_val, state) {
+				Dee_memval_foreach_loc(alias_loc, alias_val) {
+					if (Dee_memloc_gettyp(alias_loc) != Dee_memloc_gettyp(loc))
+						continue;
+					if (!Dee_memloc_sameadr(alias_loc, loc))
+						continue;
+					if (alias_loc == loc)
+						continue;
+					ASSERT(Dee_memloc_hasreg(alias_loc));
+					Dee_memstate_decrinuse(self->fg_state, Dee_memloc_getreg(alias_loc));
+					Dee_memloc_init_hstackind(alias_loc, cfa_offset, Dee_memloc_getoff(alias_loc) + val_delta_change);
+				}
+			}
+			Dee_memstate_foreach_end;
 		}
-		Dee_memstate_foreach_end;
 	}
 
 	/* Adjust register usage if `loc' is tracked by the memory state. */
-	if (MEMLOC_TYPE_HASREG(loc->ml_type) && Dee_memstate_isinstate(state, loc))
-		Dee_memstate_decrinuse(self->fg_state, loc->ml_value.v_hreg.r_regno);
+	if (Dee_memloc_hasreg(loc) && Dee_memstate_ismemlocinstate(state, loc))
+		Dee_memstate_decrinuse(self->fg_state, Dee_memloc_getreg(loc));
 
 	/* Remember that `loc' now lies on-stack (with an offset of `0') */
-	loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-	loc->ml_value.v_hstack.s_cfa = cfa_offset;
-	loc->ml_value.v_hstack.s_off = 0;
+	Dee_memloc_init_hstackind(loc, cfa_offset, 0);
 	return 0;
 err:
 	return -1;
@@ -2628,44 +2704,44 @@ Dee_function_generator_gmov_loc2loc(struct Dee_function_generator *__restrict se
 	int result;
 	if (Dee_memloc_sameloc(src_loc, dst_loc))
 		return 0;
-	switch (dst_loc->ml_type) {
-	case MEMLOC_TYPE_HREG:
+	switch (Dee_memloc_gettyp(dst_loc)) {
+	case MEMADR_TYPE_HREG:
 		result = Dee_function_generator_gmov_loc2regx(self, src_loc,
-		                                              dst_loc->ml_value.v_hreg.r_regno,
-		                                              dst_loc->ml_value.v_hreg.r_off);
+		                                              Dee_memloc_hreg_getreg(dst_loc),
+		                                              Dee_memloc_hreg_getvaloff(dst_loc));
 		break;
-	case MEMLOC_TYPE_HSTACKIND:
+	case MEMADR_TYPE_HSTACKIND:
 		result = Dee_function_generator_gmov_loc2hstackindx(self, src_loc,
-		                                                    dst_loc->ml_value.v_hstack.s_cfa,
-		                                                    dst_loc->ml_value.v_hstack.s_off);
+		                                                    Dee_memloc_hstackind_getcfa(dst_loc),
+		                                                    Dee_memloc_hstackind_getvaloff(dst_loc));
 		break;
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 	default:
-		switch (src_loc->ml_type) {
+		switch (Dee_memloc_gettyp(src_loc)) {
 		default: {
 			Dee_host_register_t not_these[2];
 			not_these[0] = HOST_REGISTER_COUNT;
 			not_these[1] = HOST_REGISTER_COUNT;
-			if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
-				not_these[0] = dst_loc->ml_value.v_hreg.r_regno;
+			if (Dee_memloc_hasreg(dst_loc))
+				not_these[0] = Dee_memloc_getreg(dst_loc);
 			if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
 				goto err;
-			ASSERT(src_loc->ml_type == MEMLOC_TYPE_HREG);
+			ASSERT(Dee_memloc_gettyp(src_loc) == MEMADR_TYPE_HREG);
 		}	ATTR_FALLTHROUGH
-		case MEMLOC_TYPE_HREG:
+		case MEMADR_TYPE_HREG:
 			result = Dee_function_generator_gmov_regx2loc(self,
-			                                              src_loc->ml_value.v_hreg.r_regno,
-			                                              src_loc->ml_value.v_hreg.r_off,
+			                                              Dee_memloc_hreg_getreg(src_loc),
+			                                              Dee_memloc_hreg_getvaloff(src_loc),
 			                                              dst_loc);
 			break;
-		case MEMLOC_TYPE_CONST:
-			result = Dee_function_generator_gmov_const2loc(self, src_loc->ml_value.v_const, dst_loc);
+		case MEMADR_TYPE_CONST:
+			result = Dee_function_generator_gmov_const2loc(self, Dee_memloc_const_getaddr(src_loc), dst_loc);
 			break;
-		case MEMLOC_TYPE_HSTACK:
-			result = Dee_function_generator_gmov_hstack2loc(self, src_loc->ml_value.v_hstack.s_cfa, dst_loc);
+		case MEMADR_TYPE_HSTACK:
+			result = Dee_function_generator_gmov_hstack2loc(self, Dee_memloc_hstack_getcfa(src_loc), dst_loc);
 			break;
-		case MEMLOC_TYPE_UNDEFINED:
+		case MEMADR_TYPE_UNDEFINED:
 			return 0;
 		}
 		break;
@@ -2680,40 +2756,40 @@ Dee_function_generator_gmov_loc2locind(struct Dee_function_generator *__restrict
                                        struct Dee_memloc *src_loc,
                                        struct Dee_memloc const *dst_loc, ptrdiff_t ind_delta) {
 	int result;
-	switch (src_loc->ml_type) {
+	switch (Dee_memloc_gettyp(src_loc)) {
 	default: {
 		Dee_host_register_t not_these[2];
 		not_these[0] = HOST_REGISTER_COUNT;
 		not_these[1] = HOST_REGISTER_COUNT;
-		if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
-			not_these[0] = dst_loc->ml_value.v_hreg.r_regno;
+		if (Dee_memloc_hasreg(dst_loc))
+			not_these[0] = Dee_memloc_getreg(dst_loc);
 		if unlikely(Dee_function_generator_greg(self, src_loc, not_these))
 			goto err;
-		ASSERT(src_loc->ml_type == MEMLOC_TYPE_HREG);
+		ASSERT(Dee_memloc_gettyp(src_loc) == MEMADR_TYPE_HREG);
 	}	ATTR_FALLTHROUGH
-	case MEMLOC_TYPE_HREG: {
-		if (src_loc->ml_value.v_hreg.r_off != 0) {
+	case MEMADR_TYPE_HREG:
+		if (Dee_memloc_hreg_getvaloff(src_loc) != 0) {
 			if (Dee_function_generator_gmov_regx2reg(self,
-			                                         src_loc->ml_value.v_hreg.r_regno,
-			                                         src_loc->ml_value.v_hreg.r_off,
-			                                         src_loc->ml_value.v_hreg.r_regno))
+			                                         Dee_memloc_hreg_getreg(src_loc),
+			                                         Dee_memloc_hreg_getvaloff(src_loc),
+			                                         Dee_memloc_hreg_getreg(src_loc)))
 				goto err;
 			Dee_memstate_hregs_adjust_delta(self->fg_state,
-			                                src_loc->ml_value.v_hreg.r_regno,
-			                                src_loc->ml_value.v_hreg.r_off);
-			src_loc->ml_value.v_hreg.r_off = 0;
+			                                Dee_memloc_hreg_getreg(src_loc),
+			                                Dee_memloc_hreg_getvaloff(src_loc));
+			Dee_memloc_hreg_setvaloff(src_loc, 0);
 		}
 		result = Dee_function_generator_gmov_reg2locind(self,
-		                                                src_loc->ml_value.v_hreg.r_regno,
+		                                                Dee_memloc_hreg_getreg(src_loc),
 		                                                dst_loc, ind_delta);
-	}	break;
+		break;
 
-	case MEMLOC_TYPE_UNDEFINED:
+	case MEMADR_TYPE_UNDEFINED:
 		return 0;
 
-	case MEMLOC_TYPE_CONST:
+	case MEMADR_TYPE_CONST:
 		result = Dee_function_generator_gmov_const2locind(self,
-		                                                  src_loc->ml_value.v_const,
+		                                                  Dee_memloc_const_getaddr(src_loc),
 		                                                  dst_loc, ind_delta);
 		break;
 	}
@@ -2727,8 +2803,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self,
                                           Dee_atomic_rwlock_t *__restrict lock) {
 	struct Dee_memloc loc;
-	loc.ml_type = MEMLOC_TYPE_CONST;
-	loc.ml_value.v_const = (DeeObject *)lock;
+	Dee_memloc_init_const(&loc, lock);
 	return Dee_function_generator_grwlock_read(self, &loc);
 }
 
@@ -2736,8 +2811,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_grwlock_write_const(struct Dee_function_generator *__restrict self,
                                            Dee_atomic_rwlock_t *__restrict lock) {
 	struct Dee_memloc loc;
-	loc.ml_type = MEMLOC_TYPE_CONST;
-	loc.ml_value.v_const = (DeeObject *)lock;
+	Dee_memloc_init_const(&loc, lock);
 	return Dee_function_generator_grwlock_write(self, &loc);
 }
 
@@ -2745,8 +2819,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_grwlock_endread_const(struct Dee_function_generator *__restrict self,
                                              Dee_atomic_rwlock_t *__restrict lock) {
 	struct Dee_memloc loc;
-	loc.ml_type = MEMLOC_TYPE_CONST;
-	loc.ml_value.v_const = (DeeObject *)lock;
+	Dee_memloc_init_const(&loc, lock);
 	return Dee_function_generator_grwlock_endread(self, &loc);
 }
 
@@ -2754,8 +2827,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_grwlock_endwrite_const(struct Dee_function_generator *__restrict self,
                                               Dee_atomic_rwlock_t *__restrict lock) {
 	struct Dee_memloc loc;
-	loc.ml_type = MEMLOC_TYPE_CONST;
-	loc.ml_value.v_const = (DeeObject *)lock;
+	Dee_memloc_init_const(&loc, lock);
 	return Dee_function_generator_grwlock_endwrite(self, &loc);
 }
 

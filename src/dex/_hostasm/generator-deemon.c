@@ -208,53 +208,62 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
                                             Dee_instruction_t const *instr,
                                             uint8_t prefix_type, uint16_t id1, uint16_t id2) {
 	uintptr_t cfa_offset;
-	struct Dee_memloc *src_loc, *dst_loc;
+	struct Dee_memval *src_mval, *dst_mval;
 	struct Dee_memstate *state;
+again:
 	DO(Dee_function_generator_state_unshare(self));
 	state = self->fg_state;
 	DO(Dee_memstate_reqvstack(state, state->ms_stackc + 1)); /* Pre-allocate for below */
 	switch (prefix_type) {
 	case ASM_STACK:
 		ASSERTF(id1 < state->ms_stackc, "Should have been checked by the caller");
-		src_loc = &state->ms_stackv[id1];
+		src_mval = &state->ms_stackv[id1];
 		break;
 	case ASM_LOCAL:
 		ASSERTF(id1 < state->ms_localc, "Should have been checked by the caller");
-		src_loc = &state->ms_localv[id1];
+		src_mval = &state->ms_localv[id1];
 		break;
 	default:
 		/* Fallback: other types of prefixes can never be aliased, so they can be pushed as-is */
 		return Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2);
 	}
 
+	/* Make sure the prefixed value is a direct value. */
+	if unlikely(!Dee_memval_isdirect(src_mval)) {
+		DO(Dee_function_generator_gdirect(self, src_mval));
+		goto again;
+	}
+
 	/* In case of a local, assert that the local is currently bound. */
-	if (prefix_type == ASM_LOCAL && !(src_loc->ml_flags & MEMLOC_F_LOCAL_BOUND)) {
-		if (src_loc->ml_flags & MEMLOC_F_LOCAL_UNBOUND)
+	if (prefix_type == ASM_LOCAL && !(src_mval->mv_flags & MEMVAL_F_LOCAL_BOUND)) {
+		if (src_mval->mv_flags & MEMVAL_F_LOCAL_UNBOUND)
 			return 1; /* Cannot address always-unbound local */
 		DO(Dee_function_generator_gassert_local_bound(self, instr, id1));
 		/* After a bound assertion, the local variable is guarantied to be bound. */
-		src_loc->ml_flags |= MEMLOC_F_LOCAL_BOUND;
+		src_mval->mv_flags |= MEMVAL_F_LOCAL_BOUND;
 	}
 
 	/* Prefixed location must contain a reference and not be aliased. */
-	if (src_loc->ml_type != MEMLOC_TYPE_CONST) {
-		struct Dee_memloc *alias;
-		struct Dee_memloc *alias_with_reference = NULL;    /* Alias that has a reference */
-		struct Dee_memloc *alias_without_reference = NULL; /* Alias that needs a reference */
+	if (!Dee_memval_direct_isconst(src_mval)) {
+		struct Dee_memval *alias;
+		struct Dee_memval *alias_with_reference = NULL;    /* Alias that has a reference */
+		struct Dee_memval *alias_without_reference = NULL; /* Alias that needs a reference */
 		bool got_alias = false; /* There *are* aliases. */
 		Dee_memstate_foreach(alias, state) {
-			if (alias == src_loc)
+			if (alias == src_mval)
 				continue;
-			if (!Dee_memloc_sameloc(alias, src_loc))
+			if (!Dee_memval_isdirect(alias))
+				continue;
+			if (!Dee_memval_direct_sameloc(alias, src_mval))
 				continue;
 			/* Got an alias! */
 			got_alias = true;
-			if (alias->ml_flags & MEMLOC_F_NOREF) {
+			if (alias->mv_flags & MEMVAL_F_NOREF) {
 				alias_without_reference = alias;
-			} else if (src_loc->ml_flags & MEMLOC_F_NOREF) {
+			} else if (src_mval->mv_flags & MEMVAL_F_NOREF) {
 				/* Steal reference from alias */
-				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
-				alias->ml_flags |= MEMLOC_F_NOREF;
+				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
+				alias->mv_flags |= MEMVAL_F_NOREF;
 				alias_without_reference = alias;
 			} else {
 				alias_with_reference = alias;
@@ -262,31 +271,31 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
 		}
 		Dee_memstate_foreach_end;
 		if (got_alias) {
-			ASSERT(!alias_with_reference || !(alias_with_reference->ml_flags & MEMLOC_F_NOREF));
-			ASSERT(!alias_without_reference || (alias_without_reference->ml_flags & MEMLOC_F_NOREF));
-			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
+			ASSERT(!alias_with_reference || !(alias_with_reference->mv_flags & MEMVAL_F_NOREF));
+			ASSERT(!alias_without_reference || (alias_without_reference->mv_flags & MEMVAL_F_NOREF));
+			if (src_mval->mv_flags & MEMVAL_F_NOREF) {
 				/* There are aliases, but no-one is holding a reference.
 				 * This can happen if the location points to a constant
 				 * that got flushed, in which case we only need a single
 				 * reference. */
 				ASSERT(alias_without_reference);
 				ASSERT(!alias_with_reference);
-				DO(Dee_function_generator_gincref_loc(self, src_loc, 1));
-				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(src_mval), 1));
+				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
 			} else if (alias_without_reference && !alias_with_reference) {
 				/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
-				ASSERT(alias_without_reference->ml_flags & MEMLOC_F_NOREF);
-				DO(Dee_function_generator_gincref_loc(self, alias_without_reference, 1));
-				alias_without_reference->ml_flags &= ~MEMLOC_F_NOREF;
+				ASSERT(alias_without_reference->mv_flags & MEMVAL_F_NOREF);
+				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(alias_without_reference), 1));
+				alias_without_reference->mv_flags &= ~MEMVAL_F_NOREF;
 			}
 
 			/* Must generate code to move the value into a second, distinct stack location. */
 			cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
 			if (cfa_offset != (uintptr_t)-1) {
-				if unlikely(Dee_function_generator_gmov_loc2hstackind(self, src_loc, cfa_offset))
+				if unlikely(Dee_function_generator_gmov_loc2hstackind(self, Dee_memval_direct_getloc(src_mval), cfa_offset))
 					goto err;
 			} else {
-				if unlikely(Dee_function_generator_ghstack_pushloc(self, src_loc))
+				if unlikely(Dee_function_generator_ghstack_pushloc(self, Dee_memval_direct_getloc(src_mval)))
 					goto err;
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				cfa_offset = state->ms_host_cfa_offset;
@@ -297,14 +306,12 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
 
 			/* Note how we *don't* update any of the location's aliases here.
 			 * From this point forth, the location doesn't have *any* aliases! */
-			src_loc->ml_type = MEMLOC_TYPE_HSTACKIND;
-			src_loc->ml_value.v_hstack.s_cfa = cfa_offset;
-			src_loc->ml_value.v_hstack.s_off = 0;
+			Dee_memloc_init_hstackind(Dee_memval_direct_getloc(src_mval), cfa_offset, 0);
 		} else {
 			/* No aliases exist, so there's no need to force a distinct location. */
-			if (src_loc->ml_flags & MEMLOC_F_NOREF) {
-				DO(Dee_function_generator_gincref_loc(self, src_loc, 1));
-				src_loc->ml_flags &= ~MEMLOC_F_NOREF;
+			if (src_mval->mv_flags & MEMVAL_F_NOREF) {
+				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(src_mval), 1));
+				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
 			}
 		}
 	}
@@ -312,11 +319,10 @@ Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__res
 	/* Push the addressed location onto the stack, thus creating a singular alias.
 	 * Said alias then gets to inherit the reference currently held in `src_loc'. */
 	ASSERT(state->ms_stackc < state->ms_stacka);
-	dst_loc = &state->ms_stackv[state->ms_stackc];
-	*dst_loc = *src_loc;
-	src_loc->ml_flags |= MEMLOC_F_NOREF; /* Reference was stolen (if there was one) */
-	if (MEMLOC_TYPE_HASREG(dst_loc->ml_type))
-		Dee_memstate_incrinuse(state, dst_loc->ml_value.v_hreg.r_regno);
+	dst_mval = &state->ms_stackv[state->ms_stackc];
+	Dee_memval_initcopy(dst_mval, src_mval);
+	src_mval->mv_flags |= MEMVAL_F_NOREF; /* Reference was stolen (if there was one) */
+	Dee_memstate_incrinuse_for_memval(state, dst_mval);
 	++state->ms_stackc;
 	return 0;
 err:
@@ -358,7 +364,7 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		bool repr = false;
 		char const *print_after = NULL; /* 1-character string to print *after* the object (or NULL) */
 		DeeTypeObject *value_type;
-		struct Dee_memloc *value_loc;
+		struct Dee_memval *value_mval;
 		uint16_t print_operator;
 		if (api_function == (void const *)&DeeFile_PrintObject) {
 			/* ... */
@@ -380,10 +386,10 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 
 		/* Check for special case: the object being printed is a constant.
 		 * In this case, try to encode a call `DeeFile_WriteAll(file, VALUEOF(str constant))' */
-		value_loc = Dee_function_generator_vtop(self);
+		value_mval = Dee_function_generator_vtop(self);
 		print_operator = repr ? OPERATOR_REPR : OPERATOR_STR;
-		if (value_loc->ml_type == MEMLOC_TYPE_CONST) {
-			DeeObject *constval = value_loc->ml_value.v_const;
+		if (Dee_memval_isconst(value_mval)) {
+			DeeObject *constval = Dee_memval_const_getobj(value_mval);
 			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), print_operator)) {
 				char const *utf8;
 				if (repr || !DeeString_Check(constval)) {
@@ -431,7 +437,7 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 		}
 
 		/* If the type of object being printed is known, then we can inline the print-operator. */
-		value_type = Dee_memloc_typeof(value_loc);
+		value_type = Dee_memval_typeof(value_mval);
 		if (value_type != NULL && DeeType_InheritOperator(value_type, print_operator)) {
 			api_function = repr ? value_type->tp_cast.tp_printrepr
 			                    : value_type->tp_cast.tp_print;
@@ -1436,7 +1442,7 @@ do_jcc:
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
 		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1)); /* [refs...], ref:function */
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF));          /* [refs...], ref:function */
+		ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF));          /* [refs...], ref:function */
 		DO(Dee_function_generator_voneref_noalias(self));                                 /* [refs...], ref:function */
 		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeFunction_Type));       /* [refs...], ref:function */
 		/* TODO: When "DEE_FUNCTION_ASSEMBLER_F_SAFE" isn't set, check if the
@@ -1467,7 +1473,7 @@ do_jcc:
 			                                  offsetof(DeeFunctionObject, fo_refv) +
 			                                  (refc * sizeof(DREF DeeObject *))));
 		}
-		ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF)); /* ref:function */
+		ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF)); /* ref:function */
 	}	break;
 
 	TARGET(ASM_CAST_INT)
@@ -1624,16 +1630,16 @@ do_jcc:
 	TARGET(ASM_LEAVE)
 		return Dee_function_generator_vop(self, OPERATOR_LEAVE, 1, VOP_F_NORMAL);
 
-	TARGET(ASM_RANGE)                                           /* start, end */
-		DO(Dee_function_generator_vnotoneref(self, 2));         /* start, end */
-		DO(Dee_function_generator_vswap(self));                 /* end, start */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* end, start, Dee_None */
-		DO(Dee_function_generator_vpush_addr(self, NULL));      /* end, start, Dee_None, NULL */
-		DO(Dee_function_generator_vcoalesce(self));             /* end, used_start */
-		DO(Dee_function_generator_vswap(self));                 /* used_start, end */
-		DO(Dee_function_generator_vpush_addr(self, NULL));      /* used_start, end, NULL */
+	TARGET(ASM_RANGE)                                              /* start, end */
+		DO(Dee_function_generator_vnotoneref(self, 2));            /* start, end */
+		DO(Dee_function_generator_vswap(self));                    /* end, start */
+		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* end, start, Dee_None */
+		DO(Dee_function_generator_vpush_const(self, DeeInt_Zero)); /* end, start, Dee_None, DeeInt_Zero */
+		DO(Dee_function_generator_vcoalesce(self));                /* end, used_start */
+		DO(Dee_function_generator_vswap(self));                    /* used_start, end */
+		DO(Dee_function_generator_vpush_addr(self, NULL));         /* used_start, end, NULL */
 		DO(Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3)); /* result */
-		return Dee_function_generator_voneref_noalias(self);    /* result */
+		return Dee_function_generator_voneref_noalias(self);       /* result */
 
 	TARGET(ASM_RANGE_DEF)                                                                     /* end */
 		DO(Dee_function_generator_vnotoneref(self, 1));                                       /* end */
@@ -1645,18 +1651,18 @@ do_jcc:
 		DO(Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3));         /* result */
 		return Dee_function_generator_voneref_noalias(self);                                  /* result */
 
-	TARGET(ASM_RANGE_STEP)                                      /* start, end, step */
-		DO(Dee_function_generator_vnotoneref(self, 3));         /* start, end, step */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* start, end, step, Dee_None */
-		DO(Dee_function_generator_vpush_addr(self, NULL));      /* start, end, step, Dee_None, NULL */
-		DO(Dee_function_generator_vcoalesce(self));             /* start, end, used_step */
-		DO(Dee_function_generator_vlrot(self, 3));              /* end, used_step, start */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* end, used_step, start, Dee_None */
-		DO(Dee_function_generator_vpush_addr(self, NULL));      /* end, used_step, start, Dee_None, NULL */
-		DO(Dee_function_generator_vcoalesce(self));             /* end, used_step, used_start */
-		DO(Dee_function_generator_vrrot(self, 3));              /* used_start, end, used_step */
+	TARGET(ASM_RANGE_STEP)                                         /* start, end, step */
+		DO(Dee_function_generator_vnotoneref(self, 3));            /* start, end, step */
+		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* start, end, step, Dee_None */
+		DO(Dee_function_generator_vpush_addr(self, NULL));         /* start, end, step, Dee_None, NULL */
+		DO(Dee_function_generator_vcoalesce(self));                /* start, end, used_step */
+		DO(Dee_function_generator_vlrot(self, 3));                 /* end, used_step, start */
+		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* end, used_step, start, Dee_None */
+		DO(Dee_function_generator_vpush_const(self, DeeInt_Zero)); /* end, used_step, start, Dee_None, DeeInt_Zero */
+		DO(Dee_function_generator_vcoalesce(self));                /* end, used_step, used_start */
+		DO(Dee_function_generator_vrrot(self, 3));                 /* used_start, end, used_step */
 		DO(Dee_function_generator_vcallapi(self, &DeeRange_New, VCALL_CC_OBJECT, 3)); /* result */
-		return Dee_function_generator_voneref_noalias(self);    /* result */
+		return Dee_function_generator_voneref_noalias(self);       /* result */
 
 	TARGET(ASM_RANGE_STEP_DEF)                                                                /* end, step */
 		DO(Dee_function_generator_vnotoneref(self, 2));                                       /* end, step */
@@ -2174,8 +2180,8 @@ do_jcc:
 		                                                            : (void const *)&DeeSeq_All,
 		                                   VCALL_CC_NEGINT, 1));
 		DO(Dee_function_generator_vdirect(self, 1));
-		ASSERT(MEMLOC_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->ml_vmorph));
-		Dee_function_generator_vtop(self)->ml_vmorph = MEMLOC_VMORPH_BOOL_GZ;
+		ASSERT(MEMVAL_VMORPH_ISDIRECT(Dee_function_generator_vtop(self)->mv_vmorph));
+		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 		break;
 
 	//TODO: TARGET(ASM_VARARGS_UNPACK)
@@ -2495,15 +2501,15 @@ do_jcc:
 				DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));  /* - */
 				DO(Dee_function_generator_vind(self, 0));                             /* ..., ref:value, *p_global */
 				DO(Dee_function_generator_vreg(self, NULL));                          /* ..., ref:value, old_value */
-				ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF); /* - */
-				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtop(self), instr,
+				ASSERT(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF); /* - */
+				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtopdloc(self), instr,
 				                                        mod, gid, NULL, &mod->mo_lock));
-				ASSERT(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF); /* - */
-				Dee_function_generator_vtop(self)->ml_flags &= ~MEMLOC_F_NOREF;       /* ..., ref:value, ref:old_value */
+				ASSERT(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF); /* - */
+				Dee_function_generator_vtop(self)->mv_flags &= ~MEMVAL_F_NOREF;       /* ..., ref:value, ref:old_value */
 				DO(Dee_function_generator_vswap(self));                               /* ..., ref:old_value, ref:value */
-				ASSERT(!(Dee_function_generator_vtop(self)->ml_flags & MEMLOC_F_NOREF)); /* - */
-				DO(Dee_function_generator_gmov_loc2constind(self, Dee_function_generator_vtop(self), &mod->mo_globalv[gid], 0)); /* - */
-				Dee_function_generator_vtop(self)->ml_flags |= MEMLOC_F_NOREF;        /* ..., ref:old_value, value */
+				ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF)); /* - */
+				DO(Dee_function_generator_gmov_loc2constind(self, Dee_function_generator_vtopdloc(self), (void const **)&mod->mo_globalv[gid], 0)); /* - */
+				Dee_function_generator_vtop(self)->mv_flags |= MEMVAL_F_NOREF;        /* ..., ref:old_value, value */
 				DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* - */
 				DO(Dee_function_generator_vpop(self));                                /* ..., ref:old_value */
 
@@ -2693,7 +2699,7 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 		struct Dee_memstate *state = self->fg_state;
 		Dee_lid_t lid;
 		for (lid = 0; lid < state->ms_localc; ++lid) {
-			if (state->ms_localv[lid].ml_type == MEMLOC_TYPE_UNALLOC)
+			if (Dee_memval_isunalloc(&state->ms_localv[lid]))
 				continue;
 			if (bitset_test(block->bb_locuse, lid))
 				continue;

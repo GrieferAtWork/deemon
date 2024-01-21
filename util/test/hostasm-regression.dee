@@ -1,0 +1,147 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+global final test_compile_and_run = ({
+	try {
+		import("_hostasm").test_compile_and_run;
+	} catch (...) {
+		return; /* Don't run this test if _hostasm isn't supported. */
+	}
+});
+
+function _hide(x) {
+	__asm__("" : "+X" (x));
+	return x;
+}
+
+/* Assign final values in a way that hides them from the optimizer.
+ * That way, the constant propagation system of _hostasm gets used. */
+global final myFinalTuple = _hide(Tuple);
+global final myFinalList = _hide(List);
+global final myFinalDict = _hide(Dict);
+global final myFinalRoDict = _hide(Dict.Frozen);
+global final myFinalHashSet = _hide(HashSet);
+global final myFinalRoSet = _hide(HashSet.Frozen);
+global final FOO_COMMA_BAR = _hide("foo,bar");
+global final finalGlobalNone = _hide(none);
+global final finalGlobalNone2 = _hide(none);
+global nonFinalGlobalNone = _hide(none);
+
+function hexec(expectedResult, args, func) {
+	local actualResult = test_compile_and_run(func, args);
+	assert actualResult == expectedResult;
+	assert type(actualResult) === type(expectedResult);
+}
+
+hexec(["x", "foo"], ("x",),   (a)     -> [a..., "foo"]);
+hexec(["x", "foo"], ("x",),   (a?)    -> [a..., "foo"]);
+hexec(["x", "foo"], ("x", 7), (a, b)  -> [a..., "foo"]);
+hexec(["x", "foo"], ("x", 7), (a, b?) -> [a..., "foo"]);
+
+hexec(().operator iter(), (), () -> Tuple.Iterator());
+
+hexec("Function func(x, y) called", ("x", "y"), (a, b) -> f"Function func({a}, {b}) called");
+
+//TODO:hexec(HashSet({ "a", "b", "x", "y", "z" }),        ("xyz", 7), (a, b?) -> myFinalHashSet({ "a", "b", a..., b, "y" }));
+//TODO:hexec(HashSet.Frozen({ "a", "b", "x", "y", "z" }), ("xyz", 7), (a, b?) -> myFinalHashSet.Frozen({ "a", "b", a..., b, "y" }));
+
+hexec(HashSet({ "a", "b", "xxx", "y", 7 }),        ("xxx", 7), (a, b?) -> myFinalHashSet({ "a", "b", a, b, "y" }));
+hexec(HashSet({ "a", "b", "y", 7 }),               ("a",   7), (a, b?) -> myFinalHashSet({ "a", "b", a, b, "y" }));
+hexec(HashSet.Frozen({ "a", "b", "xxx", "y", 7 }), ("xxx", 7), (a, b?) -> myFinalHashSet.Frozen({ "a", "b", a, b, "y" }));
+hexec(HashSet.Frozen({ "a", "b", "y", 7 }),        ("a",   7), (a, b?) -> myFinalHashSet.Frozen({ "a", "b", a, b, "y" }));
+hexec(HashSet.Frozen({ "a", "b", "xxx", "y", 7 }), ("xxx", 7), (a, b?) -> myFinalRoSet({ "a", "b", a, b, "y" }));
+hexec(HashSet.Frozen({ "a", "b", "y", 7 }),        ("a",   7), (a, b?) -> myFinalRoSet({ "a", "b", a, b, "y" }));
+
+hexec(Dict({ "a": 10, "b": 20, "x": 7, 7: 40 }),                   ("x",   7), (a, b?) -> myFinalDict({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+hexec(Dict({ "a": 10, "b": 20, "xxx": 30, "x": 7, 7: 40 }),        ("xxx", 7), (a, b?) -> myFinalDict({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+hexec(Dict.Frozen({ "a": 10, "b": 20, "x": 7, 7: 40 }),            ("x",   7), (a, b?) -> myFinalDict.Frozen({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+hexec(Dict.Frozen({ "a": 10, "b": 20, "xxx": 30, "x": 7, 7: 40 }), ("xxx", 7), (a, b?) -> myFinalDict.Frozen({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+hexec(Dict.Frozen({ "a": 10, "b": 20, "x": 7, 7: 40 }),            ("x",   7), (a, b?) -> myFinalRoDict({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+hexec(Dict.Frozen({ "a": 10, "b": 20, "xxx": 30, "x": 7, 7: 40 }), ("xxx", 7), (a, b?) -> myFinalRoDict({ "a": 10, "b": 20, a: 30, b: 40, "x": b }));
+
+hexec(["x", 10, 20, "y", 30, 40, "x", "y"], ("x", "y"), (a, b?) -> {
+	local l = myFinalList({ a, 10, 20, b, 30, 40 });
+	l.append(a);
+	l.append(b);
+	return l;
+});
+hexec(["x", 10, 20, "y", 30, 40, "x", "y"], ("x", "y"), (a, b?) -> {
+	local l = [a, 10, 20, b, 30, 40];
+	l.append(a);
+	l.append(b);
+	return l;
+});
+
+hexec("foo,bar".split(","), (), () -> FOO_COMMA_BAR.split(","));
+
+hexec("(a)", ("a", "b"), (a, b) -> {
+	local result = "(";
+	if (nonFinalGlobalNone === finalGlobalNone2) {
+		result += a;
+	} else {
+		result += b;
+	}
+	result += ")";
+	return result;
+});
+
+/* FIXME: assembler.c(1346) : Assertion failed : jd->jd_from < block->bb_deemon_end */
+//FIXME:hexec("(a)", ("a", "b"), (a, b) -> {
+//FIXME:	local result = "(";
+//FIXME:	if (finalGlobalNone === finalGlobalNone2) {
+//FIXME:		result += a;
+//FIXME:	} else {
+//FIXME:		result += b;
+//FIXME:	}
+//FIXME:	result += ")";
+//FIXME:	return result;
+//FIXME:});
+
+hexec("0123456", (7,), (a) -> {
+	local result = "";
+	for (local x: [:a])
+		result += x;
+	return result;
+});
+
+hexec("456", (4, 7), (a, b) -> {
+	local result = "";
+	for (local x: [a:b])
+		result += x;
+	return result;
+});
+
+hexec("fooxx7", ("x", 7), (a, b) -> {
+	local x = "foo";
+	do {
+		x += a;
+	} while (x == "foox");
+	return x.__add__(b);
+});
+hexec("fooxx7", ("xx", 7), (a, b) -> {
+	local x = "foo";
+	do {
+		x += a;
+	} while (x == "foox");
+	return x.__add__(b);
+});

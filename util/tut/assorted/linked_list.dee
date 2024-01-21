@@ -137,7 +137,7 @@ global class LinkedList: Sequence from deemon {
 
 		/* If the list contains itself, then the GC may choose to clear
 		 * some of our member table in order to resolve the reference loop.
-		 * For that reason, check if that happend by seeing if `m_front'
+		 * For that reason, check if that happened by seeing if `m_front'
 		 * is still bound and exit if that is the case. */
 		if (!bound(m_front))
 			return;

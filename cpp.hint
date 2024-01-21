@@ -1601,3 +1601,4 @@
 
 #define Dee_memstate_foreach(...) for(;;)
 #define Dee_memstate_foreach_end
+#define Dee_memval_foreach_loc(...) for(;;)
