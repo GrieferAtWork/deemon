@@ -291,12 +291,12 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
                         struct Dee_memloc *loc,
-                        struct Dee_memloc const *__restrict other_loc) {
+                        ptrdiff_t val_offset) {
 	Dee_host_register_t regno;
-	regno = Dee_memstate_hregs_find_unused(self, true);
 	Dee_memstate_decrinuse_for_memloc(self, loc);
+	regno = Dee_memstate_hregs_find_unused(self, true);
 	if (regno < HOST_REGISTER_COUNT) {
-		Dee_memloc_init_hreg(loc, regno, other_loc->ml_off);
+		Dee_memloc_init_hreg(loc, regno, val_offset);
 		Dee_memstate_incrinuse(self, regno);
 		self->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
 	} else {
@@ -305,8 +305,25 @@ Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
 		cfa_offset = Dee_memstate_hstack_find(self, NULL, HOST_SIZEOF_POINTER);
 		if (cfa_offset == (uintptr_t)-1)
 			cfa_offset = Dee_memstate_hstack_alloca(self, HOST_SIZEOF_POINTER);
-		Dee_memloc_init_hstackind(loc, cfa_offset, other_loc->ml_off);
+		Dee_memloc_init_hstackind(loc, cfa_offset, val_offset);
 	}
+}
+
+PRIVATE NONNULL((1, 2, 3)) bool DCALL
+Dee_memloc_makewritable(struct Dee_memstate *__restrict self,
+                        struct Dee_memloc *loc) {
+	switch (loc->ml_adr.ma_typ) {
+	case MEMADR_TYPE_HREG: /* Already writable */
+		break;
+	case MEMADR_TYPE_HSTACKIND:
+		if ((intptr_t)loc->ml_adr.ma_val.v_cfa >= 0)
+			break; /* Already writable */
+		ATTR_FALLTHROUGH
+	default:
+		Dee_memloc_makedistinct(self, loc, 0);
+		return true;
+	}
+	return false;
 }
 
 PRIVATE NONNULL((1, 2, 3, 4)) bool DCALL
@@ -315,95 +332,102 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
                          struct Dee_memloc *loc,
                          struct Dee_memloc const *other_loc) {
 	bool result = false;
-
-	/* Quick check: are locations identical? */
-	if (!Dee_memloc_sameloc(loc, other_loc)) {
-		switch (loc->ml_adr.ma_typ) {
+	switch (loc->ml_adr.ma_typ) {
 	
-		case MEMADR_TYPE_HREG:
+	case MEMADR_TYPE_HREG:
+		break;
+
+	case MEMADR_TYPE_HSTACKIND:
+		if ((intptr_t)loc->ml_adr.ma_val.v_cfa >= 0)
+			break; /* Normal stack location */
+		ATTR_FALLTHROUGH
+	default: {
+		/* On one side it's an argument or a constant, and on the other
+		 * side it's something else.
+		 * In this case, need to convert to a register/stack location. */
+
+		/* If the location describe by `other' isn't already in use in `state',
+		 * then use *it* as-it. That way, we can reduce the necessary number of
+		 * memory state transformation! */
+		switch (other_loc->ml_adr.ma_typ) {
+	
+		case MEMADR_TYPE_HSTACKIND:
+			if ((intptr_t)other_loc->ml_adr.ma_val.v_cfa < 0)
+				break; /* Out-of-band location (e.g. true arguments on i386) */
+			if (!Dee_memstate_hstack_isused(self, Dee_memloc_hstackind_getcfa(other_loc))) {
+				uintptr_t min_cfa_offset;
+				Dee_memstate_decrinuse_for_memloc(self, loc);
+				Dee_memloc_init_hstackind(loc,
+				                          Dee_memloc_hstackind_getcfa(other_loc),
+				                          Dee_memloc_hstackind_getvaloff(other_loc));
+				min_cfa_offset = other_loc->ml_adr.ma_val.v_cfa;
+#ifndef HOSTASM_STACK_GROWS_DOWN
+				min_cfa_offset += HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+				if (self->ms_host_cfa_offset < min_cfa_offset)
+					self->ms_host_cfa_offset = min_cfa_offset;
+				goto did_runtime_value_merge;
+			}
 			break;
 
-		case MEMADR_TYPE_HSTACKIND:
-			if ((intptr_t)other_loc->ml_adr.ma_val.v_cfa >= 0)
-				break; /* Normal stack location */
-			ATTR_FALLTHROUGH
-		default: {
-			/* On one side it's an argument or a constant, and on the other
-			 * side it's something else.
-			 * In this case, need to convert to a register/stack location. */
-
-			/* If the location describe by `other' isn't already in use in `state',
-			 * then use *it* as-it. That way, we can reduce the necessary number of
-			 * memory state transformation! */
-			switch (other_loc->ml_adr.ma_typ) {
-	
-			case MEMADR_TYPE_HSTACKIND:
-				if ((intptr_t)other_loc->ml_adr.ma_val.v_cfa < 0)
-					break; /* Out-of-band location (e.g. true arguments on i386) */
-				if (!Dee_memstate_hstack_isused(self, other_loc->ml_adr.ma_val.v_cfa)) {
-					uintptr_t min_cfa_offset;
-					Dee_memstate_decrinuse_for_memloc(self, loc);
-					Dee_memloc_init_hstackind(loc,
-					                          other_loc->ml_adr.ma_val.v_cfa,
-					                          other_loc->ml_off);
-					min_cfa_offset = other_loc->ml_adr.ma_val.v_cfa;
-#ifndef HOSTASM_STACK_GROWS_DOWN
-					min_cfa_offset += HOST_SIZEOF_POINTER;
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
-					if (self->ms_host_cfa_offset < min_cfa_offset)
-						self->ms_host_cfa_offset = min_cfa_offset;
-					goto did_runtime_value_merge;
-				}
-				break;
-
-			case MEMADR_TYPE_HREG:
-				if (!Dee_memstate_hregs_isused(self, other_loc->ml_adr.ma_reg)) {
-					Dee_memstate_decrinuse_for_memloc(self, loc);
-					Dee_memloc_init_hreg(loc, other_loc->ml_adr.ma_reg, other_loc->ml_off);
-					Dee_memstate_incrinuse(self, other_loc->ml_adr.ma_reg);
-					goto did_runtime_value_merge;
-				}
-				break;
-	
-			default:
-				break;
+		case MEMADR_TYPE_HREG:
+			if (!Dee_memstate_hregs_isused(self, Dee_memloc_hreg_getreg(other_loc))) {
+				Dee_memstate_decrinuse_for_memloc(self, loc);
+				Dee_memstate_incrinuse(self, Dee_memloc_hreg_getreg(other_loc));
+				*loc = *other_loc;
+				goto did_runtime_value_merge;
 			}
-			Dee_memloc_makedistinct(self, loc, other_loc);
-did_runtime_value_merge:
-			result = true;
-		}	break;
+			break;
 	
+		default:
+			break;
 		}
+		Dee_memloc_makedistinct(self, loc, Dee_memloc_getoff(other_loc));
+did_runtime_value_merge:
+		result = true;
+	}	break;
 
-		/* Even if both sides have it in-register/on-stack, must still
-		 * ensure that all aliases in `self' also appear in `other'.
-		 * Any alias that doesn't must become a distinct memory location. */
-		{
-			size_t i;
-			for (i = 0; i < self->ms_localc; ++i) {
-				struct Dee_memval *my_alias = &self->ms_localv[i];
-				struct Dee_memval const *ot_alias = &other_state->ms_localv[i];
-				if (loc == &my_alias->mv_loc0) /* TODO: Support for mem values with multiple locations */
-					continue;
+	}
 
-				/* If it's an alias in our state, but not in the other, then it must become distinct */
-				if (Dee_memloc_sameloc(loc, &my_alias->mv_loc0) &&
-				    !Dee_memloc_sameloc(other_loc, &ot_alias->mv_loc0)) {
-					Dee_memloc_makedistinct(self, &my_alias->mv_loc0, &ot_alias->mv_loc0);
-					result = true;
-				}
+	/* Even if both sides have it in-register/on-stack, must still
+	 * ensure that all aliases in `self' also appear in `other'.
+	 * Any alias that doesn't must become a distinct memory location. */
+	{
+		unsigned int kind;
+		for (kind = 0; kind < 2; ++kind) {
+			Dee_lid_t i, valc = self->ms_localc;
+			struct Dee_memval *my_valv = self->ms_localv;
+			struct Dee_memval const *ot_valv = other_state->ms_localv;
+			if (kind != 0) {
+				valc = self->ms_stackc;
+				my_valv = self->ms_stackv;
+				ot_valv = other_state->ms_stackv;
 			}
-			for (i = 0; i < self->ms_stackc; ++i) {
-				struct Dee_memval *my_alias = &self->ms_stackv[i];
-				struct Dee_memval const *ot_alias = &other_state->ms_stackv[i];
-				if (loc == &my_alias->mv_loc0) /* TODO: Support for mem values with multiple locations */
-					continue;
-
-				/* If it's an alias in our state, but not in the other, then it must become distinct */
-				if (Dee_memloc_sameloc(loc, &my_alias->mv_loc0) &&
-				    !Dee_memloc_sameloc(other_loc, &ot_alias->mv_loc0)) {
-					Dee_memloc_makedistinct(self, &my_alias->mv_loc0, &ot_alias->mv_loc0);
-					result = true;
+			for (i = 0; i < valc; ++i) {
+				Dee_lid_t loci, my_alias_locc, ot_alias_locc;
+				struct Dee_memloc *my_alias_locv;
+				struct Dee_memloc const *ot_alias_locv;
+				struct Dee_memval *my_alias = &my_valv[i];
+				struct Dee_memval const *ot_alias = &ot_valv[i];
+				if (my_alias->mv_vmorph != ot_alias->mv_vmorph)
+					continue; /* Handled by caller. */
+				my_alias_locc = Dee_memval_getlocc(my_alias);
+				ot_alias_locc = Dee_memval_getlocc(ot_alias);
+				if (my_alias_locc != ot_alias_locc)
+					continue; /* Handled by caller. */
+				my_alias_locv = Dee_memval_getlocv(my_alias);
+				ot_alias_locv = Dee_memval_getlocv(ot_alias);
+				for (loci = 0; loci < my_alias_locc; ++loci) {
+					struct Dee_memloc *my_alias_loc       = &my_alias_locv[loci];
+					struct Dee_memloc const *ot_alias_loc = &ot_alias_locv[loci];
+					if (loc == my_alias_loc)
+						continue;
+					/* If it's an alias in our state, but not in the other, then it must become distinct */
+					if (Dee_memloc_sameloc(loc, my_alias_loc) &&
+					    !Dee_memloc_sameloc(other_loc, ot_alias_loc)) {
+						Dee_memloc_makedistinct(self, my_alias_loc, Dee_memloc_getoff(ot_alias_loc));
+						result = true;
+					}
 				}
 			}
 		}
@@ -426,12 +450,6 @@ Dee_memval_constrainwith(struct Dee_memstate *__restrict self,
 		result = true;
 	}
 
-	/* If the value type differs between the 2 sides, then default to a direct value. */
-	if (val->mv_vmorph != other_val->mv_vmorph && val->mv_vmorph != MEMVAL_VMORPH_DIRECT) {
-		val->mv_vmorph = MEMVAL_VMORPH_DIRECT;
-		result = true;
-	}
-
 	/* For local variables, merge the binding state of the variable. */
 	if (is_local) {
 		uint16_t nw_bound;
@@ -447,16 +465,54 @@ Dee_memval_constrainwith(struct Dee_memstate *__restrict self,
 		}
 	}
 
-	if (MEMVAL_VMORPH_ISDIRECT(val->mv_vmorph)) {
-		result |= Dee_memloc_constrainwith(self, other_state, &val->mv_loc0, &other_val->mv_loc0);
-
-		/* Merge compile-time known location typing. */
-		if (val->mv_valtyp != NULL) {
-			DeeTypeObject *other_type = Dee_memval_typeof(other_val);
-			if (val->mv_valtyp != other_type) {
-				/* Location has multiple/unknown object types. */
-				val->mv_valtyp = NULL;
+	/* If the value differs between the 2 sides, then default to a direct value. */
+	if (!Dee_memval_sameval(val, other_val)) {
+		if (val->mv_vmorph == other_val->mv_vmorph) {
+			size_t i;
+			size_t my_locc = Dee_memval_getlocc(val);
+			size_t ot_locc = Dee_memval_getlocc(other_val);
+			struct Dee_memloc *my_locv;
+			struct Dee_memloc const *ot_locv;
+			if (my_locc != ot_locc)
+				goto incompatible_morph;
+			my_locv = Dee_memval_getlocv(val);
+			ot_locv = Dee_memval_getlocv(other_val);
+			for (i = 0; i < my_locc; ++i) {
+				struct Dee_memloc *my_loc = &my_locv[i];
+				struct Dee_memloc const *ot_loc = &ot_locv[i];
+				result |= Dee_memloc_constrainwith(self, other_state, my_loc, ot_loc);
+			}
+		} else {
+incompatible_morph:
+			if (val->mv_vmorph != MEMVAL_VMORPH_DIRECT) {
+				if (!Dee_memval_isdirect(val)) {
+					/* Make "val" into a distinct, writable location */
+					Dee_memstate_decrinuse_for_memval(self, val);
+					_Dee_memval_fini_without_DBG_memset(val);
+					Dee_memloc_init_undefined(&val->mv_loc0);
+					val->mv_vmorph = MEMVAL_VMORPH_DIRECT;
+					Dee_memloc_makedistinct(self, Dee_memval_direct_getloc(val), 0);
+				}
+				val->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 				result = true;
+			}
+			if (Dee_memval_isdirect(other_val)) {
+				result |= Dee_memloc_constrainwith(self, other_state,
+				                                   Dee_memval_direct_getloc(val),
+				                                   Dee_memval_direct_getloc(other_val));
+			} else {
+				result |= Dee_memloc_makewritable(self, Dee_memval_direct_getloc(val));
+			}
+		}
+		if (Dee_memval_isdirect(val)) {
+			/* Merge compile-time known location typing. */
+			if (Dee_memval_direct_typeof(val) != NULL) {
+				DeeTypeObject *other_type = Dee_memval_typeof(other_val);
+				if (Dee_memval_direct_typeof(val) != other_type) {
+					/* Location has multiple/unknown object types. */
+					Dee_memval_direct_settypeof(val, NULL);
+					result = true;
+				}
 			}
 		}
 	}

@@ -255,6 +255,7 @@ Dee_function_generator_vmorph_no_constrain_equivalences(struct Dee_function_gene
 	struct Dee_memaction *mactv;
 	struct Dee_memstate *old_state;
 	struct Dee_memstate const *saved_fg_state_hstack_res;
+	unsigned int kind;
 
 	/* Fast-pass: if they're literally the same states, then we've got nothing to do! */
 	if (self->fg_state == new_state)
@@ -303,35 +304,30 @@ Dee_function_generator_vmorph_no_constrain_equivalences(struct Dee_function_gene
 	old_state = self->fg_state;
 again_search_changes:
 	mactc = 0;
-	for (i = 0; i < old_state->ms_stackc; ++i) {
-		struct Dee_memval *old_loc = &old_state->ms_stackv[i];
-		struct Dee_memval const *new_loc = &new_state->ms_stackv[i];
-		if unlikely(old_loc->mv_vmorph != new_loc->mv_vmorph) {
-			ASSERT(new_loc->mv_vmorph == MEMVAL_VMORPH_DIRECT);
-			if unlikely(Dee_function_generator_gdirect(self, old_loc))
-				goto err;
-			ASSERT(Dee_memval_isdirect(old_loc));
-			old_loc->mv_vmorph = MEMVAL_VMORPH_DIRECT;
-			goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
+	for (kind = 0; kind < 2; ++kind) {
+		Dee_lid_t valc = old_state->ms_localc;
+		struct Dee_memval *old_valv = old_state->ms_localv;
+		struct Dee_memval const *new_valv = new_state->ms_localv;
+		if (kind != 0) {
+			valc = old_state->ms_stackc;
+			old_valv = old_state->ms_stackv;
+			new_valv = new_state->ms_stackv;
 		}
-		if (!Dee_memval_sameval(old_loc, new_loc)) {
-			ASSERT(Dee_memval_hasloc0(old_loc));
-			++mactc;
-		}
-	}
-	for (i = 0; i < old_state->ms_localc; ++i) {
-		struct Dee_memval *old_loc = &old_state->ms_localv[i];
-		struct Dee_memval const *new_loc = &new_state->ms_localv[i];
-		if unlikely(old_loc->mv_vmorph != new_loc->mv_vmorph) {
-			ASSERT(new_loc->mv_vmorph == MEMVAL_VMORPH_DIRECT);
-			if unlikely(Dee_function_generator_gdirect(self, old_loc))
-				goto err;
-			ASSERT(Dee_memval_isdirect(old_loc));
-			old_loc->mv_vmorph = MEMVAL_VMORPH_DIRECT;
-			goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
-		}
-		if (!Dee_memval_sameval(old_loc, new_loc)) {
-			ASSERT(Dee_memval_hasloc0(old_loc));
+		for (i = 0; i < valc; ++i) {
+			struct Dee_memval *oldval = &old_valv[i];
+			struct Dee_memval const *newval = &new_valv[i];
+			if (Dee_memval_sameval(oldval, newval))
+				continue;
+			if unlikely(oldval->mv_vmorph != newval->mv_vmorph) {
+				ASSERT(newval->mv_vmorph == MEMVAL_VMORPH_DIRECT);
+				if unlikely(Dee_function_generator_gdirect(self, oldval))
+					goto err;
+				ASSERT(Dee_memval_isdirect(oldval));
+				oldval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
+				goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
+			}
+			ASSERT(Dee_memval_hasloc0(oldval)); /* TODO: Support for mem values with multiple locations */
+			ASSERT(Dee_memval_hasloc0(newval)); /* TODO: Support for mem values with multiple locations */
 			++mactc;
 		}
 	}
@@ -348,23 +344,25 @@ again_search_changes:
 	if unlikely(!mactv)
 		goto err;
 	j = 0;
-	for (i = 0; i < old_state->ms_stackc; ++i) {
-		struct Dee_memval *old_loc = &old_state->ms_stackv[i];
-		struct Dee_memval const *new_loc = &new_state->ms_stackv[i];
-		if (!Dee_memval_sameval(old_loc, new_loc)) {
-			ASSERT(j < mactc);
-			mactv[j].ma_oldloc = old_loc;
-			mactv[j].ma_newloc = new_loc;
-			++j;
+	for (kind = 0; kind < 2; ++kind) {
+		Dee_lid_t valc = old_state->ms_localc;
+		struct Dee_memval *old_valv = old_state->ms_localv;
+		struct Dee_memval const *new_valv = new_state->ms_localv;
+		if (kind != 0) {
+			valc = old_state->ms_stackc;
+			old_valv = old_state->ms_stackv;
+			new_valv = new_state->ms_stackv;
 		}
-	}
-	for (i = 0; i < old_state->ms_localc; ++i) {
-		struct Dee_memval *old_loc = &old_state->ms_localv[i];
-		struct Dee_memval const *new_loc = &new_state->ms_localv[i];
-		if (!Dee_memval_sameval(old_loc, new_loc)) {
+		for (i = 0; i < valc; ++i) {
+			struct Dee_memval *oldval = &old_valv[i];
+			struct Dee_memval const *newval = &new_valv[i];
+			if (Dee_memval_sameval(oldval, newval))
+				continue;
+			ASSERT(Dee_memval_hasloc0(oldval)); /* TODO: Support for mem values with multiple locations */
+			ASSERT(Dee_memval_hasloc0(newval)); /* TODO: Support for mem values with multiple locations */
 			ASSERT(j < mactc);
-			mactv[j].ma_oldloc = old_loc;
-			mactv[j].ma_newloc = new_loc;
+			mactv[j].ma_oldloc = oldval;
+			mactv[j].ma_newloc = newval;
 			++j;
 		}
 	}

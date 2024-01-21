@@ -729,8 +729,8 @@ Dee_memequivs_movevalue_reg2regind(struct Dee_memequivs *__restrict self,
 
 struct Dee_memval {
 	/* High-level value (encapsulates 1..n Dee_memloc that may be morphed into a deemon value) */
-	struct Dee_memloc mv_loc0;   /* Base location */
-	uint8_t           mv_vmorph; /* Location value type (set of `MEMVAL_VMORPH_*') */
+	struct Dee_memloc mv_loc0;   /* [valid_if(Dee_memval_hasloc0(.))] Base location */
+	uint8_t           mv_vmorph; /* Location value type (one of `MEMVAL_VMORPH_*') */
 	uint8_t           mv_flags;  /* Location flags (set of `MEMVAL_F_*') */
 	uint8_t          _mv_pad[sizeof(void *) - 2]; /* ... */
 	DeeTypeObject    *mv_valtyp; /* [0..1][valid_if(MEMVAL_VMORPH_ISDIRECT(mv_vmorph))]
@@ -741,6 +741,7 @@ struct Dee_memval {
 };
 
 
+#define _Dee_memval_fini_without_DBG_memset(self) (void)0
 #define Dee_memval_fini(self) (void)0
 #define Dee_memval_initcopy(self, other) \
 	(void)(*(self) = *(other))
@@ -771,7 +772,7 @@ struct Dee_memval {
 #define Dee_memval_init_constobj(self, value)  Dee_memval_init_const(self, value, Dee_TYPE(value))
 
 
-#define Dee_memval_hasloc0(self)              1 /* TODO: Not all morphs have loc0 */
+#define Dee_memval_hasloc0(self)              true /* TODO: Support for mem values with multiple locations */
 #define Dee_memval_getloc0(self)              (&(self)->mv_loc0)
 #define Dee_memval_loc0_getloc(self)          (&(self)->mv_loc0)
 #define Dee_memval_loc0_gettyp(self)          Dee_memloc_gettyp(Dee_memval_loc0_getloc(self))
@@ -832,6 +833,8 @@ Dee_memval_typeof(struct Dee_memval const *self);
 		;                                            \
 	else
 
+#define Dee_memval_getlocc(self) 1                  /* TODO: Support for mem values with multiple locations */
+#define Dee_memval_getlocv(self) (&(self)->mv_loc0) /* TODO: Support for mem values with multiple locations */
 
 
 
