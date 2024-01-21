@@ -1214,7 +1214,7 @@ _Dee_function_generator_gloc_no_Pax(struct Dee_function_generator *__restrict se
                                     struct Dee_memloc *__restrict loc) {
 	if (loc->ml_adr.ma_typ == MEMADR_TYPE_HREG &&
 	    loc->ml_adr.ma_reg == HOST_REGISTER_PAX) {
-		/* We explicity *need* to use a register than `%Pax' here! */
+		/* We explicity *need* to use a register other than `%Pax' here! */
 		Dee_host_register_t not_these[2], lockreg;
 		struct Dee_memstate *state;
 		not_these[0] = HOST_REGISTER_PAX;

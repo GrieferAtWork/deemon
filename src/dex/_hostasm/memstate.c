@@ -333,7 +333,7 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
                          struct Dee_memloc const *other_loc) {
 	bool result = false;
 	switch (loc->ml_adr.ma_typ) {
-	
+
 	case MEMADR_TYPE_HREG:
 		break;
 
@@ -404,7 +404,7 @@ did_runtime_value_merge:
 				ot_valv = other_state->ms_stackv;
 			}
 			for (i = 0; i < valc; ++i) {
-				Dee_lid_t loci, my_alias_locc, ot_alias_locc;
+				size_t loci, my_alias_locc, ot_alias_locc;
 				struct Dee_memloc *my_alias_locv;
 				struct Dee_memloc const *ot_alias_locv;
 				struct Dee_memval *my_alias = &my_valv[i];

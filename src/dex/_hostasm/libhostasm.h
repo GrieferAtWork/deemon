@@ -828,9 +828,9 @@ Dee_memval_typeof(struct Dee_memval const *self);
 
 
 /* Enumerate all memory locations used by "self" */
-#define Dee_memval_foreach_loc(loc, self)            \
-	if (((loc) = Dee_memval_direct_getloc(self), 0)) \
-		;                                            \
+#define Dee_memval_foreach_loc(loc, self)      \
+	if (((loc) = Dee_memval_getloc0(self), 0)) \
+		;                                      \
 	else
 
 #define Dee_memval_getlocc(self) 1                  /* TODO: Support for mem values with multiple locations */

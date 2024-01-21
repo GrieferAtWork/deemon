@@ -113,7 +113,7 @@ hexec("(a)", ("a", "b"), (a, b) -> {
 //FIXME:	} else {
 //FIXME:		result += b;
 //FIXME:	}
-//FIXME:	result += ")";
+//FIXME:	result += ")"; // Do something after the if, so deemon doesn't inline the return
 //FIXME:	return result;
 //FIXME:});
 
