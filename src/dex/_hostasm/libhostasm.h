@@ -2205,6 +2205,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hreg(struct D
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hregind(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t ind_delta, ptrdiff_t val_delta); /* *(%regno + ind_delta) + val_delta (MEMOBJ_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset);                                                 /* (MEMOBJ_F_NOREF) */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta);                         /* (MEMOBJ_F_NOREF) */
+#define Dee_function_generator_vpush_none(self)           Dee_function_generator_vpush_const_(self, Dee_None)
 #define Dee_function_generator_vpush_const(self, value)   Dee_function_generator_vpush_const_(self, (DeeObject *)Dee_REQUIRES_OBJECT(value))
 #define Dee_function_generator_vpush_NULL(self)           Dee_function_generator_vpush_addr(self, NULL)
 #define Dee_function_generator_vpush_imm8(self, imm8)     Dee_function_generator_vpush_addr(self, (void *)(uintptr_t)(uint8_t)(imm8))

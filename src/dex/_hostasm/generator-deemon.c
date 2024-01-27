@@ -855,7 +855,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		__IF0 { TARGET(ASM16_ADJSTACK) delta = (int16_t)UNALIGNED_GETLE16(instr + 2); }
 		if (delta > 0) {
 			do {
-				DO(Dee_function_generator_vpush_const(self, Dee_None));
+				DO(Dee_function_generator_vpush_none(self));
 			} while (--delta > 0);
 		} else if (delta < 0) {
 			return Dee_function_generator_vpopmany(self, (Dee_vstackaddr_t)(-delta));
@@ -868,7 +868,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vpop_ulocal(self, UNALIGNED_GETLE16(instr + 2));
 
 	TARGET(ASM_PUSH_NONE)
-		return Dee_function_generator_vpush_const(self, Dee_None);
+		return Dee_function_generator_vpush_none(self);
 	TARGET(ASM_PUSH_THIS_MODULE)
 		return Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code->co_module);
 	TARGET(ASM_PUSH_THIS_FUNCTION)
@@ -927,7 +927,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vpush_ulocal(self, instr, UNALIGNED_GETLE16(instr + 2));
 
 	TARGET(ASM_RET_NONE)
-		DO(Dee_function_generator_vpush_const(self, Dee_None));
+		DO(Dee_function_generator_vpush_none(self));
 		ATTR_FALLTHROUGH
 	TARGET(ASM_RET)
 		return Dee_function_generator_vret(self);
@@ -1632,7 +1632,7 @@ do_jcc:
 	TARGET(ASM_RANGE)                                              /* start, end */
 		DO(Dee_function_generator_vnotoneref(self, 2));            /* start, end */
 		DO(Dee_function_generator_vswap(self));                    /* end, start */
-		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* end, start, Dee_None */
+		DO(Dee_function_generator_vpush_none(self));    /* end, start, Dee_None */
 		DO(Dee_function_generator_vpush_const(self, DeeInt_Zero)); /* end, start, Dee_None, DeeInt_Zero */
 		DO(Dee_function_generator_vcoalesce(self));                /* end, used_start */
 		DO(Dee_function_generator_vswap(self));                    /* used_start, end */
@@ -1652,11 +1652,11 @@ do_jcc:
 
 	TARGET(ASM_RANGE_STEP)                                         /* start, end, step */
 		DO(Dee_function_generator_vnotoneref(self, 3));            /* start, end, step */
-		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* start, end, step, Dee_None */
+		DO(Dee_function_generator_vpush_none(self));    /* start, end, step, Dee_None */
 		DO(Dee_function_generator_vpush_addr(self, NULL));         /* start, end, step, Dee_None, NULL */
 		DO(Dee_function_generator_vcoalesce(self));                /* start, end, used_step */
 		DO(Dee_function_generator_vlrot(self, 3));                 /* end, used_step, start */
-		DO(Dee_function_generator_vpush_const(self, Dee_None));    /* end, used_step, start, Dee_None */
+		DO(Dee_function_generator_vpush_none(self));    /* end, used_step, start, Dee_None */
 		DO(Dee_function_generator_vpush_const(self, DeeInt_Zero)); /* end, used_step, start, Dee_None, DeeInt_Zero */
 		DO(Dee_function_generator_vcoalesce(self));                /* end, used_step, used_start */
 		DO(Dee_function_generator_vrrot(self, 3));                 /* used_start, end, used_step */
@@ -1665,7 +1665,7 @@ do_jcc:
 
 	TARGET(ASM_RANGE_STEP_DEF)                                                                /* end, step */
 		DO(Dee_function_generator_vnotoneref(self, 2));                                       /* end, step */
-		DO(Dee_function_generator_vpush_const(self, Dee_None));                               /* end, step, Dee_None */
+		DO(Dee_function_generator_vpush_none(self));                               /* end, step, Dee_None */
 		DO(Dee_function_generator_vpush_addr(self, NULL));                                    /* end, step, Dee_None, NULL */
 		DO(Dee_function_generator_vcoalesce(self));                                           /* end, used_step */
 		DO(Dee_function_generator_vswap(self));                                               /* used_step, end */
@@ -1762,11 +1762,11 @@ do_jcc:
 		return Dee_function_generator_vop(self, OPERATOR_GETRANGE, 3, VOP_F_PUSHRES);
 
 	TARGET(ASM_GETRANGE_PN)                                     /* seq, start */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, start, end */
+		DO(Dee_function_generator_vpush_none(self)); /* seq, start, end */
 		return Dee_function_generator_vop(self, OPERATOR_GETRANGE, 3, VOP_F_PUSHRES);
 
 	TARGET(ASM_GETRANGE_NP)                                     /* seq, end */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, end, begin */
+		DO(Dee_function_generator_vpush_none(self)); /* seq, end, begin */
 		DO(Dee_function_generator_vswap(self));                 /* seq, begin, end */
 		return Dee_function_generator_vop(self, OPERATOR_GETRANGE, 3, VOP_F_PUSHRES);
 
@@ -1786,7 +1786,7 @@ do_jcc:
 			DO(Dee_function_generator_vpush_const(self, intval)); /* seq, begin, end */
 			break;
 		case ASM_GETRANGE_NI:                                       /* seq */
-			DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, begin */
+			DO(Dee_function_generator_vpush_none(self)); /* seq, begin */
 			DO(Dee_function_generator_vpush_const(self, intval));   /* seq, begin, end */
 			break;
 		case ASM_GETRANGE_IP:                                     /* seq, end */
@@ -1795,7 +1795,7 @@ do_jcc:
 			break;
 		case ASM_GETRANGE_IN:                                       /* seq */
 			DO(Dee_function_generator_vpush_const(self, intval));   /* seq, begin */
-			DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, begin, end */
+			DO(Dee_function_generator_vpush_none(self)); /* seq, begin, end */
 			break;
 		default: __builtin_unreachable();
 		}
@@ -1828,11 +1828,11 @@ do_jcc:
 		return Dee_function_generator_vop(self, OPERATOR_SETRANGE, 4, VOP_F_NORMAL);
 
 	TARGET(ASM_SETRANGE_PN)
-		DO(Dee_function_generator_vpush_const(self, Dee_None));
+		DO(Dee_function_generator_vpush_none(self));
 		return Dee_function_generator_vop(self, OPERATOR_SETRANGE, 3, VOP_F_NORMAL);
 
 	TARGET(ASM_SETRANGE_NP)
-		DO(Dee_function_generator_vpush_const(self, Dee_None));
+		DO(Dee_function_generator_vpush_none(self));
 		DO(Dee_function_generator_vswap(self));
 		return Dee_function_generator_vop(self, OPERATOR_SETRANGE, 3, VOP_F_NORMAL);
 
@@ -1853,7 +1853,7 @@ do_jcc:
 			DO(Dee_function_generator_vswap(self));               /* seq, begin, end, value */
 			break;
 		case ASM_SETRANGE_NI:                                       /* seq, value */
-			DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, value, begin */
+			DO(Dee_function_generator_vpush_none(self)); /* seq, value, begin */
 			DO(Dee_function_generator_vpush_const(self, intval));   /* seq, value, begin, end */
 			DO(Dee_function_generator_vlrot(self, 3));              /* seq, begin, end, value */
 			break;
@@ -1863,7 +1863,7 @@ do_jcc:
 			break;
 		case ASM_SETRANGE_IN:                                       /* seq, value */
 			DO(Dee_function_generator_vpush_const(self, intval));   /* seq, value, begin */
-			DO(Dee_function_generator_vpush_const(self, Dee_None)); /* seq, value, begin, end */
+			DO(Dee_function_generator_vpush_none(self)); /* seq, value, begin, end */
 			DO(Dee_function_generator_vlrot(self, 3));              /* seq, begin, end, value */
 			break;
 		default: __builtin_unreachable();

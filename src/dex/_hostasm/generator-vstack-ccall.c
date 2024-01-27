@@ -372,7 +372,7 @@ PRIVATE struct Dee_ccall_optimization tpconst cca_Sequence[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Mapping_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	if (argc < 2)
-		DO(Dee_function_generator_vpush_const(self, Dee_None));
+		DO(Dee_function_generator_vpush_none(self));
 	return Dee_function_generator_vopgetitemdef(self);
 err:
 	return -1;
@@ -389,7 +389,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	if unlikely(!map_type)
 		return 1; /* Shouldn't happen since we only get called when types are known... */
 	if (argc < 2)
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* map, key, value */
+		DO(Dee_function_generator_vpush_none(self)); /* map, key, value */
 	nsi = DeeType_NSI(map_type);
 	if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_setdefault) {
 		DO(Dee_function_generator_vnotoneref(self, 2));                                  /* this, key, value */
@@ -481,7 +481,7 @@ cca_List_append(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		--argc;
 	}
 	DO(Dee_function_generator_vpop(self));                     /* N/A */
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -505,7 +505,7 @@ cca_List_extend(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1)); /* this, seq */
 		DO(Dee_function_generator_vcallapi(self, &DeeList_AppendSequence, VCALL_CC_INT, 2)); /* N/A */
 	}
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -519,7 +519,7 @@ cca_List_insert(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 	DO(Dee_function_generator_vswap(self));            /* this, uint:index, item */
 	DO(Dee_function_generator_vnotoneref_at(self, 1)); /* this, uint:index, item */
 	DO(Dee_function_generator_vcallapi(self, &DeeList_Insert, VCALL_CC_INT, 3)); /* N/A */
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -545,7 +545,7 @@ cca_List_insertall(struct Dee_function_generator *__restrict self, Dee_vstackadd
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1)); /* this, uint:index, seq */
 		DO(Dee_function_generator_vcallapi(self, &DeeList_InsertSequence, VCALL_CC_INT, 3)); /* N/A */
 	}
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -599,7 +599,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_List_clear(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	(void)argc;
 	DO(Dee_function_generator_vcallapi(self, &DeeList_Clear, VCALL_CC_VOID, 1)); /* N/A */
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -637,7 +637,7 @@ use_null_key:
 		DO(Dee_function_generator_vpush_addr(self, NULL)); /* this, key */
 	}
 	DO(Dee_function_generator_vcallapi(self, &DeeList_Sort, VCALL_CC_INT, 2)); /* N/A */
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -651,10 +651,10 @@ cca_List_resize(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 		DO(Dee_function_generator_vswap(self));       /* this, uint:newsize, filler */
 	} else {
 		DO(Dee_function_generator_vmorph_uint(self));           /* this, uint:newsize */
-		DO(Dee_function_generator_vpush_const(self, Dee_None)); /* this, uint:newsize, filler */
+		DO(Dee_function_generator_vpush_none(self)); /* this, uint:newsize, filler */
 	}
 	DO(Dee_function_generator_vcallapi(self, &DeeList_Resize, VCALL_CC_INT, 3)); /* N/A */
-	return Dee_function_generator_vpush_const(self, Dee_None); /* none */
+	return Dee_function_generator_vpush_none(self); /* none */
 err:
 	return -1;
 }
@@ -1189,7 +1189,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_None_return_none(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	int result = Dee_function_generator_vpopmany(self, argc + 1);
 	if likely(result == 0)
-		result = Dee_function_generator_vpush_const(self, Dee_None);
+		result = Dee_function_generator_vpush_none(self);
 	return result;
 }
 
@@ -1198,7 +1198,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_None_popall(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	int result = Dee_function_generator_vpopmany(self, argc + 1);
 	if likely(result == 0)
-		result = Dee_function_generator_vpush_const(self, Dee_None);
+		result = Dee_function_generator_vpush_none(self);
 	return result;
 }
 

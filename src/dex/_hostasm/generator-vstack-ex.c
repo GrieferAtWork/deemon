@@ -2211,7 +2211,7 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 	} else if (func_type == &DeeNone_Type) {
 		/* Special case: call where this-argument is "none" -> pop all arguments and re-return "none" */
 		DO(Dee_function_generator_vpopmany(self, true_argc + 2));  /* N/A */
-		return Dee_function_generator_vpush_const(self, Dee_None); /* Dee_None */
+		return Dee_function_generator_vpush_none(self); /* Dee_None */
 	} else if (DeeType_InheritOperator(func_type, OPERATOR_CALL)) {
 		ASSERT(func_type->tp_call || func_type->tp_call_kw);
 		if (func_type == &DeeFunction_Type) {
@@ -5545,7 +5545,7 @@ not_all_args_are_constant:
 done_without_result:
 			if (flags & VOP_F_PUSHRES) {
 				/* Always make sure to return some value on-stack. */
-				return Dee_function_generator_vpush_const(self, Dee_None);
+				return Dee_function_generator_vpush_none(self);
 			}
 			return 0;
 		}
@@ -5824,7 +5824,7 @@ done_without_result:
 			DO(Dee_function_generator_vsettyp(self, return_type)); /* [ref]:this */
 			if (flags & VOP_F_PUSHRES) {
 				/* Always make sure to return some value on-stack. */
-				return Dee_function_generator_vpush_const(self, Dee_None);
+				return Dee_function_generator_vpush_none(self);
 			}
 			return 0;
 		}
@@ -6091,7 +6091,7 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 		if (seqtype == &DeeNone_Type) {
 			DO(Dee_function_generator_vpop(self));
 			for (i = 0; i < n; ++i)
-				DO(Dee_function_generator_vpush_const(self, Dee_None));
+				DO(Dee_function_generator_vpush_none(self));
 			return 0;
 		}
 		if (Dee_memval_isconst(seqval)) {
@@ -6688,7 +6688,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 
 	CASE(STRUCT_NONE):
 		DO(Dee_function_generator_vpop(self)); /* N/A */
-		return Dee_function_generator_vpush_const(self, Dee_None);
+		return Dee_function_generator_vpush_none(self);
 
 	CASE(STRUCT_WOBJECT):
 	CASE(STRUCT_WOBJECT_OPT): {
@@ -6818,7 +6818,7 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vdel_type_member(struct Dee_function_generator *__restrict self,
                                         struct Dee_type_member const *__restrict desc) {
 	/* Behavior here mirrors `Dee_type_member_del()' */
-	int result = Dee_function_generator_vpush_const(self, Dee_None);
+	int result = Dee_function_generator_vpush_none(self);
 	if likely(result == 0)
 		result = Dee_function_generator_vpop_type_member(self, desc);
 	return result;

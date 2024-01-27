@@ -438,7 +438,7 @@ Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict sel
 			/* Variable is always unbound -> generate code to throw an exception */
 			if unlikely(Dee_function_generator_gthrow_local_unbound(self, instr, (Dee_ulid_t)lid))
 				goto err;
-			return Dee_function_generator_vpush_const(self, Dee_None);
+			return Dee_function_generator_vpush_none(self);
 		}
 
 		/* Variable is not guarantied bound -> generate code to check if it's bound */
