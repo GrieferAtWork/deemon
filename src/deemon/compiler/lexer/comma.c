@@ -257,6 +257,7 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	int error;
 	unsigned int lookup_mode;
 	struct ast_loc loc;
+
 	/* In: "foo, bar = 10, x, y = getvalue()..., 7"
 	 *               |      |                  | 
 	 *               +----------------------------  expr_batch = { }
@@ -277,10 +278,12 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	               ? LOOKUP_SYM_ALLOWDECL
 	               : LOOKUP_SYM_NORMAL);
 #endif /* AST_COMMA_ALLOWVARDECLS != LOOKUP_SYM_ALLOWDECL */
+
 	/* Allow explicit visibility modifiers when variable can be declared. */
 	if (mode & AST_COMMA_ALLOWVARDECLS &&
 	    ast_parse_lookup_mode(&lookup_mode))
 		goto err;
+
 	/* Allow `final' variable declarations.
 	 * >> final global foo = 42;
 	 * A variable declared as `final' can only be assigned once during its life-time,
@@ -322,6 +325,7 @@ ast_parse_comma(uint16_t mode, uint16_t flags, uint16_t *p_out_mode) {
 	 */
 next_expr:
 	need_semi = !!(mode & AST_COMMA_PARSESEMI);
+
 	/* Parse an expression (special handling for functions/classes) */
 	if (tok == KWD_class) {
 		/* Declare a new class */
@@ -351,6 +355,7 @@ next_expr:
 					symbol_mode |= LOOKUP_SYM_VLOCAL;
 				}
 			}
+
 			/* Class symbols are implicitly `final' (though only regarding their decl
 			 * variable; not the actual class itself), unless `varying' was used. This
 			 * is required for the optimizer to take type annotations into account when
@@ -434,6 +439,7 @@ err_function_anno:
 		}
 		if unlikely(!current)
 			goto err;
+
 		/* Pack together the documentation string for the function. */
 		if (function_symbol) {
 #ifdef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
@@ -504,6 +510,7 @@ err_function_anno:
 				goto err;
 		}
 		current = ast_parse_expr(lookup_mode);
+
 		/* Check for errors. */
 		if unlikely(!current)
 			goto err;
@@ -567,6 +574,7 @@ err_function_anno:
 					}
 					if unlikely(doctext_compile(&current_tags.at_doc))
 						goto err_current;
+
 					/* Package together documentation tags for this variable symbol. */
 					var_symbol->s_global.g_doc = (DREF DeeStringObject *)ast_tags_doc(&var_symbol->s_decltype);
 					if unlikely(!var_symbol->s_global.g_doc)
@@ -611,15 +619,18 @@ err_function_anno:
 				loc_here(&equal_loc);
 				if (tok == '=' && unlikely(yield() < 0))
 					goto err_current;
+
 				/* Parse a preferred-type brace expression. */
 				args = ast_parse_expr(LOOKUP_SYM_NORMAL);
 				if unlikely(!args)
 					goto err_current;
+
 				/* Wrap the returned ast in a 1-element tuple (for the argument list) */
 				exprv = (DREF struct ast **)Dee_Mallocc(1, sizeof(DREF struct ast *));
 				if unlikely(!exprv)
 					goto err_args;
 				exprv[0] = args; /* Inherit */
+
 				/* Create a multi-branch AST for the assigned expression. */
 				/* TODO: Add support for applying annotations here! */
 				args = ast_setddi(ast_multiple(AST_FMULTIPLE_TUPLE, 1, exprv), &equal_loc);
@@ -705,6 +716,7 @@ err_args:
 			if unlikely(!merge)
 				goto err;
 			current = merge;
+
 			/* Now generate a branch to store the expression in the branch. */
 			args = ast_setddi(ast_sym(var_symbol), &symbol_name_loc);
 			if unlikely(!args)
@@ -768,11 +780,13 @@ err_args:
 				goto done_expression;
 			}
 		}
+
 		/* Append to the current comma-sequence. */
 		error = astlist_append(&expr_comma, current);
 		if unlikely(error)
 			goto err_current;
 		ast_decref(current);
+
 		/* Yield the ',' token. */
 continue_at_comma:
 		if unlikely(yield() < 0)
@@ -783,20 +797,25 @@ continue_at_comma:
 			if (temp <= 0) {
 				if unlikely(temp < 0)
 					goto err;
+
 				/* Special case: `x = (10,)'
 				 * Same as `x = pack(10)', in that a single-element tuple is created. */
+
 				/* Flush any remaining entries from the comma-list. */
 				error = astlist_appendall(&expr_batch, &expr_comma);
 				if unlikely(error)
 					goto err;
 				Dee_Free(expr_comma.ast_v);
+
 				/* Pack the branch together to form a multi-branch AST. */
 				astlist_trunc(&expr_batch);
 				current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
 				if unlikely(!current)
 					goto err_nocomma;
+
 				/* Free an remaining buffers. */
 				/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
+
 				/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 				 *          in an undefined state, but don't hold any real data. */
 				goto done_expression_nomerge;
@@ -806,11 +825,13 @@ continue_at_comma:
 	}
 	if (tok == '=') {
 		DREF struct ast *store_source;
+
 		/* This is where the magic happens and where we
 		 * assign to expression in the active comma-list. */
 		loc_here(&loc);
 		if unlikely(yield() < 0)
 			goto err_current;
+
 		/* TODO: Add support for applying annotations here! */
 		store_source = ast_parse_comma(AST_COMMA_PARSESINGLE |
 		                               (mode & AST_COMMA_STRICTCOMMA),
@@ -820,12 +841,13 @@ continue_at_comma:
 			goto err_current;
 
 		need_semi = true;
+
 		/* Now everything depends on whether or not what
 		 * we've just parsed is an expand-expression:
 		 * >> a, b, c = get_value()...; // >> (((a, b, c) = get_value())...);
 		 * >> a, b, c = get_value();    // >> (a, b, (c = get_value())); */
 		if (store_source->a_type == AST_EXPAND) {
-			DREF struct ast *store_target, *store_branch;
+			DREF struct ast *store_target;
 			/* Append the last expression (in the example above, that is `c') */
 			error = astlist_append(&expr_comma, current);
 			ast_decref(current);
@@ -841,26 +863,24 @@ err_store_source:
 			                          &loc);
 			if unlikely(!store_target)
 				goto err_store_source;
+
 			/* Steal all of these. */
 			expr_comma.ast_a = 0;
 			expr_comma.ast_c = 0;
 			expr_comma.ast_v = NULL;
+
 			/* Now store the expand's underlying expression within this tuple. */
-			store_branch = ast_setddi(ast_action2(AST_FACTION_STORE,
-			                                      store_target,
-			                                      store_source->a_expand),
-			                          &loc);
+			current = ast_setddi(ast_action2(AST_FACTION_STORE,
+			                                 store_target,
+			                                 store_source->a_expand),
+			                     &loc);
 			ast_decref(store_target);
 			ast_decref(store_source);
-			if unlikely(!store_branch)
-				goto err;
-			/* Now wrap the store-branch in another expand expression. */
-			current = ast_setddi(ast_expand(store_branch), &loc);
-			ast_decref(store_branch);
 			if unlikely(!current)
 				goto err;
 		} else {
 			DREF struct ast *store_branch;
+
 			/* Second case: assign `store_source' to `current' after
 			 *              flushing everything from the comma-list. */
 			error = astlist_appendall(&expr_batch, &expr_comma);
@@ -868,6 +888,7 @@ err_store_source:
 				ast_decref(store_source);
 				goto err_current;
 			}
+
 			/* With the comma-list now empty, generate the
 			 * store as described in the previous comment. */
 			store_branch = ast_setddi(ast_action2(AST_FACTION_STORE,
@@ -909,11 +930,13 @@ done_expression:
 		error = astlist_appendall(&expr_batch, &expr_comma);
 		if unlikely(error)
 			goto err_current;
+
 		/* Append the remaining expression to the batch. */
 		error = astlist_append(&expr_batch, current);
 		if unlikely(error)
 			goto err_current;
 		ast_decref(current);
+
 		/* Pack the branch together to form a multi-branch AST. */
 		astlist_trunc(&expr_batch);
 		current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
@@ -923,6 +946,7 @@ done_expression:
 		/* Free an remaining buffers. */
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		Dee_Free(expr_comma.ast_v);
+
 		/* WARNING: At this point, both `expr_batch' and `expr_comma' are
 		 *          in an undefined state, but don't hold any real data. */
 	} else {
@@ -964,6 +988,7 @@ err_clear_current_only:
 		}
 	}
 	return current;
+
 done_expression_nocurrent:
 	/* Merge the current expression with the batch and comma lists. */
 	if (expr_batch.ast_c || expr_comma.ast_c) {
@@ -971,11 +996,13 @@ done_expression_nocurrent:
 		error = astlist_appendall(&expr_batch, &expr_comma);
 		if unlikely(error)
 			goto err;
+
 		/* Pack the branch together to form a multi-branch AST. */
 		astlist_trunc(&expr_batch);
 		current = ast_multiple(flags, expr_batch.ast_c, expr_batch.ast_v);
 		if unlikely(!current)
 			goto err;
+
 		/* Free an remaining buffers. */
 		/*Dee_Free(expr_batch.ast_v);*/ /* This one was inherited. */
 		Dee_Free(expr_comma.ast_v);
@@ -984,6 +1011,7 @@ done_expression_nocurrent:
 	} else {
 		ASSERT(!expr_batch.ast_v);
 		ASSERT(!expr_comma.ast_v);
+
 		/* If the caller wants to force us to package
 		 * everything in a multi-branch, grant that wish. */
 		current = ast_multiple(flags, 0, NULL);
