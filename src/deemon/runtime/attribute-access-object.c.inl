@@ -928,7 +928,12 @@ DECL_BEGIN
 
 
 /* What visibility should the function have? */
-#if defined(LOCAL_HAS_tp_self) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
+#if (defined(DEFINE_DeeObject_TGetAttr) || defined(DEFINE_DeeObject_TDelAttr) ||  \
+     defined(DEFINE_DeeObject_TSetAttr) || defined(DEFINE_DeeObject_TCallAttr) || \
+     defined(DEFINE_DeeObject_TCallAttrKw) || defined(DEFINE_DeeObject_TCallAttrTuple) || \
+     defined(DEFINE_DeeObject_TCallAttrTupleKw) || defined(DEFINE_DeeObject_TBoundAttr))
+#define LOCAL_DECL PUBLIC
+#elif defined(LOCAL_HAS_tp_self) && !defined(LOCAL_IS_ENUM) && !defined(LOCAL_IS_FIND) && !defined(LOCAL_IS_FINDINFO)
 #define LOCAL_DECL INTERN
 #else /* ... */
 #define LOCAL_DECL PUBLIC

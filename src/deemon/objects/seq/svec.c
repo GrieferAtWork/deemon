@@ -960,7 +960,7 @@ INTERN DeeTypeObject RefVector_Type = {
  * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',
  *       whereas when write-access is not possible, then the disposition of
  *       elements of `vector' doesn't matter and can either be `[0..1]' or `[1..1]'. */
-PUBLIC WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeRefVector_New(DeeObject *owner, size_t length,
                  DeeObject **vector,
 #ifndef CONFIG_NO_THREADS

@@ -1658,18 +1658,6 @@ err_no_keywords:
 	goto err;
 }
 
-#ifndef DEFINE_TYPED_OPERATORS
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeObject_TThisCall(DeeTypeObject *tp_self,
-                    DeeObject *self, DeeObject *this_arg,
-                    size_t argc, DeeObject *const *argv);
-INTERN WUNUSED DREF DeeObject *DCALL
-DeeObject_TThisCallKw(DeeTypeObject *tp_self,
-                      DeeObject *self, DeeObject *this_arg,
-                      size_t argc, DeeObject *const *argv,
-                      DeeObject *kw);
-#endif /* !DEFINE_TYPED_OPERATORS */
-
 DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
                 (DeeObject *self, DeeObject *this_arg,
                  size_t argc, DeeObject *const *argv)) {

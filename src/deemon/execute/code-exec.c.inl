@@ -96,15 +96,6 @@ file_shl(DeeObject *self,
          DeeObject *some_object);
 #endif /* !FILE_SHL_DECLARED */
 
-#ifndef OBJECT_TATTR_DECLARED
-#define OBJECT_TATTR_DECLARED 1
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
-INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
-INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
-#endif /* !OBJECT_TATTR_DECLARED */
-
-
 #define construct_varkwds_mapping() \
 	construct_varkwds_mapping_impl(code, frame)
 #ifndef CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED

@@ -237,6 +237,16 @@ DECL_END
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_TCallAttr
 #include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrKw
+#include "attribute-access-object.c.inl"
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DEFINE_DeeObject_TCallAttrTuple
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrTupleKw
+#include "attribute-access-object.c.inl"
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DEFINE_DeeObject_TBoundAttr
+#include "attribute-access-object.c.inl"
 
 /* Special-case optimizations for `VCallAttrf' */
 #define DEFINE_DeeObject_VCallAttrf
@@ -279,6 +289,20 @@ PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
                                   /*String*/ DeeObject *attr,
                                   DeeObject *args, DeeObject *kw) {
 	return DeeObject_CallAttrKw(self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TCallAttrTuple)(DeeTypeObject *tp_self, DeeObject *self,
+                                 /*String*/ DeeObject *attr,
+                                 DeeObject *args) {
+	return DeeObject_TCallAttr(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
+(DCALL DeeObject_TCallAttrTupleKw)(DeeTypeObject *tp_self, DeeObject *self,
+                                   /*String*/ DeeObject *attr,
+                                   DeeObject *args, DeeObject *kw) {
+	return DeeObject_TCallAttrKw(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
 }
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 

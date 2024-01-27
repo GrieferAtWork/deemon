@@ -1141,7 +1141,7 @@ err:
 }
 
 #define DEFINE_LEXER_FLAG_FUNCTIONS(name, flag)                        \
-	INTERN WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
+	INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL          \
 	lexer_get_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		DREF DeeObject *result;                                        \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
@@ -1153,7 +1153,7 @@ err:
 	err:                                                               \
 		return NULL;                                                   \
 	}                                                                  \
-	INTERN WUNUSED WUNUSED NONNULL((1)) int DCALL                      \
+	INTERN WUNUSED NONNULL((1)) int DCALL                      \
 	lexer_del_##name(DeeCompilerWrapperObject *__restrict self) {      \
 		if (COMPILER_BEGIN(self->cw_compiler))                         \
 			goto err;                                                  \

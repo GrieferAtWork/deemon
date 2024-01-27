@@ -32,22 +32,16 @@
 
 /* Define type-specific object operators. */
 #define DEFINE_TYPED_OPERATORS 1
-#define PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
+#define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
+	PUBLIC return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) \
-	INTERN return DCALL DeeObject_T##name PRIVATE_EXPANDARGS args
+	INTERN return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
 #include "../runtime/operator.c"
 #undef DEFINE_TYPED_OPERATORS
 
 
 DECL_BEGIN
-
-/* From `attribute.c' */
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
-INTDEF int (DCALL DeeObject_TDelAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
-INTDEF int (DCALL DeeObject_TSetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
-INTDEF WUNUSED DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
 
 typedef DeeSuperObject Super;
 

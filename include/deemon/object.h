@@ -3532,8 +3532,8 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 
 /* Create a/Yield from an iterator.
  * @return: Dee_ITER_DONE: [DeeObject_IterNext] The iterator has been exhausted. */
-DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
-DFUNDEF WUNUSED WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
 typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
@@ -3543,11 +3543,11 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
  * Otherwise, return the sum of all calls to it.
  * NOTE: This function does some special optimizations for known sequence types.
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */
-DFUNDEF WUNUSED WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Unpack()' */
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
@@ -3649,16 +3649,16 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundAttrStringLenHash)(Dee
  * >> } finally {
  * >>     DeeObject_Leave(myObject);
  * >> } */
-DFUNDEF WUNUSED int (DCALL DeeObject_Enter)(DeeObject *__restrict self);
-DFUNDEF WUNUSED int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Enter)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_Leave)(DeeObject *__restrict self);
 
 
 /* Object buffer interface.
  * @param: flags: Set of `DEE_BUFFER_F*'
  * @throw: Error.RuntimeError.NotImplemented: The object doesn't implement the buffer protocol.
  * @throw: Error.ValueError.BufferError:      The object is an atomic buffer, or cannot be written to. */
-DFUNDEF WUNUSED int (DCALL DeeObject_GetBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
-DFUNDEF void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_GetBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
+DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_PutBuf)(DeeObject *__restrict self, DeeBuffer *__restrict info, unsigned int flags);
 
 
 
