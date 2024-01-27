@@ -6109,8 +6109,34 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 				DO(Dee_function_generator_vpush_none(self));
 			return 0;
 		}
-		if (Dee_memval_isconst(seqval)) {
-			/* TODO: Optimizations to inline-expand a constant expression */
+		if (Dee_memval_isconst(seqval) &&
+		    DeeType_IsOperatorConstexpr(seqtype, OPERATOR_SEQ_ENUMERATE)) {
+			/* Optimizations to inline-expand a constant expression */
+			DREF DeeObject **elemv;
+			DeeObject *seqobj = Dee_memval_const_getobj(seqval);
+			elemv = (DREF DeeObject **)Dee_Mallocac(n, sizeof(DREF DeeObject *));
+			if unlikely(!elemv)
+				goto err;
+			if likely(DeeObject_Unpack(seqobj, n, elemv) == 0) {
+				int temp = Dee_function_generator_vpop(self);
+				if likely(temp == 0) {
+					for (i = 0; i < n; ++i) {
+						DeeObject *elem = Dee_function_generator_inlineref(self, elemv[i]);
+						temp = unlikely(!elem) ? -1 : Dee_function_generator_vpush_const(self, elem);
+						if unlikely(temp) {
+							++i;
+							Dee_Decrefv(elemv + i, n - i);
+							break;
+						}
+					}
+				}
+				Dee_Freea(elemv);
+				return temp;
+			}
+			Dee_Freea(elemv);
+			if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR))
+				return -1;
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
 
 		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
