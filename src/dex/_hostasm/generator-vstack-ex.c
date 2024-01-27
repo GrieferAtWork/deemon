@@ -6068,7 +6068,7 @@ vcall_DeeFastSeq_GetItem(struct Dee_function_generator *__restrict self,
 			self->fg_state = saved_state;
 			HA_printf(".section .text\n");
 			self->fg_sect = text;
-		} /* self, index, elem */
+		}                                          /* self, index, elem */
 		DO(Dee_function_generator_vrrot(self, 3)); /* elem, self, index */
 		DO(Dee_function_generator_vpop(self));     /* elem, self */
 		DO(Dee_function_generator_vpop(self));     /* elem */

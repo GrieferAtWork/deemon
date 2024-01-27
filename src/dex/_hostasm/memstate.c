@@ -108,15 +108,25 @@ Dee_memstate_hregs_find_unused(struct Dee_memstate const *__restrict self,
 	Dee_host_register_t result;
 	/* Check if we can find a register that not used anywhere. */
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-		if (!Dee_memstate_hregs_isused(self, result)) {
-			if (self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
-				return result;
-		}
+		if (!Dee_memstate_hregs_isused(self, result) &&
+		    self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC &&
+		    self->ms_memequiv.meqs_regs[result] == 0)
+			return result;
+	}
+	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+		if (!Dee_memstate_hregs_isused(self, result) &&
+		    self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
+			return result;
 	}
 	if (accept_if_with_regusage) {
 		/* Check for registers that are only used by regusage. */
 		for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-			if (Dee_memstate_hregs_isused(self, result))
+			if (!Dee_memstate_hregs_isused(self, result) &&
+			    self->ms_memequiv.meqs_regs[result] == 0)
+				return result;
+		}
+		for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+			if (!Dee_memstate_hregs_isused(self, result))
 				break; /* Found an unused register! */
 		}
 	}
@@ -146,7 +156,19 @@ Dee_memstate_hregs_find_unused_ex(struct Dee_memstate *__restrict self,
 
 	/* Even when other usage registers can be re-used, try not to do so unless necessary. */
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
-		if (!BITSET_GET(&used, result) && self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
+		if (!BITSET_GET(&used, result) &&
+		    self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC &&
+		    self->ms_memequiv.meqs_regs[result] == 0)
+			goto done;
+	}
+	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+		if (!BITSET_GET(&used, result) &&
+		    self->ms_rusage[result] == DEE_HOST_REGUSAGE_GENERIC)
+			goto done;
+	}
+	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
+		if (!BITSET_GET(&used, result) &&
+		    self->ms_memequiv.meqs_regs[result] == 0)
 			goto done;
 	}
 	for (result = 0; result < HOST_REGISTER_COUNT; ++result) {
