@@ -858,7 +858,7 @@ struct Dee_memobjs {
 	 */
 };
 
-#define Dee_memobjs_destroy(self)       Dee_Free(self)
+INTDEF NONNULL((1)) void DCALL Dee_memobjs_destroy(struct Dee_memobjs *__restrict self);
 #define Dee_memobjs_incref(self)        (void)(++(self)->mos_refcnt)
 #define Dee_memobjs_decref(self)        (void)(--(self)->mos_refcnt || (Dee_memobjs_destroy(self), 0))
 #define Dee_memobjs_isshared(self)      ((self)->mos_refcnt > 1)

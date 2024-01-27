@@ -752,6 +752,12 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 /* Dee_memval                                                           */
 /************************************************************************/
 
+INTERN NONNULL((1)) void DCALL
+Dee_memobjs_destroy(struct Dee_memobjs *__restrict self) {
+	RINGQ_REMOVE(self, mos_copies);
+	Dee_Free(self);
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memval_do_objn_unshare(struct Dee_memval *__restrict self) {
 	struct Dee_memobjs *objs, *copy;
