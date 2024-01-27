@@ -5060,13 +5060,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-string_parition(String *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
+string_partition(String *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":parition",
+	                    "o|" UNPdSIZ UNPdSIZ ":partition",
 	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5159,13 +5159,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-string_rparition(String *self, size_t argc,
-                 DeeObject *const *argv, DeeObject *kw) {
+string_rpartition(String *self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":rparition",
+	                    "o|" UNPdSIZ UNPdSIZ ":rpartition",
 	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5258,13 +5258,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-string_caseparition(String *self, size_t argc,
-                    DeeObject *const *argv, DeeObject *kw) {
+string_casepartition(String *self, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":caseparition",
+	                    "o|" UNPdSIZ UNPdSIZ ":casepartition",
 	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -5363,13 +5363,13 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-string_caserparition(String *self, size_t argc,
-                     DeeObject *const *argv, DeeObject *kw) {
+string_caserpartition(String *self, size_t argc,
+                      DeeObject *const *argv, DeeObject *kw) {
 	String *other;
 	union dcharptr lhs, rhs, ptr;
 	size_t mylen, begin = 0, end = (size_t)-1, match_length;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserparition",
+	                    "o|" UNPdSIZ UNPdSIZ ":caserpartition",
 	                    &other, &begin, &end))
 		goto err;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -10961,12 +10961,12 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_KWMETHOD_F("endswith", &string_endswith, TYPE_METHOD_FNOREFESCAPE,
 	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} ends with @needle"),
-	TYPE_KWMETHOD("partition", &string_parition,
+	TYPE_KWMETHOD("partition", &string_partition,
 	              "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	              /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	              "If @needle could not be found, ${(this, \"\", \"\")} is returned"),
-	TYPE_KWMETHOD("rpartition", &string_rparition,
+	TYPE_KWMETHOD("rpartition", &string_rpartition,
 	              "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	              /**/ "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
@@ -11115,10 +11115,10 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	TYPE_KWMETHOD_F("caseendswith", &string_caseendswith, TYPE_METHOD_FNOREFESCAPE,
 	                "(needle:?.,start=!0,end=!-1)->?Dbool\n"
 	                "Same as ?#endswith, however perform a case-folded search (s.a. ?#casefold)"),
-	TYPE_KWMETHOD("casepartition", &string_caseparition,
+	TYPE_KWMETHOD("casepartition", &string_casepartition,
 	              "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as ?#partition, however perform a case-folded search (s.a. ?#casefold)"),
-	TYPE_KWMETHOD("caserpartition", &string_caserparition,
+	TYPE_KWMETHOD("caserpartition", &string_caserpartition,
 	              "(needle:?.,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as ?#rpartition, however perform a case-folded search (s.a. ?#casefold)"),
 	TYPE_METHOD_F("casecompare", &string_casecompare, TYPE_METHOD_FNOREFESCAPE,

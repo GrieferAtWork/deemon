@@ -2435,8 +2435,8 @@ PRIVATE DEFINE_TUPLE(empty_bytes_partition, 3, {
 });
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-bytes_parition(Bytes *self, size_t argc,
-               DeeObject *const *argv, DeeObject *kw) {
+bytes_partition(Bytes *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -2462,8 +2462,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-bytes_caseparition(Bytes *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw) {
+bytes_casepartition(Bytes *self, size_t argc,
+                    DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -2489,8 +2489,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-bytes_rparition(Bytes *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
+bytes_rpartition(Bytes *self, size_t argc,
+                 DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -2516,8 +2516,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-bytes_caserparition(Bytes *self, size_t argc,
-                    DeeObject *const *argv, DeeObject *kw) {
+bytes_caserpartition(Bytes *self, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *find_ob;
 	Needle needle;
 	size_t start = 0, end = (size_t)-1;
@@ -5615,12 +5615,12 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("endswith", &bytes_endswith, TYPE_GETSET_FNOREFESCAPE,
 	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
 	                "Return ?t if the sub-string ${this.substr(start, end)} ends with @other"),
-	TYPE_KWMETHOD("partition", &bytes_parition,
+	TYPE_KWMETHOD("partition", &bytes_partition,
 	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Search for the first instance of @needle within ${this.substr(start, end)} and "
 	              /**/ "return a 3-element sequence of byte objects ${(this[:pos], needle, this[pos + ##needle:])}.\n"
 	              "If @needle could not be found, ${(this, \"\".bytes(), \"\".bytes())} is returned"),
-	TYPE_KWMETHOD("rpartition", &bytes_rparition,
+	TYPE_KWMETHOD("rpartition", &bytes_rpartition,
 	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Search for the last instance of @needle within ${this.substr(start, end)} and "
 	              "return a 3-element sequence of strings ${(this[:pos], needle, this[pos + ##needle:])}.\n"
@@ -5784,10 +5784,10 @@ INTERN_TPCONST struct type_method tpconst bytes_methods[] = {
 	TYPE_KWMETHOD_F("caseendswith", &bytes_caseendswith, TYPE_GETSET_FNOREFESCAPE,
 	                "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?Dbool\n"
 	                "Same as ?#endswith, however ascii-casing is ignored during character comparisons"),
-	TYPE_KWMETHOD("casepartition", &bytes_caseparition,
+	TYPE_KWMETHOD("casepartition", &bytes_casepartition,
 	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as ?#partition, however ascii-casing is ignored during character comparisons"),
-	TYPE_KWMETHOD("caserpartition", &bytes_caserparition,
+	TYPE_KWMETHOD("caserpartition", &bytes_caserpartition,
 	              "(needle:?X3?.?Dstring?Dint,start=!0,end=!-1)->?T3?.?.?.\n"
 	              "Same as ?#rpartition, however ascii-casing is ignored during character comparisons"),
 	TYPE_METHOD_F("casecompare", &bytes_casecompare, TYPE_GETSET_FNOREFESCAPE,
