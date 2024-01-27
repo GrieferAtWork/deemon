@@ -814,9 +814,18 @@ struct Dee_memobj {
 #define MEMVAL_VMORPH_BOOL_GZ    7 /* >> value = DeeBool_For((intptr_t)mv_obj.mvo_0 > 0); */
 #define MEMVAL_VMORPH_INT        8 /* >> value = DeeInt_NewIntptr(mv_obj.mvo_0); */
 #define MEMVAL_VMORPH_UINT       9 /* >> value = DeeInt_NewUIntptr(mv_obj.mvo_0); */
-#define MEMVAL_VMORPH_NULLABLE  10 /* >> value = mv_obj.mvo_0 ?: HANDLE_EXCEPT(); // Shpuld only be used for stack locations (so exceptions aren't delayed too long) */
+#define MEMVAL_VMORPH_NULLABLE  10 /* >> value = mv_obj.mvo_0 ?: HANDLE_EXCEPT(); */
 #define MEMVAL_VMORPH_HASOBJ0(x) ((x) < 16)
 #define MEMVAL_VMORPH_HASOBJN(x) ((x) >= 16)
+/* TODO: Multi-object morphs: */
+/* TODO: MEMVAL_VMORPH_LIST */
+/* TODO: MEMVAL_VMORPH_TUPLE */
+/* TODO: MEMVAL_VMORPH_HASHSET */
+/* TODO: MEMVAL_VMORPH_ROSET */
+/* TODO: MEMVAL_VMORPH_DICT */
+/* TODO: MEMVAL_VMORPH_RODICT */
+/* TODO: MEMVAL_VMORPH_SUPER */
+
 
 struct Dee_memobjs {
 	Dee_refcnt_t                               mos_refcnt; /* Reference counter (when >1, this struct is used by multiple `Dee_memval'-s) */
@@ -985,7 +994,7 @@ struct Dee_memval {
 #define Dee_memval_direct_sameloc(a, b) Dee_memloc_sameloc(Dee_memval_direct_getloc(a), Dee_memval_direct_getloc(b))
 #define Dee_memval_sameval(a, b)        ((a)->mv_vmorph == (b)->mv_vmorph && Dee_memval_direct_sameloc(a, b)) /* TODO: Support for mem values with multiple locations */
 
-/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
+/* Try to figure out the guarantied runtime object type of `vdirect()' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 Dee_memval_typeof(struct Dee_memval const *self);
 
@@ -2291,10 +2300,27 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_veqaddr(struct Dee_
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce_c(struct Dee_function_generator *__restrict self, void const *from, void const *to);
 
-/* Force the top `n' elements of the v-stack to use `MEMVAL_VMORPH_ISDIRECT'.
- * Any memory locations that might alias one of those locations is also changed.
+/* Force VTOP to become a direct object. Any memory locations that aliases it is also changed.
  * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self);
+
+/* Same as (but requires that "n >= 1"):
+ * >> Dee_function_generator_vlrot(self, n);
+ * >> Dee_function_generator_vdirect1(self);
+ * >> Dee_function_generator_vrrot(self, n); */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+
+/* Same as (though the order in which objects are made direct is undefined):
+ * >> for (i = 0; i < n; ++i) {
+ * >>     Dee_function_generator_vlrot(self, n);
+ * >>     Dee_function_generator_vdirect1(self);
+ * >> } */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+
+/* Make sure that "val" is direct. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vdirect_memval(struct Dee_function_generator *__restrict self,
+                                      struct Dee_memval *val);
 
 /* Clear the `MEMOBJ_F_ONEREF' flag for the top `n' v-stack elements,
  * as well as any other memory location that might be aliasing them. */
@@ -2568,14 +2594,6 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_f
 Dee_function_exceptinject_callvoidapi_f(struct Dee_function_generator *__restrict self,
                                         struct Dee_function_exceptinject *__restrict inject);
 
-
-
-/* Force `mval' to use `MEMVAL_VMORPH_ISDIRECT'.
- * NOTE: This is the only `Dee_function_generator_g*' function that
- *       doesn't simply assume `MEMVAL_VMORPH_ISDIRECT(mv_vmorph)'. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
-                               struct Dee_memval *mval);
 
 /* Clear the `MEMOBJ_F_ONEREF' flag from `mobj', as well
  * as any other memory location that might be aliasing it. */

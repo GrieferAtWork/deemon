@@ -230,7 +230,7 @@ again:
 
 	/* Make sure the prefixed value is a direct value. */
 	if unlikely(!Dee_memval_isdirect(src_mval)) {
-		DO(Dee_function_generator_gdirect(self, src_mval));
+		DO(Dee_function_generator_vdirect_memval(self, src_mval));
 		goto again;
 	}
 
@@ -2178,7 +2178,7 @@ do_jcc:
 		                                   opcode == ASM_REDUCE_ANY ? (void const *)&DeeSeq_Any
 		                                                            : (void const *)&DeeSeq_All,
 		                                   VCALL_CC_NEGINT, 1));
-		DO(Dee_function_generator_vdirect(self, 1));
+		DO(Dee_function_generator_vdirect1(self));
 		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 		break;

@@ -320,11 +320,15 @@ again_search_changes:
 				ASSERTF(newval->mv_vmorph == MEMVAL_VMORPH_DIRECT,
 				        "In the case of incompatible morphs, `Dee_memstate_constrainwith()' "
 				        "should have normalized to `MEMVAL_VMORPH_DIRECT'!");
-				if unlikely(Dee_function_generator_gdirect(self, oldval))
+				if unlikely(Dee_function_generator_vdirect_memval(self, oldval))
 					goto err;
+				old_valv = old_state->ms_localv;
+				if (kind != 0)
+					old_valv = old_state->ms_stackv;
+				oldval = &old_valv[i];
 				ASSERT(Dee_memval_isdirect(oldval));
 				oldval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
-				goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
+				goto again_search_changes; /* Must restart because vdirect() may have flushed registers */
 			}
 			ASSERTF(locc == Dee_memval_getobjc(newval),
 			        "Incompatible location counts (this should have "

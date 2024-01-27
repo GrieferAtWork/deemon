@@ -840,9 +840,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_memadr(struct Dee_memstate *__restrict self,
                           struct Dee_memadr const *adr) {
 	struct Dee_memval *dst;
-	if unlikely(self->ms_stackc >= self->ms_stacka &&
-	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
-		goto err;
+	struct Dee_memadr temp;
+	if unlikely(self->ms_stackc >= self->ms_stacka) {
+		temp = *adr; /* In case "adr" was already part of the v-stack. */
+		if unlikely(Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+			goto err;
+		adr = &temp;
+	}
 	dst = &self->ms_stackv[self->ms_stackc];
 	Dee_memval_init_memadr(dst, adr, 0, NULL, MEMOBJ_F_NORMAL);
 	Dee_memstate_incrinuse_for_memadr(self, adr);
@@ -856,9 +860,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_memloc(struct Dee_memstate *__restrict self,
                           struct Dee_memloc const *loc) {
 	struct Dee_memval *dst;
-	if unlikely(self->ms_stackc >= self->ms_stacka &&
-	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
-		goto err;
+	struct Dee_memloc temp;
+	if unlikely(self->ms_stackc >= self->ms_stacka) {
+		temp = *loc; /* In case "loc" was already part of the v-stack. */
+		if unlikely(Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+			goto err;
+		loc = &temp;
+	}
 	dst = &self->ms_stackv[self->ms_stackc];
 	Dee_memval_init_memloc(dst, loc, NULL, MEMOBJ_F_NORMAL);
 	Dee_memstate_incrinuse_for_memloc(self, loc);
@@ -872,9 +880,13 @@ INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_memobj(struct Dee_memstate *__restrict self,
                           struct Dee_memobj const *obj) {
 	struct Dee_memval *dst;
-	if unlikely(self->ms_stackc >= self->ms_stacka &&
-	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
-		goto err;
+	struct Dee_memobj temp;
+	if unlikely(self->ms_stackc >= self->ms_stacka) {
+		temp = *obj; /* In case "obj" was already part of the v-stack. */
+		if unlikely(Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+			goto err;
+		obj = &temp;
+	}
 	dst = &self->ms_stackv[self->ms_stackc];
 	Dee_memval_init_memobj(dst, obj);
 	Dee_memstate_incrinuse_for_memobj(self, obj);
@@ -887,10 +899,13 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_memval(struct Dee_memstate *__restrict self,
                           struct Dee_memval const *val) {
-	struct Dee_memval *dst;
-	if unlikely(self->ms_stackc >= self->ms_stacka &&
-	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
-		goto err;
+	struct Dee_memval *dst, temp;
+	if unlikely(self->ms_stackc >= self->ms_stacka) {
+		temp = *val; /* In case "val" was already part of the v-stack. */
+		if unlikely(Dee_memstate_reqvstack(self, self->ms_stackc + 1))
+			goto err;
+		val = &temp;
+	}
 	dst = &self->ms_stackv[self->ms_stackc];
 	Dee_memval_initcopy(dst, val);
 	Dee_memstate_incrinuse_for_memval(self, val);

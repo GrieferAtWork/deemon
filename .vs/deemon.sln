@@ -400,6 +400,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-type-mro.dee = ..\util\test\deemon-type-mro.dee
 		..\util\test\deemon-type-newinstance.dee = ..\util\test\deemon-type-newinstance.dee
 		..\util\test\hashlib.dee = ..\util\test\hashlib.dee
+		..\util\test\hostasm-regression.dee = ..\util\test\hostasm-regression.dee
 		..\util\test\jit-c-style-struct.dee = ..\util\test\jit-c-style-struct.dee
 		..\util\test\jit-function-reference.dee = ..\util\test\jit-function-reference.dee
 		..\util\test\jit-import.dee = ..\util\test\jit-import.dee

@@ -143,7 +143,7 @@ vbool_field_nonzero(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                 /* value, value */
 	DO(Dee_function_generator_vind(self, offsetof_field)); /* value, value->xx_field */
 	DO(Dee_function_generator_vreg(self, NULL));           /* value, reg:value->xx_field */
-	DO(Dee_function_generator_vdirect(self, 1));           /* value, reg:value->xx_field */
+	DO(Dee_function_generator_vdirect1(self));           /* value, reg:value->xx_field */
 	DO(Dee_function_generator_vswap(self));                /* reg:value->xx_field, value */
 	DO(Dee_function_generator_vpop(self));                 /* reg:value->xx_field */
 	return Dee_function_generator_vcall_DeeBool_For(self); /* result */
@@ -157,7 +157,7 @@ vsize_field_uint(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                       /* value, value */
 	DO(Dee_function_generator_vind(self, offsetof_size_field));  /* value, value->xx_size */
 	DO(Dee_function_generator_vreg(self, NULL));                 /* value, reg:value->xx_size */
-	DO(Dee_function_generator_vdirect(self, 1));                 /* value, reg:value->xx_size */
+	DO(Dee_function_generator_vdirect1(self));                 /* value, reg:value->xx_size */
 	DO(Dee_function_generator_vswap(self));                      /* reg:value->xx_size, value */
 	DO(Dee_function_generator_vpop(self));                       /* reg:value->xx_size */
 	return Dee_function_generator_vcall_DeeInt_NewUIntptr(self); /* result */
@@ -297,7 +297,7 @@ impl_cca_Sequence_anyall(struct Dee_function_generator *__restrict self,
                          void const *api_function) {
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
 	DO(Dee_function_generator_vcallapi(self, api_function, VCALL_CC_NEGINT, 1));
-	DO(Dee_function_generator_vdirect(self, 1));
+	DO(Dee_function_generator_vdirect1(self));
 	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
@@ -406,7 +406,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	DO(Dee_function_generator_vdup_n(self, 3));             /* this, key, value, this, key */
 	DO(Dee_function_generator_vpush_addr(self, ITER_DONE)); /* this, key, value, this, key, ITER_DONE */
 	DO(Dee_function_generator_vopgetitemdef(self));         /* this, key, value, current_value */
-	DO(Dee_function_generator_vdirect(self, 1));            /* this, key, value, current_value */
+	DO(Dee_function_generator_vdirect1(self));            /* this, key, value, current_value */
 
 	/* >> if (current_value == ITER_DONE) {
 	 * >>     if (DeeObject_SetItem(this, key, value))
@@ -433,7 +433,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));                    /* this, key, value, this, key, value */
 	EDO(err_common_state, Dee_function_generator_vop(self, OPERATOR_SETITEM, 3, VOP_F_NORMAL)); /* this, key, value */
 	EDO(err_common_state, Dee_function_generator_vdup(self));                         /* this, key, value, value */
-	EDO(err_common_state, Dee_function_generator_vdirect(self, 1));                   /* this, key, value, value */
+	EDO(err_common_state, Dee_function_generator_vdirect1(self));                   /* this, key, value, value */
 	EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* this, key, value, value */
 	Dee_function_generator_vtop_direct_setref(self);                   /* this, key, value, ref:value */
 	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state));         /* this, key, value, ref:current_value */
@@ -1016,7 +1016,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                                    /* cell, cell */
 	DO(Dee_function_generator_vind(self, offsetof(DeeCellObject, c_item)));   /* cell, cell->c_item */
 	DO(Dee_function_generator_vreg(self, NULL));                              /* cell, reg:cell->c_item */
-	DO(Dee_function_generator_vdirect(self, 1));                              /* cell, reg:cell->c_item */
+	DO(Dee_function_generator_vdirect1(self));                              /* cell, reg:cell->c_item */
 	text = self->fg_sect;
 	cold = &self->fg_block->bb_hcold;
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
@@ -1105,7 +1105,7 @@ cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t ar
 		Dee_function_generator_vtop_direct_clearref(self);
 		EDO(err_common_state, Dee_function_generator_vpop(self));                 /* def */
 		EDO(err_common_state, Dee_function_generator_vdup(self));                 /* def, def */
-		EDO(err_common_state, Dee_function_generator_vdirect(self, 1));           /* def, def */
+		EDO(err_common_state, Dee_function_generator_vdirect1(self));           /* def, def */
 		EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* def, def */
 		Dee_function_generator_vtop_direct_setref(self);           /* def, ref:def */
 		EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* def, result */

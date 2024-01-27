@@ -773,26 +773,6 @@ err:
 	return -1;
 }
 
-/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
-INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-Dee_memval_typeof(struct Dee_memval const *self) {
-	switch (self->mv_vmorph) {
-	case MEMVAL_VMORPH_DIRECT:
-	case MEMVAL_VMORPH_DIRECT_01:
-		return Dee_memobj_typeof(Dee_memval_direct_getobj(self));
-	case MEMVAL_VMORPH_BOOL_Z:
-	case MEMVAL_VMORPH_BOOL_Z_01:
-	case MEMVAL_VMORPH_BOOL_NZ:
-	case MEMVAL_VMORPH_BOOL_NZ_01:
-		return &DeeBool_Type;
-	case MEMVAL_VMORPH_INT:
-	case MEMVAL_VMORPH_UINT:
-		return &DeeInt_Type;
-	default: break;
-	}
-	return NULL;
-}
-
 
 
 /************************************************************************/
