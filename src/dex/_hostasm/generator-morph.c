@@ -42,18 +42,14 @@ DECL_BEGIN
 struct Dee_memaction;
 SLIST_HEAD(Dee_memaction_slist, Dee_memaction);
 struct Dee_memaction {
-	struct Dee_memloc         *ma_oldloc;   /* [0..1] Old location, or NULL if already done (though in the case a
-	                                         * register, it may be gotten flushed again) (always a hasloc0 value) */
-	struct Dee_memloc const   *ma_newloc;   /* [1..1] New location (always a hasloc0 value) */
-	uint8_t                    ma_oldflags; /* "mv_flags" of the old location */
-	uint8_t                    ma_newflags; /* "mv_flags" of the new location */
-	uint8_t _ma_pad[sizeof(void *) - 2];    /* ... */
+	struct Dee_memobj         *ma_oldobj;   /* [0..1] Old location, or NULL if already done (though in the case a register, it may be gotten flushed again) */
+	struct Dee_memobj const   *ma_newobj;   /* [1..1] New location */
 	struct Dee_memaction_slist ma_before;   /* [0..n] List of actions that need to happen *before* this one */
 	SLIST_ENTRY(Dee_memaction) ma_bflink;   /* Link in some other action's `ma_before' */
 };
 
 /* Check if `self' has already happened. */
-#define Dee_memaction_isdone(self) ((self)->ma_oldloc == NULL)
+#define Dee_memaction_isdone(self) ((self)->ma_oldobj == NULL)
 
 /* Check if all actions that need to happen before `self' already have. */
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -80,19 +76,19 @@ Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, Dee_
 			continue;
 		if (!Dee_memaction_isready(act))
 			continue;
-		if ((Dee_memloc_gettyp(act->ma_oldloc) == MEMADR_TYPE_HSTACKIND && /* Is pop possible? */
-		     Dee_memloc_getcfaend(act->ma_oldloc) == host_cfa_offset) ||
-		    (Dee_memloc_gettyp(act->ma_newloc) == MEMADR_TYPE_HSTACKIND && /* Is push possible? */
-		     Dee_memloc_getcfastart(act->ma_newloc) == host_cfa_offset))
+		if ((Dee_memobj_gettyp(act->ma_oldobj) == MEMADR_TYPE_HSTACKIND && /* Is pop possible? */
+		     Dee_memobj_getcfaend(act->ma_oldobj) == host_cfa_offset) ||
+		    (Dee_memobj_gettyp(act->ma_newobj) == MEMADR_TYPE_HSTACKIND && /* Is push possible? */
+		     Dee_memobj_getcfastart(act->ma_newobj) == host_cfa_offset))
 			return act;
 	}
 	return NULL;
 }
 
-/* Return the action that references the greatest CFA in its `ma_oldloc'
+/* Return the action that references the greatest CFA in its `ma_oldobj'
  * If no such action exists, return `NULL' instead. */
 PRIVATE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
-Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, Dee_lid_t mactc) {
+Dee_memaction_at_greatest_oldobj_cfa(struct Dee_memaction *mactv, Dee_lid_t mactc) {
 	Dee_lid_t i;
 	struct Dee_memaction *result = NULL;
 	for (i = 0; i < mactc; ++i) {
@@ -101,10 +97,11 @@ Dee_memaction_at_greatest_oldloc_cfa(struct Dee_memaction *mactv, Dee_lid_t mact
 			continue;
 		if (!Dee_memaction_isready(act))
 			continue;
-		if (act->ma_oldloc->ml_adr.ma_typ != MEMADR_TYPE_HSTACKIND)
+		if (Dee_memobj_gettyp(act->ma_oldobj) != MEMADR_TYPE_HSTACKIND)
 			continue;
-		if (result == NULL ||
-		    result->ma_oldloc->ml_adr.ma_val.v_cfa < act->ma_oldloc->ml_adr.ma_val.v_cfa)
+		if ((result == NULL) ||
+		    (Dee_memobj_hstackind_getcfa(result->ma_oldobj) <
+		     Dee_memobj_hstackind_getcfa(act->ma_oldobj)))
 			result = act;
 	}
 	return result;
@@ -122,10 +119,10 @@ Dee_memaction_remove_aliases(struct Dee_memaction *mactv, Dee_lid_t mactc) {
 		struct Dee_memaction *act = &mactv[i];
 		for (j = i + 1; j < mactc;) {
 			struct Dee_memaction *alias = &mactv[j];
-			if (Dee_memloc_sameadr(act->ma_newloc, alias->ma_newloc)) {
+			if (Dee_memobj_sameadr(act->ma_newobj, alias->ma_newobj)) {
 				ptrdiff_t old_value_delta;
 				ptrdiff_t new_value_delta;
-				if (!Dee_memloc_sameadr(act->ma_oldloc, alias->ma_oldloc)) {
+				if (!Dee_memobj_sameadr(act->ma_oldobj, alias->ma_oldobj)) {
 cannot_morph:
 					return (Dee_lid_t)DeeError_Throwf(&DeeError_IllegalInstruction,
 					                                  "Cannot morph memory state. Have at least 2 "
@@ -140,8 +137,8 @@ cannot_morph:
 				 * >> new_state = [0(%eax)+4, 4(%eax)+12]
 				 * This would be impossible to morph!
 				 */
-				old_value_delta = Dee_memloc_getoff(alias->ma_oldloc) - Dee_memloc_getoff(act->ma_oldloc);
-				new_value_delta = Dee_memloc_getoff(alias->ma_newloc) - Dee_memloc_getoff(act->ma_newloc);
+				old_value_delta = Dee_memobj_getoff(alias->ma_oldobj) - Dee_memobj_getoff(act->ma_oldobj);
+				new_value_delta = Dee_memobj_getoff(alias->ma_newobj) - Dee_memobj_getoff(act->ma_newobj);
 				if (old_value_delta != new_value_delta)
 					goto cannot_morph;
 
@@ -163,12 +160,12 @@ cannot_morph:
 
 
 /* Fill in the `ma_before' of actions:
- * - mactv[i].ma_before = [act in mactv if Dee_memloc_sameadr(act->ma_oldloc, mactv[i].ma_newloc)]
+ * - mactv[i].ma_before = [act in mactv if Dee_memobj_sameadr(act->ma_oldobj, mactv[i].ma_newobj)]
  * Every action should only ever appear at most *once* in any other action's before-list.
- * This is because aliases were already removed, meaning that every `ma_newloc' is
+ * This is because aliases were already removed, meaning that every `ma_newobj' is
  * distinct (when it comes to the underlying base memory location), which also means
- * that (if you look at the pseudo-code above), every `ma_oldloc' can equal at most
- * one `ma_newloc'. */
+ * that (if you look at the pseudo-code above), every `ma_oldobj' can equal at most
+ * one `ma_newobj'. */
 PRIVATE ATTR_INOUTS(1, 2) void DCALL
 Dee_memaction_assign_before(struct Dee_memaction *mactv, Dee_lid_t mactc) {
 	Dee_lid_t i, j;
@@ -179,7 +176,7 @@ Dee_memaction_assign_before(struct Dee_memaction *mactv, Dee_lid_t mactc) {
 			if (i == j)
 				continue;
 			after_act = &mactv[j];
-			if (Dee_memloc_sameadr(act->ma_oldloc, after_act->ma_newloc)) {
+			if (Dee_memobj_sameadr(act->ma_oldobj, after_act->ma_newobj)) {
 				SLIST_INSERT(&after_act->ma_before, act, ma_bflink);
 				break;
 			}
@@ -190,30 +187,27 @@ Dee_memaction_assign_before(struct Dee_memaction *mactv, Dee_lid_t mactc) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 morph_location(struct Dee_function_generator *__restrict self,
-               struct Dee_memloc *old_loc, uint8_t old_val_flags,
-               struct Dee_memloc const *new_loc, uint8_t new_val_flags,
+               struct Dee_memobj *oldobj,
+               struct Dee_memobj const *newobj,
                bool check_different) {
 	struct Dee_memstate *state = self->fg_state;
-	if (old_val_flags & MEMVAL_F_LOCAL_UNBOUND) {
-		if (new_val_flags & MEMVAL_F_LOCAL_UNBOUND)
-			return 0; /* Value is never bound -> nothing to move! */
-		if (new_val_flags & MEMVAL_F_LOCAL_BOUND)
-			return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot morph unbound -> not unbound");
-		/* Value is conditionally bound in the target -> must generate code to assign "0" to it. */
-		old_val_flags &= ~(MEMVAL_F_NOREF | MEMVAL_M_LOCAL_BSTATE);
-		old_val_flags |= new_val_flags & MEMVAL_F_NOREF;
-		Dee_memstate_decrinuse_for_memloc(state, old_loc);
-		Dee_memloc_init_const(old_loc, NULL);
-		goto do_move_to_new_loc;
+	if (!Dee_memobj_local_alwaysbound(oldobj)) {
+		if (Dee_memobj_local_alwaysbound(newobj))
+			return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot morph maybe/never bound -> bound");
+		if (Dee_memobj_local_neverbound(oldobj)) {
+			if (Dee_memobj_local_neverbound(newobj))
+				return 0; /* Value is never bound -> nothing to move! */
+			/* Value is conditionally bound in the target -> must generate code to assign "0" to it. */
+			oldobj->mo_flags |= MEMOBJ_F_MAYBEUNBOUND;
+			oldobj->mo_flags |= newobj->mo_flags & MEMOBJ_F_ISREF;
+			ASSERT(Dee_memobj_isnull(oldobj));
+			goto do_move_to_newobj;
+		}
+	} else {
+		oldobj->mo_flags |= newobj->mo_flags & MEMOBJ_F_MAYBEUNBOUND;
 	}
-	if (old_val_flags & MEMVAL_F_LOCAL_BOUND) {
-		if (!(new_val_flags & MEMVAL_F_LOCAL_BOUND))
-			old_val_flags &= ~MEMVAL_F_LOCAL_BOUND;
-	} else if (new_val_flags & MEMVAL_F_LOCAL_BOUND) {
-		return DeeError_Throwf(&DeeError_IllegalInstruction, "Cannot morph maybe/not bound -> bound");
-	}
-	if ((old_val_flags & MEMVAL_F_NOREF) != (new_val_flags & MEMVAL_F_NOREF)) {
-		bool must_incref = old_val_flags & MEMVAL_F_NOREF;
+	if ((oldobj->mo_flags & MEMOBJ_F_ISREF) != (newobj->mo_flags & MEMOBJ_F_ISREF)) {
+		bool must_incref = newobj->mo_flags & MEMOBJ_F_ISREF;
 		/* NOTE: Can always use decref_nokill() here, since the only situation where
 		 *       the caller is ever allowed to morph code such that something is no
 		 *       longer a reference, is when it is known that the reference is question
@@ -221,25 +215,27 @@ morph_location(struct Dee_function_generator *__restrict self,
 		 * TODO: This is incorrect. `MEMSTATE_XLOCAL_POPITER' should be decref'd normally
 		 *       if the location isn't being aliased elsewhere. As such, the decref *can*
 		 *       kill if there isn't an alias. */
-		if (!(old_val_flags & MEMVAL_F_LOCAL_BOUND)) {
-			if unlikely(must_incref ? Dee_function_generator_gxincref_loc(self, old_loc, 1)
-			                        : Dee_function_generator_gxdecref_nokill_loc(self, old_loc, 1))
+		if (Dee_memobj_local_alwaysbound(oldobj)) {
+			if unlikely(must_incref ? Dee_function_generator_gincref_loc(self, Dee_memobj_getloc(oldobj), 1)
+			                        : Dee_function_generator_gdecref_nokill_loc(self, Dee_memobj_getloc(oldobj), 1))
 				goto err;
 		} else {
-			if unlikely(must_incref ? Dee_function_generator_gincref_loc(self, old_loc, 1)
-			                        : Dee_function_generator_gdecref_nokill_loc(self, old_loc, 1))
+			if unlikely(must_incref ? Dee_function_generator_gxincref_loc(self, Dee_memobj_getloc(oldobj), 1)
+			                        : Dee_function_generator_gxdecref_nokill_loc(self, Dee_memobj_getloc(oldobj), 1))
 				goto err;
 		}
-		old_val_flags &= ~MEMVAL_F_NOREF;
-		old_val_flags |= new_val_flags & MEMVAL_F_NOREF;
+		oldobj->mo_flags &= ~MEMOBJ_F_ISREF;
+		oldobj->mo_flags |= newobj->mo_flags & MEMOBJ_F_ISREF;
 	}
-	if (!check_different || !Dee_memloc_sameloc(old_loc, new_loc)) {
-do_move_to_new_loc:
-		if unlikely(Dee_function_generator_gmov_loc2loc(self, old_loc, new_loc))
+	if (!check_different || !Dee_memobj_sameloc(oldobj, newobj)) {
+do_move_to_newobj:
+		if unlikely(Dee_function_generator_gmov_loc2loc(self,
+		                                                Dee_memobj_getloc(oldobj),
+		                                                Dee_memobj_getloc(newobj)))
 			goto err;
-		Dee_memstate_decrinuse_for_memloc(state, old_loc);
-		*old_loc = *new_loc;
-		Dee_memstate_incrinuse_for_memloc(state, old_loc);
+		Dee_memstate_decrinuse_for_memobj(state, oldobj);
+		*oldobj = *newobj;
+		Dee_memstate_incrinuse_for_memobj(state, oldobj);
 	}
 	return 0;
 err:
@@ -313,11 +309,11 @@ again_search_changes:
 			new_valv = new_state->ms_stackv;
 		}
 		for (i = 0; i < valc; ++i) {
-			struct Dee_memloc *oldlocv;
-			struct Dee_memloc const *newlocv;
+			struct Dee_memobj *oldobjv;
+			struct Dee_memobj const *newobjv;
 			struct Dee_memval *oldval = &old_valv[i];
 			struct Dee_memval const *newval = &new_valv[i];
-			size_t loci, locc = Dee_memval_getlocc(oldval);
+			size_t loci, locc = Dee_memval_getobjc(oldval);
 			if (Dee_memval_sameval(oldval, newval))
 				continue;
 			if unlikely(oldval->mv_vmorph != newval->mv_vmorph) {
@@ -330,15 +326,15 @@ again_search_changes:
 				oldval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 				goto again_search_changes; /* Must restart because gdirect() may have flushed registers */
 			}
-			ASSERTF(locc == Dee_memval_getlocc(newval),
+			ASSERTF(locc == Dee_memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
 			        "been handled by `Dee_memstate_constrainwith()')");
-			oldlocv = Dee_memval_getlocv(oldval);
-			newlocv = Dee_memval_getlocv(newval);
+			oldobjv = Dee_memval_getobjv(oldval);
+			newobjv = Dee_memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
-				struct Dee_memloc *oldloc = &oldlocv[loci];
-				struct Dee_memloc const *newloc = &newlocv[loci];
-				if (!Dee_memloc_sameloc(oldloc, newloc))
+				struct Dee_memobj *oldobj = &oldobjv[loci];
+				struct Dee_memobj const *newobj = &newobjv[loci];
+				if (!Dee_memobj_sameloc(oldobj, newobj))
 					++mactc;
 			}
 		}
@@ -368,35 +364,28 @@ again_search_changes:
 			new_valv = new_state->ms_stackv;
 		}
 		for (i = 0; i < valc; ++i) {
-			struct Dee_memloc *oldlocv;
-			struct Dee_memloc const *newlocv;
+			struct Dee_memobj *oldobjv;
+			struct Dee_memobj const *newobjv;
 			struct Dee_memval *oldval = &old_valv[i];
 			struct Dee_memval const *newval = &new_valv[i];
-			size_t loci, locc = Dee_memval_getlocc(oldval);
+			size_t loci, locc = Dee_memval_getobjc(oldval);
 			if (Dee_memval_sameval(oldval, newval))
 				continue;
 			ASSERT(oldval->mv_vmorph == newval->mv_vmorph);
-			ASSERTF(locc == Dee_memval_getlocc(newval),
+			ASSERTF(locc == Dee_memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
 			        "been handled by `Dee_memstate_constrainwith()')");
-			oldlocv = Dee_memval_getlocv(oldval);
-			newlocv = Dee_memval_getlocv(newval);
+			oldobjv = Dee_memval_getobjv(oldval);
+			newobjv = Dee_memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
-				struct Dee_memloc *oldloc = &oldlocv[loci];
-				struct Dee_memloc const *newloc = &newlocv[loci];
-				if (!Dee_memloc_sameloc(oldloc, newloc)) {
+				struct Dee_memobj *oldobj = &oldobjv[loci];
+				struct Dee_memobj const *newobj = &newobjv[loci];
+				if (!Dee_memobj_sameloc(oldobj, newobj)) {
 					ASSERT(j < mactc);
-					mactv[j].ma_oldloc   = oldloc;
-					mactv[j].ma_oldflags = oldval->mv_flags;
-					mactv[j].ma_newloc   = newloc;
-					mactv[j].ma_newflags = newval->mv_flags;
-					if (kind == 0) {
-						/* Stack locations always behave as though unconditionally bound. */
-						mactv[j].ma_oldflags &= ~MEMVAL_M_LOCAL_BSTATE;
-						mactv[j].ma_newflags &= ~MEMVAL_M_LOCAL_BSTATE;
-						mactv[j].ma_oldflags |= MEMVAL_F_LOCAL_BOUND;
-						mactv[j].ma_newflags |= MEMVAL_F_LOCAL_BOUND;
-					}
+					ASSERT(kind == 0 || !(oldobj->mo_flags & MEMOBJ_F_MAYBEUNBOUND));
+					ASSERT(kind == 0 || !(newobj->mo_flags & MEMOBJ_F_MAYBEUNBOUND));
+					mactv[j].ma_oldobj = oldobj;
+					mactv[j].ma_newobj = newobj;
 					++j;
 				}
 			}
@@ -424,12 +413,9 @@ again_search_for_push_or_pop:
 		                                                                   old_state->ms_host_cfa_offset)) != NULL) {
 			ASSERT(!Dee_memaction_isdone(early_act));
 			ASSERT(Dee_memaction_isready(early_act));
-			if unlikely(morph_location(self,
-			                           early_act->ma_oldloc, early_act->ma_oldflags,
-			                           early_act->ma_newloc, early_act->ma_newflags,
-			                           false))
+			if unlikely(morph_location(self, early_act->ma_oldobj, early_act->ma_newobj, false))
 				goto err_actv_restore;
-			early_act->ma_oldloc = NULL; /* Mark as done */
+			early_act->ma_oldobj = NULL; /* Mark as done */
 			++finished;
 		}
 		cfa_delta = (ptrdiff_t)new_state->ms_host_cfa_offset -
@@ -456,12 +442,12 @@ again_search_for_push_or_pop:
 			 */
 			if (cfa_delta < 0) {
 				struct Dee_memaction *next_cfa_act;
-				next_cfa_act = Dee_memaction_at_greatest_oldloc_cfa(mactv, mactc);
+				next_cfa_act = Dee_memaction_at_greatest_oldobj_cfa(mactv, mactc);
 				if (next_cfa_act &&
-				    Dee_memloc_getcfaend(next_cfa_act->ma_oldloc) > new_state->ms_host_cfa_offset) {
+				    Dee_memobj_getcfaend(next_cfa_act->ma_oldobj) > new_state->ms_host_cfa_offset) {
 					/* This action needs to be performed *before* the stack is adjusted! */
 					ptrdiff_t next_cfa_act_delta;
-					next_cfa_act_delta = (ptrdiff_t)Dee_memloc_getcfaend(next_cfa_act->ma_oldloc) -
+					next_cfa_act_delta = (ptrdiff_t)Dee_memobj_getcfaend(next_cfa_act->ma_oldobj) -
 					                     (ptrdiff_t)old_state->ms_host_cfa_offset;
 					if unlikely(Dee_function_generator_ghstack_adjust(self, next_cfa_act_delta))
 						goto err_actv_restore;
@@ -484,13 +470,10 @@ again_search_for_push_or_pop:
 				continue;
 
 			/* Perform this action */
-			if unlikely(morph_location(self,
-			                           act->ma_oldloc, act->ma_oldflags,
-			                           act->ma_newloc, act->ma_newflags,
-			                           false))
+			if unlikely(morph_location(self, act->ma_oldobj, act->ma_newobj, false))
 				goto err_actv_restore;
 
-			act->ma_oldloc = NULL; /* Mark as done */
+			act->ma_oldobj = NULL; /* Mark as done */
 			did_something  = true;
 			++finished;
 		}
@@ -516,24 +499,21 @@ again_search_for_push_or_pop:
 			new_valv = new_state->ms_stackv;
 		}
 		for (i = 0; i < valc; ++i) {
-			struct Dee_memloc *oldlocv;
-			struct Dee_memloc const *newlocv;
+			struct Dee_memobj *oldobjv;
+			struct Dee_memobj const *newobjv;
 			struct Dee_memval *oldval = &old_valv[i];
 			struct Dee_memval const *newval = &new_valv[i];
-			size_t loci, locc = Dee_memval_getlocc(oldval);
+			size_t loci, locc = Dee_memval_getobjc(oldval);
 			ASSERT(oldval->mv_vmorph == newval->mv_vmorph);
-			ASSERTF(locc == Dee_memval_getlocc(newval),
+			ASSERTF(locc == Dee_memval_getobjc(newval),
 			        "Incompatible location counts (this should have "
 			        "been handled by `Dee_memstate_constrainwith()')");
-			oldlocv = Dee_memval_getlocv(oldval);
-			newlocv = Dee_memval_getlocv(newval);
+			oldobjv = Dee_memval_getobjv(oldval);
+			newobjv = Dee_memval_getobjv(newval);
 			for (loci = 0; loci < locc; ++loci) {
-				struct Dee_memloc *oldloc = &oldlocv[loci];
-				struct Dee_memloc const *newloc = &newlocv[loci];
-				if unlikely(morph_location(self,
-				                           oldloc, oldval->mv_flags,
-				                           newloc, newval->mv_flags,
-				                           true))
+				struct Dee_memobj *oldobj = &oldobjv[loci];
+				struct Dee_memobj const *newobj = &newobjv[loci];
+				if unlikely(morph_location(self, oldobj, newobj, true))
 					goto err;
 			}
 		}

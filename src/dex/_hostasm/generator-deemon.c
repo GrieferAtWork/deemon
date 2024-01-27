@@ -235,12 +235,11 @@ again:
 	}
 
 	/* In case of a local, assert that the local is currently bound. */
-	if (prefix_type == ASM_LOCAL && !(src_mval->mv_flags & MEMVAL_F_LOCAL_BOUND)) {
-		if (src_mval->mv_flags & MEMVAL_F_LOCAL_UNBOUND)
+	if (prefix_type == ASM_LOCAL && !Dee_memval_direct_local_alwaysbound(src_mval)) {
+		if (Dee_memval_direct_local_neverbound(src_mval))
 			return 1; /* Cannot address always-unbound local */
 		DO(Dee_function_generator_gassert_local_bound(self, instr, id1));
-		/* After a bound assertion, the local variable is guarantied to be bound. */
-		src_mval->mv_flags |= MEMVAL_F_LOCAL_BOUND;
+		Dee_memval_direct_local_setbound(src_mval);
 	}
 
 	/* Prefixed location must contain a reference and not be aliased. */
@@ -258,12 +257,12 @@ again:
 				continue;
 			/* Got an alias! */
 			got_alias = true;
-			if (alias->mv_flags & MEMVAL_F_NOREF) {
+			if (!Dee_memval_direct_isref(alias)) {
 				alias_without_reference = alias;
-			} else if (src_mval->mv_flags & MEMVAL_F_NOREF) {
+			} else if (!Dee_memval_direct_isref(src_mval)) {
 				/* Steal reference from alias */
-				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
-				alias->mv_flags |= MEMVAL_F_NOREF;
+				Dee_memval_direct_setref(src_mval);
+				Dee_memval_direct_clearref(alias);
 				alias_without_reference = alias;
 			} else {
 				alias_with_reference = alias;
@@ -271,9 +270,9 @@ again:
 		}
 		Dee_memstate_foreach_end;
 		if (got_alias) {
-			ASSERT(!alias_with_reference || !(alias_with_reference->mv_flags & MEMVAL_F_NOREF));
-			ASSERT(!alias_without_reference || (alias_without_reference->mv_flags & MEMVAL_F_NOREF));
-			if (src_mval->mv_flags & MEMVAL_F_NOREF) {
+			ASSERT(!alias_with_reference || Dee_memval_direct_isref(alias_with_reference));
+			ASSERT(!alias_without_reference || !Dee_memval_direct_isref(alias_without_reference));
+			if (!Dee_memval_direct_isref(src_mval)) {
 				/* There are aliases, but no-one is holding a reference.
 				 * This can happen if the location points to a constant
 				 * that got flushed, in which case we only need a single
@@ -281,12 +280,12 @@ again:
 				ASSERT(alias_without_reference);
 				ASSERT(!alias_with_reference);
 				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(src_mval), 1));
-				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
+				Dee_memval_direct_setref(src_mval);
 			} else if (alias_without_reference && !alias_with_reference) {
 				/* There are aliases, but less that 2 references -> make sure there are at least 2 references */
-				ASSERT(alias_without_reference->mv_flags & MEMVAL_F_NOREF);
+				ASSERT(!Dee_memval_direct_isref(alias_without_reference));
 				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(alias_without_reference), 1));
-				alias_without_reference->mv_flags &= ~MEMVAL_F_NOREF;
+				Dee_memval_direct_setref(alias_without_reference);
 			}
 
 			/* Must generate code to move the value into a second, distinct stack location. */
@@ -309,9 +308,9 @@ again:
 			Dee_memloc_init_hstackind(Dee_memval_direct_getloc(src_mval), cfa_offset, 0);
 		} else {
 			/* No aliases exist, so there's no need to force a distinct location. */
-			if (src_mval->mv_flags & MEMVAL_F_NOREF) {
+			if (!Dee_memval_direct_isref(src_mval)) {
 				DO(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(src_mval), 1));
-				src_mval->mv_flags &= ~MEMVAL_F_NOREF;
+				Dee_memval_direct_setref(src_mval);
 			}
 		}
 	}
@@ -320,9 +319,9 @@ again:
 	 * Said alias then gets to inherit the reference currently held in `src_loc'. */
 	ASSERT(state->ms_stackc < state->ms_stacka);
 	dst_mval = &state->ms_stackv[state->ms_stackc];
-	Dee_memval_initcopy(dst_mval, src_mval);
-	src_mval->mv_flags |= MEMVAL_F_NOREF; /* Reference was stolen (if there was one) */
-	Dee_memstate_incrinuse_for_memval(state, dst_mval);
+	Dee_memval_direct_initcopy(dst_mval, src_mval);
+	Dee_memval_direct_clearref(src_mval); /* Reference was stolen (if there was one) */
+	Dee_memstate_incrinuse_for_direct_memval(state, dst_mval);
 	++state->ms_stackc;
 	return 0;
 err:
@@ -1059,7 +1058,7 @@ do_jcc:
 		uint16_t rid;
 		rid = instr[1];
 		__IF0 { TARGET(ASM16_SUPER_THIS_R) rid = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self));
+		DO(Dee_function_generator_vpush_this(self, instr));
 		DO(Dee_function_generator_vpush_rid(self, rid));
 		return Dee_function_generator_vopsuper(self);
 	}	break;
@@ -1241,7 +1240,7 @@ do_jcc:
 		uint16_t cid;
 		cid = instr[1];
 		__IF0 { TARGET(ASM16_GETATTR_THIS_C) cid = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self));
+		DO(Dee_function_generator_vpush_this(self, instr));
 		DO(Dee_function_generator_vpush_cid(self, cid));
 		return Dee_function_generator_vopgetattr(self);
 	}	break;
@@ -1250,7 +1249,7 @@ do_jcc:
 		uint16_t cid;
 		cid = instr[1];
 		__IF0 { TARGET(ASM16_DELATTR_THIS_C) cid = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self));
+		DO(Dee_function_generator_vpush_this(self, instr));
 		DO(Dee_function_generator_vpush_cid(self, cid));
 		return Dee_function_generator_vopdelattr(self);
 	}	break;
@@ -1259,7 +1258,7 @@ do_jcc:
 		uint16_t cid;
 		cid = instr[1];
 		__IF0 { TARGET(ASM16_SETATTR_THIS_C) cid = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self));
+		DO(Dee_function_generator_vpush_this(self, instr));
 		DO(Dee_function_generator_vpush_cid(self, cid));
 		DO(Dee_function_generator_vlrot(self, 3));
 		return Dee_function_generator_vopsetattr(self);
@@ -1404,7 +1403,7 @@ do_jcc:
 		DO(Dee_function_generator_vpush_rid(self, type_rid));  /* [args...], type */
 		DO(Dee_function_generator_vpush_cmember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)); /* [args...], func */
 		DO(Dee_function_generator_vrrot(self, argc + 1));      /* func, [args...] */
-		DO(Dee_function_generator_vpush_this(self));           /* func, [args...], this */
+		DO(Dee_function_generator_vpush_this(self, instr));    /* func, [args...], this */
 		DO(Dee_function_generator_vrrot(self, argc + 1));      /* func, this, [args...] */
 		return Dee_function_generator_vopthiscall(self, argc); /* result */
 	}	break;
@@ -1442,7 +1441,7 @@ do_jcc:
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
 		DO(Dee_function_generator_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1)); /* [refs...], ref:function */
-		ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF));          /* [refs...], ref:function */
+		ASSERT(Dee_function_generator_vtop_direct_isref(self));                                  /* [refs...], ref:function */
 		DO(Dee_function_generator_voneref_noalias(self));                                 /* [refs...], ref:function */
 		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeFunction_Type));       /* [refs...], ref:function */
 		/* TODO: When "DEE_FUNCTION_ASSEMBLER_F_SAFE" isn't set, check if the
@@ -1463,17 +1462,17 @@ do_jcc:
 		 * >> }
 		 */
 		DO(Dee_function_generator_vpush_cid_t(self, code_cid, &DeeCode_Type));            /* [refs...], ref:function, code */
-		DO(Dee_function_generator_vref(self));                                            /* [refs...], ref:function, ref:code */
+		DO(Dee_function_generator_vref2(self, (Dee_vstackaddr_t)(refc + 2)));             /* [refs...], ref:function, ref:code */
 		DO(Dee_function_generator_vpopind(self, offsetof(DeeFunctionObject, fo_code)));   /* [refs...], ref:function */
 		while (refc) {
 			--refc;
-			DO(Dee_function_generator_vswap(self));    /* [refs...], ref:function, ref */
-			DO(Dee_function_generator_vref2(self, 2)); /* [refs...], ref:function, ref:ref */
-			DO(Dee_function_generator_vpopind(self,    /* [refs...], ref:function */
+			DO(Dee_function_generator_vswap(self));                               /* [refs...], ref:function, ref */
+			DO(Dee_function_generator_vref2(self, (Dee_vstackaddr_t)(refc + 2))); /* [refs...], ref:function, ref:ref */
+			DO(Dee_function_generator_vpopind(self,                               /* [refs...], ref:function */
 			                                  offsetof(DeeFunctionObject, fo_refv) +
 			                                  (refc * sizeof(DREF DeeObject *))));
 		}
-		ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF)); /* ref:function */
+		ASSERT(Dee_function_generator_vtop_direct_isref(self)); /* ref:function */
 	}	break;
 
 	TARGET(ASM_CAST_INT)
@@ -1975,7 +1974,7 @@ do_jcc:
 			attr_cid = UNALIGNED_GETLE16(instr + 2);
 			argc     = instr[4];
 		}
-		DO(Dee_function_generator_vpush_this(self));           /* [args...], this */
+		DO(Dee_function_generator_vpush_this(self, instr));    /* [args...], this */
 		DO(Dee_function_generator_vrrot(self, argc + 1));      /* this, [args...] */
 		DO(Dee_function_generator_vpush_cid(self, attr_cid));  /* this, [args...], attr */
 		DO(Dee_function_generator_vrrot(self, argc + 1));      /* this, attr, [args...] */
@@ -1986,7 +1985,7 @@ do_jcc:
 		uint16_t attr_cid;
 		attr_cid = instr[1];
 		__IF0 { TARGET(ASM16_CALLATTR_THIS_C_TUPLE) attr_cid = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self));          /* args, this */
+		DO(Dee_function_generator_vpush_this(self, instr));   /* args, this */
 		DO(Dee_function_generator_vpush_cid(self, attr_cid)); /* args, this, attr */
 		DO(Dee_function_generator_vlrot(self, 3));            /* this, attr, args */
 		return Dee_function_generator_vopcallattrtuple(self); /* result */
@@ -2083,7 +2082,7 @@ do_jcc:
 		return Dee_function_generator_vpush_except(self);
 
 	TARGET(ASM_PUSH_THIS)
-		return Dee_function_generator_vpush_this(self);
+		return Dee_function_generator_vpush_this(self, instr);
 
 	TARGET(ASM_CAST_HASHSET)
 		return Dee_function_generator_vopcast(self, &DeeHashSet_Type);
@@ -2130,7 +2129,7 @@ do_jcc:
 			type_rid = UNALIGNED_GETLE16(instr + 2);
 			attr_cid = UNALIGNED_GETLE16(instr + 4);
 		}
-		DO(Dee_function_generator_vpush_this(self));          /* this */
+		DO(Dee_function_generator_vpush_this(self, instr));   /* this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid)); /* this, super */
 		DO(Dee_function_generator_vopsuper(self));            /* this as super */
 		DO(Dee_function_generator_vpush_cid(self, attr_cid)); /* this as super, attr */
@@ -2149,7 +2148,7 @@ do_jcc:
 			attr_cid = UNALIGNED_GETLE16(instr + 4);
 			argc     = instr[6];
 		}
-		DO(Dee_function_generator_vpush_this(self));           /* [args...], this */
+		DO(Dee_function_generator_vpush_this(self, instr));    /* [args...], this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid));  /* [args...], this, super */
 		DO(Dee_function_generator_vopsuper(self));             /* [args...], this as super */
 		DO(Dee_function_generator_vrrot(self, argc + 1));      /* this as super, [args...] */
@@ -2229,8 +2228,8 @@ do_jcc:
 		if (matching_pop_requires_reference(*p_next_instr, self->fg_block->bb_deemon_end,
 		                                    (uint16_t)self->fg_state->ms_stackc))
 			flags |= DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF;
-		DO(Dee_function_generator_vpush_this(self)); /* type, this */
-		DO(Dee_function_generator_vswap(self));      /* this, type */
+		DO(Dee_function_generator_vpush_this(self, instr)); /* type, this */
+		DO(Dee_function_generator_vswap(self));             /* this, type */
 		return Dee_function_generator_vpush_imember(self, addr, flags);
 	}	break;
 
@@ -2238,8 +2237,8 @@ do_jcc:
 		uint16_t addr;
 		addr = instr[1];
 		__IF0 { TARGET(ASM16_DELMEMBER_THIS) addr = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self)); /* type, this */
-		DO(Dee_function_generator_vswap(self));      /* this, type */
+		DO(Dee_function_generator_vpush_this(self, instr)); /* type, this */
+		DO(Dee_function_generator_vswap(self));             /* this, type */
 		return Dee_function_generator_vdel_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE);
 	}	break;
 
@@ -2247,8 +2246,8 @@ do_jcc:
 		uint16_t addr;
 		addr = instr[1];
 		__IF0 { TARGET(ASM16_SETMEMBER_THIS) addr = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self)); /* type, value, this */
-		DO(Dee_function_generator_vrrot(self, 3));   /* this, type, value */
+		DO(Dee_function_generator_vpush_this(self, instr)); /* type, value, this */
+		DO(Dee_function_generator_vrrot(self, 3));          /* this, type, value */
 		return Dee_function_generator_vpop_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE);
 	}	break;
 
@@ -2256,8 +2255,8 @@ do_jcc:
 		uint16_t addr;
 		addr = instr[1];
 		__IF0 { TARGET(ASM16_BOUNDMEMBER_THIS) addr = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_this(self)); /* type, this */
-		DO(Dee_function_generator_vswap(self));      /* this, type */
+		DO(Dee_function_generator_vpush_this(self, instr)); /* type, this */
+		DO(Dee_function_generator_vswap(self));             /* this, type */
 		return Dee_function_generator_vbound_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE);
 	}	break;
 
@@ -2273,7 +2272,7 @@ do_jcc:
 		}
 		ref = matching_pop_requires_reference(*p_next_instr, self->fg_block->bb_deemon_end,
 		                                      (uint16_t)self->fg_state->ms_stackc + 1);
-		DO(Dee_function_generator_vpush_this(self));                  /* this */
+		DO(Dee_function_generator_vpush_this(self, instr));           /* this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid));         /* this, type */
 		return Dee_function_generator_vpush_imember(self, addr, ref); /* value */
 	}	break;
@@ -2287,7 +2286,7 @@ do_jcc:
 			type_rid = UNALIGNED_GETLE16(instr + 2);
 			addr     = UNALIGNED_GETLE16(instr + 4);
 		}
-		DO(Dee_function_generator_vpush_this(self));          /* this */
+		DO(Dee_function_generator_vpush_this(self, instr));   /* this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid)); /* this, type */
 		return Dee_function_generator_vdel_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL); 
 	}	break;
@@ -2301,7 +2300,7 @@ do_jcc:
 			type_rid = UNALIGNED_GETLE16(instr + 2);
 			addr     = UNALIGNED_GETLE16(instr + 4);
 		}
-		DO(Dee_function_generator_vpush_this(self));          /* value, this */
+		DO(Dee_function_generator_vpush_this(self, instr));   /* value, this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid)); /* value, this, type */
 		DO(Dee_function_generator_vlrot(self, 3));            /* this, type, value */
 		return Dee_function_generator_vpop_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL);
@@ -2316,7 +2315,7 @@ do_jcc:
 			type_rid = UNALIGNED_GETLE16(instr + 2);
 			addr     = UNALIGNED_GETLE16(instr + 4);
 		}
-		DO(Dee_function_generator_vpush_this(self));          /* this */
+		DO(Dee_function_generator_vpush_this(self, instr));   /* this */
 		DO(Dee_function_generator_vpush_rid(self, type_rid)); /* this, type */
 		return Dee_function_generator_vbound_imember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL); 
 	}	break;
@@ -2501,15 +2500,15 @@ do_jcc:
 				DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));  /* - */
 				DO(Dee_function_generator_vind(self, 0));                             /* ..., ref:value, *p_global */
 				DO(Dee_function_generator_vreg(self, NULL));                          /* ..., ref:value, old_value */
-				ASSERT(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF); /* - */
+				ASSERT(!Dee_function_generator_vtop_direct_isref(self));              /* - */
 				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtopdloc(self), instr,
 				                                        mod, gid, NULL, &mod->mo_lock));
-				ASSERT(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF); /* - */
-				Dee_function_generator_vtop(self)->mv_flags &= ~MEMVAL_F_NOREF;       /* ..., ref:value, ref:old_value */
+				ASSERT(!Dee_function_generator_vtop_direct_isref(self));              /* - */
+				Dee_function_generator_vtop_direct_setref(self);                      /* ..., ref:value, ref:old_value */
 				DO(Dee_function_generator_vswap(self));                               /* ..., ref:old_value, ref:value */
-				ASSERT(!(Dee_function_generator_vtop(self)->mv_flags & MEMVAL_F_NOREF)); /* - */
+				ASSERT(Dee_function_generator_vtop_direct_isref(self));               /* - */
 				DO(Dee_function_generator_gmov_loc2constind(self, Dee_function_generator_vtopdloc(self), (void const **)&mod->mo_globalv[gid], 0)); /* - */
-				Dee_function_generator_vtop(self)->mv_flags |= MEMVAL_F_NOREF;        /* ..., ref:old_value, value */
+				Dee_function_generator_vtop_direct_clearref(self);                    /* ..., ref:old_value, value */
 				DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* - */
 				DO(Dee_function_generator_vpop(self));                                /* ..., ref:old_value */
 
@@ -2699,9 +2698,10 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 		struct Dee_memstate *state = self->fg_state;
 		Dee_lid_t lid;
 		for (lid = 0; lid < state->ms_localc; ++lid) {
-			if (Dee_memval_isunalloc(&state->ms_localv[lid]))
-				continue;
 			if (bitset_test(block->bb_locuse, lid))
+				continue;
+			if (Dee_memval_isdirect(&state->ms_localv[lid]) &&
+			    Dee_memval_direct_local_neverbound(&state->ms_localv[lid]))
 				continue;
 			if (Dee_memstate_isshared(state)) {
 				DO(Dee_function_generator_state_unshare(self));

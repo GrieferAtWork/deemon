@@ -43,13 +43,14 @@ DECL_BEGIN
 /* Dee_memequivs                                                        */
 /************************************************************************/
 
-STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_UNALLOC));
 STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_UNDEFINED));
 STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HSTACK));
 STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HREG));
 STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HREGIND));
 STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_HSTACKIND));
 STATIC_ASSERT(MEMEQUIV_TYPE_SUPPORTED(MEMADR_TYPE_CONST));
+STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMEQUIV_TYPE_UNUSED));
+STATIC_ASSERT(!MEMEQUIV_TYPE_SUPPORTED(MEMEQUIV_TYPE_DUMMY));
 
 
 INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
@@ -227,6 +228,18 @@ Dee_memequivs_constrainwith(struct Dee_memequivs *__restrict self,
 					_Dee_memequivs_decrinuse(self, eq_iter->meq_loc.ml_adr.ma_reg);
 				ASSERT(RINGQ_PREV(eq_iter, meq_class) != eq_iter);
 				ASSERT(RINGQ_NEXT(eq_iter, meq_class) != eq_iter);
+
+				/* XXX: This is doing more than needs to happen:
+				 * >> a: { %eax <=> %ecx <=> %edx <=> %ebx }
+				 * >> b: { %eax <=> %ecx, %edx <=> %ebx }
+				 *
+				 * Currently, this results either:
+				 * >> result = { %eax <=> %ecx }
+				 * >> result = { %edx <=> %ebx }
+				 * based on which location is encountered first,
+				 * when the optimal result would be:
+				 * >> result = { %eax <=> %ecx, %edx <=> %ebx }
+				 */
 				RINGQ_REMOVE(eq_iter, meq_class);
 				DBG_memset(eq_iter, 0xcc, sizeof(*eq_iter));
 				eq_iter->meq_loc.ml_adr.ma_typ = MEMEQUIV_TYPE_DUMMY;

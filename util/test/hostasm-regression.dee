@@ -131,6 +131,24 @@ hexec("456", (4, 7), (a, b) -> {
 	return result;
 });
 
+hexec("01234560123456", (7,), (a) -> {
+	local result = "";
+	for (local x: [:a])
+		result += x;
+	for (local x: [:a])
+		result += x;
+	return result;
+});
+
+hexec("456456", (4, 7), (a, b) -> {
+	local result = "";
+	for (local x: [a:b])
+		result += x;
+	for (local x: [a:b])
+		result += x;
+	return result;
+});
+
 hexec("fooxx7", ("x", 7), (a, b) -> {
 	local x = "foo";
 	do {

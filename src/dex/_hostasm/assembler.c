@@ -116,6 +116,7 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
 Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *__restrict self) {
+	Dee_lid_t lid, n_optargs;
 	struct Dee_memstate *result;
 
 	/* Setup the state of the function's first (entry) block. */
@@ -129,17 +130,21 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	result->ms_stacka    = 0;
 	result->ms_flags     = MEMSTATE_F_NORMAL;
 	result->ms_uargc_min = self->fa_code->co_argc_min;
+	n_optargs            = self->fa_code->co_argc_max - self->fa_code->co_argc_min;
 	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
 	Dee_memequivs_init(&result->ms_memequiv);
 	Dee_memstate_hregs_clear_usage(result);
 	result->ms_stackv = NULL;
 
-	/* Initially, all variables are unbound */
-	{
-		Dee_lid_t lid;
-		for (lid = 0; lid < result->ms_localc; ++lid)
-			Dee_memval_init_unalloc(&result->ms_localv[lid]);
-	}
+	/* Initially, all variables are unbound... */
+	for (lid = 0; lid < result->ms_localc - n_optargs; ++lid)
+		Dee_memval_init_local_unbound(&result->ms_localv[lid]);
+
+	/* ... except for optional argument cache slots, which we initialize as undefined.
+	 * This special handling then causes optional arguments to be cached on first use
+	 * into their respective slots. */
+	for (; lid < result->ms_localc; ++lid)
+		Dee_memval_init_undefined(&result->ms_localv[lid]);
 done:
 	return result;
 }
@@ -164,7 +169,7 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 	{
 #ifdef HOSTASM_X86_64
 #define Dee_memval_set_x86_arg(self, argi) \
-	Dee_memval_init_hreg(self, truearg_regno[argi], 0, MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND, NULL)
+	Dee_memval_init_hreg(self, truearg_regno[argi], 0, NULL, MEMOBJ_F_NORMAL)
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,
@@ -177,7 +182,7 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #else /* HOSTASM_X86_64 */
 #define Dee_memval_set_x86_arg(self, argi)                                       \
 	Dee_memval_init_hstackind(self, (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
-	                          0, MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND, NULL)
+	                          0, NULL, MEMOBJ_F_NORMAL)
 #endif /* !HOSTASM_X86_64 */
 		size_t argi = 0;
 		Dee_lid_t extra_base = self->fa_localc;
@@ -202,11 +207,10 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #if defined(HOSTASM_X86_64) && !defined(HOST_REGISTER_R_ARG4)
 			if (argi == 5) {
 				struct Dee_memval *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
-				a_kw->mv_flags = MEMVAL_F_NOREF | MEMVAL_F_LOCAL_BOUND;
 #ifdef HOSTASM_X86_64_MSABI
-				Dee_memloc_init_hstackind(&a_kw->mv_loc0, (uintptr_t)(-(5 * HOST_SIZEOF_POINTER)), 0);
+				Dee_memval_init_hstackind(a_kw, (uintptr_t)(-(5 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
 #else /* HOSTASM_X86_64_MSABI */
-				Dee_memloc_init_hstackind(&a_kw->mv_loc0, (uintptr_t)(-(1 * HOST_SIZEOF_POINTER)), 0);
+				Dee_memval_init_hstackind(a_kw, (uintptr_t)(-(1 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
 #endif /* !HOSTASM_X86_64_MSABI */
 			} else
 #endif /* HOSTASM_X86_64 && !HOST_REGISTER_R_ARG4 */
@@ -222,9 +226,9 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 
 	/* Some arguments have known object types. */
 	if (cc & HOSTFUNC_CC_F_FUNC)
-		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC].mv_valtyp = &DeeFunction_Type;
+		Dee_memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC], &DeeFunction_Type);
 	if (cc & HOSTFUNC_CC_F_TUPLE)
-		state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS].mv_valtyp = &DeeTuple_Type;
+		Dee_memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS], &DeeTuple_Type);
 
 	return state;
 err:
@@ -249,7 +253,8 @@ Dee_function_generator_makeprolog_cleanup(struct Dee_function_generator *__restr
 	for (lid = 0; lid < state->ms_localc; ++lid) {
 		if (bitset_test(block0->bb_locuse, lid))
 			continue;
-		if (Dee_memval_isunalloc(&state->ms_localv[lid]))
+		if (Dee_memval_isdirect(&state->ms_localv[lid]) &&
+		    Dee_memval_direct_local_neverbound(&state->ms_localv[lid]))
 			continue;
 		if unlikely(Dee_function_generator_vdel_local(self, lid))
 			goto err;
@@ -698,7 +703,7 @@ Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
 	ASSERT(i < self->ms_stackc);
 	mval = &self->ms_stackv[i];
 	ASSERT(Dee_memval_isdirect(mval));
-	Dee_memstate_decrinuse_for_memloc(self, &mval->mv_loc0);
+	Dee_memstate_decrinuse_for_direct_memval(self, mval);
 	Dee_memval_init_undefined(mval);
 }
 
@@ -1099,7 +1104,7 @@ move_cur_loci_to_new_loci:
 		if (cur_refcnt_new_loci != 0) {
 			ASSERT(curinfo_vaddr[new_loci] != (Dee_vstackaddr_t)-1);
 			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_loci]]));
-			p_cur_loc = &state->ms_stackv[curinfo_vaddr[new_loci]].mv_loc0;
+			p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[new_loci]]);
 			/* Move "p_cur_loc" to a location somewhere further up the stack, or just decref() it. */
 
 			/* TODO: Try to move "p_cur_loc" elsewhere */
@@ -1115,7 +1120,7 @@ move_cur_loci_to_new_loci:
 
 		/* Move cur_loci -> new_loci */
 		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-		p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
+		p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]);
 		Dee_except_exitinfo_asloc(new_loci, &new_loc);
 		if unlikely(Dee_function_generator_gexcept_morph_mov(self, p_cur_loc, &new_loc,
 		                                                     cur_refcnt_cur_loci,
@@ -1125,7 +1130,7 @@ move_cur_loci_to_new_loci:
 		/* Updated meta-data to reflect the move. */
 		Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
 		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-		ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0);
+		ASSERT(p_cur_loc == Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
 		curinfo_vaddr[new_loci] = curinfo_vaddr[cur_loci];
 		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
 		*p_cur_loc = new_loc;
@@ -1161,13 +1166,13 @@ move_cur_loci_to_new_loci:
 			struct Dee_memloc *p_cur_loc;
 			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
 			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-			p_cur_loc = &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0;
+			p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]);
 			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
 			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
 				goto err;
 			if (new_refcnt == 0) {
 				ASSERT(state == self->fg_state);
-				ASSERT(p_cur_loc == &state->ms_stackv[curinfo_vaddr[cur_loci]].mv_loc0);
+				ASSERT(p_cur_loc == Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
 				Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
 				Dee_memloc_init_undefined(p_cur_loc);
 				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
@@ -1191,7 +1196,7 @@ move_cur_loci_to_new_loci:
 			ASSERT(curinfo_vaddr[new_regi] != (Dee_vstackaddr_t)-1);
 			ASSERT(curinfo_vaddr[new_regi] < state->ms_stackc);
 			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_regi]]));
-			loc = &state->ms_stackv[curinfo_vaddr[new_regi]].mv_loc0;
+			loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[new_regi]]);
 			ASSERT(loc->ml_adr.ma_typ == MEMADR_TYPE_HREG ||
 			       loc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
 			ASSERT(loc->ml_adr.ma_typ != MEMADR_TYPE_HREG ||

@@ -388,9 +388,6 @@ _Dee_memloc_debug_print(struct Dee_memloc const *__restrict self) {
 	case MEMADR_TYPE_UNDEFINED:
 		Dee_DPRINT("<undefined>");
 		break;
-	case MEMADR_TYPE_UNALLOC:
-		Dee_DPRINT("-");
-		break;
 	default:
 		Dee_DPRINTF("{%I8u:%s,%p}",
 		            self->ml_adr.ma_typ,
@@ -403,25 +400,30 @@ _Dee_memloc_debug_print(struct Dee_memloc const *__restrict self) {
 }
 
 INTERN NONNULL((1)) void DCALL
-_Dee_memval_debug_print(struct Dee_memval const *__restrict self,
-                        bool is_local) {
-	/* TODO: Print mv_vmorph */
-	/* TODO: Print mv_valtyp */
-	if (!(self->mv_flags & MEMVAL_F_NOREF))
+_Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local) {
+	if (is_local && Dee_memobj_local_neverbound(self)) {
+		Dee_DPRINT("-");
+		return;
+	}
+	/* XXX: Print mv_obj0.mo_typeof? */
+	if (Dee_memobj_isref(self))
 		Dee_DPRINT("r");
-	_Dee_memloc_debug_print(&self->mv_loc0);
+	_Dee_memloc_debug_print(Dee_memobj_getloc(self));
 	if (is_local) {
-		switch (self->mv_flags & MEMVAL_M_LOCAL_BSTATE) {
-		case MEMVAL_F_LOCAL_BOUND:
+		if (Dee_memobj_local_alwaysbound(self)) {
 			Dee_DPRINT("!");
-			break;
-		case MEMVAL_F_LOCAL_UNBOUND:
+		} else {
 			Dee_DPRINT("?");
-			break;
-		default:
-			break;
 		}
 	}
+}
+
+INTERN NONNULL((1)) void DCALL
+_Dee_memval_debug_print(struct Dee_memval const *__restrict self,
+                        bool is_local) {
+	/* TODO: Print multi-object values */
+	/* TODO: Print mv_vmorph */
+	_Dee_memobj_debug_print(&self->mv_obj0, is_local);
 }
 
 /* Return the name of `lid' at `code_addr' in `self' */
@@ -470,8 +472,9 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
 		bool is_first = true;
 		for (i = 0; i < self->ms_localc; ++i) {
 			char const *lid_name;
-			if (Dee_memval_isunalloc(&self->ms_localv[i]) &&
-			    self->ms_localv[i].mv_flags == (MEMVAL_F_NOREF | MEMVAL_F_LOCAL_UNBOUND))
+			if (Dee_memval_isdirect(&self->ms_localv[i]) &&
+			    Dee_memval_direct_local_neverbound(&self->ms_localv[i]) &&
+			    !Dee_memval_direct_isref(&self->ms_localv[i]))
 				continue;
 			Dee_DPRINT(is_first ? "\tlocal: " : ", ");
 			lid_name = NULL;

@@ -47,7 +47,7 @@ struct formatter {
 	DeeObject      *f_args;        /* [1..1][const] A user-given sequence object used to index format arguments. */
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE NONNULL((1, 2)) int DCALL
 error_unused_format_string(char *start, char *end) {
 	return DeeError_Throwf(&DeeError_ValueError,
 	                       "Unused/unrecognized format string %$q in string.format",
