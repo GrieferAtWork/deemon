@@ -6370,7 +6370,7 @@ Dee_function_generator_voptypeof(struct Dee_function_generator *__restrict self,
 	 * reference, then we also need a reference to the type! */
 	DO(Dee_function_generator_vdup(self));                               /* obj, obj */
 	DO(Dee_function_generator_vind(self, offsetof(DeeObject, ob_type))); /* obj, obj->ob_type */
-	DO(Dee_function_generator_vref(self));                               /* obj, ref:obj->ob_type */
+	DO(Dee_function_generator_vref_noconst(self));                       /* obj, ref:obj->ob_type */
 	DO(Dee_function_generator_vswap(self));                              /* ref:obj->ob_type, obj */
 	return Dee_function_generator_vpop(self);                            /* ref:obj->ob_type */
 err:
@@ -6402,9 +6402,9 @@ Dee_function_generator_vopclassof(struct Dee_function_generator *__restrict self
 	 * they don't need a reference because they know that "obj" stays alive long enough,
 	 * then we don't need to give the type a new reference. */
 	if (!ref || Dee_memstate_hasref(self->fg_state, Dee_function_generator_vtop(self) - 1))
-		DO(Dee_function_generator_vref(self)); /* obj, ref:obj.class */
-	DO(Dee_function_generator_vswap(self));    /* [ref]:obj.class, obj */
-	return Dee_function_generator_vpop(self);  /* [ref]:obj.class */
+		DO(Dee_function_generator_vref_noconst(self)); /* obj, ref:obj.class */
+	DO(Dee_function_generator_vswap(self));            /* [ref]:obj.class, obj */
+	return Dee_function_generator_vpop(self);          /* [ref]:obj.class */
 err:
 	return -1;
 }
