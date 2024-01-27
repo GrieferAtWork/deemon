@@ -756,6 +756,7 @@ struct Dee_memobj {
 #define Dee_memobj_isconst(self)         Dee_memloc_isconst(Dee_memobj_getloc(self))
 #define Dee_memobj_isconstobj(self, obj) Dee_memloc_isconstobj(Dee_memobj_getloc(self), obj)
 #define Dee_memobj_isnull(self)          Dee_memobj_isconstobj(self, NULL)
+#define Dee_memobj_iszero(self)          Dee_memobj_isconstobj(self, 0)
 #define Dee_memobj_isnone(self)          (Dee_memobj_typeof(self) == &DeeNone_Type) /*Dee_memobj_isconstobj(self, Dee_None)*/
 #define Dee_memobj_isundefined(self)     Dee_memloc_isundefined(Dee_memobj_getloc(self))
 
@@ -995,6 +996,7 @@ struct Dee_memval {
 #define Dee_memval_direct_isconst(self)                  Dee_memobj_isconst(Dee_memval_direct_getobj(self))
 #define Dee_memval_direct_isconstobj(self, obj)          Dee_memobj_isconstobj(Dee_memval_direct_getobj(self), obj)
 #define Dee_memval_direct_isnull(self)                   Dee_memobj_isnull(Dee_memval_direct_getobj(self))
+#define Dee_memval_direct_iszero(self)                   Dee_memobj_iszero(Dee_memval_direct_getobj(self))
 #define Dee_memval_direct_isnone(self)                   Dee_memobj_isnone(Dee_memval_direct_getobj(self))
 #define Dee_memval_direct_isundefined(self)              Dee_memobj_isundefined(Dee_memval_direct_getobj(self))
 #define Dee_memval_direct_getoff(self)                   Dee_memobj_getoff(Dee_memval_direct_getobj(self))
@@ -1031,6 +1033,7 @@ struct Dee_memval {
 #define Dee_memval_isconst(self)         (Dee_memval_direct_isconst(self) && likely(Dee_memval_isdirect(self)))
 #define Dee_memval_isconstobj(self, obj) (Dee_memval_isdirect(self) && Dee_memval_direct_isconstobj(self, obj))
 #define Dee_memval_isnull(self)          (Dee_memval_isdirect(self) && Dee_memval_direct_isnull(self))
+#define Dee_memval_iszero(self)          (Dee_memval_isdirect(self) && Dee_memval_direct_iszero(self))
 #define Dee_memval_isnone(self)          (Dee_memval_isdirect(self) && Dee_memval_direct_isnone(self))
 #define Dee_memval_isundefined(self)     (Dee_memval_isdirect(self) && Dee_memval_direct_isundefined(self))
 

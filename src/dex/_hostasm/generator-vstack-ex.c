@@ -433,6 +433,17 @@ typexpr_parser_parse_object_after_qmark(struct typexpr_parser *__restrict self) 
 	case 'O':
 		return (DeeObject *)&DeeObject_Type;
 
+	case 'T':
+		/* TODO: Also remember information about tuple size!
+		 * >> local x: string = ...;
+		 * >> local a, b, c = x.partition(",")...; // No need to assert that returned tuple has size=3 here!
+		 *
+		 * Idea #1: Dee_memobj is allowed to predict the first data-word of an object.
+		 * Idea #2: Just use equivalence classes to equate the returned tuple's t_size
+		 *          with the constant from here!
+		 */
+		return (DeeObject *)&DeeTuple_Type;
+
 	case '#':
 	case 'D':
 	case 'G':
@@ -5956,12 +5967,16 @@ vassert_unpack_size(struct Dee_function_generator *__restrict self,
                     size_t expected_size) {
 	DREF struct Dee_memstate *saved_state;
 	struct Dee_host_section *text, *cold;
+	struct Dee_memval *sizeval;
 	DO(Dee_function_generator_vdelta(self, -(ptrdiff_t)expected_size)); /* seq, size-expected_size */
+	sizeval = Dee_function_generator_vtop(self);
+	if (Dee_memval_iszero(sizeval)) /* Special case: size is constant and matches expected value. */
+		return Dee_function_generator_vpop(self);
 	text = self->fg_sect;
 	cold = &self->fg_block->bb_hcold;
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
 		cold = text;
-	if (cold == text) {
+	if (cold == text || Dee_memval_isconst(sizeval)) {
 		struct Dee_host_symbol *Lsize_is_correct;
 		Lsize_is_correct = Dee_function_generator_newsym_named(self, ".Lsize_is_correct");
 		if unlikely(!Lsize_is_correct)
