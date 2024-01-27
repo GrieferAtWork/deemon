@@ -607,15 +607,11 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 	if (Dee_memobj_isref(Dee_memval_direct_getobj(mval)))
 		return true;
 	Dee_memstate_foreach(iter, self) {
-		struct Dee_memobj const *obj;
 		if (!Dee_memval_isdirect(iter))
 			continue;
-		Dee_memval_foreach_obj(obj, iter) {
-			if (Dee_memobj_isref(obj) &&
-			    Dee_memobj_sameloc(obj, Dee_memval_direct_getobj(mval)))
-				return true;
-		}
-		Dee_memval_foreach_obj_end;
+		if (Dee_memval_direct_isref(iter) &&
+		    Dee_memval_direct_sameloc(iter, mval))
+			return true;
 	}
 	Dee_memstate_foreach_end;
 	return false;
@@ -1035,7 +1031,8 @@ Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	Dee_memval_initcopy(dst, &self->ms_stackv[index]);
 	Dee_memstate_incrinuse_for_memval(self, dst);
 	++self->ms_stackc;
-	return Dee_memval_clearref(dst); /* alias! (so no reference) */
+	Dee_memval_clearref(dst); /* alias! (so no reference) */
+	return 0;
 err:
 	return -1;
 }
@@ -1057,6 +1054,10 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 	       (self->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t)));
 	Dee_memstate_foreach(mval, state) {
 		struct Dee_memobj *obj;
+		if unlikely(mval->mv_flags & MEMVAL_F_NOREF) {
+			ASSERT(!Dee_memval_hasobj0(mval));
+			continue;
+		}
 		Dee_memval_foreach_obj(obj, mval) {
 			uint16_t nullflag = 0;
 			if (!Dee_memobj_isref(obj))

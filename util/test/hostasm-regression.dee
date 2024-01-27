@@ -58,12 +58,29 @@ hexec(["x", "foo"], ("x",),   (a?)    -> [a..., "foo"]);
 hexec(["x", "foo"], ("x", 7), (a, b)  -> [a..., "foo"]);
 hexec(["x", "foo"], ("x", 7), (a, b?) -> [a..., "foo"]);
 
+hexec(("x", "foo"), ("x",),   (a)     -> (a..., "foo"));
+hexec(("x", "foo"), ("x",),   (a?)    -> (a..., "foo"));
+hexec(("x", "foo"), ("x", 7), (a, b)  -> (a..., "foo"));
+hexec(("x", "foo"), ("x", 7), (a, b?) -> (a..., "foo"));
+
+hexec([10, "x", "y", "z", 20], ("xyz",),   (a)     -> [10, a..., 20]);
+hexec([10, "x", "y", "z", 20], ("xyz",),   (a?)    -> [10, a..., 20]);
+hexec([10, "x", "y", "z", 20], ("xyz", 7), (a, b)  -> [10, a..., 20]);
+hexec([10, "x", "y", "z", 20], ("xyz", 7), (a, b?) -> [10, a..., 20]);
+
+/* FIXME: Cannot jump to exception handler while holding a reference to such a complex object location */
+//FIXME: hexec((10, "x", "y", "z", 20), ("xyz",),   (a)     -> (10, a..., 20));
+//FIXME: hexec((10, "x", "y", "z", 20), ("xyz",),   (a?)    -> (10, a..., 20));
+//FIXME: hexec((10, "x", "y", "z", 20), ("xyz", 7), (a, b)  -> (10, a..., 20));
+//FIXME: hexec((10, "x", "y", "z", 20), ("xyz", 7), (a, b?) -> (10, a..., 20));
+
 hexec(().operator iter(), (), () -> Tuple.Iterator());
 
 hexec("Function func(x, y) called", ("x", "y"), (a, b) -> f"Function func({a}, {b}) called");
 
-//TODO:hexec(HashSet({ "a", "b", "x", "y", "z" }),        ("xyz", 7), (a, b?) -> myFinalHashSet({ "a", "b", a..., b, "y" }));
-//TODO:hexec(HashSet.Frozen({ "a", "b", "x", "y", "z" }), ("xyz", 7), (a, b?) -> myFinalHashSet.Frozen({ "a", "b", a..., b, "y" }));
+/* FIXME: Cannot jump to exception handler while holding a reference to such a complex object location */
+//FIXME: hexec(HashSet({ "a", "b", "x", "y", "z" }),        ("xyz", 7), (a, b?) -> myFinalHashSet({ "a", "b", a..., b, "y" }));
+//FIXME: hexec(HashSet.Frozen({ "a", "b", "x", "y", "z" }), ("xyz", 7), (a, b?) -> myFinalHashSet.Frozen({ "a", "b", a..., b, "y" }));
 
 hexec(HashSet({ "a", "b", "xxx", "y", 7 }),        ("xxx", 7), (a, b?) -> myFinalHashSet({ "a", "b", a, b, "y" }));
 hexec(HashSet({ "a", "b", "y", 7 }),               ("a",   7), (a, b?) -> myFinalHashSet({ "a", "b", a, b, "y" }));

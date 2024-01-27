@@ -1170,7 +1170,7 @@ vcall_boundmethod(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vnotoneref_at(self, 1));              /* this */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_M1INT, 1)); /* result */
 	DO(Dee_function_generator_vdirect1(self));
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -3629,7 +3629,7 @@ Dee_function_generator_vophasattr(struct Dee_function_generator *__restrict self
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 2)); /* this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_HasAttr, VCALL_CC_NEGINT, 2));
 	DO(Dee_function_generator_vdirect1(self));
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 	return 0;
 err:
@@ -3685,7 +3685,7 @@ Dee_function_generator_vopboundattr(struct Dee_function_generator *__restrict se
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 2)); /* this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundAttr, VCALL_CC_M1INT, 2));
 	DO(Dee_function_generator_vdirect1(self));
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -3887,7 +3887,7 @@ Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict se
 	DO(Dee_function_generator_vpush_imm8(self, 1));                                     /* seq, index, true */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundItem, VCALL_CC_M1INT, 3)); /* result */
 	DO(Dee_function_generator_vdirect1(self));                                        /* result */
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -4927,7 +4927,7 @@ next_key:
 			DO(Dee_function_generator_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
 			                                   VCALL_CC_RAWINTPTR, 2));                     /* [elems...], UNCHECKED(d) */
 		}                                                                                   /* [elems...], UNCHECKED(d) */
-		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));       /* [elems...], UNCHECKED(d) */
+		ASSERT(Dee_function_generator_vtop_isdirect(self));       /* [elems...], UNCHECKED(d) */
 		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [elems...], d */
 		--elemc;
 	}
@@ -6014,7 +6014,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self) {
 	void const *concat_inherited_api_function;
 	DeeTypeObject *lhs_type, *rhs_type;
-	DO(Dee_function_generator_vdirect(self, 2)); /* rhs, lhs */
+	DO(Dee_function_generator_vdirect(self, 2)); /* lhs, rhs */
 	lhs_type = Dee_memval_typeof(Dee_function_generator_vtop(self) - 1);
 	rhs_type = Dee_memval_typeof(Dee_function_generator_vtop(self) - 0);
 	/* Optimizations for known object types (see impl of `DeeObject_ConcatInherited()'). */
@@ -6034,18 +6034,18 @@ Dee_function_generator_vopconcat(struct Dee_function_generator *__restrict self)
 	DO(Dee_function_generator_vnotoneref_at(self, 1)); /* rhs, ref:lhs */
 	DO(Dee_function_generator_vswap(self));            /* ref:lhs, rhs */
 	if (concat_inherited_api_function == (void const *)&DeeObject_ConcatInherited)
-		DO(Dee_function_generator_vnotoneref_at(self, 1));
-	DO(Dee_function_generator_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 2)); /* ([valid_if(!result)] ref:lhs), rhs, UNCHECKED(result) */
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
-	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* ([valid_if(false)] ref:lhs), rhs, result */
+		DO(Dee_function_generator_vnotoneref_at(self, 1)); /* ref:lhs, rhs */
+	DO(Dee_function_generator_vdup_n(self, 2));        /* ref:lhs, rhs, lhs */
+	DO(Dee_function_generator_vswap(self));            /* ref:lhs, lhs, rhs */
+	DO(Dee_function_generator_vcallapi(self, concat_inherited_api_function, VCALL_CC_RAWINTPTR, 2)); /* [ref]:lhs, UNCHECKED(result) */
+	ASSERT(Dee_function_generator_vtop_isdirect(self));  /* [ref]:lhs, UNCHECKED(result) */
+	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self)));  /* noref:lhs, UNCHECKED(result) */
 	if (concat_inherited_api_function != (void const *)&DeeObject_ConcatInherited)
 		DO(Dee_function_generator_voneref_noalias(self));
-	DO(Dee_function_generator_vrrot(self, 3)); /* result, rhs, ([valid_if(false)] REF:lhs) */
+	DO(Dee_function_generator_vswap(self)); /* result, noref:lhs */
 	ASSERT(Dee_function_generator_vtop_direct_isref(self));
-	Dee_function_generator_vtop_direct_clearref(self); /* result, rhs, ([valid_if(false)] lhs) */
-	DO(Dee_function_generator_vpop(self));     /* result, rhs */
-	DO(Dee_function_generator_vpop(self));     /* result */
-	return 0;
+	Dee_function_generator_vtop_direct_clearref(self); /* result, lhs */
+	return Dee_function_generator_vpop(self);          /* result */
 err:
 	return -1;
 }
@@ -6115,7 +6115,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vlrot(self, 3));         /* [elems...], ref:seq, elemc, elemv */
 	old_seqflags = Dee_memval_direct_getobj(&Dee_function_generator_vtop(self)[-2])->mo_flags;
 	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
 	Dee_function_generator_vtop_direct_setref(self); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
@@ -6516,7 +6516,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
 		DO(Dee_function_generator_vdirect1(self));                   /* reg:FIELD */
-		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+		ASSERT(Dee_function_generator_vtop_isdirect(self));
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 		return 0;
 	}	break;
@@ -6526,7 +6526,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
 		DO(Dee_function_generator_vdirect1(self));                   /* reg:FIELD */
-		ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+		ASSERT(Dee_function_generator_vtop_isdirect(self));
 		Dee_function_generator_vtop(self)->mv_vmorph = (desc->m_field.m_type & Dee_STRUCT_UNSIGNED)
 		                                               ? MEMVAL_VMORPH_UINT
 		                                               : MEMVAL_VMORPH_INT;
@@ -6695,7 +6695,7 @@ Dee_function_generator_vbound_module_symbol(struct Dee_function_generator *__res
 	DO(Dee_function_generator_vpush_addr(self, sym));  /* mod, sym */
 	DO(Dee_function_generator_vcallapi(self, &DeeModule_BoundAttrSymbol, VCALL_CC_M1INT, 2));
 	DO(Dee_function_generator_vdirect1(self));
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:
@@ -6824,7 +6824,7 @@ Dee_function_generator_vbound_instance_attr(struct Dee_function_generator *__res
 	DO(Dee_function_generator_vnotoneref(self, 2));           /* desc, DeeInstance_DESC(desc, this), this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeInstance_BoundAttribute, VCALL_CC_M1INT, 4)); /* result */
 	DO(Dee_function_generator_vdirect1(self));              /* result */
-	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
+	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
 err:

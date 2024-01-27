@@ -75,6 +75,24 @@ Dee_memval_typeof(struct Dee_memval const *self) {
 	return NULL;
 }
 
+
+/* Possible propagation strategies returned by `Dee_function_generator_vdirect_impl()'
+ * These affect how/which aliases of the (previously) non-direct value are updated to
+ * reflect the (then) direct equivalent of their original value.
+ *
+ * Different strategies need to be used for immutable vs. mutable objects:
+ * >> local t1 = (foo, bar); // MEMVAL_VMORPH_TUPLE
+ * >> local t2 = (foo, bar); // MEMVAL_VMORPH_TUPLE
+ * >> local t3 = t1;         // MEMVAL_VMORPH_TUPLE  (alias)
+ * >> local l1 = [foo, bar]; // MEMVAL_VMORPH_LIST
+ * >> local l2 = [foo, bar]; // MEMVAL_VMORPH_LIST
+ * >> local l3 = l1;         // MEMVAL_VMORPH_LIST  (alias)
+ * >> cb(t1); // vdirect() is allowed to write to "t1", "t2" and "t3"
+ * >> cb(l1); // vdirect() is allowed to write to "l1" and "l3" (but *NOT* l2, even though that has the same value as "l1")
+ */
+#define MAKEDIRECT_PROPAGATE_STRATEGY_SAMEVAL  0 /* For immutable objects: copy result to all non-direct, identical values */
+#define MAKEDIRECT_PROPAGATE_STRATEGY_SAMECOPY 1 /* For mutable objects: copy result to all values that refer to the same copy (only when Dee_memobjs was used) */
+
 /* non_direct -> direct */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict self) {
@@ -167,7 +185,7 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 		                       "Unsupported location value type %#" PRFx8,
 		                       mval->mv_vmorph);
 	}
-	return 0;
+	return MAKEDIRECT_PROPAGATE_STRATEGY_SAMEVAL;
 err:
 	return -1;
 }
@@ -176,6 +194,7 @@ err:
  * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) {
+	int propagation_strategy;
 	struct Dee_memval *alias, oldval;
 	struct Dee_memval *mval;
 	struct Dee_memstate *state = self->fg_state;
@@ -193,16 +212,29 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 		mval = &state->ms_stackv[state->ms_stackc - 1];
 	}
 	Dee_memval_initcopy(&oldval, mval);
-	if unlikely(Dee_function_generator_vdirect_impl(self))
+	propagation_strategy = Dee_function_generator_vdirect_impl(self);
+	if unlikely(propagation_strategy < 0)
 		goto err_oldval;
 	state = self->fg_state;
 	mval  = &state->ms_stackv[state->ms_stackc - 1];
 	ASSERT(Dee_memval_isdirect(mval));
 	Dee_memstate_foreach(alias, state) {
-		if (!Dee_memval_sameval(alias, &oldval))
+		/* TODO: This only looks at *primary* storage locations,
+		 *       but it should also look at location equivalences! */
+		if (!(propagation_strategy == MAKEDIRECT_PROPAGATE_STRATEGY_SAMEVAL
+		      ? Dee_memval_sameval_mayalias(alias, &oldval)
+		      : Dee_memval_sameval(alias, &oldval)))
 			continue;
 		if (alias == mval)
 			continue;
+
+		/* Object references held by "alias" must be dropped!
+		 * NOTE: We can always use *vstack semantics here because
+		 *       even in the case of a local variable, that variable
+		 *       is known to be a non-direct value, meaning that it
+		 *       has to be bound unconditionally! */
+		if unlikely(Dee_function_generator_vgdecref_vstack(self, alias))
+			goto err_oldval;
 		Dee_memstate_decrinuse_for_memval(state, alias);
 		Dee_memval_fini(alias);
 		Dee_memval_direct_initcopy(alias, mval);

@@ -166,7 +166,7 @@ _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
                           Dee_instruction_t const *instr);
 INTDEF NONNULL((1)) void DCALL _Dee_memadr_debug_print(struct Dee_memadr const *__restrict self, ptrdiff_t val_delta);
 INTDEF NONNULL((1)) void DCALL _Dee_memloc_debug_print(struct Dee_memloc const *__restrict self);
-INTDEF NONNULL((1)) void DCALL _Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local);
+INTDEF NONNULL((1)) void DCALL _Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local, bool noref);
 INTDEF NONNULL((1)) void DCALL _Dee_memval_debug_print(struct Dee_memval const *__restrict self, bool is_local);
 #define _Dee_memequiv_debug_print(self) _Dee_memloc_debug_print(&(self)->meq_loc)
 INTDEF NONNULL((1)) void DCALL _Dee_memequivs_debug_print(struct Dee_memequivs const *__restrict self);
@@ -828,9 +828,34 @@ struct Dee_memobj {
 
 
 struct Dee_memobjs {
+	/* NOTE: This structure is *always* immutable!
+	 *
+	 * If you want to inplace-assign a new Dee_memobjs-descriptor to some memval, you
+	 * must *ALWAYS* first create that new Dee_memobjs-descriptor, then enumerate the
+	 * current mem-state, and search for identical memvals that also appear within the
+	 * same mos_copies as the old Dee_memobjs's ring of copies, and then assign your
+	 * new Dee_memobjs to *all* of those memvals. */
 	Dee_refcnt_t                               mos_refcnt; /* Reference counter (when >1, this struct is used by multiple `Dee_memval'-s) */
+	RINGQ_ENTRY(Dee_memobjs)                   mos_copies; /* Ring of copies that have been made of this set of mem objects
+	                                                        * All Dee_memobjs items refer to the same virtual object at runtime.
+	                                                        * Aside from `mos_objv[*].mo_flags', all items of this ring are
+	                                                        * completely identical, and if changes are made, those changes must
+	                                                        * be made on all elements at the same time! */
 	size_t                                     mos_objc;   /* # of objects */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_memobj, mos_objv);  /* [mos_objc] Vector of objects. */
+	/* TODO: Bitset of objects that should be in-place expanded:
+	 * >> return [10, foo..., 20];
+	 * ASM:
+	 * >> push   @10
+	 * >> push   pack List, #1   // MEMVAL_VMORPH_LIST: {CONST(10)}    expand:{}
+	 * >> push   @foo
+	 * >> concat top, pop        // MEMVAL_VMORPH_LIST: {CONST(10), LOC(foo)}    expand:{foo}
+	 * >> push   @20
+	 * >> extend top, #1         // MEMVAL_VMORPH_LIST: {CONST(10), LOC(foo), CONST(20)}    expand:{foo}
+	 *
+	 * When the type of "foo" is known (e.g.: is a tuple), then we
+	 * can perfectly allocate the final list right from the start!
+	 */
 };
 
 #define Dee_memobjs_destroy(self)       Dee_Free(self)
@@ -839,6 +864,22 @@ struct Dee_memobjs {
 #define Dee_memobjs_isshared(self)      ((self)->mos_refcnt > 1)
 #define Dee_memobjs_decref_nokill(self) (void)(ASSERT((self)->mos_refcnt >= 2), --(self)->mos_refcnt)
 
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memobjs_copies_contains(struct Dee_memobjs const *ring_of_this,
+                            struct Dee_memobjs const *contains_this) {
+	struct Dee_memobjs const *iter = ring_of_this;
+	do {
+		if (iter == contains_this)
+			return true;
+	} while ((iter = RINGQ_NEXT(iter, mos_copies)) != ring_of_this);
+	return false;
+}
+
+
+
+/* Possible values for `struct Dee_memval::mv_flags' */
+#define MEMVAL_F_NORMAL 0x00 /* Normal flags */
+#define MEMVAL_F_NOREF  0x01 /* Ignore `MEMOBJ_F_ISREF' of objecst (may only be set when `Dee_memval_hasobjn()') */
 
 struct Dee_memval {
 	/* High-level value (encapsulates 1..n Dee_memloc that may be morphed into a deemon value) */
@@ -851,7 +892,8 @@ struct Dee_memval {
 #endif /* !__INTELLISENSE__ */
 	}                           mv_obj;    /* Object */
 	uint8_t                     mv_vmorph; /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-	uint8_t                    _mv_pad[sizeof(void *) - 1]; /* ... */
+	uint8_t                     mv_flags;  /* Extra mem value flags (set of `MEMVAL_F_*'). */
+	uint8_t                    _mv_pad[sizeof(void *) - 2]; /* ... */
 };
 
 
@@ -884,7 +926,7 @@ struct Dee_memval {
 /* Basic Dee_memval initializers.
  * NOTE: NONE OF THESE REQUIRE USE OF "Dee_memval_fini"! */
 #define _Dee_memval_init_impl(self, _initbase) \
-	(void)(_initbase, (self)->mv_vmorph = MEMVAL_VMORPH_DIRECT)
+	(void)(_initbase, (self)->mv_vmorph = MEMVAL_VMORPH_DIRECT, (self)->mv_flags = MEMVAL_F_NORMAL)
 #define Dee_memval_init_memadr(self, adr, ml_off_, mv_valtyp_, mv_flags_) \
 	_Dee_memval_init_impl(self, Dee_memobj_init_memadr(&(self)->mv_obj.mvo_0, adr, ml_off_, mv_valtyp_, mv_flags_))
 #define Dee_memval_init_memloc(self, loc, mv_valtyp_, mv_flags_) \
@@ -992,7 +1034,6 @@ struct Dee_memval {
 #define Dee_memval_direct_hashofadr(a)  Dee_memloc_hashofadr(Dee_memval_direct_getloc(a))
 #define Dee_memval_direct_sameadr(a, b) Dee_memloc_sameadr(Dee_memval_direct_getloc(a), Dee_memval_direct_getloc(b))
 #define Dee_memval_direct_sameloc(a, b) Dee_memloc_sameloc(Dee_memval_direct_getloc(a), Dee_memval_direct_getloc(b))
-#define Dee_memval_sameval(a, b)        ((a)->mv_vmorph == (b)->mv_vmorph && Dee_memval_direct_sameloc(a, b)) /* TODO: Support for mem values with multiple locations */
 
 /* Try to figure out the guarantied runtime object type of `vdirect()' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
@@ -1026,32 +1067,76 @@ Dee_memval_typeof(struct Dee_memval const *self);
 #define Dee_memval_getobjv(self) (Dee_memval_hasobjn(self) ? Dee_memval_objn_getvec(self) : Dee_memval_getobj0(self))
 
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_memval_objn_dounshare(struct Dee_memval *__restrict self);
-#define Dee_memval_objv_inplace_copy_because_shared(self) \
-	(Dee_memval_hasobjn(self) ? Dee_memval_objn_dounshare(self) : 0)
+Dee_memval_do_objn_unshare(struct Dee_memval *__restrict self);
 #define Dee_memval_objv_shared(self) \
 	(Dee_memval_hasobjn(self) && Dee_memval_objn_shared(self))
 #define Dee_memval_objv_unshare(self) \
-	(Dee_memval_objv_shared(self) ? Dee_memval_objn_dounshare(self) : 0)
+	(Dee_memval_objv_shared(self) ? Dee_memval_do_objn_unshare(self) : 0)
 
-LOCAL WUNUSED NONNULL((1)) int DCALL
-Dee_memval_clearref(struct Dee_memval *__restrict self) {
-	struct Dee_memobj *obj;
-again_enum_obj:
-	Dee_memval_foreach_obj(obj, self) {
-		if (Dee_memobj_isref(obj)) {
-			if (Dee_memval_hasobjn(self) && Dee_memval_objn_shared(self)) {
-				if unlikely(Dee_memval_objn_dounshare(self))
-					goto err;
-				goto again_enum_obj;
-			}
-			Dee_memobj_clearref(obj);
-		}
+/* Remember that "self" isn't holding *any* references */
+#define Dee_memval_clearref(self)                                             \
+	(Dee_memval_hasobj0(self) ? Dee_memobj_clearref(Dee_memval_getobj0(self)) \
+	                          : (void)((self)->mv_flags |= MEMVAL_F_NOREF))
+
+/* Clear the buffered "MEMVAL_F_NOREF" flag, by unsharing memobjs,
+ * and clearing the MEMOBJ_F_ISREF flags of all references objects. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_memval_do_clear_MEMVAL_F_NOREF(struct Dee_memval *__restrict self);
+
+/* Check if "a" and "b" represent the same effective object, in that
+ * a (theoretical) change to the runtime object of "a" must then also
+ * be reflected in "b". */
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memval_sameval(struct Dee_memval const *a,
+                   struct Dee_memval const *b) {
+	size_t i;
+	struct Dee_memobjs const *a_objs, *b_objs;
+	if (a->mv_vmorph != b->mv_vmorph)
+		return false;
+	if (Dee_memval_hasobj0(a))
+		return Dee_memloc_sameloc(Dee_memval_obj0_getloc(a), Dee_memval_obj0_getloc(b));
+	a_objs = Dee_memval_getobjn(a);
+	b_objs = Dee_memval_getobjn(b);
+	if (a_objs->mos_objc != b_objs->mos_objc)
+		return false;
+	if (!Dee_memobjs_copies_contains(a_objs, b_objs))
+		return false;
+	for (i = 0; i < a_objs->mos_objc; ++i) {
+		if (!Dee_memobj_sameloc(&a_objs->mos_objv[i],
+		                        &b_objs->mos_objv[i]))
+			return false;
 	}
-	Dee_memval_foreach_obj_end;
-	return 0;
-err:
-	return -1;
+	return true;
+}
+
+/* Check if "a" and "b" represent the same effective.
+ * NOTE: This doesn't necessarily mean that "a === b", but *does* mean
+ *       that vdirect() of "a" and "b" produces identical logical code,
+ *       and that the result represents identical logical objects, and
+ *       that "a === b" is *allowed* to be true at runtime.
+ *
+ * This is the same as `Dee_memval_sameval()', but can be used if the
+ * caller is OK with 2 yet-to-be-created instances of identical objects
+ * (such as 2 Tuples with identical elements) end up being merged. */
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memval_sameval_mayalias(struct Dee_memval const *a,
+                            struct Dee_memval const *b) {
+	size_t i;
+	struct Dee_memobjs const *a_objs, *b_objs;
+	if (a->mv_vmorph != b->mv_vmorph)
+		return false;
+	if (Dee_memval_hasobj0(a))
+		return Dee_memloc_sameloc(Dee_memval_obj0_getloc(a), Dee_memval_obj0_getloc(b));
+	a_objs = Dee_memval_getobjn(a);
+	b_objs = Dee_memval_getobjn(b);
+	if (a_objs->mos_objc != b_objs->mos_objc)
+		return false;
+	for (i = 0; i < a_objs->mos_objc; ++i) {
+		if (!Dee_memobj_sameloc(&a_objs->mos_objv[i],
+		                        &b_objs->mos_objv[i]))
+			return false;
+	}
+	return true;
 }
 
 
@@ -2145,6 +2230,33 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct D
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
 INTDEF WUNUSED NONNULL((1)) bool DCALL Dee_function_generator_vallconst(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Check if top `n' elements are all `MEMADR_TYPE_CONST' */
 INTDEF WUNUSED NONNULL((1)) bool DCALL Dee_function_generator_vallconst_noref(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Check if top `n' elements are all `MEMADR_TYPE_CONST' and have the `MEMOBJ_F_NOREF' flag set. */
+
+
+/* Generate code needed to drop references held by `mval' (where `mval' must be a vstack item,
+ * or a local variable that is unconditionally bound or non-direct).
+ * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
+ *       realloc memstate components. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vgdecref_vstack(struct Dee_function_generator *__restrict self,
+                                       struct Dee_memval *mval);
+
+/* Generate code needed to drop references held by `mval' (where `mval' must point into locals)
+ * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
+ *       realloc memstate components. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vgdecref_local(struct Dee_function_generator *__restrict self,
+                                      struct Dee_memval *__restrict mval);
+
+#if 0
+/* Wrapper around:
+ * - Dee_function_generator_vgdecref_vstack
+ * - Dee_function_generator_vgdecref_local
+ * ... that automatically checks if `mval' points into the current mem-state's
+ * local variable list to see which function needs to be used. */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vgdecref(struct Dee_function_generator *__restrict self,
+                                struct Dee_memval *__restrict mval);
+#endif
 
 /* Remember that VTOP, as well as any other memory location
  * that might be aliasing it is an instance of "type" at runtime. */

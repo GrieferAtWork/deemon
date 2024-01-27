@@ -400,13 +400,13 @@ _Dee_memloc_debug_print(struct Dee_memloc const *__restrict self) {
 }
 
 INTERN NONNULL((1)) void DCALL
-_Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local) {
+_Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local, bool noref) {
 	if (is_local && Dee_memobj_local_neverbound(self)) {
 		Dee_DPRINT("-");
 		return;
 	}
 	/* XXX: Print mv_obj.mvo_0.mo_typeof? */
-	if (Dee_memobj_isref(self))
+	if (Dee_memobj_isref(self) && !noref)
 		Dee_DPRINT("r");
 	_Dee_memloc_debug_print(Dee_memobj_getloc(self));
 	if (is_local) {
@@ -418,12 +418,70 @@ _Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local)
 	}
 }
 
+PRIVATE NONNULL((1)) void DCALL
+_Dee_memval_debug_print_objects(struct Dee_memval const *__restrict self,
+                                bool is_local) {
+	if (MEMVAL_VMORPH_HASOBJ0(self->mv_vmorph)) {
+		_Dee_memobj_debug_print(&self->mv_obj.mvo_0, is_local, false);
+	} else {
+		size_t i;
+		struct Dee_memobjs *objs = Dee_memval_getobjn(self);
+		for (i = 0; i < objs->mos_objc; ++i) {
+			if (i != 0)
+				Dee_DPRINT(",");
+			_Dee_memobj_debug_print(&objs->mos_objv[i], false,
+			                        (self->mv_flags & MEMVAL_F_NOREF) != 0);
+		}
+	}
+}
+
 INTERN NONNULL((1)) void DCALL
 _Dee_memval_debug_print(struct Dee_memval const *__restrict self,
                         bool is_local) {
-	/* TODO: Print multi-object values */
-	/* TODO: Print mv_vmorph */
-	_Dee_memobj_debug_print(&self->mv_obj.mvo_0, is_local);
+	switch (self->mv_vmorph) {
+	case MEMVAL_VMORPH_DIRECT:
+	case MEMVAL_VMORPH_DIRECT_01:
+		_Dee_memval_debug_print_objects(self, is_local);
+		break;
+	case MEMVAL_VMORPH_BOOL_Z:
+	case MEMVAL_VMORPH_BOOL_Z_01:
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT("==0");
+		break;
+	case MEMVAL_VMORPH_BOOL_NZ:
+	case MEMVAL_VMORPH_BOOL_NZ_01:
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT("!=0");
+		break;
+	case MEMVAL_VMORPH_BOOL_LZ:
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT("<0");
+		break;
+	case MEMVAL_VMORPH_BOOL_GZ:
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT(">0");
+		break;
+	case MEMVAL_VMORPH_INT:
+		Dee_DPRINT("int(");
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT(")");
+		break;
+	case MEMVAL_VMORPH_UINT:
+		Dee_DPRINT("uint(");
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT(")");
+		break;
+	case MEMVAL_VMORPH_NULLABLE:
+		Dee_DPRINT("nullable(");
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT(")");
+		break;
+	default:
+		Dee_DPRINTF("<%I8u:", self->mv_vmorph);
+		_Dee_memval_debug_print_objects(self, is_local);
+		Dee_DPRINT(">");
+		break;
+	}
 }
 
 /* Return the name of `lid' at `code_addr' in `self' */

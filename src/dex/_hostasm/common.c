@@ -753,7 +753,7 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 /************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_memval_objn_dounshare(struct Dee_memval *__restrict self) {
+Dee_memval_do_objn_unshare(struct Dee_memval *__restrict self) {
 	struct Dee_memobjs *objs, *copy;
 	size_t sizeof_struct;
 	ASSERT(Dee_memval_hasobjn(self));
@@ -768,10 +768,45 @@ Dee_memval_objn_dounshare(struct Dee_memval *__restrict self) {
 	copy->mos_refcnt = 1;
 	Dee_memobjs_decref_nokill(objs);
 	self->mv_obj.mvo_n = copy->mos_objv;
+	RINGQ_INSERT_AFTER(objs, copy, mos_copies); /* Part of same copy-ring */
+	if (self->mv_flags & MEMVAL_F_NOREF) {
+		size_t i; /* Inline the NOREF flag. */
+		for (i = 0; i < copy->mos_objc; ++i)
+			Dee_memobj_clearref(&copy->mos_objv[i]);
+		self->mv_flags &= ~MEMVAL_F_NOREF;
+	}
 	return 0;
 err:
 	return -1;
 }
+
+/* Clear the buffered "MEMVAL_F_NOREF" flag, by unsharing memobjs,
+ * and clearing the MEMOBJ_F_ISREF flags of all references objects. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memval_do_clear_MEMVAL_F_NOREF(struct Dee_memval *__restrict self) {
+	size_t i;
+	struct Dee_memobjs *objs;
+	ASSERT(self->mv_flags & MEMVAL_F_NOREF);
+	ASSERT(Dee_memval_hasobjn(self));
+	objs = Dee_memval_getobjn(self);
+	if (Dee_memobjs_isshared(objs)) {
+		int temp;
+		bool hasrefs = false;
+		for (i = 0; i < objs->mos_objc; ++i)
+			hasrefs |= Dee_memobj_isref(&objs->mos_objv[i]);
+		if unlikely(!hasrefs)
+			return 0;
+		temp = Dee_memval_do_objn_unshare(self);
+		if unlikely(temp)
+			return temp;
+		objs = Dee_memval_getobjn(self);
+	}
+	for (i = 0; i < objs->mos_objc; ++i)
+		Dee_memobj_clearref(&objs->mos_objv[i]);
+	self->mv_flags &= ~MEMVAL_F_NOREF;
+	return 0;
+}
+
 
 
 
