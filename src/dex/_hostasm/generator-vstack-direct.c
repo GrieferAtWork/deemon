@@ -239,6 +239,7 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 		Dee_memval_fini(alias);
 		Dee_memval_direct_initcopy(alias, mval);
 		Dee_memstate_incrinuse_for_direct_memval(state, mval);
+		Dee_memval_clearref(alias); /* Aliases don't get references! */
 	}
 	Dee_memstate_foreach_end;
 	Dee_memval_fini(&oldval);
