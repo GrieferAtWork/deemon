@@ -270,6 +270,26 @@ libhostasm_rt_err_cannot_lock_weakref(void) {
 	                       "Cannot lock weak reference");
 }
 
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_unbound_index(DeeObject *__restrict self, size_t index) {
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
+	                       index, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_err_invalid_unpack_size(DeeObject *__restrict unpack_object,
+                                   size_t need_size, size_t real_size) {
+	ASSERT_OBJECT(unpack_object);
+	(void)unpack_object;
+	return DeeError_Throwf(&DeeError_UnpackError,
+	                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
+	                       need_size, need_size > 1 ? "s" : "", real_size,
+	                       real_size == 1 ? "as" : "ere");
+}
+
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw) {
 	size_t kw_length;

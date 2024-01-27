@@ -2973,8 +2973,35 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 			goto err;
 		ASSERT(mval == Dee_memstate_vtop(state));
 		ASSERT(!Dee_memval_direct_isref(mval));
+		ASSERT(!Dee_memval_direct_isoneref(mval));
 		Dee_memval_direct_setref(mval);
-		return Dee_function_generator_gnotoneref(self, Dee_memval_direct_getobj(mval));
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vref_noalias(struct Dee_function_generator *__restrict self) {
+	struct Dee_memval *mval;
+	if unlikely(Dee_function_generator_vdirect1(self))
+		goto err;
+	mval = Dee_function_generator_vtop(self);
+	ASSERT(Dee_memval_isdirect(mval));
+	if (!Dee_memval_direct_isref(mval)) {
+		struct Dee_memstate *state;
+		if unlikely(Dee_function_generator_state_unshare(self))
+			goto err;
+		state = self->fg_state;
+		mval  = Dee_memstate_vtop(state);
+		ASSERT(Dee_memval_isdirect(mval));
+		ASSERT(!Dee_memval_direct_isref(mval));
+		if unlikely(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(mval), 1))
+			goto err;
+		ASSERT(mval == Dee_memstate_vtop(state));
+		ASSERT(!Dee_memval_direct_isref(mval));
+		ASSERT(!Dee_memval_direct_isoneref(mval));
+		Dee_memval_direct_setref(mval);
 	}
 	return 0;
 err:
@@ -3506,7 +3533,7 @@ Dee_function_generator_vret(struct Dee_function_generator *__restrict self) {
 	}
 
 	/* Ensure that the final stack element contains a reference. */
-	if unlikely(Dee_function_generator_vref(self))
+	if unlikely(Dee_function_generator_vref_noalias(self))
 		goto err;
 
 	/* Steal the final (returned) object from stack */

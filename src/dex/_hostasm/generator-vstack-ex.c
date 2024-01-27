@@ -5590,9 +5590,9 @@ vinplaceop_invoke_specs(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vnotoneref_if_operator(self, operator_name, 1)); /* [args...], [ref]:this */
 	/* IMPORTANT: don't use vref2() here! The caller of the `vinplaceop()' pushed an alias
 	 *            into VTOP, so vref2() would do an extra incref by thinking that the location
-	 *            being alocated should also need one. -- Only do vref() to force a reference
-	 *            in case the caller passed a constant as original this-value. */
-	DO(Dee_function_generator_vref(self));              /* [args...], ref:this */
+	 *            being alocated should also need one. -- Only do vref_noalais() to force a
+	 *            reference in case the caller passed a constant as original this-value. */
+	DO(Dee_function_generator_vref_noalias(self));      /* [args...], ref:this */
 	DO(Dee_function_generator_vlinear(self, 1, false)); /* [args...], ref:this, p_this */
 	DO(Dee_function_generator_vswap(self));             /* [args...], p_this, ref:this */
 	DO(Dee_function_generator_vrrot(self, argc + 2));   /* ref:this, [args...], p_this */
@@ -5834,7 +5834,7 @@ done_without_result:
 	DO(Dee_function_generator_vnotoneref(self, argc));           /* [ref]:this, [args...] */
 	DO(Dee_function_generator_vlinear(self, argc, true));        /* [ref]:this, [args...], argv */
 	DO(Dee_function_generator_vlrot(self, argc + 2));            /* [args...], argv, [ref]:this */
-	DO(Dee_function_generator_vref(self));                       /* [args...], argv, ref:this */
+	DO(Dee_function_generator_vref_noalias(self));               /* [args...], argv, ref:this */
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, operator_name, 1)); /* [args...], argv, ref:this */
 	DO(Dee_function_generator_vlinear(self, 1, false));          /* [args...], argv, ref:this, p_this */
 	DO(Dee_function_generator_vswap(self));                      /* [args...], argv, p_this, ref:this */
@@ -5930,7 +5930,7 @@ Dee_function_generator_vinplaceoptuple(struct Dee_function_generator *__restrict
 		return Dee_function_generator_vinplaceop(self, operator_name, (Dee_vstackaddr_t)DeeTuple_SIZE(args), flags);
 	}                                                                          /* [ref]:this, args */
 	DO(Dee_function_generator_vswap(self));                                    /* args, [ref]:this */
-	DO(Dee_function_generator_vref(self));                                     /* args, ref:this */
+	DO(Dee_function_generator_vref_noalias(self));                             /* args, ref:this */
 	DO(Dee_function_generator_vnotoneref_if_operator(self, operator_name, 1)); /* args, ref:this */
 	DO(Dee_function_generator_vlinear(self, 1, false));                        /* args, ref:this, p_this */
 	DO(Dee_function_generator_vpush_imm16(self, operator_name));               /* args, ref:this, p_this, operator_name */
@@ -5950,8 +5950,125 @@ err:
 }
 
 
+/* seq, size -> seq */
+INTERN WUNUSED NONNULL((1)) int DCALL
+vassert_unpack_size(struct Dee_function_generator *__restrict self,
+                    size_t expected_size) {
+	DREF struct Dee_memstate *saved_state;
+	struct Dee_host_section *text, *cold;
+	DO(Dee_function_generator_vdelta(self, -(ptrdiff_t)expected_size)); /* seq, size-expected_size */
+	text = self->fg_sect;
+	cold = &self->fg_block->bb_hcold;
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
+		cold = text;
+	if (cold == text) {
+		struct Dee_host_symbol *Lsize_is_correct;
+		Lsize_is_correct = Dee_function_generator_newsym_named(self, ".Lsize_is_correct");
+		if unlikely(!Lsize_is_correct)
+			goto err;
+		DO(Dee_function_generator_gjz(self, Dee_function_generator_vtopdloc(self),
+		                              Lsize_is_correct)); /* seq, size-expected_size */
+		saved_state = self->fg_state;
+		Dee_memstate_incref(saved_state);
+		EDO(err_saved_state, Dee_function_generator_vdelta(self, (ptrdiff_t)expected_size)); /* seq, size */
+		EDO(err_saved_state, Dee_function_generator_vpush_immSIZ(self, expected_size));      /* seq, size, expected_size */
+		EDO(err_saved_state, Dee_function_generator_vswap(self));                            /* seq, expected_size, size */
+		EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_err_invalid_unpack_size, VCALL_CC_EXCEPT, 3));
+		Dee_memstate_decref(self->fg_state);
+		self->fg_state = saved_state;
+		Dee_host_symbol_setsect(Lsize_is_correct, self->fg_sect);
+	} else {
+		struct Dee_host_symbol *Lerr_invalid_unpack_size;
+		Lerr_invalid_unpack_size = Dee_function_generator_newsym_named(self, ".Lerr_invalid_unpack_size");
+		if unlikely(!Lerr_invalid_unpack_size)
+			goto err;
+		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self),
+		                               Lerr_invalid_unpack_size)); /* seq, size-expected_size */
+		saved_state = self->fg_state;
+		Dee_memstate_incref(saved_state);
+		HA_printf(".section .cold\n");
+		self->fg_sect = cold;
+		Dee_host_symbol_setsect(Lerr_invalid_unpack_size, self->fg_sect);
+		EDO(err_saved_state, Dee_function_generator_vdelta(self, (ptrdiff_t)expected_size)); /* seq, size */
+		EDO(err_saved_state, Dee_function_generator_vpush_immSIZ(self, expected_size));      /* seq, size, expected_size */
+		EDO(err_saved_state, Dee_function_generator_vswap(self));                            /* seq, expected_size, size */
+		EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_err_invalid_unpack_size, VCALL_CC_EXCEPT, 3));
+		Dee_memstate_decref(self->fg_state);
+		self->fg_state = saved_state;
+		HA_printf(".section .text\n");
+		self->fg_sect = text;
+	}                                         /* seq, size-expected_size */
+	return Dee_function_generator_vpop(self); /* seq */
+err_saved_state:
+	Dee_memstate_decref(saved_state);
+err:
+	return -1;
+}
 
-
+/* self, index -> CHECKED(elem) */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+vcall_DeeFastSeq_GetItem(struct Dee_function_generator *__restrict self,
+                         struct Dee_type_nsi const *__restrict nsi) {
+	DREF struct Dee_memstate *saved_state;
+	ASSERT(nsi->nsi_class == TYPE_SEQX_CLASS_SEQ);
+	if (nsi->nsi_seqlike.nsi_getitem_fast) {
+		struct Dee_host_section *text, *cold;
+		DO(Dee_function_generator_vdup_n(self, 2)); /* self, index, self */
+		DO(Dee_function_generator_vdup_n(self, 2)); /* self, index, self, index */
+		DO(Dee_function_generator_vcallapi(self, nsi->nsi_seqlike.nsi_getitem_fast,
+		                                   VCALL_CC_RAWINTPTR, 2)); /* self, index, UNCHECKED(elem) */
+		ASSERT(Dee_function_generator_vtop_isdirect(self));
+		text = self->fg_sect;
+		cold = &self->fg_block->bb_hcold;
+		if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
+			cold = text;
+		if (cold == text) {
+			struct Dee_host_symbol *Lis_bound;
+			Lis_bound = Dee_function_generator_newsym_named(self, ".Lis_bound");
+			if unlikely(!Lis_bound)
+				goto err;
+			DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self), Lis_bound)); /* self, index, UNCHECKED(elem) */
+			saved_state = self->fg_state;
+			Dee_memstate_incref(saved_state);
+			EDO(err_saved_state, Dee_function_generator_vrrot(self, 3)); /* UNCHECKED(elem), self, index */
+			EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_index, VCALL_CC_EXCEPT, 2));
+			Dee_memstate_decref(self->fg_state);
+			self->fg_state = saved_state;
+			Dee_host_symbol_setsect(Lis_bound, self->fg_sect);
+		} else {
+			struct Dee_host_symbol *Lerr_unbound_index;
+			Lerr_unbound_index = Dee_function_generator_newsym_named(self, ".Lerr_unbound_index");
+			if unlikely(!Lerr_unbound_index)
+				goto err;
+			DO(Dee_function_generator_gjz(self, Dee_function_generator_vtopdloc(self),
+			                              Lerr_unbound_index)); /* self, index, UNCHECKED(elem) */
+			saved_state = self->fg_state;
+			Dee_memstate_incref(saved_state);
+			HA_printf(".section .cold\n");
+			self->fg_sect = cold;
+			Dee_host_symbol_setsect(Lerr_unbound_index, self->fg_sect);
+			EDO(err_saved_state, Dee_function_generator_vrrot(self, 3)); /* UNCHECKED(elem), self, index */
+			EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_unbound_index, VCALL_CC_EXCEPT, 2));
+			Dee_memstate_decref(self->fg_state);
+			self->fg_state = saved_state;
+			HA_printf(".section .text\n");
+			self->fg_sect = text;
+		} /* self, index, elem */
+		DO(Dee_function_generator_vrrot(self, 3)); /* elem, self, index */
+		DO(Dee_function_generator_vpop(self));     /* elem, self */
+		DO(Dee_function_generator_vpop(self));     /* elem */
+		ASSERT(Dee_function_generator_vtop_isdirect(self));
+		Dee_function_generator_vtop_direct_setref(self);
+		return 0;
+	}
+	ASSERT(nsi->nsi_seqlike.nsi_getitem);
+	return Dee_function_generator_vcallapi(self, nsi->nsi_seqlike.nsi_getitem,
+	                                       VCALL_CC_OBJECT, 2);
+err_saved_state:
+	Dee_memstate_decref(saved_state);
+err:
+	return -1;
+}
 
 
 /* seq -> [elems...] */
@@ -5959,20 +6076,93 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t n) {
 	struct Dee_memval *seqval;
+	DeeTypeObject *seqtype;
 	Dee_vstackaddr_t i;
 	uintptr_t cfa_offset;
 	size_t alloc_size;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
 	DO(Dee_function_generator_state_unshare(self));
+	seqval = Dee_function_generator_vtop(self);
 
 	/* Optimization when "vtop" is always "none" */
-	seqval = Dee_function_generator_vtop(self);
-	if (Dee_memval_isnone(seqval)) {
-		DO(Dee_function_generator_vpop(self));
-		for (i = 0; i < n; ++i)
-			DO(Dee_function_generator_vpush_const(self, Dee_None));
-		return 0;
+	seqtype = Dee_memval_typeof(seqval);
+	if (seqtype != NULL) {
+		if (seqtype == &DeeNone_Type) {
+			DO(Dee_function_generator_vpop(self));
+			for (i = 0; i < n; ++i)
+				DO(Dee_function_generator_vpush_const(self, Dee_None));
+			return 0;
+		}
+		if (Dee_memval_isconst(seqval)) {
+			/* TODO: Optimizations to inline-expand a constant expression */
+		}
+
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+			if (seqtype == &DeeTuple_Type) {
+				/* TODO: Verify that the tuple has the correct size */
+				/* TODO: Push all the tuple elements via vind() (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN') */
+				/* TODO: Incref all elements that might be used after the last
+				 *       reference to the tuple has gone away must be incref'd,
+				 *       and where the consumer of the pushed element needs it
+				 *       to be a reference.
+				 * XXX: Currently, such a level of lifetime isn't available,
+				 *      so need to incref always. */
+			}
+
+			if (seqtype == &DeeList_Type) {
+				/* TODO: Acquire a lock to he list (if the list isn't ONEREF) */
+				/* TODO: Verify that the list has the correct size */
+				/* TODO: Push all of the list's elements (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN') */
+				/* TODO: Incref every element where the consumer needs it to be a reference */
+				/* TODO: Release the lock from the list (if the list isn't ONEREF) */
+			}
+
+			/* If "seqtype" implements "nsi_getsize_fast" (DeeFastSeq_GetSize),
+			 * inline the relevant code from `DeeObject_Unpack()' */
+			if (seqtype->tp_seq &&
+			    seqtype->tp_seq->tp_nsi &&
+			    seqtype->tp_seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+			    seqtype->tp_seq->tp_nsi->nsi_seqlike.nsi_getsize_fast) {
+				struct Dee_type_nsi const *nsi = seqtype->tp_seq->tp_nsi;
+				ASSERT(nsi->nsi_seqlike.nsi_getitem ||
+				       nsi->nsi_seqlike.nsi_getitem_fast);
+
+				/* NOTE: Here, we're *NOT* free to load in arbitrary order!
+				 *       If more than one element is unbound / causes an exception,
+				 *       then the actual error needs to be for the *first* (lowest)
+				 *       index where access causes a fault! */
+				DO(Dee_function_generator_vdup(self)); /* seq, seq */
+				DO(Dee_function_generator_vcallapi(self, nsi->nsi_seqlike.nsi_getsize_fast,
+				                                   VCALL_CC_RAWINTPTR, 1)); /* seq, size */
+				DO(vassert_unpack_size(self, n));                           /* seq */
+				for (i = 0; i < n; ++i) {
+					/* TODO: For locations that don't end up being used, simply push none:
+					 * >> local a, none, b = foo.partition(",")...;
+					 *
+					 * ASM:
+					 * >> push   @foo
+					 * >> push   @","
+					 * >> callattr top, @"partition", #1
+					 * >> unpack pop, #3    // Don't actually need to load second value
+					 * >> pop    local @b
+					 * >> pop               // Second value is discarded without being used
+					 * >> pop    local @a
+					 */
+					if (i == n - 1) {
+						DO(Dee_function_generator_vlrot(self, n));      /* [items...], seq */
+					} else {
+						DO(Dee_function_generator_vdup_n(self, i + 1)); /* seq, [items...], seq */
+					}
+					DO(Dee_function_generator_vpush_immSIZ(self, i));   /* [seq], [items...], seq, i */
+					DO(vcall_DeeFastSeq_GetItem(self, nsi));            /* [seq], [items...], elem */
+					DO(Dee_function_generator_vdirect1(self));          /* [seq], [items...], elem */ /* TODO: Remove me once single-NULLABLE check is done */
+				}                                                       /* [seq], [items...] */
+				if (n == 0)
+					return Dee_function_generator_vpop(self);
+				return 0;
+			}
+		}
 	}
 
 	alloc_size = n * sizeof(DREF DeeObject *);

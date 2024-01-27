@@ -975,6 +975,9 @@ struct Dee_memval {
 #define Dee_memval_direct_isref(self)             Dee_memobj_isref(Dee_memval_obj0_getobj(self))
 #define Dee_memval_direct_setref(self)            Dee_memobj_setref(Dee_memval_obj0_getobj(self))
 #define Dee_memval_direct_clearref(self)          Dee_memobj_clearref(Dee_memval_obj0_getobj(self))
+#define Dee_memval_direct_isoneref(self)          Dee_memobj_isoneref(Dee_memval_obj0_getobj(self))
+#define Dee_memval_direct_setoneref(self)         Dee_memobj_setoneref(Dee_memval_obj0_getobj(self))
+#define Dee_memval_direct_clearoneref(self)       Dee_memobj_clearoneref(Dee_memval_obj0_getobj(self))
 #define Dee_memval_direct_local_alwaysbound(self) Dee_memobj_local_alwaysbound(Dee_memval_obj0_getobj(self))
 #define Dee_memval_direct_local_neverbound(self)  Dee_memobj_local_neverbound(Dee_memval_obj0_getobj(self))
 #define Dee_memval_direct_local_setbound(self)    Dee_memobj_local_setbound(Dee_memval_obj0_getobj(self))
@@ -2544,6 +2547,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswapind(struct Dee
 
 /* Ensure that the top-most `DeeObject' from the object-stack is a reference. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref_noalias(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vref2(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t dont_steal_from_vtop_n);
 
 /* Ensure that `mobj' is holding a reference. If said location has aliases,
@@ -3327,6 +3331,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_nonempty_kw(DeeObject 
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_ValueError(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_UnboundAttribute(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cannot_lock_weakref(void);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_unbound_index(DeeObject *__restrict self, size_t index);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
 INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
 #ifdef CONFIG_HAVE_FPU

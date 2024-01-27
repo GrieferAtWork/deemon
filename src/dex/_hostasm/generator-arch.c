@@ -3040,13 +3040,13 @@ _Dee_function_generator_gtest_and_jcc(struct Dee_function_generator *__restrict 
 		ptrdiff_t val_offset = test_loc->ml_off;
 		if (val_offset == 0) {
 			gen86_printf("test" Plq "\t%s, %s\n",
-			          gen86_regname(test_loc->ml_adr.ma_reg),
-			          gen86_regname(test_loc->ml_adr.ma_reg));
+			             gen86_regname(test_loc->ml_adr.ma_reg),
+			             gen86_regname(test_loc->ml_adr.ma_reg));
 			gen86_testP_r_r(p_pc(sect), reg86, reg86);
 		} else {
 			/* This cmp sets FLAGS based on the result of `%r_regno - $off' */
-			gen86_printf("cmp" Plq "\t$%Id, %s\n", val_offset, gen86_regname(test_loc->ml_adr.ma_reg));
-			gen86_cmpP_imm_r(p_pc(sect), val_offset, reg86);
+			gen86_printf("cmp" Plq "\t$%Id, %s\n", -val_offset, gen86_regname(test_loc->ml_adr.ma_reg));
+			gen86_cmpP_imm_r(p_pc(sect), -val_offset, reg86);
 		}
 	}	break;
 
