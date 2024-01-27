@@ -6115,14 +6115,40 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 
 		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 			if (seqtype == &DeeTuple_Type) {
-				/* TODO: Verify that the tuple has the correct size */
-				/* TODO: Push all the tuple elements via vind() (starting with the greatest index when `HOSTASM_STACK_GROWS_DOWN') */
-				/* TODO: Incref all elements that might be used after the last
-				 *       reference to the tuple has gone away must be incref'd,
-				 *       and where the consumer of the pushed element needs it
-				 *       to be a reference.
-				 * XXX: Currently, such a level of lifetime isn't available,
-				 *      so need to incref always. */
+				/* Verify that the tuple has the correct size */
+				DO(Dee_function_generator_vdup(self));                                   /* seq, seq */
+				DO(Dee_function_generator_vind(self, offsetof(DeeTupleObject, t_size))); /* seq, t_size */
+				DO(vassert_unpack_size(self, n));                                        /* seq */
+#ifdef HOSTASM_STACK_GROWS_DOWN
+				for (i = n; i--;)
+#else /* HOSTASM_STACK_GROWS_DOWN */
+				for (i = 0; i < n; ++i)
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+				{
+#ifdef HOSTASM_STACK_GROWS_DOWN
+					bool is_last = i == 0;
+					Dee_vstackaddr_t n_pushed = n - (i + 1);
+#else /* HOSTASM_STACK_GROWS_DOWN */
+					bool is_last = i == n - 1;
+					Dee_vstackaddr_t n_pushed = i;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+					/* TODO: If element "i" isn't used at all (is just popped), then push none for it. */
+					if (!is_last) {                                            /* seq, [items...] */
+						DO(Dee_function_generator_vdup_n(self, n_pushed + 1)); /* seq, [items...], seq */
+					} else {
+						DO(Dee_function_generator_vlrot(self, n_pushed + 1)); /* [items...], seq */
+					}                                                         /* [seq], [items...], seq */
+					DO(Dee_function_generator_vind(self, offsetof(DeeTupleObject, t_elem) +
+					                                     i * sizeof(DREF DeeObject *))); /* [items...], elem */
+					/* TODO: Don't incref if:
+					 * - Reference to tuple "seq" has longer lifetime than reference to current element
+					 * - Current element doesn't need to be a reference (is used by "===" or "is none", etc.)
+					 * - The value in question can be a constant. */
+					DO(Dee_function_generator_vref_noconst_noalias(self)); /* [items...], ref:elem */
+				}
+				if (n == 0)
+					return Dee_function_generator_vpop(self);
+				return Dee_function_generator_vmirror(self, n);
 			}
 
 			if (seqtype == &DeeList_Type) {

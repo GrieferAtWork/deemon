@@ -89,6 +89,19 @@ Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self,
 	return result;
 }
 
+/* a,b,c,d -> d,c,b,a */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vmirror(struct Dee_function_generator *__restrict self,
+                               Dee_vstackaddr_t n) {
+	int result;
+	if unlikely(n <= 1)
+		return 0;
+	result = Dee_function_generator_state_unshare(self);
+	if likely(result == 0)
+		result = Dee_memstate_vmirror(self->fg_state, n);
+	return result;
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpush_memadr(struct Dee_function_generator *__restrict self,
                                     struct Dee_memadr const *adr) {

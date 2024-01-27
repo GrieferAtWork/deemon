@@ -1483,6 +1483,7 @@ Dee_memstate_hasalias(struct Dee_memstate const *__restrict self,
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vswap(struct Dee_memstate *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vlrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vrrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vmirror(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memadr(struct Dee_memstate *__restrict self, struct Dee_memadr const *adr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memloc(struct Dee_memstate *__restrict self, struct Dee_memloc const *loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memobj(struct Dee_memstate *__restrict self, struct Dee_memobj const *obj);
@@ -2194,6 +2195,7 @@ struct Dee_function_generator {
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vswap(struct Dee_function_generator *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vlrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrrot(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmirror(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* a,b,c,d -> d,c,b,a */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memadr(struct Dee_function_generator *__restrict self, struct Dee_memadr const *adr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memloc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memobj(struct Dee_function_generator *__restrict self, struct Dee_memobj const *obj);

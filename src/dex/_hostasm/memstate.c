@@ -832,6 +832,24 @@ Dee_memstate_vrrot(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	return 0;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memstate_vmirror(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t i;
+	struct Dee_memval *swap_base;
+	if unlikely(self->ms_stackc < n)
+		return err_illegal_stack_effect();
+	swap_base = self->ms_stackv + self->ms_stackc - n;
+	for (i = 0; i < (n / 2); ++i) {
+		struct Dee_memval temp;
+		Dee_vstackaddr_t swap_a_index = i;
+		Dee_vstackaddr_t swap_b_index = (n - 1) - i;
+		Dee_memval_initmove(&temp, &swap_base[swap_a_index]);
+		Dee_memval_initmove(&swap_base[swap_a_index], &swap_base[swap_b_index]);
+		Dee_memval_initmove(&swap_base[swap_b_index], &temp);
+	}
+	return 0;
+}
+
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vpush_memadr(struct Dee_memstate *__restrict self,
                           struct Dee_memadr const *adr) {
