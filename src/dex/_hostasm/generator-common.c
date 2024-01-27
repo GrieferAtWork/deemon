@@ -59,6 +59,15 @@ Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict
 		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
+	/* TODO: Must also forget anything related to equivalences when it comes to
+	 *       the indirection of "mobj":
+	 * >> local x = [10, 20];
+	 * >> foo(x); // When this clears the ONEREF flag, DeeList_ELEM(x) is no longer
+	 * >>         // known (and transitively also DeeList_GET(x, 0), ...)
+	 *
+	 * XXX: Is this actually a problem? indirection requires registers, but since
+	 *      we never use callee-preserve registers, *all* registers are always,
+	 *      already marked as clobbered after a function call... */
 	Dee_memobj_clearoneref(mobj);
 	return 0;
 }
