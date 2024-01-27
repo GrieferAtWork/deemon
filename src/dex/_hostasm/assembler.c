@@ -752,6 +752,7 @@ Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict s
 	state->ms_stackv          = NULL;
 	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
 	bzero(state->ms_rusage, sizeof(state->ms_rusage));
+	Dee_memval_init_local_unbound(&state->ms_localv[0]);
 	Dee_memequivs_init(&state->ms_memequiv);
 	self->fg_state = state;
 

@@ -405,7 +405,7 @@ _Dee_memobj_debug_print(struct Dee_memobj const *__restrict self, bool is_local)
 		Dee_DPRINT("-");
 		return;
 	}
-	/* XXX: Print mv_obj0.mo_typeof? */
+	/* XXX: Print mv_obj.mvo_0.mo_typeof? */
 	if (Dee_memobj_isref(self))
 		Dee_DPRINT("r");
 	_Dee_memloc_debug_print(Dee_memobj_getloc(self));
@@ -423,7 +423,7 @@ _Dee_memval_debug_print(struct Dee_memval const *__restrict self,
                         bool is_local) {
 	/* TODO: Print multi-object values */
 	/* TODO: Print mv_vmorph */
-	_Dee_memobj_debug_print(&self->mv_obj0, is_local);
+	_Dee_memobj_debug_print(&self->mv_obj.mvo_0, is_local);
 }
 
 /* Return the name of `lid' at `code_addr' in `self' */

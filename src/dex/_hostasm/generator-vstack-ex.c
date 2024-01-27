@@ -2070,8 +2070,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 
 					DO(Dee_function_generator_vsettyp_noalias(self, type)); /* Instance */
 					ASSERT(Dee_function_generator_vtop_direct_isref(self));
-					Dee_function_generator_vtop(self)->mv_obj0.mo_flags |= MEMOBJ_F_ONEREF;
-					return 0;
+					return Dee_function_generator_voneref_noalias(self);
 				}
 			} /* if (ctor_type != CTOR_TYPE_UNKNOWN) */
 #undef CTOR_TYPE_UNKNOWN
@@ -6106,18 +6105,19 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));                   /* [elems...], result */
 		goto rotate_result_and_pop_elems;
 	}
+	DO(Dee_function_generator_vdirect(self, 1));       /* [elems...], elemv, seq */
 	DO(Dee_function_generator_vref2(self, n + 2));     /* [elems...], elemv, ref:seq */
 	if (extend_inherited_api_function == (void const *)&DeeObject_ExtendInherited)
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_ADD, 1)); /* [elems...], elemv, ref:seq */
 	DO(Dee_function_generator_vpush_immSIZ(self, n));  /* [elems...], elemv, ref:seq, elemc */
 	DO(Dee_function_generator_vlrot(self, 3));         /* [elems...], ref:seq, elemc, elemv */
-	old_seqflags = Dee_function_generator_vtop(self)[-2].mv_obj0.mo_flags;
+	old_seqflags = Dee_memval_direct_getobj(&Dee_function_generator_vtop(self)[-2])->mo_flags;
 	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
 	ASSERT(Dee_memval_isdirect(Dee_function_generator_vtop(self)));
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
 	Dee_function_generator_vtop_direct_setref(self); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
-		Dee_function_generator_vtop(self)->mv_obj0.mo_flags |= n ? MEMOBJ_F_ONEREF : (old_seqflags & MEMOBJ_F_ONEREF);
+		Dee_memval_direct_getobj(Dee_function_generator_vtop(self))->mo_flags |= n ? MEMOBJ_F_ONEREF : (old_seqflags & MEMOBJ_F_ONEREF);
 	DO(Dee_function_generator_vrrot(self, 4));         /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc, elemv */
 	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc */
 	DO(Dee_function_generator_vpop(self));             /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq */

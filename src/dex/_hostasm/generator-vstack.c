@@ -418,7 +418,6 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict self,
                                    Dee_instruction_t const *instr, Dee_lid_t lid) {
 	struct Dee_memstate *state;
-	struct Dee_memobj *obj;
 	struct Dee_memval *dst, *src;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
@@ -447,19 +446,9 @@ Dee_function_generator_vpush_local(struct Dee_function_generator *__restrict sel
 	Dee_memval_initcopy(dst, src);
 	Dee_memstate_incrinuse_for_memval(state, dst);
 	++state->ms_stackc;
-	Dee_memval_foreach_obj(obj, dst) {
-		if (Dee_memobj_isref(obj)) {
-			if unlikely(Dee_memval_objv_inplace_copy_because_shared(dst))
-				goto err;
-			Dee_memval_foreach_obj(obj, dst)
-				Dee_memobj_clearref(obj); /* alias! (so no reference) */
-			goto done_delete_unused_local_after_read;
-		}
-	}
-done_delete_unused_local_after_read:
-	if unlikely(delete_unused_local_after_read(self, instr, lid))
+	if unlikely(Dee_memval_clearref(dst))
 		goto err;
-	return 0;
+	return delete_unused_local_after_read(self, instr, lid);
 err:
 	return -1;
 }
@@ -520,7 +509,7 @@ decref_or_offload_memval(struct Dee_function_generator *__restrict self,
 			/* Try and shift the burden of the reference to the other location. */
 			Dee_memstate_foreach(other_mval, state) {
 				struct Dee_memobj *other_mobj;
-				Dee_memval_foreach_obj(other_mobj, other_mval) {
+				_Dee_memval_foreach_obj(other, other_mobj, other_mval) {
 					if (Dee_memobj_sameloc(other_mobj, mobj) && other_mobj != mobj) {
 						if (Dee_memobj_isref(other_mobj)) {
 							has_ref_alias = true;
@@ -530,6 +519,7 @@ decref_or_offload_memval(struct Dee_function_generator *__restrict self,
 						}
 					}
 				}
+				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
 			if (Dee_memval_isconst(mval))
@@ -548,6 +538,7 @@ decref_or_offload_memval(struct Dee_function_generator *__restrict self,
 				goto err;
 		}
 	}
+	Dee_memval_foreach_obj_end;
 done:
 	return 0;
 err:
@@ -566,15 +557,15 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 	mval = Dee_memstate_vtop(state);
 	if (mval->mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
 		/* Still need to do the null-check (because an exception may have been thrown) */
-		uint8_t saved_mo_flags = mval->mv_obj0.mo_flags;
-		Dee_memobj_clearref(&mval->mv_obj0);
+		uint8_t saved_mo_flags = Dee_memval_nullable_getobj(mval)->mo_flags;
+		Dee_memobj_clearref(Dee_memval_nullable_getobj(mval));
 		if unlikely(Dee_function_generator_gjz_except(self, Dee_memval_nullable_getloc(mval)))
 			goto err;
 		if unlikely(Dee_function_generator_state_unshare(self))
 			goto err;
 		state = self->fg_state;
 		mval = Dee_memstate_vtop(state);
-		mval->mv_obj0.mo_flags = saved_mo_flags;
+		Dee_memval_nullable_getobj(mval)->mo_flags = saved_mo_flags;
 		Dee_memval_nullable_makedirect(mval);
 		if (Dee_memval_direct_typeof(mval) == &DeeNone_Type) {
 			Dee_memstate_decrinuse_for_memloc(state, Dee_memval_direct_getloc(mval));
@@ -699,8 +690,8 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 	 *           first.
 	 */
 	if (src->mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
-		uint8_t saved_flags = src->mv_obj0.mo_flags;
-		Dee_memobj_clearref(&src->mv_obj0);
+		uint8_t saved_flags = Dee_memval_nullable_getobj(src)->mo_flags;
+		Dee_memobj_clearref(Dee_memval_nullable_getobj(src));
 		if unlikely(Dee_function_generator_gjz_except(self, Dee_memval_nullable_getloc(src)))
 			goto err;
 		if unlikely(Dee_function_generator_state_unshare(self))
@@ -708,7 +699,7 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 		state = self->fg_state;
 		src = Dee_memstate_vtop(state);
 		Dee_memval_nullable_makedirect(src);
-		src->mv_obj0.mo_flags = saved_flags;
+		Dee_memval_nullable_getobj(src)->mo_flags = saved_flags;
 	}
 
 	/* Load the destination and see if there's already something stored in there.
@@ -733,6 +724,7 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 			ASSERTF(!(obj->mo_flags & MEMOBJ_F_MAYBEUNBOUND),
 			        "Shouldn't have been set for stack item");
 		}
+		Dee_memval_foreach_obj_end;
 	}
 #endif /* !NDEBUG */
 	--state->ms_stackc;
@@ -1163,6 +1155,7 @@ again_foreach_mobj:
 					goto err;
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	return 0;
 err:
@@ -1193,6 +1186,7 @@ again_foreach_mobj:
 				goto err;
 		}
 	}
+	Dee_memval_foreach_obj_end;
 	return 0;
 err:
 	return -1;
@@ -1227,6 +1221,7 @@ again_foreach_mobj:
 					goto err;
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	return 0;
 err:
@@ -1260,6 +1255,7 @@ again_foreach_mobj:
 				goto err;
 		}
 	}
+	Dee_memval_foreach_obj_end;
 	return 0;
 err:
 	return -1;
@@ -2599,19 +2595,19 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 
 		/* In this case, `Dee_function_generator_vopbool()' already created a morph. */
 		ASSERT(MEMVAL_VMORPH_ISBOOL(cond_mval->mv_vmorph));
-		ASSERT(!Dee_memobj_isref(&cond_mval->mv_obj0));
+		ASSERT(!Dee_memobj_isref(&cond_mval->mv_obj.mvo_0));
 
 		/* Silently remove the bool-morph location from the v-stack. */
 		ASSERT(self->fg_state->ms_stackc >= 1);
 		/*Dee_memval_fini(cond_mval);*/ /* Not needed for `MEMVAL_VMORPH_ISBOOL()' */
-		Dee_memstate_decrinuse_for_memobj(self->fg_state, &cond_mval->mv_obj0);
+		Dee_memstate_decrinuse_for_memobj(self->fg_state, &cond_mval->mv_obj.mvo_0);
 		--self->fg_state->ms_stackc;
 
 		/* Compute compare operands and target labels. */
 		Llo = NULL;
 		Leq = NULL;
 		Lgr = NULL;
-		cmp_lhs = *Dee_memobj_getloc(&cond_mval->mv_obj0);
+		cmp_lhs = *Dee_memobj_getloc(&cond_mval->mv_obj.mvo_0);
 		Dee_memloc_init_const(&cmp_rhs, NULL);
 		switch (cond_mval->mv_vmorph) {
 		case MEMVAL_VMORPH_BOOL_Z:
@@ -2961,6 +2957,7 @@ Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 					did_find_first_alias = true;
 				}
 			}
+			Dee_memval_foreach_obj_end;
 		}
 		Dee_memstate_foreach_end;
 		if unlikely(Dee_function_generator_gincref_loc(self, Dee_memval_direct_getloc(mval), 1))
@@ -3031,6 +3028,7 @@ Dee_function_generator_gref2(struct Dee_function_generator *__restrict self,
 				}
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	state->ms_stackc += dont_steal_from_vtop_n;
@@ -3105,6 +3103,7 @@ again:
 			ASSERT(Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HREG);
 		}
 	}
+	Dee_memval_foreach_obj_end;
 	return 0;
 err:
 	return -1;
@@ -3139,6 +3138,7 @@ again:
 			ASSERT(Dee_memobj_hstackind_getvaloff(mobj) == 0 || !require_valoff_0);
 		}
 	}
+	Dee_memval_foreach_obj_end;
 	return 0;
 err:
 	return -1;
@@ -3857,8 +3857,7 @@ Dee_function_generator_vcall_DeeObject_MALLOC(struct Dee_function_generator *__r
 		goto err;
 	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
 	ASSERT(Dee_function_generator_vtop_direct_isref(self));
-	Dee_function_generator_vtop(self)->mv_obj0.mo_flags |= MEMOBJ_F_ONEREF; /* Initial reference -> oneref */
-	return 0;
+	return Dee_function_generator_voneref_noalias(self); /* Initial reference -> oneref */
 err:
 	return -1;
 }
@@ -3879,8 +3878,7 @@ Dee_function_generator_vcall_DeeObject_Malloc(struct Dee_function_generator *__r
 		goto err;
 	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
 	ASSERT(Dee_function_generator_vtop_direct_isref(self));
-	Dee_function_generator_vtop(self)->mv_obj0.mo_flags |= MEMOBJ_F_ONEREF; /* Initial reference -> oneref */
-	return 0;
+	return Dee_function_generator_voneref_noalias(self); /* Initial reference -> oneref */
 err:
 	return -1;
 }
@@ -4122,10 +4120,11 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 						uintptr_t cfa = Dee_memobj_getcfastart(mobj);
 						ASSERT(cfa < state->ms_host_cfa_offset);
 						bitset_set(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
-						if (mval->mv_obj0.mo_flags & MEMOBJ_F_LINEAR)
+						if (mobj->mo_flags & MEMOBJ_F_LINEAR)
 							bitset_set(hstack_reserved, cfa / HOST_SIZEOF_POINTER);
 					}
 				}
+				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
 			/* hstack locations currently in use by the linear portion don't count as in-use.
@@ -4194,9 +4193,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 #define TYPE_ALIAS  MEMEQUIV_TYPE_DUMMY
 		for (i = 0; i < argc; ++i) {
 			struct Dee_memval *aliasval, *mval = &linbase[i];
-			struct Dee_memloc locval = mval->mv_obj0.mo_loc;
-			mval->mv_obj0.mo_loc.ml_adr.ma_typ = TYPE_LINLOC;
-			mval->mv_obj0.mo_loc.ml_adr.ma_val._v_nextobj = NULL;
+			struct Dee_memloc locval = mval->mv_obj.mvo_0.mo_loc;
+			mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_typ = TYPE_LINLOC;
+			mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_val._v_nextobj = NULL;
 			Dee_memstate_foreach(aliasval, linear_state) {
 				struct Dee_memobj *alias;
 				Dee_memval_foreach_obj(alias, aliasval) {
@@ -4205,15 +4204,16 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 						continue;
 					if (Dee_memloc_sameloc(&alias->mo_loc, &locval)) {
 						alias->mo_loc.ml_adr.ma_typ = TYPE_ALIAS;
-						alias->mo_loc.ml_adr.ma_val._v_nextobj = mval->mv_obj0.mo_loc.ml_adr.ma_val._v_nextobj;
-						mval->mv_obj0.mo_loc.ml_adr.ma_val._v_nextobj = alias;
+						alias->mo_loc.ml_adr.ma_val._v_nextobj = mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_val._v_nextobj;
+						mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_val._v_nextobj = alias;
 					}
 				}
+				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
 		}
 		for (i = 0; i < argc; ++i) {
-			struct Dee_memobj *loc = &linbase[i].mv_obj0;
+			struct Dee_memobj *loc = &linbase[i].mv_obj.mvo_0;
 			if (loc->mo_loc.ml_adr.ma_typ == TYPE_LINLOC) {
 				struct Dee_memobj *next;
 #ifdef HOSTASM_STACK_GROWS_DOWN
@@ -4240,9 +4240,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 			struct Dee_memval *mval = &linbase[i];
-			ASSERT(mval->mv_obj0.mo_loc.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
-			mval->mv_obj0.mo_loc.ml_adr.ma_val.v_cfa = dst_cfa_offset;
-			mval->mv_obj0.mo_flags |= MEMOBJ_F_LINEAR; /* Not allowed to move until popped */
+			ASSERT(mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
+			mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_val.v_cfa = dst_cfa_offset;
+			mval->mv_obj.mvo_0.mo_flags |= MEMOBJ_F_LINEAR; /* Not allowed to move until popped */
 		}
 
 		/* Make sure that `linear_state's CFA offset is large enough to hold the linear vector. */

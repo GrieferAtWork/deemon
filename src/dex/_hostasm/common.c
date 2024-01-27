@@ -27,8 +27,10 @@
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
+#include <deemon/bool.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
+#include <deemon/int.h>
 
 DECL_BEGIN
 
@@ -740,6 +742,53 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 			if (result->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED)
 				break;
 		}
+	}
+	return NULL;
+}
+
+
+
+/************************************************************************/
+/* Dee_memval                                                           */
+/************************************************************************/
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_memval_objn_dounshare(struct Dee_memval *__restrict self) {
+	struct Dee_memobjs *objs, *copy;
+	size_t sizeof_struct;
+	ASSERT(Dee_memval_hasobjn(self));
+	objs = Dee_memval_getobjn(self);
+	ASSERT(Dee_memobjs_isshared(objs));
+	sizeof_struct = (offsetof(struct Dee_memobjs, mos_objv)) +
+	                (objs->mos_objc * sizeof(struct Dee_memobj));
+	copy = (struct Dee_memobjs *)Dee_Malloc(sizeof_struct);
+	if unlikely(!copy)
+		goto err;
+	copy = (struct Dee_memobjs *)memcpy(copy, objs, sizeof_struct);
+	copy->mos_refcnt = 1;
+	Dee_memobjs_decref_nokill(objs);
+	self->mv_obj.mvo_n = copy->mos_objv;
+	return 0;
+err:
+	return -1;
+}
+
+/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+Dee_memval_typeof(struct Dee_memval const *self) {
+	switch (self->mv_vmorph) {
+	case MEMVAL_VMORPH_DIRECT:
+	case MEMVAL_VMORPH_DIRECT_01:
+		return Dee_memobj_typeof(Dee_memval_direct_getobj(self));
+	case MEMVAL_VMORPH_BOOL_Z:
+	case MEMVAL_VMORPH_BOOL_Z_01:
+	case MEMVAL_VMORPH_BOOL_NZ:
+	case MEMVAL_VMORPH_BOOL_NZ_01:
+		return &DeeBool_Type;
+	case MEMVAL_VMORPH_INT:
+	case MEMVAL_VMORPH_UINT:
+		return &DeeInt_Type;
+	default: break;
 	}
 	return NULL;
 }

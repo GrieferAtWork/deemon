@@ -26,11 +26,9 @@
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
 #include <deemon/alloc.h>
-#include <deemon/bool.h>
 #include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
-#include <deemon/int.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 
@@ -86,27 +84,6 @@ Dee_memval_vec_moveup(struct Dee_memval *dst,
 	return dst;
 }
 #endif /* !Dee_memval_initmove_IS_MEMCPY */
-
-/* Try to figure out the guarantied runtime object type of `gdirect(self)' */
-INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-Dee_memval_typeof(struct Dee_memval const *self) {
-	switch (self->mv_vmorph) {
-	case MEMVAL_VMORPH_DIRECT:
-	case MEMVAL_VMORPH_DIRECT_01:
-		return Dee_memobj_typeof(&self->mv_obj0);
-	case MEMVAL_VMORPH_BOOL_Z:
-	case MEMVAL_VMORPH_BOOL_Z_01:
-	case MEMVAL_VMORPH_BOOL_NZ:
-	case MEMVAL_VMORPH_BOOL_NZ_01:
-		return &DeeBool_Type;
-	case MEMVAL_VMORPH_INT:
-	case MEMVAL_VMORPH_UINT:
-		return &DeeInt_Type;
-	default: break;
-	}
-	return NULL;
-}
-
 
 /* Check if there is a register that contains `usage'.
  * Returns some value `>= HOST_REGISTER_COUNT' if non-existent. */
@@ -191,6 +168,7 @@ Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
 			if (Dee_memobj_hasreg(obj) && Dee_memobj_getreg(obj) == regno)
 				Dee_memobj_setoff(obj, Dee_memobj_getoff(obj) + delta);
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 }
@@ -208,6 +186,7 @@ Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
 			    Dee_memobj_hstackind_getcfa(obj) == cfa_offset)
 				return true;
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	return false;
@@ -242,6 +221,7 @@ Dee_memstate_hstack_used(struct Dee_memstate const *__restrict self,
 			if (Dee_memobj_hstack_used(obj, min_offset, end_offset))
 				return true;
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	if (hstack_reserved != NULL) {
@@ -251,6 +231,7 @@ Dee_memstate_hstack_used(struct Dee_memstate const *__restrict self,
 				if (Dee_memobj_hstack_used(obj, min_offset, end_offset))
 					return true;
 			}
+			Dee_memval_foreach_obj_end;
 		}
 		Dee_memstate_foreach_end;
 	}
@@ -529,15 +510,18 @@ incompatible_morph:
 					/* Make "val" into a distinct, writable location */
 					DeeTypeObject *saved_mo_typeof;
 					uint8_t saved_mo_flags;
-					saved_mo_typeof = val->mv_obj0.mo_typeof;
-					saved_mo_flags  = val->mv_obj0.mo_flags;
+					saved_mo_typeof = Dee_memval_typeof(val);
+					saved_mo_flags  = MEMOBJ_F_NORMAL;
+					if (Dee_memval_hasobj0(val))
+						saved_mo_flags = Dee_memval_getobj0(val)->mo_flags;
 					Dee_memstate_decrinuse_for_memval(self, val);
 					Dee_memval_fini(val);
 					Dee_memval_init_undefined(val);
 					Dee_memloc_makedistinct(self, Dee_memval_direct_getloc(val), 0);
 					ASSERT(val->mv_vmorph == MEMVAL_VMORPH_DIRECT);
-					val->mv_obj0.mo_typeof = saved_mo_typeof;
-					val->mv_obj0.mo_flags  = saved_mo_flags;
+					ASSERT(Dee_memval_hasobj0(val));
+					Dee_memval_getobj0(val)->mo_typeof = saved_mo_typeof;
+					Dee_memval_getobj0(val)->mo_flags  = saved_mo_flags;
 				}
 				val->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 				result = true;
@@ -631,6 +615,7 @@ Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
 			    Dee_memobj_sameloc(obj, Dee_memval_direct_getobj(mval)))
 				return true;
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	return false;
@@ -756,6 +741,7 @@ _Dee_memstate_verifyrinuse_d(struct Dee_memstate const *__restrict self) {
 				++correct_rinuse[Dee_memobj_getreg(obj)];
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	ASSERTF(memcmp(self->ms_rinuse, correct_rinuse, sizeof(correct_rinuse)) == 0,
@@ -1022,7 +1008,6 @@ err:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
-	struct Dee_memobj *obj;
 	struct Dee_memval *dst;
 	Dee_vstackaddr_t index;
 	ASSERT(n >= 1);
@@ -1035,16 +1020,7 @@ Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	Dee_memval_initcopy(dst, &self->ms_stackv[index]);
 	Dee_memstate_incrinuse_for_memval(self, dst);
 	++self->ms_stackc;
-	Dee_memval_foreach_obj(obj, dst) {
-		if (Dee_memobj_isref(obj)) {
-			if unlikely(Dee_memval_objv_inplace_copy_because_shared(dst))
-				goto err;
-			Dee_memval_foreach_obj(obj, dst)
-				Dee_memobj_clearref(obj); /* alias! (so no reference) */
-			return 0;
-		}
-	}
-	return 0;
+	return Dee_memval_clearref(dst); /* alias! (so no reference) */
 err:
 	return -1;
 }
@@ -1102,6 +1078,7 @@ Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
 			default: goto err_bad_loc;
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	return 0;

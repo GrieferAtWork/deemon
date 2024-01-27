@@ -25,6 +25,7 @@
 /**/
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/error.h>
@@ -54,10 +55,10 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 
 	case MEMVAL_VMORPH_NULLABLE: {
 		int result;
-		uint8_t saved_flags = mval->mv_obj0.mo_flags;
-		Dee_memobj_clearref(&mval->mv_obj0);
-		result = Dee_function_generator_gjz_except(self, &mval->mv_obj0.mo_loc);
-		mval->mv_obj0.mo_flags  = saved_flags;
+		uint8_t saved_flags = mval->mv_obj.mvo_0.mo_flags;
+		Dee_memobj_clearref(&mval->mv_obj.mvo_0);
+		result = Dee_function_generator_gjz_except(self, &mval->mv_obj.mvo_0.mo_loc);
+		mval->mv_obj.mvo_0.mo_flags  = saved_flags;
 		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 		return result;
 	}	break;
@@ -71,21 +72,21 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 		int temp;
 		Dee_host_register_t retreg;
 		ptrdiff_t retreg_delta;
-		if (Dee_memobj_gettyp(&mval->mv_obj0) == MEMADR_TYPE_HREG) {
-			retreg = Dee_memobj_hreg_getreg(&mval->mv_obj0);
+		if (Dee_memobj_gettyp(&mval->mv_obj.mvo_0) == MEMADR_TYPE_HREG) {
+			retreg = Dee_memobj_hreg_getreg(&mval->mv_obj.mvo_0);
 		} else {
 			Dee_host_register_t not_these[2];
 			not_these[0] = HOST_REGISTER_COUNT;
 			not_these[1] = HOST_REGISTER_COUNT;
-			if (Dee_memobj_hasreg(&mval->mv_obj0))
-				not_these[0] = Dee_memobj_getreg(&mval->mv_obj0);
+			if (Dee_memobj_hasreg(&mval->mv_obj.mvo_0))
+				not_these[0] = Dee_memobj_getreg(&mval->mv_obj.mvo_0);
 			retreg = Dee_function_generator_gallocreg(self, not_these);
 			if unlikely(retreg >= HOST_REGISTER_COUNT)
 				goto err;
 		}
 		if (vmorph == MEMVAL_VMORPH_BOOL_NZ_01) {
 			temp = Dee_function_generator_gmorph_loc012regbooly(self,
-			                                                    Dee_memobj_getloc(&mval->mv_obj0),
+			                                                    Dee_memobj_getloc(&mval->mv_obj.mvo_0),
 			                                                    0, retreg, &retreg_delta);
 		} else {
 			unsigned int cmp;
@@ -106,13 +107,13 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 			default: __builtin_unreachable();
 			}
 			temp = Dee_function_generator_gmorph_loc2regbooly(self,
-			                                                  Dee_memobj_getloc(&mval->mv_obj0),
+			                                                  Dee_memobj_getloc(&mval->mv_obj.mvo_0),
 			                                                  0, cmp, retreg, &retreg_delta);
 		}
 		if unlikely(temp)
 			goto err;
 		if (Dee_memstate_ismemvalinstate(self->fg_state, mval)) {
-			Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj0);
+			Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj.mvo_0);
 			Dee_memstate_incrinuse(self->fg_state, retreg);
 		}
 		Dee_memval_init_hreg(mval, retreg, retreg_delta, &DeeBool_Type, MEMOBJ_F_NORMAL);
@@ -126,21 +127,21 @@ Dee_function_generator_gdirect_impl(struct Dee_function_generator *__restrict se
 		                                            vmorph == MEMVAL_VMORPH_INT
 		                                            ? (void const *)&DeeInt_NEWSFUNC(HOST_SIZEOF_POINTER)
 		                                            : (void const *)&DeeInt_NEWUFUNC(HOST_SIZEOF_POINTER),
-		                                            1, Dee_memobj_getloc(&mval->mv_obj0)))
+		                                            1, Dee_memobj_getloc(&mval->mv_obj.mvo_0)))
 			goto err;
-		mval->mv_obj0.mo_flags = MEMOBJ_F_NORMAL;
+		mval->mv_obj.mvo_0.mo_flags = MEMOBJ_F_NORMAL;
 		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 		if (Dee_memstate_ismemvalinstate(self->fg_state, mval)) {
-			Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj0);
+			Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj.mvo_0);
 			Dee_memstate_incrinuse(self->fg_state, HOST_REGISTER_RETURN);
 		}
 		Dee_memval_init_hreg(mval, HOST_REGISTER_RETURN, 0, NULL, MEMOBJ_F_NORMAL);
-		if unlikely(Dee_function_generator_gjz_except(self, Dee_memobj_getloc(&mval->mv_obj0)))
+		if unlikely(Dee_function_generator_gjz_except(self, Dee_memobj_getloc(&mval->mv_obj.mvo_0)))
 			goto err;
-		ASSERT(!Dee_memobj_isref(&mval->mv_obj0));
-		ASSERT(Dee_memobj_typeof(&mval->mv_obj0) == NULL);
-		Dee_memobj_setref(&mval->mv_obj0);
-		Dee_memobj_settypeof(&mval->mv_obj0, &DeeInt_Type);
+		ASSERT(!Dee_memobj_isref(&mval->mv_obj.mvo_0));
+		ASSERT(Dee_memobj_typeof(&mval->mv_obj.mvo_0) == NULL);
+		Dee_memobj_setref(&mval->mv_obj.mvo_0);
+		Dee_memobj_settypeof(&mval->mv_obj.mvo_0, &DeeInt_Type);
 	}	break;
 
 	default:
@@ -171,7 +172,6 @@ Dee_function_generator_gdirect(struct Dee_function_generator *__restrict self,
 
 	/* Write the updated value into all aliases. */
 	ASSERT(Dee_memval_isdirect(mval));
-	/*oldval.mv_obj0.mo_flags &= ~MEMVAL_M_LOCAL_BSTATE;*/ /* Not needed */
 	state = self->fg_state;
 	Dee_memstate_foreach(alias, state) {
 		if (!Dee_memval_sameval(alias, &oldval))
@@ -206,6 +206,7 @@ Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict
 			if (Dee_memobj_sameloc(alias_mobj, mobj))
 				Dee_memobj_clearoneref(alias_mobj);
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	Dee_memobj_clearoneref(mobj);
@@ -418,35 +419,36 @@ Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restr
 		 * set, then we MUST NOT use pop (since the location can't be
 		 * altered) */
 		struct Dee_memval *val;
-		struct Dee_memobj *loc, *cfa_locs = NULL;
+		struct Dee_memobj *obj, *cfa_objs = NULL;
 		Dee_memstate_foreach(val, self->fg_state) {
-			Dee_memval_foreach_obj(loc, val) {
-				if (Dee_memobj_gettyp(loc) == MEMADR_TYPE_HSTACKIND &&
-				    Dee_memobj_hstackind_getcfa(loc) == cfa_offset) {
+			Dee_memval_foreach_obj(obj, val) {
+				if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HSTACKIND &&
+				    Dee_memobj_hstackind_getcfa(obj) == cfa_offset) {
 					STATIC_ASSERT(offsetof(struct Dee_memobj, mo_loc.ml_adr.ma_val.v_cfa) ==
 					              offsetof(struct Dee_memobj, mo_loc.ml_adr.ma_val._v_nextobj));
-					if (val->mv_obj0.mo_flags & MEMOBJ_F_LINEAR) {
+					if (obj->mo_flags & MEMOBJ_F_LINEAR) {
 						/* Ooops: not allowed. (Location must not be moved to a register) */
-						while (cfa_locs) {
-							loc = cfa_locs->mo_loc.ml_adr.ma_val._v_nextobj;
-							cfa_locs->mo_loc.ml_adr.ma_val.v_cfa = cfa_offset;
-							cfa_locs = loc;
+						while (cfa_objs) {
+							obj = cfa_objs->mo_loc.ml_adr.ma_val._v_nextobj;
+							cfa_objs->mo_loc.ml_adr.ma_val.v_cfa = cfa_offset;
+							cfa_objs = obj;
 						}
 						goto do_use_mov;
 					}
-					loc->mo_loc.ml_adr.ma_val._v_nextobj = cfa_locs;
-					cfa_locs = loc;
+					obj->mo_loc.ml_adr.ma_val._v_nextobj = cfa_objs;
+					cfa_objs = obj;
 				}
 			}
+			Dee_memval_foreach_obj_end;
 		}
 		Dee_memstate_foreach_end;
-		if (cfa_locs != NULL) {
+		if (cfa_objs != NULL) {
 			struct Dee_memobj *next;
 			do {
-				next = cfa_locs->mo_loc.ml_adr.ma_val._v_nextobj;
-				Dee_memloc_init_hreg(&cfa_locs->mo_loc, dst_regno, Dee_memloc_getoff(&cfa_locs->mo_loc));
+				next = cfa_objs->mo_loc.ml_adr.ma_val._v_nextobj;
+				Dee_memloc_init_hreg(&cfa_objs->mo_loc, dst_regno, Dee_memloc_getoff(&cfa_objs->mo_loc));
 				Dee_memstate_incrinuse(self->fg_state, dst_regno);
-			} while ((cfa_locs = next) != NULL);
+			} while ((cfa_objs = next) != NULL);
 		}
 		return Dee_function_generator_ghstack_popreg(self, dst_regno);
 	}
@@ -1432,8 +1434,8 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 	for (i = MEMSTATE_XLOCAL_A_MIN; i <= MEMSTATE_XLOCAL_A_MAX; ++i) {
 		struct Dee_memval *xval = &state->ms_localv[xloc_base + i];
 		if (Dee_memval_isdirect(xval) &&
-		    Dee_memobj_gettyp(&xval->mv_obj0) == MEMADR_TYPE_HREG &&
-		    Dee_memobj_hreg_getreg(&xval->mv_obj0) == regno) {
+		    Dee_memval_direct_gettyp(xval) == MEMADR_TYPE_HREG &&
+		    Dee_memval_direct_hreg_getreg(xval) == regno) {
 			uintptr_t cfa_offset;
 			Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
 			size_t true_argi = 0;
@@ -1552,6 +1554,7 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 				                          Dee_memobj_hregind_getvaloff(obj));
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 
@@ -1601,6 +1604,7 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 				ASSERT(Dee_memobj_gettyp(obj) == MEMADR_TYPE_HSTACKIND);
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	for (i = 0; i < state->ms_stackc; ++i) {
 		struct Dee_memobj *obj;
@@ -1629,6 +1633,7 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 				ASSERT(Dee_memobj_gettyp(obj) == MEMADR_TYPE_HSTACKIND);
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 
 	/* NOTE: Usage-registers must be cleared by the caller! */
@@ -1671,6 +1676,7 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 				ASSERT(Dee_memobj_gettyp(obj) == MEMADR_TYPE_HSTACKIND);
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	for (i = 0; i < state->ms_stackc; ++i) {
 		struct Dee_memobj *obj;
@@ -1699,6 +1705,7 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 				ASSERT(Dee_memobj_gettyp(obj) == MEMADR_TYPE_HSTACKIND);
 			}
 		}
+		Dee_memval_foreach_obj_end;
 	}
 
 	/* NOTE: Usage-registers must be cleared by the caller! */
@@ -1767,6 +1774,7 @@ Dee_function_generator_gallocreg_pickreg(struct Dee_function_generator *__restri
 			if (!nullable_host_register_list_contains(not_these, result))
 				return result;
 		}
+		Dee_memval_foreach_obj_end;
 	}
 	state = self->fg_state;
 	for (i = 0; i < state->ms_stackc; ++i) {
@@ -1779,6 +1787,7 @@ Dee_function_generator_gallocreg_pickreg(struct Dee_function_generator *__restri
 			if (!nullable_host_register_list_contains(not_these, result))
 				return result;
 		}
+		Dee_memval_foreach_obj_end;
 	}
 
 	return HOST_REGISTER_COUNT;
@@ -2580,13 +2589,14 @@ no_equivalence:
 				if (Dee_memobj_getloc(alias_obj) == loc)
 					continue;
 				if (Dee_memobj_gettyp(alias_obj) == MEMADR_TYPE_HSTACKIND &&
-				    (alias_val->mv_obj0.mo_flags & MEMOBJ_F_LINEAR))
+				    (alias_obj->mo_flags & MEMOBJ_F_LINEAR))
 					continue; /* The alias must remain on-stack (don't update it) */
 				Dee_memstate_decrinuse_for_memobj(self->fg_state, alias_obj);
 				Dee_memloc_init_hreg(Dee_memobj_getloc(alias_obj), regno,
 				                     Dee_memobj_getoff(alias_obj) + delta_change);
 				Dee_memstate_incrinuse(self->fg_state, regno);
 			}
+			Dee_memval_foreach_obj_end;
 		}
 		Dee_memstate_foreach_end;
 	}
@@ -2724,6 +2734,7 @@ err_restore_val_offset:
 					Dee_memloc_init_hstackind(Dee_memobj_getloc(alias_obj), cfa_offset,
 					                          Dee_memobj_getoff(alias_obj) + val_delta_change);
 				}
+				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
 		}
