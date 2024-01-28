@@ -279,6 +279,23 @@ Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict
 	return result;
 }
 
+
+/* Force "loc" to become HREG, assuming that "loc" is tracked by the mem-state. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+tracked_memloc_forcereg(struct Dee_function_generator *__restrict self,
+                        struct Dee_memloc *loc, Dee_host_register_t const *not_these) {
+	int result;
+	struct Dee_memloc retloc;
+	result = Dee_function_generator_gasreg(self, loc, &retloc, not_these);
+	if likely(result == 0) {
+		Dee_memstate_decrinuse_for_memloc(self->fg_state, loc);
+		ASSERT(Dee_memloc_gettyp(&retloc) == MEMADR_TYPE_HREG);
+		Dee_memstate_incrinuse(self->fg_state, Dee_memloc_hreg_getreg(&retloc));
+		*loc = retloc;
+	}
+	return result;
+}
+
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_arg(struct Dee_function_generator *__restrict self,
                                  Dee_instruction_t const *instr, Dee_aid_t aid) {
@@ -368,7 +385,7 @@ Dee_function_generator_vpush_arg_present(struct Dee_function_generator *__restri
 			args_or_argv_val = &self->fg_state->ms_localv[self->fg_assembler->fa_localc + MEMSTATE_XLOCAL_A_ARGV];
 		}
 		args_or_argv_loc = Dee_memval_direct_getloc(args_or_argv_val);
-		if unlikely(Dee_function_generator_greg(self, args_or_argv_loc, NULL))
+		if unlikely(tracked_memloc_forcereg(self, args_or_argv_loc, NULL))
 			goto err;
 		ASSERT(Dee_memloc_gettyp(args_or_argv_loc) == MEMADR_TYPE_HREG);
 		result = Dee_memstate_vpush_hregind(self->fg_state,
@@ -1558,7 +1575,7 @@ Dee_function_generator_vpush_xlocal(struct Dee_function_generator *__restrict se
 		ASSERT(Dee_memval_isdirect(xlocal_mval));
 		if (Dee_memval_direct_gettyp(xlocal_mval) != MEMADR_TYPE_HSTACKIND &&
 		    Dee_memval_direct_gettyp(xlocal_mval) != MEMADR_TYPE_HREG) {
-			if unlikely(Dee_function_generator_greg(self, Dee_memval_direct_getloc(xlocal_mval), NULL))
+			if unlikely(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(xlocal_mval), NULL))
 				goto err;
 			ASSERT(Dee_memval_direct_gettyp(xlocal_mval) == MEMADR_TYPE_HREG);
 		}
@@ -2352,7 +2369,7 @@ Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__res
 		vtop = Dee_function_generator_vtop(self);
 		if (Dee_memval_isconst(vtop)) {
 			ASSERT(Dee_memval_isdirect(vtop));
-			if unlikely(Dee_function_generator_greg(self, Dee_memval_direct_getloc(vtop), NULL))
+			if unlikely(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(vtop), NULL))
 				goto err;
 			ASSERT(!Dee_memloc_isconst(Dee_memval_direct_getloc(vtop)));
 			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
@@ -2419,7 +2436,7 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 		vtop = Dee_function_generator_vtop(self);
 		if (Dee_memval_isconst(vtop)) {
 			ASSERT(Dee_memval_isdirect(vtop));
-			if unlikely(Dee_function_generator_greg(self, Dee_memval_direct_getloc(vtop), NULL))
+			if unlikely(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(vtop), NULL))
 				goto err;
 			ASSERT(!Dee_memloc_isconst(Dee_memval_direct_getloc(vtop)));
 			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
@@ -2847,16 +2864,24 @@ __pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vind(struct Dee_function_generator *__restrict self,
                             ptrdiff_t ind_delta) {
+	struct Dee_memstate *state;
 	struct Dee_memval *mval;
+	struct Dee_memloc ind_loc;
 	if unlikely(Dee_function_generator_vdirect1(self))
 		goto err;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
-	mval = Dee_function_generator_vtop(self);
+	state = self->fg_state;
+	mval  = Dee_memstate_vtop(state);
 	ASSERTF(Dee_memval_isdirect(mval), "Cannot do indirection on non-direct location"); /* TODO: This shouldn't be the case! */
 	ASSERTF(!Dee_memval_direct_isref(mval), "Cannot do indirection on location holding a reference");
-	if unlikely(Dee_function_generator_gind(self, Dee_memval_direct_getloc(mval), ind_delta))
+	if unlikely(Dee_function_generator_gasind(self, Dee_memval_direct_getloc(mval), &ind_loc, ind_delta))
 		goto err;
+	ASSERT(state == self->fg_state);
+	ASSERT(mval == Dee_memstate_vtop(state));
+	Dee_memstate_decrinuse_for_memloc(state, Dee_memval_direct_getloc(mval));
+	*Dee_memval_direct_getloc(mval) = ind_loc;
+	Dee_memstate_incrinuse_for_memloc(state, &ind_loc);
 	Dee_memval_direct_settypeof(mval, NULL); /* Unknown */
 	return 0;
 err:
@@ -3196,7 +3221,7 @@ again:
 				self->fg_state = state;
 				goto again;
 			}
-			if unlikely(Dee_function_generator_greg(self, Dee_memobj_getloc(mobj), not_these))
+			if unlikely(tracked_memloc_forcereg(self, Dee_memobj_getloc(mobj), not_these))
 				goto err;
 			ASSERT(Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HREG);
 		}
@@ -3222,6 +3247,7 @@ again:
 	Dee_memval_foreach_obj(mobj, mval) {
 		if (Dee_memobj_gettyp(mobj) != MEMADR_TYPE_HSTACKIND ||
 		    (Dee_memobj_hstackind_getvaloff(mobj) != 0 && require_valoff_0)) {
+			struct Dee_memloc flushed_loc;
 			if (Dee_memstate_isshared(state)) {
 				state = Dee_memstate_copy(state);
 				if unlikely(!state)
@@ -3230,10 +3256,13 @@ again:
 				self->fg_state = state;
 				goto again;
 			}
-			if unlikely(Dee_function_generator_gflush(self, Dee_memobj_getloc(mobj), require_valoff_0))
+			if unlikely(Dee_function_generator_gasflush(self, Dee_memobj_getloc(mobj),
+			                                            &flushed_loc, require_valoff_0))
 				goto err;
-			ASSERT(Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HSTACKIND);
-			ASSERT(Dee_memobj_hstackind_getvaloff(mobj) == 0 || !require_valoff_0);
+			ASSERT(Dee_memloc_gettyp(&flushed_loc) == MEMADR_TYPE_HSTACKIND);
+			ASSERT(Dee_memloc_hstackind_getvaloff(&flushed_loc) == 0 || !require_valoff_0);
+			Dee_memstate_decrinuse_for_memobj(state, mobj);
+			*Dee_memobj_getloc(mobj) = flushed_loc;
 		}
 	}
 	Dee_memval_foreach_obj_end;
@@ -3805,8 +3834,10 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 		/* Function can be generated like this */
 	} else {
 		/* Need to load function into a register. */
-		if unlikely(Dee_function_generator_greg(self, &l_func, NULL))
+		struct Dee_memloc l_func_asreg;
+		if unlikely(Dee_function_generator_gasreg(self, &l_func, &l_func_asreg, NULL))
 			goto err_l_argv;
+		l_func = l_func_asreg;
 		ASSERT(l_func.ml_adr.ma_typ == MEMADR_TYPE_HREG);
 	}
 	func_regno = HOST_REGISTER_COUNT;

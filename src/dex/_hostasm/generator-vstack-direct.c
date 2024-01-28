@@ -162,10 +162,8 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 		}
 		if unlikely(temp)
 			goto err;
-		if (Dee_memstate_ismemvalinstate(self->fg_state, mval)) {
-			Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj.mvo_0);
-			Dee_memstate_incrinuse(self->fg_state, retreg);
-		}
+		Dee_memstate_decrinuse_for_memobj(self->fg_state, &mval->mv_obj.mvo_0);
+		Dee_memstate_incrinuse(self->fg_state, retreg);
 		Dee_memval_init_hreg(mval, retreg, retreg_delta, &DeeBool_Type, MEMOBJ_F_NORMAL);
 	}	break;
 

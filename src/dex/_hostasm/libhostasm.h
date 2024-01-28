@@ -405,7 +405,7 @@ struct Dee_memequiv {
 
 LOCAL NONNULL((1, 2)) void DCALL
 Dee_memequiv_next_asloc(struct Dee_memequiv const *__restrict self,
-                        struct Dee_memloc *__restrict loc) {
+                        /*out*/ struct Dee_memloc *__restrict loc) {
 	ptrdiff_t valoff;
 	ASSERT(Dee_memequiv_next(self) != NULL);
 	ASSERT(Dee_memequiv_next(self) != self);
@@ -1243,16 +1243,6 @@ struct Dee_memstate {
 #define Dee_memstate_foreach_end \
 		__WHILE1;                \
 	}	__WHILE0
-
-/* Check if `loc' is part of this memstate's tracked set of locations. */
-#define Dee_memstate_ismemvalinstate(self, val)                                       \
-	(((val) >= (self)->ms_stackv && (val) < (self)->ms_stackv + (self)->ms_stackc) || \
-	 ((val) >= (self)->ms_localv && (val) < (self)->ms_localv + (self)->ms_localc))
-#define Dee_memstate_ismemobjinstate(self, obj) /* TODO: Support for mem values with multiple locations */ \
-	Dee_memstate_ismemvalinstate(self, COMPILER_CONTAINER_OF(obj, struct Dee_memval, mv_obj.mvo_0))
-#define Dee_memstate_ismemlocinstate(self, loc) /* TODO: Support for mem values with multiple locations */ \
-	Dee_memstate_ismemvalinstate(self, COMPILER_CONTAINER_OF(loc, struct Dee_memval, mv_obj.mvo_0.mo_loc))
-
 
 #define Dee_memstate_sizeof(localc) \
 	(offsetof(struct Dee_memstate, ms_localv) + (localc) * sizeof(struct Dee_memval))
@@ -2735,26 +2725,26 @@ Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
                                 void const *api_function, size_t argc,
-                                struct Dee_memloc *argv);
+                                struct Dee_memloc const *argv);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gcalldynapi(struct Dee_function_generator *__restrict self,
-                                   struct Dee_memloc *api_function_loc,
-                                   size_t argc, struct Dee_memloc *argv);
+                                   struct Dee_memloc const *api_function_loc,
+                                   size_t argc, struct Dee_memloc const *argv);
 
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self, void const *api_function, size_t argc, struct Dee_memloc *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, size_t argc, struct Dee_memloc *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, size_t argc, struct Dee_memloc *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hregind(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, ptrdiff_t ind_offset, size_t argc, struct Dee_memloc *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self, void const *api_function, size_t argc, struct Dee_memloc const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, size_t argc, struct Dee_memloc const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, size_t argc, struct Dee_memloc const *argv);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hregind(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, ptrdiff_t ind_offset, size_t argc, struct Dee_memloc const *argv);
 
 
 /* Object reference count incref/decref */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gincref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);         /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);         /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_dokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);                  /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_nokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);  /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxincref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);        /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n);        /* NOTE: Might alter `loc' into a register! */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_nokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc, Dee_refcnt_t n); /* NOTE: Might alter `loc' into a register! */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gincref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_dokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gdecref_nokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxincref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gxdecref_nokill_loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, Dee_refcnt_t n);
 #define Dee_function_generator_gincref_regx(self, regno, reg_offset, n)         _Dee_function_generator_gincref_regx(self, regno, reg_offset, n)
 #define Dee_function_generator_gdecref_nokill_regx(self, regno, reg_offset, n)  _Dee_function_generator_gdecref_nokill_regx(self, regno, reg_offset, n)
 #define Dee_function_generator_gincref_const(self, value, n)                    _Dee_function_generator_gincref_const(self, value, n)
@@ -2781,23 +2771,31 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gxincref_regx(struct Dee
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gxdecref_nokill_regx(struct Dee_host_section *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gxdecref_regx(struct Dee_function_generator *__restrict self, Dee_host_register_t regno, ptrdiff_t reg_offset, Dee_refcnt_t n);
 
-/* Change `loc' into the value of `<loc> = *(<loc> + ind_delta)'
+/* Change `loc' into the value of `<result> = *(<loc> + ind_delta)'
  * Note that unlike the `Dee_function_generator_gmov*' functions, this
  * one may use `MEMADR_TYPE_*IND' to defer the indirection until later. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gind(struct Dee_function_generator *__restrict self,
-                            struct Dee_memloc *loc, ptrdiff_t ind_delta);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gasind(struct Dee_function_generator *__restrict self,
+                              /*in*/ struct Dee_memloc const *loc,
+                              /*out*/ struct Dee_memloc *result,
+                              ptrdiff_t ind_delta);
 
 /* Force `loc' to become a register (`MEMADR_TYPE_HREG'). */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_greg(struct Dee_function_generator *__restrict self,
-                            struct Dee_memloc *loc,
-                            Dee_host_register_t const *not_these);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gasreg(struct Dee_function_generator *__restrict self,
+                              /*in*/ struct Dee_memloc const *loc,
+                              /*out*/ struct Dee_memloc *result,
+                              Dee_host_register_t const *not_these);
 
-/* Force `loc' to reside on the stack, giving it an address (`MEMADR_TYPE_HSTACKIND, v_hstack.s_off = 0'). */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gflush(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc *loc, bool require_valoff_0);
+/* Force `loc' to reside on the stack, giving it an address
+ * (`MEMADR_TYPE_HSTACKIND, Dee_memloc_hstackind_getvaloff = 0').
+ * @param: require_valoff_0: When false, forgo the exit requirement
+ *                           of `Dee_memloc_hstackind_getvaloff = 0' */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gasflush(struct Dee_function_generator *__restrict self,
+                                /*in*/ struct Dee_memloc const *loc,
+                                /*out*/ struct Dee_memloc *result,
+                                bool require_valoff_0);
 
 /* Controls for operating with R/W-locks (as needed for accessing global/extern variables) */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self, Dee_atomic_rwlock_t *__restrict lock);
@@ -2808,10 +2806,10 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_endwrite
 #define Dee_function_generator_grwlock_write(self, loc)    _Dee_function_generator_grwlock_write(self, loc)
 #define Dee_function_generator_grwlock_endread(self, loc)  _Dee_function_generator_grwlock_endread(self, loc)
 #define Dee_function_generator_grwlock_endwrite(self, loc) _Dee_function_generator_grwlock_endwrite(self, loc)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_read(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_read(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 
 /* Allocate/deallocate memory from the host stack.
  * If stack memory gets allocated, zero-initialize it. */
@@ -2893,26 +2891,26 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_locind2reg(
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, struct Dee_memloc const *__restrict dst_loc, ptrdiff_t dst_delta);                /* *(<dst_loc> + dst_delta) = src_regno; */
 #define Dee_function_generator_gmov_reg2loc(self, src_regno, dst_loc) Dee_function_generator_gmov_regx2loc(self, src_regno, 0, dst_loc)
 #define Dee_function_generator_gmov_loc2reg(self, src_loc, dst_regno) Dee_function_generator_gmov_loc2regx(self, src_loc, dst_regno, 0)
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict src_loc, ptrdiff_t dst_delta);                              /* PUSH(<src_loc> - dst_delta); */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict src_loc, uintptr_t dst_cfa_offset, ptrdiff_t dst_delta); /* *<SP@dst_cfa_offset> = <src_loc> - dst_delta; */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_loc2constind(struct Dee_function_generator *__restrict self, struct Dee_memloc *__restrict src_loc, void const **p_value, ptrdiff_t dst_delta);       /* *<p_value> = <src_loc> - dst_delta; */
-INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restrict self, void const *value, struct Dee_memloc const *__restrict dst_loc, ptrdiff_t dst_delta);    /* *(<dst_loc> + dst_delta) = value; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict src_loc, ptrdiff_t dst_delta);                              /* PUSH(<src_loc> - dst_delta); */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict src_loc, uintptr_t dst_cfa_offset, ptrdiff_t dst_delta); /* *<SP@dst_cfa_offset> = <src_loc> - dst_delta; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmov_loc2constind(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict src_loc, void const **p_value, ptrdiff_t dst_delta);       /* *<p_value> = <src_loc> - dst_delta; */
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restrict self, void const *value, struct Dee_memloc const *__restrict dst_loc, ptrdiff_t dst_delta);          /* *(<dst_loc> + dst_delta) = value; */
 #define Dee_function_generator_ghstack_pushloc(self, src_loc)                    Dee_function_generator_ghstack_pushlocx(self, src_loc, 0)
 #define Dee_function_generator_gmov_loc2hstackind(self, src_loc, dst_cfa_offset) Dee_function_generator_gmov_loc2hstackindx(self, src_loc, dst_cfa_offset, 0)
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gmov_loc2loc(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, struct Dee_memloc const *dst_loc);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gmov_loc2locind(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, struct Dee_memloc const *dst_loc, ptrdiff_t ind_delta);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gmov_loc2loc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, struct Dee_memloc const *dst_loc);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gmov_loc2locind(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, struct Dee_memloc const *dst_loc, ptrdiff_t ind_delta);
 
 /* Generate code to return `loc'. No extra code to decref stack/locals is generated. If you
  * want that extra code to be generated, you need to use `Dee_function_generator_vret()'. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gret(struct Dee_function_generator *__restrict self, /*inherit_ref*/ struct Dee_memloc *__restrict loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gret(struct Dee_function_generator *__restrict self, /*inherit_ref*/ struct Dee_memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gret(struct Dee_function_generator *__restrict self);
 
 /* Helpers for transforming locations into deemon boolean objects. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                          /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);       /* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, struct Dee_memloc *rhs_loc, Dee_host_register_t dst_regno);          /* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc *src_loc, ptrdiff_t src_delta, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                          /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);       /* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, struct Dee_memloc const *rhs_loc, Dee_host_register_t dst_regno);    /* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
 #define Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno)                             _Dee_host_section_gmorph_regx2reg01((self)->fg_sect, src_regno, src_delta, cmp, dst_regno)
 #define Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno)                _Dee_host_section_gmorph_regind2reg01((self)->fg_sect, src_regno, ind_delta, val_delta, cmp, dst_regno)
 #define Dee_function_generator_gmorph_hstackind2reg01(self, cfa_offset, val_delta, cmp, dst_regno)                       _Dee_host_section_gmorph_hstackind2reg01((self)->fg_sect, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), val_delta, cmp, dst_regno)
@@ -2986,7 +2984,7 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
  *                                   before the `Dee_function_generator_gthrow_*_unbound' code. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict self,
-                                     struct Dee_memloc *loc, Dee_instruction_t const *instr,
+                                     struct Dee_memloc const *loc, Dee_instruction_t const *instr,
                                      struct Dee_module_object *mod, uint16_t id,
                                      Dee_atomic_rwlock_t *opt_endread_before_throw,
                                      Dee_atomic_rwlock_t *opt_endwrite_before_throw);
@@ -3023,15 +3021,15 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_host_section_gjmp(struct Dee_host_
  * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
 _Dee_function_generator_gjcmp(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc *lhs, struct Dee_memloc *rhs, bool signed_cmp,
+                              struct Dee_memloc const *lhs, struct Dee_memloc const *rhs, bool signed_cmp,
                               struct Dee_host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>' */
                               struct Dee_host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>' */
                               struct Dee_host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>' */
 
 /* Generate checks to enter exception handling mode. */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcmp_except(struct Dee_function_generator *__restrict self, struct Dee_memloc *loc, intptr_t threshold, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjnz_except(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcmp_except(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc, intptr_t threshold, unsigned int flags);
 #define Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO       0x01
 #define Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ       0x02
 #define Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR       0x04
