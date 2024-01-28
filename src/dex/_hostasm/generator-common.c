@@ -186,11 +186,12 @@ Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__re
 	return result;
 }
 
+#ifdef HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function_generator *__restrict self) {
 	uintptr_t src_cfa_offset = GET_ADDRESS_OF_NEXT_POP(self);
 	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
-	int result = _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(self);
+	int result = _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self);
 	if likely(result == 0) {
 		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 		(void)src_cfa_offset;
@@ -199,6 +200,7 @@ Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(struct Dee_function_ge
 	}
 	return result;
 }
+#endif /* HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict self,
@@ -828,14 +830,14 @@ Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restric
 		return Dee_function_generator_ghstack_pushhstackind(self, cfa_offset);
 	}	break;
 
-#ifdef Dee_function_generator_ghstack_pushhstack_at_cfa_boundary
+#ifdef HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 	case MEMADR_TYPE_HSTACK: {
 		uintptr_t cfa_offset = Dee_memloc_hstack_getcfa(src_loc);
 		if (cfa_offset == self->fg_state->ms_host_cfa_offset) /* Special case: push current CFA offset */
-			return Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(self);
+			return Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self);
 		goto fallback;
 	}	break;
-#endif /* Dee_function_generator_ghstack_pushhstack_at_cfa_boundary */
+#endif /* HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np */
 
 	case MEMADR_TYPE_CONST: {
 		void const *value = Dee_memloc_const_getaddr(src_loc) - dst_delta;

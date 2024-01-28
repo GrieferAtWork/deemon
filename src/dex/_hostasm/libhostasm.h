@@ -2811,6 +2811,25 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_write(s
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_adjust(struct Dee_host_section *__restrict self, ptrdiff_t sp_delta);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushreg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushregind(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self, void const *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_host_section *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
+#define HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct Dee_host_section *__restrict self, Dee_host_register_t dst_regno);
+#define _Dee_function_generator_ghstack_adjust(self, sp_delta)                 _Dee_host_section_ghstack_adjust((self)->fg_sect, sp_delta)
+#define _Dee_function_generator_ghstack_pushreg(self, src_regno)               _Dee_host_section_ghstack_pushreg((self)->fg_sect, src_regno)
+#define _Dee_function_generator_ghstack_pushregind(self, src_regno, src_delta) _Dee_host_section_ghstack_pushregind((self)->fg_sect, src_regno, src_delta)
+#define _Dee_function_generator_ghstack_pushconst(self, value)                 _Dee_host_section_ghstack_pushconst((self)->fg_sect, value)
+#define _Dee_function_generator_ghstack_pushhstackind(self, sp_offset)         _Dee_host_section_ghstack_pushhstackind((self)->fg_sect, sp_offset) /* `sp_offset' is as it would be *before* the push */
+#ifdef HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np
+#define HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
+#define _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self)    _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np((self)->fg_sect)
+#endif /* HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np */
+#define _Dee_function_generator_ghstack_popreg(self, dst_regno)                _Dee_host_section_ghstack_popreg((self)->fg_sect, dst_regno)
+
 /* Allocate/deallocate memory from the host stack.
  * If stack memory gets allocated, zero-initialize it. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict self, ptrdiff_t cfa_delta);
@@ -2818,7 +2837,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushreg(str
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restrict self, void const *value);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(struct Dee_function_generator *__restrict self);
+#ifdef HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
+#define HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function_generator *__restrict self);
+#endif /* HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict self, Dee_host_register_t dst_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_reg2hstackind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, uintptr_t cfa_offset);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_hstack2reg(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, Dee_host_register_t dst_regno);
@@ -2833,21 +2855,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_regind2reg(str
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_reg2regind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, Dee_host_register_t dst_regno, ptrdiff_t dst_delta);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_constind2reg(struct Dee_function_generator *__restrict self, void const **p_value, Dee_host_register_t dst_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_reg2constind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, void const **p_value);
-
-#define _Dee_function_generator_ghstack_adjust(self, sp_delta)                 _Dee_host_section_ghstack_adjust((self)->fg_sect, sp_delta)
-#define _Dee_function_generator_ghstack_pushreg(self, src_regno)               _Dee_host_section_ghstack_pushreg((self)->fg_sect, src_regno)
-#define _Dee_function_generator_ghstack_pushregind(self, src_regno, src_delta) _Dee_host_section_ghstack_pushregind((self)->fg_sect, src_regno, src_delta)
-#define _Dee_function_generator_ghstack_pushconst(self, value)                 _Dee_host_section_ghstack_pushconst((self)->fg_sect, value)
-#define _Dee_function_generator_ghstack_pushhstackind(self, sp_offset)         _Dee_host_section_ghstack_pushhstackind((self)->fg_sect, sp_offset) /* `sp_offset' is as it would be *before* the push */
-#define _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary(self)       _Dee_host_section_ghstack_pushhstack_at_cfa_boundary((self)->fg_sect)
-#define _Dee_function_generator_ghstack_popreg(self, dst_regno)                _Dee_host_section_ghstack_popreg((self)->fg_sect, dst_regno)
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_adjust(struct Dee_host_section *__restrict self, ptrdiff_t sp_delta);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushreg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushregind(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self, void const *value);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstack_at_cfa_boundary(struct Dee_host_section *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct Dee_host_section *__restrict self, Dee_host_register_t dst_regno);
 
 #define _Dee_function_generator_gmov_reg2hstackind(self, src_regno, sp_offset)         _Dee_host_section_gmov_reg2hstackind((self)->fg_sect, src_regno, sp_offset)
 #define _Dee_function_generator_gmov_hstack2reg(self, sp_offset, dst_regno)            _Dee_host_section_gmov_hstack2reg((self)->fg_sect, sp_offset, dst_regno)

@@ -2180,7 +2180,7 @@ err:
 
 /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
 INTERN WUNUSED NONNULL((1)) int DCALL
-_Dee_host_section_ghstack_pushhstack_at_cfa_boundary(struct Dee_host_section *__restrict self) {
+_Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_host_section *__restrict self) {
 	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
 	gen86_printf("push" Plq "\t%%" Per "sp\n");
