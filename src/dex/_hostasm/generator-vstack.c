@@ -2962,6 +2962,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vref(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *mval;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = Dee_function_generator_vtop(self);
+	if (Dee_memval_isnullable(mval) && Dee_memobj_isref(Dee_memval_nullable_getobj(mval)))
+		return 0; /* Special case: NULLABLE+REF is allowed (and we don't make it direct) */
 	if unlikely(Dee_function_generator_vdirect1(self))
 		goto err;
 	mval = Dee_function_generator_vtop(self);
@@ -3022,6 +3027,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vref_noconst(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *mval;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = Dee_function_generator_vtop(self);
+	if (Dee_memval_isnullable(mval) && Dee_memobj_isref(Dee_memval_nullable_getobj(mval)))
+		return 0; /* Special case: NULLABLE+REF is allowed (and we don't make it direct) */
 	if unlikely(Dee_function_generator_vdirect1(self))
 		goto err;
 	mval = Dee_function_generator_vtop(self);
@@ -3037,6 +3047,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vref_noalias(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *mval;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = Dee_function_generator_vtop(self);
+	if (Dee_memval_isnullable(mval) && Dee_memobj_isref(Dee_memval_nullable_getobj(mval)))
+		return 0; /* Special case: NULLABLE+REF is allowed (and we don't make it direct) */
 	if unlikely(Dee_function_generator_vdirect1(self))
 		goto err;
 	mval = Dee_function_generator_vtop(self);
@@ -3064,6 +3079,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vref_noconst_noalias(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *mval;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = Dee_function_generator_vtop(self);
+	if (Dee_memval_isnullable(mval) && Dee_memobj_isref(Dee_memval_nullable_getobj(mval)))
+		return 0; /* Special case: NULLABLE+REF is allowed (and we don't make it direct) */
 	if unlikely(Dee_function_generator_vdirect1(self))
 		goto err;
 	mval = Dee_function_generator_vtop(self);
