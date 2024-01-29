@@ -226,42 +226,24 @@ INTERN DeeTypeObject RoSetIterator_Type = {
 
 
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoSet_FromSequence(DeeObject *__restrict self) {
-	DREF DeeObject *result;
-	size_t length_hint;
-	/* Optimization: Since rosets are immutable, re-return if the
-	 *               given sequence already is a read-only set. */
-	if (DeeRoSet_CheckExact(self))
-		return_reference_(self);
-	/* TODO: if (DeeHashSet_CheckExact(self)) ... */
-	/* Construct a read-only set from an iterator. */
-	self = DeeObject_IterSelf(self);
-	if unlikely(!self)
-		goto err;
-	/* TODO: Use the fast-sequence interface directly! */
-	length_hint = DeeFastSeq_GetSize(self);
-	result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
-	         ? DeeRoSet_FromIteratorWithHint(self, length_hint)
-	         : DeeRoSet_FromIterator(self);
-	Dee_Decref(self);
-	return result;
-err:
-	return NULL;
-}
-
 #define ROSET_ALLOC(mask)  ((DREF RoSet *)DeeObject_Calloc(SIZEOF_ROSET(mask)))
 #define SIZEOF_ROSET(mask) (offsetof(RoSet, rs_elem) + (((mask) + 1) * sizeof(struct roset_item)))
 #define ROSET_INITIAL_MASK 0x03
 
-PRIVATE WUNUSED DREF RoSet *DCALL
-rehash(DREF RoSet *__restrict self, size_t old_mask, size_t new_mask) {
+PRIVATE WUNUSED NONNULL((1)) DREF RoSet *DCALL
+DeeRoSet_Rehash(/*inherit(on_success)*/ DREF RoSet *__restrict self, size_t new_mask) {
 	DREF RoSet *result;
 	size_t i;
 	result = ROSET_ALLOC(new_mask);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i <= old_mask; ++i) {
+	ASSERT(self->ob_refcnt == 1);
+	ASSERT(self->ob_type == &DeeRoSet_Type);
+	result->ob_refcnt = 1;
+	result->ob_type = &DeeRoSet_Type;
+	result->rs_size = self->rs_size;
+	result->rs_mask = new_mask;
+	for (i = 0; i <= self->rs_mask; ++i) {
 		size_t j, perturb;
 		struct roset_item *item;
 		if (!self->rs_elem[i].rsi_key)
@@ -280,17 +262,16 @@ done:
 	return result;
 }
 
-/* NOTE: _Always_ inherits references to `key' */
-PRIVATE int DCALL
-insert(DREF RoSet *__restrict self, size_t mask,
-       /*inherit(always)*/ DREF DeeObject *__restrict key) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeRoSet_DoInsert(DREF RoSet *__restrict self,
+                  DeeObject *__restrict key) {
 	size_t i, perturb, hash;
 	struct roset_item *item;
 	hash    = DeeObject_Hash(key);
-	perturb = i = hash & mask;
+	perturb = i = hash & self->rs_mask;
 	for (;; ROSET_HASHNX(i, perturb)) {
 		int error;
-		item = &self->rs_elem[i & mask];
+		item = &self->rs_elem[i & self->rs_mask];
 		if (!item->rsi_key)
 			break;
 		if (item->rsi_hash != hash)
@@ -301,17 +282,85 @@ insert(DREF RoSet *__restrict self, size_t mask,
 			goto err;
 		if (error) {
 			Dee_Decref(key);
-			return 1; /* It _is_ the same key! */
+			return 0; /* It _is_ the same key! */
 		}
 	}
+
 	/* Fill in the item. */
+	++self->rs_size;
 	item->rsi_hash = hash;
 	item->rsi_key  = key; /* Inherit reference. */
+	Dee_Incref(key);
 	return 0;
 err:
-	/* Always inherit references (even upon error) */
-	Dee_Decref(key);
 	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
+                DeeObject *__restrict key) {
+	DREF RoSet *me = *p_self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
+	ASSERT(!DeeObject_IsShared(me));
+	ASSERT(key != (DeeObject *)me);
+	if unlikely(me->rs_size * 2 > me->rs_mask) {
+		size_t new_mask = (me->rs_mask << 1) | 1;
+		me = DeeRoSet_Rehash(me, new_mask);
+		if unlikely(!me)
+			goto err;
+		*p_self = me;
+	}
+
+	/* Insert the new key/value-pair into the RoSet. */
+	return DeeRoSet_DoInsert(me, key);
+err:
+	return -1;
+}
+
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define DeeRoSet_InsertSequence_foreach (*(Dee_foreach_t)&DeeRoSet_Insert)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+DeeRoSet_InsertSequence_foreach(void *arg, DeeObject *elem) {
+	return DeeRoSet_Insert((RoDict **)arg, elem);
+}
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
+	DREF RoSet *result;
+	size_t length_hint, mask;
+
+	/* Optimization: Since rodicts are immutable, re-return if the
+	 *               given sequence already is a read-only RoSet. */
+	if (DeeRoSet_CheckExact(sequence))
+		return_reference_(sequence);
+
+	/* TODO: Optimization: if (DeeSet_CheckExact(sequence)) ...
+	 * (fix the dict's hash-vector to not contain dummies,
+	 * then copy as-is) */
+
+	/* Construct a read-only RoSet from a generic sequence. */
+	mask        = ROSET_INITIAL_MASK;
+	length_hint = DeeFastSeq_GetSize(sequence);
+	if (length_hint != DEE_FASTSEQ_NOTFAST) {
+		while (mask <= length_hint)
+			mask = (mask << 1) | 1;
+		mask = (mask << 1) | 1;
+	}
+	result = ROSET_ALLOC(mask);
+	if likely(result) {
+		/*result->rd_size = 0;*/
+		result->rs_mask = mask;
+		DeeObject_Init(result, &DeeRoSet_Type);
+		if unlikely(DeeObject_Foreach(sequence, &DeeRoSet_InsertSequence_foreach, &result))
+			goto err_r;
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_DecrefDokill(result);
+/*err:*/
+	return NULL;
 }
 
 /* Internal functions for constructing a read-only set object. */
@@ -343,104 +392,6 @@ DeeRoSet_NewWithHint(size_t num_items) {
 	DeeObject_Init(result, &DeeRoSet_Type);
 done:
 	return result;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
-                DeeObject *__restrict key) {
-	int error;
-	DREF RoSet *me = *p_self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
-	ASSERT(!DeeObject_IsShared(me));
-	ASSERT(key != (DeeObject *)me);
-	if unlikely(me->rs_size * 2 > me->rs_mask) {
-		size_t old_size = me->rs_size;
-		size_t new_mask = (me->rs_mask << 1) | 1;
-		me = rehash(me, me->rs_mask, new_mask);
-		if unlikely(!me)
-			goto err;
-		me->rs_mask = new_mask;
-		me->rs_size = old_size; /* `rs_size' is not saved by `rehash()' */
-		*p_self = me;
-	}
-	/* Insert the new key/value-pair into the set. */
-	Dee_Incref(key);
-	error = insert(me, me->rs_mask, key);
-	if (error != 0) {
-		if unlikely(error < 0)
-			goto err;
-	} else {
-		++me->rs_size; /* Keep track of the number of inserted items. */
-	}
-	return error;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoSet_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
-	DREF RoSet *result, *new_result;
-	DREF DeeObject *elem;
-	size_t elem_count = 0;
-	int error;
-	/* Construct a read-only set from an iterator. */
-	result = ROSET_ALLOC(mask);
-	if unlikely(!result)
-		goto done;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		/* Check if we must re-hash the resulting set. */
-		if (elem_count * 2 > mask) {
-			size_t new_mask = (mask << 1) | 1;
-			new_result      = rehash(result, mask, new_mask);
-			if unlikely(!new_result) {
-				Dee_Decref(elem);
-				goto err_r;
-			}
-			mask   = new_mask;
-			result = new_result;
-		}
-		/* Insert the key-value pair into the resulting set. */
-		error = insert(result, mask, elem);
-		if unlikely(error != 0) {
-			if unlikely(error < 0)
-				goto err_r;
-		} else {
-			++elem_count;
-		}
-		if (DeeThread_CheckInterrupt())
-			goto err_r;
-	}
-	if unlikely(!elem)
-		goto err_r;
-	/* Fill in control members and setup the resulting object. */
-	result->rs_size = elem_count;
-	result->rs_mask = mask;
-	DeeObject_Init(result, &DeeRoSet_Type);
-done:
-	return (DREF DeeObject *)result;
-err_r:
-	for (elem_count = 0; elem_count <= mask; ++elem_count) {
-		if (!result->rs_elem[elem_count].rsi_key)
-			continue;
-		Dee_Decref(result->rs_elem[elem_count].rsi_key);
-	}
-	DeeObject_Free(result);
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self,
-                              size_t num_items) {
-	size_t mask = ROSET_INITIAL_MASK;
-	while (mask <= num_items)
-		mask = (mask << 1) | 1;
-	mask = (mask << 1) | 1;
-	return DeeRoSet_FromIterator_impl(self, mask);
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoSet_FromIterator(DeeObject *__restrict self) {
-	return DeeRoSet_FromIterator_impl(self, ROSET_INITIAL_MASK);
 }
 
 

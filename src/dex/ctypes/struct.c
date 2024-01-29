@@ -172,6 +172,8 @@ DeeStructType_FromSequence(DeeObject *name,
 	DREF DeeStructTypeObject *result;
 	size_t i, field_count;
 
+	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize() */
+
 	/* Optimization for fast sequence types. */
 	field_count = DeeFastSeq_GetSize(fields);
 	if (field_count != DEE_FASTSEQ_NOTFAST) {
@@ -641,6 +643,9 @@ struct_assign(DeeStructTypeObject *tp_self,
 		CTYPES_FAULTPROTECT(bzero(dst, size), return -1);
 		return 0;
 	}
+
+	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize() */
+
 	/* Fallback: assign a sequence:
 	 * >> struct_type point = {
 	 * >>     ("x", int),

@@ -51,9 +51,6 @@ public:
 	static NONNULL_CXX((1)) Ref<HashSet<T> > ofseq(DeeObject *seq) DEE_CXX_NOTHROW {
 		return inherit(DeeHashSet_FromSequence(seq));
 	}
-	static NONNULL_CXX((1)) Ref<HashSet<T> > ofiter(DeeObject *iter) DEE_CXX_NOTHROW {
-		return inherit(DeeHashSet_FromIterator(iter));
-	}
 
 public:
 	NONNULL_CXX((1)) bool cinsert(DeeObject *item) {

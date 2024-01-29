@@ -3136,37 +3136,29 @@ type_invoke_base_constructor(DeeTypeObject *__restrict tp_self,
                              DeeObject *__restrict self, size_t argc,
                              DeeObject *const *argv, DeeObject *kw);
 
+struct assign_init_fields_data {
+	DeeTypeObject *aifd_tp_self;
+	DeeObject     *aifd_self;
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+assign_init_fields_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	struct assign_init_fields_data *me = (struct assign_init_fields_data *)arg;
+	Dee_ssize_t result = DeeObject_AssertTypeExact(key, &DeeString_Type);
+	if likely(result == 0) {
+		result = set_basic_member(me->aifd_tp_self, me->aifd_self,
+		                          (DeeStringObject *)key, value);
+	}
+	return result;
+}
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 assign_init_fields(DeeTypeObject *__restrict tp_self,
                    DeeObject *__restrict self,
                    DeeObject *__restrict fields) {
-	DREF DeeObject *iterator, *elem;
-	int temp;
-	DREF DeeObject *key_and_value[2];
-	iterator = DeeObject_IterSelf(fields);
-	if unlikely(!iterator)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		temp = DeeObject_Unpack(elem, 2, key_and_value);
-		Dee_Decref(elem);
-		if unlikely(temp)
-			goto err_iterator;
-		temp = DeeObject_AssertTypeExact(key_and_value[0], &DeeString_Type);
-		if likely(!temp)
-			temp = set_basic_member(tp_self, self, (DeeStringObject *)key_and_value[0], key_and_value[1]);
-		Dee_Decref(key_and_value[1]);
-		Dee_Decref(key_and_value[0]);
-		if unlikely(temp)
-			goto err_iterator;
-	}
-	if unlikely(!elem)
-		goto err_iterator;
-	Dee_Decref(iterator);
-	return 0;
-err_iterator:
-	Dee_Decref(iterator);
-err:
-	return -1;
+	struct assign_init_fields_data data;
+	data.aifd_tp_self = tp_self;
+	data.aifd_self    = self;
+	return (int)DeeObject_ForeachPair(fields, &assign_init_fields_foreach, &data);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -3277,11 +3269,36 @@ err:
 	return NULL;
 }
 
+struct assign_private_basic_members_data {
+	DeeTypeObject *apbmd_tp_self;
+	DeeObject     *apbmd_self;
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+assign_private_basic_members_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	struct assign_private_basic_members_data *me = (struct assign_private_basic_members_data *)arg;
+	Dee_ssize_t result = DeeObject_AssertTypeExact(key, &DeeString_Type);
+	if likely(result == 0) {
+		result = set_private_basic_member(me->apbmd_tp_self, me->apbmd_self,
+		                                  (DeeStringObject *)key, value);
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+assign_private_basic_members(DeeTypeObject *__restrict tp_self,
+                             DeeObject *__restrict self,
+                             DeeObject *__restrict fields) {
+	struct assign_private_basic_members_data data;
+	data.apbmd_tp_self = tp_self;
+	data.apbmd_self    = self;
+	return (int)DeeObject_ForeachPair(fields, &assign_private_basic_members_foreach, &data);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_newinstance(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
-	DREF DeeObject *iterator, *elem;
 	if (self == &DeeNone_Type)
 		return_none; /* Allow `none' to be instantiated with whatever you throw at it! */
 	if (kw && (!DeeKwds_Check(kw) || DeeKwds_SIZE(kw) == argc)) {
@@ -3301,33 +3318,12 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 					goto err_r;
 			}
 		} else {
-			iterator = DeeObject_IterSelf(kw);
-			if unlikely(!iterator)
+			if unlikely(assign_private_basic_members(self, result, kw))
 				goto err_r;
-			while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-				DREF DeeObject *name_and_value[2];
-				int temp;
-				temp = DeeObject_Unpack(elem, 2, name_and_value);
-				Dee_Decref(elem);
-				if unlikely(temp)
-					goto err_r_iterator;
-				temp = DeeObject_AssertTypeExact(name_and_value[0], &DeeString_Type);
-				if likely(!temp) {
-					temp = set_private_basic_member(self, result,
-					                                (DeeStringObject *)name_and_value[0],
-					                                name_and_value[1]);
-				}
-				Dee_Decref(name_and_value[1]);
-				Dee_Decref(name_and_value[0]);
-				if unlikely(temp)
-					goto err_r_iterator;
-			}
-			if unlikely(!elem)
-				goto err_r_iterator;
-			Dee_Decref(iterator);
 		}
 		return result;
 	}
+
 	/* Without any arguments, simply construct an
 	 * empty instance (with all members unbound) */
 	if (!argc)
@@ -3336,10 +3332,9 @@ type_newinstance(DeeTypeObject *self, size_t argc,
 		err_invalid_argc("newinstance", argc, 0, 1);
 		goto err;
 	}
+
 	/* Extended constructors! */
 	return type_new_extended(self, argv[0]);
-err_r_iterator:
-	Dee_Decref_likely(iterator);
 err_r:
 	Dee_Decref_likely(result);
 err:

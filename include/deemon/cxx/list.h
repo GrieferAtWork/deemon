@@ -59,9 +59,6 @@ public:
 	static WUNUSED NONNULL_CXX((1)) Ref<List<T> > ofseq(DeeObject *seq) {
 		return inherit(DeeList_FromSequence(seq));
 	}
-	static WUNUSED NONNULL_CXX((1)) Ref<List<T> > ofiter(DeeObject *iter) {
-		return inherit(DeeList_FromIterator(iter));
-	}
 
 public:
 	size_t cerase(size_t index, size_t count = 1) {

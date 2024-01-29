@@ -142,7 +142,6 @@ EXPORTS
 	_DeeDbg_TryMalloc@12=DeeDbg_TryMalloc@12
 	_DeeDbg_TryRealloc@16=DeeDbg_TryRealloc@16
 	_DeeDbg_UntrackAlloc@12=DeeDbg_UntrackAlloc@12
-	_DeeDict_FromIterator@4=DeeDict_FromIterator@4
 	_DeeDict_FromRoDict@4=DeeDict_FromRoDict@4
 	_DeeDict_FromSequence@4=DeeDict_FromSequence@4
 	_DeeDict_NewKeyItemsInherited@8=DeeDict_NewKeyItemsInherited@8
@@ -302,7 +301,6 @@ EXPORTS
 	_DeeGC_Untrack@4=DeeGC_Untrack@4
 	_DeeHashSet_Contains@8=DeeHashSet_Contains@8
 	_DeeHashSet_ContainsString@12=DeeHashSet_ContainsString@12
-	_DeeHashSet_FromIterator@4=DeeHashSet_FromIterator@4
 	_DeeHashSet_FromRoSet@4=DeeHashSet_FromRoSet@4
 	_DeeHashSet_FromSequence@4=DeeHashSet_FromSequence@4
 	_DeeHashSet_Insert@8=DeeHashSet_Insert@8
@@ -401,7 +399,6 @@ EXPORTS
 	_DeeList_Erase@12=DeeList_Erase@12
 	_DeeList_ExtendInherited@12=DeeList_ExtendInherited@12
 	_DeeList_FreeUninitialized@4=DeeList_FreeUninitialized@4
-	_DeeList_FromIterator@4=DeeList_FromIterator@4
 	_DeeList_FromSequence@4=DeeList_FromSequence@4
 	_DeeList_FromTuple@4=DeeList_FromTuple@4
 	_DeeList_Insert@12=DeeList_Insert@12
@@ -834,14 +831,10 @@ EXPORTS
 	_DeeRegex_Match@4=DeeRegex_Match@4
 	_DeeRegex_Search@12=DeeRegex_Search@12
 	_DeeRegex_SearchNoEpsilon@12=DeeRegex_SearchNoEpsilon@12
-	_DeeRoDict_FromIterator@4=DeeRoDict_FromIterator@4
-	_DeeRoDict_FromIteratorWithHint@8=DeeRoDict_FromIteratorWithHint@8
 	_DeeRoDict_FromSequence@4=DeeRoDict_FromSequence@4
 	_DeeRoDict_Insert@12=DeeRoDict_Insert@12
 	_DeeRoDict_New@0=DeeRoDict_New@0
 	_DeeRoDict_NewWithHint@4=DeeRoDict_NewWithHint@4
-	_DeeRoSet_FromIterator@4=DeeRoSet_FromIterator@4
-	_DeeRoSet_FromIteratorWithHint@8=DeeRoSet_FromIteratorWithHint@8
 	_DeeRoSet_FromSequence@4=DeeRoSet_FromSequence@4
 	_DeeRoSet_Insert@8=DeeRoSet_Insert@8
 	_DeeRoSet_New@0=DeeRoSet_New@0

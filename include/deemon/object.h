@@ -3551,7 +3551,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use t
 (DCALL DeeObject_ForeachPair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 
 /* Unpack the given sequence `self' into `objc' items then stored within the `objv' vector. */
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
                          /*out*/ DREF DeeObject **__restrict objv);
 

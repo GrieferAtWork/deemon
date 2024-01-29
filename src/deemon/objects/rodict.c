@@ -285,41 +285,24 @@ INTERN DeeTypeObject RoDictIterator_Type = {
 
 
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromSequence(DeeObject *__restrict self) {
-	DREF DeeObject *result;
-	size_t length_hint;
-	/* Optimization: Since rodicts are immutable, re-return if the
-	 *               given sequence already is a read-only RoDict. */
-	if (DeeRoDict_CheckExact(self))
-		return_reference_(self);
-	/* TODO: Optimization: if (DeeDict_CheckExact(self)) ... */
-	/* Construct a read-only RoDict from an iterator. */
-	self = DeeObject_IterSelf(self);
-	if unlikely(!self)
-		goto err;
-	length_hint = DeeFastSeq_GetSize(self);
-	result = likely(length_hint != DEE_FASTSEQ_NOTFAST)
-	         ? DeeRoDict_FromIteratorWithHint(self, length_hint)
-	         : DeeRoDict_FromIterator(self);
-	Dee_Decref(self);
-	return result;
-err:
-	return NULL;
-}
-
 #define RODICT_ALLOC(mask)  ((DREF RoDict *)DeeObject_Calloc(SIZEOF_RODICT(mask)))
 #define SIZEOF_RODICT(mask) (offsetof(RoDict, rd_elem) + (((mask) + 1) * sizeof(struct rodict_item)))
 #define RODICT_INITIAL_MASK 0x03
 
-PRIVATE WUNUSED DREF RoDict *DCALL
-rehash(DREF RoDict *__restrict self, size_t old_mask, size_t new_mask) {
+PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
+DeeRoDict_Rehash(/*inherit(on_success)*/ DREF RoDict *__restrict self, size_t new_mask) {
 	DREF RoDict *result;
 	size_t i;
 	result = RODICT_ALLOC(new_mask);
 	if unlikely(!result)
 		goto done;
-	for (i = 0; i <= old_mask; ++i) {
+	ASSERT(self->ob_refcnt == 1);
+	ASSERT(self->ob_type == &DeeRoDict_Type);
+	result->ob_refcnt = 1;
+	result->ob_type = &DeeRoDict_Type;
+	result->rd_size = self->rd_size;
+	result->rd_mask = new_mask;
+	for (i = 0; i <= self->rd_mask; ++i) {
 		size_t j, perturb;
 		struct rodict_item *item;
 		if (!self->rd_elem[i].rdi_key)
@@ -338,19 +321,16 @@ done:
 	return result;
 }
 
-/* NOTE: _Always_ inherits references to `key' and `value' */
-PRIVATE int DCALL
-insert(DREF RoDict *__restrict self, size_t mask,
-       size_t *__restrict p_elemcount,
-       /*inherit(always)*/ DREF DeeObject *__restrict key,
-       /*inherit(always)*/ DREF DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeRoDict_DoInsert(DREF RoDict *__restrict self,
+                   DeeObject *key, DeeObject *value) {
 	size_t i, perturb, hash;
 	struct rodict_item *item;
 	hash    = DeeObject_Hash(key);
-	perturb = i = hash & mask;
+	perturb = i = hash & self->rd_mask;
 	for (;; RODICT_HASHNX(i, perturb)) {
 		int error;
-		item = &self->rd_elem[i & mask];
+		item = &self->rd_elem[i & self->rd_mask];
 		if (!item->rdi_key)
 			break;
 		if (item->rdi_hash != hash)
@@ -364,23 +344,91 @@ insert(DREF RoDict *__restrict self, size_t mask,
 			continue; /* Not the same key. */
 
 		/* It _is_ the same key! (override it...) */
-		--*p_elemcount;
+		--self->rd_size;
 		Dee_Decref(item->rdi_key);
 		Dee_Decref(item->rdi_value);
 		break;
 	}
 
 	/* Fill in the item. */
-	++*p_elemcount;
+	++self->rd_size;
 	item->rdi_hash  = hash;
-	item->rdi_key   = key;   /* Inherit reference. */
-	item->rdi_value = value; /* Inherit reference. */
+	item->rdi_key   = key;
+	item->rdi_value = value;
+	Dee_Incref(key);
+	Dee_Incref(value);
 	return 0;
 err:
-	/* Always inherit references (even upon error) */
-	Dee_Decref(value);
-	Dee_Decref(key);
 	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
+DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
+                 DeeObject *key, DeeObject *value) {
+	DREF RoDict *me = *p_self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
+	ASSERT(!DeeObject_IsShared(me));
+	ASSERT(key != (DeeObject *)me);
+	ASSERT(value != (DeeObject *)me);
+	if unlikely(me->rd_size * 2 > me->rd_mask) {
+		size_t new_mask = (me->rd_mask << 1) | 1;
+		me = DeeRoDict_Rehash(me, new_mask);
+		if unlikely(!me)
+			goto err;
+		*p_self = me;
+	}
+
+	/* Insert the new key/value-pair into the RoDict. */
+	return DeeRoDict_DoInsert(me, key, value);
+err:
+	return -1;
+}
+
+
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define DeeRoDict_InsertSequence_foreach (*(Dee_foreach_pair_t)&DeeRoDict_Insert)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+DeeRoDict_InsertSequence_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	return DeeRoDict_Insert((RoDict **)arg, key, value);
+}
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromSequence(DeeObject *__restrict sequence) {
+	DREF RoDict *result;
+	size_t length_hint, mask;
+
+	/* Optimization: Since rodicts are immutable, re-return if the
+	 *               given sequence already is a read-only RoDict. */
+	if (DeeRoDict_CheckExact(sequence))
+		return_reference_(sequence);
+
+	/* TODO: Optimization: if (DeeDict_CheckExact(sequence)) ...
+	 * (fix the dict's hash-vector to not contain dummies,
+	 * then copy as-is) */
+
+	/* Construct a read-only RoDict from a generic sequence. */
+	mask        = RODICT_INITIAL_MASK;
+	length_hint = DeeFastSeq_GetSize(sequence);
+	if (length_hint != DEE_FASTSEQ_NOTFAST) {
+		while (mask <= length_hint)
+			mask = (mask << 1) | 1;
+		mask = (mask << 1) | 1;
+	}
+	result = RODICT_ALLOC(mask);
+	if likely(result) {
+		/*result->rd_size = 0;*/
+		result->rd_mask = mask;
+		DeeObject_Init(result, &DeeRoDict_Type);
+		if unlikely(DeeObject_ForeachPair(sequence, &DeeRoDict_InsertSequence_foreach, &result))
+			goto err_r;
+	}
+	return (DREF DeeObject *)result;
+err_r:
+	Dee_DecrefDokill(result);
+/*err:*/
+	return NULL;
 }
 
 PUBLIC WUNUSED DREF RoDict *DCALL
@@ -412,105 +460,6 @@ DeeRoDict_NewWithHint(size_t num_items) {
 done:
 	return result;
 }
-
-PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
-                 DeeObject *key, DeeObject *value) {
-	DREF RoDict *me = *p_self;
-	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
-	ASSERT(!DeeObject_IsShared(me));
-	ASSERT(key != (DeeObject *)me);
-	ASSERT(value != (DeeObject *)me);
-	if unlikely(me->rd_size * 2 > me->rd_mask) {
-		size_t old_size = me->rd_size;
-		size_t new_mask = (me->rd_mask << 1) | 1;
-		me              = rehash(me, me->rd_mask, new_mask);
-		if unlikely(!me)
-			goto err;
-		me->rd_mask = new_mask;
-		me->rd_size = old_size; /* `rd_size' is not saved by `rehash()' */
-		*p_self = me;
-	}
-
-	/* Insert the new key/value-pair into the RoDict. */
-	Dee_Incref(key);
-	Dee_Incref(value);
-	if (insert(me, me->rd_mask, &me->rd_size, key, value))
-		goto err;
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromIterator_impl(DeeObject *__restrict self, size_t mask) {
-	DREF RoDict *result;
-	DREF DeeObject *elem;
-	size_t elem_count = 0;
-	/* Construct a read-only RoDict from an iterator. */
-	result = RODICT_ALLOC(mask);
-	if unlikely(!result)
-		goto done;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		int error;
-		DREF DeeObject *key_and_value[2];
-		error = DeeObject_Unpack(elem, 2, key_and_value);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_r;
-		/* Check if we must re-hash the resulting RoDict. */
-		if (elem_count * 2 > mask) {
-			DREF RoDict *new_result;
-			size_t new_mask = (mask << 1) | 1;
-			new_result      = rehash(result, mask, new_mask);
-			if unlikely(!new_result) {
-				Dee_Decref(key_and_value[1]);
-				Dee_Decref(key_and_value[0]);
-				goto err_r;
-			}
-			mask = new_mask;
-			result = new_result;
-		}
-		/* Insert the key-value pair into the resulting RoDict. */
-		if unlikely(insert(result, mask, &elem_count, key_and_value[0], key_and_value[1]))
-			goto err_r;
-		if (DeeThread_CheckInterrupt())
-			goto err_r;
-	}
-	if unlikely(!elem)
-		goto err_r;
-	/* Fill in control members and setup the resulting object. */
-	result->rd_size = elem_count;
-	result->rd_mask = mask;
-	DeeObject_Init(result, &DeeRoDict_Type);
-done:
-	return (DREF DeeObject *)result;
-err_r:
-	for (elem_count = 0; elem_count <= mask; ++elem_count) {
-		if (!result->rd_elem[elem_count].rdi_key)
-			continue;
-		Dee_Decref(result->rd_elem[elem_count].rdi_key);
-		Dee_Decref(result->rd_elem[elem_count].rdi_value);
-	}
-	DeeObject_Free(result);
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self,
-                               size_t num_items) {
-	size_t mask = RODICT_INITIAL_MASK;
-	while (mask <= num_items)
-		mask = (mask << 1) | 1;
-	mask = (mask << 1) | 1;
-	return DeeRoDict_FromIterator_impl(self, mask);
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeRoDict_FromIterator(DeeObject *__restrict self) {
-	return DeeRoDict_FromIterator_impl(self, RODICT_INITIAL_MASK);
-}
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF RoDictIterator *DCALL
 rodict_iter(RoDict *__restrict self) {

@@ -1662,46 +1662,34 @@ err:
 
 
 #ifdef ipc_Process_USE_CreateProcessW
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ipc_nt_print_environ(struct unicode_printer *__restrict printer,
-                     DeeObject *__restrict envp) {
-	DREF DeeObject *item, *iter;
-	DREF DeeObject *name_and_value[2];
-	iter = DeeObject_IterSelf(envp);
-	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
-		if unlikely(DeeObject_Unpack(item, 2, name_and_value))
-			goto err_item;
-		if unlikely(DeeObject_AssertTypeExact(name_and_value[0], &DeeString_Type))
-			goto err_name_and_value;
-		if unlikely(DeeObject_AssertTypeExact(name_and_value[1], &DeeString_Type))
-			goto err_name_and_value;
-		if unlikely(unicode_printer_printstring(printer, name_and_value[0]) < 0)
-			goto err_name_and_value;
-		if unlikely(unicode_printer_putascii(printer, '='))
-			goto err_name_and_value;
-		if unlikely(unicode_printer_printstring(printer, name_and_value[1]) < 0)
-			goto err_name_and_value;
-		if unlikely(unicode_printer_putascii(printer, '\0'))
-			goto err_name_and_value;
-		Dee_Decref(name_and_value[1]);
-		Dee_Decref(name_and_value[0]);
-		Dee_Decref(item);
-	}
-	if unlikely(!item)
-		goto err_iter;
-	Dee_Decref(iter);
+PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+ipc_nt_print_environ_item(void *arg, DeeObject *key, DeeObject *value) {
+	struct unicode_printer *printer = (struct unicode_printer *)arg;
+	if unlikely(DeeObject_AssertTypeExact(key, &DeeString_Type))
+		goto err;
+	if unlikely(DeeObject_AssertTypeExact(value, &DeeString_Type))
+		goto err;
+	if unlikely(unicode_printer_printstring(printer, key) < 0)
+		goto err;
+	if unlikely(unicode_printer_putascii(printer, '='))
+		goto err;
+	if unlikely(unicode_printer_printstring(printer, value) < 0)
+		goto err;
 	if unlikely(unicode_printer_putascii(printer, '\0'))
 		goto err;
 	return 0;
-err_name_and_value:
-	Dee_Decref(name_and_value[1]);
-	Dee_Decref(name_and_value[0]);
-err_item:
-	Dee_Decref(item);
-err_iter:
-	Dee_Decref(iter);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ipc_nt_print_environ(struct unicode_printer *__restrict printer,
+                     DeeObject *__restrict envp) {
+	int result;
+	result = (int)DeeObject_ForeachPair(envp, &ipc_nt_print_environ_item, printer);
+	if likely(result == 0)
+		result = unicode_printer_putascii(printer, '\0');
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL

@@ -75,6 +75,7 @@ hexec([10, "x", "y", "z", 20], ("xyz", 7), (a, b?) -> [10, a..., 20]);
 //FIXME: hexec((10, "x", "y", "z", 20), ("xyz", 7), (a, b?) -> (10, a..., 20));
 
 hexec(().operator iter(), (), () -> Tuple.Iterator());
+hexec(Tuple.Iterator(), (), () -> ().operator iter());
 
 hexec("Function func(x, y) called", ("x", "y"), (a, b) -> f"Function func({a}, {b}) called");
 

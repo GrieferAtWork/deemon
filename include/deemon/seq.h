@@ -922,7 +922,7 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
  * Sub-classes of these types are not fast-sequence-compatible. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self);
-#define DEE_FASTSEQ_NOTFAST  ((size_t)-1)
+#define DEE_FASTSEQ_NOTFAST ((size_t)-1)
 
 /* Returns the `index'th item of `self'.
  * The caller is responsible that `index < DeeFastSeq_GetSize(self)' when
@@ -1032,7 +1032,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
  *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
  * @return: 0 : Success
  * @return: -1: Error */
-DFUNDEF WUNUSED NONNULL((1, 3)) int
+DFUNDEF WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
                                     /*out*/ DREF DeeObject **__restrict objv);
 

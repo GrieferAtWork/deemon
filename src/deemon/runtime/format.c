@@ -1660,16 +1660,53 @@ kwds_find_entry(DeeKwdsObject *__restrict self, size_t index) {
 	return NULL;
 }
 
+struct print_keyword_argument_type_data {
+	dformatprinter pkatd_printer;
+	void          *pkatd_arg;
+	size_t         pkatd_argc;
+};
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+print_keyword_argument_type_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	char const *str;
+	Dee_ssize_t temp, result = 0;
+	struct print_keyword_argument_type_data *me = (struct print_keyword_argument_type_data *)arg;
+	if (me->pkatd_argc != 0) {
+		temp = (*me->pkatd_printer)(me->pkatd_arg, ", ", 2);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	me->pkatd_argc = 1;
+	temp = DeeObject_Print(key, me->pkatd_printer, me->pkatd_arg);
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	temp = (*me->pkatd_printer)(me->pkatd_arg, ": ", 2);
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	str = Dee_TYPE(value)->tp_name;
+	if unlikely(!str)
+		str = "<anonymous_type>";
+	temp = (*me->pkatd_printer)(me->pkatd_arg, str, strlen(str));
+	if unlikely(temp < 0)
+		goto err;
+	result += temp;
+	return result;
+err:
+	return temp;
+}
+
 /* Print the object types passed by the given argument list.
  * If given, also include keyword names & types from `kw'
  * >> foo(10, 1.0, "bar", enabled: true);
  * Printed: "int, float, string, enabled: bool" */
-PUBLIC WUNUSED NONNULL((1)) dssize_t
+PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) dssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(dformatprinter printer, void *arg,
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw) {
 	size_t i;
-	char const *str;
 	dssize_t temp, result = 0;
 	if (kw && DeeKwds_Check(kw)) {
 		size_t kwargc = DeeKwds_SIZE(kw);
@@ -1678,6 +1715,7 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 			kwargc = argc;
 		} else {
 			for (i = 0; i < argc - kwargc; ++i) {
+				char const *str;
 				if (i != 0) {
 					temp = (*printer)(arg, ", ", 2);
 					if unlikely(temp < 0)
@@ -1694,6 +1732,7 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 			}
 		}
 		for (i = 0; i < kwargc; ++i) {
+			char const *str;
 			if (i != 0 || argc > kwargc) {
 				temp = (*printer)(arg, ", ", 2);
 				if unlikely(temp < 0)
@@ -1722,6 +1761,7 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 		goto done;
 	}
 	for (i = 0; i < argc; ++i) {
+		char const *str;
 		if (i != 0) {
 			temp = (*printer)(arg, ", ", 2);
 			if unlikely(temp < 0)
@@ -1738,59 +1778,19 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 	}
 	if (kw) {
 		/* Print keyword passed via a generic mappings. */
-		DREF DeeObject *iter, *elem, *pair[2];
-		iter = DeeObject_IterSelf(kw);
-		if unlikely(!iter)
-			goto err_m1;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			int error;
-			if (argc != 0) {
-				temp = (*printer)(arg, ", ", 2);
-				if unlikely(temp < 0)
-					goto err;
-				result += temp;
-			}
-			argc  = 1;
-			error = DeeObject_Unpack(elem, 2, pair);
-			Dee_Decref(elem);
-			if unlikely(error) {
-err_iter:
-				Dee_Decref(iter);
-				goto err_m1;
-			}
-			temp = DeeObject_Print(pair[0], printer, arg);
-			Dee_Decref(pair[0]);
-			if unlikely(temp < 0) {
-err_pair1_iter_temp:
-				Dee_Decref(pair[1]);
-err_iter_temp:
-				Dee_Decref(iter);
-				goto err;
-			}
-			result += temp;
-			temp = (*printer)(arg, ": ", 2);
-			if unlikely(temp < 0)
-				goto err_pair1_iter_temp;
-			result += temp;
-			str = Dee_TYPE(pair[1])->tp_name;
-			if unlikely(!str)
-				str = "<anonymous_type>";
-			temp = (*printer)(arg, str, strlen(str));
-			Dee_Decref(pair[1]);
-			if unlikely(temp < 0)
-				goto err_iter_temp;
-			result += temp;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
+		struct print_keyword_argument_type_data data;
+		data.pkatd_printer = printer;
+		data.pkatd_arg     = arg;
+		data.pkatd_argc    = argc;
+		temp = DeeObject_ForeachPair(kw, &print_keyword_argument_type_foreach, &data);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
 	}
 done:
 	return result;
 err:
 	return temp;
-err_m1:
-	return -1;
 }
 
 

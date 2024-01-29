@@ -211,6 +211,11 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		result    = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
+		if (DeeTuple_Check(self)) {
+			/* Further optimization: tuple can be memcpy'd */
+			ASSERT(fastsize == DeeTuple_SIZE(self));
+			return Dee_Movrefv(result, DeeTuple_ELEM(self), fastsize);
+		}
 		for (i = 0; i < fastsize; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
 			if unlikely(!elem)
@@ -321,6 +326,11 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 		result = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
 		if unlikely(!result)
 			goto err;
+		if (DeeTuple_Check(self)) {
+			/* Further optimization: tuple can be memcpy'd */
+			ASSERT(fastsize == DeeTuple_SIZE(self));
+			return Dee_Movrefv(result, DeeTuple_ELEM(self), fastsize);
+		}
 		for (i = 0; i < fastsize; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
 			if unlikely(!elem)
@@ -455,11 +465,17 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 			*p_allocated = elemc;
 #endif /* !Dee_MallocUsableSize */
 		}
-		for (i = 0; i < elemc; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err_i;
-			elemv[i] = elem; /* Inherit reference. */
+		if (DeeTuple_Check(self)) {
+			/* Further optimization: tuple can be memcpy'd */
+			ASSERT(elemc == DeeTuple_SIZE(self));
+			Dee_Movrefv(elemv, DeeTuple_ELEM(self), elemc);
+		} else {
+			for (i = 0; i < elemc; ++i) {
+				elem = DeeFastSeq_GetItem(self, i);
+				if unlikely(!elem)
+					goto err_i;
+				elemv[i] = elem; /* Inherit reference. */
+			}
 		}
 	} else {
 		/* Use iterators. */
@@ -575,11 +591,17 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 			*p_allocated = offset + elemc;
 #endif /* !Dee_MallocUsableSize */
 		}
-		for (i = 0; i < elemc; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err_i;
-			elemv[offset + i] = elem; /* Inherit reference. */
+		if (DeeTuple_Check(self)) {
+			/* Further optimization: tuple can be memcpy'd */
+			ASSERT(elemc == DeeTuple_SIZE(self));
+			Dee_Movrefv(elemv + offset, DeeTuple_ELEM(self), elemc);
+		} else {
+			for (i = 0; i < elemc; ++i) {
+				elem = DeeFastSeq_GetItem(self, i);
+				if unlikely(!elem)
+					goto err_i;
+				elemv[offset + i] = elem; /* Inherit reference. */
+			}
 		}
 	} else {
 		/* Use iterators. */
@@ -646,7 +668,7 @@ err:
  *  - Use `DeeObject_Unpack()' (meaning that all elements written to `objv' will be non-NULL)
  * @return: 0 : Success
  * @return: -1: Error */
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
                                     /*out*/ DREF DeeObject **__restrict objv) {
 	size_t i, size;

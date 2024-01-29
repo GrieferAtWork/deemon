@@ -384,6 +384,7 @@ udict_init_sequence(UDict *__restrict self,
 	/* TODO: Optimizations for `DeeRoDict_Type' */
 	/* TODO: Optimizations for `URoDict_Type' */
 
+	/* TODO: Use DeeObject_ForeachPair() */
 	iterator = DeeObject_IterSelf(sequence);
 	if unlikely(!iterator)
 		goto err;
@@ -1825,6 +1826,7 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 	/* TODO: Optimizations for `DeeRoDict_Type' */
 	/* TODO: Optimizations for `UDict_Type' */
 
+	/* TODO: Use DeeObject_ForeachPair() */
 	iterator = DeeObject_IterSelf(sequence);
 	if unlikely(!iterator)
 		goto err;

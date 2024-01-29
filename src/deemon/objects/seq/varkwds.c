@@ -1529,63 +1529,40 @@ blm_visit(BlackListMapping *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->blm_kw);
 }
 
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+blm_bool_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	BlackListMapping *self = (BlackListMapping *)arg;
+	(void)value;
+	if (!DeeString_Check(key) ||
+	    !BlackListMapping_IsBlackListed(self, key)) {
+		Dee_Decref(key);
+		return -2; /* Success indicator. */
+	}
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blm_bool(BlackListMapping *__restrict self) {
-	DREF DeeObject *vals[2], *elem, *iter;
-	iter = DeeObject_IterSelf(self->blm_kw);
-	if unlikely(!iter)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		int error;
-		error = DeeObject_Unpack(elem, 2, vals);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_iter;
-		Dee_Decref(vals[1]);
-		if (!DeeString_Check(vals[0]) ||
-		    !BlackListMapping_IsBlackListed(self, vals[0])) {
-			Dee_Decref(vals[0]);
-			return 1;
-		}
-		Dee_Decref(vals[0]);
-	}
-	if unlikely(!elem)
-		goto err_iter;
-	Dee_Decref(iter);
+	int status = (int)DeeObject_ForeachPair(self->blm_kw, &blm_bool_foreach, self);
+	ASSERT(status == 0 || status == -1 || status == -2);
+	if (status == -2)
+		status = 1;
+	return status;
+}
+
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
+blm_size_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	BlackListMapping *self = (BlackListMapping *)arg;
+	(void)value;
+	if (!DeeString_Check(key) ||
+	    !BlackListMapping_IsBlackListed(self, key))
+		return 1;
 	return 0;
-err_iter:
-	Dee_Decref(iter);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 blm_nsi_size(BlackListMapping *__restrict self) {
-	size_t result = 0;
-	DREF DeeObject *vals[2], *elem, *iter;
-	iter = DeeObject_IterSelf(self->blm_kw);
-	if unlikely(!iter)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		int error;
-		error = DeeObject_Unpack(elem, 2, vals);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_iter;
-		Dee_Decref(vals[1]);
-		if (!DeeString_Check(vals[0]) ||
-		    !BlackListMapping_IsBlackListed(self, vals[0]))
-			++result;
-		Dee_Decref(vals[0]);
-	}
-	if unlikely(!elem)
-		goto err_iter;
-	Dee_Decref(iter);
-	return result;
-err_iter:
-	Dee_Decref(iter);
-err:
-	return (size_t)-1;
+	return (size_t)DeeObject_ForeachPair(self->blm_kw, &blm_size_foreach, self);
 }
 
 

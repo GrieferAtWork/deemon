@@ -241,50 +241,14 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 dict_setitem(Dict *self, DeeObject *key, DeeObject *value);
 PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self);
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_insert_iterator(Dict *self, DeeObject *iterator) {
-	DREF DeeObject *elem;
-	DREF DeeObject *key_and_value[2];
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		/* Unpack the yielded element again. */
-		if unlikely(DeeObject_Unpack(elem, 2, key_and_value))
-			goto err_elem;
-		Dee_Decref(elem);
-		if unlikely(dict_setitem(self, key_and_value[0], key_and_value[1]))
-			goto err_item;
-		Dee_Decref(key_and_value[1]);
-		Dee_Decref(key_and_value[0]);
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	if unlikely(!elem)
-		goto err;
-	return 0;
-err_item:
-	Dee_Decref(key_and_value[1]);
-	Dee_Decref(key_and_value[0]);
-err_elem:
-	Dee_Decref(elem);
-err:
-	return -1;
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define dict_insert_sequence_foreach (*(Dee_foreach_pair_t)&dict_setitem)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_insert_sequence_foreach(void *arg, DeeObject *key, DeeObject *value) {
+	return dict_setitem((Dict *)arg, key, value);
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-dict_init_iterator(Dict *self, DeeObject *iterator) {
-	self->d_mask = 0;
-	self->d_size = 0;
-	self->d_used = 0;
-	self->d_elem = empty_dict_items;
-	Dee_atomic_rwlock_init(&self->d_lock);
-	weakref_support_init(self);
-	if unlikely(dict_insert_iterator(self, iterator)) {
-		dict_fini(self);
-		goto err;
-	}
-	return 0;
-err:
-	return -1;
-}
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
 
@@ -296,8 +260,6 @@ STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_sequence(Dict *__restrict self,
                    DeeObject *__restrict sequence) {
-	DREF DeeObject *iterator;
-	int error;
 	DeeTypeObject *tp = Dee_TYPE(sequence);
 	if (tp == &DeeDict_Type)
 		return dict_copy(self, (Dict *)sequence);
@@ -333,30 +295,20 @@ dict_init_sequence(Dict *__restrict self,
 	/* TODO: Optimizations for `_sharedmap' */
 	/* TODO: Fast-sequence support */
 
-	iterator = DeeObject_IterSelf(sequence);
-	if unlikely(!iterator)
-		goto err;
-	error = dict_init_iterator(self, iterator);
-	Dee_Decref(iterator);
-	return error;
+	/* Fallback: enumerate the sequence pair-wise and insert into "self" */
+	self->d_mask = 0;
+	self->d_size = 0;
+	self->d_used = 0;
+	self->d_elem = empty_dict_items;
+	Dee_atomic_rwlock_init(&self->d_lock);
+	weakref_support_init(self);
+	if unlikely(DeeObject_ForeachPair(sequence, &dict_insert_sequence_foreach, self))
+		goto err_self;
+	return 0;
+err_self:
+	dict_fini(self);
 err:
 	return -1;
-}
-
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeDict_FromIterator(DeeObject *__restrict self) {
-	DREF Dict *result;
-	result = DeeGCObject_MALLOC(Dict);
-	if unlikely(!result)
-		goto err;
-	if unlikely(dict_init_iterator(result, self))
-		goto err_r;
-	DeeObject_Init(result, &DeeDict_Type);
-	return DeeGC_Track((DeeObject *)result);
-err_r:
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
 }
 
 PUBLIC WUNUSED DREF DeeObject *DCALL
@@ -2256,16 +2208,10 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dict_update(Dict *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items, *iterator;
-	int error;
+	DeeObject *items;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
-	iterator = DeeObject_IterSelf(items);
-	if unlikely(!iterator)
-		goto err;
-	error = dict_insert_iterator(self, iterator);
-	Dee_Decref(iterator);
-	if unlikely(error)
+	if unlikely(DeeObject_ForeachPair(items, &dict_insert_sequence_foreach, self))
 		goto err;
 	return_none;
 err:

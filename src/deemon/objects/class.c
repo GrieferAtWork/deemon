@@ -2994,7 +2994,7 @@ err:
 	return -1;
 }
 
-LOCAL WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 instance_autoload_members_kw(DeeTypeObject *tp_self,
                              struct class_desc *__restrict desc,
                              struct instance_desc *__restrict instance,

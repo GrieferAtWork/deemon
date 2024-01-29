@@ -4456,9 +4456,9 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self,
-                                  char const *__restrict key,
-                                  dhash_t hash,
-                                  bool allow_missing) {
+                                      char const *__restrict key,
+                                      dhash_t hash,
+                                      bool allow_missing) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4503,9 +4503,9 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self,
-                                     char const *__restrict key,
-                                     size_t keylen, dhash_t hash,
-                                     bool allow_missing) {
+                                         char const *__restrict key,
+                                         size_t keylen, dhash_t hash,
+                                         bool allow_missing) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4666,8 +4666,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self,
-                                char const *__restrict key,
-                                dhash_t hash) {
+                                    char const *__restrict key,
+                                    dhash_t hash) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4690,8 +4690,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_HasItemStringLenHash)(DeeObject *__restrict self,
-                                   char const *__restrict key,
-                                   size_t keylen, dhash_t hash) {
+                                       char const *__restrict key,
+                                       size_t keylen, dhash_t hash) {
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
@@ -4832,8 +4832,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetItemStringHash(DeeObject *__restrict self,
-                        char const *__restrict key,
-                        dhash_t hash) {
+                            char const *__restrict key,
+                            dhash_t hash) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4859,9 +4859,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_GetItemStringLenHash(DeeObject *__restrict self,
-                           char const *__restrict key,
-                           size_t keylen,
-                           dhash_t hash) {
+                               char const *__restrict key,
+                               size_t keylen, dhash_t hash) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4887,9 +4886,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeObject_GetItemStringHashDef(DeeObject *self,
-                           char const *__restrict key,
-                           dhash_t hash,
-                           DeeObject *def) {
+                               char const *__restrict key,
+                               dhash_t hash, DeeObject *def) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4915,9 +4913,9 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 DeeObject_GetItemStringLenHashDef(DeeObject *self,
-                              char const *__restrict key,
-                              size_t keylen, dhash_t hash,
-                              DeeObject *def) {
+                                  char const *__restrict key,
+                                  size_t keylen, dhash_t hash,
+                                  DeeObject *def) {
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
@@ -4943,8 +4941,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_DelItemStringHash)(DeeObject *__restrict self,
-                                char const *__restrict key,
-                                dhash_t hash) {
+                                    char const *__restrict key,
+                                    dhash_t hash) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4963,8 +4961,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_DelItemStringLenHash)(DeeObject *__restrict self,
-                                   char const *__restrict key,
-                                   size_t keylen, dhash_t hash) {
+                                       char const *__restrict key,
+                                       size_t keylen, dhash_t hash) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -4983,8 +4981,8 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 (DCALL DeeObject_SetItemStringHash)(DeeObject *self,
-                                char const *__restrict key,
-                                dhash_t hash, DeeObject *value) {
+                                    char const *__restrict key,
+                                    dhash_t hash, DeeObject *value) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -5004,9 +5002,9 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) int
 (DCALL DeeObject_SetItemStringLenHash)(DeeObject *self,
-                                   char const *__restrict key,
-                                   size_t keylen, dhash_t hash,
-                                   DeeObject *value) {
+                                       char const *__restrict key,
+                                       size_t keylen, dhash_t hash,
+                                       DeeObject *value) {
 	DREF DeeObject *key_ob;
 	int result;
 	ASSERT_OBJECT(self);
@@ -5189,7 +5187,7 @@ DEFINE_OPERATOR(void, PutBuf,
 
 
 #ifndef DEFINE_TYPED_OPERATORS
-PUBLIC WUNUSED NONNULL((1, 3)) int
+PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_Unpack)(DeeObject *__restrict self, size_t objc,
                          /*out*/ DREF DeeObject **__restrict objv) {
 	DREF DeeObject *iterator, *elem;

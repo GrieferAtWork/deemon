@@ -290,22 +290,6 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeHashSet_FromIterator(DeeObject *__restrict self) {
-	DREF HashSet *result;
-	result = DeeGCObject_MALLOC(HashSet);
-	if unlikely(!result)
-		goto err;
-	if unlikely(hashset_init_iterator(result, self))
-		goto err_r;
-	DeeObject_Init(result, &DeeHashSet_Type);
-	return DeeGC_Track((DeeObject *)result);
-err_r:
-	DeeGCObject_FREE(result);
-err:
-	return NULL;
-}
-
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeHashSet_NewWithHint(size_t num_items) {
 	DREF HashSet *result;

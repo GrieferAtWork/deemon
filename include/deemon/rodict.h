@@ -72,9 +72,8 @@ DDATDEF DeeTypeObject DeeRoDict_Type;
 #define DeeRoDict_Check(ob)         DeeObject_InstanceOfExact(ob, &DeeRoDict_Type) /* `_RoDict' is final */
 #define DeeRoDict_CheckExact(ob)    DeeObject_InstanceOfExact(ob, &DeeRoDict_Type)
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIterator(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoDict_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoDict_FromSequence(DeeObject *__restrict self);
 
 /* Internal functions for constructing a read-only Dict object. */
 DFUNDEF WUNUSED DREF DeeRoDictObject *DCALL DeeRoDict_New(void);

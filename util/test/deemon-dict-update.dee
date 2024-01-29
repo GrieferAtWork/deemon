@@ -1,3 +1,4 @@
+#!/usr/bin/deemon
 /* Copyright (c) 2018-2024 Griefer@Work                                       *
  *                                                                            *
  * This software is provided 'as-is', without any express or implied          *
@@ -17,50 +18,17 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-
-
 import * from deemon;
-import * from errors;
 
-class MyClass {
-	member foo;
-	this = del; /* Delete the regular constructor. */
-}
+local d = Dict();
+__asm__("" : "+x" (d));
+assert #d == 0;
 
-local x = try MyClass(foo: 42) catch (e...) e;
-assert x is NotImplemented, "The default construct should have been deleted";
+d.update({ 10: "foo", 20: "bar" });
+assert #d == 2;
+assert d == { 10: "foo", 20: "bar" };
 
-local x = MyClass.newinstance(foo: 42);
-assert x is MyClass;
-assert x.foo == 42, "Type.newinstance should still be able to construct instances!";
-
-local init = { "foo": 42 };
-__asm__("" : "+x" (init));
-local x = MyClass.newinstance(**init);
-assert x is MyClass;
-assert x.foo == 42, "Type.newinstance should still be able to construct instances!";
-
-
-
-class MyList: List {
-	this = del; /* Delete the regular constructor. */
-	member mylist_member;
-	appendmember() {
-		this.append(mylist_member);
-	}
-}
-
-/* Extended version of Type.newinstance: Can be used to specify
- * field initializers, as well as  */
-local x = MyList.newinstance({
-	MyList: ({ "mylist_member" : "abc" }, none),
-	List:   ({ }, ({10, 20, 30},)),
-});
-
-assert x is MyList;
-assert repr(x).replace(" ", "") == "[10,20,30]";
-assert x.mylist_member == "abc";
-x.appendmember();
-assert repr(x).replace(" ", "") == "[10,20,30,\"abc\"]";
-
+d.update({ 10: "fiz", 30: "buz" });
+assert #d == 3;
+assert d == { 10: "fiz", 20: "bar", 30: "buz" };
 

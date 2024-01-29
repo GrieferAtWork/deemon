@@ -186,10 +186,14 @@ err:
 }
 
 
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define map_update_callback (*(Dee_foreach_pair_t)&DeeObject_SetItem)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 map_update_callback(void *arg, DeeObject *key, DeeObject *value) {
 	return DeeObject_SetItem((DeeObject *)arg, key, value);
 }
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_update(DeeObject *self, size_t argc, DeeObject *const *argv) {
@@ -197,7 +201,7 @@ map_update(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:update", &seq))
 		goto err;
 	if (self != seq) {
-		if unlikely(DeeObject_ForeachPair(seq, &map_update_callback, self) < 0)
+		if unlikely(DeeObject_ForeachPair(seq, &map_update_callback, self))
 			goto err;
 	}
 	return_none;

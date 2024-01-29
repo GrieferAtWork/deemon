@@ -561,7 +561,7 @@ Dee_vsnprintf(char *__restrict buffer, size_t bufsize,
  * Printed: "int, float, string, enabled: bool" */
 #define DeeFormat_PrintArgumentTypes(printer, arg, argc, argv) \
 	DeeFormat_PrintArgumentTypesKw(printer, arg, argc, argv, NULL)
-DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
 (DCALL DeeFormat_PrintArgumentTypesKw)(Dee_formatprinter_t printer, void *arg,
                                        size_t argc, DeeObject *const *argv,
                                        DeeObject *kw);
@@ -570,7 +570,7 @@ DFUNDEF WUNUSED NONNULL((1)) Dee_ssize_t
  * This function is used to generate the representation of the expression in the default
  * assertion failure handler.
  * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*') for `name' */
-DFUNDEF WUNUSED NONNULL((1, 3)) Dee_ssize_t DCALL
+DFUNDEF WUNUSED ATTR_INS(6, 5) NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             DeeObject *self, uint16_t name,
                             size_t argc, DeeObject *const *argv,
