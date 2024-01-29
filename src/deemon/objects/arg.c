@@ -1261,9 +1261,9 @@ clear_argv:
 
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
-                             char const *__restrict name,
-                             dhash_t hash) {
+DeeKwdsMapping_HasItemStringHash(DeeObject *__restrict self,
+                                 char const *__restrict name,
+                                 dhash_t hash) {
 	size_t index;
 	KwdsMapping *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
@@ -1277,10 +1277,10 @@ DeeKwdsMapping_HasItemString(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
-                                char const *__restrict name,
-                                size_t namesize,
-                                dhash_t hash) {
+DeeKwdsMapping_HasItemStringLenHash(DeeObject *__restrict self,
+                                    char const *__restrict name,
+                                    size_t namesize,
+                                    dhash_t hash) {
 	size_t index;
 	KwdsMapping *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
@@ -1294,9 +1294,9 @@ DeeKwdsMapping_HasItemStringLen(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemString(DeeObject *__restrict self,
-                             char const *__restrict name,
-                             dhash_t hash) {
+DeeKwdsMapping_GetItemStringHash(DeeObject *__restrict self,
+                                 char const *__restrict name,
+                                 dhash_t hash) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1321,10 +1321,10 @@ no_such_key:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringDef(DeeObject *self,
-                                char const *__restrict name,
-                                dhash_t hash,
-                                DeeObject *def) {
+DeeKwdsMapping_GetItemStringHashDef(DeeObject *self,
+                                    char const *__restrict name,
+                                    dhash_t hash,
+                                    DeeObject *def) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1350,10 +1350,10 @@ no_such_key:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringLen(DeeObject *__restrict self,
-                                char const *__restrict name,
-                                size_t namesize,
-                                dhash_t hash) {
+DeeKwdsMapping_GetItemStringLenHash(DeeObject *__restrict self,
+                                    char const *__restrict name,
+                                    size_t namesize,
+                                    dhash_t hash) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1378,11 +1378,11 @@ no_such_key:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringLenDef(DeeObject *self,
-                                   char const *__restrict name,
-                                   size_t namesize,
-                                   dhash_t hash,
-                                   DeeObject *def) {
+DeeKwdsMapping_GetItemStringLenHashDef(DeeObject *self,
+                                       char const *__restrict name,
+                                       size_t namesize,
+                                       dhash_t hash,
+                                       DeeObject *def) {
 	size_t index;
 	KwdsMapping *me;
 	DREF DeeObject *result;
@@ -1408,8 +1408,8 @@ no_such_key:
 }
 
 /* Construct/access keyword arguments passed to a function as a
- * high-level {(string, Object)...}-like mapping that is bound to
- * the actually mapped arguments. */
+ * high-level {string: Object}-like mapping that is bound to the
+ * actually mapped arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict p_argc,
              DeeObject *const *argv,
@@ -1513,9 +1513,9 @@ err:
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwArgs_GetString(DeeKwArgs *__restrict self,
-                    char const *__restrict name,
-                    Dee_hash_t hash) {
+DeeKwArgs_GetStringHash(DeeKwArgs *__restrict self,
+                        char const *__restrict name,
+                        Dee_hash_t hash) {
 	DREF DeeObject *result;
 	if (!self->kwa_kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
@@ -1538,9 +1538,9 @@ DeeKwArgs_GetString(DeeKwArgs *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self,
-                       char const *__restrict name,
-                       size_t namelen, Dee_hash_t hash) {
+DeeKwArgs_GetStringLenHash(DeeKwArgs *__restrict self,
+                           char const *__restrict name,
+                           size_t namelen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	if (!self->kwa_kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
@@ -1564,9 +1564,9 @@ DeeKwArgs_GetStringLen(DeeKwArgs *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
-                       char const *__restrict name,
-                       Dee_hash_t hash, DeeObject *def) {
+DeeKwArgs_GetStringHashDef(DeeKwArgs *__restrict self,
+                           char const *__restrict name,
+                           Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
@@ -1594,8 +1594,8 @@ DeeKwArgs_GetStringDef(DeeKwArgs *__restrict self,
 }
 
 PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict name,
-                          size_t namelen, Dee_hash_t hash, DeeObject *def) {
+DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
+                              size_t namelen, Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
@@ -1625,8 +1625,8 @@ DeeKwArgs_GetStringLenDef(DeeKwArgs *__restrict self, char const *__restrict nam
 
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwString(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                   char const *__restrict name, Dee_hash_t hash) {
+DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                       char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
@@ -1651,8 +1651,8 @@ DeeArg_GetKwString(size_t argc, DeeObject *const *argv, DeeObject *kw,
 }
 
 PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                      char const *__restrict name, size_t namelen, dhash_t hash) {
+DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                          char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
 		err_unknown_key_str_len(Dee_EmptyMapping, name, namelen);
 		return NULL;
@@ -1677,9 +1677,9 @@ DeeArg_GetKwStringLen(size_t argc, DeeObject *const *argv, DeeObject *kw,
 }
 
 PUBLIC WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
-DeeArg_GetKwStringDef(size_t argc, DeeObject *const *argv,
-                      DeeObject *kw, char const *__restrict name,
-                      Dee_hash_t hash, DeeObject *def) {
+DeeArg_GetKwStringHashDef(size_t argc, DeeObject *const *argv,
+                          DeeObject *kw, char const *__restrict name,
+                          Dee_hash_t hash, DeeObject *def) {
 	if (!kw) {
 return_def:
 		if (def != ITER_DONE)
@@ -1701,10 +1701,10 @@ return_def:
 }
 
 PUBLIC WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
-DeeArg_GetKwStringLenDef(size_t argc, DeeObject *const *argv,
-                         DeeObject *kw, char const *__restrict name,
-                         size_t namelen, dhash_t hash,
-                         DeeObject *def) {
+DeeArg_GetKwStringLenHashDef(size_t argc, DeeObject *const *argv,
+                             DeeObject *kw, char const *__restrict name,
+                             size_t namelen, dhash_t hash,
+                             DeeObject *def) {
 	if (!kw) {
 return_def:
 		if (def != ITER_DONE)

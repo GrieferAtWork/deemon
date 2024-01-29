@@ -106,32 +106,47 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject 
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeDict_GetItemStringDef(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeDict_GetItemStringLenDef(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeDict_SetItemString(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLen(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemString(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLen(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringHash(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeDict_GetItemStringHashDef(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeDict_GetItemStringLenHash(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeDict_GetItemStringLenHashDef(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringHash(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeDict_HasItemStringLenHash(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringHash(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeDict_DelItemStringLenHash(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeDict_SetItemStringHash(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *value);
+INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL DeeDict_SetItemStringLenHash(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *value);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_ByHash(DeeObject *__restrict self, Dee_hash_t hash, bool key_only);
 #else /* CONFIG_BUILDING_DEEMON */
-#define DeeDict_GetItemDef(self, key, def)                        DeeObject_GetItemDef(self, key, def)
-#define DeeDict_GetItemString(self, key, hash)                    DeeObject_GetItemStringHash(self, key, hash)
-#define DeeDict_GetItemStringDef(self, key, hash, def)            DeeObject_GetItemStringHashDef(self, key, hash, def)
-#define DeeDict_GetItemStringLen(self, key, keylen, hash)         DeeObject_GetItemStringLenHash(self, key, keylen, hash)
-#define DeeDict_GetItemStringLenDef(self, key, keylen, hash, def) DeeObject_GetItemStringLenHashDef(self, key, keylen, hash, def)
-#define DeeDict_DelItemString(self, key, hash)                    DeeObject_DelItemStringHash(self, key, hash)
-#define DeeDict_DelItemStringLen(self, key, keylen, hash)         DeeObject_DelItemStringLenHash(self, key, keylen, hash)
-#define DeeDict_SetItemString(self, key, hash, value)             DeeObject_SetItemStringHash(self, key, hash, value)
-#define DeeDict_SetItemStringLen(self, key, keylen, hash, value)  DeeObject_SetItemStringLenHash(self, key, keylen, hash, value)
+#define DeeDict_GetItemDef(self, key, def)                            ((*DeeDict_Type.tp_seq->tp_nsi->nsi_maplike.nsi_getdefault)(self, key, def))
+#define DeeDict_GetItemStringHash(self, key, hash)                    DeeObject_GetItemStringHash(self, key, hash)
+#define DeeDict_GetItemStringHashDef(self, key, hash, def)            DeeObject_GetItemStringHashDef(self, key, hash, def)
+#define DeeDict_GetItemStringLenHash(self, key, keylen, hash)         DeeObject_GetItemStringLenHash(self, key, keylen, hash)
+#define DeeDict_GetItemStringLenHashDef(self, key, keylen, hash, def) DeeObject_GetItemStringLenHashDef(self, key, keylen, hash, def)
+#define DeeDict_HasItemStringHash(self, key, hash)                    DeeObject_HasItemStringHash(self, key, hash)
+#define DeeDict_HasItemStringLenHash(self, key, keylen, hash)         DeeObject_HasItemStringLenHash(self, key, keylen, hash)
+#define DeeDict_DelItemStringHash(self, key, hash)                    DeeObject_DelItemStringHash(self, key, hash)
+#define DeeDict_DelItemStringLenHash(self, key, keylen, hash)         DeeObject_DelItemStringLenHash(self, key, keylen, hash)
+#define DeeDict_SetItemStringHash(self, key, hash, value)             DeeObject_SetItemStringHash(self, key, hash, value)
+#define DeeDict_SetItemStringLenHash(self, key, keylen, hash, value)  DeeObject_SetItemStringLenHash(self, key, keylen, hash, value)
 #endif /* !CONFIG_BUILDING_DEEMON */
+#define DeeDict_GetItemString(self, key)                    DeeDict_GetItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_GetItemStringLen(self, key, keylen)         DeeDict_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeDict_GetItemStringDef(self, key, def)            DeeDict_GetItemStringHashDef(self, key, Dee_HashStr(key), def)
+#define DeeDict_GetItemStringLenDef(self, key, keylen, def) DeeDict_GetItemStringLenHashDef(self, key, keylen, Dee_HashPtr(key, keylen), def)
+#define DeeDict_HasItemString(self, key)                    DeeDict_HasItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_HasItemStringLen(self, key, keylen)         DeeDict_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeDict_DelItemString(self, key)                    DeeDict_DelItemStringHash(self, key, Dee_HashStr(key))
+#define DeeDict_DelItemStringLen(self, key, keylen)         DeeDict_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeDict_SetItemString(self, key, value)             DeeDict_SetItemStringHash(self, key, Dee_HashStr(key), value)
+#define DeeDict_SetItemStringLen(self, key, keylen, value)  DeeDict_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
+
+#define DeeDict_HasItem(self, key)        DeeObject_Contains(self, key)
 #define DeeDict_GetItem(self, key)        DeeObject_GetItem(self, key)
 #define DeeDict_DelItem(self, key)        DeeObject_DelItem(self, key)
 #define DeeDict_SetItem(self, key, value) DeeObject_SetItem(self, key, value)
-#define DeeDict_Clear(self)               ((*DeeDict_Type.tp_gc->tp_clear)(self))
+
+#define DeeDict_Clear(self) ((*DeeDict_Type.tp_gc->tp_clear)(self))
 
 /* Create a new Dict by inheriting a set of passed key-item pairs.
  * @param: key_items:    A vector containing `num_keyitems*2' elements,

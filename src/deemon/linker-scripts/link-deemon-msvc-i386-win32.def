@@ -4,10 +4,10 @@ EXPORTS
 	; See this mail that noone ever bothered to reply to:
 	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
 	DeeArg_GetKw@12=_DeeArg_GetKw@12
-	DeeArg_GetKwString@20=_DeeArg_GetKwString@20
-	DeeArg_GetKwStringDef@24=_DeeArg_GetKwStringDef@24
-	DeeArg_GetKwStringLen@24=_DeeArg_GetKwStringLen@24
-	DeeArg_GetKwStringLenDef@28=_DeeArg_GetKwStringLenDef@28
+	DeeArg_GetKwStringHash@20=_DeeArg_GetKwStringHash@20
+	DeeArg_GetKwStringHashDef@24=_DeeArg_GetKwStringHashDef@24
+	DeeArg_GetKwStringLenHash@24=_DeeArg_GetKwStringLenHash@24
+	DeeArg_GetKwStringLenHashDef@28=_DeeArg_GetKwStringLenHashDef@28
 	DeeArg_PutKw@12=_DeeArg_PutKw@12
 	DeeArg_VUnpack@16=_DeeArg_VUnpack@16
 	DeeArg_VUnpackKw@24=_DeeArg_VUnpackKw@24
@@ -380,10 +380,10 @@ EXPORTS
 	DeeInt_TryGet64Bit@8=_DeeInt_TryGet64Bit@8
 	DeeInt_TryGet8Bit@8=_DeeInt_TryGet8Bit@8
 	DeeKwArgs_Done@12=_DeeKwArgs_Done@12
-	DeeKwArgs_GetString@12=_DeeKwArgs_GetString@12
-	DeeKwArgs_GetStringDef@16=_DeeKwArgs_GetStringDef@16
-	DeeKwArgs_GetStringLen@16=_DeeKwArgs_GetStringLen@16
-	DeeKwArgs_GetStringLenDef@20=_DeeKwArgs_GetStringLenDef@20
+	DeeKwArgs_GetStringHash@12=_DeeKwArgs_GetStringHash@12
+	DeeKwArgs_GetStringHashDef@16=_DeeKwArgs_GetStringHashDef@16
+	DeeKwArgs_GetStringLenHash@16=_DeeKwArgs_GetStringLenHash@16
+	DeeKwArgs_GetStringLenHashDef@20=_DeeKwArgs_GetStringLenHashDef@20
 	DeeKwArgs_Init@16=_DeeKwArgs_Init@16
 	DeeKwCMethod_New@4=_DeeKwCMethod_New@4
 	DeeKwClsMethod_New@8=_DeeKwClsMethod_New@8

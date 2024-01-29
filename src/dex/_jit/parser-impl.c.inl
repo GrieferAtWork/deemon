@@ -203,8 +203,6 @@ again_eval_expression:
 	error = DeeDict_SetItemStringLen(result,
 	                                 first_label_name,
 	                                 first_label_size,
-	                                 Dee_HashUtf8(first_label_name,
-	                                              first_label_size),
 	                                 value);
 	Dee_Decref(value);
 	if unlikely(error)

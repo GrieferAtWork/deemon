@@ -239,7 +239,7 @@ INTERN DeeTypeObject BlackListVarkwdsIterator_Type = {
 
 
 
-LOCAL NONNULL((1, 2)) size_t DCALL
+LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
 kwds_FindIndex(DeeKwdsObject *__restrict self,
                DeeStringObject *name) {
 	dhash_t i, perturb, hash;
@@ -264,7 +264,7 @@ kwds_FindIndex(DeeKwdsObject *__restrict self,
 	return (size_t)-1;
 }
 
-LOCAL size_t DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
 kwds_FindIndexStr(DeeKwdsObject *__restrict self,
                   char const *__restrict name,
                   dhash_t hash) {
@@ -377,9 +377,9 @@ again:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListVarkwds_IsBlackListedString(BlackListVarkwds *__restrict self,
-                                     char const *__restrict name,
-                                     dhash_t hash) {
+BlackListVarkwds_IsBlackListedStringHash(BlackListVarkwds *__restrict self,
+                                         char const *__restrict name,
+                                         dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -433,9 +433,9 @@ again:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListVarkwds_IsBlackListedStringLen(BlackListVarkwds *__restrict self,
-                                        char const *__restrict name,
-                                        size_t namesize, dhash_t hash) {
+BlackListVarkwds_IsBlackListedStringLenHash(BlackListVarkwds *__restrict self,
+                                            char const *__restrict name,
+                                            size_t namesize, dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -498,20 +498,20 @@ BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self,
-                               char const *__restrict name,
-                               dhash_t hash) {
+BlackListVarkwds_HasItemStringHash(BlackListVarkwds *__restrict self,
+                                   char const *__restrict name,
+                                   dhash_t hash) {
 	return (kwds_FindIndexStr(self->blvk_kwds, name, hash) != (size_t)-1) &&
-	       !BlackListVarkwds_IsBlackListedString(self, name, hash) &&
+	       !BlackListVarkwds_IsBlackListedStringHash(self, name, hash) &&
 	       atomic_read(&self->blvk_argv) != NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self,
-                                  char const *__restrict name,
-                                  size_t namesize, dhash_t hash) {
+BlackListVarkwds_HasItemStringLenHash(BlackListVarkwds *__restrict self,
+                                      char const *__restrict name,
+                                      size_t namesize, dhash_t hash) {
 	return (kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash) != (size_t)-1) &&
-	       !BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash) &&
+	       !BlackListVarkwds_IsBlackListedStringLenHash(self, name, namesize, hash) &&
 	       atomic_read(&self->blvk_argv) != NULL;
 }
 
@@ -540,14 +540,14 @@ missing:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self,
-                               char const *__restrict name, dhash_t hash) {
+BlackListVarkwds_GetItemStringHash(BlackListVarkwds *__restrict self,
+                                   char const *__restrict name, dhash_t hash) {
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStr(self->blvk_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
+	if unlikely(BlackListVarkwds_IsBlackListedStringHash(self, name, hash))
 		goto missing;
 	BlackListVarkwds_LockRead(self);
 	if unlikely(!self->blvk_argv) {
@@ -564,15 +564,15 @@ missing:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self,
-                                  char const *__restrict name,
-                                  size_t namesize, dhash_t hash) {
+BlackListVarkwds_GetItemStringLenHash(BlackListVarkwds *__restrict self,
+                                      char const *__restrict name,
+                                      size_t namesize, dhash_t hash) {
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
+	if unlikely(BlackListVarkwds_IsBlackListedStringLenHash(self, name, namesize, hash))
 		goto missing;
 	BlackListVarkwds_LockRead(self);
 	if unlikely(!self->blvk_argv) {
@@ -615,15 +615,15 @@ missing:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self,
-                                  char const *__restrict name, dhash_t hash,
-                                  DeeObject *__restrict def) {
+BlackListVarkwds_GetItemStringHashDef(BlackListVarkwds *__restrict self,
+                                      char const *__restrict name, dhash_t hash,
+                                      DeeObject *__restrict def) {
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStr(self->blvk_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(BlackListVarkwds_IsBlackListedString(self, name, hash))
+	if unlikely(BlackListVarkwds_IsBlackListedStringHash(self, name, hash))
 		goto missing;
 	BlackListVarkwds_LockRead(self);
 	if unlikely(!self->blvk_argv) {
@@ -641,16 +641,16 @@ missing:
 }
 
 INTERN WUNUSED DREF DeeObject *DCALL
-BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self,
-                                     char const *__restrict name,
-                                     size_t namesize, dhash_t hash,
-                                     DeeObject *__restrict def) {
+BlackListVarkwds_GetItemStringLenHashDef(BlackListVarkwds *__restrict self,
+                                         char const *__restrict name,
+                                         size_t namesize, dhash_t hash,
+                                         DeeObject *__restrict def) {
 	size_t index;
 	DREF DeeObject *result;
 	index = kwds_FindIndexStrLen(self->blvk_kwds, name, namesize, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(BlackListVarkwds_IsBlackListedStringLen(self, name, namesize, hash))
+	if unlikely(BlackListVarkwds_IsBlackListedStringLenHash(self, name, namesize, hash))
 		goto missing;
 	BlackListVarkwds_LockRead(self);
 	if unlikely(!self->blvk_argv) {
@@ -1293,9 +1293,9 @@ again:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListMapping_IsBlackListedString(BlackListMapping *__restrict self,
-                                     char const *__restrict name,
-                                     dhash_t hash) {
+BlackListMapping_IsBlackListedStringHash(BlackListMapping *__restrict self,
+                                         char const *__restrict name,
+                                         dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -1347,9 +1347,9 @@ again:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-BlackListMapping_IsBlackListedStringLen(BlackListMapping *__restrict self,
-                                        char const *__restrict name,
-                                        size_t namesize, dhash_t hash) {
+BlackListMapping_IsBlackListedStringLenHash(BlackListMapping *__restrict self,
+                                            char const *__restrict name,
+                                            size_t namesize, dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -1417,10 +1417,10 @@ BlackListMapping_BoundItem(BlackListMapping *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-BlackListMapping_BoundItemString(BlackListMapping *__restrict self,
-                                 char const *__restrict name,
-                                 dhash_t hash, bool allow_missing) {
-	if (BlackListMapping_IsBlackListedString(self, name, hash)) {
+BlackListMapping_BoundItemStringHash(BlackListMapping *__restrict self,
+                                     char const *__restrict name,
+                                     dhash_t hash, bool allow_missing) {
+	if (BlackListMapping_IsBlackListedStringHash(self, name, hash)) {
 		if (!allow_missing)
 			return err_unknown_key_str((DeeObject *)self, name);
 		return -2;
@@ -1429,11 +1429,11 @@ BlackListMapping_BoundItemString(BlackListMapping *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-BlackListMapping_BoundItemStringLen(BlackListMapping *__restrict self,
-                                    char const *__restrict name,
-                                    size_t namesize, dhash_t hash,
-                                    bool allow_missing) {
-	if (BlackListMapping_IsBlackListedStringLen(self, name, namesize, hash)) {
+BlackListMapping_BoundItemStringLenHash(BlackListMapping *__restrict self,
+                                        char const *__restrict name,
+                                        size_t namesize, dhash_t hash,
+                                        bool allow_missing) {
+	if (BlackListMapping_IsBlackListedStringLenHash(self, name, namesize, hash)) {
 		if (!allow_missing)
 			return err_unknown_key_str_len((DeeObject *)self, name, namesize);
 		return -2;
@@ -1454,9 +1454,9 @@ missing:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-BlackListMapping_GetItemString(BlackListMapping *__restrict self,
-                               char const *__restrict name, dhash_t hash) {
-	if (BlackListMapping_IsBlackListedString(self, name, hash))
+BlackListMapping_GetItemStringHash(BlackListMapping *__restrict self,
+                                   char const *__restrict name, dhash_t hash) {
+	if (BlackListMapping_IsBlackListedStringHash(self, name, hash))
 		goto missing;
 	return DeeObject_GetItemStringHash(self->blm_kw, name, hash);
 missing:
@@ -1465,10 +1465,10 @@ missing:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-BlackListMapping_GetItemStringLen(BlackListMapping *__restrict self,
-                                  char const *__restrict name,
-                                  size_t namesize, dhash_t hash) {
-	if (BlackListMapping_IsBlackListedStringLen(self, name, namesize, hash))
+BlackListMapping_GetItemStringLenHash(BlackListMapping *__restrict self,
+                                      char const *__restrict name,
+                                      size_t namesize, dhash_t hash) {
+	if (BlackListMapping_IsBlackListedStringLenHash(self, name, namesize, hash))
 		goto missing;
 	return DeeObject_GetItemStringLenHash(self->blm_kw, name, namesize, hash);
 missing:
@@ -1490,11 +1490,11 @@ missing:
 	return def;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self,
-                                  char const *__restrict name, dhash_t hash,
-                                  DeeObject *__restrict def) {
-	if (BlackListMapping_IsBlackListedString(self, name, hash))
+INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+BlackListMapping_GetItemStringHashDef(BlackListMapping *__restrict self,
+                                      char const *__restrict name, dhash_t hash,
+                                      DeeObject *__restrict def) {
+	if (BlackListMapping_IsBlackListedStringHash(self, name, hash))
 		goto missing;
 	return DeeObject_GetItemStringHashDef(self->blm_kw, name, hash, def);
 missing:
@@ -1503,12 +1503,12 @@ missing:
 	return def;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
-BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self,
-                                     char const *__restrict name,
-                                     size_t namesize, dhash_t hash,
-                                     DeeObject *__restrict def) {
-	if (BlackListMapping_IsBlackListedStringLen(self, name, namesize, hash))
+INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+BlackListMapping_GetItemStringLenHashDef(BlackListMapping *__restrict self,
+                                         char const *__restrict name,
+                                         size_t namesize, dhash_t hash,
+                                         DeeObject *__restrict def) {
+	if (BlackListMapping_IsBlackListedStringLenHash(self, name, namesize, hash))
 		goto missing;
 	return DeeObject_GetItemStringLenHashDef(self->blm_kw, name, namesize, hash, def);
 missing:
@@ -1807,7 +1807,7 @@ INTERN DeeTypeObject BlackListMapping_Type = {
 };
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 BlackListMapping_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeObject *__restrict kw) {

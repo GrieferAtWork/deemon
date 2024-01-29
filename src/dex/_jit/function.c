@@ -1175,11 +1175,11 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 		if (!ITER_ISOK(ref->oe_namestr))
 			continue;
 		if (ref->oe_type == JIT_OBJECT_ENTRY_TYPE_LOCAL) {
-			error = DeeDict_SetItemStringLen((DeeObject *)result,
-			                                 ref->oe_namestr,
-			                                 ref->oe_namelen,
-			                                 ref->oe_namehsh,
-			                                 ref->oe_value);
+			error = DeeDict_SetItemStringLenHash((DeeObject *)result,
+			                                     ref->oe_namestr,
+			                                     ref->oe_namelen,
+			                                     ref->oe_namehsh,
+			                                     ref->oe_value);
 		} else {
 			/* Special case: Reference to class attribute. Encode as:
 			 * >> "{}[.{}]".format({ ref->oe_namestr, ref->oe_attr.a_attr->ca_name }) */
@@ -1201,7 +1201,6 @@ jf_getrefsbyname(JITFunction *__restrict self) {
 			/* Insert into the dict. */
 			error = DeeDict_SetItemStringLen((DeeObject *)result,
 			                                 namestr, namelen,
-			                                 Dee_HashUtf8(namestr, namelen),
 			                                 ref->oe_value);
 			Dee_Free(namestr);
 		}

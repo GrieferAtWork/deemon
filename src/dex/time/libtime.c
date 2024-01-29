@@ -2961,7 +2961,7 @@ time_init_getarg(DeeKwArgs *__restrict kwds,
 	DREF DeeObject *arg;
 	if (default_argi < argc)
 		return DeeObject_AsInt128(argv[default_argi], p_result);
-	arg = DeeKwArgs_GetStringDef(kwds, argname, hash, ITER_DONE);
+	arg = DeeKwArgs_GetStringHashDef(kwds, argname, hash, ITER_DONE);
 	if (arg == ITER_DONE)
 		return 1;
 	if (arg == NULL)

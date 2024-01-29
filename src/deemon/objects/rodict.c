@@ -321,50 +321,12 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoDict_DoInsert(DREF RoDict *__restrict self,
-                   DeeObject *key, DeeObject *value) {
-	size_t i, perturb, hash;
-	struct rodict_item *item;
-	hash    = DeeObject_Hash(key);
-	perturb = i = hash & self->rd_mask;
-	for (;; RODICT_HASHNX(i, perturb)) {
-		int error;
-		item = &self->rd_elem[i & self->rd_mask];
-		if (!item->rdi_key)
-			break;
-		if (item->rdi_hash != hash)
-			continue;
-
-		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_CompareEq(key, item->rdi_key);
-		if unlikely(error < 0)
-			goto err;
-		if (!error)
-			continue; /* Not the same key. */
-
-		/* It _is_ the same key! (override it...) */
-		--self->rd_size;
-		Dee_Decref(item->rdi_key);
-		Dee_Decref(item->rdi_value);
-		break;
-	}
-
-	/* Fill in the item. */
-	++self->rd_size;
-	item->rdi_hash  = hash;
-	item->rdi_key   = key;
-	item->rdi_value = value;
-	Dee_Incref(key);
-	Dee_Incref(value);
-	return 0;
-err:
-	return -1;
-}
 
 PUBLIC WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
                  DeeObject *key, DeeObject *value) {
+	size_t i, perturb, hash;
+	struct rodict_item *item;
 	DREF RoDict *me = *p_self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoDict_Type);
 	ASSERT(!DeeObject_IsShared(me));
@@ -379,7 +341,38 @@ DeeRoDict_Insert(/*in|out*/ DREF RoDict **__restrict p_self,
 	}
 
 	/* Insert the new key/value-pair into the RoDict. */
-	return DeeRoDict_DoInsert(me, key, value);
+	hash    = DeeObject_Hash(key);
+	perturb = i = hash & me->rd_mask;
+	for (;; RODICT_HASHNX(i, perturb)) {
+		int error;
+		item = &me->rd_elem[i & me->rd_mask];
+		if (!item->rdi_key)
+			break;
+		if (item->rdi_hash != hash)
+			continue;
+
+		/* Same hash. -> Check if it's also the same key. */
+		error = DeeObject_CompareEq(key, item->rdi_key);
+		if unlikely(error < 0)
+			goto err;
+		if (!error)
+			continue; /* Not the same key. */
+
+		/* It _is_ the same key! (override it...) */
+		--me->rd_size;
+		Dee_Decref(item->rdi_key);
+		Dee_Decref(item->rdi_value);
+		break;
+	}
+
+	/* Fill in the item. */
+	++me->rd_size;
+	item->rdi_hash  = hash;
+	item->rdi_key   = key;
+	item->rdi_value = value;
+	Dee_Incref(key);
+	Dee_Incref(value);
+	return 0;
 err:
 	return -1;
 }
@@ -448,7 +441,7 @@ PUBLIC WUNUSED DREF RoDict *DCALL
 DeeRoDict_NewWithHint(size_t num_items) {
 	DREF RoDict *result;
 	size_t mask = RODICT_INITIAL_MASK;
-	while (mask <= num_items)
+	while (mask < num_items)
 		mask = (mask << 1) | 1;
 	mask   = (mask << 1) | 1;
 	result = RODICT_ALLOC(mask);
@@ -562,9 +555,9 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeRoDict_GetItemString(DeeObject *__restrict self,
-                        char const *__restrict key,
-                        dhash_t hash) {
+DeeRoDict_GetItemStringHash(DeeObject *__restrict self,
+                            char const *__restrict key,
+                            dhash_t hash) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
@@ -585,10 +578,10 @@ DeeRoDict_GetItemString(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
-                           char const *__restrict key,
-                           size_t keylen,
-                           dhash_t hash) {
+DeeRoDict_GetItemStringLenHash(DeeObject *__restrict self,
+                               char const *__restrict key,
+                               size_t keylen,
+                               dhash_t hash) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
@@ -609,10 +602,10 @@ DeeRoDict_GetItemStringLen(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeRoDict_GetItemStringDef(DeeObject *self,
-                           char const *__restrict key,
-                           dhash_t hash,
-                           DeeObject *def) {
+DeeRoDict_GetItemStringHashDef(DeeObject *self,
+                               char const *__restrict key,
+                               dhash_t hash,
+                               DeeObject *def) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
@@ -632,11 +625,11 @@ DeeRoDict_GetItemStringDef(DeeObject *self,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeRoDict_GetItemStringLenDef(DeeObject *self,
-                              char const *__restrict key,
-                              size_t keylen,
-                              dhash_t hash,
-                              DeeObject *def) {
+DeeRoDict_GetItemStringLenHashDef(DeeObject *self,
+                                  char const *__restrict key,
+                                  size_t keylen,
+                                  dhash_t hash,
+                                  DeeObject *def) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
@@ -656,9 +649,9 @@ DeeRoDict_GetItemStringLenDef(DeeObject *self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeRoDict_HasItemString(DeeObject *__restrict self,
-                        char const *__restrict key,
-                        dhash_t hash) {
+DeeRoDict_HasItemStringHash(DeeObject *__restrict self,
+                            char const *__restrict key,
+                            dhash_t hash) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;
@@ -678,10 +671,10 @@ DeeRoDict_HasItemString(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeRoDict_HasItemStringLen(DeeObject *__restrict self,
-                           char const *__restrict key,
-                           size_t keylen,
-                           dhash_t hash) {
+DeeRoDict_HasItemStringLenHash(DeeObject *__restrict self,
+                               char const *__restrict key,
+                               size_t keylen,
+                               dhash_t hash) {
 	RoDict *me = (RoDict *)self;
 	size_t i, perturb;
 	struct rodict_item *item;

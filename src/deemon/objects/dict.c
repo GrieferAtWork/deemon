@@ -753,9 +753,9 @@ dict_rehash(Dict *__restrict self, int sizedir) {
 
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeDict_GetItemString(DeeObject *__restrict self,
-                      char const *__restrict key,
-                      dhash_t hash) {
+DeeDict_GetItemStringHash(DeeObject *__restrict self,
+                          char const *__restrict key,
+                          dhash_t hash) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
@@ -782,10 +782,10 @@ DeeDict_GetItemString(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeDict_GetItemStringLen(DeeObject *__restrict self,
-                         char const *__restrict key,
-                         size_t keylen,
-                         dhash_t hash) {
+DeeDict_GetItemStringLenHash(DeeObject *__restrict self,
+                             char const *__restrict key,
+                             size_t keylen,
+                             dhash_t hash) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
@@ -812,10 +812,10 @@ DeeDict_GetItemStringLen(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeDict_GetItemStringDef(DeeObject *self,
-                         char const *__restrict key,
-                         dhash_t hash,
-                         DeeObject *def) {
+DeeDict_GetItemStringHashDef(DeeObject *self,
+                             char const *__restrict key,
+                             dhash_t hash,
+                             DeeObject *def) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
@@ -843,11 +843,11 @@ DeeDict_GetItemStringDef(DeeObject *self,
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeDict_GetItemStringLenDef(DeeObject *self,
-                            char const *__restrict key,
-                            size_t keylen,
-                            dhash_t hash,
-                            DeeObject *def) {
+DeeDict_GetItemStringLenHashDef(DeeObject *self,
+                                char const *__restrict key,
+                                size_t keylen,
+                                dhash_t hash,
+                                DeeObject *def) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *result;
 	dhash_t i, perturb;
@@ -875,9 +875,9 @@ DeeDict_GetItemStringLenDef(DeeObject *self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeDict_HasItemString(DeeObject *__restrict self,
-                      char const *__restrict key,
-                      dhash_t hash) {
+DeeDict_HasItemStringHash(DeeObject *__restrict self,
+                          char const *__restrict key,
+                          dhash_t hash) {
 	Dict *me = (Dict *)self;
 	dhash_t i, perturb;
 	DeeDict_LockRead(me);
@@ -900,10 +900,10 @@ DeeDict_HasItemString(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeDict_HasItemStringLen(DeeObject *__restrict self,
-                         char const *__restrict key,
-                         size_t keylen,
-                         dhash_t hash) {
+DeeDict_HasItemStringLenHash(DeeObject *__restrict self,
+                             char const *__restrict key,
+                             size_t keylen,
+                             dhash_t hash) {
 	Dict *me = (Dict *)self;
 	dhash_t i, perturb;
 	DeeDict_LockRead(me);
@@ -926,9 +926,9 @@ DeeDict_HasItemStringLen(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeDict_DelItemString(DeeObject *__restrict self,
-                      char const *__restrict key,
-                      dhash_t hash) {
+DeeDict_DelItemStringHash(DeeObject *__restrict self,
+                          char const *__restrict key,
+                          dhash_t hash) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *old_key, *old_value;
 	dhash_t i, perturb;
@@ -975,10 +975,10 @@ again_lock:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeDict_DelItemStringLen(DeeObject *__restrict self,
-                         char const *__restrict key,
-                         size_t keylen,
-                         dhash_t hash) {
+DeeDict_DelItemStringLenHash(DeeObject *__restrict self,
+                             char const *__restrict key,
+                             size_t keylen,
+                             dhash_t hash) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *old_key, *old_value;
 	dhash_t i, perturb;
@@ -1025,10 +1025,10 @@ again_lock:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) int DCALL
-DeeDict_SetItemString(DeeObject *self,
-                      char const *__restrict key,
-                      dhash_t hash,
-                      DeeObject *value) {
+DeeDict_SetItemStringHash(DeeObject *self,
+                          char const *__restrict key,
+                          dhash_t hash,
+                          DeeObject *value) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *old_value;
 	struct dict_item *first_dummy;
@@ -1126,11 +1126,11 @@ collect_memory:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) int DCALL
-DeeDict_SetItemStringLen(DeeObject *self,
-                         char const *__restrict key,
-                         size_t keylen,
-                         dhash_t hash,
-                         DeeObject *value) {
+DeeDict_SetItemStringLenHash(DeeObject *self,
+                             char const *__restrict key,
+                             size_t keylen,
+                             dhash_t hash,
+                             DeeObject *value) {
 	Dict *me = (Dict *)self;
 	DREF DeeObject *old_value;
 	struct dict_item *first_dummy;
@@ -1234,8 +1234,7 @@ dict_size(Dict *__restrict self) {
 
 /* This one's basically your hasitem operator. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-dict_contains(Dict *self,
-              DeeObject *key) {
+dict_contains(Dict *self, DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
@@ -1282,8 +1281,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-dict_getitem(Dict *self,
-             DeeObject *key) {
+dict_getitem(Dict *self, DeeObject *key) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;
@@ -1333,9 +1331,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeDict_GetItemDef(DeeObject *self,
-                   DeeObject *key,
-                   DeeObject *def) {
+DeeDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	size_t mask;
 	struct dict_item *vector;
 	dhash_t i, perturb;

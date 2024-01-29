@@ -4348,7 +4348,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 					 * an unbound key none-the-less. */
 				}
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			result = DeeType_INVOKE_GETITEM(tp_self, self, index);
 check_result:
 			if (!result) {
@@ -4429,7 +4430,8 @@ PUBLIC WUNUSED NONNULL((1)) int
 					 * an unbound key none-the-less. */
 				}
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
@@ -4462,26 +4464,28 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
+
 	/* Optimization for specific types. */
 	if (DeeDict_CheckExact(self)) {
-		result = DeeDict_HasItemString(self, key, hash);
+		result = DeeDict_HasItemStringHash(self, key, hash);
 		goto handle_bool;
 	}
 	if (DeeRoDict_CheckExact(self)) {
-		result = DeeRoDict_HasItemString(self, key, hash);
+		result = DeeRoDict_HasItemStringHash(self, key, hash);
 		goto handle_bool;
 	}
 	if (DeeKwdsMapping_CheckExact(self)) {
-		result = DeeKwdsMapping_HasItemString(self, key, hash);
+		result = DeeKwdsMapping_HasItemStringHash(self, key, hash);
 		goto handle_bool;
 	}
 	if (BlackListVarkwds_CheckExact(self)) {
-		result = BlackListVarkwds_HasItemString((BlackListVarkwds *)self, key, hash);
+		result = BlackListVarkwds_HasItemStringHash((BlackListVarkwds *)self, key, hash);
 		goto handle_bool;
 	}
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_BoundItemString((BlackListMapping *)self, key, hash, allow_missing);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_BoundItemStringHash((BlackListMapping *)self, key, hash, allow_missing);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4509,26 +4513,28 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
+
 	/* Optimization for specific types. */
 	if (DeeDict_CheckExact(self)) {
-		result = DeeDict_HasItemStringLen(self, key, keylen, hash);
+		result = DeeDict_HasItemStringLenHash(self, key, keylen, hash);
 		goto handle_bool;
 	}
 	if (DeeRoDict_CheckExact(self)) {
-		result = DeeRoDict_HasItemStringLen(self, key, keylen, hash);
+		result = DeeRoDict_HasItemStringLenHash(self, key, keylen, hash);
 		goto handle_bool;
 	}
 	if (DeeKwdsMapping_CheckExact(self)) {
-		result = DeeKwdsMapping_HasItemStringLen(self, key, keylen, hash);
+		result = DeeKwdsMapping_HasItemStringLenHash(self, key, keylen, hash);
 		goto handle_bool;
 	}
 	if (BlackListVarkwds_CheckExact(self)) {
-		result = BlackListVarkwds_HasItemStringLen((BlackListVarkwds *)self, key, keylen, hash);
+		result = BlackListVarkwds_HasItemStringLenHash((BlackListVarkwds *)self, key, keylen, hash);
 		goto handle_bool;
 	}
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_BoundItemStringLen((BlackListMapping *)self, key, keylen, hash, allow_missing);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_BoundItemStringLenHash((BlackListMapping *)self, key, keylen, hash, allow_missing);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4585,7 +4591,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 					 * an unbound key none-the-less. */
 				}
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			result = DeeType_INVOKE_GETITEM(tp_self, self, index);
 check_result:
 			if (!result) {
@@ -4641,7 +4648,8 @@ PUBLIC WUNUSED NONNULL((1)) int
 					 * an unbound key none-the-less. */
 				}
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
@@ -4672,12 +4680,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_HasItemString(self, key, hash) ? 1 : 0;
+		return DeeDict_HasItemStringHash(self, key, hash) ? 1 : 0;
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_HasItemString(self, key, hash) ? 1 : 0;
+		return DeeRoDict_HasItemStringHash(self, key, hash) ? 1 : 0;
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_HasItemString(self, key, hash) ? 1 : 0;
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeKwdsMapping_HasItemStringHash(self, key, hash) ? 1 : 0;
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4696,12 +4705,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	DREF DeeObject *key_ob;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_HasItemStringLen(self, key, keylen, hash) ? 1 : 0;
+		return DeeDict_HasItemStringLenHash(self, key, keylen, hash) ? 1 : 0;
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_HasItemStringLen(self, key, keylen, hash) ? 1 : 0;
+		return DeeRoDict_HasItemStringLenHash(self, key, keylen, hash) ? 1 : 0;
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_HasItemStringLen(self, key, keylen, hash) ? 1 : 0;
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeKwdsMapping_HasItemStringLenHash(self, key, keylen, hash) ? 1 : 0;
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4757,7 +4767,8 @@ DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
 				if (nsi->nsi_seqlike.nsi_getitem)
 					return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
@@ -4786,7 +4797,8 @@ PUBLIC WUNUSED NONNULL((1)) int
 				if (nsi->nsi_seqlike.nsi_delitem)
 					return (*nsi->nsi_seqlike.nsi_delitem)(self, index);
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
@@ -4816,7 +4828,8 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 				if (nsi->nsi_seqlike.nsi_setitem)
 					return (*nsi->nsi_seqlike.nsi_setitem)(self, index, value);
 			}
-			/* Fallback create an integer object and use it for indexing. */
+
+			/* Fallback: create an integer object and use it for indexing. */
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
@@ -4837,16 +4850,17 @@ DeeObject_GetItemStringHash(DeeObject *__restrict self,
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_GetItemString(self, key, hash);
+		return DeeDict_GetItemStringHash(self, key, hash);
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_GetItemString(self, key, hash);
+		return DeeRoDict_GetItemStringHash(self, key, hash);
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_GetItemString(self, key, hash);
+		return DeeKwdsMapping_GetItemStringHash(self, key, hash);
 	if (BlackListVarkwds_CheckExact(self))
-		return BlackListVarkwds_GetItemString((BlackListVarkwds *)self, key, hash);
+		return BlackListVarkwds_GetItemStringHash((BlackListVarkwds *)self, key, hash);
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_GetItemString((BlackListMapping *)self, key, hash);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_GetItemStringHash((BlackListMapping *)self, key, hash);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4864,16 +4878,17 @@ DeeObject_GetItemStringLenHash(DeeObject *__restrict self,
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_GetItemStringLen(self, key, keylen, hash);
+		return DeeDict_GetItemStringLenHash(self, key, keylen, hash);
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_GetItemStringLen(self, key, keylen, hash);
+		return DeeRoDict_GetItemStringLenHash(self, key, keylen, hash);
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_GetItemStringLen(self, key, keylen, hash);
+		return DeeKwdsMapping_GetItemStringLenHash(self, key, keylen, hash);
 	if (BlackListVarkwds_CheckExact(self))
-		return BlackListVarkwds_GetItemStringLen((BlackListVarkwds *)self, key, keylen, hash);
+		return BlackListVarkwds_GetItemStringLenHash((BlackListVarkwds *)self, key, keylen, hash);
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_GetItemStringLen((BlackListMapping *)self, key, keylen, hash);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_GetItemStringLenHash((BlackListMapping *)self, key, keylen, hash);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4891,16 +4906,17 @@ DeeObject_GetItemStringHashDef(DeeObject *self,
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_GetItemStringDef(self, key, hash, def);
+		return DeeDict_GetItemStringHashDef(self, key, hash, def);
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_GetItemStringDef(self, key, hash, def);
+		return DeeRoDict_GetItemStringHashDef(self, key, hash, def);
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_GetItemStringDef(self, key, hash, def);
+		return DeeKwdsMapping_GetItemStringHashDef(self, key, hash, def);
 	if (BlackListVarkwds_CheckExact(self))
-		return BlackListVarkwds_GetItemStringDef((BlackListVarkwds *)self, key, hash, def);
+		return BlackListVarkwds_GetItemStringHashDef((BlackListVarkwds *)self, key, hash, def);
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_GetItemStringDef((BlackListMapping *)self, key, hash, def);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_GetItemStringHashDef((BlackListMapping *)self, key, hash, def);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4919,16 +4935,17 @@ DeeObject_GetItemStringLenHashDef(DeeObject *self,
 	DREF DeeObject *key_ob, *result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_GetItemStringLenDef(self, key, keylen, hash, def);
+		return DeeDict_GetItemStringLenHashDef(self, key, keylen, hash, def);
 	if (DeeRoDict_CheckExact(self))
-		return DeeRoDict_GetItemStringLenDef(self, key, keylen, hash, def);
+		return DeeRoDict_GetItemStringLenHashDef(self, key, keylen, hash, def);
 	if (DeeKwdsMapping_CheckExact(self))
-		return DeeKwdsMapping_GetItemStringLenDef(self, key, keylen, hash, def);
+		return DeeKwdsMapping_GetItemStringLenHashDef(self, key, keylen, hash, def);
 	if (BlackListVarkwds_CheckExact(self))
-		return BlackListVarkwds_GetItemStringLenDef((BlackListVarkwds *)self, key, keylen, hash, def);
+		return BlackListVarkwds_GetItemStringLenHashDef((BlackListVarkwds *)self, key, keylen, hash, def);
 	if (BlackListMapping_CheckExact(self))
-		return BlackListMapping_GetItemStringLenDef((BlackListMapping *)self, key, keylen, hash, def);
-	/* Fallback: create a string object and use it for indexing. */
+		return BlackListMapping_GetItemStringLenHashDef((BlackListMapping *)self, key, keylen, hash, def);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4947,8 +4964,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_DelItemString(self, key, hash);
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeDict_DelItemStringHash(self, key, hash);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4967,8 +4985,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	ASSERT_OBJECT(self);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_DelItemStringLen(self, key, keylen, hash);
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeDict_DelItemStringLenHash(self, key, keylen, hash);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -4988,8 +5007,9 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(value);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_SetItemString(self, key, hash, value);
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeDict_SetItemStringHash(self, key, hash, value);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
@@ -5010,8 +5030,9 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) int
 	ASSERT_OBJECT(self);
 	ASSERT_OBJECT(value);
 	if (DeeDict_CheckExact(self))
-		return DeeDict_SetItemStringLen(self, key, keylen, hash, value);
-	/* Fallback: create a string object and use it for indexing. */
+		return DeeDict_SetItemStringLenHash(self, key, keylen, hash, value);
+
+	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;

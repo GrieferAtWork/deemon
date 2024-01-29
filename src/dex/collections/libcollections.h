@@ -650,17 +650,16 @@ INTDEF DeeTypeObject URoDictIterator_Type;
  * >> operator []= (key: Object, value: Object);
  * >>
  * >> @@(only if writable)
- * >> @@Delete all nodes that fully overlap with @[minkey:maxkey],
- * >> @@and trim/split any node (of the 0-2) that partially with it.
+ * >> @@Delete all nodes that fully overlap with @[minkey:maxkey], and
+ * >> @@trim/split any node (of the 0-2) that partially overlap with it.
  * >> operator del[:] (minkey: Object, maxkey: Object);
  * >>
  * >> @@(only if writable)
- * >> @@Delete all nodes that fully overlap with @[minkey:maxkey],
- * >> @@trim/split any node (of the 0-2) that partially with it,
- * >> @@then construct a new node mapping this node to @value. If
- * >> @@a simple, primitive key-type is used, and @value is identical
- * >> @@to that of an adjacent node (as per @===), nodes *may* be
- * >> @@merged.
+ * >> @@Delete all nodes that fully overlap with @[minkey:maxkey], and
+ * >> @@trim/split any node (of the 0-2) that partially overlap with it,
+ * >> @@then construct a new node mapping this node to @value. If a
+ * >> @@simple, primitive key-type is used, and @value is identic to
+ * >> @@that of an adjacent node (as per @===), nodes *may* be merged.
  * >> operator [:]= (minkey: Object, maxkey: Object, value: Object);
  * >>
  * >> @@Return the number of nodes within @this @RangeMap

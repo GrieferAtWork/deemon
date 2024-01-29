@@ -125,17 +125,25 @@ INTDEF DeeTypeObject BlackListVarkwdsIterator_Type;
 
 /* Helper functions & RT optimization bindings. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListed(BlackListVarkwds *__restrict self, DeeObject *__restrict name);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedString(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedStringLen(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self, DeeObject *__restrict name);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemString(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemStringLen(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItem(BlackListVarkwds *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemString(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLen(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self, DeeObject *__restrict name, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+#define BlackListVarkwds_IsBlackListedString(self, name)                BlackListVarkwds_IsBlackListedStringHash(self, name, Dee_HashStr(name))
+#define BlackListVarkwds_IsBlackListedStringLen(self, name, namesize)   BlackListVarkwds_IsBlackListedStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define BlackListVarkwds_HasItemString(self, name)                      BlackListVarkwds_HasItemStringHash(self, name, Dee_HashStr(name))
+#define BlackListVarkwds_HasItemStringLen(self, name, namesize)         BlackListVarkwds_HasItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define BlackListVarkwds_GetItemString(self, name)                      BlackListVarkwds_GetItemStringHash(self, name, Dee_HashStr(name))
+#define BlackListVarkwds_GetItemStringLen(self, name, namesize)         BlackListVarkwds_GetItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define BlackListVarkwds_GetItemStringDef(self, name, def)              BlackListVarkwds_GetItemStringHashDef(self, name, Dee_HashStr(name), def)
+#define BlackListVarkwds_GetItemStringLenDef(self, name, namesize, def) BlackListVarkwds_GetItemStringLenHashDef(self, name, namesize, Dee_HashPtr(name, namesize), def)
 
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
@@ -227,17 +235,25 @@ INTDEF DeeTypeObject BlackListMapping_Type;
 
 
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListMapping_IsBlackListed(BlackListMapping *__restrict self, DeeObject *__restrict name);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListMapping_IsBlackListedString(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListMapping_IsBlackListedStringLen(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListMapping_IsBlackListedStringHash(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListMapping_IsBlackListedStringLenHash(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL BlackListMapping_BoundItem(BlackListMapping *__restrict self, DeeObject *__restrict name, bool allow_missing);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL BlackListMapping_BoundItemString(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, bool allow_missing);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL BlackListMapping_BoundItemStringLen(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, bool allow_missing);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL BlackListMapping_BoundItemStringHash(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, bool allow_missing);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL BlackListMapping_BoundItemStringLenHash(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, bool allow_missing);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItem(BlackListMapping *self, DeeObject *name);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemString(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemStringLen(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemStringHash(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListMapping_GetItemStringLenHash(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL BlackListMapping_GetItemDef(BlackListMapping *__restrict self, DeeObject *__restrict name, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringDef(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL BlackListMapping_GetItemStringHashDef(BlackListMapping *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL BlackListMapping_GetItemStringLenHashDef(BlackListMapping *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+#define BlackListMapping_IsBlackListedString(self, name)                         BlackListMapping_IsBlackListedStringHash(self, name, Dee_HashStr(name))
+#define BlackListMapping_IsBlackListedStringLen(self, name, namesize)            BlackListMapping_IsBlackListedStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define BlackListMapping_BoundItemString(self, name, allow_missing)              BlackListMapping_BoundItemStringHash(self, name, Dee_HashStr(name), allow_missing)
+#define BlackListMapping_BoundItemStringLen(self, name, namesize, allow_missing) BlackListMapping_BoundItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize), allow_missing)
+#define BlackListMapping_GetItemString(self, name)                               BlackListMapping_GetItemStringHash(self, name, Dee_HashStr(name))
+#define BlackListMapping_GetItemStringLen(self, name, namesize)                  BlackListMapping_GetItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define BlackListMapping_GetItemStringDef(self, name, def)                       BlackListMapping_GetItemStringHashDef(self, name, Dee_HashStr(name), def)
+#define BlackListMapping_GetItemStringLenDef(self, name, namesize, def)          BlackListMapping_GetItemStringLenHashDef(self, name, namesize, Dee_HashPtr(name, namesize), def)
 
 
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
@@ -253,7 +269,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL BlackListMapping_GetItemStringLenDef(BlackL
  *    >> // Prints `_BlackListMapping { "something_else" : "foobar" }'
  *    >> foo(**{ "x" : 10, "something_else" : "foobar" });
  */
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 BlackListMapping_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeObject *__restrict kw);

@@ -1800,23 +1800,23 @@ get_sequence_find_args_kw(char const *__restrict name,
 	switch (argc) {
 
 	case 0:
-		if unlikely((*p_elem = DeeKwArgs_GetString(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
+		if unlikely((*p_elem = DeeKwArgs_GetStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
 			goto err;
 		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 /*check_kw_key:*/
-		if unlikely((*p_key = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
+		if unlikely((*p_key = DeeKwArgs_GetStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
 			goto err;
 		if (DeeNone_Check(*p_key)) {
 			Dee_DecrefNokill(Dee_None);
@@ -1842,7 +1842,7 @@ check_kw_end_key:
 		if (DeeNone_Check(*p_key))
 			*p_key = NULL;
 check_kw_end:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
@@ -1904,23 +1904,23 @@ get_sequence_find_defl_args_kw(char const *__restrict name,
 	switch (argc) {
 
 	case 0:
-		if unlikely((*p_elem = DeeKwArgs_GetString(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
+		if unlikely((*p_elem = DeeKwArgs_GetStringHash(&kwargs, "elem", Dee_HashStr__elem)) == NULL)
 			goto err;
 		Dee_DecrefNokill(*p_elem); /* FIXME: This can break for custom mapping types! */
 check_kw_start_end_key_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "start", Dee_HashStr__start, DeeInt_Zero)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_start))
 			goto err_temp;
 		Dee_Decref(temp);
 check_kw_end_key_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;
 		Dee_Decref(temp);
 /*check_kw_key_defl:*/
-		if unlikely((*p_key = DeeKwArgs_GetStringDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
+		if unlikely((*p_key = DeeKwArgs_GetStringHashDef(&kwargs, "key", Dee_HashStr__key, Dee_None)) == NULL)
 			goto err;
 		if (DeeNone_Check(*p_key)) {
 			Dee_DecrefNokill(Dee_None);
@@ -1929,7 +1929,7 @@ check_kw_end_key_defl:
 			Dee_DecrefNokill(*p_key); /* FIXME: This can break for custom mapping types! */
 		}
 check_kw_defl:
-		if unlikely((*p_defl = DeeKwArgs_GetStringDef(&kwargs, "defl", Dee_HashStr__defl, ITER_DONE)) == NULL)
+		if unlikely((*p_defl = DeeKwArgs_GetStringHashDef(&kwargs, "defl", Dee_HashStr__defl, ITER_DONE)) == NULL)
 			goto err;
 		if (*p_defl == ITER_DONE) {
 			*p_defl = NULL;
@@ -1954,7 +1954,7 @@ check_kw_defl:
 		if (DeeNone_Check(*p_key))
 			*p_key = NULL;
 check_kw_end_defl:
-		if unlikely((temp = DeeKwArgs_GetStringDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
+		if unlikely((temp = DeeKwArgs_GetStringHashDef(&kwargs, "end", Dee_HashStr__end, DeeInt_MinusOne)) == NULL)
 			goto err;
 		if (DeeObject_AsSSize(temp, (dssize_t *)p_end))
 			goto err_temp;

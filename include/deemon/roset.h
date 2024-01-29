@@ -82,9 +82,8 @@ DDATDEF DeeTypeObject DeeRoSet_Type;
 #define DeeRoSet_Check(ob)       DeeObject_InstanceOfExact(ob, &DeeRoSet_Type) /* `_RoSet' is final */
 #define DeeRoSet_CheckExact(ob)  DeeObject_InstanceOfExact(ob, &DeeRoSet_Type)
 
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromSequence(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIterator(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeRoSet_FromIteratorWithHint(DeeObject *__restrict self, size_t num_items);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeRoSet_FromSequence(DeeObject *__restrict self);
 
 /* Internal functions for constructing a read-only set object. */
 DFUNDEF WUNUSED DREF DeeRoSetObject *DCALL DeeRoSet_New(void);

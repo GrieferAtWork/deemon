@@ -262,43 +262,11 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-DeeRoSet_DoInsert(DREF RoSet *__restrict self,
-                  DeeObject *__restrict key) {
-	size_t i, perturb, hash;
-	struct roset_item *item;
-	hash    = DeeObject_Hash(key);
-	perturb = i = hash & self->rs_mask;
-	for (;; ROSET_HASHNX(i, perturb)) {
-		int error;
-		item = &self->rs_elem[i & self->rs_mask];
-		if (!item->rsi_key)
-			break;
-		if (item->rsi_hash != hash)
-			continue;
-		/* Same hash. -> Check if it's also the same key. */
-		error = DeeObject_CompareEq(key, item->rsi_key);
-		if unlikely(error < 0)
-			goto err;
-		if (error) {
-			Dee_Decref(key);
-			return 0; /* It _is_ the same key! */
-		}
-	}
-
-	/* Fill in the item. */
-	++self->rs_size;
-	item->rsi_hash = hash;
-	item->rsi_key  = key; /* Inherit reference. */
-	Dee_Incref(key);
-	return 0;
-err:
-	return -1;
-}
-
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
                 DeeObject *__restrict key) {
+	size_t i, perturb, hash;
+	struct roset_item *item;
 	DREF RoSet *me = *p_self;
 	ASSERT_OBJECT_TYPE_EXACT(me, &DeeRoSet_Type);
 	ASSERT(!DeeObject_IsShared(me));
@@ -312,7 +280,35 @@ DeeRoSet_Insert(/*in|out*/ DREF RoSet **__restrict p_self,
 	}
 
 	/* Insert the new key/value-pair into the RoSet. */
-	return DeeRoSet_DoInsert(me, key);
+	hash    = DeeObject_Hash(key);
+	perturb = i = hash & me->rs_mask;
+	for (;; ROSET_HASHNX(i, perturb)) {
+		int error;
+		item = &me->rs_elem[i & me->rs_mask];
+		if (!item->rsi_key)
+			break;
+		if (item->rsi_hash != hash)
+			continue;
+
+		/* Same hash. -> Check if it's also the same key. */
+		error = DeeObject_CompareEq(key, item->rsi_key);
+		if unlikely(error < 0)
+			goto err;
+		if (!error)
+			continue; /* Not the same key. */
+
+		/* It _is_ the same key! (override it...) */
+		--me->rs_size;
+		Dee_Decref(item->rsi_key);
+		break;
+	}
+
+	/* Fill in the item. */
+	++me->rs_size;
+	item->rsi_hash  = hash;
+	item->rsi_key   = key;
+	Dee_Incref(key);
+	return 0;
 err:
 	return -1;
 }
@@ -322,7 +318,7 @@ err:
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
 DeeRoSet_InsertSequence_foreach(void *arg, DeeObject *elem) {
-	return DeeRoSet_Insert((RoDict **)arg, elem);
+	return DeeRoSet_Insert((RoSet **)arg, elem);
 }
 #endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 
@@ -381,7 +377,7 @@ PUBLIC WUNUSED DREF RoSet *DCALL
 DeeRoSet_NewWithHint(size_t num_items) {
 	DREF RoSet *result;
 	size_t mask = ROSET_INITIAL_MASK;
-	while (mask <= num_items)
+	while (mask < num_items)
 		mask = (mask << 1) | 1;
 	mask   = (mask << 1) | 1;
 	result = ROSET_ALLOC(mask);
