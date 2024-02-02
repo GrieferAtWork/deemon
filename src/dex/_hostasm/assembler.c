@@ -623,6 +623,7 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 		/* New state expects the value to never be NULL
 		 * -> Handle this by loading the proper refcnt and `Dee_None' into `oldloc' if it's NULL
 		 */
+		int incref_none_status;
 		struct Dee_host_symbol *Lnot_null_sym;
 		Lnot_null_sym = Dee_function_generator_newsym_named(self, ".Lnot_null_sym");
 		if unlikely(!Lnot_null_sym)
@@ -630,9 +631,17 @@ Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restri
 		if unlikely(_Dee_function_generator_gjnz(self, oldloc, Lnot_null_sym))
 			goto err;
 		old_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* No longer nullable! */
-		_Dee_function_generator_gincref_const(self, Dee_None, old_refcnt);
+		incref_none_status = Dee_function_generator_gincref_const(self, Dee_None, old_refcnt);
+		if unlikely(incref_none_status < 0)
+			goto err;
 		if unlikely(Dee_function_generator_gmov_const2loc(self, Dee_None, oldloc))
 			goto err;
+#ifdef Dee_function_generator_gincref_const_MAYFAIL
+		if (incref_none_status > 0) {
+			if unlikely(Dee_function_generator_gincref_loc(self, oldloc, old_refcnt))
+				goto err;
+		}
+#endif /* Dee_function_generator_gincref_const_MAYFAIL */
 		Dee_host_symbol_setsect(Lnot_null_sym, self->fg_sect);
 	}
 	new_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* Don't care about nullable here anymore! */

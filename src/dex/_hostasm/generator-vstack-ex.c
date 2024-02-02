@@ -1649,13 +1649,15 @@ struct Dee_function_exceptinject_fini_and_freeinstance {
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL /* `fei_inject' value for `struct Dee_function_exceptinject_fini_and_freeinstance' */
 Dee_function_exceptinject_fini_and_freeinstance_f(struct Dee_function_generator *__restrict self,
                                                   struct Dee_function_exceptinject *__restrict inject) {
+	struct Dee_memloc typeloc;
 	struct Dee_function_exceptinject_fini_and_freeinstance *me;
 	me = (struct Dee_function_exceptinject_fini_and_freeinstance *)inject;
 #ifdef CONFIG_TRACE_REFCHANGES
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_FreeTracker, VCALL_CC_RAWINTPTR, 1)); /* instance */
 #endif /* CONFIG_TRACE_REFCHANGES */
 	DO(vcall_DeeType_FreeInstance(self, me->fei_fafi_type)); /* N/A */
-	return Dee_function_generator_gdecref_const(self, (DeeObject *)me->fei_fafi_type, 1);
+	Dee_memloc_init_const(&typeloc, me->fei_fafi_type);
+	return Dee_function_generator_gdecref_loc(self, &typeloc, 1);
 err:
 	return -1;
 }
