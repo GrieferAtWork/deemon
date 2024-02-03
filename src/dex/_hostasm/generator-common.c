@@ -113,7 +113,7 @@ Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict
 
 PRIVATE NONNULL((1)) void DCALL
 Dee_memstate_remember_undefined_hstack_after_redzone(struct Dee_memstate *__restrict self) {
-	uintptr_t min_undef_cfa;
+	Dee_cfa_t min_undef_cfa;
 	min_undef_cfa = self->ms_host_cfa_offset + HOSTASM_REDZONE_SIZE;
 #ifdef HOSTASM_STACK_GROWS_DOWN
 	min_undef_cfa += HOST_SIZEOF_POINTER;
@@ -139,9 +139,9 @@ Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict 
 			 * as they might get clobbered by sporadic interrupt handlers. */
 			if (cfa_delta == -HOST_SIZEOF_POINTER) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
-				uintptr_t pop_dst_cfa_offset = self->fg_state->ms_host_cfa_offset + HOST_SIZEOF_POINTER;
+				Dee_cfa_t pop_dst_cfa_offset = self->fg_state->ms_host_cfa_offset + HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-				uintptr_t pop_dst_cfa_offset = self->fg_state->ms_host_cfa_offset;
+				Dee_cfa_t pop_dst_cfa_offset = self->fg_state->ms_host_cfa_offset;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 				Dee_function_generator_remember_undefined_hstackind(self, pop_dst_cfa_offset + HOSTASM_REDZONE_SIZE);
 			} else {
@@ -163,7 +163,7 @@ Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushreg(struct Dee_function_generator *__restrict self,
                                        Dee_host_register_t src_regno) {
-	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
+	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result;
 #if HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "src_regno", do nothing */
@@ -179,7 +179,7 @@ Dee_function_generator_ghstack_pushreg(struct Dee_function_generator *__restrict
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restrict self,
                                           Dee_host_register_t src_regno, ptrdiff_t src_delta) {
-	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
+	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result;
 #if HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "[src_regno + src_delta]", do nothing */
@@ -195,7 +195,7 @@ Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restr
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restrict self,
                                          void const *value) {
-	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
+	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result;
 #if HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "value", do nothing */
@@ -210,8 +210,8 @@ Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restri
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__restrict self,
-                                             uintptr_t cfa_offset) {
-	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
+                                             Dee_cfa_t cfa_offset) {
+	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 	int result;
 #if HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER
@@ -228,8 +228,8 @@ Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__re
 #ifdef HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function_generator *__restrict self) {
-	uintptr_t src_cfa_offset = GET_ADDRESS_OF_NEXT_POP(self);
-	uintptr_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
+	Dee_cfa_t src_cfa_offset = GET_ADDRESS_OF_NEXT_POP(self);
+	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result = _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self);
 	if likely(result == 0) {
 		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
@@ -244,7 +244,7 @@ Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict self,
                                       Dee_host_register_t dst_regno) {
-	uintptr_t src_cfa_offset = GET_ADDRESS_OF_NEXT_POP(self);
+	Dee_cfa_t src_cfa_offset = GET_ADDRESS_OF_NEXT_POP(self);
 	int result;
 	/* TODO: If "dst_regno" is a known equivalence of "[#src_cfa_offset]", do nothing */
 	result = _Dee_function_generator_ghstack_popreg(self, dst_regno);
@@ -261,14 +261,14 @@ Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_reg2hstackind(struct Dee_function_generator *__restrict self,
-                                          Dee_host_register_t src_regno, uintptr_t cfa_offset) {
+                                          Dee_host_register_t src_regno, Dee_cfa_t cfa_offset) {
 	ptrdiff_t sp_offset;
 	int result;
 	/* TODO: If "[#cfa_offset]" is a known equivalence of "src_regno", do nothing */
 
 	/* Check if the value *must* be pushed onto the h-stack. */
 	if (Dee_memstate_hstack_mustpush(self->fg_state, cfa_offset)) {
-		uintptr_t skip = Dee_memstate_hstack_mustpush_skip(self->fg_state, cfa_offset);
+		Dee_cfa_t skip = Dee_memstate_hstack_mustpush_skip(self->fg_state, cfa_offset);
 		ASSERT((skip == 0) == !!Dee_memstate_hstack_canpush(self->fg_state, cfa_offset));
 		result = Dee_function_generator_ghstack_adjust(self, (ptrdiff_t)skip);
 		if likely(result == 0)
@@ -284,7 +284,7 @@ Dee_function_generator_gmov_reg2hstackind(struct Dee_function_generator *__restr
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_hstack2reg(struct Dee_function_generator *__restrict self,
-                                       uintptr_t cfa_offset, Dee_host_register_t dst_regno) {
+                                       Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno) {
 	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 	int result = _Dee_function_generator_gmov_hstack2reg(self, sp_offset, dst_regno);
 	if likely(result == 0) {
@@ -296,7 +296,7 @@ Dee_function_generator_gmov_hstack2reg(struct Dee_function_generator *__restrict
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restrict self,
-                                          uintptr_t cfa_offset, Dee_host_register_t dst_regno) {
+                                          Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno) {
 	int result;
 	ptrdiff_t sp_offset;
 	/* TODO: If "dst_regno" is a known equivalence of "[#cfa_offset]", do nothing */
@@ -398,16 +398,16 @@ Dee_function_generator_gmov_const2regind(struct Dee_function_generator *__restri
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2hstackind(struct Dee_function_generator *__restrict self,
-                                            void const *value, uintptr_t cfa_offset) {
+                                            void const *value, Dee_cfa_t cfa_offset) {
 	ptrdiff_t sp_offset;
 	int result;
 	/* TODO: If "[#cfa_offset]" is a known equivalence of "value", do nothing */
 
 	/* Check if the value *must* be pushed onto the h-stack. */
 	if (Dee_memstate_hstack_mustpush(self->fg_state, cfa_offset)) {
-		uintptr_t skip = Dee_memstate_hstack_mustpush_skip(self->fg_state, cfa_offset);
+		ptrdiff_t skip = Dee_memstate_hstack_mustpush_skip(self->fg_state, cfa_offset);
 		ASSERT((skip == 0) == !!Dee_memstate_hstack_canpush(self->fg_state, cfa_offset));
-		result = Dee_function_generator_ghstack_adjust(self, (ptrdiff_t)skip);
+		result = Dee_function_generator_ghstack_adjust(self, skip);
 		if likely(result == 0)
 			result = Dee_function_generator_ghstack_pushconst(self, value);
 		return result;
@@ -552,7 +552,7 @@ Dee_function_generator_gmov_const2loc(struct Dee_function_generator *__restrict 
 	switch (Dee_memloc_gettyp(dst_loc)) {
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
 		void const *final_value = (byte_t const *)value - Dee_memloc_getoff(dst_loc);
 		return Dee_function_generator_gmov_const2hstackind(self, final_value, cfa_offset);
 	}	break;
@@ -591,7 +591,7 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 Dee_function_generator_gmov_hstack2loc(struct Dee_function_generator *__restrict self,
-                                       uintptr_t cfa_offset,
+                                       Dee_cfa_t cfa_offset,
                                        struct Dee_memloc const *__restrict dst_loc) {
 	switch (Dee_memloc_gettyp(dst_loc)) {
 
@@ -628,7 +628,7 @@ Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict s
 	switch (Dee_memloc_gettyp(dst_loc)) {
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(dst_loc);
 		ptrdiff_t delta_delta = Dee_memloc_hstackind_getvaloff(dst_loc) - src_delta;
 		if (delta_delta != 0) {
 			/* Adjust `src_regno' to have the correct value-delta */
@@ -672,7 +672,7 @@ Dee_function_generator_gmov_loc2regx(struct Dee_function_generator *__restrict s
 	switch (Dee_memloc_gettyp(src_loc)) {
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
 		ptrdiff_t delta_delta = Dee_memloc_hstackind_getvaloff(src_loc) - dst_delta;
 		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
 		if likely(result == 0 && delta_delta != 0)
@@ -680,7 +680,7 @@ Dee_function_generator_gmov_loc2regx(struct Dee_function_generator *__restrict s
 	}	break;
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), -dst_delta);
+		Dee_cfa_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), -dst_delta);
 		result = Dee_function_generator_gmov_hstack2reg(self, cfa_offset, dst_regno);
 	}	break;
 
@@ -731,15 +731,15 @@ Dee_function_generator_gmov_loc2regy(struct Dee_function_generator *__restrict s
 	switch (Dee_memloc_gettyp(src_loc)) {
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
 		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
 		*p_dst_delta = Dee_memloc_hstackind_getvaloff(src_loc);
 	}	break;
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset  = Dee_memloc_hstack_getcfa(src_loc);
+		Dee_cfa_t cfa_offset  = Dee_memloc_hstack_getcfa(src_loc);
 		ptrdiff_t sp_offset   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
-		uintptr_t cfa0_offset = Dee_memstate_hstack_sp2cfa(self->fg_state, 0);
+		Dee_cfa_t cfa0_offset = Dee_memstate_hstack_sp2cfa(self->fg_state, 0);
 		result = Dee_function_generator_gmov_hstack2reg(self, cfa0_offset, dst_regno);
 		*p_dst_delta = sp_offset;
 	}	break;
@@ -787,7 +787,7 @@ Dee_function_generator_gmov_locind2reg(struct Dee_function_generator *__restrict
 		break;
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), src_delta);
+		Dee_cfa_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(src_loc), src_delta);
 		result = Dee_function_generator_gmov_hstackind2reg(self, cfa_offset, dst_regno);
 	}	break;
 
@@ -827,7 +827,7 @@ Dee_function_generator_gmov_reg2locind(struct Dee_function_generator *__restrict
 		break;
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
+		Dee_cfa_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
 		result = Dee_function_generator_gmov_reg2hstackind(self, src_regno, cfa_offset);
 	}	break;
 
@@ -915,7 +915,7 @@ Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restric
 	}	break;
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(src_loc);
 		ptrdiff_t final_delta = Dee_memloc_hstackind_getvaloff(src_loc) - dst_delta;
 		if (final_delta != 0)
 			goto fallback;
@@ -924,7 +924,7 @@ Dee_function_generator_ghstack_pushlocx(struct Dee_function_generator *__restric
 
 #ifdef HAVE_Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = Dee_memloc_hstack_getcfa(src_loc);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstack_getcfa(src_loc);
 		if (cfa_offset == self->fg_state->ms_host_cfa_offset) /* Special case: push current CFA offset */
 			return Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self);
 		goto fallback;
@@ -971,7 +971,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gmov_loc2hstackindx(struct Dee_function_generator *__restrict self,
                                            struct Dee_memloc const *__restrict src_loc,
-                                           uintptr_t dst_cfa_offset, ptrdiff_t dst_delta) {
+                                           Dee_cfa_t dst_cfa_offset, ptrdiff_t dst_delta) {
 	struct Dee_memloc src_asreg0;
 #ifdef HOSTASM_STACK_GROWS_DOWN
 	if (dst_cfa_offset == self->fg_state->ms_host_cfa_offset + HOST_SIZEOF_POINTER)
@@ -1100,7 +1100,7 @@ Dee_function_generator_gmov_const2locind(struct Dee_function_generator *__restri
 		break;
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
+		Dee_cfa_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(dst_loc), dst_delta);
 		result = Dee_function_generator_gmov_const2hstackind(self, value, cfa_offset);
 	}	break;
 
@@ -1209,7 +1209,7 @@ Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__rest
 		val_delta_reg = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(val_delta_reg >= HOST_REGISTER_RETURN)
 			return -1;
-		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)-val_delta, val_delta_reg);
+		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)(-val_delta), val_delta_reg);
 		if likely(result == 0) {
 			result = Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, 0,
 			                                                        cmp, val_delta_reg, dst_regno);
@@ -1224,7 +1224,7 @@ Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__rest
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmorph_hstackind2reg01(struct Dee_function_generator *__restrict self,
-                                              uintptr_t cfa_offset, ptrdiff_t val_delta,
+                                              Dee_cfa_t cfa_offset, ptrdiff_t val_delta,
                                               unsigned int cmp, Dee_host_register_t dst_regno) {
 	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 	int result = _Dee_function_generator_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno);
@@ -1237,7 +1237,7 @@ Dee_function_generator_gmorph_hstackind2reg01(struct Dee_function_generator *__r
 		val_delta_reg = Dee_function_generator_gallocreg(self, not_these);
 		if unlikely(val_delta_reg >= HOST_REGISTER_RETURN)
 			return -1;
-		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)-val_delta, val_delta_reg);
+		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)(-val_delta), val_delta_reg);
 		if likely(result == 0) {
 			result = Dee_function_generator_gmorph_hstackindCreg2reg01(self, cfa_offset, 0,
 			                                                           cmp, val_delta_reg, dst_regno);
@@ -1274,7 +1274,7 @@ Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self,
-                                                  uintptr_t cfa_offset, ptrdiff_t val_delta,
+                                                  Dee_cfa_t cfa_offset, ptrdiff_t val_delta,
                                                   unsigned int cmp, Dee_host_register_t rhs_regno,
                                                   Dee_host_register_t dst_regno) {
 	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
@@ -1500,7 +1500,7 @@ err:
  * Instead, if you try to flush a register that's been populated with one
  * of the function's caller-arguments, no code needs to be generated and
  * the CFA offset can just be reset to point at the argument again. */
-PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_cfa_t DCALL
 try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
                                 Dee_host_register_t regno) {
 #define MEMSTATE_XLOCAL_A_MIN MEMSTATE_XLOCAL_A_THIS
@@ -1512,7 +1512,7 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 		if (Dee_memval_isdirect(xval) &&
 		    Dee_memval_direct_gettyp(xval) == MEMADR_TYPE_HREG &&
 		    Dee_memval_direct_hreg_getreg(xval) == regno) {
-			uintptr_t cfa_offset;
+			Dee_cfa_t cfa_offset;
 			Dee_hostfunc_cc_t cc = self->fg_assembler->fa_cc;
 			size_t true_argi = 0;
 			switch (i) {
@@ -1540,29 +1540,29 @@ try_restore_xloc_arg_cfa_offset(struct Dee_function_generator *__restrict self,
 				break;
 			default: __builtin_unreachable();
 			}
-			cfa_offset = (uintptr_t)(-(ptrdiff_t)((true_argi + 1) * HOST_SIZEOF_POINTER));
+			cfa_offset = (Dee_cfa_t)(-(ptrdiff_t)((true_argi + 1) * HOST_SIZEOF_POINTER));
 			return cfa_offset;
 		}
 	}
-	return (uintptr_t)-1;
+	return (Dee_cfa_t)-1;
 }
 #endif /* HOSTASM_X86 && !HOSTASM_X86_64 */
 
 /* Push/move `regno' onto the host stack, returning the CFA offset of the target location. */
-PRIVATE WUNUSED NONNULL((1)) uintptr_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_cfa_t DCALL
 Dee_function_generator_gsavereg(struct Dee_function_generator *__restrict self,
                                 Dee_host_register_t regno) {
-	uintptr_t cfa_offset;
+	Dee_cfa_t cfa_offset;
 	ASSERT(!Dee_memstate_isshared(self->fg_state));
 #ifdef HAVE_try_restore_xloc_arg_cfa_offset
 	cfa_offset = try_restore_xloc_arg_cfa_offset(self, regno);
-	if (cfa_offset != (uintptr_t)-1)
+	if (cfa_offset != (Dee_cfa_t)-1)
 		return cfa_offset;
 #endif /* HAVE_try_restore_xloc_arg_cfa_offset */
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state,
 	                                      self->fg_state_hstack_res,
 	                                      HOST_SIZEOF_POINTER);
-	if (cfa_offset != (uintptr_t)-1) {
+	if (cfa_offset != (Dee_cfa_t)-1) {
 		if unlikely(Dee_function_generator_gmov_reg2hstackind(self, regno, cfa_offset))
 			goto err;
 	} else {
@@ -1576,7 +1576,7 @@ Dee_function_generator_gsavereg(struct Dee_function_generator *__restrict self,
 	}
 	return cfa_offset;
 err:
-	return (uintptr_t)-1;
+	return (Dee_cfa_t)-1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1586,12 +1586,12 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 	struct Dee_memstate *state = self->fg_state;
 	Dee_host_register_t regno = Dee_memloc_hregind_getreg(flush_loc);
 	ptrdiff_t ind_offset = Dee_memloc_hregind_getindoff(flush_loc);
-	uintptr_t cfa_offset;
+	Dee_cfa_t cfa_offset;
 	ASSERT(Dee_memloc_gettyp(flush_loc) == MEMADR_TYPE_HREGIND);
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state,
 	                                      self->fg_state_hstack_res,
 	                                      HOST_SIZEOF_POINTER);
-	if (cfa_offset != (uintptr_t)-1) {
+	if (cfa_offset != (Dee_cfa_t)-1) {
 		bool did_save_temp_regno = false;
 		Dee_host_register_t temp_regno;
 		temp_regno = Dee_memstate_hregs_find_unused(state, true);
@@ -1650,13 +1650,13 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
                                   Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                   bool only_if_reference) {
 	Dee_lid_t i;
-	uintptr_t register_cfa[HOST_REGISTER_COUNT];
+	Dee_cfa_t register_cfa[HOST_REGISTER_COUNT];
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
 
 	/* Figure out which registers are in use, and assign them CFA offsets. */
 	for (i = 0; i < HOST_REGISTER_COUNT; ++i)
-		register_cfa[i] = (uintptr_t)-1;
+		register_cfa[i] = (Dee_cfa_t)-1;
 	for (i = 0; i < state->ms_localc; ++i) {
 		struct Dee_memobj *obj;
 		struct Dee_memval *val = &state->ms_localv[i];
@@ -1666,9 +1666,9 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 			if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREG) {
 				Dee_host_register_t regno = Dee_memobj_hreg_getreg(obj);
 				ASSERT(regno < HOST_REGISTER_COUNT);
-				if (register_cfa[regno] == (uintptr_t)-1) {
+				if (register_cfa[regno] == (Dee_cfa_t)-1) {
 					register_cfa[regno] = Dee_function_generator_gsavereg(self, regno);
-					if unlikely(register_cfa[regno] == (uintptr_t)-1)
+					if unlikely(register_cfa[regno] == (Dee_cfa_t)-1)
 						goto err;
 				}
 				Dee_memstate_decrinuse(state, regno);
@@ -1695,9 +1695,9 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 			if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREG) {
 				Dee_host_register_t regno = Dee_memobj_hreg_getreg(obj);
 				ASSERT(regno < HOST_REGISTER_COUNT);
-				if (register_cfa[regno] == (uintptr_t)-1) {
+				if (register_cfa[regno] == (Dee_cfa_t)-1) {
 					register_cfa[regno] = Dee_function_generator_gsavereg(self, regno);
-					if unlikely(register_cfa[regno] == (uintptr_t)-1)
+					if unlikely(register_cfa[regno] == (Dee_cfa_t)-1)
 						goto err;
 				}
 				Dee_memstate_decrinuse(state, regno);
@@ -1724,7 +1724,7 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                  bool only_if_reference, Dee_host_register_t regno) {
 	Dee_lid_t i;
-	uintptr_t regno_cfa = (uintptr_t)-1;
+	Dee_cfa_t regno_cfa = (Dee_cfa_t)-1;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
 	ASSERT(regno < HOST_REGISTER_COUNT);
@@ -1737,9 +1737,9 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 		Dee_memval_foreach_obj(obj, val) {
 			if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREG &&
 			    Dee_memobj_hreg_getreg(obj) == regno) {
-				if (regno_cfa == (uintptr_t)-1) {
+				if (regno_cfa == (Dee_cfa_t)-1) {
 					regno_cfa = Dee_function_generator_gsavereg(self, regno);
-					if unlikely(regno_cfa == (uintptr_t)-1)
+					if unlikely(regno_cfa == (Dee_cfa_t)-1)
 						goto err;
 				}
 				Dee_memstate_decrinuse(state, regno);
@@ -1766,9 +1766,9 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 		Dee_memval_foreach_obj(obj, val) {
 			if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREG &&
 			    Dee_memobj_hreg_getreg(obj) == regno) {
-				if (regno_cfa == (uintptr_t)-1) {
+				if (regno_cfa == (Dee_cfa_t)-1) {
 					regno_cfa = Dee_function_generator_gsavereg(self, regno);
-					if unlikely(regno_cfa == (uintptr_t)-1)
+					if unlikely(regno_cfa == (Dee_cfa_t)-1)
 						goto err;
 				}
 				Dee_memstate_decrinuse(state, regno);
@@ -2254,12 +2254,18 @@ Dee_function_generator_gjcmp_except(struct Dee_function_generator *__restrict se
 	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST) {
 		bool should_jump_except = false;
 		intptr_t lhs = (intptr_t)(uintptr_t)Dee_memloc_const_getaddr(loc);
-		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO)
-			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED) ? ((uintptr_t)lhs < (uintptr_t)threshold) : (lhs < threshold);
+		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO) {
+			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED)
+			                      ? ((uintptr_t)lhs < (uintptr_t)threshold)
+			                      : (lhs < threshold);
+		}
 		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_EQ)
 			should_jump_except |= lhs == threshold;
-		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR)
-			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED) ? ((uintptr_t)lhs > (uintptr_t)threshold) : (lhs > threshold);
+		if (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) {
+			should_jump_except |= (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED)
+			                      ? ((uintptr_t)lhs > (uintptr_t)threshold)
+			                      : (lhs > threshold);
+		}
 		return should_jump_except
 		       ? Dee_function_generator_gjmp_except(self)
 		       : 0;
@@ -2511,7 +2517,7 @@ Dee_function_generator_gasind(struct Dee_function_generator *__restrict self,
 	switch (Dee_memloc_gettyp(loc)) {
 
 	case MEMADR_TYPE_HSTACK: {
-		uintptr_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(loc), ind_delta);
+		Dee_cfa_t cfa_offset = HA_cfa_offset_PLUS_sp_offset(Dee_memloc_hstack_getcfa(loc), ind_delta);
 		eq = Dee_function_generator_remember_getclassof_hstackind(self, cfa_offset);
 		if (eq != NULL) {
 			Dee_memequiv_next_asloc(eq, result);
@@ -2653,7 +2659,7 @@ Dee_function_generator_gasflush(struct Dee_function_generator *__restrict self,
                                 /*out*/ struct Dee_memloc *result,
                                 bool require_valoff_0) {
 	ptrdiff_t val_offset;
-	uintptr_t cfa_offset;
+	Dee_cfa_t cfa_offset;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
 	*result = *loc;
@@ -2677,7 +2683,7 @@ handle_hstackind_loc:
 	/* Figure out where we want to allocate the value. */
 #ifdef HAVE_try_restore_xloc_arg_cfa_offset
 	if (Dee_memloc_gettyp(result) == MEMADR_TYPE_HREG &&
-		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, Dee_memloc_hreg_getreg(result))) != (uintptr_t)-1) {
+		(cfa_offset = try_restore_xloc_arg_cfa_offset(self, Dee_memloc_hreg_getreg(result))) != (Dee_cfa_t)-1) {
 		val_offset = 0; /* CFA offset restored */
 	} else
 #endif /* HAVE_try_restore_xloc_arg_cfa_offset */
@@ -2720,7 +2726,7 @@ handle_hstackind_loc:
 		val_offset = result->ml_off;
 		if (!require_valoff_0)
 			result->ml_off = 0; /* Don't include value offset when saving location */
-		if (cfa_offset != (uintptr_t)-1) {
+		if (cfa_offset != (Dee_cfa_t)-1) {
 			if unlikely(Dee_function_generator_gmov_loc2hstackind(self, result, cfa_offset))
 				goto err;
 		} else {

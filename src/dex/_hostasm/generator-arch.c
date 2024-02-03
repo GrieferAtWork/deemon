@@ -75,7 +75,7 @@ DECL_BEGIN
 	Dee_host_section_reqhost(self, GEN86_INSTRLEN_MAX * (n_instructions))
 
 #ifdef HOST_REGISTER_R_ARG0
-PRIVATE Dee_host_register_t const arg_regs[] = {
+PRIVATE Dee_host_register_t const host_arg_regs[] = {
 	HOST_REGISTER_R_ARG0,
 #ifdef HOST_REGISTER_R_ARG1
 	HOST_REGISTER_R_ARG1,
@@ -540,7 +540,7 @@ INTERN NONNULL((1)) void DCALL
 _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
                           struct Dee_function_assembler *assembler,
                           Dee_instruction_t const *instr) {
-	Dee_DPRINTF("\tCFA:   #%Iu\n", self->ms_host_cfa_offset);
+	Dee_DPRINTF("\tCFA:   #%Iu\n", (uintptr_t)self->ms_host_cfa_offset);
 	if (self->ms_stackc > 0) {
 		uint16_t i;
 		Dee_DPRINT("\tstack: ");
@@ -739,18 +739,18 @@ _Dee_function_generator_gadjust_reg_fit32(struct Dee_function_generator *__restr
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcall86_impl(struct Dee_function_generator *__restrict self,
-                                    void const *api_function
+             void const *api_function
 #if defined(NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY) && !defined(NO_HOSTASM_DEBUG_PRINT)
-                                    , bool log_instructions
+             , bool log_instructions
 #define LOCAL_HA_printf(...) (log_instructions ? gen86_printf(__VA_ARGS__) : (void)0)
-#define Dee_function_generator_gcall86(self, api_function, log_instructions) \
+#define gcall86(self, api_function, log_instructions) \
 	gcall86_impl(self, api_function, log_instructions)
 #else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY && !NO_HOSTASM_DEBUG_PRINT */
 #define LOCAL_HA_printf(...) gen86_printf(__VA_ARGS__)
-#define Dee_function_generator_gcall86(self, api_function, log_instructions) \
+#define gcall86(self, api_function, log_instructions) \
 	gcall86_impl(self, api_function)
 #endif /* !NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY || NO_HOSTASM_DEBUG_PRINT */
-                                    ) {
+             ) {
 	struct Dee_host_section *sect = self->fg_sect;
 	struct Dee_host_reloc *rel;
 
@@ -760,6 +760,7 @@ gcall86_impl(struct Dee_function_generator *__restrict self,
 			goto err;
 		LOCAL_HA_printf("movabs\t%s, %%" Per "ax\n", gen86_addrname(api_function));
 		gen86_movabs_imm_r(p_pc(sect), api_function, GEN86_R_PAX);
+		LOCAL_HA_printf("call" Plq "\t*%%" Per "ax\n");
 		gen86_callP_mod(p_pc(sect), gen86_modrm_r, GEN86_R_PAX);
 		return 0;
 	}
@@ -984,8 +985,8 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 #endif /* HOSTASM_X86_64_MSABI */
 
 	/* Make the call to `DeeObject_Destroy()' */
-	if unlikely(Dee_function_generator_gcall86(self, (void const *)&DeeObject_Destroy,
-	                                           !IS_DEFINED_NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY))
+	if unlikely(gcall86(self, (void const *)&DeeObject_Destroy,
+	                    !IS_DEFINED_NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY))
 		goto err;
 #ifndef HOST_REGISTER_R_ARG0
 	Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
@@ -1533,7 +1534,7 @@ _Dee_function_generator_gpause_or_yield(struct Dee_function_generator *__restric
 	gen86_subP_imm_r(p_pc(sect), 32, GEN86_R_PSP); /* TODO: Do this better */
 	Dee_function_generator_gadjust_cfa_offset(self, 32);
 #endif /* HOSTASM_X86_64_MSABI */
-	if unlikely(Dee_function_generator_gcall86(self, (void const *)&SleepEx, true))
+	if unlikely(gcall86(self, (void const *)&SleepEx, true))
 		goto err;
 #ifdef HOSTASM_X86_64_MSABI
 	if unlikely(Dee_host_section_reqx86(sect, 1))
@@ -1543,7 +1544,7 @@ _Dee_function_generator_gpause_or_yield(struct Dee_function_generator *__restric
 	Dee_function_generator_gadjust_cfa_offset(self, -32);
 #endif /* HOSTASM_X86_64_MSABI */
 #else /* rt_sched_yield_IS_SleepEx */
-	if unlikely(Dee_function_generator_gcall86(self, (void const *)&rt_sched_yield, true))
+	if unlikely(gcall86(self, (void const *)&rt_sched_yield, true))
 		goto err;
 #endif /* !rt_sched_yield_IS_SleepEx */
 
@@ -2347,8 +2348,8 @@ _Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self,
                                     void const *value) {
 	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
-	gen86_printf("push" Plq "\t$%#Ix\n", (intptr_t)(uintptr_t)value);
-	gen86_pushP_imm(p_pc(self), (intptr_t)(uintptr_t)value);
+	gen86_printf("push" Plq "\t$%#I32x\n", (uint32_t)(uintptr_t)value);
+	gen86_pushP_imm(p_pc(self), (int32_t)(uint32_t)(uintptr_t)value);
 #ifndef fit32_IS_1
 	if (!fit32(value)) {
 		/* Must manually write the high 32-bit of "value" to their proper place. */
@@ -3082,7 +3083,7 @@ err:
 }
 
 /* Push "loc" onto the HSTACK, and maybe adjust registers */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 push_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
                               struct Dee_memloc *arg,
                               struct Dee_memloc *locv, size_t argc) {
@@ -3146,7 +3147,7 @@ use_arg:
 	/* NOTE: It is important that this function doesn't call `Dee_function_generator_gallocreg()'!
 	 *       That is because `alloc_unused_reg_for_call_args()' needs to be used for temporary
 	 *       registers */
-	switch (arg->ml_adr.ma_typ) {
+	switch (Dee_memloc_gettyp(arg)) {
 
 	case MEMADR_TYPE_HSTACKIND:
 	case MEMADR_TYPE_HREGIND: {
@@ -3154,13 +3155,13 @@ use_arg:
 		Dee_host_register_t tempreg;
 		uint8_t gen86_src_regno;
 		if (Dee_memloc_getoff(arg) == 0) {
-			if (arg->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND)
+			if (Dee_memloc_gettyp(arg)== MEMADR_TYPE_HSTACKIND)
 				return Dee_function_generator_ghstack_pushhstackind(self, Dee_memloc_hstackind_getcfa(arg));
 			return Dee_function_generator_ghstack_pushregind(self,
 			                                                 Dee_memloc_hregind_getreg(arg),
 			                                                 Dee_memloc_hregind_getindoff(arg));
 		}
-		if (arg->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND) {
+		if (Dee_memloc_gettyp(arg)== MEMADR_TYPE_HSTACKIND) {
 			uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(arg);
 			ind_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 			gen86_src_regno = GEN86_R_PSP;
@@ -3187,7 +3188,7 @@ use_arg:
 
 	case MEMADR_TYPE_HSTACK: {
 		Dee_host_register_t tempreg;
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(arg);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(arg);
 		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 		if (sp_offset == 0) {
 			/* Special case: can use `pushP %Psp', which pushes the current %Psp value (as it was before the push) */
@@ -3252,13 +3253,138 @@ use_arg:
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Cannot push memory location with type %#" PRFx16,
-		                       arg->ml_adr.ma_typ);
+		                       Dee_memloc_gettyp(arg));
 		break;
 	}
 	return 0;
 err:
 	return -1;
 }
+
+#ifdef HOST_REGISTER_R_ARG0
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+setreg_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
+                                struct Dee_memloc *arg, Dee_host_register_t dst_regno,
+                                struct Dee_memloc *locv, size_t argc,
+                                size_t already_pushed_arg_regs) {
+	STATIC_ASSERT_MSG(COMPILER_LENOF(host_arg_regs) + 2 <= HOST_REGISTER_COUNT,
+	                  "Need at least 2 spare registers for shuffling:\n"
+	                  "- 1 to store the function being called\n"
+	                  "- 1 for temporary register moves\n");
+	size_t i;
+
+	/* Load argument into a register.
+	 * - If the register is already used by an upcoming argument, then:
+	 *   - try to load that upcoming argument into *its* proper register immediatly.
+	 *   - If that doesn't work, then load the upcoming argument into some register
+	 *     that isn't already in use (at this point, it is guarantied that such a
+	 *     register exists, because %Pax isn't used for arguments, and the number of
+	 *     GP registers is greater than the max number reg args +1 (+1 needed here
+	 *     because 1 extra reg may be in use by the function getting called))
+	 */
+
+	/* Check if "dst_regno" is used by an upcoming argument (or the function pointer) */
+	for (i = 0; i <= argc; ++i) {
+		/* Registers used by upcoming arguments must not be clobbered */
+		struct Dee_memloc *nextarg = &locv[i];
+		Dee_host_register_t free_regno;
+		ptrdiff_t free_regno_val_offset_from_dst_regno;
+		bool free_regno_initialized;
+		uint16_t register_use_count[HOST_REGISTER_COUNT];
+		if (!Dee_memloc_hasreg(nextarg))
+			continue;
+		if (Dee_memloc_getreg(nextarg) != dst_regno)
+			continue;
+		bzero(register_use_count, sizeof(register_use_count));
+		for (i = 0; i < already_pushed_arg_regs; ++i) /* Already loaded arguments must not be clobbered */
+			register_use_count[host_arg_regs[argc + i]] = (uint16_t)-1;
+		for (i = 0; i <= argc; ++i) {
+			if (Dee_memloc_hasreg(nextarg)) {
+				Dee_host_register_t regno = Dee_memloc_getreg(nextarg);
+				++register_use_count[regno];
+			}
+		}
+		for (free_regno = 0;; ++free_regno) {
+			ASSERTF(free_regno < HOST_REGISTER_COUNT, "At least 1 register should have been available!");
+			if (register_use_count[free_regno] == 0)
+				break;
+		}
+		free_regno_initialized = false;
+		free_regno_val_offset_from_dst_regno = 0; /* %free_regno = %dst_regno + free_regno_val_offset_from_dst_regno */
+		for (i = 0; i <= argc; ++i) {
+			Dee_host_register_t used_regno;
+			ptrdiff_t nextarg_valoff;
+			nextarg = &locv[i];
+			if (!Dee_memloc_hasreg(nextarg))
+				continue;
+			if (Dee_memloc_getreg(nextarg) != dst_regno)
+				continue;
+			used_regno = i == 0 ? HOST_REGISTER_PAX : host_arg_regs[i - 1]; /* Try to use PAX for the function pointer */
+			if (register_use_count[used_regno] != 0)
+				used_regno = free_regno;
+			nextarg_valoff = Dee_memloc_getoff(nextarg);
+			if (used_regno == free_regno && free_regno_initialized) {
+				nextarg_valoff -= free_regno_val_offset_from_dst_regno;
+			} else {
+				if unlikely(Dee_function_generator_gmov_regx2reg(self, dst_regno, nextarg_valoff, used_regno))
+					goto err;
+				if (used_regno == free_regno) {
+					free_regno_val_offset_from_dst_regno = nextarg_valoff;
+					free_regno_initialized = true;
+				}
+				nextarg_valoff = 0;
+			}
+			Dee_memloc_init_hreg(nextarg, used_regno, nextarg_valoff);
+		}
+		break;
+	}
+
+	/* At this point, we've successfully made it so that "dst_regno" isn't used by future arguments. */
+
+	/* NOTE: It is important that this function doesn't call `Dee_function_generator_gallocreg()'!
+	 *       That is because `alloc_unused_reg_for_call_args()' needs to be used for temporary
+	 *       registers */
+	switch (Dee_memloc_gettyp(arg)) {
+
+	case MEMADR_TYPE_HSTACKIND:
+		if unlikely(Dee_function_generator_gmov_hstackind2reg(self, Dee_memloc_hstackind_getcfa(arg), dst_regno))
+			goto err;
+		return Dee_function_generator_gmov_regx2reg(self, dst_regno, Dee_memloc_hregind_getvaloff(arg), dst_regno);
+
+	case MEMADR_TYPE_HREGIND:
+		if unlikely(Dee_function_generator_gmov_regind2reg(self,
+		                                                   Dee_memloc_hregind_getreg(arg),
+		                                                   Dee_memloc_hregind_getindoff(arg),
+		                                                   dst_regno))
+			goto err;
+		return Dee_function_generator_gmov_regx2reg(self, dst_regno, Dee_memloc_hregind_getvaloff(arg), dst_regno);
+
+	case MEMADR_TYPE_HSTACK:
+		return Dee_function_generator_gmov_hstack2reg(self, Dee_memloc_hstack_getcfa(arg), dst_regno);
+
+	case MEMADR_TYPE_HREG:
+		return Dee_function_generator_gmov_regx2reg(self,
+		                                            Dee_memloc_hreg_getreg(arg),
+		                                            Dee_memloc_hreg_getvaloff(arg),
+		                                            dst_regno);
+
+	case MEMADR_TYPE_CONST:
+		return Dee_function_generator_gmov_const2reg(self, Dee_memloc_const_getaddr(arg), dst_regno);
+
+	case MEMADR_TYPE_UNDEFINED:
+		break;
+
+	default:
+		return DeeError_Throwf(&DeeError_IllegalInstruction,
+		                       "Cannot move-to-reg memory location with type %#" PRFx16,
+		                       Dee_memloc_gettyp(arg));
+		break;
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* HOST_REGISTER_R_ARG0 */
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
@@ -3270,42 +3396,104 @@ _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
 
 	/* Push arguments onto the host stack in reverse order. */
 	argi = argc;
-	while (argi) {
+#ifdef HOST_REGISTER_R_ARG0
+	while (argi > COMPILER_LENOF(host_arg_regs))
+#else /* HOST_REGISTER_R_ARG0 */
+	while (argi)
+#endif /* !HOST_REGISTER_R_ARG0 */
+	{
 		struct Dee_memloc *arg;
 		--argi;
 		arg = &locv[argi + 1]; /* +1 because of the function being called. */
-
-#ifdef HOST_REGISTER_R_ARG0
-		if (argi < COMPILER_LENOF(arg_regs)) {
-			Dee_host_register_t arg_regno = arg_regs[argi];
-			/* TODO: Load argument into a register.
-			 * - If the register is already used by an upcoming argument, then:
-			 *   - try to load that upcoming argument into *its* proper register immediatly.
-			 *   - If that doesn't work, then load the upcoming argument into some register
-			 *     that isn't already in use (at this point, it is guarantied that such a
-			 *     register exists, because %Pax isn't used for arguments, and the number of
-			 *     GP registers is greater than the max number reg args +1 (+1 needed here
-			 *     because 1 extra reg may be in use by the function getting called))
-			 */
-			(void)arg_regno;
-		}
-#endif /* HOST_REGISTER_R_ARG0 */
 
 		/* All remaining arguments must be pushed via the stack. */
 		if unlikely(push_memloc_maybe_adjust_regs(self, arg, locv, argi))
 			goto err;
 	}
 
+#ifdef HOST_REGISTER_R_ARG0
+	/* Pick the best-fitting equivalences of register arguments. */
+	{
+		size_t i;
+		for (i = 0; i <= argi; ++i) {
+			/* Look at equivalences and pick:
+			 * #1: MEMADR_TYPE_HREG[rel_valoff==0]  (The intended target register)
+			 * #2: HREG/HSTACK
+			 * #3: CONST
+			 * #4: HREGIND[rel_valoff==0]/HSTACKIND[rel_valoff==0]
+			 * #5: Fallback (use `arg' as-is) */
+			struct Dee_memloc *arg = &locv[i];
+			struct Dee_memequiv *eq = Dee_memequivs_getclassof(&self->fg_state->ms_memequiv, Dee_memloc_getadr(arg));
+			if (eq != NULL) {
+				Dee_host_register_t best_fit = i == 0 ? HOST_REGISTER_PAX : host_arg_regs[i - 1];
+				struct Dee_memequiv *iter;
+				ptrdiff_t base_off;
+				base_off = Dee_memloc_getoff(arg);
+				base_off -= Dee_memloc_getoff(&eq->meq_loc);
+				iter = eq;
+				do {
+					if (Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_HREG &&
+					    (Dee_memloc_hreg_getreg(&iter->meq_loc) == best_fit || best_fit == HOST_REGISTER_PAX) &&
+					    (Dee_memloc_hreg_getvaloff(&iter->meq_loc) + base_off) == 0) {
+use_memequiv_iter_as_arg:
+						*arg = iter->meq_loc;
+						Dee_memloc_adjoff(arg, base_off);
+						goto use_arg;
+					}
+				} while ((iter = Dee_memequiv_next(iter)) != eq);
+				iter = eq;
+				do {
+					if (Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_HREG ||
+					    Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_HSTACK)
+						goto use_memequiv_iter_as_arg;
+				} while ((iter = Dee_memequiv_next(iter)) != eq);
+				iter = eq;
+				do {
+					if (Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_CONST)
+						goto use_memequiv_iter_as_arg;
+				} while ((iter = Dee_memequiv_next(iter)) != eq);
+				iter = eq;
+				do {
+					if ((Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_HREGIND ||
+					     Dee_memloc_gettyp(&iter->meq_loc) == MEMADR_TYPE_HSTACKIND) &&
+					    (Dee_memloc_getoff(&iter->meq_loc) + base_off) == 0)
+						goto use_memequiv_iter_as_arg;
+				} while ((iter = Dee_memequiv_next(iter)) != eq);
+			}
+		}
+use_arg:;
+	}
+
+	/* Fix-up argument registers. */
+	while (argi) {
+		Dee_host_register_t arg_regno;
+		struct Dee_memloc *arg;
+		--argi;
+		arg = &locv[argi + 1]; /* +1 because of the function being called. */
+		arg_regno = host_arg_regs[argi];
+		if unlikely(setreg_memloc_maybe_adjust_regs(self, arg, arg_regno, locv, argi,
+		                                            (COMPILER_LENOF(host_arg_regs) - 1) - argi))
+			goto err;
+	}
+#endif /* HOST_REGISTER_R_ARG0 */
+
+
+
 	/* With everything pushed onto the stack and in the correct position, generate the call.
 	 * Note that because deemon API functions use DCALL (STDCALL), the called function does
 	 * the stack cleanup. */
+#ifdef HOSTASM_X86_64_MSABI
 	if unlikely(Dee_host_section_reqx86(sect, 1))
 		goto err;
+	gen86_printf("sub" Plq "\t$32, %%" Per "sp\n");
+	gen86_subP_imm_r(p_pc(sect), 32, GEN86_R_PSP); /* TODO: Do this better */
+	Dee_function_generator_gadjust_cfa_offset(self, 32);
+#endif /* HOSTASM_X86_64_MSABI */
 	switch (__builtin_expect(Dee_memloc_gettyp(locv), MEMADR_TYPE_CONST)) {
 
 	case MEMADR_TYPE_CONST: {
 		void const *api_function = Dee_memloc_const_getaddr(locv);
-		if unlikely(gcall86_impl(self, api_function, true))
+		if unlikely(gcall86(self, api_function, true))
 			goto err;
 	}	break;
 
@@ -3328,7 +3516,7 @@ invoke_api_function_fallback:
 	}	break;
 
 	case MEMADR_TYPE_HSTACKIND: {
-		uintptr_t cfa_offset = Dee_memloc_hstackind_getcfa(locv);
+		Dee_cfa_t cfa_offset = Dee_memloc_hstackind_getcfa(locv);
 		ptrdiff_t val_offset = Dee_memloc_hstackind_getvaloff(locv);
 		ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 		if unlikely(val_offset != 0)
@@ -3353,14 +3541,14 @@ invoke_api_function_fallback:
 	{
 		size_t stack_dealloc;
 #ifdef HOST_REGISTER_R_ARG0
-		if (argc <= COMPILER_LENOF(arg_regs)) {
+		if (argc <= COMPILER_LENOF(host_arg_regs)) {
 			stack_dealloc = 0;
 		} else
 #endif /* HOST_REGISTER_R_ARG0 */
 		{
 			stack_dealloc = argc;
 #ifdef HOST_REGISTER_R_ARG0
-			stack_dealloc -= COMPILER_LENOF(arg_regs);
+			stack_dealloc -= COMPILER_LENOF(host_arg_regs);
 #endif /* HOST_REGISTER_R_ARG0 */
 		}
 		if (stack_dealloc) {
@@ -3369,6 +3557,15 @@ invoke_api_function_fallback:
 			/* TODO: Forget assumptions about deallocated stack locations */
 		}
 	}
+
+#ifdef HOSTASM_X86_64_MSABI
+	if unlikely(Dee_host_section_reqx86(sect, 1))
+		goto err;
+	gen86_printf("add" Plq "\t$32, %%" Per "sp\n");
+	gen86_addP_imm_r(p_pc(sect), 32, GEN86_R_PSP); /* TODO: Do this better */
+	Dee_function_generator_gadjust_cfa_offset(self, -32);
+#endif /* !HOSTASM_X86_64_MSABI */
+
 	return 0;
 err:
 	return -1;
@@ -3537,7 +3734,7 @@ swap_operands:
 			rhs_basereg_off   = rhs->ml_off;
 			rhs_gen86_basereg = gen86_registers[rhs->ml_adr.ma_reg];
 		} else {
-			uintptr_t cfa_offset = rhs->ml_adr.ma_val.v_cfa;
+			Dee_cfa_t cfa_offset = rhs->ml_adr.ma_val.v_cfa;
 			rhs_basereg_off   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 			rhs_gen86_basereg = GEN86_R_PSP;
 		}
@@ -3554,7 +3751,7 @@ swap_operands:
 				rhs_basereg_off -= lhs->ml_off;
 				lhs_gen86_basereg = gen86_registers[lhs->ml_adr.ma_reg];
 			} else {
-				uintptr_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
+				Dee_cfa_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
 				rhs_basereg_off -= Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 				lhs_gen86_basereg = GEN86_R_PSP;
 			}
@@ -3619,7 +3816,7 @@ swap_operands:
 			rhs_basereg_off   = rhs->ml_adr.ma_val.v_indoff;
 			rhs_gen86_basereg = gen86_registers[rhs->ml_adr.ma_reg];
 		} else {
-			uintptr_t cfa_offset = rhs->ml_adr.ma_val.v_cfa;
+			Dee_cfa_t cfa_offset = rhs->ml_adr.ma_val.v_cfa;
 			rhs_basereg_off   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 			rhs_gen86_basereg = GEN86_R_PSP;
 		}
@@ -3638,7 +3835,7 @@ swap_operands:
 				lhs_basereg_off   = lhs->ml_off;
 				lhs_gen86_basereg = gen86_registers[lhs->ml_adr.ma_reg];
 			} else {
-				uintptr_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
+				Dee_cfa_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
 				lhs_basereg_off   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 				lhs_gen86_basereg = GEN86_R_PSP;
 			}
@@ -3712,7 +3909,7 @@ swap_operands:
 				lhs_basereg_off   = lhs->ml_off;
 				lhs_gen86_basereg = gen86_registers[lhs->ml_adr.ma_reg];
 			} else {
-				uintptr_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
+				Dee_cfa_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
 				lhs_basereg_off   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 				lhs_gen86_basereg = GEN86_R_PSP;
 			}
@@ -3737,7 +3934,7 @@ swap_operands:
 				lhs_basereg_off   = lhs->ml_adr.ma_val.v_indoff;
 				lhs_gen86_basereg = gen86_registers[lhs->ml_adr.ma_reg];
 			} else {
-				uintptr_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
+				Dee_cfa_t cfa_offset = lhs->ml_adr.ma_val.v_cfa;
 				lhs_basereg_off   = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 				lhs_gen86_basereg = GEN86_R_PSP;
 			}

@@ -199,7 +199,7 @@ Dee_memstate_hregs_adjust_delta(struct Dee_memstate *__restrict self,
 /* Check if a pointer-sized blob at `cfa_offset' is being used by something. */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
-                           uintptr_t cfa_offset) {
+                           Dee_cfa_t cfa_offset) {
 	struct Dee_memval const *val;
 	Dee_memstate_foreach(val, self) {
 		struct Dee_memobj const *obj;
@@ -220,7 +220,7 @@ Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
 	Dee_memadr_hstack_used(Dee_memloc_getadr(self), start_offset, end_offset)
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 Dee_memadr_hstack_used(struct Dee_memadr const *__restrict self,
-                       uintptr_t start_offset, uintptr_t end_offset) {
+                       Dee_cfa_t start_offset, Dee_cfa_t end_offset) {
 	if (self->ma_typ == MEMADR_TYPE_HSTACKIND) {
 		if (RANGES_OVERLAP(Dee_memadr_getcfastart(self),
 		                   Dee_memadr_getcfaend(self),
@@ -235,7 +235,7 @@ Dee_memadr_hstack_used(struct Dee_memadr const *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 Dee_memstate_hstack_used(struct Dee_memstate const *__restrict self,
                          struct Dee_memstate const *hstack_reserved,
-                         uintptr_t min_offset, uintptr_t end_offset) {
+                         Dee_cfa_t min_offset, Dee_cfa_t end_offset) {
 	struct Dee_memval const *val;
 	Dee_memstate_foreach(val, self) {
 		struct Dee_memobj const *obj;
@@ -263,9 +263,9 @@ Dee_memstate_hstack_used(struct Dee_memstate const *__restrict self,
 /* Try to find a `n_bytes'-large free section of host stack memory.
  * @param: hstack_reserved: When non-NULL, only consider locations that are *also* free in here
  * @return: * :            The base-CFA offset of the free section of memory
- * @return: (uintptr_t)-1: There is no free section of at least `n_bytes' bytes.
+ * @return: (Dee_cfa_t)-1: There is no free section of at least `n_bytes' bytes.
  *                         In this case, allocate using `Dee_memstate_hstack_alloca()' */
-INTERN ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_cfa_t DCALL
 Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
                          struct Dee_memstate const *hstack_reserved,
                          size_t n_bytes) {
@@ -277,9 +277,9 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
 		size_t n_pointers = n_bytes / HOST_SIZEOF_POINTER;
 		size_t i, check = (a_pointers - n_pointers) + 1;
 		for (i = 0; i < check; ++i) {
-			uintptr_t min_offset = (uintptr_t)(-(ptrdiff_t)((5 * HOST_SIZEOF_POINTER) -
+			Dee_cfa_t min_offset = (Dee_cfa_t)(-(ptrdiff_t)((5 * HOST_SIZEOF_POINTER) -
 			                                                (i * HOST_SIZEOF_POINTER)));
-			uintptr_t end_offset = min_offset + n_bytes;
+			Dee_cfa_t end_offset = min_offset + n_bytes;
 			if (Dee_memstate_hstack_unused(self, hstack_reserved, min_offset, end_offset)) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				return end_offset;
@@ -290,13 +290,13 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
 		}
 	}
 #endif /* HOSTASM_X86_64_MSABI */
-	if (n_bytes <= self->ms_host_cfa_offset) {
+	if ((Dee_cfa_t)n_bytes <= self->ms_host_cfa_offset) {
 		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
 		size_t n_pointers = n_bytes / HOST_SIZEOF_POINTER;
 		size_t i, check = (a_pointers - n_pointers) + 1;
 		for (i = 0; i < check; ++i) {
-			uintptr_t min_offset = i * HOST_SIZEOF_POINTER;
-			uintptr_t end_offset = min_offset + n_bytes;
+			Dee_cfa_t min_offset = i * HOST_SIZEOF_POINTER;
+			Dee_cfa_t end_offset = min_offset + n_bytes;
 			if (Dee_memstate_hstack_unused(self, hstack_reserved, min_offset, end_offset)) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				return end_offset;
@@ -306,7 +306,7 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
 			}
 		}
 	}
-	return (uintptr_t)-1;
+	return (Dee_cfa_t)-1;
 }
 
 /* Try to free unused stack memory near the top of the stack.
@@ -317,8 +317,8 @@ Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
 	bool result = false;
 	while (self->ms_host_cfa_offset > 0) {
 		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
-		uintptr_t min_offset = (a_pointers - 1) * HOST_SIZEOF_POINTER;
-		uintptr_t end_offset = min_offset + HOST_SIZEOF_POINTER;
+		Dee_cfa_t min_offset = (Dee_cfa_t)((a_pointers - 1) * HOST_SIZEOF_POINTER);
+		Dee_cfa_t end_offset = (Dee_cfa_t)(min_offset + HOST_SIZEOF_POINTER);
 		if (!Dee_memstate_hstack_unused(self, NULL, min_offset, end_offset))
 			break;
 		self->ms_host_cfa_offset -= HOST_SIZEOF_POINTER;
@@ -340,9 +340,8 @@ Dee_memloc_makedistinct(struct Dee_memstate *__restrict self,
 		self->ms_rusage[regno] = DEE_HOST_REGUSAGE_GENERIC;
 	} else {
 		/* Use a stack location. */
-		uintptr_t cfa_offset;
-		cfa_offset = Dee_memstate_hstack_find(self, NULL, HOST_SIZEOF_POINTER);
-		if (cfa_offset == (uintptr_t)-1)
+		Dee_cfa_t cfa_offset = Dee_memstate_hstack_find(self, NULL, HOST_SIZEOF_POINTER);
+		if (cfa_offset == (Dee_cfa_t)-1)
 			cfa_offset = Dee_memstate_hstack_alloca(self, HOST_SIZEOF_POINTER);
 		Dee_memloc_init_hstackind(loc, cfa_offset, val_offset);
 	}
@@ -355,7 +354,7 @@ Dee_memloc_makewritable(struct Dee_memstate *__restrict self,
 	case MEMADR_TYPE_HREG: /* Already writable */
 		break;
 	case MEMADR_TYPE_HSTACKIND:
-		if ((intptr_t)loc->ml_adr.ma_val.v_cfa >= 0)
+		if (loc->ml_adr.ma_val.v_cfa >= 0)
 			break; /* Already writable */
 		ATTR_FALLTHROUGH
 	default:
@@ -377,9 +376,14 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
 		break;
 
 	case MEMADR_TYPE_HSTACKIND:
-		if ((intptr_t)loc->ml_adr.ma_val.v_cfa >= 0)
+#if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64)
+		if (loc->ml_adr.ma_val.v_cfa >= 0)
 			break; /* Normal stack location */
 		ATTR_FALLTHROUGH
+#else /* HOSTASM_X86 && !HOSTASM_X86_64 */
+		break;
+#endif /* !HOSTASM_X86 || HOSTASM_X86_64 */
+
 	default: {
 		/* If the location describe by `other' isn't already in use in `state',
 		 * then use *it* as-it. That way, we can reduce the necessary number of
@@ -387,10 +391,12 @@ Dee_memloc_constrainwith(struct Dee_memstate *__restrict self,
 		switch (other_loc->ml_adr.ma_typ) {
 	
 		case MEMADR_TYPE_HSTACKIND:
-			if ((intptr_t)other_loc->ml_adr.ma_val.v_cfa < 0)
+#if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64)
+			if (other_loc->ml_adr.ma_val.v_cfa < 0)
 				break; /* Out-of-band location (e.g. true arguments on i386) */
+#endif /* HOSTASM_X86 && !HOSTASM_X86_64 */
 			if (!Dee_memstate_hstack_isused(self, Dee_memloc_hstackind_getcfa(other_loc))) {
-				uintptr_t min_cfa_offset;
+				Dee_cfa_t min_cfa_offset;
 				Dee_memstate_decrinuse_for_memloc(self, loc);
 				Dee_memloc_init_hstackind(loc,
 				                          Dee_memloc_hstackind_getcfa(other_loc),
@@ -1029,7 +1035,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_hstack(struct Dee_memstate *__restrict self,
-                          uintptr_t cfa_offset) {
+                          Dee_cfa_t cfa_offset) {
 	struct Dee_memval *dst;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))
@@ -1044,7 +1050,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_memstate_vpush_hstackind(struct Dee_memstate *__restrict self,
-                             uintptr_t cfa_offset, ptrdiff_t val_delta) {
+                             Dee_cfa_t cfa_offset, ptrdiff_t val_delta) {
 	struct Dee_memval *dst;
 	if unlikely(self->ms_stackc >= self->ms_stacka &&
 	            Dee_memstate_reqvstack(self, self->ms_stackc + 1))

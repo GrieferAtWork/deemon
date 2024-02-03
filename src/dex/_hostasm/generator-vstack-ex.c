@@ -4529,7 +4529,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 vmorph_int(struct Dee_function_generator *__restrict self, uint8_t wanted_morph) {
 	void const *api_function;
 	struct Dee_memval *vtop;
-	uintptr_t result_cfa;
+	Dee_cfa_t result_cfa;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
 	vtop = Dee_function_generator_vtop(self);
@@ -4557,7 +4557,7 @@ vmorph_int(struct Dee_function_generator *__restrict self, uint8_t wanted_morph)
 		}
 	}
 	result_cfa = Dee_memstate_hstack_find(self->fg_state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
-	if (result_cfa == (uintptr_t)-1) {
+	if (result_cfa == (Dee_cfa_t)-1) {
 		result_cfa = Dee_memstate_hstack_alloca(self->fg_state, HOST_SIZEOF_POINTER);
 		DO(Dee_function_generator_ghstack_adjust(self, HOST_SIZEOF_POINTER));
 	}
@@ -6100,7 +6100,7 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 	struct Dee_memval *seqval;
 	DeeTypeObject *seqtype;
 	Dee_vstackaddr_t i;
-	uintptr_t cfa_offset;
+	Dee_cfa_t cfa_offset;
 	size_t alloc_size;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
@@ -6241,7 +6241,7 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 
 	alloc_size = n * sizeof(DREF DeeObject *);
 	cfa_offset = Dee_memstate_hstack_find(self->fg_state, self->fg_state_hstack_res, alloc_size);
-	if (cfa_offset == (uintptr_t)-1) {
+	if (cfa_offset == (Dee_cfa_t)-1) {
 		DO(Dee_function_generator_ghstack_adjust(self, alloc_size));
 		cfa_offset = self->fg_state->ms_host_cfa_offset;
 #ifndef HOSTASM_STACK_GROWS_DOWN
@@ -6249,7 +6249,7 @@ Dee_function_generator_vopunpack(struct Dee_function_generator *__restrict self,
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 	}
 	for (i = 0; i < n; ++i) {
-		uintptr_t n_cfa_offset;
+		Dee_cfa_t n_cfa_offset;
 #ifdef HOSTASM_STACK_GROWS_DOWN
 		n_cfa_offset = cfa_offset - i * sizeof(DREF DeeObject *);
 #else /* HOSTASM_STACK_GROWS_DOWN */

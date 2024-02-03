@@ -207,7 +207,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_prefix_noalias(struct Dee_function_generator *__restrict self,
                                             Dee_instruction_t const *instr,
                                             uint8_t prefix_type, uint16_t id1, uint16_t id2) {
-	uintptr_t cfa_offset;
+	Dee_cfa_t cfa_offset;
 	struct Dee_memval *src_mval, *dst_mval;
 	struct Dee_memstate *state;
 again:
@@ -290,7 +290,7 @@ again:
 
 			/* Must generate code to move the value into a second, distinct stack location. */
 			cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, HOST_SIZEOF_POINTER);
-			if (cfa_offset != (uintptr_t)-1) {
+			if (cfa_offset != (Dee_cfa_t)-1) {
 				if unlikely(Dee_function_generator_gmov_loc2hstackind(self, Dee_memval_direct_getloc(src_mval), cfa_offset))
 					goto err;
 			} else {

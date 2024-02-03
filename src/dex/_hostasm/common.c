@@ -114,8 +114,8 @@ _Dee_memequivs_inplace_copy(struct Dee_memequivs *__restrict self) {
 	delta = (intptr_t)((byte_t *)newmap - (byte_t *)self->meqs_list);
 	for (i = 0; i <= mask; ++i) {
 		struct Dee_memequiv *it = &newmap[i];
-		it->meq_class.rqe_prev = (struct Dee_memequiv *)((uintptr_t)it->meq_class.rqe_prev + delta);
-		it->meq_class.rqe_next = (struct Dee_memequiv *)((uintptr_t)it->meq_class.rqe_next + delta);
+		it->meq_class.rqe_prev = (struct Dee_memequiv *)((byte_t *)it->meq_class.rqe_prev + delta);
+		it->meq_class.rqe_next = (struct Dee_memequiv *)((byte_t *)it->meq_class.rqe_next + delta);
 	}
 	self->meqs_list = newmap;
 	_Dee_memequivs_verifyrinuse(self);
@@ -638,7 +638,7 @@ Dee_memequivs_undefined_allregs(struct Dee_memequivs *__restrict self) {
 /* Mark all HSTACKIND locations with CFA offsets `>= min_cfa_offset' as undefined. */
 INTERN NONNULL((1)) void DCALL
 Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
-                                        uintptr_t min_cfa_offset) {
+                                        Dee_cfa_t min_cfa_offset) {
 	size_t i;
 	_Dee_memequivs_verifyrinuse(self);
 	for (i = 0; i <= self->meqs_mask; ++i) {
@@ -678,8 +678,8 @@ Dee_memequivs_undefined_hstackind_after(struct Dee_memequivs *__restrict self,
  * overlaps with [start_cfa_offset, end_cfa_offset) as undefined. */
 INTERN NONNULL((1)) void DCALL
 Dee_memequivs_undefined_hstackind_inrange(struct Dee_memequivs *__restrict self,
-                                          uintptr_t start_cfa_offset,
-                                          uintptr_t end_cfa_offset) {
+                                          Dee_cfa_t start_cfa_offset,
+                                          Dee_cfa_t end_cfa_offset) {
 	size_t i;
 	_Dee_memequivs_verifyrinuse(self);
 	for (i = 0; i <= self->meqs_mask; ++i) {

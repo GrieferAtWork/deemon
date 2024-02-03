@@ -168,8 +168,9 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #ifdef HOSTASM_X86
 	{
 #ifdef HOSTASM_X86_64
-#define Dee_memval_set_x86_arg(self, argi) \
-	Dee_memval_init_hreg(self, truearg_regno[argi], 0, NULL, MEMOBJ_F_NORMAL)
+#define Dee_memval_set_x86_arg(self, argi)                                      \
+	(Dee_memval_init_hreg(self, truearg_regno[argi], 0, NULL, MEMOBJ_F_NORMAL), \
+	 Dee_memstate_incrinuse(state, Dee_memval_direct_hreg_getreg(self)))
 		PRIVATE Dee_host_register_t const truearg_regno[4] = {
 			HOST_REGISTER_R_ARG0,
 			HOST_REGISTER_R_ARG1,
@@ -1223,13 +1224,13 @@ move_cur_loci_to_new_loci:
 	}
 
 	/* Fix any remaining delta in the CFA offset. */
-	if (state->ms_host_cfa_offset != newinfo->exi_cfa_offset) {
+	if (state->ms_host_cfa_offset != (Dee_cfa_t)newinfo->exi_cfa_offset) {
 		ptrdiff_t cfa_delta = (ptrdiff_t)newinfo->exi_cfa_offset -
 		                      (ptrdiff_t)state->ms_host_cfa_offset;
 		if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
 			goto err_infostate_state_curinfo_vaddr;
 	}
-	ASSERT(state->ms_host_cfa_offset == newinfo->exi_cfa_offset);
+	ASSERT(state->ms_host_cfa_offset == (Dee_cfa_t)newinfo->exi_cfa_offset);
 
 	/* Cleanup... */
 	Dee_Freea(curinfo_vaddr);
@@ -1891,6 +1892,12 @@ Dee_assemble(DeeFunctionObject *__restrict function,
 	 *               generated host assembly. */
 	if unlikely(assembler.fa_code->co_flags & CODE_FASSEMBLY)
 		assembler.fa_flags |= DEE_FUNCTION_ASSEMBLER_F_SAFE;
+
+#ifdef DEE_FUNCTION_ASSEMBLER_F_MCLARGE
+	/* TODO: Only enable by default on __PE__. On __ELF__, try to compile and
+	 *       link w/o, and only fall-back to enabling this if that fails. */
+	assembler.fa_flags |= DEE_FUNCTION_ASSEMBLER_F_MCLARGE;
+#endif /* DEE_FUNCTION_ASSEMBLER_F_MCLARGE */
 
 	/* Go through all the steps of assembling the function. */
 	if unlikely(Dee_function_assembler_loadblocks(&assembler))

@@ -263,7 +263,7 @@ Dee_function_generator_vpush_hregind(struct Dee_function_generator *__restrict s
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict self,
-                                    uintptr_t cfa_offset) {
+                                    Dee_cfa_t cfa_offset) {
 	int result = Dee_function_generator_state_unshare(self);
 	if likely(result == 0)
 		result = Dee_memstate_vpush_hstack(self->fg_state, cfa_offset);
@@ -272,7 +272,7 @@ Dee_function_generator_vpush_hstack(struct Dee_function_generator *__restrict se
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_hstackind(struct Dee_function_generator *__restrict self,
-                                       uintptr_t cfa_offset, ptrdiff_t val_delta) {
+                                       Dee_cfa_t cfa_offset, ptrdiff_t val_delta) {
 	int result = Dee_function_generator_state_unshare(self);
 	if likely(result == 0)
 		result = Dee_memstate_vpush_hstackind(self->fg_state, cfa_offset, val_delta);
@@ -2305,9 +2305,9 @@ Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict se
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 reclaim_unused_stack_space(struct Dee_function_generator *__restrict self) {
-	uintptr_t old_cfa_offset = self->fg_state->ms_host_cfa_offset;
+	Dee_cfa_t old_cfa_offset = self->fg_state->ms_host_cfa_offset;
 	if (Dee_memstate_hstack_free(self->fg_state)) {
-		uintptr_t new_cfa_offset = self->fg_state->ms_host_cfa_offset;
+		Dee_cfa_t new_cfa_offset = self->fg_state->ms_host_cfa_offset;
 		ptrdiff_t freed = old_cfa_offset - new_cfa_offset;
 		ASSERT(freed > 0);
 		return Dee_function_generator_ghstack_adjust(self, -freed);
@@ -4085,18 +4085,18 @@ DummyVector_New(size_t num_items) {
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) ATTR_INS(4, 5) size_t DCALL
 hstack_linear_score(bitset_t const *__restrict hstack_inuse,
                     bitset_t const *__restrict hstack_reserved,
-                    uintptr_t hstack_cfa_offset,
+                    Dee_cfa_t hstack_cfa_offset,
                     struct Dee_memval const *linbase,
                     Dee_vstackaddr_t linsize,
-                    uintptr_t cfa_offset) {
+                    Dee_cfa_t cfa_offset) {
 	Dee_vstackaddr_t i;
 	size_t result = 0;
 	for (i = 0; i < linsize; ++i) {
 		struct Dee_memval const *src = &linbase[i];
 #ifdef HOSTASM_STACK_GROWS_DOWN
-		uintptr_t dst_cfa_offset = cfa_offset - i * HOST_SIZEOF_POINTER;
+		Dee_cfa_t dst_cfa_offset = cfa_offset - i * HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-		uintptr_t dst_cfa_offset = cfa_offset + i * HOST_SIZEOF_POINTER;
+		Dee_cfa_t dst_cfa_offset = cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 		if (Dee_memloc_gettyp(Dee_memval_direct_getloc(src)) == MEMADR_TYPE_HSTACKIND &&
 		    Dee_memloc_hstackind_getcfa(Dee_memval_direct_getloc(src)) == dst_cfa_offset)
@@ -4175,7 +4175,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		 * In this case, we only need to make sure that said location resides in
 		 * memory (which is even allowed to be a REGIND location), and then push
 		 * the address of that location. */
-		uintptr_t cfa_offset;
+		Dee_cfa_t cfa_offset;
 		struct Dee_memloc *loc = Dee_function_generator_vtopdloc(self);
 		if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND &&
 		    Dee_memloc_hregind_getvaloff(loc) == 0) {
@@ -4196,7 +4196,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 	} else {
 		/* General case: figure out the optimal CFA base address of the linear vector. */
 		Dee_vstackaddr_t i;
-		uintptr_t result_cfa_offset;
+		Dee_cfa_t result_cfa_offset;
 		DREF struct Dee_memstate *linear_state;
 		struct Dee_memstate *state = self->fg_state;
 		struct Dee_memval *linbase = state->ms_stackv + state->ms_stackc - argc;
@@ -4207,8 +4207,8 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		if (!Dee_memvals_anyhstackind(linbase, argc)) {
 			size_t num_bytes = argc * sizeof(void *);
 			result_cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, num_bytes);
-			if (result_cfa_offset == (uintptr_t)-1) {
-				uintptr_t saved_cfa = state->ms_host_cfa_offset;
+			if (result_cfa_offset == (Dee_cfa_t)-1) {
+				Dee_cfa_t saved_cfa = state->ms_host_cfa_offset;
 				Dee_memstate_hstack_free(state);
 				result_cfa_offset = state->ms_host_cfa_offset;
 #ifdef HOSTASM_STACK_GROWS_DOWN
@@ -4220,9 +4220,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			/* Fallback: Assign scores to all possible CFA offsets for the linear vector.
 			 *           Then, choose whatever CFA offset has the lowest score. */
 			size_t result_cfa_offset_score;
-			uintptr_t cfa_offset_max;
-			uintptr_t cfa_offset_min;
-			uintptr_t cfa_offset;
+			Dee_cfa_t cfa_offset_max;
+			Dee_cfa_t cfa_offset_min;
+			Dee_cfa_t cfa_offset;
 			struct Dee_memval *mval;
 			bitset_t *hstack_inuse;    /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
 			bitset_t *hstack_reserved; /* Bitset of hstack locations that can never be used (because they belong to `MEMOBJ_F_LINEAR' items) */
@@ -4236,7 +4236,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 				struct Dee_memobj *mobj;
 				Dee_memval_foreach_obj(mobj, mval) {
 					if (Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HSTACKIND) {
-						uintptr_t cfa = Dee_memobj_getcfastart(mobj);
+						Dee_cfa_t cfa = Dee_memobj_getcfastart(mobj);
 						ASSERT(cfa < state->ms_host_cfa_offset);
 						bitset_set(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
 						if (mobj->mo_flags & MEMOBJ_F_LINEAR)
@@ -4251,7 +4251,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			for (i = 0; i < argc; ++i) {
 				ASSERT(Dee_memval_isdirect(&linbase[i]));
 				if (Dee_memval_direct_gettyp(&linbase[i]) == MEMADR_TYPE_HSTACKIND) {
-					uintptr_t cfa = Dee_memloc_getcfastart(Dee_memval_direct_getloc(&linbase[i]));
+					Dee_cfa_t cfa = Dee_memloc_getcfastart(Dee_memval_direct_getloc(&linbase[i]));
 					ASSERT(cfa < state->ms_host_cfa_offset);
 					bitset_clear(hstack_inuse, cfa / HOST_SIZEOF_POINTER);
 				}
@@ -4336,9 +4336,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			if (loc->mo_loc.ml_adr.ma_typ == TYPE_LINLOC) {
 				struct Dee_memobj *next;
 #ifdef HOSTASM_STACK_GROWS_DOWN
-				uintptr_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
+				Dee_cfa_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-				uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
+				Dee_cfa_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 				do {
 					next = loc->mo_loc.ml_adr.ma_val._v_nextobj;
@@ -4354,9 +4354,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		/* Fix locations where linear elements were aliasing each other. */
 		for (i = 0; i < argc; ++i) {
 #ifdef HOSTASM_STACK_GROWS_DOWN
-			uintptr_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
+			Dee_cfa_t dst_cfa_offset = result_cfa_offset - i * HOST_SIZEOF_POINTER;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-			uintptr_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
+			Dee_cfa_t dst_cfa_offset = result_cfa_offset + i * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 			struct Dee_memval *mval = &linbase[i];
 			ASSERT(mval->mv_obj.mvo_0.mo_loc.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
@@ -4367,9 +4367,9 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 		/* Make sure that `linear_state's CFA offset is large enough to hold the linear vector. */
 		{
 #ifdef HOSTASM_STACK_GROWS_DOWN
-			uintptr_t req_min_host_cfa = result_cfa_offset;
+			Dee_cfa_t req_min_host_cfa = result_cfa_offset;
 #else /* HOSTASM_STACK_GROWS_DOWN */
-			uintptr_t req_min_host_cfa = result_cfa_offset + argc * HOST_SIZEOF_POINTER;
+			Dee_cfa_t req_min_host_cfa = result_cfa_offset + argc * HOST_SIZEOF_POINTER;
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 			if (linear_state->ms_host_cfa_offset < req_min_host_cfa)
 				linear_state->ms_host_cfa_offset = req_min_host_cfa;

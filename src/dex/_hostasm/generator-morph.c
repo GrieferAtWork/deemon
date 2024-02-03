@@ -68,7 +68,7 @@ Dee_memaction_isready(struct Dee_memaction const *__restrict self) {
  */
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(1, 2) struct Dee_memaction *DCALL
 Dee_memaction_find_push_or_pop_at_cfa_boundary(struct Dee_memaction *mactv, Dee_lid_t mactc,
-                                               uintptr_t host_cfa_offset) {
+                                               Dee_cfa_t host_cfa_offset) {
 	Dee_lid_t i;
 	for (i = 0; i < mactc; ++i) {
 		struct Dee_memaction *act = &mactv[i];
