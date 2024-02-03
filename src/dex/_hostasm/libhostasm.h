@@ -2721,23 +2721,17 @@ Dee_function_generator_gnotoneref_impl(struct Dee_function_generator *__restrict
 	(((mobj)->mo_flags & MEMOBJ_F_ONEREF) ? Dee_function_generator_gnotoneref_impl(self, mobj) : 0)
 
 
-/* Generate a call to a C-function `api_function' with `argc'
- * pointer-sized arguments whose values are taken from `argv'.
- * NOTE: This function is allowed to modify `argv' to keep track of internal temporaries
+/* Generate a call to a C-function.
+ * @param: locv: An argc+1-long vector locations (the first is for the
+ *               function to call, the rest are pointer-sized arguments)
+ * WARNING: This function is allowed to modify `argv' to keep track of internal temporaries.
  * NOTE: The given `api_function' is assumed to use the `DCALL' calling convention. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
-                                void const *api_function, size_t argc,
-                                struct Dee_memloc const *argv);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gcalldynapi(struct Dee_function_generator *__restrict self,
-                                   struct Dee_memloc const *api_function_loc,
-                                   size_t argc, struct Dee_memloc const *argv);
-
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self, void const *api_function, size_t argc, struct Dee_memloc const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_reg(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, size_t argc, struct Dee_memloc const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hstackind(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, size_t argc, struct Dee_memloc const *argv);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gcalldynapi_hregind(struct Dee_function_generator *__restrict self, Dee_host_register_t api_function_regno, ptrdiff_t ind_offset, size_t argc, struct Dee_memloc const *argv);
+                                struct Dee_memloc *locv, size_t argc);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
+                                 struct Dee_memloc *locv, size_t argc);
 
 
 /* Object reference count incref/decref */
@@ -2833,9 +2827,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_adjust(struct De
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushreg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self, void const *value);
-#ifdef HOSTASM_X86_64
-#define _Dee_host_section_ghstack_pushconst_MAYFAIL /* `_Dee_host_section_ghstack_pushconst()' returns `1' if the constant is too large */
-#endif /* HOSTASM_X86_64 */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_host_section *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
 #define HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
@@ -2849,9 +2840,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct De
 #define HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 #define _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self) _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np((self)->fg_sect)
 #endif /* HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np */
-#ifdef _Dee_host_section_ghstack_pushconst_MAYFAIL
-#define _Dee_function_generator_ghstack_pushconst_MAYFAIL /* `_Dee_function_generator_ghstack_pushconst()' returns `1' if the constant is too large */
-#endif /* _Dee_host_section_ghstack_pushconst_MAYFAIL */
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_reg2hstackind(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t sp_offset);                             /* *(SP + sp_offset) = dst_regno; */
@@ -2958,27 +2946,38 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gret(struct Dee_
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gret(struct Dee_function_generator *__restrict self);
 
 /* Helpers for transforming locations into deemon boolean objects. */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regx2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                           /* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regxCreg2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                                    /* dst_regno = (src_regno + src_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                    /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno); /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> rhs_regno ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_hstackind2reg01(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                                            /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                             /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> rhs_regno ? 1 : 0; */
+#define _Dee_function_generator_gmorph_regxCreg2reg01(self, src_regno, src_delta, cmp, rhs_regno, dst_regno) _Dee_host_section_gmorph_regxCreg2reg01((self)->fg_sect, src_regno, src_delta, cmp, rhs_regno, dst_regno)
+#define _Dee_function_generator_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno)           _Dee_host_section_gmorph_hstackind2reg01((self)->fg_sect, sp_offset, val_delta, cmp, dst_regno)
+#ifdef HOSTASM_X86_64
+#define _Dee_function_generator_gmorph_regind2reg01_MAYFAIL /* `_Dee_function_generator_gmorph_regind2reg01()' returns `1' if "val_delta" is too large */
+#define _Dee_host_section_gmorph_hstackind2reg01_MAYFAIL    /* `_Dee_host_section_gmorph_hstackind2reg01()' returns `1' if "val_delta" is too large */
+#endif /* HOSTASM_X86_64 */
+#ifdef _Dee_host_section_gmorph_hstackind2reg01_MAYFAIL
+#define _Dee_function_generator_gmorph_hstackind2reg01_MAYFAIL /* `_Dee_function_generator_gmorph_hstackind2reg01()' returns `1' if "val_delta" is too large */
+#endif /* _Dee_host_section_gmorph_hstackind2reg01_MAYFAIL */
+#if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64) && !defined(CONFIG_TRACE_REFCHANGES)
+#define HAVE__Dee_host_section_gmorph_reg012regbool
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_reg012regbool(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno); /* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
+#endif /* HOSTASM_X86 && !HOSTASM_X86_64 && !CONFIG_TRACE_REFCHANGES */
+
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_regx2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_hstackind2reg01(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_regxCreg2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self, uintptr_t cfa_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);
+
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_loc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                          /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCreg2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);       /* dst_regno = (src_loc + src_delta) <CMP> rhs_regno ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gmorph_locCloc2reg01(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, struct Dee_memloc const *rhs_loc, Dee_host_register_t dst_regno);    /* dst_regno = (src_loc + src_delta) <CMP> rhs_loc ? 1 : 0; */
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc2regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta); /* dst_regno = &Dee_FalseTrue[(src_loc + src_delta) <CMP> 0 ? 1 : 0] - *p_dst_delta; */
 INTDEF WUNUSED NONNULL((1, 2, 5)) int DCALL Dee_function_generator_gmorph_loc012regbooly(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc, ptrdiff_t src_delta, Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta);                 /* dst_regno = &Dee_FalseTrue[src_loc + src_delta] - *p_dst_delta; */
-#define Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno)                             (unlikely(_Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-#define Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno)                (unlikely(_Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-#define Dee_function_generator_gmorph_hstackind2reg01(self, cfa_offset, val_delta, cmp, dst_regno)                       (unlikely(_Dee_host_section_gmorph_hstackind2reg01((self)->fg_sect, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), val_delta, cmp, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-#define Dee_function_generator_gmorph_regxCreg2reg01(self, src_regno, src_delta, cmp, rhs_regno, dst_regno)              (unlikely(_Dee_host_section_gmorph_regxCreg2reg01((self)->fg_sect, src_regno, src_delta, cmp, rhs_regno, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-#define Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, val_delta, cmp, rhs_regno, dst_regno) (unlikely(_Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, val_delta, cmp, rhs_regno, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-#define Dee_function_generator_gmorph_hstackindCreg2reg01(self, cfa_offset, val_delta, cmp, rhs_regno, dst_regno)        (unlikely(_Dee_function_generator_gmorph_hstackindCreg2reg01(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), val_delta, cmp, rhs_regno, dst_regno)) ? -1 : (Dee_function_generator_remember_undefined_reg(self, dst_regno), 0))
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regx2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                                       /* dst_regno = (src_regno + src_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_regxCreg2reg01(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                                    /* dst_regno = (src_regno + src_delta) <CMP> rhs_regno ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno); /* dst_regno = (*(src_regno + ind_delta) + val_delta) <CMP> rhs_regno ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_hstackind2reg01(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t dst_regno);                                                                            /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> 0 ? 1 : 0; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self, ptrdiff_t sp_offset, ptrdiff_t val_delta, unsigned int cmp, Dee_host_register_t rhs_regno, Dee_host_register_t dst_regno);                             /* dst_regno = (*(SP + sp_offset) + val_delta) <CMP> rhs_regno ? 1 : 0; */
-#if defined(HOSTASM_X86) && !defined(HOSTASM_X86_64) && !defined(CONFIG_TRACE_REFCHANGES)
-#define HAVE__Dee_host_section_gmorph_reg012regbool
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmorph_reg012regbool(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, Dee_host_register_t dst_regno); /* dst_regno = &Dee_FalseTrue[src_regno + src_delta]; */
-#endif /* HOSTASM_X86 && !HOSTASM_X86_64 && !CONFIG_TRACE_REFCHANGES */
 
 /* dst_regno = &Dee_FalseTrue[src_regno + src_delta] - *p_dst_delta; */
 #ifdef HAVE__Dee_host_section_gmorph_reg012regbool

@@ -130,7 +130,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			goto err;
 		DO(Dee_function_generator_vdup(self));             /* kw, kw */
 		DO(Dee_function_generator_voptypeof(self, false)); /* kw, type(kw) */
-		DO(Dee_function_generator_vdirect1(self));       /* kw, type(kw) */
+		DO(Dee_function_generator_vdirect1(self));         /* kw, type(kw) */
 		loc_kwds_ob_type = *Dee_function_generator_vtopdloc(self);
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 		DO(Dee_function_generator_vpop(self)); /* kw */
@@ -182,7 +182,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 		}
 		Dee_memstate_decref(self->fg_state);
 		self->fg_state = leave_state; /* Inherit reference */
-		DO(Dee_function_generator_vdirect1(self));       /* kw, size */
+		DO(Dee_function_generator_vdirect1(self));         /* kw, size */
 		loc_size = *Dee_function_generator_vtopdloc(self); /* kw, size */
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 		DO(Dee_function_generator_vpop(self)); /* kw */
@@ -1946,6 +1946,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 						DO(Dee_function_generator_vcallapi(self, type->tp_init.tp_var.tp_ctor, VCALL_CC_OBJECT, 0)); /* result */
 						return Dee_function_generator_vsettyp_noalias(self, type); /* result */
 					case CTOR_TYPE_COPY:
+						/* TODO: Optimize when `type->tp_init.tp_var.tp_copy_ctor == &DeeObject_NewRef' */
 						ASSERT(true_argc == 1);                 /* type, copyme, kw */
 						DO(vpop_empty_kwds(self));              /* type, copyme */
 						DO(Dee_function_generator_vswap(self)); /* copyme, type */
@@ -2062,7 +2063,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 						 * noexcept, or such that it doesn't return a "normal" 0/-1 status integer. */
 					} else {
 						/* Generate exception handling code while our custom exception injection is still active! */
-						DO(Dee_function_generator_vdirect1(self));                                         /* instance, UNCHECKED(status_int) */
+						DO(Dee_function_generator_vdirect1(self));                                           /* instance, UNCHECKED(status_int) */
 						DO(Dee_function_generator_gjnz_except(self, Dee_function_generator_vtopdloc(self))); /* instance, UNCHECKED(status_int) */
 						DO(Dee_function_generator_vpop(self));                                               /* instance */
 					}
@@ -2522,7 +2523,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 			DeeTypeObject *type = (DeeTypeObject *)attr->ai_decl;
 			struct class_desc *desc = DeeClass_DESC(type);
 			/* Wrapper for producing `DeeProperty_Type' */
-			DO(Dee_function_generator_vpop(self));       /* this */
+			DO(Dee_function_generator_vpop(self));     /* this */
 			DO(Dee_function_generator_vdirect1(self)); /* this */
 			if ((item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) &&
 			    !(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOROINLINE)) {
@@ -2598,7 +2599,7 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 				                                     (item->ca_addr + Dee_CLASS_GETSET_GET) *
 				                                     sizeof(DREF DeeObject *))); /* this, ref:result, DeeInstance_DESC(desc, this), GETTER */
 				if (!(item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)) {
-					DO(Dee_function_generator_vdirect1(self));             /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
+					DO(Dee_function_generator_vdirect1(self));            /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
 					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER */
 					DO(Dee_function_generator_vdup_n(self, 3));           /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER, result */
 					DO(Dee_function_generator_vswap(self));               /* this, ref:result, DeeInstance_DESC(desc, this), result, ref:GETTER */
@@ -3181,12 +3182,12 @@ Dee_function_generator_vopcallattrtuplekw(struct Dee_function_generator *__restr
 	/* TODO: Optimization for when `attr' and the type of `this' is known:
 	 * >> return "a,b,c".split(x); // Inline the actual call to `string_split()',
 	 * >>                          // bypassing the complete attribute lookup */
-	DO(Dee_function_generator_vlrot(self, 3));                                     /* this, args, kw, attr */
-	DO(Dee_function_generator_vassert_type_exact_c(self, &DeeString_Type));        /* this, args, kw, attr */
-	DO(Dee_function_generator_vlrot(self, 3));                                     /* this, kw, attr, args */
-	DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeTuple_Type)); /* this, kw, attr, args */
-	DO(Dee_function_generator_vlrot(self, 3));                                     /* this, attr, args, kw */
-	DO(Dee_function_generator_vnotoneref(self, 3));                                /* this, attr, args, kw */
+	DO(Dee_function_generator_vlrot(self, 3));                                       /* this, args, kw, attr */
+	DO(Dee_function_generator_vassert_type_exact_c(self, &DeeString_Type));          /* this, args, kw, attr */
+	DO(Dee_function_generator_vlrot(self, 3));                                       /* this, kw, attr, args */
+	DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeTuple_Type));   /* this, kw, attr, args */
+	DO(Dee_function_generator_vlrot(self, 3));                                       /* this, attr, args, kw */
+	DO(Dee_function_generator_vnotoneref(self, 3));                                  /* this, attr, args, kw */
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETATTR, 4)); /* this, attr, args, kw */
 	if (Dee_memval_isnull(Dee_function_generator_vtop(self))) {
 		DO(Dee_function_generator_vpop(self)); /* this, attr, args */
@@ -3356,7 +3357,8 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 			 * >>     call  string_format
 			 * >>     addl  $28, %esp
 			 * >>     ret   $8 */
-			DO(Dee_function_generator_vnotoneref(self, itemc));               /* func, attr, [items...] */ /* XXX: Based on how items are used by the format strings... */
+			/* TODO: Inline constant arguments into the format string */
+			DO(Dee_function_generator_vnotoneref(self, itemc));               /* func, attr, [items...] */ /* XXX: Based on how items are used by the format string... ("{}" -> OPERATOR_STR, "{!r}" -> OPERATOR_REPR) */
 			DO(Dee_function_generator_vpush_addr(self, (void const *)itemc)); /* func, attr, [items...], t_size */
 			DO(Dee_function_generator_vrrot(self, itemc + 1));                /* func, attr, t_size, [items...] */
 			DO(Dee_function_generator_vpush_const(self, &DeeTuple_Type));     /* func, attr, t_size, [items...], ob_type */
@@ -3900,7 +3902,7 @@ Dee_function_generator_vopbounditem(struct Dee_function_generator *__restrict se
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_GETITEM, 2));    /* seq, index */
 	DO(Dee_function_generator_vpush_imm8(self, 1));                                     /* seq, index, true */
 	DO(Dee_function_generator_vcallapi(self, &DeeObject_BoundItem, VCALL_CC_M1INT, 3)); /* result */
-	DO(Dee_function_generator_vdirect1(self));                                        /* result */
+	DO(Dee_function_generator_vdirect1(self));                                          /* result */
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;
@@ -4817,7 +4819,9 @@ next_key:
 
 	/* If less than 1/3 of elements in the template are NULL-entries, then don't use CALLOC
 	 * when allocating the d_elem vector, but MALLOC, and generate code to NULL out the keys
-	 * of unused template elements. */
+	 * of unused template elements.
+	 * XXX: Is that really a good cut-off? calloc isn't generally that much more expensive
+	 *      than malloc, but I could be wrong... */
 	{
 		size_t num_items = (result_d_mask + 1);
 		size_t num_null_items;
@@ -4848,10 +4852,10 @@ next_key:
 		                                   use_calloc_for_d_elem ? &Dee_Calloc
 		                                                         : &Dee_Malloc,
 		                                   VCALL_CC_OBJECT, 1));
-		DO(Dee_function_generator_vdirect1(self));                        /* [elems...], d, NOT_ASSIGNED(d_elem) */
+		DO(Dee_function_generator_vdirect1(self));                          /* [elems...], d, NOT_ASSIGNED(d_elem) */
 		Dee_function_generator_xinject_pop_freeinstance(self, &ij);
 		ASSERT(Dee_function_generator_vtop_direct_isref(self));
-		Dee_function_generator_vtop_direct_clearref(self);      /* [elems...], d, NOT_ASSIGNED(d_elem) */
+		Dee_function_generator_vtop_direct_clearref(self);                  /* [elems...], d, NOT_ASSIGNED(d_elem) */
 		DO(Dee_function_generator_vswap(self));                             /* [elems...], NOT_ASSIGNED(d_elem), d */
 		DO(Dee_function_generator_vdup_n(self, 2));                         /* [elems...], NOT_ASSIGNED(d_elem), d, NOT_ASSIGNED(d_elem) */
 		DO(Dee_function_generator_vpopind(self, soi->soi_offsetof_d_elem)); /* [elems...], d_elem, d */
@@ -4920,7 +4924,7 @@ next_key:
 	ASSERT(Dee_function_generator_vtop_direct_isref(self));
 	Dee_function_generator_vtop_direct_clearref(self); /* The "reference" is always inherited by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
 	while (elemc) {
-		DO(Dee_function_generator_vlrot(self, elemc + 1)); /* [elems...], d, key */
+		DO(Dee_function_generator_vlrot(self, elemc + 1));     /* [elems...], d, key */
 		if (asmap) {
 			DO(Dee_function_generator_vlrot(self, elemc + 1)); /* [elems...], d, key, value */
 			DO(Dee_function_generator_vref2(self, 2));         /* [elems...], d, key, ref:value */
@@ -4935,13 +4939,13 @@ next_key:
 			                                   VCALL_CC_RAWINTPTR, 3)); /* [elems...], UNCHECKED(d) */
 			--elemc;
 		} else {
-			DO(Dee_function_generator_vref2(self, 1)); /* [elems...], d, ref:key */
+			DO(Dee_function_generator_vref2(self, 1));         /* [elems...], d, ref:key */
 			ASSERT(Dee_function_generator_vtop_direct_isref(self));
 			Dee_function_generator_vtop_direct_clearref(self); /* Always stolen by `soi_libhostasm_rt_DeeSeqType_InsertFast' */
 			DO(Dee_function_generator_vcallapi(self, soi->soi_libhostasm_rt_DeeSeqType_InsertFast,
 			                                   VCALL_CC_RAWINTPTR, 2));                     /* [elems...], UNCHECKED(d) */
 		}                                                                                   /* [elems...], UNCHECKED(d) */
-		ASSERT(Dee_function_generator_vtop_isdirect(self));       /* [elems...], UNCHECKED(d) */
+		ASSERT(Dee_function_generator_vtop_isdirect(self));    /* [elems...], UNCHECKED(d) */
 		DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [elems...], d */
 		--elemc;
 	}
@@ -4980,10 +4984,10 @@ next_key:
 
 	/* Now that the object is fully ready, mark its location as containing a reference. */
 	Dee_Freea(result_d_elem_template);
-	ASSERT(!Dee_function_generator_vtop_direct_isref(self)); /* d */
-	Dee_function_generator_vtop_direct_setref(self);       /* ref:d */
-	DO(Dee_function_generator_voneref_noalias(self));                     /* oneref:ref:d */
-	return Dee_function_generator_vsettyp_noalias(self, seq_type);        /* seq_type:oneref:ref:d */
+	ASSERT(!Dee_function_generator_vtop_direct_isref(self));                          /* d */
+	Dee_function_generator_vtop_direct_setref(self);                                  /* ref:d */
+	EDO(err_no_result_d_elem_template, Dee_function_generator_voneref_noalias(self)); /* oneref:ref:d */
+	return Dee_function_generator_vsettyp_noalias(self, seq_type);                    /* seq_type:oneref:ref:d */
 err:
 	Dee_Freea(result_d_elem_template);
 err_no_result_d_elem_template:
@@ -5076,7 +5080,7 @@ err_cseq:
 		DO(Dee_function_generator_vcallapi(self, is_list ? (void const *)&DeeList_NewUninitialized
 		                                                 : (void const *)&DeeTuple_NewUninitialized,
 		                                   VCALL_CC_OBJECT, 1)); /* [elems...], ref:seq */
-		DO(Dee_function_generator_vdirect1(self));             /* [elems...], ref:seq */
+		DO(Dee_function_generator_vdirect1(self));               /* [elems...], ref:seq */
 		DO(Dee_function_generator_vdup(self));                   /* [elems...], ref:seq, seq */
 		DO(is_list ? Dee_function_generator_vind(self, offsetof(DeeListObject, l_list.ol_elemv))
 		           : Dee_function_generator_vdelta(self, offsetof(DeeTupleObject, t_elem))); /* [elems...], ref:seq, elemv */
@@ -5118,7 +5122,7 @@ err_cseq:
 		                                   seq_type == &DeeDict_Type ? (void const *)&DeeDict_NewKeyItemsInherited
 		                                                             : (void const *)&DeeHashSet_NewItemsInherited,
 		                                   VCALL_CC_OBJECT, 2));
-		DO(Dee_function_generator_vdirect1(self));        /* [elems...], result */
+		DO(Dee_function_generator_vdirect1(self));          /* [elems...], result */
 		DO(Dee_function_generator_vrrot(self, elemc + 1));  /* result, [elems...] */
 		/* In the success-case, all references were inherited by the Dict/HashSet */
 		for (i = 0; i < elemc; ++i) {
@@ -6345,9 +6349,9 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vpush_immSIZ(self, n));                                          /* [elems...], elemv, seq, elemc */
 		DO(Dee_function_generator_vlrot(self, 3));                                                 /* [elems...], seq, elemc, elemv */
 		DO(Dee_function_generator_vcallapi(self, &DeeSharedVector_NewShared, VCALL_CC_OBJECT, 2)); /* [elems...], seq, svec */
-		DO(Dee_function_generator_vdirect1(self));                                               /* [elems...], seq, svec */
+		DO(Dee_function_generator_vdirect1(self));                                                 /* [elems...], seq, svec */
 		DO(Dee_function_generator_vsettyp_noalias(self, &DeeSharedVector_Type));                   /* [elems...], seq, svec */
-		Dee_function_generator_vtop_direct_clearref(self);                             /* [elems...], seq, svec */
+		Dee_function_generator_vtop_direct_clearref(self);                                         /* [elems...], seq, svec */
 		DO(Dee_function_generator_vswap(self));                                                    /* [elems...], svec, seq */
 		Dee_function_generator_xinject_push_callvoidapi(self, &ij, api_decref, 1);                 /* [elems...], svec, seq */
 		ij.fei_cva_base.fei_stack -= 1;                                                            /* [elems...], svec, seq */
@@ -6363,11 +6367,11 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 		DO(Dee_function_generator_vop(self, OPERATOR_ADD, 2, VOP_F_PUSHRES));                      /* [elems...], svec, result */
 		Dee_function_generator_xinject_pop_callvoidapi(self, &ij);                                 /* [elems...], svec, result */
 		DO(Dee_function_generator_vswap(self));                                                    /* [elems...], result, svec */
-		ASSERT(!Dee_function_generator_vtop_direct_isref(self));                      /* [elems...], result, svec */
+		ASSERT(!Dee_function_generator_vtop_direct_isref(self));                                   /* [elems...], result, svec */
 		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));                   /* [elems...], result */
 		goto rotate_result_and_pop_elems;
 	}
-	DO(Dee_function_generator_vdirect1(self));       /* [elems...], elemv, seq */
+	DO(Dee_function_generator_vdirect1(self));         /* [elems...], elemv, seq */
 	DO(Dee_function_generator_vref2(self, n + 2));     /* [elems...], elemv, ref:seq */
 	if (extend_inherited_api_function == (void const *)&DeeObject_ExtendInherited)
 		DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_ADD, 1)); /* [elems...], elemv, ref:seq */
@@ -6377,7 +6381,7 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vcallapi(self, extend_inherited_api_function, VCALL_CC_RAWINTPTR_KEEPARGS, 3)); /* [[valid_if(!result)] elems...], [valid_if(!result)] ref:seq, elemc, elemv, UNCHECKED(result) */
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	DO(Dee_function_generator_gjz_except(self, Dee_function_generator_vtopdloc(self))); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, result */
-	Dee_function_generator_vtop_direct_setref(self); /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
+	Dee_function_generator_vtop_direct_setref(self);   /* [[valid_if(false)] elems...], [valid_if(false)] ref:seq, elemc, elemv, ref:result */
 	if (extend_inherited_api_function != (void const *)&DeeObject_ExtendInherited)
 		Dee_memval_direct_getobj(Dee_function_generator_vtop(self))->mo_flags |= n ? MEMOBJ_F_ONEREF : (old_seqflags & MEMOBJ_F_ONEREF);
 	DO(Dee_function_generator_vrrot(self, 4));         /* [[valid_if(false)] elems...], ref:result, [valid_if(false)] ref:seq, elemc, elemv */
@@ -6775,7 +6779,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 	CASE(Dee_STRUCT_BOOL(HOST_SIZEOF_POINTER)): {
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
-		DO(Dee_function_generator_vdirect1(self));                   /* reg:FIELD */
+		DO(Dee_function_generator_vdirect1(self));                     /* reg:FIELD */
 		ASSERT(Dee_function_generator_vtop_isdirect(self));
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
 		return 0;
@@ -6785,7 +6789,7 @@ _Dee_function_generator_vpush_type_member(struct Dee_function_generator *__restr
 	CASE(Dee_STRUCT_UNSIGNED | Dee_STRUCT_INTEGER(HOST_SIZEOF_POINTER)): {
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
-		DO(Dee_function_generator_vdirect1(self));                   /* reg:FIELD */
+		DO(Dee_function_generator_vdirect1(self));                     /* reg:FIELD */
 		ASSERT(Dee_function_generator_vtop_isdirect(self));
 		Dee_function_generator_vtop(self)->mv_vmorph = (desc->m_field.m_type & Dee_STRUCT_UNSIGNED)
 		                                               ? MEMVAL_VMORPH_UINT
@@ -6863,7 +6867,7 @@ push_true:
 		struct Dee_memval *vtop;
 		DO(Dee_function_generator_vind(self, desc->m_field.m_offset)); /* FIELD */
 		DO(Dee_function_generator_vreg(self, NULL));                   /* reg:FIELD */
-		DO(Dee_function_generator_vdirect1(self));                   /* reg:FIELD */
+		DO(Dee_function_generator_vdirect1(self));                     /* reg:FIELD */
 		vtop = Dee_function_generator_vtop(self);
 		ASSERT(Dee_memval_isdirect(vtop));
 		vtop->mv_vmorph = MEMVAL_VMORPH_TESTNZ(vtop->mv_vmorph);
@@ -7083,7 +7087,7 @@ Dee_function_generator_vbound_instance_attr(struct Dee_function_generator *__res
 	DO(Dee_function_generator_vpush_addr(self, attr));        /* desc, DeeInstance_DESC(desc, this), this, attr */
 	DO(Dee_function_generator_vnotoneref(self, 2));           /* desc, DeeInstance_DESC(desc, this), this, attr */
 	DO(Dee_function_generator_vcallapi(self, &DeeInstance_BoundAttribute, VCALL_CC_M1INT, 4)); /* result */
-	DO(Dee_function_generator_vdirect1(self));              /* result */
+	DO(Dee_function_generator_vdirect1(self));                /* result */
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_GZ;
 	return 0;

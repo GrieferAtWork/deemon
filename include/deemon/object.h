@@ -341,14 +341,22 @@ struct Dee_object {
 	((ob)->ob_refcnt &&     \
 	 (ob)->ob_type &&       \
 	 ((DeeObject *)(ob)->ob_type)->ob_refcnt)
-#define Dee_ASSERT_OBJECT(ob)                      (void)(likely(DeeObject_Check(ob)) || (DeeAssert_BadObject((DeeObject *)(ob), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)(likely(!(ob) || DeeObject_Check(ob)) || (DeeAssert_BadObjectOpt((DeeObject *)(ob), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)(likely((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)(likely(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExact((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExactOpt((DeeObject *)(ob), (DeeTypeObject *)(type), __FILE__, __LINE__), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT(ob)                                     Dee_ASSERT_OBJECT_AT(ob, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_OPT(ob)                                 Dee_ASSERT_OBJECT_OPT_AT(ob, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE(ob, type)                          Dee_ASSERT_OBJECT_TYPE_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)                      Dee_ASSERT_OBJECT_TYPE_OPT_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)                        Dee_ASSERT_OBJECT_TYPE_A_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)                    Dee_ASSERT_OBJECT_TYPE_A_OPT_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)                    Dee_ASSERT_OBJECT_TYPE_EXACT_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type)                Dee_ASSERT_OBJECT_TYPE_EXACT_OPT_AT(ob, type, __FILE__, __LINE__)
+#define Dee_ASSERT_OBJECT_AT(ob, file, line)                      (void)(likely(DeeObject_Check(ob)) || (DeeAssert_BadObject((DeeObject *)(ob), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_OPT_AT(ob, file, line)                  (void)(likely(!(ob) || DeeObject_Check(ob)) || (DeeAssert_BadObjectOpt((DeeObject *)(ob), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_AT(ob, type, file, line)           (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_OPT_AT(ob, type, file, line)       (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOf(ob, type))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_AT(ob, type, file, line)         (void)(likely((DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectType((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT_AT(ob, type, file, line)     (void)(likely(!(ob) || (DeeObject_Check(ob) && (DeeObject_InstanceOf(ob, type) || DeeType_IsAbstract(type)))) || (DeeAssert_BadObjectTypeOpt((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_AT(ob, type, file, line)     (void)(likely((DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExact((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT_AT(ob, type, file, line) (void)(likely(!(ob) || (DeeObject_Check(ob) && DeeObject_InstanceOfExact(ob, type))) || (DeeAssert_BadObjectTypeExactOpt((DeeObject *)(ob), (DeeTypeObject *)(type), file, line), Dee_BREAKPOINT(), 0))
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObject(DeeObject const *ob, char const *file, int line);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectOpt(DeeObject const *ob, char const *file, int line);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectType(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
@@ -356,26 +364,42 @@ DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeOpt(DeeObject const *ob, Dee
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExact(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
 DFUNDEF ATTR_COLD void DCALL DeeAssert_BadObjectTypeExactOpt(DeeObject const *ob, DeeTypeObject const *wanted_type, char const *file, int line);
 #else /* !NDEBUG */
-#define DeeObject_Check(ob)                        true
-#define Dee_ASSERT_OBJECT(ob)                      (void)0
-#define Dee_ASSERT_OBJECT_OPT(ob)                  (void)0
-#define Dee_ASSERT_OBJECT_TYPE(ob, type)           (void)0
-#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)       (void)0
-#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)         (void)0
-#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)     (void)0
-#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)     (void)0
-#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type) (void)0
+#define DeeObject_Check(ob)                                       true
+#define Dee_ASSERT_OBJECT(ob)                                     (void)0
+#define Dee_ASSERT_OBJECT_OPT(ob)                                 (void)0
+#define Dee_ASSERT_OBJECT_TYPE(ob, type)                          (void)0
+#define Dee_ASSERT_OBJECT_TYPE_OPT(ob, type)                      (void)0
+#define Dee_ASSERT_OBJECT_TYPE_A(ob, type)                        (void)0
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT(ob, type)                    (void)0
+#define Dee_ASSERT_OBJECT_TYPE_EXACT(ob, type)                    (void)0
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT(ob, type)                (void)0
+#define Dee_ASSERT_OBJECT_AT(ob, file, line)                      (void)0
+#define Dee_ASSERT_OBJECT_OPT_AT(ob, file, line)                  (void)0
+#define Dee_ASSERT_OBJECT_TYPE_AT(ob, type, file, line)           (void)0
+#define Dee_ASSERT_OBJECT_TYPE_OPT_AT(ob, type, file, line)       (void)0
+#define Dee_ASSERT_OBJECT_TYPE_A_AT(ob, type, file, line)         (void)0
+#define Dee_ASSERT_OBJECT_TYPE_A_OPT_AT(ob, type, file, line)     (void)0
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_AT(ob, type, file, line)     (void)0
+#define Dee_ASSERT_OBJECT_TYPE_EXACT_OPT_AT(ob, type, file, line) (void)0
 #endif /* NDEBUG */
 
 #ifdef DEE_SOURCE
-#define ASSERT_OBJECT                Dee_ASSERT_OBJECT
-#define ASSERT_OBJECT_OPT            Dee_ASSERT_OBJECT_OPT
-#define ASSERT_OBJECT_TYPE           Dee_ASSERT_OBJECT_TYPE
-#define ASSERT_OBJECT_TYPE_OPT       Dee_ASSERT_OBJECT_TYPE_OPT
-#define ASSERT_OBJECT_TYPE_A         Dee_ASSERT_OBJECT_TYPE_A
-#define ASSERT_OBJECT_TYPE_A_OPT     Dee_ASSERT_OBJECT_TYPE_A_OPT
-#define ASSERT_OBJECT_TYPE_EXACT     Dee_ASSERT_OBJECT_TYPE_EXACT
-#define ASSERT_OBJECT_TYPE_EXACT_OPT Dee_ASSERT_OBJECT_TYPE_EXACT_OPT
+#define ASSERT_OBJECT                   Dee_ASSERT_OBJECT
+#define ASSERT_OBJECT_OPT               Dee_ASSERT_OBJECT_OPT
+#define ASSERT_OBJECT_TYPE              Dee_ASSERT_OBJECT_TYPE
+#define ASSERT_OBJECT_TYPE_OPT          Dee_ASSERT_OBJECT_TYPE_OPT
+#define ASSERT_OBJECT_TYPE_A            Dee_ASSERT_OBJECT_TYPE_A
+#define ASSERT_OBJECT_TYPE_A_OPT        Dee_ASSERT_OBJECT_TYPE_A_OPT
+#define ASSERT_OBJECT_TYPE_EXACT        Dee_ASSERT_OBJECT_TYPE_EXACT
+#define ASSERT_OBJECT_TYPE_EXACT_OPT    Dee_ASSERT_OBJECT_TYPE_EXACT_OPT
+#define ASSERT_OBJECT_AT                Dee_ASSERT_OBJECT_AT
+#define ASSERT_OBJECT_OPT_AT            Dee_ASSERT_OBJECT_OPT_AT
+#define ASSERT_OBJECT_TYPE_AT           Dee_ASSERT_OBJECT_TYPE_AT
+#define ASSERT_OBJECT_TYPE_OPT_AT       Dee_ASSERT_OBJECT_TYPE_OPT_AT
+#define ASSERT_OBJECT_TYPE_A_AT         Dee_ASSERT_OBJECT_TYPE_A_AT
+#define ASSERT_OBJECT_TYPE_A_OPT_AT     Dee_ASSERT_OBJECT_TYPE_A_OPT_AT
+#define ASSERT_OBJECT_TYPE_EXACT_AT     Dee_ASSERT_OBJECT_TYPE_EXACT_AT
+#define ASSERT_OBJECT_TYPE_EXACT_OPT_AT Dee_ASSERT_OBJECT_TYPE_EXACT_OPT_AT
 #endif /* DEE_SOURCE */
 
 
@@ -647,9 +671,6 @@ DeeObject_UndoConstruction(DeeTypeObject *undo_start,
 	__hybrid_atomic_cmpxch(&(self)->ob_refcnt, 1, 0, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST)
 
 
-/* incref() + return `self' */
-DFUNDEF NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewRef(DeeObject *__restrict self);
-
 /* Destroy a given deemon object (called when its refcnt reaches `0') */
 #if defined(CONFIG_NO_BADREFCNT_CHECKS) && !defined(CONFIG_TRACE_REFCHANGES)
 DFUNDEF NONNULL((1)) void DCALL DeeObject_Destroy(DeeObject *__restrict self);
@@ -872,28 +893,28 @@ DFUNDEF WUNUSED NONNULL((1)) bool DCALL Dee_DecrefWasOk_traced(DeeObject *__rest
 #define Dee_DecrefIfNotOne(x)   Dee_DecrefIfNotOne_traced((DeeObject *)(x), __FILE__, __LINE__)
 #define Dee_DecrefWasOk(x)      Dee_DecrefWasOk_traced((DeeObject *)(x), __FILE__, __LINE__)
 #else /* CONFIG_TRACE_REFCHANGES */
-#define Dee_Incref_traced(ob, file, line)          Dee_Incref_untraced(x)
-#define Dee_Incref_n_traced(ob, n, file, line)     Dee_Incref_n_untraced(x, n)
-#define Dee_IncrefIfNotZero_traced(ob, file, line) Dee_IncrefIfNotZero_untraced(x)
-#define Dee_Decref_traced(ob, file, line)          Dee_Decref_untraced(x)
-#define Dee_Decref_likely_traced(ob, file, line)   Dee_Decref_likely_untraced(x)
-#define Dee_Decref_unlikely_traced(ob, file, line) Dee_Decref_unlikely_untraced(x)
-#define Dee_DecrefDokill_traced(ob, file, line)    Dee_DecrefDokill_untraced(x)
-#define Dee_DecrefNokill_traced(ob, file, line)    Dee_DecrefNokill_untraced(x)
-#define Dee_DecrefIfOne_traced(ob, file, line)     Dee_DecrefIfOne_untraced(x)
-#define Dee_DecrefIfNotOne_traced(ob, file, line)  Dee_DecrefIfNotOne_untraced(x)
-#define Dee_DecrefWasOk_traced(ob, file, line)     Dee_DecrefWasOk_untraced(x)
-#define Dee_Incref(x)                              Dee_Incref_untraced(x)
-#define Dee_Incref_n(x, n)                         Dee_Incref_n_untraced(x, n)
-#define Dee_IncrefIfNotZero(x)                     Dee_IncrefIfNotZero_untraced(x)
-#define Dee_Decref(x)                              Dee_Decref_untraced(x)
-#define Dee_Decref_likely(x)                       Dee_Decref_likely_untraced(x)
-#define Dee_Decref_unlikely(x)                     Dee_Decref_unlikely_untraced(x)
-#define Dee_DecrefDokill(x)                        Dee_DecrefDokill_untraced(x)
-#define Dee_DecrefNokill(x)                        Dee_DecrefNokill_untraced(x)
-#define Dee_DecrefIfOne(x)                         Dee_DecrefIfOne_untraced(x)
-#define Dee_DecrefIfNotOne(x)                      Dee_DecrefIfNotOne_untraced(x)
-#define Dee_DecrefWasOk(x)                         Dee_DecrefWasOk_untraced(x)
+#define Dee_Incref_traced(x, file, line)          Dee_Incref_untraced(x)
+#define Dee_Incref_n_traced(x, n, file, line)     Dee_Incref_n_untraced(x, n)
+#define Dee_IncrefIfNotZero_traced(x, file, line) Dee_IncrefIfNotZero_untraced(x)
+#define Dee_Decref_traced(x, file, line)          Dee_Decref_untraced(x)
+#define Dee_Decref_likely_traced(x, file, line)   Dee_Decref_likely_untraced(x)
+#define Dee_Decref_unlikely_traced(x, file, line) Dee_Decref_unlikely_untraced(x)
+#define Dee_DecrefDokill_traced(x, file, line)    Dee_DecrefDokill_untraced(x)
+#define Dee_DecrefNokill_traced(x, file, line)    Dee_DecrefNokill_untraced(x)
+#define Dee_DecrefIfOne_traced(x, file, line)     Dee_DecrefIfOne_untraced(x)
+#define Dee_DecrefIfNotOne_traced(x, file, line)  Dee_DecrefIfNotOne_untraced(x)
+#define Dee_DecrefWasOk_traced(x, file, line)     Dee_DecrefWasOk_untraced(x)
+#define Dee_Incref(x)                             Dee_Incref_untraced(x)
+#define Dee_Incref_n(x, n)                        Dee_Incref_n_untraced(x, n)
+#define Dee_IncrefIfNotZero(x)                    Dee_IncrefIfNotZero_untraced(x)
+#define Dee_Decref(x)                             Dee_Decref_untraced(x)
+#define Dee_Decref_likely(x)                      Dee_Decref_likely_untraced(x)
+#define Dee_Decref_unlikely(x)                    Dee_Decref_unlikely_untraced(x)
+#define Dee_DecrefDokill(x)                       Dee_DecrefDokill_untraced(x)
+#define Dee_DecrefNokill(x)                       Dee_DecrefNokill_untraced(x)
+#define Dee_DecrefIfOne(x)                        Dee_DecrefIfOne_untraced(x)
+#define Dee_DecrefIfNotOne(x)                     Dee_DecrefIfNotOne_untraced(x)
+#define Dee_DecrefWasOk(x)                        Dee_DecrefWasOk_untraced(x)
 #endif /* !CONFIG_TRACE_REFCHANGES */
 
 /* Optimization hints when the object actually
@@ -1357,6 +1378,17 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 #define Dee_XIncprefv(object_vector, object_count)                    (Dee_XIncrefv(object_vector, object_count) + (object_count))
 #define Dee_XDecprefv(object_vector, object_count)                    (Dee_XDecrefv(object_vector, object_count) + (object_count))
 #define Dee_XMovprefv(dst, src, object_count)                         (Dee_XMovrefv(dst, src, object_count) + (object_count))
+
+
+/* incref() + return `self' (may be used in type operators,
+ * and receives special optimizations in some situations) */
+DFUNDEF NONNULL((1)) DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self);
+#ifdef CONFIG_TRACE_REFCHANGES
+DFUNDEF NONNULL((1)) DREF DeeObject *(DCALL DeeObject_NewRef_traced)(DeeObject *__restrict self, char const *file, int line);
+#define DeeObject_NewRef(self) DeeObject_NewRef_traced(self, __FILE__, __LINE__)
+#else /* CONFIG_TRACE_REFCHANGES */
+#define DeeObject_NewRef_traced(self, file, line) DeeObject_NewRef(self)
+#endif /* !CONFIG_TRACE_REFCHANGES */
 
 
 /* Callback prototype for enumerating object attributes.

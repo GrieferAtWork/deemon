@@ -143,7 +143,7 @@ vbool_field_nonzero(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                 /* value, value */
 	DO(Dee_function_generator_vind(self, offsetof_field)); /* value, value->xx_field */
 	DO(Dee_function_generator_vreg(self, NULL));           /* value, reg:value->xx_field */
-	DO(Dee_function_generator_vdirect1(self));           /* value, reg:value->xx_field */
+	DO(Dee_function_generator_vdirect1(self));             /* value, reg:value->xx_field */
 	DO(Dee_function_generator_vswap(self));                /* reg:value->xx_field, value */
 	DO(Dee_function_generator_vpop(self));                 /* reg:value->xx_field */
 	return Dee_function_generator_vcall_DeeBool_For(self); /* result */
@@ -157,7 +157,7 @@ vsize_field_uint(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                       /* value, value */
 	DO(Dee_function_generator_vind(self, offsetof_size_field));  /* value, value->xx_size */
 	DO(Dee_function_generator_vreg(self, NULL));                 /* value, reg:value->xx_size */
-	DO(Dee_function_generator_vdirect1(self));                 /* value, reg:value->xx_size */
+	DO(Dee_function_generator_vdirect1(self));                   /* value, reg:value->xx_size */
 	DO(Dee_function_generator_vswap(self));                      /* reg:value->xx_size, value */
 	DO(Dee_function_generator_vpop(self));                       /* reg:value->xx_size */
 	return Dee_function_generator_vcall_DeeInt_NewUIntptr(self); /* result */
@@ -406,7 +406,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	DO(Dee_function_generator_vdup_n(self, 3));             /* this, key, value, this, key */
 	DO(Dee_function_generator_vpush_addr(self, ITER_DONE)); /* this, key, value, this, key, ITER_DONE */
 	DO(Dee_function_generator_vopgetitemdef(self));         /* this, key, value, current_value */
-	DO(Dee_function_generator_vdirect1(self));            /* this, key, value, current_value */
+	DO(Dee_function_generator_vdirect1(self));              /* this, key, value, current_value */
 
 	/* >> if (current_value == ITER_DONE) {
 	 * >>     if (DeeObject_SetItem(this, key, value))
@@ -424,19 +424,19 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	common_state = self->fg_state;
 	ASSERT(Dee_memval_isdirect(Dee_memstate_vtop(common_state)));
 	Dee_memval_direct_setref(Dee_memstate_vtop(common_state));
-	Dee_memstate_incref(common_state);                                                /* this, key, value, ref:current_value */
-	EDO(err_common_state, Dee_function_generator_state_unshare(self));                /* this, key, value, ref:current_value */
-	Dee_function_generator_vtop_direct_clearref(self);                    /* this, key, value, current_value */
-	EDO(err_common_state, Dee_function_generator_vpop(self));                         /* this, key, value */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));                    /* this, key, value, this */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));                    /* this, key, value, this, key */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));                    /* this, key, value, this, key, value */
+	Dee_memstate_incref(common_state);                                        /* this, key, value, ref:current_value */
+	EDO(err_common_state, Dee_function_generator_state_unshare(self));        /* this, key, value, ref:current_value */
+	Dee_function_generator_vtop_direct_clearref(self);                        /* this, key, value, current_value */
+	EDO(err_common_state, Dee_function_generator_vpop(self));                 /* this, key, value */
+	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this */
+	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this, key */
+	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this, key, value */
 	EDO(err_common_state, Dee_function_generator_vop(self, OPERATOR_SETITEM, 3, VOP_F_NORMAL)); /* this, key, value */
-	EDO(err_common_state, Dee_function_generator_vdup(self));                         /* this, key, value, value */
-	EDO(err_common_state, Dee_function_generator_vdirect1(self));                   /* this, key, value, value */
+	EDO(err_common_state, Dee_function_generator_vdup(self));                 /* this, key, value, value */
+	EDO(err_common_state, Dee_function_generator_vdirect1(self));             /* this, key, value, value */
 	EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* this, key, value, value */
-	Dee_function_generator_vtop_direct_setref(self);                   /* this, key, value, ref:value */
-	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state));         /* this, key, value, ref:current_value */
+	Dee_function_generator_vtop_direct_setref(self);                          /* this, key, value, ref:value */
+	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* this, key, value, ref:current_value */
 	Dee_memstate_decref(common_state);
 	Dee_host_symbol_setsect(Lnot_ITER_DONE, self->fg_sect); /* this, key, value, ref:current_value */
 	DO(Dee_function_generator_vrrot(self, 4));              /* ref:current_value, this, key, value */
@@ -971,7 +971,7 @@ cco_WeakRef_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;                                                           /* result */
 	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* result */
-	Dee_function_generator_vtop_direct_setref(self);                         /* ref:result */
+	Dee_function_generator_vtop_direct_setref(self);                                        /* ref:result */
 	return 0;
 err_saved_state:
 	Dee_memstate_decref(saved_state);
@@ -1016,7 +1016,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                                    /* cell, cell */
 	DO(Dee_function_generator_vind(self, offsetof(DeeCellObject, c_item)));   /* cell, cell->c_item */
 	DO(Dee_function_generator_vreg(self, NULL));                              /* cell, reg:cell->c_item */
-	DO(Dee_function_generator_vdirect1(self));                              /* cell, reg:cell->c_item */
+	DO(Dee_function_generator_vdirect1(self));                                /* cell, reg:cell->c_item */
 	text = self->fg_sect;
 	cold = &self->fg_block->bb_hcold;
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
@@ -1049,7 +1049,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;                                                           /* cell, reg:cell->c_item */
 	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* cell, ref:cell->c_item */
-	Dee_function_generator_vtop_direct_setref(self);                         /* cell, ref:cell->c_item */
+	Dee_function_generator_vtop_direct_setref(self);                                        /* cell, ref:cell->c_item */
 	DO(Dee_function_generator_vswap(self));                                                 /* ref:cell->c_item, cell */
 	DO(Dee_function_generator_vdup(self));                                                  /* ref:cell->c_item, cell, cell */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock)));               /* ref:cell->c_item, cell, &cell->c_lock */
@@ -1075,7 +1075,7 @@ vcall_DeeCell_DelOrSet(struct Dee_function_generator *__restrict self) {
 	DO(Dee_function_generator_vrwlock_endwrite(self));                          /* cell, ref:old_value */
 	DO(Dee_function_generator_vswap(self));                                     /* ref:old_value, cell */
 	DO(Dee_function_generator_vpop(self));                                      /* ref:old_value */
-	ASSERT(!Dee_function_generator_vtop_direct_isref(self));       /* ref:old_value */
+	ASSERT(!Dee_function_generator_vtop_direct_isref(self));                    /* ref:old_value */
 	DO(Dee_function_generator_gxdecref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* old_value */
 	return Dee_function_generator_vpop(self);
 err:
@@ -1103,11 +1103,11 @@ cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t ar
 		Dee_memstate_incref(common_state);
 		EDO(err_common_state, Dee_function_generator_state_unshare(self));
 		Dee_function_generator_vtop_direct_clearref(self);
-		EDO(err_common_state, Dee_function_generator_vpop(self));                 /* def */
-		EDO(err_common_state, Dee_function_generator_vdup(self));                 /* def, def */
-		EDO(err_common_state, Dee_function_generator_vdirect1(self));           /* def, def */
+		EDO(err_common_state, Dee_function_generator_vpop(self));     /* def */
+		EDO(err_common_state, Dee_function_generator_vdup(self));     /* def, def */
+		EDO(err_common_state, Dee_function_generator_vdirect1(self)); /* def, def */
 		EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* def, def */
-		Dee_function_generator_vtop_direct_setref(self);           /* def, ref:def */
+		Dee_function_generator_vtop_direct_setref(self);              /* def, ref:def */
 		EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* def, result */
 		Dee_memstate_decref(common_state);
 		Dee_host_symbol_setsect(Lpresent, self->fg_sect);
@@ -1365,36 +1365,36 @@ struct ccall_optimizations_struct {
 
 /* Attribute optimizations for known types. */
 PRIVATE struct ccall_optimizations_struct tpconst cca_optimizations[] = {
-#define DEFINE_OBJMETHOD_OPTIMIZATIIONS(type, vec) { type, vec, COMPILER_LENOF(vec) }
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeObject_Type, cca_Object),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeSeq_Type, cca_Sequence),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeList_Type, cca_List),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeCell_Type, cca_Cell),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeMapping_Type, cca_Mapping),
-#undef DEFINE_OBJMETHOD_OPTIMIZATIIONS
+#define DEFINE_CCALL_OPTIMIZATIIONS(type, vec) { type, vec, COMPILER_LENOF(vec) }
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeObject_Type, cca_Object),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeSeq_Type, cca_Sequence),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeList_Type, cca_List),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeCell_Type, cca_Cell),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeMapping_Type, cca_Mapping),
+#undef DEFINE_CCALL_OPTIMIZATIIONS
 };
 
 
 /* Operator optimizations for known types. */
 PRIVATE struct ccall_optimizations_struct tpconst cco_optimizations[] = {
-#define DEFINE_OBJMETHOD_OPTIMIZATIIONS(type, vec) { type, vec, COMPILER_LENOF(vec) }
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeInt_Type, cco_Int),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeString_Type, cco_String),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeBytes_Type, cco_Bytes),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeTuple_Type, cco_Tuple),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeList_Type, cco_List),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeHashSet_Type, cco_HashSet),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeRoSet_Type, cco_RoSet),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeDict_Type, cco_Dict),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeRoDict_Type, cco_RoDict),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeCell_Type, cco_Cell),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeWeakRef_Type, cco_WeakRef),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeNone_Type, cco_None),
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeBool_Type, cco_Bool),
+#define DEFINE_CCALL_OPTIMIZATIIONS(type, vec) { type, vec, COMPILER_LENOF(vec) }
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeInt_Type, cco_Int),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeString_Type, cco_String),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeBytes_Type, cco_Bytes),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeTuple_Type, cco_Tuple),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeList_Type, cco_List),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeHashSet_Type, cco_HashSet),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeRoSet_Type, cco_RoSet),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeDict_Type, cco_Dict),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeRoDict_Type, cco_RoDict),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeCell_Type, cco_Cell),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeWeakRef_Type, cco_WeakRef),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeNone_Type, cco_None),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeBool_Type, cco_Bool),
 #ifdef CONFIG_HAVE_FPU
-	DEFINE_OBJMETHOD_OPTIMIZATIIONS(&DeeFloat_Type, cco_Float),
+	DEFINE_CCALL_OPTIMIZATIIONS(&DeeFloat_Type, cco_Float),
 #endif /* CONFIG_HAVE_FPU */
-#undef DEFINE_OBJMETHOD_OPTIMIZATIIONS
+#undef DEFINE_CCALL_OPTIMIZATIIONS
 };
 
 

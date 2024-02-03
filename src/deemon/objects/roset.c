@@ -333,7 +333,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 		return_reference_(sequence);
 
 	/* TODO: Optimization: if (DeeSet_CheckExact(sequence)) ...
-	 * (fix the dict's hash-vector to not contain dummies,
+	 * (fix the set's hash-vector to not contain dummies,
 	 * then copy as-is) */
 
 	/* Construct a read-only RoSet from a generic sequence. */

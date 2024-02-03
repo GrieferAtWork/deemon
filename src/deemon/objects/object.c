@@ -405,11 +405,11 @@ set_dst_empty:
 }
 
 #ifdef __INTELLISENSE__
-PUBLIC void
+PUBLIC NONNULL((1, 2)) void
 (DCALL Dee_weakref_copyassign)(struct weakref *self,
                                struct weakref const *other)
 #else /* __INTELLISENSE__ */
-PUBLIC void
+PUBLIC NONNULL((1, 2)) void
 (DCALL Dee_weakref_copyassign)(struct weakref *self,
                                struct weakref *other)
 #endif /* !__INTELLISENSE__ */
@@ -809,9 +809,11 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 
 /* Return the state of a snapshot of `self' currently being bound. */
 #ifdef __INTELLISENSE__
-PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_weakref_bound)(struct weakref const *__restrict self)
 #else /* __INTELLISENSE__ */
-PUBLIC WUNUSED NONNULL((1)) bool (DCALL Dee_weakref_bound)(struct weakref *__restrict self)
+PUBLIC WUNUSED NONNULL((1)) bool
+(DCALL Dee_weakref_bound)(struct weakref *__restrict self)
 #endif /* !__INTELLISENSE__ */
 {
 	DeeObject *curr;
@@ -964,13 +966,6 @@ again:
 }
 
 
-
-PUBLIC NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
-	ASSERT_OBJECT(self);
-	Dee_Incref(self);
-	return self;
-}
 
 PUBLIC WUNUSED NONNULL((2)) bool DCALL
 DeeObject_UndoConstruction(DeeTypeObject *undo_start,
@@ -4015,7 +4010,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD_F("is_file", &type_is_filetype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
-	TYPE_METHOD_F("is_super_base", &type_is_superbase, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ !is bound}"),
+	TYPE_METHOD_F("is_super_base", &type_is_superbase, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ is none}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	TYPE_METHOD_END
@@ -4073,7 +4068,7 @@ get_module_from_addr(struct class_desc *__restrict my_class, uint16_t addr) {
 	return (DREF DeeObject *)result;
 }
 
-LOCAL WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_GetModule(DeeTypeObject *__restrict self) {
 	struct class_desc *my_class    = self->tp_class;
 	DeeClassDescriptorObject *desc = my_class->cd_desc;
@@ -5260,6 +5255,28 @@ PUBLIC WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefWasOk)(DeeObject *__restrict ob) {
 	return Dee_DecrefWasOk_untraced(ob);
 }
+
+
+/* incref() + return `self' (may be used in type operators,
+ * and receives special optimizations in some situations) */
+PUBLIC NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
+	ASSERT_OBJECT(self);
+	Dee_Incref(self);
+	return self;
+}
+
+PUBLIC NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef_traced)(DeeObject *__restrict self,
+                                char const *file, int line) {
+	(void)file;
+	(void)line;
+	ASSERT_OBJECT_AT(self, file, line);
+	Dee_Incref_traced(self, file, line);
+	return self;
+}
+
+
 
 /* Increment the reference counter of every object from `object_vector...+=object_count'
  * @return: * : Always re-returns the pointer to `object_vector' */

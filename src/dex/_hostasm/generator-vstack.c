@@ -3768,27 +3768,25 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
 
-	/* Save argument memory locations from before the flush. This is because after the
-	 * flush, registers are written to the stack, and if we were to pass the then-current
-	 * `Dee_memval' to `Dee_function_generator_gcallapi', it would have to load those
-	 * values from the stack (when they can also be found in registers) */
-	v_argv = self->fg_state->ms_stackv;
-	v_argv += self->fg_state->ms_stackc;
-	v_argv -= argc; /* TODO: Do the copy after gflushregs() and have gcallapi() look at equivalence classes */
-	l_argv = (struct Dee_memloc *)Dee_Mallocac(argc, sizeof(struct Dee_memloc));
-	if unlikely(!l_argv)
-		goto err;
-	for (argi = 0; argi < argc; ++argi)
-		l_argv[argi] = *Dee_memval_direct_getloc(&v_argv[argi]);
-
 	/* Flush registers that don't appear in the top `argc' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
 	if unlikely(Dee_function_generator_gflushregs(self, argc, cc == VCALL_CC_EXCEPT))
-		goto err_l_argv;
+		goto err;
+
+	/* Build up the argument list. */
+	v_argv = self->fg_state->ms_stackv;
+	v_argv += self->fg_state->ms_stackc;
+	v_argv -= argc;
+	l_argv = (struct Dee_memloc *)Dee_Mallocac(argc + 1, sizeof(struct Dee_memloc));
+	if unlikely(!l_argv)
+		goto err;
+	Dee_memloc_init_const(&l_argv[0], api_function);
+	for (argi = 0; argi < argc; ++argi)
+		l_argv[argi + 1] = *Dee_memval_direct_getloc(&v_argv[argi]);
 
 	/* Call the actual C function */
-	if unlikely(Dee_function_generator_gcallapi(self, api_function, argc, l_argv))
+	if unlikely(Dee_function_generator_gcallapi(self, l_argv, argc))
 		goto err_l_argv;
 	Dee_Freea(l_argv);
 
@@ -3812,9 +3810,8 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict self,
                                    unsigned int cc, Dee_vstackaddr_t argc) {
 	Dee_vstackaddr_t argi;
-	struct Dee_memloc *l_argv, l_func;
+	struct Dee_memloc *l_argv;
 	struct Dee_memval *v_argv;
-	Dee_host_register_t func_regno;
 	if unlikely(Dee_function_generator_vdirect(self, argc + 1))
 		goto err;
 	if unlikely(Dee_function_generator_state_unshare(self))
@@ -3828,52 +3825,25 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 		return Dee_function_generator_vcallapi(self, api_function, cc, argc);
 	}
 
-	/* Save argument memory locations from before the flush. This is because after the
-	 * flush, registers are written to the stack, and if we were to pass the then-current
-	 * `Dee_memval' to `Dee_function_generator_gcallapi', it would have to load those
-	 * values from the stack (when they can also be found in registers) */
-	v_argv -= argc; /* TODO: Do the copy after gflushregs() and have gcallapi() look at equivalence classes */
-	l_argv = (struct Dee_memloc *)Dee_Mallocac(argc, sizeof(struct Dee_memloc));
-	if unlikely(!l_argv)
-		goto err;
-	for (argi = 0; argi < argc; ++argi)
-		l_argv[argi] = *Dee_memval_direct_getloc(&v_argv[argi]);
-
 	/* Flush registers that don't appear in the top `argc' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
 	if unlikely(Dee_function_generator_gflushregs(self, argc + 1, cc == VCALL_CC_EXCEPT))
-		goto err_l_argv;
+		goto err;
 
-	l_func = *Dee_function_generator_vtopdloc(self);
+	/* Build up the argument list. */
+	v_argv -= argc;
+	l_argv = (struct Dee_memloc *)Dee_Mallocac(1 + argc, sizeof(struct Dee_memloc));
+	if unlikely(!l_argv)
+		goto err;
+	for (argi = 0; argi < argc; ++argi)
+		l_argv[1 + argi] = *Dee_memval_direct_getloc(&v_argv[argi]);
+	l_argv[0] = *Dee_function_generator_vtopdloc(self);
 	if unlikely(Dee_function_generator_vpop(self))
 		goto err_l_argv;
-	if (l_func.ml_adr.ma_typ == MEMADR_TYPE_HREG ||
-	    (l_func.ml_adr.ma_typ == MEMADR_TYPE_HREGIND && l_func.ml_off == 0) ||
-	    (l_func.ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND || l_func.ml_off != 0)) {
-		/* Function can be generated like this */
-	} else {
-		/* Need to load function into a register. */
-		struct Dee_memloc l_func_asreg;
-		if unlikely(Dee_function_generator_gasreg(self, &l_func, &l_func_asreg, NULL))
-			goto err_l_argv;
-		l_func = l_func_asreg;
-		ASSERT(l_func.ml_adr.ma_typ == MEMADR_TYPE_HREG);
-	}
-	func_regno = HOST_REGISTER_COUNT;
-	if (MEMADR_TYPE_HASREG(l_func.ml_adr.ma_typ))
-		func_regno = l_func.ml_adr.ma_reg;
-	if (l_func.ml_adr.ma_typ == MEMADR_TYPE_HREG && l_func.ml_adr.ma_val.v_indoff != 0) {
-		if unlikely(Dee_function_generator_gmov_regx2reg(self,
-		                                                 l_func.ml_adr.ma_reg,
-		                                                 l_func.ml_adr.ma_val.v_indoff,
-		                                                 l_func.ml_adr.ma_reg))
-			goto err_l_argv;
-		l_func.ml_adr.ma_val.v_indoff = 0;
-	}
 
 	/* Call the actual C function */
-	if unlikely(Dee_function_generator_gcalldynapi(self, &l_func, argc, l_argv))
+	if unlikely(Dee_function_generator_gcallapi(self, l_argv, argc))
 		goto err_l_argv;
 	Dee_Freea(l_argv);
 

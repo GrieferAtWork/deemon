@@ -44,9 +44,6 @@ DECL_BEGIN
 /************************************************************************/
 
 #undef NEED_constasreg
-#ifdef _Dee_function_generator_ghstack_pushconst_MAYFAIL
-#define NEED_constasreg
-#endif /* _Dee_function_generator_ghstack_pushconst_MAYFAIL */
 #ifdef _Dee_function_generator_gmov_const2regind_MAYFAIL
 #define NEED_constasreg
 #endif /* _Dee_function_generator_gmov_const2regind_MAYFAIL */
@@ -204,15 +201,6 @@ Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restri
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "value", do nothing */
 #endif /* HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER */
 	result = _Dee_function_generator_ghstack_pushconst(self, value);
-#ifdef _Dee_function_generator_ghstack_pushconst_MAYFAIL
-	if unlikely(result > 0) {
-		Dee_host_register_t valreg;
-		valreg = Dee_function_generator_gconst_as_reg(self, value, NULL);
-		if unlikely(valreg >= HOST_REGISTER_COUNT)
-			return -1;
-		return Dee_function_generator_ghstack_pushreg(self, valreg);
-	}
-#endif /* _Dee_function_generator_ghstack_pushconst_MAYFAIL */
 	if likely(result == 0) {
 		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 		result = Dee_function_generator_remember_movevalue_const2hstackind(self, value, dst_cfa_offset);
@@ -1194,6 +1182,107 @@ done:
 
 
 /* Helpers for transforming locations into deemon boolean objects. */
+
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_regx2reg01(struct Dee_function_generator *__restrict self,
+                                         Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                         unsigned int cmp, Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gmorph_regx2reg01(self, src_regno, src_delta, cmp, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_regind2reg01(struct Dee_function_generator *__restrict self,
+                                           Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta,
+                                           unsigned int cmp, Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gmorph_regind2reg01(self, src_regno, ind_delta, val_delta, cmp, dst_regno);
+#ifdef _Dee_function_generator_gmorph_regind2reg01_MAYFAIL
+	if unlikely(result > 0) {
+		Dee_host_register_t val_delta_reg;
+		Dee_host_register_t not_these[3];
+		not_these[0] = src_regno;
+		not_these[1] = dst_regno;
+		not_these[2] = HOST_REGISTER_RETURN;
+		val_delta_reg = Dee_function_generator_gallocreg(self, not_these);
+		if unlikely(val_delta_reg >= HOST_REGISTER_RETURN)
+			return -1;
+		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)-val_delta, val_delta_reg);
+		if likely(result == 0) {
+			result = Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, 0,
+			                                                        cmp, val_delta_reg, dst_regno);
+		}
+		return result;
+	}
+#endif /* _Dee_function_generator_gmorph_regind2reg01_MAYFAIL */
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_hstackind2reg01(struct Dee_function_generator *__restrict self,
+                                              uintptr_t cfa_offset, ptrdiff_t val_delta,
+                                              unsigned int cmp, Dee_host_register_t dst_regno) {
+	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
+	int result = _Dee_function_generator_gmorph_hstackind2reg01(self, sp_offset, val_delta, cmp, dst_regno);
+#ifdef _Dee_function_generator_gmorph_hstackind2reg01_MAYFAIL
+	if unlikely(result > 0) {
+		Dee_host_register_t val_delta_reg;
+		Dee_host_register_t not_these[2];
+		not_these[0] = dst_regno;
+		not_these[1] = HOST_REGISTER_RETURN;
+		val_delta_reg = Dee_function_generator_gallocreg(self, not_these);
+		if unlikely(val_delta_reg >= HOST_REGISTER_RETURN)
+			return -1;
+		result = Dee_function_generator_gmov_const2reg(self, (void const *)(uintptr_t)-val_delta, val_delta_reg);
+		if likely(result == 0) {
+			result = Dee_function_generator_gmorph_hstackindCreg2reg01(self, cfa_offset, 0,
+			                                                           cmp, val_delta_reg, dst_regno);
+		}
+		return result;
+	}
+#endif /* _Dee_function_generator_gmorph_hstackind2reg01_MAYFAIL */
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_regxCreg2reg01(struct Dee_function_generator *__restrict self,
+                                             Dee_host_register_t src_regno, ptrdiff_t src_delta,
+                                             unsigned int cmp, Dee_host_register_t rhs_regno,
+                                             Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gmorph_regxCreg2reg01(self, src_regno, src_delta, cmp, rhs_regno, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_regindCreg2reg01(struct Dee_function_generator *__restrict self,
+                                               Dee_host_register_t src_regno, ptrdiff_t ind_delta, ptrdiff_t val_delta,
+                                               unsigned int cmp, Dee_host_register_t rhs_regno,
+                                               Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gmorph_regindCreg2reg01(self, src_regno, ind_delta, val_delta, cmp, rhs_regno, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmorph_hstackindCreg2reg01(struct Dee_function_generator *__restrict self,
+                                                  uintptr_t cfa_offset, ptrdiff_t val_delta,
+                                                  unsigned int cmp, Dee_host_register_t rhs_regno,
+                                                  Dee_host_register_t dst_regno) {
+	ptrdiff_t sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
+	int result = _Dee_function_generator_gmorph_hstackindCreg2reg01(self, sp_offset, val_delta, cmp, rhs_regno, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
 
 /* dst_regno = (src_loc + src_delta) <CMP> 0 ? 1 : 0; */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -2200,82 +2289,12 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gcallapi(struct Dee_function_generator *__restrict self,
-                                void const *api_function, size_t argc,
-                                struct Dee_memloc const *argv) {
-	int result = _Dee_function_generator_gcallapi(self, api_function, argc, argv);
-	if likely(result == 0)
+                                struct Dee_memloc *locv, size_t argc) {
+	int result = _Dee_function_generator_gcallapi(self, locv, argc);
+	if likely(result == 0) {
 		Dee_function_generator_remember_undefined_allregs(self);
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gcalldynapi(struct Dee_function_generator *__restrict self,
-                                   struct Dee_memloc const *api_function_loc,
-                                   size_t argc, struct Dee_memloc const *argv) {
-	int result;
-	struct Dee_memloc api_function_asreg;
-	switch (Dee_memloc_gettyp(api_function_loc)) {
-	default: {
-		size_t i;
-		Dee_host_register_t regno, not_these[HOST_REGISTER_COUNT + 1];
-		bitset_t not_these_bitset[_bitset_sizeof(HOST_REGISTER_COUNT)];
-fallback:
-		bitset_clearall(not_these_bitset, HOST_REGISTER_COUNT);
-		for (i = 0; i < argc; ++i) {
-			struct Dee_memloc const *arg = &argv[i];
-			if (Dee_memloc_hasreg(arg))
-				bitset_set(not_these_bitset, Dee_memloc_getreg(arg));
-		}
-		for (i = 0, regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
-			if (bitset_test(not_these_bitset, regno)) {
-				not_these[i] = regno;
-				++i;
-			}
-		}
-		not_these[i] = HOST_REGISTER_COUNT;
-		result = Dee_function_generator_gasreg(self, api_function_loc, &api_function_asreg, not_these);
-		if unlikely(result != 0)
-			break;
-		api_function_loc = &api_function_asreg;
-	}	ATTR_FALLTHROUGH
-	case MEMADR_TYPE_HREG:
-		if unlikely(Dee_memloc_hreg_getvaloff(api_function_loc) != 0) {
-			result = Dee_function_generator_gmov_regx2reg(self,
-			                                              Dee_memloc_hreg_getreg(api_function_loc),
-			                                              Dee_memloc_hreg_getvaloff(api_function_loc),
-			                                              Dee_memloc_hreg_getreg(api_function_loc));
-			if unlikely(result != 0)
-				break;
-			Dee_memstate_hregs_adjust_delta(self->fg_state,
-			                                Dee_memloc_hreg_getreg(api_function_loc),
-			                                Dee_memloc_hreg_getvaloff(api_function_loc));
-			if (api_function_loc != &api_function_asreg) {
-				api_function_asreg = *api_function_loc;
-				api_function_loc = &api_function_asreg;
-			}
-			Dee_memloc_hreg_setvaloff(&api_function_asreg, 0);
-		}
-		result = _Dee_function_generator_gcalldynapi_reg(self, Dee_memloc_hreg_getreg(api_function_loc), argc, argv);
-		break;
-	case MEMADR_TYPE_HSTACKIND:
-		if unlikely(Dee_memloc_hstackind_getvaloff(api_function_loc) != 0)
-			goto fallback;
-		result = _Dee_function_generator_gcalldynapi_hstackind(self, Dee_memloc_hstackind_getcfa(api_function_loc), argc, argv);
-		break;
-	case MEMADR_TYPE_HREGIND:
-		if unlikely(Dee_memloc_hregind_getvaloff(api_function_loc) != 0)
-			goto fallback;
-		result = _Dee_function_generator_gcalldynapi_hregind(self,
-		                                                     Dee_memloc_hregind_getreg(api_function_loc),
-		                                                     Dee_memloc_hregind_getindoff(api_function_loc),
-		                                                     argc, argv);
-		break;
-	case MEMADR_TYPE_CONST:
-		result = _Dee_function_generator_gcallapi(self, (void const *)Dee_memloc_const_getaddr(api_function_loc), argc, argv);
-		break;
+		Dee_memstate_hregs_clear_usage(self->fg_state);
 	}
-	if likely(result == 0)
-		Dee_function_generator_remember_undefined_allregs(self);
 	return result;
 }
 
