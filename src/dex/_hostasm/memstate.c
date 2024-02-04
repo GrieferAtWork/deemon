@@ -1085,181 +1085,219 @@ err:
 
 
 
+/* Compare all of the memory locations and reference counts between "a" and "b" */
+INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_except_exitinfo_id_compare(struct Dee_except_exitinfo_id const *__restrict a,
+                               struct Dee_except_exitinfo_id const *__restrict b) {
+	size_t i;
+	if (a->exi_cfa_offset != b->exi_cfa_offset)
+		return a->exi_cfa_offset < b->exi_cfa_offset ? -1 : 1;
+	if (a->exi_memrefc != b->exi_memrefc)
+		return a->exi_memrefc < b->exi_memrefc ? -1 : 1;
+	for (i = 0; i < a->exi_memrefc; ++i) {
+		int cmp = Dee_memref_compare2(&a->exi_memrefv[i],
+		                              &b->exi_memrefv[i]);
+		if (cmp != 0)
+			return cmp;
+	}
+	return 0;
+}
 
-/* Initialize `self' from `state' (with the exception of `self->exi_block')
- * @return: 0 : Success
- * @return: -1: Error (you're holding a reference to a constant; why?) */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
-                         struct Dee_memstate *__restrict state) {
-	struct Dee_memval *mval;
-	self->exi_cfa_offset = state->ms_host_cfa_offset;
-	bzero(&self->exi_regs,
-	      ((offsetof(struct Dee_except_exitinfo, exi_stack) -
-	        offsetof(struct Dee_except_exitinfo, exi_regs)) +
-	       (self->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t)));
+
+/* Return the upper bound for the required buffer size in order to represent "state" */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+Dee_except_exitinfo_id_sizefor(struct Dee_memstate const *__restrict state) {
+	size_t result = offsetof(struct Dee_except_exitinfo_id, exi_memrefv);
+	struct Dee_memval const *mval;
 	Dee_memstate_foreach(mval, state) {
-		struct Dee_memobj *obj;
-		if unlikely(mval->mv_flags & MEMVAL_F_NOREF) {
-			ASSERT(!Dee_memval_hasobj0(mval));
-			continue;
+		struct Dee_memobj const *mobj;
+		Dee_memval_foreach_obj(mobj, mval) {
+			if (mobj->mo_flags & MEMOBJ_F_ISREF)
+				result += sizeof(struct Dee_memref);
 		}
-		Dee_memval_foreach_obj(obj, mval) {
-			uint16_t nullflag = 0;
-			if (!Dee_memobj_isref(obj))
-				continue;
-			if (!Dee_memobj_local_alwaysbound(obj)) {
-				ASSERT(Dee_memstate_foreach_islocal(mval, state));
-				nullflag = DEE_EXCEPT_EXITINFO_NULLFLAG;
-			}
-			switch (Dee_memobj_gettyp(obj)) {
+		Dee_memval_foreach_obj_end;
+	}
+	Dee_memstate_foreach_end;
+	return result;
+}
 
-			case MEMADR_TYPE_HSTACKIND: {
-				size_t index;
-				if unlikely(Dee_memobj_hstackind_getvaloff(obj) != 0)
-					goto err_bad_loc;
-				index = Dee_except_exitinfo_cfa2index(Dee_memobj_hstackind_getcfa(obj));
-				ASSERT(index < (self->exi_cfa_offset / HOST_SIZEOF_POINTER));
-				self->exi_stack[index] |= nullflag;
-				++self->exi_stack[index];
-			}	break;
 
-			case MEMADR_TYPE_HREG:
-				ASSERT(Dee_memobj_hreg_getreg(obj) < HOST_REGISTER_COUNT);
-				if unlikely(Dee_memobj_hreg_getvaloff(obj) != 0)
-					goto err_bad_loc;
-				self->exi_regs[Dee_memobj_hreg_getreg(obj)] |= nullflag;
-				++self->exi_regs[Dee_memobj_hreg_getreg(obj)];
-				break;
+/* Add "ref" to "self". If it is already present, update it; else, insert it. */
+PRIVATE NONNULL((1, 2)) void DCALL
+Dee_except_exitinfo_id_addref(struct Dee_except_exitinfo_id *__restrict self,
+                              struct Dee_memref const *__restrict ref) {
+	Dee_vstackaddr_t lo, hi;
+	lo = 0;
+	hi = self->exi_memrefc;
+	while (lo < hi) {
+		Dee_vstackaddr_t mid = (lo + hi) / 2;
+		struct Dee_memref *it = &self->exi_memrefv[mid];
+		int cmp = Dee_memref_compare(ref, it);
+		if (cmp < 0) {
+			hi = mid;
+		} else if (cmp > 0) {
+			lo = mid + 1;
+		} else {
+			/* Combine common location */
+			it->mr_refc += ref->mr_refc;
+			it->mr_flags |= ref->mr_flags & ~MEMREF_F_NOKILL;
+			it->mr_flags &= ref->mr_flags & MEMREF_F_NOKILL;
+			return;
+		}
+	}
+	ASSERT(lo == hi);
+	memmoveupc(&self->exi_memrefv[lo + 1],
+	           &self->exi_memrefv[lo],
+	           self->exi_memrefc - lo,
+	           sizeof(struct Dee_memref));
+	self->exi_memrefv[lo] = *ref;
+	++self->exi_memrefc;
+}
 
-			case MEMADR_TYPE_CONST:
-				if (Dee_memobj_const_getobj(obj) != NULL)
-					goto err_bad_loc;
-				break;
 
-			default: goto err_bad_loc;
+/* Check if `self' is more "canonical" than `other' */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_memloc_is_more_canonical_than(struct Dee_memloc const *__restrict self,
+                                  struct Dee_memloc const *__restrict other) {
+	STATIC_ASSERT(MEMADR_TYPE_CONST == 0);
+	STATIC_ASSERT(MEMADR_TYPE_UNDEFINED == 2);
+	STATIC_ASSERT(MEMADR_TYPE_HSTACK == 4);
+	STATIC_ASSERT(MEMADR_TYPE_HSTACKIND == 5);
+	STATIC_ASSERT(MEMADR_TYPE_HREG == 6);
+	STATIC_ASSERT(MEMADR_TYPE_HREGIND == 7);
+
+	/* Prefer locations with higher scores here! */
+	PRIVATE uint8_t const score_for_type[] = {
+		/* [MEMADR_TYPE_CONST]     = */ 4,
+		/* [1]                     = */ 0,
+		/* [MEMADR_TYPE_UNDEFINED] = */ 6,
+		/* [3]                     = */ 0,
+		/* [MEMADR_TYPE_HSTACK]    = */ 2,
+		/* [MEMADR_TYPE_HSTACKIND] = */ 3,
+		/* [MEMADR_TYPE_HREG]      = */ 5,
+		/* [MEMADR_TYPE_HREGIND]   = */ 1,
+	};
+
+	ASSERT(Dee_memloc_gettyp(self) < COMPILER_LENOF(score_for_type));
+	ASSERT(Dee_memloc_gettyp(other) < COMPILER_LENOF(score_for_type));
+	ASSERT(score_for_type[Dee_memloc_gettyp(self)] != 0);
+	ASSERT(score_for_type[Dee_memloc_gettyp(other)] != 0);
+	if (Dee_memloc_gettyp(self) != Dee_memloc_gettyp(other)) {
+		return score_for_type[Dee_memloc_gettyp(self)] >
+		       score_for_type[Dee_memloc_gettyp(other)];
+	}
+
+	/* Prefer locations with small value offsets */
+	return Dee_memloc_getoff(self) < Dee_memloc_getoff(other);
+}
+
+/* Looking at equivalence classes, fill `*result' with the "canonical" description of `loc'
+ * @return: true: if there is a constant equivalence. */
+PRIVATE NONNULL((1, 2, 3)) bool DCALL
+Dee_memstate_select_canonical_equiv(struct Dee_memstate const *__restrict self,
+                                    struct Dee_memloc const *__restrict loc,
+                                    struct Dee_memloc *__restrict result) {
+	bool isconst;
+	struct Dee_memequiv const *eq;
+	*result = *loc;
+	isconst = Dee_memloc_gettyp(result) == MEMADR_TYPE_CONST;
+	eq = Dee_memequivs_getclassof(&self->ms_memequiv, Dee_memloc_getadr(loc));
+	if (eq) {
+		/* Select the most "canonical" equivalence to "loc" */
+		struct Dee_memequiv const *iter;
+		ptrdiff_t val_offset;
+		val_offset = Dee_memloc_getoff(loc);
+		val_offset -= Dee_memloc_getoff(&eq->meq_loc);
+		iter = eq;
+		do {
+			struct Dee_memloc candidate;
+			candidate = iter->meq_loc;
+			Dee_memloc_adjoff(&candidate, val_offset);
+			isconst |= Dee_memloc_gettyp(&candidate) == MEMADR_TYPE_CONST;
+			if (Dee_memloc_is_more_canonical_than(&candidate, result))
+				*result = candidate;
+		} while ((iter = Dee_memequiv_next(iter)) != eq);
+	}
+	return isconst;
+}
+
+/* Initialize `self' from `state'
+ * @return: * : Always re-returns `self' */
+INTERN NONNULL((1, 2)) struct Dee_except_exitinfo_id *DCALL
+Dee_except_exitinfo_id_init(struct Dee_except_exitinfo_id *__restrict self,
+                            struct Dee_memstate const *__restrict state) {
+	struct Dee_memval const *mval;
+	self->exi_cfa_offset = state->ms_host_cfa_offset;
+	self->exi_memrefc    = 0;
+	Dee_memstate_foreach(mval, state) {
+		struct Dee_memobj const *mobj;
+		Dee_memval_foreach_obj(mobj, mval) {
+			if (mobj->mo_flags & MEMOBJ_F_ISREF) {
+				/* Construct the canonical memref from the object. */
+				struct Dee_memref ref;
+				ref.mr_refc       = 1;
+				ref._mr_always0_1 = 0;
+				ref._mr_always0_2 = 0;
+				ref._mr_always0_3 = 0;
+				ref.mr_flags      = MEMREF_F_NORMAL;
+				if (Dee_memstate_select_canonical_equiv(state, Dee_memobj_getloc(mobj), &ref.mr_loc))
+					ref.mr_flags |= MEMREF_F_NOKILL;
+#ifdef MEMREF_F_DOKILL
+				if (mobj->mo_flags & MEMOBJ_F_ONEREF)
+					ref.mr_flags |= MEMREF_F_DOKILL;
+#endif /* MEMREF_F_DOKILL */
+				if (mobj->mo_flags & MEMOBJ_F_MAYBEUNBOUND)
+					ref.mr_flags |= MEMREF_F_NULLABLE;
+				if (Dee_memloc_gettyp(&ref.mr_loc) != MEMADR_TYPE_UNDEFINED)
+					Dee_except_exitinfo_id_addref(self, &ref);
 			}
 		}
 		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
-	return 0;
-err_bad_loc:
-	return DeeError_Throwf(&DeeError_IllegalInstruction,
-	                       "Cannot jump to exception handler while holding "
-	                       "a reference to such a complex object location");
+	return self;
 }
 
-
-/* Costs of different exception cleanup operations. */
-#define DISTANCEOF_CFA_ADJUST    1 /* Adjust stack offset */
-#define DISTANCEOF_INCREF        1 /* Increment refcnt */
-#define DISTANCEOF_DECREF        5 /* Decrement refcnt w/ optional object destroy */
-#define DISTANCEOF_DECREF_NOKILL 1 /* Decrement refcnt w/o object destroy */
-#define DISTANCEOF_NULLCHK       2 /* Check if a location contains NULL */
-#define DISTANCEOF_PRESERVE      1 /* Preserve a register during `DeeObject_Destroy()' */
-
-PRIVATE ATTR_CONST WUNUSED size_t DCALL
-decref_distance(uint16_t from_refs, uint16_t to_refs,
-                Dee_host_register_t num_preserve_regs) {
-	size_t result = 0;
-	to_refs &= ~DEE_EXCEPT_EXITINFO_NULLFLAG;
-	if (from_refs == to_refs)
-		goto done;
-	if (from_refs & DEE_EXCEPT_EXITINFO_NULLFLAG) {
-		result += DISTANCEOF_NULLCHK;
-		from_refs &= ~DEE_EXCEPT_EXITINFO_NULLFLAG;
-	}
-	if (from_refs > to_refs) {
-		result += to_refs ? DISTANCEOF_DECREF_NOKILL
-		                  : DISTANCEOF_DECREF + (num_preserve_regs * DISTANCEOF_PRESERVE);
-	} else if (from_refs < to_refs) {
-		result += DISTANCEOF_INCREF;
-	}
-done:
-	return result;
-}
 
 /* Calculate the "distance" score that determines the complexity of the
- * transitioning code needed to morph from `from' to `to'. When ordering
- * exception cleanup code, exit descriptors should be ordered such that
- * the fallthru of one to the next always yields the lowest distance
- * score.
- * @return: * : The distance scrore for morphing from `from' to `to' */
+ * transitioning code needed to morph from `oldinfo' to `newinfo'. When
+ * ordering exception cleanup code, exit descriptors should be ordered
+ * such that the fallthru of one to the next always yields the lowest
+ * distance score.
+ * @return: * : The distance scrore for morphing from `oldinfo' to `newinfo' */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
-Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
-                             struct Dee_except_exitinfo const *__restrict to) {
+Dee_except_exitinfo_id_distance(struct Dee_except_exitinfo_id const *__restrict oldinfo,
+                                struct Dee_except_exitinfo_id const *__restrict newinfo) {
+	Dee_vstackaddr_t oldinfo_i, newinfo_i;
 	size_t result = 0;
-	uintptr_t min_cfa = from->exi_cfa_offset / HOST_SIZEOF_POINTER;
-	Dee_host_register_t num_preserve_regs;
-
-	/* Determine distance between registers. */
-	{
-		Dee_host_register_t regno;
-		num_preserve_regs = 0;
-		for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
-			if (from->exi_regs[regno] != 0 || to->exi_regs[regno] != 0)
-				++num_preserve_regs;
-		}
-		for (regno = 0; regno < HOST_REGISTER_COUNT; ++regno) {
-			uint16_t from_refs = from->exi_regs[regno];
-			uint16_t to_refs   = to->exi_regs[regno];
-			if (to_refs == 0)
-				--num_preserve_regs; /* If register isn't used afterwards, then  */
-			result += decref_distance(from_refs, to_refs, num_preserve_regs);
-		}
-	}
-
-	/* Check for CFA adjustment (and see if it can be combined with push/pop) */
-	if (from->exi_cfa_offset != to->exi_cfa_offset) {
-		size_t i;
-		uintptr_t from_cfa = from->exi_cfa_offset / HOST_SIZEOF_POINTER;
-		uintptr_t to_cfa   = to->exi_cfa_offset / HOST_SIZEOF_POINTER;
-		if (to_cfa < from_cfa) {
-			min_cfa = to_cfa;
-			i       = from_cfa;
-			while (i > to_cfa) {
-				if (from->exi_stack[i - 1]) {
-					if (from->exi_stack[i - 1] & DEE_EXCEPT_EXITINFO_NULLFLAG)
-						result += DISTANCEOF_NULLCHK; /* Extra null-check is needed */
-					result += DISTANCEOF_DECREF;      /* Because it's a decref, need a destroy-call */
-					if (to_cfa == i) {
-						/* Because pop can be used, a manual
-						 * CFA adjust might be unnecessary */
-						to_cfa = i - 1;
-					}
-				}
-				--i;
-			}
+	if (oldinfo->exi_cfa_offset != newinfo->exi_cfa_offset)
+		result += 1;
+	oldinfo_i = 0;
+	newinfo_i = 0;
+	while (oldinfo_i < oldinfo->exi_memrefc &&
+	       newinfo_i < newinfo->exi_memrefc) {
+		struct Dee_memref const *oldref = &oldinfo->exi_memrefv[oldinfo_i];
+		struct Dee_memref const *newref = &newinfo->exi_memrefv[newinfo_i];
+		int cmp = Dee_memref_compare(oldref, newref);
+		if (cmp < 0) {
+			result += 4; /* XXX: More points if NULLABLE */
+			++oldinfo_i;
+		} else if (cmp > 0) {
+			result += 4; /* XXX: More points if NULLABLE */
+			++newinfo_i;
 		} else {
-			ASSERT(to_cfa > from_cfa);
-			i = from_cfa;
-			while (i < to_cfa) {
-				if (to->exi_stack[i]) {
-					result += DISTANCEOF_INCREF;
-					if (from_cfa == i) {
-						/* Because push can be used, a manual
-						 * CFA adjust might be unnecessary */
-						from_cfa = i + 1;
-					}
-				}
-				++i;
-			}
-		}
-		if (from_cfa != to_cfa)
-			result += DISTANCEOF_CFA_ADJUST; /* Manual adjust is necessary */
-	}
-
-	/* Check common stack. */
-	{
-		Dee_vstackaddr_t i;
-		for (i = 0; i < min_cfa; ++i) {
-			uint16_t from_refs = from->exi_stack[i];
-			uint16_t to_refs   = to->exi_stack[i];
-			result += decref_distance(from_refs, to_refs, num_preserve_regs);
+			if (oldref->mr_refc != newref->mr_refc)
+				result += 1;
+			if ((oldref->mr_flags & MEMREF_F_NULLABLE) && !(newref->mr_flags & MEMREF_F_NULLABLE))
+				result += 1;
+			++oldinfo_i;
+			++newinfo_i;
 		}
 	}
-
+	if (oldinfo_i < oldinfo->exi_memrefc)
+		result += (oldinfo->exi_memrefc - oldinfo_i) * 4; /* XXX: More points if NULLABLE */
+	if (newinfo_i < newinfo->exi_memrefc)
+		result += (newinfo->exi_memrefc - newinfo_i) * 4; /* XXX: More points if NULLABLE */
 	return result;
 }
 

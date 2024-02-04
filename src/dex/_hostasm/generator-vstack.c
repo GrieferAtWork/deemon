@@ -2624,7 +2624,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 			except_exit = Dee_function_generator_except_exit(self);
 			if unlikely(!except_exit)
 				goto err;
-			Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_block->bb_htext, 0);
+			Dee_host_symbol_setsect_ex(Lexcept, &except_exit->exi_text, 0);
 		}
 	} else {
 		struct Dee_memloc cmp_lhs, cmp_rhs;

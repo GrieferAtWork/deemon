@@ -3359,11 +3359,11 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 			 * >>     ret   $8 */
 			/* TODO: Inline constant arguments into the format string */
 			DO(Dee_function_generator_vnotoneref(self, itemc));               /* func, attr, [items...] */ /* XXX: Based on how items are used by the format string... ("{}" -> OPERATOR_STR, "{!r}" -> OPERATOR_REPR) */
-			DO(Dee_function_generator_vpush_addr(self, (void const *)itemc)); /* func, attr, [items...], t_size */
+			DO(Dee_function_generator_vpush_immSIZ(self, itemc));             /* func, attr, [items...], t_size */
 			DO(Dee_function_generator_vrrot(self, itemc + 1));                /* func, attr, t_size, [items...] */
 			DO(Dee_function_generator_vpush_const(self, &DeeTuple_Type));     /* func, attr, t_size, [items...], ob_type */
 			DO(Dee_function_generator_vrrot(self, itemc + 2));                /* func, attr, ob_type, t_size, [items...] */
-			DO(Dee_function_generator_vpush_addr(self, (void const *)1));     /* func, attr, ob_type, t_size, [items...], 1 */
+			DO(Dee_function_generator_vpush_immSIZ(self, 1));                 /* func, attr, ob_type, t_size, [items...], 1 */
 			DO(Dee_function_generator_vrrot(self, itemc + 3));                /* func, attr, 1, ob_type, t_size, [items...] */
 			DO(Dee_function_generator_vlinear(self, itemc + 3, false));       /* func, attr, 1, ob_type, t_size, [items...], fake_tuple */
 			DO(Dee_function_generator_vsettyp_noalias(self, &DeeTuple_Type)); /* func, attr, 1, ob_type, t_size, [items...], fake_tuple */

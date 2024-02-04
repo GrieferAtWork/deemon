@@ -2060,7 +2060,7 @@ do_gjz_except(struct Dee_function_generator *__restrict self,
 	if unlikely(!info)
 		goto err;
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_text, 0);
 		if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST)
 			return Dee_function_generator_gjmp(self, Lexcept);
 		return Dee_function_generator_gjz(self, loc, Lexcept);
@@ -2080,7 +2080,7 @@ do_gjnz_except(struct Dee_function_generator *__restrict self,
 	if unlikely(!info)
 		goto err;
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_text, 0);
 		if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_CONST)
 			return Dee_function_generator_gjmp(self, Lexcept);
 		return Dee_function_generator_gjnz(self, loc, Lexcept);
@@ -2100,7 +2100,7 @@ do_gjcmp_except(struct Dee_function_generator *__restrict self,
 		goto err;
 	Dee_memloc_init_const(&threshold_loc, (byte_t const *)(uintptr_t)threshold);
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_text, 0);
 		return Dee_function_generator_gjcmp(self, loc, &threshold_loc,
 		                                    !(flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED),
 		                                    (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO) ? Lexcept : NULL,
@@ -2118,7 +2118,7 @@ do_gjmp_except(struct Dee_function_generator *__restrict self) {
 	if unlikely(!info)
 		goto err;
 	{
-		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_block->bb_htext, 0);
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lexcept, &info->exi_text, 0);
 		return Dee_function_generator_gjmp(self, Lexcept);
 	}
 err:

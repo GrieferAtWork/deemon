@@ -736,7 +736,7 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 					return false;
 
 				case ASM_POP_N: {
-					Dee_vstackaddr_t n;
+					uint16_t n;
 					n = instr[1] + 2;
 					__IF0 { case ASM16_POP_N: n = UNALIGNED_GETLE16(instr + 2) + 2; }
 					if (sptrack == stacksz - n)
@@ -746,7 +746,7 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 				}	break;
 
 				case ASM_DUP_N: {
-					Dee_vstackaddr_t n;
+					uint16_t n;
 					n = instr[1] + 2;
 					__IF0 { case ASM16_DUP_N: n = UNALIGNED_GETLE16(instr + 2) + 2; }
 					if (sptrack == stacksz - n)
@@ -763,7 +763,7 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 					goto continue_with_next;
 
 				case ASM_LROT: {
-					Dee_vstackaddr_t n;
+					uint16_t n;
 					n = instr[1] + 3;
 					__IF0 { case ASM16_LROT: n = UNALIGNED_GETLE16(instr + 2) + 3; }
 					if (sptrack == stacksz - n) {
@@ -775,7 +775,7 @@ matching_pop_requires_reference(Dee_instruction_t const *instr,
 				}	break;
 
 				case ASM_RROT: {
-					Dee_vstackaddr_t n;
+					uint16_t n;
 					n = instr[1] + 3;
 					__IF0 { case ASM16_RROT: n = UNALIGNED_GETLE16(instr + 2) + 3; }
 					if (sptrack == stacksz - 1) {
@@ -2454,7 +2454,7 @@ do_jcc:
 			return Dee_function_generator_vpop_prefix(self, prefix_type, id1, id2);
 
 		TARGET(ASM_POP_N) { /* mov #SP - <imm8> - 2, PREFIX */
-			Dee_vstackaddr_t n;
+			uint16_t n;
 			n = prefix_instr[1] + 2; /* mov #SP - <imm16> - 2, PREFIX */
 			__IF0 { TARGET(ASM16_POP_N) n = UNALIGNED_GETLE16(prefix_instr + 2) + 2; }
 			DO(Dee_function_generator_vpush_prefix(self, instr, prefix_type, id1, id2));

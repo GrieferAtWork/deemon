@@ -17,8 +17,8 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEX_HOSTASM_GENERATOR_MORPH_C
-#define GUARD_DEX_HOSTASM_GENERATOR_MORPH_C 1
+#ifndef GUARD_DEX_HOSTASM_GENERATOR_VMORPH_C
+#define GUARD_DEX_HOSTASM_GENERATOR_VMORPH_C 1
 #define DEE_SOURCE
 
 #include "libhostasm.h"
@@ -559,4 +559,4 @@ Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 
-#endif /* !GUARD_DEX_HOSTASM_GENERATOR_MORPH_C */
+#endif /* !GUARD_DEX_HOSTASM_GENERATOR_VMORPH_C */

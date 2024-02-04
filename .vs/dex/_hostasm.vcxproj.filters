@@ -25,13 +25,14 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-arch.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-common.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-deemon.c" />
-		<ClCompile Include="..\..\src\dex\_hostasm\generator-morph.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-rt.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-traits.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-vmorph.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ccall.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-direct.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack-ex.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-vstack.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\generator-xmorph.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\libhostasm.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\loader-locuse.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />

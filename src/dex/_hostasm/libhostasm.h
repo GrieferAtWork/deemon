@@ -184,8 +184,8 @@ INTDEF NONNULL((1)) void DCALL _Dee_memequivs_debug_print(struct Dee_memequivs c
 
 /* TODO: Add a dedicated type for CFA offsets (and then make it be signed) */
 typedef intptr_t Dee_cfa_t;
-typedef uint16_t Dee_vstackaddr_t;
-typedef int16_t Dee_vstackoff_t;
+typedef uint32_t Dee_vstackaddr_t;
+typedef int32_t Dee_vstackoff_t;
 typedef uint16_t Dee_aid_t;
 typedef uint32_t Dee_lid_t;
 typedef uint16_t Dee_ulid_t;
@@ -885,19 +885,39 @@ Dee_memobjs_copies_contains(struct Dee_memobjs const *ring_of_this,
 #define MEMVAL_F_NORMAL 0x00 /* Normal flags */
 #define MEMVAL_F_NOREF  0x01 /* Ignore `MEMOBJ_F_ISREF' of objecst (may only be set when `Dee_memval_hasobjn()') */
 
+#undef DEE_DEFINE_MEMVAL_FOR_IDE
+#ifdef __INTELLISENSE__
+#define DEE_DEFINE_MEMVAL_FOR_IDE
+#endif /* __INTELLISENSE__ */
+
 struct Dee_memval {
 	/* High-level value (encapsulates 1..n Dee_memloc that may be morphed into a deemon value) */
 	union {
+#ifndef DEE_DEFINE_MEMVAL_FOR_IDE
+		struct {
+			struct Dee_memloc  _mv0_loc;    /* Alias for "mv_obj.mvo_0.mo_loc" */
+			DeeTypeObject     *_mv0_typeof; /* Alias for "mv_obj.mvo_0.mo_typeof" */
+			uint8_t            _mv0_flags;  /* Alias for "mv_obj.mvo_0.mo_flags" */
+			uint8_t            _mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
+			uint8_t            _mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
+			uint8_t           __mv_pad[sizeof(void *) - 3]; /* Padding... */
+		} _mvo_val;
+#endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
 		struct Dee_memobj       mvo_0;     /* [valid_if(Dee_memval_hasobj0(this))] Base location */
-#ifdef __INTELLISENSE__
+#ifdef DEE_DEFINE_MEMVAL_FOR_IDE
 		struct Dee_memobj      *mvo_n;     /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
-#else /* __INTELLISENSE__ */
+#else /* DEE_DEFINE_MEMVAL_FOR_IDE */
 		DREF struct Dee_memobj *mvo_n;     /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
-#endif /* !__INTELLISENSE__ */
-	}                           mv_obj;    /* Object */
-	uint8_t                     mv_vmorph; /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-	uint8_t                     mv_flags;  /* Extra mem value flags (set of `MEMVAL_F_*'). */
-	uint8_t                    _mv_pad[sizeof(void *) - 2]; /* ... */
+#endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
+	} mv_obj; /* Object */
+#ifdef DEE_DEFINE_MEMVAL_FOR_IDE
+	uint8_t             mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
+	uint8_t             mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
+	uint8_t            _mv_pad[sizeof(void *) - 3]; /* Padding... */
+#else /* DEE_DEFINE_MEMVAL_FOR_IDE */
+#define mv_vmorph mv_obj._mvo_val._mv_vmorph
+#define mv_flags  mv_obj._mvo_val._mv_flags
+#endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
 };
 
 
@@ -1811,105 +1831,99 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self);
 
 
 
-/* Small descriptor for what needs to be cleaned up in a `struct Dee_memstate' */
-struct Dee_except_exitinfo {
-	/* TODO: This needs to be able to hold references to constants as well:
-	 * >> push   const @(10, 20)
-	 * >> push   arg @foo
-	 * >> concat top, pop
-	 *
-	 * Generated code:
-	 * >> movl    8(%esp), %eax
-	 * >> incref  ADDROF(@(10, 20))
-	 * >> pushl   0(%eax)
-	 * >> pushl   $ADDROF(@(10, 20))
-	 * >> calll   DeeTuple_ConcatInherited
-	 * >> testl   %eax, %eax
-	 * >> jz      .Lexcept
-	 *
-	 * Here, the exception handler *always* holds a reference to the constant,
-	 * and that's not because code is being generated less efficiently than
-	 * possible (because the general case where ASM_CONCAT's lhs operand is
-	 * a constant still needs to incref that constant and decref if the call
-	 * fails)
-	 *
-	 * It would also be cool to be able to inject extra code at the start of
-	 * exception handlers (making it possible to move xinject code into the
-	 * exception handler and get rid of the redundant jump that is created
-	 * whenever that feature gets used at the moment).
-	 */
-	struct Dee_basic_block           *exi_block;                     /* [1..1][owned] Block implementing this exit state. */
-	uintptr_t                         exi_cfa_offset;                /* [== exi_block->bb_mem_start->ms_host_cfa_offset]. */
-#define DEE_EXCEPT_EXITINFO_NULLFLAG 0x8000 /* If or'd with `exi_regs[*]' or `exi_stack[*]', means that location may be null */
-	uint16_t                          exi_regs[HOST_REGISTER_COUNT]; /* How often each register needs to be decref'd */
-	COMPILER_FLEXIBLE_ARRAY(uint16_t, exi_stack);                    /* [exi_cfa_offset / HOST_SIZEOF_POINTER]
-	                                                                  * How often CFA offsets need to be decref'd */
+/* Flags for `struct Dee_memref::mr_flags' */
+#define MEMREF_F_NORMAL   0x00 /* Normal flags */
+#define MEMREF_F_NULLABLE 0x01 /* Location may contain NULL */
+#if 0 /* Leads to problems down the line... */
+#define MEMREF_F_DOKILL   0x02 /* Allowed to use Dee_DecrefDoKill() */
+#endif
+#define MEMREF_F_NOKILL   0x04 /* Allowed to use Dee_DecrefNoKill() */
+#define _MEMREF_F_DONE    0x40 /* Used internally */
+#define _MEMREF_F_NOSRC   0x80 /* Used internally */
+
+/* Descriptor for a held reference
+ * NOTE: This structure is designed to be able to impersonate
+ *       a `struct Dee_memval' in a pinch, and act as if it was
+ *       a DIRECT object (only the mo_typeof field is broken) */
+struct Dee_memref {
+	struct Dee_memloc mr_loc;       /* Underlying memory location */
+	uintptr_t         mr_refc;      /* [>= 1] # of references held to `mr_loc' */
+	uint8_t          _mr_always0_1; /* Always 0 */
+	uint8_t          _mr_always0_2; /* Always 0 */
+	uint8_t          _mr_always0_3; /* Always 0 */
+	uint8_t           mr_flags;     /* Special flags (set of `MEMREF_F_*') */
+#if __SIZEOF_POINTER__ > 4
+	uint8_t          _mr_pad[sizeof(void *) - 4]; /* Padding (uninitialized) */
+#endif /* __SIZEOF_POINTER__ > 4 */
 };
 
-#define Dee_except_exitinfo_isreg(i)      ((i) < HOST_REGISTER_COUNT)
-#define Dee_except_exitinfo_locc(self)    (((self)->exi_cfa_offset / HOST_SIZEOF_POINTER) + HOST_REGISTER_COUNT)
-#define Dee_except_exitinfo_locv(self, i) (_Dee_except_exitinfo_locv(self)[i])
-#define _Dee_except_exitinfo_locv(self)   ((uint16_t *)((byte_t *)(self) + offsetof(struct Dee_except_exitinfo, exi_regs)))
+/* Compare "a" and "b". This is the function used to sort `exi_memrefv' */
+#define Dee_memref_compare(a, b) \
+	memcmp(&(a)->mr_loc, &(b)->mr_loc, sizeof(struct Dee_memloc))
 
-#define Dee_except_exitinfo_asadr(i, adr)                  \
-	(Dee_except_exitinfo_isreg(i)                          \
-	 ? Dee_memadr_init_hreg(adr, (Dee_host_register_t)(i)) \
-	 : Dee_memadr_init_hstackind(adr, Dee_except_exitinfo_index2cfa((i)-HOST_REGISTER_COUNT)))
-#define Dee_except_exitinfo_asloc(i, loc)                     \
-	(Dee_except_exitinfo_isreg(i)                             \
-	 ? Dee_memloc_init_hreg(loc, (Dee_host_register_t)(i), 0) \
-	 : Dee_memloc_init_hstackind(loc, Dee_except_exitinfo_index2cfa((i)-HOST_REGISTER_COUNT), 0))
+/* Compare "a" and "b". This is the function used by `Dee_except_exitinfo_id_compare' */
+#define Dee_memref_compare2(a, b) \
+	memcmp(a, b, offsetof(struct Dee_memref, _mr_always0_1))
+
+struct Dee_except_exitinfo_id {
+	Dee_cfa_t                                  exi_cfa_offset; /* CFA offset on entry to this block. */
+	Dee_vstackaddr_t                           exi_memrefc;    /* # of references held */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `Dee_memref_compare()'). */
+};
+
+/* Small descriptor for what needs to be cleaned up in a `struct Dee_memstate' */
+struct Dee_except_exitinfo {
+	struct Dee_host_section                    exi_text;       /* Host assembly text */
+	struct Dee_except_exitinfo                *exi_next;       /* [0..1] Exception handler that this one falls into. */
+	Dee_cfa_t                                  exi_cfa_offset; /* CFA offset on entry to this block. */
+	Dee_vstackaddr_t                           exi_memrefc;    /* # of references held */
+	COMPILER_FLEXIBLE_ARRAY(struct Dee_memref, exi_memrefv);   /* [0..exi_memrefc] Vector of held object references (sorted by `Dee_memref_compare()'). */
+};
+
+#define Dee_except_exitinfo_asid(self) \
+	((struct Dee_except_exitinfo_id *)&(self)->exi_cfa_offset)
 
 /* Check if `self' has been compiled. */
-#define Dee_except_exitinfo_compiled(self)                                          \
-	(((self)->exi_block->bb_htext.hs_start < (self)->exi_block->bb_htext.hs_end) || \
-	 ((self)->exi_block->bb_next != NULL))
-
-/* Convert CFA offsets <==> index into `struct Dee_except_exitinfo::exi_stack' */
-#ifdef HOSTASM_STACK_GROWS_DOWN
-#define Dee_except_exitinfo_cfa2index(cfa_offset) (((cfa_offset)-HOST_SIZEOF_POINTER) / HOST_SIZEOF_POINTER)
-#define Dee_except_exitinfo_index2cfa(index)      (((index)*HOST_SIZEOF_POINTER) + HOST_SIZEOF_POINTER)
-#else /* HOSTASM_STACK_GROWS_DOWN */
-#define Dee_except_exitinfo_cfa2index(cfa_offset) ((cfa_offset) / HOST_SIZEOF_POINTER)
-#define Dee_except_exitinfo_index2cfa(index)      ((index)*HOST_SIZEOF_POINTER)
-#endif /* !HOSTASM_STACK_GROWS_DOWN */
+#define Dee_except_exitinfo_wascompiled(self) \
+	((self)->exi_text.hs_start < (self)->exi_text.hs_end || (self)->exi_next)
 
 #define Dee_except_exitinfo_alloc(sizeof) ((struct Dee_except_exitinfo *)Dee_Malloc(sizeof))
 #define Dee_except_exitinfo_free(self)    Dee_Free(self)
-#define _Dee_except_exitinfo_destroy_noblock(self) Dee_except_exitinfo_free(self)
-#define Dee_except_exitinfo_destroy(self) (Dee_basic_block_destroy((self)->exi_block), _Dee_except_exitinfo_destroy_noblock(self))
-#define Dee_except_exitinfo_sizeof(cfa_offset) \
-	(offsetof(struct Dee_except_exitinfo, exi_stack) + ((cfa_offset) / HOST_SIZEOF_POINTER) * sizeof(uint16_t))
+#define Dee_except_exitinfo_destroy(self) (Dee_host_section_fini(&(self)->exi_text), Dee_Free(self))
 #define _Dee_except_exitinfo_cmp_baseof(x) (&(x)->exi_cfa_offset)
 #define _Dee_except_exitinfo_cmp_sizeof(x)                    \
-	((offsetof(struct Dee_except_exitinfo, exi_stack) -       \
+	((offsetof(struct Dee_except_exitinfo, exi_memrefv) -     \
 	  offsetof(struct Dee_except_exitinfo, exi_cfa_offset)) + \
-	 ((x)->exi_cfa_offset / HOST_SIZEOF_POINTER) * sizeof(uint16_t))
-#define Dee_except_exitinfo_cmp(a, b)               \
-	((a)->exi_cfa_offset < (b)->exi_cfa_offset      \
-	 ? -1                                           \
-	 : (a)->exi_cfa_offset > (b)->exi_cfa_offset    \
-	   ? 1                                          \
-	   : memcmp(_Dee_except_exitinfo_cmp_baseof(a), \
-	            _Dee_except_exitinfo_cmp_baseof(b), \
-	            _Dee_except_exitinfo_cmp_sizeof(a)))
+	 ((x)->exi_memrefc * sizeof(struct Dee_memref)))
 
-/* Initialize `self' from `state' (with the exception of `self->exi_block')
- * @return: 0 : Success
- * @return: -1: Error (you're holding a reference to a constant; why?) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_except_exitinfo_init(struct Dee_except_exitinfo *__restrict self,
-                         struct Dee_memstate *__restrict state);
+/* Compare all of the memory locations and reference counts between "a" and "b" */
+INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_except_exitinfo_id_compare(struct Dee_except_exitinfo_id const *__restrict a,
+                               struct Dee_except_exitinfo_id const *__restrict b);
+
+/* Return the upper bound for the required buffer size in order to represent "state" */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
+Dee_except_exitinfo_id_sizefor(struct Dee_memstate const *__restrict state);
+
+/* Initialize `self' from `state'
+ * @return: * : Always re-returns `self' */
+INTDEF NONNULL((1, 2)) struct Dee_except_exitinfo_id *DCALL
+Dee_except_exitinfo_id_init(struct Dee_except_exitinfo_id *__restrict self,
+                            struct Dee_memstate const *__restrict state);
 
 /* Calculate the "distance" score that determines the complexity of the
- * transitioning code needed to morph from `from' to `to'. When ordering
- * exception cleanup code, exit descriptors should be ordered such that
- * the fallthru of one to the next always yields the lowest distance
- * score.
- * @return: * : The distance scrore for morphing from `from' to `to' */
+ * transitioning code needed to morph from `oldinfo' to `newinfo'. When
+ * ordering exception cleanup code, exit descriptors should be ordered
+ * such that the fallthru of one to the next always yields the lowest
+ * distance score.
+ * @return: * : The distance scrore for morphing from `oldinfo' to `newinfo' */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
-Dee_except_exitinfo_distance(struct Dee_except_exitinfo const *__restrict from,
-                             struct Dee_except_exitinfo const *__restrict to);
+Dee_except_exitinfo_id_distance(struct Dee_except_exitinfo_id const *__restrict oldinfo,
+                                struct Dee_except_exitinfo_id const *__restrict newinfo);
+
+
+
+
 
 struct Dee_inlined_references {
 	/* TODO: Need some way to find out which objects actually end up being used
@@ -1952,7 +1966,8 @@ struct Dee_function_assembler {
 	struct Dee_basic_block      **fa_blockv;       /* [owned][0..fa_blockc][owned] Vector of basic blocks (sorted by `bb_deemon_start'). */
 	size_t                        fa_blockc;       /* Number of basic blocks. */
 	size_t                        fa_blocka;       /* Allocated number of basic blocks. */
-	struct Dee_except_exitinfo  **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exit basic blocks (sorted by `Dee_except_exitinfo_cmp()') */
+	struct Dee_except_exitinfo   *fa_except_del;   /* [0..n][owned] Chain of deleted exception exits */
+	struct Dee_except_exitinfo  **fa_except_exitv; /* [owned][0..fa_except_exitc][owned] Vector of exception exits (sorted by `Dee_except_exitinfo_id_compare()') */
 	size_t                        fa_except_exitc; /* Number of exception exit basic blocks. */
 	size_t                        fa_except_exita; /* Allocated number of exception exit basic blocks. */
 	struct Dee_except_exitinfo   *fa_except_first; /* [0..1] The first except exit descriptor (used by `Dee_function_assembler_ordersections()') */
@@ -1988,6 +2003,7 @@ struct Dee_function_assembler {
 	       (self)->fa_blockv       = NULL,                           \
 	       (self)->fa_blockc       = 0,                              \
 	       (self)->fa_blocka       = 0,                              \
+	       (self)->fa_except_del   = NULL,                           \
 	       (self)->fa_except_exitv = NULL,                           \
 	       (self)->fa_except_exitc = 0,                              \
 	       (self)->fa_except_exita = 0,                              \
@@ -2028,7 +2044,7 @@ Dee_function_assembler_locateblock(struct Dee_function_assembler const *__restri
  * @return: NULL: Error. */
 INTDEF WUNUSED NONNULL((1, 2)) struct Dee_except_exitinfo *DCALL
 Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict self,
-                                   struct Dee_memstate *__restrict state);
+                                   struct Dee_memstate const *__restrict state);
 
 /* Allocate a new host text symbol and return it.
  * @return: * :   The newly allocated host text symbol
@@ -3102,6 +3118,12 @@ Dee_function_generator_vmorph_no_constrain_equivalences(struct Dee_function_gene
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vmorph(struct Dee_function_generator *__restrict self,
                               struct Dee_memstate const *new_state);
+
+/* Generate code to morph the reference state from "oldinfo" to "newinfo" */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_xmorph(struct Dee_function_generator *__restrict self,
+                              struct Dee_except_exitinfo_id const *__restrict oldinfo,
+                              struct Dee_except_exitinfo_id *__restrict newinfo);
 
 
 /* Convert a single deemon instruction `instr' to host assembly and adjust the host memory

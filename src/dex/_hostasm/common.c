@@ -1364,6 +1364,15 @@ Dee_function_assembler_fini(struct Dee_function_assembler *__restrict self) {
 		}
 	}
 	{
+		struct Dee_except_exitinfo *info = self->fa_except_del;
+		while (info) {
+			struct Dee_except_exitinfo *next;
+			next = info->exi_next;
+			Dee_except_exitinfo_destroy(info);
+			info = next;
+		}
+	}
+	{
 		struct Dee_host_symbol *sym = self->fa_symbols;
 		while (sym) {
 			struct Dee_host_symbol *next = sym->_hs_next;
@@ -1464,28 +1473,31 @@ Dee_function_assembler_locateblock(struct Dee_function_assembler const *__restri
 	return NULL;
 }
 
+
+PRIVATE ATTR_CONST WUNUSED uint8_t DCALL
+Dee_memref_constrain_flags(uint8_t a, uint8_t b) {
+	return ((a | b) & MEMREF_F_NULLABLE) |
+	       ((a & b) & ~MEMREF_F_NULLABLE);
+}
+
 /* Lookup/allocate an exception-exit basic block that can be used to clean
  * up `state' and then return `NULL' to the caller of the generated function.
  * @return: * :   The basic block to which to jump in order to clean up `state'.
  * @return: NULL: Error. */
 INTERN WUNUSED NONNULL((1, 2)) struct Dee_except_exitinfo *DCALL
 Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict self,
-                                   struct Dee_memstate *__restrict state) {
+                                   struct Dee_memstate const *__restrict state) {
 	size_t lo, hi;
-	size_t infosize = Dee_except_exitinfo_sizeof(state->ms_host_cfa_offset);
-	struct Dee_basic_block *result;
-	struct Dee_except_exitinfo *info;
-#ifdef Dee_Alloca
-	info = (struct Dee_except_exitinfo *)Dee_Alloca(infosize);
-#else /* Dee_Alloca */
-	info = Dee_except_exitinfo_alloc(infosize);
-	if unlikely(!info)
+	size_t infsize;
+	struct Dee_except_exitinfo *result;
+	struct Dee_except_exitinfo_id *info_id;
+	infsize = Dee_except_exitinfo_id_sizefor(state);
+	info_id = (struct Dee_except_exitinfo_id *)Dee_Malloca(infsize);
+	if unlikely(!info_id)
 		goto err;
-#endif /* !Dee_Alloca */
 
 	/* Fill in info. */
-	if unlikely(Dee_except_exitinfo_init(info, state))
-		goto err_info_alloca;
+	info_id = Dee_except_exitinfo_id_init(info_id, state);
 
 	/* Check if we already have a block for this state. */
 	lo = 0;
@@ -1496,44 +1508,33 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 		size_t mid = (lo + hi) / 2;
 		oldinfo = self->fa_except_exitv[mid];
 		ASSERT(oldinfo);
-		ASSERT(oldinfo->exi_block);
-		diff = Dee_except_exitinfo_cmp(info, oldinfo);
+		diff = Dee_except_exitinfo_id_compare(info_id, Dee_except_exitinfo_asid(oldinfo));
 		if (diff < 0) {
 			hi = mid;
 		} else if (diff > 0) {
 			lo = mid + 1;
 		} else {
-			/* Found it! */
-#ifndef Dee_Alloca
-			Dee_except_exitinfo_free(info);
-#endif /* !Dee_Alloca */
+			size_t i;
+			/* Found it (but may need to constrain) */
+			ASSERT(oldinfo->exi_memrefc == info_id->exi_memrefc);
+			for (i = 0; i < oldinfo->exi_memrefc; ++i) {
+				oldinfo->exi_memrefv[i].mr_flags = Dee_memref_constrain_flags(oldinfo->exi_memrefv[i].mr_flags,
+				                                                              info_id->exi_memrefv[i].mr_flags);
+			}
+			Dee_Freea(info_id);
 			return oldinfo;
 		}
 	}
 	ASSERT(lo == hi);
 
-	/* Need to insert a new exit information descriptor. */
-#ifdef Dee_Alloca
-	{
-		struct Dee_except_exitinfo *heapinfo;
-		heapinfo = Dee_except_exitinfo_alloc(infosize);
-		if unlikely(!heapinfo)
-			goto err_info_alloca;
-		info = (struct Dee_except_exitinfo *)memcpy(heapinfo, info, infosize);
-	}
-#endif /* Dee_Alloca */
-
-	/* Allocate a basic block for `info'. */
-	result = Dee_basic_block_alloc(self->fa_xlocalc);
+	/* Need to create+insert a new exit information descriptor. */
+	result = Dee_except_exitinfo_alloc(infsize + (offsetof(struct Dee_except_exitinfo, exi_memrefv) -
+	                                              offsetof(struct Dee_except_exitinfo_id, exi_memrefv)));
 	if unlikely(!result)
-		goto err_info;
-	info->exi_block = result;
-	Dee_basic_block_init_common(result);
-	Dee_jump_descriptors_init(&result->bb_exits);
-	result->bb_deemon_start = NULL; /* No deemon code here */
-	result->bb_deemon_end   = NULL;
-	result->bb_mem_start    = state; /* Remember (some) state when jumping to this block. */
-	Dee_memstate_incref(state);
+		goto err_info_id;
+	memcpy(Dee_except_exitinfo_asid(result), info_id, infsize);
+	Dee_host_section_init(&result->exi_text);
+	result->exi_next = NULL;
 
 	/* Make sure there is enough space in the sorted list of exit information descriptors. */
 	ASSERT(self->fa_except_exitc <= self->fa_except_exita);
@@ -1554,7 +1555,7 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 			                                                       new_alloc,
 			                                                       sizeof(struct Dee_except_exitinfo *));
 			if unlikely(!new_list)
-				goto err_info_result;
+				goto err_info_id_result;
 		}
 		self->fa_except_exitv = new_list;
 		self->fa_except_exita = new_alloc;
@@ -1565,21 +1566,15 @@ Dee_function_assembler_except_exit(struct Dee_function_assembler *__restrict sel
 	           &self->fa_except_exitv[lo],
 	           self->fa_except_exitc - lo,
 	           sizeof(struct Dee_except_exitinfo *));
-	self->fa_except_exitv[lo] = info;
+	self->fa_except_exitv[lo] = result;
 	++self->fa_except_exitc;
 
-	return info;
-err_info_result:
+	return result;
+err_info_id_result:
 	Dee_basic_block_free(result);
-err_info:
-#ifdef Dee_Alloca
-	Dee_except_exitinfo_free(info);
-#endif /* Dee_Alloca */
-err_info_alloca:
-#ifndef Dee_Alloca
-	Dee_except_exitinfo_free(info);
+err_info_id:
+	Dee_Freea(info_id);
 err:
-#endif /* !Dee_Alloca */
 	return NULL;
 }
 

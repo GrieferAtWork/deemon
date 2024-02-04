@@ -98,11 +98,6 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 			if (block2->bb_next == block && block2->bb_mem_end == NULL)
 				++num_missing_entries;
 		}
-		for (j = 0; j < self->fa_except_exitc; ++j) {
-			struct Dee_basic_block *block2 = self->fa_except_exitv[j]->exi_block;
-			if (block2->bb_next == block && block2->bb_mem_end == NULL)
-				++num_missing_entries;
-		}
 		if (num_missing_entries == 0)
 			return i; /* No missing entries -> compile this one next! */
 		if (result_missing_entries > num_missing_entries) {
@@ -535,20 +530,14 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 	/* Go through exception handlers and remove those that aren't referenced. */
 	for (i = 0; i < self->fa_except_exitc;) {
 		struct Dee_except_exitinfo *info = self->fa_except_exitv[i];
-		struct Dee_basic_block *block = info->exi_block;
-
-		/* Note that the cold section of exception handlers is never referenced by code
-		 * blocks, which is why we only allocate 1 slot for each except exit in the set
-		 * above, and only check the bb_htext section here. */
-		if (host_section_set_contains(&referenced_sections, &block->bb_htext)) {
+		if (host_section_set_contains(&referenced_sections, &info->exi_text)) {
 			++i;
 			continue;
 		}
 
 		/* Unreferenced exit info blob -> get rid of it! */
-		block->bb_next   = self->fa_deleted; /* Must keep the block around (in case symbols reference its sections) */
-		self->fa_deleted = block;
-		_Dee_except_exitinfo_destroy_noblock(info);
+		info->exi_next = self->fa_except_del; /* Must keep the block around (in case symbols reference its sections) */
+		self->fa_except_del = info;
 		--self->fa_except_exitc;
 		memmovedownc(&self->fa_except_exitv[i],
 		             &self->fa_except_exitv[i + 1],
@@ -561,6 +550,119 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 err:
 	return -1;
 }
+
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_except_exitinfo *DCALL
+Dee_function_generator_select_predecessor(struct Dee_function_assembler *__restrict self,
+                                          struct Dee_except_exitinfo_id const *__restrict newinfo) {
+	size_t i, result_score = (size_t)-1;
+	struct Dee_except_exitinfo *result = NULL;
+	for (i = 0; i < self->fa_except_exitc; ++i) {
+		size_t c_score;
+		struct Dee_except_exitinfo *c = self->fa_except_exitv[i];
+		if (Dee_except_exitinfo_wascompiled(c))
+			continue;
+		c_score = Dee_except_exitinfo_id_distance(Dee_except_exitinfo_asid(c), newinfo);
+		if (c_score <= result_score) {
+			result       = c;
+			result_score = c_score;
+		}
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) {
+	struct Dee_memloc zero;
+	Dee_memloc_init_const(&zero, 0);
+	return Dee_function_generator_gret(self, &zero);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict self) {
+	void *_memstatebuf[Dee_memstate_sizeof(1) / sizeof(void *)];
+	void *_exitidbuf[offsetof(struct Dee_except_exitinfo_id, exi_memrefv) / sizeof(void *)];
+	struct Dee_memstate *state = (struct Dee_memstate *)_memstatebuf;
+	struct Dee_except_exitinfo_id *exit_id = (struct Dee_except_exitinfo_id *)_exitidbuf;
+	struct Dee_function_generator gen;
+	struct Dee_except_exitinfo *info, *next;
+	ASSERT(self->fa_blockc >= 1);
+
+	/* Setup the fake mem-state */
+	gen.fg_assembler = self;
+	gen.fg_block     = self->fa_blockv[self->fa_blockc - 1];
+	gen.fg_sect      = &gen.fg_block->bb_htext;
+	gen.fg_state     = state;
+	_Dee_function_generator_initcommon(&gen);
+	ASSERT(gen.fg_state != NULL);
+	state->ms_refcnt    = 1;
+	state->ms_localc    = 1;
+	state->ms_uargc_min = 0;
+	state->ms_flags     = MEMSTATE_F_NORMAL;
+	state->ms_stacka    = 0;
+	state->ms_stackc    = 0;
+	state->ms_stackv    = NULL;
+	Dee_memval_init_undefined(&state->ms_localv[0]);
+	exit_id->exi_cfa_offset = 0;
+	exit_id->exi_memrefc = 0;
+
+	/* Generate the special last exception exit block (the one which includes "return NULL") */
+	Dee_memequivs_init(&state->ms_memequiv);
+	info = Dee_function_generator_select_predecessor(self, exit_id);
+	ASSERT(info);
+	ASSERT(!Dee_except_exitinfo_wascompiled(info));
+	gen.fg_sect = &info->exi_text;
+	if unlikely(Dee_function_generator_xmorph(&gen, Dee_except_exitinfo_asid(info), exit_id))
+		goto err_equiv;
+	if unlikely(Dee_function_generator_gretNULL(&gen))
+		goto err_equiv;
+	ASSERT(state->ms_stacka == 0);
+	ASSERT(state->ms_stackc == 0);
+	ASSERT(state->ms_stackv == NULL);
+	ASSERT(Dee_except_exitinfo_wascompiled(info));
+	ASSERT(info->exi_next == NULL);
+	Dee_memequivs_fini(&state->ms_memequiv);
+
+	/* Compile all of the other exception exit blocks for fallthru */
+	while ((next = Dee_function_generator_select_predecessor(self, Dee_except_exitinfo_asid(info))) != NULL) {
+		ASSERT(!Dee_except_exitinfo_wascompiled(next));
+		gen.fg_sect = &next->exi_text;
+		ASSERT(state->ms_stacka == 0);
+		ASSERT(state->ms_stackc == 0);
+		ASSERT(state->ms_stackv == NULL);
+		Dee_memequivs_init(&state->ms_memequiv);
+		if unlikely(Dee_function_generator_xmorph(&gen,
+		                                          Dee_except_exitinfo_asid(next),
+		                                          Dee_except_exitinfo_asid(info)))
+			goto err_equiv;
+		Dee_memequivs_fini(&state->ms_memequiv);
+		ASSERT(state->ms_stacka == 0);
+		ASSERT(state->ms_stackc == 0);
+		ASSERT(state->ms_stackv == NULL);
+		ASSERT(next->exi_next == NULL);
+		next->exi_next = info;
+		info = next;
+		ASSERT(Dee_except_exitinfo_wascompiled(next));
+	}
+	ASSERT(state->ms_stacka == 0);
+	ASSERT(state->ms_stackc == 0);
+	ASSERT(state->ms_stackv == NULL);
+
+	/* Remember the "first" exception handler. */
+	self->fa_except_first = info;
+	return 0;
+err_equiv:
+	Dee_memequivs_fini(&state->ms_memequiv);
+	ASSERT(state->ms_stacka == 0);
+	ASSERT(state->ms_stackc == 0);
+	ASSERT(state->ms_stackv == NULL);
+/*err:*/
+	return -1;
+}
+
+
+
 
 
 /* Append morphing code for `from_state' to `to_state' to `sect' */
@@ -602,730 +704,6 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 	result = Dee_function_generator_vmorph_no_constrain_equivalences(&gen, to_block->bb_mem_start);
 	Dee_memstate_decref(gen.fg_state);
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc zero;
-	Dee_memloc_init_const(&zero, 0);
-	return Dee_function_generator_gret(self, &zero);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-Dee_function_generator_gexcept_morph_mov(struct Dee_function_generator *__restrict self,
-                                         struct Dee_memloc *oldloc,
-                                         struct Dee_memloc const *newloc,
-                                         uint16_t old_refcnt, uint16_t new_refcnt) {
-	int temp;
-	ASSERT(old_refcnt != 0);
-	ASSERT(new_refcnt != 0);
-	if ((old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) != 0 &&
-	    (new_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) == 0) {
-		/* New state expects the value to never be NULL
-		 * -> Handle this by loading the proper refcnt and `Dee_None' into `oldloc' if it's NULL
-		 */
-		int incref_none_status;
-		struct Dee_host_symbol *Lnot_null_sym;
-		Lnot_null_sym = Dee_function_generator_newsym_named(self, ".Lnot_null_sym");
-		if unlikely(!Lnot_null_sym)
-			goto err;
-		if unlikely(_Dee_function_generator_gjnz(self, oldloc, Lnot_null_sym))
-			goto err;
-		old_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* No longer nullable! */
-		incref_none_status = Dee_function_generator_gincref_const(self, Dee_None, old_refcnt);
-		if unlikely(incref_none_status < 0)
-			goto err;
-		if unlikely(Dee_function_generator_gmov_const2loc(self, Dee_None, oldloc))
-			goto err;
-#ifdef Dee_function_generator_gincref_const_MAYFAIL
-		if (incref_none_status > 0) {
-			if unlikely(Dee_function_generator_gincref_loc(self, oldloc, old_refcnt))
-				goto err;
-		}
-#endif /* Dee_function_generator_gincref_const_MAYFAIL */
-		Dee_host_symbol_setsect(Lnot_null_sym, self->fg_sect);
-	}
-	new_refcnt &= ~DEE_EXCEPT_EXITINFO_NULLFLAG; /* Don't care about nullable here anymore! */
-
-	if (old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) {
-		ptrdiff_t refcnt_delta = (ptrdiff_t)(new_refcnt) -
-		                         (ptrdiff_t)(old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
-		if (refcnt_delta > 0) {
-			temp = Dee_function_generator_gxincref_loc(self, oldloc, (Dee_refcnt_t)refcnt_delta);
-		} else if (refcnt_delta < 0) {
-			temp = new_refcnt ? Dee_function_generator_gxdecref_nokill_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
-			                  : Dee_function_generator_gxdecref_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
-		} else {
-			temp = 0;
-		}
-	} else {
-		ptrdiff_t refcnt_delta = (ptrdiff_t)new_refcnt - (ptrdiff_t)old_refcnt;
-		if (refcnt_delta > 0) {
-			temp = Dee_function_generator_gincref_loc(self, oldloc, (Dee_refcnt_t)refcnt_delta);
-		} else if (refcnt_delta < 0) {
-			temp = new_refcnt ? Dee_function_generator_gdecref_nokill_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta))
-			                  : Dee_function_generator_gdecref_loc(self, oldloc, (Dee_refcnt_t)(-refcnt_delta));
-		} else {
-			temp = 0;
-		}
-	}
-	if unlikely(temp)
-		goto err;
-
-	/* Check for special case: if the location lies further out on the hstack than
-	 * is reachable by doing a direct push, then adjust the stack such that a direct
-	 * push becomes possible. */
-	if (newloc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND &&
-	    Dee_memloc_getcfastart(newloc) > self->fg_state->ms_host_cfa_offset) {
-		uintptr_t adjust_delta = Dee_memloc_getcfastart(newloc) - self->fg_state->ms_host_cfa_offset;
-		if unlikely(Dee_function_generator_ghstack_adjust(self, adjust_delta))
-			goto err;
-	}
-	return Dee_function_generator_gmov_loc2loc(self, oldloc, newloc);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gexcept_morph_adjref(struct Dee_function_generator *__restrict self,
-                                            struct Dee_memloc *__restrict oldloc,
-                                            uint16_t old_refcnt, uint16_t new_refcnt) {
-	return Dee_function_generator_gexcept_morph_mov(self, oldloc, oldloc, old_refcnt, new_refcnt);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_gexcept_morph_decref(struct Dee_function_generator *__restrict self,
-                                            struct Dee_memloc *__restrict loc,
-                                            uint16_t old_refcnt) {
-	ASSERT(old_refcnt != 0);
-	if (old_refcnt & DEE_EXCEPT_EXITINFO_NULLFLAG) {
-		return Dee_function_generator_gxdecref_loc(self, loc, old_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG);
-	} else {
-		return Dee_function_generator_gdecref_loc(self, loc, old_refcnt);
-	}
-}
-
-/* Pop the V-stack entry describing `loc' */
-PRIVATE NONNULL((1, 2)) void DCALL
-Dee_memstate_vundef_loc(struct Dee_memstate *__restrict self,
-                        Dee_vstackaddr_t i) {
-	struct Dee_memval *mval;
-	ASSERT(i < self->ms_stackc);
-	mval = &self->ms_stackv[i];
-	ASSERT(Dee_memval_isdirect(mval));
-	Dee_memstate_decrinuse_for_direct_memval(self, mval);
-	Dee_memval_init_undefined(mval);
-}
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-Dee_except_exitinfo_contains_refcnt_after(struct Dee_except_exitinfo const *__restrict self,
-                                          uint16_t refcnt, size_t i) {
-	size_t c = Dee_except_exitinfo_locc(self);
-	for (; i < c; ++i) {
-		if (Dee_except_exitinfo_locv(self, i) == refcnt)
-			return true;
-	}
-	return false;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-Dee_function_generator_gexcept_morph(struct Dee_function_generator *__restrict self,
-                                     struct Dee_except_exitinfo const *__restrict oldinfo,
-                                     struct Dee_except_exitinfo const *__restrict newinfo) {
-	Dee_vstackaddr_t *curinfo_vaddr; /* Map from `i < Dee_except_exitinfo_locc(curinfo)' -> `state->ms_stackv' */
-	struct Dee_memstate *state;
-	size_t cur_loci, cur_locc;
-	size_t new_loci, new_locc, max_locc;
-	size_t oldsize, newsize, cursize;
-	struct Dee_except_exitinfo *curinfo;
-	oldsize = Dee_except_exitinfo_sizeof(oldinfo->exi_cfa_offset);
-	newsize = Dee_except_exitinfo_sizeof(newinfo->exi_cfa_offset);
-	cursize = oldsize > newsize ? oldsize : newsize;
-	curinfo = (struct Dee_except_exitinfo *)Dee_Malloca(cursize);
-	if unlikely(!curinfo)
-		goto err;
-	curinfo = (struct Dee_except_exitinfo *)memcpy(curinfo, oldinfo, oldsize);
-	if (newsize > oldsize)
-		bzero((byte_t *)curinfo + oldsize, newsize - oldsize);
-
-	/* Allocate a mem-state and then push all registers containing references
-	 * onto the v-stack, so they get saved properly in case they need to be
-	 * flushed. */
-	state = (struct Dee_memstate *)Dee_Malloca(Dee_memstate_sizeof(1));
-	if unlikely(!state)
-		goto err_infostate;
-	state->ms_refcnt          = 1;
-	state->ms_host_cfa_offset = curinfo->exi_cfa_offset;
-	state->ms_localc          = 1;
-	state->ms_stackc          = 0;
-	state->ms_stacka          = 0;
-	state->ms_stackv          = NULL;
-	bzero(state->ms_rinuse, sizeof(state->ms_rinuse));
-	bzero(state->ms_rusage, sizeof(state->ms_rusage));
-	Dee_memval_init_local_unbound(&state->ms_localv[0]);
-	Dee_memequivs_init(&state->ms_memequiv);
-	self->fg_state = state;
-
-	cur_locc = Dee_except_exitinfo_locc(curinfo);
-	new_locc = Dee_except_exitinfo_locc(newinfo);
-	while (cur_locc && !Dee_except_exitinfo_locv(curinfo, cur_locc - 1))
-		--cur_locc;
-	while (new_locc && !Dee_except_exitinfo_locv(newinfo, new_locc - 1))
-		--new_locc;
-
-	/* Push locations used by the old state onto the V-stack (so they aren't clobbered). */
-	max_locc = MAX(cur_locc, new_locc);
-	curinfo_vaddr = (Dee_vstackaddr_t *)Dee_Mallocac(max_locc, sizeof(Dee_vstackaddr_t));
-	if unlikely(!curinfo_vaddr)
-		goto err_infostate_state;
-	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-		struct Dee_memloc cur_loc;
-		uint16_t old_refcnt;
-		old_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
-		ASSERT(old_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		if (!old_refcnt) {
-			curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-			continue;
-		}
-		curinfo_vaddr[cur_loci] = state->ms_stackc;
-		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
-		if unlikely(Dee_memstate_vpush_memloc(state, &cur_loc))
-			goto err_infostate_state_curinfo_vaddr;
-	}
-	for (; cur_loci < max_locc; ++cur_loci)
-		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-
-	/* Shift/decref locations that no longer appear in the new state. */
-again_move_removed_location:
-	while (cur_locc > new_locc) {
-		struct Dee_memloc cur_loc;
-		uint16_t cur_refcnt;
-		cur_loci = cur_locc - 1;
-		cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
-		if unlikely(cur_refcnt == 0) {
-			ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
-			--cur_locc;
-			continue;
-		}
-		ASSERT(cur_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			ASSERT(cur_refcnt_new_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
-			ASSERT(new_refcnt_new_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
-			if (cur_refcnt_new_loci == 0 && new_refcnt_new_loci == cur_refcnt) {
-				struct Dee_memloc new_loc;
-				uint16_t new_refcnt;
-offload_cur_loci_to_new_loci_for_trunc:
-				Dee_except_exitinfo_asloc(new_loci, &new_loc);
-				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-				ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
-				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-				new_refcnt = Dee_except_exitinfo_locv(newinfo, new_loci);
-				ASSERT(new_refcnt != 0);
-				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
-				                                                     cur_refcnt, new_refcnt))
-					goto err_infostate_state_curinfo_vaddr;
-				Dee_except_exitinfo_locv(curinfo, cur_loci) = 0; /* Moved to "new_loci" */
-				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
-				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-				curinfo_vaddr[new_loci] = state->ms_stackc;
-				if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
-					goto err_infostate_state_curinfo_vaddr;
-				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
-				--cur_locc;
-				goto again_move_removed_location;
-			}
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == (cur_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_new_loci)
-				goto offload_cur_loci_to_new_loci_for_trunc;
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci >= cur_refcnt && !cur_refcnt_new_loci)
-				goto offload_cur_loci_to_new_loci_for_trunc;
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			uint16_t cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			uint16_t new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci >= (cur_refcnt & ~DEE_EXCEPT_EXITINFO_NULLFLAG) && !cur_refcnt_new_loci)
-				goto offload_cur_loci_to_new_loci_for_trunc;
-		}
-
-		/* No suitable position in the new state -> drop references *now* */
-		ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-		ASSERT(cur_refcnt == Dee_except_exitinfo_locv(curinfo, cur_loci));
-		Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
-		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-		if unlikely(Dee_function_generator_gexcept_morph_decref(self, &cur_loc, cur_refcnt))
-			goto err_infostate_state_curinfo_vaddr;
-		Dee_except_exitinfo_locv(curinfo, cur_loci) = 0;
-		--cur_locc;
-	}
-	ASSERT(cur_locc <= new_locc);
-	
-	/* Move references in order to fill newly added memory locations. */
-again_move_added_location:
-	while (cur_locc < new_locc) {
-		struct Dee_memloc new_loc;
-		uint16_t new_refcnt;
-		new_loci   = cur_locc;
-		new_refcnt = Dee_except_exitinfo_locv(newinfo, new_loci);
-		if unlikely(new_refcnt == 0) {
-			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-			++cur_locc;
-			continue;
-		}
-		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		Dee_except_exitinfo_asloc(new_loci, &new_loc);
-		for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-			uint16_t cur_refcnt_cur_loci = Dee_except_exitinfo_locv(curinfo, cur_loci);
-			uint16_t new_refcnt_cur_loci = Dee_except_exitinfo_locv(newinfo, cur_loci);
-			ASSERT(cur_refcnt_cur_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
-			ASSERT(new_refcnt_cur_loci != DEE_EXCEPT_EXITINFO_NULLFLAG);
-			if (cur_refcnt_cur_loci > new_refcnt_cur_loci && cur_refcnt_cur_loci == new_refcnt) {
-				struct Dee_memloc cur_loc;
-				uint16_t cur_refcnt;
-/*offload_cur_loci_to_new_loci_for_expand:*/
-				Dee_except_exitinfo_asloc(cur_loci, &cur_loc);
-				ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-				ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-				Dee_memstate_vundef_loc(state, curinfo_vaddr[cur_loci]);
-				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-				cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
-				ASSERT(cur_refcnt != 0);
-				if unlikely(Dee_function_generator_gexcept_morph_mov(self, &cur_loc, &new_loc,
-				                                                     cur_refcnt, new_refcnt))
-					goto err_infostate_state_curinfo_vaddr;
-				Dee_except_exitinfo_locv(curinfo, cur_loci) = 0; /* Moved to "new_loci" */
-				Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
-				ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-				curinfo_vaddr[new_loci] = state->ms_stackc;
-				if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
-					goto err_infostate_state_curinfo_vaddr;
-				ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
-				++cur_locc;
-				goto again_move_added_location;
-			}
-		}
-
-		/* No suitable value to move into the state's required reference -> create a reference to "Dee_None" */
-		{
-			/* Need to get an object out of the void. */
-			struct Dee_memloc none;
-			Dee_memloc_init_const(&none, Dee_None);
-			ASSERT(Dee_except_exitinfo_locv(curinfo, new_loci) == 0);
-			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
-			                                                     1, new_refcnt + 1))
-				goto err_infostate_state_curinfo_vaddr;
-			Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt;
-			ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-			curinfo_vaddr[new_loci] = state->ms_stackc;
-			if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
-				goto err_infostate_state_curinfo_vaddr;
-		}
-		++cur_locc;
-	}
-	ASSERT(cur_locc == new_locc);
-	curinfo->exi_cfa_offset = 0;
-	if (cur_locc > HOST_REGISTER_COUNT)
-		curinfo->exi_cfa_offset = (cur_locc - HOST_REGISTER_COUNT) * HOST_SIZEOF_POINTER;
-
-	/* Try to shift values between locations that appear in both states. */
-	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-		struct Dee_memloc *p_cur_loc, new_loc;
-		uint16_t cur_refcnt_cur_loci = Dee_except_exitinfo_locv(curinfo, cur_loci);
-		uint16_t new_refcnt_cur_loci = Dee_except_exitinfo_locv(newinfo, cur_loci);
-		uint16_t cur_refcnt_new_loci;
-		uint16_t new_refcnt_new_loci;
-		if (cur_refcnt_cur_loci == 0)
-			continue; /* Nothing here, so also nothing to move. */
-		if (cur_refcnt_cur_loci == new_refcnt_cur_loci)
-			continue; /* Location already matches target perfectly. */
-
-		/* See if there is a location in "newinfo" that matches "cur_refcnt"
-		 * perfectly, and that isn't already matched perfectly in "curinfo". */
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci != cur_refcnt_cur_loci)
-				continue; /* Wouldn't be a perfect match... */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Would be a perfect match, but already *has* a perfect match */
-			goto move_cur_loci_to_new_loci;
-		}
-		if (cur_refcnt_cur_loci & DEE_EXCEPT_EXITINFO_NULLFLAG) {
-			/* With the current value may be NULL, only perfect matches are acceptable as
-			 * move-targets (because otherwise we'd need to encode a null-check anyways) */
-			continue;
-		}
-		if (cur_refcnt_cur_loci == (new_refcnt_cur_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG))
-			continue; /* No perfect (and unused) candidate found -> target will just have to do an unnecessary NULL-check... */
-
-		/* See if there is a candidate that will simply do an unnecessary NULL-check. */
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (new_refcnt_new_loci != (cur_refcnt_cur_loci | DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Wouldn't be a perfect match... */
-			goto move_cur_loci_to_new_loci;
-		}
-
-		/* See if there is a candidate with a refcnt that is +1/-1 compared to "new_refcnt_cur_loci",
-		 * but where there isn't another location > cur_loci in curinfo that would match perfectly to *it* */
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG)
-				continue; /* Try to not go for nullable locations (yet) */
-			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
-			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked... */
-			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
-			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked */
-			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
-			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked */
-			if ((new_refcnt_new_loci == cur_refcnt_cur_loci - 1 ||
-			     new_refcnt_new_loci == cur_refcnt_cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-
-		/* Same as before, but allow arbitrary refcnt deltas! */
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG)
-				continue; /* Try to not go for nullable locations (yet) */
-			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked... */
-			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked */
-			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci | DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-		for (new_loci = 0; new_loci < new_locc; ++new_loci) {
-			cur_refcnt_new_loci = Dee_except_exitinfo_locv(curinfo, new_loci);
-			new_refcnt_new_loci = Dee_except_exitinfo_locv(newinfo, new_loci);
-			if (new_refcnt_new_loci == 0)
-				continue; /* Not a suitable target location */
-			if (new_refcnt_new_loci == cur_refcnt_new_loci)
-				continue; /* Location is already perfectly matched. */
-			if (!(new_refcnt_new_loci & DEE_EXCEPT_EXITINFO_NULLFLAG))
-				continue; /* Already checked */
-			if (!Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci, cur_loci + 1) &&
-			    !Dee_except_exitinfo_contains_refcnt_after(curinfo, new_refcnt_new_loci & ~DEE_EXCEPT_EXITINFO_NULLFLAG, cur_loci + 1))
-				goto move_cur_loci_to_new_loci; /* Move here! */
-		}
-
-		continue;
-move_cur_loci_to_new_loci:
-		ASSERT(cur_refcnt_cur_loci == Dee_except_exitinfo_locv(curinfo, cur_loci));
-		ASSERT(cur_refcnt_cur_loci != 0);
-		ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-		ASSERT(cur_refcnt_new_loci == Dee_except_exitinfo_locv(curinfo, new_loci));
-		ASSERT(new_refcnt_new_loci == Dee_except_exitinfo_locv(newinfo, new_loci));
-		ASSERT(new_refcnt_new_loci != 0);
-		if (cur_loci == new_loci)
-			continue; /* Will be done by the next pass. */
-
-		/* Do moves:
-		 * - new_loci -> [...]     (Dee_except_exitinfo_locv(curinfo, new_loci) != 0)
-		 * - cur_loci -> new_loci */
-		if (cur_refcnt_new_loci != 0) {
-			ASSERT(curinfo_vaddr[new_loci] != (Dee_vstackaddr_t)-1);
-			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_loci]]));
-			p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[new_loci]]);
-			/* Move "p_cur_loc" to a location somewhere further up the stack, or just decref() it. */
-
-			/* TODO: Try to move "p_cur_loc" elsewhere */
-
-			/* Fallback: just kill "p_cur_loc" */
-			if unlikely(Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt_new_loci))
-				goto err_infostate_state_curinfo_vaddr;
-			Dee_except_exitinfo_locv(curinfo, new_loci) = 0;
-			p_cur_loc->ml_adr.ma_typ = MEMADR_TYPE_UNDEFINED;
-			curinfo_vaddr[new_loci] = (Dee_vstackaddr_t)-1;
-		}
-		ASSERT(curinfo_vaddr[new_loci] == (Dee_vstackaddr_t)-1);
-
-		/* Move cur_loci -> new_loci */
-		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-		p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]);
-		Dee_except_exitinfo_asloc(new_loci, &new_loc);
-		if unlikely(Dee_function_generator_gexcept_morph_mov(self, p_cur_loc, &new_loc,
-		                                                     cur_refcnt_cur_loci,
-		                                                     new_refcnt_new_loci))
-			goto err_infostate_state_curinfo_vaddr;
-
-		/* Updated meta-data to reflect the move. */
-		Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
-		ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-		ASSERT(p_cur_loc == Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-		curinfo_vaddr[new_loci] = curinfo_vaddr[cur_loci];
-		curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-		*p_cur_loc = new_loc;
-		Dee_memstate_incrinuse_for_memloc(state, &new_loc);
-		Dee_except_exitinfo_locv(curinfo, cur_loci) = 0;
-		Dee_except_exitinfo_locv(curinfo, new_loci) = new_refcnt_new_loci;
-	}
-
-	/* All feasible shifts have been performed -> simply ensure that all locations
-	 * match their expected reference counts in "newinfo", without shifting values. */
-	for (cur_loci = 0; cur_loci < cur_locc; ++cur_loci) {
-		uint16_t cur_refcnt = Dee_except_exitinfo_locv(curinfo, cur_loci);
-		uint16_t new_refcnt = Dee_except_exitinfo_locv(newinfo, cur_loci);
-		ASSERT(cur_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-		if (cur_refcnt == new_refcnt)
-			continue;
-		if (cur_refcnt == (new_refcnt | DEE_EXCEPT_EXITINFO_NULLFLAG))
-			continue;
-		if (cur_refcnt == 0) {
-			/* Nothing here, yet -> incref(none), and move to the target location */
-			struct Dee_memloc new_loc, none;
-			ASSERT(curinfo_vaddr[cur_loci] == (Dee_vstackaddr_t)-1);
-			Dee_except_exitinfo_asloc(cur_loci, &new_loc);
-			Dee_memloc_init_const(&none, Dee_None);
-			if unlikely(Dee_function_generator_gexcept_morph_mov(self, &none, &new_loc,
-			                                                     1, new_refcnt + 1))
-				goto err_infostate_state_curinfo_vaddr;
-			curinfo_vaddr[cur_loci] = state->ms_stackc;
-			if unlikely(Dee_memstate_vpush_memloc(state, &new_loc))
-				goto err_infostate_state_curinfo_vaddr;
-		} else {
-			struct Dee_memloc *p_cur_loc;
-			ASSERT(curinfo_vaddr[cur_loci] != (Dee_vstackaddr_t)-1);
-			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-			p_cur_loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]);
-			if unlikely(new_refcnt == 0 ? Dee_function_generator_gexcept_morph_decref(self, p_cur_loc, cur_refcnt)
-			                            : Dee_function_generator_gexcept_morph_adjref(self, p_cur_loc, cur_refcnt, new_refcnt))
-				goto err;
-			if (new_refcnt == 0) {
-				ASSERT(state == self->fg_state);
-				ASSERT(p_cur_loc == Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[cur_loci]]));
-				Dee_memstate_decrinuse_for_memloc(state, p_cur_loc);
-				Dee_memloc_init_undefined(p_cur_loc);
-				curinfo_vaddr[cur_loci] = (Dee_vstackaddr_t)-1;
-			}
-		}
-		Dee_except_exitinfo_locv(curinfo, cur_loci) = new_refcnt;
-	}
-
-	/* Load register-references needed by the new state into registers (if they were flushed). */
-	{
-		Dee_host_register_t new_regi, new_regc;
-		new_regc = HOST_REGISTER_COUNT;
-		if (new_locc < HOST_REGISTER_COUNT)
-			new_regc = (Dee_host_register_t)new_locc;
-		for (new_regi = 0; new_regi < new_regc; ++new_regi) {
-			struct Dee_memloc *loc;
-			uint16_t new_refcnt = Dee_except_exitinfo_locv(newinfo, new_regi);
-			ASSERT(new_refcnt != DEE_EXCEPT_EXITINFO_NULLFLAG);
-			if (new_refcnt == 0)
-				continue;
-			ASSERT(curinfo_vaddr[new_regi] != (Dee_vstackaddr_t)-1);
-			ASSERT(curinfo_vaddr[new_regi] < state->ms_stackc);
-			ASSERT(Dee_memval_isdirect(&state->ms_stackv[curinfo_vaddr[new_regi]]));
-			loc = Dee_memval_direct_getloc(&state->ms_stackv[curinfo_vaddr[new_regi]]);
-			ASSERT(loc->ml_adr.ma_typ == MEMADR_TYPE_HREG ||
-			       loc->ml_adr.ma_typ == MEMADR_TYPE_HSTACKIND);
-			ASSERT(loc->ml_adr.ma_typ != MEMADR_TYPE_HREG ||
-			       (loc->ml_adr.ma_reg == new_regi ||
-			        loc->ml_adr.ma_val.v_indoff == 0));
-			if (loc->ml_adr.ma_typ != MEMADR_TYPE_HREG) {
-				if unlikely(Dee_function_generator_gmov_loc2regx(self, loc, new_regi, 0))
-					goto err_infostate_state_curinfo_vaddr;
-				loc->ml_adr.ma_typ = MEMADR_TYPE_HREG;
-				loc->ml_adr.ma_reg = new_regi;
-				loc->ml_adr.ma_val.v_indoff = 0;
-			}
-		}
-	}
-
-	/* Fix any remaining delta in the CFA offset. */
-	if (state->ms_host_cfa_offset != (Dee_cfa_t)newinfo->exi_cfa_offset) {
-		ptrdiff_t cfa_delta = (ptrdiff_t)newinfo->exi_cfa_offset -
-		                      (ptrdiff_t)state->ms_host_cfa_offset;
-		if unlikely(Dee_function_generator_ghstack_adjust(self, cfa_delta))
-			goto err_infostate_state_curinfo_vaddr;
-	}
-	ASSERT(state->ms_host_cfa_offset == (Dee_cfa_t)newinfo->exi_cfa_offset);
-
-	/* Cleanup... */
-	Dee_Freea(curinfo_vaddr);
-	Dee_memequivs_fini(&state->ms_memequiv);
-	ASSERT(self->fg_state == state);
-	ASSERT(state->ms_refcnt == 1);
-	Dee_Free(state->ms_stackv);
-	Dee_Freea(state);
-	Dee_Freea(curinfo);
-	return 0;
-err_infostate_state_curinfo_vaddr:
-	Dee_Freea(curinfo_vaddr);
-err_infostate_state:
-	Dee_memequivs_fini(&state->ms_memequiv);
-	ASSERT(self->fg_state == state);
-	ASSERT(state->ms_refcnt == 1);
-	Dee_Free(state->ms_stackv);
-	Dee_Freea(state);
-err_infostate:
-	Dee_Freea(curinfo);
-err:
-	return -1;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict self) {
-	DREF struct Dee_memstate *retstate;
-	struct Dee_except_exitinfo *last_info;
-	struct Dee_function_generator gen;
-	retstate = Dee_function_assembler_alloc_zero_memstate(self);
-	if unlikely(!retstate)
-		goto err;
-	last_info = Dee_function_assembler_except_exit(self, retstate);
-	Dee_memstate_decref(retstate);
-	if unlikely(!last_info)
-		goto err;
-
-	/* Generate code for `return NULL' */
-	gen.fg_assembler = self;
-	gen.fg_block     = last_info->exi_block;
-	gen.fg_sect      = &gen.fg_block->bb_htext;
-	gen.fg_state     = gen.fg_block->bb_mem_start;
-	_Dee_function_generator_initcommon(&gen);
-	ASSERT(gen.fg_state != NULL);
-	Dee_memstate_incref(gen.fg_state);
-	if unlikely(Dee_function_generator_gretNULL(&gen))
-		goto err_gen_fg_state;
-	ASSERT(gen.fg_block == last_info->exi_block);
-	ASSERT(gen.fg_block->bb_mem_end == NULL);
-	gen.fg_block->bb_mem_end = gen.fg_state; /* Inherit reference */
-
-	/* Compile and order all of the other blocks. */
-	if (self->fa_except_exitc > 1) {
-		size_t i;
-		struct Dee_except_exitinfo *next_info;
-		size_t next_info_score;
-search_for_next_block:
-		next_info       = NULL;
-		next_info_score = (size_t)-1;
-		for (i = 0; i < self->fa_except_exitc; ++i) {
-			size_t score;
-			struct Dee_except_exitinfo *info;
-			info = self->fa_except_exitv[i];
-			ASSERT(info);
-			if (Dee_except_exitinfo_compiled(info))
-				continue;
-			score = Dee_except_exitinfo_distance(last_info, info);
-			if (next_info_score > score || next_info == NULL) {
-				next_info_score = score;
-				next_info       = info;
-			}
-		}
-		if (next_info) {
-			ASSERT(gen.fg_assembler == self);
-			ASSERT(gen.fg_state_hstack_res == NULL);
-			gen.fg_block = next_info->exi_block;
-			gen.fg_sect  = &gen.fg_block->bb_htext;
-			ASSERT(last_info->exi_block->bb_mem_start != NULL);
-			if unlikely(Dee_function_generator_gexcept_morph(&gen, next_info, last_info))
-				goto err;
-			ASSERT(next_info->exi_block->bb_mem_end == NULL);
-			ASSERT(next_info->exi_block->bb_next == NULL);
-			next_info->exi_block->bb_next = last_info->exi_block;
-			last_info                     = next_info;
-			goto search_for_next_block;
-		}
-	}
-	/* Remember the most "convoluted" exception exit block, so ordering can start with *it* */
-	self->fa_except_first = last_info;
-	return 0;
-err_gen_fg_state:
-	Dee_memstate_decref(gen.fg_state);
-err:
-	return -1;
 }
 
 /* Step #4: Generate morph instruction sequences to perform memory state transitions.
@@ -1460,25 +838,13 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 	ASSERT((self->fa_except_first != NULL) ==
 	       (self->fa_except_exitc > 0));
 	if (self->fa_except_first != NULL) {
-		struct Dee_basic_block *block;
-		block = self->fa_except_first->exi_block;
+		struct Dee_except_exitinfo *block;
+		block = self->fa_except_first;
 		do {
-			struct Dee_basic_block *jmp_next = block->bb_next;
-			block->bb_htext.hs_fallthru = jmp_next ? &jmp_next->bb_htext : NULL;
-			block->bb_hcold.hs_fallthru = NULL;
-			TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
-			TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
-		} while ((block = block->bb_next) != NULL);
-		block = self->fa_except_first->exi_block;
-		do {
-			size_t exit_i;
-			for (exit_i = 0; exit_i < block->bb_exits.jds_size; ++exit_i) {
-				struct Dee_jump_descriptor *jmp = block->bb_exits.jds_list[exit_i];
-				ASSERT(jmp);
-				jmp->jd_morph.hs_fallthru = &jmp->jd_to->bb_htext;
-				TAILQ_INSERT_TAIL(&text, &jmp->jd_morph, hs_link);
-			}
-		} while ((block = block->bb_next) != NULL);
+			struct Dee_except_exitinfo *jmp_next = block->exi_next;
+			block->exi_text.hs_fallthru = jmp_next ? &jmp_next->exi_text : NULL;
+			TAILQ_INSERT_TAIL(&text, &block->exi_text, hs_link);
+		} while ((block = block->exi_next) != NULL);
 	}
 
 	/* Append all of the cold text to the end of normal text. */
