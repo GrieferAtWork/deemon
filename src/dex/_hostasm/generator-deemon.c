@@ -2113,7 +2113,7 @@ do_jcc:
 	TARGET(ASM_CMP_DO)
 		/* TODO: Special handling for when the instruction that eventually pops the
 		 *       value pushed here is ASM_JT/ASM_JF, in which case that jump needs
-		 *       to be implemented using `_Dee_function_generator_gjcmp()' */
+		 *       to be implemented using `Dee_function_generator_gjcc()' */
 		DO(Dee_function_generator_veqaddr(self));
 		if (opcode == ASM_CMP_DO)
 			return Dee_function_generator_vopnot(self);

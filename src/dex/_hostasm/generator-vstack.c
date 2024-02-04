@@ -1131,7 +1131,7 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	common_state = Dee_memstate_copy(self->fg_state);
 	if unlikely(!common_state)
 		goto err;
-	if unlikely(Dee_function_generator_gjcmp(self, Dee_memval_direct_getloc(p_dst),
+	if unlikely(Dee_function_generator_gjcc(self, Dee_memval_direct_getloc(p_dst),
 	                                         &coalesce_from, false,
 	                                         text_Lnot_equal, NULL, text_Lnot_equal))
 		goto err_common_state;
@@ -1368,7 +1368,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			--self->fg_state->ms_stackc;
 			Dee_memstate_decrinuse_for_memloc(self->fg_state, &l_argc);
 			Dee_memloc_init_const(&l_aid, (void *)(uintptr_t)aid);
-			if unlikely(Dee_function_generator_gjcmp(self, &l_aid, &l_argc, false, NULL,
+			if unlikely(Dee_function_generator_gjcc(self, &l_aid, &l_argc, false, NULL,
 			                                         Luse_default, Luse_default))
 				goto err;
 		}
@@ -1407,7 +1407,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			--self->fg_state->ms_stackc;
 			Dee_memstate_decrinuse_for_memloc(self->fg_state, &l_argc);
 			Dee_memloc_init_const(&l_aid, (void *)(uintptr_t)aid);
-			if unlikely(Dee_function_generator_gjcmp(self, &l_aid, &l_argc, false,
+			if unlikely(Dee_function_generator_gjcc(self, &l_aid, &l_argc, false,
 			                                         text != cold ? NULL : Ltarget,
 			                                         text != cold ? Ltarget : NULL,
 			                                         text != cold ? Ltarget : NULL))
@@ -2589,7 +2589,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 
 		/* Generate code to branch depending on the value of `loc' */
 		Dee_memloc_init_const(&zero, (void *)0);
-		if unlikely(Dee_function_generator_gjcmp(self, Dee_memval_direct_getloc(cond_mval), &zero, true,
+		if unlikely(Dee_function_generator_gjcc(self, Dee_memval_direct_getloc(cond_mval), &zero, true,
 		                                         Lexcept,                            /* loc < 0 */
 		                                         jump_if_true ? Lnot_except : Ljmp,  /* loc == 0 */
 		                                         jump_if_true ? Ljmp : Lnot_except)) /* loc > 0 */
@@ -2699,7 +2699,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		}
 
 		/* Emit the jump */
-		if unlikely(Dee_function_generator_gjcmp(self, &cmp_lhs, &cmp_rhs, true, Llo, Leq, Lgr))
+		if unlikely(Dee_function_generator_gjcc(self, &cmp_lhs, &cmp_rhs, true, Llo, Leq, Lgr))
 			goto err;
 	}
 
@@ -2790,7 +2790,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	{
 		struct Dee_memloc iter_done;
 		Dee_memloc_init_const(&iter_done, ITER_DONE);
-		if unlikely(Dee_function_generator_gjcmp(self, Dee_function_generator_vtopdloc(self),
+		if unlikely(Dee_function_generator_gjcc(self, Dee_function_generator_vtopdloc(self),
 		                                         &iter_done, false, NULL, sym, NULL))
 			goto err;
 	}

@@ -418,7 +418,7 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	if unlikely(!Lnot_ITER_DONE)
 		goto err;
 	Dee_memloc_init_const(&l_ITER_DONE, ITER_DONE);
-	DO(Dee_function_generator_gjcmp(self, Dee_function_generator_vtopdloc(self), &l_ITER_DONE,
+	DO(Dee_function_generator_gjcc(self, Dee_function_generator_vtopdloc(self), &l_ITER_DONE,
 	                                false, Lnot_ITER_DONE, NULL, Lnot_ITER_DONE));
 	DO(Dee_function_generator_state_unshare(self));
 	common_state = self->fg_state;

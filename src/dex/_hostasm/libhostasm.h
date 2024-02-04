@@ -3014,6 +3014,90 @@ Dee_function_generator_gmorph_reg012regbooly(struct Dee_function_generator *__re
 #define GMORPHBOOL_CC_LO 2 /* Compare: "<" (signed) */
 #define GMORPHBOOL_CC_GR 3 /* Compare: ">" (signed) */
 
+
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_host_section_gjmp(struct Dee_host_section *__restrict self, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL _Dee_host_section_gjz_reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL _Dee_function_generator_gjz_regind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL _Dee_host_section_gjz_hstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL _Dee_host_section_gjnz_reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 4)) int DCALL _Dee_function_generator_gjnz_regind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t ind_delta, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 3)) int DCALL _Dee_host_section_gjnz_hstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_regCreg(struct Dee_host_section *__restrict self, Dee_host_register_t lhs_regno, Dee_host_register_t rhs_regno, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_regCconst(struct Dee_host_section *__restrict self, Dee_host_register_t lhs_regno, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gjcc_regindCreg(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, Dee_host_register_t rhs_regno, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gjcc_regindCconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindCreg(struct Dee_host_section *__restrict self, ptrdiff_t lhs_sp_offset, Dee_host_register_t rhs_regno, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindCconst(struct Dee_host_section *__restrict self, ptrdiff_t lhs_sp_offset, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+#ifdef HOSTASM_X86_64
+#define _Dee_host_section_gjcc_regCconst_MAYFAIL          /* `_Dee_host_section_gjcc_regCconst()' returns `1' if "rhs_value" is too large */
+#define _Dee_function_generator_gjcc_regindCconst_MAYFAIL /* `_Dee_function_generator_gjcc_regindCconst()' returns `1' if "rhs_value" is too large */
+#define _Dee_host_section_gjcc_hstackindCconst_MAYFAIL    /* `_Dee_host_section_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
+#endif /* HOSTASM_X86_64 */
+
+#define _Dee_function_generator_gjmp(self, dst)                                                                          _Dee_host_section_gjmp((self)->fg_sect, dst)
+#define _Dee_function_generator_gjz_reg(self, src_regno, dst)                                                            _Dee_host_section_gjz_reg((self)->fg_sect, src_regno, dst)
+#define _Dee_function_generator_gjz_hstackind(self, sp_offset, dst)                                                      _Dee_host_section_gjz_hstackind((self)->fg_sect, sp_offset, dst)
+#define _Dee_function_generator_gjnz_reg(self, src_regno, dst)                                                           _Dee_host_section_gjnz_reg((self)->fg_sect, src_regno, dst)
+#define _Dee_function_generator_gjnz_hstackind(self, sp_offset, dst)                                                     _Dee_host_section_gjnz_hstackind((self)->fg_sect, sp_offset, dst)
+#define _Dee_function_generator_gjcc_regCreg(self, lhs_regno, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)             _Dee_host_section_gjcc_regCreg((self)->fg_sect, lhs_regno, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
+#define _Dee_function_generator_gjcc_regCconst(self, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)           _Dee_host_section_gjcc_regCconst((self)->fg_sect, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
+#define _Dee_function_generator_gjcc_hstackindCreg(self, lhs_sp_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)   _Dee_host_section_gjcc_hstackindCreg((self)->fg_sect, lhs_sp_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
+#define _Dee_function_generator_gjcc_hstackindCconst(self, lhs_sp_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_host_section_gjcc_hstackindCconst((self)->fg_sect, lhs_sp_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
+#ifdef _Dee_host_section_gjcc_regCconst_MAYFAIL
+#define _Dee_function_generator_gjcc_regCconst_MAYFAIL /* `_Dee_function_generator_gjcc_regCconst()' returns `1' if "rhs_value" is too large */
+#endif /* _Dee_host_section_gjcc_regCconst_MAYFAIL */
+#ifdef _Dee_host_section_gjcc_hstackindCconst_MAYFAIL
+#define _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL /* `_Dee_function_generator_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
+#endif /* _Dee_host_section_gjcc_hstackindCconst_MAYFAIL */
+
+#define Dee_function_generator_gjmp(self, dst)                                                                                _Dee_function_generator_gjmp(self, dst)
+#define Dee_function_generator_gjz_reg(self, src_regno, dst)                                                                  _Dee_function_generator_gjz_reg(self, src_regno, dst)
+#define Dee_function_generator_gjz_regind(self, src_regno, ind_delta, dst)                                                    _Dee_function_generator_gjz_regind(self, src_regno, ind_delta, dst)
+#define Dee_function_generator_gjz_hstackind(self, cfa_offset, dst)                                                           _Dee_function_generator_gjz_hstackind(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), dst)
+#define Dee_function_generator_gjnz_reg(self, src_regno, dst)                                                                 _Dee_function_generator_gjnz_reg(self, src_regno, dst)
+#define Dee_function_generator_gjnz_regind(self, src_regno, ind_delta, dst)                                                   _Dee_function_generator_gjnz_regind(self, src_regno, ind_delta, dst)
+#define Dee_function_generator_gjnz_hstackind(self, cfa_offset, dst)                                                          _Dee_function_generator_gjnz_hstackind(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, cfa_offset), dst)
+#define Dee_function_generator_gjcc_regCreg(self, lhs_regno, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)                   _Dee_function_generator_gjcc_regCreg(self, lhs_regno, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
+#define Dee_function_generator_gjcc_regindCreg(self, lhs_regno, lhs_ind_delta, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_regindCreg(self, lhs_regno, lhs_ind_delta, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
+#define Dee_function_generator_gjcc_hstackindCreg(self, lhs_cfa_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)        _Dee_function_generator_gjcc_hstackindCreg(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
+#ifndef _Dee_function_generator_gjcc_regindCconst_MAYFAIL
+#define Dee_function_generator_gjcc_regindCconst(self, lhs_regno, lhs_ind_delta, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_regindCconst(self, lhs_regno, lhs_ind_delta, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
+#else /* _Dee_function_generator_gjcc_regindCconst_MAYFAIL */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regindCconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+#endif /* !_Dee_function_generator_gjcc_regindCconst_MAYFAIL */
+#ifndef _Dee_function_generator_gjcc_regCconst_MAYFAIL
+#define Dee_function_generator_gjcc_regCconst(self, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_regCconst(self, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
+#else /* _Dee_function_generator_gjcc_regCconst_MAYFAIL */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regCconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+#endif /* !_Dee_function_generator_gjcc_regCconst_MAYFAIL */
+#ifndef _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL
+#define Dee_function_generator_gjcc_hstackindCconst(self, lhs_cfa_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_hstackindCconst(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
+#else /* _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_hstackindCconst(struct Dee_function_generator *__restrict self, Dee_cfa_t lhs_cfa_offset, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+#endif /* !_Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locCregx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, Dee_host_register_t rhs_regno, ptrdiff_t rhs_val_offset, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locCconst(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+
+
+
+
+
+/* Generate jumps. */
+#define Dee_function_generator_gjmp(self, dst) _Dee_function_generator_gjmp(self, dst)
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gjz(struct Dee_function_generator *__restrict self, struct Dee_memloc const *test_loc, struct Dee_host_symbol *__restrict dst);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self, struct Dee_memloc const *test_loc, struct Dee_host_symbol *__restrict dst);
+
+/* Emit conditional jump(s) based on `<lhs> <=> <rhs>'
+ * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gjcc(struct Dee_function_generator *__restrict self,
+                            struct Dee_memloc const *lhs, struct Dee_memloc const *rhs, bool signed_cmp,
+                            struct Dee_host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>' */
+                            struct Dee_host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>' */
+                            struct Dee_host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>' */
+
+
+
 /* Allocate at host register, possibly flushing an already used register to stack.
  * @param: not_these: Array of registers not to allocated, terminated by one `>= HOST_REGISTER_COUNT'.
  * @return: * : The allocated register
@@ -3075,26 +3159,6 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_arg_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_aid_t aid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gthrow_local_unbound(struct Dee_function_generator *__restrict self, Dee_instruction_t const *instr, Dee_ulid_t lid);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gthrow_global_unbound(struct Dee_function_generator *__restrict self, struct Dee_module_object *mod, uint16_t gid);
-
-/* Generate jumps. */
-#define Dee_function_generator_gjz(self, test_loc, dst)  _Dee_function_generator_gjz(self, test_loc, dst)
-#define Dee_function_generator_gjnz(self, test_loc, dst) _Dee_function_generator_gjnz(self, test_loc, dst)
-#define Dee_function_generator_gjmp(self, dst)           _Dee_function_generator_gjmp(self, dst)
-#define Dee_function_generator_gjcmp(self, lhs, rhs, signed_cmp, dst_lo, dst_eq, dst_gr) \
-	_Dee_function_generator_gjcmp(self, lhs, rhs, signed_cmp, dst_lo, dst_eq, dst_gr)
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL _Dee_function_generator_gjz(struct Dee_function_generator *__restrict self, struct Dee_memloc const *test_loc, struct Dee_host_symbol *__restrict dst);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL _Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self, struct Dee_memloc const *test_loc, struct Dee_host_symbol *__restrict dst);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_host_section_gjmp(struct Dee_host_section *__restrict self, struct Dee_host_symbol *__restrict dst);
-#define _Dee_function_generator_gjmp(self, dst)          _Dee_host_section_gjmp((self)->fg_sect, dst)
-
-/* Emit conditional jump(s) based on `<lhs> <=> <rhs>'
- * NOTE: This function may clobber `lhs' and `rhs', and may flush/shift local/stack locations. */
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
-_Dee_function_generator_gjcmp(struct Dee_function_generator *__restrict self,
-                              struct Dee_memloc const *lhs, struct Dee_memloc const *rhs, bool signed_cmp,
-                              struct Dee_host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>' */
-                              struct Dee_host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>' */
-                              struct Dee_host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>' */
 
 /* Generate checks to enter exception handling mode. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjz_except(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);

@@ -135,7 +135,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 		DO(Dee_function_generator_vpop(self)); /* kw */
 		Dee_memloc_init_const(&loc_DeeKwds_Type, &DeeKwds_Type);
-		DO(Dee_function_generator_gjcmp(self, &loc_kwds_ob_type, &loc_DeeKwds_Type, false,
+		DO(Dee_function_generator_gjcc(self, &loc_kwds_ob_type, &loc_DeeKwds_Type, false,
 		                                NULL, Lnot_kwds, NULL));
 		enter_state = self->fg_state; /* kw */
 		Dee_memstate_incref(enter_state);
