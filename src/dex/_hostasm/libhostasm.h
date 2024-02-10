@@ -735,6 +735,7 @@ Dee_memobj_xinfo_equals(struct Dee_memobj_xinfo const *a,
 #define MEMOBJ_F_ISREF        0x01 /* DREF: A reference is being held to the objec in `mo_loc' */
 #define MEMOBJ_F_ONEREF       0x02 /* [valid_if(MEMOBJ_F_ISREF)] The reference being held by `mo_loc' has not yet escaped (on decref, can use decref_dokill instead) */
 #define MEMOBJ_F_LINEAR       0x04 /* When mo_loc is `MEMADR_TYPE_HSTACKIND': location is part of a linear vector. It must not be moved to a different cfa offset (only allowed if memobj is part of vstack) */
+#define _MEMOBJ_F_EXPAND      0x40 /* May appear in MEMVAL_VMORPH_LIST/MEMVAL_VMORPH_TUPLE/MEMVAL_VMORPH_HASHSET/MEMVAL_VMORPH_ROSET to indicate a "foo..." argument */
 #define MEMOBJ_F_MAYBEUNBOUND 0x80 /* Location may be NULL, meaning it may not be bound (only allowed if memobj is used by MEMVAL_VMORPH_DIRECT of a local variable memval)
                                     * NOTE: This flag is combined with `MEMADR_TYPE_CONST,NULL' to represent uninitialized locals. */
 
@@ -890,16 +891,16 @@ Dee_memobj_reqxinfo(struct Dee_memobj *__restrict self);
 #define MEMVAL_VMORPH_INT        8 /* >> value = DeeInt_NewIntptr(mv_obj.mvo_0); */
 #define MEMVAL_VMORPH_UINT       9 /* >> value = DeeInt_NewUIntptr(mv_obj.mvo_0); */
 #define MEMVAL_VMORPH_NULLABLE  10 /* >> value = mv_obj.mvo_0 ?: HANDLE_EXCEPT(); */
-#define MEMVAL_VMORPH_HASOBJ0(x) ((x) < 16)
-#define MEMVAL_VMORPH_HASOBJN(x) ((x) >= 16)
-/* TODO: Multi-object morphs: */
-/* TODO: MEMVAL_VMORPH_LIST */
-/* TODO: MEMVAL_VMORPH_TUPLE */
-/* TODO: MEMVAL_VMORPH_HASHSET */
-/* TODO: MEMVAL_VMORPH_ROSET */
-/* TODO: MEMVAL_VMORPH_DICT */
-/* TODO: MEMVAL_VMORPH_RODICT */
-/* TODO: MEMVAL_VMORPH_SUPER */
+#define MEMVAL_VMORPH_HASOBJ0(x) ((x) <= 0xf)
+#define MEMVAL_VMORPH_HASOBJN(x) ((x) > 0xf)
+/* Multi-object morphs */
+//TODO: #define MEMVAL_VMORPH_LIST      0x10 /* >> value = DeeList_New...(mos_objv...); */
+//TODO: #define MEMVAL_VMORPH_TUPLE     0x11 /* >> value = DeeTuple_New...(mos_objv...); */
+//TODO: #define MEMVAL_VMORPH_HASHSET   0x12 /* >> value = DeeHashSet_New...(mos_objv...); */
+//TODO: #define MEMVAL_VMORPH_ROSET     0x13 /* >> value = DeeRoSet_New...(mos_objv...); */
+//TODO: #define MEMVAL_VMORPH_DICT      0x14 /* >> value = DeeDict_New...(mos_objv...);   // 0:key, 1:value, 2:key, ... */
+//TODO: #define MEMVAL_VMORPH_RODICT    0x15 /* >> value = DeeRoDict_New...(mos_objv...); // 0:key, 1:value, 2:key, ... */
+#define MEMVAL_VMORPH_SUPER     0x16 /* >> value = DeeSuper_New(tp_self: mos_objv[1], self: mos_objv[0]); */
 
 
 struct Dee_memobjs {
@@ -918,20 +919,10 @@ struct Dee_memobjs {
 	                                                        * be made on all elements at the same time! */
 	size_t                                     mos_objc;   /* # of objects */
 	COMPILER_FLEXIBLE_ARRAY(struct Dee_memobj, mos_objv);  /* [mos_objc] Vector of objects. */
-	/* TODO: Bitset of objects that should be in-place expanded:
-	 * >> return [10, foo..., 20];
-	 * ASM:
-	 * >> push   @10
-	 * >> push   pack List, #1   // MEMVAL_VMORPH_LIST: {CONST(10)}    expand:{}
-	 * >> push   @foo
-	 * >> concat top, pop        // MEMVAL_VMORPH_LIST: {CONST(10), LOC(foo)}    expand:{foo}
-	 * >> push   @20
-	 * >> extend top, #1         // MEMVAL_VMORPH_LIST: {CONST(10), LOC(foo), CONST(20)}    expand:{foo}
-	 *
-	 * When the type of "foo" is known (e.g.: is a tuple), then we
-	 * can perfectly allocate the final list right from the start!
-	 */
 };
+
+/* Construct a new `struct Dee_memobjs' with an uninitialized `mos_objv'. */
+INTDEF WUNUSED NONNULL((1)) struct Dee_memobjs *DCALL Dee_memobjs_new(size_t objc);
 
 INTDEF NONNULL((1)) void DCALL Dee_memobjs_destroy(struct Dee_memobjs *__restrict self);
 #define Dee_memobjs_incref(self)        (void)(++(self)->mos_refcnt)
@@ -1067,6 +1058,10 @@ Dee_memval_do_destroy_objn_or_xinfo(struct Dee_memval *__restrict self);
 	_Dee_memval_init_impl(self, Dee_memobj_init_local_unbound(&(self)->mv_obj.mvo_0))
 #define Dee_memval_init_constaddr(self, value) Dee_memval_init_const(self, value, NULL)
 #define Dee_memval_init_constobj(self, value)  Dee_memval_init_const(self, value, Dee_TYPE(value))
+
+/* Initialize "self" by inheriting a list of objects. */
+#define Dee_memval_init_objn_inherited(self, mvo_n_, mv_vmorph_, mv_flags_) \
+	(void)((self)->mv_obj.mvo_n = (mvo_n_)->mos_objv, (self)->mv_vmorph = (mv_vmorph_), (self)->mv_flags = (mv_flags_))
 
 
 #define Dee_memval_hasobj0(self)              MEMVAL_VMORPH_HASOBJ0((self)->mv_vmorph)
@@ -2530,12 +2525,14 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcoalesce_c(struct 
 /* Force VTOP to become a direct object. Any memory locations that aliases it is also changed.
  * NOTE: This function is usually called automatically by other `Dee_function_generator_v*' functions. */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vndirect1(struct Dee_function_generator *__restrict self); /* Also allow NULLABLE */
 
 /* Same as (but requires that "n >= 1"):
  * >> Dee_function_generator_vlrot(self, n);
  * >> Dee_function_generator_vdirect1(self);
  * >> Dee_function_generator_vrrot(self, n); */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vndirect_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Also allow NULLABLE */
 
 /* Same as (though the order in which objects are made direct is undefined):
  * >> for (i = 0; i < n; ++i) {
@@ -2543,6 +2540,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect_at(struct D
  * >>     Dee_function_generator_vdirect1(self);
  * >> } */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vndirect(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Also allow NULLABLE */
 
 /* Make sure that "val" is direct. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL

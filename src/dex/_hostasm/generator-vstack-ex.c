@@ -6498,18 +6498,19 @@ err:
 /* ob, type -> ob as type */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vopsuper(struct Dee_function_generator *__restrict self) {
-	/* TODO: It would be cool to implement this using some `MEMVAL_VMORPH_*'.
-	 *       That way, it would be possible to encode `DeeObject_T*' calls in
-	 *       order to more efficiently encode "super.foo" in member functions.
-	 * In order for this to work, `Dee_memval' needs to be split into the value
-	 * description part, and the location description part.
-	 * Then, the value description part can have up to 2 location parts (based
-	 * on `mv_vmorph'). */
-	DO(Dee_function_generator_vswap(self)); /* type, ob */
-	DO(Dee_function_generator_vnotoneref(self, 2));
-	DO(Dee_function_generator_vcallapi(self, &DeeSuper_New, VCALL_CC_OBJECT, 2));
-	DO(Dee_function_generator_voneref_noalias(self));
-	return Dee_function_generator_vsettyp_noalias(self, &DeeSuper_Type);
+	struct Dee_memobjs *objs;
+	struct Dee_memval *p_ob;
+	DO(Dee_function_generator_vdirect(self, 2));
+	DO(Dee_function_generator_state_unshare(self));
+	objs = Dee_memobjs_new(2);
+	if unlikely(!objs)
+		goto err;
+	p_ob = Dee_function_generator_vtop(self) - 1;
+	Dee_memobj_initmove(&objs->mos_objv[0], &p_ob[0].mv_obj.mvo_0); /* Inherit */
+	Dee_memobj_initmove(&objs->mos_objv[1], &p_ob[1].mv_obj.mvo_0); /* Inherit */
+	--self->fg_state->ms_stackc;
+	Dee_memval_init_objn_inherited(p_ob, objs, MEMVAL_VMORPH_SUPER, MEMVAL_F_NORMAL);
+	return 0;
 err:
 	return -1;
 }

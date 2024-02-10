@@ -803,6 +803,22 @@ err:
 }
 
 
+/* Construct a new `struct Dee_memobjs' with an uninitialized `mos_objv'. */
+INTERN WUNUSED NONNULL((1)) struct Dee_memobjs *DCALL
+Dee_memobjs_new(size_t objc) {
+	struct Dee_memobjs *result;
+	size_t size = offsetof(struct Dee_memobjs, mos_objv) + (objc * sizeof(struct Dee_memobj));
+	result = (struct Dee_memobjs *)Dee_Malloc(size);
+	if likely(result) {
+		result->mos_refcnt = 1;
+		RINGQ_INIT(result, mos_copies);
+		result->mos_objc = objc;
+		DBG_memset(result->mos_objv, 0xcc, objc * sizeof(struct Dee_memobj));
+	}
+	return result;
+}
+
+
 INTERN NONNULL((1)) void DCALL
 Dee_memobjs_destroy(struct Dee_memobjs *__restrict self) {
 	size_t i;

@@ -78,6 +78,8 @@ Dee_memval_typeof(struct Dee_memval const *self) {
 	case MEMVAL_VMORPH_INT:
 	case MEMVAL_VMORPH_UINT:
 		return &DeeInt_Type;
+	case MEMVAL_VMORPH_SUPER:
+		return &DeeSuper_Type;
 	default: break;
 	}
 	return NULL;
@@ -190,6 +192,30 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 		return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_OBJECT, 1);
 	}	break;
 
+	//TODO:case MEMVAL_VMORPH_LIST:
+	//TODO:case MEMVAL_VMORPH_TUPLE:
+	//TODO:case MEMVAL_VMORPH_HASHSET:
+	//TODO:case MEMVAL_VMORPH_ROSET:
+	//TODO:case MEMVAL_VMORPH_DICT:
+	//TODO:case MEMVAL_VMORPH_RODICT:
+	//TODO:	ASSERT(Dee_memval_hasobjn(mval));
+	//TODO:	break;
+
+	case MEMVAL_VMORPH_SUPER: {
+		struct Dee_memobjs *objs;
+		ASSERT(Dee_memval_hasobjn(mval));
+		objs = Dee_memval_getobjn(mval);
+		ASSERT(objs->mos_objc == 2);
+		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[1]));            /* super, tp_self */
+		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[0]));            /* super, tp_self, self */
+		DO(Dee_function_generator_vnotoneref(self, 2));                               /* super, tp_self, self */
+		DO(Dee_function_generator_vcallapi(self, &DeeSuper_New, VCALL_CC_OBJECT, 2)); /* super, result */
+		DO(Dee_function_generator_voneref_noalias(self));                             /* super, result */
+		DO(Dee_function_generator_vsettyp_noalias(self, &DeeSuper_Type));             /* super, result */
+		DO(Dee_function_generator_vswap(self));                                       /* result, super */
+		DO(Dee_function_generator_vpop(self));                                        /* result */
+	}	break;
+
 	default:
 		return DeeError_Throwf(&DeeError_IllegalInstruction,
 		                       "Unsupported location value type %#" PRFx8,
@@ -227,7 +253,74 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 		goto err_oldval;
 	state = self->fg_state;
 	mval  = &state->ms_stackv[state->ms_stackc - 1];
+	if (Dee_memval_isnullable(mval)) { /* Force nullable to direct */
+		int temp = Dee_function_generator_vdirect_impl(self);
+		if unlikely(temp < 0)
+			goto err_oldval;
+		state = self->fg_state;
+		mval  = &state->ms_stackv[state->ms_stackc - 1];
+	}
 	ASSERT(Dee_memval_isdirect(mval));
+	Dee_memstate_foreach(alias, state) {
+		/* NOTE: It's OK that this only looks at *primary* storage locations,
+		 *       since all memloc-s from the mem-state that are aliases must
+		 *       always use the same location!
+		 *       i.e.: [#4, %eax] with an equivalence #4 <=> %eax would NOT
+		 *             be a valid memory state */
+		if (!(propagation_strategy == MAKEDIRECT_PROPAGATE_STRATEGY_SAMEVAL
+		      ? Dee_memval_sameval_mayalias(alias, &oldval)
+		      : Dee_memval_sameval(alias, &oldval)))
+			continue;
+		if (alias == mval)
+			continue;
+
+		/* Object references held by "alias" must be dropped!
+		 * NOTE: We can always use *vstack semantics here because
+		 *       even in the case of a local variable, that variable
+		 *       is known to be a non-direct value, meaning that it
+		 *       has to be bound unconditionally! */
+		EDO(err_oldval, Dee_function_generator_vgdecref_vstack(self, alias));
+		Dee_memstate_decrinuse_for_memval(state, alias);
+		Dee_memval_fini(alias);
+		Dee_memval_direct_initcopy(alias, mval);
+		Dee_memstate_incrinuse_for_direct_memval(state, mval);
+		Dee_memval_clearref(alias); /* Aliases don't get references! */
+	}
+	Dee_memstate_foreach_end;
+	Dee_memval_fini(&oldval);
+	return 0;
+err_oldval:
+	Dee_memval_fini(&oldval);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vndirect1(struct Dee_function_generator *__restrict self) {
+	int propagation_strategy;
+	struct Dee_memval *alias, oldval;
+	struct Dee_memval *mval;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	mval = &state->ms_stackv[state->ms_stackc - 1];
+	if (Dee_memval_isdirect(mval) || Dee_memval_isnullable(mval))
+		return 0; /* Simple case! */
+	if (Dee_memstate_isshared(state)) {
+		state = Dee_memstate_copy(state);
+		if unlikely(!state)
+			goto err;
+		Dee_memstate_decref_nokill(self->fg_state);
+		self->fg_state = state;
+		mval = &state->ms_stackv[state->ms_stackc - 1];
+	}
+	Dee_memval_initcopy(&oldval, mval);
+	propagation_strategy = Dee_function_generator_vdirect_impl(self);
+	if unlikely(propagation_strategy < 0)
+		goto err_oldval;
+	state = self->fg_state;
+	mval  = &state->ms_stackv[state->ms_stackc - 1];
+	ASSERT(Dee_memval_isdirect(mval) || Dee_memval_isnullable(mval));
 	Dee_memstate_foreach(alias, state) {
 		/* NOTE: It's OK that this only looks at *primary* storage locations,
 		 *       since all memloc-s from the mem-state that are aliases must
@@ -287,6 +380,27 @@ err:
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vndirect(struct Dee_function_generator *__restrict self,
+                                Dee_vstackaddr_t n) {
+	Dee_vstackaddr_t i;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < n)
+		return err_illegal_stack_effect();
+	for (i = state->ms_stackc - n; i < state->ms_stackc; ++i) {
+		struct Dee_memval *mval = &state->ms_stackv[i];
+		if (!Dee_memval_isdirect(mval) && !Dee_memval_isnullable(mval)) {
+			Dee_vstackaddr_t rot_n = state->ms_stackc - i;
+			DO(Dee_function_generator_vlrot(self, rot_n));
+			DO(Dee_function_generator_vndirect1(self));
+			DO(Dee_function_generator_vrrot(self, rot_n));
+		}
+	}
+	return 0;
+err:
+	return -1;
+}
+
 /* Same as (but requires that "n >= 1"):
  * >> Dee_function_generator_vlrot(self, n);
  * >> Dee_function_generator_vdirect1(self);
@@ -306,6 +420,26 @@ Dee_function_generator_vdirect_at(struct Dee_function_generator *__restrict self
 	result = Dee_function_generator_vlrot(self, n);
 	if likely(result == 0)
 		result = Dee_function_generator_vdirect1(self);
+	if likely(result == 0)
+		result = Dee_function_generator_vrrot(self, n);
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vndirect_at(struct Dee_function_generator *__restrict self,
+                                   Dee_vstackaddr_t n) {
+	int result;
+	struct Dee_memval *mval;
+	struct Dee_memstate *state = self->fg_state;
+	ASSERT(n >= 1);
+	if unlikely(state->ms_stackc < n)
+		return err_illegal_stack_effect();
+	mval = &state->ms_stackv[state->ms_stackc - n];
+	if (Dee_memval_isdirect(mval) || Dee_memval_isnullable(mval))
+		return 0;
+	result = Dee_function_generator_vlrot(self, n);
+	if likely(result == 0)
+		result = Dee_function_generator_vndirect1(self);
 	if likely(result == 0)
 		result = Dee_function_generator_vrrot(self, n);
 	return result;

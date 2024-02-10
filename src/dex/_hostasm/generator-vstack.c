@@ -2750,11 +2750,11 @@ Dee_function_generator_vind(struct Dee_function_generator *__restrict self,
 	struct Dee_memstate *state;
 	struct Dee_memval *mval;
 	struct Dee_memloc ind_loc;
-	DO(Dee_function_generator_vdirect1(self));
+	DO(Dee_function_generator_vdirect1(self)); /* TODO: Special handling for certain morphs */
 	DO(Dee_function_generator_state_unshare(self));
 	state = self->fg_state;
 	mval  = Dee_memstate_vtop(state);
-	ASSERTF(Dee_memval_isdirect(mval), "Cannot do indirection on non-direct location"); /* TODO: This shouldn't be the case! */
+	ASSERT(Dee_memval_isdirect(mval));
 	ASSERTF(!Dee_memval_direct_isref(mval), "Cannot do indirection on location holding a reference");
 	DO(Dee_function_generator_gasind(self, Dee_memval_direct_getloc(mval), &ind_loc, ind_delta));
 	ASSERT(state == self->fg_state);
@@ -3437,19 +3437,14 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vret(struct Dee_function_generator *__restrict self) {
 	struct Dee_memloc loc;
-	struct Dee_memval *p_mval;
-	Dee_vstackaddr_t stackc = self->fg_state->ms_stackc;
+	Dee_vstackaddr_t stackc;
 	Dee_lid_t lid;
-	if unlikely(stackc < 1)
-		return err_illegal_stack_effect();
 
 	/* Special case: NULLABLE locations can be returned as-is */
-	p_mval = &self->fg_state->ms_stackv[stackc - 1];
-	if (!Dee_memval_isdirect(p_mval) && !Dee_memval_isnullable(p_mval)) {
-		DO(Dee_function_generator_vdirect1(self));
-	}
+	DO(Dee_function_generator_vndirect1(self));
 
 	/* Move the final return value to the bottom of the stack. */
+	stackc = self->fg_state->ms_stackc;
 	DO(Dee_function_generator_vrrot(self, stackc));
 
 	/* Remove all but the final element from the stack. */

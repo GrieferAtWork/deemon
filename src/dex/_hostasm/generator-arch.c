@@ -305,6 +305,7 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_ExtendInherited, 12);
 	CASE(DeeTuple_FromSequence, 4);
 	CASE(DeeList_FromSequence, 4);
+	CASE(DeeSuper_New, 8);
 	CASE(DeeSuper_Of, 4);
 	CASE(DeeRange_New, 12);
 	CASE(DeeRange_NewInt, 12);
