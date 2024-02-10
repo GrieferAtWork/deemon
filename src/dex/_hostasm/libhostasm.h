@@ -42,7 +42,7 @@
  * ============= RESTRICTIONS =============
  *
  * - Deemon code must not make use of flexible stack depths
- * - Yield-functions (CoRoutines) cannot be converted
+ * - Yield-functions (CoRoutines) cannot be converted (yet?)
  * - try- (and consequently with-) related instructions cannot be used (yet?)
  * - ASM_JMP_POP and ASM_JMP_POP_POP can only be compiled if the
  *   relevant jump table is a constant _RoDict, and that fact can
@@ -182,7 +182,6 @@ INTDEF NONNULL((1)) void DCALL _Dee_memequivs_debug_print(struct Dee_memequivs c
 	((a_end) > (b_start) && (a_start) < (b_end))
 
 
-/* TODO: Add a dedicated type for CFA offsets (and then make it be signed) */
 typedef intptr_t Dee_cfa_t;
 typedef uint32_t Dee_vstackaddr_t;
 typedef int32_t Dee_vstackoff_t;

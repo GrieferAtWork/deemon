@@ -29,6 +29,9 @@ global final test_compile_and_run = ({
 	}
 });
 
+@@Used to hide the value of (otherwise) constant expressions from the core
+@@compiler's optimizer. However, this does *not* hide it from the _hostasm
+@@optimizer, meaning this can be used to easily test constant propagation.
 function _hide(x) {
 	__asm__("" : "+X" (x));
 	return x;

@@ -3118,12 +3118,13 @@ Dee_function_generator_gjz(struct Dee_function_generator *__restrict self,
 		                                             (void const *)(uintptr_t)(intptr_t)-Dee_memloc_hreg_getvaloff(test_loc),
 		                                             false, NULL, dst, NULL);
 	case MEMADR_TYPE_UNDEFINED:
-	case MEMADR_TYPE_HSTACK: /* Never zero */
 		break;
 	case MEMADR_TYPE_CONST:
-		return (uintptr_t)Dee_memloc_const_getaddr(test_loc) == 0
-		       ? Dee_function_generator_gjmp(self, dst)
-		       : 0;
+		if ((uintptr_t)Dee_memloc_const_getaddr(test_loc) == 0)
+			return Dee_function_generator_gjmp(self, dst);
+		ATTR_FALLTHROUGH
+	case MEMADR_TYPE_HSTACK: /* Never zero */
+		return 0;
 	}
 	return 0;
 err:
@@ -3156,12 +3157,13 @@ Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self,
 		                                             (void const *)(uintptr_t)(intptr_t)-Dee_memloc_hreg_getvaloff(test_loc),
 		                                             false, dst, NULL, dst);
 	case MEMADR_TYPE_UNDEFINED:
-	case MEMADR_TYPE_HSTACK: /* Never zero */
 		break;
 	case MEMADR_TYPE_CONST:
-		return (uintptr_t)Dee_memloc_const_getaddr(test_loc) != 0
-		       ? Dee_function_generator_gjmp(self, dst)
-		       : 0;
+		if ((uintptr_t)Dee_memloc_const_getaddr(test_loc) == 0)
+			return 0;
+		ATTR_FALLTHROUGH
+	case MEMADR_TYPE_HSTACK: /* Never zero */
+		return Dee_function_generator_gjmp(self, dst);
 	}
 	return 0;
 err:
@@ -3187,6 +3189,25 @@ Dee_function_generator_gjcc(struct Dee_function_generator *__restrict self,
 		Tswap(struct Dee_host_symbol *, dst_lo, dst_gr);
 #undef Tswap
 	}
+
+	/* Special case: if both operands share the same underlying address,
+	 *               then the compare is compile-time constant and the
+	 *               jump happens based on offset-deltas. */
+	if (Dee_memloc_sameadr(lhs, rhs)) {
+		ptrdiff_t offset_delta = Dee_memloc_getoff(lhs) -
+		                         Dee_memloc_getoff(rhs);
+		struct Dee_host_symbol *dst;
+		if (offset_delta < 0) {
+			dst = dst_lo;
+		} else if (offset_delta > 0) {
+			dst = dst_gr;
+		} else {
+			dst = dst_eq;
+		}
+		return dst ? Dee_function_generator_gjmp(self, dst) : 0;
+	}
+
+	/* Branch based on the rhs operand's typing. */
 	switch (Dee_memloc_gettyp(rhs)) {
 	default: {
 		Dee_host_register_t not_these[2];

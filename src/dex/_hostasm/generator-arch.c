@@ -540,7 +540,7 @@ INTERN NONNULL((1)) void DCALL
 _Dee_memstate_debug_print(struct Dee_memstate const *__restrict self,
                           struct Dee_function_assembler *assembler,
                           Dee_instruction_t const *instr) {
-	Dee_DPRINTF("\tCFA:   #%Iu\n", (uintptr_t)self->ms_host_cfa_offset);
+	Dee_DPRINTF("\tCFA:   #%Id\n", (uintptr_t)self->ms_host_cfa_offset);
 	if (self->ms_stackc > 0) {
 		uint16_t i;
 		Dee_DPRINT("\tstack: ");
@@ -757,9 +757,24 @@ gcall86_impl(struct Dee_function_generator *__restrict self,
 
 #ifdef DEE_FUNCTION_ASSEMBLER_F_MCLARGE
 	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_MCLARGE) {
+		/* TODO: Instead of this:
+		 * >> movabs $addr, %Pax
+		 * >> callP  *%Pax
+		 *
+		 * Do this:
+		 * >> callP  *.Laddr(%Pip)
+		 * >> .pushsection .rodata
+		 * >> .Laddr: .qword addr
+		 * >> .popsection
+		 *
+		 * Where ".rodata" gets appended at the end of text.
+		 * Or even better: add a special relocation for this
+		 * case that looks at the delta during encode-time,
+		 * and determines if a placement in .rodata is needed
+		 */
 		if unlikely(Dee_host_section_reqx86(sect, 2))
 			goto err;
-		LOCAL_HA_printf("movabs\t%s, %%" Per "ax\n", gen86_addrname(api_function));
+		LOCAL_HA_printf("movabs\t$%s, %%" Per "ax\n", gen86_addrname(api_function));
 		gen86_movabs_imm_r(p_pc(sect), api_function, GEN86_R_PAX);
 		LOCAL_HA_printf("call" Plq "\t*%%" Per "ax\n");
 		gen86_callP_mod(p_pc(sect), gen86_modrm_r, GEN86_R_PAX);
@@ -898,6 +913,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict self,
                                       Dee_host_register_t regno, ptrdiff_t reg_offset,
                                       bool do_kill) {
+	Dee_host_register_t used_regno = regno;
 	struct Dee_host_section *sect = self->fg_sect;
 	struct Dee_memstate *state = self->fg_state;
 	Dee_host_register_t save_regno;
@@ -917,7 +933,7 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 
 	/* Load `regno' as argument for the call to `DeeObject_Destroy()' */
 #ifdef HOST_REGISTER_R_ARG0
-	if (regno != HOST_REGISTER_R_ARG0) {
+	if (used_regno != HOST_REGISTER_R_ARG0) {
 		ptrdiff_t adj_delta;
 		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
@@ -929,25 +945,25 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 		}
 		IF_VERBOSE_REFCNT_LOGGING(
 		gen86_printf("lea" Plq "\t%Id(%s), %s\n",
-		             adj_delta, gen86_regname(regno),
+		             adj_delta, gen86_regname(used_regno),
 		             gen86_regname(HOST_REGISTER_R_ARG0)));
 		gen86_leaP_db_r(p_pc(sect),
-		                adj_delta, gen86_registers[regno],
+		                adj_delta, gen86_registers[used_regno],
 		                gen86_registers[HOST_REGISTER_R_ARG0]);
 		reg_offset -= adj_delta;
-		regno = HOST_REGISTER_R_ARG0;
+		used_regno = HOST_REGISTER_R_ARG0;
 	}
 #endif /* HOST_REGISTER_R_ARG0 */
-	if unlikely(Dee_function_generator_gadjust_reg_delta(self->fg_sect, NULL, regno, reg_offset,
+	if unlikely(Dee_function_generator_gadjust_reg_delta(self->fg_sect, NULL, used_regno, reg_offset,
 	                                                     !IS_DEFINED_NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY))
 		goto err;
 
 	{
 		size_t req_instructions = 0;
 		if (do_kill)
-			req_instructions += 1; /* movP $0, ob_refcnt(%regno) */
+			req_instructions += 1; /* movP $0, ob_refcnt(%used_regno) */
 #ifndef HOST_REGISTER_R_ARG0
-		req_instructions += 1; /* pushP %regno */
+		req_instructions += 1; /* pushP %used_regno */
 #endif /* !HOST_REGISTER_R_ARG0 */
 #ifdef HOSTASM_X86_64_MSABI
 		req_instructions += 1; /* subP $32, %Psp */
@@ -967,15 +983,15 @@ _Dee_function_generator_gdestroy_regx(struct Dee_function_generator *__restrict 
 	if (do_kill) {
 		IF_VERBOSE_REFCNT_LOGGING(gen86_printf("mov" Plq "\t$0, ob_refcnt%+Id(%s)\n",
 		                                       reg_offset - OFFSETOF_ob_refcnt,
-		                                       gen86_regname(regno)));
+		                                       gen86_regname(used_regno)));
 		gen86_movP_imm_mod(p_pc(self->fg_sect), gen86_modrm_db, 0,
 		                   reg_offset + OFFSETOF_ob_refcnt,
-		                   gen86_registers[regno]);
+		                   gen86_registers[used_regno]);
 	}
 
 #ifndef HOST_REGISTER_R_ARG0
-	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("push" Plq "\t%s\n", gen86_regname(regno)));
-	gen86_pushP_r(p_pc(sect), gen86_registers[regno]);
+	IF_VERBOSE_REFCNT_LOGGING(gen86_printf("push" Plq "\t%s\n", gen86_regname(used_regno)));
+	gen86_pushP_r(p_pc(sect), gen86_registers[used_regno]);
 	Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 #endif /* !HOST_REGISTER_R_ARG0 */
 
@@ -3323,10 +3339,20 @@ setreg_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
 			used_regno = i == 0 ? HOST_REGISTER_PAX : host_arg_regs[i - 1]; /* Try to use PAX for the function pointer */
 			if (register_use_count[used_regno] != 0)
 				used_regno = free_regno;
-			nextarg_valoff = Dee_memloc_getoff(nextarg);
+			switch (Dee_memloc_gettyp(nextarg)) {
+			case MEMADR_TYPE_HREG:
+				nextarg_valoff = Dee_memloc_hreg_getvaloff(nextarg);
+				break;
+			case MEMADR_TYPE_HREGIND:
+				nextarg_valoff = Dee_memloc_hregind_getindoff(nextarg);
+				break;
+			default: __builtin_unreachable();
+			}
 			if (used_regno == free_regno && free_regno_initialized) {
 				nextarg_valoff -= free_regno_val_offset_from_dst_regno;
 			} else {
+				/* TODO: If "nextarg" is `MEMADR_TYPE_HREGIND' and the register isn't used
+				 *       by any other argument, directly load the value into the register. */
 				if unlikely(Dee_function_generator_gmov_regx2reg(self, dst_regno, nextarg_valoff, used_regno))
 					goto err;
 				if (used_regno == free_regno) {
@@ -3335,7 +3361,16 @@ setreg_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
 				}
 				nextarg_valoff = 0;
 			}
-			Dee_memloc_init_hreg(nextarg, used_regno, nextarg_valoff);
+			switch (Dee_memloc_gettyp(nextarg)) {
+			case MEMADR_TYPE_HREG:
+				Dee_memloc_init_hreg(nextarg, used_regno, nextarg_valoff);
+				break;
+			case MEMADR_TYPE_HREGIND:
+				Dee_memloc_init_hregind(nextarg, used_regno, nextarg_valoff,
+				                        Dee_memloc_hregind_getvaloff(nextarg));
+				break;
+			default: __builtin_unreachable();
+			}
 		}
 		break;
 	}
