@@ -3576,19 +3576,19 @@ err:
 /* Do calling-convention-specific handling of the return value. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__restrict self,
-                                            unsigned int cc, Dee_vstackaddr_t argc) {
+                                            unsigned int cc, Dee_vstackaddr_t n_pop) {
 	switch (cc) {
 
 	case VCALL_CC_OBJECT:
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, argc + 1));                     /* UNCHECKED(result), [args...] */
-		DO(Dee_function_generator_vpopmany(self, argc));                      /* UNCHECKED(result) */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1));                    /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vpopmany(self, n_pop));                     /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckobj(self);                        /* result */
 
 	case VCALL_CC_RAWINTPTR:
 	case VCALL_CC_RAWINTPTR_NX:
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, argc + 1));                     /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1));                    /* UNCHECKED(result), [args...] */
 		break;
 
 	case VCALL_CC_BOOL:
@@ -3596,39 +3596,35 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
 		ASSERT(Dee_function_generator_vtop(self)->mv_vmorph == MEMVAL_VMORPH_DIRECT);
 		Dee_function_generator_vtop(self)->mv_vmorph = MEMVAL_VMORPH_BOOL_NZ;
-		DO(Dee_function_generator_vrrot(self, argc + 1)); /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1)); /* UNCHECKED(result), [args...] */
 		break;
-
-	case VCALL_CC_RAWINTPTR_KEEPARGS:
-	case VCALL_CC_RAWINTPTR_KEEPARGS_NX:
-		return Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0);
 
 	case VCALL_CC_VOID:
 	case VCALL_CC_VOID_NX:
 		break;
 
 	case VCALL_CC_EXCEPT:
-		DO(Dee_function_generator_vpopmany(self, argc));
+		DO(Dee_function_generator_vpopmany(self, n_pop));
 		return Dee_function_generator_gjmp_except(self);
 
 	case VCALL_CC_INT:
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, argc + 1));                     /* UNCHECKED(result), [args...] */
-		DO(Dee_function_generator_vpopmany(self, argc));                      /* UNCHECKED(result) */
-		return Dee_function_generator_vcheckint(self); /* - */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1));                    /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vpopmany(self, n_pop));                     /* UNCHECKED(result) */
+		return Dee_function_generator_vcheckint(self);                        /* - */
 
 	case VCALL_CC_NEGINT: {
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, argc + 1));                     /* UNCHECKED(result), [args...] */
-		DO(Dee_function_generator_vpopmany(self, argc));                      /* UNCHECKED(result) */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1));                    /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vpopmany(self, n_pop));                     /* UNCHECKED(result) */
 		return Dee_function_generator_gjcmp_except(self, Dee_function_generator_vtopdloc(self), 0,
 		                                           Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_LO);
 	}	break;
 
 	case VCALL_CC_M1INT: {
 		DO(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0)); /* [args...], UNCHECKED(result) */
-		DO(Dee_function_generator_vrrot(self, argc + 1));                     /* UNCHECKED(result), [args...] */
-		DO(Dee_function_generator_vpopmany(self, argc));                      /* UNCHECKED(result) */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1));                    /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vpopmany(self, n_pop));                     /* UNCHECKED(result) */
 		return Dee_function_generator_gjeq_except(self, Dee_function_generator_vtopdloc(self), -1);
 	}	break;
 
@@ -3642,26 +3638,27 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		                                                cc == VCALL_CC_MORPH_UINTPTR_NX)
 		                                               ? MEMVAL_VMORPH_UINT
 		                                               : MEMVAL_VMORPH_INT;
-		DO(Dee_function_generator_vrrot(self, argc + 1)); /* UNCHECKED(result), [args...] */
+		DO(Dee_function_generator_vrrot(self, n_pop + 1)); /* UNCHECKED(result), [args...] */
 		break;
 
 	default: __builtin_unreachable();
 	}
 
 	/* Pop function arguments. */
-	return Dee_function_generator_vpopmany(self, argc);
+	return Dee_function_generator_vpopmany(self, n_pop);
 err:
 	return -1;
 }
 
 /* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+ * @param: cc:    One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+ * @param: n_pop: The # of stack items to pop during the call (in case of registers, these won't need to be saved)
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
-                                 void const *api_function, unsigned int cc,
-                                 Dee_vstackaddr_t argc) {
+Dee_function_generator_vcallapi_ex_(struct Dee_function_generator *__restrict self,
+                                    void const *api_function, unsigned int cc,
+                                    Dee_vstackaddr_t argc, Dee_vstackaddr_t n_pop) {
 	Dee_vstackaddr_t argi;
 	struct Dee_memloc *l_argv;
 	struct Dee_memval *v_argv;
@@ -3671,7 +3668,6 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 	/* Unless the class is *_NX, make sure there aren't any NULLABLE locations */
 	switch (cc) {
 	case VCALL_CC_RAWINT_NX:
-	case VCALL_CC_RAWINT_KEEPARGS_NX:
 	case VCALL_CC_VOID_NX:
 	case VCALL_CC_BOOL_NX:
 	case VCALL_CC_MORPH_INTPTR_NX:
@@ -3682,10 +3678,10 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 		break;
 	}
 
-	/* Flush registers that don't appear in the top `argc' stack locations.
+	/* Flush registers that don't appear in the top `n_pop' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	DO(Dee_function_generator_gflushregs(self, argc, cc == VCALL_CC_EXCEPT));
+	DO(Dee_function_generator_gflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
 
 	/* Build up the argument list. */
 	v_argv = self->fg_state->ms_stackv;
@@ -3704,7 +3700,7 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 	Dee_Freea(l_argv);
 
 	/* Do calling-convention-specific handling of the return value. */
-	return Dee_function_generator_vcallapi_checkresult(self, cc, argc);
+	return Dee_function_generator_vcallapi_checkresult(self, cc, n_pop);
 err_l_argv:
 	Dee_Freea(l_argv);
 err:
@@ -3720,8 +3716,9 @@ err:
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict self,
-                                   unsigned int cc, Dee_vstackaddr_t argc) {
+Dee_function_generator_vcalldynapi_ex(struct Dee_function_generator *__restrict self,
+                                      unsigned int cc, Dee_vstackaddr_t argc,
+                                      Dee_vstackaddr_t n_pop) {
 	Dee_vstackaddr_t argi;
 	struct Dee_memloc *l_argv;
 	struct Dee_memval *v_argv;
@@ -3735,10 +3732,10 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 		return Dee_function_generator_vcallapi(self, api_function, cc, argc);
 	}
 
-	/* Flush registers that don't appear in the top `argc' stack locations.
+	/* Flush registers that don't appear in the top `n_pop' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	DO(Dee_function_generator_gflushregs(self, argc + 1, cc == VCALL_CC_EXCEPT));
+	DO(Dee_function_generator_gflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
 
 	/* Build up the argument list. */
 	v_argv -= argc;
@@ -3757,7 +3754,7 @@ Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict sel
 	Dee_Freea(l_argv);
 
 	/* Do calling-convention-specific handling of the return value. */
-	return Dee_function_generator_vcallapi_checkresult(self, cc, argc);
+	return Dee_function_generator_vcallapi_checkresult(self, cc, n_pop);
 err_l_argv:
 	Dee_Freea(l_argv);
 err:

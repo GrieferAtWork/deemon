@@ -3098,14 +3098,6 @@ Dee_function_generator_gjz(struct Dee_function_generator *__restrict self,
                            struct Dee_host_symbol *__restrict dst) {
 	struct Dee_memloc test_loc_asreg;
 	switch (Dee_memloc_gettyp(test_loc)) {
-	case MEMADR_TYPE_HREGIND:
-		if (Dee_memloc_hregind_getvaloff(test_loc) == 0) {
-			return Dee_function_generator_gjz_regind(self,
-			                                         Dee_memloc_hregind_getreg(test_loc),
-			                                         Dee_memloc_hregind_getindoff(test_loc),
-			                                         dst);
-		}
-		ATTR_FALLTHROUGH
 	default:
 		if unlikely(Dee_function_generator_gasreg(self, test_loc, &test_loc_asreg, NULL))
 			goto err;
@@ -3117,6 +3109,24 @@ Dee_function_generator_gjz(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_gjcc_regCconst(self, Dee_memloc_hreg_getreg(test_loc),
 		                                             (void const *)(uintptr_t)(intptr_t)-Dee_memloc_hreg_getvaloff(test_loc),
 		                                             false, NULL, dst, NULL);
+	case MEMADR_TYPE_HREGIND:
+		if (Dee_memloc_hregind_getvaloff(test_loc) == 0) {
+			return Dee_function_generator_gjz_regind(self,
+			                                         Dee_memloc_hregind_getreg(test_loc),
+			                                         Dee_memloc_hregind_getindoff(test_loc),
+			                                         dst);
+		}
+		return Dee_function_generator_gjcc_regindCconst(self,
+		                                                Dee_memloc_hregind_getreg(test_loc),
+		                                                Dee_memloc_hregind_getindoff(test_loc),
+		                                                (void const *)(uintptr_t)(-Dee_memloc_hregind_getvaloff(test_loc)),
+		                                                false, NULL, dst, NULL);
+	case MEMADR_TYPE_HSTACKIND:
+		if (Dee_memloc_hstackind_getvaloff(test_loc) == 0)
+			return Dee_function_generator_gjz_hstackind(self, Dee_memloc_hstackind_getcfa(test_loc), dst);
+		return Dee_function_generator_gjcc_hstackindCconst(self, Dee_memloc_hstackind_getcfa(test_loc),
+		                                                   (void const *)(uintptr_t)(-Dee_memloc_hstackind_getvaloff(test_loc)),
+		                                                   false, NULL, dst, NULL);
 	case MEMADR_TYPE_UNDEFINED:
 		break;
 	case MEMADR_TYPE_CONST:
@@ -3137,14 +3147,6 @@ Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self,
                             struct Dee_host_symbol *__restrict dst) {
 	struct Dee_memloc test_loc_asreg;
 	switch (Dee_memloc_gettyp(test_loc)) {
-	case MEMADR_TYPE_HREGIND:
-		if (Dee_memloc_hregind_getvaloff(test_loc) == 0) {
-			return Dee_function_generator_gjnz_regind(self,
-			                                          Dee_memloc_hregind_getreg(test_loc),
-			                                          Dee_memloc_hregind_getindoff(test_loc),
-			                                          dst);
-		}
-		ATTR_FALLTHROUGH
 	default:
 		if unlikely(Dee_function_generator_gasreg(self, test_loc, &test_loc_asreg, NULL))
 			goto err;
@@ -3156,6 +3158,24 @@ Dee_function_generator_gjnz(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_gjcc_regCconst(self, Dee_memloc_hreg_getreg(test_loc),
 		                                             (void const *)(uintptr_t)(intptr_t)-Dee_memloc_hreg_getvaloff(test_loc),
 		                                             false, dst, NULL, dst);
+	case MEMADR_TYPE_HREGIND:
+		if (Dee_memloc_hregind_getvaloff(test_loc) == 0) {
+			return Dee_function_generator_gjnz_regind(self,
+			                                          Dee_memloc_hregind_getreg(test_loc),
+			                                          Dee_memloc_hregind_getindoff(test_loc),
+			                                          dst);
+		}
+		return Dee_function_generator_gjcc_regindCconst(self,
+		                                                Dee_memloc_hregind_getreg(test_loc),
+		                                                Dee_memloc_hregind_getindoff(test_loc),
+		                                                (void const *)(uintptr_t)(-Dee_memloc_hregind_getvaloff(test_loc)),
+		                                                false, dst, NULL, dst);
+	case MEMADR_TYPE_HSTACKIND:
+		if (Dee_memloc_hstackind_getvaloff(test_loc) == 0)
+			return Dee_function_generator_gjnz_hstackind(self, Dee_memloc_hstackind_getcfa(test_loc), dst);
+		return Dee_function_generator_gjcc_hstackindCconst(self, Dee_memloc_hstackind_getcfa(test_loc),
+		                                                   (void const *)(uintptr_t)(-Dee_memloc_hstackind_getvaloff(test_loc)),
+		                                                   false, dst, NULL, dst);
 	case MEMADR_TYPE_UNDEFINED:
 		break;
 	case MEMADR_TYPE_CONST:

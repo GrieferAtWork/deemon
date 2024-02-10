@@ -2713,15 +2713,18 @@ Dee_function_generator_vsetloc(struct Dee_function_generator *__restrict self,
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vret(struct Dee_function_generator *__restrict self);
 
 /* Generate host text to invoke `api_function' with the top-most `argc' items from the stack.
- * @param: cc: One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+ * @param: cc:    One of `VCALL_CC_*', describing the calling-convention of `api_function'.
+ * @param: n_pop: The # of stack items to pop during the call (in case of registers, these won't need to be saved)
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
-                                 void const *api_function, unsigned int cc,
-                                 Dee_vstackaddr_t argc);
+Dee_function_generator_vcallapi_ex_(struct Dee_function_generator *__restrict self,
+                                    void const *api_function, unsigned int cc,
+                                    Dee_vstackaddr_t argc, Dee_vstackaddr_t n_pop);
+#define Dee_function_generator_vcallapi_ex(self, api_function, cc, argc, n_pop) \
+	Dee_function_generator_vcallapi_ex_(self, (void const *)(api_function), cc, argc, n_pop)
 #define Dee_function_generator_vcallapi(self, api_function, cc, argc) \
-	Dee_function_generator_vcallapi_(self, (void const *)(api_function), cc, argc)
+	Dee_function_generator_vcallapi_ex(self, api_function, cc, argc, argc)
 #define VCALL_CC_OBJECT                0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMVAL_VMORPH_NULLABLE'), also MEMOBJ_F_NOREF is clear */
 #define VCALL_CC_INT                   1 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
 #define VCALL_CC_INTPTR                1 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
@@ -2729,23 +2732,19 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 #define VCALL_CC_RAWINTPTR             2 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
 #define VCALL_CC_RAWINT_NX             3 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
 #define VCALL_CC_RAWINTPTR_NX          3 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALL_CC_RAWINT_KEEPARGS       4 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_RAWINTPTR_KEEPARGS    4 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_RAWINT_KEEPARGS_NX    5 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_RAWINTPTR_KEEPARGS_NX 5 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_NEGINT                6 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_NEGINTPTR             6 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_M1INT                 7 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_M1INTPTR              7 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_VOID                  8 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_VOID_NX               9 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A */
-#define VCALL_CC_EXCEPT               10 /* ?               (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Always an error */
-#define VCALL_CC_BOOL                 11 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_BOOL_NX              12 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_INTPTR         13 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_MORPH_UINTPTR        14 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
-#define VCALL_CC_MORPH_INTPTR_NX      15 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_UINTPTR_NX     16 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_NEGINT                4 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_NEGINTPTR             4 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_M1INT                 5 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_M1INTPTR              5 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_VOID                  6 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_VOID_NX               7 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A */
+#define VCALL_CC_EXCEPT                8 /* ?               (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Always an error */
+#define VCALL_CC_BOOL                  9 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_BOOL_NX              10 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_INTPTR         11 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_MORPH_UINTPTR        12 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_MORPH_INTPTR_NX      13 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_UINTPTR_NX     14 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
 
 
 /* [args...], funcaddr -> ...
@@ -2757,8 +2756,11 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
  * @return: 0 : Success
  * @return: -1: Error */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vcalldynapi(struct Dee_function_generator *__restrict self,
-                                   unsigned int cc, Dee_vstackaddr_t argc);
+Dee_function_generator_vcalldynapi_ex(struct Dee_function_generator *__restrict self,
+                                      unsigned int cc, Dee_vstackaddr_t argc,
+                                      Dee_vstackaddr_t n_pop);
+#define Dee_function_generator_vcalldynapi(self, cc, argc) \
+	Dee_function_generator_vcalldynapi_ex(self, cc, argc, (argc) + 1)
 
 
 /* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
