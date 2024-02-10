@@ -111,6 +111,11 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 			goto err;
 		mval->mv_obj.mvo_0.mo_flags = saved_flags;
 		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
+
+		/* There can only ever be a single NULLABLE location, so once
+		 * that location becomes non-NULL, we know there aren't any
+		 * NULLABLE location left (so we can clear the relevant flag) */
+		self->fg_state->ms_flags &= ~MEMSTATE_F_GOTNULLABLE;
 	}	break;
 
 	case MEMVAL_VMORPH_BOOL_Z:

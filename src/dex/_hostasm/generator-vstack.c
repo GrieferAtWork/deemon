@@ -674,8 +674,30 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 		return err_illegal_stack_effect();
 	mval = Dee_memstate_vtop(state);
 	if (mval->mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
-		/* Still need to do the null-check (because an exception may have been thrown) */
-		uint8_t saved_mo_flags = Dee_memval_nullable_getobj(mval)->mo_flags;
+		/* Still need to do the null-check (because an exception may have been thrown),
+		 * unless the underlying location is being aliased somewhere else. */
+		uint8_t saved_mo_flags;
+		struct Dee_memval *alias_mval;
+		Dee_memstate_foreach(alias_mval, state) {
+			if (alias_mval->mv_vmorph == MEMVAL_VMORPH_NULLABLE &&
+			    Dee_memobj_sameloc(Dee_memval_nullable_getobj(alias_mval),
+			                       Dee_memval_nullable_getobj(mval)) &&
+			    alias_mval != mval) {
+				/* Found an alias! */
+				Dee_memval_nullable_makedirect(mval);
+#ifndef __OPTIMIZE_SIZE__ /* Shift a held reference as well (if possible) */
+				if (Dee_memval_direct_isref(mval) &&
+				    !Dee_memobj_isref(Dee_memval_nullable_getobj(alias_mval))) {
+					Dee_memobj_clearref(Dee_memval_direct_getobj(mval));
+					Dee_memobj_setref(Dee_memval_nullable_getobj(alias_mval));
+				}
+#endif /* !__OPTIMIZE_SIZE__ */
+				goto do_maybe_decref;
+			}
+		}
+		Dee_memstate_foreach_end;
+
+		saved_mo_flags = Dee_memval_nullable_getobj(mval)->mo_flags;
 		Dee_memobj_clearref(Dee_memval_nullable_getobj(mval));
 		if unlikely(Dee_function_generator_gjz_except(self, Dee_memval_nullable_getloc(mval)))
 			goto err;
@@ -690,6 +712,7 @@ Dee_function_generator_vpop(struct Dee_function_generator *__restrict self) {
 			Dee_memval_init_const(mval, Dee_None, &DeeNone_Type);
 		}
 	}
+do_maybe_decref:
 	if unlikely(Dee_function_generator_vgdecref_vstack(self, mval))
 		goto err;
 	--state->ms_stackc;
@@ -736,39 +759,6 @@ Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self
 	state = self->fg_state;
 	ASSERT(lid < state->ms_localc);
 	src = Dee_memstate_vtop(state);
-
-	/* Special case: NULLABLE locations shouldn't be written to locals.
-	 * If we allowed this, exceptions might get delayed for too long,
-	 * to the point where a secondary exception is raised prior to the
-	 * initial one.
-	 *
-	 * TODO: FIXME: This isn't good enough / the wrong solution:
-	 * >> push const @"throw 10;"
-	 * >> push call extern @deemon:@exec, #1   // Keep the result on the v-stack (as MEMVAL_VMORPH_NULLABLE)
-	 * >> push const @"throw 20;"
-	 * >> push call extern @deemon:@exec, #1   // This doesn't interact with the unchecked result of the first call, which is still NULLABLE
-	 *
-	 * Solution: vcallapi(), with given a CC that doesn't imply NOEXCEPT, needs to
-	 *           check if there are NULLABLE memval-s anywhere (vstack/locals). If
-	 *           so, then check them *before* the call can be made.
-	 *           Additionally, there needs to be new calling conventions for what is
-	 *           currently done via `VCALL_CC_RAWINTPTR', where the caller will later
-	 *           make a call to `vcheckobj()' / `vcheckint()', since in these cases,
-	 *           vcallapi() still needs to make sure a preceding exception is checked
-	 *           first.
-	 */
-	if (src->mv_vmorph == MEMVAL_VMORPH_NULLABLE) {
-		uint8_t saved_flags = Dee_memval_nullable_getobj(src)->mo_flags;
-		Dee_memobj_clearref(Dee_memval_nullable_getobj(src));
-		if unlikely(Dee_function_generator_gjz_except(self, Dee_memval_nullable_getloc(src)))
-			goto err;
-		if unlikely(Dee_function_generator_state_unshare(self))
-			goto err;
-		state = self->fg_state;
-		src = Dee_memstate_vtop(state);
-		Dee_memval_nullable_makedirect(src);
-		Dee_memval_nullable_getobj(src)->mo_flags = saved_flags;
-	}
 
 	/* Load the destination and see if there's already something stored in there.
 	 * This shouldn't usually be the case, especially if you didn't turn off
@@ -3660,6 +3650,27 @@ err:
 	return -1;
 }
 
+/* Make sure there are no NULLABLE memobj-s anywhere on the stack or in locals. */
+INTERN WUNUSED NONNULL((1)) int DCALL
+_Dee_function_generator_vnonullable(struct Dee_function_generator *__restrict self) {
+	struct Dee_memstate *state;
+	struct Dee_memval *mval;
+	if unlikely(Dee_function_generator_state_unshare(self))
+		goto err;
+	state = self->fg_state;
+	ASSERT(state->ms_flags & MEMSTATE_F_GOTNULLABLE);
+	Dee_memstate_foreach(mval, state) {
+		if (mval->mv_vmorph == MEMVAL_VMORPH_NULLABLE)
+			return Dee_function_generator_vdirect_memval(self, mval);
+	}
+	Dee_memstate_foreach_end;
+	/* Just clear the flag (something might have forgotten to clear it) */
+	state->ms_flags &= ~MEMSTATE_F_GOTNULLABLE;
+	return 0;
+err:
+	return -1;
+}
+
 
 /* Check if `loc' differs from vtop, and if so: move vtop
  * *into* `loc', the assign the *exact* given `loc' to vtop. */
@@ -3758,7 +3769,8 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 			goto err; /* UNCHECKED(result) */
 		return Dee_function_generator_vcheckobj(self); /* result */
 
-	case VCALL_CC_RAWINT:
+	case VCALL_CC_RAWINTPTR:
+	case VCALL_CC_RAWINTPTR_NX:
 		if unlikely(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
@@ -3766,6 +3778,7 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 		break;
 
 	case VCALL_CC_BOOL:
+	case VCALL_CC_BOOL_NX:
 		if unlikely(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		ASSERT(Dee_function_generator_vtop(self)->mv_vmorph == MEMVAL_VMORPH_DIRECT);
@@ -3774,10 +3787,12 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 			goto err; /* UNCHECKED(result), [args...] */
 		break;
 
-	case VCALL_CC_RAWINT_KEEPARGS:
+	case VCALL_CC_RAWINTPTR_KEEPARGS:
+	case VCALL_CC_RAWINTPTR_KEEPARGS_NX:
 		return Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0);
 
 	case VCALL_CC_VOID:
+	case VCALL_CC_VOID_NX:
 		break;
 
 	case VCALL_CC_EXCEPT:
@@ -3817,10 +3832,13 @@ Dee_function_generator_vcallapi_checkresult(struct Dee_function_generator *__res
 
 	case VCALL_CC_MORPH_INTPTR:
 	case VCALL_CC_MORPH_UINTPTR:
+	case VCALL_CC_MORPH_INTPTR_NX:
+	case VCALL_CC_MORPH_UINTPTR_NX:
 		if unlikely(Dee_function_generator_vpush_hreg(self, HOST_REGISTER_RETURN, 0))
 			goto err; /* [args...], UNCHECKED(result) */
 		ASSERT(Dee_function_generator_vtop(self)->mv_vmorph == MEMVAL_VMORPH_DIRECT);
-		Dee_function_generator_vtop(self)->mv_vmorph = cc == VCALL_CC_MORPH_UINTPTR
+		Dee_function_generator_vtop(self)->mv_vmorph = (cc == VCALL_CC_MORPH_UINTPTR ||
+		                                                cc == VCALL_CC_MORPH_UINTPTR_NX)
 		                                               ? MEMVAL_VMORPH_UINT
 		                                               : MEMVAL_VMORPH_INT;
 		if unlikely(Dee_function_generator_vrrot(self, argc + 1))
@@ -3851,6 +3869,21 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
 		goto err;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
+
+	/* Unless the class is *_NX, make sure there aren't any NULLABLE locations */
+	switch (cc) {
+	case VCALL_CC_RAWINT_NX:
+	case VCALL_CC_RAWINT_KEEPARGS_NX:
+	case VCALL_CC_VOID_NX:
+	case VCALL_CC_BOOL_NX:
+	case VCALL_CC_MORPH_INTPTR_NX:
+	case VCALL_CC_MORPH_UINTPTR_NX:
+		break;
+	default:
+		if unlikely(Dee_function_generator_vnonullable(self))
+			goto err;
+		break;
+	}
 
 	/* Flush registers that don't appear in the top `argc' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
@@ -4486,7 +4519,7 @@ Dee_function_exceptinject_callvoidapi_f(struct Dee_function_generator *__restric
                                         struct Dee_function_exceptinject *__restrict inject) {
 	struct Dee_function_exceptinject_callvoidapi *me;
 	me = (struct Dee_function_exceptinject_callvoidapi *)inject;
-	return Dee_function_generator_vcallapi(self, me->fei_cva_func, VCALL_CC_VOID, me->fei_cva_argc);
+	return Dee_function_generator_vcallapi(self, me->fei_cva_func, VCALL_CC_VOID_NX, me->fei_cva_argc);
 }
 
 

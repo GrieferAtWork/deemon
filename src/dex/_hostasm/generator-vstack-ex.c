@@ -1611,7 +1611,7 @@ vcall_DeeType_FreeInstance(struct Dee_function_generator *__restrict self,
 		api_function = (type->tp_flags & TP_FGC) ? (void const *)&DeeGCObject_Free
 		                                         : (void const *)&DeeObject_Free;
 	}
-	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_VOID, 1);
+	return Dee_function_generator_vcallapi(self, api_function, VCALL_CC_VOID_NX, 1);
 }
 
 struct Dee_function_exceptinject_freeinstance {
@@ -2077,7 +2077,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 						/* Emit code to start tracking the object. */
 						ASSERT(Dee_function_generator_vtop_direct_isref(self));
 						Dee_function_generator_vtop_direct_clearref(self);
-						DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR, 1));
+						DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
 						ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 						Dee_function_generator_vtop_direct_setref(self);
 					}
@@ -3478,17 +3478,17 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 			Dee_memval_direct_clearref(mval); /* Reference got stolen by the shared vector/map. */
 		}
 	}
-	if (hasattr) {                                                           /* [items...], custom:seq, func, attr */
-		DO(Dee_function_generator_vdup_n(self, 3));                          /* [items...], custom:seq, func, attr, custom:seq */
-		DO(Dee_function_generator_vopcallattr(self, 1));                     /* [items...], custom:seq, result */
-	} else {                                                                 /* [items...], custom:seq, func */
-		DO(Dee_function_generator_vdup_n(self, 2));                          /* [items...], custom:seq, func, custom:seq */
-		DO(Dee_function_generator_vopcall(self, 1));                         /* [items...], custom:seq, result */
-	}                                                                        /* [items...], custom:seq, result */
-	Dee_function_generator_xinject_pop_callvoidapi(self, &ij);               /* [items...], custom:seq, result */
-	DO(Dee_function_generator_vrrot(self, itemc + 2));                       /* result, [items...], custom:seq */
-	DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1)); /* result, [items...] */
-	return Dee_function_generator_vpopmany(self, itemc);                     /* result */
+	if (hasattr) {                                                              /* [items...], custom:seq, func, attr */
+		DO(Dee_function_generator_vdup_n(self, 3));                             /* [items...], custom:seq, func, attr, custom:seq */
+		DO(Dee_function_generator_vopcallattr(self, 1));                        /* [items...], custom:seq, result */
+	} else {                                                                    /* [items...], custom:seq, func */
+		DO(Dee_function_generator_vdup_n(self, 2));                             /* [items...], custom:seq, func, custom:seq */
+		DO(Dee_function_generator_vopcall(self, 1));                            /* [items...], custom:seq, result */
+	}                                                                           /* [items...], custom:seq, result */
+	Dee_function_generator_xinject_pop_callvoidapi(self, &ij);                  /* [items...], custom:seq, result */
+	DO(Dee_function_generator_vrrot(self, itemc + 2));                          /* result, [items...], custom:seq */
+	DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID_NX, 1)); /* result, [items...] */
+	return Dee_function_generator_vpopmany(self, itemc);                        /* result */
 err:
 	return -1;
 }
@@ -4978,7 +4978,7 @@ next_key:
 	/* If the sequence type is a GC object, emit code to start tracking it. */
 	if (seq_type->tp_flags & TP_FGC) {
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
-		DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR, 1));
+		DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	}
 
@@ -5096,7 +5096,7 @@ err_cseq:
 		if (is_list) {
 			ASSERT(Dee_function_generator_vtop_direct_isref(self));
 			Dee_function_generator_vtop_direct_clearref(self); /* Inherited by `DeeGC_Track()' */
-			DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR, 1));
+			DO(Dee_function_generator_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
 			ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 			Dee_function_generator_vtop_direct_setref(self); /* Returned by `DeeGC_Track()' */
 		}
@@ -6363,12 +6363,12 @@ Dee_function_generator_vopextend(struct Dee_function_generator *__restrict self,
 				Dee_memval_direct_clearref(&elemv[i]); /* Stolen by the shared vector */
 			}
 		}
-		DO(Dee_function_generator_vdup_n(self, 2));                                                /* [elems...], svec, seq, svec */
-		DO(Dee_function_generator_vop(self, OPERATOR_ADD, 2, VOP_F_PUSHRES));                      /* [elems...], svec, result */
-		Dee_function_generator_xinject_pop_callvoidapi(self, &ij);                                 /* [elems...], svec, result */
-		DO(Dee_function_generator_vswap(self));                                                    /* [elems...], result, svec */
-		ASSERT(!Dee_function_generator_vtop_direct_isref(self));                                   /* [elems...], result, svec */
-		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID, 1));                   /* [elems...], result */
+		DO(Dee_function_generator_vdup_n(self, 2));                                 /* [elems...], svec, seq, svec */
+		DO(Dee_function_generator_vop(self, OPERATOR_ADD, 2, VOP_F_PUSHRES));       /* [elems...], svec, result */
+		Dee_function_generator_xinject_pop_callvoidapi(self, &ij);                  /* [elems...], svec, result */
+		DO(Dee_function_generator_vswap(self));                                     /* [elems...], result, svec */
+		ASSERT(!Dee_function_generator_vtop_direct_isref(self));                    /* [elems...], result, svec */
+		DO(Dee_function_generator_vcallapi(self, api_decref, VCALL_CC_VOID_NX, 1)); /* [elems...], result */
 		goto rotate_result_and_pop_elems;
 	}
 	DO(Dee_function_generator_vdirect1(self));         /* [elems...], elemv, seq */
@@ -6859,7 +6859,7 @@ push_true:
 	CASE(STRUCT_WOBJECT): {
 		/* Check if the reference is bound by generating a call to `Dee_weakref_bound()' */
 		DO(Dee_function_generator_vdelta(self, desc->m_field.m_offset)); /* &FIELD */
-		return Dee_function_generator_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL, 1);
+		return Dee_function_generator_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL_NX, 1);
 	}	break;
 
 	CASE(STRUCT_OBJECT):
@@ -6882,7 +6882,7 @@ push_true:
 /*fallback:*/
 	DO(Dee_function_generator_vpush_addr(self, desc)); /* this, desc */
 	DO(Dee_function_generator_vswap(self));            /* desc, this */
-	return Dee_function_generator_vcallapi(self, &Dee_type_member_bound, VCALL_CC_BOOL, 2);
+	return Dee_function_generator_vcallapi(self, &Dee_type_member_bound, VCALL_CC_BOOL_NX, 2);
 err:
 	return -1;
 }

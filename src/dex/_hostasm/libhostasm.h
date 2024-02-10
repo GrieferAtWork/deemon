@@ -1234,11 +1234,10 @@ Dee_memval_sameval(struct Dee_memval const *a,
 	return true;
 }
 
-/* Check if "a" and "b" represent the same effective.
+/* Check if "a" and "b" represent the same effective value.
  * NOTE: This doesn't necessarily mean that "a === b", but *does* mean
  *       that vdirect() of "a" and "b" produces identical logical code,
- *       and that the result represents identical logical objects, and
- *       that "a === b" is *allowed* to be true at runtime.
+ *       and that "a === b" is *allowed* to be true at runtime.
  *
  * This is the same as `Dee_memval_sameval()', but can be used if the
  * caller is OK with 2 yet-to-be-created instances of identical objects
@@ -1293,9 +1292,7 @@ typedef uint8_t Dee_host_regusage_t;
 /* Mem-state flags. */
 #define MEMSTATE_F_NORMAL      0x0000 /* Normal flags */
 #define MEMSTATE_F_GOTEXCEPT   0x0001 /* It's known that `DeeThread_Self()->t_except != NULL' */
-#if 0 /* TODO */
 #define MEMSTATE_F_GOTNULLABLE 0x0002 /* There exactly 1 Dee_memval with `mv_vmorph == MEMVAL_VMORPH_NULLABLE' */
-#endif
 
 struct Dee_memstate {
 	Dee_refcnt_t                               ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
@@ -2700,6 +2697,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_write(struc
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endread(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endwrite(struct Dee_function_generator *__restrict self);
 
+/* Make sure there are no NULLABLE memobj-s anywhere on the stack or in locals. */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_vnonullable(struct Dee_function_generator *__restrict self);
+#define Dee_function_generator_vnonullable(self) (((self)->fg_state->ms_flags & MEMSTATE_F_GOTNULLABLE) ? _Dee_function_generator_vnonullable(self) : 0)
+
 /* Check if `loc' differs from vtop, and if so: move vtop
  * *into* `loc', the assign the *exact* given `loc' to vtop. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -2720,22 +2721,30 @@ Dee_function_generator_vcallapi_(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t argc);
 #define Dee_function_generator_vcallapi(self, api_function, cc, argc) \
 	Dee_function_generator_vcallapi_(self, (void const *)(api_function), cc, argc)
-#define VCALL_CC_OBJECT             0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMVAL_VMORPH_NULLABLE'), also MEMOBJ_F_NOREF is clear */
-#define VCALL_CC_INT                1 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALL_CC_INTPTR             1 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
-#define VCALL_CC_RAWINT             2 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALL_CC_RAWINTPTR          2 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
-#define VCALL_CC_RAWINT_KEEPARGS    3 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_RAWINTPTR_KEEPARGS 3 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
-#define VCALL_CC_NEGINT             4 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_NEGINTPTR          4 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
-#define VCALL_CC_M1INT              5 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_M1INTPTR           5 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
-#define VCALL_CC_VOID               6 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A */
-#define VCALL_CC_EXCEPT             7 /* ?               (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Always an error */
-#define VCALL_CC_BOOL               8 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_INTPTR       9 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
-#define VCALL_CC_MORPH_UINTPTR     10 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_OBJECT                0 /* DREF DeeObject *(DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if NULL/zero (via `MEMVAL_VMORPH_NULLABLE'), also MEMOBJ_F_NOREF is clear */
+#define VCALL_CC_INT                   1 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_INTPTR                1 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Error if non-zero */
+#define VCALL_CC_RAWINT                2 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_RAWINTPTR             2 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_RAWINT_NX             3 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR_NX          3 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> UNCHECKED(result) */
+#define VCALL_CC_RAWINT_KEEPARGS       4 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_RAWINTPTR_KEEPARGS    4 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_RAWINT_KEEPARGS_NX    5 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_RAWINTPTR_KEEPARGS_NX 5 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> [args...], UNCHECKED(result) */
+#define VCALL_CC_NEGINT                6 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_NEGINTPTR             6 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if negative */
+#define VCALL_CC_M1INT                 7 /* int             (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_M1INTPTR              7 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result   ## Error if -1 */
+#define VCALL_CC_VOID                  8 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_VOID_NX               9 /* void            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A */
+#define VCALL_CC_EXCEPT               10 /* ?               (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> N/A      ## Always an error */
+#define VCALL_CC_BOOL                 11 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_BOOL_NX              12 /* bool            (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_INTPTR         13 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_MORPH_UINTPTR        14 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result ## Make sure there are no pending errors before doing the call */
+#define VCALL_CC_MORPH_INTPTR_NX      15 /* intptr_t        (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
+#define VCALL_CC_MORPH_UINTPTR_NX     16 /* uintptr_t       (DCALL *api_function)(void *, [void *, [void *, [...]]]); [args...] -> result */
 
 
 /* [args...], funcaddr -> ...
@@ -2813,7 +2822,7 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 /* Pre-defined exception injectors. */
 struct Dee_function_exceptinject_callvoidapi {
 	struct Dee_function_exceptinject fei_cva_base; /* Underlying injector */
-	void const                      *fei_cva_func; /* [1..1] API function to call (with `VCALL_CC_VOID' semantics) */
+	void const                      *fei_cva_func; /* [1..1] API function to call (with `VCALL_CC_VOID_NX' semantics) */
 	Dee_vstackaddr_t                 fei_cva_argc; /* # of arguments taken by `fei_cva_func' */
 };
 #define Dee_function_generator_xinject_push_callvoidapi(self, ij, api_func, argc) \

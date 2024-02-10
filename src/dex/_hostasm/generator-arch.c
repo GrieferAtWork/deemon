@@ -346,6 +346,21 @@ gen86_addrname(void const *addr) {
 	CASE(DeeClass_New, 4);
 	CASE(DeeGC_Track, 4);
 	CASE(DeeGC_Untrack, 4);
+	CASE(Dee_Malloc, 4);
+	CASE(Dee_Calloc, 4);
+	CASE(Dee_Realloc, 8);
+	CASE(Dee_TryMalloc, 4);
+	CASE(Dee_TryCalloc, 4);
+	CASE(Dee_TryRealloc, 8);
+	CASE(Dee_Free, 4);
+	CASE(DeeGCObject_Malloc, 4);
+	CASE(DeeGCObject_Calloc, 4);
+	CASE(DeeGCObject_Realloc, 8);
+	CASE(DeeGCObject_TryMalloc, 4);
+	CASE(DeeGCObject_TryCalloc, 4);
+	CASE(DeeGCObject_TryRealloc, 8);
+	CASE(DeeGCObject_Free, 4);
+	CASE(DeeObject_Free, 4);
 	CASE(libhostasm_rt_err_unbound_global, 8);
 	CASE(libhostasm_rt_err_unbound_local, 12);
 	CASE(libhostasm_rt_err_unbound_arg, 12);
@@ -358,6 +373,14 @@ gen86_addrname(void const *addr) {
 	CASE(libhostasm_rt_err_invalid_class_addr, 8);
 	CASE(libhostasm_rt_err_invalid_instance_addr, 8);
 	CASE(libhostasm_rt_DeeObject_ShlRepr, 8);
+#undef CASE
+#define CASE(sym)                   \
+	if (addr == (void const *)&sym) \
+		return #sym
+	CASE(DeeObject_Type);
+	CASE(DeeType_Type);
+	CASE(DeeFunction_Type);
+	CASE(DeeCode_Type);
 #undef CASE
 	*Dee_sprintf(buf, "%#Ix", addr) = '\0';
 	return buf;
@@ -1419,10 +1442,10 @@ _Dee_host_section_gincref_const(struct Dee_host_section *__restrict self,
 		goto err;
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	gen86_printf("incref\t%#Ix", value);
+	gen86_printf("incref\t%s", gen86_addrname(value));
 	if (n != 1)
 		Dee_DPRINTF(", $%Iu", n);
-	Dee_DPRINT("\n");
+	Dee_DPRINTF("\t# %r\n", value);
 #else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 	if (n == 1) {
 		gen86_printf("lock inc" Plq "\t%#Ix\n", caddr);
@@ -1456,10 +1479,10 @@ _Dee_host_section_gdecref_const(struct Dee_host_section *__restrict self,
 	 * like `Dee_DecrefNoKill()' (iow: doesn't need a zero-check) */
 #ifndef NO_HOSTASM_DEBUG_PRINT
 #ifdef NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY
-	gen86_printf("decref_nokill\t%#Ix", value);
+	gen86_printf("decref_nokill\t%s", gen86_addrname(value));
 	if (n != 1)
 		Dee_DPRINTF(", $%Iu", n);
-	Dee_DPRINT("\n");
+	Dee_DPRINTF("\t# %r\n", value);
 #else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 	if (n == 1) {
 		gen86_printf("lock dec" Plq "\t%#Ix\n", caddr);
@@ -2475,7 +2498,7 @@ _Dee_host_section_gmov_const2reg(struct Dee_host_section *__restrict self,
 		gen86_printf("xor" Plq "\t%s, %s\n", gen86_regname(dst_regno), gen86_regname(dst_regno));
 		gen86_xorP_r_r(p_pc(self), gen86_registers[dst_regno], gen86_registers[dst_regno]);
 	} else {
-		gen86_printf("mov" Plq "\t$%#Ix, %s\n", (intptr_t)(uintptr_t)value, gen86_regname(dst_regno));
+		gen86_printf("mov" Plq "\t$%s, %s\n", gen86_addrname(value), gen86_regname(dst_regno));
 		/* NOTE: This automatically does `movabs' on x86_64! */
 		gen86_movP_imm_r(p_pc(self), (intptr_t)(uintptr_t)value, gen86_registers[dst_regno]);
 	}
@@ -2496,7 +2519,7 @@ _Dee_function_generator_gmov_const2regind(struct Dee_function_generator *__restr
 		goto err;
 	if unlikely(Dee_host_section_reqx86(sect, 1))
 		goto err;
-	gen86_printf("mov" Plq "\t$%#Ix, %Id(%s)\n", (intptr_t)(uintptr_t)value, dst_delta, gen86_regname(dst_regno));
+	gen86_printf("mov" Plq "\t$%s, %Id(%s)\n", gen86_addrname(value), dst_delta, gen86_regname(dst_regno));
 	gen86_movP_imm_db(p_pc(sect), (intptr_t)(uintptr_t)value, dst_delta, gen86_registers[dst_regno]);
 	return 0;
 err:
@@ -2512,7 +2535,7 @@ _Dee_host_section_gmov_const2hstackind(struct Dee_host_section *__restrict self,
 #endif /* _Dee_host_section_gmov_const2hstackind_MAYFAIL */
 	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
-	gen86_printf("mov" Plq "\t$%#Ix, %Id(%%" Per "sp)\n", (intptr_t)(uintptr_t)value, sp_offset);
+	gen86_printf("mov" Plq "\t$%s, %Id(%%" Per "sp)\n", gen86_addrname(value), sp_offset);
 	gen86_movP_imm_db(p_pc(self), (intptr_t)(uintptr_t)value, sp_offset, GEN86_R_PSP);
 	return 0;
 err:
@@ -2530,7 +2553,7 @@ _Dee_host_section_gmov_const2constind(struct Dee_host_section *__restrict self,
 #endif /* _Dee_host_section_gmov_const2constind_MAYFAIL */
 	if unlikely(Dee_host_section_reqx86(self, 1))
 		goto err;
-	gen86_printf("mov" Plq "\t$%#Ix, %#Ix\n", value, (intptr_t)(uintptr_t)p_value);
+	gen86_printf("mov" Plq "\t$%s, %#Ix\n", gen86_addrname(value), (intptr_t)(uintptr_t)p_value);
 	gen86_movP_imm_d(p_pc(self), (intptr_t)(uintptr_t)value, (intptr_t)(uintptr_t)p_value);
 	return 0;
 err:

@@ -919,11 +919,11 @@ PRIVATE struct Dee_ccall_optimization tpconst cco_Int[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_WeakRef_bool(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	(void)argc;
-	DO(Dee_function_generator_vdup(self));                                           /* wr, &wr->wr_ref */
-	DO(Dee_function_generator_vdelta(self, offsetof(DeeWeakRefObject, wr_ref)));     /* wr, &wr->wr_ref */
-	DO(Dee_function_generator_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL, 1)); /* wr, result */
-	DO(Dee_function_generator_vswap(self));                                          /* result, wr */
-	return Dee_function_generator_vpop(self);                                        /* result */
+	DO(Dee_function_generator_vdup(self));                                              /* wr, &wr->wr_ref */
+	DO(Dee_function_generator_vdelta(self, offsetof(DeeWeakRefObject, wr_ref)));        /* wr, &wr->wr_ref */
+	DO(Dee_function_generator_vcallapi(self, &Dee_weakref_bound, VCALL_CC_BOOL_NX, 1)); /* wr, result */
+	DO(Dee_function_generator_vswap(self));                                             /* result, wr */
+	return Dee_function_generator_vpop(self);                                           /* result */
 err:
 	return -1;
 }
@@ -1341,7 +1341,7 @@ PRIVATE struct Dee_ccall_optimization tpconst cco_Bool[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cco_Float_bool(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
 	(void)argc;
-	return Dee_function_generator_vcallapi(self, DeeFloat_Type.tp_cast.tp_bool, VCALL_CC_BOOL, 1); /* result */
+	return Dee_function_generator_vcallapi(self, DeeFloat_Type.tp_cast.tp_bool, VCALL_CC_BOOL_NX, 1); /* result */
 }
 
 PRIVATE struct Dee_ccall_optimization tpconst cco_Float[] = {
