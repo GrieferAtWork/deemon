@@ -942,26 +942,8 @@ Dee_memstate_vpush_memobj(struct Dee_memstate *__restrict self,
 	}
 	dst = &self->ms_stackv[self->ms_stackc];
 	Dee_memval_init_memobj(dst, obj);
+	Dee_memval_direct_clearref(dst); /* Pushed value is an alias, so clear the REF flag. */
 	Dee_memstate_incrinuse_for_memobj(self, obj);
-	++self->ms_stackc;
-	return 0;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_memstate_vpush_memval(struct Dee_memstate *__restrict self,
-                          struct Dee_memval const *val) {
-	struct Dee_memval *dst, temp;
-	if unlikely(self->ms_stackc >= self->ms_stacka) {
-		temp = *val; /* In case "val" was already part of the v-stack. */
-		if unlikely(Dee_memstate_reqvstack(self, self->ms_stackc + 1))
-			goto err;
-		val = &temp;
-	}
-	dst = &self->ms_stackv[self->ms_stackc];
-	Dee_memval_initcopy(dst, val);
-	Dee_memstate_incrinuse_for_memval(self, val);
 	++self->ms_stackc;
 	return 0;
 err:

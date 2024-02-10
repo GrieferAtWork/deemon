@@ -36,7 +36,6 @@ struct class_desc;
 
 INTDEF ATTR_COLD int DCALL err_no_active_exception(void);
 INTDEF ATTR_COLD int DCALL err_subclass_final_type(DeeTypeObject *__restrict tp);
-#define err_unexpected_type(self, wanted_type) DeeObject_TypeAssertFailed(self, wanted_type)
 #define err_unimplemented_constructor(tp, argc, argv) \
 	err_unimplemented_constructor_kw(tp, argc, argv, NULL)
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_constructor_kw(DeeTypeObject *tp, size_t argc, DeeObject *const *argv, DeeObject *kw);

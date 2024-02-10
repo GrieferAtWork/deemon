@@ -894,12 +894,12 @@ Dee_memobj_reqxinfo(struct Dee_memobj *__restrict self);
 #define MEMVAL_VMORPH_HASOBJ0(x) ((x) <= 0xf)
 #define MEMVAL_VMORPH_HASOBJN(x) ((x) > 0xf)
 /* Multi-object morphs */
-//TODO: #define MEMVAL_VMORPH_LIST      0x10 /* >> value = DeeList_New...(mos_objv...); */
-//TODO: #define MEMVAL_VMORPH_TUPLE     0x11 /* >> value = DeeTuple_New...(mos_objv...); */
-//TODO: #define MEMVAL_VMORPH_HASHSET   0x12 /* >> value = DeeHashSet_New...(mos_objv...); */
-//TODO: #define MEMVAL_VMORPH_ROSET     0x13 /* >> value = DeeRoSet_New...(mos_objv...); */
-//TODO: #define MEMVAL_VMORPH_DICT      0x14 /* >> value = DeeDict_New...(mos_objv...);   // 0:key, 1:value, 2:key, ... */
-//TODO: #define MEMVAL_VMORPH_RODICT    0x15 /* >> value = DeeRoDict_New...(mos_objv...); // 0:key, 1:value, 2:key, ... */
+#define MEMVAL_VMORPH_LIST      0x10 /* TODO: >> value = DeeList_New...(mos_objv...); */
+#define MEMVAL_VMORPH_TUPLE     0x11 /* TODO: >> value = DeeTuple_New...(mos_objv...); */
+#define MEMVAL_VMORPH_HASHSET   0x12 /* TODO: >> value = DeeHashSet_New...(mos_objv...); */
+#define MEMVAL_VMORPH_ROSET     0x13 /* TODO: >> value = DeeRoSet_New...(mos_objv...); */
+#define MEMVAL_VMORPH_DICT      0x14 /* TODO: >> value = DeeDict_New...(mos_objv...);   // 0:key, 1:value, 2:key, ... */
+#define MEMVAL_VMORPH_RODICT    0x15 /* TODO: >> value = DeeRoDict_New...(mos_objv...); // 0:key, 1:value, 2:key, ... */
 #define MEMVAL_VMORPH_SUPER     0x16 /* >> value = DeeSuper_New(tp_self: mos_objv[1], self: mos_objv[0]); */
 
 
@@ -1588,7 +1588,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vmirror(struct Dee_memstate *
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memadr(struct Dee_memstate *__restrict self, struct Dee_memadr const *adr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memloc(struct Dee_memstate *__restrict self, struct Dee_memloc const *loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memobj(struct Dee_memstate *__restrict self, struct Dee_memobj const *obj);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_memval(struct Dee_memstate *__restrict self, struct Dee_memval const *val);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_undefined(struct Dee_memstate *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_memstate_vpush_addr(struct Dee_memstate *__restrict self, void const *addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_memstate_vpush_const(struct Dee_memstate *__restrict self, DeeObject *value);
@@ -2300,7 +2299,6 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vmirror(struct Dee_
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memadr(struct Dee_function_generator *__restrict self, struct Dee_memadr const *adr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memloc(struct Dee_function_generator *__restrict self, struct Dee_memloc const *loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memobj(struct Dee_function_generator *__restrict self, struct Dee_memobj const *obj);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_memval(struct Dee_function_generator *__restrict self, struct Dee_memval const *val);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_undefined(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_addr(struct Dee_function_generator *__restrict self, void const *addr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vpush_const_(struct Dee_function_generator *__restrict self, DeeObject *value);
@@ -2335,7 +2333,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdup_n(struct Dee_f
 #define Dee_function_generator_vdup(self) Dee_function_generator_vdup_n(self, 1)
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopmany(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_n(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_at(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_local(struct Dee_function_generator *__restrict self, Dee_lid_t lid);
 INTDEF WUNUSED NONNULL((1)) bool DCALL Dee_function_generator_vallconst(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t n); /* Check if top `n' elements are all `MEMADR_TYPE_CONST' */
@@ -2599,6 +2597,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_imember(struct
 #define DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF    0x0001 /* Always push a reference when reading a member (only for `Dee_function_generator_vpush_[ic]member') */
 #define DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE   0x0002 /* Force "safe" access if it needs to happen at runtime (verify object type & addr being in-bounds). */
 
+/* test_type, inherited_type -> (int)DeeType_InheritsFrom(test_type, inherited_type) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vtype_inheritsfrom(struct Dee_function_generator *__restrict self);
+
 /* Generate code equivalent to `DeeObject_AssertTypeExact(VTOP, type)', but don't pop `VTOP' from the v-stack. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__restrict self,
@@ -2616,8 +2618,9 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 	 ? Dee_function_generator_vassert_type_c(self, type)            \
 	 : 0)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self);       /* obj, type -> N/A */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self); /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self);        /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self);  /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type_failed(struct Dee_function_generator *__restrict self); /* obj, type -> N/A */
 
 /* Perform a conditional jump to `desc' based on `jump_if_true'
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)
@@ -2790,7 +2793,7 @@ Dee_function_generator_vcheckerr(struct Dee_function_generator *__restrict self,
  * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
  * a slap allocator instead (just like the real DeeObject_MALLOC also does).
  * NOTE: The value pushed onto the V-stack...
- *       - ... already has its MEMOBJ_F_NOREF flag CLEAR!
+ *       - ... already has its MEMOBJ_F_ISREF flag SET!
  *       - ... has already been NULL-checked (i.e. already is a direct value)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -2815,6 +2818,34 @@ Dee_function_generator_vcall_DeeObject_Malloc(struct Dee_function_generator *__r
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
                                Dee_vstackaddr_t argc, bool readonly);
+
+
+/* Helpers for generating conditional code. */
+struct Dee_function_generator_branch {
+	struct Dee_host_section  *fgb_oldtext; /* [1..1] Old .text section. */
+	struct Dee_host_symbol   *fgb_skip;    /* [0..1] Symbol for re-entry to `fgb_oldtext'. */
+	DREF struct Dee_memstate *fgb_saved;   /* [1..1] Saved memory state (to-be restored by `Dee_function_generator_vjx_leave_noreturn()') */
+};
+#define Dee_function_generator_branch_fini(self) Dee_memstate_decref((self)->fgb_saved);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave_noreturn(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
+#define VJX_F_JZ       0x0000 /* Jump if zero */
+#define VJX_F_JNZ      0x0001 /* Jump if non-zero */
+#define VJX_F_LIKELY   0x0000 /* Jump if likely to happen */
+#define VJX_F_UNLIKELY 0x0002 /* Jump if unlikely to happen */
+
+#define Dee_function_generator_vjz_enter(self, branch)           Dee_function_generator_vjx_enter(self, branch, VJX_F_JZ)
+#define Dee_function_generator_vjz_enter_likely(self, branch)    Dee_function_generator_vjx_enter(self, branch, VJX_F_JZ | VJX_F_LIKELY)
+#define Dee_function_generator_vjz_enter_unlikely(self, branch)  Dee_function_generator_vjx_enter(self, branch, VJX_F_JZ | VJX_F_UNLIKELY)
+#define Dee_function_generator_vjz_leave(self, branch)           Dee_function_generator_vjx_leave(self, branch)
+#define Dee_function_generator_vjz_leave_noreturn(self, branch)  Dee_function_generator_vjx_leave_noreturn(self, branch)
+#define Dee_function_generator_vjnz_enter(self, branch)          Dee_function_generator_vjx_enter(self, branch, VJX_F_JNZ)
+#define Dee_function_generator_vjnz_enter_likely(self, branch)   Dee_function_generator_vjx_enter(self, branch, VJX_F_JNZ | VJX_F_LIKELY)
+#define Dee_function_generator_vjnz_enter_unlikely(self, branch) Dee_function_generator_vjx_enter(self, branch, VJX_F_JNZ | VJX_F_UNLIKELY)
+#define Dee_function_generator_vjnz_leave(self, branch)          Dee_function_generator_vjx_leave(self, branch)
+#define Dee_function_generator_vjnz_leave_noreturn(self, branch) Dee_function_generator_vjx_leave_noreturn(self, branch)
+
 
 
 /* Pre-defined exception injectors. */

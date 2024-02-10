@@ -192,7 +192,7 @@ Dee_function_generator_vpop_prefix(struct Dee_function_generator *__restrict sel
                                    uint8_t prefix_type, uint16_t id1, uint16_t id2) {
 	switch (prefix_type) {
 	case ASM_STACK:
-		return Dee_function_generator_vpop_n(self, self->fg_state->ms_stackc - id1);
+		return Dee_function_generator_vpop_at(self, self->fg_state->ms_stackc - id1);
 	case ASM_STATIC:
 		return Dee_function_generator_vpop_static(self, id1);
 	case ASM_EXTERN:
@@ -851,9 +851,9 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 	TARGET(ASM_POP)
 		return Dee_function_generator_vpop(self);
 	TARGET(ASM_POP_N)
-		return Dee_function_generator_vpop_n(self, instr[1] + 2);
+		return Dee_function_generator_vpop_at(self, instr[1] + 2);
 	TARGET(ASM16_POP_N)
-		return Dee_function_generator_vpop_n(self, UNALIGNED_GETLE16(instr + 2) + 2);
+		return Dee_function_generator_vpop_at(self, UNALIGNED_GETLE16(instr + 2) + 2);
 
 	TARGET(ASM_ADJSTACK) {
 		Dee_vstackoff_t delta;

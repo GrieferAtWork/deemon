@@ -206,14 +206,15 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 		ASSERT(Dee_memval_hasobjn(mval));
 		objs = Dee_memval_getobjn(mval);
 		ASSERT(objs->mos_objc == 2);
-		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[1]));            /* super, tp_self */
-		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[0]));            /* super, tp_self, self */
-		DO(Dee_function_generator_vnotoneref(self, 2));                               /* super, tp_self, self */
-		DO(Dee_function_generator_vcallapi(self, &DeeSuper_New, VCALL_CC_OBJECT, 2)); /* super, result */
-		DO(Dee_function_generator_voneref_noalias(self));                             /* super, result */
-		DO(Dee_function_generator_vsettyp_noalias(self, &DeeSuper_Type));             /* super, result */
-		DO(Dee_function_generator_vswap(self));                                       /* result, super */
-		DO(Dee_function_generator_vpop(self));                                        /* result */
+		DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeeSuperObject), false)); /* super, result */
+		DO(Dee_function_generator_vcall_DeeObject_Init_c(self, &DeeSuper_Type));                /* super, result */
+		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[1]));                      /* super, result, s_type */
+		DO(Dee_function_generator_vref2(self, 3));                                              /* super, result, ref:s_type */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeSuperObject, s_type)));             /* super, result */
+		DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[0]));                      /* super, result, s_self */
+		DO(Dee_function_generator_vref2(self, 3));                                              /* super, result, ref:s_self */
+		DO(Dee_function_generator_vpopind(self, offsetof(DeeSuperObject, s_self)));             /* super, result */
+		return Dee_function_generator_vpop_at(self, 2);                                         /* result */
 	}	break;
 
 	default:

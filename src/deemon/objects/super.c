@@ -59,7 +59,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 		goto err;
 	if (DeeSuper_Check(self)) {
 		if (!DeeType_IsAbstract(tp_self)) {
-			if unlikely(!DeeType_Implements(DeeSuper_TYPE(self), tp_self))
+			if unlikely(!DeeType_InheritsFrom(DeeSuper_TYPE(self), tp_self))
 				goto err_badtype;
 		}
 		self = DeeSuper_SELF(self);
@@ -82,7 +82,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 	Dee_Incref(self);
 	return (DREF DeeObject *)result;
 err_badtype:
-	err_unexpected_type(self, tp_self);
+	DeeObject_TypeAssertFailed(self, tp_self);
 err:
 	return NULL;
 }

@@ -30,15 +30,20 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/dict.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
+#include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
+#include <deemon/rodict.h>
+#include <deemon/roset.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
 #include <deemon/tuple.h>
@@ -51,6 +56,11 @@ DECL_BEGIN
 #define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
 #define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
 
 #ifdef __INTELLISENSE__
 #define DO /* nothing */
@@ -134,15 +144,6 @@ Dee_function_generator_vpush_memobj(struct Dee_function_generator *__restrict se
 	int result = Dee_function_generator_state_unshare(self);
 	if likely(result == 0)
 		result = Dee_memstate_vpush_memobj(self->fg_state, obj);
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vpush_memval(struct Dee_function_generator *__restrict self,
-                                    struct Dee_memval const *val) {
-	int result = Dee_function_generator_state_unshare(self);
-	if likely(result == 0)
-		result = Dee_memstate_vpush_memval(self->fg_state, val);
 	return result;
 }
 
@@ -342,7 +343,7 @@ Dee_function_generator_vbound_arg(struct Dee_function_generator *__restrict self
 		if (!Dee_memval_direct_isundefined(mval)) {
 			if (Dee_memval_direct_local_alwaysbound(mval))
 				return Dee_function_generator_vpush_const(self, Dee_True);
-			DO(Dee_function_generator_vpush_memval(self, mval));
+			DO(Dee_function_generator_vpush_memobj(self, Dee_memval_direct_getobj(mval)));
 			DO(Dee_function_generator_state_unshare(self));
 			mval = Dee_function_generator_vtop(self);
 			ASSERT(Dee_memval_isdirect(mval));
@@ -724,12 +725,12 @@ Dee_function_generator_vpopmany(struct Dee_function_generator *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vpop_n(struct Dee_function_generator *__restrict self,
-                              Dee_vstackaddr_t n) {
-	ASSERT(n >= 1);
-	DO(Dee_function_generator_vlrot(self, n));
-	DO(Dee_function_generator_vpop(self));
-	return Dee_function_generator_vrrot(self, n - 1);
+Dee_function_generator_vpop_at(struct Dee_function_generator *__restrict self,
+                               Dee_vstackaddr_t n) {
+	ASSERT(n >= 1);                            /* x, [n...] */
+	DO(Dee_function_generator_vlrot(self, n)); /* [n...], x */
+	DO(Dee_function_generator_vpop(self));     /* [n...] */
+	return 0;
 err:
 	return -1;
 }
@@ -1068,8 +1069,7 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	p_coalesce_from = p_coalesce_to - 1;
 	p_dst           = p_coalesce_from - 1;
 	coalesce_from   = *Dee_memval_direct_getloc(p_coalesce_from);
-	DO(Dee_function_generator_vswap(self)); /* reg:dst, to, from */
-	DO(Dee_function_generator_vpop(self));  /* reg:dst, to */
+	DO(Dee_function_generator_vpop_at(self, 2)); /* reg:dst, to */
 	ASSERT(p_coalesce_from == Dee_function_generator_vtop(self));
 	ASSERT(p_coalesce_to == Dee_function_generator_vtop(self) + 1);
 	text_Lnot_equal = Dee_function_generator_newsym_named(self, ".text_Lnot_equal");
@@ -1082,8 +1082,7 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	    Dee_function_generator_gjcc(self, Dee_memval_direct_getloc(p_dst),
 	                                &coalesce_from, false,
 	                                text_Lnot_equal, NULL, text_Lnot_equal));
-	EDO(err_common_state, Dee_function_generator_vswap(self));                /* to, reg:dst */
-	EDO(err_common_state, Dee_function_generator_vpop(self));                 /* to */
+	EDO(err_common_state, Dee_function_generator_vpop_at(self, 2));           /* to */
 	EDO(err_common_state, Dee_function_generator_vdup(self));                 /* to, to */
 	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* ... */
 	Dee_memstate_decref(common_state);
@@ -1306,14 +1305,10 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 		}
 		common_state = self->fg_state;
 		Dee_memstate_incref(common_state);
-		if unlikely(Dee_function_generator_vpop(self))
-			goto err_common_state; /* - */
-		if unlikely(Dee_function_generator_vpush_argv(self))
-			goto err_common_state; /* argv */
-		if unlikely(Dee_function_generator_vind(self, (ptrdiff_t)aid * sizeof(DeeObject *)))
-			goto err_common_state; /* argv[aid] */
-		if unlikely(Dee_function_generator_vmorph(self, common_state))
-			goto err_common_state; /* reg:value */
+		EDO(err_common_state, Dee_function_generator_vpop(self));                                       /* - */
+		EDO(err_common_state, Dee_function_generator_vpush_argv(self));                                 /* argv */
+		EDO(err_common_state, Dee_function_generator_vind(self, (ptrdiff_t)aid * sizeof(DeeObject *))); /* argv[aid] */
+		EDO(err_common_state, Dee_function_generator_vmorph(self, common_state));                       /* reg:value */
 		Dee_memstate_decref(common_state);
 		Dee_host_symbol_setsect(Luse_default, self->fg_sect);
 	} else {
@@ -1905,8 +1900,7 @@ Dee_function_generator_vpop_cmember(struct Dee_function_generator *__restrict se
 					DO(Dee_function_generator_vpopind(self,                                   /* type, type->tp_class */
 					                                  offsetof(struct Dee_class_desc, cd_members[0]) +
 					                                  (addr * sizeof(DREF DeeObject *))));
-					DO(Dee_function_generator_vpop(self)); /* type */
-					return Dee_function_generator_vpop(self); /* N/A */
+					return Dee_function_generator_vpopmany(self, 2); /* N/A */
 				}
 			}
 			if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
@@ -2178,8 +2172,7 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 		desc = DeeClass_DESC(class_type);
 		if (addr >= desc->cd_desc->cd_imemb_size)
 			return libhostasm_rt_err_invalid_instance_addr(class_type, addr);
-		DO(Dee_function_generator_vswap(self)); /* this, value, type */
-		DO(Dee_function_generator_vpop(self));  /* this, value */
+		DO(Dee_function_generator_vpop_at(self, 2)); /* this, value */
 
 		/* Push the member at runtime, but allowed to use (normally) unsafe
 		 * semantics since we were already able to verify all constraints. */
@@ -2245,6 +2238,14 @@ impl_vassert_type_exact(struct Dee_function_generator *__restrict self) {
 	}
 	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALL_CC_INT, 2);
 }
+
+/* test_type, inherited_type -> (int)DeeType_InheritsFrom(test_type, inherited_type) */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vtype_inheritsfrom(struct Dee_function_generator *__restrict self) {
+	/* FIXME: Assembly of "DeeType_InheritsFrom()" only sets %al, but this here reads from %eax! */
+	return Dee_function_generator_vcallapi(self, &DeeType_InheritsFrom, VCALL_CC_RAWINT, 2);
+}
+
 
 /* obj, type -> N/A */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -2316,6 +2317,12 @@ err:
 	return -1;
 }
 
+/* obj, type -> N/A */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vassert_type_failed(struct Dee_function_generator *__restrict self) {
+	return Dee_function_generator_vcallapi(self, &DeeObject_TypeAssertFailed, VCALL_CC_EXCEPT, 2);
+}
+
 
 /* Generate code equivalent to `DeeObject_AssertType(VTOP, type)', but don't pop `VTOP' from the v-stack. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -2349,7 +2356,7 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
 		}
 	}
-	DO(Dee_function_generator_vdirect1(self)); /* value */
+	DO(Dee_function_generator_vdirect1(self));          /* value */
 	DO(Dee_function_generator_vdup(self));              /* value, value */
 	DO(Dee_function_generator_vpush_const(self, type)); /* value, value, type */
 	return impl_vassert_type(self);
@@ -2750,8 +2757,99 @@ Dee_function_generator_vind(struct Dee_function_generator *__restrict self,
 	struct Dee_memstate *state;
 	struct Dee_memval *mval;
 	struct Dee_memloc ind_loc;
-	DO(Dee_function_generator_vdirect1(self)); /* TODO: Special handling for certain morphs */
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
 	DO(Dee_function_generator_state_unshare(self));
+	state = self->fg_state;
+	mval  = Dee_memstate_vtop(state);
+
+	/* Special case when accessing "ob_type" */
+	if (ind_delta == offsetof(DeeObject, ob_type)) {
+		DeeTypeObject *typeof_mval = Dee_memval_typeof(mval);
+		if (typeof_mval != NULL) {
+			DO(Dee_function_generator_vpop(self));
+			return Dee_function_generator_vpush_const(self, typeof_mval);
+		}
+	} else if (ind_delta == offsetof(DeeObject, ob_refcnt)) {
+		switch (mval->mv_vmorph) {
+		case MEMVAL_VMORPH_DIRECT:
+		case MEMVAL_VMORPH_DIRECT_01:
+			if (Dee_memobj_isoneref(Dee_memval_getobj0(mval))) {
+				DO(Dee_function_generator_vpop(self));
+				return Dee_function_generator_vpush_immSIZ(self, 1);
+			}
+			break;
+		case MEMVAL_VMORPH_TUPLE:
+		case MEMVAL_VMORPH_ROSET:
+		case MEMVAL_VMORPH_RODICT:
+			if (Dee_memval_getobjn(mval)->mos_objc == 0)
+				break; /* In this case, a shared constant may be used (so ob_refcnt may be != 1) */
+			ATTR_FALLTHROUGH
+		case MEMVAL_VMORPH_LIST:
+		case MEMVAL_VMORPH_HASHSET:
+		case MEMVAL_VMORPH_DICT:
+		case MEMVAL_VMORPH_SUPER:
+			/* Memory value is the virtual representation of a freshly created object. */
+			DO(Dee_function_generator_vpop(self));
+			return Dee_function_generator_vpush_immSIZ(self, 1);
+		default: break;
+		}
+	}
+
+	/* Special handling for certain morphs */
+	switch (mval->mv_vmorph) {
+
+	case MEMVAL_VMORPH_LIST:
+		if (ind_delta == offsetof(DeeListObject, l_list.ol_elemc)) {
+			size_t i;
+			struct Dee_memobjs *objs;
+push_list_mval_objc:
+			objs = Dee_memval_getobjn(mval);
+			/* Size is only a known compile-time if no element is marked as _MEMOBJ_F_EXPAND */
+			for (i = 0; i < objs->mos_objc; ++i) {
+				if (objs->mos_objv[i].mo_flags & _MEMOBJ_F_EXPAND)
+					goto no_vmorph_optimization;
+			}
+			DO(Dee_function_generator_vpush_immSIZ(self, objs->mos_objc)); /* self, rd_size */
+			return Dee_function_generator_vpop_at(self, 2);                /* rd_size */
+		}
+		break;
+
+	case MEMVAL_VMORPH_TUPLE:
+		if (ind_delta == offsetof(DeeTupleObject, t_size))
+			goto push_list_mval_objc;
+		if (ind_delta >= offsetof(DeeTupleObject, t_elem)) {
+			struct Dee_memobjs *objs = Dee_memval_getobjn(mval);
+			if ((size_t)ind_delta < ((size_t)offsetof(DeeTupleObject, t_elem) +
+			                         (size_t)(objs->mos_objc * sizeof(DREF DeeObject *)))) {
+				size_t index = (size_t)ind_delta - (size_t)offsetof(DeeTupleObject, t_elem);
+				if ((index % sizeof(DREF DeeObject *)) == 0) {
+					index /= sizeof(DREF DeeObject *);
+					DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[index])); /* tuple, t_elem[index] */
+					return Dee_function_generator_vpop_at(self, 2);                        /* t_elem[index] */
+				}
+			}
+		}
+		break;
+
+	case MEMVAL_VMORPH_SUPER: {
+		struct Dee_memobjs *objs = Dee_memval_getobjn(mval);
+		ASSERT(objs->mos_objc == 2);
+		if (ind_delta == offsetof(DeeSuperObject, s_self)) {
+			DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[0])); /* super, s_self */
+			return Dee_function_generator_vpop_at(self, 2);                    /* s_self */
+		} else if (ind_delta == offsetof(DeeSuperObject, s_type)) {
+			DO(Dee_function_generator_vpush_memobj(self, &objs->mos_objv[1])); /* super, s_type */
+			return Dee_function_generator_vpop_at(self, 2);                    /* s_type */
+		}
+	}	break;
+
+	default: break;
+	}
+
+	/* Fallback: force direct value, and load object attribute. */
+no_vmorph_optimization:
+	DO(Dee_function_generator_vdirect1(self));
 	state = self->fg_state;
 	mval  = Dee_memstate_vtop(state);
 	ASSERT(Dee_memval_isdirect(mval));
@@ -3745,7 +3843,7 @@ err:
  * provides for "alloc_size" bytes of memory. If possible, try to dispatch against
  * a slap allocator instead (just like the real DeeObject_MALLOC also does).
  * NOTE: The value pushed onto the V-stack...
- *       - ... already has its MEMOBJ_F_NOREF flag CLEAR!
+ *       - ... already has its MEMOBJ_F_ISREF flag SET!
  *       - ... has already been NULL-checked (i.e. already is a direct value)
  * @return: 0 : Success
  * @return: -1: Error */
@@ -4186,6 +4284,90 @@ err:
 
 #undef LOCAL_hstack_lowcfa_inuse
 #undef LOCAL_hstack_cfa_inuse
+
+
+
+/* Helpers for generating conditional code. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self,
+                                 /*inherit(out)*/ struct Dee_function_generator_branch *__restrict branch,
+                                 unsigned int flags) {
+	struct Dee_host_section *cold;
+	struct Dee_memloc testloc;
+	DO(Dee_function_generator_vdirect1(self));
+	testloc = *Dee_function_generator_vtopdloc(self);
+	ASSERT(!Dee_memobj_isref(Dee_function_generator_vtopdobj(self)));
+	DO(Dee_function_generator_vpop(self));
+	branch->fgb_oldtext = self->fg_sect;
+	cold = &self->fg_block->bb_hcold;
+	if ((self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) || !(flags & VJX_F_UNLIKELY))
+		cold = self->fg_sect;
+	if (self->fg_sect != cold) {
+		struct Dee_host_symbol *Ljump;
+		Ljump = Dee_function_generator_newsym_named(self, ".Ljump");
+		if unlikely(!Ljump)
+			goto err;
+		DO((flags & VJX_F_JNZ) ? Dee_function_generator_gjnz(self, &testloc, Ljump)
+		                       : Dee_function_generator_gjz(self, &testloc, Ljump));
+		HA_printf(".section .cold\n");
+		self->fg_sect = cold;
+		Dee_host_symbol_setsect(Ljump, self->fg_sect);
+		branch->fgb_skip = NULL;
+	} else {
+		struct Dee_host_symbol *Lskip;
+		Lskip = Dee_function_generator_newsym_named(self, ".Lskip");
+		if unlikely(!Lskip)
+			goto err;
+		DO((flags & VJX_F_JNZ) ? Dee_function_generator_gjz(self, &testloc, Lskip)
+		                       : Dee_function_generator_gjnz(self, &testloc, Lskip));
+		branch->fgb_skip = Lskip;
+	}
+	branch->fgb_saved = self->fg_state;
+	Dee_memstate_incref(branch->fgb_saved);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self,
+                                 /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch) {
+	ASSERT(branch->fgb_saved);
+	EDO(err_saved, Dee_function_generator_vmorph(self, branch->fgb_saved));
+	Dee_memstate_decref(branch->fgb_saved);
+	if (self->fg_sect != branch->fgb_oldtext) {
+		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lreturn, branch->fgb_oldtext, 0);
+		DO(Dee_function_generator_gjmp(self, Lreturn));
+		HA_printf(".section .text\n");
+		self->fg_sect = branch->fgb_oldtext;
+		HA_printf(".Lreturn:\n");
+	}
+	if (branch->fgb_skip)
+		Dee_host_symbol_setsect(branch->fgb_skip, self->fg_sect);
+	DBG_memset(branch, 0xcc, sizeof(*branch));
+	return 0;
+err_saved:
+	Dee_memstate_decref(branch->fgb_saved);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vjx_leave_noreturn(struct Dee_function_generator *__restrict self,
+                                          /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch) {
+	ASSERT(branch->fgb_saved);
+	Dee_memstate_decref(self->fg_state);
+	self->fg_state = branch->fgb_saved; /* Inherit */
+	if (self->fg_sect != branch->fgb_oldtext) {
+		HA_printf(".section .text\n");
+		self->fg_sect = branch->fgb_oldtext;
+	}
+	if (branch->fgb_skip)
+		Dee_host_symbol_setsect(branch->fgb_skip, self->fg_sect);
+	DBG_memset(branch, 0xcc, sizeof(*branch));
+	return 0;
+}
+
 
 
 /* Pre-defined exception injectors. */
