@@ -52,6 +52,14 @@ DECL_BEGIN
 /* VSTACK DIRECT VALUE CONVERSION                                       */
 /************************************************************************/
 
+#ifdef __INTELLISENSE__
+#define DO /* nothing */
+#else /* __INTELLISENSE__ */
+#define DO(x) if unlikely(x) goto err
+#endif /* !__INTELLISENSE__ */
+#define EDO(err, x) if unlikely(x) goto err
+
+
 #define DeeInt_NEWSFUNC(n) DEE_PRIVATE_NEWINT(n)
 #define DeeInt_NEWUFUNC(n) DEE_PRIVATE_NEWUINT(n)
 
@@ -107,8 +115,7 @@ Dee_function_generator_vdirect_impl(struct Dee_function_generator *__restrict se
 	case MEMVAL_VMORPH_NULLABLE: {
 		uint8_t saved_flags = mval->mv_obj.mvo_0.mo_flags;
 		Dee_memobj_clearref(&mval->mv_obj.mvo_0);
-		if unlikely(Dee_function_generator_gjz_except(self, &mval->mv_obj.mvo_0.mo_loc))
-			goto err;
+		DO(Dee_function_generator_gjz_except(self, &mval->mv_obj.mvo_0.mo_loc));
 		mval->mv_obj.mvo_0.mo_flags = saved_flags;
 		mval->mv_vmorph = MEMVAL_VMORPH_DIRECT;
 
@@ -222,8 +229,11 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 	mval  = &state->ms_stackv[state->ms_stackc - 1];
 	ASSERT(Dee_memval_isdirect(mval));
 	Dee_memstate_foreach(alias, state) {
-		/* TODO: This only looks at *primary* storage locations,
-		 *       but it should also look at location equivalences! */
+		/* NOTE: It's OK that this only looks at *primary* storage locations,
+		 *       since all memloc-s from the mem-state that are aliases must
+		 *       always use the same location!
+		 *       i.e.: [#4, %eax] with an equivalence #4 <=> %eax would NOT
+		 *             be a valid memory state */
 		if (!(propagation_strategy == MAKEDIRECT_PROPAGATE_STRATEGY_SAMEVAL
 		      ? Dee_memval_sameval_mayalias(alias, &oldval)
 		      : Dee_memval_sameval(alias, &oldval)))
@@ -236,8 +246,7 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 		 *       even in the case of a local variable, that variable
 		 *       is known to be a non-direct value, meaning that it
 		 *       has to be bound unconditionally! */
-		if unlikely(Dee_function_generator_vgdecref_vstack(self, alias))
-			goto err_oldval;
+		EDO(err_oldval, Dee_function_generator_vgdecref_vstack(self, alias));
 		Dee_memstate_decrinuse_for_memval(state, alias);
 		Dee_memval_fini(alias);
 		Dee_memval_direct_initcopy(alias, mval);
@@ -268,12 +277,9 @@ Dee_function_generator_vdirect(struct Dee_function_generator *__restrict self,
 		struct Dee_memval *mval = &state->ms_stackv[i];
 		if (!Dee_memval_isdirect(mval)) {
 			Dee_vstackaddr_t rot_n = state->ms_stackc - i;
-			if unlikely(Dee_function_generator_vlrot(self, rot_n))
-				goto err;
-			if unlikely(Dee_function_generator_vdirect1(self))
-				goto err;
-			if unlikely(Dee_function_generator_vrrot(self, rot_n))
-				goto err;
+			DO(Dee_function_generator_vlrot(self, rot_n));
+			DO(Dee_function_generator_vdirect1(self));
+			DO(Dee_function_generator_vrrot(self, rot_n));
 		}
 	}
 	return 0;
@@ -321,38 +327,33 @@ Dee_function_generator_vdirect_memval(struct Dee_function_generator *__restrict 
 	if (Dee_memstate_isshared(state)) {
 		bool islocal = val >= state->ms_localv &&
 		               val < state->ms_localv + state->ms_localc;
-		if unlikely(Dee_memstate_inplace_copy_because_shared(&self->fg_state))
-			goto err;
+		DO(Dee_memstate_inplace_copy_because_shared(&self->fg_state));
 		if (islocal)
 			val = self->fg_state->ms_localv + (val - state->ms_localv);
 		state = self->fg_state;
 	}
-	if unlikely(state->ms_stackc >= state->ms_stacka &&
-	            Dee_memstate_reqvstack(state, state->ms_stackc + 1))
-		goto err;
+	if unlikely(state->ms_stackc >= state->ms_stacka)
+		DO(Dee_memstate_reqvstack(state, state->ms_stackc + 1));
 	dst = &state->ms_stackv[state->ms_stackc];
 	Dee_memval_initmove(dst, val);
 	++state->ms_stackc;
 	if (val >= state->ms_localv && val < state->ms_localv + state->ms_localc) {
 		Dee_lid_t val_lid = (Dee_lid_t)(val - state->ms_localv);
 		Dee_memval_init_undefined(val);
-		if unlikely(Dee_function_generator_vdirect1(self))
-			goto err;
+		DO(Dee_function_generator_vdirect1(self));
 		val = state->ms_localv + val_lid;
 		Dee_memstate_decrinuse_for_memval(state, val);
 #if 0 /* Already checked and implemented as its own case */
 	} else if (val >= state->ms_stackv && val < state->ms_stackv + state->ms_stackc) {
 		Dee_vstackaddr_t val_adr = (Dee_vstackaddr_t)(val - state->ms_stackv);
 		Dee_memval_init_undefined(val);
-		if unlikely(Dee_function_generator_vdirect1(self))
-			goto err;
+		DO(Dee_function_generator_vdirect1(self));
 		val = state->ms_stackv + val_adr;
 		Dee_memstate_decrinuse_for_memval(state, val);
 #endif
 	} else {
 		Dee_memstate_incrinuse_for_memval(state, val);
-		if unlikely(Dee_function_generator_vdirect1(self))
-			goto err;
+		DO(Dee_function_generator_vdirect1(self));
 		src = &state->ms_stackv[state->ms_stackc - 1];
 		Dee_memstate_decrinuse_for_memval(state, src);
 	}

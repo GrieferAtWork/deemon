@@ -52,8 +52,12 @@ global nonFinalGlobalNone = _hide(none);
 
 function hexec(expectedResult, args, func) {
 	local actualResult = test_compile_and_run(func, args);
-	assert actualResult == expectedResult;
-	assert type(actualResult) === type(expectedResult);
+	if (expectedResult is Callable) {
+		assert expectedResult(actualResult);
+	} else {
+		assert actualResult == expectedResult;
+		assert type(actualResult) === type(expectedResult);
+	}
 }
 
 hexec(["x", "foo"], ("x",),   (a)     -> [a..., "foo"]);
@@ -181,4 +185,12 @@ hexec("fooxx7", ("xx", 7), (a, b) -> {
 		x += a;
 	} while (x == "foox");
 	return x.__add__(b);
+});
+
+hexec(x -> x.valueA == "x" && x.valueB == 7, ("x", 7), (a, b) -> {
+	class MyClass {
+		public final member valueA = a;
+		public final member valueB = b;
+	};
+	return MyClass();
 });
