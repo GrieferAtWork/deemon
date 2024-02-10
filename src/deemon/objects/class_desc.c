@@ -4777,7 +4777,7 @@ PUBLIC NONNULL((1, 3)) void
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
 	ASSERT(DeeType_IsClass(self));
 	desc = DeeClass_DESC(self);
-	ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
+	ASSERT(addr < desc->cd_desc->cd_cmemb_size);
 	/* Lock and extract the member. */
 	Dee_Incref(value);
 	Dee_class_desc_lock_write(desc);
@@ -4813,7 +4813,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 	ASSERT_OBJECT_TYPE(self, &DeeType_Type);
 	ASSERT(DeeType_IsClass(self));
 	desc = DeeClass_DESC(self);
-	ASSERT(addr <= desc->cd_desc->cd_cmemb_size);
+	ASSERT(addr < desc->cd_desc->cd_cmemb_size);
 
 	/* Lock and extract the member. */
 	Dee_class_desc_lock_read(desc);

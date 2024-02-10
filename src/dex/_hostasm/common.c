@@ -28,11 +28,19 @@
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 #include <deemon/bool.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
 
+#include <hybrid/align.h>
+
 DECL_BEGIN
+
+#ifndef CHAR_BIT
+#include <hybrid/typecore.h>
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -753,9 +761,68 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 /************************************************************************/
 
 INTERN NONNULL((1)) void DCALL
-Dee_memobjs_destroy(struct Dee_memobjs *__restrict self) {
-	RINGQ_REMOVE(self, mos_copies);
+Dee_memobj_xinfo_destroy(struct Dee_memobj_xinfo *__restrict self) {
+	Dee_Free(self->mox_cdesc);
 	Dee_Free(self);
+}
+
+INTERN ATTR_PURE NONNULL((1, 2)) bool DCALL
+Dee_memobj_xinfo_equals(struct Dee_memobj_xinfo const *a,
+                        struct Dee_memobj_xinfo const *b) {
+	if (a == b)
+		return true;
+	if (a->mox_cdesc != a->mox_cdesc) {
+		struct Dee_memobj_xinfo_cdesc *ca = a->mox_cdesc;
+		struct Dee_memobj_xinfo_cdesc *cb = b->mox_cdesc;
+		if (ca->moxc_desc != cb->moxc_desc)
+			goto nope;
+		if (memcmp(ca->moxc_init, cb->moxc_init,
+		           CEILDIV(ca->moxc_desc->cd_cmemb_size, CHAR_BIT)))
+			goto nope;
+	}
+	return true;
+nope:
+	return false;
+}
+
+/* Ensure that `self->mo_xinfo' has been allocated, then return it.
+ * @return: NULL: Extended object info had yet to be allocated, and allocation failed. */
+INTERN WUNUSED NONNULL((1)) struct Dee_memobj_xinfo *DCALL
+Dee_memobj_reqxinfo(struct Dee_memobj *__restrict self) {
+	if (!Dee_memobj_hasxinfo(self)) {
+		struct Dee_memobj_xinfo *result;
+		result = (struct Dee_memobj_xinfo *)Dee_Calloc(sizeof(struct Dee_memobj_xinfo));
+		if unlikely(!result)
+			goto err;
+		result->mox_refcnt = 1;
+		self->mo_xinfo = (byte_t *)result + DEE_MEMOBJ_MO_XINFO_OFFSET;
+	}
+	return Dee_memobj_getxinfo(self);
+err:
+	return NULL;
+}
+
+
+INTERN NONNULL((1)) void DCALL
+Dee_memobjs_destroy(struct Dee_memobjs *__restrict self) {
+	size_t i;
+	RINGQ_REMOVE(self, mos_copies);
+	for (i = 0; i < self->mos_objc; ++i)
+		Dee_memobj_fini(&self->mos_objv[i]);
+	Dee_Free(self);
+}
+
+INTERN NONNULL((1)) void DCALL
+Dee_memval_do_destroy_objn_or_xinfo(struct Dee_memval *__restrict self) {
+	if (Dee_memval_hasobjn(self)) {
+		struct Dee_memobjs *objn = Dee_memval_getobjn(self);
+		Dee_memobjs_destroy(objn);
+	} else {
+		struct Dee_memobj_xinfo *xinfo;
+		ASSERT(Dee_memobj_hasxinfo(Dee_memval_getobj0(self)));
+		xinfo = Dee_memobj_getxinfo(Dee_memval_getobj0(self));
+		Dee_memobj_xinfo_destroy(xinfo);
+	}
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL

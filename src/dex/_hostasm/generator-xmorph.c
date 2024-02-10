@@ -31,11 +31,12 @@
 DECL_BEGIN
 
 STATIC_ASSERT(sizeof(struct Dee_memval) == sizeof(struct Dee_memref));
+STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_xinfo) == offsetof(struct Dee_memref, _mr_always0_1));
 STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_loc) == offsetof(struct Dee_memref, mr_loc));
 STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_typeof) == offsetof(struct Dee_memref, mr_refc));
-STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_flags) == offsetof(struct Dee_memref, _mr_always0_1));
-STATIC_ASSERT(offsetof(struct Dee_memval, mv_vmorph) == offsetof(struct Dee_memref, _mr_always0_2));
-STATIC_ASSERT(offsetof(struct Dee_memval, mv_flags) == offsetof(struct Dee_memref, _mr_always0_3));
+STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_flags) == offsetof(struct Dee_memref, _mr_always0_2));
+STATIC_ASSERT(offsetof(struct Dee_memval, mv_vmorph) == offsetof(struct Dee_memref, _mr_always0_3));
+STATIC_ASSERT(offsetof(struct Dee_memval, mv_flags) == offsetof(struct Dee_memref, _mr_always0_4));
 
 /* Assign a score to the complexity of moving "from" to "to"
  * 

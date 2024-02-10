@@ -67,6 +67,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "test_compile_and_run", (DeeObject *)&test_compile_and_run_o, MODSYM_FNORMAL,
 	  DOC("(func:?DFunction,args=!T0)->") },
 #endif /* CONFIG_HAVE_LIBHOSTASM */
+	 /* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
+	  *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay
+	  *       and is only here to test re-compiling and running code) */
 	{ NULL }
 };
 

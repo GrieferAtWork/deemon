@@ -503,6 +503,17 @@ Dee_memobj_constrainwith(struct Dee_memstate *__restrict self,
 		result = true;
 	}
 
+	/* Merge extended object information. */
+	if (obj->mo_xinfo && obj->mo_xinfo != other_obj->mo_xinfo &&
+	    !Dee_memobj_xinfo_equals(Dee_memobj_getxinfo(obj),
+	                             Dee_memobj_getxinfo(other_obj))) {
+		/* Incompatible extended object information */
+		DREF struct Dee_memobj_xinfo *xinfo;
+		xinfo = Dee_memobj_getxinfo(obj);
+		obj->mo_xinfo = NULL;
+		Dee_memobj_xinfo_decref(xinfo);
+		result = true;
+	}
 	return result;
 }
 
@@ -1239,6 +1250,7 @@ Dee_except_exitinfo_id_init(struct Dee_except_exitinfo_id *__restrict self,
 				ref._mr_always0_1 = 0;
 				ref._mr_always0_2 = 0;
 				ref._mr_always0_3 = 0;
+				ref._mr_always0_4 = 0;
 				ref.mr_flags      = MEMREF_F_NORMAL;
 				if (Dee_memstate_select_canonical_equiv(state, Dee_memobj_getloc(mobj), &ref.mr_loc))
 					ref.mr_flags |= MEMREF_F_NOKILL;

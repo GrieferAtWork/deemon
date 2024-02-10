@@ -46,12 +46,18 @@
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/align.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
 
 #include "utils.h"
 
 DECL_BEGIN
+
+#ifndef CHAR_BIT
+#include <hybrid/typecore.h>
+#define CHAR_BIT __CHAR_BIT__
+#endif /* !CHAR_BIT */
 
 /************************************************************************/
 /* DEEMON TO VSTACK MICRO-OP TRANSFORMATION                             */
@@ -933,7 +939,7 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vret(self);
 
 	TARGET(ASM_THROW)
-		DO(Dee_function_generator_vnotoneref(self, 1));
+		DO(Dee_function_generator_vnotoneref_at(self, 1));
 		return Dee_function_generator_vcallapi(self, &DeeError_Throw, VCALL_CC_EXCEPT, 1);
 
 	//TODO: TARGET(ASM_SETRET)
@@ -1184,7 +1190,7 @@ do_jcc:
 			*p_next_instr = DeeAsm_NextInstr(next_instr);
 			/* TODO: Optimizations when rhs is a constant. */
 			/* TODO: Optimizations when the type of lhs is known. */
-			DO(Dee_function_generator_vnotoneref(self, 1)); /* lhs, rhs */
+			DO(Dee_function_generator_vnotoneref_at(self, 1)); /* lhs, rhs */
 			DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_REPR, 2)); /* lhs, rhs */
 			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALL_CC_OBJECT, 2);
 
@@ -1298,6 +1304,8 @@ do_jcc:
 	TARGET(ASM_CLASS_EC)     /* push class extern <imm8>:<imm8>, const <imm8> */
 	TARGET(ASM16_CLASS_EC) { /* push class extern <imm8>:<imm8>, const <imm8> */
 		uint16_t desc_cid;
+		struct Dee_memobj_xinfo *xinfo;
+		DeeClassDescriptorObject *cdesc;
 		switch (opcode) {
 		case ASM_CLASS_C:
 			desc_cid = instr[1];
@@ -1337,26 +1345,39 @@ do_jcc:
 	TARGET(ASM_CLASS)
 			DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeClassDescriptor_Type)); /* base, desc */
 		}
+		cdesc = NULL;
+		if (Dee_function_generator_vtop_isdirect(self) &&
+		    Dee_memobj_isconst(Dee_function_generator_vtopdobj(self)))
+			cdesc = (DeeClassDescriptorObject *)Dee_memobj_const_getobj(Dee_function_generator_vtopdobj(self));
 		DO(Dee_function_generator_vnotoneref(self, 2));
 		DO(Dee_function_generator_vpush_const(self, self->fg_assembler->fa_code->co_module));
-		/* TODO: Optimize succeeding ASM_DEFCMEMBER instructions by forgoing locking the
-		 *       class, and not needing to call `DeeClass_SetMember*'. Since at this point,
-		 *       we know that the class isn't being shared with anyone, we can track which
-		 *       slots have already been initialized, and do direct writes if they aren't
-		 *       yet. */
-		return Dee_function_generator_vcallapi(self, &DeeClass_New, VCALL_CC_OBJECT, 3);
+		DO(Dee_function_generator_vcallapi(self, &DeeClass_New, VCALL_CC_OBJECT, 3));
+		DO(Dee_function_generator_voneref_noalias(self));
+		ASSERT(Dee_memval_hasobj0(Dee_function_generator_vtop(self)));
+		if (cdesc) {
+			struct Dee_memobj_xinfo_cdesc *xic;
+			/* Remember the class descriptor */
+			xinfo = Dee_memobj_reqxinfo(Dee_memval_getobj0(Dee_function_generator_vtop(self)));
+			if unlikely(!xinfo)
+				goto err;
+			xic = (struct Dee_memobj_xinfo_cdesc *)Dee_Calloc(offsetof(struct Dee_memobj_xinfo_cdesc, moxc_init) +
+				                                              CEILDIV(cdesc->cd_cmemb_size, CHAR_BIT));
+			if unlikely(!xic)
+				goto err;
+			xic->moxc_desc = cdesc;
+			Dee_Free(xinfo->mox_cdesc);
+			xinfo->mox_cdesc = xic;
+		}
+		return 0;
 	}	break;
 
 	TARGET(ASM_DEFCMEMBER) {
 		uint16_t addr;
 		addr = instr[1];
 		__IF0 { TARGET(ASM16_DEFCMEMBER) addr = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vpush_imm16(self, addr)); /* type, value, addr */
-		DO(Dee_function_generator_vswap(self));             /* type, addr, value */
-		DO(Dee_function_generator_vnotoneref(self, 1));     /* type, addr, value */
-		return (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE)
-		       ? Dee_function_generator_vcallapi(self, &DeeClass_SetMemberSafe, VCALL_CC_INT, 3)
-		       : Dee_function_generator_vcallapi(self, &DeeClass_SetMember, VCALL_CC_VOID, 3);
+		DO(Dee_function_generator_vdup_n(self, 2)); /* type, value, type */
+		DO(Dee_function_generator_vswap(self));     /* type, type, value */
+		return Dee_function_generator_vpop_cmember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL); /* type */
 	}	break;
 
 	TARGET(ASM16_GETCMEMBER) {
@@ -1641,7 +1662,7 @@ do_jcc:
 		return Dee_function_generator_voneref_noalias(self);       /* result */
 
 	TARGET(ASM_RANGE_DEF)                                                                     /* end */
-		DO(Dee_function_generator_vnotoneref(self, 1));                                       /* end */
+		DO(Dee_function_generator_vnotoneref_at(self, 1));                                       /* end */
 		DO(Dee_function_generator_vdup(self));                                                /* end, end */
 		DO(Dee_function_generator_voptypeof(self, false));                                    /* end, type(end) */
 		DO(Dee_function_generator_vcallapi(self, &DeeObject_NewDefault, VCALL_CC_OBJECT, 1)); /* end, type(end)() */

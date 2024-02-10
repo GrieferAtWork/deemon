@@ -696,6 +696,39 @@ Dee_memequivs_movevalue_reg2regind(struct Dee_memequivs *__restrict self,
 
 
 
+/* Extra information that may exist for a mem-object. */
+#ifdef DEE_SOURCE
+#define Dee_class_descriptor_object class_descriptor_object
+#endif /* DEE_SOURCE */
+struct Dee_class_descriptor_object;
+struct Dee_memobj_xinfo_cdesc {
+	struct Dee_class_descriptor_object *moxc_desc;  /* [1..1] Known value for `DeeType_Class(:mo_loc)' */
+	COMPILER_FLEXIBLE_ARRAY(byte_t,     moxc_init); /* [CEILDIV(moxc_desc->cd_cmemb_size, CHAR_BIT)] Bitset of cd_members items already initialized. */
+};
+
+#define _Dee_memobj_xinfo_cdesc_wasinit_slot(addr) ((addr) / CHAR_BIT)
+#define _Dee_memobj_xinfo_cdesc_wasinit_mask(addr) ((byte_t)1 << ((addr) % CHAR_BIT))
+#define Dee_memobj_xinfo_cdesc_wasinit(self, addr) \
+	((self)->moxc_init[_Dee_memobj_xinfo_cdesc_wasinit_slot(addr)] & _Dee_memobj_xinfo_cdesc_wasinit_mask(addr))
+#define Dee_memobj_xinfo_cdesc_setinit(self, addr) \
+	(void)((self)->moxc_init[_Dee_memobj_xinfo_cdesc_wasinit_slot(addr)] |= _Dee_memobj_xinfo_cdesc_wasinit_mask(addr))
+#define Dee_memobj_xinfo_cdesc_clearinit(self, addr) \
+	(void)((self)->moxc_init[_Dee_memobj_xinfo_cdesc_wasinit_slot(addr)] &= ~_Dee_memobj_xinfo_cdesc_wasinit_mask(addr))
+
+
+struct Dee_memobj_xinfo {
+	Dee_refcnt_t                   mox_refcnt; /* Reference counter (when >1, this struct is used by multiple `Dee_memval'-s) */
+	struct Dee_memobj_xinfo_cdesc *mox_cdesc;  /* [0..1] Class descriptor info. */
+};
+
+INTDEF NONNULL((1)) void DCALL
+Dee_memobj_xinfo_destroy(struct Dee_memobj_xinfo *__restrict self);
+#define Dee_memobj_xinfo_incref(self) (void)(++(self)->mox_refcnt)
+#define Dee_memobj_xinfo_decref(self) (void)(--(self)->mox_refcnt || (Dee_memobj_xinfo_destroy(self), 0))
+
+INTDEF ATTR_PURE NONNULL((1, 2)) bool DCALL
+Dee_memobj_xinfo_equals(struct Dee_memobj_xinfo const *a,
+                        struct Dee_memobj_xinfo const *b);
 
 /* Possible flags for `struct Dee_memobj::mo_flags' */
 #define MEMOBJ_F_NORMAL       0x00
@@ -705,18 +738,57 @@ Dee_memequivs_movevalue_reg2regind(struct Dee_memequivs *__restrict self,
 #define MEMOBJ_F_MAYBEUNBOUND 0x80 /* Location may be NULL, meaning it may not be bound (only allowed if memobj is used by MEMVAL_VMORPH_DIRECT of a local variable memval)
                                     * NOTE: This flag is combined with `MEMADR_TYPE_CONST,NULL' to represent uninitialized locals. */
 
+/* Offset to go from "struct Dee_memobjs::mos_objv" to "struct Dee_memobj_xinfo" */
+#define DEE_MEMOBJ_MO_XINFO_OFFSET              \
+	(offsetof(struct Dee_memobjs, mos_objv) -   \
+	 offsetof(struct Dee_memobjs, mos_refcnt) + \
+	 offsetof(struct Dee_memobj_xinfo, mox_refcnt))
+
 struct Dee_memobj {
 	/* High-level object value (encapsulates Dee_memloc and adds extra deemon-object related meta-data) */
-	struct Dee_memloc mo_loc;    /* Object location */
-	DeeTypeObject    *mo_typeof; /* [0..1] If non-null, the guarantied correct object type of this location (assumed value
-	                              * for the "ob_type" of this memory location, and used for inlining operator calls).
-	                              * DON'T SET THIS TO SOMETHING STUPID LIKE "DeeObject_Type" -- NO BASE CLASSES ALLOWED!
-	                              * NOTE: Only used by `Dee_function_generator_v*' function! */
-	uint8_t           mo_flags;  /* Object flags (set of `MEMOBJ_F_*') */
+#ifdef __INTELLISENSE__
+	void                         *mo_xinfo;  /* [0..1] Extra information about the object (subtract "DEE_MEMOBJ_MO_XINFO_OFFSET" to get `struct Dee_memobj_xinfo'). */
+#else /* __INTELLISENSE__ */
+	DREF void                    *mo_xinfo;  /* [0..1] Extra information about the object (subtract "DEE_MEMOBJ_MO_XINFO_OFFSET" to get `struct Dee_memobj_xinfo'). */
+#endif /* !__INTELLISENSE__ */
+	struct Dee_memloc             mo_loc;    /* Object location */
+	DeeTypeObject                *mo_typeof; /* [0..1] If non-null, the guarantied correct object type of this location (assumed value
+	                                          * for the "ob_type" of this memory location, and used for inlining operator calls).
+	                                          * DON'T SET THIS TO SOMETHING STUPID LIKE "DeeObject_Type" -- NO BASE CLASSES ALLOWED!
+	                                          * NOTE: Only used by `Dee_function_generator_v*' function! */
+	uint8_t                       mo_flags;  /* Object flags (set of `MEMOBJ_F_*') */
 };
 
+#ifdef NDEBUG
+#define _Dee_memobj_fini_DBG_memset(self) (void)0
+#else /* NDEBUG */
+#define _Dee_memobj_fini_DBG_memset(self) (void)memset(self, 0xcc, sizeof(struct Dee_memobj))
+#endif /* !NDEBUG */
+
+/* Check for- and retrieve extended object info. */
+#define Dee_memobj_hasxinfo(self) ((self)->mo_xinfo /*!= NULL*/)
+#define Dee_memobj_getxinfo(self) ((struct Dee_memobj_xinfo *)((byte_t *)(self)->mo_xinfo - DEE_MEMOBJ_MO_XINFO_OFFSET))
+
+/* Ensure that `self->mo_xinfo' has been allocated, then return it.
+ * @return: NULL: Extended object info had yet to be allocated, and allocation failed. */
+INTDEF WUNUSED NONNULL((1)) struct Dee_memobj_xinfo *DCALL
+Dee_memobj_reqxinfo(struct Dee_memobj *__restrict self);
+
+#define _Dee_memobj_incref_xinfo(self)  Dee_memobj_xinfo_incref(Dee_memobj_getxinfo(self))
+#define _Dee_memobj_decref_xinfo(self)  Dee_memobj_xinfo_decref(Dee_memobj_getxinfo(self))
+#define _Dee_memobj_xincref_xinfo(self) (void)(Dee_memobj_hasxinfo(self) && (_Dee_memobj_incref_xinfo(self), 0))
+#define _Dee_memobj_xdecref_xinfo(self) (void)(Dee_memobj_hasxinfo(self) && (_Dee_memobj_decref_xinfo(self), 0))
+
+#define Dee_memobj_initcopy(self, other) (*(self) = *(other), _Dee_memobj_xincref_xinfo(self))
+#define Dee_memobj_initmove(self, other) (*(self) = *(other), _Dee_memobj_fini_DBG_memset(other))
+#define Dee_memobj_fini(self)            (_Dee_memobj_xdecref_xinfo(self), _Dee_memobj_fini_DBG_memset(self))
+#undef Dee_memobj_initmove_IS_MEMCPY
+#define Dee_memobj_initmove_IS_MEMCPY /* If defined, you can use memcpy/memmove to emulate `Dee_memobj_initmove()' */
+
+/* Basic Dee_memobj initializers.
+ * NOTE: NONE OF THESE REQUIRE USE OF "Dee_memobj_fini"! */
 #define _Dee_memobj_init_impl(self, _initbase, mo_typeof_, mo_flags_) \
-	(void)(_initbase, (self)->mo_typeof = (mo_typeof_), (self)->mo_flags = (mo_flags_))
+	(void)(_initbase, (self)->mo_typeof = (mo_typeof_), (self)->mo_xinfo = NULL, (self)->mo_flags = (mo_flags_))
 #define Dee_memobj_init_memadr(self, adr, ml_off_, mo_typeof_, mo_flags_) \
 	_Dee_memobj_init_impl(self, Dee_memloc_init_memadr(&(self)->mo_loc, adr, ml_off_), mo_typeof_, mo_flags_)
 #define Dee_memobj_init_memloc(self, loc, mo_typeof_, mo_flags_) \
@@ -750,7 +822,7 @@ struct Dee_memobj {
 #define Dee_memobj_settypeof(self, t) (void)((self)->mo_typeof = (t))
 #define Dee_memobj_isref(self)        ((self)->mo_flags & MEMOBJ_F_ISREF)
 #define Dee_memobj_setref(self)       (void)((self)->mo_flags |= MEMOBJ_F_ISREF)
-#define Dee_memobj_clearref(self)     (void)((self)->mo_flags &= ~(MEMOBJ_F_ISREF | MEMOBJ_F_ONEREF))
+#define Dee_memobj_clearref(self)     (void)((self)->mo_flags &= ~MEMOBJ_F_ISREF)
 #define Dee_memobj_isoneref(self)     ((self)->mo_flags & MEMOBJ_F_ONEREF)
 #define Dee_memobj_setoneref(self)    (void)((self)->mo_flags |= (MEMOBJ_F_ISREF | MEMOBJ_F_ONEREF))
 #define Dee_memobj_clearoneref(self)  (void)((self)->mo_flags &= ~MEMOBJ_F_ONEREF)
@@ -894,24 +966,25 @@ struct Dee_memval {
 	union {
 #ifndef DEE_DEFINE_MEMVAL_FOR_IDE
 		struct {
-			struct Dee_memloc  _mv0_loc;    /* Alias for "mv_obj.mvo_0.mo_loc" */
-			DeeTypeObject     *_mv0_typeof; /* Alias for "mv_obj.mvo_0.mo_typeof" */
-			uint8_t            _mv0_flags;  /* Alias for "mv_obj.mvo_0.mo_flags" */
-			uint8_t            _mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-			uint8_t            _mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
-			uint8_t           __mv_pad[sizeof(void *) - 3]; /* Padding... */
+			DREF struct Dee_memobj_xinfo *_mv0_xinfo;  /* [0..1] Extra information about the object. */
+			struct Dee_memloc             _mv0_loc;    /* Alias for "mv_obj.mvo_0.mo_loc" */
+			DeeTypeObject                *_mv0_typeof; /* Alias for "mv_obj.mvo_0.mo_typeof" */
+			uint8_t                       _mv0_flags;  /* Alias for "mv_obj.mvo_0.mo_flags" */
+			uint8_t                       _mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
+			uint8_t                       _mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
+			uint8_t                      __mv_pad[sizeof(void *) - 3]; /* Padding... */
 		} _mvo_val;
 #endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
-		struct Dee_memobj       mvo_0;     /* [valid_if(Dee_memval_hasobj0(this))] Base location */
+		struct Dee_memobj       mvo_0; /* [valid_if(Dee_memval_hasobj0(this))] Base location */
 #ifdef DEE_DEFINE_MEMVAL_FOR_IDE
-		struct Dee_memobj      *mvo_n;     /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
+		struct Dee_memobj      *mvo_n; /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
 #else /* DEE_DEFINE_MEMVAL_FOR_IDE */
-		DREF struct Dee_memobj *mvo_n;     /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
+		DREF struct Dee_memobj *mvo_n; /* [valid_if(Dee_memval_hasobjn(this))][1..1] Pointer to a `struct Dee_memobjs::mos_objv' */
 #endif /* !DEE_DEFINE_MEMVAL_FOR_IDE */
 	} mv_obj; /* Object */
 #ifdef DEE_DEFINE_MEMVAL_FOR_IDE
-	uint8_t             mv_vmorph;  /* Location value morph type (one of `MEMVAL_VMORPH_*') */
-	uint8_t             mv_flags;   /* Extra mem value flags (set of `MEMVAL_F_*'). */
+	uint8_t             mv_vmorph;     /* Location value morph type (one of `MEMVAL_VMORPH_*') */
+	uint8_t             mv_flags;      /* Extra mem value flags (set of `MEMVAL_F_*'). */
 	uint8_t            _mv_pad[sizeof(void *) - 3]; /* Padding... */
 #else /* DEE_DEFINE_MEMVAL_FOR_IDE */
 #define mv_vmorph mv_obj._mvo_val._mv_vmorph
@@ -926,16 +999,34 @@ struct Dee_memval {
 #define _Dee_memval_fini_DBG_memset(self) (void)memset(self, 0xcc, sizeof(struct Dee_memval))
 #endif /* !NDEBUG */
 #define Dee_memval_fini_direct(self) (void)0 /* Always a no-op, but may be used for easier code readability */
-#define Dee_memval_fini(self)                                                        \
-	(!Dee_memval_hasobjn(self) || (Dee_memobjs_decref(Dee_memval_getobjn(self)), 0), \
-	 _Dee_memval_fini_DBG_memset(self))
+
+/* Assert that `struct Dee_memobj_xinfo' and `struct Dee_memobjs' get referenced
+ * by `struct Dee_memval' in such a way that their reference counters end up at
+ * the same location. */
+#define sizeof_field(T, s) sizeof(((T *)0)->s)
+STATIC_ASSERT(offsetof(struct Dee_memval, mv_obj.mvo_0.mo_xinfo) == offsetof(struct Dee_memval, mv_obj.mvo_n));
+STATIC_ASSERT(offsetof(struct Dee_memobj_xinfo, mox_refcnt) == offsetof(struct Dee_memobjs, mos_refcnt));
+STATIC_ASSERT(sizeof_field(struct Dee_memobj_xinfo, mox_refcnt) == sizeof_field(struct Dee_memobjs, mos_refcnt));
+#undef sizeof_field
+#define _Dee_memval_impl_refcnt_p(self) \
+	((Dee_refcnt_t *)((byte_t *)(self)->mv_obj.mvo_0.mo_xinfo - DEE_MEMOBJ_MO_XINFO_OFFSET))
+#define _Dee_memval_impl_incref(self) \
+	(void)((self)->mv_obj.mvo_0.mo_xinfo && (++*_Dee_memval_impl_refcnt_p(self), 0))
+INTDEF NONNULL((1)) void DCALL
+Dee_memval_do_destroy_objn_or_xinfo(struct Dee_memval *__restrict self);
+#define _Dee_memval_impl_decref(self)                       \
+	(void)((self)->mv_obj.mvo_0.mo_xinfo &&                 \
+	       (--*_Dee_memval_impl_refcnt_p(self) ||           \
+	        (Dee_memval_do_destroy_objn_or_xinfo(self), 0), \
+	        0))
+#define Dee_memval_fini(self) \
+	(_Dee_memval_impl_decref(self), _Dee_memval_fini_DBG_memset(self))
 
 /* Create a copy of a Dee_memval. Never fails, but may incref a pointed-to
  * struct, meaning you have to call `Dee_memval_fini()', unless you know
  * that the `vmorph' of `other' doesn't require such a thing. */
 #define Dee_memval_initcopy(self, other) \
-	(void)(*(self) = *(other),           \
-	       !Dee_memval_hasobjn(self) || (Dee_memobjs_incref(Dee_memval_getobjn(self)), 0))
+	(void)(*(self) = *(other), _Dee_memval_impl_incref(self))
 
 /* Move the value from "src" into "dst".
  * Semantically the same as:
@@ -954,8 +1045,10 @@ struct Dee_memval {
 	_Dee_memval_init_impl(self, Dee_memobj_init_memadr(&(self)->mv_obj.mvo_0, adr, ml_off_, mv_valtyp_, mv_flags_))
 #define Dee_memval_init_memloc(self, loc, mv_valtyp_, mv_flags_) \
 	_Dee_memval_init_impl(self, Dee_memobj_init_memloc(&(self)->mv_obj.mvo_0, loc, mv_valtyp_, mv_flags_))
-#define Dee_memval_init_memobj(self, obj) \
+#define Dee_memval_init_memobj_inherit(self, obj) \
 	_Dee_memval_init_impl(self, (self)->mv_obj.mvo_0 = *(obj))
+#define Dee_memval_init_memobj(self, obj) \
+	(Dee_memval_init_memobj_inherit(self, obj), _Dee_memobj_xincref_xinfo(&(self)->mv_obj.mvo_0))
 #define Dee_memval_init_hreg(self, ma_regno_, ml_off_, mv_valtyp_, mv_flags_) \
 	_Dee_memval_init_impl(self, Dee_memobj_init_hreg(&(self)->mv_obj.mvo_0, ma_regno_, ml_off_, mv_valtyp_, mv_flags_))
 #define Dee_memval_init_hregind(self, ma_regno_, v_indoff_, ml_off_, mv_valtyp_, mv_flags_) \
@@ -980,6 +1073,8 @@ struct Dee_memval {
 #define Dee_memval_getobj0(self)              (&(self)->mv_obj.mvo_0)
 #define Dee_memval_obj0_getobj(self)          Dee_memval_getobj0(self)
 #define Dee_memval_obj0_getloc(self)          Dee_memobj_getloc(Dee_memval_obj0_getobj(self))
+#define Dee_memval_obj0_hasxinfo(self)        Dee_memobj_hasxinfo(Dee_memval_getobj0(self))
+#define Dee_memval_obj0_getxinfo(self)        Dee_memobj_getxinfo(Dee_memval_getobj0(self))
 #define Dee_memval_obj0_gettyp(self)          Dee_memobj_gettyp(Dee_memval_obj0_getobj(self))
 #define Dee_memval_obj0_isconst(self)         Dee_memobj_isconst(Dee_memval_obj0_getobj(self))
 #define Dee_memval_obj0_isundefined(self)     Dee_memobj_isundefined(Dee_memval_obj0_getobj(self))
@@ -1013,6 +1108,8 @@ struct Dee_memval {
 #define Dee_memval_direct_initcopy(self, other)          (void)(*(self) = *(other))
 #define Dee_memval_direct_getobj(self)                   Dee_memval_obj0_getobj(self)
 #define Dee_memval_direct_getloc(self)                   Dee_memval_obj0_getloc(self)
+#define Dee_memval_direct_hasxinfo(self)                 Dee_memval_obj0_hasxinfo(self)
+#define Dee_memval_direct_getxinfo(self)                 Dee_memval_obj0_getxinfo(self)
 #define Dee_memval_direct_typeof(self)                   Dee_memobj_typeof(Dee_memval_direct_getobj(self))
 #define Dee_memval_direct_settypeof(self, t)             Dee_memobj_settypeof(Dee_memval_direct_getobj(self), t)
 #define Dee_memval_direct_isconst(self)                  Dee_memobj_isconst(Dee_memval_direct_getobj(self))
@@ -1845,11 +1942,12 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self);
  *       a `struct Dee_memval' in a pinch, and act as if it was
  *       a DIRECT object (only the mo_typeof field is broken) */
 struct Dee_memref {
+	uintptr_t        _mr_always0_1; /* Always 0 */
 	struct Dee_memloc mr_loc;       /* Underlying memory location */
 	uintptr_t         mr_refc;      /* [>= 1] # of references held to `mr_loc' */
-	uint8_t          _mr_always0_1; /* Always 0 */
 	uint8_t          _mr_always0_2; /* Always 0 */
 	uint8_t          _mr_always0_3; /* Always 0 */
+	uint8_t          _mr_always0_4; /* Always 0 */
 	uint8_t           mr_flags;     /* Special flags (set of `MEMREF_F_*') */
 #if __SIZEOF_POINTER__ > 4
 	uint8_t          _mr_pad[sizeof(void *) - 4]; /* Padding (uninitialized) */
@@ -2497,6 +2595,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_except(struct
  * @param: flags: Set of `DEE_FUNCTION_GENERATOR_CIMEMBER_F_*' */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* type -> value */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags); /* type -> bound */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_cmember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);   /* type, value -> N/A */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);  /* this, type -> value */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vbound_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags); /* this, type -> bound */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict self, uint16_t addr, unsigned int flags);   /* this, type -> N/A */

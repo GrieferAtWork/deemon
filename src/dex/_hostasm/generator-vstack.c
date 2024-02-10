@@ -1978,6 +1978,87 @@ err:
 	return -1;
 }
 
+/* type, value -> N/A */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vpop_cmember(struct Dee_function_generator *__restrict self,
+                                    uint16_t addr, unsigned int flags) {
+	struct Dee_memobj *type_mobj;
+	if unlikely(Dee_function_generator_vdirect(self, 2))
+		goto err; /* type, value */
+	if unlikely(Dee_function_generator_vnotoneref_at(self, 1))
+		goto err; /* type, value */
+	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE)
+		flags |= DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE; /* Force safe semantics. */
+
+	/* Check if we have known meta-data about the "type" operand. */
+	type_mobj = Dee_memval_getobj0(Dee_function_generator_vtop(self) - 1);
+	if (Dee_memobj_hasxinfo(type_mobj)) {
+		struct Dee_memobj_xinfo *type_xinfo = Dee_memobj_getxinfo(type_mobj);
+		struct Dee_memobj_xinfo_cdesc *type_cdesc = type_xinfo->mox_cdesc;
+		if (type_cdesc && addr < type_cdesc->moxc_desc->cd_cmemb_size) {
+			/* If we can predict certain things about the state of the class
+			 * descriptor, we can generate some highly optimized inline code:
+			 * - Omit locking if we know there's only a single reference
+			 * - Omit xdecref'ing previously assigned values for never-before assigned slots
+			 * - Let the class inherit a reference to "value" */
+			if (type_mobj->mo_flags & MEMOBJ_F_ONEREF) {
+				if (!Dee_memobj_xinfo_cdesc_wasinit(type_cdesc, addr)) {
+					Dee_memobj_xinfo_cdesc_setinit(type_cdesc, addr);
+					/* The cmember slot is known to be NULL, so we can just directly write to it:
+					 * >> struct class_desc *cd = <type>->tp_class;
+					 * >> cd->cd_members[<addr>] = <value>; // Inherit */
+					if unlikely(Dee_function_generator_vref2(self, 2))
+						goto err; /* type, value */
+					if unlikely(Dee_function_generator_vdup_n(self, 2))
+						goto err; /* type, value, type */
+					if unlikely(Dee_function_generator_vind(self, offsetof(DeeTypeObject, tp_class)))
+						goto err; /* type, value, type->tp_class */
+					if unlikely(Dee_function_generator_vswap(self))
+						goto err; /* type, type->tp_class, value */
+					if unlikely(Dee_function_generator_vpopind(self,
+					                                           offsetof(struct Dee_class_desc, cd_members[0]) +
+					                                           (addr * sizeof(DREF DeeObject *))))
+						goto err; /* type, type->tp_class */
+					if unlikely(Dee_function_generator_vpop(self))
+						goto err; /* type */
+					return Dee_function_generator_vpop(self); /* N/A */
+				}
+			}
+			if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+				/* Object is being shared -> cannot trust what we (think we) know
+				 * about cmember slot initialization. However, can still generate
+				 * inline code to do:
+				 * >> struct class_desc *cd = <type>->tp_class;
+				 * >> #if !(type_mobj->mo_flags & MEMOBJ_F_ONEREF)
+				 * >> Dee_atomic_rwlock_write(cd);
+				 * >> #endif
+				 * >> DREF DeeObject *old_value = cd->cd_members[<addr>];
+				 * >> cd->cd_members[<addr>] = <value>; // Inherit
+				 * >> #if !(type_mobj->mo_flags & MEMOBJ_F_ONEREF)
+				 * >> Dee_atomic_rwlock_endwrite(cd);
+				 * >> #endif
+				 * >> Dee_XDecref(old_value); */
+				/* TODO */
+			}
+
+			/* Can force unsafe semantics since we know that none of the assertions can fail. */
+			flags &= ~DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE;
+		}
+	}
+
+	/* Fallback: do the assignment at runtime. */
+	if unlikely(Dee_function_generator_vpush_imm16(self, addr))
+		goto err; /* type, value, addr */
+	if unlikely(Dee_function_generator_vswap(self))
+		goto err; /* type, addr, value */
+	return (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE)
+	       ? Dee_function_generator_vcallapi(self, &DeeClass_SetMemberSafe, VCALL_CC_INT, 3)
+	       : Dee_function_generator_vcallapi(self, &DeeClass_SetMember, VCALL_CC_VOID, 3);
+err:
+	return -1;
+}
+
+
 /* this -> value */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_generator *__restrict self,
@@ -2179,7 +2260,7 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 				goto err; /* type, this, addr */
 			return Dee_function_generator_vcallapi(self, &DeeInstance_DelMember, VCALL_CC_INT, 3);
 		}
-		if unlikely(Dee_function_generator_vnotoneref(self, 1))
+		if unlikely(Dee_function_generator_vnotoneref_at(self, 1))
 			goto err; /* type, this, addr, value */
 		return Dee_function_generator_vcallapi(self, &DeeInstance_SetMember, VCALL_CC_INT, 4);
 	} else {
@@ -2282,7 +2363,7 @@ Dee_function_generator_vpop_imember(struct Dee_function_generator *__restrict se
 		                                            : (void const *)&DeeInstance_DelMember,
 		                                       VCALL_CC_INT, 3);
 	}
-	if unlikely(Dee_function_generator_vnotoneref(self, 1))
+	if unlikely(Dee_function_generator_vnotoneref_at(self, 1))
 		goto err; /* type, this, addr, value */
 	return Dee_function_generator_vcallapi(self,
 	                                       safe ? (void const *)&DeeInstance_SetMemberSafe
@@ -2804,6 +2885,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 		goto err;
 	ASSERT(desc_state->ms_stackc >= 1);
 	--desc_state->ms_stackc; /* Get rid of `UNCHECKED(result)' */
+	ASSERT(Dee_memval_isdirect(&desc_state->ms_stackv[desc_state->ms_stackc]));
 	Dee_memstate_decrinuse_for_memloc(desc_state, Dee_memval_direct_getloc(&desc_state->ms_stackv[desc_state->ms_stackc]));
 	Dee_memobj_init_local_unbound(&decref_on_iter_done);
 	if (!always_pop_iterator) {
@@ -2848,7 +2930,9 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 		popiter_mval = &desc_state->ms_localv[self->fg_assembler->fa_localc + MEMSTATE_XLOCAL_POPITER];
 		ASSERT(Dee_memval_isdirect(popiter_mval));
 		ASSERT(Dee_memval_direct_local_neverbound(popiter_mval));
-		Dee_memval_init_memobj(popiter_mval, &decref_on_iter_done);
+		Dee_memval_init_memobj_inherit(popiter_mval, &decref_on_iter_done);
+	} else {
+		Dee_memobj_fini(&decref_on_iter_done);
 	}
 
 	return temp;
@@ -2895,7 +2979,7 @@ Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self,
 	struct Dee_memloc src, *dst;
 	if unlikely(Dee_function_generator_vdirect1(self)) /* !!! Only the value getting assigned is made direct! */
 		goto err;
-	if unlikely(Dee_function_generator_vnotoneref(self, 1))
+	if unlikely(Dee_function_generator_vnotoneref_at(self, 1))
 		goto err;
 	if unlikely(Dee_function_generator_state_unshare(self))
 		goto err;
