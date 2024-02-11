@@ -850,17 +850,20 @@ err:
  * Note that this doesn't change the evaluation order, since code to evaluate
  * arguments has already been generated at this point!
  *
- * @param: func: When non-NULL, the function that is being invoked (may be used in place of "doc")
+ * @param: func:      When non-NULL, the function that is being invoked (may be used in place of "doc")
+ * @param: func_type: The effective type of "func" (may differ from Dee_TYPE() when super objects are involved)
  * @return: 0 : Keyword arguments were successfully inlined
  * @return: 1 : Keyword arguments could not be inlined
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vinline_kwds(struct Dee_function_generator *__restrict self,
-             Dee_vstackaddr_t *p_argc, struct docinfo *doc, DeeObject *func) {
+             Dee_vstackaddr_t *p_argc, struct docinfo *doc,
+             DeeObject *func, DeeTypeObject *func_type) {
 	(void)self;
 	(void)p_argc;
 	(void)doc;
 	(void)func;
+	(void)func_type;
 	/* TODO */
 	return 1;
 }
@@ -872,8 +875,9 @@ vinline_kwds(struct Dee_function_generator *__restrict self,
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vinline_kwds_and_replace_with_null(struct Dee_function_generator *__restrict self,
-                                   Dee_vstackaddr_t *p_argc, struct docinfo *doc, DeeObject *func) {
-	int result = vinline_kwds(self, p_argc, doc, func);
+                                   Dee_vstackaddr_t *p_argc, struct docinfo *doc,
+                                   DeeObject *func, DeeTypeObject *func_type) {
+	int result = vinline_kwds(self, p_argc, doc, func, func_type);
 	if (result == 0) {
 		result = Dee_function_generator_vpush_NULL(self);
 	} else if (result > 0) {
@@ -965,7 +969,7 @@ vcall_kwobjmethod(struct Dee_function_generator *__restrict self,
                   struct docinfo *doc, char const *funcname,
                   uintptr_t func_flags) {
 	DeeTypeObject *type;
-	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL)); /* this, [args...], kw */
+	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* this, [args...], kw */
 	type = doc->di_typ;
 	if (type) {
 		if (Dee_function_generator_vallconst(self, argc + 2)) {
@@ -1377,7 +1381,7 @@ vcall_kwcmethod(struct Dee_function_generator *__restrict self,
 		}
 	}
 
-	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL)); /* [args...], kw */
+	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* [args...], kw */
 
 	/* Optimizations for special C methods from the builtin deemon module. */
 	if (func == DeeBuiltin_Compare.cm_func) {
@@ -1677,9 +1681,10 @@ err:
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
-                    DeeObject *func_obj, Dee_vstackaddr_t true_argc) {
+                    DeeObject *func_obj, DeeTypeObject *func_type,
+                    Dee_vstackaddr_t true_argc) {
 	struct docinfo doc;
-	DeeTypeObject *func_type = Dee_TYPE(func_obj);
+	ASSERT_OBJECT_TYPE_A(func_obj, func_type);
 	bzero(&doc, sizeof(doc));
 	if (func_type == &DeeObjMethod_Type) {
 		DeeObjMethodObject *func = (DeeObjMethodObject *)func_obj;
@@ -1699,7 +1704,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 			doc.di_doc = DeeKwObjMethod_GetDoc((DeeObject *)func);
 			if (doc.di_doc != NULL)
 				doc.di_typ = DeeKwObjMethod_GetType((DeeObject *)func);
-			DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL)); /* func, [args...], kw */
+			DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL)); /* func, [args...], kw */
 		}                                                            /* func, [args...], kw */
 		DO(Dee_function_generator_vpop_at(self, true_argc + 2));     /* [args...], kw */
 		DO(Dee_function_generator_vpush_const(self, func->om_this)); /* [args...], kw, this */
@@ -1727,13 +1732,13 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 			if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
 				doc.di_doc = DeeKwClsMethod_GetDoc((DeeObject *)func);
 				doc.di_typ = func->cm_type;
-				DO(vinline_kwds_and_replace_with_null(self, &argc, &doc, NULL)); /* func, this, [args...], kw */
-			}                                                                    /* func, this, [args...], kw */
-			DO(Dee_function_generator_vpop_at(self, argc + 3));                  /* this, [args...], kw */
-			DO(Dee_function_generator_vlrot(self, argc + 2));                    /* [args...], kw, this */
-			DO(Dee_function_generator_vassert_type_c(self, func->ob_type));      /* [args...], kw, this */
-			DO(Dee_function_generator_vrrot(self, argc + 2));                    /* this, [args...], kw */
-			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, NULL, 0);  /* result */
+				DO(vinline_kwds_and_replace_with_null(self, &argc, &doc, NULL, NULL)); /* func, this, [args...], kw */
+			}                                                                          /* func, this, [args...], kw */
+			DO(Dee_function_generator_vpop_at(self, argc + 3));                        /* this, [args...], kw */
+			DO(Dee_function_generator_vlrot(self, argc + 2));                          /* [args...], kw, this */
+			DO(Dee_function_generator_vassert_type_c(self, func->ob_type));            /* [args...], kw, this */
+			DO(Dee_function_generator_vrrot(self, argc + 2));                          /* this, [args...], kw */
+			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, NULL, 0);        /* result */
 		}
 	} else if (func_type == &DeeClsProperty_Type) {
 		DeeClsPropertyObject *func = (DeeClsPropertyObject *)func_obj;
@@ -1781,7 +1786,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 			doc.di_doc = di.dmdi_doc;
 			doc.di_mod = di.dmdi_mod;
 			doc.di_typ = di.dmdi_typ;
-			result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL); /* [args...], kw */
+			result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
 			if likely(result == 0)
 				result = vcall_kwcmethod(self, func->cm_func, true_argc, &doc);
 			Dee_cmethod_docinfo_fini(&di);
@@ -1796,7 +1801,7 @@ vopcallkw_constfunc(struct Dee_function_generator *__restrict self,
 			doc.di_doc = get_operator_doc(self, type, OPERATOR_CONSTRUCTOR);
 			if (ITER_ISOK(doc.di_doc)) {
 				doc.di_typ = type;
-				DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL)); /* func, [args...], kw */
+				DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL)); /* func, [args...], kw */
 			} else {
 				if unlikely(doc.di_doc == (char const *)ITER_DONE)
 					goto err;
@@ -2072,13 +2077,19 @@ err:
 	return -1;
 }
 
+/* tp_func, func, [args...], kw -> result */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_voptcallkw(struct Dee_function_generator *__restrict self,
+                Dee_vstackaddr_t true_argc, bool prefer_thiscall);
+
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
  * @return: 1 : No dedicated optimization available for `func_type'
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vopcallkw_consttype(struct Dee_function_generator *__restrict self,
-                    DeeTypeObject *func_type, Dee_vstackaddr_t true_argc) {
+                    DeeTypeObject *func_type, Dee_vstackaddr_t true_argc,
+                    bool prefer_thiscall) {
 	if (func_type == &DeeObjMethod_Type) {
 		DO(vpop_empty_kwds(self));                                                    /* orig_func, [args...] */
 		DO(Dee_function_generator_vnotoneref(self, true_argc));                       /* orig_func, [args...] */
@@ -2189,8 +2200,20 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 		return Dee_function_generator_vcalldynapi_ex(self, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
 	} else if (func_type == &DeeNone_Type) {
 		/* Special case: call where this-argument is "none" -> pop all arguments and re-return "none" */
-		DO(Dee_function_generator_vpopmany(self, true_argc + 2));  /* N/A */
-		return Dee_function_generator_vpush_none(self); /* Dee_None */
+		DO(Dee_function_generator_vpopmany(self, true_argc + 2)); /* N/A */
+		return Dee_function_generator_vpush_none(self);           /* Dee_None */
+	} else if (func_type == &DeeSuper_Type) {
+		DO(Dee_function_generator_vlrot(self, true_argc + 2));                   /* [args...], kw, func */
+		DO(Dee_function_generator_vdup(self));                                   /* [args...], kw, func, func */
+		DO(Dee_function_generator_vind(self, offsetof(DeeSuperObject, s_type))); /* [args...], kw, func, func->s_type */
+		DO(Dee_function_generator_vdep(self));                                   /* [args...], kw, func, func->s_type */
+		DO(Dee_function_generator_vrrot(self, true_argc + 3));                   /* func->s_type, [args...], kw, func */
+		DO(Dee_function_generator_vdup(self));                                   /* func->s_type, [args...], kw, func, func */
+		DO(Dee_function_generator_vind(self, offsetof(DeeSuperObject, s_self))); /* func->s_type, [args...], kw, func, func->s_self */
+		DO(Dee_function_generator_vdep(self));                                   /* func->s_type, [args...], kw, func, func->s_self */
+		DO(Dee_function_generator_vrrot(self, true_argc + 3));                   /* func->s_type, func->s_self, [args...], kw, func */
+		DO(Dee_function_generator_vpop(self));                                   /* func->s_type, func->s_self, [args...], kw */
+		return impl_voptcallkw(self, true_argc, prefer_thiscall);
 	} else if (DeeType_InheritOperator(func_type, OPERATOR_CALL)) {
 		ASSERT(func_type->tp_call || func_type->tp_call_kw);
 		if (func_type == &DeeFunction_Type) {
@@ -2198,10 +2221,6 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 			 *       or if we're supposed to produce a deeply optimized code object (in which case we
 			 *       have to optimize the referenced function recursively). Then, generate a direct
 			 *       call to function's _hostasm representation. */
-		} else if (func_type == &DeeSuper_Type) {
-			/* TODO: Inline as DeeObject_TCall / DeeObject_TThisCall */
-
-
 		}
 
 		if (func_type->tp_call_kw == NULL) {
@@ -2240,6 +2259,86 @@ err:
 	return -1;
 }
 
+/* tp_func, func, [args...], kw -> result */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_voptcallkw(struct Dee_function_generator *__restrict self,
+                Dee_vstackaddr_t true_argc, bool prefer_thiscall) {
+	struct Dee_memval *funcval;
+	struct Dee_memval *tpfuncval;
+	if unlikely(self->fg_state->ms_stackc < (true_argc + 3))
+		return err_illegal_stack_effect();
+	DO(Dee_function_generator_state_unshare(self));
+	tpfuncval = Dee_function_generator_vtop(self) - (true_argc + 2);
+	if (!Dee_memval_isdirect(tpfuncval)) {
+		DO(Dee_function_generator_vdirect_at(self, true_argc + 3));
+		tpfuncval = Dee_function_generator_vtop(self) - (true_argc + 2);
+	}
+	ASSERT(Dee_memval_isdirect(tpfuncval));
+	funcval = tpfuncval + 1;
+
+	if (Dee_memval_direct_isconst(tpfuncval)) {
+		DeeTypeObject *func_type = (DeeTypeObject *)Dee_memval_const_getobj(tpfuncval);
+		int temp;                                                /* tp_func, func, [args...], kw */
+		DO(Dee_function_generator_vpop_at(self, true_argc + 3)); /* func, [args...], kw */
+		funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
+		if (Dee_memval_isconst(funcval)) {
+			DeeObject *func_obj = Dee_memval_const_getobj(funcval);
+			temp = vopcallkw_constfunc(self, func_obj, func_type, true_argc);
+			if (temp <= 0)
+				return temp; /* Optimized call encoded, or error */
+			/* Try to inline keyword arguments. */
+			DO(vinline_kwds_and_replace_with_null(self, &true_argc, NULL, func_obj, func_type));
+		}
+		temp = vopcallkw_consttype(self, func_type, true_argc, prefer_thiscall);
+		if (temp <= 0)
+			return temp; /* Optimized call encoded, or error */
+		DO(Dee_function_generator_vpush_const(self, func_type)); /* func, [args...], kw, tp_func */
+		DO(Dee_function_generator_vrrot(self, true_argc + 3));   /* tp_func, func, [args...], kw */
+	}
+
+	/* Fallback: generate code to do a dynamic call at runtime. */
+	DO(Dee_function_generator_vnotoneref(self, true_argc + 1)); /* tp_func, func, [args...], kw */
+	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_CALL, true_argc + 2)); /* tp_func, func, [args...], kw */
+	if (prefer_thiscall) {
+		Dee_vstackaddr_t argc = true_argc - 1;
+		DO(Dee_function_generator_vrrot(self, argc + 1)); /* tp_func, func, this, kw, [args...] */
+		/* TODO: If generating the linear version of `[args...]' combined with `this' prefixed
+		 *       is not any more complex than it is without, then include it in the argument
+		 *       list and encode as `DeeObject_ThisCall()' instead. */
+		DO(Dee_function_generator_vlinear(self, argc, true)); /* tp_func, func, this, kw, [args...], argv */
+		DO(Dee_function_generator_vlrot(self, argc + 5));     /* func, this, kw, [args...], argv, tp_func */
+		DO(Dee_function_generator_vlrot(self, argc + 5));     /* this, kw, [args...], argv, tp_func, func */
+		DO(Dee_function_generator_vlrot(self, argc + 5));     /* kw, [args...], argv, tp_func, func, this */
+		DO(Dee_function_generator_vpush_immSIZ(self, argc));  /* kw, [args...], argv, tp_func, func, this, argc */
+		DO(Dee_function_generator_vlrot(self, 5));            /* kw, [args...], tp_func, func, this, argc, argv */
+		DO(Dee_function_generator_vlrot(self, argc + 6));     /* [args...], tp_func, func, this, argc, argv, kw */
+		if (Dee_memval_isnull(Dee_function_generator_vtop(self))) {
+			DO(Dee_function_generator_vpop(self));            /* [args...], tp_func, func, this, argc, argv */
+			return Dee_function_generator_vcallapi_ex(self, &DeeObject_TThisCall, VCALL_CC_OBJECT, 5, argc + 5); /* result */
+		}
+		return Dee_function_generator_vcallapi_ex(self, &DeeObject_TThisCallKw, VCALL_CC_OBJECT, 6, argc + 6); /* result */
+	}                                                      /* tp_func, func, [args...], kw */
+	DO(Dee_function_generator_vrrot(self, true_argc + 1)); /* tp_func, func, kw, [args...] */
+	/* TODO: If generating the linear version of `true_argc' is much more complicated
+	 *       than doing the same for `true_argc - 1', then encode as `DeeObject_ThisCall()'
+	 *       instead. */
+	DO(Dee_function_generator_vlinear(self, true_argc, true)); /* tp_func, func, kw, [args...], argv */
+	DO(Dee_function_generator_vlrot(self, true_argc + 2));     /* tp_func, func, [args...], argv, kw */
+	DO(Dee_function_generator_vlrot(self, true_argc + 4));     /* func, [args...], argv, kw, tp_func */
+	DO(Dee_function_generator_vlrot(self, true_argc + 4));     /* [args...], argv, kw, tp_func, func */
+	DO(Dee_function_generator_vrrot(self, 4));                 /* [args...], func, argv, kw, tp_func */
+	DO(Dee_function_generator_vrrot(self, 4));                 /* [args...], tp_func, func, argv, kw */
+	DO(Dee_function_generator_vpush_immSIZ(self, true_argc));  /* [args...], tp_func, func, argv, kw, true_argc */
+	DO(Dee_function_generator_vrrot(self, 3));                 /* [args...], tp_func, func, true_argc, argv, kw */
+	if (Dee_memval_isnull(Dee_function_generator_vtop(self))) {
+		DO(Dee_function_generator_vpop(self));                 /* [args...], tp_func, func, true_argc, argv */
+		return Dee_function_generator_vcallapi_ex(self, &DeeObject_TCall, VCALL_CC_OBJECT, 4, true_argc + 4); /* result */
+	}
+	return Dee_function_generator_vcallapi_ex(self, &DeeObject_TCallKw, VCALL_CC_OBJECT, 5, true_argc + 5); /* result */
+err:
+	return -1;
+}
+
 /* func, [args...], kw -> result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 impl_vopcallkw(struct Dee_function_generator *__restrict self,
@@ -2250,27 +2349,22 @@ impl_vopcallkw(struct Dee_function_generator *__restrict self,
 		return err_illegal_stack_effect();
 	DO(Dee_function_generator_state_unshare(self));
 	funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
-	if (!Dee_memval_isdirect(funcval)) {
-		DO(Dee_function_generator_vdirect_at(self, true_argc + 2));
-		funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
-		ASSERT(Dee_memval_isdirect(funcval));
-	}
 
-	/* Optimizations for when the is a constant. (e.g. `DeeObjMethodObject') */
-	if (Dee_memval_direct_isconst(funcval)) {
+	/* Optimizations for when the function is a constant. (e.g. `DeeObjMethodObject') */
+	if (Dee_memval_isconst(funcval)) {
 		DeeObject *func_obj = Dee_memval_const_getobj(funcval);
-		int temp = vopcallkw_constfunc(self, func_obj, true_argc);
+		int temp = vopcallkw_constfunc(self, func_obj, Dee_TYPE(func_obj), true_argc);
 		if (temp <= 0)
 			return temp; /* Optimized call encoded, or error */
 		/* Try to inline keyword arguments. */
-		DO(vinline_kwds_and_replace_with_null(self, &true_argc, NULL, func_obj));
+		DO(vinline_kwds_and_replace_with_null(self, &true_argc, NULL, func_obj, Dee_TYPE(func_obj)));
 	}
 
 	/* Optimizations when `type(func)' is known by skipping operator
 	 * resolution and directly invoking the tp_call[_kw]-operator. */
 	func_type = Dee_memval_typeof(funcval);
 	if (func_type != NULL) {
-		int temp = vopcallkw_consttype(self, func_type, true_argc);
+		int temp = vopcallkw_consttype(self, func_type, true_argc, prefer_thiscall);
 		if (temp <= 0)
 			return temp; /* Optimized call encoded, or error */
 	}

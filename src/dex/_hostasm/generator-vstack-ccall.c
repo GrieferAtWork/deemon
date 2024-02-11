@@ -716,11 +716,26 @@ cco_String_size(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 	return vsize_field_uint(self, offsetof(DeeStringObject, s_len));
 }
 
+/* this, other -> result */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cco_String_add(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
+	struct Dee_memval *v_this = Dee_function_generator_vtop(self) - 1;
+	(void)argc;
+	if (Dee_memval_isconst(v_this) && DeeString_IsEmpty(Dee_memval_const_getobj(v_this))) {
+		/* Special case: `"" + foo' same as `str foo' */
+		DO(Dee_function_generator_vpop_at(self, 2)); /* other */
+		return Dee_function_generator_vopstr(self);  /* result */
+	}
+	return 1;
+err:
+	return -1;
+}
+
 PRIVATE struct Dee_ccall_optimization tpconst cco_String[] = {
 	/* IMPORTANT: Keep sorted! */
 	CCO_OPTIMIZATION(OPERATOR_0008_BOOL, &cco_String_bool, 0),
+	CCO_OPTIMIZATION(OPERATOR_0010_ADD, &cco_String_add, 1),
 	CCO_OPTIMIZATION(OPERATOR_0030_SIZE, &cco_String_size, 0),
-	/* TODO: operator+ if lhs/rhs is an empty string */
 };
 
 

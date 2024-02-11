@@ -208,3 +208,7 @@ hexec(int, (4, 7), (a, b) -> {
 	return y;
 });
 
+hexec(4, (() -> 4, 7), (a, b) -> {
+	return (a as Function)();
+});
+
