@@ -194,19 +194,21 @@ struct Dee_memloc; /* Low level value location (address of optional value delta)
 struct Dee_memobj; /* High-level object value (encapsulates Dee_memloc and adds extra deemon-object related meta-data) */
 struct Dee_memval; /* High-level value (encapsulates 1..n Dee_memloc that may be morphed into a deemon value) */
 
-struct Dee_memadr {
-	/* Low level value address */
 #define MEMADR_TYPE_CONST     0 /* >> value = ma_val.v_const; */
-/*      MEMADR_TYPE_CONSTIND  1  * >> value = *(byte_t **)ma_val.v_const; */
+/*      MEMADR_TYPE_CONSTIND  1  * >> value = *(uintptr_t *)ma_val.v_const; */
 #define MEMADR_TYPE_UNDEFINED 2 /* >> value = ???;  // Not defined (value can be anything at runtime) */
 /*      MEMADR_TYPE_          3  * ... */
 #define MEMADR_TYPE_HSTACK    4 /* >> value = CFA(%sp, ma_val.v_cfa); */
-#define MEMADR_TYPE_HSTACKIND 5 /* >> value = *(byte_t **)CFA(%sp, ma_val.v_cfa); */
+#define MEMADR_TYPE_HSTACKIND 5 /* >> value = *(uintptr_t *)CFA(%sp, ma_val.v_cfa); */
 #define MEMADR_TYPE_HREG      6 /* >> value = %ma_reg; */
-#define MEMADR_TYPE_HREGIND   7 /* >> value = *(byte_t **)(%ma_reg + ma_val.v_indoff); */
+#define MEMADR_TYPE_HREGIND   7 /* >> value = *(uintptr_t *)(%ma_reg + ma_val.v_indoff); */
 #define MEMADR_TYPE_HASREG(typ) ((typ) >= MEMADR_TYPE_HREG)
 #define MEMADR_TYPE_CASEREG     case MEMADR_TYPE_HREG: case MEMADR_TYPE_HREGIND
-	uint8_t             ma_typ;     /* Location kind (one of `MEMADR_TYPE_*') */
+typedef uint8_t Dee_memadr_type_t; /* One of `MEMADR_TYPE_*' */
+
+struct Dee_memadr {
+	/* Low level value address */
+	Dee_memadr_type_t   ma_typ;     /* Location kind (one of `MEMADR_TYPE_*') */
 	Dee_host_register_t ma_reg;     /* [valid_if(MEMADR_TYPE_HREG, MEMADR_TYPE_HREGIND)] Register number (or 0 if not valid). */
 	uint8_t            _ma_zro[sizeof(void *) - 2]; /* Extra padding space (must be 0-initialized) */
 	union {
@@ -2636,9 +2638,13 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_imember(struct
 #define DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF    0x0001 /* Always push a reference when reading a member (only for `Dee_function_generator_vpush_[ic]member') */
 #define DEE_FUNCTION_GENERATOR_CIMEMBER_F_SAFE   0x0002 /* Force "safe" access if it needs to happen at runtime (verify object type & addr being in-bounds). */
 
-/* test_type, inherited_type -> (int)DeeType_InheritsFrom(test_type, inherited_type) */
+/* test_type, extended_type -> DeeType_Extends(test_type, extended_type) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vtype_inheritsfrom(struct Dee_function_generator *__restrict self);
+Dee_function_generator_vtype_extends(struct Dee_function_generator *__restrict self);
+
+/* test_type, implemented_type -> DeeType_Implements(test_type, implemented_type) */
+INTDEF WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vtype_implements(struct Dee_function_generator *__restrict self);
 
 /* Generate code equivalent to `DeeObject_AssertTypeExact(VTOP, type)', but don't pop `VTOP' from the v-stack. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL

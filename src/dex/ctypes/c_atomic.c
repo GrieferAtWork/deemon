@@ -89,8 +89,8 @@ get_atomic_operand(DeeObject *value, DeeSTypeObject *ob_ptr_orig,
 		if (DeeLValue_Check(value)) {
 			DeeSTypeObject *lv_base;
 			lv_base = DeeType_AsLValueType(Dee_TYPE(value))->lt_orig;
-			if (DeeType_InheritsFrom(DeeSType_AsType(lv_base),
-			                        DeeSType_AsType(ob_ptr_orig))) {
+			if (DeeType_Extends(DeeSType_AsType(lv_base),
+			                    DeeSType_AsType(ob_ptr_orig))) {
 				/* Lvalue -> structured-type-derived-from-<ob_ptr_orig> */
 				CTYPES_FAULTPROTECT({
 					union pointer result_ptr;

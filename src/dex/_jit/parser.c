@@ -1205,7 +1205,7 @@ JIT_IsCatchable(DeeObject *thrown_object,
 	}
 
 	/* Fallback: Do a regular implements check.
-	 * NOTE: `DeeType_InheritsFrom()' simply returns `false' when
+	 * NOTE: `DeeType_Implements()' simply returns `false' when
 	 *       its second argument isn't actually a type at runtime. */
 	return DeeType_Implements(thrown_object_type, (DeeTypeObject *)typemask);
 }

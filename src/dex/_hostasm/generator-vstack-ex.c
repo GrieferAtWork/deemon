@@ -3412,7 +3412,7 @@ vopcallseqmap_impl(struct Dee_function_generator *__restrict self,
 	if (Dee_memval_isconst(funcval)) {
 		DeeObject *func = Dee_memval_const_getobj(funcval);
 		if (!hasattr && allow_vpackseq && DeeType_Check(func) &&
-		    (!!asmap == !!DeeType_InheritsFrom((DeeTypeObject *)func, &DeeMapping_Type)) &&
+		    (!!asmap == !!DeeType_Extends((DeeTypeObject *)func, &DeeMapping_Type)) &&
 		    ((DeeTypeObject *)func == &DeeList_Type || (DeeTypeObject *)func == &DeeTuple_Type ||
 		     (DeeTypeObject *)func == &DeeDict_Type || (DeeTypeObject *)func == &DeeRoDict_Type ||
 		     (DeeTypeObject *)func == &DeeHashSet_Type || (DeeTypeObject *)func == &DeeRoSet_Type)) {
@@ -4564,7 +4564,7 @@ err:
  * >>     if (tp_this == &DeeSuper_Type)
  * >>         tp_this = DeeSuper_TYPE(this);
  * >>     result = do_implements ? DeeType_Implements(tp_this, type)
- * >>                            : DeeType_InheritsFrom(tp_this, type);
+ * >>                            : DeeType_Extends(tp_this, type);
  * >> }
  * >> PUSH(result);
  */
@@ -4592,9 +4592,9 @@ impl_vinstanceof(struct Dee_function_generator *__restrict self,
 			/* Special case: `this is none' */
 			DO(Dee_function_generator_vpop(self)); /* this */
 			return Dee_function_generator_veqconstaddr(self, Dee_None);
-		} else if (!DeeType_InheritsFrom(type_type, &DeeType_Type)) {
+		} else if (!DeeType_Extends(type_type, &DeeType_Type)) {
 			/* When the "type" argument isn't "none", and also isn't a type,
-			 * then the `DeeType_InheritsFrom()' would always return "false". */
+			 * then the `DeeType_Extends()' would always return "false". */
 			DO(Dee_function_generator_vpop(self)); /* this */
 			DO(Dee_function_generator_vpop(self)); /* N/A */
 			return Dee_function_generator_vpush_const(self, Dee_False);
@@ -4604,7 +4604,7 @@ impl_vinstanceof(struct Dee_function_generator *__restrict self,
 			if (logical_this_type != NULL) {
 				/* Special case: the result is a constant expression. */
 				bool result = do_implements ? DeeType_Implements(logical_this_type, type)
-				                            : DeeType_InheritsFrom(logical_this_type, type);
+				                            : DeeType_Extends(logical_this_type, type);
 				DO(Dee_function_generator_vpop(self)); /* this */
 				DO(Dee_function_generator_vpop(self)); /* N/A */
 				return Dee_function_generator_vpush_const(self, DeeBool_For(result));
@@ -5133,7 +5133,7 @@ err_no_result_d_elem_template:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpackseq(struct Dee_function_generator *__restrict self,
                                 DeeTypeObject *__restrict seq_type, Dee_vstackaddr_t elemc) {
-	bool asmap = DeeType_InheritsFrom(seq_type, &DeeMapping_Type);
+	unsigned int asmap = DeeType_Extends(seq_type, &DeeMapping_Type);
 	ASSERTF(!asmap || (elemc % 2) == 0,
 	        "Need an even number of elements for a mapping type");
 	DO(Dee_function_generator_vdirect(self, elemc));
@@ -5177,7 +5177,7 @@ err_cseq:
 					goto err;
 				}
 			}
-		} else if (DeeType_InheritsFrom(seq_type, &DeeSet_Type)) {
+		} else if (DeeType_Extends(seq_type, &DeeSet_Type)) {
 			cseq = (DREF DeeObject *)DeeRoSet_NewWithHint(elemc);
 			if unlikely(!cseq)
 				goto err;
@@ -6667,7 +6667,7 @@ vopsuper_impl(struct Dee_function_generator *__restrict self) {
 		if (Dee_memval_isconst(ob_type)) {
 			DeeTypeObject *ob_type_c;
 			ob_type_c = (DeeTypeObject *)Dee_memval_const_getobj(ob_type);
-			if (!DeeType_InheritsFrom(ob_type_c, type)) {
+			if (!DeeType_Extends(ob_type_c, type)) {
 				DO(Dee_function_generator_vpop_at(self, 2));          /* ob_self, type */
 				DO(Dee_function_generator_vassert_type_failed(self)); /* N/A */
 				return Dee_function_generator_vpush_undefined(self);  /* result */
@@ -6676,13 +6676,13 @@ vopsuper_impl(struct Dee_function_generator *__restrict self) {
 		}                                                                  /* ob_self, ob_type, type */
 		DO(Dee_function_generator_vswap(self));                            /* ob_self, type, ob_type */
 		DO(Dee_function_generator_vdup_n(self, 2));                        /* ob_self, type, ob_type, type */
-		DO(Dee_function_generator_vtype_inheritsfrom(self));               /* ob_self, type, inherited */
+		DO(Dee_function_generator_vtype_extends(self));               /* ob_self, type, inherited */
 		DO(Dee_function_generator_vjz_enter_unlikely(self, &branch));      /* ob_self, type */
 		EDO(err_branch, Dee_function_generator_vassert_type_failed(self)); /* N/A */
 		DO(Dee_function_generator_vjz_leave_noreturn(self, &branch));      /* ob_self, type */
 	} else {
 		/* TODO: Must generate runtime code for:
-		 * >> if (!DeeType_IsAbstract(type) && !DeeType_InheritsFrom(ob_type, type)) {
+		 * >> if (!DeeType_IsAbstract(type) && !DeeType_Extends(ob_type, type)) {
 		 * >>     DeeObject_TypeAssertFailed(ob_self, type);
 		 * >>     HANDLE_EXCEPT();
 		 * >> } */
@@ -6854,7 +6854,7 @@ Dee_function_generator_vopcast_nofallback(struct Dee_function_generator *__restr
 	 * NOTE: Other object types aren't constexpr, so can't be inlined here! */
 	if (Dee_memval_direct_isconst(objval)) {
 		DeeObject *obj = Dee_memval_const_getobj(objval);
-		if (DeeType_InheritsFrom(newtype, &DeeSeq_Type)) {
+		if (DeeType_Extends(newtype, &DeeSeq_Type)) {
 			int temp = is_constexpr_empty_sequence(self, obj);
 			if (temp) {
 				if unlikely(temp < 0)

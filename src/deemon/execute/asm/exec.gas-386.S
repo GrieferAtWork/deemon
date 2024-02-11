@@ -1152,6 +1152,7 @@ run_finally_after_return:
 	call   fSYM(DeeType_Implements,8)
 	ADJUST_CFA_OFFSET(-8)
 	testl  %eax, %eax
+//	testb  %al, %al
 	popl   %edx /* current_except */
 	ADJUST_CFA_OFFSET(-4)
 	popl   %ecx /* count */
@@ -3569,7 +3570,7 @@ target_instanceof:
 	/* Special case: The deemon specs allow `none' to be
 	 *               written as the second argument to `is' */
 	je     1f                            /* if (DeeNone_Check(FIRST)) goto 1f; */
-	pushl  %edx                          /* DeeType_InheritsFrom:1:inherited_type=FIRST */
+	pushl  %edx                          /* DeeType_Extends:1:inherited_type=FIRST */
 	ADJUST_CFA_OFFSET(4)
 	movl   ob_type(%ecx), %eax
 	cmpl   $(SYM(DeeSuper_Type)), %eax
@@ -3577,11 +3578,11 @@ target_instanceof:
 	/* Check against the effective class of the
 	 * super-wrapper, not the super-type itself. */
 	movl   s_type(%ecx), %eax
-3:	pushl  %eax                          /* DeeType_InheritsFrom:0:test_type */
+3:	pushl  %eax                          /* DeeType_Extends:0:test_type */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeType_InheritsFrom,8)
+	call   fSYM(DeeType_Extends,8)
 	ADJUST_CFA_OFFSET(-8)
-	movzbl %al, %eax
+//	movzbl %al, %eax
 2:	ASSERT_BELOW_EQUAL(%eax,$1)
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax
@@ -3614,7 +3615,7 @@ target_implements:
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeType_Implements,8)
 	ADJUST_CFA_OFFSET(-8)
-	movzbl %al, %eax
+//	movzbl %al, %eax
 2:	ASSERT_BELOW_EQUAL(%eax,$1)
 	leal   SYM(Dee_FalseTrue)(,%eax,8), %eax
 	incref %eax

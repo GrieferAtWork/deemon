@@ -125,11 +125,14 @@ public:
 	WUNUSED bool chasprivateoperator(uint16_t name) const DEE_CXX_NOTHROW {
 		return DeeType_HasPrivateOperator((DeeTypeObject *)this, name);
 	}
-	WUNUSED bool cderivedfrom(DeeTypeObject *base_type) const DEE_CXX_NOTHROW {
-		return DeeType_InheritsFrom((DeeTypeObject *)this, base_type);
+	WUNUSED bool cbaseof(DeeTypeObject *subclass_type) const DEE_CXX_NOTHROW {
+		return !!DeeType_Extends(subclass_type, (DeeTypeObject *)this);
 	}
-	WUNUSED bool cbaseof(DeeTypeObject *derived_type) const DEE_CXX_NOTHROW {
-		return DeeType_InheritsFrom(derived_type, (DeeTypeObject *)this);
+	WUNUSED bool cextends(DeeTypeObject *extended_type) const DEE_CXX_NOTHROW {
+		return !!DeeType_Extends((DeeTypeObject *)this, extended_type);
+	}
+	WUNUSED bool cimplements(DeeTypeObject *implemented_type) const DEE_CXX_NOTHROW {
+		return !!DeeType_Implements((DeeTypeObject *)this, implemented_type);
 	}
 
 public:

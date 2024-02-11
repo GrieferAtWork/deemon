@@ -82,7 +82,7 @@ PUBLIC ATTR_COLD NONNULL((3)) int
 	/* Check for error types derived from `errors.SystemError' */
 got_tp:
 	if (DeeType_Check(tp) &&
-	    DeeType_InheritsFrom(tp, &DeeError_SystemError)) {
+	    DeeType_Extends(tp, &DeeError_SystemError)) {
 		DREF DeeSystemErrorObject *error;
 		DREF DeeStringObject *message;
 		error = (DREF DeeSystemErrorObject *)DeeObject_MALLOC(DeeSystemErrorObject);

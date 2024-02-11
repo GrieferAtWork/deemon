@@ -124,31 +124,40 @@ DeeObject_Class(DeeObject *__restrict self) {
 }
 
 
-/* Return true if `test_type' is equal to, or derived from `inherited_type'
- * NOTE: When `inherited_type' is not a type, this function simply returns `false'
- * >> return inherited_type.baseof(test_type); */
-PUBLIC WUNUSED NONNULL((1)) bool DCALL
-DeeType_InheritsFrom(DeeTypeObject const *test_type,
-                     DeeTypeObject const *inherited_type) {
+/* Return true if `test_type' is equal to, or extends `extended_type'
+ * NOTE: When `extended_type' is not a type, this function simply returns `false'
+ * >> return test_type.derivedfrom(extended_type);
+ *
+ * HINT: Always returns either `0' or `1'!
+ * @return: 0 : "test_type" does not inherit from "extended_type"
+ * @return: 1 : "test_type" does inherit from "extended_type" */
+PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
+DeeType_Extends(DeeTypeObject const *test_type,
+                DeeTypeObject const *extended_type) {
 	do {
-		if (test_type == inherited_type)
-			return true;
+		if (test_type == extended_type)
+			return 1;
 	} while ((test_type = DeeType_Base(test_type)) != NULL);
-	return false;
+	return 0;
 }
 
-/* Same as `DeeType_InheritsFrom()', but also check `tp_mro' for matches.
- * This function should be used when `implemented_type' is an abstract type. */
-PUBLIC WUNUSED NONNULL((1)) bool DCALL
+/* Same as `DeeType_Extends()', but also check `tp_mro' for matches.
+ * This function should be used when `implemented_type' is an abstract type.
+ * >> return test_type.implements(implemented_type);
+ *
+ * HINT: Always returns either `0' or `1'!
+ * @return: 0 : "test_type" does not implement "implemented_type"
+ * @return: 1 : "test_type" does implement "implemented_type" */
+PUBLIC WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Implements(DeeTypeObject const *test_type,
                    DeeTypeObject const *implemented_type) {
 	DeeTypeMRO mro;
 	test_type = DeeTypeMRO_Init(&mro, test_type);
 	do {
 		if (test_type == implemented_type)
-			return true;
+			return 1;
 	} while ((test_type = DeeTypeMRO_Next(&mro, test_type)) != NULL);
-	return false;
+	return 0;
 }
 
 
@@ -2236,18 +2245,18 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
-	bool is_instance;
+	unsigned int is_instance;
 	DeeTypeObject *tp;
 	if (DeeArg_Unpack(argc, argv, "o:__is__", &tp))
 		goto err;
 	if (DeeNone_Check((DeeObject *)tp)) {
 		is_instance = DeeNone_Check(self);
 	} else if (DeeSuper_Check(self)) {
-		is_instance = DeeType_InheritsFrom(DeeSuper_TYPE(self), tp);
+		is_instance = DeeType_Extends(DeeSuper_TYPE(self), tp);
 	} else {
 		is_instance = DeeObject_Implements(self, tp);
 	}
-	return_bool_(is_instance);
+	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[is_instance]);
 err:
 	return NULL;
 }
@@ -2747,7 +2756,7 @@ type_baseof(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
-	return_bool(DeeType_InheritsFrom(other, self));
+	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[DeeType_Extends(other, self)]);
 err:
 	return NULL;
 }
@@ -2758,7 +2767,7 @@ type_derivedfrom(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:derivedfrom", &other))
 		goto err;
-	return_bool(DeeType_InheritsFrom(self, other));
+	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
 err:
 	return NULL;
 }
@@ -3612,7 +3621,7 @@ type_derivedfrom_not_same(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_Unpack(argc, argv, "o:derived_from", &other))
 		goto err;
-	return_bool(self != other && DeeType_InheritsFrom(self, other));
+	return_bool(self != other && DeeType_Extends(self, other));
 err:
 	return NULL;
 }

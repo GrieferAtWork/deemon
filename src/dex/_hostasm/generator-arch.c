@@ -301,7 +301,7 @@ gen86_addrname(void const *addr) {
 	CASE(DeeObject_Unpack, 12);
 	CASE(DeeObject_NewDefault, 4);
 	CASE(DeeObject_Class, 4);
-	CASE(DeeType_InheritsFrom, 8);
+	CASE(DeeType_Extends, 8);
 	CASE(DeeType_Implements, 8);
 	CASE(DeeError_Throw, 4);
 	CASE(DeeObject_ConcatInherited, 8);

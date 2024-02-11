@@ -2818,7 +2818,7 @@ struct Dee_type_object {
 #define DeeType_IsIntTruncated(x)        (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FTRUNCATE)
 #define DeeType_HasMoveAny(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FMOVEANY)
 #define DeeType_IsIterator(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_iter_next != NULL)
-#define DeeType_IsTypeType(x)            DeeType_InheritsFrom((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
+#define DeeType_IsTypeType(x)            DeeType_Extends((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x), &DeeType_Type)
 #define DeeType_IsCustom(x)              (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FHEAP) /* Custom types are those not pre-defined, but created dynamically. */
 #define DeeType_IsSuperConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINHERITCTOR)
 #define DeeType_IsNoArgConstructible(x)  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_ctor != NULL)
@@ -3114,21 +3114,28 @@ DeeObject_Class(DeeObject *__restrict self);
 
 /* Object inheritance checking. */
 #define DeeObject_Implements(self, super_type)       DeeType_Implements(Dee_TYPE(self), super_type)
-#define DeeObject_InstanceOf(self, super_type)       DeeType_InheritsFrom(Dee_TYPE(self), super_type)
+#define DeeObject_InstanceOf(self, super_type)       DeeType_Extends(Dee_TYPE(self), super_type)
 #define DeeObject_InstanceOfExact(self, object_type) (Dee_TYPE(self) == (object_type))
 
-/* Return true if `test_type' is equal to, or derived from `inherited_type'
- * NOTE: When `inherited_type' is not a type, this function simply returns `false'
- * >> return inherited_type is Type && inherited_type.baseof(test_type); */
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL
-DeeType_InheritsFrom(DeeTypeObject const *test_type,
-                     DeeTypeObject const *inherited_type);
-
-/* Same as `DeeType_InheritsFrom()', but also check `tp_mro' for matches.
- * This function should be used when `implemented_type' is an abstract type.
+/* Return true if `test_type' is equal to, or extends `extended_type'
+ * NOTE: When `extended_type' is not a type, this function simply returns `false'
+ * >> return test_type.derivedfrom(extended_type);
  *
- * NOTE: The user-code `is' */
-DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+ * HINT: Always returns either `0' or `1'!
+ * @return: 0 : "test_type" does not inherit from "extended_type"
+ * @return: 1 : "test_type" does inherit from "extended_type" */
+DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
+DeeType_Extends(DeeTypeObject const *test_type,
+                DeeTypeObject const *extended_type);
+
+/* Same as `DeeType_Extends()', but also check `tp_mro' for matches.
+ * This function should be used when `implemented_type' is an abstract type.
+ * >> return test_type.implements(implemented_type);
+ *
+ * HINT: Always returns either `0' or `1'!
+ * @return: 0 : "test_type" does not implement "implemented_type"
+ * @return: 1 : "test_type" does implement "implemented_type" */
+DFUNDEF WUNUSED NONNULL((1)) unsigned int DCALL
 DeeType_Implements(DeeTypeObject const *test_type,
                    DeeTypeObject const *implemented_type);
 

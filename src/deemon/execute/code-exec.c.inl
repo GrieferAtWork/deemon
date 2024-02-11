@@ -1924,37 +1924,37 @@ do_push_module:
 		}
 
 		TARGET(ASM_INSTANCEOF, -2, +1) {
-			bool is_instance;
+			unsigned int is_instance;
 			/* Special case: The deemon specs allow `none' to be
 			 *               written as the second argument to `is' */
 			if (DeeNone_Check(FIRST)) {
 				is_instance = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
-				is_instance = DeeType_InheritsFrom(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
+				is_instance = DeeType_Extends(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
 			} else {
 				is_instance = DeeObject_InstanceOf(SECOND, (DeeTypeObject *)FIRST);
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = DeeBool_For(is_instance);
+			TOP = (DeeObject *)&Dee_FalseTrue[is_instance];
 			Dee_Incref(TOP);
 			DISPATCH();
 		}
 
 		TARGET(ASM_IMPLEMENTS, -2, +1) {
-			bool is_instance;
+			unsigned int is_implemented;
 			/* Special case: The deemon specs allow `none' to be
 			 *               written as the second argument to `is' */
 			if (DeeNone_Check(FIRST)) {
-				is_instance = DeeNone_Check(SECOND);
+				is_implemented = DeeNone_Check(SECOND);
 			} else if (DeeSuper_Check(SECOND)) {
-				is_instance = DeeType_Implements(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
+				is_implemented = DeeType_Implements(DeeSuper_TYPE(SECOND), (DeeTypeObject *)FIRST);
 			} else {
-				is_instance = DeeObject_Implements(SECOND, (DeeTypeObject *)FIRST);
+				is_implemented = DeeObject_Implements(SECOND, (DeeTypeObject *)FIRST);
 			}
 			POPREF();
 			Dee_Decref(TOP);
-			TOP = DeeBool_For(is_instance);
+			TOP = (DeeObject *)&Dee_FalseTrue[is_implemented];
 			Dee_Incref(TOP);
 			DISPATCH();
 		}

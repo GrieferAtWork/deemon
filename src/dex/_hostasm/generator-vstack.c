@@ -2300,11 +2300,18 @@ impl_vassert_type_exact(struct Dee_function_generator *__restrict self) {
 	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALL_CC_INT, 2);
 }
 
-/* test_type, inherited_type -> (int)DeeType_InheritsFrom(test_type, inherited_type) */
+/* test_type, extended_type -> DeeType_Extends(test_type, extended_type) */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vtype_inheritsfrom(struct Dee_function_generator *__restrict self) {
-	/* FIXME: Assembly of "DeeType_InheritsFrom()" only sets %al, but this here reads from %eax! */
-	return Dee_function_generator_vcallapi(self, &DeeType_InheritsFrom, VCALL_CC_RAWINT, 2);
+Dee_function_generator_vtype_extends(struct Dee_function_generator *__restrict self) {
+	/* TODO: When "inherited_type" is constant and a FINAL type, can encode as "test_type === inherited_type" */
+	return Dee_function_generator_vcallapi(self, &DeeType_Extends, VCALL_CC_RAWINT, 2);
+}
+
+/* test_type, implemented_type -> DeeType_Implements(test_type, implemented_type) */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vtype_implements(struct Dee_function_generator *__restrict self) {
+	/* TODO: When "implemented_type" is constant and non-ABSTRACT type, can encode as `Dee_function_generator_vtype_extends()' */
+	return Dee_function_generator_vcallapi(self, &DeeType_Implements, VCALL_CC_RAWINT, 2);
 }
 
 
@@ -2314,9 +2321,9 @@ impl_vassert_type(struct Dee_function_generator *__restrict self, bool allow_abs
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
 		/* TODO: emit code equivalent to:
 		 * >> #if <allow_abstract>
-		 * >> if (!DeeType_IsAbstract(type) && !DeeType_InheritsFrom(Dee_TYPE(obj), type))
+		 * >> if (!DeeType_IsAbstract(type) && !DeeType_Extends(Dee_TYPE(obj), type))
 		 * >> #else
-		 * >> if (!DeeType_InheritsFrom(Dee_TYPE(obj), type))
+		 * >> if (!DeeType_Extends(Dee_TYPE(obj), type))
 		 * >> #endif
 		 * >> {
 		 * >>     DeeObject_TypeAssertFailed(obj, type);
@@ -2442,7 +2449,7 @@ Dee_function_generator_vassert_type_or_abstract_c(struct Dee_function_generator 
 	vtop_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
 	if (vtop_type != NULL) {
 		struct Dee_memval *vtop;
-		if (DeeType_InheritsFrom(vtop_type, type))
+		if (DeeType_Extends(vtop_type, type))
 			return 0;
 		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
 			return DeeError_Throwf(&DeeError_TypeError,

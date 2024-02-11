@@ -4384,8 +4384,8 @@ class_attribute_mayaccess_impl(struct class_attribute *__restrict self,
 	if (!caller_frame ||
 	    !(caller_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
 		return false;
-	return DeeType_InheritsFrom(DeeObject_Class(caller_frame->cf_this),
-	                           impl_class);
+	return DeeType_Extends(DeeObject_Class(caller_frame->cf_this),
+	                       impl_class);
 }
 
 

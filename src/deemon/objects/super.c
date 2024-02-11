@@ -59,7 +59,7 @@ DeeSuper_New(DeeTypeObject *tp_self, DeeObject *self) {
 		goto err;
 	if (DeeSuper_Check(self)) {
 		if (!DeeType_IsAbstract(tp_self)) {
-			if unlikely(!DeeType_InheritsFrom(DeeSuper_TYPE(self), tp_self))
+			if unlikely(!DeeType_Extends(DeeSuper_TYPE(self), tp_self))
 				goto err_badtype;
 		}
 		self = DeeSuper_SELF(self);
