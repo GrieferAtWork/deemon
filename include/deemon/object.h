@@ -3081,29 +3081,26 @@ DDATDEF DeeTypeObject DeeType_Type;   /* `type(object)' */
  * @return: -1: The object doesn't match the required typing.
  * @return:  0: The object matches the required typing. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertType)(DeeObject *self, DeeTypeObject *required_type);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeOrAbstract)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertImplements)(DeeObject *self, DeeTypeObject *required_type);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_AssertTypeExact)(DeeObject *self, DeeTypeObject *required_type);
 /* Throw a TypeError stating that an instance of `required_type' was required, when `self' was given. */
 DFUNDEF ATTR_COLD NONNULL((1, 2)) int (DCALL DeeObject_TypeAssertFailed)(DeeObject *self, DeeTypeObject *required_type);
 #ifndef Dee_ASSUMED_VALUE_IS_NOOP
-#define DeeObject_TypeAssertFailed(self, required_type) \
-	Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
+#define DeeObject_TypeAssertFailed(self, required_type) Dee_ASSUMED_VALUE(DeeObject_TypeAssertFailed(self, required_type), -1)
 #endif /* !Dee_ASSUMED_VALUE_IS_NOOP */
-#define DeeObject_AssertTypeOrNone(self, required_type) \
-	(DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
-#define DeeObject_AssertTypeExactOrNone(self, required_type) \
-	(DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))
-#define DeeObject_AssertType(self, required_type) \
-	(unlikely((DeeObject_AssertType)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
-#define DeeObject_AssertImplements(self, required_type) \
-	(unlikely((DeeObject_AssertImplements)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
-#ifndef __OPTIMIZE_SIZE__
-#define DeeObject_AssertTypeExact(self, required_type) \
-	(unlikely(Dee_TYPE(self) == required_type ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
-#else /* !__OPTIMIZE_SIZE__ */
-#define DeeObject_AssertTypeExact(self, required_type) \
-	(unlikely((DeeObject_AssertTypeExact)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
-#endif /* __OPTIMIZE_SIZE__ */
+#define DeeObject_AssertTypeOrNone(self, required_type)      (DeeNone_Check(self) ? 0 : DeeObject_AssertType(self, required_type))
+#define DeeObject_AssertTypeExactOrNone(self, required_type) (DeeNone_CheckExact(self) ? 0 : DeeObject_AssertTypeExact(self, required_type))
+#define DeeObject_AssertType(self, required_type)            (unlikely((DeeObject_AssertType)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
+#define DeeObject_AssertTypeOrAbstract(self, required_type)  (unlikely((DeeObject_AssertTypeOrAbstract)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
+#define DeeObject_AssertImplements(self, required_type)      (unlikely((DeeObject_AssertImplements)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
+#ifdef __OPTIMIZE_SIZE__
+#define DeeObject_AssertTypeExact(self, required_type) (unlikely((DeeObject_AssertTypeExact)((DeeObject *)Dee_REQUIRES_OBJECT(self), required_type)))
+#else /* __OPTIMIZE_SIZE__ */
+#undef DeeObject_AssertTypeOrAbstract
+#define DeeObject_AssertTypeOrAbstract(self, required_type) (DeeType_IsAbstract(required_type) ? 0 : DeeObject_AssertType(self, required_type))
+#define DeeObject_AssertTypeExact(self, required_type)      (unlikely(Dee_TYPE(self) == required_type ? 0 : DeeObject_TypeAssertFailed((DeeObject *)(self), required_type)))
+#endif /* !__OPTIMIZE_SIZE__ */
 
 
 /* Object typeof(). */

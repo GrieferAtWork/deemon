@@ -87,6 +87,15 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_AssertTypeOrAbstract)(DeeObject *self, DeeTypeObject *required_type) {
+	if likely(DeeType_IsAbstract(required_type))
+		return 0;
+	if likely(DeeObject_InstanceOf(self, required_type))
+		return 0;
+	return DeeObject_TypeAssertFailed(self, required_type);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_AssertImplements)(DeeObject *self, DeeTypeObject *required_type) {
 	if likely(DeeObject_Implements(self, required_type))
 		return 0;
@@ -5358,7 +5367,7 @@ assert_badobject_impl(char const *check_name,
 		if (DeeObject_Check(ob->ob_type))
 			type_name = ob->ob_type->tp_name;
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s) has a reference count of 0",
+		                 "Bad object at %p (instance of '%s') has a reference count of 0",
 		                 ob, type_name);
 	} else if (!ob->ob_type) {
 		_DeeAssert_Failf(check_name, file, line,
@@ -5366,14 +5375,14 @@ assert_badobject_impl(char const *check_name,
 		                 ob, ob->ob_refcnt);
 	} else if (!ob->ob_type->ob_refcnt) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) has a type with a reference counter of 0",
+		                 "Bad object at %p (instance of '%s', %" PRFuSIZ " references) has a type with a reference counter of 0",
 		                 ob, ob->ob_type->tp_name, ob->ob_refcnt);
 	} else {
 		char const *type_name = "?";
 		if (DeeObject_Check(ob->ob_type))
 			type_name = ob->ob_type->tp_name;
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references)",
+		                 "Bad object at %p (instance of '%s', %" PRFuSIZ " references)",
 		                 ob, type_name, ob->ob_refcnt);
 	}
 }
@@ -5385,25 +5394,25 @@ assert_badtype_impl(char const *check_name, char const *file,
 	char const *is_exact = wanted_exact ? " an exact " : " an ";
 	if (!ob) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p is a NULL pointer when%sinstance of %s was needed",
+		                 "Bad object at %p is a NULL pointer when%sinstance of '%s' was needed",
 		                 ob, is_exact, wanted_type->tp_name);
 	} else if (!ob->ob_refcnt) {
 		char const *type_name = "?";
 		if (DeeObject_Check(ob->ob_type))
 			type_name = ob->ob_type->tp_name;
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s) has a reference "
-		                 "count of 0 when%sinstance of %s was needed",
+		                 "Bad object at %p (instance of '%s') has a reference "
+		                 "count of 0 when%sinstance of '%s' was needed",
 		                 ob, type_name, is_exact, wanted_type->tp_name);
 	} else if (!ob->ob_type) {
 		_DeeAssert_Failf(check_name, file, line,
 		                 "Bad object at %p (%" PRFuSIZ " references) has a NULL-pointer "
-		                 "as type when%sinstance of %s was needed",
+		                 "as type when%sinstance of '%s' was needed",
 		                 ob, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 	} else if (!ob->ob_type->ob_refcnt) {
 		_DeeAssert_Failf(check_name, file, line,
-		                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) has a type "
-		                 "with a reference counter of 0 when%sinstance of %s was needed",
+		                 "Bad object at %p (instance of '%s', %" PRFuSIZ " references) has a type "
+		                 "with a reference counter of 0 when%sinstance of '%s' was needed",
 		                 ob, ob->ob_type->tp_name, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 	} else {
 		bool include_obj_repr = false;
@@ -5416,15 +5425,15 @@ assert_badtype_impl(char const *check_name, char const *file,
 		}
 		if (include_obj_repr) {
 			_DeeAssert_Failf(check_name, file, line,
-			                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) "
-			                 "when%sinstance of %s was needed\n"
+			                 "Bad object at %p (instance of '%s', %" PRFuSIZ " references) "
+			                 "when%sinstance of '%s' was needed\n"
 			                 "repr: %r",
 			                 ob, type_name, ob->ob_refcnt, is_exact,
 			                 wanted_type->tp_name, ob);
 		} else {
 			_DeeAssert_Failf(check_name, file, line,
-			                 "Bad object at %p (instance of %s, %" PRFuSIZ " references) "
-			                 "when%sinstance of %s was needed",
+			                 "Bad object at %p (instance of '%s', %" PRFuSIZ " references) "
+			                 "when%sinstance of '%s' was needed",
 			                 ob, type_name, ob->ob_refcnt, is_exact, wanted_type->tp_name);
 		}
 	}

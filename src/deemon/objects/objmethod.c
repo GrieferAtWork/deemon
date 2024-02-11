@@ -985,11 +985,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_call(DeeClsMethodObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc)
 		goto err_argc_zero;
+
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(argv[0], self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+		goto err;
+
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1);
 err_argc_zero:
@@ -1237,11 +1237,11 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_call(DeeKwClsMethodObject *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!argc)
 		goto err_argc_zero;
+
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(argv[0], self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+		goto err;
+
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1, NULL);
 err_argc_zero:
@@ -1255,11 +1255,11 @@ kwclsmethod_call_kw(DeeKwClsMethodObject *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
 	if unlikely(!argc)
 		goto err_argc_zero;
+
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(argv[0], self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(argv[0], self->cm_type))
+		goto err;
+
 	/* Use the first argument as the this-argument. */
 	return (*self->cm_func)(argv[0], argc - 1, argv + 1, kw);
 err_argc_zero:
@@ -1435,10 +1435,8 @@ clsproperty_get(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cp_type)) {
-		if (DeeObject_AssertType(thisarg, self->cp_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+		goto err;
 	return (*self->cp_get)(thisarg);
 err:
 	return NULL;
@@ -1456,10 +1454,8 @@ clsproperty_get_kw(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cp_type)) {
-		if (DeeObject_AssertType(thisarg, self->cp_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+		goto err;
 	return (*self->cp_get)(thisarg);
 err:
 	return NULL;
@@ -1477,10 +1473,8 @@ clsproperty_delete(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cp_type)) {
-		if (DeeObject_AssertType(thisarg, self->cp_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+		goto err;
 	if unlikely((*self->cp_del)(thisarg))
 		goto err;
 	return_none;
@@ -1500,10 +1494,8 @@ clsproperty_set(DeeClsPropertyObject *__restrict self,
 	if (DeeArg_UnpackKw(argc, argv, kw, setter_kwlist, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cp_type)) {
-		if (DeeObject_AssertType(thisarg, self->cp_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cp_type))
+		goto err;
 	if unlikely((*self->cp_set)(thisarg, value))
 		goto err;
 	return_none;
@@ -1731,10 +1723,8 @@ clsmember_get(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(thisarg, self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
 	return type_member_get(&self->cm_memb, thisarg);
 err:
 	return NULL;
@@ -1747,10 +1737,8 @@ clsmember_get_kw(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(thisarg, self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
 	return type_member_get(&self->cm_memb, thisarg);
 err:
 	return NULL;
@@ -1763,10 +1751,8 @@ clsmember_delete(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:delete", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(thisarg, self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
 	if (type_member_del(&self->cm_memb, thisarg))
 		goto err;
 	return_none;
@@ -1781,10 +1767,8 @@ clsmember_set(DeeClsMemberObject *self, size_t argc,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "oo:set", &thisarg, &value))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(self->cm_type)) {
-		if (DeeObject_AssertType(thisarg, self->cm_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, self->cm_type))
+		goto err;
 	if (type_member_set(&self->cm_memb, thisarg, value))
 		goto err;
 	return_none;

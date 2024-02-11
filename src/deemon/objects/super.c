@@ -186,10 +186,8 @@ super_init(Super *self, size_t argc, DeeObject *const *argv) {
 			/* Make sure the passed type matches. */
 			if (DeeObject_AssertType(tp, &DeeType_Type))
 				goto err;
-			if (!DeeType_IsAbstract(tp)) {
-				if (DeeObject_AssertType(ob, tp))
-					goto err;
-			}
+			if (DeeObject_AssertTypeOrAbstract(ob, tp))
+				goto err;
 		}
 	} else {
 		tp = DeeType_Base(Dee_TYPE(ob));

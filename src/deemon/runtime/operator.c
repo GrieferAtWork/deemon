@@ -1678,19 +1678,15 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCall,
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
 		DeeClsMethodObject *me = (DeeClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (!DeeType_IsAbstract(me->cm_type)) {
-			if (DeeObject_AssertType(this_arg, me->cm_type))
-				goto err;
-		}
+		if (DeeObject_AssertTypeOrAbstract(this_arg, me->cm_type))
+			goto err;
 		return (*me->cm_func)(this_arg, argc, argv);
 	}
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
 		DeeKwClsMethodObject *me = (DeeKwClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (!DeeType_IsAbstract(me->cm_type)) {
-			if (DeeObject_AssertType(this_arg, me->cm_type))
-				goto err;
-		}
+		if (DeeObject_AssertTypeOrAbstract(this_arg, me->cm_type))
+			goto err;
 		return (*me->cm_func)(this_arg, argc, argv, NULL);
 	}
 
@@ -1743,19 +1739,15 @@ DEFINE_OPERATOR(DREF DeeObject *, ThisCallKw,
 	if (GET_TP_SELF() == &DeeKwClsMethod_Type) {
 		DeeKwClsMethodObject *me = (DeeKwClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (!DeeType_IsAbstract(me->cm_type)) {
-			if (DeeObject_AssertType(this_arg, me->cm_type))
-				goto err;
-		}
+		if (DeeObject_AssertTypeOrAbstract(this_arg, me->cm_type))
+			goto err;
 		return (*me->cm_func)(this_arg, argc, argv, kw);
 	}
 	if (GET_TP_SELF() == &DeeClsMethod_Type) {
 		DeeClsMethodObject *me = (DeeClsMethodObject *)self;
 		/* Must ensure proper typing of the this-argument. */
-		if (!DeeType_IsAbstract(me->cm_type)) {
-			if (DeeObject_AssertType(this_arg, me->cm_type))
-				goto err;
-		}
+		if (DeeObject_AssertTypeOrAbstract(this_arg, me->cm_type))
+			goto err;
 		if (kw) {
 			if (DeeKwds_Check(kw)) {
 				if (DeeKwds_SIZE(kw) != 0)

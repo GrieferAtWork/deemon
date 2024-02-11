@@ -124,10 +124,8 @@ do_alias_thisattr:
 					goto do_alias_thisattr; /* Shouldn't happen... */
 				if unlikely(!effective_this->oe_value)
 					goto do_alias_thisattr; /* Shouldn't happen... */
-				if (!DeeType_IsAbstract(ent->oe_attr.a_class)) {
-					if (DeeObject_AssertType(effective_this->oe_value, ent->oe_attr.a_class))
-						goto err; /* Shouldn't happen... */
-				}
+				if (DeeObject_AssertTypeOrAbstract(effective_this->oe_value, ent->oe_attr.a_class))
+					goto err; /* Shouldn't happen... */
 				destent = JITObjectTable_Create(&self->jl_scandata.jl_function->jf_refs,
 				                                name, size, hash);
 				if unlikely(!destent)

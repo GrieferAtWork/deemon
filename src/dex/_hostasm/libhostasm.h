@@ -2648,6 +2648,11 @@ Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__res
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict self,
                                       DeeTypeObject *__restrict type);
+/* Generate code equivalent to `DeeObject_AssertTypeOrAbstract(VTOP, type)', but don't pop `VTOP' from the v-stack. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vassert_type_or_abstract_c(struct Dee_function_generator *__restrict self,
+                                                  DeeTypeObject *__restrict type);
+
 #define Dee_function_generator_vassert_type_exact_if_safe_c(self, type) \
 	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE     \
 	 ? Dee_function_generator_vassert_type_exact_c(self, type)          \
@@ -2656,10 +2661,15 @@ Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict 
 	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE \
 	 ? Dee_function_generator_vassert_type_c(self, type)            \
 	 : 0)
+#define Dee_function_generator_vassert_type_or_abstract_if_safe_c(self, type) \
+	((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_SAFE           \
+	 ? Dee_function_generator_vassert_type_or_abstract_c(self, type)          \
+	 : 0)
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self);        /* obj, type -> N/A */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self);  /* obj, type -> N/A */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vassert_type_failed(struct Dee_function_generator *__restrict self); /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self);             /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vassert_type_or_abstract(struct Dee_function_generator *__restrict self); /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self);       /* obj, type -> N/A */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vassert_type_failed(struct Dee_function_generator *__restrict self);      /* obj, type -> N/A */
 
 /* Perform a conditional jump to `desc' based on `jump_if_true'
  * @param: instr: Pointer to start of deemon jmp-instruction (for bb-truncation, and error message)

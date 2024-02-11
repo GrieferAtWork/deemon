@@ -529,6 +529,7 @@ EXPORTS
 	DeeObject_AssertImplements@8=_DeeObject_AssertImplements@8
 	DeeObject_AssertType@8=_DeeObject_AssertType@8
 	DeeObject_AssertTypeExact@8=_DeeObject_AssertTypeExact@8
+	DeeObject_AssertTypeOrAbstract@8=_DeeObject_AssertTypeOrAbstract@8
 	DeeObject_Assign@8=_DeeObject_Assign@8
 	DeeObject_Bool@4=_DeeObject_Bool@4
 	DeeObject_BoundAttr@8=_DeeObject_BoundAttr@8
@@ -675,6 +676,7 @@ EXPORTS
 	DeeObject_NewDefault@4=_DeeObject_NewDefault@4
 	DeeObject_NewKw@16=_DeeObject_NewKw@16
 	DeeObject_NewRef@4=_DeeObject_NewRef@4
+	DeeObject_NewRef_traced@12=_DeeObject_NewRef_traced@12
 	DeeObject_Or@8=_DeeObject_Or@8
 	DeeObject_OrUInt32@8=_DeeObject_OrUInt32@8
 	DeeObject_PClear@8=_DeeObject_PClear@8

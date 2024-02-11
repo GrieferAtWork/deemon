@@ -692,10 +692,8 @@ dkwobjmethod_vcallf_len(dkwobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 
 	/* Invoke the function. */
 	result = DeeKwObjMethod_VCallFuncf(self, thisarg, format, args);
@@ -727,10 +725,8 @@ dobjmethod_vcallf_len(dobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 
 	/* Invoke the function. */
 	result = DeeObjMethod_VCallFuncf(self, thisarg, format, args);
@@ -767,10 +763,8 @@ dkwobjmethod_vcallf(dkwobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 
 	/* Invoke the function. */
 	result = DeeKwObjMethod_VCallFuncf(self, thisarg, format, args);
@@ -802,10 +796,8 @@ dobjmethod_vcallf(dobjmethod_t self,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 
 	/* Invoke the function. */
 	result = DeeObjMethod_VCallFuncf(self, thisarg, format, args);
@@ -1208,21 +1200,17 @@ INTERN WUNUSED LOCAL_ATTR_NONNULL int
 			if (item->mcs_method.m_flag & TYPE_METHOD_FKWDS) {
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_MUST_ASSERT_ARGC
-				if unlikely(!DeeType_IsAbstract(decl)) {
-					if (DeeObject_AssertType(LOCAL_argv[0], decl))
-						goto err;
+				if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
+					goto err;
 #define NEED_err
-				}
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 				return LOCAL_invoke_dkwobjmethod((dkwobjmethod_t)func, decl);
 			}
 			Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 #ifdef LOCAL_MUST_ASSERT_ARGC
-			if unlikely(!DeeType_IsAbstract(decl)) {
-				if (DeeObject_AssertType(LOCAL_argv[0], decl))
-					goto err;
+			if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
+				goto err;
 #define NEED_err
-			}
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 			LOCAL_assert_kw_empty(decl);
 			return LOCAL_invoke_dobjmethod(func, decl);
@@ -1271,8 +1259,7 @@ check_and_invoke_callback:
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
-				if unlikely(!DeeType_IsAbstract(decl) &&
-				            DeeObject_AssertType(thisarg, decl)) {
+				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
 				} else {
 					result = (*getter)(thisarg);
@@ -1327,8 +1314,7 @@ check_and_invoke_callback:
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 				goto err;
 #define NEED_err
-			if unlikely(!DeeType_IsAbstract(decl) &&
-			            DeeObject_AssertType(LOCAL_argv[0], decl)) {
+			if unlikely(DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl)) {
 				result = NULL;
 			} else {
 				result = type_member_get((struct type_member const *)&buf, thisarg);
@@ -1395,11 +1381,9 @@ check_and_invoke_callback:
 				return DeeKwClsMethod_New(decl, (dkwobjmethod_t)func);
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_MUST_ASSERT_ARGC
-				if unlikely(!DeeType_IsAbstract(decl)) {
-					if (DeeObject_AssertType(LOCAL_argv[0], decl))
-						goto err;
+				if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
+					goto err;
 #define NEED_err
-				}
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 				return LOCAL_invoke_dkwobjmethod((dkwobjmethod_t)func, decl);
 #endif /* !LOCAL_IS_GET */
@@ -1409,11 +1393,9 @@ check_and_invoke_callback:
 			return DeeClsMethod_New(decl, func);
 #else /* LOCAL_IS_GET */
 #ifdef LOCAL_MUST_ASSERT_ARGC
-			if unlikely(!DeeType_IsAbstract(decl)) {
-				if (DeeObject_AssertType(LOCAL_argv[0], decl))
-					goto err;
+			if (DeeObject_AssertTypeOrAbstract(LOCAL_argv[0], decl))
+				goto err;
 #define NEED_err
-			}
 #endif /* LOCAL_MUST_ASSERT_ARGC */
 			LOCAL_assert_kw_empty(decl);
 			return LOCAL_invoke_dobjmethod(func, decl);
@@ -1442,8 +1424,7 @@ check_and_invoke_callback:
 				Dee_membercache_releasetable(&tp_self->LOCAL_tp_cache, table);
 				if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 					goto err;
-				if unlikely(!DeeType_IsAbstract(decl) &&
-				            DeeObject_AssertType(thisarg, decl)) {
+				if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 					result = NULL;
 				} else {
 					result = (*getter)(thisarg);
@@ -1479,8 +1460,7 @@ check_and_invoke_callback:
 			if unlikely(LOCAL_unpack_one_for_getter(&thisarg))
 				goto err;
 #define NEED_err
-			if unlikely(!DeeType_IsAbstract(decl) &&
-			            DeeObject_AssertType(thisarg, decl)) {
+			if unlikely(DeeObject_AssertTypeOrAbstract(thisarg, decl)) {
 				result = NULL;
 			} else {
 				result = type_member_get((struct type_member const *)&buf, thisarg);

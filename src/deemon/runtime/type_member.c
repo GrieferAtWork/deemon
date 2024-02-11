@@ -330,10 +330,8 @@ type_obmeth_call(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(argv[0], cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(argv[0], cls_type))
+		goto err;
 
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
@@ -354,10 +352,8 @@ type_obmeth_call_kw(DeeTypeObject *cls_type,
 		                desc->m_name);
 		goto err;
 	}
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(argv[0], cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(argv[0], cls_type))
+		goto err;
 
 	/* Use the first argument as the this-argument. */
 	if (desc->m_flag & TYPE_METHOD_FKWDS)
@@ -407,10 +403,8 @@ type_obmeth_vcallf(DeeTypeObject *cls_type,
 		Dee_VPPackf_Cleanup(format, ((struct va_list_struct *)VALIST_ADDR(args))->vl_ap);
 		goto err;
 	} 
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 
 	/* Invoke the function. */
 	result = type_method_vcallf(desc, thisarg, format, args);
@@ -486,10 +480,8 @@ type_obprop_call(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err;
 	return (*desc->gs_get)(thisarg);
 err_unbound:
 	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
@@ -507,10 +499,8 @@ type_obprop_call_kw(DeeTypeObject *cls_type,
 		goto err_unbound;
 	if unlikely(DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err;
 	return (*desc->gs_get)(thisarg);
 err_unbound:
 	err_cant_access_attribute_string(cls_type, desc->gs_name, ATTR_ACCESS_GET);
@@ -529,10 +519,8 @@ type_obprop_vcallf(DeeTypeObject *cls_type,
 	thisarg = Dee_VPackf(format, args);
 	if unlikely(!thisarg)
 		goto err;
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 	result = (*desc->gs_get)(thisarg);
 	Dee_Decref(thisarg);
 	return result;
@@ -553,10 +541,8 @@ type_obmemb_call(DeeTypeObject *cls_type,
 	if (DeeArg_Unpack(argc, argv, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err;
 	return type_member_get(desc, thisarg);
 err:
 	return NULL;
@@ -571,10 +557,8 @@ type_obmemb_call_kw(DeeTypeObject *cls_type,
 	if (DeeArg_UnpackKw(argc, argv, kw, getter_kwlist, "o:get", &thisarg))
 		goto err;
 	/* Allow non-instance objects for generic types. */
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err;
 	return type_member_get(desc, thisarg);
 err:
 	return NULL;
@@ -588,10 +572,8 @@ type_obmemb_vcallf(DeeTypeObject *cls_type,
 	thisarg = Dee_VPackf(format, args);
 	if unlikely(!thisarg)
 		goto err;
-	if (!DeeType_IsAbstract(cls_type)) {
-		if (DeeObject_AssertType(thisarg, cls_type))
-			goto err_thisarg;
-	}
+	if (DeeObject_AssertTypeOrAbstract(thisarg, cls_type))
+		goto err_thisarg;
 	result = type_member_get(desc, thisarg);
 	Dee_Decref(thisarg);
 	return result;
