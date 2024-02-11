@@ -625,7 +625,7 @@ Dee_basic_block_locuse_pass3(struct Dee_function_assembler *__restrict assembler
 			if (lid < n_locals) {
 				if (i_lastread[lid] != NULL && !asm_locuse_isreading(&use, lid))
 					LOCAL_append_lastreadat(i_lastread[lid], lid);
-				i_lastread[i] = instr;
+				i_lastread[lid] = instr;
 			}
 		}
 	}
