@@ -3683,6 +3683,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *_
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
 #ifdef CONFIG_HAVE_FPU
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_Float(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_TFloat(DeeTypeObject *tp_self, DeeObject *self);
 #endif /* CONFIG_HAVE_FPU */
 
 

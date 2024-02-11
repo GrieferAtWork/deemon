@@ -704,6 +704,16 @@ err_no_keywords:
 	goto err;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_NewTuple)(DeeTypeObject *object_type, DeeObject *args) {
+	return DeeObject_New(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
+(DCALL DeeObject_NewTupleKw)(DeeTypeObject *object_type, DeeObject *args, DeeObject *kw) {
+	return DeeObject_NewKw(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
+}
+
 
 #ifdef CONFIG_VA_LIST_IS_STACK_POINTER
 #ifndef __NO_DEFINE_ALIAS
@@ -5164,6 +5174,7 @@ err:
 	return -1;
 }
 
+#ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(void, PutBuf,
                 (DeeObject *RESTRICT_IF_NOTYPE self,
                  DeeBuffer *__restrict info,
@@ -5188,6 +5199,7 @@ DEFINE_OPERATOR(void, PutBuf,
 	} while (type_inherit_buffer(tp_self));
 #endif /* DEFINE_TYPED_OPERATORS */
 }
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 #undef GET_TP_SELF

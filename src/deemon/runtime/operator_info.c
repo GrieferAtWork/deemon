@@ -608,11 +608,17 @@ invoke_operator(DeeObject *self, DREF DeeObject **p_self,
 	/* Fast-pass for known operators. */
 	switch (name) {
 
-	case OPERATOR_CONSTRUCTOR:
+	case OPERATOR_CONSTRUCTOR: {
 		/* Special wrapper: invoke the construction operator. */
+		DeeObject *kw = NULL;
 		if (DeeObject_AssertType(self, &DeeType_Type))
 			goto err;
-		return DeeObject_New((DeeTypeObject *)self, argc, argv);
+		if (DeeArg_Unpack(argc, argv, "o|o:__constructor__", &other, &kw))
+			goto err;
+		if (DeeObject_AssertTypeExact(other, &DeeTuple_Type))
+			goto err;
+		return DeeObject_NewTupleKw((DeeTypeObject *)self, other, kw);
+	}
 
 	case OPERATOR_COPY:
 		/* Special wrapper: invoke the copy constructor. */
@@ -1361,6 +1367,8 @@ invoke_operator(DeeObject *self, DREF DeeObject **p_self,
 			if (info->oi_type & OPTYPE_INPLACE && !p_self)
 				goto requires_inplace;
 		}
+
+		/* XXX: What about making a call to `operators.operator()' ??? */
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Cannot invoke unknown operator #%X", name);
 		goto err;

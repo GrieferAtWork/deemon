@@ -5280,79 +5280,80 @@ err:
 
 
 struct host_operator_specs {
-	void const *hos_apifunc; /* [0..1] API function (or NULL if fallback handling must be used) */
-	uint8_t     hos_argc;    /* Argument count (1-4) */
-	uint8_t     hos_cc;      /* Operator calling convention (one of `VCALL_CC_*') */
-	bool        hos_inplace; /* Is this an inplace operator? */
+	void const *hos_apifunc;  /* [0..1] API function (or NULL if fallback handling must be used) */
+	void const *hos_tapifunc; /* [0..1] Typed API function (or NULL if fallback handling must be used) */
+	uint8_t     hos_argc;     /* Argument count (1-4) */
+	uint8_t     hos_cc;       /* Operator calling convention (one of `VCALL_CC_*') */
+	bool        hos_inplace;  /* Is this an inplace operator? */
 };
 
 PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_CONSTRUCTOR]  = */ { (void const *)NULL },
-	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, 1, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_COPY]         = */ { (void const *)&DeeObject_Copy, (void const *)&DeeObject_TCopy, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DEEPCOPY]     = */ { (void const *)&DeeObject_DeepCopy, (void const *)&DeeObject_TDeepCopy, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_DESTRUCTOR]   = */ { (void const *)NULL },
-	/* [OPERATOR_ASSIGN]       = */ { (void const *)&DeeObject_Assign, 2, VCALL_CC_INT, false },
-	/* [OPERATOR_MOVEASSIGN]   = */ { (void const *)&DeeObject_MoveAssign, 2, VCALL_CC_INT, false },
+	/* [OPERATOR_ASSIGN]       = */ { (void const *)&DeeObject_Assign, (void const *)&DeeObject_TAssign, 2, VCALL_CC_INT, false },
+	/* [OPERATOR_MOVEASSIGN]   = */ { (void const *)&DeeObject_MoveAssign, (void const *)&DeeObject_TMoveAssign, 2, VCALL_CC_INT, false },
 	/* [OPERATOR_STR]          = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_REPR]         = */ { (void const *)&DeeObject_Repr, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_REPR]         = */ { (void const *)&DeeObject_Repr, (void const *)&DeeObject_TRepr, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_BOOL]         = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_ITERNEXT]     = */ { (void const *)NULL }, /* Special handling (because `DeeObject_IterNext' can return ITER_DONE) */
 	/* [OPERATOR_CALL]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_INT]          = */ { (void const *)&DeeObject_Int, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_INT]          = */ { (void const *)&DeeObject_Int, (void const *)&DeeObject_TInt, 1, VCALL_CC_OBJECT, false },
 #ifdef CONFIG_HAVE_FPU
-	/* [OPERATOR_FLOAT]        = */ { (void const *)&libhostasm_rt_DeeObject_Float, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_FLOAT]        = */ { (void const *)&libhostasm_rt_DeeObject_Float, (void const *)&libhostasm_rt_DeeObject_TFloat, 1, VCALL_CC_OBJECT, false },
 #else /* CONFIG_HAVE_FPU */
 	/* [OPERATOR_FLOAT]        = */ { (void const *)NULL },
 #endif /* !CONFIG_HAVE_FPU */
-	/* [OPERATOR_INV]          = */ { (void const *)&DeeObject_Inv, 1, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_POS]          = */ { (void const *)&DeeObject_Pos, 1, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_NEG]          = */ { (void const *)&DeeObject_Neg, 1, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_ADD]          = */ { (void const *)&DeeObject_Add, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_SUB]          = */ { (void const *)&DeeObject_Sub, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_MUL]          = */ { (void const *)&DeeObject_Mul, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_DIV]          = */ { (void const *)&DeeObject_Div, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_MOD]          = */ { (void const *)&DeeObject_Mod, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_SHL]          = */ { (void const *)&DeeObject_Shl, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_SHR]          = */ { (void const *)&DeeObject_Shr, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_AND]          = */ { (void const *)&DeeObject_And, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_OR]           = */ { (void const *)&DeeObject_Or, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_XOR]          = */ { (void const *)&DeeObject_Xor, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_POW]          = */ { (void const *)&DeeObject_Pow, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_INC]          = */ { (void const *)&DeeObject_Inc, 1, VCALL_CC_INT, true },
-	/* [OPERATOR_DEC]          = */ { (void const *)&DeeObject_Dec, 1, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_ADD]  = */ { (void const *)&DeeObject_InplaceAdd, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_SUB]  = */ { (void const *)&DeeObject_InplaceSub, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_MUL]  = */ { (void const *)&DeeObject_InplaceMul, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_DIV]  = */ { (void const *)&DeeObject_InplaceDiv, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_MOD]  = */ { (void const *)&DeeObject_InplaceMod, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_SHL]  = */ { (void const *)&DeeObject_InplaceShl, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_SHR]  = */ { (void const *)&DeeObject_InplaceShr, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_AND]  = */ { (void const *)&DeeObject_InplaceAnd, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_OR]   = */ { (void const *)&DeeObject_InplaceOr, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_XOR]  = */ { (void const *)&DeeObject_InplaceXor, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_INPLACE_POW]  = */ { (void const *)&DeeObject_InplacePow, 2, VCALL_CC_INT, true },
-	/* [OPERATOR_HASH]         = */ { (void const *)&DeeObject_Hash, 1, VCALL_CC_MORPH_UINTPTR, false },
-	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CompareEqObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CompareNeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CompareLoObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_ITERSELF]     = */ { (void const *)&DeeObject_IterSelf, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_INV]          = */ { (void const *)&DeeObject_Inv, (void const *)&DeeObject_TInv, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_POS]          = */ { (void const *)&DeeObject_Pos, (void const *)&DeeObject_TPos, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_NEG]          = */ { (void const *)&DeeObject_Neg, (void const *)&DeeObject_TNeg, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_ADD]          = */ { (void const *)&DeeObject_Add, (void const *)&DeeObject_TAdd, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SUB]          = */ { (void const *)&DeeObject_Sub, (void const *)&DeeObject_TSub, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_MUL]          = */ { (void const *)&DeeObject_Mul, (void const *)&DeeObject_TMul, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DIV]          = */ { (void const *)&DeeObject_Div, (void const *)&DeeObject_TDiv, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_MOD]          = */ { (void const *)&DeeObject_Mod, (void const *)&DeeObject_TMod, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SHL]          = */ { (void const *)&DeeObject_Shl, (void const *)&DeeObject_TShl, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_SHR]          = */ { (void const *)&DeeObject_Shr, (void const *)&DeeObject_TShr, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_AND]          = */ { (void const *)&DeeObject_And, (void const *)&DeeObject_TAnd, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_OR]           = */ { (void const *)&DeeObject_Or, (void const *)&DeeObject_TOr, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_XOR]          = */ { (void const *)&DeeObject_Xor, (void const *)&DeeObject_TXor, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_POW]          = */ { (void const *)&DeeObject_Pow, (void const *)&DeeObject_TPow, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_INC]          = */ { (void const *)&DeeObject_Inc, (void const *)&DeeObject_TInc, 1, VCALL_CC_INT, true },
+	/* [OPERATOR_DEC]          = */ { (void const *)&DeeObject_Dec, (void const *)&DeeObject_TDec, 1, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_ADD]  = */ { (void const *)&DeeObject_InplaceAdd, (void const *)&DeeObject_TInplaceAdd, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SUB]  = */ { (void const *)&DeeObject_InplaceSub, (void const *)&DeeObject_TInplaceSub, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_MUL]  = */ { (void const *)&DeeObject_InplaceMul, (void const *)&DeeObject_TInplaceMul, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_DIV]  = */ { (void const *)&DeeObject_InplaceDiv, (void const *)&DeeObject_TInplaceDiv, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_MOD]  = */ { (void const *)&DeeObject_InplaceMod, (void const *)&DeeObject_TInplaceMod, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SHL]  = */ { (void const *)&DeeObject_InplaceShl, (void const *)&DeeObject_TInplaceShl, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_SHR]  = */ { (void const *)&DeeObject_InplaceShr, (void const *)&DeeObject_TInplaceShr, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_AND]  = */ { (void const *)&DeeObject_InplaceAnd, (void const *)&DeeObject_TInplaceAnd, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_OR]   = */ { (void const *)&DeeObject_InplaceOr, (void const *)&DeeObject_TInplaceOr, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_XOR]  = */ { (void const *)&DeeObject_InplaceXor, (void const *)&DeeObject_TInplaceXor, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_INPLACE_POW]  = */ { (void const *)&DeeObject_InplacePow, (void const *)&DeeObject_TInplacePow, 2, VCALL_CC_INT, true },
+	/* [OPERATOR_HASH]         = */ { (void const *)&DeeObject_Hash, (void const *)&DeeObject_THash, 1, VCALL_CC_MORPH_UINTPTR, false },
+	/* [OPERATOR_EQ]           = */ { (void const *)&DeeObject_CompareEqObject, (void const *)&DeeObject_TCompareEqObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_NE]           = */ { (void const *)&DeeObject_CompareNeObject, (void const *)&DeeObject_TCompareNeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LO]           = */ { (void const *)&DeeObject_CompareLoObject, (void const *)&DeeObject_TCompareLoObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, (void const *)&DeeObject_TCompareLeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, (void const *)&DeeObject_TCompareGrObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, (void const *)&DeeObject_TCompareGeObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_ITERSELF]     = */ { (void const *)&DeeObject_IterSelf, (void const *)&DeeObject_TIterSelf, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_SIZE]         = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_Contains, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_DELITEM]      = */ { (void const *)&DeeObject_DelItem, 2, VCALL_CC_INT, false },
-	/* [OPERATOR_SETITEM]      = */ { (void const *)&DeeObject_SetItem, 3, VCALL_CC_INT, false },
-	/* [OPERATOR_GETRANGE]     = */ { (void const *)&DeeObject_GetRange, 3, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_DELRANGE]     = */ { (void const *)&DeeObject_DelRange, 3, VCALL_CC_INT, false },
-	/* [OPERATOR_SETRANGE]     = */ { (void const *)&DeeObject_SetRange, 4, VCALL_CC_INT, false },
+	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_ContainsObject, (void const *)&DeeObject_TContainsObject, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, (void const *)&DeeObject_TGetItem, 2, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DELITEM]      = */ { (void const *)&DeeObject_DelItem, (void const *)&DeeObject_TDelItem, 2, VCALL_CC_INT, false },
+	/* [OPERATOR_SETITEM]      = */ { (void const *)&DeeObject_SetItem, (void const *)&DeeObject_TSetItem, 3, VCALL_CC_INT, false },
+	/* [OPERATOR_GETRANGE]     = */ { (void const *)&DeeObject_GetRange, (void const *)&DeeObject_TGetRange, 3, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_DELRANGE]     = */ { (void const *)&DeeObject_DelRange, (void const *)&DeeObject_TDelRange, 3, VCALL_CC_INT, false },
+	/* [OPERATOR_SETRANGE]     = */ { (void const *)&DeeObject_SetRange, (void const *)&DeeObject_TSetRange, 4, VCALL_CC_INT, false },
 	/* [OPERATOR_GETATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_DELATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_SETATTR]      = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_ENUMATTR]     = */ { (void const *)NULL }, /* Special handling */
-	/* [OPERATOR_ENTER]        = */ { (void const *)&DeeObject_Enter, 1, VCALL_CC_INT, false },
-	/* [OPERATOR_LEAVE]        = */ { (void const *)&DeeObject_Leave, 1, VCALL_CC_INT, false },
+	/* [OPERATOR_ENTER]        = */ { (void const *)&DeeObject_Enter, (void const *)&DeeObject_TEnter, 1, VCALL_CC_INT, false },
+	/* [OPERATOR_LEAVE]        = */ { (void const *)&DeeObject_Leave, (void const *)&DeeObject_TLeave, 1, VCALL_CC_INT, false },
 };
 
 /* this, [args...]  ->  this, [args...]

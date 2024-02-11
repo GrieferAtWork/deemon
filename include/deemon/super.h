@@ -156,7 +156,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttr)(DeeTypeObjec
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TEnter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TLeave)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
-DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TPutBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

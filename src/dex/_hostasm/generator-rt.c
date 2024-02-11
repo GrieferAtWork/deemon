@@ -39,6 +39,7 @@
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 
 DECL_BEGIN
 
@@ -350,6 +351,16 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 libhostasm_rt_DeeObject_Float(DeeObject *__restrict self) {
 	double result;
 	if unlikely(DeeObject_AsDouble(self, &result))
+		goto err;
+	return DeeFloat_New(result);
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+libhostasm_rt_DeeObject_TFloat(DeeTypeObject *tp_self, DeeObject *self) {
+	double result;
+	if unlikely(DeeObject_TAsDouble(tp_self, self, &result))
 		goto err;
 	return DeeFloat_New(result);
 err:

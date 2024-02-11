@@ -367,32 +367,21 @@ super_pow(Super *self, DeeObject *some_object) {
 }
 
 
-#define INVOKE_INPLACE_OPERATOR(callback)                         \
-	Super *self = *p_self;                                        \
-	int error;                                                    \
-	DREF DeeObject *value = self->s_self;                         \
-	Dee_Incref(value);                                            \
-	error = callback;                                             \
-	if unlikely(error) {                                          \
-		Dee_Decref(value);                                        \
-		return error;                                             \
-	}                                                             \
-	if (value == self->s_self) {                                  \
-		Dee_Decref(value);                                        \
-	} else {                                                      \
-		/* Create a new super-wrapper for the updated value. */   \
-		if (DeeObject_InstanceOf(value, self->s_type)) {          \
-			self = (Super *)DeeSuper_New(self->s_type, value);    \
-		} else {                                                  \
-			self = (Super *)DeeSuper_New(Dee_TYPE(value), value); \
-		}                                                         \
-		Dee_Decref(value);                                        \
-		if unlikely(!self)                                        \
-			return -1;                                            \
-		Dee_Decref(*p_self); /* Drop the old self-value. */       \
-		*p_self = self;      /* Inherit reference. */             \
-	}                                                             \
-	return 0
+#define INVOKE_INPLACE_OPERATOR(callback)                             \
+	Super *self = *p_self;                                            \
+	int error;                                                        \
+	DREF DeeObject *value = self->s_self;                             \
+	Dee_Incref(value);                                                \
+	error = callback;                                                 \
+	if unlikely(error) {                                              \
+		Dee_Decref_unlikely(value);                                   \
+	} else if (value == self->s_self) {                               \
+		Dee_DecrefNokill(value);                                      \
+	} else {                                                          \
+		Dee_Decref(self);              /* Drop the old self-value. */ \
+		*(DeeObject **)p_self = value; /* Inherit reference. */       \
+	}                                                                 \
+	return error
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 super_inc(Super **__restrict p_self) {
@@ -662,7 +651,16 @@ PRIVATE NONNULL((1)) void DCALL
 super_putbuf(Super *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
-	DeeObject_TPutBuf(self->s_type, self->s_self, info, flags);
+	/* This function should never get called, but implement it anyways. */
+	DeeTypeObject *tp_self = self->s_type;
+	DeeObject *ob_self     = self->s_self;
+	do {
+		if (tp_self->tp_buffer && tp_self->tp_buffer->tp_getbuf) {
+			if (tp_self->tp_buffer->tp_putbuf)
+				(*tp_self->tp_buffer->tp_putbuf)(ob_self, info, flags);
+			break;
+		}
+	} while (type_inherit_buffer(tp_self));
 }
 
 PRIVATE struct type_buffer super_buffer = {

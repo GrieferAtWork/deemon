@@ -3161,10 +3161,16 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_New(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(3, 2) NONNULL((1, 3)) DREF DeeObject *DCALL DeeObject_NewKw(DeeTypeObject *object_type, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_NewTuple(DeeTypeObject *object_type, DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_NewTupleKw(DeeTypeObject *object_type, DeeObject *args, DeeObject *kw);
 DFUNDEF ATTR_SENTINEL WUNUSED NONNULL((1)) DREF DeeObject *DeeObject_NewPack(DeeTypeObject *object_type, size_t argc, ...);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_VNewPack(DeeTypeObject *object_type, size_t argc, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DeeObject_Newf(DeeTypeObject *object_type, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_VNewf(DeeTypeObject *object_type, char const *__restrict format, va_list args);
+#ifndef __OPTIMIZE_SIZE__
+#define DeeObject_NewTuple(object_type, args)       DeeObject_New(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_NewTupleKw(object_type, args, kw) DeeObject_NewKw(object_type, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#endif /* !__OPTIMIZE_SIZE__ */
 
 /* Object copy/assign operator invocation. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Copy(DeeObject *__restrict self);
