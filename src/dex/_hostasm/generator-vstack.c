@@ -295,10 +295,8 @@ tracked_memloc_forcereg(struct Dee_function_generator *__restrict self,
 	struct Dee_memloc retloc;
 	result = Dee_function_generator_gasreg(self, loc, &retloc, not_these);
 	if likely(result == 0) {
-		Dee_memstate_decrinuse_for_memloc(self->fg_state, loc);
-		ASSERT(Dee_memloc_gettyp(&retloc) == MEMADR_TYPE_HREG);
-		Dee_memstate_incrinuse(self->fg_state, Dee_memloc_hreg_getreg(&retloc));
-		*loc = retloc;
+		Dee_memstate_changeloc(self->fg_state, loc, &retloc);
+		ASSERTF(Dee_memloc_sameloc(loc, &retloc), "This should have gotten updated!");
 	}
 	return result;
 }
@@ -522,6 +520,62 @@ Dee_function_generator_vdup_n(struct Dee_function_generator *__restrict self,
 	return result;
 }
 
+/* Ensure that "mobj" (or one of its aliases) is holding a reference. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ensure_tracked_memobj_holds_reference(struct Dee_function_generator *__restrict self,
+                                      struct Dee_memobj *mobj) {
+	struct Dee_memstate *state = self->fg_state;
+	if (Dee_memstate_hasref(state, mobj))
+		return 0; /* Already a reference! -> all is fine! */
+
+	/* Check for special case: if the dependent object is a register indirection,
+	 * then that means there it still points into the object that may be about
+	 * to be destroyed. If that is the case, just change it to a register first. */
+	if (Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HREGIND) {
+		struct Dee_memloc mobj_asreg;
+		DO(Dee_function_generator_gasreg(self, Dee_memobj_getloc(mobj), &mobj_asreg, NULL));
+		Dee_memstate_changeloc(state, Dee_memobj_getloc(mobj), &mobj_asreg);
+		ASSERT(Dee_memloc_sameloc(Dee_memobj_getloc(mobj), &mobj_asreg));
+	}
+
+	/* Generate the reference *now* */
+	DO(Dee_function_generator_gincref_loc(self, Dee_memobj_getloc(mobj), 1));
+	ASSERT(!Dee_memobj_isref(mobj));
+	Dee_memobj_setref(mobj);
+	return 0;
+err:
+	return -1;
+}
+
+/* Ensure that objects that depend on "dependencies_of_this" are holding references. */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+ensure_dependent_objects_hold_references(struct Dee_function_generator *__restrict self,
+                                         struct Dee_memloc *dependencies_of_this) {
+	struct Dee_memval *dep_mval;
+	struct Dee_memstate *state = self->fg_state;
+	Dee_memstate_foreach(dep_mval, state) {
+		struct Dee_memobj *dep_mobj;
+		Dee_memval_foreach_obj(dep_mobj, dep_mval) {
+			if (Dee_memobj_hasxinfo(dep_mobj)) {
+				struct Dee_memobj_xinfo *xinfo;
+				xinfo = Dee_memobj_getxinfo(dep_mobj);
+				if (Dee_memloc_sameloc(&xinfo->mox_dep, dependencies_of_this)) {
+					/* This object depends on us -> make sure it's a reference. */
+					DO(ensure_tracked_memobj_holds_reference(self, dep_mobj));
+
+					/* With the reference created, the object no longer needs us! */
+					bzero(&xinfo->mox_dep, sizeof(xinfo->mox_dep));
+				}
+			}
+		}
+		Dee_memval_foreach_obj_end;
+	}
+	Dee_memstate_foreach_end;
+	return 0;
+err:
+	return -1;
+}
+
 /* Generate code needed to drop references held by `mval' (where `mval' must be a vstack item,
  * or a local variable that is unconditionally bound or non-direct).
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
@@ -561,17 +615,24 @@ Dee_function_generator_vgdecref_vstack(struct Dee_function_generator *__restrict
 				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
-			if (Dee_memval_isconst(mval))
+			if (Dee_memobj_isconst(mobj))
 				has_ref_alias = true; /* Constants are always aliased by static storage */
 	
 			/* No-where to shift the reference to -> must decref the object ourselves. */
 			if (has_ref_alias) {
-				temp = Dee_function_generator_gdecref_nokill_loc(self, Dee_memval_direct_getloc(mval), 1);
-			} else if (Dee_memobj_isoneref(mobj)) {
-				/* TODO: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
-				temp = Dee_function_generator_gdecref_dokill_loc(self, Dee_memval_direct_getloc(mval));
+				temp = Dee_function_generator_gdecref_nokill_loc(self, Dee_memobj_getloc(mobj), 1);
 			} else {
-				temp = Dee_function_generator_gdecref_loc(self, Dee_memval_direct_getloc(mval), 1);
+				/* If the object acts as a dependency, then we must make sure that
+				 * every distinct dependent object is holding at least 1 reference! */
+				if (mobj->mo_flags & MEMOBJ_F_HASDEP)
+					DO(ensure_dependent_objects_hold_references(self, Dee_memobj_getloc(mobj)));
+
+				/* TODO: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
+				if (Dee_memobj_isoneref(mobj)) {
+					temp = Dee_function_generator_gdecref_dokill_loc(self, Dee_memobj_getloc(mobj));
+				} else {
+					temp = Dee_function_generator_gdecref_loc(self, Dee_memobj_getloc(mobj), 1);
+				}
 			}
 			if unlikely(temp)
 				goto err;
@@ -1037,7 +1098,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self) {
 	DREF struct Dee_memstate *common_state;
-	struct Dee_host_symbol *text_Lnot_equal;
+	struct Dee_host_symbol *Lnot_equal;
 	struct Dee_memval *p_dst, *p_coalesce_from, *p_coalesce_to;
 	struct Dee_memloc coalesce_from;
 	if unlikely(self->fg_state->ms_stackc < 3)
@@ -1072,8 +1133,8 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	DO(Dee_function_generator_vpop_at(self, 2)); /* reg:dst, to */
 	ASSERT(p_coalesce_from == Dee_function_generator_vtop(self));
 	ASSERT(p_coalesce_to == Dee_function_generator_vtop(self) + 1);
-	text_Lnot_equal = Dee_function_generator_newsym_named(self, ".text_Lnot_equal");
-	if unlikely(!text_Lnot_equal)
+	Lnot_equal = Dee_function_generator_newsym_named(self, ".Lnot_equal");
+	if unlikely(!Lnot_equal)
 		goto err;
 	common_state = Dee_memstate_copy(self->fg_state);
 	if unlikely(!common_state)
@@ -1081,12 +1142,12 @@ Dee_function_generator_vcoalesce(struct Dee_function_generator *__restrict self)
 	EDO(err_common_state,
 	    Dee_function_generator_gjcc(self, Dee_memval_direct_getloc(p_dst),
 	                                &coalesce_from, false,
-	                                text_Lnot_equal, NULL, text_Lnot_equal));
+	                                Lnot_equal, NULL, Lnot_equal));
 	EDO(err_common_state, Dee_function_generator_vpop_at(self, 2));           /* to */
 	EDO(err_common_state, Dee_function_generator_vdup(self));                 /* to, to */
 	EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* ... */
 	Dee_memstate_decref(common_state);
-	Dee_host_symbol_setsect(text_Lnot_equal, self->fg_sect);
+	Dee_host_symbol_setsect(Lnot_equal, self->fg_sect);
 	return Dee_function_generator_vpop(self);
 err_common_state:
 	Dee_memstate_decref(common_state);
@@ -2866,6 +2927,48 @@ err:
 	return -1;
 }
 
+/* Remember that "TOP" is a dependency of "SECOND" */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vdep(struct Dee_function_generator *__restrict self) {
+	struct Dee_memval *this_object;
+	struct Dee_memval *depends_on_this;
+	struct Dee_memstate *state = self->fg_state;
+	if unlikely(state->ms_stackc < 2)
+		return err_illegal_stack_effect();
+	this_object     = Dee_memstate_vtop(state);
+	depends_on_this = this_object - 1;
+
+	/* You can only form dependencies to:
+	 * - direct objects
+	 * - that aren't constants
+	 * - and that are holding references (or have an alias with a reference)
+	 *
+	 * In the case of vmorph objects, the caller must do their own handling,
+	 * or rely on this default handling where such a dependency is a no-op. */
+	if (Dee_memval_isdirect(depends_on_this) && !Dee_memval_direct_isconst(depends_on_this) &&
+	    Dee_memstate_hasref(self->fg_state, Dee_memval_direct_getobj(depends_on_this))) {
+		struct Dee_memobj *this_object_item;
+		if unlikely(Dee_memstate_isshared(state)) {
+			state = Dee_memstate_copy(state);
+			if unlikely(!state)
+				goto err;
+			Dee_memstate_decref_nokill(self->fg_state);
+			self->fg_state  = state;
+			this_object     = Dee_memstate_vtop(state);
+			depends_on_this = this_object - 1;
+		}
+		Dee_memval_foreach_obj(this_object_item, this_object) {
+			if unlikely(Dee_memstate_dependency(self->fg_state, this_object_item,
+			                                    Dee_memval_direct_getobj(depends_on_this)))
+				goto err;
+		}
+		Dee_memval_foreach_obj_end;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 /* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph' in SECOND */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self,
@@ -3226,10 +3329,9 @@ again:
 			}
 			DO(Dee_function_generator_gasflush(self, Dee_memobj_getloc(mobj),
 			                                   &flushed_loc, require_valoff_0));
-			ASSERT(Dee_memloc_gettyp(&flushed_loc) == MEMADR_TYPE_HSTACKIND);
-			ASSERT(Dee_memloc_hstackind_getvaloff(&flushed_loc) == 0 || !require_valoff_0);
-			Dee_memstate_decrinuse_for_memobj(state, mobj);
-			*Dee_memobj_getloc(mobj) = flushed_loc;
+			Dee_memstate_changeloc(self->fg_state, Dee_memobj_getloc(mobj), &flushed_loc);
+			ASSERTF(Dee_memloc_sameloc(Dee_memobj_getloc(mobj), &flushed_loc),
+			        "This should have gotten updated!");
 		}
 	}
 	Dee_memval_foreach_obj_end;
@@ -3535,6 +3637,7 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vret(struct Dee_function_generator *__restrict self) {
 	struct Dee_memloc loc;
+	struct Dee_memobj *retobj;
 	Dee_vstackaddr_t stackc;
 	Dee_lid_t lid;
 
@@ -3560,8 +3663,10 @@ Dee_function_generator_vret(struct Dee_function_generator *__restrict self) {
 	ASSERT(Dee_memval_isdirect(&self->fg_state->ms_stackv[0]) ||
 	       Dee_memval_isnullable(&self->fg_state->ms_stackv[0]));
 	ASSERT(Dee_memval_hasobj0(&self->fg_state->ms_stackv[0]));
-	ASSERT(Dee_memobj_isref(Dee_memval_getobj0(&self->fg_state->ms_stackv[0])));
-	loc = *Dee_memobj_getloc(Dee_memval_getobj0(&self->fg_state->ms_stackv[0]));
+	retobj = Dee_memval_getobj0(&self->fg_state->ms_stackv[0]);
+	ASSERT(Dee_memobj_isref(retobj));
+	loc = *Dee_memobj_getloc(retobj);
+	Dee_memobj_fini(retobj);
 	Dee_memstate_decrinuse_for_memloc(self->fg_state, &loc);
 	self->fg_state->ms_stackc = 0;
 
@@ -3681,7 +3786,7 @@ Dee_function_generator_vcallapi_ex_(struct Dee_function_generator *__restrict se
 	/* Flush registers that don't appear in the top `n_pop' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	DO(Dee_function_generator_gflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
+	DO(Dee_function_generator_vflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
 
 	/* Build up the argument list. */
 	v_argv = self->fg_state->ms_stackv;
@@ -3735,7 +3840,7 @@ Dee_function_generator_vcalldynapi_ex(struct Dee_function_generator *__restrict 
 	/* Flush registers that don't appear in the top `n_pop' stack locations.
 	 * When the function always throw an exception, we *only* need to preserve
 	 * stuff that contains references! */
-	DO(Dee_function_generator_gflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
+	DO(Dee_function_generator_vflushregs(self, n_pop, cc == VCALL_CC_EXCEPT));
 
 	/* Build up the argument list. */
 	v_argv -= argc;
@@ -3762,7 +3867,7 @@ err:
 }
 
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINTPTR',
  * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
  * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
@@ -3796,7 +3901,7 @@ err:
 	return -1;
 }
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINTPTR',
  * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
  * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.

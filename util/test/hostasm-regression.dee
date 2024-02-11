@@ -52,7 +52,7 @@ global nonFinalGlobalNone = _hide(none);
 
 function hexec(expectedResult, args, func) {
 	local actualResult = test_compile_and_run(func, args);
-	if (expectedResult is Callable) {
+	if (expectedResult is Callable && expectedResult !is Type) {
 		assert expectedResult(actualResult);
 	} else {
 		assert actualResult == expectedResult;
@@ -194,3 +194,17 @@ hexec(x -> x.valueA == "x" && x.valueB == 7, ("x", 7), (a, b) -> {
 	};
 	return MyClass();
 });
+
+local c = Cell();
+hexec(0, ("x", 7), () -> c.get(0));
+c.value = 42;
+hexec(42, ("x", 7), () -> c.get(0));
+
+hexec(int, (4, 7), (a, b) -> {
+	/* This right here tests the behavior of dependent objects when
+	 * the object being depended upon is deleted. */
+	local x = a + 42;
+	local y = type(x); /* Because "x" isn't used below, it gets deleted before "y" */
+	return y;
+});
+

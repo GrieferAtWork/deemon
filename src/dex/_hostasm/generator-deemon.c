@@ -1190,7 +1190,7 @@ do_jcc:
 			*p_next_instr = DeeAsm_NextInstr(next_instr);
 			/* TODO: Optimizations when rhs is a constant. */
 			/* TODO: Optimizations when the type of lhs is known. */
-			DO(Dee_function_generator_vnotoneref_at(self, 1)); /* lhs, rhs */
+			DO(Dee_function_generator_vnotoneref_at(self, 1));                            /* lhs, rhs */
 			DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_REPR, 2)); /* lhs, rhs */
 			return Dee_function_generator_vcallapi(self, &libhostasm_rt_DeeObject_ShlRepr, VCALL_CC_OBJECT, 2);
 
@@ -1528,7 +1528,7 @@ do_jcc:
 		intval = Dee_function_generator_inlineref(self, intval);
 		if unlikely(!intval)
 			goto err;
-		opname = ASM_MATHBLOCK_OPCODE2IOPERATOR(opcode);
+		opname = ASM_MATHBLOCK_OPCODE2OPERATOR(opcode);
 		DO(Dee_function_generator_vpush_const(self, intval)); /* lhs, rhs */
 		return Dee_function_generator_vop(self, opname, 2, VOP_F_PUSHRES | VOP_F_ALLOWNATIVE);
 	}	break;
@@ -1543,7 +1543,7 @@ do_jcc:
 		intval = Dee_function_generator_inlineref(self, intval);
 		if unlikely(!intval)
 			goto err;
-		opname = ASM_MATHBLOCK_OPCODE2IOPERATOR(opcode);
+		opname = ASM_MATHBLOCK_OPCODE2OPERATOR(opcode);
 		DO(Dee_function_generator_vpush_const(self, intval)); /* lhs, rhs */
 		return Dee_function_generator_vop(self, opname, 2, VOP_F_PUSHRES | VOP_F_ALLOWNATIVE);
 	}	break;
@@ -1561,7 +1561,7 @@ do_jcc:
 		intval = Dee_function_generator_inlineref(self, intval);
 		if unlikely(!intval)
 			goto err;
-		opname = ASM_MATHBLOCK_OPCODE2IOPERATOR(opcode);
+		opname = ASM_MATHBLOCK_OPCODE2OPERATOR(opcode);
 		DO(Dee_function_generator_vpush_const(self, intval)); /* lhs, rhs */
 		return Dee_function_generator_vop(self, opname, 2, VOP_F_PUSHRES | VOP_F_ALLOWNATIVE);
 	}	break;
@@ -1653,7 +1653,7 @@ do_jcc:
 	TARGET(ASM_RANGE)                                              /* start, end */
 		DO(Dee_function_generator_vnotoneref(self, 2));            /* start, end */
 		DO(Dee_function_generator_vswap(self));                    /* end, start */
-		DO(Dee_function_generator_vpush_none(self));    /* end, start, Dee_None */
+		DO(Dee_function_generator_vpush_none(self));               /* end, start, Dee_None */
 		DO(Dee_function_generator_vpush_const(self, DeeInt_Zero)); /* end, start, Dee_None, DeeInt_Zero */
 		DO(Dee_function_generator_vcoalesce(self));                /* end, used_start */
 		DO(Dee_function_generator_vswap(self));                    /* used_start, end */

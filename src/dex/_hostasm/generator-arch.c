@@ -789,7 +789,7 @@ gcall86_impl(struct Dee_function_generator *__restrict self,
 		 * >> callP  *%Pax
 		 *
 		 * Do this:
-		 * >> callP  *.Laddr(%Pip)
+		 * >> callP  *.Laddr(%Pip)   # .byte 0xff, 0x15; .long (.Laddr-.)-4
 		 * >> .pushsection .rodata
 		 * >> .Laddr: .qword addr
 		 * >> .popsection
@@ -798,6 +798,12 @@ gcall86_impl(struct Dee_function_generator *__restrict self,
 		 * Or even better: add a special relocation for this
 		 * case that looks at the delta during encode-time,
 		 * and determines if a placement in .rodata is needed
+		 *
+		 * Or even better:
+		 * - Always encode as "callP *.Laddr(%Pip)", and replace
+		 *   with "nop; callP addr" during linking if the delta
+		 *   fits into 32 bits. But is this actually faster in
+		 *   the general case than the movabs solution?
 		 */
 		if unlikely(Dee_host_section_reqx86(sect, 2))
 			goto err;
@@ -1449,7 +1455,7 @@ _Dee_host_section_gincref_const(struct Dee_host_section *__restrict self,
 	gen86_printf("incref\t%s", gen86_addrname(value));
 	if (n != 1)
 		Dee_DPRINTF(", $%Iu", n);
-	Dee_DPRINTF("\t# %r\n", value);
+	Dee_DPRINTF("\t# const @%r\n", value);
 #else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 	if (n == 1) {
 		gen86_printf("lock inc" Plq "\t%#Ix\n", caddr);
@@ -1486,7 +1492,7 @@ _Dee_host_section_gdecref_const(struct Dee_host_section *__restrict self,
 	gen86_printf("decref_nokill\t%s", gen86_addrname(value));
 	if (n != 1)
 		Dee_DPRINTF(", $%Iu", n);
-	Dee_DPRINTF("\t# %r\n", value);
+	Dee_DPRINTF("\t# const @%r\n", value);
 #else /* NO_HOSTASM_VERBOSE_DECREF_ASSEMBLY */
 	if (n == 1) {
 		gen86_printf("lock dec" Plq "\t%#Ix\n", caddr);
@@ -3342,9 +3348,11 @@ setreg_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
 		bzero(register_use_count, sizeof(register_use_count));
 		for (i = 0; i < already_pushed_arg_regs; ++i) /* Already loaded arguments must not be clobbered */
 			register_use_count[host_arg_regs[argc + i]] = (uint16_t)-1;
-		for (i = 0; i <= argc; ++i) {
-			if (Dee_memloc_hasreg(nextarg)) {
-				Dee_host_register_t regno = Dee_memloc_getreg(nextarg);
+		ASSERT(arg == &locv[argc + 1]);
+		for (i = 0; i <= (argc + 1); ++i) { /* +1, because we also mustn't use a register used by the current argument! */
+			struct Dee_memloc *checkarg = &locv[i];
+			if (Dee_memloc_hasreg(checkarg)) {
+				Dee_host_register_t regno = Dee_memloc_getreg(checkarg);
 				++register_use_count[regno];
 			}
 		}
@@ -3410,7 +3418,7 @@ setreg_memloc_maybe_adjust_regs(struct Dee_function_generator *__restrict self,
 	switch (Dee_memloc_gettyp(arg)) {
 
 	case MEMADR_TYPE_HSTACKIND:
-		if unlikely(Dee_function_generator_gmov_hstackind2reg(self, Dee_memloc_hstackind_getcfa(arg), dst_regno))
+		if unlikely(Dee_function_generator_gmov_hstackind2reg_nopop(self, Dee_memloc_hstackind_getcfa(arg), dst_regno))
 			goto err;
 		return Dee_function_generator_gmov_regx2reg(self, dst_regno, Dee_memloc_hregind_getvaloff(arg), dst_regno);
 

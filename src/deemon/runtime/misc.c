@@ -61,6 +61,7 @@
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
+#include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #include "runtime_error.h"
@@ -89,6 +90,9 @@
 #endif /* !__MALLOC_ZERO_IS_NONNULL */
 
 DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 STATIC_ASSERT(sizeof(Dee_uint128_t) == 16);
 STATIC_ASSERT(sizeof(Dee_int128_t) == 16);
@@ -1924,7 +1928,7 @@ debug_printer(void *UNUSED(closure),
 			DBG_ALIGNMENT_DISABLE();
 			OutputDebugStringA(temp);
 			DBG_ALIGNMENT_ENABLE();
-			*(uintptr_t *)&buffer += part;
+			buffer = (char const *)((byte_t *)buffer + part);
 			bufsize -= part;
 		}
 	}

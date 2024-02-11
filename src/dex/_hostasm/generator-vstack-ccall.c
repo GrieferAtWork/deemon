@@ -1078,37 +1078,26 @@ err:
 /* this, [def] -> value */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t argc) {
-	DREF struct Dee_memstate *common_state;
-	if (argc == 0) {
-		DO(vcall_DeeCell_Get_or_Error(self, &DeeError_ValueError));
-	} else {
-		struct Dee_host_symbol *Lpresent;
-		DO(Dee_function_generator_vswap(self));                                            /* def, this */
-		DO(Dee_function_generator_vcallapi(self, &DeeCell_TryGet, VCALL_CC_RAWINTPTR, 1)); /* def, UNCHECKED(result) */
-		Lpresent = Dee_function_generator_newsym_named(self, ".Lpresent");
-		if unlikely(!Lpresent)
-			goto err;
-		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self), Lpresent)); /* def, result */
-		DO(Dee_function_generator_state_unshare(self));
-		common_state = self->fg_state;
-		ASSERT(Dee_memval_isdirect(Dee_memstate_vtop(common_state)));
-		Dee_memval_direct_setref(Dee_memstate_vtop(common_state));
-		Dee_memstate_incref(common_state);
-		EDO(err_common_state, Dee_function_generator_state_unshare(self));
-		Dee_function_generator_vtop_direct_clearref(self);
-		EDO(err_common_state, Dee_function_generator_vpop(self));     /* def */
-		EDO(err_common_state, Dee_function_generator_vdup(self));     /* def, def */
-		EDO(err_common_state, Dee_function_generator_vdirect1(self)); /* def, def */
-		EDO(err_common_state, Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* def, def */
-		Dee_function_generator_vtop_direct_setref(self);              /* def, ref:def */
-		EDO(err_common_state, Dee_function_generator_vmorph(self, common_state)); /* def, result */
-		Dee_memstate_decref(common_state);
-		Dee_host_symbol_setsect(Lpresent, self->fg_sect); /* def, result */
-		DO(Dee_function_generator_vpop_at(self, 2));      /* result */
-	}
+	struct Dee_function_generator_branch branch;
+	if (argc == 0)
+		return vcall_DeeCell_Get_or_Error(self, &DeeError_ValueError);
+	/**/                                                                               /* this, def */
+	DO(Dee_function_generator_vswap(self));                                            /* def, this */
+	/* TODO: Inline this call to DeeCell_TryGet() */
+	DO(Dee_function_generator_vcallapi(self, &DeeCell_TryGet, VCALL_CC_RAWINTPTR, 1)); /* def, result */
+	Dee_function_generator_vtop_direct_setref(self);                                   /* def, ref:result */
+	DO(Dee_function_generator_vdup(self));                                             /* def, ref:result, result */
+	DO(Dee_function_generator_vjz_enter(self, &branch));                               /* def, ref:result */
+	EDO(err_branch, Dee_function_generator_state_unshare(self));                       /* def, ref:result */
+	Dee_function_generator_vtop_direct_clearref(self);                                 /* def, result */
+	EDO(err_branch, Dee_function_generator_vpop(self));                                /* def */
+	EDO(err_branch, Dee_function_generator_vdup(self));                                /* def, def */
+	EDO(err_branch, Dee_function_generator_vdirect1(self));                            /* def, def */
+	EDO(err_branch, Dee_function_generator_vref_noalias(self));                        /* def, ref:def */
+	DO(Dee_function_generator_vjz_leave(self, &branch));                               /* def, result */
 	return 0;
-err_common_state:
-	Dee_memstate_decref(common_state);
+err_branch:
+	Dee_function_generator_branch_fini(&branch);
 err:
 	return -1;
 }

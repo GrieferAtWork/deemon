@@ -306,8 +306,6 @@ Dee_function_generator_gmov_hstack2reg(struct Dee_function_generator *__restrict
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restrict self,
                                           Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno) {
-	int result;
-	ptrdiff_t sp_offset;
 	/* TODO: If "dst_regno" is a known equivalence of "[#cfa_offset]", do nothing */
 
 	/* Special case: if the value lies on-top of the host stack, then pop it instead of move it. */
@@ -362,6 +360,15 @@ Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restr
 		return Dee_function_generator_ghstack_popreg(self, dst_regno);
 	}
 do_use_mov:
+	return Dee_function_generator_gmov_hstackind2reg_nopop(self, cfa_offset, dst_regno);
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gmov_hstackind2reg_nopop(struct Dee_function_generator *__restrict self,
+                                                Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno) {
+	int result;
+	ptrdiff_t sp_offset;
+	/* TODO: If "dst_regno" is a known equivalence of "[#cfa_offset]", do nothing */
 	sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, cfa_offset);
 	result    = _Dee_function_generator_gmov_hstackind2reg(self, sp_offset, dst_regno);
 	if likely(result == 0) {
@@ -370,6 +377,7 @@ do_use_mov:
 	}
 	return result;
 }
+
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_gmov_const2reg(struct Dee_function_generator *__restrict self,
@@ -1638,6 +1646,16 @@ Dee_function_generator_gflushregind(struct Dee_function_generator *__restrict se
 				Dee_memloc_init_hstackind(Dee_memobj_getloc(obj), cfa_offset,
 				                          Dee_memobj_hregind_getvaloff(obj));
 			}
+			if (Dee_memobj_hasxinfo(obj)) {
+				struct Dee_memobj_xinfo *xinfo;
+				xinfo = Dee_memobj_getxinfo(obj);
+				if (Dee_memloc_gettyp(&xinfo->mox_dep) == MEMADR_TYPE_HREGIND &&
+				    Dee_memloc_hregind_getreg(&xinfo->mox_dep) == regno &&
+				    Dee_memloc_hregind_getindoff(&xinfo->mox_dep) == ind_offset) {
+					Dee_memloc_init_hstackind(&xinfo->mox_dep, cfa_offset,
+					                          Dee_memloc_hregind_getvaloff(&xinfo->mox_dep));
+				}
+			}
 		}
 		Dee_memval_foreach_obj_end;
 	}
@@ -1655,12 +1673,13 @@ err:
  *                                        that don't contain object references.
  * @param: only_if_reference: Only flush locations that contain references. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self,
+Dee_function_generator_vflushregs(struct Dee_function_generator *__restrict self,
                                   Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                   bool only_if_reference) {
 	Dee_lid_t i;
 	Dee_cfa_t register_cfa[HOST_REGISTER_COUNT];
 	struct Dee_memstate *state = self->fg_state;
+	bool changed_dependencies_to_stach = false;
 	ASSERT(!Dee_memstate_isshared(state));
 
 	/* Figure out which registers are in use, and assign them CFA offsets. */
@@ -1683,6 +1702,8 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 				Dee_memstate_decrinuse(state, regno);
 				Dee_memloc_init_hstackind(Dee_memobj_getloc(obj), register_cfa[regno],
 				                          Dee_memobj_hreg_getvaloff(obj));
+				if (obj->mo_flags & MEMOBJ_F_HASDEP)
+					changed_dependencies_to_stach = true;
 			} else if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREGIND) {
 				if unlikely(Dee_function_generator_gflushregind(self, Dee_memobj_getloc(obj)))
 					goto err;
@@ -1712,6 +1733,8 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 				Dee_memstate_decrinuse(state, regno);
 				Dee_memloc_init_hstackind(Dee_memobj_getloc(obj), register_cfa[regno],
 				                          Dee_memobj_hreg_getvaloff(obj));
+				if (obj->mo_flags & MEMOBJ_F_HASDEP)
+					changed_dependencies_to_stach = true;
 			} else if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREGIND) {
 				if unlikely(Dee_function_generator_gflushregind(self, Dee_memobj_getloc(obj)))
 					goto err;
@@ -1719,6 +1742,30 @@ Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self
 			}
 		}
 		Dee_memval_foreach_obj_end;
+	}
+	if (changed_dependencies_to_stach) {
+		/* Must update consumers of dependencies of use new stack locations instead of registers. */
+		struct Dee_memval *depends_mval;
+		Dee_memstate_foreach(depends_mval, state) {
+			struct Dee_memobj *depends_mobj;
+			Dee_memval_foreach_obj(depends_mobj, depends_mval) {
+				if (Dee_memobj_hasxinfo(depends_mobj)) {
+					struct Dee_memobj_xinfo *xinfo;
+					xinfo = Dee_memobj_getxinfo(depends_mobj);
+					if (Dee_memloc_gettyp(&xinfo->mox_dep) == MEMADR_TYPE_HREG) {
+						Dee_host_register_t regno;
+						regno = Dee_memloc_hreg_getreg(&xinfo->mox_dep);
+						ASSERT(regno < HOST_REGISTER_COUNT);
+						if (register_cfa[regno] != (Dee_cfa_t)-1) {
+							Dee_memloc_init_hstackind(&xinfo->mox_dep, register_cfa[regno],
+							                          Dee_memloc_hreg_getvaloff(&xinfo->mox_dep));
+						}
+					}
+				}
+			}
+			Dee_memval_foreach_obj_end;
+		}
+		Dee_memstate_foreach_end;
 	}
 
 	/* NOTE: Usage-registers must be cleared by the caller! */
@@ -1729,11 +1776,12 @@ err:
 
 /* Flush memory locations that make use of `regno' onto the hstack. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
+Dee_function_generator_vflushreg(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                  bool only_if_reference, Dee_host_register_t regno) {
 	Dee_lid_t i;
 	Dee_cfa_t regno_cfa = (Dee_cfa_t)-1;
+	bool changed_dependencies_to_stach = false;
 	struct Dee_memstate *state = self->fg_state;
 	ASSERT(!Dee_memstate_isshared(state));
 	ASSERT(regno < HOST_REGISTER_COUNT);
@@ -1754,6 +1802,8 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 				Dee_memstate_decrinuse(state, regno);
 				Dee_memloc_init_hstackind(Dee_memobj_getloc(obj), regno_cfa,
 				                          Dee_memobj_hreg_getvaloff(obj));
+				if (obj->mo_flags & MEMOBJ_F_HASDEP)
+					changed_dependencies_to_stach = true;
 			} else if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREGIND &&
 			           Dee_memobj_hregind_getreg(obj) == regno) {
 				if unlikely(Dee_function_generator_gflushregind(self, Dee_memobj_getloc(obj)))
@@ -1783,6 +1833,8 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 				Dee_memstate_decrinuse(state, regno);
 				Dee_memloc_init_hstackind(Dee_memobj_getloc(obj), regno_cfa,
 				                          Dee_memobj_hreg_getvaloff(obj));
+				if (obj->mo_flags & MEMOBJ_F_HASDEP)
+					changed_dependencies_to_stach = true;
 			} else if (Dee_memobj_gettyp(obj) == MEMADR_TYPE_HREGIND &&
 			           Dee_memobj_hregind_getreg(obj) == regno) {
 				if unlikely(Dee_function_generator_gflushregind(self, Dee_memobj_getloc(obj)))
@@ -1791,6 +1843,27 @@ Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
 			}
 		}
 		Dee_memval_foreach_obj_end;
+	}
+	if (changed_dependencies_to_stach) {
+		/* Must update consumers of dependencies of use new stack locations instead of registers. */
+		struct Dee_memval *depends_mval;
+		ASSERT(regno_cfa != (Dee_cfa_t)-1);
+		Dee_memstate_foreach(depends_mval, state) {
+			struct Dee_memobj *depends_mobj;
+			Dee_memval_foreach_obj(depends_mobj, depends_mval) {
+				if (Dee_memobj_hasxinfo(depends_mobj)) {
+					struct Dee_memobj_xinfo *xinfo;
+					xinfo = Dee_memobj_getxinfo(depends_mobj);
+					if (Dee_memloc_gettyp(&xinfo->mox_dep) == MEMADR_TYPE_HREG &&
+					    Dee_memloc_hreg_getreg(&xinfo->mox_dep) == regno) {
+						Dee_memloc_init_hstackind(&xinfo->mox_dep, regno_cfa,
+						                          Dee_memloc_hreg_getvaloff(&xinfo->mox_dep));
+					}
+				}
+			}
+			Dee_memval_foreach_obj_end;
+		}
+		Dee_memstate_foreach_end;
 	}
 
 	/* NOTE: Usage-registers must be cleared by the caller! */
@@ -1892,7 +1965,7 @@ Dee_function_generator_gallocreg(struct Dee_function_generator *__restrict self,
 		result = Dee_function_generator_gallocreg_pickreg(self, not_these);
 		if unlikely(result >= HOST_REGISTER_COUNT)
 			goto err_no_way_to_allocate;
-		if unlikely(Dee_function_generator_gflushreg(self, 0, false, result))
+		if unlikely(Dee_function_generator_vflushreg(self, 0, false, result))
 			goto err;
 	}
 	return result;
@@ -2581,7 +2654,6 @@ Dee_function_generator_gasreg(struct Dee_function_generator *__restrict self,
                               /*out*/ struct Dee_memloc *result,
                               Dee_host_register_t const *not_these) {
 	struct Dee_memequiv *eq;
-	struct Dee_memstate *state;
 	Dee_host_register_t regno;
 	ptrdiff_t val_delta;
 	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREG) {
@@ -2624,32 +2696,6 @@ no_equivalence:
 	/* Move value into register. */
 	if unlikely(Dee_function_generator_gmov_loc2regy(self, loc, regno, &val_delta))
 		goto err;
-
-	/* If the location used to be a writable location, then we must
-	 * also update any other location that used to alias `loc'. */
-	state = self->fg_state;
-	if (Dee_memloc_gettyp(loc) == MEMADR_TYPE_HREGIND ||
-	    Dee_memloc_gettyp(loc) == MEMADR_TYPE_HSTACKIND) {
-		ptrdiff_t delta_change = val_delta - Dee_memloc_getoff(loc);
-		struct Dee_memval *alias_val;
-		struct Dee_memobj *alias_obj;
-		struct Dee_memloc orig_loc = *loc;
-		Dee_memstate_foreach(alias_val, state) {
-			Dee_memval_foreach_obj(alias_obj, alias_val) {
-				if (!Dee_memloc_sameadr(Dee_memobj_getloc(alias_obj), &orig_loc))
-					continue;
-				if (Dee_memobj_gettyp(alias_obj) == MEMADR_TYPE_HSTACKIND &&
-				    (alias_obj->mo_flags & MEMOBJ_F_LINEAR))
-					continue; /* The alias must remain on-stack (don't update it) */
-				Dee_memstate_decrinuse_for_memobj(self->fg_state, alias_obj);
-				Dee_memloc_init_hreg(Dee_memobj_getloc(alias_obj), regno,
-				                     Dee_memobj_getoff(alias_obj) + delta_change);
-				Dee_memstate_incrinuse(self->fg_state, regno);
-			}
-			Dee_memval_foreach_obj_end;
-		}
-		Dee_memstate_foreach_end;
-	}
 
 	/* Remember that `loc' now lies in a register. */
 	Dee_memloc_init_hreg(result, regno, val_delta);

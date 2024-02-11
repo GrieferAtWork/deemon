@@ -760,6 +760,19 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 /* Dee_memval                                                           */
 /************************************************************************/
 
+INTERN ATTR_PURE NONNULL((1, 2)) bool DCALL
+Dee_memobj_xinfo_cdesc_equals(struct Dee_memobj_xinfo_cdesc const *a,
+                              struct Dee_memobj_xinfo_cdesc const *b) {
+	if (a->moxc_desc != b->moxc_desc)
+		goto nope;
+	if (memcmp(a->moxc_init, b->moxc_init,
+	           CEILDIV(a->moxc_desc->cd_cmemb_size, CHAR_BIT)))
+		goto nope;
+	return true;
+nope:
+	return false;
+}
+
 INTERN NONNULL((1)) void DCALL
 Dee_memobj_xinfo_destroy(struct Dee_memobj_xinfo *__restrict self) {
 	Dee_Free(self->mox_cdesc);
@@ -771,16 +784,13 @@ Dee_memobj_xinfo_equals(struct Dee_memobj_xinfo const *a,
                         struct Dee_memobj_xinfo const *b) {
 	if (a == b)
 		return true;
-	if (a->mox_cdesc != a->mox_cdesc) {
-		struct Dee_memobj_xinfo_cdesc *ca = a->mox_cdesc;
-		struct Dee_memobj_xinfo_cdesc *cb = b->mox_cdesc;
-		if (ca->moxc_desc != cb->moxc_desc)
+	if (a->mox_cdesc != b->mox_cdesc) {
+		if (!a->mox_cdesc || !b->mox_cdesc)
 			goto nope;
-		if (memcmp(ca->moxc_init, cb->moxc_init,
-		           CEILDIV(ca->moxc_desc->cd_cmemb_size, CHAR_BIT)))
+		if (!Dee_memobj_xinfo_cdesc_equals(a->mox_cdesc, b->mox_cdesc))
 			goto nope;
 	}
-	return true;
+	return Dee_memloc_sameloc(&a->mox_dep, &b->mox_dep);
 nope:
 	return false;
 }

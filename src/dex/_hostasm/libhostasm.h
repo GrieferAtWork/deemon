@@ -271,6 +271,12 @@ struct Dee_memadr {
 #define Dee_memadr_getcfaend(self)   ((self)->ma_val.v_cfa + HOST_SIZEOF_POINTER)
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 
+#define Dee_memadr_gettyp(self) ((self)->ma_typ)
+#define Dee_memadr_hasreg(self) MEMADR_TYPE_HASREG(Dee_memadr_gettyp(self))
+#define Dee_memadr_getreg(self) ((self)->ma_reg)
+
+
+
 struct Dee_memloc {
 	/* Low level value location (address of optional value delta) */
 	struct Dee_memadr ml_adr; /* >> value = VALUE_OF(ml_adr) + ml_off; */
@@ -706,6 +712,10 @@ struct Dee_memobj_xinfo_cdesc {
 	COMPILER_FLEXIBLE_ARRAY(byte_t,     moxc_init); /* [CEILDIV(moxc_desc->cd_cmemb_size, CHAR_BIT)] Bitset of cd_members items already initialized. */
 };
 
+INTDEF ATTR_PURE NONNULL((1, 2)) bool DCALL
+Dee_memobj_xinfo_cdesc_equals(struct Dee_memobj_xinfo_cdesc const *a,
+                              struct Dee_memobj_xinfo_cdesc const *b);
+
 #define _Dee_memobj_xinfo_cdesc_wasinit_slot(addr) ((addr) / CHAR_BIT)
 #define _Dee_memobj_xinfo_cdesc_wasinit_mask(addr) ((byte_t)1 << ((addr) % CHAR_BIT))
 #define Dee_memobj_xinfo_cdesc_wasinit(self, addr) \
@@ -718,7 +728,11 @@ struct Dee_memobj_xinfo_cdesc {
 
 struct Dee_memobj_xinfo {
 	Dee_refcnt_t                   mox_refcnt; /* Reference counter (when >1, this struct is used by multiple `Dee_memval'-s) */
-	struct Dee_memobj_xinfo_cdesc *mox_cdesc;  /* [0..1] Class descriptor info. */
+	struct Dee_memobj_xinfo_cdesc *mox_cdesc;  /* [0..1] Class descriptor info (or NULL if this isn't a user-defined class in the making). */
+	struct Dee_memloc              mox_dep;    /* Dependent memory location (or all zeroes if there is none).
+	                                            * All `Dee_memobj' that are equal to this location get the `MEMOBJ_F_HASDEP'
+	                                            * flag. When a location with that flag gets decref'd, it must first make sure
+	                                            * that every distinct objects that depend on it has at least 1 reference. */
 };
 
 INTDEF NONNULL((1)) void DCALL
@@ -732,9 +746,10 @@ Dee_memobj_xinfo_equals(struct Dee_memobj_xinfo const *a,
 
 /* Possible flags for `struct Dee_memobj::mo_flags' */
 #define MEMOBJ_F_NORMAL       0x00
-#define MEMOBJ_F_ISREF        0x01 /* DREF: A reference is being held to the objec in `mo_loc' */
+#define MEMOBJ_F_ISREF        0x01 /* DREF: A reference is being held to the object in `mo_loc' */
 #define MEMOBJ_F_ONEREF       0x02 /* [valid_if(MEMOBJ_F_ISREF)] The reference being held by `mo_loc' has not yet escaped (on decref, can use decref_dokill instead) */
 #define MEMOBJ_F_LINEAR       0x04 /* When mo_loc is `MEMADR_TYPE_HSTACKIND': location is part of a linear vector. It must not be moved to a different cfa offset (only allowed if memobj is part of vstack) */
+#define MEMOBJ_F_HASDEP       0x08 /* This object's location (may) appear as a dependency of another object. If it gets decref'd, must first incref every every distinct dependent object. */
 #define _MEMOBJ_F_EXPAND      0x40 /* May appear in MEMVAL_VMORPH_LIST/MEMVAL_VMORPH_TUPLE/MEMVAL_VMORPH_HASHSET/MEMVAL_VMORPH_ROSET to indicate a "foo..." argument */
 #define MEMOBJ_F_MAYBEUNBOUND 0x80 /* Location may be NULL, meaning it may not be bound (only allowed if memobj is used by MEMVAL_VMORPH_DIRECT of a local variable memval)
                                     * NOTE: This flag is combined with `MEMADR_TYPE_CONST,NULL' to represent uninitialized locals. */
@@ -1465,6 +1480,30 @@ INTDEF NONNULL((1)) void DCALL _Dee_memstate_verifyrinuse_d(struct Dee_memstate 
 INTDEF NONNULL((1)) void DCALL
 Dee_memstate_remember_undefined_unusedregs(struct Dee_memstate *__restrict self);
 
+/* Remember that "this_object" depends on "depends_on_this". That means that when
+ * "depends_on_this" (or one of its aliases) gets decref'd such that it *might*
+ * get destroyed, it must *first* ensure that "this_object" (or one of its aliases)
+ * is holding a reference.
+ * Note that any object can only ever have at most 1 dependency (so if "this_object"
+ * already has a dependency, that dependency gets overwritten by this function). */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_memstate_dependency(struct Dee_memstate *__restrict self,
+                        struct Dee_memobj *__restrict this_object,
+                        struct Dee_memobj *__restrict depends_on_this);
+
+/* Same as `Dee_memobj_reqxinfo()', but must be used when "obj" may be aliased by
+ * other memory locations, in which case the returned struct will be allocated in
+ * all aliases as well. */
+INTDEF WUNUSED NONNULL((1, 2)) struct Dee_memobj_xinfo *DCALL
+Dee_memstate_reqxinfo(struct Dee_memstate *__restrict self,
+                      struct Dee_memobj *__restrict obj);
+
+/* Change all reference to "from" to instead refer to "to" */
+INTDEF NONNULL((1, 2, 3)) void DCALL
+Dee_memstate_changeloc(struct Dee_memstate *__restrict self,
+                       struct Dee_memloc const *from,
+                       struct Dee_memloc const *to);
+
 
 
 
@@ -1567,10 +1606,10 @@ INTDEF NONNULL((1, 2)) bool DCALL
 Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
                            struct Dee_memstate const *__restrict other);
 
-/* Check if a reference is being held by `mval' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mobj' or some other location that may be aliasing it. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
-                    struct Dee_memval const *mval);
+                    struct Dee_memobj const *mobj);
 
 /* Check if `mval' has an alias. */
 INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
@@ -2646,6 +2685,12 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 /* >> TOP = *(TOP + ind_delta); */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vind(struct Dee_function_generator *__restrict self, ptrdiff_t ind_delta);
 
+/* Remember that "TOP" is a dependency of "SECOND"
+ * This must be done with "TOP" is a sub-object of "SECOND", such that "TOP"
+ * either needs a reference of its own, or require that it not live longer
+ * than "SECOND". */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vdep(struct Dee_function_generator *__restrict self);
+
 /* >> *(SECOND + ind_delta) = POP(); // NOTE: Ignores `mv_vmorph' in SECOND */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self, ptrdiff_t ind_delta);
 
@@ -2763,7 +2808,7 @@ Dee_function_generator_vcalldynapi_ex(struct Dee_function_generator *__restrict 
 	Dee_function_generator_vcalldynapi_ex(self, cc, argc, (argc) + 1)
 
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINTPTR',
  * do the extra trailing checks needed to turn that call into `VCALL_CC_OBJECT'
  * The difference to directly passing `VCALL_CC_OBJECT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
@@ -2774,7 +2819,7 @@ Dee_function_generator_vcalldynapi_ex(struct Dee_function_generator *__restrict 
 INTDEF WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vcheckobj(struct Dee_function_generator *__restrict self);
 
-/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINT',
+/* After a call to `Dee_function_generator_vcallapi()' with `VCALL_CC_RAWINTPTR',
  * do the extra trailing checks needed to turn that call into `VCALL_CC_INT'
  * The difference to directly passing `VCALL_CC_INT' is that using this 2-step
  * method, you're able to pop more elements from the stack first.
@@ -3058,6 +3103,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_ghstack_popreg(stru
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_reg2hstackind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, Dee_cfa_t cfa_offset);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_hstack2reg(struct Dee_function_generator *__restrict self, Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_hstackind2reg(struct Dee_function_generator *__restrict self, Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_hstackind2reg_nopop(struct Dee_function_generator *__restrict self, Dee_cfa_t cfa_offset, Dee_host_register_t dst_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_const2reg(struct Dee_function_generator *__restrict self, void const *value, Dee_host_register_t dst_regno);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_const2regind(struct Dee_function_generator *__restrict self, void const *value, Dee_host_register_t dst_regno, ptrdiff_t dst_delta);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_const2hstackind(struct Dee_function_generator *__restrict self, void const *value, Dee_cfa_t cfa_offset);
@@ -3259,13 +3305,13 @@ Dee_function_generator_gusagereg(struct Dee_function_generator *__restrict self,
  *                                        that don't contain object references.
  * @param: only_if_reference: Only flush locations that contain references. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gflushregs(struct Dee_function_generator *__restrict self,
+Dee_function_generator_vflushregs(struct Dee_function_generator *__restrict self,
                                   Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                   bool only_if_reference);
 
 /* Flush memory locations that make use of `regno' onto the hstack. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gflushreg(struct Dee_function_generator *__restrict self,
+Dee_function_generator_vflushreg(struct Dee_function_generator *__restrict self,
                                  Dee_vstackaddr_t ignore_top_n_stack_if_not_ref,
                                  bool only_if_reference, Dee_host_register_t regno);
 

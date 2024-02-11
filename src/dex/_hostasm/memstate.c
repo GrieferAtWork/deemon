@@ -504,15 +504,46 @@ Dee_memobj_constrainwith(struct Dee_memstate *__restrict self,
 	}
 
 	/* Merge extended object information. */
-	if (obj->mo_xinfo && obj->mo_xinfo != other_obj->mo_xinfo &&
-	    !Dee_memobj_xinfo_equals(Dee_memobj_getxinfo(obj),
-	                             Dee_memobj_getxinfo(other_obj))) {
-		/* Incompatible extended object information */
-		DREF struct Dee_memobj_xinfo *xinfo;
-		xinfo = Dee_memobj_getxinfo(obj);
-		obj->mo_xinfo = NULL;
-		Dee_memobj_xinfo_decref(xinfo);
-		result = true;
+	if (obj->mo_xinfo && obj->mo_xinfo != other_obj->mo_xinfo) {
+		struct Dee_memobj_xinfo *cur_xinfo = Dee_memobj_getxinfo(obj);
+		struct Dee_memobj_xinfo *new_xinfo = NULL;
+		if (other_obj->mo_xinfo)
+			new_xinfo = Dee_memobj_getxinfo(other_obj);
+		if (new_xinfo &&
+		    Dee_memobj_xinfo_equals(Dee_memobj_getxinfo(obj),
+		                            Dee_memobj_getxinfo(other_obj))) {
+			/* Information is actually compatible! */
+		} else {
+			/* Incompatible extended object information */
+			if (cur_xinfo->mox_cdesc && (!new_xinfo || !new_xinfo->mox_cdesc ||
+			                             !Dee_memobj_xinfo_cdesc_equals(cur_xinfo->mox_cdesc,
+			                                                            new_xinfo->mox_cdesc))) {
+				/* Incompatible class descriptor info. */
+				result = true;
+				Dee_Free(cur_xinfo->mox_cdesc);
+				cur_xinfo->mox_cdesc = NULL;
+			}
+			if (Dee_memloc_gettyp(&cur_xinfo->mox_dep) != 0 &&
+			    (!new_xinfo || !Dee_memloc_sameloc(&cur_xinfo->mox_dep,
+			                                       &new_xinfo->mox_dep))) {
+				/* Incompatible dependent objects.
+				 * In this case, check if "obj" (or one of its aliases)
+				 * holds a reference. If not, then we must force it to
+				 * become a reference. */
+				if (!Dee_memstate_hasref(self, obj)) {
+					obj->mo_flags |= MEMOBJ_F_ISREF;
+					result = true;
+				}
+				bzero(&cur_xinfo->mox_dep, sizeof(cur_xinfo->mox_dep));
+			}
+
+			/* Cleanup: if the xinfo object becomes empty, get rid of it. */
+			if (cur_xinfo->mox_cdesc == 0 &&
+			    Dee_memloc_gettyp(&cur_xinfo->mox_dep) == 0) {
+				Dee_memobj_xinfo_decref(cur_xinfo);
+				obj->mo_xinfo = NULL;
+			}
+		}
 	}
 	return result;
 }
@@ -636,21 +667,20 @@ Dee_memstate_constrainwith(struct Dee_memstate *__restrict self,
 	return result;
 }
 
-/* Check if a reference is being held by `mval' or some other location that may be aliasing it. */
+/* Check if a reference is being held by `mobj' or some other location that may be aliasing it. */
 INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
 Dee_memstate_hasref(struct Dee_memstate const *__restrict self,
-                    struct Dee_memval const *mval) {
-	struct Dee_memval const *iter;
-	if (!Dee_memval_isdirect(mval))
-		return false; /* Virtual object */
-	if (Dee_memobj_isref(Dee_memval_direct_getobj(mval)))
+                    struct Dee_memobj const *mobj) {
+	struct Dee_memval const *alias_mval;
+	if (Dee_memobj_isref(mobj))
 		return true;
-	Dee_memstate_foreach(iter, self) {
-		if (!Dee_memval_isdirect(iter))
-			continue;
-		if (Dee_memval_direct_isref(iter) &&
-		    Dee_memval_direct_sameloc(iter, mval))
-			return true;
+	Dee_memstate_foreach(alias_mval, self) {
+		struct Dee_memobj const *alias_mobj;
+		Dee_memval_foreach_obj(alias_mobj, alias_mval) {
+			if (Dee_memobj_isref(alias_mobj) && Dee_memobj_sameloc(alias_mobj, mobj))
+				return true;
+		}
+		Dee_memval_foreach_obj_end;
 	}
 	Dee_memstate_foreach_end;
 	return false;
@@ -828,6 +858,127 @@ Dee_memstate_remember_undefined_unusedregs(struct Dee_memstate *__restrict self)
 	}
 }
 
+
+/* Remember that "this_object" depends on "depends_on_this". That means that when
+ * "depends_on_this" (or one of its aliases) gets decref'd such that it *might*
+ * get destroyed, it must *first* ensure that "this_object" (or one of its aliases)
+ * is holding a reference.
+ * Note that any object can only ever have at most 1 dependency (so if "this_object"
+ * already has a dependency, that dependency gets overwritten by this function). */
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_memstate_dependency(struct Dee_memstate *__restrict self,
+                        struct Dee_memobj *__restrict this_object,
+                        struct Dee_memobj *__restrict depends_on_this) {
+	struct Dee_memval *alias_mval;
+	struct Dee_memobj_xinfo *xinfo;
+	ASSERTF(this_object != depends_on_this, "You can't depend on yourself");
+	ASSERTF(!Dee_memobj_sameloc(this_object, depends_on_this), "You can't depend on yourself");
+	xinfo = Dee_memstate_reqxinfo(self, this_object);
+	if unlikely(!xinfo)
+		goto err;
+	xinfo->mox_dep = *Dee_memobj_getloc(depends_on_this);
+
+	/* Must also set the "MEMOBJ_F_HASDEP" in all aliases. */
+	if (!(depends_on_this->mo_flags & MEMOBJ_F_HASDEP)) {
+		depends_on_this->mo_flags |= MEMOBJ_F_HASDEP;
+		Dee_memstate_foreach(alias_mval, self) {
+			struct Dee_memobj *alias_mobj;
+			Dee_memval_foreach_obj(alias_mobj, alias_mval) {
+				if (Dee_memobj_sameloc(alias_mobj, depends_on_this) &&
+					alias_mobj != depends_on_this)
+					alias_mobj->mo_flags |= MEMOBJ_F_HASDEP;
+			}
+			Dee_memval_foreach_obj_end;
+		}
+		Dee_memstate_foreach_end;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* Same as `Dee_memobj_reqxinfo()', but must be used when "obj" may be aliased by
+ * other memory locations, in which case the returned struct will be allocated in
+ * all aliases as well. */
+INTERN WUNUSED NONNULL((1, 2)) struct Dee_memobj_xinfo *DCALL
+Dee_memstate_reqxinfo(struct Dee_memstate *__restrict self,
+                      struct Dee_memobj *__restrict obj) {
+	struct Dee_memobj_xinfo *result;
+	if (Dee_memobj_hasxinfo(obj))
+		return Dee_memobj_getxinfo(obj);
+	result = Dee_memobj_reqxinfo(obj);
+	if likely(result) {
+		struct Dee_memval *alias_mval;
+again_assign_aliases:
+		Dee_memstate_foreach(alias_mval, self) {
+			struct Dee_memobj *alias_mobj;
+			Dee_memval_foreach_obj(alias_mobj, alias_mval) {
+				if (Dee_memobj_sameloc(alias_mobj, obj) /*&& alias_mobj != obj*/) {
+					if unlikely(Dee_memobj_hasxinfo(alias_mobj)) {
+						if (Dee_memobj_getxinfo(alias_mobj) != result) {
+							/* This might happen due to lazy aliasing
+							 * -> fix it by using the existing value instead. */
+							Dee_memobj_xinfo_destroy(result);
+							result = Dee_memobj_getxinfo(alias_mobj);
+							obj->mo_xinfo = (byte_t *)result + DEE_MEMOBJ_MO_XINFO_OFFSET;
+							Dee_memobj_xinfo_incref(result);
+							goto again_assign_aliases;
+						}
+					} else {
+						alias_mobj->mo_xinfo = (byte_t *)result + DEE_MEMOBJ_MO_XINFO_OFFSET;
+						Dee_memobj_xinfo_incref(result);
+					}
+				}
+			}
+			Dee_memval_foreach_obj_end;
+		}
+		Dee_memstate_foreach_end;
+	}
+	return result;
+}
+
+/* Change all reference to "from" to instead refer to "to" */
+INTERN NONNULL((1, 2, 3)) void DCALL
+Dee_memstate_changeloc(struct Dee_memstate *__restrict self,
+                       struct Dee_memloc const *from,
+                       struct Dee_memloc const *to) {
+	struct Dee_memval *mval;
+	struct Dee_memloc _from = *from;
+	size_t n_changed = 0;
+
+	/* Update all aliases. */
+	Dee_memstate_foreach(mval, self) {
+		struct Dee_memobj *mobj;
+		Dee_memval_foreach_obj(mobj, mval) {
+			if (Dee_memloc_sameadr(Dee_memobj_getloc(mobj), &_from)) {
+				mobj->mo_loc.ml_adr = to->ml_adr;
+				mobj->mo_loc.ml_off -= _from.ml_off;
+				mobj->mo_loc.ml_off += to->ml_off;
+				++n_changed;
+			}
+			if (Dee_memobj_hasxinfo(mobj)) {
+				struct Dee_memobj_xinfo *xinfo;
+				xinfo = Dee_memobj_getxinfo(mobj);
+				if (Dee_memloc_sameadr(&xinfo->mox_dep, &_from)) {
+					mobj->mo_loc.ml_adr = to->ml_adr;
+					mobj->mo_loc.ml_off -= _from.ml_off;
+					mobj->mo_loc.ml_off += to->ml_off;
+#if 0 /* Doesn't count towards register usage! */
+					++n_changed;
+#endif
+				}
+			}
+		}
+		Dee_memval_foreach_obj_end;
+	}
+	Dee_memstate_foreach_end;
+
+	/* Update register usage. */
+	if (Dee_memloc_hasreg(&_from))
+		self->ms_rinuse[Dee_memloc_getreg(&_from)] -= n_changed;
+	if (Dee_memloc_hasreg(to))
+		self->ms_rinuse[Dee_memloc_getreg(to)] += n_changed;
+}
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
