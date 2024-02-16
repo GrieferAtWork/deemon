@@ -136,6 +136,29 @@ DECL_END
 #undef PRIVATE
 #define PRIVATE      INTERN
 
+
+/* Hooks for filesystem properties */
+#undef HAVE_INSENSITIVE_PATHS
+#undef SEP
+#undef ALTSEP
+#undef ISABS
+#ifdef DEE_SYSTEM_FS_ICASE
+#define HAVE_INSENSITIVE_PATHS
+#endif /* DEE_SYSTEM_FS_ICASE */
+#ifndef DeeSystem_ALTSEP
+#define SEP DeeSystem_SEP
+#elif DeeSystem_SEP == '\\' && DeeSystem_ALTSEP == '/'
+#define SEP    '/'
+#define ALTSEP '\\'
+#else /* ... */
+#define SEP    DeeSystem_SEP
+#define ALTSEP DeeSystem_ALTSEP
+#endif /* !... */
+#define ISABS(x) DeeSystem_IsAbs(x)
+
+
+
+
 /* Force tpp to use our own version of [v]sprintf, thus preventing a potential libc
  * dependency for which we'd need to add another system-features test. And given the
  * fact that deemon _needs_ its own format-printer (due to extensions such as %r for
