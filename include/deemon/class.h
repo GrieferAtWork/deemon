@@ -634,26 +634,24 @@ DeeInstance_CallAttributeKw(struct Dee_class_desc *__restrict desc,
                             DeeObject *this_arg,
                             struct Dee_class_attribute const *__restrict attr,
                             size_t argc, DeeObject *const *argv, DeeObject *kw);
-
-#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTuple(struct Dee_class_desc *__restrict desc,
-                               struct Dee_instance_desc *__restrict self,
-                               DeeObject *this_arg,
-                               struct Dee_class_attribute const *__restrict attr,
-                               DeeObject *args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTupleKw(struct Dee_class_desc *__restrict desc,
-                                 struct Dee_instance_desc *__restrict self,
-                                 DeeObject *this_arg,
-                                 struct Dee_class_attribute const *__restrict attr,
-                                 DeeObject *args, DeeObject *kw);
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
+(DCALL DeeInstance_CallAttributeTuple)(struct Dee_class_desc *__restrict desc,
+                                       struct Dee_instance_desc *__restrict self,
+                                       DeeObject *this_arg,
+                                       struct Dee_class_attribute const *__restrict attr,
+                                       DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
+(DCALL DeeInstance_CallAttributeTupleKw)(struct Dee_class_desc *__restrict desc,
+                                         struct Dee_instance_desc *__restrict self,
+                                         DeeObject *this_arg,
+                                         struct Dee_class_attribute const *__restrict attr,
+                                         DeeObject *args, DeeObject *kw);
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeInstance_CallAttributeTuple(desc, self, this_arg, attr, args) \
 	DeeInstance_CallAttribute(desc, self, this_arg, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeInstance_CallAttributeTupleKw(desc, self, this_arg, attr, args, kw) \
 	DeeInstance_CallAttributeKw(desc, self, this_arg, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_DelAttribute(struct Dee_class_desc *__restrict desc,

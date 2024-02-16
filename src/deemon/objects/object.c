@@ -4046,7 +4046,7 @@ type_isbuffer(DeeTypeObject *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_classdesc(DeeTypeObject *__restrict self) {
-	if (!self->tp_class) {
+	if (!DeeType_IsClass(self)) {
 		DeeError_Throwf(&DeeError_AttributeError,
 		                "Can't access `__class__' of non-user-defined Type `%s'",
 		                self->tp_name);
@@ -4059,7 +4059,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_issingleton(DeeTypeObject *__restrict self) {
 	if (self->tp_features & TF_SINGLETON)
 		return_true; /* Alternative means of creation. */
-	if (self->tp_class) {
+	if (DeeType_IsClass(self)) {
 		/* Special handling for user-defined classes. */
 		if (!self->tp_init.tp_alloc.tp_ctor &&
 		    !self->tp_init.tp_alloc.tp_any_ctor &&
@@ -4184,7 +4184,7 @@ again:
 	result = Dee_weakref_lock(&self->tp_module);
 	if (result != NULL)
 		return result;
-	if (self->tp_class) {
+	if (DeeType_IsClass(self)) {
 		result = DeeClass_GetModule(self);
 		if (result != NULL)
 			Dee_weakref_set(&self->tp_module, result);

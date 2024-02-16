@@ -2071,7 +2071,7 @@ err_result_copy:
 						JITLValue_Init(&self->jl_lvalue);
 						if unlikely(!oo_class)
 							goto err_r;
-						if (DeeType_Check(oo_class) && oo_class->tp_class) {
+						if (DeeType_Check(oo_class) && DeeType_IsClass(oo_class)) {
 							/* Check if `oo_class' contains an instance-member `attr_name'
 							 * that had been declared as `private' or `final'. If it does,
 							 * then we _must_ (as per the specs) access that attribute

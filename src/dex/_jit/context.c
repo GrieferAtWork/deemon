@@ -149,7 +149,7 @@ class_desc_from_instance(struct instance_desc *__restrict self,
 	DeeTypeObject *tp;
 	if (DeeType_Check(this_arg)) {
 		tp = (DeeTypeObject *)this_arg;
-		ASSERT(tp->tp_class);
+		ASSERT(DeeType_IsClass(tp));
 		ASSERT(self == Dee_class_desc_as_instance(tp->tp_class));
 		return tp->tp_class;
 	}

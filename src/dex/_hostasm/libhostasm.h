@@ -2891,6 +2891,7 @@ struct Dee_function_generator_branch {
 };
 #define Dee_function_generator_branch_fini(self) Dee_memstate_decref((self)->fgb_saved);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjex_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave_noreturn(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
 #define VJX_F_JZ       0x0000 /* Jump if zero */
@@ -2908,6 +2909,17 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave_noretu
 #define Dee_function_generator_vjnz_enter_unlikely(self, branch) Dee_function_generator_vjx_enter(self, branch, VJX_F_JNZ | VJX_F_UNLIKELY)
 #define Dee_function_generator_vjnz_leave(self, branch)          Dee_function_generator_vjx_leave(self, branch)
 #define Dee_function_generator_vjnz_leave_noreturn(self, branch) Dee_function_generator_vjx_leave_noreturn(self, branch)
+
+#define Dee_function_generator_vje_enter(self, branch)           Dee_function_generator_vjex_enter(self, branch, VJX_F_JZ)
+#define Dee_function_generator_vje_enter_likely(self, branch)    Dee_function_generator_vjex_enter(self, branch, VJX_F_JZ | VJX_F_LIKELY)
+#define Dee_function_generator_vje_enter_unlikely(self, branch)  Dee_function_generator_vjex_enter(self, branch, VJX_F_JZ | VJX_F_UNLIKELY)
+#define Dee_function_generator_vje_leave(self, branch)           Dee_function_generator_vjx_leave(self, branch)
+#define Dee_function_generator_vje_leave_noreturn(self, branch)  Dee_function_generator_vjx_leave_noreturn(self, branch)
+#define Dee_function_generator_vjne_enter(self, branch)          Dee_function_generator_vjex_enter(self, branch, VJX_F_JNZ)
+#define Dee_function_generator_vjne_enter_likely(self, branch)   Dee_function_generator_vjex_enter(self, branch, VJX_F_JNZ | VJX_F_LIKELY)
+#define Dee_function_generator_vjne_enter_unlikely(self, branch) Dee_function_generator_vjex_enter(self, branch, VJX_F_JNZ | VJX_F_UNLIKELY)
+#define Dee_function_generator_vjne_leave(self, branch)          Dee_function_generator_vjx_leave(self, branch)
+#define Dee_function_generator_vjne_leave_noreturn(self, branch) Dee_function_generator_vjx_leave_noreturn(self, branch)
 
 
 

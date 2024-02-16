@@ -1147,9 +1147,10 @@ do_assign:
 DEFINE_OPERATOR(int, MoveAssign, (DeeObject *self, DeeObject *other)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(other);
-	if (!(tp_self->tp_flags & TP_FMOVEANY) &&
-	    DeeObject_AssertImplements(other, tp_self))
-		goto err;
+	if (!(tp_self->tp_flags & TP_FMOVEANY)) {
+		if (DeeObject_AssertImplements(other, tp_self))
+			goto err;
+	}
 	if (tp_self->tp_init.tp_move_assign) {
 do_move_assign:
 		return DeeType_INVOKE_MOVEASSIGN(tp_self, self, other);
@@ -1171,10 +1172,10 @@ err:
 
 
 #ifdef DEFINE_TYPED_OPERATORS
-LOCAL bool DCALL
+LOCAL WUNUSED bool DCALL
 repr_contains(struct trepr_frame *chain, DeeTypeObject *tp, DeeObject *ob)
 #else /* DEFINE_TYPED_OPERATORS */
-LOCAL bool DCALL
+LOCAL WUNUSED bool DCALL
 repr_contains(struct repr_frame *chain, DeeObject *__restrict ob)
 #endif /* !DEFINE_TYPED_OPERATORS */
 {
@@ -1533,15 +1534,21 @@ recursion:
 DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	/* _very_ likely case: `self' is one of the boolean constants
 	 *  -> In this case, we return the result immediately! */
+#ifndef __OPTIMIZE_SIZE__
 	if (self == Dee_True)
 		return 1;
 	if (self == Dee_False)
 		return 0;
-	LOAD_TP_SELF;
-	if likely(tp_self->tp_cast.tp_bool ||
-	          type_inherit_bool(tp_self))
-		return DeeType_INVOKE_BOOL(tp_self, self);
-	return err_unimplemented_operator(tp_self, OPERATOR_BOOL);
+#endif /* !__OPTIMIZE_SIZE__ */
+
+	/* General case: invoke the "bool" operator. */
+	{
+		LOAD_TP_SELF;
+		if likely(tp_self->tp_cast.tp_bool ||
+		          type_inherit_bool(tp_self))
+			return DeeType_INVOKE_BOOL(tp_self, self);
+		return err_unimplemented_operator(tp_self, OPERATOR_BOOL);
+	}
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, Call,
@@ -1558,13 +1565,19 @@ DEFINE_OPERATOR(DREF DeeObject *, Call,
 }
 
 #ifndef DEFINE_TYPED_OPERATORS
-#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
                (DeeObject *self, DeeObject *args)) {
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	LOAD_TP_SELF;
+again:
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 	if (tp_self == &DeeFunction_Type)
 		return DeeFunction_CallTuple((DeeFunctionObject *)self, args);
+	if (tp_self == &DeeSuper_Type) {
+		tp_self = DeeSuper_TYPE(self);
+		self    = DeeSuper_SELF(self);
+		goto again;
+	}
 	do {
 		if (tp_self->tp_call) {
 			return DeeType_INVOKE_CALL(tp_self, self,
@@ -1580,14 +1593,24 @@ DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
 	} while (type_inherit_call(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 	return NULL;
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	return DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 }
 
 DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
                (DeeObject *self, DeeObject *args, DeeObject *kw)) {
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	LOAD_TP_SELF;
+again:
 	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
 	if (tp_self == &DeeFunction_Type)
 		return DeeFunction_CallTupleKw((DeeFunctionObject *)self, args, kw);
+	if (tp_self == &DeeSuper_Type) {
+		tp_self = DeeSuper_TYPE(self);
+		self    = DeeSuper_SELF(self);
+		goto again;
+	}
 	do {
 		if (tp_self->tp_call_kw) {
 			return DeeType_INVOKE_CALLKW(tp_self, self,
@@ -1621,18 +1644,10 @@ err:
 err_no_keywords:
 	err_keywords_not_accepted(tp_self, kw);
 	goto err;
-}
-
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-DEFINE_OPERATOR(DREF DeeObject *, CallTuple,
-                (DeeObject *self, DeeObject *args)) {
-	return DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args));
-}
-DEFINE_OPERATOR(DREF DeeObject *, CallTupleKw,
-                (DeeObject *self, DeeObject *args, DeeObject *kw)) {
 	return DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw);
-}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+}
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, CallKw,

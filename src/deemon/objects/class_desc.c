@@ -4089,13 +4089,13 @@ err:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
+(DCALL DeeInstance_CallAttributeTuple)(struct class_desc *__restrict desc,
+                                       struct instance_desc *__restrict self,
+                                       DeeObject *this_arg,
+                                       struct class_attribute const *__restrict attr,
+                                       DeeObject *args) {
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
-                               struct instance_desc *__restrict self,
-                               DeeObject *this_arg,
-                               struct class_attribute const *__restrict attr,
-                               DeeObject *args) {
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -4144,14 +4144,21 @@ illegal:
 	                            ATTR_ACCESS_GET);
 err:
 	return NULL;
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	/* For binary compatibility */
+	return DeeInstance_CallAttribute(desc, self, this_arg, attr,
+	                                 DeeTuple_SIZE(args),
+	                                 DeeTuple_ELEM(args));
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
-                                 struct instance_desc *__restrict self,
-                                 DeeObject *this_arg,
-                                 struct class_attribute const *__restrict attr,
-                                 DeeObject *args, DeeObject *kw) {
+PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
+(DCALL DeeInstance_CallAttributeTupleKw)(struct class_desc *__restrict desc,
+                                         struct instance_desc *__restrict self,
+                                         DeeObject *this_arg,
+                                         struct class_attribute const *__restrict attr,
+                                         DeeObject *args, DeeObject *kw) {
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
 	DREF DeeObject *result, *callback;
 	ASSERT_OBJECT(this_arg);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
@@ -4200,33 +4207,14 @@ illegal:
 	                            ATTR_ACCESS_GET);
 err:
 	return NULL;
-}
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTuple(struct class_desc *__restrict desc,
-                               struct instance_desc *__restrict self,
-                               DeeObject *this_arg,
-                               struct class_attribute const *__restrict attr,
-                               DeeObject *args) {
-	/* For binary compatibility */
-	return DeeInstance_CallAttribute(desc, self, this_arg, attr,
-	                                 DeeTuple_SIZE(args),
-	                                 DeeTuple_ELEM(args));
-}
-
-PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *DCALL
-DeeInstance_CallAttributeTupleKw(struct class_desc *__restrict desc,
-                                 struct instance_desc *__restrict self,
-                                 DeeObject *this_arg,
-                                 struct class_attribute const *__restrict attr,
-                                 DeeObject *args, DeeObject *kw) {
 	/* For binary compatibility */
 	return DeeInstance_CallAttributeKw(desc, self, this_arg, attr,
 	                                   DeeTuple_SIZE(args),
 	                                   DeeTuple_ELEM(args),
 	                                   kw);
-}
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+}
 
 
 PUBLIC WUNUSED NONNULL((1, 2, 3, 4)) int DCALL

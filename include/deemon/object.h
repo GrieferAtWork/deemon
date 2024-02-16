@@ -3260,17 +3260,16 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_VThisCallf(De
  * >> function a(args...) -> Object.id(args) == b(args...);
  * >> print a(10, 20); // Prints `true' if `CONFIG_CALLTUPLE_OPTIMIZATIONS' was enabled; else `false'
  */
-#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_CallTuple(DeeObject *self, /*Tuple*/ DeeObject *args);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_CallTupleKw(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTuple(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_ThisCallTupleKw(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args, DeeObject *kw);
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTuple)(DeeObject *self, /*Tuple*/ DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CallTupleKw)(DeeObject *self, /*Tuple*/ DeeObject *args, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTuple)(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_ThisCallTupleKw)(DeeObject *self, DeeObject *this_arg, /*Tuple*/ DeeObject *args, DeeObject *kw);
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeObject_CallTuple(self, args)                     DeeObject_Call(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_CallTupleKw(self, args, kw)               DeeObject_CallKw(self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #define DeeObject_ThisCallTuple(self, this_arg, args)       DeeObject_ThisCall(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_ThisCallTupleKw(self, this_arg, args, kw) DeeObject_ThisCallKw(self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
 
 /* Generate and return the hash of a given object. */
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1)) Dee_hash_t (DCALL DeeObject_Hash)(DeeObject *__restrict self);
@@ -3647,10 +3646,9 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DeeObject_CallAttrStringHash
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DeeObject_CallAttrStringLenHashf)(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeObject_VCallAttrStringHashf)(DeeObject *self, char const *__restrict attr, Dee_hash_t hash, char const *__restrict format, va_list args);
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeObject_VCallAttrStringLenHashf)(DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, char const *__restrict format, va_list args);
-#if defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) || defined(__OPTIMIZE_SIZE__)
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTuple)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_CallAttrTupleKw)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args, DeeObject *kw);
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS || __OPTIMIZE_SIZE__ */
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeObject_CallAttrTuple(self, attr, args)       DeeObject_CallAttr(self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_CallAttrTupleKw(self, attr, args, kw) DeeObject_CallAttrKw(self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */

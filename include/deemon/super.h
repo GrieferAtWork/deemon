@@ -145,10 +145,9 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttr)(DeeTypeObject 
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TSetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrKw)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#if defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) || defined(__OPTIMIZE_SIZE__)
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TCallAttrTuple)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TCallAttrTupleKw)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args, DeeObject *kw);
-#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS || __OPTIMIZE_SIZE__ */
+#if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeObject_TCallAttrTuple(tp_self, self, attr, args)       DeeObject_TCallAttr(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_TCallAttrTupleKw(tp_self, self, attr, args, kw) DeeObject_TCallAttrKw(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */

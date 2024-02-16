@@ -404,11 +404,8 @@ attribute_init(DeeAttributeObject *__restrict self,
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:Attribute",
-	                    &search_self,
-	                    &search_name,
-	                    &flagmask,
-	                    &flagval,
-	                    &rules.alr_decl))
+	                    &search_self, &search_name, &flagmask,
+	                    &flagval, &rules.alr_decl))
 		goto err;
 	if (DeeObject_AssertTypeExact(search_name, &DeeString_Type))
 		goto err;
@@ -474,11 +471,8 @@ attribute_exists(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:exists",
-	                    &search_self,
-	                    &search_name,
-	                    &flagmask,
-	                    &flagval,
-	                    &rules.alr_decl))
+	                    &search_self, &search_name, &flagmask,
+	                    &flagval, &rules.alr_decl))
 		goto err;
 	if (DeeObject_AssertTypeExact(search_name, &DeeString_Type))
 		goto err;
@@ -541,11 +535,8 @@ attribute_lookup(DeeTypeObject *__restrict UNUSED(self), size_t argc,
 	rules.alr_perm_mask  = 0;
 	rules.alr_perm_value = 0;
 	if (DeeArg_UnpackKw(argc, argv, kw, attrinit_kwlist, "oo|ooo:lookup",
-	                    &search_self,
-	                    &search_name,
-	                    &flagmask,
-	                    &flagval,
-	                    &rules.alr_decl))
+	                    &search_self, &search_name, &flagmask,
+	                    &flagval, &rules.alr_decl))
 		goto err;
 	if (DeeObject_AssertTypeExact(search_name, &DeeString_Type))
 		goto err;
@@ -807,18 +798,19 @@ enumattr_init(EnumAttr *__restrict self,
 	if (b) {
 		if (DeeObject_AssertType(a, &DeeType_Type))
 			goto err;
-		if (DeeObject_AssertType(b, (DeeTypeObject *)a))
+		if (DeeObject_AssertTypeOrAbstract(b, (DeeTypeObject *)a))
 			goto err;
 		self->ea_type = (DREF DeeTypeObject *)a;
 		self->ea_obj  = b;
-		Dee_Incref(a);
-		Dee_Incref(b);
+	} else if (DeeSuper_Check(a)) {
+		self->ea_type = DeeSuper_TYPE(a);
+		self->ea_obj  = DeeSuper_SELF(a);
 	} else {
 		self->ea_type = Dee_TYPE(a);
 		self->ea_obj  = a;
-		Dee_Incref(Dee_TYPE(a));
-		Dee_Incref(a);
 	}
+	Dee_Incref(self->ea_type);
+	Dee_Incref(self->ea_obj);
 #ifndef CONFIG_LONGJMP_ENUMATTR
 	/* Collect all attributes */
 	{
@@ -969,7 +961,7 @@ PUBLIC DeeTypeObject DeeEnumAttr_Type = {
 	                         /**/ "one of its bases and those accessible through a superview of @ob using @tp.\n"
 	                         "Note that iterating this object may be expensive, and that conversion to "
 	                         /**/ "a different sequence before iterating multiple times may be desirable"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT|TP_FFINAL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -1027,7 +1019,7 @@ enumattriter_init(EnumAttrIter *__restrict self,
 	EnumAttr *seq;
 	if (DeeArg_Unpack(argc, argv, "o:_EnumAttrIterator", &seq))
 		goto err;
-	if (DeeObject_AssertType(seq, &DeeEnumAttr_Type))
+	if (DeeObject_AssertTypeExact(seq, &DeeEnumAttr_Type)) /* DeeEnumAttr_Type is final, so *Exact is OK */
 		goto err;
 	enumattriter_setup(self, seq);
 	return 0;
