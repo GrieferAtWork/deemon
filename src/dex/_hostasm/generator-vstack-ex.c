@@ -6033,7 +6033,7 @@ Dee_function_generator_voptuple(struct Dee_function_generator *__restrict self,
 	argsval = Dee_function_generator_vtop(self);
 	if (argsval->mv_vmorph == MEMVAL_VMORPH_TUPLE) {
 		/* Special case: expand args tuple and do a regular operator invocation. */
-		size_t argc = Dee_memval_getobjn(argsval)->mos_objc;
+		Dee_vstackaddr_t argc = (Dee_vstackaddr_t)Dee_memval_getobjn(argsval)->mos_objc;
 		DO(Dee_function_generator_vopunpack(self, argc)); /* [ref]:this, [args...] */
 		return Dee_function_generator_vop(self, operator_name, argc + 1, flags);
 	}
@@ -6081,7 +6081,7 @@ Dee_function_generator_vinplaceoptuple(struct Dee_function_generator *__restrict
 	argsval = Dee_function_generator_vtop(self);
 	if (argsval->mv_vmorph == MEMVAL_VMORPH_TUPLE) {
 		/* Special case: expand args tuple and do a regular operator invocation. */
-		size_t argc = Dee_memval_getobjn(argsval)->mos_objc;
+		Dee_vstackaddr_t argc = (Dee_vstackaddr_t)Dee_memval_getobjn(argsval)->mos_objc;
 		DO(Dee_function_generator_vopunpack(self, argc)); /* [ref]:this, [args...] */
 		return Dee_function_generator_vinplaceop(self, operator_name, argc, flags);
 	}

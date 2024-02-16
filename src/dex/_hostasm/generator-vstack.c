@@ -4574,6 +4574,66 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vjax_enter(struct Dee_function_generator *__restrict self,
+                                  /*inherit(out)*/ struct Dee_function_generator_branch *__restrict branch,
+                                  unsigned int flags) {
+	struct Dee_host_section *cold;
+	struct Dee_memval *temp;
+	struct Dee_memloc lhsloc, rhsloc;
+	DO(Dee_function_generator_vdirect(self, 2));
+	temp   = Dee_function_generator_vtop(self);
+	rhsloc = *Dee_memval_direct_getloc(temp);
+	DO(Dee_function_generator_vpop(self)); /* lhs */
+	temp   = Dee_function_generator_vtop(self);
+	lhsloc = *Dee_memval_direct_getloc(temp);
+	if (Dee_memval_hasref_or_isdep(temp)) {
+		/* Special case: poping VTOP may alter registers, so we need to preserve "rhsloc" */
+		DO(Dee_function_generator_vpush_memloc(self, &lhsloc)); /* lhs, lhsloc, rhsloc */
+		DO(Dee_function_generator_vpush_memloc(self, &rhsloc)); /* lhs, lhsloc, rhsloc */
+		DO(Dee_function_generator_vpop_at(self, 3));            /* lhsloc, rhsloc */
+		temp   = Dee_function_generator_vtop(self);
+		rhsloc = *Dee_memval_direct_getloc(temp);
+		DO(Dee_function_generator_vpop(self));
+		temp   = Dee_function_generator_vtop(self);
+		lhsloc = *Dee_memval_direct_getloc(temp);
+		DO(Dee_function_generator_vpop(self));
+	} else {
+		DO(Dee_function_generator_vpop(self));
+	}
+	branch->fgb_oldtext = self->fg_sect;
+	cold = &self->fg_block->bb_hcold;
+	if ((self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) || !(flags & VJX_F_UNLIKELY))
+		cold = self->fg_sect;
+	if (self->fg_sect != cold) {
+		struct Dee_host_symbol *Ljump;
+		Ljump = Dee_function_generator_newsym_named(self, ".Ljump");
+		if unlikely(!Ljump)
+			goto err;
+		DO(Dee_function_generator_gjca(self, &lhsloc, &rhsloc,
+		                               (flags & VJX_F_JNZ) ? Ljump : NULL,
+		                               (flags & VJX_F_JNZ) ? NULL : Ljump));
+		HA_printf(".section .cold\n");
+		self->fg_sect = cold;
+		Dee_host_symbol_setsect(Ljump, self->fg_sect);
+		branch->fgb_skip = NULL;
+	} else {
+		struct Dee_host_symbol *Lskip;
+		Lskip = Dee_function_generator_newsym_named(self, ".Lskip");
+		if unlikely(!Lskip)
+			goto err;
+		DO(Dee_function_generator_gjca(self, &lhsloc, &rhsloc,
+		                               (flags & VJX_F_JNZ) ? NULL : Lskip,
+		                               (flags & VJX_F_JNZ) ? Lskip : NULL));
+		branch->fgb_skip = Lskip;
+	}
+	branch->fgb_saved = self->fg_state;
+	Dee_memstate_incref(branch->fgb_saved);
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self,
                                  /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch) {
 	ASSERT(branch->fgb_saved);

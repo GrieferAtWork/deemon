@@ -917,7 +917,7 @@ Dee_memobj_reqxinfo(struct Dee_memobj *__restrict self);
 #define MEMVAL_VMORPH_ROSET     0x13 /* TODO: >> value = DeeRoSet_New...(mos_objv...); */
 #define MEMVAL_VMORPH_DICT      0x14 /* TODO: >> value = DeeDict_New...(mos_objv...);   // 0:key, 1:value, 2:key, ... */
 #define MEMVAL_VMORPH_RODICT    0x15 /* TODO: >> value = DeeRoDict_New...(mos_objv...); // 0:key, 1:value, 2:key, ... */
-#define MEMVAL_VMORPH_SUPER     0x16 /* >> value = DeeSuper_New(tp_self: mos_objv[1], self: mos_objv[0]); */
+#define MEMVAL_VMORPH_SUPER     0x16 /* >> value = DeeSuper_New(tp_self: mos_objv[1], self: mos_objv[0]); // guarantied 2 objects */
 
 
 struct Dee_memobjs {
@@ -2890,8 +2890,9 @@ struct Dee_function_generator_branch {
 	DREF struct Dee_memstate *fgb_saved;   /* [1..1] Saved memory state (to-be restored by `Dee_function_generator_vjx_leave_noreturn()') */
 };
 #define Dee_function_generator_branch_fini(self) Dee_memstate_decref((self)->fgb_saved);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjex_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags);  /* if (VJX_F_JZ ^ (TOP)) { ... } */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjex_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags); /* if (VJX_F_JZ ^ (TOP == SECOND)) { ... } */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjax_enter(struct Dee_function_generator *__restrict self, /*out*/ struct Dee_function_generator_branch *__restrict branch, unsigned int flags); /* if (VJX_F_JZ ^ (TOP & SECOND)) { ... } */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vjx_leave_noreturn(struct Dee_function_generator *__restrict self, /*inherit(always)*/ struct Dee_function_generator_branch *__restrict branch);
 #define VJX_F_JZ       0x0000 /* Jump if zero */
@@ -3145,13 +3146,45 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gmov_reg2constind(s
 
 
 /* Arithmetic helpers. */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_regreg2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno1, Dee_host_register_t src_regno2, Dee_host_register_t dst_regno); /* dst_regno = src_regno1 + src_regno2; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gumul_regconst2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, uintptr_t n, Dee_host_register_t dst_regno);                  /* dst_regno = src_regno * n; */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_const2hstackind(struct Dee_host_section *__restrict self, void const *value, ptrdiff_t sp_offset);                                                   /* *(SP + sp_offset) = *(SP + sp_offset) + <value>; */
+#ifdef HOSTASM_X86
+#define HAVE__Dee_host_section_gadd_regreg2reg
 #define HAVE__Dee_host_section_gadd_const2hstackind
+#endif /* HOSTASM_X86 */
+#ifdef HAVE__Dee_host_section_gadd_regreg2reg
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_regreg2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, Dee_host_register_t dst_regno); /* dst_regno = src1_regno + src2_regno; */
+#define _Dee_function_generator_gadd_regreg2reg(self, src1_regno, src2_regno, dst_regno) _Dee_host_section_gadd_regreg2reg((self)->fg_sect, src1_regno, src2_regno, dst_regno)
+#endif /* HAVE__Dee_host_section_gadd_regreg2reg */
+#ifdef HAVE__Dee_host_section_gadd_const2hstackind
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gadd_const2hstackind(struct Dee_host_section *__restrict self, void const *value, ptrdiff_t sp_offset); /* *(SP + sp_offset) = *(SP + sp_offset) + <value>; */
 #ifdef HOSTASM_X86_64
 #define _Dee_host_section_gadd_const2hstackind_MAYFAIL /* `_Dee_host_section_gadd_const2hstackind()' returns `1' if the constant is too large */
 #endif /* HOSTASM_X86_64 */
+#endif /* HAVE__Dee_host_section_gadd_const2hstackind */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gand_regreg2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, Dee_host_register_t dst_regno);                                          /* dst_regno = src1_regno & src2_regno; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gand_regconst2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src1_regno, void const *src2_value, Dee_host_register_t dst_regno);                                                /* dst_regno = src1_regno & src2_value; */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gand_reghstackind2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src1_regno, ptrdiff_t src2_sp_offset, Dee_host_register_t dst_regno);                                          /* dst_regno = src1_regno & *(SP + src2_sp_offset); */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gand_regregind2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno); /* dst_regno = src1_regno & *(src2_regno + src2_ind_delta); */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gumul_regconst2reg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, uintptr_t n, Dee_host_register_t dst_regno);                                                           /* dst_regno = src_regno * n; */
+#ifdef HOSTASM_X86_64
+#define _Dee_host_section_gand_regconst2reg_MAYFAIL /* `_Dee_host_section_gand_regconst2reg()' returns `1' if the constant is too large */
+#endif /* HOSTASM_X86_64 */
+#define _Dee_function_generator_gand_regreg2reg(self, src1_regno, src2_regno, dst_regno)           _Dee_host_section_gand_regreg2reg((self)->fg_sect, src1_regno, src2_regno, dst_regno)
+#define _Dee_function_generator_gand_regconst2reg(self, src1_regno, src2_value, dst_regno)         _Dee_host_section_gand_regconst2reg((self)->fg_sect, src1_regno, src2_value, dst_regno)
+#define _Dee_function_generator_gand_reghstackind2reg(self, src1_regno, src2_sp_offset, dst_regno) _Dee_host_section_gand_reghstackind2reg((self)->fg_sect, src1_regno, src2_sp_offset, dst_regno)
+#ifdef _Dee_host_section_gand_regconst2reg_MAYFAIL
+#define _Dee_function_generator_gand_regconst2reg_MAYFAIL /* `_Dee_function_generator_gand_regconst2reg()' returns `1' if the constant is too large */
+#endif /* _Dee_host_section_gand_regconst2reg_MAYFAIL */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gadd_regreg2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, Dee_host_register_t dst_regno);                                 /* dst_regno = src1_regno + src2_regno; */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gand_regreg2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, Dee_host_register_t dst_regno);                                 /* dst_regno = src1_regno & src2_regno; */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gand_reghstackind2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src1_regno, Dee_cfa_t src2_cfa_offset, Dee_host_register_t dst_regno);                                /* dst_regno = src1_regno & *(SP ... src2_cfa_offset); */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gand_regregind2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno);    /* dst_regno = src1_regno & *(src2_regno + src2_ind_delta); */
+#ifdef _Dee_function_generator_gand_regconst2reg_MAYFAIL
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gand_regconst2reg(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, void const *value, Dee_host_register_t dst_regno); /* dst_regno = src_regno & value; */
+#else /* _Dee_function_generator_gand_regconst2reg_MAYFAIL */
+#define Dee_function_generator_gand_regconst2reg(self, src_regno, value, dst_regno) _Dee_function_generator_gand_regconst2reg(self, src_regno, value, dst_regno)
+#endif /* !_Dee_function_generator_gand_regconst2reg_MAYFAIL */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gand_locloc2reg(struct Dee_function_generator *__restrict self, struct Dee_memloc const *src_loc1, struct Dee_memloc const *src_loc2, Dee_host_register_t dst_regno); /* dst_regno = src_loc1 & src_loc2; */
+
 
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL Dee_function_generator_gmov_const2loc(struct Dee_function_generator *__restrict self, void const *value, struct Dee_memloc const *__restrict dst_loc);                                                  /* <dst_loc> = value; */
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL Dee_function_generator_gmov_regx2loc(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta, struct Dee_memloc const *__restrict dst_loc);                  /* <dst_loc> = src_regno + src_delta; */
@@ -3246,6 +3279,43 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindCconst(str
 #define _Dee_host_section_gjcc_hstackindCconst_MAYFAIL    /* `_Dee_host_section_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
 #endif /* HOSTASM_X86_64 */
 
+
+#ifdef HOSTASM_X86
+#define HAVE__Dee_host_section_gjcc_regAreg
+#define HAVE__Dee_host_section_gjcc_regAconst
+#define HAVE__Dee_function_generator_gjcc_regindAreg
+#define HAVE__Dee_function_generator_gjcc_regindAconst
+#define HAVE__Dee_host_section_gjcc_hstackindAreg
+#define HAVE__Dee_host_section_gjcc_hstackindAconst
+#ifdef HAVE__Dee_host_section_gjcc_regAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_regAreg(struct Dee_host_section *__restrict self, Dee_host_register_t lhs_regno, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#endif /* HAVE__Dee_host_section_gjcc_regAreg */
+#ifdef HAVE__Dee_host_section_gjcc_regAconst
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_regAconst(struct Dee_host_section *__restrict self, Dee_host_register_t lhs_regno, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#ifdef HOSTASM_X86_64
+#define _Dee_host_section_gjcc_regAconst_MAYFAIL /* `_Dee_host_section_gjcc_regAconst()' returns `1' if "rhs_value" is too large */
+#endif /* HOSTASM_X86_64 */
+#endif /* HAVE__Dee_host_section_gjcc_regAconst */
+#ifdef HAVE__Dee_function_generator_gjcc_regindAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gjcc_regindAreg(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#endif /* HAVE__Dee_function_generator_gjcc_regindAreg */
+#ifdef HAVE__Dee_function_generator_gjcc_regindAconst
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_gjcc_regindAconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#ifdef HOSTASM_X86_64
+#define _Dee_function_generator_gjcc_regindAconst_MAYFAIL /* `_Dee_function_generator_gjcc_regindAconst()' returns `1' if "rhs_value" is too large */
+#endif /* HOSTASM_X86_64 */
+#endif /* HAVE__Dee_function_generator_gjcc_regindAconst */
+#ifdef HAVE__Dee_host_section_gjcc_hstackindAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindAreg(struct Dee_host_section *__restrict self, ptrdiff_t lhs_sp_offset, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#endif /* HAVE__Dee_host_section_gjcc_hstackindAreg */
+#ifdef HAVE__Dee_host_section_gjcc_hstackindAconst
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindAconst(struct Dee_host_section *__restrict self, ptrdiff_t lhs_sp_offset, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#ifdef HOSTASM_X86_64
+#define _Dee_host_section_gjcc_hstackindAconst_MAYFAIL /* `_Dee_host_section_gjcc_hstackindAconst()' returns `1' if "rhs_value" is too large */
+#endif /* HOSTASM_X86_64 */
+#endif /* HAVE__Dee_host_section_gjcc_hstackindAconst */
+#endif /* HOSTASM_X86 */
+
 #define _Dee_function_generator_gjmp(self, dst)                                                                          _Dee_host_section_gjmp((self)->fg_sect, dst)
 #define _Dee_function_generator_gjz_reg(self, src_regno, dst)                                                            _Dee_host_section_gjz_reg((self)->fg_sect, src_regno, dst)
 #define _Dee_function_generator_gjz_hstackind(self, sp_offset, dst)                                                      _Dee_host_section_gjz_hstackind((self)->fg_sect, sp_offset, dst)
@@ -3262,6 +3332,33 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindCconst(str
 #define _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL /* `_Dee_function_generator_gjcc_hstackindCconst()' returns `1' if "rhs_value" is too large */
 #endif /* _Dee_host_section_gjcc_hstackindCconst_MAYFAIL */
 
+#ifdef HAVE__Dee_host_section_gjcc_regAreg
+#define HAVE__Dee_function_generator_gjcc_regAreg
+#define _Dee_function_generator_gjcc_regAreg(self, lhs_regno, rhs_regno, dst_nz, dst_z) \
+	_Dee_host_section_gjcc_regAreg((self)->fg_sect, lhs_regno, rhs_regno, dst_nz, dst_z)
+#endif /* HAVE__Dee_host_section_gjcc_regAreg */
+#ifdef HAVE__Dee_host_section_gjcc_regAconst
+#define HAVE__Dee_function_generator_gjcc_regAconst
+#define _Dee_function_generator_gjcc_regAconst(self, lhs_regno, rhs_value, dst_nz, dst_z) \
+	_Dee_host_section_gjcc_regAconst((self)->fg_sect, lhs_regno, rhs_value, dst_nz, dst_z)
+#ifdef _Dee_host_section_gjcc_regAconst_MAYFAIL
+#define _Dee_function_generator_gjcc_regAconst_MAYFAIL /* `_Dee_function_generator_gjcc_regAconst()' returns `1' if "rhs_value" is too large */
+#endif /* _Dee_host_section_gjcc_regAconst_MAYFAIL */
+#endif /* HAVE__Dee_host_section_gjcc_regAconst */
+#ifdef HAVE__Dee_host_section_gjcc_hstackindAreg
+#define HAVE__Dee_function_generator_gjcc_hstackindAreg
+#define _Dee_function_generator_gjcc_hstackindAreg(self, lhs_sp_offset, rhs_regno, dst_nz, dst_z) \
+	_Dee_host_section_gjcc_hstackindAreg((self)->fg_sect, lhs_sp_offset, rhs_regno, dst_nz, dst_z)
+#endif /* HAVE__Dee_host_section_gjcc_hstackindAreg */
+#ifdef HAVE__Dee_host_section_gjcc_hstackindAconst
+#define HAVE__Dee_function_generator_gjcc_hstackindAconst
+#define _Dee_function_generator_gjcc_hstackindAconst(self, lhs_sp_offset, rhs_value, dst_nz, dst_z) \
+	_Dee_host_section_gjcc_hstackindAconst((self)->fg_sect, lhs_sp_offset, rhs_value, dst_nz, dst_z)
+#ifdef _Dee_host_section_gjcc_hstackindAconst_MAYFAIL
+#define _Dee_function_generator_gjcc_hstackindAconst_MAYFAIL /* `_Dee_function_generator_gjcc_hstackindAconst()' returns `1' if "rhs_value" is too large */
+#endif /* _Dee_host_section_gjcc_hstackindAconst_MAYFAIL */
+#endif /* HAVE__Dee_host_section_gjcc_hstackindAconst */
+
 #define Dee_function_generator_gjmp(self, dst)                                                                                _Dee_function_generator_gjmp(self, dst)
 #define Dee_function_generator_gjz_reg(self, src_regno, dst)                                                                  _Dee_function_generator_gjz_reg(self, src_regno, dst)
 #define Dee_function_generator_gjz_regind(self, src_regno, ind_delta, dst)                                                    _Dee_function_generator_gjz_regind(self, src_regno, ind_delta, dst)
@@ -3274,21 +3371,55 @@ INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gjcc_hstackindCconst(str
 #define Dee_function_generator_gjcc_hstackindCreg(self, lhs_cfa_offset, rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)        _Dee_function_generator_gjcc_hstackindCreg(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_regno, signed_cmp, dst_lo, dst_eq, dst_gr)
 #ifndef _Dee_function_generator_gjcc_regindCconst_MAYFAIL
 #define Dee_function_generator_gjcc_regindCconst(self, lhs_regno, lhs_ind_delta, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_regindCconst(self, lhs_regno, lhs_ind_delta, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
-#else /* _Dee_function_generator_gjcc_regindCconst_MAYFAIL */
+#else /* !_Dee_function_generator_gjcc_regindCconst_MAYFAIL */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regindCconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
-#endif /* !_Dee_function_generator_gjcc_regindCconst_MAYFAIL */
+#endif /* _Dee_function_generator_gjcc_regindCconst_MAYFAIL */
 #ifndef _Dee_function_generator_gjcc_regCconst_MAYFAIL
 #define Dee_function_generator_gjcc_regCconst(self, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_regCconst(self, lhs_regno, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
-#else /* _Dee_function_generator_gjcc_regCconst_MAYFAIL */
+#else /* !_Dee_function_generator_gjcc_regCconst_MAYFAIL */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regCconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
-#endif /* !_Dee_function_generator_gjcc_regCconst_MAYFAIL */
+#endif /* _Dee_function_generator_gjcc_regCconst_MAYFAIL */
 #ifndef _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL
 #define Dee_function_generator_gjcc_hstackindCconst(self, lhs_cfa_offset, rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr) _Dee_function_generator_gjcc_hstackindCconst(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_value, signed_cmp, dst_lo, dst_eq, dst_gr)
-#else /* _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
+#else /* !_Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_hstackindCconst(struct Dee_function_generator *__restrict self, Dee_cfa_t lhs_cfa_offset, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
-#endif /* !_Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
+#endif /* _Dee_function_generator_gjcc_hstackindCconst_MAYFAIL */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locCregx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, Dee_host_register_t rhs_regno, ptrdiff_t rhs_val_offset, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locCconst(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, void const *rhs_value, bool signed_cmp, struct Dee_host_symbol *dst_lo, struct Dee_host_symbol *dst_eq, struct Dee_host_symbol *dst_gr);
+
+/* Conditional jump based on "(<lhs> & <rhs>) !=/= 0" */
+#ifndef HAVE__Dee_function_generator_gjcc_regAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regAreg(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !HAVE__Dee_function_generator_gjcc_regAreg */
+#define Dee_function_generator_gjcc_regAreg(self, lhs_regno, rhs_regno, dst_nz, dst_z) _Dee_function_generator_gjcc_regAreg(self, lhs_regno, rhs_regno, dst_nz, dst_z)
+#endif /* HAVE__Dee_function_generator_gjcc_regAreg */
+#ifndef HAVE__Dee_function_generator_gjcc_regindAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regindAreg(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !HAVE__Dee_function_generator_gjcc_regindAreg */
+#define Dee_function_generator_gjcc_regindAreg(self, lhs_regno, lhs_ind_delta, rhs_regno, dst_nz, dst_z) _Dee_function_generator_gjcc_regindAreg(self, lhs_regno, lhs_ind_delta, rhs_regno, dst_nz, dst_z)
+#endif /* HAVE__Dee_function_generator_gjcc_regindAreg */
+#ifndef HAVE__Dee_function_generator_gjcc_hstackindAreg
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_hstackindAreg(struct Dee_function_generator *__restrict self, Dee_cfa_t lhs_cfa_offset, Dee_host_register_t rhs_regno, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !HAVE__Dee_function_generator_gjcc_hstackindAreg */
+#define Dee_function_generator_gjcc_hstackindAreg(self, lhs_cfa_offset, rhs_regno, dst_nz, dst_z) _Dee_function_generator_gjcc_hstackindAreg(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_regno, dst_nz, dst_z)
+#endif /* HAVE__Dee_function_generator_gjcc_hstackindAreg */
+#if !defined(HAVE__Dee_function_generator_gjcc_regindAconst) || defined(_Dee_function_generator_gjcc_regindAconst_MAYFAIL)
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regindAconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, ptrdiff_t lhs_ind_delta, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !HAVE__Dee_function_generator_gjcc_regindAconst || _Dee_function_generator_gjcc_regindAconst_MAYFAIL */
+#define Dee_function_generator_gjcc_regindAconst(self, lhs_regno, lhs_ind_delta, rhs_value, dst_nz, dst_z) _Dee_function_generator_gjcc_regindAconst(self, lhs_regno, lhs_ind_delta, rhs_value, dst_nz, dst_z)
+#endif /* HAVE__Dee_function_generator_gjcc_regindAconst && !_Dee_function_generator_gjcc_regindAconst_MAYFAIL */
+#if !defined(HAVE__Dee_function_generator_gjcc_regAconst) || defined(_Dee_function_generator_gjcc_regAconst_MAYFAIL)
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_regAconst(struct Dee_function_generator *__restrict self, Dee_host_register_t lhs_regno, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !_Dee_function_generator_gjcc_regAconst || _Dee_function_generator_gjcc_regAconst_MAYFAIL */
+#define Dee_function_generator_gjcc_regAconst(self, lhs_regno, rhs_value, dst_nz, dst_z) _Dee_function_generator_gjcc_regAconst(self, lhs_regno, rhs_value, dst_nz, dst_z)
+#endif /* _Dee_function_generator_gjcc_regAconst && !_Dee_function_generator_gjcc_regAconst_MAYFAIL */
+#if !defined(HAVE__Dee_function_generator_gjcc_hstackindAconst) || defined(_Dee_function_generator_gjcc_hstackindAconst_MAYFAIL)
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjcc_hstackindAconst(struct Dee_function_generator *__restrict self, Dee_cfa_t lhs_cfa_offset, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+#else /* !HAVE__Dee_function_generator_gjcc_hstackindAconst || _Dee_function_generator_gjcc_hstackindAconst_MAYFAIL */
+#define Dee_function_generator_gjcc_hstackindAconst(self, lhs_cfa_offset, rhs_value, dst_nz, dst_z) _Dee_function_generator_gjcc_hstackindAconst(self, Dee_memstate_hstack_cfa2sp((self)->fg_state, lhs_cfa_offset), rhs_value, dst_nz, dst_z)
+#endif /* HAVE__Dee_function_generator_gjcc_hstackindAconst && !_Dee_function_generator_gjcc_hstackindAconst_MAYFAIL */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locAregx(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, Dee_host_register_t rhs_regno, ptrdiff_t rhs_val_offset, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_gjcc_locAconst(struct Dee_function_generator *__restrict self, struct Dee_memloc const *lhs, void const *rhs_value, struct Dee_host_symbol *dst_nz, struct Dee_host_symbol *dst_z);
 
 
 
@@ -3307,6 +3438,11 @@ Dee_function_generator_gjcc(struct Dee_function_generator *__restrict self,
                             struct Dee_host_symbol *dst_lo,  /* Jump here if `<lhs> < <rhs>' */
                             struct Dee_host_symbol *dst_eq,  /* Jump here if `<lhs> == <rhs>' */
                             struct Dee_host_symbol *dst_gr); /* Jump here if `<lhs> > <rhs>' */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL
+Dee_function_generator_gjca(struct Dee_function_generator *__restrict self,
+                            struct Dee_memloc const *lhs, struct Dee_memloc const *rhs,
+                            struct Dee_host_symbol *dst_nz, /* Jump here if `(<lhs> & <rhs>) != 0' */
+                            struct Dee_host_symbol *dst_z); /* Jump here if `(<lhs> & <rhs>) == 0' */
 
 
 
