@@ -322,7 +322,7 @@ done:
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
-INTERN WUNUSED NONNULL((1, 2)) int
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) int
 (DCALL DeeKwds_AppendStringLenHash)(DREF DeeObject **__restrict p_self,
                                     char const *__restrict name,
                                     size_t name_len, dhash_t hash) {
@@ -1276,7 +1276,7 @@ DeeKwdsMapping_HasItemStringHash(DeeObject *__restrict self,
 	return true;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 DeeKwdsMapping_HasItemStringLenHash(DeeObject *__restrict self,
                                     char const *__restrict name,
                                     size_t namesize,
@@ -1349,7 +1349,7 @@ no_such_key:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemStringLenHash(DeeObject *__restrict self,
                                     char const *__restrict name,
                                     size_t namesize,
@@ -1377,7 +1377,7 @@ no_such_key:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL
 DeeKwdsMapping_GetItemStringLenHashDef(DeeObject *self,
                                        char const *__restrict name,
                                        size_t namesize,
@@ -1434,7 +1434,7 @@ DeeArg_GetKw(size_t *__restrict p_argc,
 	return_reference_(kw);
 }
 
-PUBLIC NONNULL((3)) void DCALL
+PUBLIC ATTR_INS(2, 1) NONNULL((3)) void DCALL
 DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 	ASSERT_OBJECT(kw);
 	if (DeeKwdsMapping_Check(kw) &&
@@ -1537,7 +1537,7 @@ DeeKwArgs_GetStringHash(DeeKwArgs *__restrict self,
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringLenHash(DeeKwArgs *__restrict self,
                            char const *__restrict name,
                            size_t namelen, Dee_hash_t hash) {
@@ -1593,7 +1593,7 @@ DeeKwArgs_GetStringHashDef(DeeKwArgs *__restrict self,
 	return def;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
                               size_t namelen, Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
@@ -1624,7 +1624,7 @@ DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict
 
 
 
-PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                        char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
@@ -1650,7 +1650,7 @@ DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 	return DeeObject_GetItemStringHash(kw, name, hash);
 }
 
-PUBLIC WUNUSED NONNULL((4)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                           char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
@@ -1676,7 +1676,7 @@ DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 	return DeeObject_GetItemStringLenHash(kw, name, namelen, hash);
 }
 
-PUBLIC WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 6)) DREF DeeObject *DCALL
 DeeArg_GetKwStringHashDef(size_t argc, DeeObject *const *argv,
                           DeeObject *kw, char const *__restrict name,
                           Dee_hash_t hash, DeeObject *def) {
@@ -1700,11 +1700,10 @@ return_def:
 	return DeeObject_GetItemStringHashDef(kw, name, hash, def);
 }
 
-PUBLIC WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
+PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) NONNULL((7)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenHashDef(size_t argc, DeeObject *const *argv,
                              DeeObject *kw, char const *__restrict name,
-                             size_t namelen, dhash_t hash,
-                             DeeObject *def) {
+                             size_t namelen, dhash_t hash, DeeObject *def) {
 	if (!kw) {
 return_def:
 		if (def != ITER_DONE)

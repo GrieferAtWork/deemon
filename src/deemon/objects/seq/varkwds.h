@@ -126,16 +126,16 @@ INTDEF DeeTypeObject BlackListVarkwdsIterator_Type;
 /* Helper functions & RT optimization bindings. */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListed(BlackListVarkwds *__restrict self, DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_IsBlackListedStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL BlackListVarkwds_IsBlackListedStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItem(BlackListVarkwds *__restrict self, DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL BlackListVarkwds_HasItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL BlackListVarkwds_HasItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItem(BlackListVarkwds *self, DeeObject *name);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringHash(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHash(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL BlackListVarkwds_GetItemDef(BlackListVarkwds *__restrict self, DeeObject *__restrict name, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
-INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, dhash_t hash, DeeObject *__restrict def);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHashDef(BlackListVarkwds *__restrict self, char const *__restrict name, size_t namesize, dhash_t hash, DeeObject *__restrict def);
 #define BlackListVarkwds_IsBlackListedString(self, name)                BlackListVarkwds_IsBlackListedStringHash(self, name, Dee_HashStr(name))
 #define BlackListVarkwds_IsBlackListedStringLen(self, name, namesize)   BlackListVarkwds_IsBlackListedStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
 #define BlackListVarkwds_HasItemString(self, name)                      BlackListVarkwds_HasItemStringHash(self, name, Dee_HashStr(name))
@@ -158,7 +158,7 @@ INTDEF WUNUSED DREF DeeObject *DCALL BlackListVarkwds_GetItemStringLenHashDef(Bl
  *    >> // Prints `_BlackListVarkwds { "something_else" : "foobar" }'
  *    >> foo(x: 10, something_else: "foobar");
  */
-INTDEF WUNUSED DREF DeeObject *DCALL
+INTDEF WUNUSED NONNULL((1, 3)) ATTR_INS(4, 2) DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
@@ -167,7 +167,8 @@ BlackListVarkwds_New(struct code_object *__restrict code,
 /* Unshare the argument vector from a blacklist-varkwds object, automatically
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
-INTDEF void DCALL BlackListVarkwds_Decref(DREF DeeObject *__restrict self);
+INTDEF NONNULL((1)) void DCALL
+BlackListVarkwds_Decref(DREF DeeObject *__restrict self);
 
 
 /* Safely decref the contents of a non-NULL `struct code_frame_kwds::fk_varkwds' field. */

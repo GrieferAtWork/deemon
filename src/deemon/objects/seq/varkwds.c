@@ -432,7 +432,7 @@ again:
 	return false;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 BlackListVarkwds_IsBlackListedStringLenHash(BlackListVarkwds *__restrict self,
                                             char const *__restrict name,
                                             size_t namesize, dhash_t hash) {
@@ -506,7 +506,7 @@ BlackListVarkwds_HasItemStringHash(BlackListVarkwds *__restrict self,
 	       atomic_read(&self->blvk_argv) != NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) bool DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 BlackListVarkwds_HasItemStringLenHash(BlackListVarkwds *__restrict self,
                                       char const *__restrict name,
                                       size_t namesize, dhash_t hash) {
@@ -563,7 +563,7 @@ missing:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringLenHash(BlackListVarkwds *__restrict self,
                                       char const *__restrict name,
                                       size_t namesize, dhash_t hash) {
@@ -614,7 +614,7 @@ missing:
 	return def;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringHashDef(BlackListVarkwds *__restrict self,
                                       char const *__restrict name, dhash_t hash,
                                       DeeObject *__restrict def) {
@@ -640,7 +640,7 @@ missing:
 	return def;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 BlackListVarkwds_GetItemStringLenHashDef(BlackListVarkwds *__restrict self,
                                          char const *__restrict name,
                                          size_t namesize, dhash_t hash,
@@ -952,7 +952,7 @@ INTERN DeeTypeObject BlackListVarkwds_Type = {
  * NOTE: If `kwds' is empty, return `Dee_EmptyMapping' instead.
  * NOTE: If `code' doesn't specify any keywords, return `DeeKwdsMapping_New()' instead.
  * Otherwise, the caller must decref the returned object using `BlackListVarkwds_Decref()' */
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 3)) ATTR_INS(4, 2) DREF DeeObject *DCALL
 BlackListVarkwds_New(struct code_object *__restrict code,
                      size_t positional_argc,
                      DeeKwdsObject *__restrict kwds,
@@ -998,7 +998,7 @@ done:
 /* Unshare the argument vector from a blacklist-varkwds object, automatically
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
-INTERN void DCALL
+INTERN NONNULL((1)) void DCALL
 BlackListVarkwds_Decref(DREF DeeObject *__restrict self) {
 	DREF BlackListVarkwds *me;
 	size_t kwdc;

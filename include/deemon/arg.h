@@ -154,7 +154,7 @@ struct dee_kwds_object {
 
 DDATDEF DeeTypeObject DeeKwds_Type;
 #define DeeKwds_SIZE(ob)       ((DeeKwdsObject *)Dee_REQUIRES_OBJECT(ob))->kw_size
-#define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwds_Type) /* _kwds is final */
+#define DeeKwds_Check(ob)      DeeObject_InstanceOfExact(ob, &DeeKwds_Type) /* _Kwds is final */
 #define DeeKwds_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeKwds_Type)
 
 
@@ -165,7 +165,7 @@ DeeKwds_NewWithHint(size_t num_items);
 /* Append a new entry for `name'.
  * NOTE: The keywords argument index is set to the old number of
  *       keywords that had already been defined previously. */
-INTDEF WUNUSED NONNULL((1, 2)) int
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) int
 (DCALL DeeKwds_AppendStringLenHash)(DREF DeeObject **__restrict p_self,
                                     char const *__restrict name,
                                     size_t name_len, Dee_hash_t hash);
@@ -303,23 +303,17 @@ DFUNDEF NONNULL((1)) void DCALL DeeKwdsMapping_Decref(DREF DeeObject *__restrict
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemStringHash(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeKwdsMapping_HasItemStringLenHash(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL DeeKwdsMapping_HasItemStringLenHash(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringHash(DeeObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenHash(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringHashDef(DeeObject *self, char const *__restrict name, Dee_hash_t hash, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenHash(DeeObject *__restrict self, char const *__restrict name, size_t namesize, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenHashDef(DeeObject *self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *def);
-#define DeeKwdsMapping_HasItemString(self, name) \
-	DeeKwdsMapping_HasItemStringHash(self, name, Dee_HashStr(name))
-#define DeeKwdsMapping_HasItemStringLen(self, name, namesize) \
-	DeeKwdsMapping_HasItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
-#define DeeKwdsMapping_GetItemString(self, name) \
-	DeeKwdsMapping_GetItemStringHash(self, name, Dee_HashStr(name))
-#define DeeKwdsMapping_GetItemStringDef(self, name, def) \
-	DeeKwdsMapping_GetItemStringHashDef(self, name, Dee_HashStr(name), def)
-#define DeeKwdsMapping_GetItemStringLen(self, name, namesize) \
-	DeeKwdsMapping_GetItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
-#define DeeKwdsMapping_GetItemStringLenDef(self, name, namesize, def) \
-	DeeKwdsMapping_GetItemStringLenHashDef(self, name, namesize, Dee_HashPtr(name, namesize), def)
+INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL DeeKwdsMapping_GetItemStringLenHashDef(DeeObject *self, char const *__restrict name, size_t namesize, Dee_hash_t hash, DeeObject *def);
+#define DeeKwdsMapping_HasItemString(self, name)                      DeeKwdsMapping_HasItemStringHash(self, name, Dee_HashStr(name))
+#define DeeKwdsMapping_HasItemStringLen(self, name, namesize)         DeeKwdsMapping_HasItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define DeeKwdsMapping_GetItemString(self, name)                      DeeKwdsMapping_GetItemStringHash(self, name, Dee_HashStr(name))
+#define DeeKwdsMapping_GetItemStringDef(self, name, def)              DeeKwdsMapping_GetItemStringHashDef(self, name, Dee_HashStr(name), def)
+#define DeeKwdsMapping_GetItemStringLen(self, name, namesize)         DeeKwdsMapping_GetItemStringLenHash(self, name, namesize, Dee_HashPtr(name, namesize))
+#define DeeKwdsMapping_GetItemStringLenDef(self, name, namesize, def) DeeKwdsMapping_GetItemStringLenHashDef(self, name, namesize, Dee_HashPtr(name, namesize), def)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 typedef struct dee_kwargs DeeKwArgs;
@@ -359,7 +353,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringHash(DeeKwArgs *__restrict self,
                         char const *__restrict name,
                         Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringLenHash(DeeKwArgs *__restrict self,
                            char const *__restrict name,
                            size_t namelen, Dee_hash_t hash);
@@ -367,19 +361,15 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringHashDef(DeeKwArgs *__restrict self,
                            char const *__restrict name,
                            Dee_hash_t hash, DeeObject *def);
-DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL
 DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self,
                               char const *__restrict name,
                               size_t namelen, Dee_hash_t hash,
                               DeeObject *def);
-#define DeeKwArgs_GetString(self, name) \
-	DeeKwArgs_GetStringHash(self, name, Dee_HashStr(name))
-#define DeeKwArgs_GetStringLen(self, name, namelen) \
-	DeeKwArgs_GetStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
-#define DeeKwArgs_GetStringDef(self, name, def) \
-	DeeKwArgs_GetStringHashDef(self, name, Dee_HashStr(name), def)
-#define DeeKwArgs_GetStringLenDef(self, name, namelen, def) \
-	DeeKwArgs_GetStringLenHashDef(self, name, namelen, Dee_HashPtr(name, namelen), def)
+#define DeeKwArgs_GetString(self, name)                     DeeKwArgs_GetStringHash(self, name, Dee_HashStr(name))
+#define DeeKwArgs_GetStringLen(self, name, namelen)         DeeKwArgs_GetStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeKwArgs_GetStringDef(self, name, def)             DeeKwArgs_GetStringHashDef(self, name, Dee_HashStr(name), def)
+#define DeeKwArgs_GetStringLenDef(self, name, namelen, def) DeeKwArgs_GetStringLenHashDef(self, name, namelen, Dee_HashPtr(name, namelen), def)
 
 
 
@@ -388,34 +378,29 @@ DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self,
  * actually mapped arguments. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeArg_GetKw(size_t *__restrict p_argc, DeeObject *const *argv, DeeObject *kw);
-DFUNDEF NONNULL((3)) void DCALL
+DFUNDEF ATTR_INS(2, 1) NONNULL((3)) void DCALL
 DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw);
 
 /* In a keyword-enabled function, return the argument associated with a given
  * `name', or throw a TypeError exception or return `def' if not provided. */
-DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4)) DREF DeeObject *DCALL
 DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                        char const *__restrict name, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((4)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                           char const *__restrict name, size_t namelen, Dee_hash_t hash);
-DFUNDEF WUNUSED NONNULL((4, 6)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 1) NONNULL((4, 6)) DREF DeeObject *DCALL
 DeeArg_GetKwStringHashDef(size_t argc, DeeObject *const *argv,
                           DeeObject *kw, char const *__restrict name,
                           Dee_hash_t hash, DeeObject *def);
-DFUNDEF WUNUSED NONNULL((4, 7)) DREF DeeObject *DCALL
+DFUNDEF WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) NONNULL((7)) DREF DeeObject *DCALL
 DeeArg_GetKwStringLenHashDef(size_t argc, DeeObject *const *argv,
                              DeeObject *kw, char const *__restrict name,
-                             size_t namelen, Dee_hash_t hash,
-                             DeeObject *def);
-#define DeeArg_GetKwString(argc, argv, kw, name) \
-	DeeArg_GetKwStringHash(argc, argv, kw, name, Dee_HashStr(name))
-#define DeeArg_GetKwStringLen(argc, argv, kw, name, namelen) \
-	DeeArg_GetKwStringLenHash(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen))
-#define DeeArg_GetKwStringDef(argc, argv, kw, name, def) \
-	DeeArg_GetKwStringHashDef(argc, argv, kw, name, Dee_HashStr(name), def)
-#define DeeArg_GetKwStringLenDef(argc, argv, kw, name, namelen, def) \
-	DeeArg_GetKwStringLenHashDef(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen), def)
+                             size_t namelen, Dee_hash_t hash, DeeObject *def);
+#define DeeArg_GetKwString(argc, argv, kw, name)                     DeeArg_GetKwStringHash(argc, argv, kw, name, Dee_HashStr(name))
+#define DeeArg_GetKwStringLen(argc, argv, kw, name, namelen)         DeeArg_GetKwStringLenHash(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeArg_GetKwStringDef(argc, argv, kw, name, def)             DeeArg_GetKwStringHashDef(argc, argv, kw, name, Dee_HashStr(name), def)
+#define DeeArg_GetKwStringLenDef(argc, argv, kw, name, namelen, def) DeeArg_GetKwStringLenHashDef(argc, argv, kw, name, namelen, Dee_HashPtr(name, namelen), def)
 
 
 
@@ -618,6 +603,5 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
 #endif /* DEE_SOURCE */
 
 DECL_END
-
 
 #endif /* !GUARD_DEEMON_ARG_H */
