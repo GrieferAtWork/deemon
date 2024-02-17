@@ -174,7 +174,7 @@ Dee_function_generator_vpush_prefix(struct Dee_function_generator *__restrict se
                                     uint8_t prefix_type, uint16_t id1, uint16_t id2) {
 	switch (prefix_type) {
 	case ASM_STACK:
-		return Dee_function_generator_vdup_n(self, self->fg_state->ms_stackc - id1);
+		return Dee_function_generator_vdup_at(self, self->fg_state->ms_stackc - id1);
 	case ASM_STATIC:
 		return Dee_function_generator_vpush_static(self, id1);
 	case ASM_EXTERN:
@@ -417,7 +417,7 @@ gen_print_to_file(struct Dee_function_generator *__restrict self,
 				if unlikely(!utf8)
 					goto handle_error_and_do_fallback;
 				if (print_after != NULL) {
-					DO(Dee_function_generator_vdup_n(self, 2)); /* File, value, File */
+					DO(Dee_function_generator_vdup_at(self, 2)); /* File, value, File */
 					DO(Dee_function_generator_vswap(self));     /* File, File, value */
 				}
 				DO(Dee_function_generator_vpop(self));          /* [File], File */
@@ -845,9 +845,9 @@ Dee_function_generator_geninstr(struct Dee_function_generator *__restrict self,
 	TARGET(ASM_DUP)
 		return Dee_function_generator_vdup(self);
 	TARGET(ASM_DUP_N)
-		return Dee_function_generator_vdup_n(self, instr[1] + 2);
+		return Dee_function_generator_vdup_at(self, instr[1] + 2);
 	TARGET(ASM16_DUP_N)
-		return Dee_function_generator_vdup_n(self, UNALIGNED_GETLE16(instr + 2) + 2);
+		return Dee_function_generator_vdup_at(self, UNALIGNED_GETLE16(instr + 2) + 2);
 	TARGET(ASM_POP)
 		return Dee_function_generator_vpop(self);
 	TARGET(ASM_POP_N)
@@ -1343,7 +1343,7 @@ do_jcc:
 		DO(Dee_function_generator_vpush_cid_t(self, desc_cid, &DeeClassDescriptor_Type));
 		__IF0 {
 	TARGET(ASM_CLASS)
-			DO(Dee_function_generator_vassert_type_exact_if_safe_c(self, &DeeClassDescriptor_Type)); /* base, desc */
+			DO(Dee_function_generator_vcall_DeeObject_AssertTypeExact_c_if_safe(self, &DeeClassDescriptor_Type)); /* base, desc */
 		}
 		cdesc = NULL;
 		if (Dee_function_generator_vtop_isdirect(self) &&
@@ -1375,7 +1375,7 @@ do_jcc:
 		uint16_t addr;
 		addr = instr[1];
 		__IF0 { TARGET(ASM16_DEFCMEMBER) addr = UNALIGNED_GETLE16(instr + 2); }
-		DO(Dee_function_generator_vdup_n(self, 2)); /* type, value, type */
+		DO(Dee_function_generator_vdup_at(self, 2)); /* type, value, type */
 		DO(Dee_function_generator_vswap(self));     /* type, type, value */
 		return Dee_function_generator_vpop_cmember(self, addr, DEE_FUNCTION_GENERATOR_CIMEMBER_F_NORMAL); /* type */
 	}	break;

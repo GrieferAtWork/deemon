@@ -177,10 +177,10 @@ DEFINE_CCALL_OPTIMIZATION(cca_Object___str__, Dee_function_generator_vopstr(self
 DEFINE_CCALL_OPERATOR(cca_Object___repr__, OPERATOR_REPR, 1)
 DEFINE_CCALL_OPTIMIZATION(cca_Object___bool__, Dee_function_generator_vopbool(self, VOPBOOL_F_NORMAL)) /* 1 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___call__,
-                          Dee_function_generator_vassert_type_exact_c(self, &DeeTuple_Type) ||
+                          Dee_function_generator_vcall_DeeObject_AssertTypeExact_c(self, &DeeTuple_Type) ||
                           Dee_function_generator_vopcalltuple(self)) /* 2 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___thiscall__,
-                          Dee_function_generator_vassert_type_exact_c(self, &DeeTuple_Type) ||
+                          Dee_function_generator_vcall_DeeObject_AssertTypeExact_c(self, &DeeTuple_Type) ||
                           Dee_function_generator_vopthiscalltuple(self)) /* 3 */
 DEFINE_CCALL_OPERATOR(cca_Object___hash__, OPERATOR_HASH, 1)
 DEFINE_CCALL_OPTIMIZATION(cca_Object___int__, Dee_function_generator_vopint(self)) /* 1 */
@@ -216,7 +216,7 @@ DEFINE_CCALL_OPERATOR(cca_Object___iterself__, OPERATOR_ITERSELF, 1)
 DEFINE_CCALL_OPERATOR(cca_Object___iternext__, OPERATOR_ITERNEXT, 1)
 DEFINE_CCALL_OPTIMIZATION(cca_Object___getattr__, Dee_function_generator_vopgetattr(self)) /* 2 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___callattr__,
-                          Dee_function_generator_vassert_type_exact_c(self, &DeeTuple_Type) ||
+                          Dee_function_generator_vcall_DeeObject_AssertTypeExact_c(self, &DeeTuple_Type) ||
                           Dee_function_generator_vopcallattrtuple(self))                   /* 3 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___hasattr__, Dee_function_generator_vophasattr(self)) /* 2 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___delattr__, Dee_function_generator_vopdelattr(self)) /* 2 */
@@ -400,8 +400,8 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	/* Fallback: lookup key and override if not already present (thread-unsafe) */
 	DO(Dee_function_generator_vnotoneref(self, 2));         /* this, key, value */
 	DO(Dee_function_generator_vnotoneref_if_operator_at(self, OPERATOR_SETITEM, 2)); /* this, key, value */
-	DO(Dee_function_generator_vdup_n(self, 3));             /* this, key, value, this */
-	DO(Dee_function_generator_vdup_n(self, 3));             /* this, key, value, this, key */
+	DO(Dee_function_generator_vdup_at(self, 3));             /* this, key, value, this */
+	DO(Dee_function_generator_vdup_at(self, 3));             /* this, key, value, this, key */
 	DO(Dee_function_generator_vpush_addr(self, ITER_DONE)); /* this, key, value, this, key, ITER_DONE */
 	DO(Dee_function_generator_vopgetitemdef(self));         /* this, key, value, current_value */
 	DO(Dee_function_generator_vdirect1(self));              /* this, key, value, current_value */
@@ -426,9 +426,9 @@ cca_Mapping_setdefault(struct Dee_function_generator *__restrict self, Dee_vstac
 	EDO(err_common_state, Dee_function_generator_state_unshare(self));        /* this, key, value, ref:current_value */
 	Dee_function_generator_vtop_direct_clearref(self);                        /* this, key, value, current_value */
 	EDO(err_common_state, Dee_function_generator_vpop(self));                 /* this, key, value */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this, key */
-	EDO(err_common_state, Dee_function_generator_vdup_n(self, 3));            /* this, key, value, this, key, value */
+	EDO(err_common_state, Dee_function_generator_vdup_at(self, 3));            /* this, key, value, this */
+	EDO(err_common_state, Dee_function_generator_vdup_at(self, 3));            /* this, key, value, this, key */
+	EDO(err_common_state, Dee_function_generator_vdup_at(self, 3));            /* this, key, value, this, key, value */
 	EDO(err_common_state, Dee_function_generator_vop(self, OPERATOR_SETITEM, 3, VOP_F_NORMAL)); /* this, key, value */
 	EDO(err_common_state, Dee_function_generator_vdup(self));                 /* this, key, value, value */
 	EDO(err_common_state, Dee_function_generator_vdirect1(self));             /* this, key, value, value */
@@ -471,7 +471,7 @@ cca_List_append(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t
 	while (argc) {
 		/* XXX: Pre-reserve memory when multiple arguments are given? */
 		/* XXX: Use a different function `DeeList_AppendInherted()', so we don't have to decref the appended object? */
-		DO(Dee_function_generator_vdup_n(self, argc + 1));                           /* this, [args...], this */
+		DO(Dee_function_generator_vdup_at(self, argc + 1));                           /* this, [args...], this */
 		DO(Dee_function_generator_vlrot(self, argc + 1));                            /* this, [moreargs...], this, arg */
 		DO(Dee_function_generator_vcallapi(self, &DeeList_Append, VCALL_CC_INT, 2)); /* this, [moreargs...] */
 		--argc;
@@ -1073,13 +1073,13 @@ err:
 /* cell, ref:value -> N/A */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vcall_DeeCell_DelOrSet(struct Dee_function_generator *__restrict self) {
-	DO(Dee_function_generator_vdup_n(self, 2));                                 /* cell, ref:value, cell */
+	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:value, cell */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock)));   /* cell, ref:value, &cell->c_lock */
 	DO(Dee_function_generator_vrwlock_write(self));                             /* cell, ref:value */
-	DO(Dee_function_generator_vdup_n(self, 2));                                 /* cell, ref:value, cell */
+	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:value, cell */
 	DO(Dee_function_generator_vswap(self));                                     /* cell, cell, ref:value */
 	DO(Dee_function_generator_vswapind(self, offsetof(DeeCellObject, c_item))); /* cell, ref:old_value */
-	DO(Dee_function_generator_vdup_n(self, 2));                                 /* cell, ref:old_value, cell */
+	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:old_value, cell */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock)));   /* cell, ref:old_value, &cell->c_lock */
 	DO(Dee_function_generator_vrwlock_endwrite(self));                          /* cell, ref:old_value */
 	DO(Dee_function_generator_vpop_at(self, 2));                                /* ref:old_value */
@@ -1109,7 +1109,7 @@ cca_Cell_get(struct Dee_function_generator *__restrict self, Dee_vstackaddr_t ar
 	EDO(err_branch, Dee_function_generator_vdup(self));                                /* def, def */
 	EDO(err_branch, Dee_function_generator_vdirect1(self));                            /* def, def */
 	EDO(err_branch, Dee_function_generator_vref_noalias(self));                        /* def, ref:def */
-	DO(Dee_function_generator_vjz_leave(self, &branch));                               /* def, result */
+	DO(Dee_function_generator_vjx_leave(self, &branch));                               /* def, result */
 	return 0;
 err_branch:
 	Dee_function_generator_branch_fini(&branch);

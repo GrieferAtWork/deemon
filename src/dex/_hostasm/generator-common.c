@@ -35,6 +35,8 @@
 #include <deemon/tuple.h>
 #include <deemon/util/lock.h>
 
+#include <hybrid/overflow.h>
+
 #include "utils.h"
 
 DECL_BEGIN
@@ -67,9 +69,9 @@ DECL_BEGIN
 #ifdef _Dee_function_generator_gmov_reg2constind_MAYFAIL
 #define NEED_constasreg
 #endif /* _Dee_function_generator_gmov_reg2constind_MAYFAIL */
-#ifdef _Dee_function_generator_gand_regconst2reg_MAYFAIL
+#ifdef _Dee_function_generator_gbitop_regconst2reg_MAYFAIL
 #define NEED_constasreg
-#endif /* !_Dee_function_generator_gand_regconst2reg_MAYFAIL */
+#endif /* !_Dee_function_generator_gbitop_regconst2reg_MAYFAIL */
 #ifdef _Dee_function_generator_gjcc_regindCconst_MAYFAIL
 #define NEED_constasreg
 #endif /* !_Dee_function_generator_gjcc_regindCconst_MAYFAIL */
@@ -109,6 +111,51 @@ err:
 	return HOST_REGISTER_COUNT;
 }
 #endif /* NEED_constasreg */
+
+
+/* Bit operations */
+INTERN ATTR_CONST WUNUSED uintptr_t DCALL
+Dee_bitop_forconst(Dee_bitop_t op, uintptr_t lhs, uintptr_t rhs) {
+	uintptr_t result;
+	switch (op) {
+	case BITOP_AND:
+		result = lhs & rhs;
+		break;
+	case BITOP_OR:
+		result = lhs | rhs;
+		break;
+	case BITOP_XOR:
+		result = lhs ^ rhs;
+		break;
+	default: __builtin_unreachable();
+	}
+	return result;
+}
+
+/* @return: true:  overflow
+ * @return: false: no overflow */
+INTERN WUNUSED NONNULL((4)) bool DCALL
+Dee_arithop_forconst(Dee_bitop_t op, uintptr_t lhs, uintptr_t rhs,
+                     uintptr_t *__restrict p_result) {
+	bool did_overfow;
+	switch (op) {
+	case ARITHOP_UADD:
+		did_overfow = OVERFLOW_UADD(lhs, rhs, p_result);
+		break;
+	case ARITHOP_SADD:
+		did_overfow = OVERFLOW_SADD((intptr_t)lhs, (intptr_t)rhs, (intptr_t *)p_result);
+		break;
+	case ARITHOP_USUB:
+		did_overfow = OVERFLOW_USUB(lhs, rhs, p_result);
+		break;
+	case ARITHOP_SSUB:
+		did_overfow = OVERFLOW_SSUB((intptr_t)lhs, (intptr_t)rhs, (intptr_t *)p_result);
+		break;
+	default: __builtin_unreachable();
+	}
+	return did_overfow;
+}
+
 
 
 /* Clear the `MEMOBJ_F_ONEREF' flag from `mobj', as well
@@ -577,59 +624,48 @@ Dee_function_generator_gmov_reg2constind(struct Dee_function_generator *__restri
 }
 
 
-/* dst_regno = src1_regno + src2_regno; */
+/* dst_regno = src1_regno <op> src2_regno; */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gadd_regreg2reg(struct Dee_function_generator *__restrict self,
-                                       Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
-                                       Dee_host_register_t dst_regno) {
-	int result = _Dee_function_generator_gadd_regreg2reg(self, src1_regno, src2_regno, dst_regno);
-	if likely(result == 0)
-		Dee_function_generator_remember_undefined_reg(self, dst_regno);
-	return result;
-}
-
-/* dst_regno = src1_regno & src2_regno; */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_regreg2reg(struct Dee_function_generator *__restrict self,
-                                       Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
-                                       Dee_host_register_t dst_regno) {
-	int result = _Dee_function_generator_gand_regreg2reg(self, src1_regno, src2_regno, dst_regno);
-	if likely(result == 0)
-		Dee_function_generator_remember_undefined_reg(self, dst_regno);
-	return result;
-}
-
-/* dst_regno = src1_regno & *(src2_regno + src2_ind_delta); */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_regregind2reg(struct Dee_function_generator *__restrict self,
-                                          Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
-                                          ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno) {
-	int result = _Dee_function_generator_gand_regregind2reg(self, src1_regno, src2_regno, src2_ind_delta, dst_regno);
-	if likely(result == 0)
-		Dee_function_generator_remember_undefined_reg(self, dst_regno);
-	return result;
-}
-
-/* dst_regno = src1_regno & *(SP ... src2_cfa_offset); */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_reghstackind2reg(struct Dee_function_generator *__restrict self,
-                                             Dee_host_register_t src1_regno, Dee_cfa_t src2_cfa_offset,
-                                             Dee_host_register_t dst_regno) {
-	ptrdiff_t src2_sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, src2_cfa_offset);
-	int result = _Dee_function_generator_gand_reghstackind2reg(self, src1_regno, src2_sp_offset, dst_regno);
-	if likely(result == 0)
-		Dee_function_generator_remember_undefined_reg(self, dst_regno);
-	return result;
-}
-
-
-#ifdef _Dee_function_generator_gand_regconst2reg_MAYFAIL
-/* dst_regno = src_regno & value; */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_regconst2reg(struct Dee_function_generator *__restrict self,
-                                         Dee_host_register_t src_regno, void const *value,
+Dee_function_generator_gbitop_regreg2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                         Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
                                          Dee_host_register_t dst_regno) {
-	int result = _Dee_function_generator_gand_regconst2reg(self, src_regno, value, dst_regno);
+	int result = _Dee_function_generator_gbitop_regreg2reg(self, op, src1_regno, src2_regno, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+/* dst_regno = src1_regno <op> *(src2_regno + src2_ind_delta); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gbitop_regregind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                            Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
+                                            ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gbitop_regregind2reg(self, op, src1_regno, src2_regno, src2_ind_delta, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+/* dst_regno = src1_regno <op> *(SP ... src2_cfa_offset); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gbitop_reghstackind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                               Dee_host_register_t src1_regno, Dee_cfa_t src2_cfa_offset,
+                                               Dee_host_register_t dst_regno) {
+	ptrdiff_t src2_sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, src2_cfa_offset);
+	int result = _Dee_function_generator_gbitop_reghstackind2reg(self, op, src1_regno, src2_sp_offset, dst_regno);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+
+#ifdef _Dee_function_generator_gbitop_regconst2reg_MAYFAIL
+/* dst_regno = src_regno <op> value; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gbitop_regconst2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                           Dee_host_register_t src_regno, void const *value,
+                                           Dee_host_register_t dst_regno) {
+	int result = _Dee_function_generator_gbitop_regconst2reg(self, op, src_regno, value, dst_regno);
 	if unlikely(result > 0) {
 		Dee_host_register_t not_these[3], tempreg;
 		not_these[0] = src_regno;
@@ -638,34 +674,34 @@ Dee_function_generator_gand_regconst2reg(struct Dee_function_generator *__restri
 		tempreg = Dee_function_generator_gconst_as_reg(self, value, not_these);
 		if unlikely(tempreg >= HOST_REGISTER_COUNT)
 			return -1;
-		return Dee_function_generator_gand_regreg2reg(self, src_regno, tempreg, dst_regno);
+		return Dee_function_generator_gbitop_regreg2reg(self, op, src_regno, tempreg, dst_regno);
 	}
 	if likely(result == 0)
 		Dee_function_generator_remember_undefined_reg(self, dst_regno);
 	return result;
 }
-#endif /* _Dee_function_generator_gand_regconst2reg_MAYFAIL */
+#endif /* _Dee_function_generator_gbitop_regconst2reg_MAYFAIL */
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_regxregx2reg(struct Dee_function_generator *__restrict self,
-                                         Dee_host_register_t src1_regno, ptrdiff_t src_regno1_off,
-                                         Dee_host_register_t src2_regno, ptrdiff_t src_regno2_off,
-                                         Dee_host_register_t dst_regno) {
+Dee_function_generator_gbitop_regxregx2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                           Dee_host_register_t src1_regno, ptrdiff_t src_regno1_off,
+                                           Dee_host_register_t src2_regno, ptrdiff_t src_regno2_off,
+                                           Dee_host_register_t dst_regno) {
 	if (src_regno1_off == 0 && src_regno2_off == 0) /* Both sides have value-offset = 0 */
-		return Dee_function_generator_gand_regreg2reg(self, src1_regno, src2_regno, dst_regno);
+		return Dee_function_generator_gbitop_regreg2reg(self, op, src1_regno, src2_regno, dst_regno);
 	if (src_regno1_off == 0 && dst_regno != src1_regno) {
 		/* Left side has value-offset == 0, and destination isn't src1. Encode as:
 		 * >> dst_regno = src2_regno + src_regno2_off;
 		 * >> dst_regno = src1_regno & dst_regno; */
 		DO(Dee_function_generator_gmov_regx2reg(self, src2_regno, src_regno2_off, dst_regno));
-		return Dee_function_generator_gand_regreg2reg(self, src1_regno, dst_regno, dst_regno);
+		return Dee_function_generator_gbitop_regreg2reg(self, op, src1_regno, dst_regno, dst_regno);
 	}
 	if (src_regno2_off == 0 && dst_regno != src2_regno) {
 		/* Right side has value-offset == 0, and destination isn't src2. Encode as:
 		 * >> dst_regno = src1_regno + src_regno1_off;
 		 * >> dst_regno = dst_regno & src2_regno; */
 		DO(Dee_function_generator_gmov_regx2reg(self, src1_regno, src_regno1_off, dst_regno));
-		return Dee_function_generator_gand_regreg2reg(self, dst_regno, src2_regno, dst_regno);
+		return Dee_function_generator_gbitop_regreg2reg(self, op, dst_regno, src2_regno, dst_regno);
 	}
 
 	/* Fallback: inline-adjust */
@@ -701,17 +737,16 @@ Dee_function_generator_gand_regxregx2reg(struct Dee_function_generator *__restri
 			/*src_regno2_off = 0;*/
 		}
 	}
-	return Dee_function_generator_gand_regreg2reg(self, src1_regno, src2_regno, dst_regno);
+	return Dee_function_generator_gbitop_regreg2reg(self, op, src1_regno, src2_regno, dst_regno);
 err:
 	return -1;
 }
 
-/* dst_regno = src_loc1 & src_loc2; */
+/* dst_regno = src_loc1 <op> src_loc2; */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gand_locloc2reg(struct Dee_function_generator *__restrict self,
-                                       struct Dee_memloc const *src_loc1,
-                                       struct Dee_memloc const *src_loc2,
-                                       Dee_host_register_t dst_regno) {
+Dee_function_generator_gbitop_locloc2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                         struct Dee_memloc const *src_loc1, struct Dee_memloc const *src_loc2,
+                                         Dee_host_register_t dst_regno) {
 	struct Dee_memloc loc1_asreg, loc2_asreg;
 	Dee_host_register_t not_these[2];
 	if (Dee_memloc_gettyp(src_loc2) == MEMADR_TYPE_HREG ||
@@ -724,8 +759,11 @@ Dee_function_generator_gand_locloc2reg(struct Dee_function_generator *__restrict
 		src_loc1 = temp;
 	}
 
-	if (Dee_memloc_sameloc(src_loc1, src_loc2))
+	if (Dee_memloc_sameloc(src_loc1, src_loc2)) {
+		if (op == BITOP_XOR)
+			return Dee_function_generator_gmov_const2reg(self, (void const *)0, dst_regno);
 		return Dee_function_generator_gmov_loc2reg(self, src_loc1, dst_regno);
+	}
 	if unlikely(Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_UNDEFINED)
 		return 0;
 	switch (Dee_memloc_gettyp(src_loc2)) {
@@ -747,10 +785,10 @@ Dee_function_generator_gand_locloc2reg(struct Dee_function_generator *__restrict
 				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
 				                                                 dst_regno))
 					goto err;
-				return Dee_function_generator_gand_reghstackind2reg(self, dst_regno, src_loc2_cfa, dst_regno);
+				return Dee_function_generator_gbitop_reghstackind2reg(self, op, dst_regno, src_loc2_cfa, dst_regno);
 			}
-			return Dee_function_generator_gand_reghstackind2reg(self, Dee_memloc_hreg_getreg(src_loc1),
-			                                                    src_loc2_cfa, dst_regno);
+			return Dee_function_generator_gbitop_reghstackind2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                      src_loc2_cfa, dst_regno);
 		}
 	}	break;
 
@@ -772,11 +810,11 @@ Dee_function_generator_gand_locloc2reg(struct Dee_function_generator *__restrict
 				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
 				                                                 dst_regno))
 					goto err;
-				return Dee_function_generator_gand_regregind2reg(self, dst_regno, src_loc2_regno,
-				                                                 src_loc2_indoff, dst_regno);
+				return Dee_function_generator_gbitop_regregind2reg(self, op, dst_regno, src_loc2_regno,
+				                                                   src_loc2_indoff, dst_regno);
 			}
-			return Dee_function_generator_gand_regregind2reg(self, Dee_memloc_hreg_getreg(src_loc1),
-			                                                 src_loc2_regno, src_loc2_indoff, dst_regno);
+			return Dee_function_generator_gbitop_regregind2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                   src_loc2_regno, src_loc2_indoff, dst_regno);
 		}
 	}	break;
 
@@ -792,18 +830,18 @@ src_loc2_fallback:
 	case MEMADR_TYPE_HREG:
 		if (Dee_memloc_gettyp(src_loc1) != MEMADR_TYPE_HREG) {
 			not_these[0] = Dee_memloc_getreg(src_loc2);
-			not_these[1] = HOST_REGISTER_COUNT; /*  */
+			not_these[1] = HOST_REGISTER_COUNT;
 			DO(Dee_function_generator_gasreg(self, src_loc1, &loc1_asreg, not_these));
 			src_loc1 = &loc1_asreg;
 		}
 		ASSERT(Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_HREG);
 		ASSERT(Dee_memloc_gettyp(src_loc2) == MEMADR_TYPE_HREG);
-		return Dee_function_generator_gand_regxregx2reg(self,
-		                                                Dee_memloc_hreg_getreg(src_loc1),
-		                                                Dee_memloc_hreg_getvaloff(src_loc1),
-		                                                Dee_memloc_hreg_getreg(src_loc2),
-		                                                Dee_memloc_hreg_getvaloff(src_loc2),
-		                                                dst_regno);
+		return Dee_function_generator_gbitop_regxregx2reg(self, op,
+		                                                  Dee_memloc_hreg_getreg(src_loc1),
+		                                                  Dee_memloc_hreg_getvaloff(src_loc1),
+		                                                  Dee_memloc_hreg_getreg(src_loc2),
+		                                                  Dee_memloc_hreg_getvaloff(src_loc2),
+		                                                  dst_regno);
 
 	case MEMADR_TYPE_CONST: {
 		void const *src_loc2_value = Dee_memloc_const_getaddr(src_loc2);
@@ -820,14 +858,13 @@ src_loc2_fallback:
 				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
 				                                                 dst_regno))
 					goto err;
-				return Dee_function_generator_gand_regconst2reg(self, dst_regno, src_loc2_value, dst_regno);
+				return Dee_function_generator_gbitop_regconst2reg(self, op, dst_regno, src_loc2_value, dst_regno);
 			}
-			return Dee_function_generator_gand_regconst2reg(self, Dee_memloc_hreg_getreg(src_loc1),
-			                                                src_loc2_value, dst_regno);
+			return Dee_function_generator_gbitop_regconst2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                  src_loc2_value, dst_regno);
 		case MEMADR_TYPE_CONST: {
 			void const *src_loc1_value = Dee_memloc_const_getaddr(src_loc1);
-			void const *dst_value = (void const *)((uintptr_t)src_loc1_value &
-			                                       (uintptr_t)src_loc2_value);
+			void const *dst_value = (void const *)Dee_bitop_forconst(op, (uintptr_t)src_loc1_value, (uintptr_t)src_loc2_value);
 			return Dee_function_generator_gmov_const2reg(self, dst_value, dst_regno);
 		}	break;
 
@@ -842,6 +879,314 @@ err:
 	return -1;
 }
 
+
+
+/* dst_regno = src1_regno <op> src2_regno; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_regreg2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                          Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
+                                          Dee_host_register_t dst_regno,
+                                          struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	int result = _Dee_function_generator_gjarith_regreg2reg(self, op, src1_regno, src2_regno, dst_regno, dst_o, dst_no);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+/* dst_regno = src1_regno <op> *(src2_regno + src2_ind_delta); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_regregind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                             Dee_host_register_t src1_regno, Dee_host_register_t src2_regno,
+                                             ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno,
+                                             struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	int result = _Dee_function_generator_gjarith_regregind2reg(self, op, src1_regno, src2_regno, src2_ind_delta, dst_regno, dst_o, dst_no);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+/* dst_regno = src1_regno <op> *(SP ... src2_cfa_offset); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_reghstackind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                                Dee_host_register_t src1_regno, Dee_cfa_t src2_cfa_offset,
+                                                Dee_host_register_t dst_regno,
+                                                struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	ptrdiff_t src2_sp_offset = Dee_memstate_hstack_cfa2sp(self->fg_state, src2_cfa_offset);
+	int result = _Dee_function_generator_gjarith_reghstackind2reg(self, op, src1_regno, src2_sp_offset, dst_regno, dst_o, dst_no);
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+
+
+#ifdef _Dee_function_generator_gjarith_regconst2reg_MAYFAIL
+/* dst_regno = src_regno <op> value; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_regconst2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                            Dee_host_register_t src_regno, void const *value,
+                                            Dee_host_register_t dst_regno,
+                                            struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	int result = _Dee_function_generator_gjarith_regconst2reg(self, op, src_regno, value, dst_regno, dst_o, dst_no);
+	if unlikely(result > 0) {
+		Dee_host_register_t not_these[3], tempreg;
+		not_these[0] = src_regno;
+		not_these[1] = dst_regno;
+		not_these[2] = HOST_REGISTER_COUNT;
+		tempreg = Dee_function_generator_gconst_as_reg(self, value, not_these);
+		if unlikely(tempreg >= HOST_REGISTER_COUNT)
+			return -1;
+		return Dee_function_generator_gjarith_regreg2reg(self, op, src_regno, tempreg, dst_regno, dst_o, dst_no);
+	}
+	if likely(result == 0)
+		Dee_function_generator_remember_undefined_reg(self, dst_regno);
+	return result;
+}
+#endif /* _Dee_function_generator_gjarith_regconst2reg_MAYFAIL */
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_regxregx2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                            Dee_host_register_t src1_regno, ptrdiff_t src_regno1_off,
+                                            Dee_host_register_t src2_regno, ptrdiff_t src_regno2_off,
+                                            Dee_host_register_t dst_regno,
+                                            struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	if (src_regno1_off == 0 && src_regno2_off == 0) /* Both sides have value-offset = 0 */
+		return Dee_function_generator_gjarith_regreg2reg(self, op, src1_regno, src2_regno, dst_regno, dst_o, dst_no);
+	if (src1_regno == src2_regno && ARITHOP_MAYMOVEOFF(op)) {
+		src_regno2_off -= src_regno1_off;
+		src_regno1_off = 0;
+	}
+	if (src_regno1_off == 0 && dst_regno != src1_regno) {
+		/* Left side has value-offset == 0, and destination isn't src1. Encode as:
+		 * >> dst_regno = src2_regno + src_regno2_off;
+		 * >> dst_regno = src1_regno & dst_regno; */
+		DO(Dee_function_generator_gmov_regx2reg(self, src2_regno, src_regno2_off, dst_regno));
+		return Dee_function_generator_gjarith_regreg2reg(self, op, src1_regno, dst_regno, dst_regno, dst_o, dst_no);
+	}
+	if (src_regno2_off == 0 && dst_regno != src2_regno) {
+		/* Right side has value-offset == 0, and destination isn't src2. Encode as:
+		 * >> dst_regno = src1_regno + src_regno1_off;
+		 * >> dst_regno = dst_regno & src2_regno; */
+		DO(Dee_function_generator_gmov_regx2reg(self, src1_regno, src_regno1_off, dst_regno));
+		return Dee_function_generator_gjarith_regreg2reg(self, op, dst_regno, src2_regno, dst_regno, dst_o, dst_no);
+	}
+
+	/* Fallback: inline-adjust */
+	if (src_regno1_off != 0) {
+		Dee_host_register_t new_src_regno1 = src1_regno;
+		if (new_src_regno1 == src2_regno)
+			new_src_regno1 = dst_regno;
+		DO(Dee_function_generator_gmov_regx2reg(self, src1_regno, src_regno1_off, new_src_regno1));
+		Dee_memstate_hregs_adjust_delta(self->fg_state, new_src_regno1, src_regno1_off);
+		if (src2_regno == new_src_regno1)
+			src_regno2_off += src_regno1_off;
+		src1_regno = new_src_regno1;
+		/*src_regno1_off = 0;*/
+	}
+	if (src_regno2_off != 0) {
+		if (src1_regno != src2_regno) {
+			DO(Dee_function_generator_gmov_regx2reg(self, src2_regno, src_regno2_off, src2_regno));
+			/*src_regno2_off = 0;*/
+		} else if (src1_regno != dst_regno) {
+			DO(Dee_function_generator_gmov_regx2reg(self, src2_regno, src_regno2_off, dst_regno));
+			src2_regno = dst_regno;
+			/*src_regno2_off = 0;*/
+		} else {
+			Dee_host_register_t tempreg;
+			Dee_host_register_t not_these[2];
+			not_these[0] = src2_regno;
+			not_these[1] = HOST_REGISTER_COUNT;
+			tempreg = Dee_function_generator_gallocreg(self, not_these);
+			if unlikely(tempreg >= HOST_REGISTER_COUNT)
+				goto err;
+			DO(Dee_function_generator_gmov_regx2reg(self, src2_regno, src_regno2_off, tempreg));
+			src2_regno = tempreg;
+			/*src_regno2_off = 0;*/
+		}
+	}
+	return Dee_function_generator_gjarith_regreg2reg(self, op, src1_regno, src2_regno, dst_regno, dst_o, dst_no);
+err:
+	return -1;
+}
+
+/* dst_regno = src_loc1 <op> src_loc2; */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_gjarith_locloc2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op,
+                                          struct Dee_memloc const *src_loc1, struct Dee_memloc const *src_loc2,
+                                          Dee_host_register_t dst_regno,
+                                          struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	struct Dee_memloc loc1_asnormal, loc2_asnormal;
+	struct Dee_memloc loc1_asreg, loc2_asreg;
+	Dee_host_register_t not_these[2];
+	if (Dee_memloc_gettyp(src_loc2) == MEMADR_TYPE_HREG ||
+	    Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_CONST) {
+		if (ARITHOP_MAYREORDER(op)) {
+			/* Always want the constant to appear on the *right*
+			 * side, and a register to appear on the left side. */
+			struct Dee_memloc const *temp;
+			temp = src_loc2;
+			src_loc2 = src_loc1;
+			src_loc1 = temp;
+		} else if (Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_CONST) {
+			switch (op) {
+
+			case ARITHOP_USUB:
+			case ARITHOP_SSUB: {
+				intptr_t negval = -(intptr_t)(uintptr_t)Dee_memloc_const_getaddr(src_loc1);
+				src_loc1 = src_loc2;
+				src_loc2 = &loc2_asnormal;
+				Dee_memloc_init_const(&loc2_asnormal, (void *)(uintptr_t)negval);
+				op = op == ARITHOP_USUB ? ARITHOP_UADD : ARITHOP_SADD;
+			}	break;
+
+			default: break;
+			}
+		}
+	}
+
+	/* If allowed by the operation, move all value offsets into "src_loc2" */
+	if (ARITHOP_MAYMOVEOFF(op)) {
+		ptrdiff_t off1 = Dee_memloc_getoff(src_loc1);
+		if (off1 == 0) {
+			/* Nothing do to: lhs already has a value-offset of 0 */
+		} else {
+			if (src_loc2 != &loc2_asnormal)
+				loc2_asnormal = *src_loc2;
+			src_loc2 = &loc2_asnormal;
+			Dee_memloc_adjoff(&loc2_asnormal, -off1);
+			loc1_asnormal = *src_loc1;
+			Dee_memloc_setoff(&loc1_asnormal, 0);
+			src_loc1 = &loc1_asnormal;
+		}
+	}
+
+	if (Dee_memloc_sameloc(src_loc1, src_loc2)) {
+		switch (op) {
+		case ARITHOP_USUB:
+		case ARITHOP_SSUB:
+			return Dee_function_generator_gmov_const2reg(self, (void const *)0, dst_regno);
+		default: break;
+		}
+		return Dee_function_generator_gmov_loc2reg(self, src_loc1, dst_regno);
+	}
+	if unlikely(Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_UNDEFINED)
+		return (dst_o && dst_no) ? Dee_function_generator_gjmp(self, dst_no) : 0;
+	switch (Dee_memloc_gettyp(src_loc2)) {
+
+	case MEMADR_TYPE_HSTACKIND: {
+		Dee_cfa_t src_loc2_cfa = Dee_memloc_hstackind_getcfa(src_loc2);
+		if (Dee_memloc_hstackind_getvaloff(src_loc2) != 0)
+			goto src_loc2_fallback;
+		switch (Dee_memloc_gettyp(src_loc1)) {
+		default:
+			DO(Dee_function_generator_gmov_loc2reg(self, src_loc1, dst_regno));
+			Dee_memloc_init_hreg(&loc1_asreg, dst_regno, 0);
+			src_loc1 = &loc1_asreg;
+			ATTR_FALLTHROUGH
+		case MEMADR_TYPE_HREG:
+			if (Dee_memloc_hreg_getvaloff(src_loc1) != 0) {
+				if unlikely(Dee_function_generator_gmov_regx2reg(self,
+				                                                 Dee_memloc_hreg_getreg(src_loc1),
+				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
+				                                                 dst_regno))
+					goto err;
+				return Dee_function_generator_gjarith_reghstackind2reg(self, op, dst_regno, src_loc2_cfa,
+				                                                       dst_regno, dst_o, dst_no);
+			}
+			return Dee_function_generator_gjarith_reghstackind2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                       src_loc2_cfa, dst_regno, dst_o, dst_no);
+		}
+	}	break;
+
+	case MEMADR_TYPE_HREGIND: {
+		Dee_host_register_t src_loc2_regno = Dee_memloc_hregind_getreg(src_loc2);
+		ptrdiff_t src_loc2_indoff = Dee_memloc_hregind_getindoff(src_loc2);
+		if (Dee_memloc_hregind_getvaloff(src_loc2) != 0)
+			goto src_loc2_fallback;
+		switch (Dee_memloc_gettyp(src_loc1)) {
+		default:
+			DO(Dee_function_generator_gmov_loc2reg(self, src_loc1, dst_regno));
+			Dee_memloc_init_hreg(&loc1_asreg, dst_regno, 0);
+			src_loc1 = &loc1_asreg;
+			ATTR_FALLTHROUGH
+		case MEMADR_TYPE_HREG:
+			if (Dee_memloc_hreg_getvaloff(src_loc1) != 0) {
+				if unlikely(Dee_function_generator_gmov_regx2reg(self,
+				                                                 Dee_memloc_hreg_getreg(src_loc1),
+				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
+				                                                 dst_regno))
+					goto err;
+				return Dee_function_generator_gjarith_regregind2reg(self, op, dst_regno, src_loc2_regno,
+				                                                    src_loc2_indoff, dst_regno, dst_o, dst_no);
+			}
+			return Dee_function_generator_gjarith_regregind2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                    src_loc2_regno, src_loc2_indoff, dst_regno, dst_o, dst_no);
+		}
+	}	break;
+
+	default:
+src_loc2_fallback:
+		not_these[0] = HOST_REGISTER_COUNT;
+		not_these[1] = HOST_REGISTER_COUNT;
+		if (Dee_memloc_hasreg(src_loc1))
+			not_these[0] = Dee_memloc_getreg(src_loc1);
+		DO(Dee_function_generator_gasreg(self, src_loc2, &loc2_asreg, not_these));
+		src_loc2 = &loc2_asreg;
+		ATTR_FALLTHROUGH
+	case MEMADR_TYPE_HREG:
+		if (Dee_memloc_gettyp(src_loc1) != MEMADR_TYPE_HREG) {
+			not_these[0] = Dee_memloc_getreg(src_loc2);
+			not_these[1] = HOST_REGISTER_COUNT;
+			DO(Dee_function_generator_gasreg(self, src_loc1, &loc1_asreg, not_these));
+			src_loc1 = &loc1_asreg;
+		}
+		ASSERT(Dee_memloc_gettyp(src_loc1) == MEMADR_TYPE_HREG);
+		ASSERT(Dee_memloc_gettyp(src_loc2) == MEMADR_TYPE_HREG);
+		return Dee_function_generator_gjarith_regxregx2reg(self, op,
+		                                                  Dee_memloc_hreg_getreg(src_loc1),
+		                                                  Dee_memloc_hreg_getvaloff(src_loc1),
+		                                                  Dee_memloc_hreg_getreg(src_loc2),
+		                                                  Dee_memloc_hreg_getvaloff(src_loc2),
+		                                                  dst_regno, dst_o, dst_no);
+
+	case MEMADR_TYPE_CONST: {
+		uintptr_t src_loc2_value = (uintptr_t)Dee_memloc_const_getaddr(src_loc2);
+		switch (Dee_memloc_gettyp(src_loc1)) {
+		default:
+			DO(Dee_function_generator_gmov_loc2reg(self, src_loc1, dst_regno));
+			Dee_memloc_init_hreg(&loc1_asreg, dst_regno, 0);
+			src_loc1 = &loc1_asreg;
+			ATTR_FALLTHROUGH
+		case MEMADR_TYPE_HREG:
+			if (Dee_memloc_hreg_getvaloff(src_loc1) != 0) {
+				if unlikely(Dee_function_generator_gmov_regx2reg(self,
+				                                                 Dee_memloc_hreg_getreg(src_loc1),
+				                                                 Dee_memloc_hreg_getvaloff(src_loc1),
+				                                                 dst_regno))
+					goto err;
+				return Dee_function_generator_gjarith_regconst2reg(self, op, dst_regno, (void const *)src_loc2_value,
+				                                                   dst_regno, dst_o, dst_no);
+			}
+			return Dee_function_generator_gjarith_regconst2reg(self, op, Dee_memloc_hreg_getreg(src_loc1),
+			                                                   (void const *)src_loc2_value, dst_regno, dst_o, dst_no);
+		case MEMADR_TYPE_CONST: {
+			uintptr_t dst_value;
+			uintptr_t src_loc1_value = (uintptr_t)Dee_memloc_const_getaddr(src_loc1);
+			bool is_overflow = Dee_arithop_forconst(op, src_loc1_value, src_loc2_value, &dst_value);
+			struct Dee_host_symbol *dst = is_overflow ? dst_o : dst_no;
+			DO(Dee_function_generator_gmov_const2reg(self, (void const *)dst_value, dst_regno));
+			return dst ? Dee_function_generator_gjmp(self, dst) : 0;
+		}	break;
+
+		}
+	}	break;
+
+	case MEMADR_TYPE_UNDEFINED:
+		return 0;
+	}
+	__builtin_unreachable();
+err:
+	return -1;
+}
 
 
 
@@ -3464,7 +3809,7 @@ Dee_function_generator_gjcc_regAreg(struct Dee_function_generator *__restrict se
 	Dee_host_register_t dst_regno = Dee_function_generator_gallocreg(self, NULL);
 	if unlikely(dst_regno >= HOST_SIZEOF_POINTER)
 		goto err;
-	DO(Dee_function_generator_gand_regreg2reg(lhs_regno, rhs_regno, dst_regno));
+	DO(Dee_function_generator_gbitop_regreg2reg(self, BITOP_AND, lhs_regno, rhs_regno, dst_regno));
 	return Dee_function_generator_gjccA_reg(self, dst_regno, dst_nz, dst_z);
 err:
 	return -1;
@@ -3480,7 +3825,7 @@ Dee_function_generator_gjcc_regindAreg(struct Dee_function_generator *__restrict
 	Dee_host_register_t dst_regno = Dee_function_generator_gallocreg(self, NULL);
 	if unlikely(dst_regno >= HOST_SIZEOF_POINTER)
 		goto err;
-	DO(Dee_function_generator_gand_regregind2reg(self, rhs_regno, lhs_regno, lhs_ind_delta, dst_regno));
+	DO(Dee_function_generator_gbitop_regregind2reg(self, BITOP_AND, rhs_regno, lhs_regno, lhs_ind_delta, dst_regno));
 	return Dee_function_generator_gjccA_reg(self, dst_regno, dst_nz, dst_z);
 err:
 	return -1;
@@ -3495,7 +3840,7 @@ Dee_function_generator_gjcc_hstackindAreg(struct Dee_function_generator *__restr
 	Dee_host_register_t dst_regno = Dee_function_generator_gallocreg(self, NULL);
 	if unlikely(dst_regno >= HOST_SIZEOF_POINTER)
 		goto err;
-	DO(Dee_function_generator_gand_reghstackind2reg(self, rhs_regno, lhs_cfa_offset, dst_regno));
+	DO(Dee_function_generator_gbitop_reghstackind2reg(self, BITOP_AND, rhs_regno, lhs_cfa_offset, dst_regno));
 	return Dee_function_generator_gjccA_reg(self, dst_regno, dst_nz, dst_z);
 err:
 	return -1;
@@ -3542,7 +3887,7 @@ Dee_function_generator_gjcc_regAconst(struct Dee_function_generator *__restrict 
 	Dee_host_register_t dst_regno = Dee_function_generator_gallocreg(self, NULL);
 	if unlikely(dst_regno >= HOST_REGISTER_COUNT)
 		goto err;
-	DO(Dee_function_generator_gand_regconst2reg(self, lhs_regno, rhs_value, dst_regno));
+	DO(Dee_function_generator_gbitop_regconst2reg(self, BITOP_AND, lhs_regno, rhs_value, dst_regno));
 	return Dee_function_generator_gjccA_reg(self, dst_regno, dst_nz, dst_z);
 err:
 	return -1;

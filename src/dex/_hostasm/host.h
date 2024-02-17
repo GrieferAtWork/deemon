@@ -25,6 +25,7 @@
 #include <deemon/system-features.h>
 
 #include <hybrid/align.h>
+#include <hybrid/byteorder.h>
 #include <hybrid/host.h>
 #include <hybrid/typecore.h>
 
@@ -98,9 +99,15 @@
 #ifdef HOSTASM_X86_64_SYSVABI
 #define HOSTASM_REDZONE_SIZE 128
 #endif /* HOSTASM_X86_64_SYSVABI */
+#define HOST_BYTEORDER __ORDER_LITTLE_ENDIAN__
 #elif defined(HOSTASM_X86)
 #define HOST_SIZEOF_POINTER 4
+#define HOST_BYTEORDER __ORDER_LITTLE_ENDIAN__
 #endif /* ... */
+
+#ifndef HOST_BYTEORDER
+#define HOST_BYTEORDER __BYTE_ORDER__
+#endif /* !HOST_BYTEORDER */
 
 
 #undef HOSTASM_HAVE_SHRINKJUMPS

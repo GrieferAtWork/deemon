@@ -212,3 +212,14 @@ hexec(4, (() -> 4, 7), (a, b) -> {
 	return (a as Function)();
 });
 
+
+/* Test that varargs creation works correctly */
+function functionWithVarArgs(a = 0, b = 1, args...) {
+	return args;
+}
+
+hexec((), (), functionWithVarArgs);
+hexec((), (10,), functionWithVarArgs);
+hexec((), (10, 20), functionWithVarArgs);
+hexec((30,), (10, 20, 30), functionWithVarArgs);
+hexec((30, 40), (10, 20, 30, 40), functionWithVarArgs);

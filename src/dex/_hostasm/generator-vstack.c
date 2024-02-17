@@ -512,11 +512,11 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vdup_n(struct Dee_function_generator *__restrict self,
-                              Dee_vstackaddr_t n) {
+Dee_function_generator_vdup_at(struct Dee_function_generator *__restrict self,
+                               Dee_vstackaddr_t n) {
 	int result = Dee_function_generator_state_unshare(self);
 	if likely(result == 0)
-		result = Dee_memstate_vdup_n(self->fg_state, n);
+		result = Dee_memstate_vdup_at(self->fg_state, n);
 	return result;
 }
 
@@ -576,6 +576,23 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+Dee_memstate_hasconstval(struct Dee_memstate const *__restrict self,
+                         struct Dee_memobj const *mobj) {
+	struct Dee_memequiv *eq;
+	if (Dee_memobj_isconst(mobj))
+		return true;
+	eq = Dee_memequivs_getclassof(&self->ms_memequiv, Dee_memobj_getadr(mobj));
+	if (eq) {
+		struct Dee_memequiv *iter = eq;
+		do {
+			if (Dee_memloc_isconst(&iter->meq_loc))
+				return true;
+		} while ((iter = Dee_memequiv_next(iter)) != eq);
+	}
+	return false;
+}
+
 /* Generate code needed to drop references held by `mval' (where `mval' must be a vstack item,
  * or a local variable that is unconditionally bound or non-direct).
  * NOTE: This function is somewhere between the v* and g* APIs, though it does *NOT* unshare or
@@ -615,7 +632,7 @@ Dee_function_generator_vgdecref_vstack(struct Dee_function_generator *__restrict
 				Dee_memval_foreach_obj_end;
 			}
 			Dee_memstate_foreach_end;
-			if (Dee_memobj_isconst(mobj))
+			if (!has_ref_alias && Dee_memstate_hasconstval(state, mobj))
 				has_ref_alias = true; /* Constants are always aliased by static storage */
 	
 			/* No-where to shift the reference to -> must decref the object ourselves. */
@@ -627,7 +644,7 @@ Dee_function_generator_vgdecref_vstack(struct Dee_function_generator *__restrict
 				if (mobj->mo_flags & MEMOBJ_F_HASDEP)
 					DO(ensure_dependent_objects_hold_references(self, Dee_memobj_getloc(mobj)));
 
-				/* TODO: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
+				/* XXX: If types are known, inline DeeObject_Destroy() as tp_fini() + DeeType_FreeInstance() */
 				if (Dee_memobj_isoneref(mobj)) {
 					temp = Dee_function_generator_gdecref_dokill_loc(self, Dee_memobj_getloc(mobj));
 				} else {
@@ -924,7 +941,7 @@ check_next_vstack_item:
 
 PRIVATE NONNULL((1, 2)) void DCALL
 memval_direct_setvaltype(struct Dee_memstate *__restrict state,
-                  struct Dee_memval *mval, DeeTypeObject *type) {
+                         struct Dee_memval *mval, DeeTypeObject *type) {
 	Dee_memval_direct_settypeof(mval, type);
 	if (type == &DeeNone_Type && Dee_memval_isdirect(mval)) {
 		/* Special case: none is a singleton, so if that's the type,
@@ -958,7 +975,6 @@ Dee_function_generator_vsettyp(struct Dee_function_generator *__restrict self,
 			memval_direct_setvaltype(state, alias, type);
 		}
 		Dee_memstate_foreach_end;
-		/* TODO: Check for equivalences of "vtop" and assign the type to those as well! */
 		ASSERT(Dee_memval_direct_typeof(vtop) == type);
 	}
 	return 0;
@@ -1429,14 +1445,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpushinit_varargs(struct Dee_function_generator *__restrict self) {
+	struct Dee_function_generator_branch branch;
 	uint16_t co_argc_min = self->fg_assembler->fa_code->co_argc_min;
 	uint16_t co_argc_max = self->fg_assembler->fa_code->co_argc_max;
-	DO(Dee_function_generator_vpush_argc(self));                      /* argc */
-	DO(Dee_function_generator_vdelta(self, -(ptrdiff_t)co_argc_max)); /* argc-co_argc_max */
+	DO(Dee_function_generator_vpush_argc(self)); /* argc */
 	if (co_argc_min < co_argc_max && self->fg_state->ms_uargc_min < co_argc_max) {
-		/* TODO: FIXME: If `argc-co_argc_max' rolls over or is 0, then we have to push an empty tuple
-		 *              This is because less than `co_argc_max' may be provided by the caller if the
-		 *              function also takes default/optional arguments:
+		/* Special case: If `argc-co_argc_max' rolls over or is 0, then we have to push an empty tuple
+		 *               This is because less than `co_argc_max' may be provided by the caller if the
+		 *               function also takes default/optional arguments:
 		 * >> function foo(a = 0, b = 1, args...) {
 		 * >>     return args;
 		 * >> }
@@ -1446,12 +1462,29 @@ Dee_function_generator_vpushinit_varargs(struct Dee_function_generator *__restri
 		 * >> print repr foo(10, 20, 30);     // (30,)
 		 * >> print repr foo(10, 20, 30, 40); // (30,40)
 		 */
+		DO(Dee_function_generator_vpush_const(self, Dee_EmptyTuple));     /* argc, empty_tuple */
+		DO(Dee_function_generator_vreg(self, NULL));                      /* argc, reg:empty_tuple */
+		DO(Dee_function_generator_vref_noalias(self));                    /* argc, ref:reg:empty_tuple */
+		DO(Dee_function_generator_vswap(self));                           /* ref:reg:empty_tuple, argc */
+		DO(Dee_function_generator_vpush_immSIZ(self, co_argc_max));       /* ref:reg:empty_tuple, argc, co_argc_max */
+		DO(Dee_function_generator_vjno_usub_enter_likely(self, &branch)); /* ref:reg:empty_tuple, argc-co_argc_max */
+		EDO(err_branch, Dee_function_generator_vpop_at(self, 2));         /* argc-co_argc_max */
+		EDO(err_branch, Dee_function_generator_vpush_argv(self));         /* argc-co_argc_max, argv */
+		EDO(err_branch, Dee_function_generator_vdelta(self, (ptrdiff_t)co_argc_max * sizeof(DeeObject *))); /* argc-co_argc_max, argv+co_argc_max */
+		EDO(err_branch, Dee_function_generator_vcallapi(self, &DeeTuple_NewVector, VCALL_CC_OBJECT, 2));    /* varargs */
+		EDO(err_branch, Dee_function_generator_vpush_undefined(self));    /* varargs, undefined */
+		DO(Dee_function_generator_vjx_leave(self, &branch));              /* varargs, <some_value> */
+		return Dee_function_generator_vpop(self);                         /* varargs */
+	} else {
+		DO(Dee_function_generator_vdelta(self, -(ptrdiff_t)co_argc_max)); /* argc-co_argc_max */
 	}
 	DO(Dee_function_generator_vpush_argv(self));                                           /* argc-co_argc_max, argv */
 	DO(Dee_function_generator_vdelta(self, (ptrdiff_t)co_argc_max * sizeof(DeeObject *))); /* argc-co_argc_max, argv+co_argc_max */
 	DO(Dee_function_generator_vcallapi(self, &DeeTuple_NewVector, VCALL_CC_OBJECT, 2));    /* varargs */
 	Dee_function_generator_voneref_noalias(self);
 	return 0;
+err_branch:
+	Dee_function_generator_branch_fini(&branch);
 err:
 	return -1;
 }
@@ -1955,7 +1988,7 @@ Dee_function_generator_vpop_cmember(struct Dee_function_generator *__restrict se
 					 * >> struct class_desc *cd = <type>->tp_class;
 					 * >> cd->cd_members[<addr>] = <value>; // Inherit */
 					DO(Dee_function_generator_vref2(self, 2));                                /* type, value */
-					DO(Dee_function_generator_vdup_n(self, 2));                               /* type, value, type */
+					DO(Dee_function_generator_vdup_at(self, 2));                               /* type, value, type */
 					DO(Dee_function_generator_vind(self, offsetof(DeeTypeObject, tp_class))); /* type, value, type->tp_class */
 					DO(Dee_function_generator_vswap(self));                                   /* type, type->tp_class, value */
 					DO(Dee_function_generator_vpopind(self,                                   /* type, type->tp_class */
@@ -2285,170 +2318,120 @@ reclaim_unused_stack_space(struct Dee_function_generator *__restrict self) {
 	return 0;
 }
 
-/* obj, type -> N/A */
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-impl_vassert_type_exact(struct Dee_function_generator *__restrict self) {
-	/* TODO: Must check for `DeeType_IsAbstract(type)' */
-	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* TODO: emit code equivalent to:
-		 * >> if (Dee_TYPE(self) != type) {
-		 * >>     DeeObject_TypeAssertFailed(obj, type);
-		 * >>     HANDLE_EXCEPT();
-		 * >> }
-		 */
-	}
-	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALL_CC_INT, 2);
-}
-
 /* test_type, extended_type -> DeeType_Extends(test_type, extended_type) */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vtype_extends(struct Dee_function_generator *__restrict self) {
-	/* TODO: When "inherited_type" is constant and a FINAL type, can encode as "test_type === inherited_type" */
+Dee_function_generator_vcall_DeeType_Extends(struct Dee_function_generator *__restrict self) {
+	/* TODO: When "inherited_type" is constant and a FINAL type,
+	 *       can encode as "test_type === inherited_type" */
 	return Dee_function_generator_vcallapi(self, &DeeType_Extends, VCALL_CC_RAWINT, 2);
 }
 
 /* test_type, implemented_type -> DeeType_Implements(test_type, implemented_type) */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vtype_implements(struct Dee_function_generator *__restrict self) {
-	/* TODO: When "implemented_type" is constant and non-ABSTRACT type, can encode as `Dee_function_generator_vtype_extends()' */
+Dee_function_generator_vcall_DeeType_Implements(struct Dee_function_generator *__restrict self) {
+	/* TODO: When "implemented_type" is constant and non-ABSTRACT type,
+	 *       can encode as `Dee_function_generator_vcall_DeeType_Extends()' */
 	return Dee_function_generator_vcallapi(self, &DeeType_Implements, VCALL_CC_RAWINT, 2);
 }
 
 
 /* obj, type -> N/A */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-impl_vassert_type(struct Dee_function_generator *__restrict self, bool allow_abstract) {
+impl_vcall_DeeObject_AssertType(struct Dee_function_generator *__restrict self) {
+	struct Dee_function_generator_branch branch;
 	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
-		/* TODO: emit code equivalent to:
-		 * >> #if <allow_abstract>
-		 * >> if (!DeeType_IsAbstract(type) && !DeeType_Extends(Dee_TYPE(obj), type))
-		 * >> #else
-		 * >> if (!DeeType_Extends(Dee_TYPE(obj), type))
-		 * >> #endif
-		 * >> {
+		/* Emit code equivalent to:
+		 * >> if (!DeeType_Extends(Dee_TYPE(obj), type)) {
 		 * >>     DeeObject_TypeAssertFailed(obj, type);
 		 * >>     HANDLE_EXCEPT();
-		 * >> }
-		 */
+		 * >> } */
+		DO(Dee_function_generator_vdup_at(self, 2));                         /* obj, type, obj */
+		DO(Dee_function_generator_vind(self, offsetof(DeeObject, ob_type))); /* obj, type, obj->ob_type */
+		DO(Dee_function_generator_vdup_at(self, 2));                         /* obj, type, obj->ob_type, type */
+		DO(Dee_function_generator_vcall_DeeType_Extends(self));              /* obj, type, extends */
+		DO(Dee_function_generator_vjz_enter_unlikely(self, &branch));        /* obj, type */
+		EDO(err_branch, Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self)); /* N/A */
+		DO(Dee_function_generator_vjx_leave_noreturn(self, &branch));        /* obj, type */
+		return Dee_function_generator_vpopmany(self, 2);                     /* N/A */
 	}
-	return Dee_function_generator_vcallapi(self,
-	                                       allow_abstract ? &DeeObject_AssertTypeOrAbstract
-	                                                      : &DeeObject_AssertType,
-	                                       VCALL_CC_INT, 2);
-}
-
-
-/* Generate code equivalent to `DeeObject_AssertTypeExact(VTOP, type)', but don't pop `VTOP' from the v-stack. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vassert_type_exact_c(struct Dee_function_generator *__restrict self,
-                                            DeeTypeObject *__restrict type) {
-	DeeTypeObject *vtop_type;
-	if unlikely(self->fg_state->ms_stackc < 1)
-		return err_illegal_stack_effect();
-	vtop_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
-	if (vtop_type != NULL) {
-		struct Dee_memval *vtop;
-		if (vtop_type == type)
-			return 0;
-		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
-			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Expected exact instance of `%r', but got a `%r' object",
-			                       type, vtop_type);
-		}
-		/* Other pieces of code are allowed to assume that in case of a compile-time
-		 * constant, the produced type assertions will ensure that constants always
-		 * have the proper types. As such, we mustn't leave the value be a constant,
-		 * so-as not to cause those assertions to fail. */
-		vtop = Dee_function_generator_vtop(self);
-		if (Dee_memval_isconst(vtop)) {
-			ASSERT(Dee_memval_isdirect(vtop));
-			DO(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(vtop), NULL));
-			ASSERT(!Dee_memloc_isconst(Dee_memval_direct_getloc(vtop)));
-			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
-		}
-	}
-	DO(Dee_function_generator_vdirect1(self));          /* value */
-	DO(Dee_function_generator_vdup(self));              /* value, value */
-	DO(Dee_function_generator_vpush_const(self, type)); /* value, value, type */
-	DO(impl_vassert_type_exact(self));                  /* value */
-	return Dee_function_generator_vsettyp(self, type);
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALL_CC_INT, 2);
+err_branch:
+	Dee_function_generator_branch_fini(&branch);
 err:
 	return -1;
 }
 
 /* obj, type -> N/A */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vassert_type_exact(struct Dee_function_generator *__restrict self) {
-	struct Dee_memval *typeval;
-	DO(Dee_function_generator_vdirect(self, 2)); /* obj, type */
-	typeval = Dee_function_generator_vtop(self);
-	if (Dee_memval_direct_isconst(typeval)) {
-		DeeTypeObject *type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
-		DO(Dee_function_generator_vpop(self));                       /* obj */
-		DO(Dee_function_generator_vassert_type_exact_c(self, type)); /* obj */
-		return Dee_function_generator_vpop(self);                    /* N/A */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_vcall_DeeObject_AssertTypeOrAbstract(struct Dee_function_generator *__restrict self) {
+	struct Dee_function_generator_branch b1, b2;
+	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+		/* Emit code equivalent to:
+		 * >> if (!DeeType_IsAbstract(type)) {
+		 * >>     if (!DeeType_Extends(Dee_TYPE(obj), type)) {
+		 * >>         DeeObject_TypeAssertFailed(obj, type);
+		 * >>         HANDLE_EXCEPT();
+		 * >>     }
+		 * >> } */
+		DO(Dee_function_generator_vdup(self));                                                    /* obj, type, type */
+		DO(Dee_function_generator_vind(self, offsetof(DeeTypeObject, tp_flags)));                 /* obj, type, type->tp_flags */
+		DO(Dee_function_generator_vpush_immSIZ(self, DeeTypeObject_tp_flags_FLAG(TP_FABSTRACT))); /* obj, type, type->tp_flags, TP_FABSTRACT */
+		DO(Dee_function_generator_vjaz_enter(self, &b1));                                         /* obj, type */
+		EDO(err_b1, Dee_function_generator_vdup_at(self, 2));                                     /* obj, type, obj */
+		EDO(err_b1, Dee_function_generator_vind(self, offsetof(DeeObject, ob_type)));             /* obj, type, obj->ob_type */
+		EDO(err_b1, Dee_function_generator_vdup_at(self, 2));                                     /* obj, type, obj->ob_type, type */
+		EDO(err_b1, Dee_function_generator_vcall_DeeType_Extends(self));                          /* obj, type, extends */
+		EDO(err_b1, Dee_function_generator_vjz_enter_unlikely(self, &b2));                        /* obj, type */
+		EDO(err_b1_b2, Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self));            /* N/A */
+		EDO(err_b1, Dee_function_generator_vjx_leave_noreturn(self, &b2));                        /* obj, type */
+		DO(Dee_function_generator_vjx_leave(self, &b1));                                          /* obj, type */
+		return Dee_function_generator_vpopmany(self, 2);                                          /* N/A */
 	}
-	return impl_vassert_type_exact(self);
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertType, VCALL_CC_INT, 2);
+err_b1_b2:
+	Dee_function_generator_branch_fini(&b2);
+err_b1:
+	Dee_function_generator_branch_fini(&b1);
 err:
 	return -1;
 }
 
 /* obj, type -> N/A */
-INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vassert_type_failed(struct Dee_function_generator *__restrict self) {
-	return Dee_function_generator_vcallapi(self, &DeeObject_TypeAssertFailed, VCALL_CC_EXCEPT, 2);
-}
-
-/* Generate code equivalent to `DeeObject_AssertType(VTOP, type)', but don't pop `VTOP' from the v-stack. */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vassert_type_c(struct Dee_function_generator *__restrict self,
-                                      DeeTypeObject *__restrict type) {
-	DeeTypeObject *vtop_type;
-	if unlikely(self->fg_state->ms_stackc < 1)
-		return err_illegal_stack_effect();
-	vtop_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
-	if (vtop_type != NULL) {
-		struct Dee_memval *vtop;
-		if (DeeType_Implements(vtop_type, type))
-			return 0;
-		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
-			return DeeError_Throwf(&DeeError_TypeError,
-			                       "Expected instance of `%r', but got a `%r' object",
-			                       type, vtop_type);
-		}
-
-		/* Other pieces of code are allowed to assume that in case of a compile-time
-		 * constant, the produced type assertions will ensure that constants always
-		 * have the proper types. As such, we mustn't leave the value be a constant,
-		 * so-as not to cause those assertions to fail. */
-		vtop = Dee_function_generator_vtop(self);
-		if (Dee_memval_isconst(vtop)) {
-			ASSERT(Dee_memval_isdirect(vtop));
-			DO(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(vtop), NULL));
-			ASSERT(!Dee_memloc_isconst(Dee_memval_direct_getloc(vtop)));
-			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
-		}
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+impl_vcall_DeeObject_AssertTypeExact(struct Dee_function_generator *__restrict self) {
+	struct Dee_function_generator_branch branch;
+	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)) {
+		/* Emit code equivalent to:
+		 * >> if (Dee_TYPE(obj) != type) {
+		 * >>     DeeObject_TypeAssertFailed(obj, type);
+		 * >>     HANDLE_EXCEPT();
+		 * >> } */
+		DO(Dee_function_generator_vdup_at(self, 2));                         /* obj, type, obj */
+		DO(Dee_function_generator_vind(self, offsetof(DeeObject, ob_type))); /* obj, type, obj->ob_type */
+		DO(Dee_function_generator_vdup_at(self, 2));                         /* obj, type, obj->ob_type, type */
+		DO(Dee_function_generator_vjne_enter_unlikely(self, &branch));       /* obj, type */
+		EDO(err_branch, Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self)); /* N/A */
+		DO(Dee_function_generator_vjx_leave_noreturn(self, &branch));        /* obj, type */
+		return Dee_function_generator_vpopmany(self, 2);                     /* N/A */
 	}
-	DO(Dee_function_generator_vdirect1(self));          /* value */
-	DO(Dee_function_generator_vdup(self));              /* value, value */
-	DO(Dee_function_generator_vpush_const(self, type)); /* value, value, type */
-	return impl_vassert_type(self, false);              /* value */
+	return Dee_function_generator_vcallapi(self, &DeeObject_AssertTypeExact, VCALL_CC_INT, 2);
+err_branch:
+	Dee_function_generator_branch_fini(&branch);
 err:
 	return -1;
 }
 
-/* Generate code equivalent to `DeeObject_AssertType(VTOP, type)', but don't pop `VTOP' from the v-stack. */
+
+
+/* obj -> obj */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_generator_vassert_type_or_abstract_c(struct Dee_function_generator *__restrict self,
-                                                  DeeTypeObject *__restrict type) {
+Dee_function_generator_vcall_DeeObject_AssertType_c(struct Dee_function_generator *__restrict self,
+                                                    DeeTypeObject *__restrict type) {
 	DeeTypeObject *vtop_type;
 	if unlikely(self->fg_state->ms_stackc < 1)
 		return err_illegal_stack_effect();
-	if (DeeType_IsAbstract(type))
-		return 0; /* Special case: abstract types don't need to be checked! */
 	vtop_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
 	if (vtop_type != NULL) {
-		struct Dee_memval *vtop;
 		if (DeeType_Extends(vtop_type, type))
 			return 0;
 		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
@@ -2456,59 +2439,136 @@ Dee_function_generator_vassert_type_or_abstract_c(struct Dee_function_generator 
 			                       "Expected instance of `%r', but got a `%r' object",
 			                       type, vtop_type);
 		}
-
-		/* Other pieces of code are allowed to assume that in case of a compile-time
-		 * constant, the produced type assertions will ensure that constants always
-		 * have the proper types. As such, we mustn't leave the value be a constant,
-		 * so-as not to cause those assertions to fail. */
-		vtop = Dee_function_generator_vtop(self);
-		if (Dee_memval_isconst(vtop)) {
-			ASSERT(Dee_memval_isdirect(vtop));
-			DO(tracked_memloc_forcereg(self, Dee_memval_direct_getloc(vtop), NULL));
-			ASSERT(!Dee_memloc_isconst(Dee_memval_direct_getloc(vtop)));
-			Dee_memobj_settypeof(Dee_memval_direct_getobj(vtop), NULL);
-		}
 	}
-	DO(Dee_function_generator_vdirect1(self));          /* value */
 	DO(Dee_function_generator_vdup(self));              /* value, value */
 	DO(Dee_function_generator_vpush_const(self, type)); /* value, value, type */
-	return impl_vassert_type(self, true);               /* value */
+	return impl_vcall_DeeObject_AssertType(self);       /* value */
+err:
+	return -1;
+}
+
+/* obj -> obj */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract_c(struct Dee_function_generator *__restrict self,
+                                                              DeeTypeObject *__restrict type) {
+	if (DeeType_IsAbstract(type))
+		return 0; /* Special case: abstract types don't need to be checked! */
+	return Dee_function_generator_vcall_DeeObject_AssertType_c(self, type);
+}
+
+/* obj -> obj */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vcall_DeeObject_AssertTypeExact_c(struct Dee_function_generator *__restrict self,
+                                                         DeeTypeObject *__restrict type) {
+	DeeTypeObject *vtop_type;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+	vtop_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
+	if (vtop_type != NULL) {
+		if (vtop_type == type)
+			return 0;
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "Expected exact instance of `%r', but got a `%r' object",
+			                       type, vtop_type);
+		}
+	}
+	DO(Dee_function_generator_vdup(self));              /* value, value */
+	DO(Dee_function_generator_vpush_const(self, type)); /* value, value, type */
+	DO(impl_vcall_DeeObject_AssertTypeExact(self));     /* value */
+	return Dee_function_generator_vsettyp(self, type);  /* value */
 err:
 	return -1;
 }
 
 /* obj, type -> N/A */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vassert_type(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vcall_DeeObject_AssertType(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *typeval;
+	DeeTypeObject *type;
 	DO(Dee_function_generator_vdirect(self, 2)); /* obj, type */
 	typeval = Dee_function_generator_vtop(self);
 	if (Dee_memval_isconst(typeval)) {
-		DeeTypeObject *type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
-		DO(Dee_function_generator_vpop(self));                 /* obj */
-		DO(Dee_function_generator_vassert_type_c(self, type)); /* obj */
-		return Dee_function_generator_vpop(self);              /* N/A */
+		type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
+		DO(Dee_function_generator_vpop(self));                               /* obj */
+		DO(Dee_function_generator_vcall_DeeObject_AssertType_c(self, type)); /* obj */
+		return Dee_function_generator_vpop(self);                            /* N/A */
 	}
-	return impl_vassert_type(self, false);
+	type = Dee_memval_typeof(typeval);
+	if (type != NULL && !DeeType_IsTypeType(type)) {
+		/* Assertion always fails because "typeval" isn't a type. */
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "Type assertion `? is instance of %r' always fails because %r isn't a type-type",
+			                       type, type);
+		}
+		return Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self);
+	}
+	return impl_vcall_DeeObject_AssertType(self);
 err:
 	return -1;
 }
 
 /* obj, type -> N/A */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_vassert_type_or_abstract(struct Dee_function_generator *__restrict self) {
+Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(struct Dee_function_generator *__restrict self) {
 	struct Dee_memval *typeval;
+	DeeTypeObject *type;
 	DO(Dee_function_generator_vdirect(self, 2)); /* obj, type */
 	typeval = Dee_function_generator_vtop(self);
 	if (Dee_memval_isconst(typeval)) {
-		DeeTypeObject *type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
-		DO(Dee_function_generator_vpop(self));                             /* obj */
-		DO(Dee_function_generator_vassert_type_or_abstract_c(self, type)); /* obj */
-		return Dee_function_generator_vpop(self);                          /* N/A */
+		type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
+		DO(Dee_function_generator_vpop(self));                                         /* obj */
+		DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract_c(self, type)); /* obj */
+		return Dee_function_generator_vpop(self);                                      /* N/A */
 	}
-	return impl_vassert_type(self, true);
+	type = Dee_memval_typeof(typeval);
+	if (type != NULL && !DeeType_IsTypeType(type)) {
+		/* Assertion always fails because "typeval" isn't a type. */
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "Type assertion `? is instance of %r or abstract' always fails because %r isn't a type-type",
+			                       type, type);
+		}
+		return Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self);
+	}
+	return impl_vcall_DeeObject_AssertTypeOrAbstract(self);
 err:
 	return -1;
+}
+
+/* obj, type -> N/A */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcall_DeeObject_AssertTypeExact(struct Dee_function_generator *__restrict self) {
+	struct Dee_memval *typeval;
+	DeeTypeObject *type;
+	DO(Dee_function_generator_vdirect(self, 2)); /* obj, type */
+	typeval = Dee_function_generator_vtop(self);
+	if (Dee_memval_direct_isconst(typeval)) {
+		type = (DeeTypeObject *)Dee_memval_const_getobj(typeval);
+		DO(Dee_function_generator_vpop(self));                                    /* obj */
+		DO(Dee_function_generator_vcall_DeeObject_AssertTypeExact_c(self, type)); /* obj */
+		return Dee_function_generator_vpop(self);                                 /* N/A */
+	}
+	type = Dee_memval_typeof(typeval);
+	if (type != NULL && !DeeType_IsTypeType(type)) {
+		/* Assertion always fails because "typeval" isn't a type. */
+		if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
+			return DeeError_Throwf(&DeeError_TypeError,
+			                       "Type assertion `? is exact instance of %r' always fails because %r isn't a type-type",
+			                       type, type);
+		}
+		return Dee_function_generator_vcall_DeeObject_TypeAssertFailed(self);
+	}
+	return impl_vcall_DeeObject_AssertTypeExact(self);
+err:
+	return -1;
+}
+
+/* obj, type -> N/A */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vcall_DeeObject_TypeAssertFailed(struct Dee_function_generator *__restrict self) {
+	return Dee_function_generator_vcallapi(self, &DeeObject_TypeAssertFailed, VCALL_CC_EXCEPT, 2);
 }
 
 
@@ -4456,6 +4516,116 @@ err:
 #undef LOCAL_hstack_lowcfa_inuse
 #undef LOCAL_hstack_cfa_inuse
 
+
+
+/* Perform bitwise or arithmetic operations (in the later case, also support doing jumps based on the operation overflowing) */
+
+/* PUSH(POP(2) <op> POP(1)); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vbitop(struct Dee_function_generator *__restrict self,
+                              Dee_bitop_t op) {
+	Dee_host_register_t retreg;
+	struct Dee_memloc lhs, rhs;
+	DO(Dee_function_generator_vdirect(self, 2));
+	/* Juggle values so we can get rid of references.
+	 * FIXME: This breaks when "lhs" and "rhs" depend on each other... */
+	lhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 1);
+	rhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 0);
+	DO(Dee_function_generator_vpush_memloc(self, &lhs)); /* a, b, lhs */
+	DO(Dee_function_generator_vpush_memloc(self, &rhs)); /* a, b, lhs, rhs */
+	DO(Dee_function_generator_vpop_at(self, 2));         /* a, lhs, rhs */
+	DO(Dee_function_generator_vpop_at(self, 2));         /* lhs, rhs */
+	lhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 1);
+	rhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 0);
+	DO(Dee_function_generator_vpopmany(self, 2));        /* N/A */
+	if (Dee_memloc_isconst(&lhs) && Dee_memloc_isconst(&rhs)) {
+		uintptr_t lhsval = (uintptr_t)Dee_memloc_const_getaddr(&lhs);
+		uintptr_t rhsval = (uintptr_t)Dee_memloc_const_getaddr(&rhs);
+		uintptr_t result = Dee_bitop_forconst(op, lhsval, rhsval);
+		return Dee_function_generator_vpush_addr(self, (void const *)result);
+	}
+	retreg = Dee_function_generator_gallocreg(self, NULL);
+	if unlikely(retreg >= HOST_REGISTER_COUNT)
+		goto err;
+	DO(Dee_function_generator_gbitop_locloc2reg(self, op, &lhs, &rhs, retreg));
+	return Dee_function_generator_vpush_hreg(self, retreg, 0);
+err:
+	return -1;
+}
+
+/* PUSH(POP(2) <op> POP(1)); */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_varithop(struct Dee_function_generator *__restrict self, Dee_arithop_t op,
+                                struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no) {
+	Dee_host_register_t retreg;
+	struct Dee_memloc lhs, rhs;
+	DO(Dee_function_generator_vdirect(self, 2));
+	/* Juggle values so we can get rid of references.
+	 * FIXME: This breaks when "lhs" and "rhs" depend on each other... */
+	lhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 1);
+	rhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 0);
+	DO(Dee_function_generator_vpush_memloc(self, &lhs)); /* a, b, lhs */
+	DO(Dee_function_generator_vpush_memloc(self, &rhs)); /* a, b, lhs, rhs */
+	DO(Dee_function_generator_vpop_at(self, 2));         /* a, lhs, rhs */
+	DO(Dee_function_generator_vpop_at(self, 2));         /* lhs, rhs */
+	lhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 1);
+	rhs = *Dee_memval_direct_getloc(Dee_function_generator_vtop(self) - 0);
+	DO(Dee_function_generator_vpopmany(self, 2));        /* N/A */
+	if (Dee_memloc_isconst(&lhs) && Dee_memloc_isconst(&rhs)) {
+		uintptr_t result;
+		uintptr_t lhsval = (uintptr_t)Dee_memloc_const_getaddr(&lhs);
+		uintptr_t rhsval = (uintptr_t)Dee_memloc_const_getaddr(&rhs);
+		bool did_overflow = Dee_arithop_forconst(op, lhsval, rhsval, &result);
+		struct Dee_host_symbol *dst = did_overflow ? dst_o : dst_no;
+		DO(Dee_function_generator_vpush_addr(self, (void const *)result));
+		return dst ? Dee_function_generator_gjmp(self, dst) : 0;
+	}
+	retreg = Dee_function_generator_gallocreg(self, NULL);
+	if unlikely(retreg >= HOST_REGISTER_COUNT)
+		goto err;
+	DO(Dee_function_generator_gjarith_locloc2reg(self, op, &lhs, &rhs, retreg, dst_o, dst_no));
+	return Dee_function_generator_vpush_hreg(self, retreg, 0);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+Dee_function_generator_vjox_arith_enter(struct Dee_function_generator *__restrict self,
+                                        /*out*/ struct Dee_function_generator_branch *__restrict branch,
+                                        Dee_arithop_t op, unsigned int flags) {
+	struct Dee_host_section *cold;
+	branch->fgb_oldtext = self->fg_sect;
+	cold = &self->fg_block->bb_hcold;
+	if ((self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) || !(flags & VJX_F_UNLIKELY))
+		cold = self->fg_sect;
+	if (self->fg_sect != cold) {
+		struct Dee_host_symbol *Ljump;
+		Ljump = Dee_function_generator_newsym_named(self, ".Ljump");
+		if unlikely(!Ljump)
+			goto err;
+		DO(Dee_function_generator_varithop(self, op,
+		                                   (flags & VJX_F_JNZ) ? Ljump : NULL,
+		                                   (flags & VJX_F_JNZ) ? NULL : Ljump));
+		HA_printf(".section .cold\n");
+		self->fg_sect = cold;
+		Dee_host_symbol_setsect(Ljump, self->fg_sect);
+		branch->fgb_skip = NULL;
+	} else {
+		struct Dee_host_symbol *Lskip;
+		Lskip = Dee_function_generator_newsym_named(self, ".Lskip");
+		if unlikely(!Lskip)
+			goto err;
+		DO(Dee_function_generator_varithop(self, op,
+		                                   (flags & VJX_F_JNZ) ? NULL : Lskip,
+		                                   (flags & VJX_F_JNZ) ? Lskip : NULL));
+		branch->fgb_skip = Lskip;
+	}
+	branch->fgb_saved = self->fg_state;
+	Dee_memstate_incref(branch->fgb_saved);
+	return 0;
+err:
+	return -1;
+}
 
 
 /* Helpers for generating conditional code. */

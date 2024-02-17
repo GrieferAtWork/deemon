@@ -1208,7 +1208,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_memstate_vdup_n(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
+Dee_memstate_vdup_at(struct Dee_memstate *__restrict self, Dee_vstackaddr_t n) {
 	struct Dee_memval *dst;
 	Dee_vstackaddr_t index;
 	ASSERT(n >= 1);
