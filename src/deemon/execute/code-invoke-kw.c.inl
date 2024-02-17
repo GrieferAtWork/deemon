@@ -59,7 +59,7 @@
 DECL_BEGIN
 
 INTERN WUNUSED DREF DeeObject *DCALL
-PP_CAT2(MY_FUNCTION_NAME, IntellisenseInternal)
+PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
                 (DeeFunctionObject *__restrict self
 #ifdef CALL_THIS
                  , DeeObject *__restrict this_arg

@@ -31,29 +31,29 @@ DECL_BEGIN
 #ifdef CALL_THIS
 #ifdef CALL_KW
 #ifdef CALL_TUPLE
-#define MY_FUNCTION_NAME DeeFunction_ThisCallTupleKw
+#define LOCAL_DeeFunction_Call DeeFunction_ThisCallTupleKw
 #else /* CALL_TUPLE */
-#define MY_FUNCTION_NAME DeeFunction_ThisCallKw
+#define LOCAL_DeeFunction_Call DeeFunction_ThisCallKw
 #endif /* !CALL_TUPLE */
 #else /* CALL_KW */
 #ifdef CALL_TUPLE
-#define MY_FUNCTION_NAME DeeFunction_ThisCallTuple
+#define LOCAL_DeeFunction_Call DeeFunction_ThisCallTuple
 #else /* CALL_TUPLE */
-#define MY_FUNCTION_NAME DeeFunction_ThisCall
+#define LOCAL_DeeFunction_Call DeeFunction_ThisCall
 #endif /* !CALL_TUPLE */
 #endif /* !CALL_KW */
 #else /* CALL_THIS */
 #ifdef CALL_KW
 #ifdef CALL_TUPLE
-#define MY_FUNCTION_NAME DeeFunction_CallTupleKw
+#define LOCAL_DeeFunction_Call DeeFunction_CallTupleKw
 #else /* CALL_TUPLE */
-#define MY_FUNCTION_NAME DeeFunction_CallKw
+#define LOCAL_DeeFunction_Call DeeFunction_CallKw
 #endif /* !CALL_TUPLE */
 #else /* CALL_KW */
 #ifdef CALL_TUPLE
-#define MY_FUNCTION_NAME DeeFunction_CallTuple
+#define LOCAL_DeeFunction_Call DeeFunction_CallTuple
 #else /* CALL_TUPLE */
-#define MY_FUNCTION_NAME DeeFunction_Call
+#define LOCAL_DeeFunction_Call DeeFunction_Call
 #endif /* !CALL_TUPLE */
 #endif /* !CALL_KW */
 #endif /* !CALL_THIS */
@@ -113,28 +113,23 @@ INTERN WUNUSED
 #endif /* !CALL_THIS */
 #endif /* !CALL_TUPLE */
 DREF DeeObject *DCALL
-MY_FUNCTION_NAME(DeeFunctionObject *self
+LOCAL_DeeFunction_Call(DeeFunctionObject *self
 #ifdef CALL_THIS
-                 ,
-                 DeeObject *this_arg
+                       , DeeObject *this_arg
 #endif /* CALL_THIS */
 #ifdef CALL_TUPLE
 #define GET_ARGC() DeeTuple_SIZE(args)
 #define GET_ARGV() DeeTuple_ELEM(args)
-                 ,
-                 DeeObject *args
+                       , DeeObject *args
 #else /* CALL_TUPLE */
 #define GET_ARGC() argc
 #define GET_ARGV() argv
-                 ,
-                 size_t argc,
-                 DeeObject *const *argv
+                       , size_t argc, DeeObject *const *argv
 #endif /* !CALL_TUPLE */
 #ifdef CALL_KW
-                 ,
-                 DeeObject *kw
+                       , DeeObject *kw
 #endif /* CALL_KW */
-                 )
+                       )
 {
 	DREF DeeObject *result;
 	DeeCodeObject *code;
@@ -397,7 +392,7 @@ err:
 #undef INIT_THIS
 #undef GET_ARGC
 #undef GET_ARGV
-#undef MY_FUNCTION_NAME
+#undef LOCAL_DeeFunction_Call
 #undef CALL_KW
 #undef CALL_THIS
 #undef CALL_TUPLE

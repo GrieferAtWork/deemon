@@ -4201,7 +4201,7 @@ _Dee_function_generator_gbitop_regregind2reg(struct Dee_function_generator *__re
 	} else {
 		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
-		_Dee_host_section_gbitop_db_r(sect, op, src2_ind_delta, gen86_registers[src2_regno], dst_regno);
+		_Dee_host_section_gbitop_db_r(sect, op, (int32_t)src2_ind_delta, gen86_registers[src2_regno], dst_regno);
 	}
 	return 0;
 err:
@@ -4442,7 +4442,7 @@ _Dee_function_generator_gjarith_regregind2reg(struct Dee_function_generator *__r
 	} else {
 		if unlikely(Dee_host_section_reqx86(sect, 1))
 			goto err;
-		_Dee_host_section_gjarith_db_r(sect, op, src2_ind_delta, gen86_registers[src2_regno], dst_regno);
+		_Dee_host_section_gjarith_db_r(sect, op, (int32_t)src2_ind_delta, gen86_registers[src2_regno], dst_regno);
 	}
 	return _Dee_host_section_gjarith_jcc(sect, op, dst_o, dst_no);
 err:

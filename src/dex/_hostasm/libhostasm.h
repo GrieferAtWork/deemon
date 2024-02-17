@@ -3486,7 +3486,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjarith_regreg2reg(
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjarith_reghstackind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op, Dee_host_register_t src1_regno, Dee_cfa_t src2_cfa_offset, Dee_host_register_t dst_regno, struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjarith_regregind2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op, Dee_host_register_t src1_regno, Dee_host_register_t src2_regno, ptrdiff_t src2_ind_delta, Dee_host_register_t dst_regno, struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no);
 #ifdef _Dee_function_generator_gjarith_regconst2reg_MAYFAIL
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjarith_regconst2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op, Dee_host_register_t src_regno, void const *value, Dee_host_register_t dst_regno); /* dst_regno = src_regno <op> value; */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_gjarith_regconst2reg(struct Dee_function_generator *__restrict self, Dee_bitop_t op, Dee_host_register_t src_regno, void const *value, Dee_host_register_t dst_regno, struct Dee_host_symbol *dst_o, struct Dee_host_symbol *dst_no); /* dst_regno = src_regno <op> value; */
 #else /* _Dee_function_generator_gjarith_regconst2reg_MAYFAIL */
 #define Dee_function_generator_gjarith_regconst2reg(self, op, src_regno, value, dst_regno, dst_o, dst_no) _Dee_function_generator_gjarith_regconst2reg(self, op, src_regno, value, dst_regno, dst_o, dst_no)
 #endif /* !_Dee_function_generator_gjarith_regconst2reg_MAYFAIL */

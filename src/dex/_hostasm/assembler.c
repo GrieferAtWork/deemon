@@ -233,8 +233,190 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self) {
-	/* TODO: Check argc */
-	/* TODO: Unpack keywords */
+	DeeCodeObject *code = self->fg_assembler->fa_code;
+	uint16_t co_argc_min = code->co_argc_min;
+	uint16_t co_argc_max = code->co_argc_max;
+	if (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_KW) {
+		/* Generate code:
+		 * >> size_t argc;
+		 * >> DeeObject **argv;
+		 * >> DeeObject *kw;
+		 * >> DeeObject **kw_argv = alloca({co_argc_max * sizeof(DeeObject *)});
+		 * >> if (kw != NULL) {
+		 * >>     if likely(kw->ob_type == &DeeKwds_Type) {
+		 * >>         DeeObject *kw_argv;
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         size_t kw_used = 0;
+		 * >> #endif
+		 * >>         size_t effective_argc;
+		 * >>         if unlikely(OVERFLOW_USUB(argc, kw->kw_size, &effective_argc)) {
+		 * >>             err_keywords_bad_for_argc(argc, kw->kw_size);
+		 * >>             HANDLE_EXCEPT();
+		 * >>         }
+		 * >>         argc = effective_argc;
+		 * >> #if !(co_flags & CODE_FVARARGS)
+		 * >>         if (argc > <co_argc_max>))
+		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
+		 * >> #endif
+		 * >>         kw_argv = argv + argc;
+		 * >> #if {co_argc_min} > 0
+		 * >>         if (argc < {co_argc_min}) {
+		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
+		 * >>                 DeeObject *arg = DeeKwds_GetMandatoryArgument(kw, kw_argv, {co_keywords}[i]);
+		 * >>                 if (!arg)
+		 * >>                     HANDLE_EXCEPT();
+		 * >>                 kw_argv[i] = arg;
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>                 ++kw_used;
+		 * >> #endif
+		 * >>             }
+		 * >>         }
+		 * >> #endif
+		 * >> #if {co_argc_max} > {co_argc_min}
+		 * >> #for (size_t i = {co_argc_min}; i < {co_argc_max}; ++i)
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         ++kw_used;
+		 * >> #endif
+		 * >>         DeeObject *temp = DeeKwds_GetOptionalArgument(kw, kw_argv, {co_keywords[i]});
+		 * >>         if (!temp) {
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>             --kw_used;
+		 * >> #endif
+		 * >> #if co_defaultv[i]
+		 * >>             temp = {co_defaultv[i]};
+		 * >> #endif
+		 * >>         }
+		 * >>         kw_argv[{i}] = temp;
+		 * >> #endfor
+		 * >> #endif
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         if (kw_used < kw->kw_size) {
+		 * >>             err_invalid_argc(...); // ERROR: Unused keyword arguments
+		 * >>             HANDLE_EXCEPT();
+		 * >>         }
+		 * >> #endif
+		 * >>     } else {
+		 * >> #if !(co_flags & CODE_FVARARGS)
+		 * >>         if (argc > <co_argc_max>))
+		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
+		 * >> #endif
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         size_t kw_used = 0;
+		 * >> #endif
+		 * >> #if {co_argc_min} > 0
+		 * >>         if (argc < {co_argc_min}) {
+		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
+		 * >>                 DeeObject *arg = DeeGenericKwds_GetMandatoryArgument(kw, {co_keywords}[i]);
+		 * >>                 if (!arg)
+		 * >>                     HANDLE_EXCEPT();
+		 * >>                 kw_argv[i] = arg;
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>                 ++kw_used;
+		 * >> #endif
+		 * >>             }
+		 * >>         }
+		 * >> #endif
+		 * >> #if {co_argc_max} > {co_argc_min}
+		 * >> #for (size_t i = {co_argc_min}; i < {co_argc_max}; ++i)
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         ++kw_used;
+		 * >> #endif
+		 * >>         DeeObject *temp = DeeGenericKwds_GetOptionalArgument(kw, {co_keywords[i]});
+		 * >>         if (!temp) {
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>             --kw_used;
+		 * >> #endif
+		 * >> #if co_defaultv[i]
+		 * >>             temp = {co_defaultv[i]};
+		 * >> #endif
+		 * >>         }
+		 * >>         kw_argv[{i}] = temp;
+		 * >> #endfor
+		 * >> #endif
+		 * >> #if !(co_flags & CODE_FVARKWDS)
+		 * >>         size_t kw_argc = DeeObject_Size(kw);
+		 * >>         if (kw_argc != kw_used) {
+		 * >>             if (kw_argc == (size_t)-1)
+		 * >>                 HANDLE_EXCEPT();
+		 * >>             err_invalid_argc(...); // ERROR: Unused keyword arguments
+		 * >>         }
+		 * >> #endif
+		 * >>     }
+		 * >> }
+		 */
+		/* TODO */
+		return 0;
+	}
+
+	if (co_argc_min == 0 && (code->co_flags & CODE_FVARARGS)) {
+		/* Special case: *any* number of arguments is accepted */
+	} else if (co_argc_min == co_argc_max && !(code->co_flags & CODE_FVARARGS)) {
+		/* TODO: if (argc != co_argc_min) err_invalid_argc(...); */
+	} else if (code->co_flags & CODE_FVARARGS) {
+		/* TODO: if (argc < co_argc_min) err_invalid_argc(...); */
+	} else {
+		/* TODO: if (argc < co_argc_min || argc > co_argc_max) err_invalid_argc(...); */
+	}
+
+	/*
+	 * At this point, arguments, varargs and varkwds are accessed as follows:
+	 *
+	 * if HOSTFUNC_CC_F_KW:
+	 * >> varkwds = ({ // CAUTION: Must be decref'd using "VARKWDS_DECREF()"
+	 * >>     if (kw->ob_type == &DeeKwds_Type) {
+	 * >>         BlackListVarkwds_New({code}, argc, argv, kw);
+	 * >>     } else {
+	 * >>         BlackListMapping_New({code}, argc, kw);
+	 * >>     }
+	 * >> });
+	 *
+	 * if HOSTFUNC_CC_F_KW:
+	 * >> arg[{i}] = ({
+	 * >>     if ({i} < argc) {
+	 * >>         argv[{i}];
+	 * >>     } else {
+	 * >> #if {co_argc_min} < {co_argc_max} && {co_defaultv[i - co_argc_min] == NULL}
+	 * >>         if (!kw_argv[{i}]) {
+	 * >>             err_unbound_arg(...);
+	 * >>             HANDLE_EXCEPT();
+	 * >>         }
+	 * >> #endif
+	 * >>         kw_argv[{i}];
+	 * >>     }
+	 * >> });
+	 *
+	 * if !HOSTFUNC_CC_F_KW:
+	 * >> arg[{i}] = ({
+	 * >>     __assume({i} < {co_argc_max});
+	 * >> #if {co_argc_min} >= {co_argc_max}
+	 * >>     argv[{i}];
+	 * >> #else // {co_argc_min} >= {co_argc_max}
+	 * >>     if ({i} < argc) {
+	 * >>         argv[{i}];
+	 * >>     } else {
+	 * >> #if co_defaultv[i - co_argc_min] != NULL
+	 * >>         {co_defaultv[i - co_argc_min]};
+	 * >> #else
+	 * >>         err_unbound_arg(...);
+	 * >>         HANDLE_EXCEPT();
+	 * >> #endif
+	 * >>     }
+	 * >> #endif // {co_argc_min} < {co_argc_max}
+	 * >> });
+	 *
+	 * >> varargs = ({
+	 * >> #if {co_argc_min} < {co_argc_max}
+	 * >>     if (argc < {co_argc_max}) {
+	 * >>         Dee_EmptyTuple;
+	 * >>     } else
+	 * >> #endif
+	 * >>     {
+	 * >>         DeeTuple_New(argc - {co_argc_max}, argv + {co_argc_max});
+	 * >>     }
+	 * >> });
+	 * 
+	 */
+
 	(void)self;
 	return 0;
 }
@@ -274,7 +456,7 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
 	int result;
 	struct Dee_function_generator gen;
 	gen.fg_assembler = self;
-	gen.fg_block     = self->fa_blockv[0];
+	gen.fg_block     = self->fa_blockv[0]; /* FIXME: This doesn't work: if block[0] needs to be reset, cold text from the prolog gets deleted */
 	gen.fg_sect      = &self->fa_prolog;
 	gen.fg_state     = state; /* Inherit reference */
 	_Dee_function_generator_initcommon(&gen);
