@@ -26,12 +26,22 @@
 
 #include <deemon/arg.h>
 #include <deemon/dex.h>
+#include <deemon/error.h>
 #include <deemon/objmethod.h>
 #include <deemon/tuple.h>
 
 DECL_BEGIN
 
 #ifdef CONFIG_HAVE_LIBHOSTASM
+#if 0 /* Only here to test that unwinding works correctly (don't use c++ exceptions with deemon). */
+#define HAVE_test_throw
+PRIVATE DREF DeeObject *DCALL
+test_throw(size_t argc, DeeObject *const *argv) {
+	(void)argv;
+	throw argc;
+}
+#endif
+
 PRIVATE DREF DeeObject *DCALL
 test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	struct Dee_hostfunc hfunc;
@@ -50,22 +60,41 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 		goto err;
 
 	/* Call the function. */
-	result = (*hfunc.hf_raw.rhf_entry.hfe_call)(DeeTuple_SIZE(args),
-	                                            DeeTuple_ELEM(args));
-	Dee_hostfunc_fini(&hfunc);
+#ifdef HAVE_test_throw
+	try
+#endif /* HAVE_test_throw */
+	{
+		result = (*hfunc.hf_raw.rhf_entry.hfe_call)(DeeTuple_SIZE(args),
+		                                            DeeTuple_ELEM(args));
+	}
+#ifdef HAVE_test_throw
+	catch (...) {
+		HA_printf("caught!\n");
+		DeeError_Throwf(&DeeError_ValueError, "Exception caught");
+		result = NULL;
+	}
+#endif /* HAVE_test_throw */
 
+	Dee_hostfunc_fini(&hfunc);
 	return result;
 err:
 	return NULL;
 }
 
 DEFINE_CMETHOD(test_compile_and_run_o, &test_compile_and_run);
+#ifdef HAVE_test_throw
+DEFINE_CMETHOD(test_throw_o, &test_throw);
+#endif /* HAVE_test_throw */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 
 PRIVATE struct dex_symbol symbols[] = {
 #ifdef CONFIG_HAVE_LIBHOSTASM
-	{ "test_compile_and_run", (DeeObject *)&test_compile_and_run_o, MODSYM_FNORMAL,
+	{ "test_compile_and_run", (DeeObject *)&test_compile_and_run_o, MODSYM_FREADONLY,
 	  DOC("(func:?DFunction,args=!T0)->") },
+#ifdef HAVE_test_throw
+	{ "test_throw", (DeeObject *)&test_throw_o, MODSYM_FREADONLY,
+	  DOC("()") },
+#endif /* HAVE_test_throw */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 	 /* TODO: Proper API that allows you to re-compile deemon.Function and deemon.Code objects,
 	  *       and be given their compiled equivalents (`test_compile_and_run()' will *not* stay

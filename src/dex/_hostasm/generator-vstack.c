@@ -1416,15 +1416,17 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			common_state = self->fg_state;
 			Dee_memstate_incref(common_state);
 			HA_printf(".section .cold\n");
-			Dee_function_generator_settext(self, cold);
-			if (text != cold)
+			if (text != cold) {
+				EDO(err_common_state, Dee_function_generator_settext(self, cold));
 				Dee_host_symbol_setsect(Ltarget, cold);
-			if unlikely(Dee_function_generator_gthrow_arg_unbound(self, instr, aid))
-				goto err_common_state;
-			if (text == cold)
+			}
+			EDO(err_common_state, Dee_function_generator_gthrow_arg_unbound(self, instr, aid));
+			if (text == cold) {
 				Dee_host_symbol_setsect(Ltarget, text);
-			HA_printf(".section .text\n");
-			Dee_function_generator_settext(self, text);
+			} else {
+				HA_printf(".section .text\n");
+				EDO(err_common_state, Dee_function_generator_settext(self, text));
+			}
 
 			/* After the check above, we're allowed to remember that the argument
 			 * count is great enough to always include the accessed argument. */
@@ -1659,12 +1661,11 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict self) {
+	DREF struct Dee_memstate *saved_state;
 	DO(Dee_function_generator_vpush_usage(self, DEE_HOST_REGUSAGE_THREAD));     /* DeeThread_Self() */
 	DO(Dee_function_generator_vind(self, offsetof(DeeThreadObject, t_except))); /* DeeThread_Self()->t_except */
 	/* Check if there is an active exception if not already checked. */
 	if (!(self->fg_state->ms_flags & MEMSTATE_F_GOTEXCEPT)) {
-		int temp;
-		DREF struct Dee_memstate *saved_state;
 		struct Dee_host_section *text = Dee_function_generator_gettext(self);
 		struct Dee_host_section *cold = Dee_function_generator_getcold(self);
 		if unlikely(!cold)
@@ -1678,9 +1679,8 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 			DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self), text_Ldone));
 			saved_state = self->fg_state;
 			Dee_memstate_incref(saved_state);
-			temp = Dee_function_generator_state_dounshare(self);
-			if likely(temp == 0)
-				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
+			EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+			EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0));
 			Dee_memstate_decref(self->fg_state);
 			self->fg_state = saved_state;
 			Dee_host_symbol_setsect(text_Ldone, text);
@@ -1693,23 +1693,22 @@ Dee_function_generator_vpush_except(struct Dee_function_generator *__restrict se
 			saved_state = self->fg_state;
 			Dee_memstate_incref(saved_state);
 			HA_printf(".section .cold\n");
-			Dee_function_generator_settext(self, cold);
+			EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 			Dee_host_symbol_setsect(Lerr_no_active_exception, cold);
-			temp = Dee_function_generator_state_dounshare(self);
-			if likely(temp == 0)
-				temp = Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0);
+			EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+			EDO(err_saved_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_no_active_exception, VCALL_CC_EXCEPT, 0));
 			HA_printf(".section .text\n");
-			Dee_function_generator_settext(self, text);
+			EDO(err_saved_state, Dee_function_generator_settext(self, text));
 			Dee_memstate_decref(self->fg_state);
 			self->fg_state = saved_state;
 		}
-		if unlikely(temp)
-			goto err;
 		/* Remember that there is an exception */
 		self->fg_state->ms_flags |= MEMSTATE_F_GOTEXCEPT;
 	}
 	/* DeeThread_Self()->t_except->ef_error */
 	return Dee_function_generator_vind(self, offsetof(struct Dee_except_frame, ef_error));
+err_saved_state:
+	Dee_memstate_decref(saved_state);
 err:
 	return -1;
 }
@@ -1757,7 +1756,6 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_generator *__restrict self,
                                                        DeeTypeObject *class_type,
                                                        uint16_t addr, unsigned int flags) {
-	int temp;
 	struct class_desc *desc = DeeClass_DESC(class_type);
 	struct Dee_host_section *text;
 	struct Dee_host_section *cold;
@@ -1799,11 +1797,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self), text_Lbound));
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
-		temp = Dee_function_generator_state_dounshare(self);
-		if ((flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF) && likely(temp == 0))
-			temp = Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock);
-		if likely(temp == 0)
-			temp = Dee_function_generator_gunbound_class_member(self, class_type, addr);
+		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
+			EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));
+		EDO(err_saved_state, Dee_function_generator_gunbound_class_member(self, class_type, addr));
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
 		struct Dee_host_symbol *cold_Lunbound_member;
@@ -1814,20 +1811,17 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
-		temp = Dee_function_generator_state_dounshare(self);
-		if ((flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF) && likely(temp == 0))
-			temp = Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock);
-		if likely(temp == 0)
-			temp = Dee_function_generator_gunbound_class_member(self, class_type, addr);
+		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
+			EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));
+		EDO(err_saved_state, Dee_function_generator_gunbound_class_member(self, class_type, addr));
 		HA_printf(".section .text\n");
-		Dee_function_generator_settext(self, text);
+		EDO(err_saved_state, Dee_function_generator_settext(self, text));
 	}
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
-	if unlikely(temp)
-		goto err;
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	if (!(flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF))
@@ -1835,6 +1829,8 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1));
 	Dee_function_generator_vtop_direct_setref(self);
 	return Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock);
+err_saved_state:
+	Dee_memstate_decref(saved_state);
 err:
 	return -1;
 }
@@ -2037,7 +2033,6 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_generator *__restrict self,
                                                        DeeTypeObject *type, uint16_t addr, unsigned int flags) {
-	int temp;
 	struct Dee_host_section *text;
 	struct Dee_host_section *cold;
 	DREF struct Dee_memstate *saved_state;
@@ -2085,11 +2080,9 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		DO(Dee_function_generator_gjnz(self, Dee_function_generator_vtopdloc(self), text_Lbound));
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
-		temp = Dee_function_generator_state_dounshare(self);
-		if likely(temp == 0)
-			temp = Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1);
-		if likely(temp == 0)
-			temp = Dee_function_generator_gunbound_instance_member(self, type, addr);
+		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+		EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+		EDO(err_saved_state, Dee_function_generator_gunbound_instance_member(self, type, addr));
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
 		struct Dee_host_symbol *cold_Lunbound_member;
@@ -2100,20 +2093,16 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
-		temp = Dee_function_generator_state_dounshare(self);
-		if likely(temp == 0)
-			temp = Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1);
-		if likely(temp == 0)
-			temp = Dee_function_generator_gunbound_instance_member(self, type, addr);
+		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+		EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+		EDO(err_saved_state, Dee_function_generator_gunbound_instance_member(self, type, addr));
 		HA_printf(".section .text\n");
-		Dee_function_generator_settext(self, text);
+		EDO(err_saved_state, Dee_function_generator_settext(self, text));
 	}
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
-	if unlikely(temp)
-		goto err;
 	if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF) {
 		DO(Dee_function_generator_vref2(self, 2));                                               /* &this->[...].id_lock, ref:value */
 		DO(Dee_function_generator_vswap(self));                                                  /* ref:value, &this->[...].id_lock */
@@ -2121,6 +2110,8 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		DO(Dee_function_generator_vpop(self));                                                   /* ref:value */
 	}
 	return 0;
+err_saved_state:
+	Dee_memstate_decref(saved_state);
 err:
 	return -1;
 }
@@ -2311,13 +2302,18 @@ Dee_function_generator_vdel_imember(struct Dee_function_generator *__restrict se
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 reclaim_unused_stack_space(struct Dee_function_generator *__restrict self) {
-	Dee_cfa_t old_cfa_offset = self->fg_state->ms_host_cfa_offset;
-	if (Dee_memstate_hstack_free(self->fg_state)) {
-		Dee_cfa_t new_cfa_offset = self->fg_state->ms_host_cfa_offset;
-		ptrdiff_t freed = old_cfa_offset - new_cfa_offset;
-		ASSERT(freed > 0);
-		return Dee_function_generator_ghstack_adjust(self, -freed);
-	}
+	struct Dee_memstate *state = self->fg_state;
+	Dee_cfa_t min_cfa = Dee_memstate_hstack_greatest_inuse(state);
+	ptrdiff_t free_space;
+#ifndef HOSTASM_STACK_GROWS_DOWN
+	min_cfa += HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
+	free_space = state->ms_host_cfa_offset - min_cfa;
+
+	/* Only free space if there is more free space than
+	 * needed for doing an unaligned call to another function. */
+	if (free_space > HOSTASM_SCRACHAREA_SIZE + HOSTASM_STACK_ALIGNMENT - HOST_SIZEOF_POINTER)
+		return Dee_function_generator_ghstack_adjust(self, -free_space);
 	return 0;
 }
 
@@ -2767,11 +2763,11 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 				ASSERT(!Dee_host_symbol_isdefined(Lexcept));
 				ASSERT(text != cold);
 				HA_printf(".section .cold\n");
-				Dee_function_generator_settext(self, cold);
+				DO(Dee_function_generator_settext(self, cold));
 				Dee_host_symbol_setsect(Lexcept, cold);
 				DO(Dee_function_generator_gjmp_except(self));
 				HA_printf(".section .text\n");
-				Dee_function_generator_settext(self, text);
+				DO(Dee_function_generator_settext(self, text));
 			}
 		} else {
 			struct Dee_except_exitinfo *except_exit;
@@ -4392,13 +4388,12 @@ Dee_function_generator_vlinear(struct Dee_function_generator *__restrict self,
 			size_t num_bytes = argc * sizeof(void *);
 			result_cfa_offset = Dee_memstate_hstack_find(state, self->fg_state_hstack_res, num_bytes);
 			if (result_cfa_offset == (Dee_cfa_t)-1) {
-				Dee_cfa_t saved_cfa = state->ms_host_cfa_offset;
-				Dee_memstate_hstack_free(state);
-				result_cfa_offset = state->ms_host_cfa_offset;
+				result_cfa_offset = Dee_memstate_hstack_greatest_inuse(state);
 #ifdef HOSTASM_STACK_GROWS_DOWN
 				result_cfa_offset += num_bytes;
-#endif /* HOSTASM_STACK_GROWS_DOWN */
-				state->ms_host_cfa_offset = saved_cfa;
+#else /* HOSTASM_STACK_GROWS_DOWN */
+				result_cfa_offset += HOST_SIZEOF_POINTER;
+#endif /* !HOSTASM_STACK_GROWS_DOWN */
 			}
 		} else {
 			/* Fallback: Assign scores to all possible CFA offsets for the linear vector.
@@ -4676,7 +4671,7 @@ Dee_function_generator_vjox_arith_enter(struct Dee_function_generator *__restric
 		                                   (flags & VJX_F_JNZ) ? Ljump : NULL,
 		                                   (flags & VJX_F_JNZ) ? NULL : Ljump));
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		DO(Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(Ljump, cold);
 		branch->fgb_skip = NULL;
 	} else {
@@ -4723,7 +4718,7 @@ Dee_function_generator_vjx_enter(struct Dee_function_generator *__restrict self,
 		DO((flags & VJX_F_JNZ) ? Dee_function_generator_gjnz(self, &testloc, Ljump)
 		                       : Dee_function_generator_gjz(self, &testloc, Ljump));
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		DO(Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(Ljump, cold);
 		branch->fgb_skip = NULL;
 	} else {
@@ -4799,7 +4794,7 @@ Dee_function_generator_vjex_enter(struct Dee_function_generator *__restrict self
 		                               (flags & VJX_F_JNZ) ? NULL : Ljump,
 		                               (flags & VJX_F_JNZ) ? Ljump : NULL));
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		DO(Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(Ljump, cold);
 		branch->fgb_skip = NULL;
 	} else {
@@ -4864,7 +4859,7 @@ Dee_function_generator_vjax_enter(struct Dee_function_generator *__restrict self
 		                               (flags & VJX_F_JNZ) ? Ljump : NULL,
 		                               (flags & VJX_F_JNZ) ? NULL : Ljump));
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		DO(Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(Ljump, cold);
 		branch->fgb_skip = NULL;
 	} else {
@@ -4894,7 +4889,7 @@ Dee_function_generator_vjx_leave(struct Dee_function_generator *__restrict self,
 		Dee_function_generator_DEFINE_Dee_host_symbol_section(self, err, Lreturn, branch->fgb_oldtext, 0);
 		DO(Dee_function_generator_gjmp(self, Lreturn));
 		HA_printf(".section .text\n");
-		Dee_function_generator_settext(self, branch->fgb_oldtext);
+		DO(Dee_function_generator_settext(self, branch->fgb_oldtext));
 		HA_printf(".Lreturn:\n");
 	}
 	if (branch->fgb_skip)
@@ -4915,12 +4910,14 @@ Dee_function_generator_vjx_leave_noreturn(struct Dee_function_generator *__restr
 	self->fg_state = branch->fgb_saved; /* Inherit */
 	if (self->fg_sect != branch->fgb_oldtext) {
 		HA_printf(".section .text\n");
-		self->fg_sect = branch->fgb_oldtext;
+		DO(Dee_function_generator_settext(self, branch->fgb_oldtext));
 	}
 	if (branch->fgb_skip)
 		Dee_host_symbol_setsect(branch->fgb_skip, self->fg_sect);
 	DBG_memset(branch, 0xcc, sizeof(*branch));
 	return 0;
+err:
+	return -1;
 }
 
 

@@ -214,6 +214,29 @@ Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
 	return false;
 }
 
+
+/* Returns the greatest in-use CFA address used by any location.
+ * When nothing uses the HSTACK, return "0" instead (only HSTACKIND count). */
+INTERN ATTR_PURE WUNUSED NONNULL((1)) Dee_cfa_t DCALL
+Dee_memstate_hstack_greatest_inuse(struct Dee_memstate const *__restrict self) {
+	Dee_cfa_t result = 0;
+	struct Dee_memval *mval;
+	Dee_memstate_foreach(mval, self) {
+		struct Dee_memobj *mobj;
+		Dee_memval_foreach_obj(mobj, mval) {
+			if (Dee_memobj_gettyp(mobj) == MEMADR_TYPE_HSTACKIND) {
+				Dee_cfa_t cfa = Dee_memobj_hstackind_getcfa(mobj);
+				if (result < cfa)
+					result = cfa;
+			}
+		}
+		Dee_memval_foreach_obj_end;
+	}
+	Dee_memstate_foreach_end;
+	return result;
+}
+
+
 #define Dee_memobj_hstack_used(self, start_offset, end_offset) \
 	Dee_memadr_hstack_used(Dee_memobj_getadr(self), start_offset, end_offset)
 #define Dee_memloc_hstack_used(self, start_offset, end_offset) \
@@ -307,24 +330,6 @@ Dee_memstate_hstack_find(struct Dee_memstate const *__restrict self,
 		}
 	}
 	return (Dee_cfa_t)-1;
-}
-
-/* Try to free unused stack memory near the top of the stack.
- * @return: true:  The CFA offset was reduced.
- * @return: false: The CFA offset remains the same. */
-INTERN NONNULL((1)) bool DCALL
-Dee_memstate_hstack_free(struct Dee_memstate *__restrict self) {
-	bool result = false;
-	while (self->ms_host_cfa_offset > 0) {
-		size_t a_pointers = self->ms_host_cfa_offset / HOST_SIZEOF_POINTER;
-		Dee_cfa_t min_offset = (Dee_cfa_t)((a_pointers - 1) * HOST_SIZEOF_POINTER);
-		Dee_cfa_t end_offset = (Dee_cfa_t)(min_offset + HOST_SIZEOF_POINTER);
-		if (!Dee_memstate_hstack_unused(self, NULL, min_offset, end_offset))
-			break;
-		self->ms_host_cfa_offset -= HOST_SIZEOF_POINTER;
-		result = true;
-	}
-	return false;
 }
 
 PRIVATE NONNULL((1, 2, 3)) void DCALL

@@ -74,7 +74,10 @@ INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
 			},
 			/* .ml_off = */ 0,
 		},
-		/* .meq_class = */ RINGQ_ENTRY_UNBOUND_INITIALIZER,
+		/* .meq_class = */ {
+			(struct Dee_memequiv *)Dee_memequivs_dummy_list,
+			(struct Dee_memequiv *)Dee_memequivs_dummy_list,
+		},
 	}
 };
 
@@ -1065,6 +1068,7 @@ Dee_host_section_fini(struct Dee_host_section *__restrict self) {
 		Dee_host_section_fini(self->hs_cold);
 		Dee_Free(self->hs_cold);
 	}
+	Dee_host_unwind_fini(&self->hs_unwind);
 }
 
 INTERN NONNULL((1)) void DCALL
@@ -1072,6 +1076,7 @@ Dee_host_section_clear(struct Dee_host_section *__restrict self) {
 	do {
 		self->hs_end  = self->hs_start;
 		self->hs_relc = 0;
+		Dee_host_unwind_clear(&self->hs_unwind);
 		/* Must recursively clear cold (sub-)sections */
 	} while ((self = self->hs_cold) != NULL);
 }
@@ -1803,6 +1808,9 @@ err_unsupported_opcode(DeeCodeObject *__restrict code, Dee_instruction_t const *
 
 INTERN NONNULL((1)) void DCALL
 Dee_hostfunc_fini(struct Dee_hostfunc *__restrict self) {
+#ifndef CONFIG_host_unwind_USES_NOOP
+	Dee_hostfunc_unwind_fini(&self->hf_unwind);
+#endif /* !CONFIG_host_unwind_USES_NOOP */
 	Dee_rawhostfunc_fini(&self->hf_raw);
 	if (self->hf_refs) {
 		size_t i;

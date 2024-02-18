@@ -17,6 +17,7 @@
 			<Filter>libgen86</Filter>
 		</ClInclude>
 		<ClInclude Include="..\..\src\dex\_hostasm\libhostasm.h" />
+		<ClInclude Include="..\..\src\dex\_hostasm\unwind.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\utils.h" />
 	</ItemGroup>
 	<ItemGroup>
@@ -37,6 +38,7 @@
 		<ClCompile Include="..\..\src\dex\_hostasm\loader-locuse.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\loader.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\memstate.c" />
+		<ClCompile Include="..\..\src\dex\_hostasm\unwind.c" />
 	</ItemGroup>
 	<ItemGroup>
 		<None Include="..\..\src\dex\_hostasm\libgen86\.git">

@@ -171,7 +171,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			 * >> .section .text
 			 * >> .Lgot_size: */
 			HA_printf(".section .cold\n");
-			Dee_function_generator_settext(self, cold);
+			DO(Dee_function_generator_settext(self, cold));
 			leave_state = self->fg_state; /* Inherit reference */
 			self->fg_state = enter_state; /* Inherit reference */
 			Dee_host_symbol_setsect(Lnot_kwds, cold);                /* kw */
@@ -181,7 +181,7 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			EDO(err_leave_state, Dee_function_generator_vmorph(self, leave_state));
 			EDO(err_leave_state, Dee_function_generator_gjmp(self, Lgot_size));
 			HA_printf(".section .text\n");
-			Dee_function_generator_settext(self, text);
+			EDO(err_leave_state, Dee_function_generator_settext(self, text));
 			Dee_host_symbol_setsect(Lgot_size, text);
 		}
 		Dee_memstate_decref(self->fg_state);
@@ -221,11 +221,11 @@ vpop_empty_kwds(struct Dee_function_generator *__restrict self) {
 			Dee_memstate_incref(enter_state);
 			HA_printf(".section .cold\n");
 			ASSERT(text == Dee_function_generator_gettext(self));
-			Dee_function_generator_settext(self, cold);
+			EDO(err_enter_state, Dee_function_generator_settext(self, cold));
 			Dee_host_symbol_setsect(Lsize_is_not_zero, cold);
 			EDO(err_enter_state, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_nonempty_kw, VCALL_CC_EXCEPT, 1));
 			HA_printf(".section .text\n");
-			Dee_function_generator_settext(self, text);
+			EDO(err_enter_state, Dee_function_generator_settext(self, text));
 		}
 		Dee_memstate_decref(self->fg_state);
 		self->fg_state = enter_state;             /* kw */

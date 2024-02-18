@@ -215,7 +215,6 @@ Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict 
 	result = _Dee_function_generator_ghstack_adjust(self, cfa_delta);
 #endif /* !HOSTASM_STACK_GROWS_DOWN */
 	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, cfa_delta);
 		if (cfa_delta < 0) {
 			/* Remember that values beyond the stack's red zone become undefined,
 			 * as they might get clobbered by sporadic interrupt handlers. */
@@ -251,10 +250,8 @@ Dee_function_generator_ghstack_pushreg(struct Dee_function_generator *__restrict
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "src_regno", do nothing */
 #endif /* HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER */
 	result = _Dee_function_generator_ghstack_pushreg(self, src_regno);
-	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_reg2hstackind(self, src_regno, dst_cfa_offset);
-	}
 	return result;
 }
 
@@ -267,10 +264,8 @@ Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restr
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "[src_regno + src_delta]", do nothing */
 #endif /* HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER */
 	result = _Dee_function_generator_ghstack_pushregind(self, src_regno, src_delta);
-	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_regind2hstackind(self, src_regno, src_delta, dst_cfa_offset);
-	}
 	return result;
 }
 
@@ -283,10 +278,8 @@ Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restri
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "value", do nothing */
 #endif /* HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER */
 	result = _Dee_function_generator_ghstack_pushconst(self, value);
-	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_const2hstackind(self, value, dst_cfa_offset);
-	}
 	return result;
 }
 
@@ -300,10 +293,8 @@ Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__re
 	/* TODO: If "[#dst_cfa_offset]" is a known equivalence of "[#cfa_offset]", do nothing */
 #endif /* HOSTASM_REDZONE_SIZE >= HOST_SIZEOF_POINTER */
 	result = _Dee_function_generator_ghstack_pushhstackind(self, sp_offset);
-	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
+	if likely(result == 0)
 		result = Dee_function_generator_remember_movevalue_hstackind2hstackind(self, cfa_offset, dst_cfa_offset);
-	}
 	return result;
 }
 
@@ -314,7 +305,6 @@ Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function
 	Dee_cfa_t dst_cfa_offset = GET_ADDRESS_OF_NEXT_PUSH(self);
 	int result = _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self);
 	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER);
 		(void)src_cfa_offset;
 		(void)dst_cfa_offset;
 		result = Dee_function_generator_remember_movevalue_hstack2hstackind(self, src_cfa_offset, dst_cfa_offset);
@@ -331,7 +321,6 @@ Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict 
 	/* TODO: If "dst_regno" is a known equivalence of "[#src_cfa_offset]", do nothing */
 	result = _Dee_function_generator_ghstack_popreg(self, dst_regno);
 	if likely(result == 0) {
-		Dee_function_generator_gadjust_cfa_offset(self, -HOST_SIZEOF_POINTER);
 		result = Dee_function_generator_remember_movevalue_hstackind2reg(self, src_cfa_offset, dst_regno);
 		Dee_function_generator_remember_undefined_hstackind(self, src_cfa_offset + HOSTASM_REDZONE_SIZE);
 	}
@@ -2664,7 +2653,6 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
                                      struct Dee_module_object *mod, uint16_t id,
                                      Dee_atomic_rwlock_t *opt_endread_before_throw,
                                      Dee_atomic_rwlock_t *opt_endwrite_before_throw) {
-	int temp;
 	DREF struct Dee_memstate *saved_state;
 	struct Dee_host_symbol *target;
 	struct Dee_host_section *text;
@@ -2676,43 +2664,34 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	target = Dee_function_generator_newsym_named(self, text == cold ? ".Lbound" : ".Lunbound");
 	if unlikely(!target)
 		goto err;
-	if unlikely(text == cold
-	            ? Dee_function_generator_gjnz(self, loc, target)
-	            : Dee_function_generator_gjz(self, loc, target))
-		goto err;
+	DO(text == cold ? Dee_function_generator_gjnz(self, loc, target)
+	                : Dee_function_generator_gjz(self, loc, target));
 	saved_state = self->fg_state;
 	Dee_memstate_incref(saved_state);
-	if unlikely(Dee_function_generator_state_dounshare(self))
-		goto err_saved_state;
+	EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
 
-	Dee_function_generator_settext(self, cold);
 	if (text != cold) {
 		HA_printf(".section .cold\n");
+		EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(target, cold);
 	}
 
 	/* Location isn't bound -> generate code to throw an exception. */
-	if (opt_endwrite_before_throw != NULL &&
-	    unlikely(Dee_function_generator_grwlock_endwrite_const(self, opt_endwrite_before_throw)))
-		goto err_saved_state;
-	if (opt_endread_before_throw != NULL &&
-	    unlikely(Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw)))
-		goto err_saved_state;
-	if (mod) {
-		temp = Dee_function_generator_gthrow_global_unbound(self, mod, id);
-	} else {
-		temp = Dee_function_generator_gthrow_local_unbound(self, instr, id);
-	}
-	if unlikely(temp)
-		goto err_saved_state;
+	if (opt_endwrite_before_throw != NULL)
+		EDO(err_saved_state, Dee_function_generator_grwlock_endwrite_const(self, opt_endwrite_before_throw));
+	if (opt_endread_before_throw != NULL)
+		EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw));
+	EDO(err_saved_state,
+	    mod ? Dee_function_generator_gthrow_global_unbound(self, mod, id)
+	        : Dee_function_generator_gthrow_local_unbound(self, instr, id));
 
 	/* Switch back to the original section, and restore the saved mem-state. */
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
-	Dee_function_generator_settext(self, text);
 
 	ASSERT((text == cold) == !!Dee_host_symbol_isdefined(target));
 	if (text != cold) {
+		DO(Dee_function_generator_settext(self, text));
 		HA_printf(".section .text\n");
 	} else {
 		Dee_host_symbol_setsect(target, text);
@@ -2952,12 +2931,11 @@ do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
 		                                        (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) ? Ldo_except : NULL))
 			goto err;
 		HA_printf(".section .cold\n");
-		Dee_function_generator_settext(self, cold);
+		DO(Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(Ldo_except, cold);
-		if unlikely(Dee_function_generator_gjmp_except(self))
-			goto err;
+		DO(Dee_function_generator_gjmp_except(self));
 		HA_printf(".section .text\n");
-		Dee_function_generator_settext(self, text);
+		DO(Dee_function_generator_settext(self, text));
 	}
 	return 0;
 err:

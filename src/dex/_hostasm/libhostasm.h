@@ -23,6 +23,9 @@
 #include "host.h"
 /**/
 
+#include "unwind.h"
+/**/
+
 #include <deemon/api.h>
 #include <deemon/code.h>
 #include <deemon/object.h>
@@ -181,8 +184,9 @@ INTDEF NONNULL((1)) void DCALL _Dee_memequivs_debug_print(struct Dee_memequivs c
 #define RANGES_OVERLAP(a_start, a_end, b_start, b_end) \
 	((a_end) > (b_start) && (a_start) < (b_end))
 
-
+/* Canonical Frame Address (offset between host-SP and frame-base; higher values mean larger stack allocation) */
 typedef intptr_t Dee_cfa_t;
+
 typedef uint32_t Dee_vstackaddr_t;
 typedef int32_t Dee_vstackoff_t;
 typedef uint16_t Dee_aid_t;
@@ -442,8 +446,8 @@ LOCAL NONNULL((1, 2)) void DCALL
 Dee_memequiv_next_asloc(struct Dee_memequiv const *__restrict self,
                         /*out*/ struct Dee_memloc *__restrict loc) {
 	ptrdiff_t valoff;
-	ASSERT(Dee_memequiv_next(self) != NULL);
-	ASSERT(Dee_memequiv_next(self) != self);
+	Dee_ASSERT(Dee_memequiv_next(self) != NULL);
+	Dee_ASSERT(Dee_memequiv_next(self) != self);
 	valoff = Dee_memloc_getoff(&self->meq_loc);
 	*loc = Dee_memequiv_next(self)->meq_loc;
 	Dee_memloc_adjoff(loc, -valoff);
@@ -1619,11 +1623,10 @@ INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 Dee_memstate_hstack_isused(struct Dee_memstate const *__restrict self,
                            Dee_cfa_t cfa_offset);
 
-/* Try to free unused stack memory near the top of the stack.
- * @return: true:  The CFA offset was reduced.
- * @return: false: The CFA offset remains the same. */
-INTDEF NONNULL((1)) bool DCALL
-Dee_memstate_hstack_free(struct Dee_memstate *__restrict self);
+/* Returns the greatest in-use CFA address used by any location.
+ * When nothing uses the HSTACK, return "0" instead (only HSTACKIND count). */
+INTDEF ATTR_PURE WUNUSED NONNULL((1)) Dee_cfa_t DCALL
+Dee_memstate_hstack_greatest_inuse(struct Dee_memstate const *__restrict self);
 
 /* Constrain `self' with `other', such that it is possible to generate code to
  * transition from `other' to `self', as well as any other mem-state that might
@@ -1778,7 +1781,6 @@ Dee_host_reloc_value(struct Dee_host_reloc const *__restrict self);
 struct Dee_host_section;
 TAILQ_HEAD(Dee_host_section_tailq, Dee_host_section);
 struct Dee_host_section {
-	struct Dee_host_section      *hs_cold;    /* [0..1][lock(WRITE_ONCE)][owned] Cold text data. */
 	byte_t                       *hs_start;   /* [<= hs_end][owned] Start of host assembly */
 	byte_t                       *hs_end;     /* [>= hs_start && <= hs_alend] End of host assembly */
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
@@ -1799,6 +1801,10 @@ struct Dee_host_section {
 	byte_t                       *hs_alend;   /* [>= hs_start] End of allocated host assembly */
 #endif /* !HOSTASM_HAVE_SHRINKJUMPS */
 	TAILQ_ENTRY(Dee_host_section) hs_link;    /* [0..1] Position of this section in the final output. */
+	struct Dee_host_section      *hs_cold;    /* [0..1][lock(WRITE_ONCE)][owned] Cold text data. */
+#ifndef CONFIG_host_unwind_USES_NOOP
+	struct Dee_host_unwind        hs_unwind;  /* OS-specific unwind data. */
+#endif /* !CONFIG_host_unwind_USES_NOOP */
 	struct Dee_host_reloc        *hs_relv;    /* [0..hs_relc][owned] Vector of host relocations. */
 	size_t                        hs_relc;    /* Number of host relocations. */
 	union {
@@ -1822,7 +1828,14 @@ struct Dee_host_section {
 	;
 };
 
-#define Dee_host_section_init(self) bzero(self, sizeof(struct Dee_host_section))
+#ifdef Dee_host_unwind_init_IS_BZERO
+#define Dee_host_section_init(self) \
+	bzero(self, sizeof(struct Dee_host_section))
+#else /* Dee_host_unwind_init_IS_BZERO */
+#define Dee_host_section_init(self) \
+	(bzero(self, sizeof(struct Dee_host_section)), Dee_host_unwind_init(&(self)->hs_unwind))
+#endif /* !Dee_host_unwind_init_IS_BZERO */
+
 INTDEF NONNULL((1)) void DCALL Dee_host_section_fini(struct Dee_host_section *__restrict self);
 INTDEF NONNULL((1)) void DCALL Dee_host_section_clear(struct Dee_host_section *__restrict self);
 #define Dee_host_section_size(self) \
@@ -1980,7 +1993,7 @@ Dee_basic_block_splitat(struct Dee_basic_block *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_basic_block_constrainwith(struct Dee_basic_block *__restrict self,
                               struct Dee_memstate *__restrict state,
-                              code_addr_t self_start_addr);
+                              Dee_code_addr_t self_start_addr);
 
 /* Remove exits from `self' that have origins beyond `self->bb_deemon_end' */
 INTDEF NONNULL((1)) void DCALL
@@ -2298,12 +2311,22 @@ struct Dee_function_generator {
 #define Dee_function_generator_except_exit(self) \
 	Dee_function_assembler_except_exit((self)->fg_assembler, (self)->fg_state)
 
-#define Dee_function_generator_gadjust_cfa_offset(self, delta) \
-	(void)((self)->fg_state->ms_host_cfa_offset += (ptrdiff_t)(delta))
+/* Inform the function generator that it may need
+ * to generate unwind info because the CFA changed.
+ *
+ * Must be called whenever "ms_host_cfa_offset" was altered. */
+#define Dee_function_generator_gcfa_changed(self) \
+	Dee_host_section_unwind_setsp(self->fg_sect, self->fg_state->ms_host_cfa_offset)
+
+/* Adjust the CFA offset. */
+#define Dee_function_generator_gadjust_cfa_offset(self, delta)   \
+	((self)->fg_state->ms_host_cfa_offset += (ptrdiff_t)(delta), \
+	 Dee_function_generator_gcfa_changed(self))
+
 
 /* Helpers for doing section management */
 #define Dee_function_generator_gettext(self)    (self)->fg_sect
-#define Dee_function_generator_settext(self, s) (void)((self)->fg_sect = (s))
+#define Dee_function_generator_settext(self, s) ((self)->fg_sect = (s), Dee_function_generator_gcfa_changed(self))
 #define Dee_function_generator_getcold(self)                           \
 	(((self)->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE) \
 	 ? Dee_function_generator_gettext(self)                            \
@@ -3130,23 +3153,16 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_write(s
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_adjust(struct Dee_host_section *__restrict self, ptrdiff_t sp_delta);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushreg(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushconst(struct Dee_host_section *__restrict self, void const *value);
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_host_section *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
-#define HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_pushhstackind(struct Dee_host_section *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
-INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_ghstack_popreg(struct Dee_host_section *__restrict self, Dee_host_register_t dst_regno);
-#define _Dee_function_generator_ghstack_adjust(self, sp_delta)         _Dee_host_section_ghstack_adjust(Dee_function_generator_gettext(self), sp_delta)
-#define _Dee_function_generator_ghstack_pushreg(self, src_regno)       _Dee_host_section_ghstack_pushreg(Dee_function_generator_gettext(self), src_regno)
-#define _Dee_function_generator_ghstack_pushconst(self, value)         _Dee_host_section_ghstack_pushconst(Dee_function_generator_gettext(self), value)
-#define _Dee_function_generator_ghstack_pushhstackind(self, sp_offset) _Dee_host_section_ghstack_pushhstackind(Dee_function_generator_gettext(self), sp_offset) /* `sp_offset' is as it would be *before* the push */
-#define _Dee_function_generator_ghstack_popreg(self, dst_regno)        _Dee_host_section_ghstack_popreg(Dee_function_generator_gettext(self), dst_regno)
-#ifdef HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np
 #define HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
-#define _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(self) _Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np(Dee_function_generator_gettext(self))
-#endif /* HAVE__Dee_host_section_ghstack_pushhstack_at_cfa_boundary_np */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict self, ptrdiff_t sp_delta);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushreg(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushregind(struct Dee_function_generator *__restrict self, Dee_host_register_t src_regno, ptrdiff_t src_delta);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushconst(struct Dee_function_generator *__restrict self, void const *value);
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushhstackind(struct Dee_function_generator *__restrict self, ptrdiff_t sp_offset); /* `sp_offset' is as it would be *before* the push */
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_popreg(struct Dee_function_generator *__restrict self, Dee_host_register_t dst_regno);
+#ifdef HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
+INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np(struct Dee_function_generator *__restrict self); /* Pushes the address of `(self)->fg_state->ms_host_cfa_offset' (as it was before the push) */
+#endif /* HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np */
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_host_section_gmov_reg2hstackind(struct Dee_host_section *__restrict self, Dee_host_register_t src_regno, ptrdiff_t sp_offset);                             /* *(SP + sp_offset) = dst_regno; */
@@ -3753,8 +3769,11 @@ DeeCMethod_IsConstExpr(Dee_cmethod_t method, size_t argc,
 /************************************************************************/
 
 struct Dee_hostfunc {
-	struct Dee_rawhostfunc hf_raw;  /* Raw function information */
-	DREF DeeObject       **hf_refs; /* [1..1][const][0..n][const][owned] Vector of extra objects referenced by host assembly. */
+	struct Dee_rawhostfunc     hf_raw;    /* Raw function information */
+	DREF DeeObject           **hf_refs;   /* [1..1][const][0..n][const][owned] Vector of extra objects referenced by host assembly. */
+#ifndef CONFIG_host_unwind_USES_NOOP
+	struct Dee_hostfunc_unwind hf_unwind; /* OS-specific function unwind descriptor. */
+#endif /* !CONFIG_host_unwind_USES_NOOP */
 	/* TODO: Save information about where/how to call the function whilst skipping
 	 *       its prolog. That way, when hostasm code calls another deemon function
 	 *       that has already been re-compiled into hostasm, argument/keyword checks

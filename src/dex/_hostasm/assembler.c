@@ -62,7 +62,15 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
 	_Dee_function_generator_initcommon(&generator);
 	ASSERT(generator.fg_state);
 	Dee_memstate_incref(generator.fg_state);
-	result = Dee_function_generator_genall(&generator);
+#ifdef DEFINED_Dee_host_section_unwind_setsp_initial
+	Dee_host_section_unwind_setsp_initial(generator.fg_sect, generator.fg_state->ms_host_cfa_offset);
+#else /* DEFINED_Dee_host_section_unwind_setsp_initial */
+	result = Dee_host_section_unwind_setsp(generator.fg_sect, generator.fg_state->ms_host_cfa_offset);
+	if likely(result == 0)
+#endif /* !DEFINED_Dee_host_section_unwind_setsp_initial */
+	{
+		result = Dee_function_generator_genall(&generator);
+	}
 	Dee_memstate_decref(generator.fg_state);
 	ASSERT(generator.fg_block == self);
 	ASSERT(generator.fg_sect == &self->bb_htext);
@@ -1189,10 +1197,17 @@ no_jmp_needed:;
 	self->fa_sectsize = 0;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
 		self->fa_sectsize += Dee_host_section_size(sect);
+#ifdef Dee_host_section_unwind_maxsize
+		self->fa_sectsize += Dee_host_section_unwind_maxsize(sect);
+#endif /* Dee_host_section_unwind_maxsize */
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 		sect->hs_symbols = NULL; /* Needed for symbol ordering */
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
 	}
+
+	/* Align the total section size to whole pointers */
+	self->fa_sectsize += (HOST_SIZEOF_POINTER - 1);
+	self->fa_sectsize &= ~(HOST_SIZEOF_POINTER - 1);
 
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 	/* Sort host text symbols into their proper sections (needed
@@ -1287,6 +1302,10 @@ Dee_host_section_deltext(struct Dee_host_section *__restrict self,
 	for (sect = TAILQ_NEXT(self, hs_link); sect;
 	     sect = TAILQ_NEXT(sect, hs_link))
 		sect->hs_badr -= num_bytes;
+
+#ifndef CONFIG_host_unwind_USES_NOOP
+	Dee_host_section_unwind_trimrange(self, sectrel_addr, num_bytes);
+#endif /* !CONFIG_host_unwind_USES_NOOP */
 }
 
 PRIVATE NONNULL((1, 2)) bool DCALL
@@ -1455,6 +1474,15 @@ again:
 			goto err_result;
 		}
 	}
+
+	/* Output unwind information (if enabled). */
+#ifndef CONFIG_host_unwind_USES_NOOP
+	Dee_hostfunc_unwind_init(&result->hf_unwind, self,
+	                         (byte_t *)result->hf_raw._rhf_base,
+	                         writer);
+#endif /* !CONFIG_host_unwind_USES_NOOP */
+
+	/* Make the function executable. */
 	if unlikely(Dee_rawhostfunc_mkexec(&result->hf_raw)) {
 		Dee_BadAlloc(self->fa_sectsize);
 		goto err_result;
