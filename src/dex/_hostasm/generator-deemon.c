@@ -2760,8 +2760,6 @@ Dee_function_generator_genall(struct Dee_function_generator *__restrict self) {
 			 */
 			ASSERT(block->bb_htext.hs_end == block->bb_htext.hs_start);
 			ASSERT(block->bb_htext.hs_relc == 0);
-			ASSERT(block->bb_hcold.hs_end == block->bb_hcold.hs_start);
-			ASSERT(block->bb_hcold.hs_relc == 0);
 			block->bb_mem_end = NULL;
 			return 0;
 		}

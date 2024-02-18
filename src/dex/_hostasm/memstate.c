@@ -713,7 +713,6 @@ Dee_basic_block_clear_hcode_and_exits(struct Dee_basic_block *__restrict self) {
 		}
 	}
 	Dee_host_section_clear(&self->bb_htext);
-	Dee_host_section_clear(&self->bb_hcold);
 }
 
 /* Constrain or assign `self->bb_mem_start' with the memory state `state'
@@ -733,8 +732,6 @@ Dee_basic_block_constrainwith(struct Dee_basic_block *__restrict self,
 		Dee_memstate_incref(state);
 		ASSERT(self->bb_htext.hs_end == self->bb_htext.hs_start);
 		ASSERT(self->bb_htext.hs_relc == 0);
-		ASSERT(self->bb_hcold.hs_end == self->bb_hcold.hs_start);
-		ASSERT(self->bb_hcold.hs_relc == 0);
 		return 0;
 	}
 	if unlikely(block_start->ms_stackc != state->ms_stackc) {

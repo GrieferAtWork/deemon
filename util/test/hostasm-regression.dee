@@ -52,11 +52,15 @@ global nonFinalGlobalNone = _hide(none);
 
 function hexec(expectedResult, args, func) {
 	local actualResult = test_compile_and_run(func, args);
+	local actualResultNative = func(args...);
 	if (expectedResult is Callable && expectedResult !is Type) {
 		assert expectedResult(actualResult);
+		assert expectedResult(actualResultNative);
 	} else {
 		assert actualResult == expectedResult;
+		assert actualResultNative == expectedResult;
 		assert type(actualResult) === type(expectedResult);
+		assert type(actualResultNative) === type(expectedResult);
 	}
 }
 
@@ -196,9 +200,9 @@ hexec(x -> x.valueA == "x" && x.valueB == 7, ("x", 7), (a, b) -> {
 });
 
 local c = Cell();
-hexec(0, ("x", 7), () -> c.get(0));
+hexec(0, (), () -> c.get(0));
 c.value = 42;
-hexec(42, ("x", 7), () -> c.get(0));
+hexec(42, (), () -> c.get(0));
 
 hexec(int, (4, 7), (a, b) -> {
 	/* This right here tests the behavior of dependent objects when

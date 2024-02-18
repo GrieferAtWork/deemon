@@ -1061,6 +1061,31 @@ Dee_host_section_fini(struct Dee_host_section *__restrict self) {
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
 	Dee_Free(self->hs_start);
 	Dee_Free(self->hs_relv);
+	if (self->hs_cold) {
+		Dee_host_section_fini(self->hs_cold);
+		Dee_Free(self->hs_cold);
+	}
+}
+
+INTERN NONNULL((1)) void DCALL
+Dee_host_section_clear(struct Dee_host_section *__restrict self) {
+	do {
+		self->hs_end  = self->hs_start;
+		self->hs_relc = 0;
+		/* Must recursively clear cold (sub-)sections */
+	} while ((self = self->hs_cold) != NULL);
+}
+
+/* Lazily allocate the cold sub-section of "self"
+ * @return: NULL: Error */
+INTERN NONNULL((1)) struct Dee_host_section *DCALL
+Dee_host_section_getcold(struct Dee_host_section *__restrict self) {
+	struct Dee_host_section *result = self->hs_cold;
+	if (result == NULL) {
+		result = (struct Dee_host_section *)Dee_Calloc(sizeof(struct Dee_host_section));
+		self->hs_cold = result;
+	}
+	return result;
 }
 
 /* Ensure that at least `num_bytes' of host text memory are available.
@@ -1262,7 +1287,6 @@ Dee_basic_block_destroy(struct Dee_basic_block *__restrict self) {
 	if (self->bb_mem_end)
 		Dee_memstate_decref(self->bb_mem_end);
 	Dee_host_section_fini(&self->bb_htext);
-	Dee_host_section_fini(&self->bb_hcold);
 	Dee_Free(self->bb_locreadv);
 	Dee_basic_block_free(self);
 }

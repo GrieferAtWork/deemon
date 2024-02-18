@@ -151,6 +151,12 @@ Dee_arithop_forconst(Dee_bitop_t op, uintptr_t lhs, uintptr_t rhs,
 	case ARITHOP_SSUB:
 		did_overfow = OVERFLOW_SSUB((intptr_t)lhs, (intptr_t)rhs, (intptr_t *)p_result);
 		break;
+	case ARITHOP_UMUL:
+		did_overfow = OVERFLOW_UMUL(lhs, rhs, p_result);
+		break;
+	case ARITHOP_SMUL:
+		did_overfow = OVERFLOW_SMUL((intptr_t)lhs, (intptr_t)rhs, (intptr_t *)p_result);
+		break;
 	default: __builtin_unreachable();
 	}
 	return did_overfow;
@@ -2088,13 +2094,14 @@ INTERN WUNUSED NONNULL((1, 5)) int DCALL
 Dee_function_generator_gmorph_reg012regbooly(struct Dee_function_generator *__restrict self,
                                              Dee_host_register_t src_regno, ptrdiff_t src_delta,
                                              Dee_host_register_t dst_regno, ptrdiff_t *__restrict p_dst_delta) {
-	if unlikely(_Dee_host_section_gumul_regconst2reg(self->fg_sect, src_regno,
+	struct Dee_host_section *sect = Dee_function_generator_gettext(self);
+	if unlikely(_Dee_host_section_gumul_regconst2reg(sect, src_regno,
 	                                                 sizeof(DeeBoolObject), dst_regno))
 		goto err;
 	src_delta *= sizeof(DeeBoolObject);
 	src_delta += (ptrdiff_t)(uintptr_t)Dee_FalseTrue;
 	*p_dst_delta = 0;
-	return _Dee_host_section_gmov_regx2reg(self->fg_sect, dst_regno, src_delta, dst_regno);
+	return _Dee_host_section_gmov_regx2reg(sect, dst_regno, src_delta, dst_regno);
 err:
 	return -1;
 }
@@ -2660,16 +2667,16 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	int temp;
 	DREF struct Dee_memstate *saved_state;
 	struct Dee_host_symbol *target;
-	struct Dee_host_section *text_sect;
-	struct Dee_host_section *cold_sect;
-	text_sect = self->fg_sect;
-	cold_sect = text_sect;
-	if (!(self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE))
-		cold_sect = &self->fg_block->bb_hcold;
-	target = Dee_function_generator_newsym_named(self, text_sect == cold_sect ? ".Lbound" : ".Lunbound");
+	struct Dee_host_section *text;
+	struct Dee_host_section *cold;
+	text = Dee_function_generator_gettext(self);
+	cold = Dee_function_generator_getcold(self);
+	if unlikely(!cold)
+		goto err;
+	target = Dee_function_generator_newsym_named(self, text == cold ? ".Lbound" : ".Lunbound");
 	if unlikely(!target)
 		goto err;
-	if unlikely(text_sect == cold_sect
+	if unlikely(text == cold
 	            ? Dee_function_generator_gjnz(self, loc, target)
 	            : Dee_function_generator_gjz(self, loc, target))
 		goto err;
@@ -2678,10 +2685,10 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	if unlikely(Dee_function_generator_state_dounshare(self))
 		goto err_saved_state;
 
-	self->fg_sect = cold_sect;
-	if (text_sect != cold_sect) {
+	Dee_function_generator_settext(self, cold);
+	if (text != cold) {
 		HA_printf(".section .cold\n");
-		Dee_host_symbol_setsect(target, cold_sect);
+		Dee_host_symbol_setsect(target, cold);
 	}
 
 	/* Location isn't bound -> generate code to throw an exception. */
@@ -2702,13 +2709,13 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	/* Switch back to the original section, and restore the saved mem-state. */
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
-	self->fg_sect = text_sect;
+	Dee_function_generator_settext(self, text);
 
-	ASSERT((text_sect == cold_sect) == !!Dee_host_symbol_isdefined(target));
-	if (text_sect != cold_sect) {
+	ASSERT((text == cold) == !!Dee_host_symbol_isdefined(target));
+	if (text != cold) {
 		HA_printf(".section .text\n");
 	} else {
-		Dee_host_symbol_setsect(target, text_sect);
+		Dee_host_symbol_setsect(target, text);
 	}
 	return 0;
 err_saved_state:
@@ -2915,12 +2922,12 @@ do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
                      struct Dee_memloc const *loc, intptr_t threshold,
                      unsigned int flags) {
 	bool signed_cmp = !(flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_UNSIGNED);
-	struct Dee_host_section *text = self->fg_sect;
-	struct Dee_host_section *cold = &self->fg_block->bb_hcold;
+	struct Dee_host_section *text = Dee_function_generator_gettext(self);
+	struct Dee_host_section *cold = Dee_function_generator_getcold(self);
 	struct Dee_memloc compare_value_loc;
+	if unlikely(!cold)
+		goto err;
 	Dee_memloc_init_const(&compare_value_loc, (byte_t const *)(uintptr_t)threshold);
-	if (self->fg_assembler->fa_flags & DEE_FUNCTION_ASSEMBLER_F_OSIZE)
-		cold = text;
 	if (cold == text) {
 		struct Dee_host_symbol *Lno_except;
 		Lno_except = Dee_function_generator_newsym_named(self, ".Lno_except");
@@ -2933,7 +2940,7 @@ do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
 			goto err;
 		if unlikely(Dee_function_generator_gjmp_except(self))
 			goto err;
-		Dee_host_symbol_setsect(Lno_except, self->fg_sect);
+		Dee_host_symbol_setsect(Lno_except, text);
 	} else {
 		struct Dee_host_symbol *Ldo_except;
 		Ldo_except = Dee_function_generator_newsym_named(self, ".Ldo_except");
@@ -2945,12 +2952,12 @@ do_slow_gjcmp_except(struct Dee_function_generator *__restrict self,
 		                                        (flags & Dee_FUNCTION_GENERATOR_GJCMP_EXCEPT_GR) ? Ldo_except : NULL))
 			goto err;
 		HA_printf(".section .cold\n");
-		self->fg_sect = cold;
-		Dee_host_symbol_setsect(Ldo_except, self->fg_sect);
+		Dee_function_generator_settext(self, cold);
+		Dee_host_symbol_setsect(Ldo_except, cold);
 		if unlikely(Dee_function_generator_gjmp_except(self))
 			goto err;
 		HA_printf(".section .text\n");
-		self->fg_sect = text;
+		Dee_function_generator_settext(self, text);
 	}
 	return 0;
 err:
@@ -3359,7 +3366,7 @@ handle_hstackind_loc:
 		/* emit `addP $..., sp_offset(%Psp)' to adjust the offset of the stored value
 		 * Afterwards, go through all stack/local variables and adjust value offsets
 		 * wherever the same CFA offset is referenced. */
-		return _Dee_host_section_gadd_const2hstackind(self->fg_sect,
+		return _Dee_host_section_gadd_const2hstackind(Dee_function_generator_gettext(self),
 		                                              (void const *)(uintptr_t)(intptr_t)Dee_memloc_hstackind_getvaloff(result),
 		                                              Dee_memstate_hstack_cfa2sp(self->fg_state, Dee_memloc_hstackind_getcfa(result)));
 #endif /* HAVE__Dee_host_section_gadd_const2hstackind */

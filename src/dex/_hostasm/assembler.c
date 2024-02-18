@@ -456,7 +456,7 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
 	int result;
 	struct Dee_function_generator gen;
 	gen.fg_assembler = self;
-	gen.fg_block     = self->fa_blockv[0]; /* FIXME: This doesn't work: if block[0] needs to be reset, cold text from the prolog gets deleted */
+	gen.fg_block     = self->fa_blockv[0];
 	gen.fg_sect      = &self->fa_prolog;
 	gen.fg_state     = state; /* Inherit reference */
 	_Dee_function_generator_initcommon(&gen);
@@ -530,8 +530,6 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		ASSERT(block->bb_mem_end == NULL);
 		ASSERT(block->bb_htext.hs_end == block->bb_htext.hs_start);
 		ASSERT(block->bb_htext.hs_relc == 0);
-		ASSERT(block->bb_hcold.hs_end == block->bb_hcold.hs_start);
-		ASSERT(block->bb_hcold.hs_relc == 0);
 
 		/* Compile this block. */
 		if unlikely(Dee_basic_block_compile(block, self))
@@ -663,7 +661,7 @@ host_section_set_insertall_from_relocations(struct host_section_set *__restrict 
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) {
 	struct host_section_set referenced_sections;
-	size_t i;
+	size_t i, num_sections;
 
 	/* Note how we skip the primary block here.
 	 * That's because it could never not have been compiled. */
@@ -694,25 +692,51 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 		++i;
 	}
 
-	/* Go through all blocks and check which exception exit info blocks
-	 * are actually still being used, and remove those that aren't. */
-	if unlikely(host_section_set_init(&referenced_sections,
-	                                  (self->fa_blockc * 2) +
-	                                  self->fa_except_exitc))
-		goto err;
+	num_sections = self->fa_blockc + self->fa_except_exitc;
 	for (i = 0; i < self->fa_blockc; ++i) {
 		struct Dee_basic_block *block = self->fa_blockv[i];
+		struct Dee_host_section *sect;
 		ASSERT(block);
 		ASSERT(block->bb_mem_start);
 		ASSERT(block->bb_mem_end);
-		host_section_set_insertall_from_relocations(&referenced_sections, &block->bb_htext);
-		host_section_set_insertall_from_relocations(&referenced_sections, &block->bb_hcold);
+		sect = &block->bb_htext;
+		while ((sect = sect->hs_cold) != NULL)
+			++num_sections;
+	}
+	for (i = 0; i < self->fa_except_exitc; ++i) {
+		struct Dee_except_exitinfo *xinfo = self->fa_except_exitv[i];
+		struct Dee_host_section *sect;
+		ASSERT(xinfo);
+		sect = &xinfo->exi_text;
+		while ((sect = sect->hs_cold) != NULL)
+			++num_sections;
+	}
+
+	/* Go through all blocks and check which exception exit info blocks
+	 * are actually still being used, and remove those that aren't. */
+	if unlikely(host_section_set_init(&referenced_sections, num_sections))
+		goto err;
+	for (i = 0; i < self->fa_blockc; ++i) {
+		struct Dee_basic_block *block = self->fa_blockv[i];
+		struct Dee_host_section *sect;
+		ASSERT(block);
+		ASSERT(block->bb_mem_start);
+		ASSERT(block->bb_mem_end);
+		sect = &block->bb_htext;
+		do {
+			host_section_set_insertall_from_relocations(&referenced_sections, sect);
+		} while ((sect = sect->hs_cold) != NULL);
 	}
 
 	/* Go through exception handlers and remove those that aren't referenced. */
 	for (i = 0; i < self->fa_except_exitc;) {
 		struct Dee_except_exitinfo *info = self->fa_except_exitv[i];
-		if (host_section_set_contains(&referenced_sections, &info->exi_text)) {
+		struct Dee_host_section *sect = &info->exi_text;
+		bool found_any = false;
+		do {
+			found_any = host_section_set_contains(&referenced_sections, sect);
+		} while (!found_any && (sect = sect->hs_cold) != NULL);
+		if (found_any) {
 			++i;
 			continue;
 		}
@@ -962,10 +986,8 @@ collect_morph_sections(struct Dee_host_section_tailq *__restrict text,
  *   - self->fa_sections
  *   - self->fa_prolog.hs_link+hs_symbols
  *   - self->fa_blockv[*]->bb_htext.hs_link+hs_symbols
- *   - self->fa_blockv[*]->bb_hcold.hs_link+hs_symbols
  *   - self->fa_blockv[*]->bb_exits.jds_list[*]->jd_morph.hs_link+hs_symbols
  *   - self->fa_except_exitv[*]->exi_block->bb_htext.hs_link+hs_symbols
- *   - self->fa_except_exitv[*]->exi_block->bb_hcold.hs_link+hs_symbols
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -1002,9 +1024,7 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 		ASSERT(block);
 		jmp_next = block->bb_next;
 		block->bb_htext.hs_fallthru = jmp_next ? &jmp_next->bb_htext : NULL;
-		block->bb_hcold.hs_fallthru = NULL;
 		TAILQ_INSERT_TAIL(&text, &block->bb_htext, hs_link);
-		TAILQ_INSERT_TAIL(&cold, &block->bb_hcold, hs_link);
 		if (jmp_next == NULL) {
 			/* Block doesn't return normally -> this is a good spot to insert morph sections. */
 			LOCAL_morph_flush(block_i);
@@ -1027,6 +1047,48 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 			block->exi_text.hs_fallthru = jmp_next ? &jmp_next->exi_text : NULL;
 			TAILQ_INSERT_TAIL(&text, &block->exi_text, hs_link);
 		} while ((block = block->exi_next) != NULL);
+	}
+
+	/* Collect cold sections. */
+	{
+		size_t depth;
+		for (depth = 0;; ++depth) {
+			bool found_any = false;
+			for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
+				size_t depth_i;
+				struct Dee_basic_block *block = self->fa_blockv[block_i];
+				struct Dee_host_section *csect = block->bb_htext.hs_cold;
+				if (!csect)
+					goto next_cold_block;
+				for (depth_i = 0; depth_i < depth; ++depth_i) {
+					csect = csect->hs_cold;
+					if (!csect)
+						goto next_cold_block;
+				}
+				csect->hs_fallthru = NULL;
+				TAILQ_INSERT_TAIL(&cold, csect, hs_link);
+				found_any = true;
+next_cold_block:;
+			}
+			for (block_i = 0; block_i < self->fa_except_exitc; ++block_i) {
+				size_t depth_i;
+				struct Dee_except_exitinfo *xinfo = self->fa_except_exitv[block_i];
+				struct Dee_host_section *csect = xinfo->exi_text.hs_cold;
+				if (!csect)
+					goto next_cold_xinfo;
+				for (depth_i = 0; depth_i < depth; ++depth_i) {
+					csect = csect->hs_cold;
+					if (!csect)
+						goto next_cold_xinfo;
+				}
+				csect->hs_fallthru = NULL;
+				TAILQ_INSERT_TAIL(&cold, csect, hs_link);
+				found_any = true;
+next_cold_xinfo:;
+			}
+			if (!found_any)
+				break;
+		}
 	}
 
 	/* Append all of the cold text to the end of normal text. */
@@ -1070,7 +1132,7 @@ do_move_section:
 				TAILQ_INSERT_BEFORE(want_next, sect, hs_link);
 				ASSERT(TAILQ_NEXT(sect, hs_link) == sect->hs_fallthru);
 				ASSERT(TAILQ_NEXT(sect, hs_link) == want_next);
-				}
+			}
 		}
 		sect = sort_next;
 	}

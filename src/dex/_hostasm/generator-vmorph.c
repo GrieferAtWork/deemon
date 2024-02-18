@@ -242,7 +242,7 @@ err:
 	return -1;
 }
 
-/* Generate code in `self->fg_sect' to morph `self->fg_state' into `new_state' */
+/* Generate code in `Dee_function_generator_gettext(self)' to morph `self->fg_state' into `new_state' */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vmorph_no_constrain_equivalences(struct Dee_function_generator *__restrict self,
                                                         struct Dee_memstate const *new_state) {
