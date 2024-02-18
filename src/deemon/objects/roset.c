@@ -316,7 +316,7 @@ err:
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define DeeRoSet_InsertSequence_foreach (*(Dee_foreach_t)&DeeRoSet_Insert)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
-PRIVATE WUNUSED NONNULL((2, 3)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeRoSet_InsertSequence_foreach(void *arg, DeeObject *elem) {
 	return DeeRoSet_Insert((RoSet **)arg, elem);
 }
@@ -327,7 +327,7 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 	DREF RoSet *result;
 	size_t length_hint, mask;
 
-	/* Optimization: Since rodicts are immutable, re-return if the
+	/* Optimization: Since rosets are immutable, re-return if the
 	 *               given sequence already is a read-only RoSet. */
 	if (DeeRoSet_CheckExact(sequence))
 		return_reference_(sequence);

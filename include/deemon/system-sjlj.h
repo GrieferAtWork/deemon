@@ -35,7 +35,7 @@
  * entirely different stack, which may have been allocated such that it appears
  * at a lower address than the source (making __longjmp_chk think that we did
  * an invalid jump when that isn't actually the case)
- * 
+ *
  * The bug here is that __longjmp_chk always simply does:
  * >> assert(TARGET_SP >= MY_SP);
  *
