@@ -227,6 +227,7 @@ PRIVATE struct type_member tpconst kwdsiter_members[] = {
 	TYPE_MEMBER_END
 };
 
+#undef READ_ITER
 
 INTERN DeeTypeObject DeeKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -412,70 +413,6 @@ DeeKwds_GetByIndex(DeeObject *__restrict self, size_t keyword_index) {
 
 
 
-LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
-kwds_findstr(Kwds *__restrict self,
-             char const *__restrict name,
-             dhash_t hash) {
-	dhash_t i, perturb;
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (strcmp(DeeString_STR(entry->ke_name), name) != 0)
-			continue;
-		return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-LOCAL WUNUSED NONNULL((1)) size_t DCALL
-kwds_findstr_len(Kwds *__restrict self,
-                 char const *__restrict name,
-                 size_t namesize,
-                 dhash_t hash) {
-	dhash_t i, perturb;
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (DeeString_EqualsBuf(entry->ke_name, name, namesize))
-			return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
-kwds_findstr_obj(Kwds *__restrict self,
-                 DeeStringObject *__restrict name) {
-	dhash_t hash = DeeString_Hash((DeeObject *)name);
-	dhash_t i, perturb;
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
-			continue;
-		if (DeeString_EqualsBuf(entry->ke_name, DeeString_STR(name), DeeString_SIZE(name)))
-			return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-
-
-
 PRIVATE WUNUSED DREF Kwds *DCALL kwds_ctor(void) {
 	DREF Kwds *result;
 	result = (DREF Kwds *)DeeObject_Malloc(offsetof(Kwds, kw_map) +
@@ -605,14 +542,10 @@ kwds_nsi_getsize(Kwds *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-kwds_contains(Kwds *self,
-              DeeObject *key) {
+kwds_contains(Kwds *self, DeeObject *key) {
 	if (!DeeString_Check(key))
 		goto nope;
-	return_bool(kwds_findstr(self,
-	                         DeeString_STR(key),
-	                         DeeString_Hash(key)) !=
-	            (size_t)-1);
+	return_bool(DeeKwds_IndexOf((DeeObject *)self, key) != (size_t)-1);
 nope:
 	return_false;
 }
@@ -624,9 +557,7 @@ kwds_nsi_getdefault(Kwds *__restrict self,
 	size_t index;
 	if (!DeeString_Check(key))
 		goto nope;
-	index = kwds_findstr(self,
-	                     DeeString_STR(key),
-	                     DeeString_Hash(key));
+	index = DeeKwds_IndexOf((DeeObject *)self, key);
 	if (index == (size_t)-1)
 		goto nope;
 	return DeeInt_NewSize(index);
@@ -726,7 +657,74 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ kwds_class_members
 };
-#undef READ_ITER
+
+
+/* Translate an argument keyword name into its index within at given `DeeKwdsObject *self'.
+ * When `self' doesn't contain a descriptor for `name', no error is thrown, and `(size_t)-1'
+ * is returned instead. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeKwds_IndexOf(DeeObject const *__restrict self, /*string*/ DeeObject *__restrict name) {
+	dhash_t i, perturb, hash;
+	DeeKwdsObject *me = (DeeKwdsObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	hash    = DeeString_Hash(name);
+	perturb = i = hash & me->kw_mask;
+	for (;; DeeKwds_MAPNEXT(i, perturb)) {
+		struct kwds_entry *entry;
+		entry = &me->kw_map[i & me->kw_mask];
+		if (!entry->ke_name)
+			break;
+		if (entry->ke_hash != hash)
+			continue;
+		if (DeeString_EqualsSTR(entry->ke_name, name))
+			return entry->ke_index;
+	}
+	return (size_t)-1;
+}
+
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeKwds_IndexOfStringHash(DeeObject const *__restrict self,
+                          char const *__restrict name,
+                          Dee_hash_t hash) {
+	dhash_t i, perturb;
+	DeeKwdsObject *me = (DeeKwdsObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
+	perturb = i = hash & me->kw_mask;
+	for (;; DeeKwds_MAPNEXT(i, perturb)) {
+		struct kwds_entry *entry;
+		entry = &me->kw_map[i & me->kw_mask];
+		if (!entry->ke_name)
+			break;
+		if (entry->ke_hash != hash)
+			continue;
+		if (strcmp(DeeString_STR(entry->ke_name), name) == 0)
+			return entry->ke_index;
+	}
+	return (size_t)-1;
+}
+
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
+DeeKwds_IndexOfStringLenHash(DeeObject const *__restrict self,
+                             char const *__restrict name,
+                             size_t namelen, Dee_hash_t hash) {
+	dhash_t i, perturb;
+	DeeKwdsObject *me = (DeeKwdsObject *)self;
+	ASSERT_OBJECT_TYPE_EXACT(me, &DeeKwds_Type);
+	perturb = i = hash & me->kw_mask;
+	for (;; DeeKwds_MAPNEXT(i, perturb)) {
+		struct kwds_entry *entry;
+		entry = &me->kw_map[i & me->kw_mask];
+		if (!entry->ke_name)
+			break;
+		if (entry->ke_hash != hash)
+			continue;
+		if (DeeString_EqualsBuf(entry->ke_name, name, namelen) == 0)
+			return entry->ke_index;
+	}
+	return (size_t)-1;
+}
+
 
 
 
@@ -1056,12 +1054,11 @@ kmap_nsi_getsize(KwdsMapping *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 kmap_contains(KwdsMapping *self, DeeObject *key) {
+	size_t index;
 	if (!DeeString_Check(key))
 		goto nope;
-	return_bool(kwds_findstr(self->kmo_kwds,
-	                         DeeString_STR(key),
-	                         DeeString_Hash(key)) !=
-	            (size_t)-1);
+	index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, key);
+	return_bool(index != (size_t)-1);
 nope:
 	return_false;
 }
@@ -1071,9 +1068,7 @@ kmap_nsi_getdefault(KwdsMapping *self, DeeObject *key, DeeObject *def) {
 	size_t index;
 	if (!DeeString_Check(key))
 		goto nope;
-	index = kwds_findstr(self->kmo_kwds,
-	                     DeeString_STR(key),
-	                     DeeString_Hash(key));
+	index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, key);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1239,7 +1234,7 @@ INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeKwdsMapping_HasItemStringHash(DeeKwdsMappingObject *__restrict self,
                                  char const *__restrict name,
                                  dhash_t hash) {
-	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->kmo_kwds, name, hash);
 	return index != (size_t)-1;
 }
 
@@ -1248,14 +1243,14 @@ DeeKwdsMapping_HasItemStringLenHash(DeeKwdsMappingObject *__restrict self,
                                     char const *__restrict name,
                                     size_t namesize,
                                     dhash_t hash) {
-	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->kmo_kwds, name, namesize, hash);
 	return index != (size_t)-1;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKwdsMapping_GetItemNR(DeeKwdsMappingObject *__restrict self,
                          /*string*/ DeeObject *__restrict name) {
-	size_t index = kwds_findstr_obj(self->kmo_kwds, (DeeStringObject *)name);
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, name);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1272,7 +1267,7 @@ INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKwdsMapping_GetItemNRStringHash(DeeKwdsMappingObject *__restrict self,
                                    char const *__restrict name,
                                    dhash_t hash) {
-	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->kmo_kwds, name, hash);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1289,7 +1284,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 DeeKwdsMapping_GetItemNRDef(DeeKwdsMappingObject *__restrict self,
                             /*string*/ DeeObject *__restrict name,
                             DeeObject *def) {
-	size_t index = kwds_findstr_obj(self->kmo_kwds, (DeeStringObject *)name);
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->kmo_kwds, name);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1306,7 +1301,7 @@ DeeKwdsMapping_GetItemNRStringHashDef(DeeKwdsMappingObject *__restrict self,
                                       char const *__restrict name,
                                       dhash_t hash,
                                       DeeObject *def) {
-	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->kmo_kwds, name, hash);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1323,7 +1318,7 @@ DeeKwdsMapping_GetItemNRStringLenHash(DeeKwdsMappingObject *__restrict self,
                                       char const *__restrict name,
                                       size_t namesize,
                                       dhash_t hash) {
-	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->kmo_kwds, name, namesize, hash);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1342,7 +1337,7 @@ DeeKwdsMapping_GetItemNRStringLenHashDef(DeeKwdsMappingObject *__restrict self,
                                          size_t namesize,
                                          dhash_t hash,
                                          DeeObject *def) {
-	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->kmo_kwds, name, namesize, hash);
 	if likely(index != (size_t)-1) {
 		DeeObject *result;
 		ASSERT(index < self->kmo_kwds->kw_size);
@@ -1471,7 +1466,7 @@ DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
 		size_t kw_index;
-		kw_index = kwds_findstr_obj((Kwds *)self->kwa_kw, (DeeStringObject *)name);
+		kw_index = DeeKwds_IndexOf(self->kwa_kw, name);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(DeeString_STR(name));
 			return NULL;
@@ -1496,7 +1491,7 @@ DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
 		size_t kw_index;
-		kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
+		kw_index = DeeKwds_IndexOfStringHash(self->kwa_kw, name, hash);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
@@ -1522,7 +1517,7 @@ DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
 	++self->kwa_kwused;
 	if (DeeKwds_Check(self->kwa_kw)) {
 		size_t kw_index;
-		kw_index = kwds_findstr_len((Kwds *)self->kwa_kw, name, namelen, hash);
+		kw_index = DeeKwds_IndexOfStringLenHash(self->kwa_kw, name, namelen, hash);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
@@ -1543,7 +1538,7 @@ DeeKwArgs_GetItemNRDef(DeeKwArgs *__restrict self,
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
-			kw_index = kwds_findstr_obj((Kwds *)self->kwa_kw, (DeeStringObject *)name);
+			kw_index = DeeKwds_IndexOf(self->kwa_kw, name);
 			if unlikely(kw_index != (size_t)-1) {
 				def = self->kwa_kwargv[kw_index];
 				++self->kwa_kwused;
@@ -1569,7 +1564,7 @@ DeeKwArgs_GetItemNRStringHashDef(DeeKwArgs *__restrict self,
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
-			kw_index = kwds_findstr((Kwds *)self->kwa_kw, name, hash);
+			kw_index = DeeKwds_IndexOfStringHash(self->kwa_kw, name, hash);
 			if unlikely(kw_index != (size_t)-1) {
 				def = self->kwa_kwargv[kw_index];
 				++self->kwa_kwused;
@@ -1594,7 +1589,7 @@ DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__re
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
-			kw_index = kwds_findstr_len((Kwds *)self->kwa_kw, name, namelen, hash);
+			kw_index = DeeKwds_IndexOfStringLenHash(self->kwa_kw, name, namelen, hash);
 			if unlikely(kw_index != (size_t)-1) {
 				def = self->kwa_kwargv[kw_index];
 				++self->kwa_kwused;
@@ -1631,7 +1626,7 @@ DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
-		kw_index = kwds_findstr_obj((Kwds *)kw, (DeeStringObject *)name);
+		kw_index = DeeKwds_IndexOf(kw, name);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(DeeString_STR(name));
 			return NULL;
@@ -1657,7 +1652,7 @@ DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
-		kw_index = kwds_findstr((Kwds *)kw, name, hash);
+		kw_index = DeeKwds_IndexOfStringHash(kw, name, hash);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
@@ -1683,7 +1678,7 @@ DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			err_keywords_bad_for_argc(argc, num_keywords);
 			return NULL;
 		}
-		kw_index = kwds_findstr_len((Kwds *)kw, name, namelen, hash);
+		kw_index = DeeKwds_IndexOfStringLenHash(kw, name, namelen, hash);
 		if unlikely(kw_index == (size_t)-1) {
 			err_keywords_not_found(name);
 			return NULL;
@@ -1707,7 +1702,7 @@ return_def:
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > argc)
 			goto return_def;
-		kw_index = kwds_findstr_obj((Kwds *)kw, (DeeStringObject *)name);
+		kw_index = DeeKwds_IndexOf(kw, name);
 		if (kw_index == (size_t)-1)
 			goto return_def;
 		ASSERT(kw_index < num_keywords);
@@ -1729,7 +1724,7 @@ return_def:
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if unlikely(num_keywords > argc)
 			goto return_def;
-		kw_index = kwds_findstr((Kwds *)kw, name, hash);
+		kw_index = DeeKwds_IndexOfStringHash(kw, name, hash);
 		if (kw_index == (size_t)-1)
 			goto return_def;
 		ASSERT(kw_index < num_keywords);
@@ -1751,7 +1746,7 @@ return_def:
 		size_t num_keywords = DeeKwds_SIZE(kw);
 		if (num_keywords > argc)
 			goto return_def;
-		kw_index = kwds_findstr_len((Kwds *)kw, name, namelen, hash);
+		kw_index = DeeKwds_IndexOfStringLenHash(kw, name, namelen, hash);
 		if (kw_index == (size_t)-1)
 			goto return_def;
 		ASSERT(kw_index < num_keywords);

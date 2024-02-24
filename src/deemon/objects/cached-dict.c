@@ -1161,7 +1161,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ cdict_methods,
-	/* .tp_getsets       = */ NULL,
+	/* .tp_getsets       = */ NULL, /* TODO: "property cache: Mapping = { get() }" -- Proxy dict that operates on the cache only. */
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

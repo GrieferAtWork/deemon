@@ -73,31 +73,6 @@ DECL_BEGIN
 #endif /* !... */
 
 
-#ifdef CALL_KW
-#ifndef KWDS_FIND_INDEX_DEFINED
-#define KWDS_FIND_INDEX_DEFINED 1
-LOCAL size_t DCALL
-kwds_find_index(DeeKwdsObject *__restrict self,
-                DeeStringObject *__restrict name) {
-	dhash_t i, perturb, hash;
-	hash    = DeeString_Hash((DeeObject *)name);
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (DeeString_EqualsSTR(entry->ke_name, name))
-			return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-#endif /* !KWDS_FIND_INDEX_DEFINED */
-#endif /* CALL_KW */
-
-
 INTERN WUNUSED
 #ifdef CALL_TUPLE
 #ifdef CALL_THIS

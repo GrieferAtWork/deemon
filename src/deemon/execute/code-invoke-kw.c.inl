@@ -188,7 +188,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			}
 			frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
-			index = kwds_find_index((DeeKwdsObject *)kw, name);
+			index = DeeKwds_IndexOf(kw, (DeeObject *)name);
 			if unlikely(index == (size_t)-1) {
 				/* Missing, mandatory argument. */
 				err_invalid_argc_missing_kw(DeeString_STR(name),
@@ -227,7 +227,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		}
 		frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
-		index = kwds_find_index((DeeKwdsObject *)kw, name);
+		index = DeeKwds_IndexOf(kw, (DeeObject *)name);
 		if (index == (size_t)-1) {
 			/* Missing argument (leave as unbound / allow fallthrough to argument defaults) */
 			frame.cf_kw->fk_kargv[i] = NULL;

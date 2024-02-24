@@ -254,78 +254,6 @@ INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 
 
 
-LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
-kwds_FindIndex(DeeKwdsObject *__restrict self,
-               DeeStringObject *name) {
-	dhash_t i, perturb, hash;
-	hash    = DeeString_Hash((DeeObject *)name);
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
-			continue;
-		if (bcmpc(DeeString_STR(entry->ke_name),
-		          DeeString_STR(name),
-		          DeeString_SIZE(name),
-		          sizeof(char)) != 0)
-			continue;
-		return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-LOCAL ATTR_PURE WUNUSED NONNULL((1, 2)) size_t DCALL
-kwds_FindIndexStr(DeeKwdsObject *__restrict self,
-                  char const *__restrict name,
-                  dhash_t hash) {
-	dhash_t i, perturb;
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (strcmp(DeeString_STR(entry->ke_name), name) != 0)
-			continue;
-		return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-LOCAL size_t DCALL
-kwds_FindIndexStrLen(DeeKwdsObject *__restrict self,
-                     char const *__restrict name,
-                     size_t namesize,
-                     dhash_t hash) {
-	dhash_t i, perturb;
-	perturb = i = hash & self->kw_mask;
-	for (;; DeeKwds_MAPNEXT(i, perturb)) {
-		struct kwds_entry *entry;
-		entry = &self->kw_map[i & self->kw_mask];
-		if (!entry->ke_name)
-			break;
-		if (entry->ke_hash != hash)
-			continue;
-		if (DeeString_SIZE(entry->ke_name) != namesize)
-			continue;
-		if (bcmpc(DeeString_STR(entry->ke_name), name,
-		          namesize, sizeof(char)) != 0)
-			continue;
-		return entry->ke_index;
-	}
-	return (size_t)-1;
-}
-
-
-
-
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeBlackListKwds_IsBlackListed(DeeBlackListKwdsObject *__restrict self,
                                DeeObject *__restrict name) {
@@ -450,7 +378,7 @@ again:
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 DeeBlackListKwds_IsBlackListedStringLenHash(DeeBlackListKwdsObject *__restrict self,
                                             char const *__restrict name,
-                                            size_t namesize, dhash_t hash) {
+                                            size_t namelen, dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -461,7 +389,7 @@ again:
 			break;
 		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_EqualsBuf(str, name, namesize))
+		if (DeeString_EqualsBuf(str, name, namelen))
 			return true; /* It is! */
 	}
 
@@ -488,8 +416,8 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (hashof_str == hash && DeeString_SIZE(str) == namesize &&
-			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
+			if (hashof_str == hash && DeeString_SIZE(str) == namelen &&
+			    bcmpc(DeeString_STR(str), name, namelen, sizeof(char)) == 0) {
 				self->blkd_load = index;
 				DeeBlackListKwds_LockEndWrite(self);
 				return true;
@@ -507,32 +435,31 @@ again:
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 DeeBlackListKwds_HasItem(DeeBlackListKwdsObject *__restrict self,
                          DeeObject *__restrict name) {
-	return (kwds_FindIndex(self->blkd_kwds, (DeeStringObject *)name) != (size_t)-1) &&
-	       !DeeBlackListKwds_IsBlackListed(self, name);
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
+	return (index != (size_t)-1) && !DeeBlackListKwds_IsBlackListed(self, name);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeBlackListKwds_HasItemStringHash(DeeBlackListKwdsObject *__restrict self,
                                    char const *__restrict name,
                                    dhash_t hash) {
-	return (kwds_FindIndexStr(self->blkd_kwds, name, hash) != (size_t)-1) &&
-	       !DeeBlackListKwds_IsBlackListedStringHash(self, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
+	return (index != (size_t)-1) && !DeeBlackListKwds_IsBlackListedStringHash(self, name, hash);
 }
 
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
 DeeBlackListKwds_HasItemStringLenHash(DeeBlackListKwdsObject *__restrict self,
                                       char const *__restrict name,
-                                      size_t namesize, dhash_t hash) {
-	return (kwds_FindIndexStrLen(self->blkd_kwds, name, namesize, hash) != (size_t)-1) &&
-	       !DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namesize, hash);
+                                      size_t namelen, dhash_t hash) {
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
+	return (index != (size_t)-1) && !DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNR(DeeBlackListKwdsObject *__restrict self,
                            DeeObject *__restrict name) {
-	size_t index;
 	DeeObject *result;
-	index = kwds_FindIndex(self->blkd_kwds, (DeeStringObject *)name);
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
@@ -549,9 +476,8 @@ missing:
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNRStringHash(DeeBlackListKwdsObject *__restrict self,
                                      char const *__restrict name, dhash_t hash) {
-	size_t index;
 	DeeObject *result;
-	index = kwds_FindIndexStr(self->blkd_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
@@ -568,20 +494,19 @@ missing:
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNRStringLenHash(DeeBlackListKwdsObject *__restrict self,
                                         char const *__restrict name,
-                                        size_t namesize, dhash_t hash) {
-	size_t index;
+                                        size_t namelen, dhash_t hash) {
 	DeeObject *result;
-	index = kwds_FindIndexStrLen(self->blkd_kwds, name, namesize, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namesize, hash))
+	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
 		goto missing;
 	DeeBlackListKwds_LockRead(self);
 	result = self->blkd_argv[index];
 	DeeBlackListKwds_LockEndRead(self);
 	return result;
 missing:
-	err_unknown_key_str_len((DeeObject *)self, name, namesize);
+	err_unknown_key_str_len((DeeObject *)self, name, namelen);
 	return NULL;
 }
 
@@ -589,9 +514,8 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNRDef(DeeBlackListKwdsObject *__restrict self,
                               DeeObject *__restrict name,
                               DeeObject *__restrict def) {
-	size_t index;
 	DeeObject *result;
-	index = kwds_FindIndex(self->blkd_kwds, (DeeStringObject *)name);
+	size_t index = DeeKwds_IndexOf((DeeObject *)self->blkd_kwds, name);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListed(self, name))
@@ -608,9 +532,8 @@ INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNRStringHashDef(DeeBlackListKwdsObject *__restrict self,
                                         char const *__restrict name, dhash_t hash,
                                         DeeObject *__restrict def) {
-	size_t index;
 	DeeObject *result;
-	index = kwds_FindIndexStr(self->blkd_kwds, name, hash);
+	size_t index = DeeKwds_IndexOfStringHash((DeeObject *)self->blkd_kwds, name, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
 	if unlikely(DeeBlackListKwds_IsBlackListedStringHash(self, name, hash))
@@ -626,14 +549,13 @@ missing:
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL
 DeeBlackListKwds_GetItemNRStringLenHashDef(DeeBlackListKwdsObject *__restrict self,
                                            char const *__restrict name,
-                                           size_t namesize, dhash_t hash,
+                                           size_t namelen, dhash_t hash,
                                            DeeObject *__restrict def) {
-	size_t index;
 	DeeObject *result;
-	index = kwds_FindIndexStrLen(self->blkd_kwds, name, namesize, hash);
+	size_t index = DeeKwds_IndexOfStringLenHash((DeeObject *)self->blkd_kwds, name, namelen, hash);
 	if unlikely(index == (size_t)-1)
 		goto missing;
-	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namesize, hash))
+	if unlikely(DeeBlackListKwds_IsBlackListedStringLenHash(self, name, namelen, hash))
 		goto missing;
 	DeeBlackListKwds_LockRead(self);
 	result = self->blkd_argv[index];
@@ -1315,7 +1237,7 @@ again:
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
 DeeBlackListKw_IsBlackListedStringLenHash(DeeBlackListKwObject *__restrict self,
                                           char const *__restrict name,
-                                          size_t namesize, dhash_t hash) {
+                                          size_t namelen, dhash_t hash) {
 	dhash_t i, perturb;
 	DeeStringObject *str;
 again:
@@ -1326,7 +1248,7 @@ again:
 			break;
 		if (DeeString_HASH(str) != hash)
 			continue; /* Strings loaded within the hash-set have always been pre-hashed! */
-		if (DeeString_EqualsBuf(str, name, namesize))
+		if (DeeString_EqualsBuf(str, name, namelen))
 			return true; /* It is! */
 	}
 
@@ -1353,8 +1275,8 @@ again:
 			}
 
 			/* Check if this one's our's, and stop loading if it is. */
-			if (hashof_str == hash && DeeString_SIZE(str) == namesize &&
-			    bcmpc(DeeString_STR(str), name, namesize, sizeof(char)) == 0) {
+			if (hashof_str == hash && DeeString_SIZE(str) == namelen &&
+			    bcmpc(DeeString_STR(str), name, namelen, sizeof(char)) == 0) {
 				self->blkw_load = index;
 				DeeBlackListKw_LockEndWrite(self);
 				return true;
@@ -1383,12 +1305,12 @@ DeeBlackListKw_BoundItemStringHash(DeeBlackListKwObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeBlackListKw_BoundItemStringLenHash(DeeBlackListKwObject *__restrict self,
                                       char const *__restrict name,
-                                      size_t namesize, dhash_t hash,
+                                      size_t namelen, dhash_t hash,
                                       bool allow_missing) {
-	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namesize, hash))
-		return DeeObject_BoundItemStringLenHash(DeeBlackListKw_KW(self), name, namesize, hash, allow_missing);
+	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
+		return DeeObject_BoundItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash, allow_missing);
 	if (!allow_missing)
-		return err_unknown_key_str_len((DeeObject *)self, name, namesize);
+		return err_unknown_key_str_len((DeeObject *)self, name, namelen);
 	return -2;
 }
 
@@ -1404,9 +1326,9 @@ DeeBlackListKw_HasItemStringHash(DeeBlackListKwObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeBlackListKw_HasItemStringLenHash(DeeBlackListKwObject *__restrict self,
                                     char const *__restrict name,
-                                    size_t namesize, dhash_t hash) {
-	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namesize, hash))
-		return DeeObject_HasItemStringLenHash(DeeBlackListKw_KW(self), name, namesize, hash);
+                                    size_t namelen, dhash_t hash) {
+	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
+		return DeeObject_HasItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
 	return 0;
 }
 
@@ -1432,10 +1354,10 @@ DeeBlackListKw_GetItemNRStringHash(DeeBlackListKwObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeBlackListKw_GetItemNRStringLenHash(DeeBlackListKwObject *__restrict self,
                                       char const *__restrict name,
-                                      size_t namesize, dhash_t hash) {
-	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namesize, hash))
-		return DeeKw_GetItemNRStringLenHash(DeeBlackListKw_KW(self), name, namesize, hash);
-	err_unknown_key_str_len((DeeObject *)self, name, namesize);
+                                      size_t namelen, dhash_t hash) {
+	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
+		return DeeKw_GetItemNRStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
+	err_unknown_key_str_len((DeeObject *)self, name, namelen);
 	return NULL;
 }
 
@@ -1461,10 +1383,10 @@ DeeBlackListKw_GetItemNRStringHashDef(DeeBlackListKwObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
 DeeBlackListKw_GetItemNRStringLenHashDef(DeeBlackListKwObject *__restrict self,
                                          char const *__restrict name,
-                                         size_t namesize, dhash_t hash,
+                                         size_t namelen, dhash_t hash,
                                          DeeObject *__restrict def) {
-	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namesize, hash))
-		return DeeKw_GetItemNRStringLenHashDef(DeeBlackListKw_KW(self), name, namesize, hash, def);
+	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
+		return DeeKw_GetItemNRStringLenHashDef(DeeBlackListKw_KW(self), name, namelen, hash, def);
 	return def;
 }
 

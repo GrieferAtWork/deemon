@@ -412,6 +412,9 @@ EXPORTS
 	_DeeKw_Wrap@4=DeeKw_Wrap@4
 	_DeeKwdsMapping_Decref@4=DeeKwdsMapping_Decref@4
 	_DeeKwdsMapping_New@8=DeeKwdsMapping_New@8
+	_DeeKwds_IndexOf@8=DeeKwds_IndexOf@8
+	_DeeKwds_IndexOfStringHash@12=DeeKwds_IndexOfStringHash@12
+	_DeeKwds_IndexOfStringLenHash@16=DeeKwds_IndexOfStringLenHash@16
 	_DeeList_Append@8=DeeList_Append@8
 	_DeeList_AppendIterator@8=DeeList_AppendIterator@8
 	_DeeList_AppendSequence@8=DeeList_AppendSequence@8
