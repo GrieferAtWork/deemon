@@ -329,7 +329,7 @@ next_expr:
 	/* Parse an expression (special handling for functions/classes) */
 	if (tok == KWD_class) {
 		/* Declare a new class */
-		uint16_t class_flags          = current_tags.at_class_flags & 0xf; /* From tags. */
+		uint16_t class_flags = current_tags.at_class_flags & 0xf; /* From tags. */
 		struct TPPKeyword *class_name = NULL;
 		unsigned int symbol_mode      = lookup_mode;
 		if (symbol_mode & LOOKUP_SYM_FINAL)

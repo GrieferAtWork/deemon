@@ -856,27 +856,42 @@ DFUNDEF void DCALL DeeSlab_ResetStat(void);
  *   - DeeObject_SlabFree<size2>(return) | size2 <= size
  *   - DeeObject_Free(return) */
 #ifdef CONFIG_NO_OBJECT_SLABS
-#define DeeObject_FMalloc(size)    DeeObject_Malloc(size)
-#define DeeObject_FCalloc(size)    DeeObject_Calloc(size)
-#define DeeObject_FTryMalloc(size) DeeObject_TryMalloc(size)
-#define DeeObject_FTryCalloc(size) DeeObject_TryCalloc(size)
-#define DeeObject_FFree(ptr, size) DeeObject_Free(ptr)
+#define DeeObject_FMalloc(size)                   DeeObject_Malloc(size)
+#define DeeObject_FCalloc(size)                   DeeObject_Calloc(size)
+#define DeeObject_FTryMalloc(size)                DeeObject_TryMalloc(size)
+#define DeeObject_FTryCalloc(size)                DeeObject_TryCalloc(size)
+#define DeeObject_FFree(ptr, size)                DeeObject_Free(ptr)
+#define DeeDbgObject_FMalloc(size, file, line)    DeeDbgObject_Malloc(size, file, line)
+#define DeeDbgObject_FCalloc(size, file, line)    DeeDbgObject_Calloc(size, file, line)
+#define DeeDbgObject_FTryMalloc(size, file, line) DeeDbgObject_TryMalloc(size, file, line)
+#define DeeDbgObject_FTryCalloc(size, file, line) DeeDbgObject_TryCalloc(size, file, line)
+#define DeeDbgObject_FFree(ptr, size, file, line) DeeDbgObject_Free(ptr, file, line)
 #else /* CONFIG_NO_OBJECT_SLABS */
-#define DeeObject_FMalloc(size)    DeeSlab_Invoke(DeeObject_SlabMalloc, size, (), DeeObject_Malloc(size))
-#define DeeObject_FCalloc(size)    DeeSlab_Invoke(DeeObject_SlabCalloc, size, (), DeeObject_Calloc(size))
-#define DeeObject_FTryMalloc(size) DeeSlab_Invoke(DeeObject_SlabTryMalloc, size, (), DeeObject_TryMalloc(size))
-#define DeeObject_FTryCalloc(size) DeeSlab_Invoke(DeeObject_SlabTryCalloc, size, (), DeeObject_TryCalloc(size))
-#define DeeObject_FFree(ptr, size) DeeSlab_Invoke(DeeObject_SlabFree, size, (ptr), DeeObject_Free(ptr))
+#define DeeObject_FMalloc(size)                   DeeSlab_Invoke(DeeObject_SlabMalloc, size, (), DeeObject_Malloc(size))
+#define DeeObject_FCalloc(size)                   DeeSlab_Invoke(DeeObject_SlabCalloc, size, (), DeeObject_Calloc(size))
+#define DeeObject_FTryMalloc(size)                DeeSlab_Invoke(DeeObject_SlabTryMalloc, size, (), DeeObject_TryMalloc(size))
+#define DeeObject_FTryCalloc(size)                DeeSlab_Invoke(DeeObject_SlabTryCalloc, size, (), DeeObject_TryCalloc(size))
+#define DeeObject_FFree(ptr, size)                DeeSlab_Invoke(DeeObject_SlabFree, size, (ptr), DeeObject_Free(ptr))
+#define DeeDbgObject_FMalloc(size, file, line)    DeeSlab_Invoke(DeeDbgObject_SlabMalloc, size, (file, line), DeeDbgObject_Malloc(size, file, line))
+#define DeeDbgObject_FCalloc(size, file, line)    DeeSlab_Invoke(DeeDbgObject_SlabCalloc, size, (file, line), DeeDbgObject_Calloc(size, file, line))
+#define DeeDbgObject_FTryMalloc(size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabTryMalloc, size, (file, line), DeeDbgObject_TryMalloc(size, file, line))
+#define DeeDbgObject_FTryCalloc(size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabTryCalloc, size, (file, line), DeeDbgObject_TryCalloc(size, file, line))
+#define DeeDbgObject_FFree(ptr, size, file, line) DeeSlab_Invoke(DeeDbgObject_SlabFree, size, (ptr, file, line), DeeDbgObject_Free(ptr, file, line))
 #endif /* !CONFIG_NO_OBJECT_SLABS */
 
 /* Same as the regular malloc functions, but use the same allocation methods that
  * would be used by `TYPE_FIXED_ALLOCATOR' and `TYPE_FIXED_ALLOCATOR_S', meaning
  * that pointers returned by these macros have binary compatibility with them. */
-#define DeeObject_MALLOC(T)       ((T *)DeeObject_FMalloc(sizeof(T)))
-#define DeeObject_CALLOC(T)       ((T *)DeeObject_FCalloc(sizeof(T)))
-#define DeeObject_TRYMALLOC(T)    ((T *)DeeObject_FTryMalloc(sizeof(T)))
-#define DeeObject_TRYCALLOC(T)    ((T *)DeeObject_FTryCalloc(sizeof(T)))
-#define DeeObject_FREE(typed_ptr)       DeeObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
+#define DeeObject_MALLOC(T)                      ((T *)DeeObject_FMalloc(sizeof(T)))
+#define DeeObject_CALLOC(T)                      ((T *)DeeObject_FCalloc(sizeof(T)))
+#define DeeObject_TRYMALLOC(T)                   ((T *)DeeObject_FTryMalloc(sizeof(T)))
+#define DeeObject_TRYCALLOC(T)                   ((T *)DeeObject_FTryCalloc(sizeof(T)))
+#define DeeObject_FREE(typed_ptr)                      DeeObject_FFree(typed_ptr, sizeof(*(typed_ptr)))
+#define DeeDbgObject_MALLOC(T, file, line)       ((T *)DeeDbgObject_FMalloc(sizeof(T), file, line))
+#define DeeDbgObject_CALLOC(T, file, line)       ((T *)DeeDbgObject_FCalloc(sizeof(T), file, line))
+#define DeeDbgObject_TRYMALLOC(T, file, line)    ((T *)DeeDbgObject_FTryMalloc(sizeof(T), file, line))
+#define DeeDbgObject_TRYCALLOC(T, file, line)    ((T *)DeeDbgObject_FTryCalloc(sizeof(T), file, line))
+#define DeeDbgObject_FREE(typed_ptr, file, line)       DeeDbgObject_FFree(typed_ptr, sizeof(*(typed_ptr)), file, line)
 
 #ifndef DEE_TYPE_ALLOCATOR
 /* Specifies a custom object allocator declaration. */

@@ -2118,16 +2118,45 @@ utf8_getchar16(uint8_t const *__restrict base, uint8_t seqlen) {
 }
 
 /* Construct a string from a UTF-8 character sequence. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeString_NewUtf8(char const *__restrict str, size_t length,
-                  unsigned int error_mode) {
+#ifdef NDEBUG
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewUtf8)(char const *__restrict str, size_t length,
+                             unsigned int error_mode,
+                             char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_NewUtf8(str, length, error_mode);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewUtf8)(char const *__restrict str, size_t length,
+                          unsigned int error_mode)
+#define LOCAL_DeeDbgString(func, ...) DeeString_##func(__VA_ARGS__)
+#else /* NDEBUG */
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewUtf8)(char const *__restrict str, size_t length,
+                          unsigned int error_mode) {
+	return DeeDbgString_NewUtf8(str, length, error_mode, NULL, 0);
+}
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewUtf8)(char const *__restrict str, size_t length,
+                             unsigned int error_mode,
+                             char const *file, int line)
+#define LOCAL_DeeDbgString(func, ...) DeeDbgString_##func(__VA_ARGS__, file, line)
+#endif /* !NDEBUG */
+{
 	DREF String *result;
 	uint8_t *iter, *end;
 	struct string_utf *utf = NULL;
 	uint32_t *buffer32, *dst32;
 	size_t i, simple_length, utf_length;
+#ifdef NDEBUG
 	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
 	                                         (length + 1) * sizeof(char));
+#else /* NDEBUG */
+	result = (DREF String *)DeeDbgObject_Malloc(offsetof(String, s_str) +
+	                                            (length + 1) * sizeof(char),
+	                                            file, line);
+#endif /* !NDEBUG */
 	if unlikely(!result)
 		goto err;
 	iter = (uint8_t *)memcpyc(result->s_str, str, length, sizeof(char));
@@ -2174,7 +2203,7 @@ DeeString_NewUtf8(char const *__restrict str, size_t length,
 		}
 		if (ch32 > 0xffff) {
 			/* Must decode into a 4-byte string */
-			buffer32 = DeeString_New4ByteBuffer(length - (seqlen - 1));
+			buffer32 = LOCAL_DeeDbgString(New4ByteBuffer, length - (seqlen - 1));
 			if unlikely(!buffer32)
 				goto err_r;
 			dst32         = buffer32;
@@ -2211,7 +2240,7 @@ use_buffer32:
 					                "Invalid utf-8 character byte 0x%.2I8x",
 					                ch);
 err_buffer32:
-					DeeString_Free4ByteBuffer(buffer32);
+					LOCAL_DeeDbgString(Free4ByteBuffer, buffer32);
 					goto err_r;
 				}
 				ch32     = utf8_getchar(iter, seqlen);
@@ -2222,7 +2251,7 @@ err_buffer32:
 			ASSERT(utf_length <= WSTR_LENGTH(buffer32));
 			if (utf_length != WSTR_LENGTH(buffer32)) {
 				uint32_t *new_buffer32;
-				new_buffer32 = DeeString_TryResize4ByteBuffer(buffer32, utf_length);
+				new_buffer32 = LOCAL_DeeDbgString(TryResize4ByteBuffer, buffer32, utf_length);
 				if likely(new_buffer32)
 					buffer32 = new_buffer32;
 			}
@@ -2237,7 +2266,7 @@ err_buffer32:
 		} else {
 			uint16_t *buffer16, *dst16;
 			/* Must decode into a 2/4-byte string */
-			buffer16 = DeeString_New2ByteBuffer(length - (seqlen - 1));
+			buffer16 = LOCAL_DeeDbgString(New2ByteBuffer, length - (seqlen - 1));
 			if unlikely(!buffer16)
 				goto err_r;
 			dst16         = buffer16;
@@ -2273,20 +2302,20 @@ err_buffer32:
 					                "Invalid utf-8 character byte 0x%.2I8x",
 					                ch);
 err_buffer16:
-					DeeString_Free2ByteBuffer(buffer16);
+					LOCAL_DeeDbgString(Free2ByteBuffer, buffer16);
 					goto err_r;
 				}
 				ch32 = utf8_getchar(iter, seqlen);
 				if unlikely(ch32 > 0xffff) {
 					iter += seqlen;
 					/* Must upgrade to use a 4-byte buffer. */
-					buffer32 = DeeString_New4ByteBuffer((dst16 - buffer16) + 1 + (end - iter));
+					buffer32 = LOCAL_DeeDbgString(New4ByteBuffer, (dst16 - buffer16) + 1 + (end - iter));
 					if unlikely(!buffer32)
 						goto err_buffer16;
 					simple_length = (size_t)(dst16 - buffer16);
 					for (i = 0; i < simple_length; ++i)
 						buffer32[i] = buffer16[i];
-					DeeString_Free2ByteBuffer(buffer16);
+					LOCAL_DeeDbgString(Free2ByteBuffer, buffer16);
 					dst32    = buffer32 + simple_length;
 					*dst32++ = ch32;
 					goto use_buffer32;
@@ -2298,7 +2327,7 @@ err_buffer16:
 			ASSERT(utf_length <= WSTR_LENGTH(buffer16));
 			if (utf_length != WSTR_LENGTH(buffer16)) {
 				uint16_t *new_buffer16;
-				new_buffer16 = DeeString_TryResize2ByteBuffer(buffer16, utf_length);
+				new_buffer16 = LOCAL_DeeDbgString(TryResize2ByteBuffer, buffer16, utf_length);
 				if likely(new_buffer16)
 					buffer16 = new_buffer16;
 			}
@@ -2324,6 +2353,7 @@ err_r:
 	DeeObject_Free(result);
 err:
 	return NULL;
+#undef LOCAL_DeeDbgString
 }
 
 

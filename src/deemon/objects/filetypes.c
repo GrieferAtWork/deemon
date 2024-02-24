@@ -253,7 +253,7 @@ PUBLIC DeeFileTypeObject DeeMemoryFile_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ 0,
+		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{
@@ -1825,7 +1825,7 @@ PUBLIC DeeFileTypeObject DeeFilePrinter_Type = {
 		/* .tp_doc      = */ NULL,
 		/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 		/* .tp_weakrefs = */ 0,
-		/* .tp_features = */ 0,
+		/* .tp_features = */ TF_NONE,
 		/* .tp_base     = */ (DeeTypeObject *)&DeeFile_Type,
 		/* .tp_init = */ {
 			{

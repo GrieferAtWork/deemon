@@ -143,6 +143,7 @@ EXPORTS
 	_DeeDbgString_New@12=DeeDbgString_New@12
 	_DeeDbgString_NewBuffer@12=DeeDbgString_NewBuffer@12
 	_DeeDbgString_NewSized@16=DeeDbgString_NewSized@16
+	_DeeDbgString_NewUtf8@20=DeeDbgString_NewUtf8@20
 	_DeeDbg_Calloc@12=DeeDbg_Calloc@12
 	_DeeDbg_Free@12=DeeDbg_Free@12
 	_DeeDbg_Malloc@12=DeeDbg_Malloc@12
@@ -403,6 +404,7 @@ EXPORTS
 	_DeeKwMapping_Decref@12=DeeKwMapping_Decref@12
 	_DeeKwMapping_New@12=DeeKwMapping_New@12
 	_DeeKwObjMethod_New@8=DeeKwObjMethod_New@8
+	_DeeKw_ForceWrap@4=DeeKw_ForceWrap@4
 	_DeeKw_GetItemNR@8=DeeKw_GetItemNR@8
 	_DeeKw_GetItemNRDef@12=DeeKw_GetItemNRDef@12
 	_DeeKw_GetItemNRStringHash@12=DeeKw_GetItemNRStringHash@12

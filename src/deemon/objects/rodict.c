@@ -1023,7 +1023,7 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | TF_KW,
+	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{

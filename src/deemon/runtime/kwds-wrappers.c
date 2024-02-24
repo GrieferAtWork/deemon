@@ -801,7 +801,7 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | TF_KW,
+	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -1652,7 +1652,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | TF_KW,
+	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{

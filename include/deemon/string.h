@@ -130,7 +130,6 @@ DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strlen
 #define CONFIG_HAVE_strlen
-DECL_BEGIN
 #undef strlen
 #define strlen dee_strlen
 LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
@@ -139,12 +138,10 @@ LOCAL WUNUSED NONNULL((1)) size_t dee_strlen(char const *str) {
 		;
 	return result;
 }
-DECL_END
 #endif /* !CONFIG_HAVE_strlen */
 
 #ifndef CONFIG_HAVE_memcmp
 #define CONFIG_HAVE_memcmp
-DECL_BEGIN
 #undef memcmp
 #define memcmp dee_memcmp
 LOCAL WUNUSED NONNULL((1, 2)) int
@@ -159,7 +156,6 @@ dee_memcmp(void const *s1, void const *s2, size_t n) {
 	}
 	return 0;
 }
-DECL_END
 #endif /* !CONFIG_HAVE_memcmp */
 
 #ifndef CONFIG_HAVE_bcmp
@@ -254,11 +250,11 @@ union Dee_charptr {
 };
 
 
-#define Dee_STRING_WIDTH_1BYTE  0u /* All characters are within the range U+0000 - U+00FF (LATIN-1) */
-#define Dee_STRING_WIDTH_2BYTE  1u /* All characters are within the range U+0000 - U+FFFF (BMP) */
-#define Dee_STRING_WIDTH_4BYTE  2u /* All characters are within the range U+0000 - U+10FFFF (Full unicode; UTF-32) */
-#define Dee_STRING_WIDTH_COUNT  3u /* the number of of known string width encodings. */
 
+#define Dee_STRING_WIDTH_1BYTE 0u /* All characters are within the range U+0000 - U+00FF (LATIN-1) */
+#define Dee_STRING_WIDTH_2BYTE 1u /* All characters are within the range U+0000 - U+FFFF (BMP) */
+#define Dee_STRING_WIDTH_4BYTE 2u /* All characters are within the range U+0000 - U+10FFFF (Full unicode; UTF-32) */
+#define Dee_STRING_WIDTH_COUNT 3u /* the number of of known string width encodings. */
 
 /* 
  *   00 | 00  -> 00 == a|b
@@ -288,10 +284,10 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 }
 #define Dee_STRING_WIDTH_COMMON(x, y)     _Dee_string_width_common(x, y)
 #define Dee_STRING_WIDTH_COMMON3(x, y, z) _Dee_string_width_common3(x, y, z)
-#else /* ... */
+#else /* !__NO_XBLOCK */
 #define Dee_STRING_WIDTH_COMMON(x, y)     ((x) >= (y) ? (x) : (y))
 #define Dee_STRING_WIDTH_COMMON3(x, y, z) ((x) >= (y) ? Dee_STRING_WIDTH_COMMON(x, z) : Dee_STRING_WIDTH_COMMON(y, z))
-#endif /* !... */
+#endif /* __NO_XBLOCK */
 
 
 /* Encoding error flags. */
@@ -439,15 +435,23 @@ struct Dee_string_utf {
 	}	__WHILE0
 
 #if 1
-#define Dee_string_utf_alloc()      DeeObject_MALLOC(struct Dee_string_utf)
-#define Dee_string_utf_tryalloc()   DeeObject_TRYMALLOC(struct Dee_string_utf)
-#define Dee_string_utf_free(ptr)    DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
-#define Dee_string_utf_untrack(ptr) DeeObject_UntrackAlloc(ptr)
+#define Dee_string_utf_alloc()                     DeeObject_MALLOC(struct Dee_string_utf)
+#define Dee_string_utf_tryalloc()                  DeeObject_TRYMALLOC(struct Dee_string_utf)
+#define Dee_string_utf_free(ptr)                   DeeObject_FFree(ptr, sizeof(struct Dee_string_utf))
+#define Dee_string_utf_untrack(ptr)                DeeObject_UntrackAlloc(ptr)
+#define DeeDbg_string_utf_alloc(file, line)        DeeDbgObject_MALLOC(struct Dee_string_utf, file, line)
+#define DeeDbg_string_utf_tryalloc(file, line)     DeeDbgObject_TRYMALLOC(struct Dee_string_utf, file, line)
+#define DeeDbg_string_utf_free(ptr, file, line)    DeeDbgObject_FFree(ptr, sizeof(struct Dee_string_utf), file, line)
+#define DeeDbg_string_utf_untrack(ptr, file, line) DeeDbgObject_UntrackAlloc(ptr, file, line)
 #else
-#define Dee_string_utf_alloc()      ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
-#define Dee_string_utf_tryalloc()   ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))
-#define Dee_string_utf_free(ptr)    Dee_Free(ptr)
-#define Dee_string_utf_untrack(ptr) Dee_UntrackAlloc(utf)
+#define Dee_string_utf_alloc()                     ((struct Dee_string_utf *)Dee_Malloc(sizeof(struct Dee_string_utf)))
+#define Dee_string_utf_tryalloc()                  ((struct Dee_string_utf *)Dee_TryMalloc(sizeof(struct Dee_string_utf)))
+#define Dee_string_utf_free(ptr)                   Dee_Free(ptr)
+#define Dee_string_utf_untrack(ptr)                Dee_UntrackAlloc(utf)
+#define DeeDbg_string_utf_alloc(file, line)        ((struct Dee_string_utf *)DeeDbg_Malloc(sizeof(struct Dee_string_utf), file, line))
+#define DeeDbg_string_utf_tryalloc(file, line)     ((struct Dee_string_utf *)DeeDbg_TryMalloc(sizeof(struct Dee_string_utf), file, line))
+#define DeeDbg_string_utf_free(ptr, file, line)    DeeDbg_Free(ptr, file, line)
+#define DeeDbg_string_utf_untrack(ptr, file, line) DeeDbg_UntrackAlloc(utf, file, line)
 #endif
 
 
@@ -839,7 +843,7 @@ Dee_wchar_t *DeeString_AsWide(DeeObject *__restrict self);
 /* ================================================================================= */
 
 /* Construct an uninitialized single-byte string,
- * capable of representing up to `num_bytes' bytes of text. */
+ * capable of representing up to `num_bytes' bytes of text (representing LATIN-1 text). */
 #undef DeeString_NewBuffer
 #undef DeeDbgString_NewBuffer
 DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_NewBuffer)(size_t num_bytes);
@@ -875,7 +879,8 @@ DeeString_PrintUtf8(DeeObject *__restrict self,
 /* Print the escape-encoded variant of `self' */
 DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeString_PrintRepr(DeeObject *__restrict self,
-                    Dee_formatprinter_t printer, void *arg);
+                    Dee_formatprinter_t printer,
+                    void *arg);
 
 
 /* Construct a string from the given escape-sequence.
@@ -888,6 +893,7 @@ DeeString_PrintRepr(DeeObject *__restrict self,
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_FromBackslashEscaped(/*utf-8*/ char const *__restrict start,
                                size_t length, unsigned int error_mode);
+
 /* @return: 0 : Success
  * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL
@@ -960,20 +966,41 @@ DeeString_IsObject(/*unsigned*/ char const *__restrict str) {
 	return NULL;
 }
 
+#ifdef NDEBUG
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewAuto(/*unsigned*/ char const *__restrict str) {
+DeeString_NewAuto(/*unsigned*/ char const *__restrict str)
+#define DeeDbgString_NewAuto(str, file, line) DeeString_NewAuto(str)
+#else /* NDEBUG */
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDbgString_NewAuto(/*unsigned*/ char const *__restrict str, char const *file, int line)
+#define DeeString_NewAuto(str) DeeDbgString_NewAuto(str, __FILE__, __LINE__)
+#endif /* !NDEBUG */
+{
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
 		Dee_Incref(result);
 	} else {
+#ifdef NDEBUG
 		result = DeeString_New(str);
+#else /* NDEBUG */
+		result = DeeDbgString_New(str, file, line);
+#endif /* !NDEBUG */
 	}
 	return result;
 }
 
+#ifdef NDEBUG
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t hash) {
+DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t hash)
+#define DeeDbgString_NewAutoWithHash(str, hash, file, line) DeeString_NewAutoWithHash(str, hash)
+#else /* NDEBUG */
+LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDbgString_NewAutoWithHash(/*unsigned*/ char const *__restrict str,
+                             Dee_hash_t hash, char const *file, int line)
+#define DeeString_NewAutoWithHash(str, hash) DeeDbgString_NewAutoWithHash(str, hash, __FILE__, __LINE__)
+#endif /* !NDEBUG */
+{
 	DeeObject *result;
 	result = DeeString_IsObject(str);
 	if (result) {
@@ -986,16 +1013,22 @@ DeeString_NewAutoWithHash(/*unsigned*/ char const *__restrict str, Dee_hash_t ha
 		Dee_Incref(result);
 	} else {
 return_new_string:
+#ifdef NDEBUG
 		result = DeeString_NewWithHash(str, hash);
+#else /* NDEBUG */
+		result = DeeDbgString_NewWithHash(str, hash, file, line);
+#endif /* !NDEBUG */
 	}
 	return result;
 }
 
 #else /* __ARCH_PAGESIZE_MIN && !__OPTIMIZE_SIZE__ */
 #define DeeString_IsObject_IS_NOOP
-#define DeeString_IsObject(str)              ((DeeObject *)NULL)
-#define DeeString_NewAuto(str)               DeeString_New(str)
-#define DeeString_NewAutoWithHash(str, hash) DeeString_NewWithHash(str, hash)
+#define DeeString_IsObject(str)                             ((DeeObject *)NULL)
+#define DeeString_NewAuto(str)                              DeeString_New(str)
+#define DeeString_NewAutoWithHash(str, hash)                DeeString_NewWithHash(str, hash)
+#define DeeDbgString_NewAuto(str, file, line)               DeeDbgString_New(str, file, line)
+#define DeeDbgString_NewAutoWithHash(str, hash, file, line) DeeDbgString_NewWithHash(str, hash, file, line)
 #endif /* !__ARCH_PAGESIZE_MIN || __OPTIMIZE_SIZE__ */
 
 /* Construct a new string using printf-like (and deemon-enhanced) format-arguments. */
@@ -1040,9 +1073,15 @@ DREF DeeObject *DeeDbgString_New1Byte(uint8_t const *__restrict str, size_t leng
 
 
 /* Construct a string from a UTF-8 character sequence. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewUtf8(/*utf-8*/ char const *__restrict str,
-                  size_t length, unsigned int error_mode);
+#undef DeeString_NewUtf8
+#undef DeeDbgString_NewUtf8
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewUtf8)(/*utf-8*/ char const *__restrict str, size_t length, unsigned int error_mode, char const *file, int line);
+#ifdef NDEBUG
+#define DeeDbgString_NewUtf8(str, length, error_mode, file, line) DeeString_NewUtf8(str, length, error_mode)
+#else /* NDEBUG */
+#define DeeString_NewUtf8(str, length, error_mode) DeeDbgString_NewUtf8(str, length, error_mode, __FILE__, __LINE__)
+#endif /* !NDEBUG */
 
 /* Given a string `self' that has previously been allocated as a byte-buffer
  * string (such as `DeeString_NewSized()' or `DeeString_NewBuffer()'), convert
