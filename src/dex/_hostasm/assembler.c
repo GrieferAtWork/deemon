@@ -252,7 +252,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> DeeObject **kw_argv = alloca({co_argc_max * sizeof(DeeObject *)});
 		 * >> if (kw != NULL) {
 		 * >>     if likely(kw->ob_type == &DeeKwds_Type) {
-		 * >>         DeeObject *kw_argv;
+		 * >>         DeeObject **kwds_argv;
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>         size_t kw_used = 0;
 		 * >> #endif
@@ -266,14 +266,16 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >>         if (argc > <co_argc_max>))
 		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
 		 * >> #endif
-		 * >>         kw_argv = argv + argc;
+		 * >>         kwds_argv = argv + argc;
 		 * >> #if {co_argc_min} > 0
 		 * >>         if (argc < {co_argc_min}) {
 		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
-		 * >>                 DeeObject *arg = DeeKwds_GetMandatoryArgument(kw, kw_argv, {co_keywords}[i]);
-		 * >>                 if (!arg)
+		 * >>                 size_t index = DeeKwds_IndexOf(kw, {co_keywords}[i]);
+		 * >>                 if (index == (size_t)-1) {
+		 * >>                     err_invalid_argc_missing_kw(...);
 		 * >>                     HANDLE_EXCEPT();
-		 * >>                 kw_argv[i] = arg;
+		 * >>                 }
+		 * >>                 kw_argv[i] = kwds_argv[index];
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>                 ++kw_used;
 		 * >> #endif
@@ -282,16 +284,12 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> #endif
 		 * >> #if {co_argc_max} > {co_argc_min}
 		 * >> #for (size_t i = {co_argc_min}; i < {co_argc_max}; ++i)
+		 * >>         size_t index = DeeKwds_IndexOf(kw, {co_keywords[i]});
+		 * >>         DeeObject *temp = {co_defaultv[i]};
+		 * >>         if (index != (size_t)-1) {
+		 * >>             temp = kwds_argv[index];
 		 * >> #if !(co_flags & CODE_FVARKWDS)
-		 * >>         ++kw_used;
-		 * >> #endif
-		 * >>         DeeObject *temp = DeeKwds_GetOptionalArgument(kw, kw_argv, {co_keywords[i]});
-		 * >>         if (!temp) {
-		 * >> #if !(co_flags & CODE_FVARKWDS)
-		 * >>             --kw_used;
-		 * >> #endif
-		 * >> #if co_defaultv[i]
-		 * >>             temp = {co_defaultv[i]};
+		 * >>             ++kw_used;
 		 * >> #endif
 		 * >>         }
 		 * >>         kw_argv[{i}] = temp;
@@ -314,7 +312,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> #if {co_argc_min} > 0
 		 * >>         if (argc < {co_argc_min}) {
 		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
-		 * >>                 DeeObject *arg = DeeGenericKwds_GetMandatoryArgument(kw, {co_keywords}[i]);
+		 * >>                 DeeObject *arg = DeeKw_GetItemNR(kw, {co_keywords}[i]);
 		 * >>                 if (!arg)
 		 * >>                     HANDLE_EXCEPT();
 		 * >>                 kw_argv[i] = arg;
@@ -329,7 +327,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>         ++kw_used;
 		 * >> #endif
-		 * >>         DeeObject *temp = DeeGenericKwds_GetOptionalArgument(kw, {co_keywords[i]});
+		 * >>         DeeObject *temp = DeeKw_GetItemNRDef(kw, {co_keywords[i]}, NULL);
 		 * >>         if (!temp) {
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>             --kw_used;
@@ -352,39 +350,6 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >>     }
 		 * >> }
 		 */
-		/* TODO: Add a new system for "DeeGenericKwds_GetOptionalArgument()". This will also
-		 *       solve the same problem in `DeeArg_UnpackKw()', the problem being that keyword
-		 *       arguments can (in theory) be constructed on-demand by a custom Mapping object,
-		 *       though that is something that would require loaded keyword arguments to always
-		 *       be references (which would be may less efficient, and require a re-write of a
-		 *       large part of deemon's builtin APIs)
-		 * DeeGenericKwds_GetOptionalArgument() would then work similar to DeeObject_GetItem(),
-		 * only that it doesn't return a reference, and only works for a select few types. Then,
-		 * there should be a new opcode `ASM_CAST_KWDS' that converts a generic mapping into one
-		 * that can be used for keyword arguments (in the generic case, that would be a mapping
-		 * object that inherits references to the items of the underlying mapping by caching them)
-		 *
-		 * So then, a generic kwds call looks like this:
-		 * >> function foo(args, kwds) {
-		 * >>     return bar(args..., **kwds);
-		 * >> }
-		 * ASM:
-		 * >>     push @bar
-		 * >>     push arg @args
-		 * >>     cast top, Tuple
-		 * >>     push arg @kwds
-		 * >>     cast top, kwds         // New opcode: ASM_CAST_KWDS
-		 * >>     call top, pop..., pop  // In safe-mode, this will assert that the 3rd operand is kwds-capable
-		 * >>     ret  pop
-		 *
-		 * The following types should then be kwds-capable (there should be a tp_features flag to test for these):
-		 * - DeeKwds_Type           (for extra-special handling where values are passed via args)
-		 * - DeeRoDict_Type         (no point in not allowing this one; it can already implement GetItemWithoutRef)
-		 * - DeeCachedMapping_Type  (a new type that wraps another mapping whilst caching its key/item pairs)
-		 *
-		 * TODO: Come up with a better name than "DeeGenericKwds_GetOptionalArgument"
-		 */
-
 		/* TODO */
 		return 0;
 	}
@@ -404,7 +369,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 	 *
 	 * if HOSTFUNC_CC_F_KW:
 	 * >> varkwds = ({ // CAUTION: Must be decref'd using "DeeKwBlackList_Decref()"
-	 * >>     DeeBlackListKw_New({code}, argc, argv, kw);
+	 * >>     DeeKwBlackList_New({code}, argc, argv, kw);
 	 * >> });
 	 *
 	 * if HOSTFUNC_CC_F_KW:
