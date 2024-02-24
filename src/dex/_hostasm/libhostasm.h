@@ -2585,8 +2585,11 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast(struct D
 /* Like Dee_function_generator_vopcast(), but return 1 if the fallback (1-arg ctor-call) would be used. */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_vopcast_nofallback(struct Dee_function_generator *__restrict self, DeeTypeObject *newtype);
 
+/* obj -> DeeKw_Wrap(obj) */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vopcast_varkwds(struct Dee_function_generator *__restrict self);
+
 /* Helpers to perform certain operations. */
-INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self);          /* instance, type -> instance */
+INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vcall_DeeObject_Init(struct Dee_function_generator *__restrict self); /* instance, type -> instance */
 #define Dee_function_generator_vcall_DeeObject_Init_c(self, type) \
 	(unlikely(Dee_function_generator_vpush_const(self, type)) ||  \
 	 unlikely(Dee_function_generator_vcall_DeeObject_Init(self)))

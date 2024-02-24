@@ -30,6 +30,7 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/cached-dict.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
@@ -6931,6 +6932,31 @@ Dee_function_generator_vopcast(struct Dee_function_generator *__restrict self,
 		result = Dee_function_generator_vopcall(self, 1);      /* result */
 	}
 	return result;
+err:
+	return -1;
+}
+
+
+/* obj -> DeeKw_Wrap(obj) */
+INTERN WUNUSED NONNULL((1)) int DCALL
+Dee_function_generator_vopcast_varkwds(struct Dee_function_generator *__restrict self) {
+	DeeTypeObject *obj_type;
+	if unlikely(self->fg_state->ms_stackc < 1)
+		return err_illegal_stack_effect();
+
+	/* Check for special case: the given "obj" is already kw-capable. */
+	obj_type = Dee_memval_typeof(Dee_function_generator_vtop(self));
+	if (obj_type) {
+		if (DeeType_IsKw(obj_type))
+			return 0;
+		/* Special case: the type is never kw-capable (can emit a force-call) */
+		DO(Dee_function_generator_vcallapi(self, &DeeKw_ForceWrap, VCALL_CC_OBJECT, 1));
+		return Dee_function_generator_vsettyp_noalias(self, &DeeCachedDict_Type);
+	}
+
+	/* Fallback: must emit a regular runtime-call. */
+	/* TODO: Remember that VTOP evaluates to true in `DeeObject_IsKw(VTOP)' */
+	return Dee_function_generator_vcallapi(self, &DeeKw_Wrap, VCALL_CC_OBJECT, 1);
 err:
 	return -1;
 }

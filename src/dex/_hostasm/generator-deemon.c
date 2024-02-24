@@ -1099,6 +1099,9 @@ do_jcc:
 	TARGET(ASM_CAST_LIST)
 		return Dee_function_generator_vopcast(self, &DeeList_Type);
 
+	TARGET(ASM_CAST_VARKWDS)
+		return Dee_function_generator_vopcast_varkwds(self);
+
 	TARGET(ASM_PACK_TUPLE)
 	TARGET(ASM16_PACK_TUPLE)
 	TARGET(ASM_PACK_LIST)
