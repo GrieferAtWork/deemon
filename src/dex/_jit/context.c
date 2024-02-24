@@ -767,7 +767,7 @@ JITLValue_CallValue(JITLValue *__restrict self, JITContext *__restrict context,
 	DREF DeeObject *result;
 	ASSERT(self->lv_kind != JIT_LVALUE_NONE);
 	if (kw && !DeeObject_IsKw(kw)) {
-		kw = DeeKw_Wrap(kw);
+		kw = DeeKw_ForceWrap(kw);
 		if unlikely(!kw)
 			goto err;
 		result = JITLValue_CallValue(self, context, args, kw);

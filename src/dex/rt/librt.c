@@ -2090,7 +2090,9 @@ PRIVATE struct dex_symbol symbols[] = {
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 	{ "kw", (DeeObject *)&librt_kw, MODSYM_FNORMAL, /* varying */
 	  DOC("(map:?DMapping)->?DMapping\n"
-	      "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)") },
+	      "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)\n"
+	      "You should never have to call this function. It is mainly here to expose that detail of the "
+	      /**/ "#IGATW deemon implementation.") },
 
 	/* Internal types used to drive keyword argument support */
 	{ "DocKwds", /* DocKwds_Type */

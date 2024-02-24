@@ -1769,6 +1769,11 @@ DeeKw_Wrap(DeeObject *__restrict kwds) {
 	return DeeCachedDict_New(kwds);
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKw_ForceWrap(DeeObject *__restrict kwds) {
+	return DeeCachedDict_New(kwds);
+}
+
 
 
 /* List of types that support TF_KW */
@@ -1919,10 +1924,10 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 		 * >> }
 		 * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
 		 * Semantically comparable to:
-		 * >> return rt.RoDict(
+		 * >> return Mapping.frozen(
 		 * >> 	for (local key, id: kw)
 		 * >> 		if (key !in __code__.__kwds__)
-		 * >> 			(key, __argv__[(#__argv__ - #__code__.__kwds__) + id])
+		 * >> 			(key, positional_argv[positional_argc + id])
 		 * >> );
 		 */
 		if unlikely(!DeeKwds_SIZE(kw)) {
@@ -1933,7 +1938,7 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 			return Dee_EmptyMapping;
 		}
 		positional_argv += positional_argc;
-		if (positional_argc >= code->co_argc_max || !code->co_keywords) {
+		if (positional_argc >= code->co_argc_max || unlikely(!code->co_keywords)) {
 			/* No keyword information --> Return an unfiltered keywords mapping object.
 			 * -> This happens for purely varkwds user-code functions, such a function
 			 *    written as `function foo(**kw)', in which case there aren't any other
@@ -1948,13 +1953,13 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 	 *               of all keys that are equal to one of the strings found
 	 *               within our keyword list.
 	 * Semantically comparable to:
-	 * >> return rt.RoDict(
+	 * >> return Mapping.frozen(
 	 * >> 	for (local key, item: kw)
-	 * >> 		if (key !in __code__.__kwds__)
+	 * >> 		if (key !in __code__.__kwds__[positional_argc:])
 	 * >> 			(key, item)
 	 * >> );
 	 */
-	if (positional_argc >= code->co_argc_max || !code->co_keywords) {
+	if (positional_argc >= code->co_argc_max || unlikely(!code->co_keywords)) {
 		/* No keyword information --> Re-return the unfiltered input mapping object. */
 		return_reference_(kw);
 	}

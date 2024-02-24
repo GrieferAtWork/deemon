@@ -27,6 +27,113 @@
 
 DECL_BEGIN
 
+/*
+ * ============= KEYWORD COMPONENTS OVERVIEW :: C API UTILS =============
+ *
+ * DeeKwArgs
+ * - Usage:
+ *   - Helper for implementing dynamic (but still fixed) keyword arguments in C.
+ *   - >> DeeKwArgs kwargs;
+ *     >> DO(DeeKwArgs_Init(&kwargs, &argc, argv, kw));
+ *     >> HANDLE_POSITION_ARGS(argc, argv); // "argc" was updated to exclude kw-through-argv (s.a. `DeeKwdsObject')
+ *     >> DeeObject *a = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg1", Dee_None);
+ *     >> DeeObject *b = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg2", Dee_None);
+ *     >> DeeObject *c = DeeKwArgs_GetItemNRStringDef(&kwargs, "arg3", Dee_None);
+ *     >> DO(DeeKwArgs_Done(&kwargs, argc)); // Asserts that all keyword arguments were used
+ *
+ * DeeArg_GetKwNR
+ * - Usage:
+ *   - Direct function to load a specific keyword argument in C
+ *   - >> DeeObject *a = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg1", Dee_None);
+ *     >> DeeObject *b = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg2", Dee_None);
+ *     >> DeeObject *c = DeeArg_GetKwNRStringDef(argc, argv, kw, "arg3", Dee_None);
+ *
+ * DeeKw_Wrap
+ * - Usage:
+ *   - Must be called to wrap a generic mapping-like object for the purpose of using
+ *     that object as a "kw" argument in a call to (e.g.) `DeeObject_CallKw()'
+ *   - In user-code, the `ASM_CAST_VARKWDS' instruction calls this function
+ *   - This function checks if the given "kwds" is kw-capable (DeeObject_IsKw),
+ *     and if it isn't, it returns "DeeCachedDict_New(kwds)".
+ *   - kw-capable means that the object supports `DeeKw_GetItemNR*', which is the
+ *     set of low-level functions used for loading keyword arguments.
+ *
+ * DeeKw_GetItemNR
+ * - Usage:
+ *   - Don't use unless you know what you're doing.
+ *   - Used to load keyword arguments from kw-capable kw-objects, but does *NOT*
+ *     support `DeeKwdsObject' (which must be handled by the caller explicitly)
+ *   - The passed "kw" must be `DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'
+ *
+ * DeeKwBlackList_New
+ * - Usage:
+ *   - Used by the runtime interpreter when "ASM_PUSH_VARKWDS" is used.
+ *   - This function figures out how to correctly package argc/argv/kw into
+ *     a deemon object that user-code is able to understand, whilst also
+ *     filtering and keyword arguments that were loaded into positional args.
+ *   - The returned object must be decref'd using `DeeKwBlackList_Decref()'
+ *     before "argc/argv/kw" go out-of-scope. After that call, the object
+ *     was either destroyed, or shared caches were unshared (which is the
+ *     case when varkwds live longer than the function's score; i.e. when
+ *     varkwds are returned, passed to a thread, written to a Cell or global,
+ *     etc...)
+ *
+ * DeeKwBlackList_Decref
+ * - See DeeKwBlackList_New
+ *
+ *
+ *
+ * ============= KEYWORD COMPONENTS OVERVIEW :: OBJECT TYPES =============
+ *
+ * DeeKwdsObject extends Mapping {string: int}
+ * - Behavior:
+ *   - May be passed as "DeeObject *kw"
+ *   - Keyword names are constant, and values are passed in "argv"
+ *   - The mapped "int index" maps to the value as "argv[argc - DeeKwds_SIZE(kw) + index]"
+ *   - When used, the last "DeeKwds_SIZE(kw)" elements of "argv"
+ *     must not be considered "normal" positional arguments
+ * - Usage:
+ *   - The default way of passing keyword arguments in deemon usercode
+ *   - >> local x = s.replace("a", "b", max: 42);
+ *     - Call is generated as (argc = 3, argv = {"a", "b", 42}, kw = {"max": 0})
+ *
+ * DeeKwdsMappingObject extends Mapping {string: Object}
+ * - Behavior:
+ *   - Combines a "DeeKwdsObject" with "DeeObject **argv" to form a normal
+ *     deemon Mapping object which can be used to access variable keyword
+ *     arguments.
+ * - Usage:
+ *   - >> function foo(**kwds) -> kwds;
+ *     >> print repr foo(a: 10, b: 20);
+ *     - Call is generated as (argc = 2, argv = {10, 20}, kw = {"a": 0, "b": 1})
+ *     - "foo" returns a "DeeKwdsMappingObject"
+ *     - Prints "{ "a": 10, "b": 20 }"
+ *
+ * DeeBlackListKwdsObject extends Mapping {string: Object}
+ * - Behavior:
+ *   - Same as "DeeKwdsMappingObject", but apply an extra filter to deny the
+ *     existence of keyword arguments that were loaded into positional args.
+ *   - Semantically the same as using `DeeBlackListKwObject' to wrap `DeeKwdsMappingObject'
+ * - Usage:
+ *   - >> function foo(a, **kwds) -> kwds;
+ *     >> print repr foo(a: 10, b: 20);
+ *     - Call is generated as (argc = 2, argv = {10, 20}, kw = {"a": 0, "b": 1})
+ *     - "foo" returns a "DeeBlackListKwdsObject"
+ *     - Prints "{ "b": 20 }"
+ *
+ * DeeBlackListKwObject extends Mapping {string: Object}
+ * - Behavior:
+ *   - Same as "DeeBlackListKwdsObject", but used when the internal "kw" passed
+ *     to the user-function wasn't `DeeKwdsObject', but some other kw-capable
+ *     mapping object.
+ * - Usage:
+ *   - >> function foo(a, **kwds) -> kwds;
+ *     >> print repr foo(**{ "a": 10, "b": 20 });
+ *     - Call is generated as (argc = 0, argv = {}, kw = {"a": 10, "b": 20})
+ *     - "foo" returns a "DeeBlackListKwObject"
+ *     - Prints "{ "b": 20 }"
+ */
+
 
 #ifdef DEE_SOURCE
 #define dee_kwds_entry    kwds_entry
@@ -383,6 +490,7 @@ DFUNDEF WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) NONNULL((7)) DeeObject *DCALL DeeA
  * are queried, but then caches returned references such that the keyword consumer
  * doesn't need to keep track of them. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_Wrap(DeeObject *__restrict kwds);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKw_ForceWrap(DeeObject *__restrict kwds);
 
 /* Lookup keyword arguments. These functions may be used to extract keyword arguments
  * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
@@ -644,7 +752,6 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeBlackListKw_GetItemNRStrin
 
 
 /* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
- * NOTE: If `code' doesn't specify any keywords, re-return `kw' unmodified.
  * -> The returned objects can be used for any kind of mapping, such that in the
  *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))'
  *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)'
@@ -654,8 +761,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeBlackListKw_GetItemNRStrin
  *    >>     print type kwds, repr kwds;
  *    >> }
  *    >> // Prints `_DeeBlackListKw { "something_else" : "foobar" }'
- *    >> foo(**{ "x" : 10, "something_else" : "foobar" });
- */
+ *    >> foo(**{ "x" : 10, "something_else" : "foobar" }); */
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKw_New(struct Dee_code_object *__restrict code,
                    size_t positional_argc,

@@ -1693,6 +1693,17 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 };
 
 
+/* Construct a new mapping for a general-purpose mapping that follows the black-listing scheme.
+ * -> The returned objects can be used for any kind of mapping, such that in the
+ *    case of kwmappings, `DeeBlackListKw_New(code, DeeKwdsMapping_New(kwds, argv))'
+ *    would produce the semantically equivalent of `DeeBlackListKwds_New(code, kwds, argv)'
+ * -> This function is used to filter keyword arguments from varkwds when the general
+ *    purpose keyword argument protocol is used:
+ *    >> function foo(x, y?, **kwds) {
+ *    >>     print type kwds, repr kwds;
+ *    >> }
+ *    >> // Prints `_DeeBlackListKw { "something_else" : "foobar" }'
+ *    >> foo(**{ "x" : 10, "something_else" : "foobar" }); */
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKw_New(struct code_object *__restrict code,
                    size_t positional_argc,
