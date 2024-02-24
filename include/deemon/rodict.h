@@ -83,6 +83,24 @@ DeeRoDict_Insert(/*in|out*/ DREF DeeRoDictObject **__restrict p_self,
                  DeeObject *key, DeeObject *value);
 
 
+/* Special empty instance of `DeeRoDict_Type'
+ * NOTE: This is _NOT_ a singleton! */
+#ifdef GUARD_DEEMON_OBJECTS_RODICT_C
+struct Dee_empty_rodict_object {
+	Dee_OBJECT_HEAD
+	size_t                 rd_mask;    /* [== 0] */
+	size_t                 rd_size;    /* [== 0] */
+	struct Dee_rodict_item rd_elem[1]; /* [== {{NULL,NULL,0}}] */
+};
+DDATDEF struct Dee_empty_rodict_object DeeRoDict_EmptyInstance;
+#define Dee_EmptyRoDict ((DeeObject *)&DeeRoDict_EmptyInstance)
+#else /* GUARD_DEEMON_OBJECTS_RODICT_C */
+DDATDEF DeeObject DeeRoDict_EmptyInstance;
+#define Dee_EmptyRoDict (&DeeRoDict_EmptyInstance)
+#endif /* !GUARD_DEEMON_OBJECTS_RODICT_C */
+
+
+
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringHash(DeeRoDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLenHash(DeeRoDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);

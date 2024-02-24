@@ -41,6 +41,7 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
@@ -1679,7 +1680,7 @@ do_push_arg:
 					}
 				}
 			} else {
-				varkwds = Dee_EmptyMapping;
+				varkwds = Dee_EmptyRoDict;
 			}
 			PUSHREF(varkwds);
 			DISPATCH();
@@ -6655,7 +6656,7 @@ do_prefix_push_arg:
 							}
 						}
 					} else {
-						varkwds = Dee_EmptyMapping;
+						varkwds = Dee_EmptyRoDict;
 					}
 					Dee_Incref(varkwds);
 					if (set_prefix_object((DeeObject *)varkwds))

@@ -957,15 +957,7 @@ PRIVATE struct type_member tpconst rodict_class_members[] = {
 };
 
 PRIVATE WUNUSED DREF RoDict *DCALL rodict_ctor(void) {
-	DREF RoDict *result;
-	result = RODICT_ALLOC(0);
-	if unlikely(!result)
-		goto done;
-	result->rd_mask = 0;
-	result->rd_size = 0;
-	DeeObject_Init(result, &DeeRoDict_Type);
-done:
-	return result;
+	return_reference_((DREF RoDict *)Dee_EmptyRoDict);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF RoDict *DCALL
@@ -1064,6 +1056,15 @@ PUBLIC DeeTypeObject DeeRoDict_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ rodict_class_members
 };
+
+/* Special empty instance of `DeeRoDict_Type' */
+PUBLIC struct Dee_empty_rodict_object DeeRoDict_EmptyInstance = {
+	OBJECT_HEAD_INIT(&DeeRoDict_Type),
+	/* .rd_mask = */ 0,
+	/* .rd_size = */ 0,
+	/* .rd_elem = */ {{ NULL, NULL, 0 }}
+};
+
 
 DECL_END
 

@@ -2973,7 +2973,7 @@ target_push_varkwds:
 	ADJUST_CFA_OFFSET(-4)
 	jmp    .disp
 #endif /* !CONFIG_NO_THREADS */
-70:	leal   SYM(DeeMapping_EmptyInstance), %edx
+70:	leal   SYM(DeeRoDict_EmptyInstance), %edx
 	sp_push %edx, 1
 	jmp    .disp
 
@@ -7379,7 +7379,7 @@ prefix_target_push_varkwds:
 	ADJUST_CFA_OFFSET(-4)
 	jmp    set_prefix_object_incref
 #endif /* !CONFIG_NO_THREADS */
-70:	leal   SYM(DeeMapping_EmptyInstance), %edx
+70:	leal   SYM(DeeRoDict_EmptyInstance), %edx
 	jmp    set_prefix_object_incref
 
 

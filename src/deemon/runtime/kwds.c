@@ -1140,7 +1140,7 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	                         "(kwds:?Ert:Kwds,args:?DTuple)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE | TF_KW,
+	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -1357,7 +1357,7 @@ DeeKwMapping_New(size_t *__restrict p_argc,
                  DeeObject *const *argv,
                  DeeObject *kw) {
 	if (!kw)
-		return_reference_(Dee_EmptyMapping);
+		return_reference_(Dee_EmptyRoDict);
 	if (DeeKwds_Check(kw)) {
 		size_t num_keywords;
 		num_keywords = DeeKwds_SIZE(kw);
@@ -1461,7 +1461,7 @@ DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
 	DeeObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (!self->kwa_kw) {
-		err_unknown_key(Dee_EmptyMapping, name);
+		err_unknown_key(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
@@ -1486,7 +1486,7 @@ DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
                               Dee_hash_t hash) {
 	DeeObject *result;
 	if (!self->kwa_kw) {
-		err_unknown_key_str(Dee_EmptyMapping, name);
+		err_unknown_key_str(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(self->kwa_kw)) {
@@ -1511,7 +1511,7 @@ DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
                                  size_t namelen, Dee_hash_t hash) {
 	DeeObject *result;
 	if (!self->kwa_kw) {
-		err_unknown_key_str(Dee_EmptyMapping, name);
+		err_unknown_key_str(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	++self->kwa_kwused;
@@ -1615,7 +1615,7 @@ DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
                /*string*/ DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	if (!kw) {
-		err_unknown_key(Dee_EmptyMapping, name);
+		err_unknown_key(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1641,7 +1641,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
 DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                          char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
-		err_unknown_key_str(Dee_EmptyMapping, name);
+		err_unknown_key_str(Dee_EmptyRoDict, name);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1667,7 +1667,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) DeeObject *DCALL
 DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
                             char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
-		err_unknown_key_str_len(Dee_EmptyMapping, name, namelen);
+		err_unknown_key_str_len(Dee_EmptyRoDict, name, namelen);
 		return NULL;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1933,9 +1933,10 @@ DeeKwBlackList_New(struct Dee_code_object *__restrict code,
 		if unlikely(!DeeKwds_SIZE(kw)) {
 			/* No keywords --> Return an empty mapping.
 			 * -> This can happen depending on how keyword arguments
-			 *    have been routed throughout the runtime. */
-			Dee_Incref(Dee_EmptyMapping);
-			return Dee_EmptyMapping;
+			 *    have been routed throughout the runtime.
+			 * Note that we use "Dee_EmptyRoDict" because the mapping needs to be kw-capable */
+			Dee_Incref(Dee_EmptyRoDict);
+			return Dee_EmptyRoDict;
 		}
 		positional_argv += positional_argc;
 		if (positional_argc >= code->co_argc_max || unlikely(!code->co_keywords)) {

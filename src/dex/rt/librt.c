@@ -2204,15 +2204,16 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "DictValuesIterator", (DeeObject *)&librt_get_DictValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictValuesIterator_Type */
 
 	/* Special instances of non-singleton objects */
-	{ "Sequence_empty", (DeeObject *)Dee_EmptySeq, MODSYM_FREADONLY, DOC("A general-purpose, empty sequence singleton") },
-	{ "Set_empty", (DeeObject *)Dee_EmptySet, MODSYM_FREADONLY, DOC("A general-purpose, empty set singleton") },
-	{ "Mapping_empty", (DeeObject *)Dee_EmptyMapping, MODSYM_FREADONLY, DOC("A general-purpose, empty mapping singleton") },
-	{ "Tuple_empty", (DeeObject *)Dee_EmptyTuple, MODSYM_FREADONLY, DOC("The empty tuple singleton $\"\"") },
-	{ "String_empty", (DeeObject *)Dee_EmptyString, MODSYM_FREADONLY, DOC("The empty string singleton $\"\"") },
-	{ "Bytes_empty", (DeeObject *)Dee_EmptyBytes, MODSYM_FREADONLY, DOC("The empty bytes singleton ${\"\".bytes()}") },
-	{ "Int_0", DeeInt_Zero, MODSYM_FREADONLY, DOC("The integer constant $0") },
-	{ "Int_1", DeeInt_One, MODSYM_FREADONLY, DOC("The integer constant $1") },
-	{ "Int_m1", DeeInt_MinusOne, MODSYM_FREADONLY, DOC("The integer constant ${-1}") },
+	{ "Sequence_empty", (DeeObject *)Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },
+	{ "Set_empty", (DeeObject *)Dee_EmptySet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty set singleton") },
+	{ "Mapping_empty", (DeeObject *)Dee_EmptyMapping, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty mapping singleton") },
+	{ "RoDict_empty", (DeeObject *)Dee_EmptyRoDict, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("An empty instance of ?GRoDict") },
+	{ "Tuple_empty", (DeeObject *)Dee_EmptyTuple, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty tuple singleton $\"\"") },
+	{ "String_empty", (DeeObject *)Dee_EmptyString, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty string singleton $\"\"") },
+	{ "Bytes_empty", (DeeObject *)Dee_EmptyBytes, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The empty bytes singleton ${\"\".bytes()}") },
+	{ "Int_0", DeeInt_Zero, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant $0") },
+	{ "Int_1", DeeInt_One, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant $1") },
+	{ "Int_m1", DeeInt_MinusOne, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("The integer constant ${-1}") },
 	{ "Code_empty", (DeeObject *)&librt_get_Code_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GCode\n"
 	      "Special instance of ?GCode that immediately returns ?N") }, /* empty_code_head.c_code */
@@ -2226,7 +2227,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Traceback_empty", (DeeObject *)&librt_get_Traceback_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
 	  DOC("->?GTraceback\n"
 	      "The fallback #Iempty traceback") }, /* DeeTraceback_Empty */
-	{ "Module_deemon", (DeeObject *)&DeeModule_Deemon, MODSYM_FREADONLY,
+	{ "Module_deemon", (DeeObject *)&DeeModule_Deemon, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
 	  DOC("->?GModule\n"
 	      "The built-in ?Mdeemon module") }, /* DeeModule_Deemon */
 	{ "Module_empty", (DeeObject *)&librt_get_Module_empty, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
