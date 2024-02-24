@@ -143,6 +143,15 @@ PRIVATE WUNUSED NONNULL((1)) int
 	if (ast_genasm_one(self, ASM_G_FPUSHRES))
 		goto err;
 
+	/* Check for special case: if it's the special "varkwds" symbol, then we don't need to cast! */
+	if (self->a_type == AST_SYM) {
+		struct symbol *sym = self->a_sym;
+		SYMBOL_INPLACE_UNWIND_ALIAS(sym);
+		if (sym->s_type == SYMBOL_TYPE_ARG &&
+		    DeeBaseScope_IsVarkwds(current_basescope, sym))
+			return 0;
+	}
+
 	/* DONT use ast_predict_type here: that one can only be used when
 	 * the assumption not being met results in weak undefined behavior. However,
 	 * if the args-operand in a call really isn't a tuple, the results are hard
