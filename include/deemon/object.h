@@ -2697,6 +2697,8 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                                             * An example for where this flag should be used would be an object that only ever
                                             * holds references to `String' or `int' objects, but not to objects of its own type,
                                             * or any sort of container object capable of holding instances of the same type. */
+#define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
+                                            * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
@@ -2715,6 +2717,7 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
 #define TP_FINTERHITABLE    Dee_TP_FINTERHITABLE
 #define TF_NONE             Dee_TF_NONE
 #define TF_NONLOOPING       Dee_TF_NONLOOPING
+#define TF_KW               Dee_TF_KW
 #define TF_SINGLETON        Dee_TF_SINGLETON
 #endif /* DEE_SOURCE */
 

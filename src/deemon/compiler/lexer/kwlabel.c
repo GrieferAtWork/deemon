@@ -26,6 +26,7 @@
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/compiler/tpp.h>
+#include <deemon/kwds.h>
 #include <deemon/tuple.h>
 
 DECL_BEGIN

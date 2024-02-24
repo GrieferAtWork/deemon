@@ -634,7 +634,8 @@
                                     * >> PUSH(Tuple(POP(IMM8))); */
 #define ASM_PACK_LIST         0x43 /* [2][-n,+1]   `push pack List, #<imm8>'            - Pop <imm8> elements and pack them into a List.
                                     * >> PUSH(List(POP(IMM8))); */
-/*      ASM_                  0x44  *               --------                            - ------------------ */
+#define ASM_CAST_VARKWDS      0x44 /* [1][-1,+1]   `cast top, varkwds'                  - Ensure that the object in stack-top supports `DeeObject_IsKw()'.
+                                    * >> PUSH(DeeKw_Wrap(POP())); */
 /*      ASM_                  0x45  *               --------                            - ------------------ */
 #define ASM_UNPACK            0x46 /* [2][-1,+n]   `unpack pop, #<imm8>'                - Pop a sequence and unpack it into <imm8> elements then pushed onto the stack.
                                     *              `unpack PREFIX, #<imm8>', `PREFIX: unpack #<imm8>'

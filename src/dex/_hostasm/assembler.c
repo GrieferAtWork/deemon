@@ -352,16 +352,49 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >>     }
 		 * >> }
 		 */
+		/* TODO: Add a new system for "DeeGenericKwds_GetOptionalArgument()". This will also
+		 *       solve the same problem in `DeeArg_UnpackKw()', the problem being that keyword
+		 *       arguments can (in theory) be constructed on-demand by a custom Mapping object,
+		 *       though that is something that would require loaded keyword arguments to always
+		 *       be references (which would be may less efficient, and require a re-write of a
+		 *       large part of deemon's builtin APIs)
+		 * DeeGenericKwds_GetOptionalArgument() would then work similar to DeeObject_GetItem(),
+		 * only that it doesn't return a reference, and only works for a select few types. Then,
+		 * there should be a new opcode `ASM_CAST_KWDS' that converts a generic mapping into one
+		 * that can be used for keyword arguments (in the generic case, that would be a mapping
+		 * object that inherits references to the items of the underlying mapping by caching them)
+		 *
+		 * So then, a generic kwds call looks like this:
+		 * >> function foo(args, kwds) {
+		 * >>     return bar(args..., **kwds);
+		 * >> }
+		 * ASM:
+		 * >>     push @bar
+		 * >>     push arg @args
+		 * >>     cast top, Tuple
+		 * >>     push arg @kwds
+		 * >>     cast top, kwds         // New opcode: ASM_CAST_KWDS
+		 * >>     call top, pop..., pop  // In safe-mode, this will assert that the 3rd operand is kwds-capable
+		 * >>     ret  pop
+		 *
+		 * The following types should then be kwds-capable (there should be a tp_features flag to test for these):
+		 * - DeeKwds_Type           (for extra-special handling where values are passed via args)
+		 * - DeeRoDict_Type         (no point in not allowing this one; it can already implement GetItemWithoutRef)
+		 * - DeeCachedMapping_Type  (a new type that wraps another mapping whilst caching its key/item pairs)
+		 *
+		 * TODO: Come up with a better name than "DeeGenericKwds_GetOptionalArgument"
+		 */
+
 		/* TODO */
 		return 0;
 	}
 
 	if (co_argc_min == 0 && (code->co_flags & CODE_FVARARGS)) {
 		/* Special case: *any* number of arguments is accepted */
-	} else if (co_argc_min == co_argc_max && !(code->co_flags & CODE_FVARARGS)) {
-		/* TODO: if (argc != co_argc_min) err_invalid_argc(...); */
 	} else if (code->co_flags & CODE_FVARARGS) {
 		/* TODO: if (argc < co_argc_min) err_invalid_argc(...); */
+	} else if (co_argc_min == co_argc_max) {
+		/* TODO: if (argc != co_argc_min) err_invalid_argc(...); */
 	} else {
 		/* TODO: if (argc < co_argc_min || argc > co_argc_max) err_invalid_argc(...); */
 	}
@@ -370,12 +403,8 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 	 * At this point, arguments, varargs and varkwds are accessed as follows:
 	 *
 	 * if HOSTFUNC_CC_F_KW:
-	 * >> varkwds = ({ // CAUTION: Must be decref'd using "VARKWDS_DECREF()"
-	 * >>     if (kw->ob_type == &DeeKwds_Type) {
-	 * >>         BlackListVarkwds_New({code}, argc, argv, kw);
-	 * >>     } else {
-	 * >>         BlackListMapping_New({code}, argc, kw);
-	 * >>     }
+	 * >> varkwds = ({ // CAUTION: Must be decref'd using "DeeKwBlackList_Decref()"
+	 * >>     DeeBlackListKw_New({code}, argc, argv, kw);
 	 * >> });
 	 *
 	 * if HOSTFUNC_CC_F_KW:

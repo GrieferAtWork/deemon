@@ -247,6 +247,7 @@ INTERN NONNULL((1, 2, 3, 4)) void DCALL
 Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
                          struct Dee_function_assembler *__restrict assembler,
                          byte_t *start_of_text, byte_t *end_of_text) {
+	BOOLEAN bAddOk;
 	struct Dee_host_unwind_ms64_writer writer;
 	struct Dee_host_section *sect;
 	NT_RUNTIME_FUNCTION *pFunctionTable;
@@ -257,7 +258,7 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 	num_functions = 0;
 	TAILQ_FOREACH (sect, &assembler->fa_sections, hs_link) {
 		num_functions += sect->hs_unwind.hu_unwindc;
-		if (Dee_host_section_size(sect))
+		if (Dee_host_section_size(sect) && sect->hs_unwind.hu_currsp != 0)
 			++num_functions;
 	}
 	if (num_functions == 0) {
@@ -273,8 +274,13 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 
 	/* Register the function table with NT. */
 	self->hfu_FunctionTable = pFunctionTable;
-	if (!RtlAddFunctionTable((PRUNTIME_FUNCTION)pFunctionTable, writer.humw_function_count,
-	                         (DWORD64)(uintptr_t)writer.humw_image_base)) {
+
+	/* TODO: Use GetProcAddress() to load this function */
+	DBG_ALIGNMENT_DISABLE();
+	bAddOk = RtlAddFunctionTable((PRUNTIME_FUNCTION)pFunctionTable, writer.humw_function_count,
+	                             (DWORD64)(uintptr_t)writer.humw_image_base);
+	DBG_ALIGNMENT_ENABLE();
+	if (!bAddOk) {
 		HA_printf("Error calling RtlAddFunctionTable: %u\n", (unsigned int)GetLastError());
 		self->hfu_FunctionTable = NULL;
 	}
@@ -283,8 +289,12 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 /* Finalize host function unwind data. */
 INTERN NONNULL((1)) void DCALL
 Dee_hostfunc_unwind_fini(struct Dee_hostfunc_unwind *__restrict self) {
-	if (self->hfu_FunctionTable)
+	if (self->hfu_FunctionTable) {
+		/* TODO: Use GetProcAddress() to load this function */
+		DBG_ALIGNMENT_DISABLE();
 		RtlDeleteFunctionTable((PRUNTIME_FUNCTION)self->hfu_FunctionTable);
+		DBG_ALIGNMENT_ENABLE();
+	}
 }
 
 

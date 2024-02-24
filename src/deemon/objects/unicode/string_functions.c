@@ -1107,31 +1107,81 @@ err:
 	return NULL;
 }
 
+#ifdef NDEBUG
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeString_New2Byte(uint16_t const *__restrict str,
-                   size_t length) {
+                   size_t length)
+#else /* NDEBUG */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDbgString_New2Byte(uint16_t const *__restrict str,
+                      size_t length, char const *file, int line)
+#endif /* !NDEBUG */
+{
 	uint16_t *buffer;
+#ifdef NDEBUG
 	buffer = DeeString_New2ByteBuffer(length);
+#else /* NDEBUG */
+	buffer = DeeDbgString_New2ByteBuffer(length, file, line);
+#endif /* !NDEBUG */
 	if unlikely(!buffer)
 		goto err;
-	memcpyw(buffer, str, length);
+	buffer = memcpyw(buffer, str, length);
 	return DeeString_Pack2ByteBuffer(buffer);
 err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_New4Byte(uint32_t const *__restrict str,
-                   size_t length) {
+#ifdef NDEBUG
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_New4Byte)(uint32_t const *__restrict str,
+                           size_t length)
+#else /* NDEBUG */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_New4Byte)(uint32_t const *__restrict str,
+                              size_t length, char const *file, int line)
+#endif /* !NDEBUG */
+{
 	uint32_t *buffer;
+#ifdef NDEBUG
 	buffer = DeeString_New4ByteBuffer(length);
+#else /* NDEBUG */
+	buffer = DeeDbgString_New4ByteBuffer(length, file, line);
+#endif /* !NDEBUG */
 	if unlikely(!buffer)
 		goto err;
-	memcpyl(buffer, str, length);
+	buffer = memcpyl(buffer, str, length);
 	return DeeString_Pack4ByteBuffer(buffer);
 err:
 	return NULL;
 }
+
+#ifdef NDEBUG
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_New2Byte)(uint16_t const *__restrict str,
+                              size_t length, char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_New2Byte(str, length);
+}
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_New4Byte)(uint32_t const *__restrict str,
+                              size_t length, char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_New4Byte(str, length);
+}
+#else /* NDEBUG */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_New2Byte)(uint16_t const *__restrict str,
+                           size_t length) {
+	return DeeDbgString_New2Byte(str, length, NULL, 0);
+}
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_New4Byte)(uint32_t const *__restrict str,
+                           size_t length) {
+	return DeeDbgString_New4Byte(str, length, NULL, 0);
+}
+#endif /* !NDEBUG */
 
 /* Construct strings from UTF-16/32 encoded content.
  * @param: error_mode: One of `STRING_ERROR_F*' */

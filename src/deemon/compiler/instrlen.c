@@ -211,7 +211,7 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x41 */ 1, /* `ASM_CAST_LIST':               `cast top, List' */
 	/* 0x42 */ 2, /* `ASM_PACK_TUPLE':              `push pack Tuple, #<imm8>' */
 	/* 0x43 */ 2, /* `ASM_PACK_LIST':               `push pack List, #<imm8>' */
-	/* 0x44 */ 1, /* --- */
+	/* 0x44 */ 1, /* `ASM_CAST_VARKWDS':            `cast top, varkwds' */
 	/* 0x45 */ 1, /* --- */
 	/* 0x46 */ 2, /* `ASM_UNPACK':                  `unpack pop, #<imm8>' */
 	/* 0x47 */ 1, /* `ASM_CONCAT':                  `concat top, pop' */
@@ -322,11 +322,11 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0xb0 */ 1, /* `ASM_CONTAINS':                `contains top, pop' */
 	/* 0xb1 */ 2, /* `ASM_CONTAINS_C':              `push contains const <imm8>, pop' */
 	/* 0xb2 */ 1, /* `ASM_GETITEM':                 `getitem top, pop' */
-	/* 0xb3 */ 3, /* `ASM_GETITEM_I':               `getitem top, $<Simm16>' */
+	/* 0xb3 */ 3, /* `ASM_GETITEM_I':               `getitem top, $<imm16>' */
 	/* 0xb4 */ 2, /* `ASM_GETITEM_C':               `getitem top, const <imm8>' */
 	/* 0xb5 */ 1, /* `ASM_GETSIZE':                 `getsize top' */
 	/* 0xb6 */ 1, /* `ASM_SETITEM':                 `setitem pop, pop, pop' */
-	/* 0xb7 */ 3, /* `ASM_SETITEM_I':               `setitem pop, $<Simm16>, pop' */
+	/* 0xb7 */ 3, /* `ASM_SETITEM_I':               `setitem pop, $<imm16>, pop' */
 	/* 0xb8 */ 2, /* `ASM_SETITEM_C':               `setitem pop, const <imm8>, pop' */
 	/* 0xb9 */ 1, /* `ASM_ITERSELF':                `iterself top' */
 	/* 0xba */ 1, /* `ASM_DELITEM':                 `delitem pop, pop' */
@@ -428,7 +428,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x17 */ 2, /* --- */
 	/* 0x18 */ 2, /* `ASM_JMP_POP_POP':             `jmp pop, #pop' */
 	/* 0x19 */ 5, /* `ASM16_OPERATOR':              `op top, $<imm16>, #<imm8>' */
-	/* 0x1a */ 4, /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop' */
+	/* 0x1a */ 4, /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop...' */
 	/* 0x1b */ 3, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
 	/* 0x1c */ 3, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
 	/* 0x1d */ 2, /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
@@ -729,7 +729,7 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x41 */ STACK_EFFECT(1, 1), /* `ASM_CAST_LIST':               `cast top, List' */
 	/* 0x42 */ STACK_EFFECT_UNDEF, /* `ASM_PACK_TUPLE':              `push pack Tuple, #<imm8>' */
 	/* 0x43 */ STACK_EFFECT_UNDEF, /* `ASM_PACK_LIST':               `push pack List, #<imm8>' */
-	/* 0x44 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x44 */ STACK_EFFECT(1, 1), /* `ASM_CAST_VARKWDS':            `cast top, varkwds' */
 	/* 0x45 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x46 */ STACK_EFFECT_UNDEF, /* `ASM_UNPACK':                  `unpack pop, #<imm8>' */
 	/* 0x47 */ STACK_EFFECT(2, 1), /* `ASM_CONCAT':                  `concat top, pop' */
@@ -840,11 +840,11 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0xb0 */ STACK_EFFECT(2, 1), /* `ASM_CONTAINS':                `contains top, pop' */
 	/* 0xb1 */ STACK_EFFECT(1, 1), /* `ASM_CONTAINS_C':              `push contains const <imm8>, pop' */
 	/* 0xb2 */ STACK_EFFECT(2, 1), /* `ASM_GETITEM':                 `getitem top, pop' */
-	/* 0xb3 */ STACK_EFFECT(1, 1), /* `ASM_GETITEM_I':               `getitem top, $<Simm16>' */
+	/* 0xb3 */ STACK_EFFECT(1, 1), /* `ASM_GETITEM_I':               `getitem top, $<imm16>' */
 	/* 0xb4 */ STACK_EFFECT(1, 1), /* `ASM_GETITEM_C':               `getitem top, const <imm8>' */
 	/* 0xb5 */ STACK_EFFECT(1, 1), /* `ASM_GETSIZE':                 `getsize top' */
 	/* 0xb6 */ STACK_EFFECT(3, 0), /* `ASM_SETITEM':                 `setitem pop, pop, pop' */
-	/* 0xb7 */ STACK_EFFECT(2, 0), /* `ASM_SETITEM_I':               `setitem pop, $<Simm16>, pop' */
+	/* 0xb7 */ STACK_EFFECT(2, 0), /* `ASM_SETITEM_I':               `setitem pop, $<imm16>, pop' */
 	/* 0xb8 */ STACK_EFFECT(2, 0), /* `ASM_SETITEM_C':               `setitem pop, const <imm8>, pop' */
 	/* 0xb9 */ STACK_EFFECT(1, 1), /* `ASM_ITERSELF':                `iterself top' */
 	/* 0xba */ STACK_EFFECT(2, 0), /* `ASM_DELITEM':                 `delitem pop, pop' */
@@ -946,7 +946,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x17 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x18 */ STACK_EFFECT(2, 0), /* `ASM_JMP_POP_POP':             `jmp pop, #pop' */
 	/* 0x19 */ STACK_EFFECT_UNDEF, /* `ASM16_OPERATOR':              `op top, $<imm16>, #<imm8>' */
-	/* 0x1a */ STACK_EFFECT(2, 1), /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop' */
+	/* 0x1a */ STACK_EFFECT(2, 1), /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop...' */
 	/* 0x1b */ STACK_EFFECT_UNDEF, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
 	/* 0x1c */ STACK_EFFECT_UNDEF, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
 	/* 0x1d */ STACK_EFFECT(3, 1), /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */

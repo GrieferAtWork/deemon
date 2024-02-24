@@ -24,7 +24,7 @@
 #define CALL_KW    1
 #endif /* __INTELLISENSE__ */
 
-#include "../objects/seq/varkwds.h"
+#include <deemon/kwds.h>
 
 DECL_BEGIN
 

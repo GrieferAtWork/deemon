@@ -34,6 +34,7 @@
 #include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
@@ -4433,6 +4434,11 @@ PRIVATE struct type_member tpconst type_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("__iscustom__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FHEAP,
 	                         "True if this type was dynamically allocated on the heap"),
 	TYPE_MEMBER_BITFIELD("__issuperconstructible__", STRUCT_CONST, DeeTypeObject, tp_flags, TP_FINHERITCTOR),
+	TYPE_MEMBER_BITFIELD_DOC("__iskw__", STRUCT_CONST, DeeTypeObject, tp_features, TF_KW,
+	                         "True if instances of this type can be used as keywords argument in the C API. "
+	                         /**/ "When this is not true, and an instance is used as a keywords argument, the "
+	                         /**/ "compiler must generate code to wrap instance of this type as a mapping that "
+	                         /**/ "#Idoes support ?#__iskw__ (s.a. ?Ert:kw)"),
 	TYPE_MEMBER_FIELD("__isnoargconstructible__", STRUCT_CONST | STRUCT_BOOLPTR,
 	                  offsetof(DeeTypeObject, tp_init.tp_alloc.tp_ctor)),
 	TYPE_MEMBER_END

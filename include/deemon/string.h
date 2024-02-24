@@ -840,7 +840,15 @@ Dee_wchar_t *DeeString_AsWide(DeeObject *__restrict self);
 
 /* Construct an uninitialized single-byte string,
  * capable of representing up to `num_bytes' bytes of text. */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeString_NewBuffer(size_t num_bytes);
+#undef DeeString_NewBuffer
+#undef DeeDbgString_NewBuffer
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_NewBuffer)(size_t num_bytes);
+DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeDbgString_NewBuffer)(size_t num_bytes, char const *file, int line);
+#ifdef NDEBUG
+#define DeeDbgString_NewBuffer(num_bytes, file, line) DeeString_NewBuffer(num_bytes)
+#else /* !NDEBUG */
+#define DeeString_NewBuffer(num_bytes) DeeDbgString_NewBuffer(num_bytes, __FILE__, __LINE__)
+#endif /* !NDEBUG */
 
 /* Resize a single-byte string to have a length of `num_bytes' bytes.
  * You may pass `NULL' for `self', or a reference to `Dee_EmptyString'
@@ -892,11 +900,17 @@ DeeString_DecodeBackslashEscaped(struct Dee_unicode_printer *__restrict printer,
 /* Construct a new, non-decoded single-byte-per-character string `str'.
  * The string itself may contain characters above 127, which are then
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_New(/*unsigned*/ char const *__restrict str);
-
-#define DeeString_NewWithHash(str, hash) \
-	((void)(hash), DeeString_New(str)) /* XXX: Take advantage of this? */
+#undef DeeString_New
+#undef DeeDbgString_New
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str, char const *file, int line);
+#define DeeString_NewWithHash(str, hash)                ((void)(hash), DeeString_New(str))                /* XXX: Take advantage of this? */
+#define DeeDbgString_NewWithHash(str, hash, file, line) ((void)(hash), DeeDbgString_New(str, file, line)) /* XXX: Take advantage of this? */
+#ifdef NDEBUG
+#define DeeDbgString_New(str, file, line) DeeString_New(str)
+#else /* NDEBUG */
+#define DeeString_New(str) DeeDbgString_New(str, __FILE__, __LINE__)
+#endif /* !NDEBUG */
 
 
 #ifndef __ARCH_PAGESIZE_MIN
@@ -989,16 +1003,39 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DeeString_Newf(/*utf-8*/ char const
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_VNewf(/*utf-8*/ char const *__restrict format, va_list args);
 
 /* Construct strings with basic width-data. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_New2Byte(uint16_t const *__restrict str, size_t length);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeString_New4Byte(uint32_t const *__restrict str, size_t length);
+#undef DeeString_NewSized
+#undef DeeString_New2Byte
+#undef DeeString_New4Byte
+#undef DeeDbgString_NewSized
+#undef DeeDbgString_New2Byte
+#undef DeeDbgString_New4Byte
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New2Byte)(uint16_t const *__restrict str, size_t length);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeString_New4Byte)(uint32_t const *__restrict str, size_t length);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New2Byte)(uint16_t const *__restrict str, size_t length, char const *file, int line);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeDbgString_New4Byte)(uint32_t const *__restrict str, size_t length, char const *file, int line);
 #define DeeString_NewSizedWithHash(str, length, hash) \
 	((void)(hash), DeeString_NewSized(str, length)) /* XXX: Take advantage of this? */
+#define DeeDbgString_NewSizedWithHash(str, length, hash, file, line) \
+	((void)(hash), DeeDbgString_NewSized(str, length, file, line)) /* XXX: Take advantage of this? */
+#ifdef NDEBUG
+#define DeeDbgString_NewSized(str, length, file, line) DeeString_NewSized(str, length)
+#define DeeDbgString_New2Byte(str, length, file, line) DeeString_New2Byte(str, length)
+#define DeeDbgString_New4Byte(str, length, file, line) DeeString_New4Byte(str, length)
+#else /* !NDEBUG */
+#define DeeString_NewSized(str, length) DeeDbgString_NewSized(str, length, __FILE__, __LINE__)
+#define DeeString_New2Byte(str, length) DeeDbgString_New2Byte(str, length, __FILE__, __LINE__)
+#define DeeString_New4Byte(str, length) DeeDbgString_New4Byte(str, length, __FILE__, __LINE__)
+#endif /* !NDEBUG */
+
 
 #ifdef __INTELLISENSE__
 DREF DeeObject *DeeString_New1Byte(uint8_t const *__restrict str, size_t length);
+DREF DeeObject *DeeDbgString_New1Byte(uint8_t const *__restrict str, size_t length, char const *file, int line);
 #else /* __INTELLISENSE__ */
-#define DeeString_New1Byte(str, length) DeeString_NewSized((char const *)(str), length)
+#define DeeString_New1Byte(str, length)                DeeString_NewSized((char const *)(str), length)
+#define DeeDbgString_New1Byte(str, length, file, line) DeeDbgString_NewSized((char const *)(str), length, file, line)
 #endif /* !__INTELLISENSE__ */
 
 

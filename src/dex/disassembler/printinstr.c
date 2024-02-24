@@ -246,7 +246,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x41 */ "cast   top, List", /* `ASM_CAST_LIST' */
 	/* 0x42 */ "push   pack Tuple, " PREFIX_STACKEFFECT, /* `ASM_PACK_TUPLE' */
 	/* 0x43 */ "push   pack List, " PREFIX_STACKEFFECT, /* `ASM_PACK_LIST' */
-	/* 0x44 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x44 */ "cast   top, varkwds", /* `ASM_CAST_VARKWDS' */
 	/* 0x45 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x46 */ "unpack pop, " PREFIX_STACKEFFECT, /* `ASM_UNPACK' */
 	/* 0x47 */ "concat top, pop", /* `ASM_CONCAT' */

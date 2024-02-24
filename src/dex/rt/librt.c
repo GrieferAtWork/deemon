@@ -31,6 +31,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/cached-dict.h>
 #include <deemon/callable.h>
 #include <deemon/cell.h>
 #include <deemon/class.h>
@@ -46,6 +47,7 @@
 #include <deemon/hashset.h>
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/mapfile.h>
@@ -64,8 +66,8 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
-#include <deemon/weakref.h>
 #include <deemon/util/atomic.h>
+#include <deemon/weakref.h>
 
 DECL_BEGIN
 
@@ -475,87 +477,22 @@ librt_get_Module_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_Module_empty_f_impl();
 }
 
-
-
-PRIVATE DeeStringObject *varkwds_keywords[1] = {
-	NULL /* NOTE: Set to non-NULL in `librt_get_BlackListVarkwds_impl_f()' */
-};
-
-PRIVATE DEFINE_CODE(
-	varkwds_code,
-	/* co_flags    : */ CODE_FASSEMBLY | CODE_FVARKWDS,
-	/* co_localc   : */ 0,
-	/* co_staticc  : */ 0,
-	/* co_refc     : */ 0,
-	/* co_exceptc  : */ 0,
-	/* co_argc_min : */ COMPILER_LENOF(varkwds_keywords),
-	/* co_argc_max : */ COMPILER_LENOF(varkwds_keywords),
-	/* co_framesize: */ 1 * sizeof(DREF DeeObject *),
-	/* co_codebytes: */ 2,
-	/* co_module   : */ &DeeModule_Deemon,
-	/* co_keywords : */ varkwds_keywords,
-	/* co_defaultv : */ NULL,
-	/* co_staticv  : */ NULL,
-	/* co_exceptv  : */ NULL,
-	/* co_ddi      : */ &DeeDDI_Empty,
-{
-	ASM_PUSH_VARKWDS, /* push varkwds  (This is the only thing we're actually interested in) */
-	ASM_RET           /* ret  pop */
-});
-
-PRIVATE DEFINE_FUNCTION_NOREFS(
-	varkwds_func,
-	/* fo_code: */ (DeeCodeObject *)&varkwds_code.ob);
-PRIVATE DEFINE_KWDS(
-	varkwds_invoke_kwds,
-	/* kw_size: */ 1,
-	/* kw_mask: */ 1,
-{
-});
-
-
-LOCAL WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListVarkwds_impl_f(void) {
-	/* `type(varkwds_func(iterator: none))' */
-	DeeObject *argv[] = { Dee_None };
-	dhash_t h = DeeString_Hash((DeeObject *)&str_Iterator);
-	varkwds_invoke_kwds.kw_map[h & 1].ke_name = &str_Iterator;
-	varkwds_invoke_kwds.kw_map[h & 1].ke_hash = h;
-	varkwds_keywords[0] = (DeeStringObject *)&str_Iterator;
-	return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
-	                                    COMPILER_LENOF(argv),
-	                                    argv,
-	                                    (DeeObject *)&varkwds_invoke_kwds));
-}
-
-LOCAL WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListMapping_impl_f(void) {
-	/* `type(varkwds_func(**none))' */
-	varkwds_keywords[0] = (DeeStringObject *)&str_Iterator;
-	return get_type_of(DeeObject_CallKw((DeeObject *)&varkwds_func,
-	                                    0,
-	                                    NULL,
-	                                    Dee_None));
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_BlackListKwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return DeeObject_GetAttr((DeeObject *)&DeeBlackListKwds_Type,
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListVarkwds_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_BlackListVarkwds_impl_f();
+librt_get_BlackListKwIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return DeeObject_GetAttr((DeeObject *)&DeeBlackListKw_Type,
+	                         (DeeObject *)&str_Iterator);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListVarkwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_BlackListVarkwds_impl_f());
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListMapping_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return librt_get_BlackListMapping_impl_f();
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_BlackListMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_BlackListMapping_impl_f());
+librt_get_CachedDictIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return DeeObject_GetAttr((DeeObject *)&DeeCachedDict_Type,
+	                         (DeeObject *)&str_Iterator);
 }
 
 
@@ -1772,10 +1709,9 @@ PRIVATE DEFINE_CMETHOD(librt_get_GCSet, &librt_get_GCSet_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSetIterator, &librt_get_GCSetIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCSet_empty, &librt_get_GCSet_empty_f);
 PRIVATE DEFINE_CMETHOD(librt_get_Code_empty, &librt_get_Code_empty_f);
-PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwds, &librt_get_BlackListVarkwds_f);
-PRIVATE DEFINE_CMETHOD(librt_get_BlackListVarkwdsIterator, &librt_get_BlackListVarkwdsIterator_f);
-PRIVATE DEFINE_CMETHOD(librt_get_BlackListMapping, &librt_get_BlackListMapping_f);
-PRIVATE DEFINE_CMETHOD(librt_get_BlackListMappingIterator, &librt_get_BlackListMappingIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwdsIterator, &librt_get_BlackListKwdsIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_BlackListKwIterator, &librt_get_BlackListKwIterator_f);
+PRIVATE DEFINE_CMETHOD(librt_get_CachedDictIterator, &librt_get_CachedDictIterator_f);
 PRIVATE DEFINE_CMETHOD(librt_get_GCEnum, &librt_get_GCEnum_f);
 PRIVATE DEFINE_CMETHOD(librt_get_Traceback_empty, &librt_get_Traceback_empty_f);
 PRIVATE DEFINE_CMETHOD(librt_get_Module_empty, &librt_get_Module_empty_f);
@@ -1885,6 +1821,19 @@ err:
 PRIVATE DEFINE_CMETHOD(librt_argv_get, &librt_argv_get_f);
 PRIVATE DEFINE_CMETHOD(librt_argv_set, &librt_argv_set_f);
 
+
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_kw_f(size_t argc, DeeObject *const *argv) {
+	DeeObject *kw;
+	if (DeeArg_Unpack(argc, argv, "o:kw", &kw))
+		goto err;
+	return DeeKw_Wrap(kw);
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f);
 
 
 
@@ -2127,38 +2076,21 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "GCSetIterator", (DeeObject *)&librt_get_GCSetIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeGCSetIterator_Type */
 
 	/* Internal types used to drive variable keyword arguments */
-	{ "BlackListVarkwds", /* BlackListVarkwds_Type */
-	  (DeeObject *)&librt_get_BlackListVarkwds,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("A ${{string: Object}}-like mapping that is used to exclude positional "
-	      /**/ "keyword arguments for a variable-keywords user-code function, when that "
-	      /**/ "function is invoked with regular keywords being passed:\n"
-	      "${"
-	      /**/ "function foo(a, **kwds) {\n"
-	      /**/ "	print type kwds; /* _BlackListVarkwds */\n"
-	      /**/ "}\n"
-	      /**/ "foo(10, b: 20);\n"
-	      /**/ "foo(a: 10, b: 20);"
-	      "}") },
-	{ "BlackListVarkwdsIterator", /* BlackListVarkwdsIterator_Type */
-	  (DeeObject *)&librt_get_BlackListVarkwdsIterator,
+	{ "BlackListKwds", (DeeObject *)&DeeBlackListKwds_Type, MODSYM_FREADONLY },
+	{ "BlackListKwdsIterator", /* DeeBlackListKwdsIterator_Type */
+	  (DeeObject *)&librt_get_BlackListKwdsIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
-	{ "BlackListMapping", /* BlackListMapping_Type */
-	  (DeeObject *)&librt_get_BlackListMapping,
-	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR,
-	  DOC("A ${{string: Object}}-like mapping that is similar to ?GBlackListVarkwds, "
-	      /**/ "however gets used when the function is invoked using a custom keyword "
-	      /**/ "protocol, rather than conventional keyword arguments that store their "
-	      /**/ "values as part of the argument vector:\n"
-	      "${"
-	      /**/ "function foo(a, **kwds) {\n"
-	      /**/ "	print type kwds; /* _BlackListMapping */\n"
-	      /**/ "}\n"
-	      /**/ "foo(**{ \"a\": 10, \"b\": 20});"
-	      "}") },
-	{ "BlackListMappingIterator", /* BlackListMappingIterator_Type */
-	  (DeeObject *)&librt_get_BlackListMappingIterator,
+	{ "BlackListKw", (DeeObject *)&DeeBlackListKw_Type, MODSYM_FREADONLY },
+	{ "BlackListKwIterator", /* DeeBlackListKwIterator_Type */
+	  (DeeObject *)&librt_get_BlackListKwIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
+	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
+	{ "CachedDictIterator", /* DeeBlackListKwIterator_Type */
+	  (DeeObject *)&librt_get_CachedDictIterator,
+	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
+	{ "kw", (DeeObject *)&librt_kw, MODSYM_FNORMAL, /* varying */
+	  DOC("(map:?DMapping)->?DMapping\n"
+	      "Ensure that @map can be used as a keywords argument in the C API (s.a. ?A__iskw__?DType)") },
 
 	/* Internal types used to drive keyword argument support */
 	{ "DocKwds", /* DocKwds_Type */

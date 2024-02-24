@@ -42,6 +42,7 @@
 #include <deemon/gc.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/mapfile.h>

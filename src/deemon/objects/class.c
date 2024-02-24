@@ -31,6 +31,7 @@
 #include <deemon/float.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
 #include <deemon/string.h>

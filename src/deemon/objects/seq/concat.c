@@ -868,8 +868,7 @@ DeeSeq_Concat(DeeObject *self, DeeObject *other) {
 			DREF DeeObject **dst;
 			size_t rhs_size;
 			rhs_size = DeeTuple_SIZE(other);
-			result = DeeTuple_NewUninitialized(lhs_size +
-			                                                          rhs_size);
+			result = DeeTuple_NewUninitialized(lhs_size + rhs_size);
 			if unlikely(!result)
 				goto err;
 			dst = Dee_Movprefv(DeeTuple_ELEM(result),

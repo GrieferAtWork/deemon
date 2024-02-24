@@ -47,6 +47,7 @@
 		<ClInclude Include="..\include\deemon\attribute.h" />
 		<ClInclude Include="..\include\deemon\bool.h" />
 		<ClInclude Include="..\include\deemon\bytes.h" />
+		<ClInclude Include="..\include\deemon\cached-dict.h" />
 		<ClInclude Include="..\include\deemon\callable.h" />
 		<ClInclude Include="..\include\deemon\cell.h" />
 		<ClInclude Include="..\include\deemon\class.h" />
@@ -181,6 +182,7 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\typecore.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\unaligned.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\wordbits.h" />
+		<ClInclude Include="..\include\deemon\kwds.h" />
 		<ClInclude Include="..\include\deemon\list.h" />
 		<ClInclude Include="..\include\deemon\map.h" />
 		<ClInclude Include="..\include\deemon\mapfile.h" />
@@ -248,7 +250,6 @@
 		<ClInclude Include="..\src\deemon\objects\seq\svec.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\transform.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h" />
-		<ClInclude Include="..\src\deemon\objects\seq\varkwds.h" />
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl" />
@@ -369,10 +370,10 @@
 		<ClCompile Include="..\src\deemon\execute\module.c" />
 		<ClCompile Include="..\src\deemon\execute\module_globals.c" />
 		<ClCompile Include="..\src\deemon\main.c" />
-		<ClCompile Include="..\src\deemon\objects\arg.c" />
 		<ClCompile Include="..\src\deemon\objects\attribute.c" />
 		<ClCompile Include="..\src\deemon\objects\bool.c" />
 		<ClCompile Include="..\src\deemon\objects\bytes.c" />
+		<ClCompile Include="..\src\deemon\objects\cached-dict.c" />
 		<ClCompile Include="..\src\deemon\objects\callable.c" />
 		<ClCompile Include="..\src\deemon\objects\cell.c" />
 		<ClCompile Include="..\src\deemon\objects\class.c" />
@@ -422,7 +423,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\svec.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\transform.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c" />
-		<ClCompile Include="..\src\deemon\objects\seq\varkwds.c" />
 		<ClCompile Include="..\src\deemon\objects\seq_functions.c" />
 		<ClCompile Include="..\src\deemon\objects\seq_mutable.c" />
 		<ClCompile Include="..\src\deemon\objects\set.c" />
@@ -447,6 +447,8 @@
 		<ClCompile Include="..\src\deemon\runtime\error.c" />
 		<ClCompile Include="..\src\deemon\runtime\format.c" />
 		<ClCompile Include="..\src\deemon\runtime\gc.c" />
+		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c" />
+		<ClCompile Include="..\src\deemon\runtime\kwds.c" />
 		<ClCompile Include="..\src\deemon\runtime\lock.c" />
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />

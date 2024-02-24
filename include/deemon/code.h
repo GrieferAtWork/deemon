@@ -716,23 +716,23 @@ DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
  * >>    ERROR_UNBOUND_ARGUMENT(i);
  */
 struct Dee_code_frame_kwds {
-	DREF DeeObject                           *fk_varkwds; /* [0..1][valid_if(:cf_func->fo_code->co_flags & CODE_FVARKWDS)]
-	                                                       * [lock(WRITE_ONCE)] Variable keyword arguments.
-	                                                       * NOTE: May only be accessed by a code interpreter when the associated
-	                                                       *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
-	                                                       *       field may not actually exist)
-	                                                       * WARNING: Certain object types which can appear in this field require
-	                                                       *          special actions to be taken before being decref'd by their
-	                                                       *          creator / stack-owner. */
-	DREF DeeObject                           *fk_kw;      /* [1..1][const] The original `kw' object that was passed to the function.
-	                                                       * NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
-	                                                       *       aka. at the end of the standard-accessible argument vector.
-	                                                       * NOTE: May only be accessed by a code interpreter when the associated
-	                                                       *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
-	                                                       *       field may not actually exist) */
-	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fk_kargv);  /* [0..1][const][1..(:cf_func->fo_code->co_argc_max - :cf_argc)]
-	                                                       * Overlay of additional, non-positional arguments which were
-	                                                       * passed via keyword arguments. */
+	DREF DeeObject                      *fk_varkwds; /* [0..1][valid_if(:cf_func->fo_code->co_flags & CODE_FVARKWDS)]
+	                                                  * [lock(WRITE_ONCE)] Variable keyword arguments.
+	                                                  * NOTE: May only be accessed by a code interpreter when the associated
+	                                                  *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+	                                                  *       field may not actually exist)
+	                                                  * WARNING: Certain object types which can appear in this field require
+	                                                  *          special actions to be taken before being decref'd by their
+	                                                  *          creator / stack-owner. */
+	DREF DeeObject                      *fk_kw;      /* [1..1][const] The original `kw' object that was passed to the function.
+	                                                  * NOTE: When this is a DeeKwdsObject, its values are mapped to `:cf_argv + :cf_argc',
+	                                                  *       aka. at the end of the standard-accessible argument vector.
+	                                                  * NOTE: May only be accessed by a code interpreter when the associated
+	                                                  *       code object has the `CODE_FVARKWDS' flag set (otherwise, this
+	                                                  *       field may not actually exist) */
+	COMPILER_FLEXIBLE_ARRAY(DeeObject *, fk_kargv);  /* [0..1][const][1..(:cf_func->fo_code->co_argc_max - :cf_argc)]
+	                                                  * Overlay of additional, non-positional arguments which were
+	                                                  * passed via keyword arguments. */
 };
 
 

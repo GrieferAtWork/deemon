@@ -174,9 +174,8 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 			ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-			val = DeeObject_GetItemDef(kw, (DeeObject *)name, ITER_DONE);
+			val = DeeKw_GetItemNRDef(kw, (DeeObject *)name, ITER_DONE);
 			if unlikely(!ITER_ISOK(val)) {
-				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
 				if (val != NULL) {
 					/* Missing, mandatory argument. */
 					err_invalid_argc_missing_kw(DeeString_STR(name),
@@ -187,7 +186,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 				}
 				goto err_ex_frame;
 			}
-			frame.cf_kw->fk_kargv[i] = val; /* Inherit reference. */
+			frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
 			index = kwds_find_index((DeeKwdsObject *)kw, name);
 			if unlikely(index == (size_t)-1) {
@@ -197,18 +196,12 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 				                            GET_ARGC(),
 				                            code->co_argc_min,
 				                            code->co_argc_max);
-#if CODE_FLAGS & CODE_FYIELDING
-				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
-#endif /* CODE_FLAGS & CODE_FYIELDING */
 				goto err_ex_frame;
 			}
 			val = (GET_ARGV() + frame.cf_argc)[index];
 			ASSERT_OBJECT(val);
 			/* No need to store a reference, as we're also responsible for any cleanup. */
 			frame.cf_kw->fk_kargv[i] = val;
-#if CODE_FLAGS & CODE_FYIELDING
-			Dee_Incref(val);
-#endif /* CODE_FLAGS & CODE_FYIELDING */
 #endif /* !KW_IS_MAPPING */
 #if !(CODE_FLAGS & CODE_FVARKWDS)
 			++kw_used;
@@ -225,16 +218,14 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 		ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-		val = DeeObject_GetItemDef(kw, (DeeObject *)name, ITER_DONE);
+		val = DeeKw_GetItemNRDef(kw, (DeeObject *)name, ITER_DONE);
 		if (!ITER_ISOK(val)) {
-			if unlikely(!val) {
-				Dee_XDecrefv(frame.cf_kw->fk_kargv, i);
+			if unlikely(!val)
 				goto err_ex_frame;
-			}
 			frame.cf_kw->fk_kargv[i] = NULL; /* Unset value. */
 			continue;
 		}
-		frame.cf_kw->fk_kargv[i] = val; /* Inherit reference. */
+		frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
 		index = kwds_find_index((DeeKwdsObject *)kw, name);
 		if (index == (size_t)-1) {
@@ -246,9 +237,6 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		ASSERT_OBJECT(val);
 		/* No need to store a reference, as we're also responsible for any cleanup. */
 		frame.cf_kw->fk_kargv[i] = val;
-#if CODE_FLAGS & CODE_FYIELDING
-		Dee_Incref(val);
-#endif /* CODE_FLAGS & CODE_FYIELDING */
 #endif /* !KW_IS_MAPPING */
 #if !(CODE_FLAGS & CODE_FVARKWDS)
 		++kw_used;
@@ -263,7 +251,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #ifdef KW_IS_MAPPING
 	kw_argc = DeeObject_Size(kw);
 	if unlikely(kw_argc == (size_t)-1)
-		goto UNIQUE(err_kargv);
+		goto err_ex_frame;
 #endif /* KW_IS_MAPPING */
 	if unlikely(kw_used < kw_argc) {
 		/* ERROR: Not all keyword arguments have been used. */
@@ -272,38 +260,15 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		                 GET_ARGC(),
 		                 code->co_argc_min,
 		                 code->co_argc_max);
-#if defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FYIELDING
-#if (CODE_FLAGS & CODE_FYIELDING) && (defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FVARKWDS)
-#define LOCAL_NEED_err_kargv_varkwds
-		goto UNIQUE(err_kargv_varkwds);
-#else /* (CODE_FLAGS & CODE_FYIELDING) && (KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS) */
-UNIQUE(err_kargv):
-		Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 		goto err_ex_frame;
-#endif /* !(CODE_FLAGS & CODE_FYIELDING) || !(KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS) */
-#else /* KW_IS_MAPPING || CODE_FLAGS & CODE_FYIELDING */
-		goto err_ex_frame;
-#endif /* !KW_IS_MAPPING && !(CODE_FLAGS & CODE_FYIELDING) */
 	}
 #endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
 #if CODE_FLAGS & CODE_FYIELDING
 	/* Yield-function invocation. */
 	yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(frame.cf_argc));
 	if unlikely(!yf) {
-#ifdef LOCAL_NEED_err_kargv_varkwds
-#undef LOCAL_NEED_err_kargv_varkwds
-UNIQUE(err_kargv_varkwds):
-#endif /* LOCAL_NEED_err_kargv_varkwds */
-#if defined(KW_IS_MAPPING) || CODE_FLAGS & CODE_FVARKWDS
 		/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
-#if defined(KW_IS_MAPPING) && !(CODE_FLAGS & CODE_FVARKWDS)
-UNIQUE(err_kargv):
-#endif /* KW_IS_MAPPING && !(CODE_FLAGS & CODE_FVARKWDS) */
-		Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
 		goto err_ex_frame;
-#else /* KW_IS_MAPPING || CODE_FLAGS & CODE_FVARKWDS */
-		goto UNIQUE(err_kargv);
-#endif /* !KW_IS_MAPPING && !(CODE_FLAGS & CODE_FVARKWDS) */
 	}
 	yf->yf_func = self;
 	Dee_Incref(self);
@@ -350,9 +315,6 @@ UNIQUE(err_kargv):
 #if CODE_FLAGS & CODE_FVARKWDS
 			/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
 #endif /* CODE_FLAGS & CODE_FVARKWDS */
-#ifdef KW_IS_MAPPING
-			Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
-#endif /* KW_IS_MAPPING */
 			goto err_ex_frame;
 		}
 	}
@@ -414,7 +376,7 @@ UNIQUE(err_kargv):
 
 #if CODE_FLAGS & CODE_FVARKWDS
 	if (frame.cf_kw->fk_varkwds)
-		VARKWDS_DECREF(frame.cf_kw->fk_varkwds);
+		DeeKwBlackList_Decref(frame.cf_kw->fk_varkwds);
 #endif /* CODE_FLAGS & CODE_FVARKWDS */
 
 #ifdef Dee_Alloca
@@ -431,10 +393,7 @@ UNIQUE(err_kargv):
 		Dee_XDecref(frame.cf_vargs);
 	}
 
-#ifdef KW_IS_MAPPING
-	Dee_XDecrefv(frame.cf_kw->fk_kargv, ex_argc);
-#endif /* KW_IS_MAPPING */
-		/* Cleanup keyword extension data. */
+	/* Cleanup keyword extension data. */
 #ifndef Dee_Alloca
 #if CODE_FLAGS & CODE_FVARKWDS
 	Dee_Free(frame.cf_kw);

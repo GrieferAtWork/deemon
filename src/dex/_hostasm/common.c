@@ -74,10 +74,7 @@ INTERN struct Dee_memequiv const Dee_memequivs_dummy_list[1] = {
 			},
 			/* .ml_off = */ 0,
 		},
-		/* .meq_class = */ {
-			(struct Dee_memequiv *)Dee_memequivs_dummy_list,
-			(struct Dee_memequiv *)Dee_memequivs_dummy_list,
-		},
+		/* .meq_class = */ RINGQ_ENTRY_UNBOUND_INITIALIZER,
 	}
 };
 
@@ -748,10 +745,10 @@ Dee_memequivs_getclassof(struct Dee_memequivs const *__restrict self,
 		perturb = i = Dee_memequivs_hashst(self, hash);
 		for (;; Dee_memequivs_hashnx(i, perturb)) {
 			struct Dee_memequiv *result = Dee_memequivs_hashit(self, i);
-			if (Dee_memadr_sameadr(&result->meq_loc.ml_adr, loc))
-				return result;
 			if (result->meq_loc.ml_adr.ma_typ == MEMEQUIV_TYPE_UNUSED)
 				break;
+			if (Dee_memadr_sameadr(&result->meq_loc.ml_adr, loc))
+				return result;
 		}
 	}
 	return NULL;

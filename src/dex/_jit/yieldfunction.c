@@ -29,6 +29,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/gc.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>

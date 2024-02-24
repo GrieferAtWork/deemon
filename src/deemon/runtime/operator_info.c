@@ -31,6 +31,7 @@
 #include <deemon/file.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/seq.h>

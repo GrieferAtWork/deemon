@@ -26,6 +26,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
@@ -1167,7 +1168,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		return DeeArg_VUnpack(argc, argv, format, args);
 	fmt_start   = format;
 	is_optional = false;
-	p_args       = (struct va_list_struct *)VALIST_ADDR(args);
+	p_args      = (struct va_list_struct *)VALIST_ADDR(args);
 	if (DeeKwds_Check(kw)) {
 		/* Indirect keyword list. */
 		size_t pos_argc;
@@ -1299,7 +1300,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 	kw_argc = 0;
 	for (;;) {
 		dhash_t keyword_hash;
-		DREF DeeObject *keyword_value;
+		DeeObject *keyword_value;
 		if (*format == '|') {
 			is_optional = true;
 			++format;
@@ -1317,7 +1318,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 			keyword_hash   = Dee_HashStr(kwlist->k_name);
 			kwlist->k_hash = keyword_hash;
 		}
-		keyword_value = DeeObject_GetItemStringHashDef(kw,
+		keyword_value = DeeKw_GetItemNRStringHashDef(kw,
 		                                           kwlist->k_name,
 		                                           keyword_hash,
 		                                           ITER_DONE);
@@ -1347,7 +1348,6 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 		} else {
 			/* All right! we've got the argument! */
 			temp = Dee_VPUnpackf(keyword_value, (char const **)&format, p_args);
-			Dee_Decref(keyword_value); /* FIXME: This might cause problems for `o'-targets... */
 			if unlikely(temp)
 				return temp;
 			++kw_argc;

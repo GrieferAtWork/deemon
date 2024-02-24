@@ -23,6 +23,8 @@
 #include <deemon/api.h>
 #include <deemon/compiler/assembler.h>
 #include <deemon/compiler/ast.h>
+#include <deemon/compiler/optimize.h>
+#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/object.h>
 
@@ -186,12 +188,24 @@ emit_instruction:
 			int error;
 			switch (operator_name) {
 
-			case OPERATOR_CALL:
+			case OPERATOR_CALL: {
+				struct ast *kw_ast;
+				DeeTypeObject *kw_type;
 				if (argc != 2)
 					goto fallback_generate_goperator;
-				/* Special case: call-with-keywords */
+
+				/* Special case: call-with-keywords (must also
+				 * emit a cast-to-varkwds instruction if necessary) */
+				kw_ast  = expr->a_operator.o_op2;
+				kw_type = ast_predict_type_noanno(kw_ast);
+				if (!kw_type || !DeeType_IsKw(kw_type)) {
+					if (asm_putddi(kw_ast))
+						goto err;
+					if (asm_gcast_varkwds())
+						goto err;
+				}
 				error = asm_gcall_tuple_kwds();
-				break;
+			}	break;
 
 			case FAKE_OPERATOR_IS:
 				if (argc != 2)

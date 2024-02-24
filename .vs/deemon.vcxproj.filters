@@ -114,6 +114,9 @@
 		<ClInclude Include="..\include\deemon\bytes.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\cached-dict.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\callable.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -516,6 +519,9 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\wordbits.h">
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\kwds.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\list.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -715,9 +721,6 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h">
-			<Filter>src\objects\seq</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\objects\seq\varkwds.h">
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h">
@@ -1076,9 +1079,6 @@
 		<ClCompile Include="..\src\deemon\main.c">
 			<Filter>src</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\arg.c">
-			<Filter>src\objects</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\attribute.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
@@ -1086,6 +1086,9 @@
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\bytes.c">
+			<Filter>src\objects</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\cached-dict.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\callable.c">
@@ -1235,9 +1238,6 @@
 		<ClCompile Include="..\src\deemon\objects\seq\typemro.c">
 			<Filter>src\objects\seq</Filter>
 		</ClCompile>
-		<ClCompile Include="..\src\deemon\objects\seq\varkwds.c">
-			<Filter>src\objects\seq</Filter>
-		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\seq_functions.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
@@ -1308,6 +1308,12 @@
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\gc.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\kwds-wrappers.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\kwds.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\lock.c">

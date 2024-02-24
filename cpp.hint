@@ -1427,8 +1427,8 @@
 #define DEFINE_MEI_COMPARE(n,op) DeeObject*n(ModuleExportsIterator*self,ModuleExportsIterator*other){}
 #define STACK_ALLOCATOR_DECL
 #define CONFIG_DEEMON_PATH(x)
-#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(BlackListVarkwdsIterator*self,BlackListVarkwdsIterator*other){}
-#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(BlackListMappingIterator*self,BlackListMappingIterator*other){}
+#define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwdsIterator*self,DeeBlackListKwdsIterator*other){}
+#define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwIterator*self,DeeBlackListKwIterator*other){}
 #define DEFINE_HASHFILTERITERATOR_COMPARE(n,...) DeeObject*n(HashFilterIterator*self,HashFilterIterator*other){}
 #define DEFINE_ITER_COMPARE(n,...) DeeObject*n(SeqSimpleProxyIterator*self,SeqSimpleProxyIterator*other){}
 #define DEFINE_SIITER_COMPARE(n,...) DeeObject*n(SetIntersectionIterator*self,SetIntersectionIterator*other){}

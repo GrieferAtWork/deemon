@@ -31,11 +31,12 @@
 #include <deemon/error.h>
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/system-features.h> /* memcpy() */
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
 #include <deemon/util/objectlist.h>
-#include <deemon/util/atomic.h>
 
 #include <hybrid/unaligned.h>
 
@@ -765,6 +766,14 @@ JITLValue_CallValue(JITLValue *__restrict self, JITContext *__restrict context,
                     DeeObject *args, DeeObject *kw) {
 	DREF DeeObject *result;
 	ASSERT(self->lv_kind != JIT_LVALUE_NONE);
+	if (kw && !DeeObject_IsKw(kw)) {
+		kw = DeeKw_Wrap(kw);
+		if unlikely(!kw)
+			goto err;
+		result = JITLValue_CallValue(self, context, args, kw);
+		Dee_Decref(kw);
+		return result;
+	}
 	switch (self->lv_kind) {
 
 	case JIT_LVALUE_ATTR:

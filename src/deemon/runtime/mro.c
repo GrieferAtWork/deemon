@@ -30,6 +30,7 @@
 #include <deemon/file.h>
 #include <deemon/format.h>
 #include <deemon/instancemethod.h>
+#include <deemon/kwds.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>

@@ -41,6 +41,7 @@
 #include <deemon/hashset.h>
 #include <deemon/instancemethod.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/module.h>

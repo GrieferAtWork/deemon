@@ -36,6 +36,7 @@
 #include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>

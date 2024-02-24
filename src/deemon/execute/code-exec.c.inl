@@ -35,6 +35,7 @@
 #include <deemon/format.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/map.h>
 #include <deemon/module.h>
@@ -55,7 +56,6 @@
 #include <hybrid/sched/yield.h>
 #include <hybrid/unaligned.h>
 
-#include "../objects/seq/varkwds.h"
 #include "../runtime/runtime_error.h"
 
 #undef SSIZE_MAX
@@ -103,45 +103,9 @@ file_shl(DeeObject *self,
 PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
 construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
                                struct code_frame *__restrict frame) {
-	struct code_frame_kwds *kwds;
-	DREF DeeObject *result;
-	DeeObject *kw;
-	kwds = frame->cf_kw;
+	struct code_frame_kwds *kwds = frame->cf_kw;
 	ASSERT(kwds != NULL);
-	kw = kwds->fk_kw;
-	if likely(DeeKwds_Check(kw)) {
-		/* Most common case: Must create a wrapper around the kwds/argv hybrid descriptor,
-		 *                   but exclude any keyword also found as part of our code's
-		 *                   keyword list.
-		 * >> function foo(x, y, **kw) {
-		 * >> 	print repr kw;
-		 * >> }
-		 * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
-		 * Semantically comparable to:
-		 * >> return rt.RoDict(
-		 * >> 	for (local key, id: kw)
-		 * >> 		if (key !in __code__.__kwds__)
-		 * >> 			(key, __argv__[(#__argv__ - #__code__.__kwds__) + id])
-		 * >> );
-		 */
-		result = BlackListVarkwds_New(code,
-		                              frame->cf_argc,
-		                              (DeeKwdsObject *)kw,
-		                              frame->cf_argv + frame->cf_argc);
-	} else {
-		/* Special case: create a proxy-mapping object for `kw' that get rids
-		 *               of all keys that are equal to one of the strings found
-		 *               within our keyword list.
-		 * Semantically comparable to:
-		 * >> return rt.RoDict(
-		 * >> 	for (local key, item: kw)
-		 * >> 		if (key !in __code__.__kwds__)
-		 * >> 			(key, item)
-		 * >> );
-		 */
-		result = BlackListMapping_New(code, frame->cf_argc, kw);
-	}
-	return result;
+	return DeeKwBlackList_New(code, frame->cf_argc, frame->cf_argv, kwds->fk_kw);
 }
 #endif /* !CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED */
 
@@ -1033,7 +997,7 @@ next_instr:
 #if 0
 	if (_Dee_dprint_enabled) {
 		struct ddi_state state;
-		code_addr_t ip_addr = ip.ptr - code->co_code;
+		code_addr_t ip_addr = (code_addr_t)(ip.ptr - code->co_code);
 		if (!DeeCode_FindDDI((DeeObject *)code, &state, NULL, ip_addr, DDI_STATE_FNOTHROW | DDI_STATE_FNONAMES)) {
 			Dee_DPRINTF("%s+%.4I32X [trace]\n", DeeCode_NAME(code), ip_addr);
 		} else {
@@ -1710,7 +1674,7 @@ do_push_arg:
 						HANDLE_EXCEPT();
 					oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 					if unlikely(oldval) {
-						VARKWDS_DECREF(varkwds);
+						DeeKwBlackList_Decref(varkwds);
 						varkwds = oldval;
 					}
 				}
@@ -1840,6 +1804,16 @@ do_unpack:
 		TARGET(ASM_CAST_LIST, -1, +1) {
 			DREF DeeObject *temp;
 			temp = DeeList_FromSequence(TOP);
+			if unlikely(!temp)
+				HANDLE_EXCEPT();
+			Dee_Decref(TOP);
+			TOP = temp; /* Inherit reference. */
+			DISPATCH();
+		}
+
+		TARGET(ASM_CAST_VARKWDS, -1, +1) {
+			DREF DeeObject *temp;
+			temp = DeeKw_Wrap(TOP);
 			if unlikely(!temp)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -5241,7 +5215,7 @@ do_pack_dict:
 								HANDLE_EXCEPT();
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, value);
 							if unlikely(oldval) {
-								VARKWDS_DECREF(value);
+								DeeKwBlackList_Decref(value);
 								value = oldval;
 							}
 						}
@@ -6676,7 +6650,7 @@ do_prefix_push_arg:
 								HANDLE_EXCEPT();
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 							if unlikely(oldval) {
-								VARKWDS_DECREF(varkwds);
+								DeeKwBlackList_Decref(varkwds);
 								varkwds = oldval;
 							}
 						}

@@ -2930,36 +2930,17 @@ target_push_varkwds:
 	sp_push %eax, 1
 	jmp    .disp
 1:	/* construct_varkwds_mapping() { */
-	movl   fk_kw(%edx), %eax
-	/* if likely(DeeKwds_Check(kw)) */
-	cmpl   $SYM(DeeKwds_Type), ob_type(%eax)
-	jne    1f
-	/* { */
-	movl   FRAME_ARGC, %ecx
-	movl   FRAME_ARGV, %edx
-	leal   (%edx,%ecx,4), %ecx
-	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
+	pushl  fk_kw(%edx)   /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax          /* kw */
+	pushl  FRAME_ARGV    /* frame->cf_argv */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_New,16)
+	call   fSYM(DeeKwBlackList_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp    60f
-	/* } else { */
-1:	pushl  %eax          /* kw */
-	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_ARGC    /* positional_argc */
-	ADJUST_CFA_OFFSET(4)
-	pushl  CODE_OR_LOC   /* code */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListMapping_New,12)
-	ADJUST_CFA_OFFSET(-12)
-	/* } */
-60:	testl  %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
 	movl   FRAME_KW, %ecx
@@ -2986,25 +2967,10 @@ target_push_varkwds:
 	/* } */
 1:	/* Another thread already loaded `EAX'. */
 	sp_push %eax, 1
-	movl   ob_type(%edx), %ecx
-	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
-	jne    1f
-	/* Cleanup: DeeKwdsMapping_CheckExact() */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwBlackList_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp    .disp
-1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
-	jne    1f
-	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_Decref,4)
-	ADJUST_CFA_OFFSET(-4)
-	jmp    .disp
-	/* Cleanup: Dee_Decref() */
-1:	decref %edx
 	jmp    .disp
 #endif /* !CONFIG_NO_THREADS */
 70:	leal   SYM(DeeMapping_EmptyInstance), %edx
@@ -3314,36 +3280,17 @@ target_push_varkwds_ne:
 	sp_push %eax, 1
 	jmp    .disp
 1:	/* construct_varkwds_mapping() { */
-	movl   fk_kw(%edx), %eax
-	/* if likely(DeeKwds_Check(kw)) */
-	cmpl   $SYM(DeeKwds_Type), ob_type(%eax)
-	jne    1f
-	/* { */
-	movl   FRAME_ARGC, %ecx
-	movl   FRAME_ARGV, %edx
-	leal   (%edx,%ecx,4), %ecx
-	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
+	pushl  fk_kw(%edx)   /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %eax          /* kw */
+	pushl  FRAME_ARGV    /* frame->cf_argv */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_New,16)
+	call   fSYM(DeeKwBlackList_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp    60f
-	/* } else { */
-1:	pushl  %eax          /* kw */
-	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_ARGC    /* positional_argc */
-	ADJUST_CFA_OFFSET(4)
-	pushl  CODE_OR_LOC   /* code */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListMapping_New,12)
-	ADJUST_CFA_OFFSET(-12)
-	/* } */
-60:	testl  %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
 	movl   FRAME_KW, %ecx
@@ -3372,33 +3319,12 @@ target_push_varkwds_ne:
 	ADJUST_CFA_OFFSET(-4)
 	/* } */
 1:	/* Another thread already loaded `EAX'. */
-	movl   ob_type(%edx), %ecx
-	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
-	jne    1f
-	/* Cleanup: DeeKwdsMapping_CheckExact() */
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwBlackList_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp    .Ltarget_push_varkwds_ne_impl_onstack
-	ADJUST_CFA_OFFSET(-4)
-1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
-	jne    1f
-	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_Decref,4)
-	ADJUST_CFA_OFFSET(-4)
-	jmp    .Ltarget_push_varkwds_ne_impl_onstack
-	ADJUST_CFA_OFFSET(-4)
-	/* Cleanup: Dee_Decref() */
-1:	pushl  %eax
-	ADJUST_CFA_OFFSET(4)
-	decref %edx
 	jmp    .Ltarget_push_varkwds_ne_impl_onstack
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
@@ -3825,6 +3751,7 @@ define_unary_op target_cast_tuple, fSYM(DeeTuple_FromSequence,4)
 define_unary_op target_cast_list, fSYM(DeeList_FromSequence,4)
 define_unary_op target_cast_hashset, fSYM(DeeHashSet_FromSequence,4)
 define_unary_op target_cast_dict, fSYM(DeeDict_FromSequence,4)
+define_unary_op target_cast_varkwds, fSYM(DeeKw_Wrap,4)
 define_unary_op target_str, fSYM(DeeObject_Str,4)
 define_unary_op target_copy, fSYM(DeeObject_Copy,4)
 define_unary_op target_deepcopy, fSYM(DeeObject_DeepCopy,4)
@@ -7412,36 +7339,17 @@ prefix_target_push_varkwds:
 	testl  %edx, %edx
 	jnz    set_prefix_object_incref
 	/* construct_varkwds_mapping() { */
-	movl   fk_kw(%eax), %edx
-	/* if likely(DeeKwds_Check(kw)) */
-	cmpl   $SYM(DeeKwds_Type), ob_type(%edx)
-	jne    1f
-	/* { */
-	movl   FRAME_ARGC, %ecx
-	movl   FRAME_ARGV, %eax
-	leal   (%edx,%ecx,4), %ecx
-	pushl  %ecx /* frame->cf_argv + frame->cf_argc */
+	pushl  fk_kw(%eax)   /* kw */
 	ADJUST_CFA_OFFSET(4)
-	pushl  %edx          /* kw */
+	pushl  FRAME_ARGV    /* frame->cf_argv */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_ARGC    /* positional_argc */
 	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC   /* code */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_New,16)
+	call   fSYM(DeeKwBlackList_New,16)
 	ADJUST_CFA_OFFSET(-16)
-	jmp    60f
-	/* } else { */
-1:	pushl  %edx          /* kw */
-	ADJUST_CFA_OFFSET(4)
-	pushl  FRAME_ARGC    /* positional_argc */
-	ADJUST_CFA_OFFSET(4)
-	pushl  CODE_OR_LOC   /* code */
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListMapping_New,12)
-	ADJUST_CFA_OFFSET(-12)
-	/* } */
-60:	testl  %eax, %eax
+	testl  %eax, %eax
 	jz     .except
 	/* Cache the newly generated varkwds object. */
 	movl   FRAME_KW, %ecx
@@ -7463,26 +7371,11 @@ prefix_target_push_varkwds:
 	/* Another thread already loaded `EAX'. */
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	movl   ob_type(%edx), %ecx
-	cmpl   $SYM(DeeKwdsMapping_Type), %ecx
-	jne    1f
-	/* Cleanup: DeeKwdsMapping_CheckExact() */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeKwdsMapping_Decref,4)
+	call   fSYM(DeeKwBlackList_Decref,4)
 	ADJUST_CFA_OFFSET(-4)
-	jmp    2f
-1:	cmpl   $SYM(BlackListVarkwds_Type), %ecx
-	jne    1f
-	/* Cleanup: BlackListVarkwds_CheckExact() */
-	pushl  %edx
-	ADJUST_CFA_OFFSET(4)
-	call   fSYM(BlackListVarkwds_Decref,4)
-	ADJUST_CFA_OFFSET(-4)
-	jmp    2f
-	/* Cleanup: Dee_Decref() */
-1:	decref %edx
-2:	popl   %edx
+	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 	jmp    set_prefix_object_incref
 #endif /* !CONFIG_NO_THREADS */
@@ -8617,6 +8510,9 @@ prefix_target_pack_tuple = prefix_invop
 .ifndef prefix_target_pack_list
 prefix_target_pack_list = prefix_invop
 .endif
+.ifndef prefix_target_cast_varkwds
+prefix_target_cast_varkwds = prefix_invop
+.endif
 .ifndef prefix_target_unpack
 prefix_target_unpack = prefix_invop
 .endif
@@ -9685,6 +9581,9 @@ repr_target_pack_tuple = repr_invop
 .ifndef repr_target_pack_list
 repr_target_pack_list = repr_invop
 .endif
+.ifndef repr_target_cast_varkwds
+repr_target_cast_varkwds = repr_invop
+.endif
 .ifndef repr_target_unpack
 repr_target_unpack = repr_invop
 .endif
@@ -10231,7 +10130,7 @@ inst_table:
 	.long target_cast_list               /* 0x41 : `cast top, List' */
 	.long target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
-	.long invop
+	.long target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
 	.long invop
 	.long target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long target_concat                  /* 0x47 : `concat top, pop' */
@@ -10342,11 +10241,11 @@ inst_table:
 	.long target_contains                /* 0xb0 : `contains top, pop' */
 	.long target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
 	.long target_getitem                 /* 0xb2 : `getitem top, pop' */
-	.long target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long target_getitem_i               /* 0xb3 : `getitem top, $<imm16>' */
 	.long target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
 	.long target_getsize                 /* 0xb5 : `getsize top' */
 	.long target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
-	.long target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long target_setitem_i               /* 0xb7 : `setitem pop, $<imm16>, pop' */
 	.long target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
 	.long target_iterself                /* 0xb9 : `iterself top' */
 	.long target_delitem                 /* 0xba : `delitem pop, pop' */
@@ -10447,7 +10346,7 @@ inst_table_f0:
 	.long invop
 	.long target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
-	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop' */
+	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
 	.long target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
 	.long target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
 	.long target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
@@ -10747,7 +10646,7 @@ prefix_inst_table:
 	.long prefix_target_cast_list               /* 0x41 : `cast top, List' */
 	.long prefix_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long prefix_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
-	.long prefix_invop
+	.long prefix_target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
 	.long prefix_invop
 	.long prefix_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long prefix_target_concat                  /* 0x47 : `concat top, pop' */
@@ -10858,11 +10757,11 @@ prefix_inst_table:
 	.long prefix_target_contains                /* 0xb0 : `contains top, pop' */
 	.long prefix_target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
 	.long prefix_target_getitem                 /* 0xb2 : `getitem top, pop' */
-	.long prefix_target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long prefix_target_getitem_i               /* 0xb3 : `getitem top, $<imm16>' */
 	.long prefix_target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
 	.long prefix_target_getsize                 /* 0xb5 : `getsize top' */
 	.long prefix_target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
-	.long prefix_target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long prefix_target_setitem_i               /* 0xb7 : `setitem pop, $<imm16>, pop' */
 	.long prefix_target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
 	.long prefix_target_iterself                /* 0xb9 : `iterself top' */
 	.long prefix_target_delitem                 /* 0xba : `delitem pop, pop' */
@@ -10963,7 +10862,7 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target_jmp_pop_pop             /* 0x18 : `jmp pop, #pop' */
 	.long prefix_target16_operator              /* 0x19 : `op top, $<imm16>, #<imm8>' */
-	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop' */
+	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
 	.long prefix_target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
 	.long prefix_target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
 	.long prefix_target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
@@ -11263,7 +11162,7 @@ repr_inst_table:
 	.long repr_target_cast_list               /* 0x41 : `cast top, List' */
 	.long repr_target_pack_tuple              /* 0x42 : `push pack Tuple, #<imm8>' */
 	.long repr_target_pack_list               /* 0x43 : `push pack List, #<imm8>' */
-	.long repr_invop
+	.long repr_target_cast_varkwds            /* 0x44 : `cast top, varkwds' */
 	.long repr_invop
 	.long repr_target_unpack                  /* 0x46 : `unpack pop, #<imm8>' */
 	.long repr_target_concat                  /* 0x47 : `concat top, pop' */
@@ -11374,11 +11273,11 @@ repr_inst_table:
 	.long repr_target_contains                /* 0xb0 : `contains top, pop' */
 	.long repr_target_contains_c              /* 0xb1 : `push contains const <imm8>, pop' */
 	.long repr_target_getitem                 /* 0xb2 : `getitem top, pop' */
-	.long repr_target_getitem_i               /* 0xb3 : `getitem top, $<Simm16>' */
+	.long repr_target_getitem_i               /* 0xb3 : `getitem top, $<imm16>' */
 	.long repr_target_getitem_c               /* 0xb4 : `getitem top, const <imm8>' */
 	.long repr_target_getsize                 /* 0xb5 : `getsize top' */
 	.long repr_target_setitem                 /* 0xb6 : `setitem pop, pop, pop' */
-	.long repr_target_setitem_i               /* 0xb7 : `setitem pop, $<Simm16>, pop' */
+	.long repr_target_setitem_i               /* 0xb7 : `setitem pop, $<imm16>, pop' */
 	.long repr_target_setitem_c               /* 0xb8 : `setitem pop, const <imm8>, pop' */
 	.long repr_target_iterself                /* 0xb9 : `iterself top' */
 	.long repr_target_delitem                 /* 0xba : `delitem pop, pop' */

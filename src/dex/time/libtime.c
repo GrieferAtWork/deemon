@@ -32,6 +32,7 @@
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/numeric.h>
 #include <deemon/objmethod.h>
@@ -2957,18 +2958,15 @@ time_init_getarg(DeeKwArgs *__restrict kwds,
                  size_t default_argi,
                  char const *__restrict argname, dhash_t hash,
                  Dee_int128_t *__restrict p_result) {
-	int result;
-	DREF DeeObject *arg;
+	DeeObject *arg;
 	if (default_argi < argc)
 		return DeeObject_AsInt128(argv[default_argi], p_result);
-	arg = DeeKwArgs_GetStringHashDef(kwds, argname, hash, ITER_DONE);
+	arg = DeeKwArgs_GetItemNRStringHashDef(kwds, argname, hash, ITER_DONE);
 	if (arg == ITER_DONE)
 		return 1;
 	if (arg == NULL)
 		return -1;
-	result = DeeObject_AsInt128(arg, p_result);
-	Dee_Decref(arg);
-	return result;
+	return DeeObject_AsInt128(arg, p_result);
 }
 
 

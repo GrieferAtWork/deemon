@@ -520,7 +520,7 @@ extern void (__debugbreak)(void);
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
-#define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), (_CrtCheckMemory)(), DBG_ALIGNMENT_ENABLE())
+#define Dee_CHECKMEMORY() (DBG_ALIGNMENT_DISABLE(), Dee_ASSERT((_CrtCheckMemory)()), DBG_ALIGNMENT_ENABLE())
 #if !defined(_MSC_VER) || defined(_DLL)
 extern __ATTR_DLLIMPORT int (ATTR_CDECL _CrtCheckMemory)(void);
 #else /* !_MSC_VER || _DLL */

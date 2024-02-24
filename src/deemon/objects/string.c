@@ -368,15 +368,27 @@ DeeString_TryResizeBuffer(DREF DeeObject *self, size_t num_bytes) {
 
 /* Construct an uninitialized single-byte string,
  * capable of representing up to `num_bytes' bytes of text. */
-PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeString_NewBuffer(size_t num_bytes) {
+#ifdef NDEBUG
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewBuffer)(size_t num_bytes)
+#else /* NDEBUG */
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewBuffer)(size_t num_bytes, char const *file, int line)
+#endif /* !NDEBUG */
+{
 	DREF String *result;
 	if unlikely(!num_bytes) {
 		Dee_Incref(Dee_EmptyString);
 		return Dee_EmptyString;
 	}
+#ifdef NDEBUG
 	result = (DREF String *)DeeObject_Malloc(offsetof(String, s_str) +
 	                                         (num_bytes + 1) * sizeof(char));
+#else /* NDEBUG */
+	result = (DREF String *)DeeDbgObject_Malloc(offsetof(String, s_str) +
+	                                            (num_bytes + 1) * sizeof(char),
+	                                            file, line);
+#endif /* !NDEBUG */
 	if likely(result) {
 		DeeObject_Init(result, &DeeString_Type);
 		result->s_data           = NULL;
@@ -386,6 +398,22 @@ DeeString_NewBuffer(size_t num_bytes) {
 	}
 	return (DREF DeeObject *)result;
 }
+
+#ifdef NDEBUG
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeDbgString_NewBuffer)(size_t num_bytes, char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_NewBuffer(num_bytes);
+}
+#else /* NDEBUG */
+PUBLIC WUNUSED DREF DeeObject *
+(DCALL DeeString_NewBuffer)(size_t num_bytes) {
+	return DeeDbgString_NewBuffer(num_bytes, NULL, 0);
+}
+#endif /* !NDEBUG */
+
+
 
 PUBLIC NONNULL((1)) void DCALL
 DeeString_FreeWidth(DeeObject *__restrict self) {
@@ -403,8 +431,15 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
 }
 
 /* Construct strings with basic width-data. */
+#ifdef NDEBUG
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length) {
+DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length)
+#else /* NDEBUG */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDbgString_NewSized(/*unsigned latin-1*/ char const *__restrict str,
+                      size_t length, char const *file, int line)
+#endif /* !NDEBUG */
+{
 	DREF DeeObject *result;
 	/* Optimization: use pre-allocated latin1 strings
 	 *               for single-character sequences. */
@@ -419,8 +454,12 @@ DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t lengt
 	default:
 		break;
 	}
+#ifdef NDEBUG
 	result = DeeString_NewBuffer(length);
-	if (result) {
+#else /* NDEBUG */
+	result = DeeDbgString_NewBuffer(length, file, line);
+#endif /* !NDEBUG */
+	if likely(result) {
 		memcpyc(DeeString_STR(result), str,
 		        length, sizeof(char));
 	}
@@ -430,10 +469,29 @@ DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t lengt
 /* Construct a new, non-decoded single-byte-per-character string `str'.
  * The string itself may contain characters above 127, which are then
  * interpreted as part of the unicode character-range U+0080...U+00FF. */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_New(/*unsigned*/ char const *__restrict str) {
+#ifdef NDEBUG
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str) {
 	return DeeString_NewSized(str, strlen(str));
 }
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str,
+                         char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_New(str);
+}
+#else /* NDEBUG */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_New)(/*unsigned*/ char const *__restrict str) {
+	return DeeDbgString_New(str, NULL, 0);
+}
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_New)(/*unsigned*/ char const *__restrict str,
+                         char const *file, int line) {
+	return DeeDbgString_NewSized(str, strlen(str), file, line);
+}
+#endif /* !NDEBUG */
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL

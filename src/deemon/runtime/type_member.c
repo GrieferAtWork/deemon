@@ -27,6 +27,7 @@
 #include <deemon/error.h>
 #include <deemon/float.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>

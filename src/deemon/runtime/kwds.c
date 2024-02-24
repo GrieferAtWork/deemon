@@ -17,18 +17,22 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_ARG_C
-#define GUARD_DEEMON_OBJECTS_ARG_C 1
+#ifndef GUARD_DEEMON_RUNTIME_KWDS_C
+#define GUARD_DEEMON_RUNTIME_KWDS_C 1
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/cached-dict.h>
+#include <deemon/code.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/map.h>
 #include <deemon/object.h>
+#include <deemon/rodict.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
 #include <deemon/system-features.h>
@@ -448,6 +452,27 @@ kwds_findstr_len(Kwds *__restrict self,
 	return (size_t)-1;
 }
 
+LOCAL WUNUSED NONNULL((1, 2)) size_t DCALL
+kwds_findstr_obj(Kwds *__restrict self,
+                 DeeStringObject *__restrict name) {
+	dhash_t hash = DeeString_Hash((DeeObject *)name);
+	dhash_t i, perturb;
+	perturb = i = hash & self->kw_mask;
+	for (;; DeeKwds_MAPNEXT(i, perturb)) {
+		struct kwds_entry *entry;
+		entry = &self->kw_map[i & self->kw_mask];
+		if (!entry->ke_name)
+			break;
+		if (entry->ke_hash != hash)
+			continue;
+		if (DeeString_SIZE(entry->ke_name) != DeeString_SIZE(name))
+			continue;
+		if (DeeString_EqualsBuf(entry->ke_name, DeeString_STR(name), DeeString_SIZE(name)))
+			return entry->ke_index;
+	}
+	return (size_t)-1;
+}
+
 
 
 
@@ -660,7 +685,7 @@ PUBLIC DeeTypeObject DeeKwds_Type = {
 	/* .tp_doc      = */ DOC("(names:?S?Dstring)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FVARIABLE | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONLOOPING,
+	/* .tp_features = */ TF_NONLOOPING | TF_KW, /* Instances of this type are allowed in "kw" arguments. */
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
@@ -761,15 +786,14 @@ kmapiter_bool(KmapIterator *__restrict self) {
 		if (entry >= self->ki_end)
 			return 0;
 		if (entry->ke_name)
-			break;
+			return 1;
 		++entry;
 	}
-	return atomic_read(&self->ki_map->kmo_argv) != NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_nsi_nextitem(KmapIterator *__restrict self) {
-	DREF DeeObject *value, *result;
+	DeeObject *value;
 	struct kwds_entry *old_iter, *entry;
 	for (;;) {
 		old_iter = atomic_read(&self->ki_iter);
@@ -785,16 +809,9 @@ kmap_nsi_nextitem(KmapIterator *__restrict self) {
 			break;
 	}
 	DeeKwdsMapping_LockRead(self->ki_map);
-	if unlikely(!self->ki_map->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(self->ki_map);
-		return ITER_DONE;
-	}
 	value = self->ki_map->kmo_argv[entry->ke_index];
-	Dee_Incref(value);
 	DeeKwdsMapping_LockEndRead(self->ki_map);
-	result = DeeTuple_Pack(2, entry->ke_name, value);
-	Dee_Decref_unlikely(value);
-	return result;
+	return DeeTuple_Pack(2, entry->ke_name, value);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -813,8 +830,6 @@ kmap_nsi_nextkey(KmapIterator *__restrict self) {
 		if (atomic_cmpxch_weak_or_write(&self->ki_iter, old_iter, entry + 1))
 			break;
 	}
-	if unlikely(!atomic_read(&self->ki_map->kmo_argv))
-		return ITER_DONE;
 	return_reference_((DeeObject *)entry->ke_name);
 }
 
@@ -836,13 +851,9 @@ kmap_nsi_nextvalue(KmapIterator *__restrict self) {
 			break;
 	}
 	DeeKwdsMapping_LockRead(self->ki_map);
-	if unlikely(!self->ki_map->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(self->ki_map);
-		return ITER_DONE;
-	}
 	value = self->ki_map->kmo_argv[entry->ke_index];
-	Dee_Incref(value);
 	DeeKwdsMapping_LockEndRead(self->ki_map);
+	Dee_Incref(value);
 	return value;
 }
 
@@ -900,127 +911,121 @@ INTERN DeeTypeObject DeeKwdsMappingIterator_Type = {
 
 
 
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-kmap_ctor(KwdsMapping *__restrict self) {
-	self->kmo_kwds = kwds_ctor();
-	if unlikely(!self->kmo_kwds)
-		goto err;
-	self->kmo_argv = NULL;
-	Dee_atomic_rwlock_init(&self->kmo_lock);
-	return 0;
-err:
-	return -1;
+PRIVATE WUNUSED DREF KwdsMapping *DCALL kmap_ctor(void) {
+	DREF KwdsMapping *result;
+	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args));
+	if unlikely(!result)
+		goto done;
+	result->kmo_argv = result->kmo_args;
+	result->kmo_kwds = kwds_ctor();
+	if unlikely(!result->kmo_kwds)
+		goto err_r;
+	Dee_atomic_rwlock_init(&result->kmo_lock);
+	DeeObject_Init(result, &DeeKwdsMapping_Type);
+done:
+	return result;
+err_r:
+	DeeObject_Free(result);
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-kmap_copy(KwdsMapping *__restrict self,
-          KwdsMapping *__restrict other) {
-	size_t i, count;
-	count          = other->kmo_kwds->kw_size;
-	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
-	if unlikely(!self->kmo_argv)
-		goto err;
-	DeeKwdsMapping_LockRead(other);
-	for (i = 0; i < count; ++i) {
-		self->kmo_argv[i] = other->kmo_argv[i];
-		Dee_Incref(self->kmo_argv[i]);
-	}
-	DeeKwdsMapping_LockEndRead(other);
-	Dee_atomic_rwlock_init(&self->kmo_lock);
-	self->kmo_kwds = other->kmo_kwds;
-	Dee_Incref(self->kmo_kwds);
-	return 0;
-err:
-	return -1;
+PRIVATE WUNUSED NONNULL((1)) DREF KwdsMapping *DCALL
+kmap_copy(KwdsMapping *__restrict self) {
+	DREF KwdsMapping *result;
+	size_t argc;
+	argc   = DeeKwds_SIZE(self->kmo_kwds);
+	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
+	                                              (argc * sizeof(DREF DeeObject *)));
+	if unlikely(!result)
+		goto done;
+	DeeKwdsMapping_LockRead(self);
+	Dee_Movrefv(result->kmo_args, self->kmo_argv, argc);
+	DeeKwdsMapping_LockEndRead(self);
+	result->kmo_argv = result->kmo_args;
+	result->kmo_kwds = self->kmo_kwds;
+	Dee_Incref(result->kmo_kwds);
+	Dee_atomic_rwlock_init(&result->kmo_lock);
+	DeeObject_Init(result, &DeeKwdsMapping_Type);
+done:
+	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-kmap_deep(KwdsMapping *__restrict self,
-          KwdsMapping *__restrict other) {
-	size_t i, count;
-	count          = other->kmo_kwds->kw_size;
-	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
-	if unlikely(!self->kmo_argv)
-		goto err;
-	DeeKwdsMapping_LockRead(other);
-	for (i = 0; i < count; ++i) {
-		self->kmo_argv[i] = other->kmo_argv[i];
-		Dee_Incref(self->kmo_argv[i]);
-	}
-	DeeKwdsMapping_LockEndRead(other);
-
-	/* Construct deep copies of all of the arguments. */
-	for (i = 0; i < count; ++i) {
-		if (DeeObject_InplaceDeepCopy(&self->kmo_argv[i]))
-			goto err_r_argv;
-	}
-	Dee_atomic_rwlock_init(&self->kmo_lock);
-	self->kmo_kwds = other->kmo_kwds;
-	Dee_Incref(self->kmo_kwds);
-	return 0;
+PRIVATE WUNUSED NONNULL((1)) DREF KwdsMapping *DCALL
+kmap_deep(KwdsMapping *__restrict self) {
+	DREF KwdsMapping *result;
+	size_t argc;
+	argc   = DeeKwds_SIZE(self->kmo_kwds);
+	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
+	                                              (argc * sizeof(DREF DeeObject *)));
+	if unlikely(!result)
+		goto done;
+	DeeKwdsMapping_LockRead(self);
+	Dee_Movrefv(result->kmo_args, self->kmo_argv, argc);
+	DeeKwdsMapping_LockEndRead(self);
+	if (DeeObject_InplaceDeepCopyv(result->kmo_args, argc))
+		goto err_r_argv;
+	result->kmo_argv = result->kmo_args;
+	result->kmo_kwds = self->kmo_kwds;
+	Dee_Incref(result->kmo_kwds);
+	Dee_atomic_rwlock_init(&result->kmo_lock);
+	DeeObject_Init(result, &DeeKwdsMapping_Type);
+done:
+	return result;
 err_r_argv:
-	Dee_Decrefv(self->kmo_argv, count);
-	Dee_Free(self->kmo_argv);
-err:
-	return -1;
+	Dee_Decrefv(result->kmo_args, argc);
+/*err_r:*/
+	DeeObject_Free(result);
+	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-kmap_init(KwdsMapping *__restrict self,
-          size_t argc, DeeObject *const *argv) {
-	DeeObject *args;
-	size_t i;
-	if (DeeArg_Unpack(argc, argv, "oo:_KwdsMapping", &self->kmo_kwds, &args))
+PRIVATE WUNUSED DREF KwdsMapping *DCALL
+kmap_init(size_t argc, DeeObject *const *argv) {
+	DREF KwdsMapping *result;
+	DeeKwdsObject *kwds;
+	DeeTupleObject *args;
+	size_t kw_argc;
+	if (DeeArg_Unpack(argc, argv, "oo:_KwdsMapping", &kwds, &args))
 		goto err;
-	if (DeeObject_AssertTypeExact(self->kmo_kwds, &DeeKwds_Type))
+	if (DeeObject_AssertTypeExact(kwds, &DeeKwds_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
-	if (DeeTuple_SIZE(args) != self->kmo_kwds->kw_size) {
-		return err_keywords_bad_for_argc(DeeTuple_SIZE(args),
-		                                 self->kmo_kwds->kw_size);
-	}
-	self->kmo_argv = (DREF DeeObject **)Dee_Mallocc(DeeTuple_SIZE(args),
-	                                                sizeof(DREF DeeObject *));
-	if unlikely(!self->kmo_argv)
+	kw_argc = kwds->kw_size;
+	if (DeeTuple_SIZE(args) != kw_argc) {
+		err_keywords_bad_for_argc(DeeTuple_SIZE(args), kw_argc);
 		goto err;
-	for (i = 0; i < DeeTuple_SIZE(args); ++i) {
-		self->kmo_argv[i] = DeeTuple_GET(args, i);
-		Dee_Incref(self->kmo_argv[i]);
 	}
-	Dee_Incref(self->kmo_kwds);
-	Dee_atomic_rwlock_init(&self->kmo_lock);
-	return 0;
+	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
+	                                              (kw_argc * sizeof(DREF DeeObject *)));
+	if unlikely(!result)
+		goto err;
+	result->kmo_argv = Dee_Movrefv(result->kmo_args, DeeTuple_ELEM(args), kw_argc);
+	result->kmo_kwds = kwds;
+	Dee_Incref(kwds);
+	Dee_atomic_rwlock_init(&result->kmo_lock);
+	DeeObject_Init(result, &DeeKwdsMapping_Type);
+	return result;
 err:
-	return -1;
+	return NULL;
 }
+
 
 PRIVATE NONNULL((1)) void DCALL
 kmap_fini(KwdsMapping *__restrict self) {
-	if (self->kmo_argv) {
-		size_t count = self->kmo_kwds->kw_size;
-		while (count--)
-			Dee_Decref(self->kmo_argv[count]);
-		Dee_Free(self->kmo_argv);
-	}
-
+	Dee_Decrefv(self->kmo_argv, self->kmo_kwds->kw_size);
 	Dee_Decref(self->kmo_kwds);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 kmap_visit(KwdsMapping *__restrict self, dvisit_t proc, void *arg) {
 	DeeKwdsMapping_LockRead(self);
-	if (self->kmo_argv)
-		Dee_Visitv(self->kmo_argv, self->kmo_kwds->kw_size);
+	Dee_Visitv(self->kmo_argv, self->kmo_kwds->kw_size);
 	DeeKwdsMapping_LockEndRead(self);
 	/*Dee_Visit(self->kmo_kwds);*/ /* Only ever references strings, so there'd be no point. */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 kmap_bool(KwdsMapping *__restrict self) {
-	if (!atomic_read(&self->kmo_argv))
-		return 0;
 	return self->kmo_kwds->kw_size != 0;
 }
 
@@ -1041,22 +1046,16 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kmap_size(KwdsMapping *__restrict self) {
-	if (!atomic_read(&self->kmo_argv))
-		return_reference_(DeeInt_Zero);
 	return DeeInt_NewSize(self->kmo_kwds->kw_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 kmap_nsi_getsize(KwdsMapping *__restrict self) {
-	if (!atomic_read(&self->kmo_argv))
-		return 0;
 	return self->kmo_kwds->kw_size;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 kmap_contains(KwdsMapping *self, DeeObject *key) {
-	if (!atomic_read(&self->kmo_argv))
-		goto nope;
 	if (!DeeString_Check(key))
 		goto nope;
 	return_bool(kwds_findstr(self->kmo_kwds,
@@ -1070,24 +1069,20 @@ nope:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 kmap_nsi_getdefault(KwdsMapping *self, DeeObject *key, DeeObject *def) {
 	size_t index;
-	DREF DeeObject *result;
 	if (!DeeString_Check(key))
 		goto nope;
 	index = kwds_findstr(self->kmo_kwds,
 	                     DeeString_STR(key),
 	                     DeeString_Hash(key));
-	if (index == (size_t)-1)
-		goto nope;
-	DeeKwdsMapping_LockRead(self);
-	if unlikely(!self->kmo_argv) {
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
 		DeeKwdsMapping_LockEndRead(self);
-		goto nope;
+		Dee_Incref(result);
+		return result;
 	}
-	ASSERT(index < self->kmo_kwds->kw_size);
-	result = self->kmo_argv[index];
-	Dee_Incref(result);
-	DeeKwdsMapping_LockEndRead(self);
-	return result;
 nope:
 	if (def != ITER_DONE)
 		Dee_Incref(def);
@@ -1146,19 +1141,20 @@ PRIVATE struct type_member tpconst kmap_class_members[] = {
 PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_KwdsMapping",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_doc      = */ DOC("()\n"
+	                         "(kwds:?Ert:Kwds,args:?DTuple)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
+	/* .tp_features = */ TF_NONE | TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
 	/* .tp_init = */ {
 		{
-			/* .tp_alloc = */ {
+			/* .tp_var = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&kmap_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)&kmap_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)&kmap_deep,
 				/* .tp_any_ctor  = */ (dfunptr_t)&kmap_init,
-				TYPE_FIXED_ALLOCATOR(KwdsMapping)
+				/* .tp_free      = */ (dfunptr_t)NULL
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&kmap_fini,
@@ -1197,15 +1193,18 @@ PUBLIC DeeTypeObject DeeKwdsMapping_Type = {
  *       to clean up the returned object. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKwdsMapping_New(/*Kwds*/ DeeObject *kwds,
-                   DeeObject *const *argv) {
+                   DeeObject *const *kw_argv) {
 	DREF KwdsMapping *result;
+	size_t argc;
 	ASSERT_OBJECT_TYPE_EXACT(kwds, &DeeKwds_Type);
-	result = DeeObject_MALLOC(KwdsMapping);
+	argc   = DeeKwds_SIZE(kwds);
+	result = (DREF KwdsMapping *)DeeObject_Malloc(offsetof(KwdsMapping, kmo_args) +
+	                                              (argc * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
 		goto done;
-	result->kmo_argv = (DREF DeeObject **)(DeeObject **)argv;
-	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
 	Dee_atomic_rwlock_init(&result->kmo_lock);
+	result->kmo_argv = (DREF DeeObject **)kw_argv; /* Shared (for now) */
+	result->kmo_kwds = (DREF DeeKwdsObject *)kwds;
 	DeeObject_Init(result, &DeeKwdsMapping_Type);
 done:
 	return (DREF DeeObject *)result;
@@ -1215,41 +1214,17 @@ done:
  * constructing a copy if all contained objects if `self' is being shared,
  * or destroying `self' without touching the argument vector if not. */
 PUBLIC NONNULL((1)) void DCALL
-DeeKwdsMapping_Decref(DREF DeeObject *__restrict self) {
+DeeKwdsMapping_Decref(DREF /*KwdsMapping*/ DeeObject *__restrict self) {
 	DREF KwdsMapping *me;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
 	me = (DREF KwdsMapping *)self;
 	if (DeeObject_IsShared(me)) {
-		/* The mapping is being shared, so we must construct a copy of its argument list. */
-		size_t argc = me->kmo_kwds->kw_size;
-		DREF DeeObject **argv;
-		if (!argc) {
-clear_argv:
-			DeeKwdsMapping_LockWrite(me);
-			me->kmo_argv = NULL;
-			DeeKwdsMapping_LockEndWrite(me);
-		} else {
-			do {
-				argv = (DREF DeeObject **)Dee_TryMallocc(argc, sizeof(DREF DeeObject *));
-			} while (unlikely(!argv) && Dee_TryCollectMemory(argc * sizeof(DREF DeeObject *)));
-			if unlikely(!argv)
-				goto clear_argv;
-			DeeKwdsMapping_LockWrite(me);
-			if unlikely(!me->kmo_argv) {
-				/* Shouldn't really happen, but is allowed by the specs... */
-				Dee_Free(argv);
-				argv = NULL;
-			} else {
-				Dee_Movrefv(argv, me->kmo_argv, argc);
-			}
-			me->kmo_argv = argv; /* Remember the old arguments. */
-			DeeKwdsMapping_LockEndWrite(me);
-		}
-
-		/* Create a reference for `kmo_kwds', which didn't contain one until now. */
+		/* The mapping is being shared, so we must gift it references. */
+		Dee_Movrefv(me->kmo_args, me->kmo_argv, me->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockWrite(me);
+		me->kmo_argv = me->kmo_args;
+		DeeKwdsMapping_LockEndWrite(me);
 		Dee_Incref(me->kmo_kwds);
-
-		/* Drop our own reference (which should still be shared) */
 		Dee_Decref_unlikely(self);
 	} else {
 		/*Dee_Decref(me->kmo_kwds);*/
@@ -1261,159 +1236,131 @@ clear_argv:
 
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeKwdsMapping_HasItemStringHash(DeeObject *__restrict self,
+DeeKwdsMapping_HasItemStringHash(DeeKwdsMappingObject *__restrict self,
                                  char const *__restrict name,
                                  dhash_t hash) {
-	size_t index;
-	KwdsMapping *me;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if unlikely(index == (size_t)-1)
-		return false;
-	if unlikely(!atomic_read(&me->kmo_argv))
-		return false;
-	return true;
+	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	return index != (size_t)-1;
 }
 
 INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) bool DCALL
-DeeKwdsMapping_HasItemStringLenHash(DeeObject *__restrict self,
+DeeKwdsMapping_HasItemStringLenHash(DeeKwdsMappingObject *__restrict self,
                                     char const *__restrict name,
                                     size_t namesize,
                                     dhash_t hash) {
-	size_t index;
-	KwdsMapping *me;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if unlikely(index == (size_t)-1)
-		return false;
-	if unlikely(!atomic_read(&me->kmo_argv))
-		return false;
-	return true;
+	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	return index != (size_t)-1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringHash(DeeObject *__restrict self,
-                                 char const *__restrict name,
-                                 dhash_t hash) {
-	size_t index;
-	KwdsMapping *me;
-	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if unlikely(index == (size_t)-1) {
-no_such_key:
-		err_unknown_key_str((DeeObject *)self, name);
-		return NULL;
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNR(DeeKwdsMappingObject *__restrict self,
+                         /*string*/ DeeObject *__restrict name) {
+	size_t index = kwds_findstr_obj(self->kmo_kwds, (DeeStringObject *)name);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
 	}
-	DeeKwdsMapping_LockRead(me);
-	if unlikely(!me->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(me);
-		goto no_such_key;
-	}
-	ASSERT(index < me->kmo_kwds->kw_size);
-	result = me->kmo_argv[index];
-	Dee_Incref(result);
-	DeeKwdsMapping_LockEndRead(me);
-	return result;
+	err_unknown_key((DeeObject *)self, name);
+	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringHashDef(DeeObject *self,
-                                    char const *__restrict name,
-                                    dhash_t hash,
-                                    DeeObject *def) {
-	size_t index;
-	KwdsMapping *me;
-	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr(me->kmo_kwds, name, hash);
-	if unlikely(index == (size_t)-1) {
-no_such_key:
-		if (def != ITER_DONE)
-			Dee_Incref(def);
-		return def;
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNRStringHash(DeeKwdsMappingObject *__restrict self,
+                                   char const *__restrict name,
+                                   dhash_t hash) {
+	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
 	}
-	DeeKwdsMapping_LockRead(me);
-	if unlikely(!me->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(me);
-		goto no_such_key;
-	}
-	ASSERT(index < me->kmo_kwds->kw_size);
-	result = me->kmo_argv[index];
-	Dee_Incref(result);
-	DeeKwdsMapping_LockEndRead(me);
-	return result;
+	err_unknown_key_str((DeeObject *)self, name);
+	return NULL;
 }
 
-INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringLenHash(DeeObject *__restrict self,
-                                    char const *__restrict name,
-                                    size_t namesize,
-                                    dhash_t hash) {
-	size_t index;
-	KwdsMapping *me;
-	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if unlikely(index == (size_t)-1) {
-no_such_key:
-		err_unknown_key_str_len((DeeObject *)self, name, namesize);
-		return NULL;
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNRDef(DeeKwdsMappingObject *__restrict self,
+                            /*string*/ DeeObject *__restrict name,
+                            DeeObject *def) {
+	size_t index = kwds_findstr_obj(self->kmo_kwds, (DeeStringObject *)name);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
 	}
-	DeeKwdsMapping_LockRead(me);
-	if unlikely(!me->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(me);
-		goto no_such_key;
-	}
-	ASSERT(index < me->kmo_kwds->kw_size);
-	result = me->kmo_argv[index];
-	Dee_Incref(result);
-	DeeKwdsMapping_LockEndRead(me);
-	return result;
+	return def;
 }
 
-INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL
-DeeKwdsMapping_GetItemStringLenHashDef(DeeObject *self,
-                                       char const *__restrict name,
-                                       size_t namesize,
-                                       dhash_t hash,
-                                       DeeObject *def) {
-	size_t index;
-	KwdsMapping *me;
-	DREF DeeObject *result;
-	ASSERT_OBJECT_TYPE_EXACT(self, &DeeKwdsMapping_Type);
-	me    = (KwdsMapping *)self;
-	index = kwds_findstr_len(me->kmo_kwds, name, namesize, hash);
-	if unlikely(index == (size_t)-1) {
-no_such_key:
-		if (def != ITER_DONE)
-			Dee_Incref(def);
-		return def;
+INTERN WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNRStringHashDef(DeeKwdsMappingObject *__restrict self,
+                                      char const *__restrict name,
+                                      dhash_t hash,
+                                      DeeObject *def) {
+	size_t index = kwds_findstr(self->kmo_kwds, name, hash);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
 	}
-	DeeKwdsMapping_LockRead(me);
-	if unlikely(!me->kmo_argv) {
-		DeeKwdsMapping_LockEndRead(me);
-		goto no_such_key;
+	return def;
+}
+
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNRStringLenHash(DeeKwdsMappingObject *__restrict self,
+                                      char const *__restrict name,
+                                      size_t namesize,
+                                      dhash_t hash) {
+	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
 	}
-	ASSERT(index < me->kmo_kwds->kw_size);
-	result = me->kmo_argv[index];
-	Dee_Incref(result);
-	DeeKwdsMapping_LockEndRead(me);
-	return result;
+	err_unknown_key_str_len((DeeObject *)self, name, namesize);
+	return NULL;
+}
+
+INTERN WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DeeObject *DCALL
+DeeKwdsMapping_GetItemNRStringLenHashDef(DeeKwdsMappingObject *__restrict self,
+                                         char const *__restrict name,
+                                         size_t namesize,
+                                         dhash_t hash,
+                                         DeeObject *def) {
+	size_t index = kwds_findstr_len(self->kmo_kwds, name, namesize, hash);
+	if likely(index != (size_t)-1) {
+		DeeObject *result;
+		ASSERT(index < self->kmo_kwds->kw_size);
+		DeeKwdsMapping_LockRead(self);
+		result = self->kmo_argv[index];
+		DeeKwdsMapping_LockEndRead(self);
+		return result;
+	}
+	return def;
 }
 
 /* Construct/access keyword arguments passed to a function as a
  * high-level {string: Object}-like mapping that is bound to the
  * actually mapped arguments. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeArg_GetKw(size_t *__restrict p_argc,
-             DeeObject *const *argv,
-             DeeObject *kw) {
+DeeKwMapping_New(size_t *__restrict p_argc,
+                 DeeObject *const *argv,
+                 DeeObject *kw) {
 	if (!kw)
 		return_reference_(Dee_EmptyMapping);
 	if (DeeKwds_Check(kw)) {
@@ -1435,10 +1382,10 @@ DeeArg_GetKw(size_t *__restrict p_argc,
 }
 
 PUBLIC ATTR_INS(2, 1) NONNULL((3)) void DCALL
-DeeArg_PutKw(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
+DeeKwMapping_Decref(size_t argc, DeeObject *const *argv, DREF DeeObject *kw) {
 	ASSERT_OBJECT(kw);
 	if (DeeKwdsMapping_Check(kw) &&
-	    DeeKwdsMapping_GetArgv(kw) == argv + argc) {
+	    DeeKwdsMapping_ARGV(kw) == argv + argc) {
 		/* If we're the ones owning the keywords-mapping, we must also decref() it. */
 		DeeKwdsMapping_Decref(kw);
 	} else {
@@ -1509,14 +1456,40 @@ err:
 	return -1;
 }
 
+
 /* Lookup a named keyword argument from `self'
  * @return: * :   Reference to named keyword argument.
  * @return: NULL: An error was thrown.*/
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringHash(DeeKwArgs *__restrict self,
-                        char const *__restrict name,
-                        Dee_hash_t hash) {
-	DREF DeeObject *result;
+PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKwArgs_GetItemNR(DeeKwArgs *__restrict self,
+                    /*string*/ DeeObject *__restrict name) {
+	DeeObject *result;
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	if (!self->kwa_kw) {
+		err_unknown_key(Dee_EmptyMapping, name);
+		return NULL;
+	}
+	if (DeeKwds_Check(self->kwa_kw)) {
+		size_t kw_index;
+		kw_index = kwds_findstr_obj((Kwds *)self->kwa_kw, (DeeStringObject *)name);
+		if unlikely(kw_index == (size_t)-1) {
+			err_keywords_not_found(DeeString_STR(name));
+			return NULL;
+		}
+		++self->kwa_kwused;
+		return self->kwa_kwargv[kw_index];
+	}
+	result = DeeKw_GetItemNR(self->kwa_kw, name);
+	if likely(result)
+		++self->kwa_kwused;
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKwArgs_GetItemNRStringHash(DeeKwArgs *__restrict self,
+                              char const *__restrict name,
+                              Dee_hash_t hash) {
+	DeeObject *result;
 	if (!self->kwa_kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
@@ -1529,19 +1502,19 @@ DeeKwArgs_GetStringHash(DeeKwArgs *__restrict self,
 			return NULL;
 		}
 		++self->kwa_kwused;
-		return_reference(self->kwa_kwargv[kw_index]);
+		return self->kwa_kwargv[kw_index];
 	}
-	result = DeeObject_GetItemStringHash(self->kwa_kw, name, hash);
+	result = DeeKw_GetItemNRStringHash(self->kwa_kw, name, hash);
 	if likely(result)
 		++self->kwa_kwused;
 	return result;
 }
 
-PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLenHash(DeeKwArgs *__restrict self,
-                           char const *__restrict name,
-                           size_t namelen, Dee_hash_t hash) {
-	DREF DeeObject *result;
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL
+DeeKwArgs_GetItemNRStringLenHash(DeeKwArgs *__restrict self,
+                                 char const *__restrict name,
+                                 size_t namelen, Dee_hash_t hash) {
+	DeeObject *result;
 	if (!self->kwa_kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
@@ -1555,18 +1528,44 @@ DeeKwArgs_GetStringLenHash(DeeKwArgs *__restrict self,
 			return NULL;
 		}
 		++self->kwa_kwused;
-		return_reference(self->kwa_kwargv[kw_index]);
+		return self->kwa_kwargv[kw_index];
 	}
-	result = DeeObject_GetItemStringLenHash(self->kwa_kw, name, namelen, hash);
+	result = DeeKw_GetItemNRStringLenHash(self->kwa_kw, name, namelen, hash);
 	if likely(result)
 		++self->kwa_kwused;
 	return result;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringHashDef(DeeKwArgs *__restrict self,
-                           char const *__restrict name,
-                           Dee_hash_t hash, DeeObject *def) {
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+DeeKwArgs_GetItemNRDef(DeeKwArgs *__restrict self,
+                       /*string*/ DeeObject *__restrict name, DeeObject *def) {
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	if (self->kwa_kw) {
+		if (DeeKwds_Check(self->kwa_kw)) {
+			size_t kw_index;
+			kw_index = kwds_findstr_obj((Kwds *)self->kwa_kw, (DeeStringObject *)name);
+			if unlikely(kw_index != (size_t)-1) {
+				def = self->kwa_kwargv[kw_index];
+				++self->kwa_kwused;
+			}
+		} else {
+			DeeObject *result;
+			result = DeeKw_GetItemNRDef(self->kwa_kw, name, ITER_DONE);
+			if likely(result != ITER_DONE) {
+				++self->kwa_kwused;
+			} else {
+				result = def;
+			}
+			return result;
+		}
+	}
+	return def;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+DeeKwArgs_GetItemNRStringHashDef(DeeKwArgs *__restrict self,
+                                 char const *__restrict name,
+                                 Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
@@ -1576,26 +1575,22 @@ DeeKwArgs_GetStringHashDef(DeeKwArgs *__restrict self,
 				++self->kwa_kwused;
 			}
 		} else {
-			DREF DeeObject *result;
-			result = DeeObject_GetItemStringHashDef(self->kwa_kw, name, hash, ITER_DONE);
+			DeeObject *result;
+			result = DeeKw_GetItemNRStringHashDef(self->kwa_kw, name, hash, ITER_DONE);
 			if likely(result != ITER_DONE) {
 				++self->kwa_kwused;
 			} else {
 				result = def;
-				if (result != ITER_DONE)
-					Dee_Incref(result);
 			}
 			return result;
 		}
 	}
-	if (def != ITER_DONE)
-		Dee_Incref(def);
 	return def;
 }
 
-PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DREF DeeObject *DCALL
-DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
-                              size_t namelen, Dee_hash_t hash, DeeObject *def) {
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DeeObject *DCALL
+DeeKwArgs_GetItemNRStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict name,
+                                    size_t namelen, Dee_hash_t hash, DeeObject *def) {
 	if (self->kwa_kw) {
 		if (DeeKwds_Check(self->kwa_kw)) {
 			size_t kw_index;
@@ -1605,28 +1600,51 @@ DeeKwArgs_GetStringLenHashDef(DeeKwArgs *__restrict self, char const *__restrict
 				++self->kwa_kwused;
 			}
 		} else {
-			DREF DeeObject *result;
-			result = DeeObject_GetItemStringLenHashDef(self->kwa_kw, name, namelen, hash, ITER_DONE);
+			DeeObject *result;
+			result = DeeKw_GetItemNRStringLenHashDef(self->kwa_kw, name, namelen, hash, ITER_DONE);
 			if likely(result != ITER_DONE) {
 				++self->kwa_kwused;
 			} else {
 				result = def;
-				if (result != ITER_DONE)
-					Dee_Incref(result);
 			}
 			return result;
 		}
 	}
-	if (def != ITER_DONE)
-		Dee_Incref(def);
 	return def;
 }
 
 
 
-PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DREF DeeObject *DCALL
-DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                       char const *__restrict name, Dee_hash_t hash) {
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
+DeeArg_GetKwNR(size_t argc, DeeObject *const *argv, DeeObject *kw,
+               /*string*/ DeeObject *__restrict name) {
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	if (!kw) {
+		err_unknown_key(Dee_EmptyMapping, name);
+		return NULL;
+	}
+	if (DeeKwds_Check(kw)) {
+		size_t kw_index;
+		size_t num_keywords = DeeKwds_SIZE(kw);
+		if unlikely(num_keywords > argc) {
+			/* Argument list is too short of the given keywords */
+			err_keywords_bad_for_argc(argc, num_keywords);
+			return NULL;
+		}
+		kw_index = kwds_findstr_obj((Kwds *)kw, (DeeStringObject *)name);
+		if unlikely(kw_index == (size_t)-1) {
+			err_keywords_not_found(DeeString_STR(name));
+			return NULL;
+		}
+		ASSERT(kw_index < num_keywords);
+		return argv[(argc - num_keywords) + kw_index];
+	}
+	return DeeKw_GetItemNR(kw, name);
+}
+
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4)) DeeObject *DCALL
+DeeArg_GetKwNRStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                         char const *__restrict name, Dee_hash_t hash) {
 	if (!kw) {
 		err_unknown_key_str(Dee_EmptyMapping, name);
 		return NULL;
@@ -1645,14 +1663,14 @@ DeeArg_GetKwStringHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			return NULL;
 		}
 		ASSERT(kw_index < num_keywords);
-		return_reference(argv[(argc - num_keywords) + kw_index]);
+		return argv[(argc - num_keywords) + kw_index];
 	}
-	return DeeObject_GetItemStringHash(kw, name, hash);
+	return DeeKw_GetItemNRStringHash(kw, name, hash);
 }
 
-PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) DREF DeeObject *DCALL
-DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
-                          char const *__restrict name, size_t namelen, dhash_t hash) {
+PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) DeeObject *DCALL
+DeeArg_GetKwNRStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                            char const *__restrict name, size_t namelen, dhash_t hash) {
 	if (!kw) {
 		err_unknown_key_str_len(Dee_EmptyMapping, name, namelen);
 		return NULL;
@@ -1671,19 +1689,39 @@ DeeArg_GetKwStringLenHash(size_t argc, DeeObject *const *argv, DeeObject *kw,
 			return NULL;
 		}
 		ASSERT(kw_index < num_keywords);
-		return_reference(argv[(argc - num_keywords) + kw_index]);
+		return argv[(argc - num_keywords) + kw_index];
 	}
-	return DeeObject_GetItemStringLenHash(kw, name, namelen, hash);
+	return DeeKw_GetItemNRStringLenHash(kw, name, namelen, hash);
+}
+
+PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) DeeObject *DCALL
+DeeArg_GetKwNRDef(size_t argc, DeeObject *const *argv, DeeObject *kw,
+                  /*string*/ DeeObject *__restrict name, DeeObject *def) {
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	if (!kw) {
+return_def:
+		return def;
+	}
+	if (DeeKwds_Check(kw)) {
+		size_t kw_index;
+		size_t num_keywords = DeeKwds_SIZE(kw);
+		if unlikely(num_keywords > argc)
+			goto return_def;
+		kw_index = kwds_findstr_obj((Kwds *)kw, (DeeStringObject *)name);
+		if (kw_index == (size_t)-1)
+			goto return_def;
+		ASSERT(kw_index < num_keywords);
+		return argv[(argc - num_keywords) + kw_index];
+	}
+	return DeeKw_GetItemNRDef(kw, name, def);
 }
 
 PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 6)) DREF DeeObject *DCALL
-DeeArg_GetKwStringHashDef(size_t argc, DeeObject *const *argv,
-                          DeeObject *kw, char const *__restrict name,
-                          Dee_hash_t hash, DeeObject *def) {
+DeeArg_GetKwNRStringHashDef(size_t argc, DeeObject *const *argv,
+                            DeeObject *kw, char const *__restrict name,
+                            Dee_hash_t hash, DeeObject *def) {
 	if (!kw) {
 return_def:
-		if (def != ITER_DONE)
-			Dee_Incref(def);
 		return def;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1695,19 +1733,17 @@ return_def:
 		if (kw_index == (size_t)-1)
 			goto return_def;
 		ASSERT(kw_index < num_keywords);
-		return_reference(argv[(argc - num_keywords) + kw_index]);
+		return argv[(argc - num_keywords) + kw_index];
 	}
-	return DeeObject_GetItemStringHashDef(kw, name, hash, def);
+	return DeeKw_GetItemNRStringHashDef(kw, name, hash, def);
 }
 
-PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) NONNULL((7)) DREF DeeObject *DCALL
-DeeArg_GetKwStringLenHashDef(size_t argc, DeeObject *const *argv,
+PUBLIC WUNUSED ATTR_INS(2, 1) ATTR_INS(4, 5) NONNULL((7)) DeeObject *DCALL
+DeeArg_GetKwNRStringLenHashDef(size_t argc, DeeObject *const *argv,
                              DeeObject *kw, char const *__restrict name,
                              size_t namelen, dhash_t hash, DeeObject *def) {
 	if (!kw) {
 return_def:
-		if (def != ITER_DONE)
-			Dee_Incref(def);
 		return def;
 	}
 	if (DeeKwds_Check(kw)) {
@@ -1719,13 +1755,232 @@ return_def:
 		if (kw_index == (size_t)-1)
 			goto return_def;
 		ASSERT(kw_index < num_keywords);
-		return_reference(argv[(argc - num_keywords) + kw_index]);
+		return argv[(argc - num_keywords) + kw_index];
 	}
-	return DeeObject_GetItemStringLenHashDef(kw, name, namelen, hash, def);
+	return DeeKw_GetItemNRStringLenHashDef(kw, name, namelen, hash, def);
+}
+
+
+
+
+/* Check if `kwds' fulfills `DeeObject_IsKw()', and if not, wrap it as a generic
+ * kw-capable wrapper that calls forward to `DeeObject_GetItem(kwds)' when keywords
+ * are queried, but then caches returned references such that the keyword consumer
+ * doesn't need to keep track of them. */
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKw_Wrap(DeeObject *__restrict kwds) {
+	if (DeeObject_IsKw(kwds))
+		return_reference_(kwds);
+	return DeeCachedDict_New(kwds);
+}
+
+
+
+/* List of types that support TF_KW */
+#define FOREACH_KW_TYPE(cb) \
+	cb(DeeCachedDict)       \
+	cb(DeeKwdsMapping)      \
+	cb(DeeRoDict)           \
+	cb(DeeBlackListKwds)    \
+	cb(DeeBlackListKw)
+
+
+/* Lookup keyword arguments. These functions may be used to extract keyword arguments
+ * when the caller knows that `kw != NULL && DeeObject_IsKw(kw) && !DeeKwds_Check(kw)'.
+ *
+ * IMPORTANT: These functions to *NOT* return references! */
+PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKw_GetItemNR(DeeObject *__restrict kw,
+                /*string*/ DeeObject *__restrict name) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNR((prefix##Object *)kw, name);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeKw_GetItemNRStringHash(DeeObject *__restrict kw,
+                          char const *__restrict name,
+                          Dee_hash_t hash) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNRStringHash((prefix##Object *)kw, name, hash);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL
+DeeKw_GetItemNRStringLenHash(DeeObject *kw, char const *__restrict name,
+                             size_t namelen, Dee_hash_t hash) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNRStringLenHash((prefix##Object *)kw, name, namelen, hash);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+DeeKw_GetItemNRDef(DeeObject *__restrict kw,
+                   /*string*/ DeeObject *__restrict name,
+                   DeeObject *def) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNRDef((prefix##Object *)kw, name, def);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+DeeKw_GetItemNRStringHashDef(DeeObject *kw, char const *__restrict name,
+                             Dee_hash_t hash, DeeObject *def) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNRStringHashDef((prefix##Object *)kw, name, hash, def);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+PUBLIC WUNUSED ATTR_INS(2, 3) NONNULL((1, 5)) DeeObject *DCALL
+DeeKw_GetItemNRStringLenHashDef(DeeObject *kw, char const *__restrict name,
+                                size_t namelen, Dee_hash_t hash, DeeObject *def) {
+	DeeTypeObject *kw_type;
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	kw_type = Dee_TYPE(kw);
+#define LOCAL_handle(prefix)       \
+	if (kw_type == &prefix##_Type) \
+		return prefix##_GetItemNRStringLenHashDef((prefix##Object *)kw, name, namelen, hash, def);
+	FOREACH_KW_TYPE(LOCAL_handle);
+#undef LOCAL_handle
+	Dee_Fatalf("kw-type %r not implemented", kw_type);
+	__builtin_unreachable();
+}
+
+
+
+
+/* Construct the canonical wrapper for "**kwds" in a user-defined function,
+ * such that the names of positional arguments passed via "kw" are black-listed.
+ *
+ * The returned object is always kw-capable, and this function is used in code
+ * such as this:
+ * >> function foo(a, b, **kwds) {
+ * >>     return kwds;
+ * >> }
+ * >> print repr foo(**{ "a": 10, "b": 20, "c": 30 }); // prints '{ "c": 30 }' (because "a" and "b" are black-listed)
+ *
+ * This function is the high-level wrapper around:
+ * - DeeBlackListKwds_New
+ * - DeeBlackListKw_New
+ * - DeeKwdsMapping_New
+ *
+ * IMPORTANT: The returned object must be decref'd using `DeeKwBlackList_Decref()'
+ *            once the function that created it returns. */
+PUBLIC WUNUSED NONNULL((1, 3)) ATTR_INS(4, 2) DREF DeeObject *DCALL
+DeeKwBlackList_New(struct Dee_code_object *__restrict code,
+                   size_t positional_argc,
+                   DeeObject *const *positional_argv,
+                   DeeObject *__restrict kw) {
+	ASSERT_OBJECT(kw);
+	ASSERT(DeeObject_IsKw(kw));
+	if likely(DeeKwds_Check(kw)) {
+		/* Most common case: Must create a wrapper around the kwds/argv hybrid descriptor,
+		 *                   but exclude any keyword also found as part of our code's
+		 *                   keyword list.
+		 * >> function foo(x, y, **kw) {
+		 * >> 	print repr kw;
+		 * >> }
+		 * >> foo(x: 10, y: 20, z: 30); // { "z": 30 }
+		 * Semantically comparable to:
+		 * >> return rt.RoDict(
+		 * >> 	for (local key, id: kw)
+		 * >> 		if (key !in __code__.__kwds__)
+		 * >> 			(key, __argv__[(#__argv__ - #__code__.__kwds__) + id])
+		 * >> );
+		 */
+		if unlikely(!DeeKwds_SIZE(kw)) {
+			/* No keywords --> Return an empty mapping.
+			 * -> This can happen depending on how keyword arguments
+			 *    have been routed throughout the runtime. */
+			Dee_Incref(Dee_EmptyMapping);
+			return Dee_EmptyMapping;
+		}
+		positional_argv += positional_argc;
+		if (positional_argc >= code->co_argc_max || !code->co_keywords) {
+			/* No keyword information --> Return an unfiltered keywords mapping object.
+			 * -> This happens for purely varkwds user-code functions, such a function
+			 *    written as `function foo(**kw)', in which case there aren't any other
+			 *    keyword which would have to be blacklisted when access is made. */
+			return DeeKwdsMapping_New((DeeObject *)kw, positional_argv);
+		}
+		return DeeBlackListKwds_New(code, positional_argc,
+		                            positional_argv, (DeeKwdsObject *)kw);
+	}
+
+	/* General case: create a proxy-mapping object for `kw' that get rids
+	 *               of all keys that are equal to one of the strings found
+	 *               within our keyword list.
+	 * Semantically comparable to:
+	 * >> return rt.RoDict(
+	 * >> 	for (local key, item: kw)
+	 * >> 		if (key !in __code__.__kwds__)
+	 * >> 			(key, item)
+	 * >> );
+	 */
+	if (positional_argc >= code->co_argc_max || !code->co_keywords) {
+		/* No keyword information --> Re-return the unfiltered input mapping object. */
+		return_reference_(kw);
+	}
+	return DeeBlackListKw_New(code, positional_argc, kw);
+}
+
+/* Unshare pointers to "argv" if "self" is still shared. */
+PUBLIC NONNULL((1)) void DCALL
+DeeKwBlackList_Decref(DREF DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (tp_self == &DeeKwdsMapping_Type) {
+		DeeKwdsMapping_Decref(self);
+	} else if (tp_self == &DeeBlackListKwds_Type) {
+		DeeBlackListKwds_Decref(self);
+	} else {
+		Dee_Decref_likely(self);
+	}
 }
 
 
 
 DECL_END
 
-#endif /* !GUARD_DEEMON_OBJECTS_ARG_C */
+#endif /* !GUARD_DEEMON_RUNTIME_KWDS_C */

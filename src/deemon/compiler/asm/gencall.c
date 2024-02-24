@@ -32,6 +32,7 @@
 #include <deemon/dict.h>
 #include <deemon/hashset.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/list.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
@@ -129,6 +130,28 @@ PRIVATE WUNUSED NONNULL((1)) int
 		if (asm_putddi(self))
 			goto err;
 		if (asm_gcast_tuple())
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int
+(DCALL ast_genasm_one_as_varkwds)(struct ast *__restrict self) {
+	DeeTypeObject *kw_type;
+	if (ast_genasm_one(self, ASM_G_FPUSHRES))
+		goto err;
+
+	/* DONT use ast_predict_type here: that one can only be used when
+	 * the assumption not being met results in weak undefined behavior. However,
+	 * if the args-operand in a call really isn't a tuple, the results are hard
+	 * undefined behavior (and probably an interpreter crash) */
+	kw_type = ast_predict_type_noanno(self);
+	if (!kw_type || !DeeType_IsKw(kw_type)) {
+		if (asm_putddi(self))
+			goto err;
+		if (asm_gcast_varkwds())
 			goto err;
 	}
 	return 0;
@@ -1844,7 +1867,8 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 			Dee_Decref(name_ob);
 			if unlikely(attrid < 0)
 				goto err;
-			if (kwds->a_type == AST_CONSTEXPR) {
+			if (kwds->a_type == AST_CONSTEXPR &&
+			    DeeObject_IsKw(kwds->a_constexpr)) {
 				int32_t kwd_cid;
 				kwd_cid = asm_newconst(kwds->a_constexpr);
 				if unlikely(kwd_cid < 0)
@@ -1899,7 +1923,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
-					if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+					if (ast_genasm_one_as_varkwds(kwds))
 						goto err;
 					if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc))
 						goto err;
@@ -1911,7 +1935,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 						goto err;
 					if (asm_gpush_const((uint16_t)attrid))
 						goto err;
-					if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+					if (ast_genasm_one_as_varkwds(kwds))
 						goto err;
 					if (asm_putddi(ddi_ast))
 						goto err;
@@ -1925,7 +1949,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one_as_tuple(args))
 					goto err;
-				if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+				if (ast_genasm_one_as_varkwds(kwds))
 					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
@@ -1943,7 +1967,8 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		name = func->a_operator.o_op1;
 		if (kwds->a_type == AST_CONSTEXPR &&
 		    name->a_type == AST_CONSTEXPR &&
-		    DeeString_Check(name->a_constexpr)) {
+		    DeeString_Check(name->a_constexpr) &&
+		    DeeObject_IsKw(kwds->a_constexpr)) {
 			int32_t kwd_cid, att_cid;
 			kwd_cid = asm_newconst(kwds->a_constexpr);
 			if unlikely(kwd_cid < 0)
@@ -2001,7 +2026,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
-				if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+				if (ast_genasm_one_as_varkwds(kwds))
 					goto err;
 				if (asm_gcallattr_kwds((uint8_t)args->a_multiple.m_astc))
 					goto err;
@@ -2013,7 +2038,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 					goto err;
 				if (ast_genasm_one(name, ASM_G_FPUSHRES))
 					goto err;
-				if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+				if (ast_genasm_one_as_varkwds(kwds))
 					goto err;
 				if (asm_putddi(ddi_ast))
 					goto err;
@@ -2027,7 +2052,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 				goto err;
 			if (ast_genasm_one_as_tuple(args))
 				goto err;
-			if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+			if (ast_genasm_one_as_varkwds(kwds))
 				goto err;
 			if (asm_putddi(ddi_ast))
 				goto err;
@@ -2040,7 +2065,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 	/* The object being called isn't an attribute. */
 	if (ast_genasm(func, ASM_G_FPUSHRES))
 		goto err;
-	if (kwds->a_type == AST_CONSTEXPR) {
+	if (kwds->a_type == AST_CONSTEXPR && DeeObject_IsKw(kwds->a_constexpr)) {
 		int32_t kwd_cid;
 		kwd_cid = asm_newconst(kwds->a_constexpr);
 		if unlikely(kwd_cid < 0)
@@ -2075,7 +2100,7 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 		/* Fallback: use the stack to pass all the arguments. */
 		if (ast_genasm_one_as_tuple(args))
 			goto err;
-		if (ast_genasm_one(kwds, ASM_G_FPUSHRES))
+		if (ast_genasm_one_as_varkwds(kwds))
 			goto err;
 		if (asm_putddi(ddi_ast))
 			goto err;

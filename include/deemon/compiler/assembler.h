@@ -1283,6 +1283,7 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gcast_dict()              (asm_dicsp(), asm_put((ASM_CAST_DICT & 0xff00) >> 8) || asm_put(ASM_CAST_DICT & 0xff))
 #define asm_gcast_int()               (asm_dicsp(), asm_put(ASM_CAST_INT))
 #define asm_gcast_bool()              (asm_dicsp(), asm_put(ASM_BOOL))
+#define asm_gcast_varkwds()           (asm_dicsp(), asm_put(ASM_CAST_VARKWDS))
 #define asm_gpush_none()              (asm_incsp(), asm_put(ASM_PUSH_NONE))
 #define asm_gpush_none_p()            (asm_put(ASM_PUSH_NONE))
 #define asm_gpush_module(mid)         (asm_incsp(), asm_put816(ASM_PUSH_MODULE, mid))

@@ -55,6 +55,11 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
 		goto err;
 
+	/* TODO: On i386, the argc/argv/kw/... stack locations should be usable
+	 *       for hstack allocation once the respective arguments are no longer
+	 *       used (just like how argument registers can get re-used on x86_64
+	 *       once no longer needed) */
+
 	/* Assemble the function. */
 	if unlikely(Dee_assemble(func, &hfunc, HOSTFUNC_CC_CALL, DEE_FUNCTION_ASSEMBLER_F_NORMAL))
 		goto err;

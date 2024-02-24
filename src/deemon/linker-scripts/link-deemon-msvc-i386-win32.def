@@ -3,12 +3,12 @@ EXPORTS
 	; stdcall symbols without a leading underscore.
 	; See this mail that noone ever bothered to reply to:
 	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
-	DeeArg_GetKw@12=_DeeArg_GetKw@12
-	DeeArg_GetKwStringHash@20=_DeeArg_GetKwStringHash@20
-	DeeArg_GetKwStringHashDef@24=_DeeArg_GetKwStringHashDef@24
-	DeeArg_GetKwStringLenHash@24=_DeeArg_GetKwStringLenHash@24
-	DeeArg_GetKwStringLenHashDef@28=_DeeArg_GetKwStringLenHashDef@28
-	DeeArg_PutKw@12=_DeeArg_PutKw@12
+	DeeArg_GetKwNR@16=_DeeArg_GetKwNR@16
+	DeeArg_GetKwNRDef@20=_DeeArg_GetKwNRDef@20
+	DeeArg_GetKwNRStringHash@20=_DeeArg_GetKwNRStringHash@20
+	DeeArg_GetKwNRStringHashDef@24=_DeeArg_GetKwNRStringHashDef@24
+	DeeArg_GetKwNRStringLenHash@24=_DeeArg_GetKwNRStringLenHash@24
+	DeeArg_GetKwNRStringLenHashDef@28=_DeeArg_GetKwNRStringLenHashDef@28
 	DeeArg_VUnpack@16=_DeeArg_VUnpack@16
 	DeeArg_VUnpackKw@24=_DeeArg_VUnpackKw@24
 	DeeAsm_IsNoreturn@8=_DeeAsm_IsNoreturn@8
@@ -22,6 +22,9 @@ EXPORTS
 	DeeAssert_BadObjectTypeExact@16=_DeeAssert_BadObjectTypeExact@16
 	DeeAssert_BadObjectTypeExactOpt@16=_DeeAssert_BadObjectTypeExactOpt@16
 	DeeAssert_BadObjectTypeOpt@16=_DeeAssert_BadObjectTypeOpt@16
+	DeeBlackListKw_New@12=_DeeBlackListKw_New@12
+	DeeBlackListKwds_Decref@4=_DeeBlackListKwds_Decref@4
+	DeeBlackListKwds_New@16=_DeeBlackListKwds_New@16
 	DeeBytes_FromSequence@4=_DeeBytes_FromSequence@4
 	DeeBytes_NewBuffer@8=_DeeBytes_NewBuffer@8
 	DeeBytes_NewBufferData@8=_DeeBytes_NewBufferData@8
@@ -31,6 +34,7 @@ EXPORTS
 	DeeBytes_TruncateBuffer@8=_DeeBytes_TruncateBuffer@8
 	DeeCMethod_DocInfo@8=_DeeCMethod_DocInfo@8
 	DeeCMethod_New@4=_DeeCMethod_New@4
+	DeeCachedDict_New@4=_DeeCachedDict_New@4
 	DeeCell_CmpXch@12=_DeeCell_CmpXch@12
 	DeeCell_Del@4=_DeeCell_Del@4
 	DeeCell_Get@4=_DeeCell_Get@4
@@ -134,6 +138,11 @@ EXPORTS
 	DeeDbgSlab_TryMalloc5@8=_DeeDbgSlab_TryMalloc5@8
 	DeeDbgSlab_TryMalloc6@8=_DeeDbgSlab_TryMalloc6@8
 	DeeDbgSlab_TryMalloc8@8=_DeeDbgSlab_TryMalloc8@8
+	DeeDbgString_New2Byte@16=_DeeDbgString_New2Byte@16
+	DeeDbgString_New4Byte@16=_DeeDbgString_New4Byte@16
+	DeeDbgString_New@12=_DeeDbgString_New@12
+	DeeDbgString_NewBuffer@12=_DeeDbgString_NewBuffer@12
+	DeeDbgString_NewSized@16=_DeeDbgString_NewSized@16
 	DeeDbg_Calloc@12=_DeeDbg_Calloc@12
 	DeeDbg_Free@12=_DeeDbg_Free@12
 	DeeDbg_Malloc@12=_DeeDbg_Malloc@12
@@ -380,14 +389,27 @@ EXPORTS
 	DeeInt_TryGet64Bit@8=_DeeInt_TryGet64Bit@8
 	DeeInt_TryGet8Bit@8=_DeeInt_TryGet8Bit@8
 	DeeKwArgs_Done@12=_DeeKwArgs_Done@12
-	DeeKwArgs_GetStringHash@12=_DeeKwArgs_GetStringHash@12
-	DeeKwArgs_GetStringHashDef@16=_DeeKwArgs_GetStringHashDef@16
-	DeeKwArgs_GetStringLenHash@16=_DeeKwArgs_GetStringLenHash@16
-	DeeKwArgs_GetStringLenHashDef@20=_DeeKwArgs_GetStringLenHashDef@20
+	DeeKwArgs_GetItemNR@8=_DeeKwArgs_GetItemNR@8
+	DeeKwArgs_GetItemNRDef@12=_DeeKwArgs_GetItemNRDef@12
+	DeeKwArgs_GetItemNRStringHash@12=_DeeKwArgs_GetItemNRStringHash@12
+	DeeKwArgs_GetItemNRStringHashDef@16=_DeeKwArgs_GetItemNRStringHashDef@16
+	DeeKwArgs_GetItemNRStringLenHash@16=_DeeKwArgs_GetItemNRStringLenHash@16
+	DeeKwArgs_GetItemNRStringLenHashDef@20=_DeeKwArgs_GetItemNRStringLenHashDef@20
 	DeeKwArgs_Init@16=_DeeKwArgs_Init@16
+	DeeKwBlackList_Decref@4=_DeeKwBlackList_Decref@4
+	DeeKwBlackList_New@16=_DeeKwBlackList_New@16
 	DeeKwCMethod_New@4=_DeeKwCMethod_New@4
 	DeeKwClsMethod_New@8=_DeeKwClsMethod_New@8
+	DeeKwMapping_Decref@12=_DeeKwMapping_Decref@12
+	DeeKwMapping_New@12=_DeeKwMapping_New@12
 	DeeKwObjMethod_New@8=_DeeKwObjMethod_New@8
+	DeeKw_GetItemNR@8=_DeeKw_GetItemNR@8
+	DeeKw_GetItemNRDef@12=_DeeKw_GetItemNRDef@12
+	DeeKw_GetItemNRStringHash@12=_DeeKw_GetItemNRStringHash@12
+	DeeKw_GetItemNRStringHashDef@16=_DeeKw_GetItemNRStringHashDef@16
+	DeeKw_GetItemNRStringLenHash@16=_DeeKw_GetItemNRStringLenHash@16
+	DeeKw_GetItemNRStringLenHashDef@20=_DeeKw_GetItemNRStringLenHashDef@20
+	DeeKw_Wrap@4=_DeeKw_Wrap@4
 	DeeKwdsMapping_Decref@4=_DeeKwdsMapping_Decref@4
 	DeeKwdsMapping_New@8=_DeeKwdsMapping_New@8
 	DeeList_Append@8=_DeeList_Append@8
@@ -909,7 +931,6 @@ EXPORTS
 	DeeString_New4Byte@8=_DeeString_New4Byte@8
 	DeeString_New@4=_DeeString_New@4
 	DeeString_NewBuffer@4=_DeeString_NewBuffer@4
-	DeeString_NewSized@8=_DeeString_NewSized@8
 	DeeString_NewUtf16@12=_DeeString_NewUtf16@12
 	DeeString_NewUtf16AltEndian@12=_DeeString_NewUtf16AltEndian@12
 	DeeString_NewUtf32@12=_DeeString_NewUtf32@12

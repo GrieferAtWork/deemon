@@ -25,6 +25,7 @@
 /**/
 
 #include <deemon/api.h>
+#include <deemon/cached-dict.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -115,12 +116,13 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 
 PRIVATE struct dex_symbol symbols[] = {
-	{ "Deque", (DeeObject *)&Deque_Type },
-	{ "FixedList", (DeeObject *)&FixedList_Type },
-	{ "UniqueDict", (DeeObject *)&UDict_Type },
-	{ "UniqueSet", (DeeObject *)&USet_Type },
-	{ "RangeMap", (DeeObject *)&RangeMap_Type },
-	{ "RBTree", (DeeObject *)&RBTree_Type },
+	{ "Deque", (DeeObject *)&Deque_Type, MODSYM_FREADONLY },
+	{ "FixedList", (DeeObject *)&FixedList_Type, MODSYM_FREADONLY },
+	{ "UniqueDict", (DeeObject *)&UDict_Type, MODSYM_FREADONLY },
+	{ "UniqueSet", (DeeObject *)&USet_Type, MODSYM_FREADONLY },
+	{ "RangeMap", (DeeObject *)&RangeMap_Type, MODSYM_FREADONLY },
+	{ "RBTree", (DeeObject *)&RBTree_Type, MODSYM_FREADONLY },
+	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
 	/* TODO: STailQ (singly linked list; internally: STAILQ) */
 	/* TODO: TailQ (double linked list; internally: TAILQ) */
 	{ NULL }

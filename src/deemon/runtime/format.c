@@ -25,6 +25,7 @@
 #include <deemon/bytes.h>
 #include <deemon/float.h>
 #include <deemon/format.h>
+#include <deemon/kwds.h>
 #include <deemon/object.h>
 #include <deemon/string.h>
 #include <deemon/stringutils.h>

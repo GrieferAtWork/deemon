@@ -526,6 +526,7 @@ INSTR("cast", (
 	O2(ASM_CAST_HASHSET, FNORMAL, (TOP)(HASHSET)) /* `cast top, HashSet' */
 	O2(ASM_CAST_INT,     FNORMAL, (TOP)(INT))     /* `cast top, int' */
 	O2(ASM_BOOL,         FNORMAL, (TOP)(BOOL))    /* `cast top, bool' */
+	O2(ASM_CAST_VARKWDS, FNORMAL, (TOP)(VARKWDS)) /* `cast top, varkwds' */
 ))
 
 /* CONSTRAINTS: `pack ..., ...' */

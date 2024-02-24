@@ -35,6 +35,7 @@
 #include <deemon/float.h>
 #include <deemon/format.h>
 #include <deemon/hashset.h>
+#include <deemon/kwds.h>
 #include <deemon/module.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>

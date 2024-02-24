@@ -129,7 +129,7 @@ static void *const basic_targets[256] = {
 	/* 0x41 */ &&target_ASM_CAST_LIST,
 	/* 0x42 */ &&target_ASM_PACK_TUPLE,
 	/* 0x43 */ &&target_ASM_PACK_LIST,
-	/* 0x44 */ &&unknown_instruction,
+	/* 0x44 */ &&target_ASM_CAST_VARKWDS,
 	/* 0x45 */ &&unknown_instruction,
 	/* 0x46 */ &&target_ASM_UNPACK,
 	/* 0x47 */ &&target_ASM_CONCAT,
