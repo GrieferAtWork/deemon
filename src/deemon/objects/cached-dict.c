@@ -359,6 +359,16 @@ cdict_fini(CachedDict *__restrict self) {
 
 PRIVATE NONNULL((1)) void DCALL
 cdict_clear(CachedDict *__restrict self) {
+	/* FIXME: CachedDict implementing "operator clear()" is a problem:
+	 * - It is needed because CachedDict is a GC object
+	 * - CachedDict must be a GC object because it can potentially reference itself (see code example below)
+	 * - It is possible to trigger "CachedDict.operator clear()" while there are still NOREF arguments
+	 * So in other words:
+	 * - We get problems by implementing it (breaking the invariant that CachedDict keeps objects alive during the call)
+	 * - And we'd get problems if we didn't implement it (reference loops that can't be resolved)
+	 *
+	 * see also: "util/test/deemon-kwcall-reference-loophole.dee"
+	 */
 	struct cached_dict_item *elem;
 	size_t mask;
 	DeeCachedDict_LockWrite(self);

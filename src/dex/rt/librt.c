@@ -2085,7 +2085,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  (DeeObject *)&librt_get_BlackListKwIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
-	{ "CachedDictIterator", /* DeeBlackListKwIterator_Type */
+	{ "CachedDictIterator", /* CachedDictIterator_Type */
 	  (DeeObject *)&librt_get_CachedDictIterator,
 	  MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },
 	{ "kw", (DeeObject *)&librt_kw, MODSYM_FNORMAL, /* varying */

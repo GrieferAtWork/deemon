@@ -1,0 +1,99 @@
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import rt;
+import * from deemon;
+
+global myCachedDict;
+
+function _hide(x) {
+	__asm__("" : "+X" (x));
+	return x;
+}
+
+class MyHackyItemProvider {
+	operator # () -> 1;
+	operator [](key) {
+		assert key == "argName";
+		return myCachedDict;
+	}
+}
+
+function inner(argName) {
+	/* During argument binding, "MyHackyItemProvider.operator []" is called 1
+	 * time, where it returns "myCachedDict" (which is the internal "kw"
+	 * object used by the call), meaning that "myCachedDict" now references
+	 * itself 1 time. */
+	local argNameLocalCopy = _hide(argName);
+	local argName_refcnt1 = argName.__refcnt__;
+	assert argName === myCachedDict;
+
+	/* Tease the CachedDict into clearing its cache.
+	 *
+	 * You might argue that calling a private operator like this
+	 * is cheating, and you'd be correct: there is no portable
+	 * way of forcing the runtime to call "tp_clear", not even
+	 * if we did this:
+	 * >> argNameLocalCopy = none;
+	 * >> myCachedDict = none;
+	 * >> gc.collect();
+	 * ... because there'd still be 1 more reference on the stack
+	 * from the call "foo(**MyHackyItemProvider())", where the
+	 * CachedDict was created, so no unreachable reference loop
+	 * would ever be detected by the GC (meaning it would never
+	 * make a call to "tp_clear").
+	 *
+	 * However, I still find this to a problem that needs addressing,
+	 * especially since as of right now, OPERATOR_CLEAR, while already
+	 * marked as a private operator, isn't explicitly documented as
+	 * something not-to-be exposed to user-code (and can actually be
+	 * called explicitly as seen here).
+	 */
+#if 0 /* FIXME: Disabled so the test doesn't actually fail... */
+	myCachedDict.operator 0x8001();
+#endif
+
+	/* Assert that the reference count didn't change (this is what
+	 * fails right now when a call to "tp_clear" is forced) */
+	local argName_refcnt2 = argName.__refcnt__;
+	assert argName_refcnt1 == argName_refcnt2;
+
+	/* Only here to prevent early deletion of "argNameLocalCopy" */
+	_hide(argNameLocalCopy);
+}
+
+function foo(**kwds) {
+	assert kwds is rt.CachedDict;
+
+	/* Let "MyHackyItemProvider" return the CachedDict itself, thus
+	 * causing the dict to become cached as a value within itself.
+	 * Because we're allowed to do this, CachedDict *MUST* be a GC
+	 * object
+	 */
+	myCachedDict = kwds;
+
+	/* Make another call using the same CachedDict. During the argument
+	 * binding phase, this will call "MyHackyItemProvider.operator []" a
+	 * total of 1 times, before caching "kwds" within self under "argName" */
+	inner(**kwds);
+}
+
+/* Do a call where the runtime needs to use CachedDict. */
+foo(**MyHackyItemProvider());

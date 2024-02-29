@@ -27,6 +27,7 @@
 #include <deemon/asm.h>
 #include <deemon/bool.h>
 #include <deemon/code.h>
+#include <deemon/format.h>
 #include <deemon/gc.h>
 #include <deemon/int.h>
 #include <deemon/object.h>
@@ -1475,10 +1476,23 @@ dump_reference_history(DeeObject *__restrict obj);
 INTERN void DCALL gc_dump_all(void) {
 	struct gc_head *iter;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
+		DeeObject *ob = &iter->gc_object;
+		DeeTypeObject *ob_type;
 		ASSERT(iter != iter->gc_next);
-		Dee_DPRINTF("GC Object at %p: Instance of %s (%u refs)\n",
-		            &iter->gc_object, iter->gc_object.ob_type->tp_name,
-		            iter->gc_object.ob_refcnt);
+		ob_type = ob->ob_type;
+		Dee_DPRINTF("GC Object at %p: Instance of %s (%" PRFuSIZ " refs)",
+		            ob, ob_type->tp_name, ob->ob_refcnt);
+		/* Print the name of a select set of types. */
+		if (ob_type == &DeeType_Type) {
+			Dee_DPRINTF(" {tp_name:%q}", ((DeeTypeObject *)ob)->tp_name);
+		} else if (ob_type == &DeeCode_Type) {
+			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(ob));
+		} else if (ob_type == &DeeFunction_Type) {
+			Dee_DPRINTF(" {co_name:%q}", DeeCode_NAME(DeeFunction_CODE(ob)));
+		} else if (ob_type == &DeeModule_Type) {
+			Dee_DPRINTF(" {mo_name:%r}", ((DeeModuleObject *)ob)->mo_name);
+		}
+		Dee_DPRINT("\n");
 #ifdef CONFIG_TRACE_REFCHANGES
 		dump_reference_history(&iter->gc_object);
 #endif /* CONFIG_TRACE_REFCHANGES */
