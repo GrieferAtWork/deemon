@@ -381,14 +381,15 @@ cdict_clear(CachedDict *__restrict self) {
 			if (!iter->cdi_key)
 				continue;
 			Dee_Decref(iter->cdi_key);
-			Dee_XDecref(iter->cdi_value);
+			Dee_Decref(iter->cdi_value);
 		}
 		Dee_Free(elem);
 	}
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-dict_visit(CachedDict *__restrict self, dvisit_t proc, void *arg) {
+cdict_visit(CachedDict *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->cd_map);
 	DeeCachedDict_LockRead(self);
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_mask == 0));
 	ASSERT((self->cd_elem == empty_cdict_items) == (self->cd_size == 0));
@@ -400,7 +401,7 @@ dict_visit(CachedDict *__restrict self, dvisit_t proc, void *arg) {
 				continue;
 			/* Visit all keys and associated values. */
 			Dee_Visit(iter->cdi_key);
-			Dee_XVisit(iter->cdi_value);
+			Dee_Visit(iter->cdi_value);
 		}
 	}
 	DeeCachedDict_LockEndRead(self);
@@ -1112,7 +1113,7 @@ PRIVATE struct type_gc tpconst cdict_gc = {
 
 PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ DeeString_STR(&str_Dict),
+	/* .tp_name     = */ "CachedDict",
 	/* .tp_doc      = */ DOC("Cached mapping that remembers the bindings of keys as they are "
 	                         /**/ "queried from an underlying ?DMapping (meaning every distinct "
 	                         /**/ "key is only ever queried once in the underlying ?DMapping)\n"
@@ -1124,7 +1125,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 
 	                         "(map:?DMapping)\n"
 	                         "Create a cache mapping for @map"),
-	/* .tp_flags    = */ TP_FNORMAL | TP_FGC | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
 	/* .tp_base     = */ &DeeMapping_Type,
@@ -1151,7 +1152,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&cdict_printrepr
 	},
 	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&cdict_visit,
 	/* .tp_gc            = */ &cdict_gc,
 	/* .tp_math          = */ NULL,
 	/* .tp_cmp           = */ &cdict_cmp,
