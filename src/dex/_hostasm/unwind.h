@@ -131,6 +131,9 @@ Dee_host_section_unwind_trimrange(struct Dee_host_section *__restrict self,
                                   uint32_t sectrel_addr, uint32_t num_bytes);
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
 
+/* Check if unwind instrumentation should be used. */
+INTDEF WUNUSED bool DCALL Dee_hostfunc_unwind_enabled(void);
+#define HAVE_Dee_hostfunc_unwind_enabled
 
 struct Dee_hostfunc_unwind {
 	NT_RUNTIME_FUNCTION *hfu_FunctionTable; /* Pointer to the end of actual text. */

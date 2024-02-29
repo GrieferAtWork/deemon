@@ -2453,10 +2453,10 @@ DecFile_LoadCode(DecFile *__restrict self,
 		result->co_defaultv = defv;
 		if unlikely(defaultc + result->co_argc_max < defaultc) {
 			/* Too many default objects (the counter overflows). */
-			while (defaultc--)
-				Dee_Decref(defv[defaultc]);
+			Dee_Decrefv(defv, defaultc);
 			Dee_Free(defv);
 			GOTO_CORRUPTED(reader, corrupt_r);
+			__builtin_unreachable();
 		}
 
 		/* Add the number of default objects to the argc_max field. */
@@ -2699,18 +2699,13 @@ err_r_except:
 	}
 	Dee_Free(result->co_exceptv);
 err_r_static:
-	while (result->co_staticc) {
-		--result->co_staticc;
-		Dee_Decref(result->co_staticv[result->co_staticc]);
-	}
+	Dee_Decrefv(result->co_staticv, result->co_staticc);
 	Dee_Free(result->co_staticv);
 err_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);
-	while (result->co_argc_max > result->co_argc_min) {
-		--result->co_argc_max;
-		Dee_XDecref(result->co_defaultv[result->co_argc_max - result->co_argc_min]);
-	}
+	Dee_XDecrefv(result->co_defaultv, result->co_argc_max -
+	                                  result->co_argc_min);
 	Dee_Free((void *)result->co_defaultv);
 err_r:
 	DeeGCObject_Free(result);

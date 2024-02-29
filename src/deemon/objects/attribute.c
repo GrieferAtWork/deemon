@@ -811,21 +811,23 @@ enumattr_init(EnumAttr *__restrict self,
 	}
 	Dee_Incref(self->ea_type);
 	Dee_Incref(self->ea_obj);
+
 #ifndef CONFIG_LONGJMP_ENUMATTR
 	/* Collect all attributes */
 	{
 		struct attr_list list;
 		list.al_a = list.al_c = 0;
 		list.al_v             = NULL;
+
 		/* Enumerate all the attributes. */
 		if (DeeObject_EnumAttr(self->ea_type, self->ea_obj, (denum_t)&save_attr, &list) < 0) {
-			while (list.al_c--)
-				Dee_Decref(list.al_v[list.al_c]);
+			Dee_Decrefv(list.al_v, list.al_c);
 			Dee_Free(list.al_v);
 			Dee_Decref(self->ea_type);
 			Dee_XDecref(self->ea_obj);
 			goto err;
 		}
+
 		/* Truncate the collection vector. */
 		if (list.al_c != list.al_a) {
 			DREF Attr **new_vector;
@@ -834,6 +836,7 @@ enumattr_init(EnumAttr *__restrict self,
 			if likely(new_vector)
 				list.al_v = new_vector;
 		}
+
 		/* Assign the attribute vector. */
 		self->ea_attrc = list.al_c;
 		self->ea_attrv = list.al_v; /* Inherit. */
@@ -849,11 +852,7 @@ enumattr_fini(EnumAttr *__restrict self) {
 	Dee_Decref(self->ea_type);
 	Dee_XDecref(self->ea_obj);
 #ifndef CONFIG_LONGJMP_ENUMATTR
-	{
-		size_t i;
-		for (i = 0; i < self->ea_attrc; ++i)
-			Dee_Decref(self->ea_attrv[i]);
-	}
+	Dee_Decrefv(self->ea_attrv, self->ea_attrc);
 	Dee_Free(self->ea_attrv);
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
@@ -863,11 +862,7 @@ enumattr_visit(EnumAttr *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->ea_type);
 	Dee_XVisit(self->ea_obj);
 #ifndef CONFIG_LONGJMP_ENUMATTR
-	{
-		size_t i;
-		for (i = 0; i < self->ea_attrc; ++i)
-			Dee_Visit(self->ea_attrv[i]);
-	}
+	Dee_Visitv(self->ea_attrv, self->ea_attrc);
 #endif /* !CONFIG_LONGJMP_ENUMATTR */
 }
 

@@ -5197,12 +5197,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_WaitForMultipleObjects_f_impl(
 		goto err;
 	for (i = 0; i < nCount; ++i) {
 		void *hHandle;
-		if unlikely(DeeNTSystem_TryGetHandle(pHandles.o[i], &hHandle)) {
-			do {
-				Dee_Decref(pHandles.o[i]);
-			} while (++i < nCount);
-			goto err_handles;
-		}
+		if unlikely(DeeNTSystem_TryGetHandle(pHandles.o[i], &hHandle))
+			goto err_handles_i;
 		Dee_Decref(pHandles.o[i]);
 		pHandles.v[i] = hHandle;
 	}
@@ -5222,15 +5218,19 @@ again:
 		if (DeeNTSystem_IsIntr(dwError)) {
 check_interrupt:
 			if (DeeThread_CheckInterrupt())
-				goto err;
+				goto err_handles;
 			goto again;
 		}
+		Dee_Free(pHandles.v);
 		RETURN_ERROR(dwError,
 		             "Failed to wait for %" PRFuSIZ " handles (bWaitAll: %u, dwMilliseconds: %#" PRFx32 ")",
 		             nCount, (unsigned int)bWaitAll, dwMilliseconds);
 	}
 	DBG_ALIGNMENT_ENABLE();
+	Dee_Free(pHandles.v);
 	return DeeInt_NewUInt32(dwResult);
+err_handles_i:
+	Dee_Decrefv(pHandles.o + i, nCount - i);
 err_handles:
 	Dee_Free(pHandles.v);
 err:

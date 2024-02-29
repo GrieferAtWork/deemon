@@ -755,36 +755,33 @@ err_result:
 			/* Recover the old code object. */
 recover_old_code_object:
 			/*ASSERT(is_reusing_code_object);*/
-			current_code                                = current_assembler.a_sect[SECTION_TEXT].sec_code;
+			current_code = current_assembler.a_sect[SECTION_TEXT].sec_code;
 			current_code->co_code[preexisting_codesize] = ASM_UD;
-			current_code->co_flags                      = old_co_flags;
-			current_code->co_localc                     = old_co_localc;
-			current_code->co_staticc                    = old_co_staticc;
-			current_code->co_staticv                    = current_assembler.a_constv;
-			current_code->co_refc                       = 0;
-			current_code->co_exceptc                    = old_co_exceptc;
-			current_code->co_exceptv                    = old_co_exceptv;
-			current_code->co_argc_min                   = 0;
-			current_code->co_argc_max                   = 0;
-			current_code->co_framesize                  = old_co_framesize;
-			current_code->co_codebytes                  = (code_size_t)(preexisting_codesize + 1);
+			current_code->co_flags     = old_co_flags;
+			current_code->co_localc    = old_co_localc;
+			current_code->co_staticc   = old_co_staticc;
+			current_code->co_staticv   = current_assembler.a_constv;
+			current_code->co_refc      = 0;
+			current_code->co_exceptc   = old_co_exceptc;
+			current_code->co_exceptv   = old_co_exceptv;
+			current_code->co_argc_min  = 0;
+			current_code->co_argc_max  = 0;
+			current_code->co_framesize = old_co_framesize;
+			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
 			Dee_atomic_rwlock_init(&current_code->co_static_lock);
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
 			current_code->co_keywords = NULL;
 			current_code->co_ddi      = old_co_ddi;
-			while (current_assembler.a_constc > old_co_staticc) {
-				--current_assembler.a_constc;
-				Dee_Decref(current_assembler.a_constv[current_assembler.a_constc]);
-			}
+			Dee_Decrefv(current_assembler.a_constv, current_assembler.a_constc);
 			current_assembler.a_sect[SECTION_TEXT].sec_code  = NULL;
 			current_assembler.a_sect[SECTION_TEXT].sec_begin = NULL;
 			current_assembler.a_sect[SECTION_TEXT].sec_iter  = NULL;
 			current_assembler.a_sect[SECTION_TEXT].sec_end   = NULL;
-			current_assembler.a_constc                       = 0;
-			current_assembler.a_consta                       = 0;
-			current_assembler.a_constv                       = NULL;
+			current_assembler.a_constc = 0;
+			current_assembler.a_consta = 0;
+			current_assembler.a_constv = NULL;
 		}
 	}
 do_assembler_fini:
@@ -1392,8 +1389,7 @@ err_frame:
 err_stream:
 	Dee_Decref(self->im_stream);
 err_globals:
-	for (i = 0; i < self->im_module.mo_globalc; ++i)
-		Dee_XDecref(self->im_module.mo_globalv[i]);
+	Dee_XDecrefv(self->im_module.mo_globalv, self->im_module.mo_globalc);
 	for (i = 0; i <= self->im_module.mo_bucketm; ++i) {
 		struct module_symbol *sym;
 		sym = &self->im_module.mo_bucketv[i];

@@ -60,7 +60,7 @@ DECL_BEGIN
 #define HOST_REGISTER_PDX HOST_REGISTER_EDX
 #endif /* !HOSTASM_X86_64 */
 
-#define gen86_printf(sect, ...) (HA_printf("gen86:", __VA_ARGS__))
+#define gen86_printf(sect, ...) (HA_printf("gen86:" __VA_ARGS__))
 
 
 #ifdef HOSTASM_X86_64

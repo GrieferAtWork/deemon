@@ -110,8 +110,8 @@ INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNRStringLenHash
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL DeeRoDict_GetItemNRDef(DeeRoDictObject *self, DeeObject *key, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL DeeRoDict_GetItemNRStringHashDef(DeeRoDictObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
 INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeRoDict_GetItemNRStringLenHashDef(DeeRoDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
-#define DeeRoDict_HasItemString(self, key)                    DeeRoDict_HasItemStringHash(self, key, Dee_HashStr(key))
-#define DeeRoDict_HasItemStringLen(self, key, keylen)         DeeRoDict_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeRoDict_HasItemString(self, key)                      DeeRoDict_HasItemStringHash(self, key, Dee_HashStr(key))
+#define DeeRoDict_HasItemStringLen(self, key, keylen)           DeeRoDict_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeRoDict_GetItemNRString(self, key)                    DeeRoDict_GetItemNRStringHash(self, key, Dee_HashStr(key))
 #define DeeRoDict_GetItemNRStringLen(self, key, keylen)         DeeRoDict_GetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeRoDict_GetItemNRStringDef(self, key, def)            DeeRoDict_GetItemNRStringHashDef(self, key, Dee_HashStr(key), def)

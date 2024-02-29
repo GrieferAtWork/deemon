@@ -72,7 +72,6 @@ done:
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
 fl_copy(FixedList *__restrict self) {
 	DREF FixedList *result;
-	size_t i;
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
 	                                              (self->fl_size * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
@@ -80,10 +79,7 @@ fl_copy(FixedList *__restrict self) {
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = self->fl_size;
 	FixedList_LockRead(self);
-	for (i = 0; i < self->fl_size; ++i) {
-		result->fl_elem[i] = self->fl_elem[i];
-		Dee_XIncref(result->fl_elem[i]);
-	}
+	Dee_XMovrefv(result->fl_elem, self->fl_elem, self->fl_size);
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);

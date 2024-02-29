@@ -157,7 +157,7 @@ err_r:
 		if (!result->st_fvec[i].sf_name)
 			continue;
 		Dee_Decref(result->st_fvec[i].sf_name);
-		Dee_Decref((DeeObject *)result->st_fvec[i].sf_type);
+		Dee_Decref(DeeLValueType_AsObject(result->st_fvec[i].sf_type));
 	}
 	DeeGCObject_Free(result);
 err:
@@ -258,7 +258,7 @@ DeeStructType_FromSequence(DeeObject *name,
 	}
 
 	/* Fill in remaining fields and start tracking the new struct type. */
-	Dee_Incref((DeeObject *)&DeeStruct_Type);
+	Dee_Incref(DeeStructType_AsObject(&DeeStruct_Type));
 	Dee_atomic_rwlock_cinit(&result->st_base.st_cachelock);
 	result->st_base.st_base.tp_base  = (DREF DeeTypeObject *)&DeeStruct_Type;
 	result->st_base.st_base.tp_name  = DeeStruct_Type.st_base.st_base.tp_name;
@@ -271,14 +271,13 @@ DeeStructType_FromSequence(DeeObject *name,
 		Dee_Incref(name);
 	}
 	DeeObject_Init((DeeObject *)result, &DeeStructType_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF DeeStructTypeObject *)DeeGC_Track((DeeObject *)result);
 err_r:
 	for (i = 0; i <= result->st_fmsk; ++i) {
 		if (!result->st_fvec[i].sf_name)
 			continue;
 		Dee_Decref(result->st_fvec[i].sf_name);
-		Dee_Decref((DeeObject *)result->st_fvec[i].sf_type);
+		Dee_Decref(DeeLValueType_AsObject(result->st_fvec[i].sf_type));
 	}
 	DeeGCObject_Free(result);
 err:
@@ -286,7 +285,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeStructTypeObject *DCALL struct_type_new_empty(void) {
-	Dee_Incref((DeeObject *)&DeeStruct_Type);
+	Dee_Incref(DeeStructType_AsObject(&DeeStruct_Type));
 	return &DeeStruct_Type;
 }
 
@@ -312,7 +311,7 @@ struct_type_fini(DeeStructTypeObject *__restrict self) {
 		if (!self->st_fvec[i].sf_name)
 			continue;
 		Dee_Decref(self->st_fvec[i].sf_name);
-		Dee_Decref((DeeObject *)self->st_fvec[i].sf_type);
+		Dee_Decref(DeeLValueType_AsObject(self->st_fvec[i].sf_type));
 	}
 }
 
@@ -323,7 +322,7 @@ struct_type_visit(DeeStructTypeObject *__restrict self, dvisit_t proc, void *arg
 		if (!self->st_fvec[i].sf_name)
 			continue;
 		Dee_Visit(self->st_fvec[i].sf_name);
-		Dee_Visit((DeeObject *)self->st_fvec[i].sf_type);
+		Dee_Visit(DeeLValueType_AsObject(self->st_fvec[i].sf_type));
 	}
 }
 
@@ -401,7 +400,7 @@ struct_type_typeof(DeeStructTypeObject *self, size_t argc, DeeObject *const *arg
 		if (field->sf_hash != hash)
 			continue;
 		if (DeeString_EqualsSTR(field->sf_name, name))
-			return_reference((DeeObject *)field->sf_type->lt_orig);
+			return_reference(DeeSType_AsObject(field->sf_type->lt_orig));
 	}
 	DeeError_Throwf(&DeeError_AttributeError,
 	                "Cannot get unknown attribute `%k.%k'",

@@ -608,19 +608,19 @@ deq_ctor(Deque *__restrict self) {
 	return 0;
 }
 
-LOCAL DequeBucket *DCALL
-copy_bucket(DequeBucket *__restrict self, size_t bucket_size,
+LOCAL WUNUSED NONNULL((1)) DequeBucket *DCALL
+copy_bucket(DequeBucket *__restrict self,
+            size_t bucket_size,
             size_t start, size_t used_size) {
 	DequeBucket *result;
-	size_t i;
+	ASSERT(start + used_size >= start);
 	ASSERT(start + used_size <= bucket_size);
 	result = TRY_NEW_BUCKET(bucket_size);
 	if unlikely(!result)
 		goto done;
-	for (i = start; i < start + used_size; ++i) {
-		result->db_items[i] = self->db_items[i];
-		Dee_Incref(result->db_items[i]);
-	}
+	Dee_Movrefv(result->db_items + start,
+	            self->db_items + start,
+	            used_size);
 done:
 	return result;
 }

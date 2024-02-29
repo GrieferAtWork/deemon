@@ -692,7 +692,6 @@ jf_call_kw(JITFunction *self, size_t argc,
 	JITObjectTable base_locals;
 	DeeThreadObject *ts;
 	if ((self->jf_flags & (JIT_FUNCTION_FYIELDING | JIT_FUNCTION_FRETEXPR)) == JIT_FUNCTION_FYIELDING) {
-		size_t i;
 		DREF JITYieldFunctionObject *yfo;
 		/* Yield function support */
 		yfo = (DREF JITYieldFunctionObject *)DeeObject_Malloc(offsetof(JITYieldFunctionObject, jy_argv) +
@@ -704,10 +703,7 @@ jf_call_kw(JITFunction *self, size_t argc,
 		yfo->jy_argc = argc;
 		Dee_Incref(self);
 		Dee_XIncref(kw);
-		for (i = 0; i < argc; ++i) {
-			yfo->jy_argv[i] = argv[i];
-			Dee_Incref(argv[i]);
-		}
+		Dee_Movrefv(yfo->jy_argv, argv, argc);
 		DeeObject_Init(yfo, &JITYieldFunction_Type);
 		return (DREF DeeObject *)yfo;
 	}

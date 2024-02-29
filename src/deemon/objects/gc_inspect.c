@@ -243,16 +243,12 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 gcset_fini(GCSet *__restrict self) {
-	size_t i;
-	for (i = 0; i <= self->gs_mask; ++i)
-		Dee_XDecref(self->gs_elem[i]);
+	Dee_XDecrefv(self->gs_elem, self->gs_mask + 1);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 gcset_visit(GCSet *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
-	for (i = 0; i <= self->gs_mask; ++i)
-		Dee_XVisit(self->gs_elem[i]);
+	Dee_XVisitv(self->gs_elem, self->gs_mask + 1);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -365,13 +361,11 @@ INTERN GCSet DeeGCSet_Empty = {
 /* Finalize the given GC-set maker. */
 INTERN NONNULL((1)) void DCALL
 GCSetMaker_Fini(GCSetMaker *__restrict self) {
-	size_t i;
 	GCSet *set = self->gs_set;
-	if (!set)
-		return;
-	for (i = 0; i <= set->gs_mask; ++i)
-		Dee_XDecref(set->gs_elem[i]);
-	DeeObject_Free(set);
+	if (set) {
+		Dee_XDecrefv(set->gs_elem, set->gs_mask + 1);
+		DeeObject_Free(set);
+	}
 }
 
 INTERN WUNUSED NONNULL((1)) bool DCALL

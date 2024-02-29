@@ -1058,21 +1058,21 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	ASSERT(!current_basescope->bs_varargs);
 	ASSERT(!current_basescope->bs_varkwds);
 	ASSERT(!(current_basescope->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS)));
+
 	/* Copy basic flags and counters. */
 	current_basescope->bs_flags |= other->bs_flags & (CODE_FVARARGS | CODE_FVARKWDS);
 	current_basescope->bs_argc_max = other->bs_argc_max;
 	current_basescope->bs_argc_min = other->bs_argc_min;
 	current_basescope->bs_argc     = other->bs_argc;
+
 	/* Copy default arguments. */
 	count = other->bs_argc_max - other->bs_argc_min;
 	if (count) {
 		current_basescope->bs_default = (DREF DeeObject **)Dee_Mallocc(count, sizeof(DREF DeeObject *));
 		if unlikely(!current_basescope->bs_default)
 			goto err;
-		for (i = 0; i < count; ++i) {
-			current_basescope->bs_default[i] = other->bs_default[i];
-			Dee_XIncref(other->bs_default[i]);
-		}
+		Dee_XMovrefv(current_basescope->bs_default,
+		             other->bs_default, count);
 	}
 	count = other->bs_argc;
 	if (count) {
@@ -1080,6 +1080,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 		if unlikely(!current_basescope->bs_argv)
 			goto err;
 		/* Copy the actual argument symbols. */
+
 		for (i = 0; i < count; ++i) {
 			struct symbol *sym, *other_sym;
 			other_sym = other->bs_argv[i];
@@ -1110,8 +1111,7 @@ copy_argument_symbols(DeeBaseScopeObject *__restrict other) {
 	return 0;
 err:
 	count = other->bs_argc_max - other->bs_argc_min;
-	for (i = 0; i < count; ++i)
-		Dee_XDecref(current_basescope->bs_default[i]);
+	Dee_XDecrefv(current_basescope->bs_default, count);
 	Dee_Free(current_basescope->bs_default);
 	current_basescope->bs_argc     = 0;
 	current_basescope->bs_argc_min = 0;

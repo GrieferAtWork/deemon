@@ -1650,8 +1650,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if unlikely(!static_vec)
 			goto err_r_default_v;
 		if unlikely(static_cnt > (uint16_t)-1) {
-			while (static_cnt--)
-				Dee_Decref(static_vec[static_cnt]);
+			Dee_Decrefv(static_vec, static_cnt);
 			Dee_Free(static_vec);
 			err_integer_overflow_i(16, true);
 			goto err_r_default_v;
@@ -1808,9 +1807,8 @@ got_flag:
 	return result;
 err_r_except:
 	if (result->co_exceptv) {
-		while (result->co_exceptc--) {
+		while (result->co_exceptc--)
 			Dee_XDecref(result->co_exceptv[result->co_exceptc].eh_mask);
-		}
 		Dee_Free((void *)result->co_exceptv);
 	}
 err_r_statics:

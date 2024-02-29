@@ -1615,8 +1615,7 @@ DeeSeq_InsertAll(DeeObject *self, size_t index,
 					if unlikely(!vector)
 						goto err;
 					result = (*nsi->nsi_seqlike.nsi_insertvec)(self, index, length, vector);
-					while (length--)
-						Dee_Decref(vector[length]);
+					Dee_Decrefv(vector, length);
 					Dee_Free(vector);
 					return result;
 				}
@@ -1910,8 +1909,7 @@ DeeSeq_Extend(DeeObject *self, DeeObject *values) {
 					if unlikely(!vector)
 						goto err;
 					result = (*nsi->nsi_seqlike.nsi_insertvec)(self, (size_t)-1, length, vector);
-					while (length--)
-						Dee_Decref(vector[length]);
+					Dee_Decrefv(vector, length);
 					Dee_Free(vector);
 					return result;
 				}
@@ -2101,8 +2099,7 @@ DeeSeq_InplaceExtend(DREF DeeObject **__restrict p_self,
 					if unlikely(!vector)
 						goto err;
 					result = (*nsi->nsi_seqlike.nsi_insertvec)(self, (size_t)-1, length, vector);
-					while (length--)
-						Dee_Decref(vector[length]);
+					Dee_Decrefv(vector, length);
 					Dee_Free(vector);
 					return result;
 				}

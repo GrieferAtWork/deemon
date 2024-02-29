@@ -1013,9 +1013,9 @@ DFUNDEF ATTR_RETNONNULL ATTR_OUTS(1, 3) NONNULL((2)) DREF DeeObject **
 LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XIncrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
                      size_t object_count) {
-	while (object_count--) {
-		DREF DeeObject *ob;
-		ob = object_vector[object_count];
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob = object_vector[i];
 		Dee_XIncref_untraced(ob);
 	}
 	return (DREF DeeObject **)object_vector;
@@ -1024,10 +1024,9 @@ LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 LOCAL ATTR_RETNONNULL ATTR_INS(1, 2) DREF DeeObject **
 (DCALL Dee_XDecrefv)(DeeObject * /*nullable*/ const *__restrict object_vector,
                      size_t object_count) {
-	size_t i;
-	for (i = 0; i < object_count; ++i) {
+	while (object_count--) {
 		DREF DeeObject *ob;
-		ob = object_vector[i];
+		ob = object_vector[object_count];
 		Dee_XDecref_untraced(ob);
 	}
 	return (DREF DeeObject **)object_vector;
@@ -1037,11 +1036,11 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 (DCALL Dee_XMovrefv)(/*out:ref*/ DeeObject * /*nullable*/ *__restrict dst,
                      /*in*/ DeeObject * /*nullable*/ const *__restrict src,
                      size_t object_count) {
-	while (object_count--) {
-		DREF DeeObject *ob;
-		ob = src[object_count];
+	size_t i;
+	for (i = 0; i < object_count; ++i) {
+		DREF DeeObject *ob = src[i];
 		Dee_XIncref_untraced(ob);
-		dst[object_count] = ob;
+		dst[i] = ob;
 	}
 	return dst;
 }

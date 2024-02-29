@@ -1855,7 +1855,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	} else {
 		Dee_Incref(z);
 		table[0] = z;
-		for (i = 1; i < 32; ++i)
+		for (i = 1; i < COMPILER_LENOF(table); ++i)
 			MULT(table[i - 1], a, table[i]);
 		for (i = b->ob_size - 1; i >= 0; --i) {
 			digit bi = b->ob_digit[i];
@@ -1870,8 +1870,7 @@ int_pow(DeeIntObject *a, DeeObject *b_ob) {
 	}
 out:
 	if (b->ob_size > FIVEARY_CUTOFF) {
-		for (i = 0; i < 32; ++i)
-			Dee_XDecref(table[i]);
+		Dee_XDecrefv(table, COMPILER_LENOF(table));
 	}
 	Dee_Decref(a);
 	Dee_Decref(b);

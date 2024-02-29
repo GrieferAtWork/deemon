@@ -722,8 +722,8 @@ do_generic:
 			temp = allow_constexpr(operand);
 			if (temp == CONSTEXPR_ILLEGAL) {
 cleanup_operands:
-				for (++i; i < opcount; ++i)
-					Dee_Decref(argv[i]);
+				++i;
+				Dee_Decrefv(argv + i, opcount - i);
 				goto generic_operator_optimizations;
 			}
 			if (temp == CONSTEXPR_USECOPY) {
@@ -763,8 +763,7 @@ cleanup_operands:
 			}
 			if (operator_result == ITER_DONE) {
 not_allowed:
-				for (i = 0; i < opcount; ++i)
-					Dee_Decref(argv[i]);
+				Dee_Decrefv(argv, opcount);
 				goto done;
 			}
 		} else if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP) {
@@ -795,8 +794,7 @@ not_allowed:
 			                 operator_result);
 		}
 #endif /* CONFIG_HAVE_OPTIMIZE_VERBOSE */
-		for (i = 0; i < opcount; ++i)
-			Dee_Decref(argv[i]);
+		Dee_Decrefv(argv, opcount);
 	}
 	/* If the operator failed, don't do any propagation. */
 set_operator_result:

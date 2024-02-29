@@ -307,7 +307,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >>             err_invalid_argc(...); // ERROR: Too many positional arguments
 		 * >> #endif
 		 * >> #if !(co_flags & CODE_FVARKWDS)
-		 * >>         size_t kw_used = 0;
+		 * >>         size_t kw_used = {co_argc_max - co_argc_min};
 		 * >> #endif
 		 * >> #if {co_argc_min} > 0
 		 * >>         if (argc < {co_argc_min}) {
@@ -324,11 +324,10 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> #endif
 		 * >> #if {co_argc_max} > {co_argc_min}
 		 * >> #for (size_t i = {co_argc_min}; i < {co_argc_max}; ++i)
-		 * >> #if !(co_flags & CODE_FVARKWDS)
-		 * >>         ++kw_used;
-		 * >> #endif
-		 * >>         DeeObject *temp = DeeKw_GetItemNRDef(kw, {co_keywords[i]}, NULL);
-		 * >>         if (!temp) {
+		 * >>         DeeObject *temp = DeeKw_GetItemNRDef(kw, {co_keywords[i]}, ITER_DONE);
+		 * >>         if (!temp)
+		 * >>             HANDLE_EXCEPT();
+		 * >>         if (temp == ITER_DONE) {
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>             --kw_used;
 		 * >> #endif
@@ -341,7 +340,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 		 * >> #endif
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>         size_t kw_argc = DeeObject_Size(kw);
-		 * >>         if (kw_argc != kw_used) {
+		 * >>         if (kw_argc > kw_used) {
 		 * >>             if (kw_argc == (size_t)-1)
 		 * >>                 HANDLE_EXCEPT();
 		 * >>             err_invalid_argc(...); // ERROR: Unused keyword arguments
@@ -994,6 +993,11 @@ collect_morph_sections(struct Dee_host_section_tailq *__restrict text,
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict self) {
+#ifdef Dee_host_section_unwind_maxsize
+#ifdef HAVE_Dee_hostfunc_unwind_enabled
+	bool unwind_enabled;
+#endif /* HAVE_Dee_hostfunc_unwind_enabled */
+#endif /* Dee_host_section_unwind_maxsize */
 	struct Dee_host_section *sect;
 	size_t block_i, morph_flush_i;
 #ifdef __INTELLISENSE__
@@ -1189,10 +1193,20 @@ no_jmp_needed:;
 	 * Note that we can't remove empty sections because they might still be
 	 * referenced by Dee_host_symbol-s. */
 	self->fa_sectsize = 0;
+#ifdef Dee_host_section_unwind_maxsize
+#ifdef HAVE_Dee_hostfunc_unwind_enabled
+	unwind_enabled = Dee_hostfunc_unwind_enabled();
+#endif /* HAVE_Dee_hostfunc_unwind_enabled */
+#endif /* Dee_host_section_unwind_maxsize */
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
 		self->fa_sectsize += Dee_host_section_size(sect);
 #ifdef Dee_host_section_unwind_maxsize
-		self->fa_sectsize += Dee_host_section_unwind_maxsize(sect);
+#ifdef HAVE_Dee_hostfunc_unwind_enabled
+		if (unwind_enabled)
+#endif /* HAVE_Dee_hostfunc_unwind_enabled */
+		{
+			self->fa_sectsize += Dee_host_section_unwind_maxsize(sect);
+		}
 #endif /* Dee_host_section_unwind_maxsize */
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 		sect->hs_symbols = NULL; /* Needed for symbol ordering */

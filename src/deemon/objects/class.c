@@ -2788,12 +2788,14 @@ instance_kwsuper_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_super_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_super_init(DeeObject *__restrict self,
+                    size_t argc, DeeObject *const *argv) {
 	return instance_super_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_kwsuper_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_kwsuper_init(DeeObject *__restrict self,
+                      size_t argc, DeeObject *const *argv) {
 	return instance_kwsuper_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
@@ -2849,7 +2851,8 @@ instance_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_init(DeeObject *__restrict self,
+              size_t argc, DeeObject *const *argv) {
 	return instance_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
@@ -2866,7 +2869,8 @@ instance_nobase_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_nobase_init(DeeObject *__restrict self,
+                     size_t argc, DeeObject *const *argv) {
 	return instance_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
@@ -2913,7 +2917,8 @@ instance_builtin_nobase_ctor(DeeObject *__restrict self) {
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_builtin_nobase_init(DeeObject *__restrict self,
+                             size_t argc, DeeObject *const *argv) {
 	return instance_builtin_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
@@ -2981,11 +2986,8 @@ instance_autoload_members(DeeTypeObject *tp_self,
 		at = find_next_attribute(desc->cd_desc, &next_table_index);
 		if unlikely(!at)
 			goto err_argc;
-		if unlikely(DeeInstance_SetAttribute(desc,
-			                                  instance,
-			                                  self,
-			                                  at,
-			                                  argv[i]))
+		if unlikely(DeeInstance_SetAttribute(desc, instance,
+			                                 self, at, argv[i]))
 		goto err;
 	}
 	return 0;
@@ -3000,19 +3002,19 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
                              struct class_desc *__restrict desc,
                              struct instance_desc *__restrict instance,
                              DeeObject *self, size_t argc,
-                             DeeObject *const *argv,
-                             DeeKwdsObject *kw) {
+                             DeeObject *const *argv, DeeObject *kw) {
 	uint16_t next_table_index;
 	DREF DeeObject *iterator, *elem, *data[2];
 	if (!kw)
 		return instance_autoload_members(tp_self, desc, instance, self, argc, argv);
 	next_table_index = 0;
 	if (DeeKwds_Check(kw)) {
+		DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
 		size_t i, positional_argc;
 		DeeObject *const *kw_argv;
-		if unlikely(DeeKwds_SIZE(kw) > argc)
-			return err_keywords_bad_for_argc(argc, DeeKwds_SIZE(kw));
-		positional_argc = argc - DeeKwds_SIZE(kw);
+		if unlikely(DeeKwds_SIZE(kwds) > argc)
+			return err_keywords_bad_for_argc(argc, DeeKwds_SIZE(kwds));
+		positional_argc = argc - DeeKwds_SIZE(kwds);
 		kw_argv         = argv + positional_argc;
 		/* Load positional arguments into the first positional_argc instance members. */
 		for (i = 0; i < positional_argc; ++i) {
@@ -3025,26 +3027,26 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at, argv[i]))
 				goto err;
 		}
-		for (i = 0; i <= kw->kw_mask; ++i) {
+		for (i = 0; i <= kwds->kw_mask; ++i) {
 			struct class_attribute *at;
-			if (!kw->kw_map[i].ke_name)
+			if (!kwds->kw_map[i].ke_name)
 				continue;
 			at = DeeClassDesc_QueryInstanceAttributeHash(desc,
-			                                             (DeeObject *)kw->kw_map[i].ke_name,
-			                                             kw->kw_map[i].ke_hash);
+			                                             (DeeObject *)kwds->kw_map[i].ke_name,
+			                                             kwds->kw_map[i].ke_hash);
 			if unlikely(!at || !CLASS_ATTRIBUTE_ALLOW_AUTOINIT(at)) {
 				err_unknown_attribute_string(tp_self,
-				                      DeeString_STR(kw->kw_map[i].ke_name),
-				                      ATTR_ACCESS_SET);
+				                             DeeString_STR(kwds->kw_map[i].ke_name),
+				                             ATTR_ACCESS_SET);
 				goto err;
 			}
 			if unlikely(at->ca_addr < next_table_index) {
 				/* Member had already been initialized via a positional argument! */
-				err_keywords_shadows_positional(DeeString_STR(kw->kw_map[i].ke_name));
+				err_keywords_shadows_positional(DeeString_STR(kwds->kw_map[i].ke_name));
 				goto err;
 			}
 			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at,
-			                                     kw_argv[kw->kw_map[i].ke_index]))
+			                                     kw_argv[kwds->kw_map[i].ke_index]))
 				goto err;
 		}
 	} else {
@@ -3057,11 +3059,8 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc,
-			                                     instance,
-			                                     self,
-			                                     at,
-			                                     argv[i]))
+			if unlikely(DeeInstance_SetAttribute(desc, instance,
+			                                     self, at, argv[i]))
 				goto err;
 		}
 		iterator = DeeObject_IterSelf((DeeObject *)kw);
@@ -3086,11 +3085,8 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_keywords_shadows_positional(DeeString_STR(data[0]));
 				goto err_iter_data;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc,
-			                                     instance,
-			                                     self,
-			                                     at,
-			                                     data[1]))
+			if unlikely(DeeInstance_SetAttribute(desc, instance,
+			                                     self, at, data[1]))
 				goto err_iter_data;
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
@@ -3212,12 +3208,8 @@ instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self,
-	                                      desc,
-	                                      instance,
-	                                      self,
-	                                      argc,
-	                                      argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance,
+	                                      self, argc, argv))
 		goto err_super;
 	Dee_Decref(func);
 	return 0;
@@ -3271,13 +3263,8 @@ instance_auto_tinitkw(DeeTypeObject *tp_self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self,
-	                                         desc,
-	                                         instance,
-	                                         self,
-	                                         argc,
-	                                         argv,
-	                                         (DeeKwdsObject *)kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
+	                                         self, argc, argv, kw))
 		goto err_super;
 	Dee_Decref(func);
 	return 0;
@@ -3316,12 +3303,8 @@ instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	}
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self,
-	                                      desc,
-	                                      instance,
-	                                      self,
-	                                      argc,
-	                                      argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance,
+	                                      self, argc, argv))
 		goto err_super;
 	return 0;
 err_super:
@@ -3358,13 +3341,8 @@ instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
 	}
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self,
-	                                         desc,
-	                                         instance,
-	                                         self,
-	                                         argc,
-	                                         argv,
-	                                         (DeeKwdsObject *)kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
+	                                         self, argc, argv, kw))
 		goto err_super;
 	return 0;
 err_super:
@@ -3379,22 +3357,26 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_auto_init(DeeObject *__restrict self,
+                   size_t argc, DeeObject *const *argv) {
 	return instance_auto_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_auto_initkw(DeeObject *__restrict self, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
 	return instance_auto_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_builtin_auto_init(DeeObject *__restrict self,
+                           size_t argc, DeeObject *const *argv) {
 	return instance_builtin_auto_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_builtin_auto_initkw(DeeObject *__restrict self, size_t argc,
+                             DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_auto_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
@@ -3426,12 +3408,8 @@ instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self,
-	                                      desc,
-	                                      instance,
-	                                      self,
-	                                      argc,
-	                                      argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance,
+	                                      self, argc, argv))
 		goto err_members;
 	Dee_Decref(func);
 	return 0;
@@ -3470,13 +3448,8 @@ instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self,
-	                                         desc,
-	                                         instance,
-	                                         self,
-	                                         argc,
-	                                         argv,
-	                                         (DeeKwdsObject *)kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
+	                                         self, argc, argv, kw))
 		goto err_members;
 	Dee_Decref(func);
 	return 0;
@@ -3500,12 +3473,8 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict
 	       sizeof(DREF DeeObject *));
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self,
-	                                      desc,
-	                                      instance,
-	                                      self,
-	                                      argc,
-	                                      argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance,
+	                                      self, argc, argv))
 		goto err_members;
 	return 0;
 err_members:
@@ -3528,13 +3497,8 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	       sizeof(DREF DeeObject *));
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self,
-		                                      desc,
-		                                      instance,
-		                                      self,
-		                                      argc,
-		                                      argv,
-		                                      (DeeKwdsObject *)kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
+		                                     self, argc, argv, kw))
 	goto err_members;
 	return 0;
 err_members:
@@ -3544,22 +3508,26 @@ err_members:
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_auto_nobase_init(DeeObject *__restrict self,
+                          size_t argc, DeeObject *const *argv) {
 	return instance_auto_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
+                            DeeObject *const *argv, DeeObject *kw) {
 	return instance_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_nobase_init(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) {
+instance_builtin_auto_nobase_init(DeeObject *__restrict self,
+                                  size_t argc, DeeObject *const *argv) {
 	return instance_builtin_auto_nobase_tinit(Dee_TYPE(self), self, argc, argv);
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
-instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+instance_builtin_auto_nobase_initkw(DeeObject *__restrict self, size_t argc,
+                                    DeeObject *const *argv, DeeObject *kw) {
 	return instance_builtin_auto_nobase_tinitkw(Dee_TYPE(self), self, argc, argv, kw);
 }
 #endif /* CONFIG_NOBASE_OPTIMIZED_CLASS_OPERATORS */
@@ -4803,13 +4771,11 @@ instance_tvisit(DeeTypeObject *tp_self,
                 DeeObject *__restrict self,
                 dvisit_t proc, void *arg) {
 	struct class_desc *desc;
-	uint16_t i;
 	struct instance_desc *instance;
 	desc     = DeeClass_DESC(tp_self);
 	instance = DeeInstance_DESC(desc, self);
 	Dee_instance_desc_lock_read(instance);
-	for (i = 0; i < desc->cd_desc->cd_imemb_size; ++i)
-		Dee_XVisit(instance->id_vtab[i]);
+	Dee_XVisitv(instance->id_vtab, desc->cd_desc->cd_imemb_size);
 	Dee_instance_desc_lock_endread(instance);
 }
 
@@ -4836,10 +4802,8 @@ again_i:
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
 			Dee_instance_desc_lock_endwrite(instance);
-			while (buflen) {
-				--buflen;
-				Dee_Decref(buffer[buflen]);
-			}
+			Dee_Decrefv(buffer, buflen);
+			buflen = 0;
 			Dee_instance_desc_lock_write(instance);
 			goto again_i;
 		}
@@ -4847,10 +4811,7 @@ again_i:
 		instance->id_vtab[i] = NULL;
 	}
 	Dee_instance_desc_lock_endwrite(instance);
-	while (buflen) {
-		--buflen;
-		Dee_Decref(buffer[buflen]);
-	}
+	Dee_Decrefv(buffer, buflen);
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -4879,10 +4840,8 @@ again_i:
 		}
 		if (buflen == COMPILER_LENOF(buffer)) {
 			Dee_instance_desc_lock_endwrite(instance);
-			while (buflen) {
-				--buflen;
-				Dee_Decref(buffer[buflen]);
-			}
+			Dee_Decrefv(buffer, buflen);
+			buflen = 0;
 			Dee_instance_desc_lock_write(instance);
 			goto again_i;
 		}
@@ -4890,10 +4849,7 @@ again_i:
 		instance->id_vtab[i] = NULL;
 	}
 	Dee_instance_desc_lock_endwrite(instance);
-	while (buflen) {
-		--buflen;
-		Dee_Decref(buffer[buflen]);
-	}
+	Dee_Decrefv(buffer, buflen);
 }
 
 INTERN NONNULL((1, 2)) void DCALL
@@ -5400,9 +5356,16 @@ err_custom_allocator:
 	result->tp_init.tp_alloc.tp_instance_size += offsetof(struct instance_desc, id_vtab);        /* Instance descriptor header. */
 	result->tp_init.tp_alloc.tp_instance_size += desc->cd_imemb_size * sizeof(DREF DeeObject *); /* Instance member objects. */
 
-	/* When the type doesn't have any instance members, it's an abstract type */
+	/* When the type doesn't have any instance members, it's an abstract type... */
 	if (desc->cd_imemb_size == 0) {
-		result->tp_flags |= TP_FABSTRACT;
+		/* ... but only if the underlying type is abstract */
+		if ((cbases.cb_base == NULL) ||
+#if 0 /* `DeeObject_Type' has TP_FABSTRACT set, so no extra check needed */
+		    (cbases.cb_base == &DeeObject_Type) ||
+#endif
+		    (cbases.cb_base->tp_flags & TP_FABSTRACT)) {
+			result->tp_flags |= TP_FABSTRACT;
+		}
 
 		/* Try to re-use the instance descriptor of the base class. */
 		if (cbases.cb_base && DeeType_IsClass(cbases.cb_base)) {

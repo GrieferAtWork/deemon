@@ -2219,7 +2219,8 @@ object_format_method(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		struct unicode_printer printer = UNICODE_PRINTER_INIT;
 		error = object_format_generic(self,
 		                              &unicode_printer_print,
-		                              &printer, format_utf8, WSTR_LENGTH(format_utf8));
+		                              &printer, format_utf8,
+		                              WSTR_LENGTH(format_utf8));
 		if unlikely(error < 0)
 			goto err_printer;
 		return unicode_printer_pack(&printer);
@@ -2556,7 +2557,17 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	                         /**/ "operator str(): string {\n"
 	                         /**/ "	return str type this;\n"
 	                         /**/ "}"
-	                         "}\n"),
+	                         "}\n"
+
+	                         "repr->\n"
+	                         "Returns $\"Object()\" if this is an exact instance of ?.\n"
+	                         "${"
+	                         /**/ "operator repr(): string {\n"
+	                         /**/ "	if (type(this) === Object)\n"
+	                         /**/ "		return \"Object()\";\n"
+	                         /**/ "	throw Error.RuntimeError.NotImplemented();\n"
+	                         /**/ "}"
+	                         "}"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

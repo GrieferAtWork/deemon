@@ -379,7 +379,6 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 ast_delmultiple(Ast *__restrict self) {
 	int result = 0;
 	struct ast *me;
-	size_t i;
 	if (COMPILER_BEGIN(self->ci_compiler))
 		goto err;
 	me = self->ci_value;
@@ -387,8 +386,7 @@ ast_delmultiple(Ast *__restrict self) {
 		result = err_invalid_ast_type(self, AST_MULTIPLE);
 	} else {
 		/* Assign the new branch vector. */
-		for (i = 0; i < me->a_multiple.m_astc; ++i)
-			Dee_Decref(me->a_multiple.m_astv[i]);
+		Dee_Decrefv(me->a_multiple.m_astv, me->a_multiple.m_astc);
 		Dee_Free(me->a_multiple.m_astv);
 		me->a_multiple.m_astc = 0;
 		me->a_multiple.m_astv = NULL;
@@ -419,13 +417,12 @@ err_compiler_end:
 		} else {
 #ifdef CONFIG_AST_IS_STRUCT
 #error "This loop doesn't work when asts are structs"
-#endif
+#endif /* CONFIG_AST_IS_STRUCT */
 			for (i = 0; i < new_astc; ++i) {
 				struct ast *branch_ast;
 				if (DeeObject_AssertTypeExact(new_astv[i], &DeeCompilerAst_Type)) {
 err_branch_v:
-					for (i = 0; i < new_astc; ++i)
-						Dee_Decref(new_astv[i]);
+					Dee_Decrefv(new_astv, new_astc);
 					Dee_Free(new_astv);
 					goto err_compiler_end;
 				}
@@ -447,8 +444,7 @@ err_branch_v:
 			old_astv              = me->a_multiple.m_astv;
 			me->a_multiple.m_astc = new_astc;
 			me->a_multiple.m_astv = (DREF struct ast **)new_astv;
-			for (i = 0; i < old_astc; ++i)
-				Dee_Decref(old_astv[i]);
+			ast_decrefv(old_astv, old_astc);
 			Dee_Free(old_astv);
 		}
 	}

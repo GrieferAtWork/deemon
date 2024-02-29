@@ -556,8 +556,7 @@ ast_makemultiple(DeeCompilerObject *self, size_t argc,
 	ast_decref_unlikely(result_ast);
 	__IF0 {
 err_branch_v:
-		while (branch_c--)
-			Dee_Decref(branch_v[branch_c]);
+		Dee_Decrefv(branch_v, branch_c);
 		Dee_Free(branch_v);
 	}
 done_compiler_end:

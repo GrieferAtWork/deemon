@@ -558,7 +558,6 @@ PRIVATE struct type_member tpconst function_members[] = {
 
 PRIVATE NONNULL((1)) void DCALL
 function_fini(Function *__restrict self) {
-	size_t i;
 	/* TODO: There should be a sub-class of ref-objects
 	 *       that we don't actually hold a proper DREF to.
 	 * We could use those slots to reference the declaring
@@ -644,8 +643,7 @@ function_fini(Function *__restrict self) {
 	 * However, this check may be skipped in the case of an attribute
 	 * call (as in `foo.fun()', as opposed to `type(foo).fun(foo)')
 	 */
-	for (i = 0; i < self->fo_code->co_refc; ++i)
-		Dee_Decref(self->fo_refv[i]);
+	Dee_Decrefv(self->fo_refv, self->fo_code->co_refc);
 	Dee_Decref(self->fo_code);
 }
 

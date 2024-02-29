@@ -242,6 +242,43 @@ Dee_host_section_unwind_trimrange(struct Dee_host_section *__restrict self,
 
 
 
+#undef RtlAddFunctionTable
+#undef RtlDeleteFunctionTable
+typedef BOOLEAN (ATTR_CDECL *LPRTLADDFUNCTIONTABLE)(NT_RUNTIME_FUNCTION *FunctionTable, uint32_t EntryCount, uint64_t BaseAddress);
+typedef BOOLEAN (ATTR_CDECL *LPRTLDELETEFUNCTIONTABLE)(NT_RUNTIME_FUNCTION *FunctionTable);
+PRIVATE LPRTLADDFUNCTIONTABLE pdyn_RtlAddFunctionTable;
+PRIVATE LPRTLDELETEFUNCTIONTABLE pdyn_RtlDeleteFunctionTable;
+#define RtlAddFunctionTable    (*pdyn_RtlAddFunctionTable)
+#define RtlDeleteFunctionTable (*pdyn_RtlDeleteFunctionTable)
+
+PRIVATE WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', '.', 'd', 'l', 'l', 0 };
+
+
+/* Check if unwind instrumentation should be used. */
+INTERN WUNUSED bool DCALL Dee_hostfunc_unwind_enabled(void) {
+	if (!pdyn_RtlAddFunctionTable) {
+		LPRTLADDFUNCTIONTABLE new_RtlAddFunctionTable;
+		LPRTLDELETEFUNCTIONTABLE new_RtlDeleteFunctionTable;
+		HMODULE mKernel32 = LoadLibraryW(wKernel32_dll);
+		if (!mKernel32)
+			goto fail;
+		new_RtlAddFunctionTable = (LPRTLADDFUNCTIONTABLE)GetProcAddress(mKernel32, "RtlAddFunctionTable");
+		new_RtlDeleteFunctionTable = (LPRTLDELETEFUNCTIONTABLE)GetProcAddress(mKernel32, "RtlDeleteFunctionTable");
+		if (!new_RtlAddFunctionTable || !new_RtlDeleteFunctionTable) {
+fail:
+			new_RtlAddFunctionTable = (LPRTLADDFUNCTIONTABLE)(void *)-1;
+			new_RtlDeleteFunctionTable = (LPRTLDELETEFUNCTIONTABLE)(void *)-1;
+		}
+		COMPILER_WRITE_BARRIER();
+		pdyn_RtlDeleteFunctionTable = new_RtlDeleteFunctionTable;
+		COMPILER_WRITE_BARRIER();
+		pdyn_RtlAddFunctionTable = new_RtlAddFunctionTable;
+		COMPILER_WRITE_BARRIER();
+	}
+	return pdyn_RtlAddFunctionTable != (LPRTLADDFUNCTIONTABLE)(void *)-1;
+}
+
+
 /* Initialize host function unwind data. */
 INTERN NONNULL((1, 2, 3, 4)) void DCALL
 Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
@@ -252,6 +289,14 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 	struct Dee_host_section *sect;
 	NT_RUNTIME_FUNCTION *pFunctionTable;
 	size_t num_functions;
+
+	/* Try to load unwind functions, but if this
+	 * fails, don't produce unwind instrumentation. */
+	if (!Dee_hostfunc_unwind_enabled()) {
+		self->hfu_FunctionTable = NULL;
+		return;
+	}
+
 	writer.humw_image_base       = start_of_text;
 	writer.humw_RUNTIME_FUNCTION = (byte_t *)CEIL_ALIGN((uintptr_t)end_of_text, HOST_SIZEOF_POINTER);
 	pFunctionTable = (NT_RUNTIME_FUNCTION *)writer.humw_RUNTIME_FUNCTION;
@@ -275,10 +320,9 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 	/* Register the function table with NT. */
 	self->hfu_FunctionTable = pFunctionTable;
 
-	/* TODO: Use GetProcAddress() to load this function */
 	DBG_ALIGNMENT_DISABLE();
-	bAddOk = RtlAddFunctionTable((PRUNTIME_FUNCTION)pFunctionTable, writer.humw_function_count,
-	                             (DWORD64)(uintptr_t)writer.humw_image_base);
+	bAddOk = RtlAddFunctionTable(pFunctionTable, writer.humw_function_count,
+	                             (uintptr_t)writer.humw_image_base);
 	DBG_ALIGNMENT_ENABLE();
 	if (!bAddOk) {
 		HA_printf("Error calling RtlAddFunctionTable: %u\n", (unsigned int)GetLastError());
@@ -290,13 +334,11 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 INTERN NONNULL((1)) void DCALL
 Dee_hostfunc_unwind_fini(struct Dee_hostfunc_unwind *__restrict self) {
 	if (self->hfu_FunctionTable) {
-		/* TODO: Use GetProcAddress() to load this function */
 		DBG_ALIGNMENT_DISABLE();
-		RtlDeleteFunctionTable((PRUNTIME_FUNCTION)self->hfu_FunctionTable);
+		RtlDeleteFunctionTable(self->hfu_FunctionTable);
 		DBG_ALIGNMENT_ENABLE();
 	}
 }
-
 
 #endif /* CONFIG_host_unwind_USES_NT_UNWIND_INFO */
 

@@ -356,8 +356,7 @@ continue_inline_at_iter:
 				                                            sizeof(DREF struct ast *));
 				if unlikely(!new_astv) {
 err_expand_vec:
-					while (len--)
-						Dee_Decref(vec[len]);
+					Dee_Decrefv(vec, len);
 					Dee_Free(vec);
 					goto err;
 				}
@@ -386,8 +385,7 @@ err_expand_vec:
 					}
 					iter[i] = constant_ast; /* Inherit reference */
 				}
-				while (len--)
-					Dee_Decref(vec[len]);
+				Dee_Decrefv(vec, len);
 				Dee_Free(vec);
 				ast_decref(expand);
 				goto continue_inline_at_iter;

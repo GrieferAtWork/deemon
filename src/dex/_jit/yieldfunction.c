@@ -81,18 +81,14 @@ jit_state_fini(struct jit_state *__restrict self) {
 
 PRIVATE NONNULL((1)) void DCALL
 jy_fini(JITYieldFunction *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->jy_argc; ++i)
-		Dee_Decref(self->jy_argv[i]);
+	Dee_Decrefv(self->jy_argv, self->jy_argc);
 	Dee_XDecref(self->jy_kw);
 	Dee_Decref(self->jy_func);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 jy_visit(JITYieldFunction *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
-	for (i = 0; i < self->jy_argc; ++i)
-		Dee_Visit(self->jy_argv[i]);
+	Dee_Visitv(self->jy_argv, self->jy_argc);
 	Dee_XVisit(self->jy_kw);
 	Dee_Visit(self->jy_func);
 }

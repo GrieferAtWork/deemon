@@ -213,8 +213,7 @@ dex_load_handle(DeeDexObject *__restrict self,
 err_glob:
 	Dee_Free(globals);
 err_imp_elem:
-	while (impcount--)
-		Dee_Decref(imports[impcount]);
+	Dee_Decrefv(imports, impcount);
 err_imp:
 	Dee_Free(imports);
 err:

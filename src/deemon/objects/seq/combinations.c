@@ -531,9 +531,7 @@ com_fini(Combinations *__restrict self) {
 	 *        pointer for any object that isn't a tuple. */
 	if (self->c_elem &&
 	    self->c_elem != DeeTuple_ELEM(self->c_seq)) {
-		size_t i;
-		for (i = 0; i < self->c_seqlen; ++i)
-			Dee_Decref(self->c_elem[i]);
+		Dee_Decrefv(self->c_elem, self->c_seqlen);
 		Dee_Free(self->c_elem);
 	}
 	Dee_Decref(self->c_seq);
@@ -544,11 +542,8 @@ com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
 	/* NOTE: `DeeTuple_ELEM()' just returns an invalid
 	 *        pointer for any object that isn't a tuple. */
 	if (self->c_elem &&
-	    self->c_elem != DeeTuple_ELEM(self->c_seq)) {
-		size_t i;
-		for (i = 0; i < self->c_seqlen; ++i)
-			Dee_Visit(self->c_elem[i]);
-	}
+	    self->c_elem != DeeTuple_ELEM(self->c_seq))
+		Dee_Visitv(self->c_elem, self->c_seqlen);
 	Dee_Visit(self->c_seq);
 }
 
@@ -1223,8 +1218,7 @@ load_tp_size:
 						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
-							while (elem_c--)
-								Dee_Decref(elem_v[elem_c]);
+							Dee_Decrefv(elem_v, elem_c);
 							Dee_Free(elem_v);
 							goto err_r;
 						}
@@ -1240,9 +1234,7 @@ err_elem_v:
 				goto err_elem_v;
 			Dee_Decref(iterator);
 			if (r >= elem_c) {
-				size_t i;
-				for (i = 0; i < elem_c; ++i)
-					Dee_Decref(elem_v[i]);
+				Dee_Decrefv(elem_v, elem_c);
 				Dee_Free(elem_v);
 				DeeObject_FREE(result);
 				if (r == elem_c)
@@ -1399,8 +1391,7 @@ load_tp_size:
 						if unlikely(!new_elem_v) {
 							Dee_Decref(elem);
 err_elem_v:
-							while (elem_c--)
-								Dee_Decref(elem_v[elem_c]);
+							Dee_Decrefv(elem_v, elem_c);
 							Dee_Free(elem_v);
 							goto err_r;
 						}

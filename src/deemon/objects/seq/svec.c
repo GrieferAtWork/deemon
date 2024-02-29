@@ -1217,17 +1217,13 @@ INTERN DeeTypeObject SharedVectorIterator_Type = {
 
 PRIVATE NONNULL((1)) void DCALL
 svec_fini(SharedVector *__restrict self) {
-	size_t i;
-	for (i = 0; i < self->sv_length; ++i)
-		Dee_Decref(self->sv_vector[i]);
+	Dee_Decrefv(self->sv_vector, self->sv_length);
 	Dee_Free((void *)self->sv_vector);
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
 svec_visit(SharedVector *__restrict self, dvisit_t proc, void *arg) {
-	size_t i;
-	for (i = 0; i < self->sv_length; ++i)
-		Dee_Visit(self->sv_vector[i]);
+	Dee_Visitv(self->sv_vector, self->sv_length);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF SharedVectorIterator *DCALL
