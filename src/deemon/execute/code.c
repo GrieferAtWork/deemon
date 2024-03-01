@@ -613,9 +613,9 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 
-/* Define the special `empty_code' object. */
-#define empty_code empty_code_head.ob
-INTERN DEFINE_CODE(empty_code_head,
+/* Define the special `DeeCode_Empty' object. */
+#define DeeCode_Empty DeeCode_Empty_head.ob
+INTERN DEFINE_CODE(DeeCode_Empty_head,
                    /* co_flags:     */ CODE_FCOPYABLE,
                    /* co_localc:    */ 0,
                    /* co_staticc:   */ 0,
@@ -824,7 +824,7 @@ restart:
 			 *      After all: accessing constants normally doesn't require locks,
 			 *      but us meddling with _all_ of them (and not just statics) breaks
 			 *      some of the assumptions such code makes... */
-			self->co_staticv[i] = (DeeObject *)&empty_code;
+			self->co_staticv[i] = (DeeObject *)&DeeCode_Empty;
 		} else {
 			self->co_staticv[i] = Dee_None;
 		}
@@ -1246,7 +1246,7 @@ PRIVATE struct type_cmp code_cmp = {
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
-	return_reference_((DeeObject *)&empty_code);
+	return_reference_((DeeObject *)&DeeCode_Empty);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL

@@ -353,7 +353,7 @@ DeeFunction_CallKw(DeeObject *self, size_t argc,
 PRIVATE WUNUSED DREF Function *DCALL
 function_init(size_t argc, DeeObject *const *argv) {
 	DREF Function *result;
-	DeeCodeObject *code = &empty_code;
+	DeeCodeObject *code = &DeeCode_Empty;
 	DeeObject *refs     = Dee_EmptyTuple;
 	if (DeeArg_Unpack(argc, argv, "|oo:Function", &code, &refs))
 		goto err;

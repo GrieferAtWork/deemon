@@ -441,7 +441,7 @@ PUBLIC struct Dee_static_module_struct DeeModule_Deemon =
 		/* .mo_bucketv   = */ deemon_symbols,
 		/* .mo_importv   = */ NULL,
 		/* .mo_globalv   = */ builtin_object_vector,
-		/* .mo_root      = */ &empty_code,
+		/* .mo_root      = */ &DeeCode_Empty,
 #ifndef CONFIG_NO_THREADS
 		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,

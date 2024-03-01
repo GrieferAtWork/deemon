@@ -115,7 +115,6 @@ DECL_END
 #undef calloc
 #undef realloc
 #undef free
-#undef empty_code
 
 /* Redirect heap allocations to use deemon's general-purpose heap. */
 #define malloc(s)     Dee_TryMalloc(s)

@@ -646,20 +646,18 @@ struct Dee_code_object {
 
 #ifdef CONFIG_BUILDING_DEEMON
 #ifndef GUARD_DEEMON_EXECUTE_CODE_C
-
 /* A stub code-object that contains a single, `ret none' instruction. */
-struct empty_code_struct {
+struct DeeCode_Empty_struct {
 	/* Even though never tracked, the empty code
 	 * object still needs the GC header for visiting. */
 	struct Dee_gc_head_link c_head;
 	DeeCodeObject           c_code;
 };
-
 #ifdef __INTELLISENSE__
-INTDEF DeeCodeObject empty_code;
+INTDEF DeeCodeObject DeeCode_Empty;
 #else /* __INTELLISENSE__ */
-INTDEF struct empty_code_struct empty_code_head;
-#define empty_code   empty_code_head.c_code
+INTDEF struct DeeCode_Empty_struct DeeCode_Empty_head;
+#define DeeCode_Empty DeeCode_Empty_head.c_code
 #endif /* !__INTELLISENSE__ */
 #endif /* !GUARD_DEEMON_EXECUTE_CODE_C */
 #endif /* CONFIG_BUILDING_DEEMON */

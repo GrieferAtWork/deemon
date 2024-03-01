@@ -1921,7 +1921,7 @@ INTERN WUNUSED NONNULL((1)) int
 			goto err;
 	} else {
 		/* Shouldn't happen, but the specs allow `mo_root' to be NULL. */
-		if unlikely(dec_putcode(&empty_code))
+		if unlikely(dec_putcode(&DeeCode_Empty))
 			goto err;
 	}
 

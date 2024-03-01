@@ -144,8 +144,8 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 	Dee_XIncref(result->fo_code);
 	DeeModule_LockEndRead(me);
 	if (!result->fo_code) {
-		result->fo_code = &empty_code;
-		Dee_Incref(&empty_code);
+		result->fo_code = &DeeCode_Empty;
+		Dee_Incref(&DeeCode_Empty);
 	}
 	DeeObject_Init(result, &DeeFunction_Type);
 	if (set_initialized) {
@@ -1743,7 +1743,7 @@ INTERN struct Dee_static_module_struct DeeModule_Empty =
 		/* .mo_bucketv   = */ empty_module_buckets,
 		/* .mo_importv   = */ NULL,
 		/* .mo_globalv   = */ NULL,
-		/* .mo_root      = */ &empty_code,
+		/* .mo_root      = */ &DeeCode_Empty,
 #ifndef CONFIG_NO_THREADS
 		/* .mo_lock      = */ DEE_ATOMIC_RWLOCK_INIT,
 		/* .mo_loader    = */ NULL,

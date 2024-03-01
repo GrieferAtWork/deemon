@@ -415,7 +415,7 @@ DDATDEF struct Dee_kwcmethod_object DeeBuiltin_Exec;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* A stub module-object named `' (empty string), and pointing to `empty_code'. */
+/* A stub module-object named `' (empty string), and pointing to `DeeCode_Empty'. */
 #ifdef __INTELLISENSE__
 INTDEF DeeModuleObject DeeModule_Empty;
 #else /* __INTELLISENSE__ */
