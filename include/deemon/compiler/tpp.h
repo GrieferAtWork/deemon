@@ -283,7 +283,7 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
 #define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
 
-INTDEF WUNUSED NONNULL((1)) int DFCALL
+INTDEF WUNUSED int DFCALL
 parser_skip(tok_t expected_tok, int wnum, ...);
 
 

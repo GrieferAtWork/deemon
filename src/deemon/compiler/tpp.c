@@ -857,7 +857,7 @@ parser_warn_pack_used(struct ast_loc *loc) {
 
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DFCALL
+PRIVATE WUNUSED int DCALL
 parser_skip_maybe_seek(tok_t expected_tok) {
 	/* Depending on which token was expected, and what the current token is,
 	 * skip ahead a couple of tokens in search of what we're looking for. */
@@ -881,7 +881,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1)) int DFCALL
+INTERN WUNUSED int DFCALL
 parser_skip(tok_t expected_tok, int wnum, ...) {
 	if likely(tok != expected_tok) {
 		va_list args;
