@@ -818,8 +818,8 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 PRIVATE NONNULL((1)) void DCALL
 yf_fini(YFunction *__restrict self) {
 	if (self->yf_kw) {
+		Dee_Decref(self->yf_kw->fk_kw);
 		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
-			Dee_Decref(self->yf_kw->fk_kw);
 			/* NOTE: When `DeeBlackListKwds_Type' or `DeeKwdsMapping_Type' are used,
 			 *       the argument vector loaded by the object had been implicitly
 			 *       referenced via `self->yf_args' until this point. */
@@ -836,10 +836,9 @@ yf_fini(YFunction *__restrict self) {
 PRIVATE NONNULL((1, 2)) void DCALL
 yf_visit(YFunction *__restrict self, dvisit_t proc, void *arg) {
 	if (self->yf_kw) {
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
-			Dee_Visit(self->yf_kw->fk_kw);
+		Dee_Visit(self->yf_kw->fk_kw);
+		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
 			Dee_XVisit(self->yf_kw->fk_varkwds);
-		}
 	}
 	Dee_Visit(self->yf_func);
 	Dee_Visitv(self->yf_argv, self->yf_argc);
@@ -854,9 +853,10 @@ PRIVATE WUNUSED DREF YFunction *DCALL yf_ctor(void) {
 	result->yf_func = function_init(0, NULL);
 	if unlikely(!result->yf_func)
 		goto err_r;
-	result->yf_argc = 0;
-	result->yf_kw   = NULL;
-	result->yf_this = NULL;
+	result->yf_pargc = 0;
+	result->yf_argc  = 0;
+	result->yf_kw    = NULL;
+	result->yf_this  = NULL;
 	DeeObject_Init(result, &DeeYieldFunction_Type);
 	return result;
 err_r:
@@ -871,27 +871,28 @@ yf_copy(YFunction *__restrict self) {
 	DREF YFunction *result;
 	struct code_frame_kwds *kw;
 	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
-	if unlikely(!result->yf_func)
+	if unlikely(!result)
 		goto err;
 	result->yf_kw = NULL;
 	if (self->yf_kw) {
 		size_t count;
-		count = (self->yf_func->fo_code->co_argc_max - self->yf_argc);
+		ASSERT(self->yf_func->fo_code->co_argc_max >= self->yf_pargc);
+		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
 		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
-		                                             (count * sizeof(DeeObject *)));
+		                                          (count * sizeof(DeeObject *)));
 		if unlikely(!kw)
 			goto err_r;
 		result->yf_kw = kw;
 		memcpyc(kw->fk_kargv, self->yf_kw->fk_kargv, count, sizeof(DeeObject *));
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
-			result->yf_kw->fk_kw      = self->yf_kw->fk_kw;
-			result->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
-			Dee_Incref(result->yf_kw->fk_kw);
-		}
+		kw->fk_kw = self->yf_kw->fk_kw;
+		Dee_Incref(kw->fk_kw);
+		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
+			kw->fk_varkwds = NULL; /* Don't copy this one... */
 	}
-	result->yf_func = result->yf_func;
-	result->yf_argc = result->yf_argc;
-	result->yf_this = self->yf_this;
+	result->yf_func  = self->yf_func;
+	result->yf_pargc = self->yf_pargc;
+	result->yf_argc  = self->yf_argc;
+	result->yf_this  = self->yf_this;
 	Dee_Incref(result->yf_func);
 	Dee_Movrefv(result->yf_argv, self->yf_argv, self->yf_argc);
 	Dee_XIncref(result->yf_this);
@@ -905,13 +906,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
 yf_deepcopy(YFunction *__restrict self) {
-	size_t i, count;
 	struct code_frame_kwds *kw;
 	DREF YFunction *result;
 	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
 	if unlikely(!result->yf_func)
 		goto err;
-	result->yf_argc = self->yf_argc;
+	result->yf_pargc = self->yf_pargc;
+	result->yf_argc  = self->yf_argc;
 	Dee_Movrefv(result->yf_argv, self->yf_argv, self->yf_argc);
 	if (DeeObject_InplaceDeepCopyv(result->yf_argv, self->yf_argc))
 		goto err_args_r;
@@ -923,32 +924,60 @@ yf_deepcopy(YFunction *__restrict self) {
 	}
 	result->yf_kw = NULL;
 	if (self->yf_kw) {
-		DREF DeeObject *temp;
-		count = (self->yf_func->fo_code->co_argc_max - self->yf_argc);
+		size_t i, count;
+		DeeObject *kwcopy;
+		DeeCodeObject *code;
+		DeeObject *const *kw_argv;
+		count = (self->yf_func->fo_code->co_argc_max - self->yf_pargc);
 		kw = (struct code_frame_kwds *)Dee_Malloc(offsetof(struct code_frame_kwds, fk_kargv) +
 		                                          (count * sizeof(DeeObject *)));
 		if unlikely(!kw)
 			goto err_this_args_r;
 		result->yf_kw = kw;
-		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
-			temp = DeeObject_DeepCopy(self->yf_kw->fk_kw);
-			if unlikely(!temp)
-				goto err_kw_this_args_r;
-			result->yf_kw->fk_kw      = temp; /* Inherit reference. */
-			result->yf_kw->fk_varkwds = NULL; /* Don't copy this one... */
-		}
+		kwcopy = DeeObject_DeepCopy(self->yf_kw->fk_kw);
+		if unlikely(!kwcopy)
+			goto err_kw_this_args_r;
+		kw->fk_kw = kwcopy; /* Inherit reference. */
+		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
+			kw->fk_varkwds = NULL; /* Don't copy this one... */
+		code    = self->yf_func->fo_code;
+		kw_argv = result->yf_argv + result->yf_pargc;
+		ASSERT(code->co_keywords != NULL || !count);
 		for (i = 0; i < count; ++i) {
-			// self->yf_kw->fk_kargv[i]
-			kw->fk_kargv[i] = NULL; /* TODO: Re-load from `result->yf_kw->fk_kw' */
+			DeeObject *val = NULL;
+			DeeStringObject *name = code->co_keywords[self->yf_pargc + i];
+			if (DeeKwds_Check(kwcopy)) {
+				size_t index = DeeKwds_IndexOf(kwcopy, (DeeObject *)name);
+				if (index != (size_t)-1) {
+					ASSERT(index < (result->yf_argc - result->yf_pargc));
+					val = kw_argv[index];
+				}
+			} else {
+				val = DeeKw_GetItemNRDef(kwcopy, (DeeObject *)name, ITER_DONE);
+				if unlikely(!ITER_ISOK(val)) {
+					if unlikely(!val)
+						goto err_kw_this_args_r_kw;
+					val = NULL;
+				}
+			}
+			if unlikely(!val && /* Only throw an error if the argument is mandatory. */
+			            (result->yf_pargc + i) < code->co_argc_min) {
+				err_invalid_argc_missing_kw(DeeString_STR(name),
+				                            DeeCode_NAME(code),
+				                            self->yf_argc,
+				                            code->co_argc_min,
+				                            code->co_argc_max);
+				goto err_kw_this_args_r_kw;
+			}
+			kw->fk_kargv[i] = val;
 		}
 	}
 	result->yf_func = self->yf_func;
 	Dee_Incref(result->yf_func);
 	DeeObject_Init(result, &DeeYieldFunction_Type);
 	return result;
-/*err_kw_kw:*/
-	/*if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS)
-		Dee_Decref(result->yf_kw->fk_kw);*/
+err_kw_this_args_r_kw:
+	Dee_Decref(kw->fk_kw);
 err_kw_this_args_r:
 	Dee_Free(kw);
 err_this_args_r:
@@ -984,7 +1013,7 @@ yfi_init(YFIterator *__restrict self,
 	self->yi_frame.cf_kw    = yield_function->yf_kw;
 	self->yi_frame.cf_flags = code->co_flags;
 	self->yi_frame.cf_vargs = NULL;
-	self->yi_frame.cf_argc  = yield_function->yf_argc;
+	self->yi_frame.cf_argc  = yield_function->yf_pargc;
 	self->yi_frame.cf_argv  = yield_function->yf_argv;
 	self->yi_frame.cf_this  = yield_function->yf_this;
 	Dee_XIncref(self->yi_frame.cf_this);
@@ -1031,8 +1060,10 @@ yf_hash(DeeYieldFunctionObject *__restrict self) {
 	dhash_t result;
 	result = DeeObject_HashGeneric(self->yf_func);
 	result = Dee_HashCombine(result, DeeObject_Hashv(self->yf_argv, self->yf_argc));
+	if (self->yf_kw)
+		result = Dee_HashCombine(result, DeeObject_Hash(self->yf_kw->fk_kw));
 	if (self->yf_this)
-		result = Dee_HashCombine(result, DeeObject_Hash((DeeObject *)self->yf_this));
+		result = Dee_HashCombine(result, DeeObject_Hash(self->yf_this));
 	return result;
 }
 
@@ -1045,6 +1076,8 @@ yf_eq_impl(DeeYieldFunctionObject *__restrict self,
 	if (self == other)
 		goto yes;
 	if (self->yf_func != other->yf_func)
+		goto nope;
+	if (self->yf_pargc != other->yf_pargc)
 		goto nope;
 	if (self->yf_argc != other->yf_argc)
 		goto nope;
@@ -1101,7 +1134,7 @@ PRIVATE struct type_member tpconst yf_members[] = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_args(YFunction *__restrict self) {
-	return DeeRefVector_NewReadonly((DeeObject *)self, self->yf_argc, self->yf_argv);
+	return DeeRefVector_NewReadonly((DeeObject *)self, self->yf_pargc, self->yf_argv);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL

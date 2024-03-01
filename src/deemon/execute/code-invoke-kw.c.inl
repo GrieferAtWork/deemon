@@ -20,7 +20,7 @@
 #ifdef __INTELLISENSE__
 #include "code-invoke.c.inl"
 #define CODE_FLAGS   (CODE_FYIELDING)
-#define KW_IS_MAPPING 1
+//#define KW_IS_MAPPING 1
 #endif /* __INTELLISENSE__ */
 
 #if (CODE_FLAGS & ~(CODE_FVARKWDS | CODE_FYIELDING)) != 0
@@ -186,7 +186,6 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 				}
 				goto err_ex_frame;
 			}
-			frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
 			index = DeeKwds_IndexOf(kw, (DeeObject *)name);
 			if unlikely(index == (size_t)-1) {
@@ -200,9 +199,8 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			}
 			val = (GET_ARGV() + frame.cf_argc)[index];
 			ASSERT_OBJECT(val);
-			/* No need to store a reference, as we're also responsible for any cleanup. */
-			frame.cf_kw->fk_kargv[i] = val;
 #endif /* !KW_IS_MAPPING */
+			frame.cf_kw->fk_kargv[i] = val;
 #if !(CODE_FLAGS & CODE_FVARKWDS)
 			++kw_used;
 #endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
@@ -225,7 +223,6 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			frame.cf_kw->fk_kargv[i] = NULL; /* Unset value. */
 			continue;
 		}
-		frame.cf_kw->fk_kargv[i] = val;
 #else /* KW_IS_MAPPING */
 		index = DeeKwds_IndexOf(kw, (DeeObject *)name);
 		if (index == (size_t)-1) {
@@ -235,9 +232,8 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		}
 		val = (GET_ARGV() + frame.cf_argc)[index];
 		ASSERT_OBJECT(val);
-		/* No need to store a reference, as we're also responsible for any cleanup. */
-		frame.cf_kw->fk_kargv[i] = val;
 #endif /* !KW_IS_MAPPING */
+		frame.cf_kw->fk_kargv[i] = val;
 #if !(CODE_FLAGS & CODE_FVARKWDS)
 		++kw_used;
 #endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
@@ -265,7 +261,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #endif /* !(CODE_FLAGS & CODE_FVARKWDS) */
 #if CODE_FLAGS & CODE_FYIELDING
 	/* Yield-function invocation. */
-	yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(frame.cf_argc));
+	yf = (DREF DeeYieldFunctionObject *)DeeObject_Malloc(DeeYieldFunction_Sizeof(GET_ARGC()));
 	if unlikely(!yf) {
 		/*Dee_XDecref(frame.cf_kw->fk_varkwds);*/
 		goto err_ex_frame;
@@ -274,8 +270,9 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 	Dee_Incref(self);
 
 	/* Pack together an argument tuple for the yield-function. */
-	yf->yf_argc = frame.cf_argc;
-	Dee_Movrefv(yf->yf_argv, GET_ARGV(), frame.cf_argc);
+	yf->yf_pargc = frame.cf_argc;
+	yf->yf_argc  = GET_ARGC();
+	Dee_Movrefv(yf->yf_argv, GET_ARGV(), GET_ARGC());
 #ifdef CALL_THIS
 	yf->yf_this = this_arg;
 	Dee_Incref(this_arg);
@@ -295,10 +292,13 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 #else /* __SIZEOF_POINTER__... */
 	DBG_memset(&frame.cf_kw->fk_varkwds, 0xcc, sizeof(void *));
 #endif /* !__SIZEOF_POINTER__... */
-#if CODE_FLAGS & CODE_FVARKWDS
+#if CODE_FLAGS & CODE_FYIELDING
+	frame.cf_kw->fk_kw = kw;
+	Dee_Incref(kw); /* Always a reference when yielding */
+#elif CODE_FLAGS & CODE_FVARKWDS
 	ASSERT(frame.cf_kw->fk_kw == kw);
-	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `CODE_FVARKWDS' is set) */
-#endif /* CODE_FLAGS & CODE_FVARKWDS */
+	Dee_Incref(kw); /* The reference stored in `frame.cf_kw->fk_kw' (Only valid when `CODE_FVARKWDS') */
+#endif /* CODE_FLAGS & CODE_FVARKWDS ) */
 	yf->yf_kw = frame.cf_kw; /* Inherit data. */
 	DeeObject_Init(yf, &DeeYieldFunction_Type);
 	return (DREF DeeObject *)yf;

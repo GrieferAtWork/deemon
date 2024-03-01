@@ -1091,7 +1091,7 @@ DeeFatal_BadIncref(DeeObject *ob, char const *file, int line) {
 	bad_refcnt_lock_acquire();
 	Dee_DPRINTF("\n\n\n" FILE_AND_LINE_FORMAT "BAD_INCREF(%p)\n",
 	            file, line, ob);
-	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%" PRFXSIZ ")\n",
+	Dee_DPRINTF("refcnt : %" PRFuSIZ " (%#" PRFXSIZ ")\n",
 	            ob->ob_refcnt, ob->ob_refcnt);
 	type = Dee_TYPE(ob);
 	if (DeeObject_Check(type) && DeeType_Check(type)) {

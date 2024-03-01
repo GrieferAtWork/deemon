@@ -33,8 +33,9 @@ global final test_compile_and_run = ({
 @@compiler's optimizer. However, this does *not* hide it from the _hostasm
 @@optimizer, meaning this can be used to easily test constant propagation.
 function _hide(x) {
-	__asm__("" : "+X" (x));
-	return x;
+	local result = x;
+	__asm__("" : "+X" (result));
+	return result;
 }
 
 /* Assign final values in a way that hides them from the optimizer.

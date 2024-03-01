@@ -24,8 +24,9 @@ import * from deemon;
 global myCachedDict;
 
 function _hide(x) {
-	__asm__("" : "+X" (x));
-	return x;
+	local result = x;
+	__asm__("" : "+X" (result));
+	return result;
 }
 
 class MyHackyItemProvider {

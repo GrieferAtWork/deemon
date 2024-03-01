@@ -347,7 +347,7 @@ err_ex_frame:
 			goto err;
 		yf->yf_func = self;
 		Dee_Incref(self);
-		yf->yf_argc = GET_ARGC();
+		yf->yf_argc = yf->yf_pargc = GET_ARGC();
 		Dee_Movrefv(yf->yf_argv, GET_ARGV(), GET_ARGC());
 #ifdef CALL_THIS
 		yf->yf_this = this_arg;

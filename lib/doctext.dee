@@ -1048,7 +1048,7 @@ function claculateComponentIndentation(
 @@+--------------------------------+----------------------------------------+
 function splitTextSegment(
 		docstring: string,
-		mypath: (string, bool) = none,
+		mypath: (string, bool) | none = none,
 		start: int = 0, end: int = -1)
 	: {(string | Object)...}
 {

@@ -927,6 +927,7 @@ struct Dee_yield_function_object {
 	DREF DeeFunctionObject                   *yf_func;  /* [1..1][const] The function we are derived from. */
 	struct Dee_code_frame_kwds               *yf_kw;    /* [0..1][owned][const] Keyword arguments. */
 	DREF DeeObject                           *yf_this;  /* [0..1][const] 'this' object during callback. */
+	size_t                                    yf_pargc; /* [const] Positional argument count */
 	size_t                                    yf_argc;  /* [const] Argument count */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, yf_argv); /* [1..1][const][yf_argc] Argument vector*/
 };
