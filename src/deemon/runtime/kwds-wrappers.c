@@ -715,6 +715,61 @@ PRIVATE struct type_member tpconst blv_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE WUNUSED DREF DeeBlackListKwdsObject *DCALL
+blv_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DeeCodeObject *code;
+	DeeTupleObject *kwargs;
+	DeeKwdsObject *kwds;
+	size_t positional;
+	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(positional), K(kwargs), K(kwds), KEND });
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o" UNPuSIZ "oo:_BlackListKwds",
+	                    &code, &positional, &kwargs, &kwds))
+		goto err;
+	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(kwargs, &DeeTuple_Type))
+		goto err;
+	if (DeeObject_AssertTypeExact(kwds, &DeeKwds_Type))
+		goto err;
+
+	/* Validate arguments. */
+	if unlikely(DeeKwds_SIZE(kwds) <= 0) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Empty keyword list given");
+		goto err;
+	}
+	if unlikely(DeeKwds_SIZE(kwds) != DeeTuple_SIZE(kwargs)) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "`kwargs' tuple has %" PRFuSIZ " elements when "
+		                "`kwds' map requires exactly %" PRFuSIZ " values",
+		                DeeTuple_SIZE(kwargs), DeeKwds_SIZE(kwds));
+		goto err;
+	}
+	if unlikely(!code->co_keywords) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Code object does not define keyword arguments");
+		goto err;
+	}
+	if unlikely(code->co_argc_max <= positional) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Code object takes at most %" PRFu16 " positional "
+		                "arguments when %" PRFuSIZ " were supposedly given",
+		                code->co_argc_max, positional);
+		goto err;
+	}
+
+	result = DeeBlackListKwds_New(code, positional, DeeTuple_ELEM(kwargs), kwds);
+	if unlikely(!result)
+		goto err;
+	/* Force unshare (hacky, but works and doesn't require extra code) */
+	Dee_Incref(result);
+	DeeBlackListKwds_Decref(result);
+	return (DREF DeeBlackListKwdsObject *)result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwdsObject *DCALL
 blv_copy(DeeBlackListKwdsObject *__restrict self) {
 	size_t count = self->blkd_kwds->kw_size;
@@ -799,7 +854,13 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	                         /**/ "}\n"
 	                         /**/ "foo(10, b: 20);\n"
 	                         /**/ "foo(a: 10, b: 20);"
-	                         "}"),
+	                         "}\n"
+	                         "\n"
+	                         "(code:?Ert:Code,positional:?Dint,kwargs:?DTuple,kwds:?Ert:Kwds)\n"
+	                         "Construct a new ?. object that blacklists the first @positional "
+	                         /**/ "arguments from @code. Keyword argument values are then taken "
+	                         /**/ "from @kwargs and @kwds"
+	),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
@@ -807,11 +868,13 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_copy_ctor = */ (dfunptr_t)&blv_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&blv_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL, /* TODO */
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&blv_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&blv_deep,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_free        = */ (dfunptr_t)NULL,
+				/* .tp_alloc       = */ { (dfunptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&blv_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blv_fini,
@@ -1520,6 +1583,39 @@ PRIVATE struct type_seq blkw_seq = {
 	/* .tp_nsi       = */ &blkw_nsi
 };
 
+PRIVATE WUNUSED DREF DeeBlackListKwObject *DCALL
+blkw_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	DREF DeeObject *result;
+	DeeCodeObject *code;
+	DeeObject *kwds;
+	size_t positional;
+	PRIVATE DEFINE_KWLIST(kwlist, { K(code), K(positional), K(kwds), KEND });
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o" UNPuSIZ "o:_BlackListKw",
+	                    &code, &positional, &kwds))
+		goto err;
+	if (DeeObject_AssertTypeExact(code, &DeeCode_Type))
+		goto err;
+
+	/* Validate arguments. */
+	if unlikely(!code->co_keywords) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Code object does not define keyword arguments");
+		goto err;
+	}
+	if unlikely(code->co_argc_max <= positional) {
+		DeeError_Throwf(&DeeError_ValueError,
+		                "Code object takes at most %" PRFu16 " positional "
+		                "arguments when %" PRFuSIZ " were supposedly given",
+		                code->co_argc_max, positional);
+		goto err;
+	}
+
+	result = DeeBlackListKw_New(code, positional, kwds);
+	return (DREF DeeBlackListKwObject *)result;
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeBlackListKwObject *DCALL
 blkw_copy(DeeBlackListKwObject *__restrict self) {
 	DREF DeeObject *result_kw;
@@ -1655,7 +1751,13 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	                         /**/ "	print type kwds; /* _BlackListKw */\n"
 	                         /**/ "}\n"
 	                         /**/ "foo(**{ \"a\": 10, \"b\": 20});"
-	                         "}"),
+	                         "}\n"
+	                         "\n"
+	                         "(code:?Ert:Code,positional:?Dint,kwds:?Ert:Kwds)\n"
+	                         "Construct a new ?. object that blacklists the first @positional "
+	                         /**/ "arguments from @code. Keyword argument values are then taken "
+	                         /**/ "from @kwds"
+	),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_KW,
@@ -1663,11 +1765,13 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_var = */ {
-				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)&blkw_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&blkw_deep,
-				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
-				/* .tp_free      = */ (dfunptr_t)NULL
+				/* .tp_ctor        = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor   = */ (dfunptr_t)&blkw_copy,
+				/* .tp_deep_ctor   = */ (dfunptr_t)&blkw_deep,
+				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
+				/* .tp_free        = */ (dfunptr_t)NULL,
+				/* .tp_alloc       = */ { (dfunptr_t)NULL },
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&blkw_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&blkw_fini,
