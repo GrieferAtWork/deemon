@@ -202,13 +202,13 @@ PRIVATE struct type_cmp blvi_cmp = {
 
 PRIVATE struct type_member tpconst blvi_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwdsIterator, blki_map),
-	                      "->?Ert:DeeBlackListKwdsObject"),
+	                      "->?Ert:BlackListKwds"),
 	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject DeeBlackListKwdsIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_DeeBlackListKwdsIterator",
+	/* .tp_name     = */ "_BlackListKwdsIterator",
 	/* .tp_doc      = */ DOC("next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -789,13 +789,13 @@ err_r_argv:
 
 PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_DeeBlackListKwds",
+	/* .tp_name     = */ "_BlackListKwds",
 	/* .tp_doc      = */ DOC("A ${{string: Object}}-like mapping that is used to exclude positional "
 	                         /**/ "keyword arguments for a variable-keywords user-code function, when that "
 	                         /**/ "function is invoked with regular keywords being passed:\n"
 	                         "${"
 	                         /**/ "function foo(a, **kwds) {\n"
-	                         /**/ "	print type kwds; /* _DeeBlackListKwds */\n"
+	                         /**/ "	print type kwds; /* _BlackListKwds */\n"
 	                         /**/ "}\n"
 	                         /**/ "foo(10, b: 20);\n"
 	                         /**/ "foo(a: 10, b: 20);"
@@ -844,9 +844,14 @@ PUBLIC DeeTypeObject DeeBlackListKwds_Type = {
 
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
- * NOTE: If `kwds' is empty, return `Dee_EmptyMapping' instead.
- * NOTE: If `code' doesn't specify any keywords, return `DeeKwdsMapping_New()' instead.
- * Otherwise, the caller must decref the returned object using `DeeBlackListKwds_Decref()' */
+ * The caller must decref the returned object using `DeeBlackListKwds_Decref()'
+ * -> This function is used to filter keyword arguments from varkwds when 
+ *    kwargs argument protocol is used:
+ *    >> function foo(x, y?, **kwds) {
+ *    >>     print type kwds, repr kwds;
+ *    >> }
+ *    >> // Prints `_BlackListKwds { "something_else" : "foobar" }'
+ *    >> foo(x: 10, something_else: "foobar"); */
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKwds_New(struct code_object *__restrict code,
                      size_t positional_argc, DeeObject *const *kw_argv,
@@ -1073,14 +1078,14 @@ PRIVATE struct type_cmp blmi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blmi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:DeeBlackListKwObject"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_map), "->?Ert:BlackListKw"),
 	TYPE_MEMBER_FIELD_DOC("__iter__", STRUCT_OBJECT, offsetof(DeeBlackListKwIterator, mi_iter), "->?DIterator"),
 	TYPE_MEMBER_END
 };
 
 INTERN DeeTypeObject DeeBlackListKwIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_DeeBlackListKwIterator",
+	/* .tp_name     = */ "_BlackListKwIterator",
 	/* .tp_doc      = */ DOC("next->?T2?Dstring?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -1640,14 +1645,14 @@ PRIVATE struct type_member tpconst blkw_class_members[] = {
 
 PUBLIC DeeTypeObject DeeBlackListKw_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_DeeBlackListKw",
+	/* .tp_name     = */ "_BlackListKw",
 	/* .tp_doc      = */ DOC("A ${{string: Object}}-like mapping that is similar to ?GDeeBlackListKwds, "
 	                         /**/ "however gets used when the function is invoked using a custom keyword "
 	                         /**/ "protocol, rather than conventional keyword arguments that store their "
 	                         /**/ "values as part of the argument vector:\n"
 	                         "${"
 	                         /**/ "function foo(a, **kwds) {\n"
-	                         /**/ "	print type kwds; /* _DeeBlackListKw */\n"
+	                         /**/ "	print type kwds; /* _BlackListKw */\n"
 	                         /**/ "}\n"
 	                         /**/ "foo(**{ \"a\": 10, \"b\": 20});"
 	                         "}"),
@@ -1703,7 +1708,7 @@ PUBLIC DeeTypeObject DeeBlackListKw_Type = {
  *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;
  *    >> }
- *    >> // Prints `_DeeBlackListKw { "something_else" : "foobar" }'
+ *    >> // Prints `_BlackListKw { "something_else" : "foobar" }'
  *    >> foo(**{ "x" : 10, "something_else" : "foobar" }); */
 PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKw_New(struct code_object *__restrict code,

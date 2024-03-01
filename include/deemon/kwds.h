@@ -619,7 +619,7 @@ typedef struct {
 #define DeeBlackListKwds_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->blkd_lock)
 
 DFUNDEF DeeTypeObject DeeBlackListKwds_Type;
-#define DeeBlackListKwds_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type) /* `_DeeBlackListKwds' is final */
+#define DeeBlackListKwds_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type) /* `_BlackListKwds' is final */
 #define DeeBlackListKwds_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBlackListKwds_Type)
 
 
@@ -648,17 +648,14 @@ INTDEF WUNUSED ATTR_INS(2, 3) NONNULL((1)) DeeObject *DCALL DeeBlackListKwds_Get
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Construct a new mapping for keywords that follows the black-listing scheme.
- * NOTE: If `kwds' is empty, return `Dee_EmptyMapping' instead.
- * NOTE: If `code' doesn't specify any keywords, return `DeeKwdsMapping_New()' instead.
- * Otherwise, the caller must decref the returned object using `DeeBlackListKwds_Decref()'
+ * The caller must decref the returned object using `DeeBlackListKwds_Decref()'
  * -> This function is used to filter keyword arguments from varkwds when 
  *    kwargs argument protocol is used:
  *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;
  *    >> }
- *    >> // Prints `_DeeBlackListKwds { "something_else" : "foobar" }'
- *    >> foo(x: 10, something_else: "foobar");
- */
+ *    >> // Prints `_BlackListKwds { "something_else" : "foobar" }'
+ *    >> foo(x: 10, something_else: "foobar"); */
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKwds_New(struct Dee_code_object *__restrict code,
                      size_t positional_argc, DeeObject *const *kw_argv,
@@ -723,7 +720,7 @@ typedef struct {
 #define DeeBlackListKw_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->blkw_lock)
 
 DDATDEF DeeTypeObject DeeBlackListKw_Type;
-#define DeeBlackListKw_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type) /* `_DeeBlackListKw' is final */
+#define DeeBlackListKw_Check(x)      DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type) /* `_BlackListKw' is final */
 #define DeeBlackListKw_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeBlackListKw_Type)
 
 #ifdef CONFIG_BUILDING_DEEMON
@@ -760,7 +757,7 @@ INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeBlackListKw_GetItemNRStrin
  *    >> function foo(x, y?, **kwds) {
  *    >>     print type kwds, repr kwds;
  *    >> }
- *    >> // Prints `_DeeBlackListKw { "something_else" : "foobar" }'
+ *    >> // Prints `_BlackListKw { "something_else" : "foobar" }'
  *    >> foo(**{ "x" : 10, "something_else" : "foobar" }); */
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeBlackListKw_New(struct Dee_code_object *__restrict code,
