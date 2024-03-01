@@ -564,132 +564,6 @@ fi
 
 
 ########################################################################################
-## Also configure libffi (if needed)
-########################################################################################
-if [[ "$WITHOUT_DEX_SPECIFIC" == *"CTYPES"* ]]; then
-	# The ctypes dex is disabled, so we don't even need libffi
-	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
-	CONFIG_DEX_CTYPES_CFLAGS=""
-	CONFIG_DEX_CTYPES_LDFLAGS=""
-	CONFIG_DEX_CTYPES_LIBS=""
-else
-	if [[ "$WITH_LIBFFI" != "1" ]]; then
-		CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
-		CONFIG_DEX_CTYPES_LDFLAGS=""
-		CONFIG_DEX_CTYPES_LIBS=""
-	elif [[ "$WITH_SYSTEM_LIBFFI" == "1" ]]; then
-		CONFIG_DEX_CTYPES_CFLAGS=""
-		CONFIG_DEX_CTYPES_LDFLAGS=""
-		CONFIG_DEX_CTYPES_LIBS="-lffi"
-	else
-		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
-			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
-			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
-			cmd mkdir -p "$BLD_PATH/libffi"
-			cd "$BLD_PATH/libffi"
-			if [ -z "$LIBFFI_TARGET" ]; then
-				case "$TARGET" in
-				*-kos | *-kos-*)
-					# libffi doesn't know KOS, but it's close
-					# enough to linux, so we just use that
-					LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
-					;;
-				*)
-					LIBFFI_TARGET="$TARGET"
-					;;
-				esac
-			fi
-			(
-				export CROSS_PREFIX="$CONFIG_CROSS_PREFIX"
-				export CC="$CONFIG_CC"
-				export CXX="$CONFIG_CXX"
-				export CPP="${CONFIG_CROSS_PREFIX}cpp"
-				export AS="${CONFIG_CROSS_PREFIX}as"
-				export AR="${CONFIG_CROSS_PREFIX}ar"
-				export NM="${CONFIG_CROSS_PREFIX}nm"
-				export TARGET="$LIBFFI_TARGET"
-				if [[ "$TARGET" == "i686-w64-mingw32" ]]; then
-					# Workaround for a configure-detection-bug:
-					# https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
-					export CFLAGS="$CFLAGS -DSYMBOL_UNDERSCORE";
-					export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
-				fi
-				case "$TARGET" in
-					*CYGWIN* | *Cygwin* | *cygwin*)
-						;;
-					*)
-						# Force libffi to be built as position-independent,
-						# thus preventing DT_TEXTREL in ctypes.so
-						export CFLAGS="$CFLAGS -fPIC";
-						export CXXFLAGS="$CXXFLAGS -fPIC";
-						;;
-				esac
-				cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
-					--host="$LIBFFI_TARGET" \
-					--target="$LIBFFI_TARGET" \
-					--enable-static \
-					--prefix "$BLD_PATH/libffi"
-			) || exit $?
-		fi
-		if ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
-			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
-			cd "$BLD_PATH/libffi"
-			trycmd make -j $(grep -c ^processor /proc/cpuinfo) || {
-				error=$?
-				# libffi relies on libtool, which in turn contains some bashism,
-				# though rather than being called by /bin/bash, it's called by
-				# /bin/sh instead. So if you've just seen errors like this:
-				# >> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found
-				# then the problem is that '[$(readlink /bin/sh) != "bash"]'
-				# s.a. https://github.com/JuliaPackaging/BinaryBuilder.jl/issues/77
-				#      Though for libffi the problem isn't a miss-configured kernel,
-				#      but it unconditionally assuming that the /bin/sh-shell has
-				#      support for all of the bashism it wants to throw at it...
-				if [ "$(readlink "/bin/sh")" != "bash" ]; then
-					echo "" | tee -a "$CONFIG_LOG"
-					echo "" | tee -a "$CONFIG_LOG"
-					echo "" | tee -a "$CONFIG_LOG"
-					echo "Building libffi likely failed because you're using a custom shell in '/bin/sh'" | tee -a "$CONFIG_LOG"
-					echo "Libffi relies on libtool, which in turn contains some bashism that may not be" | tee -a "$CONFIG_LOG"
-					echo "supported by other shells. If you're seeing errors like:" | tee -a "$CONFIG_LOG"
-					echo ">> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found" | tee -a "$CONFIG_LOG"
-					echo "then consider fixing this problem by install bash and running:" | tee -a "$CONFIG_LOG"
-					echo "    'unlink /bin/sh; ln -s \"bash\" /bin/sh'" | tee -a "$CONFIG_LOG"
-					echo "as root" | tee -a "$CONFIG_LOG"
-					echo "" | tee -a "$CONFIG_LOG"
-				fi
-				exit $error
-			}
-		fi
-		cd "$BLD_PATH"
-		CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
-		CONFIG_DEX_CTYPES_LDFLAGS=""
-		CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
-	fi
-	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
-	case "$TARGET" in
-	*-kos | *-kos-*)
-		# In order to allow the handling of exceptions with <kos/except.h>,
-		# we have to compile the ctypes dex in c++ (thus allowing the use of
-		# try...catch for the purpose of handling handling exceptions)
-		CONFIG_DEX_CTYPES_CC="$CONFIG_CXX"
-		CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
-		# Enable NOSTDLIB for ctypes to prevent libstdc++ from
-		# being linked in, when we don't actually make use of it.
-		CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib -static-libgcc"
-		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
-		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
-		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lgcc"
-		;;
-	*)
-		;;
-	esac
-fi
-
-
-
-
-########################################################################################
 ## Automatically determine how to link against libm and libdl
 ########################################################################################
 if [ -z "$CONFIG_LIBM" ]; then
@@ -803,6 +677,7 @@ fi
 CONFTEST_H="$BLD_ROOT/conftest.h"
 CONFTEST="$BLD_ROOT/conftest.c"
 CONFTEST_OUT="$BLD_ROOT/conftest.o"
+CONFTEST_EXE="$BLD_ROOT/conftest"
 CONFTEST_MAIN="int main()"
 
 cat > "$CONFTEST_H" <<EOF
@@ -853,6 +728,12 @@ try_compile_raw() {
 	echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -include $CONFINC -c -o $CONFTEST_OUT $CONFTEST" >> "$CONFIG_LOG"
 	"$CONFIG_CC" $CONFIG_CFLAGS -Werror -include "$CONFINC" \
 		-c -o "$CONFTEST_OUT" "$CONFTEST" >> "$CONFIG_LOG" 2>&1
+	return $?
+}
+try_link_raw() {
+	local extra_flags="$1"
+	echo "exec: $CONFIG_CC $CONFIG_CFLAGS -Werror -o $CONFTEST_EXE $CONFTEST_OUT $extra_flags" >> "$CONFIG_LOG"
+	"$CONFIG_CC" $CONFIG_CFLAGS -Werror -o "$CONFTEST_EXE" "$CONFTEST_OUT" $extra_flags >> "$CONFIG_LOG" 2>&1
 	return $?
 }
 try_compile_minimal() {
@@ -995,6 +876,163 @@ EOF
 	fi
 fi
 log_checking_yes "'$CONFTEST_MAIN { ... }'"
+
+
+########################################################################################
+## Also configure libffi (if needed)
+########################################################################################
+if [[ "$WITHOUT_DEX_SPECIFIC" == *"CTYPES"* ]]; then
+	# The ctypes dex is disabled, so we don't even need libffi
+	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
+	CONFIG_DEX_CTYPES_CFLAGS=""
+	CONFIG_DEX_CTYPES_LDFLAGS=""
+	CONFIG_DEX_CTYPES_LIBS=""
+else
+	if [[ "$WITH_LIBFFI" != "1" ]]; then
+		CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS=""
+	elif [[ "$WITH_SYSTEM_LIBFFI" == "1" ]]; then
+		CONFIG_DEX_CTYPES_CFLAGS=""
+		CONFIG_DEX_CTYPES_LDFLAGS=""
+		CONFIG_DEX_CTYPES_LIBS="-lffi"
+	else
+		_STATIC_LIBFFY_BUILD_ERROR=""
+		if ! [ -f "$BLD_PATH/libffi/include/ffi.h" ]; then
+			echo "Configuring libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
+			rm -rf "$BLD_PATH/libffi" > /dev/null 2>&1
+			cmd mkdir -p "$BLD_PATH/libffi"
+			cd "$BLD_PATH/libffi"
+			if [ -z "$LIBFFI_TARGET" ]; then
+				case "$TARGET" in
+				*-kos | *-kos-*)
+					# libffi doesn't know KOS, but it's close
+					# enough to linux, so we just use that
+					LIBFFI_TARGET="$TARGET_CPU-linux-gnu"
+					;;
+				*)
+					LIBFFI_TARGET="$TARGET"
+					;;
+				esac
+			fi
+			(
+				export CROSS_PREFIX="$CONFIG_CROSS_PREFIX"
+				export CC="$CONFIG_CC"
+				export CXX="$CONFIG_CXX"
+				export CPP="${CONFIG_CROSS_PREFIX}cpp"
+				export AS="${CONFIG_CROSS_PREFIX}as"
+				export AR="${CONFIG_CROSS_PREFIX}ar"
+				export NM="${CONFIG_CROSS_PREFIX}nm"
+				export TARGET="$LIBFFI_TARGET"
+				if [[ "$TARGET" == "i686-w64-mingw32" ]]; then
+					# Workaround for a configure-detection-bug:
+					# https://bugzilla.mozilla.org/show_bug.cgi?id=1336569
+					export CFLAGS="$CFLAGS -DSYMBOL_UNDERSCORE";
+					export CXXFLAGS="$CXXFLAGS -DSYMBOL_UNDERSCORE";
+				fi
+				case "$TARGET" in
+					*CYGWIN* | *Cygwin* | *cygwin*)
+						;;
+					*)
+						# Force libffi to be built as position-independent,
+						# thus preventing DT_TEXTREL in ctypes.so
+						export CFLAGS="$CFLAGS -fPIC";
+						export CXXFLAGS="$CXXFLAGS -fPIC";
+						;;
+				esac
+				cmd bash "$SRC_ROOT/src/dex/ctypes/ffi/libffi/configure" \
+					--host="$LIBFFI_TARGET" \
+					--target="$LIBFFI_TARGET" \
+					--enable-static \
+					--prefix "$BLD_PATH/libffi"
+			) || {
+				_STATIC_LIBFFY_BUILD_ERROR="$?"
+			}
+		fi
+		if test -z "$_STATIC_LIBFFY_BUILD_ERROR" && ! [ -f "${BLD_PATH}/libffi/.libs/libffi.a" ]; then
+			echo "Building libffi (for dex.ctypes)..." | tee -a "$CONFIG_LOG"
+			cd "$BLD_PATH/libffi"
+			trycmd make -j $(grep -c ^processor /proc/cpuinfo) || {
+				_STATIC_LIBFFY_BUILD_ERROR=$?
+				# libffi relies on libtool, which in turn contains some bashism,
+				# though rather than being called by /bin/bash, it's called by
+				# /bin/sh instead. So if you've just seen errors like this:
+				# >> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found
+				# then the problem is that '[$(readlink /bin/sh) != "bash"]'
+				# s.a. https://github.com/JuliaPackaging/BinaryBuilder.jl/issues/77
+				#      Though for libffi the problem isn't a miss-configured kernel,
+				#      but it unconditionally assuming that the /bin/sh-shell has
+				#      support for all of the bashism it wants to throw at it...
+				if [ "$(readlink "/bin/sh")" != "bash" ]; then
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+					echo "Building libffi likely failed because you're using a custom shell in '/bin/sh'" | tee -a "$CONFIG_LOG"
+					echo "Libffi relies on libtool, which in turn contains some bashism that may not be" | tee -a "$CONFIG_LOG"
+					echo "supported by other shells. If you're seeing errors like:" | tee -a "$CONFIG_LOG"
+					echo ">> ./libtool: 1578: ./libtool: preserve_args+= --tag CC: not found" | tee -a "$CONFIG_LOG"
+					echo "then consider fixing this problem by install bash and running:" | tee -a "$CONFIG_LOG"
+					echo "    'unlink /bin/sh; ln -s \"bash\" /bin/sh'" | tee -a "$CONFIG_LOG"
+					echo "as root" | tee -a "$CONFIG_LOG"
+					echo "" | tee -a "$CONFIG_LOG"
+				fi
+			}
+		fi
+		cd "$BLD_PATH"
+		if test -z "$_STATIC_LIBFFY_BUILD_ERROR"; then
+			CONFIG_DEX_CTYPES_CFLAGS="-I${BLD_PATH}/libffi/include"
+			CONFIG_DEX_CTYPES_LDFLAGS=""
+			CONFIG_DEX_CTYPES_LIBS="${BLD_PATH}/libffi/.libs/libffi.a"
+		else
+			echo "" | tee -a "$CONFIG_LOG"
+			echo "" | tee -a "$CONFIG_LOG"
+			echo "" | tee -a "$CONFIG_LOG"
+			echo "[!] Error building libffi (host might not be supported by built-in version of libffi)" | tee -a "$CONFIG_LOG"
+			log_checking_begin "Checking if a system version of libffi is installed"
+			cat > "$CONFTEST" <<EOF
+#include <ffi.h>
+#include <ffitarget.h>
+$CONFTEST_MAIN{extern ffi_type a; extern ffi_cif b;return 0;}
+EOF
+			if try_compile_raw && try_link_raw "-lffi"; then
+				log_checking_yes
+				echo "[!] Using system version of libffi (implicit '--with-system-libffi')" | tee -a "$CONFIG_LOG"
+				CONFIG_DEX_CTYPES_CFLAGS=""
+				CONFIG_DEX_CTYPES_LDFLAGS=""
+				CONFIG_DEX_CTYPES_LIBS="-lffi"
+				WITH_SYSTEM_LIBFFI="1"
+			else
+				log_checking_no
+				echo "[!] No working instance of libffi detected (implicit '--without-libffi')" | tee -a "$CONFIG_LOG"
+				CONFIG_DEX_CTYPES_CFLAGS="-DCONFIG_NO_CFUNCTION"
+				CONFIG_DEX_CTYPES_LDFLAGS=""
+				CONFIG_DEX_CTYPES_LIBS=""
+				WITH_LIBFFI="0"
+			fi
+		fi
+	fi
+	CONFIG_DEX_CTYPES_CC="$CONFIG_DEX_CC"
+	case "$TARGET" in
+	*-kos | *-kos-*)
+		# In order to allow the handling of exceptions with <kos/except.h>,
+		# we have to compile the ctypes dex in c++ (thus allowing the use of
+		# try...catch for the purpose of handling handling exceptions)
+		CONFIG_DEX_CTYPES_CC="$CONFIG_CXX"
+		CONFIG_DEX_CTYPES_CFLAGS="$CONFIG_DEX_CTYPES_CFLAGS -fnon-call-exceptions"
+		# Enable NOSTDLIB for ctypes to prevent libstdc++ from
+		# being linked in, when we don't actually make use of it.
+		CONFIG_DEX_CTYPES_LDFLAGS="-nostdlib -static-libgcc"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lc"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -ldl"
+		CONFIG_DEX_CTYPES_LIBS="$CONFIG_DEX_CTYPES_LIBS -lgcc"
+		;;
+	*)
+		;;
+	esac
+fi
+
+
+
 
 # Check for features
 in_features_region=no
