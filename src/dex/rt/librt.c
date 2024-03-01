@@ -435,17 +435,10 @@ librt_get_GCSetIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(get_type_of(librt_get_GCSet_empty_impl_f()));
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL librt_get_Code_empty_impl_f(void) {
-	/* The empty-code object is set when `Function()' is called without any arguments. */
-	DREF DeeObject *result, *stub_function;
-	stub_function = DeeObject_NewDefault(&DeeFunction_Type);
-	if unlikely(!stub_function)
-		goto err;
-	result = DeeObject_GetAttrString(stub_function, "__code__");
-	Dee_Decref(stub_function);
-	return result;
-err:
-	return NULL;
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_Code_empty_impl_f(void) {
+	/* The empty-code object is set when `Code()' is called without any arguments. */
+	return DeeObject_NewDefault(&DeeCode_Type);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
