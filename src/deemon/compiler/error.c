@@ -677,8 +677,8 @@ handle_compiler_warning(struct ast_loc *loc,
 		} else {
 			error->ce_loc = NULL;
 			if unlikely(capture_compiler_location(file, &error->ce_locs,
-				                                   &error->ce_loc))
-			goto err_message;
+			                                      &error->ce_loc))
+				goto err_message;
 			if unlikely(!error->ce_loc)
 				error->ce_loc = &error->ce_locs;
 		}
@@ -719,6 +719,10 @@ INTERN ATTR_COLD int (parser_warnf)(int wnum, ...) {
 	result = handle_compiler_warning(NULL, false, false, wnum, args);
 	va_end(args);
 	return result;
+}
+
+INTERN ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args) {
+	return handle_compiler_warning(NULL, false, false, wnum, args);
 }
 
 INTERN ATTR_COLD int (parser_errf)(int wnum, ...) {

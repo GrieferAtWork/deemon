@@ -1523,7 +1523,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 tuple_nsi_getitem(Tuple *__restrict self, size_t index) {
 	if unlikely(index >= self->t_size)
 		goto err_bounds;
-	return_reference(self->t_elem[index]);
+	return_reference(self->t_elem[index]); /* FIXME: Crash here when opening: http://localhost:8080/modules/deemon/i:Bytes */
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, self->t_size);
 	return NULL;

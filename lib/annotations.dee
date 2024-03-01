@@ -34,33 +34,31 @@ import * from deemon;
 @@>foobar(10);     /* First variant */
 @@>foobar(10, 20); /* Second variant */
 class Overload: Callable {
-
 	private member primary: Callable;
 	private member overloads: {Callable...} = [];
-	this(func: Callable): primary(func) { }
 
-	operator str(): string {
-		return str primary;
+	this(func: Callable)
+		: primary(func)
+	{}
+
+	public operator str(): string {
+		return f"<Overload: {primary}>";
 	}
-	operator repr(): string {
-		File.Writer fp;
-		fp	<< "Overload("
-			<< repr primary
-			<< ")";
-		local invload = invalid_overload;
+	public operator repr(fp) {
+		print fp: ("Overload(", repr primary, ")"),;
+		local invload = invalidOverload;
 		for (local x: overloads) {
-			if (x === invload)
+			if (x == invload)
 				continue;
-			fp << ".register(" << repr x << ")";
+			print fp: (".register(", repr x, ")"),;
 		}
-		return fp.string;
 	}
 
-	private function invalid_overload(args...) {
+	private function invalidOverload(args...) {
 		throw Error.TypeError(f"function {primary} does not accept {#args} args");
 	}
 
-	operator () (args..., **kwds) {
+	public operator () (args..., **kwds) {
 		__stack local argc = #args;
 		if (argc < #overloads)
 			return overloads[argc](args...);
@@ -68,21 +66,20 @@ class Overload: Callable {
 	}
 
 	@@Register a new overload to-be considered for invocation
-	register(func: Callable): Overload {
+	public function register(func: Function): Overload {
 		__stack local code = func.__code__;
 		__stack local min = code.__argc_min__;
 		__stack local max = code.__argc_max__;
 		__stack local count = #overloads;
 		if (max >= count) {
-			overloads.resize(max + 1, invalid_overload);
-			__stack local prim_code = primary.__code__;
-			overloads.fill(prim_code.__argc_min__, prim_code.__argc_max__ + 1, primary);
+			overloads.resize(max + 1, invalidOverload);
+			__stack local primCode = primary.__code__;
+			overloads.fill(primCode.__argc_min__, primCode.__argc_max__ + 1, primary);
 		}
 		for (__stack local i: [min:max + 1])
 			overloads[i] = func;
 		return this;
 	}
-
 }
 
 
@@ -105,47 +102,39 @@ class Deprecated: Callable {
 	private member m_func: Callable;
 	private member m_message: string;
 	private member m_didcall: bool = false;
+
 	this(func: Callable, reason: string = "") {
 		m_func = func;
 		if (reason)
 			m_message = reason;
 	}
-	operator str(): string {
-		return str m_func;
+
+	public operator str(): string {
+		return f"<Deprecated {m_func}>";
 	}
-	operator repr(): string {
+	public operator repr(): string {
 		if (m_message is bound)
 			return f"Deprecated({repr m_func}, {repr m_message})";
 		return f"Deprecated({repr m_func})";
 	}
 
-	operator () (args..., **kwds) {
+	public operator () (args..., **kwds) {
 		if (!m_didcall) {
 			import Traceback from deemon;
 			m_didcall = true;
 			local frame = Traceback()[1];
 			local errout = File.stderr;
-			errout
-				<< frame.File
-				<< "("
-				<< frame.line + 1
-				<< ","
-				<< frame.col + 1
-				<< ") : Deprecated ";
+			print errout: (
+				frame.file, "(", frame.line + 1, ",",
+				frame.col + 1, ") : Deprecated "),;
 			if (m_func is Type) {
-				errout
-					<< "class `"
-					<< m_func
-					<< "' instantiated";
+				print errout: ("class `", m_func, "' instantiated"),;
 			} else {
-				errout
-					<< "function `"
-					<< m_func
-					<< "' called";
+				print errout: ("function `", m_func, "' called"),;
 			}
 			if (m_message is bound)
-				print File.stderr: ":", m_message,;
-			print File.stderr:;
+				print errout: ":", m_message,;
+			print errout:;
 		}
 		return m_func(args..., **kwds);
 	}
@@ -171,6 +160,7 @@ class Deprecated: Callable {
 class Synchronized: Callable {
 	private member m_func: Callable;
 	private member m_lock: Lock from threading | Object;
+
 	@@@param lock The lock that is entered prior to invocation of @func, and will be left afterwards. When omit, a new instance of :threading.Mutex will be constructed and used in its place"
 	@@Construct a new Synchronized function annotation for @func
 	this(func: Callable, lock?: Lock from threading | Object) {
@@ -182,25 +172,25 @@ class Synchronized: Callable {
 		}
 	}
 
-	operator str(): string {
-		return str m_func;
+	public operator str(): string {
+		return f"<Synchronized: {m_func}>";
 	}
-	operator repr(): string {
+	public operator repr(): string {
 		return f"Synchronized({repr m_func}, {repr m_lock})";
 	}
 
-	operator enter(): none {
+	public operator enter(): none {
 		return m_lock.operator enter();
 	}
-	operator leave(): none {
+	public operator leave(): none {
 		return m_lock.operator leave();
 	}
-	operator () (args..., **kwds) {
+
+	public operator () (args..., **kwds) {
 		with (m_lock) {
 			return m_func(args..., **kwds);
 		}
 	}
-
 }
 
 
@@ -226,6 +216,7 @@ class Timed: Callable {
 	private member m_func: Callable;
 	private member m_total_spend: Time from time;
 	private member m_num_invocations: int = 0;
+
 	this(func: Callable) {
 		m_func = func;
 		if (m_libtime !is bound)
@@ -233,15 +224,15 @@ class Timed: Callable {
 		m_total_spend = m_libtime.Time(0);
 	}
 
-	operator str(): string {
-		return str m_func;
+	public operator str(): string {
+		return f"<Timed: {m_func}>";
 	}
 
-	operator repr(): string {
+	public operator repr(): string {
 		return f"Timed({repr m_func})";
 	}
 
-	operator () (args..., **kwds) {
+	public operator () (args..., **kwds) {
 		local start = m_libtime.tick();
 		try {
 			return m_func(args..., **kwds);
@@ -252,14 +243,14 @@ class Timed: Callable {
 	}
 
 	@@Reset all timing data
-	reset() {
+	public function reset() {
 		del total;
 	}
 
 	@@Get/del (reset)/set the amount of time that has
 	@@already been spent while inside of the function.
 	@@>print myfunc.total.nanoseconds;
-	property total: Time from time = {
+	public property total: Time from time = {
 		get(): Time from time {
 			return m_total_spend;
 		}
@@ -285,7 +276,7 @@ do_del_total:
 	@@@throw ValueError The function hasn't been called yet
 	@@Get the average time spent while inside of the function
 	@@>print myfunc.average.nanoseconds;
-	property average: Time from time = {
+	public property average: Time from time = {
 		get(): Time from time {
 			try {
 				return m_total_spend / m_num_invocations;

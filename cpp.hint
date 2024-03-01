@@ -951,6 +951,17 @@
 	void DeeSlab_Free##size(void*restrict ptr);\
 	void DeeDbgSlab_Free##size(void*restrict ptr,char const*file,int line);\
 	void DeeGCObject_SlabFree##size(void*restrict ptr);
+#define DEFINE_GC_SLAB_FUNCTIONS(index,size)\
+	void*DeeGCObject_SlabMalloc##size(void){}\
+	void*DeeGCObject_SlabCalloc##size(void){}\
+	void*DeeGCObject_SlabTryMalloc##size(void){}\
+	void*DeeGCObject_SlabTryCalloc##size(void){}\
+	void DeeGCObject_SlabFree##size(void*restrict ptr){}\
+	void*DeeDbgGCObject_SlabMalloc##size(char const*file,int line){}\
+	void*DeeDbgGCObject_SlabCalloc##size(char const*file,int line){}\
+	void*DeeDbgGCObject_SlabTryMalloc##size(char const*file,int line){}\
+	void*DeeDbgGCObject_SlabTryCalloc##size(char const*file,int line){}\
+	void DeeDbgGCObject_SlabFree##size(void*restrict ptr,char const*file,int line){}
 
 #define DREF
 #define DWEAK

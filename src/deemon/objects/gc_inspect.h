@@ -41,12 +41,21 @@ typedef struct {
 	 *  - <referred to by X>, <reachable from X>
 	 *  - <GC objects referred to by X>, <GC objects reachable from X>
 	 *  - <GC objects referring to X> */
+	size_t                                    gs_size;  /* [const] Number of objects apart of the hash-vector. */
+	size_t                                    gs_mask;  /* [const] Mask of hash-vector. */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, gs_elem); /* [0..1][const][gs_mask+1] Hash-vector. */
+} GCSet;
+
+INTDEF DeeTypeObject DeeGCSet_Type;
+
+typedef struct {
+	OBJECT_HEAD
 	size_t          gs_size;    /* [const] Number of objects apart of the hash-vector. */
 	size_t          gs_mask;    /* [const] Mask of hash-vector. */
 	DREF DeeObject *gs_elem[1]; /* [0..1][const][gs_mask+1] Hash-vector. */
-} GCSet;
-INTDEF DeeTypeObject DeeGCSet_Type;
-INTDEF GCSet DeeGCSet_Empty;
+} GCSet_Empty;
+INTDEF GCSet_Empty DeeGCSet_Empty;
+#define Dee_EmptyGCSet ((GCSet *)&DeeGCSet_Empty)
 
 #define GCSET_HASHOBJ(x)          Dee_HashPointer(x)
 #define GCSET_HASHNXT(i, perturb) ((i) = ((i) << 2) + (i) + (perturb) + 1, (perturb) >>= 5)
@@ -67,7 +76,9 @@ INTDEF NONNULL((1)) void DCALL GCSetMaker_Fini(GCSetMaker *__restrict self);
 /* @return:  1: Object was already inserted into the set.
  * @return:  0: Object was newly inserted into the set.
  * @return: -1: An allocation failed (release all locks and to collect `self->gs_err' bytes of memory) */
-INTDEF int DCALL GCSetMaker_Insert(GCSetMaker *__restrict self, /*inherit(return == 0)*/ DREF DeeObject *__restrict ob);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL
+GCSetMaker_Insert(GCSetMaker *__restrict self,
+                  /*inherit(return == 0)*/ DREF DeeObject *__restrict ob);
 
 /* Remove all non-GC objects from the given set. */
 INTDEF WUNUSED NONNULL((1)) int DCALL GCSetMaker_RemoveNonGC(GCSetMaker *__restrict self);
@@ -91,7 +102,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectReachable(GCSetMaker *__re
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject *__restrict target); /* GC objects referring to X */
 
 /* Returns `true' if `target' is referred to by `source' */
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target);
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeGC_ReferredBy(DeeObject *source, DeeObject *target);
 #define DeeGC_IsReachable(object, from) DeeGC_ReferredBy(from, object)
 
 

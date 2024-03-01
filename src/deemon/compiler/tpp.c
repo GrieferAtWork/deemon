@@ -854,9 +854,55 @@ parser_warn_pack_used(struct ast_loc *loc) {
 		file = loc->l_file;
 	if (file->f_kind != TPPFILE_KIND_TEXT)
 		return 0; /* Only warn inside of regular files */
-	return WARNAT(loc, W_PACKED_USED_OUTSIDE_OF_MACRO);
+	return parser_warnatf(loc, W_PACKED_USED_OUTSIDE_OF_MACRO);
 
 }
+
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+parser_skip_maybe_seek(tok_t expected_tok) {
+	/* Depending on which token was expected, and what the current token is,
+	 * skip ahead a couple of tokens in search of what we're looking for. */
+again:
+	if (tok == expected_tok) {
+		if unlikely(yield() < 0)
+			goto err;
+		return 1;
+	}
+	if (tok == 0)
+		return 0;
+	if (TPP_ISKEYWORD(tok) && !TPP_ISKEYWORD(expected_tok)) {
+		/* Skip unexpected keywords */
+/*yield_and_again:*/
+		if unlikely(yield() < 0)
+			goto err;
+		goto again;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DFCALL
+parser_skip(tok_t expected_tok, int wnum, ...) {
+	if likely(tok != expected_tok) {
+		va_list args;
+		int result;
+		va_start(args, wnum);
+		result = parser_vwarnf(wnum, args);
+		va_end(args);
+		if (result != 0)
+			return result;
+		if unlikely(parser_skip_maybe_seek(expected_tok) < 0)
+			goto err;
+	} else {
+		if unlikely(yield() < 0)
+			goto err;
+	}
+	return 0;
+err:
+	return -1;
+}
+
 
 INTERN WUNUSED NONNULL((1)) int DFCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
@@ -877,9 +923,13 @@ _parser_paren_begin(bool *__restrict p_has_paren, int wnum) {
 				goto err;
 		}
 	} else {
-		if unlikely(WARN(wnum))
+		int temp;
+		if unlikely(parser_warnf(wnum))
 			goto err;
-		*p_has_paren = false;
+		temp = parser_skip_maybe_seek('(');
+		if unlikely(temp < 0)
+			goto err;
+		*p_has_paren = temp > 0;
 	}
 	return 0;
 err:

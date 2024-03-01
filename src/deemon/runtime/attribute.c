@@ -261,7 +261,6 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 DeeObject_VCallAttrStringLenHashf(DeeObject *self,
                                   char const *__restrict attr, size_t attrlen, dhash_t hash,
                                   char const *__restrict format, va_list args) {
-	/* TODO: Encode `attr' as a string. */
 	DREF DeeObject *result, *args_tuple;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)

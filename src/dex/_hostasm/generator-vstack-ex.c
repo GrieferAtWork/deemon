@@ -954,6 +954,13 @@ vcall_objmethod(struct Dee_function_generator *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop_at(self, argc + 1)); /* [args...] */
+			DO(Dee_function_generator_vpush_undefined(self));   /* [args...], undefined */
+			DO(Dee_function_generator_vrrot(self, argc + 1));   /* undefined, [args...] */
+			func_flags |= Dee_TYPE_METHOD_FNOREFESCAPE;
+		}
 	}
 	DO(Dee_function_generator_vnotoneref(self, argc));            /* this, [args...] */
 	if (!(func_flags & Dee_TYPE_METHOD_FNOREFESCAPE))             /* this, [args...] */
@@ -1038,6 +1045,13 @@ vcall_kwobjmethod(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vpush_NULL(self)); /* this, [args...], kw=NULL */
 				}
 			}
+		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop_at(self, argc + 2)); /* [args...], kw */
+			DO(Dee_function_generator_vpush_undefined(self));   /* [args...], kw, undefined */
+			DO(Dee_function_generator_vrrot(self, argc + 2));   /* undefined, [args...], kw */
+			func_flags |= Dee_TYPE_METHOD_FNOREFESCAPE;
 		}
 	}
 	DO(Dee_function_generator_vnotoneref(self, argc + 1));        /* this, [args...], kw */
@@ -1125,8 +1139,14 @@ vcall_getmethod(struct Dee_function_generator *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop(self));            /* N/A */
+			DO(Dee_function_generator_vpush_undefined(self)); /* undefined */
+			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+		}
 	}
-	if (!(getset_flags & TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
 		DO(Dee_function_generator_vnotoneref_at(self, 1));                  /* this */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_RAWINTPTR, 1)); /* result */
 	return check_result_with_doc(self, 0, doc);
@@ -1175,8 +1195,14 @@ vcall_boundmethod(struct Dee_function_generator *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop(self));            /* N/A */
+			DO(Dee_function_generator_vpush_undefined(self)); /* undefined */
+			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+		}
 	}
-	if (!(getset_flags & TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
 		DO(Dee_function_generator_vnotoneref_at(self, 1));              /* this */
 	DO(Dee_function_generator_vcallapi(self, func, VCALL_CC_M1INT, 1)); /* result */
 	DO(Dee_function_generator_vdirect1(self));
@@ -1215,8 +1241,14 @@ vcall_delmethod(struct Dee_function_generator *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop(self));            /* N/A */
+			DO(Dee_function_generator_vpush_undefined(self)); /* undefined */
+			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+		}
 	}
-	if (!(getset_flags & TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
 		DO(Dee_function_generator_vnotoneref_at(self, 1)); /* this */
 	return Dee_function_generator_vcallapi(self, func, VCALL_CC_INT, 1); /* N/A */
 err:
@@ -1251,9 +1283,16 @@ vcall_setmethod(struct Dee_function_generator *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
+		if (DeeType_IsNamespace(type)) {
+			/* Don't need a valid "this" argument (replace "this" with "undefined") */
+			DO(Dee_function_generator_vpop_at(self, 2));      /* value */
+			DO(Dee_function_generator_vpush_undefined(self)); /* value, undefined */
+			DO(Dee_function_generator_vswap(self));           /* undefined, value */
+			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+		}
 	}
 	DO(Dee_function_generator_vnotoneref_at(self, 1)); /* this, value */
-	if (!(getset_flags & TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
 		DO(Dee_function_generator_vnotoneref_at(self, 2)); /* this, value */
 	return Dee_function_generator_vcallapi(self, func, VCALL_CC_INT, 2); /* N/A */
 err:
@@ -2086,7 +2125,7 @@ err:
 /* tp_func, func, [args...], kw -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 do_impl_vopTcallkw(struct Dee_function_generator *__restrict self,
-                Dee_vstackaddr_t true_argc, bool prefer_thiscall);
+                   Dee_vstackaddr_t true_argc, bool prefer_thiscall);
 
 /* func, [args...], kw -> result
  * @return: 0 : Optimization successfully applied
@@ -2142,7 +2181,7 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 			DO(Dee_function_generator_vdup(self));                     /* orig_func, [args...], argv, func, func, this, this */
 			DO(Dee_function_generator_vlrot(self, 3));                 /* orig_func, [args...], argv, func, this, this, func */
 			DO(Dee_function_generator_vind(self, offsetof(DeeClsMethodObject, cm_type))); /* orig_func, [args...], argv, func, this, this, func->cm_type */
-			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self)); /* orig_func, [args...], argv, func, this */
+			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self));        /* orig_func, [args...], argv, func, this */
 			DO(Dee_function_generator_vpush_immSIZ(self, true_argc));  /* orig_func, [args...], argv, func, this, argc */
 			DO(Dee_function_generator_vlrot(self, 4));                 /* orig_func, [args...], func, this, argc, argv */
 			DO(Dee_function_generator_vlrot(self, 4));                 /* orig_func, [args...], this, argc, argv, func */
@@ -2164,7 +2203,7 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 			DO(Dee_function_generator_vdup(self));                     /* orig_func, kw, [args...], argv, func, func, this, this */
 			DO(Dee_function_generator_vlrot(self, 3));                 /* orig_func, kw, [args...], argv, func, this, this, func */
 			DO(Dee_function_generator_vind(self, offsetof(DeeKwClsMethodObject, cm_type))); /* orig_func, kw, [args...], argv, func, this, this, func->cm_type */
-			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self)); /* orig_func, kw, [args...], argv, func, this */
+			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self));          /* orig_func, kw, [args...], argv, func, this */
 			DO(Dee_function_generator_vpush_immSIZ(self, true_argc));  /* orig_func, kw, [args...], argv, func, this, argc */
 			DO(Dee_function_generator_vlrot(self, 4));                 /* orig_func, kw, [args...], func, this, argc, argv */
 			DO(Dee_function_generator_vlrot(self, true_argc + 5));     /* orig_func, [args...], func, this, argc, argv, kw */
@@ -2177,9 +2216,9 @@ vopcallkw_consttype(struct Dee_function_generator *__restrict self,
 			DO(vpop_empty_kwds(self));                         /* func, this */
 			DO(Dee_function_generator_vnotoneref_at(self, 1)); /* func, this */
 			DO(Dee_function_generator_vdup(self));             /* func, this, this */
-			DO(Dee_function_generator_vdup_at(self, 3));        /* func, this, this, func */
+			DO(Dee_function_generator_vdup_at(self, 3));       /* func, this, this, func */
 			DO(Dee_function_generator_vind(self, offsetof(DeeClsMemberObject, cm_type))); /* func, this, this, func->cm_type */
-			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self)); /* func, this */
+			DO(Dee_function_generator_vcall_DeeObject_AssertTypeOrAbstract(self));        /* func, this */
 			DO(Dee_function_generator_vswap(self));            /* this, func */
 			DO(Dee_function_generator_vdelta(self, offsetof(DeeClsMemberObject, cm_memb))); /* this, &func->cm_memb */
 			DO(Dee_function_generator_vswap(self));            /* &func->cm_memb, this */
@@ -2282,9 +2321,13 @@ do_impl_vopTcallkw(struct Dee_function_generator *__restrict self,
 
 	if (Dee_memval_direct_isconst(tpfuncval)) {
 		DeeTypeObject *func_type = (DeeTypeObject *)Dee_memval_const_getobj(tpfuncval);
+		DeeTypeObject *real_func_type;
 		int temp;                                                /* tp_func, func, [args...], kw */
 		DO(Dee_function_generator_vpop_at(self, true_argc + 3)); /* func, [args...], kw */
 		funcval = Dee_function_generator_vtop(self) - (true_argc + 1);
+		real_func_type = Dee_memval_typeof(funcval);
+		if (real_func_type == func_type)  /* Unnecessary super-cast (can use normal semantics) */
+			return Dee_function_generator_vopcallkw(self, true_argc);
 		if (Dee_memval_isconst(funcval)) {
 			DeeObject *func_obj = Dee_memval_const_getobj(funcval);
 			temp = vopcallkw_constfunc(self, func_obj, func_type, true_argc);
@@ -2812,15 +2855,13 @@ vopboundattr_constattr(struct Dee_function_generator *__restrict self,
 	case Dee_ATTRINFO_INSTANCE_METHOD:
 	case Dee_ATTRINFO_INSTANCE_GETSET:
 	case Dee_ATTRINFO_INSTANCE_MEMBER:
-		DO(Dee_function_generator_vpop(self)); /* this */
-		DO(Dee_function_generator_vpop(self)); /* N/A */
+		DO(Dee_function_generator_vpopmany(self, 2)); /* N/A */
 		return Dee_function_generator_vpush_const(self, Dee_True);
 
 	case Dee_ATTRINFO_MODSYM: {
 		/* Access a module symbol */
 		struct Dee_module_symbol const *sym = attr->ai_value.v_modsym;
-		DO(Dee_function_generator_vpop(self));            /* this */
-		DO(Dee_function_generator_vpop(self));            /* N/A */
+		DO(Dee_function_generator_vpopmany(self, 2)); /* N/A */
 		return Dee_function_generator_vbound_module_symbol(self, (DeeModuleObject *)attr->ai_decl, sym);
 	}	break;
 
@@ -2875,8 +2916,7 @@ vopdelattr_constattr(struct Dee_function_generator *__restrict self,
 	case Dee_ATTRINFO_MODSYM: {
 		/* Access a module symbol */
 		struct Dee_module_symbol const *sym = attr->ai_value.v_modsym;
-		DO(Dee_function_generator_vpop(self)); /* this */
-		DO(Dee_function_generator_vpop(self)); /* N/A */
+		DO(Dee_function_generator_vpopmany(self, 2)); /* N/A */
 		return Dee_function_generator_vdel_module_symbol(self, (DeeModuleObject *)attr->ai_decl, sym);
 	}	break;
 
@@ -2932,8 +2972,7 @@ vopsetattr_constattr(struct Dee_function_generator *__restrict self,
 		/* Access a module symbol */
 		struct Dee_module_symbol const *sym = attr->ai_value.v_modsym; /* this, attr, value */
 		DO(Dee_function_generator_vrrot(self, 3));                     /* value, this, attr */
-		DO(Dee_function_generator_vpop(self));                         /* value, this */
-		DO(Dee_function_generator_vpop(self));                         /* value */
+		DO(Dee_function_generator_vpopmany(self, 2));                  /* value */
 		return Dee_function_generator_vpop_module_symbol(self, (DeeModuleObject *)attr->ai_decl, sym);
 	}	break;
 

@@ -65,6 +65,7 @@ struct ast;
  * @return:  0: The warning caused an error to be thrown, but the
  *              max number of compiler errors has yet to be reached. */
 INTDEF ATTR_COLD int (parser_warnf)(int wnum, ...);
+INTDEF ATTR_COLD int (DCALL parser_vwarnf)(int wnum, va_list args);
 INTDEF ATTR_COLD int (parser_warnatf)(struct ast_loc *loc, int wnum, ...);
 INTDEF ATTR_COLD int (parser_warnatrf)(struct ast_loc *loc, int wnum, ...); /* file from `loc' is guarantied to be reachable! */
 INTDEF ATTR_COLD int (parser_warnastf)(struct ast *__restrict loc_ast, int wnum, ...);
@@ -267,7 +268,7 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define yield()           TPPLexer_Yield()
 #define yieldnb()         TPPLexer_YieldNB()
 #define yieldnbif(allow)  ((allow) ? TPPLexer_YieldNB() : TPPLexer_Yield())
-#define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : WARN(__VA_ARGS__))
+#define skip(expected_tok, ...) unlikely(likely(tok == (expected_tok)) ? (yield() < 0) : parser_skip(expected_tok, __VA_ARGS__))
 #endif /* !__INTELLISENSE__ */
 #define HAS(ext)          TPPLexer_HasExtension(ext)
 #define WARN(...)         parser_warnf(__VA_ARGS__)
@@ -281,6 +282,10 @@ int skip(tok_t expected_tok, int wnum, ...);
 #define TPP_PUSHF()       do { uint32_t _old_flags = TPPLexer_Current->l_flags
 #define TPP_BREAKF()      TPPLexer_Current->l_flags = _old_flags
 #define TPP_POPF()        TPPLexer_Current->l_flags = _old_flags; }	__WHILE0
+
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+parser_skip(tok_t expected_tok, int wnum, ...);
+
 
 INTDEF WUNUSED NONNULL((1)) int DFCALL
 _parser_paren_begin(bool *__restrict p_has_paren, int wnum);

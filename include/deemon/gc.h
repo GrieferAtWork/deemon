@@ -38,7 +38,19 @@ DECL_BEGIN
 #define Dee_gc_head      gc_head
 #endif /* DEE_SOURCE */
 
-
+#if defined(DEE_SOURCE) && defined(__INTELLISENSE__)
+struct gc_head;
+struct gc_head_link {
+	/* The structure that is prefixed before every GC-allocated object. */
+	struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+};
+struct gc_head {
+	struct gc_head  *gc_next;   /* [0..1][lock(INTERNAL(gc_lock))] Next GC object. */
+	struct gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
+	DeeObject        gc_object; /* The object that is being controlled by the GC. */
+};
+#else /* DEE_SOURCE && __INTELLISENSE__ */
 struct Dee_gc_head;
 struct Dee_gc_head_link {
 	/* The structure that is prefixed before every GC-allocated object. */
@@ -50,6 +62,8 @@ struct Dee_gc_head {
 	struct Dee_gc_head **gc_pself;  /* [1..1][== self][1..1][lock(INTERNAL(gc_lock))] Self-pointer in the global chain of GC objects. */
 	DeeObject            gc_object; /* The object that is being controlled by the GC. */
 };
+#endif /* !DEE_SOURCE || !__INTELLISENSE__ */
+
 #define DEE_GC_OBJECT_OFFSET COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DEE_GC_HEAD_SIZE     COMPILER_OFFSETOF(struct Dee_gc_head, gc_object)
 #define DeeGC_Head(ob)       ((struct Dee_gc_head *)((uintptr_t)Dee_REQUIRES_OBJECT(ob) - DEE_GC_OBJECT_OFFSET))

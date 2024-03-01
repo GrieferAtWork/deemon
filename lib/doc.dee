@@ -219,15 +219,15 @@ local function rfindNonEscaped(
 		if (result < 0)
 			break;
 		if (result && text[result - 1] == "\\") {
-			local is_escaped = true;
+			local isEscaped = true;
 			local pos = result - 1;
 			while (pos > 0) {
 				--pos;
 				if (text[pos] != "\\")
 					break;
-				is_escaped = !is_escaped;
+				isEscaped = !isEscaped;
 			}
-			if (is_escaped) {
+			if (isEscaped) {
 				end = pos;
 				continue;
 			}
@@ -469,8 +469,8 @@ local function getDefaultOperatorWithType(typ: Type, name: string): string | non
 				repl = getIteratorElementTypeDoc(typ);
 			result = result.replace("?*", repl);
 			if ("?K*" in result || "?V*" in result) {
-				local k_repl = "?O";
-				local v_repl = "?O";
+				local kRepl = "?O";
+				local vRepl = "?O";
 				if (repl.startswith("?T2?")) {
 					local p;
 					if (repl.count("?") == 3) {
@@ -479,13 +479,13 @@ local function getDefaultOperatorWithType(typ: Type, name: string): string | non
 						p = getNextTyperefStart(repl, 3);
 					}
 					if (p != -1) {
-						k_repl = repl[3:p];
-						v_repl = repl[p:];
+						kRepl = repl[3:p];
+						vRepl = repl[p:];
 					}
 				}
 				result = result
-					.replace("?K*", k_repl)
-					.replace("?V*", v_repl);
+					.replace("?K*", kRepl)
+					.replace("?V*", vRepl);
 			}
 			return result;
 		}
@@ -602,11 +602,11 @@ local function getQualifiedTypePath(
 		}	break;
 
 		case "E": {
-			local modend = findNonEscaped(qual, ":", 2);
+			local modEnd = findNonEscaped(qual, ":", 2);
 			return f"/{
-				decodeName(qual.substr(2, modend))
+				decodeName(qual.substr(2, modEnd))
 			}/{
-				decodeName(qual.substr(modend + 1))
+				decodeName(qual.substr(modEnd + 1))
 			}";
 		}	break;
 
@@ -629,9 +629,12 @@ local function findErrorByName(t: Type, qual: string, s: string): string | none 
 	if (t.__name__ == s)
 		return qual;
 	for (local attr: enumattr(t)) {
-		if (attr.decl != t) break;
-		if (attr.attrtype != type Object) break;
-		if (!attr.isclass) continue;
+		if (attr.decl != t)
+			break;
+		if (attr.attrtype != type Object)
+			break;
+		if (!attr.isclass)
+			continue;
 		local result = findErrorByName(
 			t.operator . (attr.name),
 			f"?A{attr.name}{qual}",
@@ -709,8 +712,7 @@ local function qualifyTyperefString(docnode: WeakRef with Doc, s: string): strin
 			return s;
 
 		case "A": {
-			local attrEnd;
-			attrEnd = findNonEscaped(s, "?", 2);
+			local attrEnd = findNonEscaped(s, "?", 2);
 			if (attrEnd < 0)
 				break;
 			local tail = s.substr(attrEnd);
@@ -744,11 +746,11 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 	}	break;
 
 	case "E": {
-		local modend = findNonEscaped(qual, ":");
-		if (modend < 0)
+		local modEnd = findNonEscaped(qual, ":");
+		if (modEnd < 0)
 			break;
-		local modnam = decodeName(qual.substr(2, modend));
-		local symnam = decodeName(qual.substr(modend + 1));
+		local modnam = decodeName(qual.substr(2, modEnd));
+		local symnam = decodeName(qual.substr(modEnd + 1));
 		local mod;
 		if (modnam.startswith(".")) {
 			/* Import the module relatively to the one calling */
@@ -891,7 +893,7 @@ class TypeRef: WeakRefAble {
 				if (docstring.startswith("?G")) {
 					m_prettyname = decodeName(docstring.substr(2));
 				} else {
-					m_prettyname = getprettyname(docstring);
+					m_prettyname = getPrettyName(docstring);
 				}
 			}
 			return m_prettyname;
@@ -899,33 +901,33 @@ class TypeRef: WeakRefAble {
 	}
 	private member m_prettyname: string;
 
-	private getprettyname(qual): string {
+	private getPrettyName(qual): string {
 		if (#qual >= 2) {
 			switch (qual[1]) {
 
 			case "E": {
-				local modend = findNonEscaped(qual, ":", 2);
-				local modname = decodeName(qual.substr(2, modend));
-				local modexp = decodeName(qual.substr(modend + 1));
-				local mymod = docnode.lock(none).module;
-				if (mymod !is none) {
-					if (modname == Module.__name__(mymod))
-						return modexp;
-					if (modname == "deemon" && modexp !in Module.__exports__(mymod))
-						return modexp;
+				local modEnd = findNonEscaped(qual, ":", 2);
+				local modName = decodeName(qual.substr(2, modEnd));
+				local modExp = decodeName(qual.substr(modEnd + 1));
+				local myMod = docnode.lock(none).module;
+				if (myMod !is none) {
+					if (modName == Module.__name__(myMod))
+						return modExp;
+					if (modName == "deemon" && modExp !in Module.__exports__(myMod))
+						return modExp;
 				}
-				return f"{modname}.{modexp}";
+				return f"{modName}.{modExp}";
 			}	break;
 
 			case "U":
 				return decodeName(qual.substr(2));
 
 			case "A": {
-				local namelen = decodeNameEnd(qual, 2);
+				local nameLen = decodeNameEnd(qual, 2);
 				return f"{
-					getprettyname(qual.substr(namelen))
+					getPrettyName(qual.substr(nameLen))
 				}.{
-					decodeName(qual.substr(2, namelen))
+					decodeName(qual.substr(2, nameLen))
 				}";
 			}
 
@@ -990,10 +992,10 @@ again:
 	case "T":
 	case "X": {
 		++result;
-		local n_start = result;
+		local nStart = result;
 		while (result < len && s.isdigit(result))
 			++result;
-		local n = try int(s[n_start:result]) catch (...) 0;
+		local n = try int(s[nStart:result]) catch (...) 0;
 		for (none: [:n])
 			result = typeExprEnd(s, result);
 	}	break;
@@ -1062,10 +1064,10 @@ again:
 	case "S":
 	case "H": {
 		++result;
-		local n_start = result;
+		local nStart = result;
 		while (result < len && s.isdigit(result))
 			++result;
-		local n = try int(s[n_start:result]) catch (...) 0;
+		local n = try int(s[nStart:result]) catch (...) 0;
 		for (none: [:n])
 			result = deflexpr_end(s, result);
 	}	break;
@@ -1368,13 +1370,13 @@ check_elem:
 	public final property types: {Type...} = {
 		get(): {Type...} {
 			if (m_types !is bound)
-				m_types = HashSet(enumtypes());
+				m_types = HashSet(enumTypes());
 			return m_types;
 		}
 	}
 	private member m_types: {Type...};
 
-	private enumtypes(): {Type...} {
+	private enumTypes(): {Type...} {
 		switch (kind) {
 
 		case "E":
@@ -1382,7 +1384,7 @@ check_elem:
 			break;
 
 		case "C":
-			yield Ccelltype.enumtypes()...;
+			yield Ccelltype.enumTypes()...;
 			break;
 
 		case "T":
@@ -1391,7 +1393,7 @@ check_elem:
 
 		case "X":
 			for (local x: Xtypes)
-				yield x.enumtypes()...;
+				yield x.enumTypes()...;
 			break;
 
 		case "S":
@@ -1460,10 +1462,10 @@ check_elem:
 		}
 		m_cache = Tuple(result);
 	}
-	private loadS() {
+	private function loadS() {
 		m_cache = TypeExpr(docdecl, m_docstring.substr(2));
 	}
-	private loadQ() {
+	private function loadQ() {
 		m_cache = Expression(docdecl, m_docstring[2:-1]);
 	}
 
@@ -2373,11 +2375,11 @@ class Parameter: WeakRefAble {
 							if (ob is Function) {
 								/* Extract from default argument list of user-level function */
 								local code = ob.__code__;
-								local argc_min = code.__argc_min__;
-								if (docargi >= argc_min &&
+								local argcMin = code.__argc_min__;
+								if (docargi >= argcMin &&
 								    docargi <  code.__argc_max__) {
 									/* Default argument is available. */
-									local val = code.__default__[docargi - argc_min];
+									local val = code.__default__[docargi - argcMin];
 									m_defexpr = Expression(docdecl, false, val);
 									goto done;
 								}
@@ -2792,7 +2794,7 @@ class TextSegment: WeakRefAble {
 		, docstring(ds)
 	{}
 
-	@@Enumerate all of different parts that make up this text segment
+	@@Enumerate all the different parts that make up this text segment
 	operator for(): {(string | Object)...} {
 		local dc = import("doctext");
 		local doc = this.docsect.lock(none).docnode.lock(none);
@@ -2808,11 +2810,10 @@ class TextSegment: WeakRefAble {
 	}
 
 	@@Returns the formated documentation string of this text segment
-	operator str(): string {
+	operator str(fp: File) {
 		local dc = import("doctext");
-		local p = dc.ConsolePrinter();
+		local p = dc.ConsolePrinter(fp: fp);
 		printConsoleString(p);
-		return p.fp.string;
 	}
 
 	@@Returns a string representation of how @this TextSegment can be created
@@ -2833,7 +2834,8 @@ local function splitSegments(sect: DocSection, docstring: string): {Declaration 
 	while (docstring.startswith("(", start)) {
 		/* The first line is already is one that is special */
 		local newstart = findNonEscaped(docstring, "\n", start);
-		if (newstart < 0) newstart = #docstring;
+		if (newstart < 0)
+			newstart = #docstring;
 		yield Declaration(sect, docstring.substr(start, newstart));
 		start = newstart + 1;
 	}
@@ -2844,18 +2846,21 @@ local function splitSegments(sect: DocSection, docstring: string): {Declaration 
 			if (j < 0)
 				break;
 			i = rfindNonEscaped(docstring, "\n", start, j);
-			if (i < 0) i = start;
+			if (i < 0)
+				i = start;
 		} else {
 			++i;
 			if (j >= 0 && j < i) {
 				i = rfindNonEscaped(docstring, "\n", start, j);
-				if (i < 0) i = start;
+				if (i < 0)
+					i = start;
 			}
 		}
 		if (i - 1 > start)
 			yield TextSegment(sect, decodeText(docstring.substr(start, i - 1)));
 		local line_end = findNonEscaped(docstring, "\n", i);
-		if (line_end < 0) line_end = #docstring;
+		if (line_end < 0)
+			line_end = #docstring;
 		yield Declaration(sect, docstring.substr(i, line_end));
 		start = line_end + 1;
 	}
@@ -2882,65 +2887,64 @@ class DocSection: WeakRefAble {
 	@@as tuples of @(operatorName: string, section: DocSection)
 	public final enumerateOperatorSections(): {string: DocSection} {
 		local seg = segments;
-		for (local i = 0; i < #seg; ++i) {
+		for (local i: [:#seg]) {
 			local s = seg[i];
 			if (s !is Declaration)
 				continue;
 			local opname = s.opname;
 			if (opname is none)
 				continue;
-			local result_segments = [s];
-			for (local j = i + 1; j < #seg; ++j) {
+			local resultSegments = [s];
+			for (local j: [i+1:#seg]) {
 				s = seg[j];
 				if (s is Declaration /*&& s.opname != opname*/)
 					continue;
-				result_segments.append(s);
+				resultSegments.append(s);
 			}
-			if (#result_segments == #m_segments) {
+			if (#resultSegments == #m_segments) {
 				yield (opname, this);
 				return;
 			}
 			local result = DocSection(
 				docnode,
 				"\n".join(
-					for (local x: result_segments)
+					for (local x: resultSegments)
 						x.docstring));
 			result.m_hasdecls = true;
-			result.m_segments = result_segments;
+			result.m_segments = resultSegments;
 			yield (opname, result);
 		}
 	}
-
 
 	@@Check if @this DocSection contains a declaration for a given operator @name
 	@@If it does, return a new DocSection containing all of the associated
 	@@sub-segments containing information about that operator.
 	public final getopsection(name: string): {DocSection...} | none {
 		local seg = segments;
-		for (local i = 0; i < #seg; ++i) {
+		for (local i: [:#seg]) {
 			local s = seg[i];
 			if (s !is Declaration)
 				continue;
 			if (s.opname != name)
 				continue;
-			local result_segments = [s];
-			for (local j = i + 1; j < #seg; ++j) {
+			local resultSegments = [s];
+			for (local j: [i + 1:#seg]) {
 				s = seg[j];
 				if (s is Declaration /*&& s.opname != opname*/)
 					continue;
-				result_segments.append(s);
+				resultSegments.append(s);
 			}
-			if (#result_segments == #m_segments) {
+			if (#resultSegments == #m_segments) {
 				yield this;
 				return;
 			}
 			local result = DocSection(
 				docnode,
 				"\n".join(
-					for (local x: result_segments)
+					for (local x: resultSegments)
 						x.docstring));
 			result.m_hasdecls = true;
-			result.m_segments = result_segments;
+			result.m_segments = resultSegments;
 			yield result;
 		}
 	}
@@ -2996,28 +3000,28 @@ class DocSection: WeakRefAble {
 local function generateFunctionParams(fp: File, fun: Function) {
 	/* We can actually figure out a lot about this function! */
 	local code = fun.__code__;
-	local argc_min = code.__argc_min__;
-	local argc_max = code.__argc_max__;
+	local argcMin = code.__argc_min__;
+	local argcMax = code.__argc_max__;
 	local kwds = code.__kwds__;
-	local n_kwds = #kwds;
+	local nKwds = #kwds;
 	fp << "(";
-	for (local i: [:argc_min]) {
+	for (local i: [:argcMin]) {
 		if (i != 0)
 			fp << ",";
-		if (i < n_kwds) {
+		if (i < nKwds) {
 			fp << kwds[i];
 		} else {
 			fp << getGenericArgumentName(i);
 		}
 	}
-	if (argc_max > argc_min) {
+	if (argcMax > argcMin) {
 		local defl = code.__default__;
-		if (argc_min)
+		if (argcMin)
 			fp << ",";
-		for (local i: [:argc_max - argc_min]) {
+		for (local i: [:argcMax - argcMin]) {
 			if (i != 0)
 				fp << ",";
-			if (i < n_kwds) {
+			if (i < nKwds) {
 				fp << kwds[i];
 			} else {
 				fp << getGenericArgumentName(i);
@@ -3038,11 +3042,11 @@ local function generateFunctionParams(fp: File, fun: Function) {
 		}
 	}
 	if (code.hasvarargs) {
-		if (argc_max)
+		if (argcMax)
 			fp << ",";
-		fp << (argc_max < n_kwds
-			? kwds[argc_max]
-			: getGenericArgumentName(argc_max))
+		fp << (argcMax < nKwds
+			? kwds[argcMax]
+			: getGenericArgumentName(argcMax))
 			<< "!";
 	}
 	fp << ")";
@@ -3051,11 +3055,11 @@ local function generateFunctionParams(fp: File, fun: Function) {
 
 
 @@The main interface for accessing the documentation API provided by deemon
-@@Documentation text is addressed using unambiguos paths structures as follows:
+@@Documentation text is addressed using unambiguous paths structures as follows:
 @@ - The string is split into segments separated by @"/"
 @@ - Dangling leading and trailing slashes are ignored.
 @@ - The first segment is a module name that describes which module to search
-@@   for the documenation strings. If no slash follows, the Doc node will refer
+@@   for the documentation strings. If no slash follows, the Doc node will refer
 @@   to that module as a whole
 @@ - Otherwise, the remaining segment are walked left-to-right and used to dereference
 @@   attribute names of their respective object.
@@ -3080,7 +3084,7 @@ local function generateFunctionParams(fp: File, fun: Function) {
 @@child nodes can be enumerated by using the doc-node as a sequence-like object.
 @@
 @@Some restrictions apply to Doc-nodes, most notably the restriction that the object
-@@being documented must somehow by addressible as a module export, meaning that private
+@@being documented must somehow by addressable as a module export, meaning that private
 @@(local) functions or classes usually cannot be addressed, and that builtin objects
 @@used by the deemon core, which aren't actually exported from the builtin deemon
 @@module cannot be addressed without the use of the :rt module.
@@ -3117,29 +3121,29 @@ class Doc: WeakRefAble {
 	@@      the @"?U" encoding when the qualified path cannot be determined.
 	public final property qualpath: string = {
 		get(): string {
-			if (m_qualified_path !is bound) {
+			if (m_qualpath !is bound) {
 				if (name is none) {
-					m_qualified_path = "?Uunknown";
+					m_qualpath = "?Uunknown";
 				} else {
 					local par = parent;
 					if (par is none) {
-						m_qualified_path = "?U" + encodeName(name);
+						m_qualpath = "?U" + encodeName(name);
 					} else if (par.ismodule) {
-						m_qualified_path = f"?E{
+						m_qualpath = f"?E{
 							/* TODO: This only works for global modules! */
 							encodeName(par.name)
 						}:{
 							encodeName(name)
 						}";
 					} else {
-						m_qualified_path = f"?A{encodeName(name)}{par.qualpath}";
+						m_qualpath = f"?A{encodeName(name)}{par.qualpath}";
 					}
 				}
 			}
-			return m_qualified_path;
+			return m_qualpath;
 		}
 	}
-	private member m_qualified_path: string;
+	private member m_qualpath: string;
 
 	@@The name of this documentation object (last component of @path, stripped of its namespace prefix)
 	@@Note the namespace prefix will have already been stripped from this string, though
@@ -3278,26 +3282,26 @@ class Doc: WeakRefAble {
 	@[optional.gatw.doc("(base:?GDoc,attrname:?Dstring)")]
 	@[optional.gatw.doc("(base,attrname:?Dstring)")]
 	@[optional.gatw.doc("Lookup a given @attrname as a child of a given @base")]
-	this(doc_parent_or_path, attribute_name?: Attribute | string, operator_doc?: {DocSection...}) {
-		if (attribute_name !is bound) {
-			if (doc_parent_or_path is Module) {
+	this(docParentOrPath, attributeName?: Attribute | string, operatorDoc?: {DocSection...}) {
+		if (attributeName !is bound) {
+			if (docParentOrPath is Module) {
 				/* Doc(module) */
-				object    = doc_parent_or_path;
+				object    = docParentOrPath;
 				m_attr    = none;
 				docstring = "";
 				m_parent  = none;
-				name = Module.__name__(doc_parent_or_path);
+				name = Module.__name__(docParentOrPath);
 				return;
 			}
-			if (doc_parent_or_path is Type) {
+			if (docParentOrPath is Type) {
 				/* Doc(Type) */
 				local type_module;
 load_type_input:
-				object = doc_parent_or_path;
-				m_parent = type_module = Type.__module__(doc_parent_or_path);
-				docstring = Type.__doc__(doc_parent_or_path).rstrip();
+				object = docParentOrPath;
+				m_parent = type_module = Type.__module__(docParentOrPath);
+				docstring = Type.__doc__(docParentOrPath).rstrip();
 				istype = true;
-				name = Type.__name__(doc_parent_or_path);
+				name = Type.__name__(docParentOrPath);
 				if (type_module is none) {
 					m_attr = none;
 					m_path = none;
@@ -3313,17 +3317,17 @@ load_type_input:
 				}
 				return;
 			}
-			if (doc_parent_or_path is Attribute) {
+			if (docParentOrPath is Attribute) {
 				/* Doc(Attribute) */
-				name = doc_parent_or_path.name;
-				local ds = doc_parent_or_path.doc;
+				name = docParentOrPath.name;
+				local ds = docParentOrPath.doc;
 				if (ds is none)
 					ds = "";
 				docstring = ds.rstrip();
-				local decl = m_parent = doc_parent_or_path.decl;
-				if (doc_parent_or_path.isclass) {
+				local decl = m_parent = docParentOrPath.decl;
+				if (docParentOrPath.isclass) {
 					local parob = decl;
-					if (doc_parent_or_path.isinstance) {
+					if (docParentOrPath.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
 						object = Type.getinstanceattr(parob, name);
@@ -3331,27 +3335,27 @@ load_type_input:
 						object = parob.operator . (name);
 					}
 				}
-				m_attr = doc_parent_or_path;
+				m_attr = docParentOrPath;
 				return;
 			}
 			/* Support for attribute wrappers */
-			if (doc_parent_or_path !is string) {
+			if (docParentOrPath !is string) {
 				/* Check for singleton-like object instances. */
-				local tp = type doc_parent_or_path;
+				local tp = type docParentOrPath;
 				if (Type.__issingleton__(tp)) {
-					doc_parent_or_path = tp;
+					docParentOrPath = tp;
 					goto load_type_input;
 				}
-				name = doc_parent_or_path.__name__; /* NOTE: This may return `none'! */
-				local ds = doc_parent_or_path.__doc__;
+				name = docParentOrPath.__name__; /* NOTE: This may return `none'! */
+				local ds = docParentOrPath.__doc__;
 				if (ds is none)
 					ds = "";
 				docstring = ds.rstrip();
-				object = doc_parent_or_path;
-				if (hasattr(doc_parent_or_path, "__type__")) {
+				object = docParentOrPath;
+				if (hasattr(docParentOrPath, "__type__")) {
 					local doc_type;
 					try {
-						doc_type = doc_parent_or_path.__type__;
+						doc_type = docParentOrPath.__type__;
 					} catch (Error.AttributeError) {
 						goto do_load_wrapper_module;
 					}
@@ -3362,7 +3366,7 @@ load_type_input:
 do_load_wrapper_module:
 					local mod;
 					try {
-						mod = doc_parent_or_path.__module__;
+						mod = docParentOrPath.__module__;
 					} catch (Error.AttributeError) {
 						goto do_throw_unknown_object_origin;
 					}
@@ -3370,13 +3374,13 @@ do_load_wrapper_module:
 do_throw_unknown_object_origin:
 						throw Error.AttributeError(
 							f"Failed to determine the declaring type "
-							f"or module of {repr doc_parent_or_path}");
+							f"or module of {repr docParentOrPath}");
 					}
 					m_parent = mod;
 				}
 				return;
 			}
-			local head, none, tail = doc_parent_or_path.strip("/ ").rpartition("/")...;
+			local head, none, tail = docParentOrPath.strip("/ ").rpartition("/")...;
 			if (!tail) {
 				/* Module documentation */
 				if (head.startswith(".")) {
@@ -3391,50 +3395,50 @@ do_throw_unknown_object_origin:
 				name      = head;
 				return;
 			}
-			doc_parent_or_path = Doc(head);
-			attribute_name     = tail;
+			docParentOrPath = Doc(head);
+			attributeName     = tail;
 		}
-		if (doc_parent_or_path !is Doc)
-			doc_parent_or_path = Doc(doc_parent_or_path);
-		local fixed_attribute_name;
-		if (!doc_parent_or_path.haschildren) {
-			if (attribute_name.startswith("op:")) {
-				attribute_name = attribute_name[3:];
+		if (docParentOrPath !is Doc)
+			docParentOrPath = Doc(docParentOrPath);
+		local fixedAttributeName;
+		if (!docParentOrPath.haschildren) {
+			if (attributeName.startswith("op:")) {
+				attributeName = attributeName[3:];
 err_unknown_operator:
 				throw Error.AttributeError(
-					f"Unknown operator {repr attribute_name} in {repr doc_parent_or_path.path}");
+					f"Unknown operator {repr attributeName} in {repr docParentOrPath.path}");
 			}
-			fixed_attribute_name = attribute_name.lsstrip("i:").lsstrip("c:");
+			fixedAttributeName = attributeName.lsstrip("i:").lsstrip("c:");
 err_unknown_attribute:
 			throw Error.AttributeError(
-				f"Unknown attribute {repr fixed_attribute_name} in {repr doc_parent_or_path.path}");
+				f"Unknown attribute {repr fixedAttributeName} in {repr docParentOrPath.path}");
 		}
-		m_parent = doc_parent_or_path;
-		local my_attr;
-		if (attribute_name is Attribute) {
-			my_attr = attribute_name;
-			fixed_attribute_name = attribute_name.name;
-			attribute_name = f"{
-				attribute_name.isinstance ? 'i:' :
-				attribute_name.isclass ? 'c:' : ''
-			}{fixed_attribute_name}";
-		} else if (attribute_name.startswith("op:")) {
+		m_parent = docParentOrPath;
+		local myAttr: Attribute;
+		if (attributeName is Attribute) {
+			myAttr = attributeName;
+			fixedAttributeName = attributeName.name;
+			attributeName = f"{
+				attributeName.isinstance ? 'i:' :
+				attributeName.isclass ? 'c:' : ''
+			}{fixedAttributeName}";
+		} else if (attributeName.startswith("op:")) {
 			/* Operator node. */
-			local parpath = doc_parent_or_path.path;
+			local parpath = docParentOrPath.path;
 			if (parpath is none) {
 				m_path = none;
 			} else {
-				m_path = f"{parpath}/{attribute_name}";
+				m_path = f"{parpath}/{attributeName}";
 			}
-			attribute_name = name = attribute_name[3:];
+			attributeName = name = attributeName[3:];
 			isoperator = true;
 			local sect;
-			if (operator_doc is bound) {
+			if (operatorDoc is bound) {
 				/* Caller-provided documentation string */
-				sect = Tuple(operator_doc);
+				sect = Tuple(operatorDoc);
 			} else {
 				/* Manually lookup the doc section associated with this operaotr. */
-				sect = Tuple(doc_parent_or_path.getopdoc(attribute_name));
+				sect = Tuple(docParentOrPath.getopdoc(attributeName));
 				if (!sect)
 					goto err_unknown_operator;
 			}
@@ -3446,40 +3450,40 @@ err_unknown_attribute:
 			return;
 		} else {
 			try {
-				if (attribute_name.startswith("i:")) {
-					fixed_attribute_name = attribute_name[2:];
-					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name, "i");
-				} else if (attribute_name.startswith("c:")) {
-					fixed_attribute_name = attribute_name[2:];
-					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name, "i", "");
+				if (attributeName.startswith("i:")) {
+					fixedAttributeName = attributeName[2:];
+					myAttr = Attribute(docParentOrPath.object, fixedAttributeName, "i");
+				} else if (attributeName.startswith("c:")) {
+					fixedAttributeName = attributeName[2:];
+					myAttr = Attribute(docParentOrPath.object, fixedAttributeName, "i", "");
 				} else {
-					fixed_attribute_name = attribute_name;
-					my_attr = Attribute(doc_parent_or_path.object, fixed_attribute_name);
+					fixedAttributeName = attributeName;
+					myAttr = Attribute(docParentOrPath.object, fixedAttributeName);
 				}
 			} catch (Error.AttributeError) {
 				goto err_unknown_attribute;
 			}
 		}
-		assert operator_doc !is bound;
-		assert my_attr is bound;
-		assert my_attr is Attribute;
-		if (!my_attr.isprivate && !my_attr.isproperty) {
-			local parob = doc_parent_or_path.object;
+		assert operatorDoc !is bound;
+		assert myAttr is bound;
+		assert myAttr is Attribute;
+		if (!myAttr.isprivate && !myAttr.isproperty) {
+			local parob = docParentOrPath.object;
 			if (parob is Type) {
-				if (my_attr.isclass) {
-					if (my_attr.isinstance) {
+				if (myAttr.isclass) {
+					if (myAttr.isinstance) {
 						/* Use `type.getinstanceattr' to prevent ambiguity
 						 * between stuff like `foo.c:field' and `foo.i:field' */
-						object = Type.getinstanceattr(parob, fixed_attribute_name);
+						object = Type.getinstanceattr(parob, fixedAttributeName);
 					} else {
 						try {
-							object = parob.operator . (fixed_attribute_name);
+							object = parob.operator . (fixedAttributeName);
 						} catch (Error.AttributeError) {
 						}
 					}
 				}
-			} else if (my_attr.isinstance && fixed_attribute_name is bound) {
-				object = parob.operator . (fixed_attribute_name);
+			} else if (myAttr.isinstance && fixedAttributeName is bound) {
+				object = parob.operator . (fixedAttributeName);
 			}
 		}
 		/* Types implement their own documentation strings. */
@@ -3498,26 +3502,26 @@ set_is_type:
 				goto set_is_type;
 			}
 		}
-		local tp = my_attr.attrtype;
+		local tp = myAttr.attrtype;
 		if (tp !is none && Type.derivedfrom(tp, Type))
 			istype = true;
 		/* If we couldn't load a non-empty doc string from other places,
 		 * try to load the doc string from the attribute descriptor. */
 		if (docstring !is bound || !docstring)
-			docstring = my_attr.doc.rstrip();
-		m_attr = my_attr;
-		name = fixed_attribute_name;
-		local parpath = doc_parent_or_path.path;
+			docstring = myAttr.doc.rstrip();
+		m_attr = myAttr;
+		name = fixedAttributeName;
+		local parpath = docParentOrPath.path;
 		if (parpath is none) {
 			m_path = none;
 		} else {
-			m_path = f"{parpath}/{attribute_name}";
+			m_path = f"{parpath}/{attributeName}";
 		}
 	}
 
 	@@Returns a string representation of how @this Doc node can be constructed
 	operator repr(): string {
-		return f"Doc({ repr path })";
+		return f"Doc({repr path})";
 	}
 
 	@@Returns @true if @this doc node has allowed to refer to child nodes
@@ -3738,14 +3742,14 @@ set_is_type:
 
 	@@Enable support for sorting of doc-nodes
 	operator < (other: Doc): bool {
-		local my_kind = kind;
-		local ot_kind = other.kind;
-		if (my_kind != ot_kind) {
+		local myKind = kind;
+		local otKind = other.kind;
+		if (myKind != otKind) {
 			return
-				KIND_SORTING_WEIGHTS.get(my_kind, 0) <
-				KIND_SORTING_WEIGHTS.get(ot_kind, 0);
+				KIND_SORTING_WEIGHTS.get(myKind, 0) <
+				KIND_SORTING_WEIGHTS.get(otKind, 0);
 		}
-		if (my_kind == "operator") {
+		if (myKind == "operator") {
 			return
 				OPERATOR_SORTING_WEIGHTS.get(name, 0) <
 				OPERATOR_SORTING_WEIGHTS.get(other.name, 0);
@@ -3797,7 +3801,7 @@ set_is_type:
 		}
 	}
 
-	@@Return a function-like declaration found in the documenation
+	@@Return a function-like declaration found in the documentation
 	@@of @this Doc node that matches the given argument list.
 	@@If no such declaration could be found, return @none instead.
 	public final declfor(args...: Object): Declaration | none {
@@ -3842,7 +3846,7 @@ set_is_type:
 		return declfor(args...).ret;
 	}
 
-	@@Returns a sequence of all sections found on the documenation of @docstring
+	@@Returns a sequence of all sections found on the documentation of @docstring
 	public final property allsections: {DocSection...} = {
 		get(): {DocSection...} {
 			if (m_allsections !is bound) {
@@ -3904,27 +3908,27 @@ set_is_type:
 			if (m_docsections !is bound) {
 				local result = allsections;
 				if (istype) {
-					local new_result = [];
+					local newResult = [];
 					/* Filter out operator docs. (aka: any section containing declarations) */
 					for (local sect: result) {
 						if (!sect.hasdeclarations)
-							new_result.append(sect);
+							newResult.append(sect);
 					}
-					result = new_result;
+					result = newResult;
 				} else {
-					local has_desc = false;
+					local hasDesc = false;
 					for (local sect: result) {
 						if (sect.hasdeclarations) {
-							has_desc = true;
+							hasDesc = true;
 							break;
 						}
 					}
-					if (!has_desc) {
+					if (!hasDesc) {
 						/* Without any pre-defined declaration, autogenerate some. */
-						local new_result;
-						new_result = List(autogenerateDecls());
-						new_result.extend(result);
-						result = new_result;
+						local newResult;
+						newResult = List(autogenerateDecls());
+						newResult.extend(result);
+						result = newResult;
 					}
 				}
 				m_docsections = result;
@@ -3939,16 +3943,16 @@ set_is_type:
 		if (Type.__issuperconstructible__(object)) {
 			yield DocSection(this, "constructor->!S");
 		} else {
-			local hasany = false;
+			local hasAny = false;
 			if (Type.__isnoargconstructible__(object)) {
 				yield DocSection(this, "constructor()->");
-				hasany = true;
+				hasAny = true;
 			}
 			if (Type.__isvarargconstructible__(object)) {
 				yield DocSection(this, "constructor->");
-				hasany = true;
+				hasAny = true;
 			}
-			if (!hasany)
+			if (!hasAny)
 				yield DocSection(this, "constructor->!D");
 		}
 	}
@@ -3958,19 +3962,19 @@ set_is_type:
 	@@must be the operator's real name (e.g. @"eq", and not @"==")
 	@@If the operator is implemented, but doesn't have an explicit
 	@@section defined within the associated type's doc string, a
-	@@documenation string for the operator will be generated automatically,
+	@@documentation string for the operator will be generated automatically,
 	@@including specific information about deleted operators.
 	public final getopdoc(opname: string): {DocSection...} {
 		if (!istype)
 			return;
-		local found_sections = false;
+		local foundSections = false;
 		for (local sect: allsections) {
 			for (local os: sect.getopsection(opname)) {
 				yield os;
-				found_sections = true;
+				foundSections = true;
 			}
 		}
-		if (!found_sections) {
+		if (!foundSections) {
 			/* If the type implements or explicitly deletes the
 			 * specified operator, auto-generate a doc for it. */
 			if (object !is bound)
@@ -4077,15 +4081,15 @@ set_is_type:
 		}
 		return result;
 	}
-	private member m_operator_sections: {string: {DocSection...}};
+	private member m_operatorSections: {string: {DocSection...}};
 
 	@@Enumerate the child nodes used to represent operators
 	@@of @this when @istype is @true
 	public final property operators: {Doc...} = {
 		get(): {Doc...} {
-			if (m_operator_sections !is bound)
-				m_operator_sections = enumerateOperatorSections();
-			for (local name, sect: m_operator_sections)
+			if (m_operatorSections !is bound)
+				m_operatorSections = enumerateOperatorSections();
+			for (local name, sect: m_operatorSections)
 				yield Doc(this, "op:" + name, sect);
 		}
 	}
@@ -4098,16 +4102,16 @@ set_is_type:
 			return !!getopdoc(name[3:]);
 		if (object !is bound)
 			return false;
-		local my_object = object;
-		local decl_object = my_object;
-		if (decl_object !is Type &&
-		    decl_object !is Module)
-			decl_object = type decl_object;
+		local myObject = object;
+		local declObject = myObject;
+		if (declObject !is Type &&
+		    declObject !is Module)
+			declObject = type declObject;
 		if (name.startswith("i:"))
-			return Attribute.exists(my_object, name[2:], "i", decl: decl_object);
+			return Attribute.exists(myObject, name[2:], "i", decl: declObject);
 		if (name.startswith("c:"))
-			return Attribute.exists(my_object, name[2:], "i", "", decl: decl_object);
-		return Attribute.exists(my_object, name, decl: decl_object);
+			return Attribute.exists(myObject, name[2:], "i", "", decl: declObject);
+		return Attribute.exists(myObject, name, decl: declObject);
 	}
 
 	@@Enumerate all child nodes of @this documentation node
@@ -4118,13 +4122,13 @@ set_is_type:
 			yield operators...;
 		if (object !is bound)
 			return;
-		local my_object = object;
-		local decl_object = my_object;
-		if (decl_object !is Type &&
-		    decl_object !is Module)
-			decl_object = type decl_object;
-		for (local x: enumattr(my_object)) {
-			if (x.decl !== decl_object)
+		local myObject = object;
+		local declObject = myObject;
+		if (declObject !is Type &&
+		    declObject !is Module)
+			declObject = type declObject;
+		for (local x: enumattr(myObject)) {
+			if (x.decl !== declObject)
 				break;
 			yield Doc(this, x);
 		}

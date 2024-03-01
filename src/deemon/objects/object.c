@@ -3486,7 +3486,7 @@ err:
 }
 
 
-PRIVATE bool DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 impl_type_hasprivateattribute_string_hash(DeeTypeObject *__restrict self,
                                           char const *name_str,
                                           dhash_t name_hash) {
@@ -4405,6 +4405,11 @@ type_iscopyable(DeeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_isnamespace(DeeObject *__restrict self) {
+	return_bool(DeeType_IsNamespace(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_gcpriority(DeeObject *__restrict self) {
 	return DeeInt_NewUInt(DeeType_GCPriority(self));
 }
@@ -4525,6 +4530,10 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
 	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isnamespace__", &type_isnamespace, TYPE_GETSET_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Instance methods/getsets of this type never look at the $this argument "
+	              /**/ "(allowing for optimizations in ?M_hostasm by passing undefined values for it)"),
 	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };

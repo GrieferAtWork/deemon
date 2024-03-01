@@ -2395,15 +2395,15 @@ PRIVATE struct type_math iterator_math = {
  * data producer, lazily producing data, and all of the other threads there to
  * lazily consume that data:
  * >> function tee(iter, n = 2) {
- * >>     import deque from collections;
+ * >>     import Deque from collections;
  * >>     import Signal, Error from deemon;
- * >>     import mutex from threading;
+ * >>     import SharedLock from threading;
  * >>     if (n < 0) throw Error.IntegerOverflow();
  * >>     if (n == 0) return { };
  * >>     if (n == 1) return { iter.pending };
- * >>     local pending = deque();
+ * >>     local pending = Deque();
  * >>     local offsets = [0] * n;
- * >>     local lock = mutex();
+ * >>     local lock = SharedLock();
  * >>     function gen(i) {
  * >>         for (;;) {
  * >>             local new_item;

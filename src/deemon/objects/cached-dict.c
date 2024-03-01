@@ -582,8 +582,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_LookupAndRememberStringHash(DeeCachedDictObject *__restrict self,
                                           char const *key, dhash_t hash) {
 	DREF DeeObject *result;
-	/* TODO: Inline special-type optimizations here! (so "keyob" is only created once in the fallback-case) */
-	result = DeeObject_GetItemStringHash(self->cd_map, key, hash);
+	DeeObject *basemap = self->cd_map;
+	if (DeeDict_CheckExact(basemap)) {
+		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
+	}
+	result = DeeObject_GetItemStringHash(basemap, key, hash);
 	if likely(result) {
 		DREF DeeObject *keyob;
 		keyob = DeeString_NewWithHash(key, hash);
@@ -601,8 +604,11 @@ PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_LookupAndRememberStringLenHash(DeeCachedDictObject *__restrict self,
                                              char const *key, size_t keylen, dhash_t hash) {
 	DREF DeeObject *result;
-	/* TODO: Inline special-type optimizations here! (so "keyob" is only created once in the fallback-case) */
-	result = DeeObject_GetItemStringLenHash(self->cd_map, key, keylen, hash);
+	DeeObject *basemap = self->cd_map;
+	if (DeeDict_CheckExact(basemap)) {
+		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
+	}
+	result = DeeObject_GetItemStringLenHash(basemap, key, keylen, hash);
 	if likely(result) {
 		DREF DeeObject *keyob;
 		keyob = DeeString_NewSizedWithHash(key, keylen, hash);
@@ -637,8 +643,11 @@ PRIVATE WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
 DeeCachedDict_LookupAndRememberStringHashDef(DeeCachedDictObject *__restrict self,
                                              char const *key, dhash_t hash, DeeObject *def) {
 	DREF DeeObject *result;
-	/* TODO: Inline special-type optimizations here! (so "keyob" is only created once in the fallback-case) */
-	result = DeeObject_GetItemStringHashDef(self->cd_map, key, hash, def);
+	DeeObject *basemap = self->cd_map;
+	if (DeeDict_CheckExact(basemap)) {
+		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
+	}
+	result = DeeObject_GetItemStringHashDef(basemap, key, hash, def);
 	if likely(result) {
 		DREF DeeObject *keyob;
 		if (result == def) {
@@ -662,8 +671,11 @@ DeeCachedDict_LookupAndRememberStringLenHashDef(DeeCachedDictObject *__restrict 
                                                 char const *key, size_t keylen,
                                                 dhash_t hash, DeeObject *def) {
 	DREF DeeObject *result;
-	/* TODO: Inline special-type optimizations here! (so "keyob" is only created once in the fallback-case) */
-	result = DeeObject_GetItemStringLenHashDef(self->cd_map, key, keylen, hash, def);
+	DeeObject *basemap = self->cd_map;
+	if (DeeDict_CheckExact(basemap)) {
+		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
+	}
+	result = DeeObject_GetItemStringLenHashDef(basemap, key, keylen, hash, def);
 	if likely(result) {
 		DREF DeeObject *keyob;
 		if (result == def) {
@@ -1172,7 +1184,7 @@ PUBLIC DeeTypeObject DeeCachedDict_Type = {
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ cdict_methods,
-	/* .tp_getsets       = */ NULL, /* TODO: "property cache: Mapping = { get() }" -- Proxy dict that operates on the cache only. */
+	/* .tp_getsets       = */ NULL, /* TODO: "property cache: Mapping = { get() }" -- Proxy dict that operates on the cache only (but mustn't allow removing items from the cache). */
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,

@@ -2676,7 +2676,11 @@ DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                                         * For example: Abstract base classes have this flag set, such as `Object', `Sequence' or `Iterator'
                                         * NOTE: This flag is not inherited.
                                         * When this flag is set, the type may also be used to construct super-wrappers
-                                        * for any other kind of object, even if that object isn't derived from the type. */
+                                        * for any other kind of object, even if that object isn't derived from the type.
+                                        * NOTE: When combined with `TF_SINGLETON' and `TP_FFINAL', class member functions
+                                        *       may be called with invalid/broken "self" arguments, as it is assumed that
+                                        *       the class only functions as a simple namespace (e.g. `deemon.gc').
+                                        *       s.a.: `DeeType_IsNamespace()' */
 /*      Dee_TP_F                0x0080  * ... */
 /*      Dee_TP_F                0x0100  * ... */
 /*      Dee_TP_F                0x0200  * ... */
@@ -2827,6 +2831,7 @@ struct Dee_type_object {
 #define DeeType_IsVarArgConstructible(x) (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_any_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_any_ctor_kw != NULL)
 #define DeeType_IsConstructible(x)       (DeeType_IsSuperConstructible(x) || DeeType_IsNoArgConstructible(x) || DeeType_IsVarArgConstructible(x))
 #define DeeType_IsCopyable(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_init.tp_alloc.tp_copy_ctor != NULL || ((DeeTypeObject const *)(x))->tp_init.tp_alloc.tp_deep_ctor != NULL)
+#define DeeType_IsNamespace(x)           ((((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & (Dee_TP_FFINAL | Dee_TP_FABSTRACT)) == (Dee_TP_FFINAL | Dee_TP_FABSTRACT) && (((DeeTypeObject const *)(x))->tp_features & Dee_TF_SINGLETON))
 #define DeeType_Base(x)                  (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_base)
 #define DeeType_GCPriority(x)            (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_gc ? ((DeeTypeObject const *)(x))->tp_gc->tp_gcprio : Dee_GC_PRIORITY_LATE)
 #define DeeObject_GCPriority(x)          DeeType_GCPriority(Dee_TYPE(x))

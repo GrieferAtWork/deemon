@@ -101,7 +101,7 @@ blvi_visit(DeeBlackListKwdsIterator *__restrict self, dvisit_t proc, void *arg) 
 }
 
 
-LOCAL struct kwds_entry *DCALL
+PRIVATE WUNUSED NONNULL((1)) struct kwds_entry *DCALL
 blvi_nextiter(DeeBlackListKwdsIterator *__restrict self) {
 	struct kwds_entry *iter;
 	struct kwds_entry *old_iter;
@@ -201,7 +201,8 @@ PRIVATE struct type_cmp blvi_cmp = {
 };
 
 PRIVATE struct type_member tpconst blvi_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwdsIterator, blki_map), "->?Ert:DeeBlackListKwdsObject"),
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(DeeBlackListKwdsIterator, blki_map),
+	                      "->?Ert:DeeBlackListKwdsObject"),
 	TYPE_MEMBER_END
 };
 

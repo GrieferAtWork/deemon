@@ -95,7 +95,7 @@ public:
 
 		/* The following causes an AttributeError, since `my_class_member'
 		 * is declared as part of the class itself, meaning that the instance
-		 * addressible as `this' doesn't actually have such an attribute. */
+		 * addressable as `this' doesn't actually have such an attribute. */
 //		print "this.my_class_member   =", repr this.my_class_member;
 
 		/* This is the correct way of explicitly accessing class members,

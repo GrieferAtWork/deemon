@@ -213,60 +213,41 @@ err:
 PRIVATE NONNULL((1)) void DCALL
 hashset_fini(HashSet *__restrict self);
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-hashset_init_iterator(HashSet *__restrict self,
-                      DeeObject *__restrict iterator) {
-	DREF DeeObject *elem;
-	self->hs_mask = 0;
-	self->hs_size = 0;
-	self->hs_used = 0;
-	self->hs_elem = empty_hashset_items;
-	Dee_atomic_rwlock_init(&self->hs_lock);
-	weakref_support_init(self);
-	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-		if unlikely(DeeHashSet_Insert((DeeObject *)self, elem) < 0)
-			goto err_elem;
-		Dee_Decref(elem);
-		if (DeeThread_CheckInterrupt())
-			goto err;
-	}
-	if unlikely(!elem)
-		goto err;
-	return 0;
-err_elem:
-	Dee_Decref(elem);
-err:
-	hashset_fini(self);
-	return -1;
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define hashset_insert_sequence_foreach (*(Dee_foreach_t)&DeeHashSet_Insert)
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+hashset_insert_sequence_foreach(void *arg, DeeObject *key) {
+	return DeeHashSet_Insert((DeeObject *)arg, key);
 }
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL hashset_copy(HashSet *__restrict self, HashSet *__restrict other);
-
-STATIC_ASSERT(sizeof(struct hashset_item) == sizeof(struct roset_item));
-STATIC_ASSERT(offsetof(struct hashset_item, hsi_key) == offsetof(struct roset_item, rsi_key));
-STATIC_ASSERT(offsetof(struct hashset_item, hsi_hash) == offsetof(struct roset_item, rsi_hash));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 hashset_init_sequence(HashSet *__restrict self,
                       DeeObject *__restrict sequence) {
-	DREF DeeObject *iterator;
-	int error;
 	DeeTypeObject *tp = Dee_TYPE(sequence);
 	if (tp == &DeeHashSet_Type)
 		return hashset_copy(self, (HashSet *)sequence);
 
 	/* Optimizations for `_RoSet' */
 	if (tp == &DeeRoSet_Type) {
+		STATIC_ASSERT(sizeof(struct hashset_item) == sizeof(struct roset_item));
+		STATIC_ASSERT(offsetof(struct hashset_item, hsi_key) == offsetof(struct roset_item, rsi_key));
+		STATIC_ASSERT(offsetof(struct hashset_item, hsi_hash) == offsetof(struct roset_item, rsi_hash));
 		struct hashset_item *iter, *end;
 		DeeRoSetObject *src = (DeeRoSetObject *)sequence;
 		Dee_atomic_rwlock_init(&self->hs_lock);
-		self->hs_mask = src->rs_mask;
 		self->hs_used = self->hs_size = src->rs_size;
 		if unlikely(!self->hs_size) {
+			self->hs_mask = 0;
 			self->hs_elem = (struct hashset_item *)empty_hashset_items;
 		} else {
+			self->hs_mask = src->rs_mask;
 			self->hs_elem = (struct hashset_item *)Dee_Mallocc(src->rs_mask + 1,
-			                                                  sizeof(struct hashset_item));
+			                                                   sizeof(struct hashset_item));
 			if unlikely(!self->hs_elem)
 				goto err;
 			iter = (struct hashset_item *)memcpyc(self->hs_elem, src->rs_elem,
@@ -280,12 +261,19 @@ hashset_init_sequence(HashSet *__restrict self,
 		return 0;
 	}
 	/* TODO: Fast-sequence support */
-	iterator = DeeObject_IterSelf(sequence);
-	if unlikely(!iterator)
-		goto err;
-	error = hashset_init_iterator(self, iterator);
-	Dee_Decref(iterator);
-	return error;
+
+	/* Fallback: enumerate the sequence pair-wise and insert into "self" */
+	self->hs_mask = 0;
+	self->hs_size = 0;
+	self->hs_used = 0;
+	self->hs_elem = empty_hashset_items;
+	Dee_atomic_rwlock_init(&self->hs_lock);
+	weakref_support_init(self);
+	if unlikely(DeeObject_Foreach(sequence, &hashset_insert_sequence_foreach, self) < 0)
+		goto err_self;
+	return 0;
+err_self:
+	hashset_fini(self);
 err:
 	return -1;
 }
@@ -1902,16 +1890,9 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 hashset_init(HashSet *__restrict self,
          size_t argc, DeeObject *const *argv) {
 	DeeObject *seq;
-	int error;
 	if unlikely(DeeArg_Unpack(argc, argv, "o:HashSet", &seq))
 		goto err;
-	/* TODO: Support for initialization from `_RoSet' */
-	/* TODO: Optimization for fast-sequence types. */
-	if unlikely((seq = DeeObject_IterSelf(seq)) == NULL)
-		goto err;
-	error = hashset_init_iterator(self, seq);
-	Dee_Decref(seq);
-	return error;
+	return hashset_init_sequence(self, seq);
 err:
 	return -1;
 }

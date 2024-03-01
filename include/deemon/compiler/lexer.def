@@ -138,7 +138,7 @@ DEF_K(F)
  * >>           // You can think of local variables in the global scope as private objects
  * >>           // that are not exported when another module uses `import' on use this one,
  * >>           // whilst regular global variables (without a storage prefix) are exported
- * >>           // and therewith visible to, as well as addressible and modifiable by other modules.
+ * >>           // and therewith visible to, as well as addressable and modifiable by other modules.
  * >> function set_local_y() {
  * >>     y = 42;        // Error: Cannot write to referenced variable (`y' isn't a global)
  * >>     global y = 42; // Same error: `global y' refers to a variable in

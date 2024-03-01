@@ -57,8 +57,8 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcsetiterator_ctor(GCSetIterator *__restrict self) {
-	self->gsi_set = &DeeGCSet_Empty;
-	Dee_Incref(&DeeGCSet_Empty);
+	self->gsi_set = Dee_EmptyGCSet;
+	Dee_Incref(Dee_EmptyGCSet);
 	self->gsi_index = 0;
 	return 0;
 }
@@ -68,7 +68,7 @@ gcsetiterator_copy(GCSetIterator *__restrict self,
                    GCSetIterator *__restrict other) {
 	self->gsi_set = other->gsi_set;
 	Dee_Incref(self->gsi_set);
-	self->gsi_index = READ_INDEX(other);
+	self->gsi_index = atomic_read(&other->gsi_index);
 	return 0;
 }
 
@@ -117,7 +117,7 @@ gcsetiterator_next(GCSetIterator *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 gcsetiterator_bool(GCSetIterator *__restrict self) {
 	size_t idx;
-	idx = READ_INDEX(self);
+	idx = atomic_read(&self->gsi_index);
 	for (;;) {
 		if (idx > self->gsi_set->gs_mask)
 			return 0;
@@ -134,14 +134,14 @@ PRIVATE struct type_member tpconst gcset_iterator_members[] = {
 };
 
 INTDEF DeeTypeObject DeeGCSetIterator_Type;
-#define DEFINE_GCSETITERATOR_COMPARE(name, op)                        \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(GCSetIterator *self, GCSetIterator *other) {                 \
-		if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type)) \
-			goto err;                                                 \
-		return_bool(READ_INDEX(self) op READ_INDEX(other));           \
-	err:                                                              \
-		return NULL;                                                  \
+#define DEFINE_GCSETITERATOR_COMPARE(name, op)                                        \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                             \
+	name(GCSetIterator *self, GCSetIterator *other) {                                 \
+		if (DeeObject_AssertTypeExact(other, &DeeGCSetIterator_Type))                 \
+			goto err;                                                                 \
+		return_bool(atomic_read(&self->gsi_index) op atomic_read(&other->gsi_index)); \
+	err:                                                                              \
+		return NULL;                                                                  \
 	}
 DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_eq, ==)
 DEFINE_GCSETITERATOR_COMPARE(gcset_iterator_ne, !=)
@@ -209,7 +209,7 @@ INTERN DeeTypeObject DeeGCSetIterator_Type = {
 
 
 PRIVATE WUNUSED DREF GCSet *DCALL gcset_ctor(void) {
-	return_reference_(&DeeGCSet_Empty);
+	return_reference_(Dee_EmptyGCSet);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF GCSet *DCALL
@@ -226,16 +226,16 @@ gcset_deepcopy(GCSet *__restrict self) {
 				continue;
 			copy = DeeObject_DeepCopy(self->gs_elem[i]);
 			if unlikely(!copy)
-				goto err;
+				goto err_maker;
 			error = GCSetMaker_Insert(&maker, copy);
 			if (error == 0)
 				continue;
 			Dee_Decref(copy);
 			if unlikely(error < 0)
-				goto err;
+				goto err_maker;
 		}
 		return GCSetMaker_Pack(&maker);
-err:
+err_maker:
 		GCSetMaker_Fini(&maker);
 		return NULL;
 	}
@@ -347,7 +347,7 @@ INTERN DeeTypeObject DeeGCSet_Type = {
 	/* .tp_class_members = */ gcset_class_members
 };
 
-INTERN GCSet DeeGCSet_Empty = {
+INTERN GCSet_Empty DeeGCSet_Empty = {
 	OBJECT_HEAD_INIT(&DeeGCSet_Type),
 	/* .gs_size = */ 0,
 	/* .gs_mask = */ 0,
@@ -407,7 +407,7 @@ GCSetMaker_Rehash(GCSetMaker *__restrict self) {
 /* @return:  1: Object was already inserted into the set.
  * @return:  0: Object was newly inserted into the set.
  * @return: -1: An allocation failed (release all locks and to collect `self->gs_err' bytes of memory) */
-INTERN int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 GCSetMaker_Insert(GCSetMaker *__restrict self,
                   /*inherit(return == 0)*/ DREF DeeObject *__restrict ob) {
 	size_t j, i, perturb;
@@ -484,7 +484,7 @@ GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self) {
 	if ((result = self->gs_set) != NULL) {
 		DeeObject_Init(result, &DeeGCSet_Type);
 	} else {
-		result = &DeeGCSet_Empty;
+		result = Dee_EmptyGCSet;
 		Dee_Incref(result);
 	}
 	return result;
@@ -608,10 +608,10 @@ again:
 /* Returns `true' if `target' is directly referred to by `source' */
 struct visit_referred_by_data {
 	DeeObject *target;
-	bool did;
+	bool       did;
 };
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1, 2)) void DCALL
 visit_referred_by_func(DeeObject *__restrict self,
                        struct visit_referred_by_data *__restrict data) {
 	if (data->target == self)
@@ -619,7 +619,8 @@ visit_referred_by_func(DeeObject *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-DeeGC_ReferredBy(DeeObject *__restrict source, DeeObject *__restrict target) {
+DeeGC_ReferredBy(DeeObject *source,
+                 DeeObject *target) {
 	struct visit_referred_by_data data;
 	/* Check for special case: the 2 objects are identical. */
 	if (source == target)

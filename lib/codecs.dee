@@ -43,7 +43,6 @@ local function throwDecodeUnsupportedError(...) {
 }
 
 local class CustomCodec {
-
 	public final member encode: Callable;
 	public final member decode: Callable;
 
@@ -58,7 +57,6 @@ local class CustomCodec {
 }
 
 local class CpCodec {
-
 	public final member cp: string;
 	public final member cpLen: int;
 	public final member cpRev: {int: string};
@@ -129,10 +127,10 @@ local class CpCodec {
 
 
 @@Cache of loaded codecs
-local loadedCodecs = Dict();
+final local loadedCodecs = Dict();
 
 @@Cache of loaded codecs
-local userCodecs = Dict();
+final local userCodecs = Dict();
 
 local function loadCodecModule(name: string): CpCodec | CustomCodec {
 	/* Load the codec from a module. */

@@ -244,18 +244,13 @@ PRIVATE NONNULL((1)) void DCALL dict_fini(Dict *__restrict self);
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define dict_insert_sequence_foreach (*(Dee_foreach_pair_t)&dict_setitem)
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
-PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 dict_insert_sequence_foreach(void *arg, DeeObject *key, DeeObject *value) {
 	return dict_setitem((Dict *)arg, key, value);
 }
 #endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL dict_copy(Dict *__restrict self, Dict *__restrict other);
-
-STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
-STATIC_ASSERT(offsetof(struct dict_item, di_key) == offsetof(struct rodict_item, rdi_key));
-STATIC_ASSERT(offsetof(struct dict_item, di_value) == offsetof(struct rodict_item, rdi_value));
-STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item, rdi_hash));
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 dict_init_sequence(Dict *__restrict self,
@@ -266,14 +261,19 @@ dict_init_sequence(Dict *__restrict self,
 
 	/* Optimizations for `_RoDict' */
 	if (tp == &DeeRoDict_Type) {
+		STATIC_ASSERT(sizeof(struct dict_item) == sizeof(struct rodict_item));
+		STATIC_ASSERT(offsetof(struct dict_item, di_key) == offsetof(struct rodict_item, rdi_key));
+		STATIC_ASSERT(offsetof(struct dict_item, di_value) == offsetof(struct rodict_item, rdi_value));
+		STATIC_ASSERT(offsetof(struct dict_item, di_hash) == offsetof(struct rodict_item, rdi_hash));
 		struct dict_item *iter, *end;
 		DeeRoDictObject *src = (DeeRoDictObject *)sequence;
 		Dee_atomic_rwlock_init(&self->d_lock);
-		self->d_mask = src->rd_mask;
 		self->d_used = self->d_size = src->rd_size;
 		if unlikely(!self->d_size) {
+			self->d_mask = 0;
 			self->d_elem = empty_dict_items;
 		} else {
+			self->d_mask = src->rd_mask;
 			self->d_elem = (struct dict_item *)Dee_Mallocc(src->rd_mask + 1,
 			                                               sizeof(struct dict_item));
 			if unlikely(!self->d_elem)
@@ -292,7 +292,7 @@ dict_init_sequence(Dict *__restrict self,
 		weakref_support_init(self);
 		return 0;
 	}
-	/* TODO: Optimizations for `_sharedmap' */
+	/* TODO: Optimizations for `_SharedMap' */
 	/* TODO: Fast-sequence support */
 
 	/* Fallback: enumerate the sequence pair-wise and insert into "self" */
@@ -2243,6 +2243,7 @@ err:
  *       a `KeyError', rather than `operator []' itself.
  *    -> User-classes can then override that function to implement
  *       some custom behavior for dealing with missing keys.
+ * XXX: This would need to be implemented in "DeeMapping_Type"; not here
  */
 
 DOC_REF(map_get_doc);

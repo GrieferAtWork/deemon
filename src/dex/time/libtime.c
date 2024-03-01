@@ -174,12 +174,27 @@ PRIVATE HMODULE DCALL GetKernel32Handle(void) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 
+/* Nano-seconds from 01-01-0000 to 01-01-1601 */
+/*[[[deemon
+import * from time;
+print("#ifdef WANT_NANOSECONDS_01_01_1601");
+print("#undef WANT_NANOSECONDS_01_01_1601");
+print("static Dee_uint128_t const NANOSECONDS_01_01_1601 =");
+print("__HYBRID_UINT128_INIT16N(0x",
+	", 0x".join(
+		Time(year: 1601, month: 1, day: 1)
+			.nanoseconds
+			.tostr(16, 32)
+			.segments(4)
+	), ");");
+print("#endif /" "* WANT_NANOSECONDS_01_01_1601 *" "/");
+]]]*/
 #ifdef WANT_NANOSECONDS_01_01_1601
 #undef WANT_NANOSECONDS_01_01_1601
-/* Nano-seconds from 01-01-0000 to 01-01-1601 */
 static Dee_uint128_t const NANOSECONDS_01_01_1601 =
 __HYBRID_UINT128_INIT16N(0x0000, 0x0000, 0x0000, 0x0002, 0xbd24, 0xd971, 0x356e, 0x0000);
 #endif /* WANT_NANOSECONDS_01_01_1601 */
+/*[[[end]]]*/
 
 
 
@@ -623,10 +638,10 @@ time_inplace_day2year(Dee_int128_t *__restrict p_value) {
 	temp2   = temp;
 	greg_yr = 0;
 	if (temp > 73048) { /* For years 200 to 399 */
-		temp -= 73048; /* this shifts the calculation by 1 day */
+		temp -= 73048;  /* this shifts the calculation by 1 day */
 		greg_yr = 200;
 	}
-	greg_yr += (temp << 10) / 374014; /* 374014 is a magic number */
+	greg_yr += (temp << 10) / 374014;     /* 374014 is a magic number */
 	if (y400_table[greg_yr + 1] <= temp2) /* fix if greg_yr is off by 1 */
 		++greg_yr;
 	__hybrid_int128_add32(base, greg_yr);
@@ -1743,6 +1758,26 @@ PRIVATE struct type_method tpconst time_methods[] = {
 	TYPE_METHOD_F("__format__", &time_doformat, TYPE_METHOD_FNOREFESCAPE,
 	              "(format:?Dstring)->?Dstring\n"
 	              "Internal alias for ?#format"),
+	/* TODO: set(year?:?Dint,month?:?Dint,day?:?Dint,hour?:?Dint,minute?:?Dint,second?:?Dint,nanosecond?:?Dint)->?.
+	 * Assign new value(s) for the named properties.
+	 *
+	 * Behaves like this:
+	 * >> function set(**kwds): Time {
+	 * >>     for (local key, value: kwds)
+	 * >>         this.operator . (key) = value;
+	 * >>     return this;
+	 * >> } */
+
+	/* TODO: with(year?:?Dint,month?:?Dint,day?:?Dint,hour?:?Dint,minute?:?Dint,second?:?Dint,nanosecond?:?Dint)->?.
+	 * Copy the Time object and assign new value(s) for the named properties.
+	 *
+	 * Behaves like this:
+	 * >> function with(**kwds): Time {
+	 * >>     local result = copy this;
+	 * >>     for (local key, value: kwds)
+	 * >>         result.operator . (key) = value;
+	 * >>     return result;
+	 * >> } */
 	TYPE_METHOD_END
 };
 
@@ -1987,7 +2022,7 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	DEFINE_LIBTIME_AS_FIELD(minute, "Minute of Hour"),
 	DEFINE_LIBTIME_AS_FIELD(hour, "Hour of day"),
 	DEFINE_LIBTIME_AS_FIELD(wday, "Day of week (0-based; 0 is Sunday)"),
-	DEFINE_LIBTIME_AS_FIELD(mweek, "Week of month (week 1 starts on the first sunday of the month; if the month doesn't start on a sun-day, week 0 exists)"),
+	DEFINE_LIBTIME_AS_FIELD(mweek, "Week of month (week 1 starts on the first sunday of the month; if the month doesn't start on a sunday, week 0 exists)"),
 	DEFINE_LIBTIME_AS_FIELD(month, "Month of year (1-based)"),
 	DEFINE_LIBTIME_AS_FIELD(year, "Year"),
 	DEFINE_LIBTIME_AS_FIELD(decade, "Decade"),
@@ -1995,7 +2030,7 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	DEFINE_LIBTIME_AS_FIELD(millennium, "Millennium"),
 	DEFINE_LIBTIME_AS_FIELD(mday, "Day of month (1-based)"),
 	DEFINE_LIBTIME_AS_FIELD(yday, "Day of year (1-based)"),
-	DEFINE_LIBTIME_AS_FIELD(yweek, "Week of year (week 1 starts on the first sunday of the year; if the year doesn't start on a sun-day, week 0 exists)"),
+	DEFINE_LIBTIME_AS_FIELD(yweek, "Week of year (week 1 starts on the first sunday of the year; if the year doesn't start on a sunday, week 0 exists)"),
 	DEFINE_LIBTIME_AS_FIELD(nanoseconds, "Total nanoseconds (since #C{01-01-0000})"),
 	DEFINE_LIBTIME_AS_FIELD(microseconds, "Total microseconds (since #C{01-01-0000})"),
 	DEFINE_LIBTIME_AS_FIELD(milliseconds, "Total milliseconds (since #C{01-01-0000})"),
@@ -2081,9 +2116,9 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	              "->?GTime\n"
 	              "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
 	              "Read/write the time portion of @this time object, that is everything below the "
-	              /**/ "day-threshold, including ?#hour, ?#minute, ?#second, ?#millisecond and ?#microsecond\n"
+	              /**/ "day-threshold, including ?#hour, ?#minute, ?#second and ?#nanosecond\n"
 	              "When setting, the passed objected is interpreted as an integer describing the "
-	              /**/ "number of microsecond since the day began"),
+	              /**/ "number of nanoseconds since the day began"),
 	TYPE_GETSET_F("datepart", &time_datepart_get, &time_datepart_del, &time_datepart_set, TYPE_GETSET_FNOREFESCAPE,
 	              "->?GTime\n"
 	              "#tValueError{(get-only) @this ?. object isn't a timestamp (s.a. ?#istimestamp)}"
@@ -2091,7 +2126,7 @@ PRIVATE struct type_getset tpconst time_getsets[] = {
 	              "Read/write the date portion of @this time object, that is everything "
 	              /**/ "above the day-threshold, including ?#mday, ?#month and ?#year\n"
 	              "When setting, the passed objected is interpreted as an integer "
-	              /**/ "describing the number of microsecond since #C{01-01-0000}"),
+	              /**/ "describing the number of nanoseconds since #C{01-01-0000}"),
 
 	TYPE_GETTER_F("isdst", &time_isdst, TYPE_GETSET_FNOREFESCAPE,
 	              "->?Dbool\n"
@@ -2399,7 +2434,7 @@ f_libtime_tick(size_t argc, DeeObject *const *argv) {
 		goto err;
 
 	/* Load the current tick. */
-	tick = DeeThread_GetTimeMicroSeconds();
+	tick = DeeThread_GetTimeMicroSeconds(); /* TODO: Use a higher resolution source (can go up to nanoseconds) */
 	__hybrid_int128_set64(result->t_nanos, tick);
 	__hybrid_int128_mul16(result->t_nanos, NANOSECONDS_PER_MICROSECOND);
 	result->t_typekind = TIME_TYPEKIND(TIME_TYPE_NANOSECONDS, TIME_KIND_DELTA);
@@ -3508,6 +3543,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "localtime", (DeeObject *)&libtime_localtime, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current time in the host's local timezone (s.a. ?Ggmtime)") },
+	/* TODO: timezone()->?GTime
+	 * Returns the ?Aisdelta?GTime delta that gets added to ?Ggmtime in order to produce ?Glocaltime */
 	{ "tick", (DeeObject *)&libtime_tick, MODSYM_FREADONLY,
 	  DOC("->?GTime\n"
 	      "Returns the current tick suitable for high-precision timings.\n"
@@ -3539,10 +3576,10 @@ PRIVATE struct dex_symbol symbols[] = {
 	 *       case, as not-too-long-ago, it was microseconds):
 	 * >> import seconds from time;
 	 * >> import Thread from deemon;
-	 * >> 
-	 * >> begin "Begin waiting for 2 seconds";
+	 * >>
+	 * >> print "Begin waiting for 2 seconds";
 	 * >> Thread.sleep(seconds(2));
-	 * >> begin "Done waiting";
+	 * >> print "Done waiting";
 	 */
 #define DEFINE_DELTA_CALLBACK(name)                          \
 	{ #name, (DeeObject *)&libtime_##name, MODSYM_FREADONLY, \

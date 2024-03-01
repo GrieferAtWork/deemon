@@ -96,11 +96,13 @@ DECL_BEGIN
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_rshared_lock_t gc_lock = DEE_RSHARED_LOCK_INIT;
 #endif /* !CONFIG_NO_THREADS */
-#define GCLOCK_TRYACQUIRE()   Dee_rshared_lock_tryacquire(&gc_lock)
-#define GCLOCK_ACQUIRE()      Dee_rshared_lock_acquire_noint(&gc_lock)
-#define GCLOCK_RELEASE()      Dee_rshared_lock_release(&gc_lock)
-#define GCLOCK_ACQUIRE_READ() Dee_rshared_lock_acquire_noint(&gc_lock)
-#define GCLOCK_RELEASE_READ() Dee_rshared_lock_release(&gc_lock)
+#define GCLOCK_TRYACQUIRE()         Dee_rshared_lock_tryacquire(&gc_lock)
+#define GCLOCK_ACQUIRE_NOINT()      Dee_rshared_lock_acquire_noint(&gc_lock)
+#define GCLOCK_ACQUIRE()            Dee_rshared_lock_acquire(&gc_lock)
+#define GCLOCK_RELEASE()            Dee_rshared_lock_release(&gc_lock)
+#define GCLOCK_ACQUIRE_READ_NOINT() Dee_rshared_lock_acquire_noint(&gc_lock)
+#define GCLOCK_ACQUIRE_READ()       Dee_rshared_lock_acquire(&gc_lock)
+#define GCLOCK_RELEASE_READ()       Dee_rshared_lock_release(&gc_lock)
 
 #ifndef NDEBUG
 #if __SIZEOF_POINTER__ == 4
@@ -142,7 +144,7 @@ PRIVATE void DCALL gc_pending_service(void) {
 }
 
 LOCAL void DCALL gc_lock_acquire_s(void) {
-	GCLOCK_ACQUIRE();
+	GCLOCK_ACQUIRE_NOINT();
 	gc_pending_service();
 }
 LOCAL void DCALL gc_lock_release_s(void) {
@@ -157,7 +159,7 @@ again:
 #define GCLOCK_ACQUIRE_S() gc_lock_acquire_s()
 #define GCLOCK_RELEASE_S() gc_lock_release_s()
 #else /* CONFIG_HAVE_PENDING_GC_OBJECTS */
-#define GCLOCK_ACQUIRE_S() GCLOCK_ACQUIRE()
+#define GCLOCK_ACQUIRE_S() GCLOCK_ACQUIRE_NOINT()
 #define GCLOCK_RELEASE_S() GCLOCK_RELEASE()
 #endif /* !CONFIG_HAVE_PENDING_GC_OBJECTS */
 
@@ -1544,7 +1546,8 @@ gciter_next(GCIter *__restrict self) {
 		GCIter_LockRelease(self);
 		return ITER_DONE;
 	}
-	GCLOCK_ACQUIRE_READ();
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err_unlock_iter;
 
 	/* Skip ZERO-ref entries. */
 	next = DeeGC_Head(result)->gc_next;
@@ -1562,6 +1565,9 @@ gciter_next(GCIter *__restrict self) {
 
 	/* Return the extracted item. */
 	return result;
+err_unlock_iter:
+	GCIter_LockRelease(self);
+	return NULL;
 }
 
 
@@ -1623,7 +1629,8 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	result = DeeObject_MALLOC(GCIter);
 	if unlikely(!result)
 		goto done;
-	GCLOCK_ACQUIRE_READ();
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err_r;
 	first = gc_root;
 	/*  Find the first object that we can actually incref()
 	 * (The GC chain may contain dangling (aka. weak) objects) */
@@ -1638,19 +1645,25 @@ gcenum_iter(DeeObject *__restrict UNUSED(self)) {
 	DeeObject_Init(result, &GCIter_Type);
 done:
 	return result;
+err_r:
+	DeeObject_FREE(result);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 gcenum_size(DeeObject *__restrict UNUSED(self)) {
 	size_t result = 0;
 	struct gc_head *iter;
-	GCLOCK_ACQUIRE_READ();
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		ASSERT(iter != iter->gc_next);
 		++result;
 	}
 	GCLOCK_RELEASE_READ();
 	return DeeInt_NewSize(result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1663,7 +1676,8 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 #else /* GCHEAD_ISTRACKED */
 	{
 		struct gc_head *iter;
-		GCLOCK_ACQUIRE_READ();
+		if unlikely(GCLOCK_ACQUIRE_READ())
+			goto err;
 		for (iter = gc_root; iter; iter = iter->gc_next) {
 			ASSERT(iter != iter->gc_next);
 			if (&iter->gc_object == ob) {
@@ -1674,6 +1688,8 @@ gcenum_contains(DeeObject *__restrict UNUSED(self),
 		GCLOCK_RELEASE_READ();
 	}
 	return_false;
+err:
+	return NULL;
 #endif /* !GCHEAD_ISTRACKED */
 }
 
@@ -1797,7 +1813,7 @@ PRIVATE DeeTypeObject GCEnum_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ DeeString_STR(&str_gc),
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FNAMEOBJECT | TP_FABSTRACT,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_SINGLETON,
 	/* .tp_base     = */ &DeeSeq_Type,
@@ -1858,7 +1874,8 @@ DeeGC_CollectGCReferred(GCSetMaker *__restrict self,
                         DeeObject *__restrict target) {
 	struct gc_head *iter;
 again:
-	GCLOCK_ACQUIRE_READ();
+	if unlikely(GCLOCK_ACQUIRE_READ())
+		goto err;
 	for (iter = gc_root; iter; iter = iter->gc_next) {
 		DREF DeeObject *obj;
 		ASSERT(iter != iter->gc_next);
@@ -1875,7 +1892,7 @@ again:
 			Dee_Decref_unlikely(obj);
 			if (Dee_CollectMemory(self->gs_err))
 				goto again;
-			return -1;
+			goto err;
 		} else {
 decref_obj:
 			if (!Dee_DecrefIfNotOne(obj)) {
@@ -1887,9 +1904,9 @@ decref_obj:
 	}
 	GCLOCK_RELEASE_READ();
 	return 0;
+err:
+	return -1;
 }
-
-
 
 DECL_END
 
