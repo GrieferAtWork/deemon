@@ -32,23 +32,23 @@ Deemon is designed with the following features in mind:
 git clone --recursive https://github.com/GrieferAtWork/deemon.git
 ```
 
+With configure  
+```sh
+bash ./configure
+make -j $(nproc)
+```
+
+Cross-compiling deemon (using `/opt/kos/binutils/i386-kos/bin/i686-kos-gcc`)  
+```sh
+bash ./configure --cross-prefix=/opt/kos/binutils/i386-kos/bin/i686-kos-
+make -j $(nproc)
+```
+
 With visual studio  
 
 - Open `/.vs/deemon.sln`
 - Select your preferred build configuration and architecture
 - `CTRL+SHIFT+B`
-
-With configure  
-```sh
-./configure
-make
-```
-
-Cross-compiling deemon (using `/opt/kos/binutils/i386-kos/bin/i686-kos-gcc`)  
-```sh
-./configure --cross-prefix=/opt/kos/binutils/i386-kos/bin/i686-kos-
-make
-```
 
 
 
