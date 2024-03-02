@@ -93,23 +93,8 @@ DECL_BEGIN
 #ifndef FILE_SHL_DECLARED
 #define FILE_SHL_DECLARED 1
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-file_shl(DeeObject *self,
-         DeeObject *some_object);
+file_shl(DeeObject *self, DeeObject *some_object);
 #endif /* !FILE_SHL_DECLARED */
-
-#define construct_varkwds_mapping() \
-	construct_varkwds_mapping_impl(code, frame)
-#ifndef CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
-#define CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED
-PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-construct_varkwds_mapping_impl(DeeCodeObject *__restrict code,
-                               struct code_frame *__restrict frame) {
-	struct code_frame_kwds *kwds = frame->cf_kw;
-	ASSERT(kwds != NULL);
-	return DeeKwBlackList_New(code, frame->cf_argc, frame->cf_argv, kwds->fk_kw);
-}
-#endif /* !CONSTRUCT_VARKWDS_MAPPING_IMPL_DEFINED */
-
 
 
 /* @return: * :        Prefixed object pointer (dereferences to non-NULL)
@@ -1670,9 +1655,14 @@ do_push_arg:
 				varkwds = frame->cf_kw->fk_varkwds;
 				if (!varkwds) {
 					DeeObject *oldval;
-					varkwds = construct_varkwds_mapping();
+					varkwds = DeeKwBlackList_New(code, frame->cf_argc,
+					                             frame->cf_argv,
+					                             frame->cf_kw->fk_kw);
 					if unlikely(!varkwds)
 						HANDLE_EXCEPT();
+					/* Must do an atomic store here because the keyword descriptor
+					 * might be shared between multiple threads when the same yield
+					 * function is enumerated multiple times by different threads. */
 					oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 					if unlikely(oldval) {
 						DeeKwBlackList_Decref(varkwds);
@@ -5211,9 +5201,14 @@ do_pack_dict:
 						value = frame->cf_kw->fk_varkwds;
 						if (!value) {
 							DeeObject *oldval;
-							value = construct_varkwds_mapping();
+							value = DeeKwBlackList_New(code, frame->cf_argc,
+							                           frame->cf_argv,
+							                           frame->cf_kw->fk_kw);
 							if unlikely(!value)
 								HANDLE_EXCEPT();
+							/* Must do an atomic store here because the keyword descriptor
+							 * might be shared between multiple threads when the same yield
+							 * function is enumerated multiple times by different threads. */
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, value);
 							if unlikely(oldval) {
 								DeeKwBlackList_Decref(value);
@@ -6646,9 +6641,14 @@ do_prefix_push_arg:
 						varkwds = frame->cf_kw->fk_varkwds;
 						if (!varkwds) {
 							DeeObject *oldval;
-							varkwds = construct_varkwds_mapping();
+							varkwds = DeeKwBlackList_New(code, frame->cf_argc,
+							                             frame->cf_argv,
+							                             frame->cf_kw->fk_kw);
 							if unlikely(!varkwds)
 								HANDLE_EXCEPT();
+							/* Must do an atomic store here because the keyword descriptor
+							 * might be shared between multiple threads when the same yield
+							 * function is enumerated multiple times by different threads. */
 							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
 							if unlikely(oldval) {
 								DeeKwBlackList_Decref(varkwds);
@@ -7267,7 +7267,6 @@ __pragma_GCC_diagnostic_pop
 #undef YIELD
 #undef RETURN
 #undef USE_SWITCH
-#undef construct_varkwds_mapping
 #undef set_prefix_object
 #undef xch_prefix_object
 #undef get_prefix_object_ptr

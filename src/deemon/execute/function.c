@@ -820,9 +820,6 @@ yf_fini(YFunction *__restrict self) {
 	if (self->yf_kw) {
 		Dee_Decref(self->yf_kw->fk_kw);
 		if (self->yf_func->fo_code->co_flags & CODE_FVARKWDS) {
-			/* NOTE: When `DeeBlackListKwds_Type' or `DeeKwdsMapping_Type' are used,
-			 *       the argument vector loaded by the object had been implicitly
-			 *       referenced via `self->yf_args' until this point. */
 			if (self->yf_kw->fk_varkwds)
 				DeeKwBlackList_Decref(self->yf_kw->fk_varkwds);
 		}
@@ -1211,20 +1208,20 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	              "->?DModule\n"
 	              "Alias for :Function.__module__ though ?#__func__"),
 	TYPE_GETTER_F("__operator__", &yf_get_operator, TYPE_GETSET_FNOREFESCAPE,
-	            "->?X2?Dint?N\n"
-	            "Alias for :Function.__operator__ though ?#__func__"),
+	              "->?X2?Dint?N\n"
+	              "Alias for :Function.__operator__ though ?#__func__"),
 	TYPE_GETTER_F("__operatorname__", &yf_get_operatorname, TYPE_GETSET_FNOREFESCAPE,
-	            "->?X3?Dstring?Dint?N\n"
-	            "Alias for :Function.__operatorname__ though ?#__func__"),
+	              "->?X3?Dstring?Dint?N\n"
+	              "Alias for :Function.__operatorname__ though ?#__func__"),
 	TYPE_GETTER_F("__property__", &yf_get_property, TYPE_GETSET_FNOREFESCAPE,
-	            "->?X2?Dint?N\n"
-	            "Alias for :Function.__property__ though ?#__func__"),
+	              "->?X2?Dint?N\n"
+	              "Alias for :Function.__property__ though ?#__func__"),
 	TYPE_GETTER_F("__refs__", &yf_get_refs, TYPE_GETSET_FNOREFESCAPE,
-	            "->?S?O\n"
-	            "Alias for :Function.__refs__ though ?#__func__"),
+	              "->?S?O\n"
+	              "Alias for :Function.__refs__ though ?#__func__"),
 	TYPE_GETTER_F(STR___kwds__, &yf_get_kwds, TYPE_GETSET_FNOREFESCAPE,
-	            "->?S?Dstring\n"
-	            "Alias for :Function.__kwds__ though ?#__func__"),
+	              "->?S?Dstring\n"
+	              "Alias for :Function.__kwds__ though ?#__func__"),
 	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
