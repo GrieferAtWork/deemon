@@ -29,6 +29,7 @@
 #include <deemon/api.h>
 #include <deemon/arg.h>
 #include <deemon/bool.h>
+#include <deemon/callable.h>
 #include <deemon/dex.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
@@ -602,14 +603,14 @@ PRIVATE struct type_getset tpconst once_getsets[] = {
 	              "->?DCallable\n"
 	              "#tUnboundAttribute{No callback has been assigned}"
 	              "#tValueError{The ?GOnce-object has already been invoked (or is being "
-	              /*             */ "invoked right now), and the callback can no longer be "
-	              /*             */ "accessed or modified.}"
+	              /*        */ "invoked right now), and the callback can no longer be "
+	              /*        */ "accessed or modified.}"
 	              "Get/set the callback invoked by this ?GOnce-object"),
 	TYPE_GETSET_F("result", &once_result_get, &once_result_del, &once_result_set, TYPE_GETSET_FNOREFESCAPE,
 	              "->\n"
 	              "#tUnboundAttribute{No result has been assigned}"
 	              "#tValueError{The ?GOnce-object has not yet been invoked, "
-	              /*             */ "so the result cannot be accessed (yet).}"
+	              /*        */ "so the result cannot be accessed (yet).}"
 	              "Get/set the result of this ?GOnce-object"),
 	TYPE_GETTER_F("hasrun", &once_hasrun_get, TYPE_GETSET_FNOREFESCAPE,
 	              "->?Dbool\n"
@@ -686,7 +687,7 @@ INTERN DeeTypeObject DeeOnce_Type = {
 	/* .tp_flags    = */ TP_FNORMAL | TP_FGC,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeObject_Type,
+	/* .tp_base     = */ &DeeCallable_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
