@@ -44,7 +44,7 @@ test_throw(size_t argc, DeeObject *const *argv) {
 
 PRIVATE DREF DeeObject *DCALL
 test_compile_and_run(size_t argc, DeeObject *const *argv) {
-	struct Dee_hostfunc hfunc;
+	struct hostfunc hfunc;
 	DREF DeeObject *result;
 	DeeFunctionObject *func;
 	DeeTupleObject *args = (DeeTupleObject *)Dee_EmptyTuple;
@@ -61,7 +61,7 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	 *       once no longer needed) */
 
 	/* Assemble the function. */
-	if unlikely(Dee_assemble(func, &hfunc, HOSTFUNC_CC_CALL, DEE_FUNCTION_ASSEMBLER_F_NORMAL))
+	if unlikely(Dee_assemble(func, &hfunc, HOST_CC_CALL, FUNCTION_ASSEMBLER_F_NORMAL))
 		goto err;
 
 	/* Call the function. */
@@ -80,7 +80,7 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	}
 #endif /* HAVE_test_throw */
 
-	Dee_hostfunc_fini(&hfunc);
+	hostfunc_fini(&hfunc);
 	return result;
 err:
 	return NULL;

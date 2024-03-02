@@ -144,100 +144,100 @@
 
 /* Figure out how many scratch registers this host gives us. */
 #ifdef HOSTASM_X86_64_MSABI
-#define HOST_REGISTER_RETURN HOST_REGISTER_RAX
-#define HOST_REGISTER_RAX    0
-#define HOST_REGISTER_RCX    1
-#define HOST_REGISTER_RDX    2
-#define HOST_REGISTER_R8     3
-#define HOST_REGISTER_R9     4
-#define HOST_REGISTER_R10    5
-#define HOST_REGISTER_R11    6
-#define HOST_REGISTER_COUNT  7 /* %rax, %rcx, %rdx, %r8, %r9, %r10, %r11 */
+#define HOST_REGNO_RETURN HOST_REGNO_RAX
+#define HOST_REGNO_RAX    0
+#define HOST_REGNO_RCX    1
+#define HOST_REGNO_RDX    2
+#define HOST_REGNO_R8     3
+#define HOST_REGNO_R9     4
+#define HOST_REGNO_R10    5
+#define HOST_REGNO_R11    6
+#define HOST_REGNO_COUNT  7 /* %rax, %rcx, %rdx, %r8, %r9, %r10, %r11 */
 #elif defined(HOSTASM_X86_64_SYSVABI)
-#define HOST_REGISTER_RETURN HOST_REGISTER_RAX
-#define HOST_REGISTER_RAX    0
-#define HOST_REGISTER_RCX    1
-#define HOST_REGISTER_RDX    2
-#define HOST_REGISTER_RDI    3
-#define HOST_REGISTER_RSI    4
-#define HOST_REGISTER_R8     5
-#define HOST_REGISTER_R9     6
-#define HOST_REGISTER_R10    7
-#define HOST_REGISTER_R11    8
-#define HOST_REGISTER_COUNT  9 /* %rax, %rcx, %rdx, %rdi, %rsi, %r8, %r9, %r10, %r11 */
+#define HOST_REGNO_RETURN HOST_REGNO_RAX
+#define HOST_REGNO_RAX    0
+#define HOST_REGNO_RCX    1
+#define HOST_REGNO_RDX    2
+#define HOST_REGNO_RDI    3
+#define HOST_REGNO_RSI    4
+#define HOST_REGNO_R8     5
+#define HOST_REGNO_R9     6
+#define HOST_REGNO_R10    7
+#define HOST_REGNO_R11    8
+#define HOST_REGNO_COUNT  9 /* %rax, %rcx, %rdx, %rdi, %rsi, %r8, %r9, %r10, %r11 */
 #elif defined(HOSTASM_X86)
-#define HOST_REGISTER_RETURN HOST_REGISTER_EAX
-#define HOST_REGISTER_EAX    0
-#define HOST_REGISTER_ECX    1
-#define HOST_REGISTER_EDX    2
-#define HOST_REGISTER_COUNT  3 /* %eax, %ecx, %edx */
+#define HOST_REGNO_RETURN HOST_REGNO_EAX
+#define HOST_REGNO_EAX    0
+#define HOST_REGNO_ECX    1
+#define HOST_REGNO_EDX    2
+#define HOST_REGNO_COUNT  3 /* %eax, %ecx, %edx */
 #endif /* ... */
 
 
 /* Arguments registers in the `DCALL' ABI */
 #ifdef HOSTASM_X86_64_MSABI
-#define HOST_REGISTER_R_ARG0 HOST_REGISTER_RCX
-#define HOST_REGISTER_R_ARG1 HOST_REGISTER_RDX
-#define HOST_REGISTER_R_ARG2 HOST_REGISTER_R8
-#define HOST_REGISTER_R_ARG3 HOST_REGISTER_R9
+#define HOST_REGNO_R_ARG0 HOST_REGNO_RCX
+#define HOST_REGNO_R_ARG1 HOST_REGNO_RDX
+#define HOST_REGNO_R_ARG2 HOST_REGNO_R8
+#define HOST_REGNO_R_ARG3 HOST_REGNO_R9
 #elif defined(HOSTASM_X86_64_SYSVABI)
-#define HOST_REGISTER_R_ARG0 HOST_REGISTER_RDI
-#define HOST_REGISTER_R_ARG1 HOST_REGISTER_RSI
-#define HOST_REGISTER_R_ARG2 HOST_REGISTER_RDX
-#define HOST_REGISTER_R_ARG3 HOST_REGISTER_RCX
-#define HOST_REGISTER_R_ARG4 HOST_REGISTER_R8
-#define HOST_REGISTER_R_ARG5 HOST_REGISTER_R9
+#define HOST_REGNO_R_ARG0 HOST_REGNO_RDI
+#define HOST_REGNO_R_ARG1 HOST_REGNO_RSI
+#define HOST_REGNO_R_ARG2 HOST_REGNO_RDX
+#define HOST_REGNO_R_ARG3 HOST_REGNO_RCX
+#define HOST_REGNO_R_ARG4 HOST_REGNO_R8
+#define HOST_REGNO_R_ARG5 HOST_REGNO_R9
 #endif /* ... */
 
 
 DECL_BEGIN
 
-typedef uint8_t Dee_host_register_t;
+typedef uint8_t host_regno_t;
 
-/* Host function assembly calling convention (one of `HOSTFUNC_CC_*'). */
-typedef uint8_t Dee_hostfunc_cc_t;
+/* Host function assembly calling convention (one of `HOST_CC_*'). */
+typedef uint8_t host_cc_t;
 
 /* Possible calling convention flags. */
-#define HOSTFUNC_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
-#define HOSTFUNC_CC_F_THIS  2 /* Take an an extra `DeeObject *self' parameter for "this" */
-#define HOSTFUNC_CC_F_TUPLE 4 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
-#define HOSTFUNC_CC_F_FUNC  8 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
+#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
+#define HOST_CC_F_THIS  2 /* Take an an extra `DeeObject *self' parameter for "this" */
+#define HOST_CC_F_TUPLE 4 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
+#define HOST_CC_F_FUNC  8 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
 
 /* Possible calling conventions. */
-#define HOSTFUNC_CC_CALL                   0  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_CALL_KW                1  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_THISCALL               2  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_THISCALL_KW            3  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_CALL_TUPLE             4  /* DREF DeeObject *(DCALL *)(DeeObject *args); */
-#define HOSTFUNC_CC_CALL_TUPLE_KW          5  /* DREF DeeObject *(DCALL *)(DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_THISCALL_TUPLE         6  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
-#define HOSTFUNC_CC_THISCALL_TUPLE_KW      7  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_FUNC_CALL              8  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_FUNC_CALL_KW           9  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_FUNC_THISCALL          10 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv); */
-#define HOSTFUNC_CC_FUNC_THISCALL_KW       11 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
-#define HOSTFUNC_CC_FUNC_CALL_TUPLE        12 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args); */
-#define HOSTFUNC_CC_FUNC_CALL_TUPLE_KW     13 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_FUNC_THISCALL_TUPLE    14 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args); */
-#define HOSTFUNC_CC_FUNC_THISCALL_TUPLE_KW 15 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args, DeeObject *kw); */
-#define HOSTFUNC_CC_COUNT                  16
-union Dee_rawhostfunc_entry {
+#define HOST_CC_CALL                   0  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv); */
+#define HOST_CC_CALL_KW                1  /* DREF DeeObject *(DCALL *)(size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOST_CC_THISCALL               2  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define HOST_CC_THISCALL_KW            3  /* DREF DeeObject *(DCALL *)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOST_CC_CALL_TUPLE             4  /* DREF DeeObject *(DCALL *)(DeeObject *args); */
+#define HOST_CC_CALL_TUPLE_KW          5  /* DREF DeeObject *(DCALL *)(DeeObject *args, DeeObject *kw); */
+#define HOST_CC_THISCALL_TUPLE         6  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args); */
+#define HOST_CC_THISCALL_TUPLE_KW      7  /* DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *args, DeeObject *kw); */
+#define HOST_CC_FUNC_CALL              8  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv); */
+#define HOST_CC_FUNC_CALL_KW           9  /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOST_CC_FUNC_THISCALL          10 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv); */
+#define HOST_CC_FUNC_THISCALL_KW       11 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); */
+#define HOST_CC_FUNC_CALL_TUPLE        12 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args); */
+#define HOST_CC_FUNC_CALL_TUPLE_KW     13 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw); */
+#define HOST_CC_FUNC_THISCALL_TUPLE    14 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args); */
+#define HOST_CC_FUNC_THISCALL_TUPLE_KW 15 /* DREF DeeObject *(DCALL *)(DeeFunctionObject *func, DeeObject *self, DeeObject *args, DeeObject *kw); */
+#define HOST_CC_COUNT                  16
+union host_rawfunc_entry {
 	void                   *hfe_addr;
-	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                        /* HOSTFUNC_CC_CALL */
-	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                      /* HOSTFUNC_CC_CALL_KW */
-	DREF DeeObject *(DCALL *hfe_thiscall)(DeeObject *self, size_t argc, DeeObject *const *argv);                   /* HOSTFUNC_CC_THISCALL */
-	DREF DeeObject *(DCALL *hfe_thiscall_kw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); /* HOSTFUNC_CC_THISCALL_KW */
-	DREF DeeObject *(DCALL *hfe_call_tuple)(DeeObject *args);                                                      /* HOSTFUNC_CC_CALL_TUPLE */
-	DREF DeeObject *(DCALL *hfe_call_tuple_kw)(DeeObject *args, DeeObject *kw);                                    /* HOSTFUNC_CC_CALL_TUPLE_KW */
-	DREF DeeObject *(DCALL *hfe_thiscall_tuple)(DeeObject *self, DeeObject *args);                                 /* HOSTFUNC_CC_THISCALL_TUPLE */
-	DREF DeeObject *(DCALL *hfe_thiscall_tuple_kw)(DeeObject *self, DeeObject *args, DeeObject *kw);               /* HOSTFUNC_CC_THISCALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                        /* HOST_CC_CALL */
+	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                      /* HOST_CC_CALL_KW */
+	DREF DeeObject *(DCALL *hfe_thiscall)(DeeObject *self, size_t argc, DeeObject *const *argv);                   /* HOST_CC_THISCALL */
+	DREF DeeObject *(DCALL *hfe_thiscall_kw)(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw); /* HOST_CC_THISCALL_KW */
+	DREF DeeObject *(DCALL *hfe_call_tuple)(DeeObject *args);                                                      /* HOST_CC_CALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_call_tuple_kw)(DeeObject *args, DeeObject *kw);                                    /* HOST_CC_CALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_thiscall_tuple)(DeeObject *self, DeeObject *args);                                 /* HOST_CC_THISCALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_thiscall_tuple_kw)(DeeObject *self, DeeObject *args, DeeObject *kw);               /* HOST_CC_THISCALL_TUPLE_KW */
 };
 
 
-struct Dee_rawhostfunc {
-	union Dee_rawhostfunc_entry rhf_entry; /* Function entry point. */
-	void                      *_rhf_base;  /* Mmap base address. */
-	size_t                     _rhf_size;  /* Mmap size address. */
+struct host_rawfunc {
+	union host_rawfunc_entry rhf_entry; /* Function entry point. */
+	void                   *_rhf_base;  /* Mmap base address. */
+	size_t                  _rhf_size;  /* Mmap size address. */
 };
 
 #ifdef __CYGWIN__
@@ -282,12 +282,12 @@ PRIVATE ATTR_CONST size_t DCALL dee_nt_getpagesize(void) {
 
 
 #if defined(CONFIG_hostfunc_USES_VirtualAlloc)
-#define Dee_rawhostfunc_init(self, size)                    \
+#define host_rawfunc_init(self, size)                       \
 	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())), \
 	 ((self)->_rhf_base = VirtualAlloc(NULL, (self)->_rhf_size, MEM_COMMIT, PAGE_READWRITE)) != NULL ? 0 : -1)
-#define Dee_rawhostfunc_fini(self)   (void)VirtualFree((self)->_rhf_base, 0, MEM_RELEASE)
-#define Dee_rawhostfunc_mkexec(self) Dee_rawhostfunc_mkexec(self)
-LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_rawhostfunc_mkexec)(struct Dee_rawhostfunc *__restrict self) {
+#define host_rawfunc_fini(self)   (void)VirtualFree((self)->_rhf_base, 0, MEM_RELEASE)
+#define host_rawfunc_mkexec(self) host_rawfunc_mkexec(self)
+LOCAL WUNUSED NONNULL((1)) int (DCALL host_rawfunc_mkexec)(struct host_rawfunc *__restrict self) {
 	DWORD dwTemp;
 	return VirtualProtect(self->_rhf_base, self->_rhf_size, PAGE_EXECUTE_READ, &dwTemp) ? 0 : -1;
 }
@@ -295,18 +295,18 @@ LOCAL WUNUSED NONNULL((1)) int (DCALL Dee_rawhostfunc_mkexec)(struct Dee_rawhost
 #ifndef MAP_FAILED
 #define MAP_FAILED ((void *)(uintptr_t)-1)
 #endif /* !MAP_FAILED */
-#define Dee_rawhostfunc_init(self, size)                                        \
+#define host_rawfunc_init(self, size)                                           \
 	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())),                     \
 	 ((self)->_rhf_base = mmap(NULL, (self)->_rhf_size, PROT_READ | PROT_WRITE, \
-	                          MAP_PRIVATE | MAP_ANON, -1, 0)) != MAP_FAILED ? 0 : -1)
-#define Dee_rawhostfunc_fini(self)   (void)munmap((self)->_rhf_base, (self)->_rhf_size)
-#define Dee_rawhostfunc_mkexec(self) mprotect((self)->_rhf_base, (self)->_rhf_size, PROT_READ | PROT_EXEC)
+	                           MAP_PRIVATE | MAP_ANON, -1, 0)) != MAP_FAILED ? 0 : -1)
+#define host_rawfunc_fini(self)   (void)munmap((self)->_rhf_base, (self)->_rhf_size)
+#define host_rawfunc_mkexec(self) mprotect((self)->_rhf_base, (self)->_rhf_size, PROT_READ | PROT_EXEC)
 #else /* ... */
-#define Dee_rawhostfunc_init(self, size)                    \
+#define host_rawfunc_init(self, size)                       \
 	(((self)->_rhf_size = CEIL_ALIGN(size, getpagesize())), \
 	 ((self)->_rhf_base = Dee_TryMalloc((self)->_rhf_size)) != NULL ? 0 : -1)
-#define Dee_rawhostfunc_fini(self)   Dee_Free((self)->_rhf_base)
-#define Dee_rawhostfunc_mkexec(self) 0
+#define host_rawfunc_fini(self)   Dee_Free((self)->_rhf_base)
+#define host_rawfunc_mkexec(self) 0
 #endif /* !... */
 
 DECL_END

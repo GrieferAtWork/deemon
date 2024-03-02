@@ -51,30 +51,30 @@ DECL_BEGIN
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
-                        struct Dee_function_assembler *__restrict assembler) {
+basic_block_compile(struct basic_block *__restrict self,
+                    struct function_assembler *__restrict assembler) {
 	int result;
-	struct Dee_function_generator generator;
-	generator.fg_block     = self;
-	generator.fg_sect      = &self->bb_htext;
-	generator.fg_assembler = assembler;
-	generator.fg_state     = self->bb_mem_start;
-	_Dee_function_generator_initcommon(&generator);
-	ASSERT(generator.fg_state);
-	Dee_memstate_incref(generator.fg_state);
-#ifdef DEFINED_Dee_host_section_unwind_setsp_initial
-	Dee_host_section_unwind_setsp_initial(generator.fg_sect, generator.fg_state->ms_host_cfa_offset);
-#else /* DEFINED_Dee_host_section_unwind_setsp_initial */
-	result = Dee_host_section_unwind_setsp(generator.fg_sect, generator.fg_state->ms_host_cfa_offset);
+	struct fungen gen;
+	gen.fg_block     = self;
+	gen.fg_sect      = &self->bb_htext;
+	gen.fg_assembler = assembler;
+	gen.fg_state     = self->bb_mem_start;
+	_fg_initcommon(&gen);
+	ASSERT(gen.fg_state);
+	memstate_incref(gen.fg_state);
+#ifdef DEFINED_host_section_unwind_setsp_initial
+	host_section_unwind_setsp_initial(gen.fg_sect, gen.fg_state->ms_host_cfa_offset);
+#else /* DEFINED_host_section_unwind_setsp_initial */
+	result = host_section_unwind_setsp(gen.fg_sect, gen.fg_state->ms_host_cfa_offset);
 	if likely(result == 0)
-#endif /* !DEFINED_Dee_host_section_unwind_setsp_initial */
+#endif /* !DEFINED_host_section_unwind_setsp_initial */
 	{
-		result = Dee_function_generator_genall(&generator);
+		result = fg_genall(&gen);
 	}
-	Dee_memstate_decref(generator.fg_state);
-	ASSERT(generator.fg_block == self);
-	ASSERT(generator.fg_sect == &self->bb_htext);
-	ASSERT(generator.fg_assembler == assembler);
+	memstate_decref(gen.fg_state);
+	ASSERT(gen.fg_block == self);
+	ASSERT(gen.fg_sect == &self->bb_htext);
+	ASSERT(gen.fg_assembler == assembler);
 	return result;
 }
 
@@ -83,12 +83,12 @@ Dee_basic_block_compile(struct Dee_basic_block *__restrict self,
  * `jd_stat' and return that one.
  * @return: (size_t)-1: Everything has been compiled. */
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
+find_next_block_to_compile(struct function_assembler *__restrict self) {
 	size_t result_index = (size_t)-1;
 	size_t i, result_missing_entries = (size_t)-1;
 	for (i = 0; i < self->fa_blockc; ++i) {
 		size_t j, num_missing_entries;
-		struct Dee_basic_block *block = self->fa_blockv[i];
+		struct basic_block *block = self->fa_blockv[i];
 		if (block->bb_mem_start == NULL)
 			continue; /* Block hasn't been reached at all, yet. */
 		if (block->bb_mem_end != NULL)
@@ -97,12 +97,12 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 			return 0; /* Always compile the entry-block first! */
 		num_missing_entries = 0;
 		for (j = 0; j < block->bb_entries.jds_size; ++j) {
-			struct Dee_jump_descriptor *entry = block->bb_entries.jds_list[j];
+			struct jump_descriptor *entry = block->bb_entries.jds_list[j];
 			if (entry->jd_stat == NULL)
 				++num_missing_entries;
 		}
 		for (j = 0; j < self->fa_blockc; ++j) {
-			struct Dee_basic_block *block2 = self->fa_blockv[j];
+			struct basic_block *block2 = self->fa_blockv[j];
 			if (block2->bb_next == block && block2->bb_mem_end == NULL)
 				++num_missing_entries;
 		}
@@ -117,13 +117,13 @@ find_next_block_to_compile(struct Dee_function_assembler *__restrict self) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
-Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *__restrict self) {
-	Dee_lid_t lid, n_optargs;
-	struct Dee_memstate *result;
+PRIVATE WUNUSED NONNULL((1)) DREF struct memstate *DCALL
+function_assembler_alloc_zero_memstate(struct function_assembler const *__restrict self) {
+	lid_t lid, n_optargs;
+	DREF struct memstate *result;
 
 	/* Setup the state of the function's first (entry) block. */
-	result = Dee_memstate_alloc(self->fa_xlocalc);
+	result = memstate_alloc(self->fa_xlocalc);
 	if unlikely(!result)
 		goto done;
 	result->ms_refcnt = 1;
@@ -135,19 +135,19 @@ Dee_function_assembler_alloc_zero_memstate(struct Dee_function_assembler const *
 	result->ms_uargc_min = self->fa_code->co_argc_min;
 	n_optargs            = self->fa_code->co_argc_max - self->fa_code->co_argc_min;
 	bzero(result->ms_rinuse, sizeof(result->ms_rinuse));
-	Dee_memequivs_init(&result->ms_memequiv);
-	Dee_memstate_hregs_clear_usage(result);
+	memequivs_init(&result->ms_memequiv);
+	memstate_hregs_clear_usage(result);
 	result->ms_stackv = NULL;
 
 	/* Initially, all variables are unbound... */
 	for (lid = 0; lid < result->ms_localc - n_optargs; ++lid)
-		Dee_memval_init_local_unbound(&result->ms_localv[lid]);
+		memval_init_local_unbound(&result->ms_localv[lid]);
 
 	/* ... except for optional argument cache slots, which we initialize as undefined.
 	 * This special handling then causes optional arguments to be cached on first use
 	 * into their respective slots. */
 	for (; lid < result->ms_localc; ++lid)
-		Dee_memval_init_undefined(&result->ms_localv[lid]);
+		memval_init_undefined(&result->ms_localv[lid]);
 done:
 	return result;
 }
@@ -156,14 +156,14 @@ done:
  * generated function is entered at the start of the prolog.
  * @return: * :   The initial memory-state
  * @return: NULL: Error */
-PRIVATE WUNUSED NONNULL((1)) DREF struct Dee_memstate *DCALL
-Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *__restrict self) {
-	Dee_hostfunc_cc_t cc = self->fa_cc;
-	struct Dee_memstate *state;
+PRIVATE WUNUSED NONNULL((1)) DREF struct memstate *DCALL
+function_assembler_alloc_init_memstate(struct function_assembler const *__restrict self) {
+	host_cc_t cc = self->fa_cc;
+	struct memstate *state;
 	ASSERT(self->fa_blockc >= 1);
 
 	/* Figure out how many locals we need. */
-	state = Dee_function_assembler_alloc_zero_memstate(self);
+	state = function_assembler_alloc_zero_memstate(self);
 	if unlikely(!state)
 		goto err;
 
@@ -171,68 +171,68 @@ Dee_function_assembler_alloc_init_memstate(struct Dee_function_assembler const *
 #ifdef HOSTASM_X86
 	{
 #ifdef HOSTASM_X86_64
-#define Dee_memval_set_x86_arg(self, argi)                                      \
-	(Dee_memval_init_hreg(self, truearg_regno[argi], 0, NULL, MEMOBJ_F_NORMAL), \
-	 Dee_memstate_incrinuse(state, Dee_memval_direct_hreg_getreg(self)))
-		PRIVATE Dee_host_register_t const truearg_regno[4] = {
-			HOST_REGISTER_R_ARG0,
-			HOST_REGISTER_R_ARG1,
-			HOST_REGISTER_R_ARG2,
-			HOST_REGISTER_R_ARG0,
-#ifdef HOST_REGISTER_R_ARG4
-			HOST_REGISTER_R_ARG4,
-#endif /* HOST_REGISTER_R_ARG4 */
+#define memval_set_x86_arg(self, argi)                                      \
+	(memval_init_hreg(self, truearg_regno[argi], 0, NULL, MEMOBJ_F_NORMAL), \
+	 memstate_incrinuse(state, memval_direct_hreg_getreg(self)))
+		PRIVATE host_regno_t const truearg_regno[4] = {
+			HOST_REGNO_R_ARG0,
+			HOST_REGNO_R_ARG1,
+			HOST_REGNO_R_ARG2,
+			HOST_REGNO_R_ARG0,
+#ifdef HOST_REGNO_R_ARG4
+			HOST_REGNO_R_ARG4,
+#endif /* HOST_REGNO_R_ARG4 */
 		};
 #else /* HOSTASM_X86_64 */
-#define Dee_memval_set_x86_arg(self, argi)                                       \
-	Dee_memval_init_hstackind(self, (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
+#define memval_set_x86_arg(self, argi)                                       \
+	memval_init_hstackind(self, (uintptr_t)(-(ptrdiff_t)(((argi) + 1) * 4)), \
 	                          0, NULL, MEMOBJ_F_NORMAL)
 #endif /* !HOSTASM_X86_64 */
 		size_t argi = 0;
-		Dee_lid_t extra_base = self->fa_localc;
-		if (cc & HOSTFUNC_CC_F_FUNC) {
-			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
+		lid_t extra_base = self->fa_localc;
+		if (cc & HOST_CC_F_FUNC) {
+			memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_FUNC], argi);
 			++argi;
 		}
-		if (cc & HOSTFUNC_CC_F_THIS) {
-			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_THIS], argi);
+		if (cc & HOST_CC_F_THIS) {
+			memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_THIS], argi);
 			++argi;
 		}
-		if (cc & HOSTFUNC_CC_F_TUPLE) {
-			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGS], argi);
+		if (cc & HOST_CC_F_TUPLE) {
+			memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGS], argi);
 			++argi;
 		} else {
-			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGC], argi);
+			memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGC], argi);
 			++argi;
-			Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGV], argi);
+			memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_ARGV], argi);
 			++argi;
 		}
-		if (cc & HOSTFUNC_CC_F_KW) {
-#if defined(HOSTASM_X86_64) && !defined(HOST_REGISTER_R_ARG4)
+		if (cc & HOST_CC_F_KW) {
+#if defined(HOSTASM_X86_64) && !defined(HOST_REGNO_R_ARG4)
 			if (argi == 5) {
-				struct Dee_memval *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
+				struct memval *a_kw = &state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW];
 #ifdef HOSTASM_X86_64_MSABI
-				Dee_memval_init_hstackind(a_kw, (uintptr_t)(-(5 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
+				memval_init_hstackind(a_kw, (uintptr_t)(-(5 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
 #else /* HOSTASM_X86_64_MSABI */
-				Dee_memval_init_hstackind(a_kw, (uintptr_t)(-(1 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
+				memval_init_hstackind(a_kw, (uintptr_t)(-(1 * HOST_SIZEOF_POINTER)), 0, NULL, MEMOBJ_F_NORMAL);
 #endif /* !HOSTASM_X86_64_MSABI */
 			} else
-#endif /* HOSTASM_X86_64 && !HOST_REGISTER_R_ARG4 */
+#endif /* HOSTASM_X86_64 && !HOST_REGNO_R_ARG4 */
 			{
-				Dee_memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
+				memval_set_x86_arg(&state->ms_localv[extra_base + MEMSTATE_XLOCAL_A_KW], argi);
 			}
 		}
-#undef Dee_memval_set_x86_arg
+#undef memval_set_x86_arg
 	}
 #else /* ... */
 #error "Initial register state not implemented for this architecture"
 #endif /* !... */
 
 	/* Some arguments have known object types. */
-	if (cc & HOSTFUNC_CC_F_FUNC)
-		Dee_memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC], &DeeFunction_Type);
-	if (cc & HOSTFUNC_CC_F_TUPLE)
-		Dee_memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS], &DeeTuple_Type);
+	if (cc & HOST_CC_F_FUNC)
+		memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_FUNC], &DeeFunction_Type);
+	if (cc & HOST_CC_F_TUPLE)
+		memval_direct_settypeof(&state->ms_localv[self->fa_xlocalc + MEMSTATE_XLOCAL_A_ARGS], &DeeTuple_Type);
 
 	return state;
 err:
@@ -240,11 +240,11 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self) {
+fg_makeprolog(struct fungen *__restrict self) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
 	uint16_t co_argc_min = code->co_argc_min;
 	uint16_t co_argc_max = code->co_argc_max;
-	if (self->fg_assembler->fa_cc & HOSTFUNC_CC_F_KW) {
+	if (self->fg_assembler->fa_cc & HOST_CC_F_KW) {
 		/* Generate code:
 		 * >> size_t argc;
 		 * >> DeeObject **argv;
@@ -366,12 +366,12 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 	/*
 	 * At this point, arguments, varargs and varkwds are accessed as follows:
 	 *
-	 * if HOSTFUNC_CC_F_KW:
+	 * if HOST_CC_F_KW:
 	 * >> varkwds = ({ // CAUTION: Must be decref'd using "DeeKwBlackList_Decref()"
 	 * >>     DeeKwBlackList_New({code}, argc, argv, kw);
 	 * >> });
 	 *
-	 * if HOSTFUNC_CC_F_KW:
+	 * if HOST_CC_F_KW:
 	 * >> arg[{i}] = ({
 	 * >>     if ({i} < argc) {
 	 * >>         argv[{i}];
@@ -386,7 +386,7 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 	 * >>     }
 	 * >> });
 	 *
-	 * if !HOSTFUNC_CC_F_KW:
+	 * if !HOST_CC_F_KW:
 	 * >> arg[{i}] = ({
 	 * >>     __assume({i} < {co_argc_max});
 	 * >> #if {co_argc_min} >= {co_argc_max}
@@ -423,19 +423,19 @@ Dee_function_generator_makeprolog(struct Dee_function_generator *__restrict self
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_makeprolog_cleanup(struct Dee_function_generator *__restrict self) {
+fg_makeprolog_cleanup(struct fungen *__restrict self) {
 	/* Delete all locals initialized by the prolog
 	 * that aren't used within the function. */
-	Dee_lid_t lid;
-	struct Dee_memstate *state = self->fg_state;
-	struct Dee_basic_block *block0 = self->fg_block;
+	lid_t lid;
+	struct memstate *state = self->fg_state;
+	struct basic_block *block0 = self->fg_block;
 	for (lid = 0; lid < state->ms_localc; ++lid) {
 		if (bitset_test(block0->bb_locuse, lid))
 			continue;
-		if (Dee_memval_isdirect(&state->ms_localv[lid]) &&
-		    Dee_memval_direct_local_neverbound(&state->ms_localv[lid]))
+		if (memval_isdirect(&state->ms_localv[lid]) &&
+		    memval_direct_local_neverbound(&state->ms_localv[lid]))
 			continue;
-		if unlikely(Dee_function_generator_vdel_local(self, lid))
+		if unlikely(fg_vdel_local(self, lid))
 			goto err;
 		state = self->fg_state; /* Re-load in case unshare happened. */
 	}
@@ -452,27 +452,27 @@ err:
  * @return: 0 : Success
  * @return: -1: Error */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self,
-                                  /*inherit(always)*/ DREF struct Dee_memstate *__restrict state) {
+function_assembler_makeprolog(struct function_assembler *__restrict self,
+                              /*inherit(always)*/ DREF struct memstate *__restrict state) {
 	int result;
-	struct Dee_function_generator gen;
+	struct fungen gen;
 	gen.fg_assembler = self;
 	gen.fg_block     = self->fa_blockv[0];
 	gen.fg_sect      = &self->fa_prolog;
 	gen.fg_state     = state; /* Inherit reference */
-	_Dee_function_generator_initcommon(&gen);
+	_fg_initcommon(&gen);
 	ASSERT(gen.fg_block);
 	ASSERT(self->fa_prolog_end == NULL);
 	ASSERT(gen.fg_state != NULL);
-	result = Dee_function_generator_makeprolog(&gen);
+	result = fg_makeprolog(&gen);
 	if likely(result == 0)
-		result = Dee_function_generator_makeprolog_cleanup(&gen);
+		result = fg_makeprolog_cleanup(&gen);
 	ASSERT(gen.fg_state != NULL);
 	ASSERT(self->fa_prolog_end == NULL);
 	if likely(result == 0) {
 		self->fa_prolog_end = gen.fg_state; /* Inherit reference */
 	} else {
-		Dee_memstate_decref(gen.fg_state);
+		memstate_decref(gen.fg_state);
 	}
 	return result;
 }
@@ -494,19 +494,19 @@ Dee_function_assembler_makeprolog(struct Dee_function_assembler *__restrict self
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict self) {
+function_assembler_compileblocks(struct function_assembler *__restrict self) {
 	size_t block_i;
-	struct Dee_memstate *state;
-	struct Dee_basic_block *block;
+	struct memstate *state;
+	struct basic_block *block;
 	ASSERT(self->fa_blockc >= 1);
 
 	/* Setup the state of the function's first (entry) block. */
-	state = Dee_function_assembler_alloc_init_memstate(self);
+	state = function_assembler_alloc_init_memstate(self);
 	if unlikely(!state)
 		goto err;
 
 	/* Generate the function prolog. */
-	if unlikely(Dee_function_assembler_makeprolog(self, state))
+	if unlikely(function_assembler_makeprolog(self, state))
 		goto err;
 
 	/* Set the mem-state for the initial block. */
@@ -514,18 +514,18 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 	block = self->fa_blockv[0];
 	ASSERT(block);
 	ASSERT(block->bb_mem_start == NULL);
-	Dee_memstate_incref(self->fa_prolog_end);
+	memstate_incref(self->fa_prolog_end);
 	block->bb_mem_start = self->fa_prolog_end; /* Inherit reference */
 
 	/* Compile all basic blocks until everything has been compiled and everyone is happy. */
 	while ((block_i = find_next_block_to_compile(self)) != (size_t)-1) {
 		block = self->fa_blockv[block_i];
-		Dee_DPRINTF("Dee_basic_block_compile: %" PRFuSIZ " [%.4" PRFx32 "-%.4" PRFx32 "]\n",
+		Dee_DPRINTF("basic_block_compile: %" PRFuSIZ " [%.4" PRFx32 "-%.4" PRFx32 "]\n",
 		            block_i,
-		            Dee_function_assembler_addrof(self, block->bb_deemon_start),
-		            Dee_function_assembler_addrof(self, block->bb_deemon_end - 1));
+		            function_assembler_addrof(self, block->bb_deemon_start),
+		            function_assembler_addrof(self, block->bb_deemon_end - 1));
 #ifndef NO_HOSTASM_DEBUG_PRINT
-		_Dee_memstate_debug_print(block->bb_mem_start, self, block->bb_deemon_start);
+		_memstate_debug_print(block->bb_mem_start, self, block->bb_deemon_start);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 		ASSERT(block->bb_mem_start != NULL);
 		ASSERT(block->bb_mem_end == NULL);
@@ -533,7 +533,7 @@ Dee_function_assembler_compileblocks(struct Dee_function_assembler *__restrict s
 		ASSERT(block->bb_htext.hs_relc == 0);
 
 		/* Compile this block. */
-		if unlikely(Dee_basic_block_compile(block, self))
+		if unlikely(basic_block_compile(block, self))
 			goto err;
 	}
 
@@ -544,10 +544,10 @@ err:
 
 
 struct host_section_set {
-	struct Dee_host_section **hss_list; /* [1..1][0..hss_size] List of basic blocks (sorted by pointer) */
-	size_t                    hss_size; /* # of items in `hss_list' */
+	struct host_section **hss_list; /* [1..1][0..hss_size] List of basic blocks (sorted by pointer) */
+	size_t                hss_size; /* # of items in `hss_list' */
 #ifndef NDEBUG
-	size_t                    hss_smax; /* Max # of items in `hss_list' */
+	size_t                hss_smax; /* Max # of items in `hss_list' */
 #endif /* !NDEBUG */
 };
 
@@ -560,18 +560,18 @@ struct host_section_set {
 #define host_section_set_init(self, smax)         \
 	(_host_section_set_init_set_smax(self, smax), \
 	 (self)->hss_size = 0,                        \
-	 ((self)->hss_list = (struct Dee_host_section **)Dee_Mallocac(smax, sizeof(struct Dee_host_section *))) != NULL ? 0 : -1)
+	 ((self)->hss_list = (struct host_section **)Dee_Mallocac(smax, sizeof(struct host_section *))) != NULL ? 0 : -1)
 
 
 /* Try to insert `sect' into `self' (if it wasn't inserted already) */
 PRIVATE NONNULL((1, 2)) void DCALL
 host_section_set_insert(struct host_section_set *__restrict self,
-                        struct Dee_host_section *sect) {
+                        struct host_section *sect) {
 	size_t lo = 0, hi = self->hss_size;
 	ASSERT(sect);
 	while (lo < hi) {
 		size_t mid = (lo + hi) / 2;
-		struct Dee_host_section *ex = self->hss_list[mid];
+		struct host_section *ex = self->hss_list[mid];
 		if (sect < ex) {
 			hi = mid;
 		} else if (sect > ex) {
@@ -589,18 +589,18 @@ host_section_set_insert(struct host_section_set *__restrict self,
 	memmoveupc(&self->hss_list[lo + 1],
 	           &self->hss_list[lo],
 	           self->hss_size - lo,
-	           sizeof(struct Dee_host_section *));
+	           sizeof(struct host_section *));
 	self->hss_list[lo] = sect;
 	++self->hss_size;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 host_section_set_contains(struct host_section_set const *__restrict self,
-                          struct Dee_host_section *sect) {
+                          struct host_section *sect) {
 	size_t lo = 0, hi = self->hss_size;
 	while (lo < hi) {
 		size_t mid = (lo + hi) / 2;
-		struct Dee_host_section *ex = self->hss_list[mid];
+		struct host_section *ex = self->hss_list[mid];
 		if (sect < ex) {
 			hi = mid;
 		} else if (sect > ex) {
@@ -614,21 +614,21 @@ host_section_set_contains(struct host_section_set const *__restrict self,
 
 PRIVATE NONNULL((1, 2)) void DCALL
 host_section_set_insertall_from_relocations(struct host_section_set *__restrict self,
-                                            struct Dee_host_section *sect) {
+                                            struct host_section *sect) {
 	size_t i;
 	for (i = 0; i < sect->hs_relc; ++i) {
-		struct Dee_host_reloc *rel = &sect->hs_relv[i];
+		struct host_reloc *rel = &sect->hs_relv[i];
 		switch (rel->hr_vtype) {
 		case DEE_HOST_RELOCVALUE_SYM: {
-			struct Dee_host_symbol const *sym = rel->hr_value.rv_sym;
+			struct host_symbol const *sym = rel->hr_value.rv_sym;
 			switch (sym->hs_type) {
 #if 0 /* We only care about sections that might be used for exception handling! */
-			case DEE_HOST_SYMBOL_JUMP:
+			case HOST_SYMBOL_JUMP:
 				host_section_set_insert(self, &sym->hs_value.sv_jump->jd_morph);
 				host_section_set_insert(self, &sym->hs_value.sv_jump->jd_to->bb_htext);
 				break;
 #endif
-			case DEE_HOST_SYMBOL_SECT:
+			case HOST_SYMBOL_SECT:
 				host_section_set_insert(self, sym->hs_value.sv_sect.ss_sect);
 				break;
 			default: break;
@@ -660,7 +660,7 @@ host_section_set_insertall_from_relocations(struct host_section_set *__restrict 
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) {
+function_assembler_trimdead(struct function_assembler *__restrict self) {
 	struct host_section_set referenced_sections;
 	size_t i, num_sections;
 
@@ -671,7 +671,7 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 	ASSERT(self->fa_blockv[0]->bb_mem_start != NULL);
 	ASSERT(self->fa_blockv[0]->bb_mem_end != NULL);
 	for (i = 1; i < self->fa_blockc;) {
-		struct Dee_basic_block *block = self->fa_blockv[i];
+		struct basic_block *block = self->fa_blockv[i];
 		ASSERT((block->bb_mem_start != NULL) == (block->bb_mem_end != NULL));
 		if (block->bb_mem_start == NULL) {
 			/* Fully get rid of this block. */
@@ -679,8 +679,8 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 			memmovedownc(&self->fa_blockv[i],
 			             &self->fa_blockv[i + 1],
 			             self->fa_blockc - i,
-			             sizeof(struct Dee_basic_block *));
-			Dee_basic_block_destroy(block);
+			             sizeof(struct basic_block *));
+			basic_block_destroy(block);
 			continue;
 		}
 		if (block->bb_deemon_end < block->bb_deemon_end_r) {
@@ -688,15 +688,15 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 			 * In this case, it is possible that there are further jump
 			 * descriptors for parts of the code that hasn't been compiled,
 			 * which we must get rid of now. */
-			Dee_basic_block_trim_unused_exits(block);
+			basic_block_trim_unused_exits(block);
 		}
 		++i;
 	}
 
 	num_sections = self->fa_blockc + self->fa_except_exitc;
 	for (i = 0; i < self->fa_blockc; ++i) {
-		struct Dee_basic_block *block = self->fa_blockv[i];
-		struct Dee_host_section *sect;
+		struct basic_block *block = self->fa_blockv[i];
+		struct host_section *sect;
 		ASSERT(block);
 		ASSERT(block->bb_mem_start);
 		ASSERT(block->bb_mem_end);
@@ -705,8 +705,8 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 			++num_sections;
 	}
 	for (i = 0; i < self->fa_except_exitc; ++i) {
-		struct Dee_except_exitinfo *xinfo = self->fa_except_exitv[i];
-		struct Dee_host_section *sect;
+		struct except_exitinfo *xinfo = self->fa_except_exitv[i];
+		struct host_section *sect;
 		ASSERT(xinfo);
 		sect = &xinfo->exi_text;
 		while ((sect = sect->hs_cold) != NULL)
@@ -718,8 +718,8 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 	if unlikely(host_section_set_init(&referenced_sections, num_sections))
 		goto err;
 	for (i = 0; i < self->fa_blockc; ++i) {
-		struct Dee_basic_block *block = self->fa_blockv[i];
-		struct Dee_host_section *sect;
+		struct basic_block *block = self->fa_blockv[i];
+		struct host_section *sect;
 		ASSERT(block);
 		ASSERT(block->bb_mem_start);
 		ASSERT(block->bb_mem_end);
@@ -731,8 +731,8 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 
 	/* Go through exception handlers and remove those that aren't referenced. */
 	for (i = 0; i < self->fa_except_exitc;) {
-		struct Dee_except_exitinfo *info = self->fa_except_exitv[i];
-		struct Dee_host_section *sect = &info->exi_text;
+		struct except_exitinfo *info = self->fa_except_exitv[i];
+		struct host_section *sect = &info->exi_text;
 		bool found_any = false;
 		do {
 			found_any = host_section_set_contains(&referenced_sections, sect);
@@ -749,7 +749,7 @@ Dee_function_assembler_trimdead(struct Dee_function_assembler *__restrict self) 
 		memmovedownc(&self->fa_except_exitv[i],
 		             &self->fa_except_exitv[i + 1],
 		             self->fa_except_exitc - i,
-		             sizeof(struct Dee_except_exitinfo *));
+		             sizeof(struct except_exitinfo *));
 	}
 	host_section_set_fini(&referenced_sections);
 
@@ -760,17 +760,17 @@ err:
 
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) struct Dee_except_exitinfo *DCALL
-Dee_function_generator_select_predecessor(struct Dee_function_assembler *__restrict self,
-                                          struct Dee_except_exitinfo_id const *__restrict newinfo) {
+PRIVATE WUNUSED NONNULL((1, 2)) struct except_exitinfo *DCALL
+function_assembler_except_select_predecessor(struct function_assembler *__restrict self,
+                                             struct except_exitinfo_id const *__restrict newinfo) {
 	size_t i, result_score = (size_t)-1;
-	struct Dee_except_exitinfo *result = NULL;
+	struct except_exitinfo *result = NULL;
 	for (i = 0; i < self->fa_except_exitc; ++i) {
 		size_t c_score;
-		struct Dee_except_exitinfo *c = self->fa_except_exitv[i];
-		if (Dee_except_exitinfo_wascompiled(c))
+		struct except_exitinfo *c = self->fa_except_exitv[i];
+		if (except_exitinfo_wascompiled(c))
 			continue;
-		c_score = Dee_except_exitinfo_id_distance(Dee_except_exitinfo_asid(c), newinfo);
+		c_score = except_exitinfo_id_distance(except_exitinfo_asid(c), newinfo);
 		if (c_score <= result_score) {
 			result       = c;
 			result_score = c_score;
@@ -780,20 +780,20 @@ Dee_function_generator_select_predecessor(struct Dee_function_assembler *__restr
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_generator_gretNULL(struct Dee_function_generator *__restrict self) {
-	struct Dee_memloc zero;
-	Dee_memloc_init_const(&zero, 0);
-	return Dee_function_generator_gret(self, &zero);
+fg_gretNULL(struct fungen *__restrict self) {
+	struct memloc zero;
+	memloc_init_const(&zero, 0);
+	return fg_gret(self, &zero);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict self) {
-	void *_memstatebuf[Dee_memstate_sizeof(1) / sizeof(void *)];
-	void *_exitidbuf[offsetof(struct Dee_except_exitinfo_id, exi_memrefv) / sizeof(void *)];
-	struct Dee_memstate *state = (struct Dee_memstate *)_memstatebuf;
-	struct Dee_except_exitinfo_id *exit_id = (struct Dee_except_exitinfo_id *)_exitidbuf;
-	struct Dee_function_generator gen;
-	struct Dee_except_exitinfo *info, *next;
+function_assembler_compileexcept(struct function_assembler *__restrict self) {
+	void *_memstatebuf[memstate_sizeof(1) / sizeof(void *)];
+	void *_exitidbuf[offsetof(struct except_exitinfo_id, exi_memrefv) / sizeof(void *)];
+	struct memstate *state = (struct memstate *)_memstatebuf;
+	struct except_exitinfo_id *exit_id = (struct except_exitinfo_id *)_exitidbuf;
+	struct fungen gen;
+	struct except_exitinfo *info, *next;
 	ASSERT(self->fa_blockc >= 1);
 
 	/* Setup the fake mem-state */
@@ -801,7 +801,7 @@ Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict s
 	gen.fg_block     = self->fa_blockv[self->fa_blockc - 1];
 	gen.fg_sect      = &gen.fg_block->bb_htext;
 	gen.fg_state     = state;
-	_Dee_function_generator_initcommon(&gen);
+	_fg_initcommon(&gen);
 	ASSERT(gen.fg_state != NULL);
 	state->ms_refcnt    = 1;
 	state->ms_localc    = 1;
@@ -810,47 +810,45 @@ Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict s
 	state->ms_stacka    = 0;
 	state->ms_stackc    = 0;
 	state->ms_stackv    = NULL;
-	Dee_memval_init_undefined(&state->ms_localv[0]);
+	memval_init_undefined(&state->ms_localv[0]);
 	exit_id->exi_cfa_offset = 0;
 	exit_id->exi_memrefc = 0;
 
 	/* Generate the special last exception exit block (the one which includes "return NULL") */
-	Dee_memequivs_init(&state->ms_memequiv);
-	info = Dee_function_generator_select_predecessor(self, exit_id);
+	memequivs_init(&state->ms_memequiv);
+	info = function_assembler_except_select_predecessor(self, exit_id);
 	ASSERT(info);
-	ASSERT(!Dee_except_exitinfo_wascompiled(info));
+	ASSERT(!except_exitinfo_wascompiled(info));
 	gen.fg_sect = &info->exi_text;
-	if unlikely(Dee_function_generator_xmorph(&gen, Dee_except_exitinfo_asid(info), exit_id))
+	if unlikely(fg_xmorph(&gen, except_exitinfo_asid(info), exit_id))
 		goto err_equiv;
-	if unlikely(Dee_function_generator_gretNULL(&gen))
+	if unlikely(fg_gretNULL(&gen))
 		goto err_equiv;
 	ASSERT(state->ms_stacka == 0);
 	ASSERT(state->ms_stackc == 0);
 	ASSERT(state->ms_stackv == NULL);
-	ASSERT(Dee_except_exitinfo_wascompiled(info));
+	ASSERT(except_exitinfo_wascompiled(info));
 	ASSERT(info->exi_next == NULL);
-	Dee_memequivs_fini(&state->ms_memequiv);
+	memequivs_fini(&state->ms_memequiv);
 
 	/* Compile all of the other exception exit blocks for fallthru */
-	while ((next = Dee_function_generator_select_predecessor(self, Dee_except_exitinfo_asid(info))) != NULL) {
-		ASSERT(!Dee_except_exitinfo_wascompiled(next));
+	while ((next = function_assembler_except_select_predecessor(self, except_exitinfo_asid(info))) != NULL) {
+		ASSERT(!except_exitinfo_wascompiled(next));
 		gen.fg_sect = &next->exi_text;
 		ASSERT(state->ms_stacka == 0);
 		ASSERT(state->ms_stackc == 0);
 		ASSERT(state->ms_stackv == NULL);
-		Dee_memequivs_init(&state->ms_memequiv);
-		if unlikely(Dee_function_generator_xmorph(&gen,
-		                                          Dee_except_exitinfo_asid(next),
-		                                          Dee_except_exitinfo_asid(info)))
+		memequivs_init(&state->ms_memequiv);
+		if unlikely(fg_xmorph(&gen, except_exitinfo_asid(next), except_exitinfo_asid(info)))
 			goto err_equiv;
-		Dee_memequivs_fini(&state->ms_memequiv);
+		memequivs_fini(&state->ms_memequiv);
 		ASSERT(state->ms_stacka == 0);
 		ASSERT(state->ms_stackc == 0);
 		ASSERT(state->ms_stackv == NULL);
 		ASSERT(next->exi_next == NULL);
 		next->exi_next = info;
 		info = next;
-		ASSERT(Dee_except_exitinfo_wascompiled(next));
+		ASSERT(except_exitinfo_wascompiled(next));
 	}
 	ASSERT(state->ms_stacka == 0);
 	ASSERT(state->ms_stackc == 0);
@@ -860,7 +858,7 @@ Dee_function_assembler_compileexcept(struct Dee_function_assembler *__restrict s
 	self->fa_except_first = info;
 	return 0;
 err_equiv:
-	Dee_memequivs_fini(&state->ms_memequiv);
+	memequivs_fini(&state->ms_memequiv);
 	ASSERT(state->ms_stacka == 0);
 	ASSERT(state->ms_stackc == 0);
 	ASSERT(state->ms_stackv == NULL);
@@ -875,10 +873,10 @@ err_equiv:
 /* Append morphing code for `from_state' to `to_state' to `sect' */
 #undef assemble_morph
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-assemble_morph(struct Dee_function_assembler *__restrict assembler,
-               struct Dee_host_section *sect,
-               struct Dee_memstate *from_state,
-               struct Dee_basic_block *to_block
+assemble_morph(struct function_assembler *__restrict assembler,
+               struct host_section *sect,
+               struct memstate *from_state,
+               struct basic_block *to_block
 #ifndef NO_HOSTASM_DEBUG_PRINT
                , Dee_instruction_t const *from_instr
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
@@ -887,29 +885,29 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
 #define assemble_morph(a, b, c, d, e) assemble_morph(a, b, c, d)
 #endif /* NO_HOSTASM_DEBUG_PRINT */
 	int result;
-	struct Dee_function_generator gen;
+	struct fungen gen;
 	ASSERT(to_block->bb_mem_start);
-	Dee_DPRINTF("Dee_function_generator_vmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
-	            Dee_function_assembler_addrof(assembler, from_instr),
+	Dee_DPRINTF("fg_vmorph: %.4" PRFx32 " -> %.4" PRFx32 "\n",
+	            function_assembler_addrof(assembler, from_instr),
 	            to_block->bb_deemon_start < to_block->bb_deemon_end
-	            ? Dee_function_assembler_addrof(assembler, to_block->bb_deemon_start)
+	            ? function_assembler_addrof(assembler, to_block->bb_deemon_start)
 	            : 0xffff);
 #ifndef NO_HOSTASM_DEBUG_PRINT
-	_Dee_memstate_debug_print(from_state, assembler, from_instr);
-	_Dee_memstate_debug_print(to_block->bb_mem_start, assembler,
-	                          to_block->bb_deemon_start < to_block->bb_deemon_end
-	                          ? to_block->bb_deemon_start
-	                          : NULL);
+	_memstate_debug_print(from_state, assembler, from_instr);
+	_memstate_debug_print(to_block->bb_mem_start, assembler,
+	                      to_block->bb_deemon_start < to_block->bb_deemon_end
+	                      ? to_block->bb_deemon_start
+	                      : NULL);
 #endif /* !NO_HOSTASM_DEBUG_PRINT */
 	gen.fg_assembler = assembler;
 	gen.fg_block     = to_block;
 	gen.fg_sect      = sect;
 	gen.fg_state     = from_state;
-	_Dee_function_generator_initcommon(&gen);
-	Dee_memstate_incref(gen.fg_state);
+	_fg_initcommon(&gen);
+	memstate_incref(gen.fg_state);
 	/* Since we just throw the mem-state away anyways, we don't need to do equivalence constraining here. */
-	result = Dee_function_generator_vmorph_no_constrain_equivalences(&gen, to_block->bb_mem_start);
-	Dee_memstate_decref(gen.fg_state);
+	result = fg_vmorph_no_constrain_equivalences(&gen, to_block->bb_mem_start);
+	memstate_decref(gen.fg_state);
 	return result;
 }
 
@@ -925,7 +923,7 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict self) {
+function_assembler_compilemorph(struct function_assembler *__restrict self) {
 	size_t block_i;
 	/* Initial morph after the prolog to match the start-state of the first block. */
 	if unlikely(assemble_morph(self, &self->fa_prolog, self->fa_prolog_end,
@@ -934,12 +932,12 @@ Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict se
 		goto err;
 	for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
 		size_t exit_i;
-		struct Dee_basic_block *block = self->fa_blockv[block_i];
+		struct basic_block *block = self->fa_blockv[block_i];
 		ASSERT(block);
 		ASSERT(block->bb_mem_start);
 		ASSERT(block->bb_mem_end);
 		for (exit_i = 0; exit_i < block->bb_exits.jds_size; ++exit_i) {
-			struct Dee_jump_descriptor *jd = block->bb_exits.jds_list[exit_i];
+			struct jump_descriptor *jd = block->bb_exits.jds_list[exit_i];
 			ASSERT(jd);
 			ASSERT(jd->jd_from >= block->bb_deemon_start);
 			ASSERT(jd->jd_from < block->bb_deemon_end);
@@ -958,18 +956,18 @@ Dee_function_assembler_compilemorph(struct Dee_function_assembler *__restrict se
 
 	/* Generate cleanup/fallthru code for exit descriptors. */
 	if (self->fa_except_exitc > 0)
-		return Dee_function_assembler_compileexcept(self);
+		return function_assembler_compileexcept(self);
 	return 0;
 err:
 	return -1;
 }
 
 PRIVATE NONNULL((1, 2)) void DCALL
-collect_morph_sections(struct Dee_host_section_tailq *__restrict text,
-                       struct Dee_basic_block *__restrict morph_block) {
+collect_morph_sections(struct host_section_tailq *__restrict text,
+                       struct basic_block *__restrict morph_block) {
 	size_t exit_i;
 	for (exit_i = 0; exit_i < morph_block->bb_exits.jds_size; ++exit_i) {
-		struct Dee_jump_descriptor *jmp = morph_block->bb_exits.jds_list[exit_i];
+		struct jump_descriptor *jmp = morph_block->bb_exits.jds_list[exit_i];
 		ASSERT(jmp);
 		TAILQ_INSERT_TAIL(text, &jmp->jd_morph, hs_link);
 		jmp->jd_morph.hs_fallthru = &jmp->jd_to->bb_htext;
@@ -992,25 +990,25 @@ collect_morph_sections(struct Dee_host_section_tailq *__restrict text,
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict self) {
-#ifdef Dee_host_section_unwind_maxsize
-#ifdef HAVE_Dee_hostfunc_unwind_enabled
+function_assembler_ordersections(struct function_assembler *__restrict self) {
+#ifdef host_section_unwind_maxsize
+#ifdef HAVE_hostfunc_unwind_enabled
 	bool unwind_enabled;
-#endif /* HAVE_Dee_hostfunc_unwind_enabled */
-#endif /* Dee_host_section_unwind_maxsize */
-	struct Dee_host_section *sect;
+#endif /* HAVE_hostfunc_unwind_enabled */
+#endif /* host_section_unwind_maxsize */
+	struct host_section *sect;
 	size_t block_i, morph_flush_i;
 #ifdef __INTELLISENSE__
-	struct Dee_host_section_tailq text;
+	struct host_section_tailq text;
 #else /* __INTELLISENSE__ */
 #define text self->fa_sections
 #endif /* !__INTELLISENSE__ */
-	struct Dee_host_section_tailq cold;
+	struct host_section_tailq cold;
 	TAILQ_INIT(&text);
 	TAILQ_INIT(&cold);
-	ASSERT(!Dee_host_section_islinked(&self->fa_prolog));
+	ASSERT(!host_section_islinked(&self->fa_prolog));
 	TAILQ_INSERT_HEAD(&text, &self->fa_prolog, hs_link);
-	ASSERT(Dee_host_section_islinked(&self->fa_prolog));
+	ASSERT(host_section_islinked(&self->fa_prolog));
 	ASSERT(self->fa_blockc >= 1);
 #define LOCAL_morph_flush(until_block_i)                                     \
 	do {                                                                     \
@@ -1025,8 +1023,8 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 	 * relation to deemon bytecode address ranges. */
 	morph_flush_i = 0;
 	for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
-		struct Dee_basic_block *jmp_next;
-		struct Dee_basic_block *block = self->fa_blockv[block_i];
+		struct basic_block *jmp_next;
+		struct basic_block *block = self->fa_blockv[block_i];
 		ASSERT(block);
 		jmp_next = block->bb_next;
 		block->bb_htext.hs_fallthru = jmp_next ? &jmp_next->bb_htext : NULL;
@@ -1041,15 +1039,15 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 #undef LOCAL_morph_flush
 
 	/* Go through exception exits and put them into the section order.
-	 * Note that `Dee_function_assembler_compilemorph()' already ordered
+	 * Note that `function_assembler_compilemorph()' already ordered
 	 * them for us, so all we need to do is start walking at `fa_except_first' */
 	ASSERT((self->fa_except_first != NULL) ==
 	       (self->fa_except_exitc > 0));
 	if (self->fa_except_first != NULL) {
-		struct Dee_except_exitinfo *block;
+		struct except_exitinfo *block;
 		block = self->fa_except_first;
 		do {
-			struct Dee_except_exitinfo *jmp_next = block->exi_next;
+			struct except_exitinfo *jmp_next = block->exi_next;
 			block->exi_text.hs_fallthru = jmp_next ? &jmp_next->exi_text : NULL;
 			TAILQ_INSERT_TAIL(&text, &block->exi_text, hs_link);
 		} while ((block = block->exi_next) != NULL);
@@ -1062,8 +1060,8 @@ Dee_function_assembler_ordersections(struct Dee_function_assembler *__restrict s
 			bool found_any = false;
 			for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
 				size_t depth_i;
-				struct Dee_basic_block *block = self->fa_blockv[block_i];
-				struct Dee_host_section *csect = block->bb_htext.hs_cold;
+				struct basic_block *block = self->fa_blockv[block_i];
+				struct host_section *csect = block->bb_htext.hs_cold;
 				if (!csect)
 					goto next_cold_block;
 				for (depth_i = 0; depth_i < depth; ++depth_i) {
@@ -1078,8 +1076,8 @@ next_cold_block:;
 			}
 			for (block_i = 0; block_i < self->fa_except_exitc; ++block_i) {
 				size_t depth_i;
-				struct Dee_except_exitinfo *xinfo = self->fa_except_exitv[block_i];
-				struct Dee_host_section *csect = xinfo->exi_text.hs_cold;
+				struct except_exitinfo *xinfo = self->fa_except_exitv[block_i];
+				struct host_section *csect = xinfo->exi_text.hs_cold;
 				if (!csect)
 					goto next_cold_xinfo;
 				for (depth_i = 0; depth_i < depth; ++depth_i) {
@@ -1108,26 +1106,26 @@ next_cold_xinfo:;
 	 * becomes blocked) */
 	sect = TAILQ_FIRST(&text);
 	while (sect) {
-		struct Dee_host_section *sort_next = TAILQ_NEXT(sect, hs_link);
-		struct Dee_host_section *want_next = sect->hs_fallthru;
+		struct host_section *sort_next = TAILQ_NEXT(sect, hs_link);
+		struct host_section *want_next = sect->hs_fallthru;
 		ASSERT(sort_next != sect);
 		if (want_next && want_next != sort_next && want_next != sect) {
-			struct Dee_host_section *want_prev;
+			struct host_section *want_prev;
 			/* Special case: can *always* move an empty section */
-			if (Dee_host_section_size(sect) == 0)
+			if (host_section_size(sect) == 0)
 				goto do_move_section;
 
 			/* See if we can move this section to where it wants to go. */
-			want_prev = TAILQ_PREV(want_next, Dee_host_section_tailq, hs_link);
+			want_prev = TAILQ_PREV(want_next, host_section_tailq, hs_link);
 			while (want_prev && want_prev->hs_fallthru == want_next &&
-			       Dee_host_section_size(want_prev) == 0) {
+			       host_section_size(want_prev) == 0) {
 				/* Special case: the other section is empty, so it
 				 * doesn't matter if we jump to it, or after it.
 				 *
 				 * As such, try to jump *to* it so we get another
 				 * chance of shifting `sect'. */
 				want_next = want_prev;
-				want_prev = TAILQ_PREV(want_next, Dee_host_section_tailq, hs_link);
+				want_prev = TAILQ_PREV(want_next, host_section_tailq, hs_link);
 			}
 			if (want_prev == NULL || want_prev->hs_fallthru != want_next) {
 				/* Moving the section doesn't have any downsides (other
@@ -1146,8 +1144,8 @@ do_move_section:
 	/* Go through the list of sections and append jump instructions wherever
 	 * the intended fallthru target differs from the actual successor section. */
 	TAILQ_FOREACH (sect, &text, hs_link) {
-		struct Dee_host_section *want_next = sect->hs_fallthru;
-		struct Dee_host_section *sort_next = TAILQ_NEXT(sect, hs_link);
+		struct host_section *want_next = sect->hs_fallthru;
+		struct host_section *sort_next = TAILQ_NEXT(sect, hs_link);
 		unsigned int n;
 		if (want_next == NULL)
 			goto no_jmp_needed; /* No specific successor needed */
@@ -1158,8 +1156,8 @@ do_move_section:
 		 * actual jump goes to wherever that section falls to. */
 		want_next = sect->hs_fallthru;
 		for (n = 128; n > 0; --n) { /* Limit is needed for infinite loops */
-			struct Dee_host_section *next;
-			if (Dee_host_section_size(want_next) != 0)
+			struct host_section *next;
+			if (host_section_size(want_next) != 0)
 				break;
 			next = want_next->hs_fallthru;
 			if (next == NULL) {
@@ -1175,14 +1173,14 @@ do_move_section:
 
 		/* Must generate a jump */
 		{
-			Dee_function_assembler_DEFINE_Dee_host_symbol_section(self, err, Lnext_dst, want_next, 0);
+			function_assembler_DEFINE_host_symbol_section(self, err, Lnext_dst, want_next, 0);
 #ifdef Dee_MallocUsableSize
 			sect->hs_alend = sect->hs_start + Dee_MallocUsableSize(sect->hs_start);
 			ASSERT(sect->hs_alend >= sect->hs_end);
 #else /* Dee_MallocUsableSize */
 			sect->hs_alend = sect->hs_end;
 #endif /* !Dee_MallocUsableSize */
-			if unlikely(_Dee_host_section_gjmp(sect, Lnext_dst))
+			if unlikely(_host_section_gjmp(sect, Lnext_dst))
 				goto err;
 		}
 		/*sect->hs_fallthru = NULL;*/
@@ -1191,23 +1189,23 @@ no_jmp_needed:;
 
 	/* Go through the big ol' list of sections to figure out the total text size.
 	 * Note that we can't remove empty sections because they might still be
-	 * referenced by Dee_host_symbol-s. */
+	 * referenced by host_symbol-s. */
 	self->fa_sectsize = 0;
-#ifdef Dee_host_section_unwind_maxsize
-#ifdef HAVE_Dee_hostfunc_unwind_enabled
-	unwind_enabled = Dee_hostfunc_unwind_enabled();
-#endif /* HAVE_Dee_hostfunc_unwind_enabled */
-#endif /* Dee_host_section_unwind_maxsize */
+#ifdef host_section_unwind_maxsize
+#ifdef HAVE_hostfunc_unwind_enabled
+	unwind_enabled = hostfunc_unwind_enabled();
+#endif /* HAVE_hostfunc_unwind_enabled */
+#endif /* host_section_unwind_maxsize */
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
-		self->fa_sectsize += Dee_host_section_size(sect);
-#ifdef Dee_host_section_unwind_maxsize
-#ifdef HAVE_Dee_hostfunc_unwind_enabled
+		self->fa_sectsize += host_section_size(sect);
+#ifdef host_section_unwind_maxsize
+#ifdef HAVE_hostfunc_unwind_enabled
 		if (unwind_enabled)
-#endif /* HAVE_Dee_hostfunc_unwind_enabled */
+#endif /* HAVE_hostfunc_unwind_enabled */
 		{
-			self->fa_sectsize += Dee_host_section_unwind_maxsize(sect);
+			self->fa_sectsize += host_section_unwind_maxsize(sect);
 		}
-#endif /* Dee_host_section_unwind_maxsize */
+#endif /* host_section_unwind_maxsize */
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 		sect->hs_symbols = NULL; /* Needed for symbol ordering */
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
@@ -1221,43 +1219,43 @@ no_jmp_needed:;
 	/* Sort host text symbols into their proper sections (needed
 	 * so that shrinkjumps() can adjust symbols when deleting text) */
 	{
-		struct Dee_host_symbol *misc_symbols = NULL;
-		struct Dee_host_symbol *sym = self->fa_symbols;
+		struct host_symbol *misc_symbols = NULL;
+		struct host_symbol *sym = self->fa_symbols;
 		while (sym) {
-			struct Dee_host_symbol *next = sym->_hs_next;
-			struct Dee_host_symbol **p_list;
-			/* Must also resolve `DEE_HOST_SYMBOL_JUMP' -> `DEE_HOST_SYMBOL_SECT' */
-			if (sym->hs_type == DEE_HOST_SYMBOL_JUMP) {
-				struct Dee_jump_descriptor *jmp = sym->hs_value.sv_jump;
-				struct Dee_host_section *target_sect;
-				if (Dee_host_section_islinked(&jmp->jd_morph)) {
+			struct host_symbol *next = sym->_hs_next;
+			struct host_symbol **p_list;
+			/* Must also resolve `HOST_SYMBOL_JUMP' -> `HOST_SYMBOL_SECT' */
+			if (sym->hs_type == HOST_SYMBOL_JUMP) {
+				struct jump_descriptor *jmp = sym->hs_value.sv_jump;
+				struct host_section *target_sect;
+				if (host_section_islinked(&jmp->jd_morph)) {
 					target_sect = &jmp->jd_morph;
 				} else {
-					struct Dee_basic_block *block;
+					struct basic_block *block;
 					block = jmp->jd_to;
-					while (Dee_host_section_islinked(&block->bb_htext)) {
+					while (host_section_islinked(&block->bb_htext)) {
 						ASSERTF(block->bb_next, "symbol points to not-linked block with no successor");
 						block = block->bb_next;
 					}
 					target_sect = &block->bb_htext;
 				}
-				sym->hs_type = DEE_HOST_SYMBOL_SECT;
+				sym->hs_type = HOST_SYMBOL_SECT;
 				sym->hs_value.sv_sect.ss_sect = target_sect;
 				sym->hs_value.sv_sect.ss_off  = 0;
 			}
-			ASSERT(sym->hs_type == DEE_HOST_SYMBOL_SECT ||
-			       sym->hs_type == DEE_HOST_SYMBOL_ABS);
+			ASSERT(sym->hs_type == HOST_SYMBOL_SECT ||
+			       sym->hs_type == HOST_SYMBOL_ABS);
 			p_list = &misc_symbols;
-			if (sym->hs_type == DEE_HOST_SYMBOL_SECT) {
-				struct Dee_host_section *symsect;
+			if (sym->hs_type == HOST_SYMBOL_SECT) {
+				struct host_section *symsect;
 				symsect = sym->hs_value.sv_sect.ss_sect;
 				ASSERT(symsect);
-				/* The section may not be linked if it was deleted by `Dee_function_assembler_trimdead()'.
+				/* The section may not be linked if it was deleted by `function_assembler_trimdead()'.
 				 * When that is the case, simply keep the symbol as part of the misc-symbols list. */
-				if (Dee_host_section_islinked(symsect))
+				if (host_section_islinked(symsect))
 					p_list = &symsect->hs_symbols;
 			}
-			ASSERT(!*p_list || (*p_list)->hs_type != DEE_HOST_SYMBOL_UNDEF);
+			ASSERT(!*p_list || (*p_list)->hs_type != HOST_SYMBOL_UNDEF);
 			sym->_hs_next = *p_list;
 			*p_list = sym;
 			sym = next;
@@ -1279,28 +1277,28 @@ err:
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 /* Delete the specified address range, and adjust  */
 PRIVATE NONNULL((1)) void DCALL
-Dee_host_section_deltext(struct Dee_host_section *__restrict self,
-                         uint32_t sectrel_addr, uint32_t num_bytes) {
-	struct Dee_host_section *sect;
-	struct Dee_host_symbol *sym;
+host_section_deltext(struct host_section *__restrict self,
+                     uint32_t sectrel_addr, uint32_t num_bytes) {
+	struct host_section *sect;
+	struct host_symbol *sym;
 	size_t i;
-	ASSERT((sectrel_addr) < Dee_host_section_size(self));
-	ASSERT((sectrel_addr + num_bytes) <= Dee_host_section_size(self));
+	ASSERT((sectrel_addr) < host_section_size(self));
+	ASSERT((sectrel_addr + num_bytes) <= host_section_size(self));
 	self->hs_end -= num_bytes;
 	memmovedown(self->hs_start + sectrel_addr,
 	            self->hs_start + sectrel_addr + num_bytes,
-	            Dee_host_section_size(self) - sectrel_addr);
+	            host_section_size(self) - sectrel_addr);
 
 	/* Adjust offsets of relocations that happen after the deleted area. */
 	for (i = 0; i < self->hs_relc; ++i) {
-		struct Dee_host_reloc *rel = &self->hs_relv[i];
+		struct host_reloc *rel = &self->hs_relv[i];
 		if (rel->hr_offset >= sectrel_addr)
 			rel->hr_offset -= num_bytes;
 	}
 
 	/* Adjust addresses of symbols that appear after the deleted area */
 	for (sym = self->hs_symbols; sym; sym = sym->_hs_next) {
-		ASSERT(sym->hs_type == DEE_HOST_SYMBOL_SECT);
+		ASSERT(sym->hs_type == HOST_SYMBOL_SECT);
 		ASSERT(sym->hs_value.sv_sect.ss_sect == self);
 		if (sym->hs_value.sv_sect.ss_off >= sectrel_addr)
 			sym->hs_value.sv_sect.ss_off -= num_bytes;
@@ -1312,25 +1310,25 @@ Dee_host_section_deltext(struct Dee_host_section *__restrict self,
 		sect->hs_badr -= num_bytes;
 
 #ifndef CONFIG_host_unwind_USES_NOOP
-	Dee_host_section_unwind_trimrange(self, sectrel_addr, num_bytes);
+	host_section_unwind_trimrange(self, sectrel_addr, num_bytes);
 #endif /* !CONFIG_host_unwind_USES_NOOP */
 }
 
 PRIVATE NONNULL((1, 2)) bool DCALL
-Dee_host_reloc_shrinkjump(struct Dee_host_section *__restrict sect,
-                          struct Dee_host_reloc *self) {
+host_reloc_shrinkjump(struct host_section *__restrict sect,
+                      struct host_reloc *self) {
 	byte_t *rel_templ = sect->hs_start + self->hr_offset;
 	uintptr_t rel_adr = sect->hs_badr + self->hr_offset;
 	uintptr_t rel_val;
-	ASSERT(self->hr_offset < Dee_host_section_size(sect));
+	ASSERT(self->hr_offset < host_section_size(sect));
 	switch (self->hr_vtype) {
 	case DEE_HOST_RELOCVALUE_ABS:
 		goto nope; /* Cannot shrink absolute relocation */
 	case DEE_HOST_RELOCVALUE_SYM: {
-		struct Dee_host_symbol *sym = self->hr_value.rv_sym;
-		if (sym->hs_type == DEE_HOST_SYMBOL_ABS)
+		struct host_symbol *sym = self->hr_value.rv_sym;
+		if (sym->hs_type == HOST_SYMBOL_ABS)
 			goto nope; /* Cannot shrink absolute relocation */
-		rel_val = Dee_host_symbol_value(sym);
+		rel_val = host_symbol_value(sym);
 	}	break;
 	default: __builtin_unreachable();
 	}
@@ -1350,7 +1348,7 @@ Dee_host_reloc_shrinkjump(struct Dee_host_section *__restrict sect,
 				rel_templ[-1] = 0xeb;
 				rel_templ[0]  = (byte_t)(uint8_t)Simm8;
 				self->hr_rtype = DEE_HOST_RELOC_PCREL8;
-				Dee_host_section_deltext(sect, self->hr_offset + 1, 3);
+				host_section_deltext(sect, self->hr_offset + 1, 3);
 				return true;
 			} else if (self->hr_offset >= 2 && (rel_templ[-2] == 0x0f &&
 			                                    rel_templ[-1] >= 0x80 &&
@@ -1361,7 +1359,7 @@ Dee_host_reloc_shrinkjump(struct Dee_host_section *__restrict sect,
 				rel_templ[-1] = (byte_t)(uint8_t)Simm8;
 				self->hr_rtype = DEE_HOST_RELOC_PCREL8;
 				--self->hr_offset;
-				Dee_host_section_deltext(sect, self->hr_offset + 1, 4);
+				host_section_deltext(sect, self->hr_offset + 1, 4);
 				return true;
 			}
 		}
@@ -1377,19 +1375,19 @@ nope:
 }
 
 PRIVATE NONNULL((1)) bool DCALL
-Dee_host_section_shrinkjumps(struct Dee_host_section *__restrict self) {
+host_section_shrinkjumps(struct host_section *__restrict self) {
 	bool result = false;
 	size_t i;
 	for (i = 0; i < self->hs_relc; ++i)
-		result |= Dee_host_reloc_shrinkjump(self, &self->hs_relv[i]);
+		result |= host_reloc_shrinkjump(self, &self->hs_relv[i]);
 	return result;
 }
 
 /* Step #6: Try to shrink large in generated host text with smaller ones.
  * This is an arch-specific step. On x86 it replaces `jmpl' with `jmp8' (if possible) */
 INTERN NONNULL((1)) void DCALL
-Dee_function_assembler_shrinkjumps(struct Dee_function_assembler *__restrict self) {
-	struct Dee_host_section *sect;
+function_assembler_shrinkjumps(struct function_assembler *__restrict self) {
+	struct host_section *sect;
 	uintptr_t badr;
 	bool did_something;
 
@@ -1397,14 +1395,14 @@ Dee_function_assembler_shrinkjumps(struct Dee_function_assembler *__restrict sel
 	badr = 0;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
 		sect->hs_badr = badr;
-		badr += Dee_host_section_size(sect);
+		badr += host_section_size(sect);
 	}
 
 	/* Try to shrink host jump instructions. */
 	do {
 		did_something = false;
 		TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
-			did_something |= Dee_host_section_shrinkjumps(sect);
+			did_something |= host_section_shrinkjumps(sect);
 		}
 	} while (did_something);
 }
@@ -1412,12 +1410,12 @@ Dee_function_assembler_shrinkjumps(struct Dee_function_assembler *__restrict sel
 
 
 INTERN NONNULL((1)) bool DCALL
-Dee_host_section_reloc(struct Dee_host_section *__restrict self) {
+host_section_reloc(struct host_section *__restrict self) {
 	size_t i;
 	for (i = 0; i < self->hs_relc; ++i) {
-		struct Dee_host_reloc *rel = &self->hs_relv[i];
+		struct host_reloc *rel = &self->hs_relv[i];
 		byte_t *rel_addr = self->hs_base + rel->hr_offset;
-		uintptr_t value = Dee_host_reloc_value(rel);
+		uintptr_t value = host_reloc_value(rel);
 		switch (rel->hr_rtype) {
 		case DEE_HOST_RELOC_NONE:
 			break;
@@ -1450,12 +1448,12 @@ Dee_host_section_reloc(struct Dee_host_section *__restrict self) {
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_function_assembler_output(struct Dee_function_assembler *__restrict self,
-                              struct Dee_hostfunc *__restrict result) {
+function_assembler_output(struct function_assembler *__restrict self,
+                          struct hostfunc *__restrict result) {
 	byte_t *writer;
-	struct Dee_host_section *sect;
+	struct host_section *sect;
 again:
-	if unlikely(Dee_rawhostfunc_init(&result->hf_raw, self->fa_sectsize)) {
+	if unlikely(host_rawfunc_init(&result->hf_raw, self->fa_sectsize)) {
 		if (Dee_CollectMemory(self->fa_sectsize))
 			goto again;
 		goto err;
@@ -1465,7 +1463,7 @@ again:
 	/* Figure out the final base addresses of sections. */
 	writer = (byte_t *)result->hf_raw._rhf_base;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
-		size_t size = Dee_host_section_size(sect);
+		size_t size = host_section_size(sect);
 		sect->hs_base = writer;
 		writer += size;
 	}
@@ -1473,10 +1471,10 @@ again:
 	/* Output sections and resolve relocations. */
 	writer = (byte_t *)result->hf_raw._rhf_base;
 	TAILQ_FOREACH (sect, &self->fa_sections, hs_link) {
-		size_t size = Dee_host_section_size(sect);
+		size_t size = host_section_size(sect);
 		ASSERT(writer == sect->hs_base);
 		writer = (byte_t *)mempcpy(writer, sect->hs_start, size);
-		if (!Dee_host_section_reloc(sect)) {
+		if (!host_section_reloc(sect)) {
 			/* TODO: Error if overflow on x86_64 (to re-compile w/ large memory model) */
 			DeeError_NOTIMPLEMENTED();
 			goto err_result;
@@ -1485,13 +1483,13 @@ again:
 
 	/* Output unwind information (if enabled). */
 #ifndef CONFIG_host_unwind_USES_NOOP
-	Dee_hostfunc_unwind_init(&result->hf_unwind, self,
+	hostfunc_unwind_init(&result->hf_unwind, self,
 	                         (byte_t *)result->hf_raw._rhf_base,
 	                         writer);
 #endif /* !CONFIG_host_unwind_USES_NOOP */
 
 	/* Make the function executable. */
-	if unlikely(Dee_rawhostfunc_mkexec(&result->hf_raw)) {
+	if unlikely(host_rawfunc_mkexec(&result->hf_raw)) {
 		Dee_BadAlloc(self->fa_sectsize);
 		goto err_result;
 	}
@@ -1516,59 +1514,59 @@ again:
 
 	return 0;
 err_result:
-	Dee_rawhostfunc_fini(&result->hf_raw);
+	host_rawfunc_fini(&result->hf_raw);
 err:
 	return -1;
 }
 
 /* High-level wrapper function to fully assemble `function' into its host-asm equivalent.
  * @param: cc:    Calling convention of the generated function
- * @param: flags: Set of `DEE_FUNCTION_ASSEMBLER_F_*'
+ * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*'
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_assemble(DeeFunctionObject *__restrict function,
-             struct Dee_hostfunc *__restrict result,
-             Dee_hostfunc_cc_t cc, uint16_t flags) {
-	struct Dee_function_assembler assembler;
-	Dee_function_assembler_init(&assembler, function, function->fo_code, cc, flags);
+             struct hostfunc *__restrict result,
+             host_cc_t cc, uint16_t flags) {
+	struct function_assembler assembler;
+	function_assembler_init(&assembler, function, function->fo_code, cc, flags);
 
 	/* Special case: deemon code that contains user-written deemon assembly
 	 *               requires special care to include some extra checks in
 	 *               generated host assembly. */
 	if unlikely(assembler.fa_code->co_flags & CODE_FASSEMBLY)
-		assembler.fa_flags |= DEE_FUNCTION_ASSEMBLER_F_SAFE;
+		assembler.fa_flags |= FUNCTION_ASSEMBLER_F_SAFE;
 
-#ifdef DEE_FUNCTION_ASSEMBLER_F_MCLARGE
+#ifdef FUNCTION_ASSEMBLER_F_MCLARGE
 	/* TODO: Only enable by default on __PE__. On __ELF__, try to compile and
 	 *       link w/o, and only fall-back to enabling this if that fails. */
-	assembler.fa_flags |= DEE_FUNCTION_ASSEMBLER_F_MCLARGE;
-#endif /* DEE_FUNCTION_ASSEMBLER_F_MCLARGE */
+	assembler.fa_flags |= FUNCTION_ASSEMBLER_F_MCLARGE;
+#endif /* FUNCTION_ASSEMBLER_F_MCLARGE */
 
 	/* Go through all the steps of assembling the function. */
-	if unlikely(Dee_function_assembler_loadblocks(&assembler))
+	if unlikely(function_assembler_loadblocks(&assembler))
 		goto err_assembler;
-	if (!(assembler.fa_flags & DEE_FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
-		if unlikely(Dee_function_assembler_loadlocuse(&assembler))
+	if (!(assembler.fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYDEL)) {
+		if unlikely(function_assembler_loadlocuse(&assembler))
 			goto err_assembler;
 	}
-	if unlikely(Dee_function_assembler_compileblocks(&assembler))
+	if unlikely(function_assembler_compileblocks(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_trimdead(&assembler))
+	if unlikely(function_assembler_trimdead(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_compilemorph(&assembler))
+	if unlikely(function_assembler_compilemorph(&assembler))
 		goto err_assembler;
-	if unlikely(Dee_function_assembler_ordersections(&assembler))
+	if unlikely(function_assembler_ordersections(&assembler))
 		goto err_assembler;
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
-	Dee_function_assembler_shrinkjumps(&assembler);
+	function_assembler_shrinkjumps(&assembler);
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
-	if unlikely(Dee_function_assembler_output(&assembler, result))
+	if unlikely(function_assembler_output(&assembler, result))
 		goto err_assembler;
-	Dee_function_assembler_fini(&assembler);
+	function_assembler_fini(&assembler);
 	return 0;
 err_assembler:
-	Dee_function_assembler_fini(&assembler);
+	function_assembler_fini(&assembler);
 /*err:*/
 	return -1;
 }

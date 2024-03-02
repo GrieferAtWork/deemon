@@ -41,7 +41,7 @@
 
 DECL_BEGIN
 
-struct Dee_host_section;
+struct host_section;
 
 
 
@@ -90,7 +90,7 @@ typedef struct {
 /* ===== END OF MS BS ===== */
 
 
-struct Dee_host_unwind {
+struct host_unwind {
 	/* NOTE: This stuff will eventually be registered with "RtlAddFunctionTable" */
 	/* Because MS is dumb and doesn't want you to change %Psp while in the middle
 	 * or a function, we actually have to encode every change to %Psp as its own
@@ -101,53 +101,53 @@ struct Dee_host_unwind {
 	NT_RUNTIME_FUNCTION *hu_unwindv; /* [0..hu_unwindc|ALLOC(hu_unwinda)][owned] Vector of unwind ranges ("UnwindData" is just the sp-offset) */
 };
 
-#define Dee_host_unwind_init_IS_BZERO
-#define Dee_host_unwind_init(self)  bzero(self, sizeof(struct Dee_host_unwind))
-#define Dee_host_unwind_fini(self)  Dee_Free((self)->hu_unwindv)
-#define Dee_host_unwind_clear(self) (void)((self)->hu_unwindc = 0)
+#define host_unwind_init_IS_BZERO
+#define host_unwind_init(self)  bzero(self, sizeof(struct host_unwind))
+#define host_unwind_fini(self)  Dee_Free((self)->hu_unwindv)
+#define host_unwind_clear(self) (void)((self)->hu_unwindc = 0)
 
 #define RUNTIME_FUNCTION_MAXSIZE 24 /* [sizeof(NT_RUNTIME_FUNCTION)=12] + [sizeof(NT_UNWIND_INFO)=12 (NT_UWOP_ALLOC_LARGE,1 form, +2 padding)] */
 
 /* Returns the max # of text bytes that may be needed for unwind info.
  * This info is needed for knowing how much extra space to mmap() at the start. */
-#define Dee_host_section_unwind_maxsize(self) \
+#define host_section_unwind_maxsize(self) \
 	(((self)->hs_unwind.hu_unwindc + 1) * RUNTIME_FUNCTION_MAXSIZE)
 
 /* Remember that the return address is at "*(void **)(%Psp + sp_offset)" right now.
  * This function is called by arch-specific code in "generator-arch.c */
 INTDEF WUNUSED NONNULL((1)) int DCALL
-Dee_host_section_unwind_setsp(struct Dee_host_section *__restrict self,
-                              ptrdiff_t sp_offset);
-#define DEFINED_Dee_host_section_unwind_setsp
+host_section_unwind_setsp(struct host_section *__restrict self,
+                          ptrdiff_t sp_offset);
+#define DEFINED_host_section_unwind_setsp
 
-#define Dee_host_section_unwind_setsp_initial(self, sp_offset) \
+#define host_section_unwind_setsp_initial(self, sp_offset) \
 	(void)((self)->hs_unwind.hu_currsp = (uint32_t)(sp_offset))
-#define DEFINED_Dee_host_section_unwind_setsp_initial
+#define DEFINED_host_section_unwind_setsp_initial
 
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 /* Called as part of jump shrinking to remove the given address range. */
 INTDEF NONNULL((1)) void DCALL
-Dee_host_section_unwind_trimrange(struct Dee_host_section *__restrict self,
-                                  uint32_t sectrel_addr, uint32_t num_bytes);
+host_section_unwind_trimrange(struct host_section *__restrict self,
+                              uint32_t sectrel_addr, uint32_t num_bytes);
 #endif /* HOSTASM_HAVE_SHRINKJUMPS */
 
 /* Check if unwind instrumentation should be used. */
-INTDEF WUNUSED bool DCALL Dee_hostfunc_unwind_enabled(void);
-#define HAVE_Dee_hostfunc_unwind_enabled
+INTDEF WUNUSED bool DCALL hostfunc_unwind_enabled(void);
+#define HAVE_hostfunc_unwind_enabled
 
-struct Dee_hostfunc_unwind {
+struct hostfunc_unwind {
 	NT_RUNTIME_FUNCTION *hfu_FunctionTable; /* Pointer to the end of actual text. */
 };
 
 /* Initialize host function unwind data. */
 INTDEF NONNULL((1, 2, 3, 4)) void DCALL
-Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
-                         struct Dee_function_assembler *__restrict assembler,
-                         byte_t *start_of_text, byte_t *end_of_text);
+hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
+                     struct function_assembler *__restrict assembler,
+                     byte_t *start_of_text, byte_t *end_of_text);
 
 /* Finalize host function unwind data. */
 INTDEF NONNULL((1)) void DCALL
-Dee_hostfunc_unwind_fini(struct Dee_hostfunc_unwind *__restrict self);
+hostfunc_unwind_fini(struct hostfunc_unwind *__restrict self);
 #endif /* CONFIG_host_unwind_USES_NT_UNWIND_INFO */
 
 
@@ -158,11 +158,11 @@ Dee_hostfunc_unwind_fini(struct Dee_hostfunc_unwind *__restrict self);
 /* NOOP IMPLEMENTATION                                                  */
 /************************************************************************/
 #ifdef CONFIG_host_unwind_USES_NOOP
-#define Dee_host_unwind_init_IS_BZERO
-#define Dee_host_unwind_init(self)  (void)0
-#define Dee_host_unwind_fini(self)  (void)0
-#define Dee_host_unwind_clear(self) (void)0
-#define Dee_host_section_unwind_setsp(self, sp_offset) 0
+#define host_unwind_init_IS_BZERO
+#define host_unwind_init(self)  (void)0
+#define host_unwind_fini(self)  (void)0
+#define host_unwind_clear(self) (void)0
+#define host_section_unwind_setsp(self, sp_offset) 0
 #endif /* CONFIG_host_unwind_USES_NOOP */
 
 DECL_END

@@ -37,47 +37,47 @@
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-register_jump(struct Dee_function_assembler *__restrict self,
+register_jump(struct function_assembler *__restrict self,
               Dee_instruction_t const *from,
               Dee_instruction_t const *to) {
-	struct Dee_basic_block *from_block;
-	struct Dee_basic_block *to_block;
-	struct Dee_jump_descriptor *jump;
+	struct basic_block *from_block;
+	struct basic_block *to_block;
+	struct jump_descriptor *jump;
 
 	/* Make sure that a basic block begins at `to' */
-	to_block = Dee_function_assembler_splitblock(self, to);
+	to_block = function_assembler_splitblock(self, to);
 	if unlikely(!to_block)
 		goto err;
 	ASSERT(to_block->bb_deemon_start == to);
-	from_block = Dee_function_assembler_locateblock(self, from);
+	from_block = function_assembler_locateblock(self, from);
 	ASSERT(from_block);
 	ASSERT(from >= from_block->bb_deemon_start &&
 	       from < from_block->bb_deemon_end);
 
 	/* Allocate a descriptor for the jump. */
-	jump = Dee_jump_descriptor_alloc();
+	jump = jump_descriptor_alloc();
 	if unlikely(!jump)
 		goto err;
 	jump->jd_from = from;
 	jump->jd_to   = to_block;
 	jump->jd_stat = NULL; /* Filled in later... */
-	Dee_host_section_init(&jump->jd_morph);
+	host_section_init(&jump->jd_morph);
 
 	/* Insert the jump into the from->exit and to->entry tables. */
-	if unlikely(Dee_jump_descriptors_insert(&to_block->bb_entries, jump))
+	if unlikely(jump_descriptors_insert(&to_block->bb_entries, jump))
 		goto err_jump;
-	if unlikely(Dee_jump_descriptors_insert(&from_block->bb_exits, jump))
+	if unlikely(jump_descriptors_insert(&from_block->bb_exits, jump))
 		goto err; /* `to_block->bb_entries' owns the jump at this point. */
 
 	return 0;
 err_jump:
-	Dee_jump_descriptor_free(jump);
+	jump_descriptor_free(jump);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-scan_and_split_blocks(struct Dee_function_assembler *__restrict self,
+scan_and_split_blocks(struct function_assembler *__restrict self,
                       Dee_instruction_t const *iter,
                       Dee_instruction_t const *end) {
 	for (; iter < end; iter = DeeAsm_NextInstr(iter)) {
@@ -148,7 +148,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
-scan_block_for_noreturn(struct Dee_basic_block *__restrict block, uint16_t code_flags) {
+scan_block_for_noreturn(struct basic_block *__restrict block, uint16_t code_flags) {
 	Dee_instruction_t const *iter;
 	for (iter = block->bb_deemon_start;
 	     iter < block->bb_deemon_end;
@@ -164,8 +164,8 @@ scan_block_for_noreturn(struct Dee_basic_block *__restrict block, uint16_t code_
 		case ASM_JMP16:
 		case ASM32_JMP: {
 			/* Convert unconditional jump -> fallthru */
-			struct Dee_jump_descriptor *desc;
-			desc = Dee_jump_descriptors_lookup(&block->bb_exits, iter);
+			struct jump_descriptor *desc;
+			desc = jump_descriptors_lookup(&block->bb_exits, iter);
 			ASSERTF(desc, "Jump at %p should have been found by the loader", iter);
 			block->bb_next = desc->jd_to;
 			block->bb_deemon_end = iter;
@@ -187,10 +187,10 @@ scan_block_for_noreturn(struct Dee_basic_block *__restrict block, uint16_t code_
 
 /* Remove exits from `self' that have origins beyond `self->bb_deemon_end' */
 INTERN NONNULL((1)) void DCALL
-Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self) {
+basic_block_trim_unused_exits(struct basic_block *__restrict self) {
 	size_t exit_count = self->bb_exits.jds_size;
 	while (exit_count > 0) {
-		struct Dee_jump_descriptor *jmp;
+		struct jump_descriptor *jmp;
 		jmp = self->bb_exits.jds_list[exit_count - 1];
 		ASSERT(jmp);
 		if (jmp->jd_from < self->bb_deemon_end)
@@ -200,13 +200,13 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self) {
 	ASSERT(exit_count <= self->bb_exits.jds_size);
 	while (exit_count < self->bb_exits.jds_size) {
 		/* Get rid of trimmed exits! */
-		struct Dee_jump_descriptor *unused_jmp;
+		struct jump_descriptor *unused_jmp;
 		--self->bb_exits.jds_size;
 		unused_jmp = self->bb_exits.jds_list[self->bb_exits.jds_size];
 		ASSERT(unused_jmp->jd_to != NULL);
 		ASSERT(unused_jmp->jd_stat == NULL);
-		Dee_jump_descriptors_remove(&unused_jmp->jd_to->bb_entries, unused_jmp);
-		Dee_jump_descriptor_destroy(unused_jmp);
+		jump_descriptors_remove(&unused_jmp->jd_to->bb_entries, unused_jmp);
+		jump_descriptor_destroy(unused_jmp);
 	}
 }
 
@@ -223,9 +223,9 @@ Dee_basic_block_trim_unused_exits(struct Dee_basic_block *__restrict self) {
  * @return: 0 : Success
  * @return: -1: Error */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self) {
+function_assembler_loadblocks(struct function_assembler *__restrict self) {
 	size_t i;
-	struct Dee_basic_block *block;
+	struct basic_block *block;
 	ASSERT(self->fa_blockc == 0);
 
 	if (self->fa_code->co_flags & CODE_FYIELDING)
@@ -237,23 +237,23 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 	 * This block will be split into smaller ones as we scan the code. */
 	if (!self->fa_blocka) {
 		self->fa_blocka = 8;
-		self->fa_blockv = (struct Dee_basic_block **)Dee_TryMallocc(8, sizeof(struct Dee_basic_block *));
+		self->fa_blockv = (struct basic_block **)Dee_TryMallocc(8, sizeof(struct basic_block *));
 		if (!self->fa_blockv) {
 			self->fa_blocka = 1;
-			self->fa_blockv = (struct Dee_basic_block **)Dee_Mallocc(1, sizeof(struct Dee_basic_block *));
+			self->fa_blockv = (struct basic_block **)Dee_Mallocc(1, sizeof(struct basic_block *));
 			if unlikely(!self->fa_blockv)
 				goto err;
 		}
 	}
 
 	/* Initialize the initial block. */
-	block = Dee_basic_block_alloc(self->fa_xlocalc);
+	block = basic_block_alloc(self->fa_xlocalc);
 	if unlikely(!block)
 		goto err;
-	Dee_basic_block_init_common(block);
+	basic_block_init_common(block);
 	block->bb_deemon_start = self->fa_code->co_code;
 	block->bb_deemon_end   = self->fa_code->co_code + self->fa_code->co_codebytes;
-	Dee_jump_descriptors_init(&block->bb_exits);
+	jump_descriptors_init(&block->bb_exits);
 
 	/* Set the initial block. */
 	self->fa_blockv[0] = block;
@@ -281,13 +281,13 @@ Dee_function_assembler_loadblocks(struct Dee_function_assembler *__restrict self
 		block->bb_deemon_end_r = block->bb_deemon_end;
 		block->bb_next_r       = block->bb_next;
 		if (has_noreturn)
-			Dee_basic_block_trim_unused_exits(block);
+			basic_block_trim_unused_exits(block);
 	}
 
 	/* Check if there are blocks that are entirely unreachable, and merge
 	 * blocks that can only be reached via fallthru with their predecessor. */
 	for (i = 1; i < self->fa_blockc;) {
-		struct Dee_basic_block *prev_block;
+		struct basic_block *prev_block;
 		block = self->fa_blockv[i];
 		if (block->bb_entries.jds_size > 0) {
 continue_with_next_block:
@@ -299,7 +299,7 @@ continue_with_next_block:
 		{
 			size_t j;
 			for (j = 0; j < self->fa_blockc; ++j) {
-				struct Dee_basic_block *other_block = self->fa_blockv[j];
+				struct basic_block *other_block = self->fa_blockv[j];
 				if (j == i - 1)
 					continue;
 				if (other_block->bb_next == block)
@@ -328,19 +328,19 @@ continue_with_next_block:
 					avail = prev_block->bb_exits.jds_alloc - prev_block->bb_exits.jds_size;
 					need  = block->bb_exits.jds_size;
 					if (need > avail) {
-						struct Dee_jump_descriptor **new_list;
+						struct jump_descriptor **new_list;
 						size_t min_alloc = prev_block->bb_exits.jds_size + need;
 						size_t new_alloc = prev_block->bb_exits.jds_alloc * 2;
 						if (new_alloc < min_alloc)
 							new_alloc = min_alloc;
-						new_list = (struct Dee_jump_descriptor **)Dee_TryReallocc(prev_block->bb_exits.jds_list,
-						                                                          new_alloc,
-						                                                          sizeof(struct Dee_jump_descriptor *));
+						new_list = (struct jump_descriptor **)Dee_TryReallocc(prev_block->bb_exits.jds_list,
+						                                                      new_alloc,
+						                                                      sizeof(struct jump_descriptor *));
 						if unlikely(!new_list) {
 							new_alloc = min_alloc;
-							new_list = (struct Dee_jump_descriptor **)Dee_Reallocc(prev_block->bb_exits.jds_list,
-							                                                       new_alloc,
-							                                                       sizeof(struct Dee_jump_descriptor *));
+							new_list = (struct jump_descriptor **)Dee_Reallocc(prev_block->bb_exits.jds_list,
+							                                                   new_alloc,
+							                                                   sizeof(struct jump_descriptor *));
 							if unlikely(!new_list)
 								goto err;
 						}
@@ -349,7 +349,7 @@ continue_with_next_block:
 					}
 					memcpyc(&prev_block->bb_exits.jds_list[prev_block->bb_exits.jds_size],
 					        &block->bb_exits.jds_list[0],
-					        need, sizeof(struct Dee_jump_descriptor *));
+					        need, sizeof(struct jump_descriptor *));
 					prev_block->bb_exits.jds_size += need;
 					block->bb_exits.jds_size = 0;
 				}
@@ -362,8 +362,8 @@ continue_with_next_block:
 		memmovedownc(&self->fa_blockv[i],
 		             &self->fa_blockv[i + 1],
 		             self->fa_blockc - i,
-		             sizeof(struct Dee_basic_block *));
-		Dee_basic_block_destroy(block);
+		             sizeof(struct basic_block *));
+		basic_block_destroy(block);
 	}
 
 	return 0;

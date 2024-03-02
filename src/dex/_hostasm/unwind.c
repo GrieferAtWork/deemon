@@ -41,7 +41,7 @@ DECL_BEGIN
 
 #ifdef CONFIG_host_unwind_USES_NT_UNWIND_INFO
 
-struct Dee_host_unwind_ms64_writer {
+struct host_unwind_ms64_writer {
 	byte_t   *humw_RUNTIME_FUNCTION; /* Writer for generated "RUNTIME_FUNCTION" */
 	byte_t   *humw_UNWIND_INFO;      /* Writer for "UNWIND_INFO" pointed-to by "RUNTIME_FUNCTION" */
 	byte_t   *humw_image_base;       /* [const] "image base pointer" (used for encoding "image-relative" offsets) */
@@ -51,7 +51,7 @@ struct Dee_host_unwind_ms64_writer {
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL
-Dee_host_unwind_ms64_writer_writefun(struct Dee_host_unwind_ms64_writer *__restrict self,
+host_unwind_ms64_writer_writefun(struct host_unwind_ms64_writer *__restrict self,
                                      uint32_t imagerel_BeginAddress,
                                      uint32_t imagerel_EndAddress,
                                      uint32_t sp_offset) {
@@ -120,21 +120,21 @@ Dee_host_unwind_ms64_writer_writefun(struct Dee_host_unwind_ms64_writer *__restr
 
 /* Output "sect" into "self" */
 PRIVATE NONNULL((1, 2)) void DCALL
-Dee_host_unwind_ms64_writer_writesect(struct Dee_host_unwind_ms64_writer *__restrict self,
-                                      struct Dee_host_section *__restrict sect) {
+host_unwind_ms64_writer_writesect(struct host_unwind_ms64_writer *__restrict self,
+                                  struct host_section *__restrict sect) {
 	size_t i;
 	uint32_t sect_delta = (uint32_t)(sect->hs_base - self->humw_image_base);
 	uint32_t last_sp = 0;
 	uint32_t last_pc = 0;
-	uint32_t stop_pc = (uint32_t)Dee_host_section_size(sect);
+	uint32_t stop_pc = (uint32_t)host_section_size(sect);
 	if (sect->hs_unwind.hu_unwindc >= 1 &&
 	    sect->hs_unwind.hu_unwindv[sect->hs_unwind.hu_unwindc - 1].UnwindData == sect->hs_unwind.hu_currsp)
 		sect->hs_unwind.hu_unwindv[sect->hs_unwind.hu_unwindc - 1].EndAddress = stop_pc;
 	for (i = 0; i < sect->hs_unwind.hu_unwindc; ++i) {
 		NT_RUNTIME_FUNCTION *src = &sect->hs_unwind.hu_unwindv[i];
 		ASSERT(src->BeginAddress < src->EndAddress);
-		ASSERT(src->EndAddress <= (uint32_t)Dee_host_section_size(sect));
-		Dee_host_unwind_ms64_writer_writefun(self,
+		ASSERT(src->EndAddress <= (uint32_t)host_section_size(sect));
+		host_unwind_ms64_writer_writefun(self,
 		                                     (uint32_t)(src->BeginAddress + sect_delta),
 		                                     (uint32_t)(src->EndAddress + sect_delta),
 		                                     (uint32_t)src->UnwindData);
@@ -143,7 +143,7 @@ Dee_host_unwind_ms64_writer_writesect(struct Dee_host_unwind_ms64_writer *__rest
 	}
 	ASSERT(last_pc <= stop_pc);
 	if (last_pc < stop_pc) {
-		Dee_host_unwind_ms64_writer_writefun(self,
+		host_unwind_ms64_writer_writefun(self,
 		                                     (uint32_t)(last_pc + sect_delta),
 		                                     (uint32_t)(stop_pc + sect_delta),
 		                                     (uint32_t)sect->hs_unwind.hu_currsp);
@@ -152,8 +152,8 @@ Dee_host_unwind_ms64_writer_writesect(struct Dee_host_unwind_ms64_writer *__rest
 
 /* Remember that the return address is at "*(void **)(%Psp + sp_offset)" right now. */
 INTERN WUNUSED NONNULL((1)) int DCALL
-Dee_host_section_unwind_setsp(struct Dee_host_section *__restrict self,
-                              ptrdiff_t sp_offset) {
+host_section_unwind_setsp(struct host_section *__restrict self,
+                          ptrdiff_t sp_offset) {
 	uint32_t old_pc, new_pc;
 	uint32_t new_sp = (uint32_t)sp_offset;
 	NT_RUNTIME_FUNCTION *slot;
@@ -165,7 +165,7 @@ Dee_host_section_unwind_setsp(struct Dee_host_section *__restrict self,
 	if (self->hs_unwind.hu_currsp == new_sp)
 		return 0; /* Nothing changed */
 	old_pc = 0;
-	new_pc = (uint32_t)Dee_host_section_size(self);
+	new_pc = (uint32_t)host_section_size(self);
 	if (self->hs_unwind.hu_unwindc > 0) {
 		NT_RUNTIME_FUNCTION *old;
 		old    = &self->hs_unwind.hu_unwindv[self->hs_unwind.hu_unwindc - 1];
@@ -201,7 +201,7 @@ Dee_host_section_unwind_setsp(struct Dee_host_section *__restrict self,
 	slot->BeginAddress = old_pc;
 	slot->EndAddress   = new_pc;
 	ASSERT(slot->BeginAddress < slot->EndAddress);
-	ASSERT(slot->EndAddress <= (uint32_t)Dee_host_section_size(self));
+	ASSERT(slot->EndAddress <= (uint32_t)host_section_size(self));
 	slot->UnwindData   = self->hs_unwind.hu_currsp; /* End of old SP region */
 	++self->hs_unwind.hu_unwindc;
 	self->hs_unwind.hu_currsp = new_sp;
@@ -213,8 +213,8 @@ err:
 #ifdef HOSTASM_HAVE_SHRINKJUMPS
 /* Called as part of jump shrinking to remove the given address range. */
 INTERN NONNULL((1)) void DCALL
-Dee_host_section_unwind_trimrange(struct Dee_host_section *__restrict self,
-                                  uint32_t sectrel_addr, uint32_t num_bytes) {
+host_section_unwind_trimrange(struct host_section *__restrict self,
+                              uint32_t sectrel_addr, uint32_t num_bytes) {
 	size_t i = self->hs_unwind.hu_unwindc;
 	NT_RUNTIME_FUNCTION *vec = self->hs_unwind.hu_unwindv;
 	while (i > 0) {
@@ -255,7 +255,7 @@ PRIVATE WCHAR const wKernel32_dll[] = { 'K', 'e', 'r', 'n', 'e', 'l', '3', '2', 
 
 
 /* Check if unwind instrumentation should be used. */
-INTERN WUNUSED bool DCALL Dee_hostfunc_unwind_enabled(void) {
+INTERN WUNUSED bool DCALL hostfunc_unwind_enabled(void) {
 	if (!pdyn_RtlAddFunctionTable) {
 		LPRTLADDFUNCTIONTABLE new_RtlAddFunctionTable;
 		LPRTLDELETEFUNCTIONTABLE new_RtlDeleteFunctionTable;
@@ -281,18 +281,18 @@ fail:
 
 /* Initialize host function unwind data. */
 INTERN NONNULL((1, 2, 3, 4)) void DCALL
-Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
-                         struct Dee_function_assembler *__restrict assembler,
-                         byte_t *start_of_text, byte_t *end_of_text) {
+hostfunc_unwind_init(struct hostfunc_unwind *__restrict self,
+                     struct function_assembler *__restrict assembler,
+                     byte_t *start_of_text, byte_t *end_of_text) {
 	BOOLEAN bAddOk;
-	struct Dee_host_unwind_ms64_writer writer;
-	struct Dee_host_section *sect;
+	struct host_unwind_ms64_writer writer;
+	struct host_section *sect;
 	NT_RUNTIME_FUNCTION *pFunctionTable;
 	size_t num_functions;
 
 	/* Try to load unwind functions, but if this
 	 * fails, don't produce unwind instrumentation. */
-	if (!Dee_hostfunc_unwind_enabled()) {
+	if (!hostfunc_unwind_enabled()) {
 		self->hfu_FunctionTable = NULL;
 		return;
 	}
@@ -303,7 +303,7 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 	num_functions = 0;
 	TAILQ_FOREACH (sect, &assembler->fa_sections, hs_link) {
 		num_functions += sect->hs_unwind.hu_unwindc;
-		if (Dee_host_section_size(sect) && sect->hs_unwind.hu_currsp != 0)
+		if (host_section_size(sect) && sect->hs_unwind.hu_currsp != 0)
 			++num_functions;
 	}
 	if (num_functions == 0) {
@@ -315,7 +315,7 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 	writer.humw_last_EndAddress = NULL;
 	writer.humw_function_count = 0;
 	TAILQ_FOREACH (sect, &assembler->fa_sections, hs_link)
-		Dee_host_unwind_ms64_writer_writesect(&writer, sect);
+		host_unwind_ms64_writer_writesect(&writer, sect);
 
 	/* Register the function table with NT. */
 	self->hfu_FunctionTable = pFunctionTable;
@@ -332,7 +332,7 @@ Dee_hostfunc_unwind_init(struct Dee_hostfunc_unwind *__restrict self,
 
 /* Finalize host function unwind data. */
 INTERN NONNULL((1)) void DCALL
-Dee_hostfunc_unwind_fini(struct Dee_hostfunc_unwind *__restrict self) {
+hostfunc_unwind_fini(struct hostfunc_unwind *__restrict self) {
 	if (self->hfu_FunctionTable) {
 		DBG_ALIGNMENT_DISABLE();
 		RtlDeleteFunctionTable(self->hfu_FunctionTable);

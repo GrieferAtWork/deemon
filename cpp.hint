@@ -1608,11 +1608,11 @@
 #define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
 #define DEFINE_FILTERITERATOR_COMPARE(n,...) DeeObject*n(FilterIterator*self,FilterIterator*other){}
 
-#define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct Dee_function_generator*self,Dee_vstackaddr_t argc){}
-#define DEFINE_CCALL_OPERATOR(name,...) int name(struct Dee_function_generator*self,Dee_vstackaddr_t argc){}
+#define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct fungen*self,vstackaddr_t argc){}
+#define DEFINE_CCALL_OPERATOR(name,...) int name(struct fungen*self,vstackaddr_t argc){}
 
-#define Dee_memstate_foreach(...) for(;;)
-#define Dee_memstate_foreach_end
-#define _Dee_memval_foreach_obj(...) for(;;)
-#define Dee_memval_foreach_obj(...) for(;;)
-#define Dee_memval_foreach_obj_end
+#define memstate_foreach(...) for(;;)
+#define memstate_foreach_end
+#define _memval_foreach_obj(...) for(;;)
+#define memval_foreach_obj(...) for(;;)
+#define memval_foreach_obj_end
