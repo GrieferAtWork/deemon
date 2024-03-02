@@ -165,6 +165,7 @@ DECL_BEGIN
 #endif /* DEE_SOURCE */
 
 struct Dee_code_frame;
+struct Dee_function_object;
 struct Dee_tuple_object;
 struct Dee_string_object;
 struct Dee_module_object;
@@ -498,12 +499,138 @@ DDATDEF DeeDDIObject DeeDDI_Empty;
                                               * when an error occurs, which would otherwise cause the constructor wrapper to discard that error on
                                               * the ground of not being able to undo construction. */
 #define CODE_FMASK           0x03ff          /* Mask of known code flags. */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#define CODE_FNOOPTIMIZE     0x0400          /* Code object cannot be optimized by `_hostasm' */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 #define DEC_CODE_F8BIT       0x8000          /* Used by DEC. - Does not actually appear in runtime code object, but must remain reserved */
 
 /* Threshold of `co_framesize' for `CODE_FHEAPFRAME' */
 #define CODE_LARGEFRAME_THRESHOLD 0x100      /* When `co_framesize' turns out to be larger than this,
                                               * it is suggested that the `CODE_FHEAPFRAME' flag be set. */
 #endif /* DEE_SOURCE */
+
+
+#ifdef CONFIG_HAVE_CODE_METRICS
+struct Dee_code_metrics {
+	size_t com_functions;     /* [lock(atomic)] # of times this code object has been used to construct a function */
+	size_t com_call;          /* [lock(atomic)] # of times a function invoked this code object. */
+	size_t com_call_kw;       /* [lock(atomic)] # of times a function invoked this code object (w/ keyword arguments). */
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	size_t com_call_tuple;    /* [lock(atomic)] # of times a function invoked this code object (w/ args-tuple). */
+	size_t com_call_tuple_kw; /* [lock(atomic)] # of times a function invoked this code object (w/ args-tuple & keyword arguments). */
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DEE_CODE_METRICS_INIT { 0, 0, 0, 0, 0 }
+#define Dee_code_metrics_init(self)       \
+	(void)((self)->com_functions     = 0, \
+	       (self)->com_call          = 0, \
+	       (self)->com_call_kw       = 0, \
+	       (self)->com_call_tuple    = 0, \
+	       (self)->com_call_tuple_kw = 0)
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DEE_CODE_METRICS_INIT { 0, 0, 0 }
+#define Dee_code_metrics_init(self)   \
+	(void)((self)->com_functions = 0, \
+	       (self)->com_call      = 0, \
+	       (self)->com_call_kw   = 0)
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+struct Dee_hostasm_code_data;
+struct Dee_hostasm_function_data;
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF NONNULL((1)) void DCALL Dee_hostasm_code_data_destroy(struct Dee_hostasm_code_data *__restrict self);
+INTDEF NONNULL((1)) void DCALL Dee_hostasm_function_data_destroy(struct Dee_hostasm_function_data *__restrict self);
+#endif /* CONFIG_BUILDING_DEEMON */
+
+struct Dee_hostasm_code {
+	/* [0..1][owned][lock(WRITE_ONCE)]
+	 * Data blob for holding extra meta-data referenced by compiled host assembly. */
+	struct Dee_hostasm_code_data *haco_data;
+
+	/* [0..1][lock(WRITE_ONCE)]
+	 * Compiled callbacks for invocation with a function. */
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv);
+		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+	} haco_call;
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+	} haco_call_kw;
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, DeeObject *args);
+		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args);
+	} haco_call_tuple;
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+	} haco_call_tuple_kw;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DEE_HOSTASM_CODE_INIT { NULL, { NULL }, { NULL }, { NULL }, { NULL } }
+#define Dee_hostasm_code_init(self)                  \
+	(void)((self)->haco_data                 = NULL, \
+	       (self)->haco_call.c_norm          = NULL, \
+	       (self)->haco_call_kw.c_norm       = NULL, \
+	       (self)->haco_call_tuple.c_norm    = NULL, \
+	       (self)->haco_call_tuple_kw.c_norm = NULL)
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DEE_HOSTASM_CODE_INIT { NULL, { NULL }, { NULL } }
+#define Dee_hostasm_code_init(self)            \
+	(void)((self)->haco_data           = NULL, \
+	       (self)->haco_call.c_norm    = NULL, \
+	       (self)->haco_call_kw.c_norm = NULL)
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+struct Dee_hostasm_function {
+	/* [0..1][owned][lock(WRITE_ONCE)]
+	 * Data blob for holding extra meta-data referenced by compiled host assembly. */
+	struct Dee_hostasm_function_data *hafu_data;
+
+	/* [0..1][lock(WRITE_ONCE && WRITE(:fo_code->co_static_lock))]
+	 * Compiled callbacks for invocation with a function. */
+	union {
+		DREF DeeObject *(DCALL *c_norm)(size_t argc, DeeObject *const *argv);
+		DREF DeeObject *(DCALL *c_this)(DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+	} hafu_call;
+	union {
+		DREF DeeObject *(DCALL *c_norm)(size_t argc, DeeObject *const *argv, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+	} hafu_call_kw;
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeObject *args);
+		DREF DeeObject *(DCALL *c_this)(DeeObject *thisarg, DeeObject *args);
+	} hafu_call_tuple;
+	union {
+		DREF DeeObject *(DCALL *c_norm)(DeeObject *args, DeeObject *kw);
+		DREF DeeObject *(DCALL *c_this)(DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+	} hafu_call_tuple_kw;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+};
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define DEE_HOSTASM_FUNCTION_INIT { NULL, { NULL }, { NULL }, { NULL }, { NULL } }
+#define Dee_hostasm_function_init(self)              \
+	(void)((self)->hafu_data                 = NULL, \
+	       (self)->hafu_call.c_norm          = NULL, \
+	       (self)->hafu_call_kw.c_norm       = NULL, \
+	       (self)->hafu_call_tuple.c_norm    = NULL, \
+	       (self)->hafu_call_tuple_kw.c_norm = NULL)
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DEE_HOSTASM_FUNCTION_INIT { NULL, { NULL }, { NULL } }
+#define Dee_hostasm_function_init(self)        \
+	(void)((self)->hafu_data           = NULL, \
+	       (self)->hafu_call.c_norm    = NULL, \
+	       (self)->hafu_call_kw.c_norm = NULL)
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 
 struct Dee_code_object {
@@ -550,6 +677,12 @@ struct Dee_code_object {
 	/* NOTE: Exception handlers are execute in order of last -> first, meaning that later handler overwrite prior ones. */
 	struct Dee_except_handler                 *co_exceptv;  /* [0..co_excptc][owned] Vector of exception handler descriptors. */
 	DREF DeeDDIObject                         *co_ddi;      /* [1..1][const] Debug line information. */
+#ifdef CONFIG_HAVE_CODE_METRICS
+	struct Dee_code_metrics                    co_metrics;  /* [lock(atomic)] Code metrics */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	struct Dee_hostasm_code                    co_hostasm;  /* Host assembly functions.  */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	COMPILER_FLEXIBLE_ARRAY(Dee_instruction_t, co_code);    /* [co_codebytes][const] The actual instructions encoding this code object's behavior.
 	                                                         * WARNING: The safe code executor assumes that the code vector does not
 	                                                         *          stop prematurely, or is capable of exceeding its natural ending
@@ -585,6 +718,22 @@ struct Dee_code_object {
 #define _DEE_CODE_CO_STATIC_LOCK_INIT  /* nothing */
 #endif /* CONFIG_NO_THREADS */
 
+#ifdef CONFIG_HAVE_CODE_METRICS
+#define _DEE_CODE_CO_METRICS_FIELD struct Dee_code_metrics co_metrics;
+#define _DEE_CODE_CO_METRICS_INIT  DEE_CODE_METRICS_INIT,
+#else /* CONFIG_HAVE_CODE_METRICS */
+#define _DEE_CODE_CO_METRICS_FIELD /* nothing */
+#define _DEE_CODE_CO_METRICS_INIT  /* nothing */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#define _DEE_CODE_CO_HOSTASM_FIELD struct Dee_hostasm_code co_hostasm;
+#define _DEE_CODE_CO_HOSTASM_INIT  DEE_HOSTASM_CODE_INIT,
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define _DEE_CODE_CO_HOSTASM_FIELD /* nothing */
+#define _DEE_CODE_CO_HOSTASM_INIT  /* nothing */
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
+
 /* Define a statically allocated code object. */
 #define Dee_DEFINE_CODE(name,                                                   \
                         co_flags_, co_localc_, co_staticc_, co_refc_,           \
@@ -612,6 +761,8 @@ struct Dee_code_object {
 			DREF DeeObject                      **co_staticv;                   \
 			struct Dee_except_handler            *co_exceptv;                   \
 			DREF DeeDDIObject                    *co_ddi;                       \
+			_DEE_CODE_CO_METRICS_FIELD                                          \
+			_DEE_CODE_CO_HOSTASM_FIELD                                          \
 			Dee_instruction_t                     co_code[co_codebytes_];       \
 		} ob;                                                                   \
 	} name = {                                                                  \
@@ -634,6 +785,8 @@ struct Dee_code_object {
 		  co_staticv_,                                                          \
 		  co_exceptv_,                                                          \
 		  co_ddi_,                                                              \
+		  _DEE_CODE_CO_METRICS_INIT                                             \
+		  _DEE_CODE_CO_HOSTASM_INIT                                             \
 		  __VA_ARGS__ }                                                         \
 	}
 
@@ -895,20 +1048,33 @@ DeeCode_HandleBreakpoint(struct Dee_code_frame *__restrict frame);
 struct Dee_function_object {
 	/* WARNING: Changes must be mirrored in `/src/deemon/execute/asm/exec.gas-386.S' */
 	Dee_OBJECT_HEAD
-	DREF DeeCodeObject                       *fo_code;  /* [1..1][const] Associated code object. */
-	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv); /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
+	DREF DeeCodeObject                       *fo_code;    /* [1..1][const] Associated code object. */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	struct Dee_hostasm_function               fo_hostasm; /* Host assembly functions.  */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv);   /* [1..1][const][fo_code->co_refc] Vector of referenced objects. */
 };
 #define DeeFunction_CODE(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_code
 #define DeeFunction_REFS(x) ((DeeFunctionObject const *)Dee_REQUIRES_OBJECT(x))->fo_refv
+
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#define _DEE_FUNCTION_FO_HOSTASM_FIELD struct Dee_hostasm_function fo_hostasm;
+#define _DEE_FUNCTION_FO_HOSTASM_INIT  DEE_HOSTASM_FUNCTION_INIT,
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define _DEE_FUNCTION_FO_HOSTASM_FIELD /* nothing */
+#define _DEE_FUNCTION_FO_HOSTASM_INIT  /* nothing */
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 #define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
 	struct {                                               \
 		Dee_OBJECT_HEAD                                    \
 		DREF DeeCodeObject *fo_code;                       \
+		_DEE_FUNCTION_FO_HOSTASM_FIELD                     \
 		DREF DeeObject     *fo_refv[fo_refc_];             \
 	} name = {                                             \
 		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),           \
 		fo_code_,                                          \
+		_DEE_FUNCTION_FO_HOSTASM_INIT                      \
 		__VA_ARGS__                                        \
 	}
 
@@ -916,9 +1082,11 @@ struct Dee_function_object {
 	struct {                                       \
 		Dee_OBJECT_HEAD                            \
 		DREF DeeCodeObject *fo_code;               \
+		_DEE_FUNCTION_FO_HOSTASM_FIELD             \
 	} name = {                                     \
 		Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),   \
-		fo_code_                                   \
+		fo_code_,                                  \
+		_DEE_FUNCTION_FO_HOSTASM_INIT              \
 	}
 
 
@@ -1026,6 +1194,37 @@ DeeCode_GetInfo(/*Code*/ DeeObject *__restrict self,
 
 
 
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CONFIG_HAVE_CODE_METRICS
+/* Get/set the threshold after which a code object
+ * gets automatically recompiled into host assembly.
+ *
+ * Special values:
+ * - 0 :         Functions are always optimized immediately.
+ * - (size_t)-1: Functions are never optimized (when trying to
+ *               optimize a function, and doing so fails because
+ *               `_hostasm' can't be loaded, this value gets set
+ *               automatically) */
+DFUNDEF ATTR_PURE WUNUSED size_t DCALL DeeCode_GetOptimizeCallThreshold(void);
+DFUNDEF size_t DCALL DeeCode_SetOptimizeCallThreshold(size_t new_threshold);
+
+#ifdef CONFIG_BUILDING_DEEMON
+INTDEF size_t DeeCode_OptimizeCallThreshold;
+
+INTDEF NONNULL((1)) DREF DeeObject *DCALL DeeFunction_OptimizeAndCall(DeeFunctionObject *self, size_t argc, DeeObject *const *argv);
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCall(DeeFunctionObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv);
+INTDEF NONNULL((1, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndCallKw(DeeFunctionObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
+INTDEF NONNULL((1, 2, 5)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCallKw(DeeFunctionObject *self, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+INTDEF NONNULL((1, 2)) DREF DeeObject *DCALL DeeFunction_OptimizeAndCallTuple(DeeFunctionObject *self, DeeObject *args);
+INTDEF NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCallTuple(DeeFunctionObject *self, DeeObject *thisarg, DeeObject *args);
+INTDEF NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeFunction_OptimizeAndCallTupleKw(DeeFunctionObject *self, DeeObject *args, DeeObject *kw);
+INTDEF NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL DeeFunction_OptimizeAndThisCallTupleKw(DeeFunctionObject *self, DeeObject *thisarg, DeeObject *args, DeeObject *kw);
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_BUILDING_DEEMON */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
 
 #ifndef CONFIG_BUILDING_DEEMON
 #define DeeFunction_NewNoRefs(code)                            DeeFunction_New(code, 0, NULL)
@@ -1042,6 +1241,11 @@ DeeFunction_NewInherited(DeeObject *code, size_t refc,
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFunction_NewNoRefs(DeeObject *__restrict code);
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFunction_Call(DeeFunctionObject *self, size_t argc, DeeObject *const *argv);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeFunction_CallKw(DeeFunctionObject *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw);
 
 /* Optimized operator for calling a `function' object using the `thiscall' calling convention.
  * NOTE: Potentially required conversions are performed by this function automatically! */

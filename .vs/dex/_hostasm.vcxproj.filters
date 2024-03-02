@@ -21,6 +21,7 @@
 		<ClInclude Include="..\..\src\dex\_hostasm\utils.h" />
 	</ItemGroup>
 	<ItemGroup>
+		<ClCompile Include="..\..\src\dex\_hostasm\api.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\assembler.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\common.c" />
 		<ClCompile Include="..\..\src\dex\_hostasm\generator-arch.c" />

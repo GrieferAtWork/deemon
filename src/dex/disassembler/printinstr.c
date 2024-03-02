@@ -1375,7 +1375,7 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 
 		case ASM_RET:
 			mnemonic = "ret    ";
-			if (code && code->co_flags & CODE_FYIELDING)
+			if (code && (code->co_flags & CODE_FYIELDING))
 				mnemonic = "yield  ";
 			goto do_mnemonic_prefix_readonly;
 

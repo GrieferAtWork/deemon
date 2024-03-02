@@ -1519,7 +1519,7 @@ INTERN WUNUSED NONNULL((1)) int
 	struct dec_section *code_sec = dec_curr;
 
 	/* Fill in a code object descriptor. */
-	descr.co_flags      = self->co_flags;
+	descr.co_flags      = self->co_flags & CODE_FMASK;
 	descr.co_localc     = self->co_localc;
 	descr.co_refc       = self->co_refc;
 	descr.co_argc_min   = self->co_argc_min;

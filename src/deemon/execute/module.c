@@ -148,6 +148,12 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 		Dee_Incref(&DeeCode_Empty);
 	}
 	DeeObject_Init(result, &DeeFunction_Type);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_inc(&result->fo_code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_function_init(&result->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	if (set_initialized) {
 		uint16_t flags;
 		/* Try to set the `MODULE_FDIDINIT' flag */

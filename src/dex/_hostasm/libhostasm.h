@@ -1342,17 +1342,18 @@ typedef uint8_t host_regusage_t;
 
 /* Extra local variable IDs always present in `ms_localv'
  * These indices appear after "normal" locals. */
-#define MEMSTATE_XLOCAL_A_FUNC     0 /* Caller-argument: `DeeFunctionObject *func' (only for `HOST_CC_F_FUNC') */
-#define MEMSTATE_XLOCAL_A_THIS     1 /* Caller-argument: `DeeObject *this'         (only for `HOST_CC_F_THIS') */
-#define MEMSTATE_XLOCAL_A_ARGC     2 /* Caller-argument: `size_t argc'             (only for `!HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGS     3 /* Caller-argument: `DeeTupleObject *args'    (only for `HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_ARGV     3 /* Caller-argument: `DeeObject **argv'        (only for `!HOST_CC_F_TUPLE') */
-#define MEMSTATE_XLOCAL_A_KW       4 /* Caller-argument: `DeeObject *kw'           (only for `HOST_CC_F_KW') */
-#define MEMSTATE_XLOCAL_VARARGS    5 /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
-#define MEMSTATE_XLOCAL_VARKWDS    6 /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
-#define MEMSTATE_XLOCAL_STDOUT     7 /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
-#define MEMSTATE_XLOCAL_POPITER    8 /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
-#define MEMSTATE_XLOCAL_MINCOUNT   9 /* Min number of extra locals */
+#define MEMSTATE_XLOCAL_A_FUNC     0  /* Caller-argument: `DeeFunctionObject *func' (only for `HOST_CC_F_FUNC') */
+#define MEMSTATE_XLOCAL_A_THIS     1  /* Caller-argument: `DeeObject *this'         (only for `HOST_CC_F_THIS') */
+#define MEMSTATE_XLOCAL_A_ARGC     2  /* Caller-argument: `size_t argc'             (only for `!HOST_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_ARGS     3  /* Caller-argument: `DeeTupleObject *args'    (only for `HOST_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_ARGV     3  /* Caller-argument: `DeeObject **argv'        (only for `!HOST_CC_F_TUPLE') */
+#define MEMSTATE_XLOCAL_A_KW       4  /* Caller-argument: `DeeObject *kw'           (only for `HOST_CC_F_KW') */
+#define MEMSTATE_XLOCAL_VARARGS    5  /* Varargs (s.a. `struct Dee_code_frame::cf_vargs') */
+#define MEMSTATE_XLOCAL_VARKWDS    6  /* Varkwds (s.a. `struct Dee_code_frame_kwds::fk_varkwds') */
+#define MEMSTATE_XLOCAL_KW_ARGV    7  /* Keyword argv (s.a. `struct Dee_code_frame_kwds::fk_kargv') */
+#define MEMSTATE_XLOCAL_STDOUT     8  /* Temporary slot for a cached version of `deemon.File.stdout' (to speed up `ASM_PRINT' & friends) */
+#define MEMSTATE_XLOCAL_POPITER    9  /* Temporary slot used by `ASM_FOREACH' to decref the iterator when ITER_DONE is returned. DON'T USE FOR ANYTHING ELSE! */
+#define MEMSTATE_XLOCAL_MINCOUNT   10 /* Min number of extra locals */
 #define MEMSTATE_XLOCAL_DEFARG_MIN MEMSTATE_XLOCAL_MINCOUNT
 #define MEMSTATE_XLOCAL_DEFARG(opt_aid) (MEMSTATE_XLOCAL_DEFARG_MIN + (opt_aid)) /* Start of cached optional arguments. */
 
@@ -1363,7 +1364,7 @@ typedef uint8_t host_regusage_t;
 
 struct memstate {
 	Dee_refcnt_t                           ms_refcnt;          /* Reference counter for the mem-state (state becomes read-only when >1) */
-	host_cfa_t                                  ms_host_cfa_offset; /* Delta between SP to CFA (Canonical Frame Address) */
+	host_cfa_t                             ms_host_cfa_offset; /* Delta between SP to CFA (Canonical Frame Address) */
 	lid_t                                  ms_localc;          /* [== :co_localc+MEMSTATE_XLOCAL_MINCOUNT+(:co_argc_max-:co_argc_min)]
 	                                                                * Number of local variables + extra slots. NOTE: Never 0! */
 	vstackaddr_t                           ms_stackc;          /* Number of (currently) used deemon stack slots in use. */
@@ -1372,6 +1373,9 @@ struct memstate {
 	size_t                                 ms_uargc_min;       /* Lower bound for the `argc' passed to the generated function (can be used to skip argc-checks) */
 	size_t                                 ms_rinuse[HOST_REGNO_COUNT]; /* Number of times each register is referenced by `ms_stackv' and `ms_localv' */
 	host_regusage_t                        ms_rusage[HOST_REGNO_COUNT]; /* Meaning of registers (set to `HOST_REGUSAGE_GENERIC' if clobbered) */
+	/* TODO: Array of currently in-use HSTACKIND locations (where each element
+	 *       is a `uint16_t' describing how many memloc's reference that CFA) */
+
 	/* Keep track of memory locations that contain the same values.
 	 * primarily: when loading a HSTACKIND into a HREG, the stack location
 	 *            is now available for allocation, but until that happens,
@@ -3959,10 +3963,11 @@ function_assembler_output(struct function_assembler *__restrict self,
  * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*'
  * @return: 0 : Success
  * @return: -1: Error */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-Dee_assemble(DeeFunctionObject *__restrict function,
-             struct hostfunc *__restrict result,
-             host_cc_t cc, uint16_t flags);
+INTDEF WUNUSED NONNULL((2, 3)) int DCALL
+hostfunc_assemble(DeeFunctionObject *function,
+                  DeeCodeObject *code,
+                  struct hostfunc *__restrict result,
+                  host_cc_t cc, uint16_t flags);
 
 
 

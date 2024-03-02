@@ -741,6 +741,14 @@ gencode_failed:
 				if (!is_reusing_code_object)
 					Dee_Decref(self->im_frame.cf_func->fo_code);
 				self->im_frame.cf_func->fo_code = current_code; /* Inherit reference. */
+#ifdef CONFIG_HAVE_CODE_METRICS
+				atomic_inc(&current_code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+				if (self->im_frame.cf_func->fo_hostasm.hafu_data)
+					Dee_hostasm_function_data_destroy(self->im_frame.cf_func->fo_hostasm.hafu_data);
+				Dee_hostasm_function_init(&self->im_frame.cf_func->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 			}
 			if (!is_reusing_code_object)
 				Dee_Decref(self->im_module.mo_root);
@@ -774,6 +782,14 @@ recover_old_code_object:
 			current_code->co_defaultv = NULL;
 			current_code->co_keywords = NULL;
 			current_code->co_ddi      = old_co_ddi;
+#ifdef CONFIG_HAVE_CODE_METRICS
+			Dee_code_metrics_init(&current_code->co_metrics);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+			if (current_code->co_hostasm.haco_data)
+				Dee_hostasm_code_data_destroy(current_code->co_hostasm.haco_data);
+			Dee_hostasm_code_init(&current_code->co_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 			Dee_Decrefv(current_assembler.a_constv, current_assembler.a_constc);
 			current_assembler.a_sect[SECTION_TEXT].sec_code  = NULL;
 			current_assembler.a_sect[SECTION_TEXT].sec_begin = NULL;
@@ -1365,6 +1381,12 @@ err_compiler_basefile:
 		init_code->co_code[0]  = ASM_UD;
 		Dee_Incref((DeeObject *)self);
 		Dee_Incref(&DeeDDI_Empty);
+#ifdef CONFIG_HAVE_CODE_METRICS
+		Dee_code_metrics_init(&init_code->co_metrics);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+		Dee_hostasm_code_init(&init_code->co_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(init_code, &DeeCode_Type);
 		DeeGC_Track((DeeObject *)init_code);
 		self->im_module.mo_root = init_code; /* Inherit reference. */
@@ -1375,6 +1397,12 @@ err_compiler_basefile:
 		/* Set the code-pointer of the initial function object. */
 		Dee_Incref(init_code);
 		self->im_frame.cf_func->fo_code = init_code;
+#ifdef CONFIG_HAVE_CODE_METRICS
+		atomic_inc(&init_code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+		Dee_hostasm_function_init(&self->im_frame.cf_func->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	}
 
 	return 0;

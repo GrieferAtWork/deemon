@@ -61,7 +61,9 @@ test_compile_and_run(size_t argc, DeeObject *const *argv) {
 	 *       once no longer needed) */
 
 	/* Assemble the function. */
-	if unlikely(Dee_assemble(func, &hfunc, HOST_CC_CALL, FUNCTION_ASSEMBLER_F_NORMAL))
+	if unlikely(hostfunc_assemble(func, func->fo_code, &hfunc,
+	                              HOST_CC_CALL,
+	                              FUNCTION_ASSEMBLER_F_NORMAL))
 		goto err;
 
 	/* Call the function. */

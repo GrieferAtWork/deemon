@@ -42,6 +42,7 @@
 #include <deemon/thread.h>
 #include <deemon/traceback.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -294,6 +295,12 @@ DeeFunction_New(DeeObject *code_, size_t refc,
 		goto done;
 	result->fo_code = code;
 	Dee_Incref(code);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_inc(&code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_function_init(&result->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	Dee_Movrefv(result->fo_refv, refv, refc);
 	DeeObject_Init(result, &DeeFunction_Type);
 done:
@@ -319,6 +326,12 @@ DeeFunction_NewInherited(DeeObject *code_, size_t refc,
 		goto done;
 	result->fo_code = code;
 	Dee_Incref(code);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_inc(&code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_function_init(&result->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	memcpyc(result->fo_refv, refv, refc,
 	        sizeof(DREF DeeObject *));
 	DeeObject_Init(result, &DeeFunction_Type);
@@ -337,17 +350,16 @@ DeeFunction_NewNoRefs(DeeObject *__restrict code_) {
 		goto done;
 	result->fo_code = code;
 	Dee_Incref(code);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_inc(&code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_function_init(&result->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	DeeObject_Init(result, &DeeFunction_Type);
 done:
 	return (DREF DeeObject *)result;
 }
-
-
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_Call(DeeObject *self, size_t argc, DeeObject *const *argv);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFunction_CallKw(DeeObject *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw);
 
 
 PRIVATE WUNUSED DREF Function *DCALL
@@ -367,6 +379,12 @@ function_init(size_t argc, DeeObject *const *argv) {
 		goto err_r;
 	result->fo_code = code;
 	Dee_Incref(code);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_inc(&code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_function_init(&result->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	DeeObject_Init(result, &DeeFunction_Type);
 	return result;
 err_r:
@@ -502,6 +520,22 @@ function_get_property(Function *__restrict self) {
 err:
 	return NULL;
 }
+
+DOC_REF(code_optimize_doc);
+DOC_REF(code_optimized_doc);
+
+INTDEF NONNULL((1)) DREF DeeObject *DCALL
+function_optimize(DeeFunctionObject *__restrict self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw);
+INTDEF NONNULL((1)) DREF DeeObject *DCALL
+function_optimized(DeeFunctionObject *__restrict self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw);
+
+PRIVATE struct type_method tpconst function_methods[] = {
+	TYPE_KWMETHOD("optimize", &function_optimize, DOC_GET(code_optimize_doc)),
+	TYPE_KWMETHOD("optimized", &function_optimized, DOC_GET(code_optimized_doc)),
+	TYPE_METHOD_END
+};
 
 PRIVATE struct type_getset tpconst function_getsets[] = {
 	TYPE_GETTER_F(STR___name__, &function_get_name, TYPE_GETSET_FNOREFESCAPE,
@@ -643,6 +677,11 @@ function_fini(Function *__restrict self) {
 	 * However, this check may be skipped in the case of an attribute
 	 * call (as in `foo.fun()', as opposed to `type(foo).fun(foo)')
 	 */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	if (self->fo_hostasm.hafu_data)
+		Dee_hostasm_function_data_destroy(self->fo_hostasm.hafu_data);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
 	Dee_Decrefv(self->fo_refv, self->fo_code->co_refc);
 	Dee_Decref(self->fo_code);
 }
@@ -796,7 +835,7 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 		/* .tp_print     = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_print,
 		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&function_printrepr
 	},
-	/* .tp_call          = */ &DeeFunction_Call,
+	/* .tp_call          = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *))&DeeFunction_Call,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&function_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
@@ -806,13 +845,13 @@ PUBLIC DeeTypeObject DeeFunction_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ function_methods,
 	/* .tp_getsets       = */ function_getsets,
 	/* .tp_members       = */ function_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ function_class_members,
-	/* .tp_call_kw       = */ &DeeFunction_CallKw,
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&DeeFunction_CallKw,
 };
 
 PRIVATE NONNULL((1)) void DCALL

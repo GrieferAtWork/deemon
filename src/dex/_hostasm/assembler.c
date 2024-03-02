@@ -56,6 +56,24 @@ DECL_BEGIN
 #define INT8_MAX __INT8_MAX__
 #endif /* !INT8_MAX */
 
+STATIC_ASSERT(HOST_CC_CALL == (0));
+STATIC_ASSERT(HOST_CC_CALL_KW == (HOST_CC_F_KW));
+STATIC_ASSERT(HOST_CC_CALL_TUPLE == (HOST_CC_F_TUPLE));
+STATIC_ASSERT(HOST_CC_CALL_TUPLE_KW == (HOST_CC_F_KW | HOST_CC_F_TUPLE));
+STATIC_ASSERT(HOST_CC_FUNC_CALL == (HOST_CC_F_FUNC));
+STATIC_ASSERT(HOST_CC_FUNC_CALL_KW == (HOST_CC_F_KW | HOST_CC_F_FUNC));
+STATIC_ASSERT(HOST_CC_FUNC_CALL_TUPLE == (HOST_CC_F_TUPLE | HOST_CC_F_FUNC));
+STATIC_ASSERT(HOST_CC_FUNC_CALL_TUPLE_KW == (HOST_CC_F_KW | HOST_CC_F_TUPLE | HOST_CC_F_FUNC));
+STATIC_ASSERT(HOST_CC_THISCALL == (HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_THISCALL_KW == (HOST_CC_F_KW | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_THISCALL_TUPLE == (HOST_CC_F_TUPLE | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_THISCALL_TUPLE_KW == (HOST_CC_F_KW | HOST_CC_F_TUPLE | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_FUNC_THISCALL == (HOST_CC_F_FUNC | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_FUNC_THISCALL_KW == (HOST_CC_F_KW | HOST_CC_F_FUNC | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_FUNC_THISCALL_TUPLE == (HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_THIS));
+STATIC_ASSERT(HOST_CC_FUNC_THISCALL_TUPLE_KW == (HOST_CC_F_KW | HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_THIS));
+STATIC_ASSERT((HOST_CC_F_KW | HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_THIS) == 15);
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 basic_block_compile(struct basic_block *__restrict self,
@@ -277,7 +295,8 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >>         kwds_argv = argv + argc;
 		 * >> #if {co_argc_min} > 0
 		 * >>         if (argc < {co_argc_min}) {
-		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
+		 * >>             size_t i = argc;
+		 * >>             do {
 		 * >>                 size_t index = DeeKwds_IndexOf(kw, {co_keywords}[i]);
 		 * >>                 if (index == (size_t)-1) {
 		 * >>                     err_invalid_argc_missing_kw(...);
@@ -287,7 +306,8 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>                 ++kw_used;
 		 * >> #endif
-		 * >>             }
+		 * >>                 ++i;
+		 * >>             } while (i < {co_argc_min});
 		 * >>         }
 		 * >> #endif
 		 * >> #if {co_argc_max} > {co_argc_min}
@@ -319,7 +339,8 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >> #endif
 		 * >> #if {co_argc_min} > 0
 		 * >>         if (argc < {co_argc_min}) {
-		 * >>             for (size_t i = argc; i < {co_argc_min}; ++i) {
+		 * >>             size_t i = argc;
+		 * >>             do {
 		 * >>                 DeeObject *arg = DeeKw_GetItemNR(kw, {co_keywords}[i]);
 		 * >>                 if (!arg)
 		 * >>                     HANDLE_EXCEPT();
@@ -327,7 +348,8 @@ fg_makeprolog(struct fungen *__restrict self) {
 		 * >> #if !(co_flags & CODE_FVARKWDS)
 		 * >>                 ++kw_used;
 		 * >> #endif
-		 * >>             }
+		 * >>                 ++i;
+		 * >>             } while (i < {co_argc_min});
 		 * >>         }
 		 * >> #endif
 		 * >> #if {co_argc_max} > {co_argc_min}
@@ -1590,12 +1612,13 @@ err:
  * @param: flags: Set of `FUNCTION_ASSEMBLER_F_*'
  * @return: 0 : Success
  * @return: -1: Error */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-Dee_assemble(DeeFunctionObject *__restrict function,
-             struct hostfunc *__restrict result,
-             host_cc_t cc, uint16_t flags) {
+INTERN WUNUSED NONNULL((2, 3)) int DCALL
+hostfunc_assemble(DeeFunctionObject *function,
+                  DeeCodeObject *code,
+                  struct hostfunc *__restrict result,
+                  host_cc_t cc, uint16_t flags) {
 	struct function_assembler assembler;
-	function_assembler_init(&assembler, function, function->fo_code, cc, flags);
+	function_assembler_init(&assembler, function, code, cc, flags);
 
 	/* Special case: deemon code that contains user-written deemon assembly
 	 *               requires special care to include some extra checks in

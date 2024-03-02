@@ -1487,7 +1487,19 @@ do_jcc:
 		 */
 		DO(fg_vpush_cid_t(self, code_cid, &DeeCode_Type));          /* [refs...], ref:function, code */
 		DO(fg_vref2(self, (vstackaddr_t)(refc + 2)));               /* [refs...], ref:function, ref:code */
+#ifdef CONFIG_HAVE_CODE_METRICS
+		/* TODO: atomic_inc(&code->co_metrics.com_functions); */
+#endif /* CONFIG_HAVE_CODE_METRICS */
 		DO(fg_vpopind(self, offsetof(DeeFunctionObject, fo_code))); /* [refs...], ref:function */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_data)));
+		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call)));
+		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_kw)));
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple)));
+		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple_kw)));
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		while (refc) {
 			--refc;
 			DO(fg_vswap(self));                           /* [refs...], ref:function, ref */

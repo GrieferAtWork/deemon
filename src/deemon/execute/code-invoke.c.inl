@@ -31,32 +31,166 @@ DECL_BEGIN
 #ifdef CALL_THIS
 #ifdef CALL_KW
 #ifdef CALL_TUPLE
-#define LOCAL_DeeFunction_Call DeeFunction_ThisCallTupleKw
+#define LOCAL_DeeFunction_Call            DeeFunction_ThisCallTupleKw
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndThisCallTupleKw
 #else /* CALL_TUPLE */
-#define LOCAL_DeeFunction_Call DeeFunction_ThisCallKw
+#define LOCAL_DeeFunction_Call            DeeFunction_ThisCallKw
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndThisCallKw
 #endif /* !CALL_TUPLE */
 #else /* CALL_KW */
 #ifdef CALL_TUPLE
-#define LOCAL_DeeFunction_Call DeeFunction_ThisCallTuple
+#define LOCAL_DeeFunction_Call            DeeFunction_ThisCallTuple
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndThisCallTuple
 #else /* CALL_TUPLE */
-#define LOCAL_DeeFunction_Call DeeFunction_ThisCall
+#define LOCAL_DeeFunction_Call            DeeFunction_ThisCall
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndThisCall
 #endif /* !CALL_TUPLE */
 #endif /* !CALL_KW */
 #else /* CALL_THIS */
 #ifdef CALL_KW
 #ifdef CALL_TUPLE
-#define LOCAL_DeeFunction_Call DeeFunction_CallTupleKw
+#define LOCAL_DeeFunction_Call            DeeFunction_CallTupleKw
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndCallTupleKw
 #else /* CALL_TUPLE */
-#define LOCAL_DeeFunction_Call DeeFunction_CallKw
+#define LOCAL_DeeFunction_Call            DeeFunction_CallKw
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndCallKw
 #endif /* !CALL_TUPLE */
 #else /* CALL_KW */
 #ifdef CALL_TUPLE
-#define LOCAL_DeeFunction_Call DeeFunction_CallTuple
+#define LOCAL_DeeFunction_Call            DeeFunction_CallTuple
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndCallTuple
 #else /* CALL_TUPLE */
-#define LOCAL_DeeFunction_Call DeeFunction_Call
+#define LOCAL_DeeFunction_Call            DeeFunction_Call
+#define LOCAL_DeeFunction_OptimizeAndCall DeeFunction_OptimizeAndCall
 #endif /* !CALL_TUPLE */
 #endif /* !CALL_KW */
 #endif /* !CALL_THIS */
+
+
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CONFIG_HAVE_CODE_METRICS
+INTERN WUNUSED DREF DeeObject *DCALL
+LOCAL_DeeFunction_OptimizeAndCall(DeeFunctionObject *self
+#ifdef CALL_THIS
+                                  , DeeObject *this_arg
+#endif /* CALL_THIS */
+#ifdef CALL_TUPLE
+                                  , DeeObject *args
+#else /* CALL_TUPLE */
+                                  , size_t argc, DeeObject *const *argv
+#endif /* !CALL_TUPLE */
+#ifdef CALL_KW
+                                  , DeeObject *kw
+#endif /* CALL_KW */
+                                  ) {
+	int status;
+	host_cc_t cc = 0 |
+#ifdef CALL_THIS
+	               HOST_CC_F_THIS |
+#endif /* CALL_THIS */
+#ifdef CALL_TUPLE
+	               HOST_CC_F_TUPLE |
+#endif /* CALL_TUPLE */
+#ifdef CALL_KW
+	               HOST_CC_F_KW |
+#endif /* CALL_KW */
+	               0;
+	DeeCodeObject *code = self->fo_code;
+	size_t num_funcs = atomic_read(&code->co_metrics.com_functions);
+#if defined(CALL_TUPLE) && defined(CALL_KW)
+	size_t num_calls = atomic_read(&code->co_metrics.com_call_tuple_kw);
+#elif defined(CALL_TUPLE) && !defined(CALL_KW)
+	size_t num_calls = atomic_read(&code->co_metrics.com_call_tuple);
+#elif !defined(CALL_TUPLE) && defined(CALL_KW)
+	size_t num_calls = atomic_read(&code->co_metrics.com_call_kw);
+#elif !defined(CALL_TUPLE) && !defined(CALL_KW)
+	size_t num_calls = atomic_read(&code->co_metrics.com_call);
+#endif /* ... */
+	if (num_funcs > 1 && num_funcs >= (num_calls / 4))
+		cc |= HOST_CC_F_FUNC; /* Lots of individual function -> re-compile as function-independent */
+	status = DeeFunction_HostAsmRecompile(self, cc, true);
+	if unlikely(status < 0)
+		return NULL; /* Error during recompilation */
+	if likely(status == 0) {
+		if (cc & HOST_CC_F_FUNC) {
+#if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_tuple_kw.c_this);
+			return (*code->co_hostasm.haco_call_tuple_kw.c_this)(self, this_arg, args, kw);
+#elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_kw.c_this);
+			return (*code->co_hostasm.haco_call_kw.c_this)(self, this_arg, argc, argv, kw);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_tuple.c_this);
+			return (*code->co_hostasm.haco_call_tuple.c_this)(self, this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call.c_this);
+			return (*code->co_hostasm.haco_call.c_this)(self, this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_tuple_kw.c_norm);
+			return (*code->co_hostasm.haco_call_tuple_kw.c_norm)(self, args, kw);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_kw.c_norm);
+			return (*code->co_hostasm.haco_call_kw.c_norm)(self, argc, argv, kw);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call_tuple.c_norm);
+			return (*code->co_hostasm.haco_call_tuple.c_norm)(self, args);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(code->co_hostasm.haco_call.c_norm);
+			return (*code->co_hostasm.haco_call.c_norm)(self, argc, argv);
+#endif /* ... */
+		} else {
+#if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_tuple_kw.c_this);
+			return (*self->fo_hostasm.hafu_call_tuple_kw.c_this)(this_arg, args, kw);
+#elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_kw.c_this);
+			return (*self->fo_hostasm.hafu_call_kw.c_this)(this_arg, argc, argv, kw);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_tuple.c_this);
+			return (*self->fo_hostasm.hafu_call_tuple.c_this)(this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call.c_this);
+			return (*self->fo_hostasm.hafu_call.c_this)(this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_tuple_kw.c_norm);
+			return (*self->fo_hostasm.hafu_call_tuple_kw.c_norm)(args, kw);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_kw.c_norm);
+			return (*self->fo_hostasm.hafu_call_kw.c_norm)(argc, argv, kw);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call_tuple.c_norm);
+			return (*self->fo_hostasm.hafu_call_tuple.c_norm)(args);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+			ASSERT(self->fo_hostasm.hafu_call.c_norm);
+			return (*self->fo_hostasm.hafu_call.c_norm)(argc, argv);
+#endif /* ... */
+		}
+	}
+
+	/* Fallback: do a normal invocation (in this case,
+	 * `DeeCode_OptimizeCallThreshold' was set
+	 * to (size_t)-1, so this won't loop) */
+#if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	return DeeFunction_ThisCallTupleKw(self, this_arg, args, kw);
+#elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	return DeeFunction_ThisCallKw(self, this_arg, argc, argv, kw);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	return DeeFunction_ThisCallTuple(self, this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	return DeeFunction_ThisCall(self, this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	return DeeFunction_CallTupleKw(self, args, kw);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	return DeeFunction_CallKw(self, argc, argv, kw);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	return DeeFunction_CallTuple(self, args);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	return DeeFunction_Call(self, argc, argv);
+#endif /* ... */
+}
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
 
 
 
@@ -114,6 +248,8 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 	ASSERT_OBJECT(this_arg);
 #endif /* CALL_THIS */
 	code = self->fo_code;
+
+	/* Handle miss-match the THISCALL calling behavior. */
 #ifdef CALL_THIS
 	if unlikely(!(code->co_flags & CODE_FTHISCALL)) {
 		DREF DeeTupleObject *packed_args;
@@ -163,6 +299,64 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 	}
 #endif /* !CALL_THIS */
 
+	/* Check if the Function object has been re-compiled into host assembly. */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple_kw.c_this)
+		return (*self->fo_hostasm.hafu_call_tuple_kw.c_this)(this_arg, args, kw);
+#elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_kw.c_this)
+		return (*self->fo_hostasm.hafu_call_kw.c_this)(this_arg, argc, argv, kw);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple.c_this)
+		return (*self->fo_hostasm.hafu_call_tuple.c_this)(this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call.c_this)
+		return (*self->fo_hostasm.hafu_call.c_this)(this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple_kw.c_norm)
+		return (*self->fo_hostasm.hafu_call_tuple_kw.c_norm)(args, kw);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_kw.c_norm)
+		return (*self->fo_hostasm.hafu_call_kw.c_norm)(argc, argv, kw);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple.c_norm)
+		return (*self->fo_hostasm.hafu_call_tuple.c_norm)(args);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call.c_norm)
+		return (*self->fo_hostasm.hafu_call.c_norm)(argc, argv);
+#endif /* ... */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
+	/* Check if the Code object has been re-compiled into host assembly. */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple_kw.c_this)
+		return (*code->co_hostasm.haco_call_tuple_kw.c_this)(self, this_arg, args, kw);
+#elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_kw.c_this)
+		return (*code->co_hostasm.haco_call_kw.c_this)(self, this_arg, argc, argv, kw);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple.c_this)
+		return (*code->co_hostasm.haco_call_tuple.c_this)(self, this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call.c_this)
+		return (*code->co_hostasm.haco_call.c_this)(self, this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple_kw.c_norm)
+		return (*code->co_hostasm.haco_call_tuple_kw.c_norm)(self, args, kw);
+#elif !defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_kw.c_norm)
+		return (*code->co_hostasm.haco_call_kw.c_norm)(self, argc, argv, kw);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple.c_norm)
+		return (*code->co_hostasm.haco_call_tuple.c_norm)(self, args);
+#elif !defined(CALL_THIS) && !defined(CALL_KW) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call.c_norm)
+		return (*code->co_hostasm.haco_call.c_norm)(self, argc, argv);
+#endif /* ... */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
 #ifdef CALL_KW
 	if (kw) {
 		DREF DeeYieldFunctionObject *yf;
@@ -173,6 +367,36 @@ LOCAL_DeeFunction_Call(DeeFunctionObject *self
 		                 * NOTE: Once all provided arguments have been loaded, this is used
 		                 *       to check if _all_ keywords have actually been used, which
 		                 *       is a requirement when `CODE_FVARKWDS' isn't set. */
+	
+		/* Keep track of metrics. */
+#ifdef CONFIG_HAVE_CODE_METRICS
+#ifdef CALL_TUPLE
+		atomic_inc(&code->co_metrics.com_call_tuple_kw);
+#else /* CALL_TUPLE */
+		atomic_inc(&code->co_metrics.com_call_kw);
+#endif /* !CALL_TUPLE */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CALL_TUPLE
+		if unlikely(code->co_metrics.com_call_tuple_kw > DeeCode_OptimizeCallThreshold)
+#else /* CALL_TUPLE */
+		if unlikely(code->co_metrics.com_call_kw > DeeCode_OptimizeCallThreshold)
+#endif /* !CALL_TUPLE */
+		{
+			if (!(code->co_flags & CODE_FNOOPTIMIZE)) {
+#if defined(CALL_TUPLE) && defined(CALL_THIS)
+				return DeeFunction_OptimizeAndThisCallTupleKw(self, this_arg, args, kw);
+#elif defined(CALL_TUPLE) && !defined(CALL_THIS)
+				return DeeFunction_OptimizeAndCallTupleKw(self, args, kw);
+#elif !defined(CALL_TUPLE) && defined(CALL_THIS)
+				return DeeFunction_OptimizeAndThisCallKw(self, this_arg, argc, argv, kw);
+#elif !defined(CALL_TUPLE) && !defined(CALL_THIS)
+				return DeeFunction_OptimizeAndCallKw(self, argc, argv, kw);
+#endif /* ... */
+			}
+		}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+
 #ifdef Dee_Alloca
 #define err_ex_frame err
 #endif /* Dee_Alloca */
@@ -239,7 +463,71 @@ err_ex_frame:
 #undef err_ex_frame
 #endif /* Dee_Alloca */
 	}
+
+	/* Check if the Function object was hostasm recompiled w/o keyword arguments */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#if defined(CALL_THIS) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple.c_this)
+		return (*self->fo_hostasm.hafu_call_tuple.c_this)(this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call.c_this)
+		return (*self->fo_hostasm.hafu_call.c_this)(this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call_tuple.c_norm)
+		return (*self->fo_hostasm.hafu_call_tuple.c_norm)(args);
+#elif !defined(CALL_THIS) && !defined(CALL_TUPLE)
+	if (self->fo_hostasm.hafu_call.c_norm)
+		return (*self->fo_hostasm.hafu_call.c_norm)(argc, argv);
+#endif /* ... */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
+	/* Check if the Code object was hostasm recompiled w/o keyword arguments */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#if defined(CALL_THIS) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple.c_this)
+		return (*code->co_hostasm.haco_call_tuple.c_this)(self, this_arg, args);
+#elif defined(CALL_THIS) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call.c_this)
+		return (*code->co_hostasm.haco_call.c_this)(self, this_arg, argc, argv);
+#elif !defined(CALL_THIS) && defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call_tuple.c_norm)
+		return (*code->co_hostasm.haco_call_tuple.c_norm)(self, args);
+#elif !defined(CALL_THIS) && !defined(CALL_TUPLE)
+	if (code->co_hostasm.haco_call.c_norm)
+		return (*code->co_hostasm.haco_call.c_norm)(self, argc, argv);
+#endif /* ... */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 #endif /* CALL_KW */
+
+	/* Keep track of metrics. */
+#ifdef CONFIG_HAVE_CODE_METRICS
+#ifdef CALL_TUPLE
+	atomic_inc(&code->co_metrics.com_call_tuple);
+#else /* CALL_TUPLE */
+	atomic_inc(&code->co_metrics.com_call);
+#endif /* !CALL_TUPLE */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CALL_TUPLE
+	if unlikely(code->co_metrics.com_call_tuple > DeeCode_OptimizeCallThreshold)
+#else /* CALL_TUPLE */
+	if unlikely(code->co_metrics.com_call > DeeCode_OptimizeCallThreshold)
+#endif /* !CALL_TUPLE */
+	{
+		if (!(code->co_flags & CODE_FNOOPTIMIZE)) {
+#if defined(CALL_TUPLE) && defined(CALL_THIS)
+			return DeeFunction_OptimizeAndThisCallTuple(self, this_arg, args);
+#elif defined(CALL_TUPLE) && !defined(CALL_THIS)
+			return DeeFunction_OptimizeAndCallTuple(self, args);
+#elif !defined(CALL_TUPLE) && defined(CALL_THIS)
+			return DeeFunction_OptimizeAndThisCall(self, this_arg, argc, argv);
+#elif !defined(CALL_TUPLE) && !defined(CALL_THIS)
+			return DeeFunction_OptimizeAndCall(self, argc, argv);
+#endif /* ... */
+		}
+	}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#endif /* CONFIG_HAVE_CODE_METRICS */
+
 
 	if unlikely(GET_ARGC() < code->co_argc_min ||
 	            (GET_ARGC() > code->co_argc_max &&
@@ -368,6 +656,7 @@ err:
 #undef GET_ARGC
 #undef GET_ARGV
 #undef LOCAL_DeeFunction_Call
+#undef LOCAL_DeeFunction_OptimizeAndCall
 #undef CALL_KW
 #undef CALL_THIS
 #undef CALL_TUPLE

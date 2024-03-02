@@ -1579,13 +1579,19 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	result->co_framesize = (current_assembler.a_localc +
 	                        current_assembler.a_stackmax) *
 	                       sizeof(DeeObject *);
-	result->co_codebytes       = total_codesize;
-	result->co_keywords        = kwds;
-	result->co_defaultv        = current_basescope->bs_default;
-	result->co_staticv         = current_assembler.a_constv;
-	result->co_exceptv         = exceptv;
-	result->co_ddi             = ddi; /* Inherit reference. */
-	result->co_next            = current_rootscope->rs_code;
+	result->co_codebytes = total_codesize;
+	result->co_keywords  = kwds;
+	result->co_defaultv  = current_basescope->bs_default;
+	result->co_staticv   = current_assembler.a_constv;
+	result->co_exceptv   = exceptv;
+	result->co_ddi       = ddi; /* Inherit reference. */
+	result->co_next      = current_rootscope->rs_code;
+#ifdef CONFIG_HAVE_CODE_METRICS
+	Dee_code_metrics_init(&result->co_metrics);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_code_init(&result->co_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 	current_rootscope->rs_code = result;
 	Dee_Incref(result); /* The reference that is stored in the root-scope. */
 

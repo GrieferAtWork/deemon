@@ -5884,9 +5884,9 @@ prefix_foreach_16:
 
 
 				PREFIX_TARGET(ASM_FUNCTION_C_16)
-				imm_val  = READ_imm8();
-				imm_val2 = READ_imm16();
-				goto prefix_do_function_c;
+					imm_val  = READ_imm8();
+					imm_val2 = READ_imm16();
+					goto prefix_do_function_c;
 				PREFIX_TARGET(ASM_FUNCTION_C) {
 					DREF DeeObject *function;
 					imm_val  = READ_imm8();

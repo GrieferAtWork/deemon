@@ -404,23 +404,38 @@ END(_impl_assert_failed)
 #ifndef CONFIG_NO_THREADS
 #define co_static_lock (DEE_OBJECT_OFFSETOF_DATA+24) /* Dee_atomic_rwlock_t co_static_lock; */
 #define co_module      (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF DeeModuleObject *co_module; */
-#define co_next        (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF DeeCodeObject *co_next; */
-#define co_keywords    (DEE_OBJECT_OFFSETOF_DATA+32) /* DREF struct kwds_object *co_keywords; */
-#define co_defaultv    (DEE_OBJECT_OFFSETOF_DATA+36) /* DREF DeeObject *const *co_defaultv; */
-#define co_staticv     (DEE_OBJECT_OFFSETOF_DATA+40) /* DREF DeeObject **co_staticv; */
-#define co_exceptv     (DEE_OBJECT_OFFSETOF_DATA+44) /* struct except_handler *co_exceptv; */
-#define co_ddi         (DEE_OBJECT_OFFSETOF_DATA+48) /* DREF DeeDDIObject *co_ddi; */
-#define co_code        (DEE_OBJECT_OFFSETOF_DATA+52) /* instruction_t co_code[1]; */
 #else /* !CONFIG_NO_THREADS */
 #define co_module      (DEE_OBJECT_OFFSETOF_DATA+24) /* DREF DeeModuleObject *co_module; */
-#define co_next        (DEE_OBJECT_OFFSETOF_DATA+24) /* DREF DeeCodeObject *co_next; */
-#define co_keywords    (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF struct kwds_object *co_keywords; */
-#define co_defaultv    (DEE_OBJECT_OFFSETOF_DATA+32) /* DREF DeeObject *const *co_defaultv; */
-#define co_staticv     (DEE_OBJECT_OFFSETOF_DATA+36) /* DREF DeeObject **co_staticv; */
-#define co_exceptv     (DEE_OBJECT_OFFSETOF_DATA+40) /* struct except_handler *co_exceptv; */
-#define co_ddi         (DEE_OBJECT_OFFSETOF_DATA+44) /* DREF DeeDDIObject *co_ddi; */
-#define co_code        (DEE_OBJECT_OFFSETOF_DATA+48) /* instruction_t co_code[1]; */
 #endif /* CONFIG_NO_THREADS */
+#define co_next        co_module      /* DREF DeeCodeObject *co_next; */
+#define co_keywords    (co_module+4)  /* DREF struct kwds_object *co_keywords; */
+#define co_defaultv    (co_module+8)  /* DREF DeeObject *const *co_defaultv; */
+#define co_staticv     (co_module+12) /* DREF DeeObject **co_staticv; */
+#define co_exceptv     (co_module+16) /* struct except_handler *co_exceptv; */
+#define co_ddi         (co_module+20) /* DREF DeeDDIObject *co_ddi; */
+#ifdef CONFIG_HAVE_CODE_METRICS
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define SIZEOF_Dee_code_metrics 20
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define SIZEOF_Dee_code_metrics 12
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define co_metrics     (co_module+24) /* struct Dee_code_metrics co_metrics; */
+#define _AFTER_co_metrics (co_metrics+SIZEOF_Dee_code_metrics)
+#else /* CONFIG_HAVE_CODE_METRICS */
+#define _AFTER_co_metrics co_module
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define SIZEOF_Dee_hostasm_code 20
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define SIZEOF_Dee_hostasm_code 12
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define co_hostasm _AFTER_co_metrics /* struct Dee_hostasm_code co_hostasm; */
+#define _AFTER_co_hostasm (_AFTER_co_metrics+SIZEOF_Dee_hostasm_code)
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define _AFTER_co_hostasm _AFTER_co_metrics
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define co_code        _AFTER_co_hostasm /* instruction_t co_code[1]; */
 /* }; */
 
 /* struct code_frame_kwds { */
@@ -448,7 +463,17 @@ END(_impl_assert_failed)
 
 /* struct function_object { */
 #define fo_code      DEE_OBJECT_OFFSETOF_DATA    /* DREF DeeCodeObject *fo_code; */
-#define fo_refv     (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject    **fo_refv; */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define SIZEOF_Dee_hostasm_function 20
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define SIZEOF_Dee_hostasm_function 12
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define fo_hostasm  (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_hostasm_function fo_hostasm; */
+#define fo_refv     (DEE_OBJECT_OFFSETOF_DATA+4+SIZEOF_Dee_hostasm_function) /* DREF DeeObject **fo_refv; */
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define fo_refv     (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject **fo_refv; */
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 /* }; */
 
 

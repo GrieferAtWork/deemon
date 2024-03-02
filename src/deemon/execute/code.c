@@ -38,6 +38,7 @@
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
@@ -191,6 +192,440 @@
 
 
 DECL_BEGIN
+
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+
+/* Hidden C-API of _hostasm
+ * NOTE: These values must match the definitions from `libhostasm.h' */
+#define HOST_CC_F_KW    1 /* Take an an extra `DeeObject *kw' parameter for keyword arguments */
+#define HOST_CC_F_TUPLE 2 /* Instead of `size_t argc, DeeObject *const *argv', take `DeeObject *args' */
+#define HOST_CC_F_FUNC  4 /* Don't hard-code "ref" or "this_function" operands (for lambda functions) */
+#define HOST_CC_F_THIS  8 /* Take an an extra `DeeObject *thisarg' parameter for "this" */
+typedef uint8_t host_cc_t;
+
+union host_rawfunc_entry {
+	void                   *hfe_addr;
+	DREF DeeObject *(DCALL *hfe_call)(size_t argc, DeeObject *const *argv);                                                                         /* HOST_CC_CALL */
+	DREF DeeObject *(DCALL *hfe_call_kw)(size_t argc, DeeObject *const *argv, DeeObject *kw);                                                       /* HOST_CC_CALL_KW */
+	DREF DeeObject *(DCALL *hfe_call_tuple)(DeeObject *args);                                                                                       /* HOST_CC_CALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_call_tuple_kw)(DeeObject *args, DeeObject *kw);                                                                     /* HOST_CC_CALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_func_call)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv);                                           /* HOST_CC_FUNC_CALL */
+	DREF DeeObject *(DCALL *hfe_func_call_kw)(DeeFunctionObject *func, size_t argc, DeeObject *const *argv, DeeObject *kw);                         /* HOST_CC_FUNC_CALL_KW */
+	DREF DeeObject *(DCALL *hfe_func_call_tuple)(DeeFunctionObject *func, DeeObject *args);                                                         /* HOST_CC_FUNC_CALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_func_call_tuple_kw)(DeeFunctionObject *func, DeeObject *args, DeeObject *kw);                                       /* HOST_CC_FUNC_CALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_thiscall)(DeeObject *thisarg, size_t argc, DeeObject *const *argv);                                                 /* HOST_CC_THISCALL */
+	DREF DeeObject *(DCALL *hfe_thiscall_kw)(DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw);                               /* HOST_CC_THISCALL_KW */
+	DREF DeeObject *(DCALL *hfe_thiscall_tuple)(DeeObject *thisarg, DeeObject *args);                                                               /* HOST_CC_THISCALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_thiscall_tuple_kw)(DeeObject *thisarg, DeeObject *args, DeeObject *kw);                                             /* HOST_CC_THISCALL_TUPLE_KW */
+	DREF DeeObject *(DCALL *hfe_func_thiscall)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv);                   /* HOST_CC_FUNC_THISCALL */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_kw)(DeeFunctionObject *func, DeeObject *thisarg, size_t argc, DeeObject *const *argv, DeeObject *kw); /* HOST_CC_FUNC_THISCALL_KW */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args);                                 /* HOST_CC_FUNC_THISCALL_TUPLE */
+	DREF DeeObject *(DCALL *hfe_func_thiscall_tuple_kw)(DeeFunctionObject *func, DeeObject *thisarg, DeeObject *args, DeeObject *kw);               /* HOST_CC_FUNC_THISCALL_TUPLE_KW */
+};
+
+struct hostfunc {
+	union host_rawfunc_entry hf_entry; /* Function entry point. */
+	/* ... extra fields here... */
+};
+
+/* Create a host assembly function for `code' */
+typedef WUNUSED_T NONNULL_T((2)) struct hostfunc *
+(DCALL *LPHOSTASM_HOSTFUNC_NEW)(/*0..1*/ DeeFunctionObject *function,
+                                /*1..1*/ DeeCodeObject *code,
+                                host_cc_t cc);
+typedef NONNULL_T((1)) void (DCALL *LPHOSTASM_HOSTFUNC_DESTROY)(struct hostfunc *func);
+PRIVATE LPHOSTASM_HOSTFUNC_NEW pdyn_hostasm_hostfunc_new = NULL;
+PRIVATE LPHOSTASM_HOSTFUNC_DESTROY pdyn_hostasm_hostfunc_destroy = NULL;
+
+PRIVATE DEFINE_STRING(str__hostasm, "_hostasm");
+
+/* Load the _hostasm API
+ * @return: 1 : Unable to load API . In this case, `DeeCode_OptimizeCallThreshold'
+ *              has automatically been set to `(size_t)-1'.
+ * @return: 0 : Success
+ * @return: -1: Error */
+PRIVATE WUNUSED int DCALL hostasm_loadapi(void) {
+	DREF DeeObject *mod_hostasm;
+	LPHOSTASM_HOSTFUNC_NEW sym_hostasm_hostfunc_new;
+	LPHOSTASM_HOSTFUNC_DESTROY sym_hostasm_hostfunc_destroy;
+	COMPILER_READ_BARRIER();
+	if (pdyn_hostasm_hostfunc_new)
+		return 0;
+	COMPILER_READ_BARRIER();
+	mod_hostasm = DeeModule_OpenGlobal((DeeObject *)&str__hostasm, NULL, false);
+	if unlikely(!ITER_ISOK(mod_hostasm)) {
+		if unlikely(mod_hostasm == NULL)
+			goto err;
+		goto not_available;
+	}
+	if unlikely(DeeModule_RunInit(mod_hostasm) < 0)
+		goto err_mod_hostasm;
+	*(void **)&sym_hostasm_hostfunc_new     = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_new");
+	*(void **)&sym_hostasm_hostfunc_destroy = DeeModule_GetNativeSymbol(mod_hostasm, "hostasm_hostfunc_destroy");
+	Dee_Decref(mod_hostasm);
+	if unlikely(!sym_hostasm_hostfunc_new)
+		goto not_available;
+	if unlikely(!sym_hostasm_hostfunc_destroy)
+		goto not_available;
+	COMPILER_WRITE_BARRIER();
+	pdyn_hostasm_hostfunc_destroy = sym_hostasm_hostfunc_destroy;
+	COMPILER_WRITE_BARRIER();
+	pdyn_hostasm_hostfunc_new = sym_hostasm_hostfunc_new;
+	COMPILER_WRITE_BARRIER();
+	return 0;
+err_mod_hostasm:
+	Dee_Decref(mod_hostasm);
+err:
+	return -1;
+not_available:
+#ifdef CONFIG_HAVE_CODE_METRICS
+	atomic_write(&DeeCode_OptimizeCallThreshold, (size_t)-1);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+	return 1;
+}
+
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+#define HOSTASM_FUNCTION_COUNT ((HOST_CC_F_KW | HOST_CC_F_TUPLE) + 1)
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define HOSTASM_FUNCTION_COUNT ((HOST_CC_F_KW) + 1)
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+struct Dee_hostasm_code_data {
+	struct hostfunc *hcd_functions[HOSTASM_FUNCTION_COUNT]; /* [0..1][lock(WRITE_ONCE)][*] */
+};
+struct Dee_hostasm_function_data {
+	struct hostfunc *hfd_functions[HOSTASM_FUNCTION_COUNT]; /* [0..1][lock(WRITE_ONCE)][*] */
+};
+
+INTERN NONNULL((1)) void DCALL
+Dee_hostasm_code_data_destroy(struct Dee_hostasm_code_data *__restrict self) {
+	size_t i;
+	for (i = 0; i < COMPILER_LENOF(self->hcd_functions); ++i) {
+		struct hostfunc *hfunc = self->hcd_functions[i];
+		if (hfunc != NULL)
+			(*pdyn_hostasm_hostfunc_destroy)(hfunc);
+	}
+	Dee_Free(self);
+}
+
+INTERN NONNULL((1)) void DCALL
+Dee_hostasm_function_data_destroy(struct Dee_hostasm_function_data *__restrict self) {
+	Dee_hostasm_code_data_destroy((struct Dee_hostasm_code_data *)self);
+}
+
+
+/* Lazily re-compile `self' as per `cc'
+ * @return: 1 : Unable to recompile (_hostasm wasn't found, or didn't export the correct
+ *              functions). In this case, `DeeCode_OptimizeCallThreshold' has automatically
+ *              been set to `(size_t)-1'. Alternatively (when `allow_async == true'), the
+ *              function might be getting optimized asynchronously, in which case the
+ *              caller should execute it using the normal bytecode interpreter for the
+ *              time being (once recomp finishes, it will automatically get hooked in the
+ *              function/code).
+ * @return: 0 : Success
+ * @return: -1: Error */
+PRIVATE NONNULL((1)) int DCALL
+DeeFunction_HostAsmRecompile(DeeFunctionObject *__restrict self,
+                             host_cc_t cc, bool allow_async) {
+	int status;
+	host_cc_t data_cc = cc & (HOSTASM_FUNCTION_COUNT - 1);
+	struct Dee_hostasm_code_data *data, **p_data;
+	DeeCodeObject *code = self->fo_code;
+	struct hostfunc *hfunc;
+	status = hostasm_loadapi();
+	if (status != 0)
+		return status; /* Error, or not available. */
+	if (cc & HOST_CC_F_FUNC) {
+		p_data = &code->co_hostasm.haco_data;
+	} else {
+		p_data = (struct Dee_hostasm_code_data **)&self->fo_hostasm.hafu_data;
+	}
+again_read_data:
+	data = atomic_read(p_data);
+	if (!data) {
+		/* Lazily allocate data holder. */
+		data = (struct Dee_hostasm_code_data *)Dee_Calloc(sizeof(struct Dee_hostasm_code_data));
+		if unlikely(!data)
+			goto err;
+		if unlikely(!atomic_cmpxch(p_data, NULL, data)) {
+			Dee_Free(data);
+			goto again_read_data;
+		}
+	}
+
+	/* Lazily compile the function variant in question. */
+again_read_hfunc:
+	hfunc = atomic_read(&data->hcd_functions[data_cc]);
+	if likely(hfunc == NULL) {
+		if (allow_async) {
+#ifndef CONFIG_NO_THREADS
+			/* TODO: Enqueue the recompilation operation to happen in a different thread. */
+#endif /* !CONFIG_NO_THREADS */
+		}
+
+		/* Recompile the function in question. */
+		hfunc = (*pdyn_hostasm_hostfunc_new)(cc & HOST_CC_F_FUNC ? NULL : self, code, cc);
+		if unlikely(!hfunc) {
+			/* Check for special case: _hostasm throws `IllegalInstruction' if it's unable
+			 * to re-compile the function due to it using some sort of functionality that
+			 * it is unable to handle (yet). */
+			if (DeeError_Catch(&DeeError_IllegalInstruction)) {
+				/* Remember that this code object can't be optimized. */
+				atomic_or(&code->co_flags, CODE_FNOOPTIMIZE);
+				return 1;
+			}
+			goto err;
+		}
+		if unlikely(!atomic_cmpxch(&data->hcd_functions[data_cc], NULL, hfunc)) {
+			(*pdyn_hostasm_hostfunc_destroy)(hfunc);
+			goto again_read_hfunc;
+		}
+	}
+
+	/* Store the produced function pointer in its proper location. */
+	switch (cc) {
+	case 0:
+	case HOST_CC_F_THIS:
+		atomic_write(&self->fo_hostasm.hafu_call.c_norm, hfunc->hf_entry.hfe_call);
+		break;
+	case HOST_CC_F_KW:
+	case HOST_CC_F_KW | HOST_CC_F_THIS:
+		atomic_write(&self->fo_hostasm.hafu_call_kw.c_norm, hfunc->hf_entry.hfe_call_kw);
+		break;
+	case HOST_CC_F_FUNC:
+	case HOST_CC_F_FUNC | HOST_CC_F_THIS:
+		atomic_write(&code->co_hostasm.haco_call.c_norm, hfunc->hf_entry.hfe_func_call);
+		break;
+	case HOST_CC_F_FUNC | HOST_CC_F_KW:
+	case HOST_CC_F_FUNC | HOST_CC_F_KW | HOST_CC_F_THIS:
+		atomic_write(&code->co_hostasm.haco_call_kw.c_norm, hfunc->hf_entry.hfe_func_call_kw);
+		break;
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	case HOST_CC_F_TUPLE:
+	case HOST_CC_F_TUPLE | HOST_CC_F_THIS:
+		atomic_write(&self->fo_hostasm.hafu_call_tuple.c_norm, hfunc->hf_entry.hfe_call_tuple);
+		break;
+	case HOST_CC_F_TUPLE | HOST_CC_F_KW:
+	case HOST_CC_F_TUPLE | HOST_CC_F_KW | HOST_CC_F_THIS:
+		atomic_write(&self->fo_hostasm.hafu_call_tuple_kw.c_norm, hfunc->hf_entry.hfe_call_tuple_kw);
+		break;
+	case HOST_CC_F_TUPLE | HOST_CC_F_FUNC:
+	case HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_THIS:
+		atomic_write(&code->co_hostasm.haco_call_tuple.c_norm, hfunc->hf_entry.hfe_func_call_tuple);
+		break;
+	case HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_KW:
+	case HOST_CC_F_TUPLE | HOST_CC_F_FUNC | HOST_CC_F_KW | HOST_CC_F_THIS:
+		atomic_write(&code->co_hostasm.haco_call_tuple_kw.c_norm, hfunc->hf_entry.hfe_func_call_tuple_kw);
+		break;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	default: __builtin_unreachable();
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) int DCALL
+DeeCode_HostAsmRecompile(DeeCodeObject *__restrict self,
+                         host_cc_t cc, bool allow_async) {
+	DeeCodeObject *_buf = self;
+	DeeFunctionObject *func = COMPILER_CONTAINER_OF(&_buf, DeeFunctionObject, fo_code);
+	ASSERT(cc & HOST_CC_F_FUNC);
+	return DeeFunction_HostAsmRecompile(func, cc, allow_async);
+}
+
+#ifdef CONFIG_HAVE_CODE_METRICS
+#ifndef DEFAULT_HOSTASM_RECOMPILE_CALL_THRESHOLD
+#if 1 /* TODO: Enable this feature by default. */
+#define DEFAULT_HOSTASM_RECOMPILE_CALL_THRESHOLD ((size_t)-1)
+#else
+#define DEFAULT_HOSTASM_RECOMPILE_CALL_THRESHOLD 128
+#endif
+#endif /* !DEFAULT_HOSTASM_RECOMPILE_CALL_THRESHOLD */
+
+INTERN size_t DeeCode_OptimizeCallThreshold = DEFAULT_HOSTASM_RECOMPILE_CALL_THRESHOLD;
+
+/* Get/set the threshold after which a code object
+ * gets automatically recompiled into host assembly.
+ *
+ * Special values:
+ * - 0 :         Functions are always optimized immediately.
+ * - (size_t)-1: Functions are never optimized (when trying to
+ *               optimize a function, and doing so fails because
+ *               `_hostasm' can't be loaded, this value gets set
+ *               automatically) */
+PUBLIC ATTR_PURE WUNUSED size_t DCALL
+DeeCode_GetOptimizeCallThreshold(void) {
+	return atomic_read(&DeeCode_OptimizeCallThreshold);
+}
+
+PUBLIC size_t DCALL
+DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
+	return atomic_xch(&DeeCode_OptimizeCallThreshold, new_threshold);
+}
+#define DEFINED_DeeCode_GetOptimizeCallThreshold
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+
+
+PRIVATE ATTR_COLD int DCALL
+err_code_optimization_disabled(void) {
+	return DeeError_Throwf(&DeeError_UnsupportedAPI, "Code optimization is not available/possible");
+}
+
+PRIVATE DEFINE_KWLIST(code_optimize_kwlist, { K(tuple), K(kwds), K(async), KEND });
+
+INTERN NONNULL((1)) DREF DeeObject *DCALL
+function_optimize(DeeFunctionObject *__restrict self, size_t argc,
+                  DeeObject *const *argv, DeeObject *kw) {
+	bool for_tuple = false;
+	bool for_kwds = false;
+	bool allow_async = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
+	                    &for_tuple, &for_kwds, &allow_async))
+		goto err;
+#ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	if (for_tuple)
+		return DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	{
+		int status;
+		host_cc_t cc = 0;
+		if (self->fo_code->co_flags & CODE_FTHISCALL)
+			cc |= HOST_CC_F_THIS;
+		if (for_kwds)
+			cc |= HOST_CC_F_KW;
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		if (for_tuple)
+			cc |= HOST_CC_F_TUPLE;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+		status = DeeFunction_HostAsmRecompile(self, cc, allow_async);
+		if unlikely(status < 0)
+			goto err;
+		if likely(status == 0)
+			return_none;
+	}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	err_code_optimization_disabled();
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1)) DREF DeeObject *DCALL
+code_optimize(DeeCodeObject *__restrict self, size_t argc,
+              DeeObject *const *argv, DeeObject *kw) {
+	bool for_tuple = false;
+	bool for_kwds = false;
+	bool allow_async = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
+	                    &for_tuple, &for_kwds, &allow_async))
+		goto err;
+#ifndef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	if (for_tuple)
+		return DeeError_Throwf(&DeeError_ValueError, "Cannot optimize function with `tuple=true'");
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	{
+		int status;
+		host_cc_t cc = HOST_CC_F_FUNC;
+		if (self->co_flags & CODE_FTHISCALL)
+			cc |= HOST_CC_F_THIS;
+		if (for_kwds)
+			cc |= HOST_CC_F_KW;
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		if (for_tuple)
+			cc |= HOST_CC_F_TUPLE;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+		status = DeeCode_HostAsmRecompile(self, cc, allow_async);
+		if unlikely(status < 0)
+			goto err;
+		if likely(status == 0)
+			return_none;
+	}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	err_code_optimization_disabled();
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1)) DREF DeeObject *DCALL
+function_optimized(DeeFunctionObject *__restrict self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	bool for_tuple = false;
+	bool for_kwds = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
+		goto err;
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	if (!for_tuple) {
+		if (for_kwds ? (self->fo_hostasm.hafu_call_kw.c_norm != NULL)
+		             : (self->fo_hostasm.hafu_call.c_norm != NULL))
+			return_true;
+	} else {
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		if (for_kwds ? (self->fo_hostasm.hafu_call_tuple_kw.c_norm != NULL)
+		             : (self->fo_hostasm.hafu_call_tuple.c_norm != NULL))
+			return_true;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	return_false;
+err:
+	return NULL;
+}
+
+INTERN NONNULL((1)) DREF DeeObject *DCALL
+code_optimized(DeeCodeObject *__restrict self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	bool for_tuple = false;
+	bool for_kwds = false;
+	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
+		goto err;
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	if (!for_tuple) {
+		if (for_kwds ? (self->co_hostasm.haco_call_kw.c_norm != NULL)
+		             : (self->co_hostasm.haco_call.c_norm != NULL))
+			return_true;
+	} else {
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+		if (for_kwds ? (self->co_hostasm.haco_call_tuple_kw.c_norm != NULL)
+		             : (self->co_hostasm.haco_call_tuple.c_norm != NULL))
+			return_true;
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+	}
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+	return_false;
+err:
+	return NULL;
+}
+
+
+
+
+#ifndef DEFINED_DeeCode_GetOptimizeCallThreshold
+/* Get/set the threshold after which a code object
+ * gets automatically recompiled into host assembly.
+ *
+ * Special values:
+ * - 0 :         Functions are always optimized immediately.
+ * - (size_t)-1: Functions are never optimized (when trying to
+ *               optimize a function, and doing so fails because
+ *               `_hostasm' can't be loaded, this value gets set
+ *               automatically) */
+PUBLIC ATTR_PURE WUNUSED size_t DCALL
+DeeCode_GetOptimizeCallThreshold(void) {
+	COMPILER_IMPURE();
+	return (size_t)-1;
+}
+
+PUBLIC size_t DCALL
+DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
+	(void)new_threshold;
+	COMPILER_IMPURE();
+	return (size_t)-1;
+}
+#endif /* !DEFINED_DeeCode_GetOptimizeCallThreshold */
 
 /************************************************************************/
 /* STACK ALLOCATOR FUNCTIONS                                            */
@@ -743,7 +1178,12 @@ code_fini(DeeCodeObject *__restrict self) {
 	        !DeeModule_Check(self->co_module) ||
 	        self != self->co_module->mo_root ||
 	        self->co_module->ob_refcnt == 0,
-	        "Cannot destroy the root code object of a module");
+	        "Cannot destroy the root code object of a module, "
+	        /**/ "before the module has been destroyed");
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	if (self->co_hostasm.haco_data)
+		Dee_hostasm_code_data_destroy(self->co_hostasm.haco_data);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	/* Clear default argument objects. */
@@ -999,7 +1439,67 @@ PRIVATE struct type_member tpconst code_members[] = {
 	                         "True for class constructor code objects. - When set, don't include the this-argument in "
 	                         "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
 	                         "causes some sort of exception to be thrown"),
+#ifdef CONFIG_HAVE_CODE_METRICS
+	TYPE_MEMBER_FIELD_DOC("__stat_functions__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(DeeCodeObject, co_metrics.com_functions),
+	                      "The number of times @this ?. was used to construct a ?DFunction"),
+	TYPE_MEMBER_FIELD_DOC("__stat_call__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(DeeCodeObject, co_metrics.com_call),
+	                      "The number of times @this ?. was called without args-tuple and without keywords"),
+	TYPE_MEMBER_FIELD_DOC("__stat_call_kw__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(DeeCodeObject, co_metrics.com_call_kw),
+	                      "The number of times @this ?. was called without args-tuple, but with keywords"),
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	TYPE_MEMBER_FIELD_DOC("__stat_call_tuple__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(DeeCodeObject, co_metrics.com_call_tuple),
+	                      "The number of times @this ?. was called with args-tuple, but without keywords"),
+	TYPE_MEMBER_FIELD_DOC("__stat_call_tuple_kw__", STRUCT_CONST | STRUCT_SIZE_T,
+	                      offsetof(DeeCodeObject, co_metrics.com_call_tuple_kw),
+	                      "The number of times @this ?. was called with args-tuple, and with keywords"),
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#endif /* CONFIG_HAVE_CODE_METRICS */
 	TYPE_MEMBER_END
+};
+
+#ifndef CONFIG_NO_DOC
+INTERN_CONST char const code_optimize_doc[] =
+"(tuple=!f,kwds=!f,async=!f)\n"
+"#pasync{When !t, allow the optimization to happen asynchronously"
+#ifdef CONFIG_HAVE_CODE_METRICS
+/*   */ " (this is the default when optimization happens as a result of"
+/*   */ " ?A__stat_call__?DCode exceeding ?Ert:getcalloptimizethreshold)"
+#endif /* CONFIG_HAVE_CODE_METRICS */
+/*   */ "}"
+"#tValueError{@tuple is true, but the tuple call optimizations are disabled ("
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+/*        */ "never"
+#else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+/*        */ "always"
+#endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
+/*        */ " happens in the current implemented)}"
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+"#tUnsupportedAPI{Unable to load the ?M_hostasm module}"
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+"#tUnsupportedAPI{Always thrown because automatic call optimizations "
+/*            */ "have been disabled when building deemon}"
+#endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+"Try to optimize this ?. for the purpose of being able to run faster\n"
+"#T{Arguments|Optimize calling convention~"
+/**/ "${tuple=false,kwds=false}|${this(a, b, c)}&"
+/**/ "${tuple=false,kwds=true}|${this(a, foo: b, bar: c)}, ${this(a, **kwds)}&"
+/**/ "${tuple=true,kwds=false}|${this(args...)}&"
+/**/ "${tuple=true,kwds=true}|${this(args..., **kwds)}"
+"}";
+
+INTERN_CONST char const code_optimized_doc[] =
+"(tuple=!f,kwds=!f)->?Dbool\n"
+"Check if @this ?. has been optimized for the @tuple and @kwds (s.a. ?#optimize)";
+#endif /* !CONFIG_NO_DOC */
+
+PRIVATE struct type_method tpconst code_methods[] = {
+	TYPE_KWMETHOD("optimize", &code_optimize, DOC_GET(code_optimize_doc)),
+	TYPE_KWMETHOD("optimized", &code_optimized, DOC_GET(code_optimized_doc)),
+	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst code_getsets[] = {
@@ -1800,6 +2300,12 @@ got_flag:
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
 	Dee_atomic_rwlock_init(&result->co_static_lock);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	Dee_code_metrics_init(&result->co_metrics);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_code_init(&result->co_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 	/* Initialize the new code object, and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);
@@ -2089,7 +2595,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	/* .tp_attr          = */ NULL,
 	/* .tp_with          = */ NULL,
 	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
+	/* .tp_methods       = */ code_methods,
 	/* .tp_getsets       = */ code_getsets,
 	/* .tp_members       = */ code_members,
 	/* .tp_class_methods = */ NULL,

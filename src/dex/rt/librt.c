@@ -111,6 +111,28 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_getcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
+	size_t result;
+	if (DeeArg_Unpack(argc, argv, ":getcalloptimizethreshold"))
+		goto err;
+	result = DeeCode_GetOptimizeCallThreshold();
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_setcalloptimizethreshold_f(size_t argc, DeeObject *const *argv) {
+	size_t result, newval;
+	if (DeeArg_Unpack(argc, argv, UNPuSIZ ":setcalloptimizethreshold", &newval))
+		goto err;
+	result = DeeCode_SetOptimizeCallThreshold(newval);
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED DREF DeeTypeObject *DCALL
 librt_makeclass_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *base, *descriptor;
@@ -135,6 +157,9 @@ err:
 
 PRIVATE DEFINE_CMETHOD(librt_getstacklimit, &librt_getstacklimit_f);
 PRIVATE DEFINE_CMETHOD(librt_setstacklimit, &librt_setstacklimit_f);
+
+PRIVATE DEFINE_CMETHOD(librt_getcalloptimizethreshold, &librt_getcalloptimizethreshold_f);
+PRIVATE DEFINE_CMETHOD(librt_setcalloptimizethreshold, &librt_setcalloptimizethreshold_f);
 PRIVATE DEFINE_KWCMETHOD(librt_makeclass, &librt_makeclass_f);
 
 #if 1
@@ -1836,13 +1861,13 @@ PRIVATE DEFINE_CMETHOD(librt_kw, &librt_kw_f);
  *       the symbols to be considered properties during enumeration (`ATTR_PROPERTY'
  *       doesn't get set), thus allowing the doc server to browse them unrestricted. */
 PRIVATE struct dex_symbol symbols[] = {
-	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FNORMAL, /* varying */
+	{ "getstacklimit", (DeeObject *)&librt_getstacklimit, MODSYM_FREADONLY, /* varying */
 	  DOC("->?Dint\n"
 	      "Returns the current stack limit, that is the max number of "
 	      /**/ "user-code functions that may be executed consecutively before "
 	      /**/ "a :StackOverflow error is thrown\n"
 	      "The default stack limit is $" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT)) },
-	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FNORMAL, /* varying */
+	{ "setstacklimit", (DeeObject *)&librt_setstacklimit, MODSYM_FREADONLY, /* varying */
 	  DOC("(new_limit=!" PP_STR(DEE_CONFIG_DEFAULT_STACK_LIMIT) ")->?Dint\n"
 	      "#tIntegerOverflow{@new_limit is negative, or greater than $0xffff}"
 	      "Set the new stack limit to @new_limit and return the old limit\n"
@@ -1856,7 +1881,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	  Dee_False
 #endif /* !CONFIG_HAVE_EXEC_ALTSTACK */
 	  ,
-	  MODSYM_FNORMAL, /* varying */
+	  MODSYM_FREADONLY | MODSYM_FCONSTEXPR, /* varying */
 	  DOC("->?Dbool\n"
 	      "A boolean that is ?t if the deemon interpreter supports "
 	      /**/ "an unlimited stack limit, meaning that #setstacklimit can "
@@ -1869,9 +1894,20 @@ PRIVATE struct dex_symbol symbols[] = {
 	      "Unlimited stack limit support requires a special arch-specific "
 	      /**/ "sub-routine within the deemon core, which may not be implemented "
 	      /**/ "for an arbitrary architecture.") },
+
+	{ "getcalloptimizethreshold", (DeeObject *)&librt_getcalloptimizethreshold, MODSYM_FREADONLY,
+	  DOC("->?Dint\n"
+	      "Get the threshold specifying how often a ?DFunction or ?DCode object "
+	      /**/ "needs to be called before deemon will automatically try to optimize it.") },
+	{ "setcalloptimizethreshold", (DeeObject *)&librt_setcalloptimizethreshold, MODSYM_FREADONLY,
+	  DOC("(newThreshold:?Dint)->?Dint\n"
+	      "#r{The old threshold}"
+	      "Set the threshold specifying how often a ?DFunction or ?DCode object "
+	      /**/ "needs to be called before deemon will automatically try to optimize it.") },
+
 	{ "SlabStat", (DeeObject *)&SlabStat_Type, MODSYM_FREADONLY }, /* Access to slab allocator statistics. */
 	{ "makeclass", (DeeObject *)&librt_makeclass, MODSYM_FREADONLY,
-	  DOC("(base:?X2?DType?N,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
+	  DOC("(base:?X3?N?DType?S?DType,descriptor:?GClassDescriptor,module:?X2?DModule?N=!N)->?DType\n"
 	      "#pmodule{The module that is declaring the class (and returned by ${return.__module__}). "
 	      /*     */ "When not given (or given as ?N), the type is not linked to a module.}"
 	      "Construct a new class from a given @base type, as well as class @descriptor") },

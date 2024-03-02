@@ -1381,6 +1381,12 @@ err_function_code:
 			((DREF DeeFunctionObject *)result)->fo_refv[i] = temp; /* Inherit reference. */
 		}
 		((DREF DeeFunctionObject *)result)->fo_code = code; /* Inherit reference. */
+#ifdef CONFIG_HAVE_CODE_METRICS
+		atomic_inc(&code->co_metrics.com_functions);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+		Dee_hostasm_function_init(&((DREF DeeFunctionObject *)result)->fo_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(result, &DeeFunction_Type);
 	}	break;
 
@@ -2683,6 +2689,12 @@ err_kwds_i:
 	/* Fill in module information for the code object. */
 	result->co_module = self->df_module;
 	Dee_Incref(self->df_module);
+#ifdef CONFIG_HAVE_CODE_METRICS
+	Dee_code_metrics_init(&result->co_metrics);
+#endif /* CONFIG_HAVE_CODE_METRICS */
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+	Dee_hostasm_code_init(&result->co_hostasm);
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
 	/* Finally, initialize the resulting code object and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);

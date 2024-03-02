@@ -356,6 +356,32 @@ DECL_BEGIN
 #endif /* !CONFIG_FORCE_HOST_... */
 
 
+/* Include metrics and support for automatically re-compiling `DeeCodeObject'
+ * and `DeeFunctionObject' objects into host assembly (using `_hostasm') once
+ * - the same code object has used to create functions a given # of times
+ * - the same function has been called a given # of times */
+#if (!defined(CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE) && \
+     !defined(CONFIG_NO_HOSTASM_AUTO_RECOMPILE))
+#include <hybrid/host.h>
+#if ((defined(__i386__) || defined(__x86_64__)) && \
+     (defined(CONFIG_HOST_WINDOWS) || defined(CONFIG_HOST_UNIX)))
+#define CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#else /* ... */
+#define CONFIG_NO_HOSTASM_AUTO_RECOMPILE
+#endif /* !... */
+#endif /* !CONFIG_[HAVE|NO]_HOSTASM_AUTO_RECOMPILE */
+
+/* Enable support for metrics in DeeCodeObject and DeeFunctionObject */
+#if (!defined(CONFIG_HAVE_CODE_METRICS) && \
+     !defined(CONFIG_NO_CODE_METRICS))
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#define CONFIG_HAVE_CODE_METRICS
+#else /* ... */
+#define CONFIG_NO_CODE_METRICS
+#endif /* !... */
+#endif /* !CONFIG_[HAVE|NO]CODE_METRICS */
+
+
 #if ((!defined(__i386__) && !defined(__x86_64__)) || \
      (!defined(CONFIG_HOST_WINDOWS) && !defined(CONFIG_HOST_UNIX)))
 #undef CONFIG_NO_OBJECT_SLABS
