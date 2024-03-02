@@ -1147,7 +1147,8 @@ Dee_memval_do_destroy_objn_or_xinfo(struct Dee_memval *__restrict self);
 #define Dee_memval_nullable_getobj(self)          Dee_memval_obj0_getobj(self)
 #define Dee_memval_nullable_getloc(self)          Dee_memval_obj0_getloc(self)
 
-#define Dee_memval_direct_initcopy(self, other)          (void)(*(self) = *(other))
+#define Dee_memval_direct_fini(self)                     Dee_memval_fini(self)
+#define Dee_memval_direct_initcopy(self, other)          Dee_memval_initcopy(self, other)
 #define Dee_memval_direct_getobj(self)                   Dee_memval_obj0_getobj(self)
 #define Dee_memval_direct_getloc(self)                   Dee_memval_obj0_getloc(self)
 #define Dee_memval_direct_hasxinfo(self)                 Dee_memval_obj0_hasxinfo(self)
@@ -2244,8 +2245,8 @@ Dee_function_assembler_newsym(struct Dee_function_assembler *__restrict self);
 #define Dee_function_assembler_newsym_named_dbg(self, name, file, line) Dee_function_assembler_newsym(self)
 #else /* ... */
 INTDEF WUNUSED NONNULL((1)) struct Dee_host_symbol *DCALL
-Dee_function_assembler_newsym_named(struct Dee_function_assembler *__restrict self);
-#define Dee_function_assembler_newsym(self, name)                       Dee_function_assembler_newsym_named(self, name)
+Dee_function_assembler_newsym_named(struct Dee_function_assembler *__restrict self, char const *name);
+#define Dee_function_assembler_newsym(self)                             Dee_function_assembler_newsym_named(self, NULL)
 #define Dee_function_assembler_newsym_dbg(self, file, line)             Dee_function_assembler_newsym_named(self, NULL)
 #define Dee_function_assembler_newsym_named_dbg(self, name, file, line) Dee_function_assembler_newsym_named(self, name)
 #endif /* !... */

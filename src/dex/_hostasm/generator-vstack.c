@@ -1374,6 +1374,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			ASSERT(Dee_function_generator_vtop_isdirect(self));
 			ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 			l_argc = *Dee_function_generator_vtopdloc(self);
+			Dee_memval_direct_fini(Dee_function_generator_vtop(self));
 			--self->fg_state->ms_stackc;
 			Dee_memstate_decrinuse_for_memloc(self->fg_state, &l_argc);
 			Dee_memloc_init_const(&l_aid, (void *)(uintptr_t)aid);
@@ -1406,6 +1407,7 @@ Dee_function_generator_vpushinit_optarg(struct Dee_function_generator *__restric
 			ASSERT(Dee_function_generator_vtop_isdirect(self));
 			ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 			l_argc = *Dee_function_generator_vtopdloc(self);
+			Dee_memval_direct_fini(Dee_function_generator_vtop(self));
 			--self->fg_state->ms_stackc;
 			Dee_memstate_decrinuse_for_memloc(self->fg_state, &l_argc);
 			Dee_memloc_init_const(&l_aid, (void *)(uintptr_t)aid);
@@ -2694,6 +2696,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 	 * Handle this case by doing the call to `DeeObject_Bool()' ourselves, so we can combine the bool
 	 * branch with the except branch, thus saving on a couple of otherwise redundant instructions. */
 	if (bool_status > 0) {
+		struct Dee_memloc cond_mloc;
 		bool hasbool;
 		DeeTypeObject *loctype;
 		struct Dee_memloc zero;
@@ -2724,7 +2727,9 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 		cond_mval = Dee_function_generator_vtop(self);
 		ASSERT(Dee_memval_isdirect(cond_mval));
 		ASSERT(self->fg_state->ms_stackc >= 1);
-		Dee_memstate_decrinuse_for_memloc(self->fg_state, Dee_memval_direct_getloc(cond_mval));
+		cond_mloc = *Dee_memval_direct_getloc(cond_mval);
+		Dee_memstate_decrinuse_for_memloc(self->fg_state, &cond_mloc);
+		Dee_memval_direct_fini(cond_mval);
 		--self->fg_state->ms_stackc;
 
 		/* Figure out how to do exception handling. */
@@ -2744,7 +2749,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 
 		/* Generate code to branch depending on the value of `loc' */
 		Dee_memloc_init_const(&zero, (void *)0);
-		DO(Dee_function_generator_gjcc(self, Dee_memval_direct_getloc(cond_mval), &zero, true,
+		DO(Dee_function_generator_gjcc(self, &cond_mloc, &zero, true,
 		                               Lexcept,                             /* loc < 0 */
 		                               jump_if_true ? Lnot_except : Ljmp,   /* loc == 0 */
 		                               jump_if_true ? Ljmp : Lnot_except)); /* loc > 0 */
@@ -2825,6 +2830,7 @@ Dee_function_generator_vjcc(struct Dee_function_generator *__restrict self,
 			break;
 		default: __builtin_unreachable();
 		}
+		Dee_memval_direct_fini(cond_mval);
 
 		if (!jump_if_true) {
 			/* Invert the logical meaning of the jump. */
@@ -2893,6 +2899,7 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
                                 bool always_pop_iterator) {
 	int temp;
 	struct Dee_memobj decref_on_iter_done;
+	struct Dee_memval *mval;
 	DREF struct Dee_memstate *desc_state;
 	struct Dee_host_symbol *sym;
 	struct Dee_basic_block *target = desc->jd_to;
@@ -2939,17 +2946,21 @@ Dee_function_generator_vforeach(struct Dee_function_generator *__restrict self,
 	if unlikely(!desc_state)
 		goto err;
 	ASSERT(desc_state->ms_stackc >= 1);
+	mval = Dee_memstate_vtop(desc_state);
 	--desc_state->ms_stackc; /* Get rid of `UNCHECKED(result)' */
-	ASSERT(Dee_memval_isdirect(&desc_state->ms_stackv[desc_state->ms_stackc]));
-	Dee_memstate_decrinuse_for_memloc(desc_state, Dee_memval_direct_getloc(&desc_state->ms_stackv[desc_state->ms_stackc]));
+	ASSERT(Dee_memval_isdirect(mval));
+	Dee_memstate_decrinuse_for_memloc(desc_state, Dee_memval_direct_getloc(mval));
+	Dee_memval_direct_fini(mval);
 	Dee_memobj_init_local_unbound(&decref_on_iter_done);
 	if (!always_pop_iterator) {
 		/* Pop another vstack item (the iterator) and store it in `MEMSTATE_XLOCAL_POPITER'.
 		 * When the time comes to generate morph-code, the iterator will then be decref'd. */
 		ASSERT(desc_state->ms_stackc >= 1);
+		mval = Dee_memstate_vtop(desc_state);
 		--desc_state->ms_stackc;
-		ASSERT(Dee_memval_isdirect(&desc_state->ms_stackv[desc_state->ms_stackc]));
-		decref_on_iter_done = *Dee_memval_direct_getobj(&desc_state->ms_stackv[desc_state->ms_stackc]);
+		ASSERT(Dee_memval_isdirect(mval));
+		decref_on_iter_done = *Dee_memval_direct_getobj(mval);
+		Dee_memval_direct_fini(mval);
 		Dee_memstate_decrinuse_for_memobj(desc_state, &decref_on_iter_done);
 	}
 	desc->jd_stat = desc_state; /* Inherit reference */
@@ -3159,15 +3170,19 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vpopind(struct Dee_function_generator *__restrict self,
                                ptrdiff_t ind_delta) {
+	struct Dee_memval *mval;
 	struct Dee_memloc src, *dst;
 	DO(Dee_function_generator_vdirect1(self)) /* !!! Only the value getting assigned is made direct! */;
 	DO(Dee_function_generator_vnotoneref_at(self, 1));
 	DO(Dee_function_generator_state_unshare(self));
 	src = *Dee_function_generator_vtopdloc(self);
 	Dee_memstate_decrinuse_for_memloc(self->fg_state, &src);
+	mval = Dee_function_generator_vtop(self);
 	--self->fg_state->ms_stackc;
-	ASSERT(Dee_memval_hasobj0(Dee_function_generator_vtop(self)));
-	dst = Dee_memobj_getloc(Dee_memval_getobj0(Dee_function_generator_vtop(self)));
+	Dee_memval_direct_fini(mval);
+	mval = Dee_function_generator_vtop(self);
+	ASSERT(Dee_memval_hasobj0(mval));
+	dst = Dee_memobj_getloc(Dee_memval_getobj0(mval));
 	return Dee_function_generator_gmov_loc2locind(self, &src, dst, ind_delta);
 err:
 	return -1;
@@ -3615,6 +3630,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vpopref_mod_global(struct Dee_function_generator *__restrict self,
                    struct Dee_module_object *mod, uint16_t gid) {
+	struct Dee_memval *mval;
 	struct Dee_memloc loc;
 	if unlikely(gid >= mod->mo_globalc)
 		return err_illegal_gid(mod, gid);
@@ -3625,11 +3641,13 @@ vpopref_mod_global(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vswapind(self, 0));                           /* ref:old_value */
 	DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* ref:old_value */
 	ASSERT(self->fg_state->ms_stackc >= 1);
-	ASSERT(Dee_function_generator_vtop_isdirect(self));
-	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
-	loc = *Dee_function_generator_vtopdloc(self);
-	Dee_memstate_decrinuse_for_memloc(self->fg_state, &loc);
+	mval = Dee_function_generator_vtop(self);
 	--self->fg_state->ms_stackc;
+	ASSERT(Dee_memval_isdirect(mval));
+	ASSERT(!Dee_memval_direct_isref(mval));
+	loc = *Dee_memval_direct_getloc(mval);
+	Dee_memval_direct_fini(mval);
+	Dee_memstate_decrinuse_for_memloc(self->fg_state, &loc);
 	return Dee_function_generator_gxdecref_loc(self, &loc, 1); /* xdecref in case global wasn't bound before. */
 err:
 	return -1;

@@ -879,13 +879,13 @@ assemble_morph(struct Dee_function_assembler *__restrict assembler,
                struct Dee_host_section *sect,
                struct Dee_memstate *from_state,
                struct Dee_basic_block *to_block
-#ifndef Dee_DPRINT_IS_NOOP
+#ifndef NO_HOSTASM_DEBUG_PRINT
                , Dee_instruction_t const *from_instr
-#endif /* !Dee_DPRINT_IS_NOOP */
+#endif /* !NO_HOSTASM_DEBUG_PRINT */
                ) {
-#ifdef Dee_DPRINT_IS_NOOP
+#ifdef NO_HOSTASM_DEBUG_PRINT
 #define assemble_morph(a, b, c, d, e) assemble_morph(a, b, c, d)
-#endif /* Dee_DPRINT_IS_NOOP */
+#endif /* NO_HOSTASM_DEBUG_PRINT */
 	int result;
 	struct Dee_function_generator gen;
 	ASSERT(to_block->bb_mem_start);

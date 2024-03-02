@@ -285,7 +285,7 @@ Dee_function_generator_vdirect1(struct Dee_function_generator *__restrict self) 
 		Dee_memval_fini(alias);
 		Dee_memval_direct_initcopy(alias, mval);
 		Dee_memstate_incrinuse_for_direct_memval(state, mval);
-		Dee_memval_clearref(alias); /* Aliases don't get references! */
+		Dee_memval_direct_clearref(alias); /* Aliases don't get references! */
 	}
 	Dee_memstate_foreach_end;
 	Dee_memval_fini(&oldval);
@@ -345,7 +345,7 @@ Dee_function_generator_vndirect1(struct Dee_function_generator *__restrict self)
 		Dee_memval_fini(alias);
 		Dee_memval_direct_initcopy(alias, mval);
 		Dee_memstate_incrinuse_for_direct_memval(state, mval);
-		Dee_memval_clearref(alias); /* Aliases don't get references! */
+		Dee_memval_direct_clearref(alias); /* Aliases don't get references! */
 	}
 	Dee_memstate_foreach_end;
 	Dee_memval_fini(&oldval);
@@ -478,6 +478,7 @@ Dee_function_generator_vdirect_memval(struct Dee_function_generator *__restrict 
 		DO(Dee_function_generator_vdirect1(self));
 		val = state->ms_localv + val_lid;
 		Dee_memstate_decrinuse_for_memval(state, val);
+		Dee_memval_fini(val);
 #if 0 /* Already checked and implemented as its own case */
 	} else if (val >= state->ms_stackv && val < state->ms_stackv + state->ms_stackc) {
 		Dee_vstackaddr_t val_adr = (Dee_vstackaddr_t)(val - state->ms_stackv);
@@ -485,9 +486,10 @@ Dee_function_generator_vdirect_memval(struct Dee_function_generator *__restrict 
 		DO(Dee_function_generator_vdirect1(self));
 		val = state->ms_stackv + val_adr;
 		Dee_memstate_decrinuse_for_memval(state, val);
+		Dee_memval_fini(val);
 #endif
 	} else {
-		Dee_memstate_incrinuse_for_memval(state, val);
+		Dee_memstate_incrinuse_for_memval(state, dst);
 		DO(Dee_function_generator_vdirect1(self));
 		src = &state->ms_stackv[state->ms_stackc - 1];
 		Dee_memstate_decrinuse_for_memval(state, src);
@@ -496,7 +498,6 @@ Dee_function_generator_vdirect_memval(struct Dee_function_generator *__restrict 
 	/* Move the now-direct value back into the caller-given buffer. */
 	--state->ms_stackc;
 	src = &state->ms_stackv[state->ms_stackc];
-	Dee_memval_fini(val);
 	Dee_memval_initmove(val, src);
 	ASSERT(Dee_memval_isdirect(val));
 	return 0;
