@@ -6178,7 +6178,7 @@ vassert_unpack_size(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vje_enter_unlikely(self, &branch));              /* seq, size */
 	EDO(err_branch, Dee_function_generator_vpush_immSIZ(self, expected_size)); /* seq, size, expected_size */
 	EDO(err_branch, Dee_function_generator_vswap(self));                       /* seq, expected_size, size */
-	EDO(err_branch, Dee_function_generator_vcallapi(self, &libhostasm_err_invalid_unpack_size, VCALL_CC_EXCEPT, 3)); /* N/A */
+	EDO(err_branch, Dee_function_generator_vcallapi(self, &libhostasm_rt_err_invalid_unpack_size, VCALL_CC_EXCEPT, 3)); /* N/A */
 	DO(Dee_function_generator_vjx_leave_noreturn(self, &branch));              /* seq, size */
 	return Dee_function_generator_vpop(self);                                  /* seq */
 err_branch:

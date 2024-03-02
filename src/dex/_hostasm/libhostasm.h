@@ -3969,7 +3969,8 @@ INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_ValueError(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cell_empty_UnboundAttribute(void);
 INTDEF ATTR_COLD int DCALL libhostasm_rt_err_cannot_lock_weakref(void);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_unbound_index(DeeObject *__restrict self, size_t index);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_unpack_size(DeeObject *__restrict unpack_object, size_t need_size, size_t real_size);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL libhostasm_rt_err_invalid_argc(DeeCodeObject *__restrict code, size_t argc);
 INTDEF WUNUSED NONNULL((1)) int DCALL libhostasm_rt_assert_empty_kw(DeeObject *__restrict kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL libhostasm_rt_DeeObject_ShlRepr(DeeObject *lhs, DeeObject *rhs);
 #ifdef CONFIG_HAVE_FPU

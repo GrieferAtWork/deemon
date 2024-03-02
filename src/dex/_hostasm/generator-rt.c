@@ -281,14 +281,33 @@ libhostasm_rt_err_unbound_index(DeeObject *__restrict self, size_t index) {
 }
 
 INTERN ATTR_COLD NONNULL((1)) int DCALL
-libhostasm_err_invalid_unpack_size(DeeObject *__restrict unpack_object,
-                                   size_t need_size, size_t real_size) {
+libhostasm_rt_err_invalid_unpack_size(DeeObject *__restrict unpack_object,
+                                      size_t need_size, size_t real_size) {
 	ASSERT_OBJECT(unpack_object);
 	(void)unpack_object;
 	return DeeError_Throwf(&DeeError_UnpackError,
 	                       "Expected %" PRFuSIZ " object%s when %" PRFuSIZ " w%s given",
 	                       need_size, need_size > 1 ? "s" : "", real_size,
 	                       real_size == 1 ? "as" : "ere");
+}
+
+INTERN ATTR_COLD NONNULL((1)) int DCALL
+libhostasm_rt_err_invalid_argc(DeeCodeObject *__restrict code, size_t argc) {
+	uint16_t co_argc_min = code->co_argc_min;
+	uint16_t co_argc_max = code->co_argc_max;
+	char const *function_name = DeeCode_NAME(code);
+	if (co_argc_min == co_argc_max) {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       co_argc_min, argc, argc == 1 ? "as" : "ere");
+	} else {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "arguments when %" PRFuSIZ " w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       co_argc_min, co_argc_max, argc, argc == 1 ? "as" : "ere");
+	}
 }
 
 
