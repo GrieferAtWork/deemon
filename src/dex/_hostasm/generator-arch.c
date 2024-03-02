@@ -3725,7 +3725,7 @@ invoke_api_function_fallback:
 		Dee_host_register_t regno = Dee_memloc_hreg_getreg(locv);
 		ptrdiff_t val_offset = Dee_memloc_hreg_getvaloff(locv);
 		if unlikely(val_offset != 0) {
-			if unlikely(Dee_function_generator_gadjust_reg_delta_impl(sect, NULL, regno, val_offset, true))
+			if unlikely(Dee_function_generator_gadjust_reg_delta(sect, NULL, regno, val_offset, true))
 				goto err;
 			if unlikely(Dee_host_section_reqx86(sect, 1))
 				goto err;
