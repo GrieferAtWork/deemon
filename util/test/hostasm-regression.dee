@@ -20,6 +20,7 @@
  */
 
 import * from deemon;
+import * from errors;
 
 global final test_compile_and_run = ({
 	try {
@@ -53,8 +54,8 @@ global nonFinalGlobalNone = _hide(none);
 
 function hexec(expectedResult, args, func) {
 	//print("line:", Traceback()[1].line + 1);
-	local actualResult = test_compile_and_run(func, args);
-	local actualResultNative = func(args...);
+	local actualResult = try test_compile_and_run(func, args) catch (e...) e;
+	local actualResultNative = try func(args...) catch (e...) e;
 	if (expectedResult is Callable && expectedResult !is Type) {
 		assert expectedResult(actualResult);
 		assert expectedResult(actualResultNative);
@@ -229,3 +230,29 @@ hexec((), (10,), functionWithVarArgs);
 hexec((), (10, 20), functionWithVarArgs);
 hexec((30,), (10, 20, 30), functionWithVarArgs);
 hexec((30, 40), (10, 20, 30, 40), functionWithVarArgs);
+
+/* Assert that _hostasm functions validate argument counts. */
+hexec(42,                     (),      () -> 42);
+hexec(x -> x is TypeError,    (10,),   () -> 42);
+hexec(x -> x is TypeError,    (10,20), () -> 42);
+hexec(x -> x is TypeError,    (),      (a) -> 42);
+hexec(42,                     (10,),   (a) -> 42);
+hexec(x -> x is TypeError,    (10,20), (a) -> 42);
+hexec(42,                     (),      (a?) -> 42);
+hexec(42,                     (10,),   (a?) -> 42);
+hexec(x -> x is TypeError,    (10,20), (a?) -> 42);
+hexec(42,                     (),      (...) -> 42);
+hexec(42,                     (10,),   (...) -> 42);
+hexec(42,                     (10,20), (...) -> 42);
+hexec(x -> x is TypeError,    (),      (a, ...) -> 42);
+hexec(42,                     (10,),   (a, ...) -> 42);
+hexec(42,                     (10,20), (a, ...) -> 42);
+hexec(42,                     (),      (a?, ...) -> 42);
+hexec(42,                     (10,),   (a?, ...) -> 42);
+hexec(42,                     (10,20), (a?, ...) -> 42);
+hexec((),                     (),      (a?, ...) -> (...));
+hexec((),                     (10,),   (a?, ...) -> (...));
+hexec((20,),                  (10,20), (a?, ...) -> (...));
+hexec(x -> x is UnboundLocal, (),      (a?, ...) -> a);
+hexec(10,                     (10,),   (a?, ...) -> a);
+hexec(10,                     (10,20), (a?, ...) -> a);

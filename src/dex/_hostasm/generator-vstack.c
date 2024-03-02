@@ -4791,6 +4791,26 @@ err:
 	return -1;
 }
 
+/* Force-enter .cold without generating any code. */
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+fg_vcold_enter(struct fungen *__restrict self,
+               /*out*/ struct fg_branch *__restrict branch) {
+	struct host_section *cold;
+	branch->fgb_oldtext = fg_gettext(self);
+	cold = fg_getcold_always(self);
+	if unlikely(!cold)
+		goto err;
+	HA_printf(".section .cold\n");
+	DO(fg_settext(self, cold));
+	branch->fgb_skip  = NULL;
+	branch->fgb_saved = self->fg_state;
+	memstate_incref(branch->fgb_saved);
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Check if "self" contains references or acts as a dependency. */
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
 memval_hasref_or_isdep(struct memval *__restrict self) {

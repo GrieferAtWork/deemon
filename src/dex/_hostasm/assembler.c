@@ -42,6 +42,13 @@
 
 DECL_BEGIN
 
+#ifdef __INTELLISENSE__
+#define DO /* nothing */
+#else /* __INTELLISENSE__ */
+#define DO(x) if unlikely(x) goto err
+#endif /* !__INTELLISENSE__ */
+#define EDO(err, x) if unlikely(x) goto err
+
 #ifndef INT8_MIN
 #define INT8_MIN __INT8_MIN__
 #endif /* !INT8_MIN */
@@ -241,6 +248,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 fg_makeprolog(struct fungen *__restrict self) {
+	struct fg_branch branch;
 	DeeCodeObject *code = self->fg_assembler->fa_code;
 	uint16_t co_argc_min = code->co_argc_min;
 	uint16_t co_argc_max = code->co_argc_max;
@@ -355,12 +363,35 @@ fg_makeprolog(struct fungen *__restrict self) {
 
 	if (co_argc_min == 0 && (code->co_flags & CODE_FVARARGS)) {
 		/* Special case: *any* number of arguments is accepted */
-	} else if (code->co_flags & CODE_FVARARGS) {
-		/* TODO: if (argc < co_argc_min) err_invalid_argc(...); */
-	} else if (co_argc_min == co_argc_max) {
-		/* TODO: if (argc != co_argc_min) err_invalid_argc(...); */
 	} else {
-		/* TODO: if (argc < co_argc_min || argc > co_argc_max) err_invalid_argc(...); */
+		struct host_symbol *Lerr_invalid_argc;
+		struct memloc l_argc_min;
+		Lerr_invalid_argc = fg_newsym_named(self, ".Lerr_invalid_argc");
+		if unlikely(!Lerr_invalid_argc)
+			goto err;
+		memloc_init_const(&l_argc_min, (void const *)(uintptr_t)co_argc_min);
+		DO(fg_vpush_argc(self)); /* argc */
+		DO(fg_vdirect1(self));   /* argc */
+		if (code->co_flags & CODE_FVARARGS) {
+			/* if (argc < co_argc_min) err_invalid_argc(...); */
+			DO(fg_gjcc(self, fg_vtopdloc(self), &l_argc_min, false, Lerr_invalid_argc, NULL, NULL));
+		} else if (co_argc_min == co_argc_max) {
+			/* if (argc != co_argc_min) err_invalid_argc(...); */
+			DO(fg_gjcc(self, fg_vtopdloc(self), &l_argc_min, false, Lerr_invalid_argc, NULL, Lerr_invalid_argc));
+		} else {
+			struct memloc l_argc_max;
+			memloc_init_const(&l_argc_max, (void const *)(uintptr_t)co_argc_max);
+			/* if (argc < co_argc_min || argc > co_argc_max) err_invalid_argc(...); */
+			DO(fg_gjcc(self, fg_vtopdloc(self), &l_argc_min, false, Lerr_invalid_argc, NULL, NULL));
+			DO(fg_gjcc(self, fg_vtopdloc(self), &l_argc_max, false, NULL, NULL, Lerr_invalid_argc));
+		}
+		DO(fg_vcold_enter(self, &branch));
+		host_symbol_setsect(Lerr_invalid_argc, fg_gettext(self));                                /* argc */
+		EDO(err_branch, fg_vpush_const(self, self->fg_assembler->fa_code));                      /* argc, code */
+		EDO(err_branch, fg_vswap(self));                                                         /* code, argc */
+		EDO(err_branch, fg_vcallapi(self, &libhostasm_rt_err_invalid_argc, VCALL_CC_EXCEPT, 2)); /* N/A */
+		DO(fg_vjx_leave_noreturn(self, &branch));                                                /* argc */
+		DO(fg_vpop(self));                                                                       /* N/A */
 	}
 
 	/*
@@ -420,6 +451,10 @@ fg_makeprolog(struct fungen *__restrict self) {
 
 	(void)self;
 	return 0;
+err_branch:
+	fg_branch_fini(&branch);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -456,10 +491,11 @@ function_assembler_makeprolog(struct function_assembler *__restrict self,
                               /*inherit(always)*/ DREF struct memstate *__restrict state) {
 	int result;
 	struct fungen gen;
-	gen.fg_assembler = self;
-	gen.fg_block     = self->fa_blockv[0];
-	gen.fg_sect      = &self->fa_prolog;
-	gen.fg_state     = state; /* Inherit reference */
+	gen.fg_assembler   = self;
+	gen.fg_block       = self->fa_blockv[0];
+	gen.fg_sect        = &self->fa_prolog;
+	gen.fg_state       = state; /* Inherit reference */
+	gen.fg_nextlastloc = NULL;
 	_fg_initcommon(&gen);
 	ASSERT(gen.fg_block);
 	ASSERT(self->fa_prolog_end == NULL);
@@ -693,7 +729,12 @@ function_assembler_trimdead(struct function_assembler *__restrict self) {
 		++i;
 	}
 
-	num_sections = self->fa_blockc + self->fa_except_exitc;
+	num_sections = 1 + self->fa_blockc + self->fa_except_exitc;
+	{
+		struct host_section *sect = &self->fa_prolog;
+		while ((sect = sect->hs_cold) != NULL)
+			++num_sections;
+	}
 	for (i = 0; i < self->fa_blockc; ++i) {
 		struct basic_block *block = self->fa_blockv[i];
 		struct host_section *sect;
@@ -717,6 +758,12 @@ function_assembler_trimdead(struct function_assembler *__restrict self) {
 	 * are actually still being used, and remove those that aren't. */
 	if unlikely(host_section_set_init(&referenced_sections, num_sections))
 		goto err;
+	{
+		struct host_section *sect = &self->fa_prolog;
+		do {
+			host_section_set_insertall_from_relocations(&referenced_sections, sect);
+		} while ((sect = sect->hs_cold) != NULL);
+	}
 	for (i = 0; i < self->fa_blockc; ++i) {
 		struct basic_block *block = self->fa_blockv[i];
 		struct host_section *sect;
@@ -1007,6 +1054,7 @@ function_assembler_ordersections(struct function_assembler *__restrict self) {
 	TAILQ_INIT(&text);
 	TAILQ_INIT(&cold);
 	ASSERT(!host_section_islinked(&self->fa_prolog));
+	self->fa_prolog.hs_fallthru = &self->fa_blockv[0]->bb_htext;
 	TAILQ_INSERT_HEAD(&text, &self->fa_prolog, hs_link);
 	ASSERT(host_section_islinked(&self->fa_prolog));
 	ASSERT(self->fa_blockc >= 1);
@@ -1058,6 +1106,23 @@ function_assembler_ordersections(struct function_assembler *__restrict self) {
 		size_t depth;
 		for (depth = 0;; ++depth) {
 			bool found_any = false;
+			/* Search the prolog */
+			{
+				struct host_section *csect;
+				size_t depth_i;
+				csect = self->fa_prolog.hs_cold;
+				if (!csect)
+					goto check_blocks;
+				for (depth_i = 0; depth_i < depth; ++depth_i) {
+					csect = csect->hs_cold;
+					if (!csect)
+						goto check_blocks;
+				}
+				csect->hs_fallthru = NULL;
+				TAILQ_INSERT_TAIL(&cold, csect, hs_link);
+				found_any = true;
+			}
+check_blocks:
 			for (block_i = 0; block_i < self->fa_blockc; ++block_i) {
 				size_t depth_i;
 				struct basic_block *block = self->fa_blockv[block_i];
@@ -1256,6 +1321,7 @@ no_jmp_needed:;
 					p_list = &symsect->hs_symbols;
 			}
 			ASSERT(!*p_list || (*p_list)->hs_type != HOST_SYMBOL_UNDEF);
+			ASSERT(!*p_list || (*p_list)->hs_type < HOST_SYMBOL_TCNT);
 			sym->_hs_next = *p_list;
 			*p_list = sym;
 			sym = next;

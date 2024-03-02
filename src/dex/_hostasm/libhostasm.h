@@ -1717,6 +1717,7 @@ struct host_symbol {
 #define HOST_SYMBOL_ABS   1 /* Absolute value (e.g. for API functions) */
 #define HOST_SYMBOL_JUMP  2 /* Pass-through via a `struct jump_descriptor' (or fast-forward to start of section) */
 #define HOST_SYMBOL_SECT  3 /* Offset into a `struct host_section' */
+#define HOST_SYMBOL_TCNT  4 /* # of valid types */
 	uintptr_t            hs_type; /* Symbol type (one of `HOST_SYMBOL_*') */
 	union {
 		void const             *sv_abs;  /* [?..?][valid_if(HOST_SYMBOL_ABS)] */
@@ -3030,6 +3031,9 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vjex_enter(struct fungen *__restrict
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vjax_enter(struct fungen *__restrict self, /*out*/ struct fg_branch *__restrict branch, unsigned int flags); /* if (VJX_F_JZ ^ ((TOP & SECOND) != 0) { ... } */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vjx_leave(struct fungen *__restrict self, /*inherit(always)*/ struct fg_branch *__restrict branch);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vjx_leave_noreturn(struct fungen *__restrict self, /*inherit(always)*/ struct fg_branch *__restrict branch);
+
+/* Force-enter .cold without generating any code. */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL fg_vcold_enter(struct fungen *__restrict self, /*out*/ struct fg_branch *__restrict branch);
 
 #define fg_vjz_enter(self, branch)           fg_vjx_enter(self, branch, VJX_F_JZ)
 #define fg_vjz_enter_likely(self, branch)    fg_vjx_enter(self, branch, VJX_F_JZ | VJX_F_LIKELY)
