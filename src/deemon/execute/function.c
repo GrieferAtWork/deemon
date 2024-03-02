@@ -906,7 +906,7 @@ yf_deepcopy(YFunction *__restrict self) {
 	struct code_frame_kwds *kw;
 	DREF YFunction *result;
 	result = (DREF YFunction *)DeeObject_Malloc(DeeYieldFunction_Sizeof(self->yf_argc));
-	if unlikely(!result->yf_func)
+	if unlikely(!result)
 		goto err;
 	result->yf_pargc = self->yf_pargc;
 	result->yf_argc  = self->yf_argc;
