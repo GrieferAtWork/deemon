@@ -432,12 +432,23 @@ DeeString_FreeWidth(DeeObject *__restrict self) {
 
 /* Construct strings with basic width-data. */
 #ifdef NDEBUG
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_NewSized(/*unsigned latin-1*/ char const *__restrict str, size_t length)
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_NewSized)(/*unsigned latin-1*/ char const *__restrict str,
+                              size_t length, char const *file, int line) {
+	(void)file;
+	(void)line;
+	return DeeString_NewSized(str, length);
+}
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length)
 #else /* NDEBUG */
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeDbgString_NewSized(/*unsigned latin-1*/ char const *__restrict str,
-                      size_t length, char const *file, int line)
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeString_NewSized)(/*unsigned latin-1*/ char const *__restrict str, size_t length) {
+	return DeeDbgString_NewSized(str, length, NULL, 0);
+}
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
+(DCALL DeeDbgString_NewSized)(/*unsigned latin-1*/ char const *__restrict str,
+                              size_t length, char const *file, int line)
 #endif /* !NDEBUG */
 {
 	DREF DeeObject *result;

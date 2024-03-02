@@ -936,6 +936,7 @@ EXPORTS
 	DeeString_New4Byte@8=_DeeString_New4Byte@8
 	DeeString_New@4=_DeeString_New@4
 	DeeString_NewBuffer@4=_DeeString_NewBuffer@4
+	DeeString_NewSized@8=_DeeString_NewSized@8
 	DeeString_NewUtf16@12=_DeeString_NewUtf16@12
 	DeeString_NewUtf16AltEndian@12=_DeeString_NewUtf16AltEndian@12
 	DeeString_NewUtf32@12=_DeeString_NewUtf32@12
