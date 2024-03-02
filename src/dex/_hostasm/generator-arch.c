@@ -1647,6 +1647,7 @@ err:
 
 
 
+#ifndef CONFIG_NO_THREADS
 #ifdef NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY
 #define IF_VERBOSE_LOCK_LOGGING(x) /* nothing */
 #else /* NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY */
@@ -2469,6 +2470,7 @@ _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restri
 err:
 	return -1;
 }
+#endif /* !CONFIG_NO_THREADS */
 
 
 

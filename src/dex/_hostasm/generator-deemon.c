@@ -2521,19 +2521,26 @@ do_jcc:
 
 				DO(Dee_function_generator_vref2(self, 0));                            /* ..., ref:value */
 				DO(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]));   /* ..., ref:value, p_global */
+#ifndef CONFIG_NO_THREADS
 				DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));  /* - */
+#endif /* !CONFIG_NO_THREADS */
 				DO(Dee_function_generator_vind(self, 0));                             /* ..., ref:value, *p_global */
 				DO(Dee_function_generator_vreg(self, NULL));                          /* ..., ref:value, old_value */
 				ASSERT(!Dee_function_generator_vtop_direct_isref(self));              /* - */
-				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtopdloc(self), instr,
-				                                        mod, gid, NULL, &mod->mo_lock));
+#ifndef CONFIG_NO_THREADS
+				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtopdloc(self), instr, mod, gid, NULL, &mod->mo_lock));
+#else /* !CONFIG_NO_THREADS */
+				DO(Dee_function_generator_gassert_bound(self, Dee_function_generator_vtopdloc(self), instr, mod, gid));
+#endif /* CONFIG_NO_THREADS */
 				ASSERT(!Dee_function_generator_vtop_direct_isref(self));              /* - */
 				Dee_function_generator_vtop_direct_setref(self);                      /* ..., ref:value, ref:old_value */
 				DO(Dee_function_generator_vswap(self));                               /* ..., ref:old_value, ref:value */
 				ASSERT(Dee_function_generator_vtop_direct_isref(self));               /* - */
 				DO(Dee_function_generator_gmov_loc2constind(self, Dee_function_generator_vtopdloc(self), (void const **)&mod->mo_globalv[gid], 0)); /* - */
 				Dee_function_generator_vtop_direct_clearref(self);                    /* ..., ref:old_value, value */
+#ifndef CONFIG_NO_THREADS
 				DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* - */
+#endif /* !CONFIG_NO_THREADS */
 				DO(Dee_function_generator_vpop(self));                                /* ..., ref:old_value */
 
 				/* Do post-processing, now that the stack looks like: a, b, c, old_value */

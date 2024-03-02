@@ -46,6 +46,7 @@
 #include <deemon/roset.h>
 #include <deemon/string.h>
 #include <deemon/super.h>
+#include <deemon/thread.h>
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
@@ -1781,8 +1782,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 	 * >> }
 	 * >> Dee_Incref(result);
 	 * >> Dee_class_desc_lock_endread(desc); */
+#ifndef CONFIG_NO_THREADS
 	if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
 		DO(Dee_function_generator_grwlock_read_const(self, &desc->cd_lock));
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[addr])); /* p_value */
 	DO(Dee_function_generator_vind(self, 0));                             /* *p_value */
 	DO(Dee_function_generator_vreg(self, NULL));                          /* reg:value */
@@ -1800,8 +1803,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+#ifndef CONFIG_NO_THREADS
 		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
 			EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));
+#endif /* !CONFIG_NO_THREADS */
 		EDO(err_saved_state, Dee_function_generator_gunbound_class_member(self, class_type, addr));
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
@@ -1816,8 +1821,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
 		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
+#ifndef CONFIG_NO_THREADS
 		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
 			EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));
+#endif /* !CONFIG_NO_THREADS */
 		EDO(err_saved_state, Dee_function_generator_gunbound_class_member(self, class_type, addr));
 		HA_printf(".section .text\n");
 		EDO(err_saved_state, Dee_function_generator_settext(self, text));
@@ -1830,7 +1837,10 @@ Dee_function_generator_vpush_cmember_unsafe_at_runtime(struct Dee_function_gener
 		return 0;
 	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1));
 	Dee_function_generator_vtop_direct_setref(self);
-	return Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock);
+#ifndef CONFIG_NO_THREADS
+	DO(Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));
+#endif /* !CONFIG_NO_THREADS */
+	return 0;
 err_saved_state:
 	Dee_memstate_decref(saved_state);
 err:
@@ -2039,7 +2049,9 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 	struct Dee_host_section *cold;
 	DREF struct Dee_memstate *saved_state;
 	struct class_desc *desc = DeeClass_DESC(type);
+#ifndef CONFIG_NO_THREADS
 	ptrdiff_t lock_offset;
+#endif /* !CONFIG_NO_THREADS */
 	ptrdiff_t slot_offset;
 	ASSERT(self->fg_state->ms_stackc >= 1);
 
@@ -2052,7 +2064,9 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		return Dee_function_generator_vcallapi(self, &DeeInstance_GetMember, VCALL_CC_OBJECT, 3);
 	}
 
+#ifndef CONFIG_NO_THREADS
 	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
+#endif /* !CONFIG_NO_THREADS */
 	slot_offset = desc->cd_offset + offsetof(struct instance_desc, id_vtab) +
 	              addr * sizeof(DREF DeeObject *);
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
@@ -2060,14 +2074,17 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 	/* TODO: In case of reading members, if one of the next instructions also does a read,
 	 *       keep the lock acquired. The same should also go when it comes to accessing
 	 *       global/extern variables. */
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_vdelta(self, lock_offset)); /* &this->[...].id_lock */
 	if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
 		DO(Dee_function_generator_grwlock_read(self, Dee_function_generator_vtopdloc(self)));
 	if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
-		DO(Dee_function_generator_vdup(self));                          /* [&this->[...].id_lock], &this->[...].id_lock */
-	DO(Dee_function_generator_vdelta(self, slot_offset - lock_offset)); /* [&this->[...].id_lock], &this->[...].VALUE */
-	DO(Dee_function_generator_vind(self, 0));                           /* [&this->[...].id_lock], value */
-	DO(Dee_function_generator_vreg(self, NULL));                        /* [&this->[...].id_lock], reg:value */
+		DO(Dee_function_generator_vdup(self));                        /* [&this->[...].id_lock], &this->[...].id_lock */
+	DO(Dee_function_generator_vind(self, slot_offset - lock_offset)); /* [&this->[...].id_lock], value */
+#else /* !CONFIG_NO_THREADS */
+	DO(Dee_function_generator_vind(self, slot_offset)); /* &this->[...].VALUE */
+#endif /* CONFIG_NO_THREADS */
+	DO(Dee_function_generator_vreg(self, NULL)); /* [&this->[...].id_lock], reg:value */
 
 	/* Assert that the member is bound */
 	text = Dee_function_generator_gettext(self);
@@ -2083,7 +2100,10 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		saved_state = self->fg_state;
 		Dee_memstate_incref(saved_state);
 		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
-		EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+#ifndef CONFIG_NO_THREADS
+		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
+			EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+#endif /* !CONFIG_NO_THREADS */
 		EDO(err_saved_state, Dee_function_generator_gunbound_instance_member(self, type, addr));
 		Dee_host_symbol_setsect(text_Lbound, text);
 	} else {
@@ -2098,7 +2118,10 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 		EDO(err_saved_state, Dee_function_generator_settext(self, cold));
 		Dee_host_symbol_setsect(cold_Lunbound_member, cold);
 		EDO(err_saved_state, Dee_function_generator_state_dounshare(self));
-		EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+#ifndef CONFIG_NO_THREADS
+		if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF)
+			EDO(err_saved_state, Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self) - 1));
+#endif /* !CONFIG_NO_THREADS */
 		EDO(err_saved_state, Dee_function_generator_gunbound_instance_member(self, type, addr));
 		HA_printf(".section .text\n");
 		EDO(err_saved_state, Dee_function_generator_settext(self, text));
@@ -2106,10 +2129,12 @@ Dee_function_generator_vpush_imember_unsafe_at_runtime(struct Dee_function_gener
 	Dee_memstate_decref(self->fg_state);
 	self->fg_state = saved_state;
 	if (flags & DEE_FUNCTION_GENERATOR_CIMEMBER_F_REF) {
-		DO(Dee_function_generator_vref2(self, 2));                                               /* &this->[...].id_lock, ref:value */
+		DO(Dee_function_generator_vref_noalias(self)); /* &this->[...].id_lock, ref:value */
+#ifndef CONFIG_NO_THREADS
 		DO(Dee_function_generator_vswap(self));                                                  /* ref:value, &this->[...].id_lock */
 		DO(Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self))); /* ref:value, &this->[...].id_lock */
 		DO(Dee_function_generator_vpop(self));                                                   /* ref:value */
+#endif /* !CONFIG_NO_THREADS */
 	}
 	return 0;
 err_saved_state:
@@ -2185,7 +2210,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function_generator *__restrict self,
                                                              DeeTypeObject *type, uint16_t addr) {
 	struct class_desc *desc = DeeClass_DESC(type);
+#ifndef CONFIG_NO_THREADS
 	ptrdiff_t lock_offset;
+#endif /* !CONFIG_NO_THREADS */
 	ptrdiff_t slot_offset;
 	ASSERT(self->fg_state->ms_stackc >= 2);
 
@@ -2211,11 +2238,14 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 			DO(Dee_function_generator_vref2(self, 2)); /* this, ref:value */
 	}
 
+#ifndef CONFIG_NO_THREADS
 	lock_offset = desc->cd_offset + offsetof(struct instance_desc, id_lock);
+#endif /* !CONFIG_NO_THREADS */
 	slot_offset = desc->cd_offset + offsetof(struct instance_desc, id_vtab) +
 	              addr * sizeof(DREF DeeObject *);
 	/* XXX: (and this is a problem with the normal executor): assert that "this" is an instance of `type' */
 
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_vswap(self));                                                   /* ref:value, this */
 	DO(Dee_function_generator_vdelta(self, lock_offset));                                     /* ref:value, &this->[...].id_lock */
 	DO(Dee_function_generator_grwlock_write(self, Dee_function_generator_vtopdloc(self)));    /* ... */
@@ -2226,6 +2256,9 @@ Dee_function_generator_vdel_or_pop_imember_unsafe_at_runtime(struct Dee_function
 	DO(Dee_function_generator_vswap(self));                                                   /* old_value, &this->[...].id_lock */
 	DO(Dee_function_generator_grwlock_endwrite(self, Dee_function_generator_vtopdloc(self))); /* old_value, &this->[...].id_lock */
 	DO(Dee_function_generator_vpop(self));                                                    /* old_value */
+#else /* !CONFIG_NO_THREADS */
+	DO(Dee_function_generator_vswapind(self, slot_offset)); /* old_value */
+#endif /* CONFIG_NO_THREADS */
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	DO(Dee_function_generator_gxdecref_loc(self, Dee_function_generator_vtopdloc(self), 1));
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
@@ -3224,7 +3257,7 @@ Dee_function_generator_vswapind(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vrrot(self, 3));           /* reg:*(dst + ind_delta), src, dst */
 	DO(Dee_function_generator_vswap(self));              /* reg:*(dst + ind_delta), dst, src */
 	DO(Dee_function_generator_vpopind(self, ind_delta)); /* reg:*(dst + ind_delta), dst */
-	return Dee_function_generator_vpop(self);
+	return Dee_function_generator_vpop(self);            /* reg:*(dst + ind_delta) */
 err:
 	return -1;
 }
@@ -3570,16 +3603,22 @@ Dee_function_generator_vpush_mod_global(struct Dee_function_generator *__restric
 		DeeModule_LockEndRead(mod);
 	}
 	DO(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]));
+#ifndef CONFIG_NO_THREADS
 	if (ref)
 		DO(Dee_function_generator_grwlock_read_const(self, &mod->mo_lock));
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vind(self, 0));
 	DO(Dee_function_generator_vreg(self, NULL));
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	loc = Dee_function_generator_vtopdloc(self);
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid,
 	                                        ref ? &mod->mo_lock : NULL,
 	                                        NULL));
+#else /* !CONFIG_NO_THREADS */
+	DO(Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid));
+#endif /* CONFIG_NO_THREADS */
 
 	/* Depending on how the value will be used, we may not need a reference.
 	 * If only its value is used (ASM_ISNONE, ASM_CMP_SO, ASM_CMP_DO), we
@@ -3589,7 +3628,9 @@ Dee_function_generator_vpush_mod_global(struct Dee_function_generator *__restric
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	if (ref) {
 		DO(Dee_function_generator_gincref_loc(self, loc, 1));
+#ifndef CONFIG_NO_THREADS
 		DO(Dee_function_generator_grwlock_endread_const(self, &mod->mo_lock));
+#endif /* !CONFIG_NO_THREADS */
 		ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 		Dee_function_generator_vtop_direct_setref(self);
 	}
@@ -3637,9 +3678,13 @@ vpopref_mod_global(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdirect1(self));                              /* value */
 	DO(Dee_function_generator_vpush_addr(self, &mod->mo_globalv[gid]));     /* value, &GLOBAL */
 	DO(Dee_function_generator_vswap(self));                                 /* &GLOBAL, value */
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_grwlock_write_const(self, &mod->mo_lock));    /* &GLOBAL, value */
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vswapind(self, 0));                           /* ref:old_value */
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_grwlock_endwrite_const(self, &mod->mo_lock)); /* ref:old_value */
+#endif /* !CONFIG_NO_THREADS */
 	ASSERT(self->fg_state->ms_stackc >= 1);
 	mval = Dee_function_generator_vtop(self);
 	--self->fg_state->ms_stackc;
@@ -3715,7 +3760,9 @@ Dee_function_generator_vpush_static(struct Dee_function_generator *__restrict se
 	if unlikely(sid >= code->co_staticc)
 		return err_illegal_sid(sid);
 	DO(Dee_function_generator_vpush_addr(self, &code->co_staticv[sid]));
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_grwlock_read_const(self, &code->co_static_lock));
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vind(self, 0));
 	DO(Dee_function_generator_vreg(self, NULL));
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
@@ -3724,7 +3771,10 @@ Dee_function_generator_vpush_static(struct Dee_function_generator *__restrict se
 	ASSERT(Dee_function_generator_vtop_isdirect(self));
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	Dee_function_generator_vtop_direct_setref(self);
-	return Dee_function_generator_grwlock_endread_const(self, &code->co_static_lock);
+#ifndef CONFIG_NO_THREADS
+	DO(Dee_function_generator_grwlock_endread_const(self, &code->co_static_lock));
+#endif /* !CONFIG_NO_THREADS */
+	return 0;
 err:
 	return -1;
 }
@@ -3739,9 +3789,13 @@ Dee_function_generator_vpop_static(struct Dee_function_generator *__restrict sel
 	ASSERT(Dee_function_generator_vtop_direct_isref(self));
 	DO(Dee_function_generator_vpush_addr(self, &code->co_staticv[sid])); /* value, addr */
 	DO(Dee_function_generator_vswap(self));                              /* addr, value */
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_grwlock_write_const(self, &code->co_static_lock));
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vswapind(self, 0)); /* old_value */
+#ifndef CONFIG_NO_THREADS
 	DO(Dee_function_generator_grwlock_endwrite_const(self, &code->co_static_lock));
+#endif /* !CONFIG_NO_THREADS */
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));
 	Dee_function_generator_vtop_direct_setref(self);
 	return Dee_function_generator_vpop(self);
@@ -3749,6 +3803,7 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_NO_THREADS
 INTERN WUNUSED NONNULL((1)) int DCALL
 Dee_function_generator_vrwlock_read(struct Dee_function_generator *__restrict self) {
 	DO(Dee_function_generator_vdirect1(self));
@@ -3788,6 +3843,7 @@ Dee_function_generator_vrwlock_endwrite(struct Dee_function_generator *__restric
 err:
 	return -1;
 }
+#endif /* !CONFIG_NO_THREADS */
 
 /* Make sure there are no NULLABLE memobj-s anywhere on the stack or in locals. */
 INTERN WUNUSED NONNULL((1)) int DCALL

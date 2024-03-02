@@ -2663,14 +2663,18 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 				DO(Dee_function_generator_vpop(self)); /* N/A */
 			DO(Dee_function_generator_vcall_DeeObject_MALLOC(self, sizeof(DeePropertyObject), false)); /* [this], ref:result */
 			if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FCLASSMEM) {
+#ifndef CONFIG_NO_THREADS
 				DO(Dee_function_generator_grwlock_read_const(self, &desc->cd_lock));                 /* ref:result */
+#endif /* !CONFIG_NO_THREADS */
 				DO(Dee_function_generator_vpush_addr(self, &desc->cd_members[item->ca_addr + Dee_CLASS_GETSET_GET])); /* ref:result, &GETTER */
 				DO(Dee_function_generator_vind(self, 0));                                            /* ref:result, GETTER */
 				DO(Dee_function_generator_vdirect1(self));                                           /* ref:result, GETTER */
 				DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* ref:result, ref:GETTER */
 				if (item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY) {
 					DO(Dee_function_generator_vreg(self, NULL));                                     /* ref:result, ref:GETTER */
+#ifndef CONFIG_NO_THREADS
 					DO(Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));          /* ref:result, ref:GETTER */
+#endif /* !CONFIG_NO_THREADS */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_get)));    /* ref:result */
 				} else {
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_get)));    /* ref:result */
@@ -2684,17 +2688,15 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 					DO(Dee_function_generator_vdirect1(self));                                       /* ref:result, SETTER */
 					DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* ref:result, ref:SETTER */
 					DO(Dee_function_generator_vreg(self, NULL));                                     /* ref:result, ref:SETTER */
+#ifndef CONFIG_NO_THREADS
 					DO(Dee_function_generator_grwlock_endread_const(self, &desc->cd_lock));          /* ref:result, ref:SETTER */
+#endif /* !CONFIG_NO_THREADS */
 					DO(Dee_function_generator_vpopind(self, offsetof(DeePropertyObject, p_set)));    /* ref:result */
 				}
 			} else {
-				DO(Dee_function_generator_vdup_at(self, 2));               /* this, ref:result, this */
+				DO(Dee_function_generator_vdup_at(self, 2));              /* this, ref:result, this */
 				DO(Dee_function_generator_vdelta(self, desc->cd_offset)); /* this, ref:result, DeeInstance_DESC(desc, this) */
-				DO(Dee_function_generator_vdup(self));                    /* this, ref:result, DeeInstance_DESC(desc, this), DeeInstance_DESC(desc, this) */
-				DO(Dee_function_generator_vdelta(self, offsetof(struct Dee_instance_desc, id_lock))); /* this, ref:result, DeeInstance_DESC(desc, this), &DeeInstance_DESC(desc, this)->id_lock */
-				DO(Dee_function_generator_vdirect1(self));                /* this, ref:result, DeeInstance_DESC(desc, this), &DeeInstance_DESC(desc, this)->id_lock */
-				DO(Dee_function_generator_grwlock_read(self, Dee_function_generator_vtopdloc(self))); /* this, ref:result, DeeInstance_DESC(desc, this), &DeeInstance_DESC(desc, this)->id_lock */
-				DO(Dee_function_generator_vpop(self));                    /* this, ref:result, DeeInstance_DESC(desc, this) */
+				DO(Dee_function_generator_vrwlock_read_field(self, offsetof(struct Dee_instance_desc, id_lock))); /* this, ref:result, DeeInstance_DESC(desc, this) */
 				DO(Dee_function_generator_vdup(self));                    /* this, ref:result, DeeInstance_DESC(desc, this), DeeInstance_DESC(desc, this) */
 				DO(Dee_function_generator_vind(self, offsetof(struct Dee_instance_desc, id_vtab) +
 				                                     (item->ca_addr + Dee_CLASS_GETSET_GET) *
@@ -2722,10 +2724,12 @@ vopgetattr_constattr(struct Dee_function_generator *__restrict self,
 				DO(Dee_function_generator_gxincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
 				DO(Dee_function_generator_vreg(self, NULL));              /* this, ref:result, DeeInstance_DESC(desc, this), ref:GETTER_OR_SETTER */
 				DO(Dee_function_generator_vswap(self));                   /* this, ref:result, ref:GETTER_OR_SETTER, DeeInstance_DESC(desc, this) */
+#ifndef CONFIG_NO_THREADS
 				DO(Dee_function_generator_vdelta(self, offsetof(struct Dee_instance_desc, id_lock))); /* this, ref:result, ref:GETTER_OR_SETTER, &DeeInstance_DESC(desc, this)->id_lock */
-				DO(Dee_function_generator_vdirect1(self));                /* this, ref:result, ref:GETTER_OR_SETTER, &DeeInstance_DESC(desc, this)->id_lock */
-				DO(Dee_function_generator_grwlock_endread(self, Dee_function_generator_vtopdloc(self))); /* this, ref:result, ref:GETTER_OR_SETTER, &DeeInstance_DESC(desc, this)->id_lock */
+				DO(Dee_function_generator_vrwlock_endread(self));         /* this, ref:result, ref:GETTER_OR_SETTER */
+#else /* !CONFIG_NO_THREADS */
 				DO(Dee_function_generator_vpop(self));                    /* this, ref:result, ref:GETTER_OR_SETTER */
+#endif /* CONFIG_NO_THREADS */
 				DO(Dee_function_generator_vpopind(self, (item->ca_flag & Dee_CLASS_ATTRIBUTE_FREADONLY)
 				                                        ? offsetof(DeePropertyObject, p_get)
 				                                        : offsetof(DeePropertyObject, p_set))); /* this, ref:result */

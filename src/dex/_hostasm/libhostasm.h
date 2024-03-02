@@ -2810,10 +2810,22 @@ INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_extern(struct 
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpush_static(struct Dee_function_generator *__restrict self, uint16_t sid);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vpop_static(struct Dee_function_generator *__restrict self, uint16_t sid);
 
+#ifndef CONFIG_NO_THREADS
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_read(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_write(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endread(struct Dee_function_generator *__restrict self);
 INTDEF WUNUSED NONNULL((1)) int DCALL Dee_function_generator_vrwlock_endwrite(struct Dee_function_generator *__restrict self);
+#define Dee_function_generator_vrwlock_read_field(self, offsetof_field)     (Dee_function_generator_vdup(self) || Dee_function_generator_vdelta(self, offsetof_field) || Dee_function_generator_vrwlock_read(self))
+#define Dee_function_generator_vrwlock_write_field(self, offsetof_field)    (Dee_function_generator_vdup(self) || Dee_function_generator_vdelta(self, offsetof_field) || Dee_function_generator_vrwlock_write(self))
+#define Dee_function_generator_vrwlock_endread_field(self, offsetof_field)  (Dee_function_generator_vdup(self) || Dee_function_generator_vdelta(self, offsetof_field) || Dee_function_generator_vrwlock_endread(self))
+#define Dee_function_generator_vrwlock_endwrite_field(self, offsetof_field) (Dee_function_generator_vdup(self) || Dee_function_generator_vdelta(self, offsetof_field) || Dee_function_generator_vrwlock_endwrite(self))
+#else /* !CONFIG_NO_THREADS */
+#define Dee_function_generator_vrwlock_read_field(self, offsetof_field)     0
+#define Dee_function_generator_vrwlock_write_field(self, offsetof_field)    0
+#define Dee_function_generator_vrwlock_endread_field(self, offsetof_field)  0
+#define Dee_function_generator_vrwlock_endwrite_field(self, offsetof_field) 0
+#endif /* CONFIG_NO_THREADS */
+	
 
 /* Make sure there are no NULLABLE memobj-s anywhere on the stack or in locals. */
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_vnonullable(struct Dee_function_generator *__restrict self);
@@ -3144,6 +3156,7 @@ Dee_function_generator_gasflush(struct Dee_function_generator *__restrict self,
                                 bool require_valoff_0);
 
 /* Controls for operating with R/W-locks (as needed for accessing global/extern variables) */
+#ifndef CONFIG_NO_THREADS
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self, Dee_atomic_rwlock_t *__restrict lock);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_write_const(struct Dee_function_generator *__restrict self, Dee_atomic_rwlock_t *__restrict lock);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL Dee_function_generator_grwlock_endread_const(struct Dee_function_generator *__restrict self, Dee_atomic_rwlock_t *__restrict lock);
@@ -3156,6 +3169,7 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_read(st
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_write(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endread(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL _Dee_function_generator_grwlock_endwrite(struct Dee_function_generator *__restrict self, struct Dee_memloc const *__restrict loc);
+#endif /* !CONFIG_NO_THREADS */
 
 #define HAVE__Dee_function_generator_ghstack_pushhstack_at_cfa_boundary_np
 INTDEF WUNUSED NONNULL((1)) int DCALL _Dee_function_generator_ghstack_adjust(struct Dee_function_generator *__restrict self, ptrdiff_t sp_delta);
@@ -3609,19 +3623,25 @@ Dee_function_generator_vflushreg(struct Dee_function_generator *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict self,
                                      struct Dee_memloc const *loc, Dee_instruction_t const *instr,
-                                     struct Dee_module_object *mod, uint16_t id,
-                                     Dee_atomic_rwlock_t *opt_endread_before_throw,
-                                     Dee_atomic_rwlock_t *opt_endwrite_before_throw);
+                                     struct Dee_module_object *mod, uint16_t id
+#ifndef CONFIG_NO_THREADS
+                                     , Dee_atomic_rwlock_t *opt_endread_before_throw
+                                     , Dee_atomic_rwlock_t *opt_endwrite_before_throw
+#endif /* !CONFIG_NO_THREADS */
+                                     );
 #define Dee_function_generator_gassert_local_bound(self, instr, ulid) \
 	((ulid) >= (self)->fg_assembler->fa_localc                        \
 	 ? err_illegal_ulid(ulid)                                         \
 	 : !Dee_memval_isdirect(&(self)->fg_state->ms_localv[ulid])       \
 	   ? 0                                                            \
 	   : Dee_function_generator_gassert_local_bound_ex(self, Dee_memval_direct_getloc(&(self)->fg_state->ms_localv[ulid]), instr, ulid))
-#define Dee_function_generator_gassert_local_bound_ex(self, loc, instr, ulid) \
-	Dee_function_generator_gassert_bound(self, loc, instr, NULL, ulid, NULL, NULL)
-#define Dee_function_generator_gassert_global_bound(self, loc, mod, gid) \
-	Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid, NULL, NULL)
+#ifndef CONFIG_NO_THREADS
+#define Dee_function_generator_gassert_local_bound_ex(self, loc, instr, ulid) Dee_function_generator_gassert_bound(self, loc, instr, NULL, ulid, NULL, NULL)
+#define Dee_function_generator_gassert_global_bound(self, loc, mod, gid)      Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid, NULL, NULL)
+#else /* !CONFIG_NO_THREADS */
+#define Dee_function_generator_gassert_local_bound_ex(self, loc, instr, ulid) Dee_function_generator_gassert_bound(self, loc, instr, NULL, ulid)
+#define Dee_function_generator_gassert_global_bound(self, loc, mod, gid)      Dee_function_generator_gassert_bound(self, loc, NULL, mod, gid)
+#endif /* CONFIG_NO_THREADS */
 
 /* Generate code to throw an error indicating that local variable `lid'
  * is unbound. This includes any necessary jump for the purpose of entering

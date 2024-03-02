@@ -268,6 +268,8 @@ DECL_BEGIN
 #endif /* ... */
 #endif /* Dee_pid_t */
 
+
+#ifndef DeeThread_USE_SINGLE_THREADED
 #if defined(CONFIG_HOST_WINDOWS) && defined(_MSC_VER)
 #ifdef _PREFAST_
 #pragma warning(push)
@@ -371,6 +373,7 @@ DeeThread_SetName(char const *__restrict name) {
 #elif defined(DeeThread_USE_pthread_create) && defined(CONFIG_HAVE_pthread_self) && defined(CONFIG_HAVE_pthread_setname_np_23RG)
 #define DeeThread_SetName(name) (void)pthread_setname_np(pthread_self(), name, strlen(name))
 #endif /* ... */
+#endif /* !DeeThread_USE_SINGLE_THREADED */
 
 
 

@@ -990,9 +990,7 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	except_api = (void const *)&libhostasm_rt_err_cell_empty_ValueError;
 	if (error_type == &DeeError_UnboundAttribute)
 		except_api = (void const *)&libhostasm_rt_err_cell_empty_UnboundAttribute;
-	DO(Dee_function_generator_vdup(self));                                    /* cell, cell */
-	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock))); /* cell, &cell->c_lock */
-	DO(Dee_function_generator_vrwlock_read(self));                            /* cell */
+	DO(Dee_function_generator_vrwlock_read_field(self, offsetof(DeeCellObject, c_lock))); /* cell */
 	DO(Dee_function_generator_vdup(self));                                    /* cell, cell */
 	DO(Dee_function_generator_vind(self, offsetof(DeeCellObject, c_item)));   /* cell, cell->c_item */
 	DO(Dee_function_generator_vreg(self, NULL));                              /* cell, reg:cell->c_item */
@@ -1000,16 +998,16 @@ vcall_DeeCell_Get_or_Error(struct Dee_function_generator *__restrict self,
 	DO(Dee_function_generator_vdup(self));                                    /* cell, reg:cell->c_item, reg:cell->c_item */
 	DO(Dee_function_generator_vjz_enter_unlikely(self, &branch));             /* cell, reg:cell->c_item */
 	EDO(err_branch, Dee_function_generator_vswap(self));                      /* cell->c_item, cell */
+#ifndef CONFIG_NO_THREADS
 	EDO(err_branch, Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock))); /* cell->c_item, cell, &cell->c_lock */
-	EDO(err_branch, Dee_function_generator_vrwlock_endread(self));            /* cell->c_item, cell */
-	EDO(err_branch, Dee_function_generator_vcallapi(self, except_api, VCALL_CC_EXCEPT, 0)); /* cell->c_item, cell */
+	EDO(err_branch, Dee_function_generator_vrwlock_endread(self));            /* cell->c_item */
+#endif /* !CONFIG_NO_THREADS */
+	EDO(err_branch, Dee_function_generator_vcallapi(self, except_api, VCALL_CC_EXCEPT, 0)); /* cell->c_item, [cell] */
 	DO(Dee_function_generator_vjx_leave_noreturn(self, &branch));             /* cell, reg:cell->c_item */
 	DO(Dee_function_generator_gincref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* cell, ref:cell->c_item */
 	Dee_function_generator_vtop_direct_setref(self);                          /* cell, ref:cell->c_item */
 	DO(Dee_function_generator_vswap(self));                                   /* ref:cell->c_item, cell */
-	DO(Dee_function_generator_vdup(self));                                    /* ref:cell->c_item, cell, cell */
-	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock))); /* ref:cell->c_item, cell, &cell->c_lock */
-	DO(Dee_function_generator_vrwlock_endread(self));                         /* ref:cell->c_item, cell */
+	DO(Dee_function_generator_vrwlock_endread_field(self, offsetof(DeeCellObject, c_lock))); /* ref:cell->c_item, cell */
 	return Dee_function_generator_vpop(self);                                 /* ref:cell->c_item */
 err_branch:
 	Dee_function_generator_branch_fini(&branch);
@@ -1020,15 +1018,19 @@ err:
 /* cell, ref:value -> N/A */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 vcall_DeeCell_DelOrSet(struct Dee_function_generator *__restrict self) {
-	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:value, cell */
+#ifndef CONFIG_NO_THREADS
+	DO(Dee_function_generator_vdup_at(self, 2));                                /* cell, ref:value, cell */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock)));   /* cell, ref:value, &cell->c_lock */
 	DO(Dee_function_generator_vrwlock_write(self));                             /* cell, ref:value */
-	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:value, cell */
+#endif /* !CONFIG_NO_THREADS */
+	DO(Dee_function_generator_vdup_at(self, 2));                                /* cell, ref:value, cell */
 	DO(Dee_function_generator_vswap(self));                                     /* cell, cell, ref:value */
 	DO(Dee_function_generator_vswapind(self, offsetof(DeeCellObject, c_item))); /* cell, ref:old_value */
-	DO(Dee_function_generator_vdup_at(self, 2));                                 /* cell, ref:old_value, cell */
+#ifndef CONFIG_NO_THREADS
+	DO(Dee_function_generator_vdup_at(self, 2));                                /* cell, ref:old_value, cell */
 	DO(Dee_function_generator_vdelta(self, offsetof(DeeCellObject, c_lock)));   /* cell, ref:old_value, &cell->c_lock */
 	DO(Dee_function_generator_vrwlock_endwrite(self));                          /* cell, ref:old_value */
+#endif /* !CONFIG_NO_THREADS */
 	DO(Dee_function_generator_vpop_at(self, 2));                                /* ref:old_value */
 	ASSERT(!Dee_function_generator_vtop_direct_isref(self));                    /* ref:old_value */
 	DO(Dee_function_generator_gxdecref_loc(self, Dee_function_generator_vtopdloc(self), 1)); /* old_value */

@@ -2650,9 +2650,12 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict self,
                                      struct Dee_memloc const *loc, Dee_instruction_t const *instr,
-                                     struct Dee_module_object *mod, uint16_t id,
-                                     Dee_atomic_rwlock_t *opt_endread_before_throw,
-                                     Dee_atomic_rwlock_t *opt_endwrite_before_throw) {
+                                     struct Dee_module_object *mod, uint16_t id
+#ifndef CONFIG_NO_THREADS
+                                     , Dee_atomic_rwlock_t *opt_endread_before_throw
+                                     , Dee_atomic_rwlock_t *opt_endwrite_before_throw
+#endif /* !CONFIG_NO_THREADS */
+                                     ) {
 	DREF struct Dee_memstate *saved_state;
 	struct Dee_host_symbol *target;
 	struct Dee_host_section *text;
@@ -2677,10 +2680,12 @@ Dee_function_generator_gassert_bound(struct Dee_function_generator *__restrict s
 	}
 
 	/* Location isn't bound -> generate code to throw an exception. */
+#ifndef CONFIG_NO_THREADS
 	if (opt_endwrite_before_throw != NULL)
 		EDO(err_saved_state, Dee_function_generator_grwlock_endwrite_const(self, opt_endwrite_before_throw));
 	if (opt_endread_before_throw != NULL)
 		EDO(err_saved_state, Dee_function_generator_grwlock_endread_const(self, opt_endread_before_throw));
+#endif /* !CONFIG_NO_THREADS */
 	EDO(err_saved_state,
 	    mod ? Dee_function_generator_gthrow_global_unbound(self, mod, id)
 	        : Dee_function_generator_gthrow_local_unbound(self, instr, id));
@@ -3559,6 +3564,7 @@ err:
 }
 
 
+#ifndef CONFIG_NO_THREADS
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 Dee_function_generator_grwlock_read_const(struct Dee_function_generator *__restrict self,
                                           Dee_atomic_rwlock_t *__restrict lock) {
@@ -3590,6 +3596,7 @@ Dee_function_generator_grwlock_endwrite_const(struct Dee_function_generator *__r
 	Dee_memloc_init_const(&loc, lock);
 	return Dee_function_generator_grwlock_endwrite(self, &loc);
 }
+#endif /* !CONFIG_NO_THREADS */
 
 
 

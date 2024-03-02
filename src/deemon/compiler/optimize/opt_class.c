@@ -20,13 +20,16 @@
 #ifndef GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_CLASS_C
 #define GUARD_DEEMON_COMPILER_OPTIMIZE_OPT_CLASS_C 1
 
-#include <deemon/alloc.h>
 #include <deemon/api.h>
+/**/
+
+#include <deemon/alloc.h>
 #include <deemon/class.h>
 #include <deemon/compiler/ast.h>
 #include <deemon/compiler/optimize.h>
 #include <deemon/compiler/symbol.h>
 #include <deemon/object.h>
+#include <deemon/system-features.h>
 
 DECL_BEGIN
 
