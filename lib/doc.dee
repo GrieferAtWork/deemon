@@ -3747,7 +3747,7 @@ set_is_type:
 		get(): Type | none {
 			if (object !is bound || object !is Type)
 				return none;
-			return Type.__base__(object);
+			return try Type.__base__(object) catch (UnboundAttribute) none;
 		}
 	}
 

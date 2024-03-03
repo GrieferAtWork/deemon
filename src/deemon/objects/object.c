@@ -2497,30 +2497,40 @@ instance_get_itable(DeeObject *__restrict self);
 
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
-	TYPE_GETTER(STR_this, &DeeObject_NewRef, "Always re-return @this object"),
-	TYPE_GETTER_F(STR_class, &object_class_get, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_this, &DeeObject_NewRef,
+	              METHOD_FCONSTCALL,
+	              "Always re-return @this object"),
+	TYPE_GETTER_F(STR_class, &object_class_get,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?DType\n"
 	              "Returns the class of @this Type, which is usually identical to "
 	              /**/ "?#type, however in the case of a super-proxy, the viewed "
 	              /**/ "Type is returned, rather than the actual Type."),
-	TYPE_GETTER("super", &DeeSuper_Of,
-	            "->?DSuper\n"
-	            "Returns a view for the super-instance of @this object"),
-	TYPE_GETTER("__itable__", &instance_get_itable,
-	            "->?AObjectTable?Ert:ClassDescriptor\n"
-	            "Returns an indexable sequence describing the instance object "
-	            /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
-	            "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	            /**/ "is ?f), an empty sequence is returned.\n"
-	            "The class-attribute table can be accessed through ?A__ctable__?DType."),
+	TYPE_GETTER_F("super", &DeeSuper_Of,
+	              METHOD_FCONSTCALL,
+	              "->?DSuper\n"
+	              "Returns a view for the super-instance of @this object"),
+	TYPE_GETTER_F("__itable__", &instance_get_itable,
+	              METHOD_FCONSTCALL,
+	              "->?AObjectTable?Ert:ClassDescriptor\n"
+	              "Returns an indexable sequence describing the instance object "
+	              /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
+	              "For non-user-defined classes (aka. when ${this.class.__isclass__} "
+	              /**/ "is ?f), an empty sequence is returned.\n"
+	              "The class-attribute table can be accessed through ?A__ctable__?DType."),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
-	TYPE_GETTER_F("id", &object_id_get, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("id", &object_id_get,
+	              /* This one isn't CONSTCALL because IDs can change if a constant
+	               * is serialized and deserialized (as would be the case when building
+	               * and later re-loading a .dec file) */
+	              METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns a unique id identifying @this specific object instance"),
 
 	/* Utility function: Return the size of a given object (in bytes) */
-	TYPE_GETTER_F("__sizeof__", &object_sizeof, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__sizeof__", &object_sizeof,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Return the size of @this object in bytes."),
 	TYPE_GETSET_END
@@ -2533,9 +2543,6 @@ PRIVATE struct type_member tpconst object_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__refcnt__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DeeObject, ob_refcnt),
 	                      "->?Dint\n"
 	                      "The number of references currently existing for @this object"),
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeObject, ob_type),
-	                      "->?DType\n"
-	                      "Alias for ?#type"),
 	TYPE_MEMBER_END
 };
 
@@ -4364,6 +4371,17 @@ type_get_module(DeeTypeObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+type_bound_module(DeeTypeObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeType_GetModule(self);
+	if likely(result) {
+		Dee_Decref_unlikely(result);
+		return 1;
+	}
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_get_instancesize(DeeTypeObject *__restrict self) {
 	size_t instance_size;
@@ -4400,6 +4418,39 @@ type_get_instancesize(DeeTypeObject *__restrict self) {
 unknown:
 	err_unbound_attribute_string(Dee_TYPE(self), "__instancesize__");
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+type_bound_instancesize(DeeTypeObject *__restrict self) {
+	if (self->tp_flags & TP_FVARIABLE)
+		goto unknown;
+	if (!self->tp_init.tp_alloc.tp_ctor &&
+	    !self->tp_init.tp_alloc.tp_copy_ctor &&
+	    !self->tp_init.tp_alloc.tp_deep_ctor &&
+	    !self->tp_init.tp_alloc.tp_any_ctor &&
+	    !self->tp_init.tp_alloc.tp_any_ctor_kw)
+		goto unknown;
+	if unlikely(self->tp_init.tp_alloc.tp_free) {
+#ifndef CONFIG_NO_OBJECT_SLABS
+		/* Check for slab allocators. */
+		void (DCALL *tp_free)(void *__restrict ob);
+		tp_free = self->tp_init.tp_alloc.tp_free;
+#define CHECK_SIZE(index, size)                        \
+		if (tp_free == &DeeObject_SlabFree##size ||    \
+		    tp_free == &DeeGCObject_SlabFree##size) {  \
+		} else
+		DeeSlab_ENUMERATE(CHECK_SIZE)
+#undef CHECK_SIZE
+		{
+			goto unknown;
+		}
+#else /* !CONFIG_NO_OBJECT_SLABS */
+		goto unknown;
+#endif /* CONFIG_NO_OBJECT_SLABS */
+	}
+	return 1;
+unknown:
+	return 0;
 }
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_operators(DeeTypeObject *__restrict self);
@@ -4445,7 +4496,7 @@ PRIVATE struct type_member tpconst type_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeTypeObject, tp_doc),
 	                      "->?X2?Dstring?N\n"
 	                      "Doc string for this type, including documentation on operators, or ?N if it has none"),
-	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT_OPT, offsetof(DeeTypeObject, tp_base),
+	TYPE_MEMBER_FIELD_DOC("__base__", STRUCT_OBJECT, offsetof(DeeTypeObject, tp_base),
 	                      "->?DType\n"
 	                      "#t{UnboundAttribute}"
 	                      "The immediate/primary base of this type"),
@@ -4486,84 +4537,95 @@ PRIVATE struct type_member tpconst type_members[] = {
 };
 
 PRIVATE struct type_getset tpconst type_getsets[] = {
-	TYPE_GETTER_F("isbuffer", &type_isbuffer, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("isbuffer", &type_isbuffer,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Type implements the buffer interface\n"
 	              "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
-	TYPE_GETTER("__bases__", &TypeBases_New,
-	            "->?Ert:TypeBases\n"
-	            "Returns a sequence type ?S?DType that represents all immediate bases of @this ?DType"),
-	TYPE_GETTER("__mro__", &TypeMRO_New,
-	            "->?Ert:TypeMRO\n"
-	            "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
-	TYPE_GETTER_F("__class__", &type_get_classdesc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__bases__", &TypeBases_New,
+	              METHOD_FCONSTCALL,
+	              "->?Ert:TypeBases\n"
+	              "Returns a sequence type ?S?DType that represents all immediate bases of @this ?DType"),
+	TYPE_GETTER_F("__mro__", &TypeMRO_New,
+	              METHOD_FCONSTCALL,
+	              "->?Ert:TypeMRO\n"
+	              "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
+	TYPE_GETTER_F("__class__", &type_get_classdesc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Ert:ClassDescriptor\n"
 	              "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
 	              "Returns the internal class-descriptor descriptor for a user-defined class"),
-	TYPE_GETTER_F("__issingleton__", &type_issingleton, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__issingleton__", &type_issingleton,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Check if @this Type describes a singleton object, requiring that @this type not be "
 	              /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
 	              /**/ "of the special internal types used to represent implementation-specific wrapper "
 	              /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
 	              /**/ "class descriptors or DDI information providers"),
-	TYPE_GETTER_F(STR___module__, &type_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Return the module used to define @this Type, or throw :UnboundAttribute if the module "
-	              /**/ "cannot be determined, which may be the case if the type doesn't have any defining "
-	              /**/ "features such as operators, or class/instance member functions"),
-	TYPE_GETTER("__ctable__", &type_get_ctable,
-	            "->?AObjectTable?Ert:ClassDescriptor\n"
-	            "Returns an indexable sequence describing the class object table, "
-	            /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
-	            "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
-	            "The instance-attribute table can be accessed through ?A__itable__?DObject"),
-	TYPE_GETTER("__operators__", &type_get_operators,
-	            "->?S?X2?Dstring?Dint\n"
-	            "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
-	            "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
-	            "${"
-	            /**/ "function hasprivateoperator(name: string | int): bool {\n"
-	            /**/ "	return name in this.__operators__;\n"
-	            /**/ "}"
-	            "}\n"
-	            "Also note that this set doesn't differentiate between overwritten and deleted operators, "
-	            /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
-	            /**/ ":NotImplemented exception\n"
-	            "Additionally, this set also includes automatically generated operators for user-classes, "
-	            /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
-	            /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
-	            /**/ "define any of them\n"
-	            "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
-	            /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is ?t), and only use ?#__operators__ "
-	            /**/ "for all other types that this doesn't apply to"),
-	TYPE_GETTER("__operatorids__", &type_get_operatorids,
-	            "->?S?Dint\n"
-	            "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
-	            "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
-	            /**/ "operator ids to their user-friendly name, as described in ?#hasoperator"),
-	TYPE_GETTER_F("__instancesize__", &type_get_instancesize, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the heap allocation size of instances of @this Type, or throw :UnboundAttribute "
-	              /**/ "when @this Type cannot be instantiated, is a singleton (such as ?N), or has variable-"
-	              /**/ "length instances (?#isvariable)"),
+	TYPE_GETTER_BOUND_F(STR___module__, &type_get_module, &type_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Return the module used to define @this Type, or throw :UnboundAttribute if the module "
+	                    /**/ "cannot be determined, which may be the case if the type doesn't have any defining "
+	                    /**/ "features such as operators, or class/instance member functions"),
+	TYPE_GETTER_F("__ctable__", &type_get_ctable,
+	              METHOD_FCONSTCALL,
+	              "->?AObjectTable?Ert:ClassDescriptor\n"
+	              "Returns an indexable sequence describing the class object table, "
+	              /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
+	              "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"
+	              "The instance-attribute table can be accessed through ?A__itable__?DObject"),
+	TYPE_GETTER_F("__operators__", &type_get_operators,
+	              METHOD_FCONSTCALL,
+	              "->?S?X2?Dstring?Dint\n"
+	              "Enumerate the names of all the operators overwritten by @this Type as a set-like sequence\n"
+	              "This member functions such that the member function ?#hasprivateoperator can be implemented as:\n"
+	              "${"
+	              /**/ "function hasprivateoperator(name: string | int): bool {\n"
+	              /**/ "	return name in this.__operators__;\n"
+	              /**/ "}"
+	              "}\n"
+	              "Also note that this set doesn't differentiate between overwritten and deleted operators, "
+	              /**/ "as for this purpose any deleted operator is considered to be implemented as throwing a "
+	              /**/ ":NotImplemented exception\n"
+	              "Additionally, this set also includes automatically generated operators for user-classes, "
+	              /**/ "meaning that pretty much any user-class will always have its compare, assignment, as well "
+	              /**/ "as constructor and destructor operators overwritten, even when the user didn't actually "
+	              /**/ "define any of them\n"
+	              "For the purposes of human-readable information, is is recommended to use ?Aoperators?#__class__ "
+	              /**/ "when @this Type is a user-defined class (aka. ?#__isclass__ is ?t), and only use ?#__operators__ "
+	              /**/ "for all other types that this doesn't apply to"),
+	TYPE_GETTER_F("__operatorids__", &type_get_operatorids,
+	              METHOD_FCONSTCALL,
+	              "->?S?Dint\n"
+	              "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
+	              "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
+	              /**/ "operator ids to their user-friendly name, as described in ?#hasoperator"),
+	TYPE_GETTER_BOUND_F("__instancesize__", &type_get_instancesize, &type_bound_instancesize,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the heap allocation size of instances of @this Type, or throw :UnboundAttribute "
+	                    /**/ "when @this Type cannot be instantiated, is a singleton (such as ?N), or has variable-"
+	                    /**/ "length instances (?#isvariable)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETTER_F("__instance_size__", &type_get_instancesize, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Deprecated alias for ?#__instancesize__"),
+	TYPE_GETTER_BOUND_F("__instance_size__", &type_get_instancesize, &type_bound_instancesize,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Deprecated alias for ?#__instancesize__"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER_F("__istypetype__", &type_istypetype, METHOD_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, METHOD_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, METHOD_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, METHOD_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isnamespace__", &type_isnamespace, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__istypetype__", &type_istypetype, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isnamespace__", &type_isnamespace, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Instance methods/getsets of this type never look at the $this argument "
 	              /**/ "(allowing for optimizations in ?M_hostasm by passing undefined values for it)"),
-	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

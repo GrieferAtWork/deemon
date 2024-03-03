@@ -409,11 +409,19 @@ function_get_refs(Function *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_kwds(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
-	if (!code->co_keywords)
-		return_empty_seq;
-	return DeeRefVector_NewReadonly((DeeObject *)code,
-	                                (size_t)code->co_argc_max,
-	                                (DeeObject *const *)code->co_keywords);
+	if likely(code->co_keywords) {
+		return DeeRefVector_NewReadonly((DeeObject *)code,
+		                                (size_t)code->co_argc_max,
+		                                (DeeObject *const *)code->co_keywords);
+	}
+	err_unbound_attribute_string(&DeeFunction_Type, STR___kwds__);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_kwds(Function *__restrict self) {
+	DeeCodeObject *code = self->fo_code;
+	return code->co_keywords ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -428,6 +436,19 @@ function_get_name(Function *__restrict self) {
 	err_unbound_attribute_string(&DeeFunction_Type, STR___name__);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_name(Function *__restrict self) {
+	struct function_info info;
+	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_name);
+	return info.fi_name ? 1 : 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -458,6 +479,19 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_type(Function *__restrict self) {
+	struct function_info info;
+	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_type);
+	return info.fi_type ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_module(Function *__restrict self) {
 	if likely(self->fo_code->co_module)
@@ -465,6 +499,11 @@ function_get_module(Function *__restrict self) {
 	/* Shouldn't happen... */
 	err_unbound_attribute_string(&DeeFunction_Type, STR___module__);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_module(Function *__restrict self) {
+	return self->fo_code->co_module ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -480,6 +519,19 @@ function_get_operator(Function *__restrict self) {
 	err_unbound_attribute_string(&DeeFunction_Type, "__operator__");
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_operator(Function *__restrict self) {
+	struct function_info info;
+	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	return info.fi_opname != (uint16_t)-1 ? 1 : 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -517,6 +569,19 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+function_bound_property(Function *__restrict self) {
+	struct function_info info;
+	if (DeeFunction_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_type);
+	return info.fi_getset != (uint16_t)-1 ? 1 : 0;
+err:
+	return -1;
+}
+
 DOC_REF(code_optimize_doc);
 DOC_REF(code_optimized_doc);
 
@@ -534,56 +599,64 @@ PRIVATE struct type_method tpconst function_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst function_getsets[] = {
-	TYPE_GETTER_F(STR___name__, &function_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the name of @this function"),
-	TYPE_GETTER_F(STR___doc__, &function_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___name__, &function_get_name, &function_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the name of @this function"),
+	TYPE_GETTER_F(STR___doc__, &function_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this function, or ?N if there is none"),
-	TYPE_GETTER_F(STR___type__, &function_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Try to determine if @this function is defined as part of a user-defined class, "
-	              /**/ "and if it is, return that class type, or throw :UnboundAttribute if that "
-	              /**/ "class couldn't be found, or if @this function is defined as stand-alone"),
-	TYPE_GETTER_F(STR___module__, &function_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Return the module as part of which @this function's code was originally written"),
-	TYPE_GETTER_F("__operator__", &function_get_operator, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Try to determine if @this function is defined as part of a user-defined class, "
-	              /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	              /**/ "return the internal ID of the operator that @this function provides, or throw "
-	              /**/ ":UnboundAttribute if that class couldn't be found, @this function is defined "
-	              /**/ "as stand-alone, or defined as a class- or instance-method"),
-	TYPE_GETTER_F("__operatorname__", &function_get_operatorname, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Same as ?#__operator__, but instead try to return the unambiguous name of the "
-	              /**/ "operator, though still return its ID if the operator isn't recognized as being "
-	              /**/ "part of the standard"),
-	TYPE_GETTER_F("__property__", &function_get_property, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Returns an integer describing the kind if @this function is part of a property or getset, "
-	              /**/ "or throw :UnboundAttribute if the function's property could not be found, or if the "
-	              /**/ "function isn't declared as a property callback\n"
-	              "#T{Id|Callback|Compatible prototype~"
-	              /**/ "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"
-	              /**/ "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
-	              /**/ "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
-	              "}"),
-	TYPE_GETTER("__refs__", &function_get_refs,
-	            "->?S?O\n"
-	            "Returns a sequence of all of the references used by @this function"),
-	TYPE_GETTER_F(STR___kwds__, &function_get_kwds, METHOD_FNOREFESCAPE,
-	              "->?S?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns a sequence of keyword argument names accepted by @this function\n"
-	              "If @this function doesn't accept keyword arguments, throw :UnboundAttribute"),
+	TYPE_GETTER_BOUND_F(STR___type__, &function_get_type, &function_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Try to determine if @this function is defined as part of a user-defined class, "
+	                    /**/ "and if it is, return that class type, or throw :UnboundAttribute if that "
+	                    /**/ "class couldn't be found, or if @this function is defined as stand-alone"),
+	TYPE_GETTER_BOUND_F(STR___module__, &function_get_module, &function_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Return the module as part of which @this function's code was originally written"),
+	TYPE_GETTER_BOUND_F("__operator__", &function_get_operator, &function_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Try to determine if @this function is defined as part of a user-defined class, "
+	                    /**/ "and if so, if it is used to define an operator callback. If that is the case, "
+	                    /**/ "return the internal ID of the operator that @this function provides, or throw "
+	                    /**/ ":UnboundAttribute if that class couldn't be found, @this function is defined "
+	                    /**/ "as stand-alone, or defined as a class- or instance-method"),
+	TYPE_GETTER_BOUND_F("__operatorname__", &function_get_operatorname, &function_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Same as ?#__operator__, but instead try to return the unambiguous name of the "
+	                    /**/ "operator, though still return its ID if the operator isn't recognized as being "
+	                    /**/ "part of the standard"),
+	TYPE_GETTER_BOUND_F("__property__", &function_get_property, &function_bound_property,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns an integer describing the kind if @this function is part of a property or getset, "
+	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if the "
+	                    /**/ "function isn't declared as a property callback\n"
+	                    "#T{Id|Callback|Compatible prototype~"
+	                    /**/ "$" PP_STR(CLASS_GETSET_GET) "|Getter callback|${get(): Object}&"
+	                    /**/ "$" PP_STR(CLASS_GETSET_DEL) "|Delete callback|${del(): none}&"
+	                    /**/ "$" PP_STR(CLASS_GETSET_SET) "|Setter callback|${set(value: Object): none}"
+	                    "}"),
+	TYPE_GETTER_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Returns a sequence of all of the references used by @this function"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns a sequence of keyword argument names accepted by @this function\n"
+	                    "If @this function doesn't accept keyword arguments, throw :UnboundAttribute"),
 	TYPE_GETSET_END
 };
 
@@ -1186,6 +1259,11 @@ yf_get_name(YFunction *__restrict self) {
 	return function_get_name(self->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_name(YFunction *__restrict self) {
+	return function_bound_name(self->yf_func);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_doc(YFunction *__restrict self) {
 	return function_get_doc(self->yf_func);
@@ -1196,14 +1274,29 @@ yf_get_type(YFunction *__restrict self) {
 	return function_get_type(self->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_type(YFunction *__restrict self) {
+	return function_bound_type(self->yf_func);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_module(YFunction *__restrict self) {
 	return function_get_module(self->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_module(YFunction *__restrict self) {
+	return function_bound_module(self->yf_func);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_operator(YFunction *__restrict self) {
 	return function_get_operator(self->yf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_operator(YFunction *__restrict self) {
+	return function_bound_operator(self->yf_func);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1216,6 +1309,11 @@ yf_get_property(YFunction *__restrict self) {
 	return function_get_property(self->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_property(YFunction *__restrict self) {
+	return function_bound_property(self->yf_func);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_refs(YFunction *__restrict self) {
 	return function_get_refs(self->yf_func);
@@ -1226,6 +1324,11 @@ yf_get_kwds(YFunction *__restrict self) {
 	return function_get_kwds(self->yf_func);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yf_bound_kwds(YFunction *__restrict self) {
+	return function_bound_kwds(self->yf_func);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_sizeof(YFunction *__restrict self) {
 	size_t size = DeeYieldFunction_Sizeof(self->yf_argc);
@@ -1233,45 +1336,59 @@ yf_get_sizeof(YFunction *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst yf_getsets[] = {
-	TYPE_GETTER("__args__", &yf_get_args, "->?S?O"),
-	TYPE_GETTER_F("__code__", &yf_get_code, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("__args__", &yf_get_args,
+	              METHOD_FCONSTCALL,
+	              "->?S?O"),
+	TYPE_GETTER_F("__code__", &yf_get_code,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "Alias for :Function.__code__ though ?#__func__"),
-	TYPE_GETTER_F(STR___name__, &yf_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__name__ though ?#__func__"),
-	TYPE_GETTER_F(STR___doc__, &yf_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___name__, &yf_get_name, &yf_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__name__ though ?#__func__"),
+	TYPE_GETTER_F(STR___doc__, &yf_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Alias for :Function.__doc__ though ?#__func__"),
-	TYPE_GETTER_F(STR___type__, &yf_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__type__ though ?#__func__"),
-	TYPE_GETTER_F(STR___module__, &yf_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__module__ though ?#__func__"),
-	TYPE_GETTER_F("__operator__", &yf_get_operator, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__operator__ though ?#__func__"),
-	TYPE_GETTER_F("__operatorname__", &yf_get_operatorname, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__operatorname__ though ?#__func__"),
-	TYPE_GETTER_F("__property__", &yf_get_property, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__property__ though ?#__func__"),
-	TYPE_GETTER_F("__refs__", &yf_get_refs, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___type__, &yf_get_type, &yf_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__type__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___module__, &yf_get_module, &yf_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__module__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operator__", &yf_get_operator, &yf_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__operator__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operatorname__", &yf_get_operatorname, &yf_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__operatorname__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__property__", &yf_get_property, &yf_bound_property,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__property__ though ?#__func__"),
+	TYPE_GETTER_F("__refs__", &yf_get_refs,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Alias for :Function.__refs__ though ?#__func__"),
-	TYPE_GETTER_F(STR___kwds__, &yf_get_kwds, METHOD_FNOREFESCAPE,
-	              "->?S?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for :Function.__kwds__ though ?#__func__"),
-	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &yf_get_kwds, &yf_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__kwds__ though ?#__func__"),
+	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1787,7 +1904,7 @@ nomem:
 
 #ifndef CONFIG_NO_THREADS
 PRIVATE WUNUSED NONNULL((1)) DREF YFunction *DCALL
-yfi_getyfunc(YFIterator *__restrict self) {
+yfi_get_yfunc(YFIterator *__restrict self) {
 	DREF YFunction *result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
@@ -1802,25 +1919,51 @@ err:
 }
 #endif /* !CONFIG_NO_THREADS */
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getthis(YFIterator *__restrict self) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_yfunc(YFIterator *__restrict self) {
+	YFunction *result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
-	result = self->yi_frame.cf_this;
-	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
-		result = NULL;
-	Dee_XIncref(result);
+	result = self->yi_func;
 	DeeYieldFunctionIterator_LockEndRead(self);
-	if unlikely(!result)
+	return result ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_this(YFIterator *__restrict self) {
+	DREF DeeObject *thisarg;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	thisarg = self->yi_frame.cf_this;
+	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
+		thisarg = NULL;
+	Dee_XIncref(thisarg);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	if unlikely(!thisarg)
 		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__this__");
-	return result;
+	return thisarg;
 err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_this(YFIterator *__restrict self) {
+	DeeObject *thisarg;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	thisarg = self->yi_frame.cf_this;
+	if (!(self->yi_frame.cf_flags & CODE_FTHISCALL))
+		thisarg = NULL;
+	DeeYieldFunctionIterator_LockEndRead(self);
+	return thisarg ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getframe(YFIterator *__restrict self) {
+yfi_get_frame(YFIterator *__restrict self) {
 	return DeeFrame_NewReferenceWithLock((DeeObject *)self,
 	                                     &self->yi_frame,
 	                                     DEEFRAME_FREADONLY |
@@ -1831,7 +1974,7 @@ yfi_getframe(YFIterator *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
-yfi_getfunc(YFIterator *__restrict self) {
+yfi_get_func(YFIterator *__restrict self) {
 	DREF Function *result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
@@ -1847,9 +1990,10 @@ yfi_getfunc(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_func yfi_bound_yfunc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
-yfi_getcode(YFIterator *__restrict self) {
+yfi_get_code(YFIterator *__restrict self) {
 	DREF DeeCodeObject *result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
@@ -1865,9 +2009,10 @@ yfi_getcode(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_code yfi_bound_yfunc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getrefs(YFIterator *__restrict self) {
+yfi_get_refs(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
@@ -1886,9 +2031,10 @@ yfi_getrefs(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_refs yfi_bound_yfunc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getkwds(YFIterator *__restrict self) {
+yfi_get_kwds(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF Function *func;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
@@ -1908,8 +2054,21 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_kwds(YFIterator *__restrict self) {
+	bool bound;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	bound = self->yi_func &&
+	        self->yi_func->yf_func->fo_code->co_keywords;
+	DeeYieldFunctionIterator_LockEndRead(self);
+	return bound ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getargs(YFIterator *__restrict self) {
+yfi_get_args(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *yfunction;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
@@ -1928,6 +2087,7 @@ yfi_getargs(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_args yfi_bound_yfunc
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF YFunction *DCALL
 yfi_get_func_reference(YFIterator *__restrict self,
@@ -1949,7 +2109,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getname(YFIterator *__restrict self) {
+yfi_get_name(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, STR___name__);
@@ -1962,8 +2122,26 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_name(YFIterator *__restrict self) {
+	int result;
+	DREF YFunction *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	func = self->yi_func;
+	Dee_XIncref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	if unlikely(!func)
+		return 0;
+	result = yf_bound_name(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getdoc(YFIterator *__restrict self) {
+yfi_get_doc(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, STR___doc__);
@@ -1975,9 +2153,10 @@ yfi_getdoc(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_doc yfi_bound_yfunc
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-yfi_gettype(YFIterator *__restrict self) {
+yfi_get_type(YFIterator *__restrict self) {
 	DREF DeeTypeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, STR___type__);
@@ -1990,8 +2169,26 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_type(YFIterator *__restrict self) {
+	int result;
+	DREF YFunction *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	func = self->yi_func;
+	Dee_XIncref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	if unlikely(!func)
+		return 0;
+	result = yf_bound_type(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getmodule(YFIterator *__restrict self) {
+yfi_get_module(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, STR___module__);
@@ -2004,8 +2201,20 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_module(YFIterator *__restrict self) {
+	bool bound;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	bound = self->yi_func && self->yi_func->yf_func->fo_code->co_module;
+	DeeYieldFunctionIterator_LockEndRead(self);
+	return bound ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getoperator(YFIterator *__restrict self) {
+yfi_get_operator(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__operator__");
@@ -2018,8 +2227,26 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_operator(YFIterator *__restrict self) {
+	int result;
+	DREF YFunction *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	func = self->yi_func;
+	Dee_XIncref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	if unlikely(!func)
+		return 0;
+	result = yf_bound_operator(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getoperatorname(YFIterator *__restrict self) {
+yfi_get_operatorname(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__operatorname__");
@@ -2031,9 +2258,10 @@ yfi_getoperatorname(YFIterator *__restrict self) {
 err:
 	return NULL;
 }
+#define yfi_bound_operatorname yfi_bound_operator
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-yfi_getproperty(YFIterator *__restrict self) {
+yfi_get_property(YFIterator *__restrict self) {
 	DREF DeeObject *result;
 	DREF YFunction *func;
 	func = yfi_get_func_reference(self, "__property__");
@@ -2046,68 +2274,102 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+yfi_bound_property(YFIterator *__restrict self) {
+	int result;
+	DREF YFunction *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	func = self->yi_func;
+	Dee_XIncref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	if unlikely(!func)
+		return 0;
+	result = yf_bound_property(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return -1;
+}
+
 
 PRIVATE struct type_getset tpconst yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
-	TYPE_GETTER_F(STR_seq, &yfi_getyfunc, METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Alias for ?#__yfunc__"),
+	TYPE_GETTER_BOUND_F(STR_seq, &yfi_get_yfunc, &yfi_bound_yfunc,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    "Alias for ?#__yfunc__"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER("__frame__", &yfi_getframe,
-	            "->?Dframe\n"
-	            "The execution stack-frame representing the current state of the iterator"),
-	TYPE_GETTER_F("__this__", &yfi_getthis, METHOD_FNOREFESCAPE,
-	              "#tUnboundAttribute{No $this-argument available}"
-	              "The $this-argument used during execution"),
+	TYPE_GETTER_F("__frame__", &yfi_get_frame,
+	              METHOD_FCONSTCALL,
+	              "->?Dframe\n"
+	              "The execution stack-frame representing the current state of the iterator"),
+	TYPE_GETTER_BOUND_F("__this__", &yfi_get_this, &yfi_bound_this,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "#tUnboundAttribute{No $this-argument available}"
+	                    "The $this-argument used during execution"),
 #ifndef CONFIG_NO_THREADS
-	TYPE_GETTER_F("__yfunc__", &yfi_getyfunc, METHOD_FNOREFESCAPE,
-	              "->?Ert:YieldFunction\n"
-	              "The underlying yield-function, describing the ?DFunction "
-	              /**/ "and arguments that are being executed"),
+	TYPE_GETTER_BOUND_F("__yfunc__", &yfi_get_yfunc, &yfi_bound_yfunc,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Ert:YieldFunction\n"
+	                    "The underlying yield-function, describing the ?DFunction "
+	                    /**/ "and arguments that are being executed"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER_F("__func__", &yfi_getfunc, METHOD_FNOREFESCAPE,
-	              "->?Dfunction\n"
-	              "The function that is being executed"),
-	TYPE_GETTER_F("__code__", &yfi_getcode, METHOD_FNOREFESCAPE,
-	              "->?Ert:Code\n"
-	              "The code object that is being executed"),
-	TYPE_GETTER_F("__refs__", &yfi_getrefs, METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Returns a sequence of all of the references used by the function"),
-	TYPE_GETTER_F("__args__", &yfi_getargs, METHOD_FNOREFESCAPE,
-	              "->?S?O\n"
-	              "Returns a sequence representing the positional arguments passed to the function"),
-	TYPE_GETTER_F(STR___name__, &yfi_getname, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__name__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___doc__, &yfi_getdoc, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Alias for ?A__doc__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___kwds__, &yfi_getkwds, METHOD_FNOREFESCAPE,
-	              "->?S?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__kwds__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___type__, &yfi_gettype, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__type__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___module__, &yfi_getmodule, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__module__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__operator__", &yfi_getoperator, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__operator__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__operatorname__", &yfi_getoperatorname, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__operatorname__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__property__", &yfi_getproperty, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Alias for ?A__property__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__func__", &yfi_get_func, &yfi_bound_func,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dfunction\n"
+	                    "The function that is being executed"),
+	TYPE_GETTER_BOUND_F("__code__", &yfi_get_code, &yfi_bound_code,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Ert:Code\n"
+	                    "The code object that is being executed"),
+	TYPE_GETTER_BOUND_F("__refs__", &yfi_get_refs, &yfi_bound_refs,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    "Returns a sequence of all of the references used by the function"),
+	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    "Returns a sequence representing the positional arguments passed to the function"),
+	TYPE_GETTER_BOUND_F(STR___name__, &yfi_get_name, &yfi_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__name__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___doc__, &yfi_get_doc, &yfi_bound_doc,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?N\n"
+	                    "Alias for ?A__doc__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &yfi_get_kwds, &yfi_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__kwds__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___type__, &yfi_get_type, &yfi_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__type__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F(STR___module__, &yfi_get_module, &yfi_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__module__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operator__", &yfi_get_operator, &yfi_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__operator__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__operatorname__", &yfi_get_operatorname, &yfi_bound_operatorname,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__operatorname__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__property__", &yfi_get_property, &yfi_bound_property,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for ?A__property__?DFunction though ?#__func__"),
 	TYPE_GETSET_END
 };
 

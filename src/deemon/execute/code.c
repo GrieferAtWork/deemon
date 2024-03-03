@@ -1296,6 +1296,11 @@ code_get_kwds(DeeCodeObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+code_bound_kwds(DeeCodeObject *__restrict self) {
+	return self->co_keywords ? 1 : 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getdefault(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
@@ -1326,6 +1331,19 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+code_bound_name(DeeCodeObject *__restrict self) {
+	struct function_info info;
+	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	return info.fi_name ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_doc(DeeCodeObject *__restrict self) {
 	struct function_info info;
@@ -1354,6 +1372,19 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+code_bound_type(DeeCodeObject *__restrict self) {
+	struct function_info info;
+	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	return info.fi_type ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_operator(DeeCodeObject *__restrict self) {
 	struct function_info info;
@@ -1367,6 +1398,19 @@ code_get_operator(DeeCodeObject *__restrict self) {
 	err_unbound_attribute_string(&DeeCode_Type, "__operator__");
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+code_bound_operator(DeeCodeObject *__restrict self) {
+	struct function_info info;
+	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	return info.fi_opname != (uint16_t)-1 ? 1 : 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1404,6 +1448,19 @@ code_get_property(DeeCodeObject *__restrict self) {
 	err_unbound_attribute_string(&DeeCode_Type, "__property__");
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+code_bound_property(DeeCodeObject *__restrict self) {
+	struct function_info info;
+	if (DeeCode_GetInfo((DeeObject *)self, &info) < 0)
+		goto err;
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_type);
+	return info.fi_getset != (uint16_t)-1 ? 1 : 0;
+err:
+	return -1;
 }
 
 PRIVATE struct type_member tpconst code_members[] = {
@@ -1512,52 +1569,56 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * Properties matching these names can be found in a variety of other
 	 * types, including `Function', `ObjMethod', etc.
 	 */
-	TYPE_GETTER_F(STR___name__, &code_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the name of @this code object (s.a. ?A__name__?DFunction)"),
-	TYPE_GETTER_F(STR___doc__, &code_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___name__, &code_get_name, &code_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the name of @this code object (s.a. ?A__name__?DFunction)"),
+	TYPE_GETTER_F(STR___doc__, &code_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
-	TYPE_GETTER_F(STR___type__, &code_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Determine if @this code object is defined as part of a user-defined class, "
-	              /**/ "and if it is, return that class type (s.a. ?A__type__?DFunction)"),
-	TYPE_GETTER(STR___kwds__, &code_get_kwds,
-	            "->?S?Dstring\n"
-	            "#t{UnboundAttribute}"
-	            "Returns a sequence of keyword argument names accepted by @this code object\n"
-	            "If @this code doesn't accept keyword arguments, throw :UnboundAttribute"),
-	TYPE_GETTER_F("__operator__", &code_get_operator, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Try to determine if @this code object is defined as part of a user-defined class, "
-	              /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	              /**/ "return the internal ID of the operator that @this code object provides, or throw "
-	              /**/ ":UnboundAttribute if that class couldn't be found, @this code object is defined "
-	              /**/ "as stand-alone, or defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
-	TYPE_GETTER_F("__operatorname__", &code_get_operatorname, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Same as ?#__operator__, but instead try to return the unambiguous name of the "
-	              /**/ "operator, though still return its ID if the operator isn't recognized as being "
-	              /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
-	TYPE_GETTER_F("__property__", &code_get_property, METHOD_FNOREFESCAPE,
-	              "->?Dint\n"
-	              "#t{UnboundAttribute}"
-	              "Returns an integer describing the kind if @this code is part of a property or getset, "
-	              /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
-	              /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
-	TYPE_GETTER("__default__", &code_getdefault,
-	            "->?S?O\n"
-	            "Access to the default values of arguments"),
-	/* Code-specific RTTI fields don't have leading/trailing underscores,
-	 * because they don't need to match the ABI also provided by numerous
-	 * other types (such as `Function', `ObjMethod', etc.) */
-	TYPE_GETTER("statics", &code_getstatic,
-	            "->?S?O\n"
-	            "Access to the static values of @this code object"),
+	TYPE_GETTER_BOUND_F(STR___type__, &code_get_type, &code_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Determine if @this code object is defined as part of a user-defined class, "
+	                    /**/ "and if it is, return that class type (s.a. ?A__type__?DFunction)"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &code_get_kwds, &code_bound_kwds,
+	                    METHOD_FCONSTCALL,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns a sequence of keyword argument names accepted by @this code object\n"
+	                    "If @this code doesn't accept keyword arguments, throw :UnboundAttribute"),
+	TYPE_GETTER_BOUND_F("__operator__", &code_get_operator, &code_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Try to determine if @this code object is defined as part of a user-defined class, "
+	                    /**/ "and if so, if it is used to define an operator callback. If that is the case, "
+	                    /**/ "return the internal ID of the operator that @this code object provides, or throw "
+	                    /**/ ":UnboundAttribute if that class couldn't be found, @this code object is defined "
+	                    /**/ "as stand-alone, or defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
+	TYPE_GETTER_BOUND_F("__operatorname__", &code_get_operatorname, &code_bound_operator,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?X2?Dstring?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Same as ?#__operator__, but instead try to return the unambiguous name of the "
+	                    /**/ "operator, though still return its ID if the operator isn't recognized as being "
+	                    /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
+	TYPE_GETTER_BOUND_F("__property__", &code_get_property, &code_bound_property,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dint\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns an integer describing the kind if @this code is part of a property or getset, "
+	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
+	                    /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
+	TYPE_GETTER_F("__default__", &code_getdefault, METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Access to the default values of arguments"),
+	TYPE_GETTER_F("__statics__", &code_getstatic, METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Access to the static values of @this code object"),
 	TYPE_GETSET_END
 };
 

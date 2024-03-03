@@ -97,7 +97,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 property_init_kw(Property *__restrict self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	PRIVATE DEFINE_KWLIST(kwlist, { K(getter), K(delete), K(setter), KEND });
@@ -274,6 +274,21 @@ property_callback_getattr(Property *self, DeeStringObject *name) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+property_callback_boundattr(Property *self, DeeStringObject *name) {
+	int result;
+	if (self->p_get) {
+		result = DeeObject_BoundAttr(self->p_get, (DeeObject *)name);
+	} else if (self->p_del) {
+		result = DeeObject_BoundAttr(self->p_del, (DeeObject *)name);
+	} else if (self->p_set) {
+		result = DeeObject_BoundAttr(self->p_set, (DeeObject *)name);
+	} else {
+		return 0;
+	}
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 property_get_name(Property *__restrict self) {
 	struct function_info info;
@@ -292,6 +307,23 @@ property_get_name(Property *__restrict self) {
 	err_unbound_attribute_string(&DeeProperty_Type, STR___name__);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_bound_name(Property *__restrict self) {
+	int error;
+	struct function_info info;
+	error = property_info(self, &info);
+	if unlikely(error < 0)
+		goto err;
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_name);
+	if (info.fi_name)
+		return 1;
+	return property_callback_boundattr(self, &str___name__);
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -314,6 +346,23 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_bound_doc(Property *__restrict self) {
+	struct function_info info;
+	int error;
+	error = property_info(self, &info);
+	if unlikely(error < 0)
+		goto err;
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_type);
+	Dee_XDecref(info.fi_doc);
+	if (info.fi_doc)
+		return 1;
+	return property_callback_boundattr(self, &str___doc__);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 property_get_type(Property *__restrict self) {
 	struct function_info info;
@@ -334,9 +383,31 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_bound_type(Property *__restrict self) {
+	struct function_info info;
+	int error;
+	error = property_info(self, &info);
+	if unlikely(error < 0)
+		goto err;
+	Dee_XDecref(info.fi_name);
+	Dee_XDecref(info.fi_doc);
+	Dee_XDecref(info.fi_type);
+	if (info.fi_type)
+		return 1;
+	return property_callback_boundattr(self, &str___type__);
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_function_module(DeeFunctionObject *__restrict self) {
 	return_reference_((DeeObject *)self->fo_code->co_module);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bound_function_module(DeeFunctionObject *__restrict self) {
+	return (DeeObject *)self->fo_code->co_module ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -355,33 +426,50 @@ property_get_module(Property *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+property_bound_module(Property *__restrict self) {
+	if (self->p_get && DeeFunction_Check(self->p_get))
+		return bound_function_module((DeeFunctionObject *)self->p_get);
+	if (self->p_del && DeeFunction_Check(self->p_del))
+		return bound_function_module((DeeFunctionObject *)self->p_del);
+	if (self->p_set && DeeFunction_Check(self->p_set))
+		return bound_function_module((DeeFunctionObject *)self->p_set);
+	return property_callback_boundattr(self, &str___module__);
+}
 
 
 PRIVATE struct type_getset tpconst property_getsets[] = {
-	TYPE_GETTER_F("canget", &property_canget, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("canget", &property_canget,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a getter callback"),
-	TYPE_GETTER_F("candel", &property_candel, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &property_candel,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a delete callback"),
-	TYPE_GETTER_F("canset", &property_canset, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &property_canset,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a setter callback"),
-	TYPE_GETTER_F(STR___name__, &property_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the name of @this Property"),
-	TYPE_GETTER_F(STR___doc__, &property_get_doc, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "Returns the documentation string of @this Property"),
-	TYPE_GETTER_F(STR___type__, &property_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the type implementing @this Property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &property_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the module within which @this Property is declared"),
+	TYPE_GETTER_BOUND_F(STR___name__, &property_get_name, &property_bound_name,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the name of @this Property"),
+	TYPE_GETTER_BOUND_F(STR___doc__, &property_get_doc, &property_bound_doc,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "Returns the documentation string of @this Property"),
+	TYPE_GETTER_BOUND_F(STR___type__, &property_get_type, &property_bound_type,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the type implementing @this Property, or ?N if unknown"),
+	TYPE_GETTER_BOUND_F(STR___module__, &property_get_module, &property_bound_module,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the module within which @this Property is declared"),
 	TYPE_GETSET_END
 };
 

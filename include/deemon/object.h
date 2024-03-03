@@ -2011,7 +2011,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define Dee_METHOD_FNORMAL      0x0000 /* Normal flags */
 #define Dee_METHOD_FEXACTRETURN 0x0400 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI')
                                         * WARNING: _hostasm treats `struct type_member' with doc strings as though this flag was *always* set! */
-#define Dee_METHOD_FNOTHROW     0x0800 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL') */
+#define Dee_METHOD_FNOTHROW     0x0800 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL' and also means no OOM allowed) */
 #define Dee_METHOD_FNORETURN    0x1000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
 #define Dee_METHOD_FPURECALL    0x2000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
                                         * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
@@ -2099,16 +2099,16 @@ struct Dee_type_getset {
 #define Dee_TYPE_GETSET_BOUND_NODOC(name, get, del, set, bound)          { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL, Dee_TYPE_GETSET_FNORMAL }
 #define Dee_TYPE_GETTER(name, get, doc)                                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
 #define Dee_TYPE_GETTER_NODOC(name, get)                                 { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETTER_BOUND(name, get, doc)                            { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), Dee_TYPE_GETSET_FNORMAL }
-#define Dee_TYPE_GETTER_BOUND_NODOC(name, get)                           { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_BOUND(name, get, bound, doc)                     { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), Dee_TYPE_GETSET_FNORMAL }
+#define Dee_TYPE_GETTER_BOUND_NODOC(name, get, bound)                    { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), NULL, Dee_TYPE_GETSET_FNORMAL }
 #define Dee_TYPE_GETSET_F(name, get, del, set, flags, doc)               { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, DOC(doc), flags }
 #define Dee_TYPE_GETSET_F_NODOC(name, get, del, set, flags)              { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), NULL, NULL, flags }
 #define Dee_TYPE_GETSET_BOUND_F(name, get, del, set, bound, flags, doc)  { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), flags }
 #define Dee_TYPE_GETSET_BOUND_F_NODOC(name, get, del, set, bound, flags) { name, Dee_REQUIRES_GETMETHOD(get), Dee_REQUIRES_DELMETHOD(del), Dee_REQUIRES_SETMETHOD(set), Dee_REQUIRES_BOUNDMETHOD(bound), NULL, flags }
 #define Dee_TYPE_GETTER_F(name, get, flags, doc)                         { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), flags }
 #define Dee_TYPE_GETTER_F_NODOC(name, get, flags)                        { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
-#define Dee_TYPE_GETTER_BOUND_F(name, get, flags, doc)                   { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, DOC(doc), flags }
-#define Dee_TYPE_GETTER_BOUND_F_NODOC(name, get, flags)                  { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, NULL, NULL, flags }
+#define Dee_TYPE_GETTER_BOUND_F(name, get, bound, flags, doc)            { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), DOC(doc), flags }
+#define Dee_TYPE_GETTER_BOUND_F_NODOC(name, get, bound, flags)           { name, Dee_REQUIRES_GETMETHOD(get), NULL, NULL, Dee_REQUIRES_BOUNDMETHOD(bound), NULL, flags }
 #define Dee_TYPE_GETSET_END                                              { NULL, NULL, NULL, NULL, NULL, NULL, 0 }
 #ifdef DEE_SOURCE
 #define TYPE_GETSET               Dee_TYPE_GETSET

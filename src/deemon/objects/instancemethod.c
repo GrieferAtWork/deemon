@@ -103,10 +103,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-im_init(InstanceMethod *__restrict self,
-        size_t argc, DeeObject *const *argv,
-        DeeObject *kw) {
-	PRIVATE struct keyword kwlist[] = { K(func), K(thisarg), KEND };
+im_init_kw(InstanceMethod *__restrict self, size_t argc,
+           DeeObject *const *argv, DeeObject *kw) {
+	PRIVATE DEFINE_KWLIST(kwlist, { K(func), K(thisarg), KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:InstanceMethod",
 	                    &self->im_func, &self->im_this))
 		goto err;
@@ -142,8 +141,7 @@ im_hash(InstanceMethod *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-im_eq(InstanceMethod *self,
-      InstanceMethod *other) {
+im_eq(InstanceMethod *self, InstanceMethod *other) {
 	int temp;
 	if (DeeObject_AssertType(other, &DeeInstanceMethod_Type))
 		goto err;
@@ -194,8 +192,8 @@ STATIC_ASSERT(offsetof(DeeSuperObject, s_self) == offsetof(InstanceMethod, im_th
  * layout, we can re-use some operators here... */
 INTDEF NONNULL((1)) void DCALL super_fini(DeeSuperObject *__restrict self);
 INTDEF NONNULL((1, 2)) void DCALL super_visit(DeeSuperObject *__restrict self, dvisit_t proc, void *arg);
-#define im_fini   super_fini
-#define im_visit  super_visit
+#define im_fini  super_fini
+#define im_visit super_visit
 
 PRIVATE WUNUSED NONNULL((1)) struct class_attribute *DCALL
 instancemethod_getattr(InstanceMethod *__restrict self,
@@ -261,6 +259,15 @@ instancemethod_get_name(InstanceMethod *__restrict self) {
 	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+instancemethod_bound_name(InstanceMethod *__restrict self) {
+	struct class_attribute *attr;
+	attr = instancemethod_getattr(self, NULL, NULL);
+	if (attr)
+		return 1;
+	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___name__);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_doc(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
@@ -288,6 +295,11 @@ instancemethod_get_kwds(InstanceMethod *__restrict self) {
 	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___kwds__);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+instancemethod_bound_kwds(InstanceMethod *__restrict self) {
+	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___kwds__);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
@@ -297,36 +309,54 @@ instancemethod_get_type(InstanceMethod *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+instancemethod_bound_type(InstanceMethod *__restrict self) {
+	DeeTypeObject *result;
+	if (instancemethod_getattr(self, NULL, &result))
+		return 1;
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_module(InstanceMethod *__restrict self) {
 	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___module__);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+instancemethod_bound_module(InstanceMethod *__restrict self) {
+	return DeeObject_BoundAttr(self->im_func, (DeeObject *)&str___module__);
+}
+
 PRIVATE struct type_getset tpconst im_getsets[] = {
-	TYPE_GETTER_F(STR___name__, &instancemethod_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "The name of the function being bound"),
-	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___name__, &instancemethod_get_name, &instancemethod_bound_name,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "The name of the function being bound"),
+	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc,
+	              METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of the function being bound, or ?N if unknown"),
-	TYPE_GETTER_F(STR___kwds__, &instancemethod_get_kwds, METHOD_FNOREFESCAPE,
-	              "->?S?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns a sequence of keyword argument names accepted by @this function\n"
-	              "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
-	TYPE_GETTER_F(STR___type__, &instancemethod_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "The type implementing the function that is being bound"),
-	TYPE_GETTER_F(STR___module__, &instancemethod_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "The type within which the bound function was defined "
-	              "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
-	              "If something other than a user-level function was set for ?#__func__, "
-	              /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
-	              /**/ "then forwarded"),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &instancemethod_get_kwds, &instancemethod_bound_kwds,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?S?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns a sequence of keyword argument names accepted by @this function\n"
+	                    "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
+	TYPE_GETTER_BOUND_F(STR___type__, &instancemethod_get_type, &instancemethod_bound_type,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "The type implementing the function that is being bound"),
+	TYPE_GETTER_BOUND_F(STR___module__, &instancemethod_get_module, &instancemethod_bound_module,
+	                    METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "The type within which the bound function was defined "
+	                    "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
+	                    "If something other than a user-level function was set for ?#__func__, "
+	                    /**/ "a $\"__module__\" attribute will be loaded from it, with its value "
+	                    /**/ "then forwarded"),
 	TYPE_GETSET_END
 };
 
@@ -363,7 +393,7 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 				/* .tp_deep_ctor   = */ (dfunptr_t)&im_deepcopy,
 				/* .tp_any_ctor    = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(InstanceMethod),
-				/* .tp_any_ctor_kw = */ (dfunptr_t)&im_init,
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&im_init_kw,
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&im_fini,

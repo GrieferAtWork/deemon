@@ -207,6 +207,13 @@ PRIVATE struct type_cmp objmethod_cmp = {
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ne
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+objmethod_bound_origin(DeeObjMethodObject *__restrict self) {
+	struct objmethod_origin origin;
+	return DeeObjMethod_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+}
+
+#define objmethod_bound_func objmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
@@ -216,6 +223,7 @@ objmethod_get_func(DeeObjMethodObject *__restrict self) {
 	return NULL;
 }
 
+#define objmethod_bound_name objmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
@@ -234,6 +242,7 @@ objmethod_get_doc(DeeObjMethodObject *__restrict self) {
 	return_none;
 }
 
+#define objmethod_bound_type objmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 objmethod_get_type(DeeObjMethodObject *__restrict self) {
 	struct objmethod_origin origin;
@@ -253,6 +262,19 @@ objmethod_get_module(DeeObjMethodObject *__restrict self) {
 	}
 	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+objmethod_bound_module(DeeObjMethodObject *__restrict self) {
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
+		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
+		if likely(result) {
+			Dee_Decref_unlikely(result);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 DOC_DEF(objmethod_get_func_doc,
@@ -281,11 +303,21 @@ DOC_DEF(objmethod_get_module_doc,
         "The module implementing the function that is being bound");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &objmethod_get_func, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_func_doc)),
-	TYPE_GETTER_F(STR___name__, &objmethod_get_name, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &objmethod_get_doc, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_doc_doc)),
-	TYPE_GETTER_F(STR___type__, &objmethod_get_type, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_type_doc)),
-	TYPE_GETTER_F(STR___module__, &objmethod_get_module, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_module_doc)),
+	TYPE_GETTER_F("__func__", &objmethod_get_func,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              DOC_GET(objmethod_get_func_doc)),
+	TYPE_GETTER_BOUND_F(STR___name__, &objmethod_get_name, &objmethod_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_name_doc)),
+	TYPE_GETTER_F(STR___doc__, &objmethod_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              DOC_GET(objmethod_get_doc_doc)),
+	TYPE_GETTER_BOUND_F(STR___type__, &objmethod_get_type, &objmethod_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_type_doc)),
+	TYPE_GETTER_BOUND_F(STR___module__, &objmethod_get_module, &objmethod_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_module_doc)),
 	TYPE_GETSET_END
 };
 
@@ -520,11 +552,13 @@ PRIVATE struct type_cmp dockwdsiter_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
-	return DeeString_New(self->dki_kwds->dk_start);
+	return DeeString_NewAutoUtf8(self->dki_kwds->dk_start);
 }
 
 PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
-	TYPE_GETTER_F("__doc__", &dockwdsiter_getdocstr, METHOD_FNOREFESCAPE, "->?Dstring"),
+	TYPE_GETTER_F("__doc__", &dockwdsiter_getdocstr,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dstring"),
 	TYPE_GETSET_END
 };
 
@@ -776,11 +810,15 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
 	return NULL;
 }
+#define kwobjmethod_bound_kwds objmethod_bound_origin
 
 #define kwobjmethod_get_name       objmethod_get_name
+#define kwobjmethod_bound_name     objmethod_bound_name
 #define kwobjmethod_get_doc        objmethod_get_doc
 #define kwobjmethod_get_type       objmethod_get_type
+#define kwobjmethod_bound_type     objmethod_bound_type
 #define kwobjmethod_get_module     objmethod_get_module
+#define kwobjmethod_bound_module   objmethod_bound_module
 #define kwobjmethod_get_func_doc   objmethod_get_func_doc
 #define kwobjmethod_get_name_doc   objmethod_get_name_doc
 #define kwobjmethod_get_doc_doc    objmethod_get_doc_doc
@@ -789,12 +827,24 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &kwobjmethod_get_func, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_func_doc)),
-	TYPE_GETTER_F(STR___name__, &kwobjmethod_get_name, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &kwobjmethod_get_doc, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_doc_doc)),
-	TYPE_GETTER_F(STR___kwds__, &kwobjmethod_get_kwds, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___type__, &kwobjmethod_get_type, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_type_doc)),
-	TYPE_GETTER_F(STR___module__, &kwobjmethod_get_module, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_module_doc)),
+	TYPE_GETTER_F("__func__", &kwobjmethod_get_func,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              DOC_GET(kwobjmethod_get_func_doc)),
+	TYPE_GETTER_BOUND_F(STR___name__, &kwobjmethod_get_name, &kwobjmethod_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_name_doc)),
+	TYPE_GETTER_F(STR___doc__, &kwobjmethod_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              DOC_GET(kwobjmethod_get_doc_doc)),
+	TYPE_GETTER_BOUND_F(STR___kwds__, &kwobjmethod_get_kwds, &kwobjmethod_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_kwds_doc)),
+	TYPE_GETTER_BOUND_F(STR___type__, &kwobjmethod_get_type, &kwobjmethod_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_type_doc)),
+	TYPE_GETTER_BOUND_F(STR___module__, &kwobjmethod_get_module, &kwobjmethod_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(kwobjmethod_get_module_doc)),
 	TYPE_GETSET_END
 };
 #define kwobjmethod_members   objmethod_members
@@ -1029,6 +1079,12 @@ PRIVATE struct type_cmp clsmethod_cmp = {
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsmethod_ge
 };
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmethod_bound_origin(DeeClsMethodObject *__restrict self) {
+	struct objmethod_origin origin;
+	return DeeClsMethod_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 	struct objmethod_origin origin;
@@ -1037,6 +1093,7 @@ clsmethod_get_name(DeeClsMethodObject *__restrict self) {
 	err_unbound_attribute_string(Dee_TYPE(self), STR___name__);
 	return NULL;
 }
+#define clsmethod_bound_name clsmethod_bound_origin
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
@@ -1055,6 +1112,7 @@ kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
 	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
 	return NULL;
 }
+#define kwclsmethod_bound_kwds clsmethod_bound_origin
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_module(DeeClsMethodObject *__restrict self) {
@@ -1066,21 +1124,36 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmethod_bound_module(DeeClsMethodObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeType_GetModule(self->cm_type);
+	if likely(result) {
+		Dee_Decref_unlikely(result);
+		return 1;
+	}
+	return 0;
+}
+
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
-	TYPE_GETTER_F(STR___kwds__, &kwclsmethod_get_kwds, METHOD_FNOREFESCAPE,
-	              DOC_GET(objmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___name__, &clsmethod_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "The name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___kwds__, &kwclsmethod_get_kwds, &kwclsmethod_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(objmethod_get_kwds_doc)),
+	TYPE_GETTER_BOUND_F(STR___name__, &clsmethod_get_name, &clsmethod_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "The name of @this method"),
+	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this method, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &clsmethod_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "The module implementing @this method"),
+	TYPE_GETTER_BOUND_F(STR___module__, &clsmethod_get_module, &clsmethod_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "The module implementing @this method"),
 	TYPE_GETSET_END
 };
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
@@ -1449,6 +1522,13 @@ clsproperty_printrepr(DeeClsPropertyObject *__restrict self,
 	return DeeFormat_Printf(printer, arg, "%r.%s", self->cp_type, name);
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsproperty_bound_origin(DeeClsPropertyObject *__restrict self) {
+	struct clsproperty_origin origin;
+	return DeeClsProperty_GetOrigin((DeeObject *)self, &origin) ? 1 : 0;
+}
+
+#define clsproperty_bound_name clsproperty_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
 	struct clsproperty_origin origin;
@@ -1477,6 +1557,17 @@ clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsproperty_bound_module(DeeClsPropertyObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeType_GetModule(self->cp_type);
+	if likely(result) {
+		Dee_Decref_unlikely(result);
+		return 1;
+	}
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_canget(DeeClsPropertyObject *__restrict self) {
 	return_bool_(self->cp_get != NULL);
@@ -1493,26 +1584,32 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
-	TYPE_GETTER_F("canget", &clsproperty_canget, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("canget", &clsproperty_canget,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a getter callback"),
-	TYPE_GETTER_F("candel", &clsproperty_candel, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &clsproperty_candel,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a delete callback"),
-	TYPE_GETTER_F("canset", &clsproperty_canset, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &clsproperty_canset,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a setter callback"),
-	TYPE_GETTER_F(STR___name__, &clsproperty_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "The name of @this property"),
-	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___name__, &clsproperty_get_name, &clsproperty_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "The name of @this property"),
+	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &clsproperty_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "The module implementing @this property"),
+	TYPE_GETTER_BOUND_F(STR___module__, &clsproperty_get_module, &clsproperty_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "The module implementing @this property"),
 	TYPE_GETSET_END
 };
 
@@ -1728,12 +1825,15 @@ PRIVATE struct type_cmp clsmember_cmp = {
 };
 
 PRIVATE struct type_member tpconst clsmember_members[] = {
-	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT, offsetof(DeeClsMemberObject, cm_type),
+	TYPE_MEMBER_FIELD_DOC(STR___type__, STRUCT_OBJECT,
+	                      offsetof(DeeClsMemberObject, cm_type),
 	                      "->?DType\n"
 	                      "The type implementing @this member"),
-	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR, offsetof(DeeClsMemberObject, cm_memb.m_name),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_CONST | STRUCT_CSTR,
+	                      offsetof(DeeClsMemberObject, cm_memb.m_name),
 	                      "The name of @this member"),
-	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT, offsetof(DeeClsMemberObject, cm_memb.m_doc),
+	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_CONST | STRUCT_CSTR_OPT,
+	                      offsetof(DeeClsMemberObject, cm_memb.m_doc),
 	                      "->?X2?Dstring?N\n"
 	                      "The documentation string of @this member, or ?N if unknown"),
 	TYPE_MEMBER_CONST_DOC("canget", Dee_True, "Always evaluates to ?t"),
@@ -1757,17 +1857,31 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+clsmember_bound_module(DeeClsMemberObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeType_GetModule(self->cm_type);
+	if likely(result) {
+		Dee_Decref_unlikely(result);
+		return 1;
+	}
+	return 0;
+}
+
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
-	TYPE_GETTER_F("candel", &clsmember_canset, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &clsmember_canset,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for #canset"),
-	TYPE_GETTER_F("canset", &clsmember_canset, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &clsmember_canset,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this member can be modified"),
-	TYPE_GETTER_F(STR___module__, &clsmember_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "The module implementing @this member"),
+	TYPE_GETTER_BOUND_F(STR___module__, &clsmember_get_module, &clsmember_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "The module implementing @this member"),
 	TYPE_GETSET_END
 };
 
@@ -1963,6 +2077,24 @@ cmethod_get_module(DeeCMethodObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cmethod_bound_module(DeeCMethodObject *__restrict self) {
+	DREF DeeObject *result;
+	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
+	if (result) {
+		Dee_Decref_unlikely(result);
+		return 1;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cmethod_bound_origin(DeeCMethodObject *__restrict self) {
+	struct cmethod_origin origin;
+	return DeeKwCMethod_GetOrigin(self, &origin) ? 1 : 0;
+}
+
+#define kwcmethod_bound_kwds cmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
@@ -1986,6 +2118,7 @@ kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
 	return NULL;
 }
 
+#define cmethod_bound_name cmethod_bound_origin
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_name(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
@@ -2010,13 +2143,28 @@ cmethod_get_type(DeeCMethodObject *__restrict self) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cmethod_bound_type(DeeCMethodObject *__restrict self) {
+	struct cmethod_origin origin;
+	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+		Dee_XDecref(origin.cmo_module);
+		Dee_XDecref(origin.cmo_type);
+		if (origin.cmo_type)
+			return 1;
+	}
+	return 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_doc(DeeCMethodObject *__restrict self) {
 	struct cmethod_origin origin;
-	if (DeeKwCMethod_GetOrigin(self, &origin) && origin.cmo_doc) {
-		DREF DeeObject *result = DeeString_NewAutoUtf8(origin.cmo_doc);
+	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+		if (origin.cmo_doc) {
+			DREF DeeObject *result = DeeString_NewAutoUtf8(origin.cmo_doc);
+			Dee_cmethod_origin_fini(&origin);
+			return result;
+		}
 		Dee_cmethod_origin_fini(&origin);
-		return result;
 	}
 	return_none;
 }
@@ -2026,21 +2174,26 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
 #define cmethod_getsets (kwcmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
-	TYPE_GETTER_F(STR___kwds__, &kwcmethod_get_kwds, METHOD_FNOREFESCAPE,
-	              DOC_GET(cmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___module__, &cmethod_get_module, METHOD_FNOREFESCAPE,
-	              "->?DModule\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the module defining @this method"),
-	TYPE_GETTER_F(STR___type__, &cmethod_get_type, METHOD_FNOREFESCAPE,
-	              "->?DType\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the type as part of which @this method was declared."),
-	TYPE_GETTER_F(STR___name__, &cmethod_get_name, METHOD_FNOREFESCAPE,
-	              "->?Dstring\n"
-	              "#t{UnboundAttribute}"
-	              "Returns the name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_BOUND_F(STR___kwds__, &kwcmethod_get_kwds, &kwcmethod_bound_kwds,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    DOC_GET(cmethod_get_kwds_doc)),
+	TYPE_GETTER_BOUND_F(STR___module__, &cmethod_get_module, &cmethod_bound_module,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DModule\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the module defining @this method"),
+	TYPE_GETTER_BOUND_F(STR___type__, &cmethod_get_type, &cmethod_bound_type,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?DType\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the type as part of which @this method was declared."),
+	TYPE_GETTER_BOUND_F(STR___name__, &cmethod_get_name, &cmethod_bound_name,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?Dstring\n"
+	                    "#t{UnboundAttribute}"
+	                    "Returns the name of @this method"),
+	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this method, or ?N if unknown"),
 	TYPE_GETSET_END
