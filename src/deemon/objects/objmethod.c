@@ -76,9 +76,9 @@ done:
 }
 
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
-typeobject_find_objmethod(DeeTypeObject *__restrict self,
-                          dobjmethod_t meth) {
+PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+typeobject_find_objmethod(DeeTypeObject *__restrict self, dobjmethod_t meth,
+                          struct objmethod_origin *__restrict result) {
 	DeeTypeMRO mro;
 	DeeTypeMRO_Init(&mro, self);
 	do {
@@ -86,51 +86,22 @@ typeobject_find_objmethod(DeeTypeObject *__restrict self,
 		iter = self->tp_class_methods;
 		if (iter)
 			for (; iter->m_name; ++iter) {
-				if (iter->m_func == meth)
-					return iter->m_name;
+				if (iter->m_func == meth) {
+					result->omo_type  = self;
+					result->omo_chain = self->tp_class_methods;
+					result->omo_decl  = iter;
+					return true;
+				}
 			}
 	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
-	return NULL;
+	return false;
 }
 
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) char const *DCALL
-typeobject_find_objmethod_doc(DeeTypeObject *__restrict self,
-                              dobjmethod_t meth) {
-	DeeTypeMRO mro;
-	DeeTypeMRO_Init(&mro, self);
-	do {
-		struct type_method const *iter;
-		iter = self->tp_class_methods;
-		if (iter)
-			for (; iter->m_name; ++iter) {
-				if (iter->m_func == meth)
-					return iter->m_doc;
-			}
-	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
-	return NULL;
-}
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) DeeTypeObject *DCALL
-typeobject_find_objmethod_type(DeeTypeObject *__restrict self,
-                               dobjmethod_t meth) {
-	DeeTypeMRO mro;
-	DeeTypeMRO_Init(&mro, self);
-	do {
-		struct type_method const *iter;
-		iter = self->tp_class_methods;
-		if (iter)
-			for (; iter->m_name; ++iter) {
-				if (iter->m_func == meth)
-					return self;
-			}
-	} while ((self = DeeTypeMRO_Next(&mro, self)) != NULL);
-	return NULL;
-}
-
-/* Returns the name of the function bound by the given
- * `_ObjMethod', or `NULL' if the name could not be determined. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeObjMethod_GetName(DeeObject const *__restrict self) {
+/* Lookup the origin of the function bound by
+ * the given `_ObjMethod', or `NULL' if unknown. */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
+                       struct objmethod_origin *__restrict result) {
 	dobjmethod_t func;
 	DeeTypeObject *tp_self;
 	DeeTypeMRO mro;
@@ -142,83 +113,28 @@ DeeObjMethod_GetName(DeeObject const *__restrict self) {
 	do {
 		struct type_method const *iter;
 		if (tp_self == &DeeType_Type) {
-			char const *result;
-			result = typeobject_find_objmethod((DeeTypeObject *)DeeObjMethod_SELF(self), func);
-			if (result)
-				return result;
+			if (typeobject_find_objmethod((DeeTypeObject *)DeeObjMethod_SELF(self), func, result))
+				return true;
 		}
 		iter = tp_self->tp_methods;
 		if (iter)
 			for (; iter->m_name; ++iter) {
-				if (iter->m_func == func)
-					return iter->m_name;
+				if (iter->m_func == func) {
+					result->omo_type  = tp_self;
+					result->omo_chain = tp_self->tp_methods;
+					result->omo_decl  = iter;
+					return true;
+				}
 			}
 	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
-	return NULL;
+	return false;
 }
 
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeObjMethod_GetDoc(DeeObject const *__restrict self) {
-	dobjmethod_t func;
-	DeeTypeObject *tp_self;
-	DeeTypeMRO mro;
-	ASSERT_OBJECT(self);
-	ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
-	func    = DeeObjMethod_FUNC(self);
-	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
-	DeeTypeMRO_Init(&mro, tp_self);
-	do {
-		struct type_method const *iter;
-		if (tp_self == &DeeType_Type) {
-			char const *result;
-			result = typeobject_find_objmethod_doc((DeeTypeObject *)DeeObjMethod_SELF(self), func);
-			if (result)
-				return result;
-		}
-		iter = tp_self->tp_methods;
-		if (iter) {
-			for (; iter->m_name; ++iter) {
-				if (iter->m_func == func)
-					return iter->m_doc;
-			}
-		}
-	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
-	return NULL;
-}
-
-/* Returns the type that is implementing the bound method. */
-PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-DeeObjMethod_GetType(DeeObject const *__restrict self) {
-	dobjmethod_t func;
-	DeeTypeObject *tp_self;
-	DeeTypeMRO mro;
-	ASSERT_OBJECT(self);
-	ASSERT(DeeObjMethod_Check(self) || DeeKwObjMethod_Check(self));
-	func    = DeeObjMethod_FUNC(self);
-	tp_self = Dee_TYPE(DeeObjMethod_SELF(self));
-	DeeTypeMRO_Init(&mro, tp_self);
-	do {
-		struct type_method const *iter;
-		if (tp_self == &DeeType_Type) {
-			DeeTypeObject *result;
-			result = typeobject_find_objmethod_type((DeeTypeObject *)DeeObjMethod_SELF(self), func);
-			if (result)
-				return result;
-		}
-		iter = tp_self->tp_methods;
-		if (iter)
-			for (; iter->m_name; ++iter) {
-				if (iter->m_func == func)
-					return tp_self;
-			}
-	} while ((tp_self = DeeTypeMRO_Next(&mro, tp_self)) != NULL);
-	return Dee_TYPE(DeeObjMethod_SELF(self));
-}
-
-/* Returns the name of the function bound by the given
- * `_ClsMethod', or `NULL' if the name could not be determined. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsMethod_GetName(DeeObject const *__restrict self) {
+/* Lookup the origin of the function bound by
+ * the given `_ClsMethod', or `NULL' if unknown. */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
+                       struct objmethod_origin *__restrict result) {
 	dobjmethod_t func;
 	struct type_method const *iter;
 	ASSERT_OBJECT(self);
@@ -227,28 +143,15 @@ DeeClsMethod_GetName(DeeObject const *__restrict self) {
 	iter = DeeClsMethod_TYPE(self)->tp_methods;
 	if (iter) {
 		for (; iter->m_name; ++iter) {
-			if (iter->m_func == func)
-				return iter->m_name;
+			if (iter->m_func == func) {
+				result->omo_type  = DeeClsMethod_TYPE(self);
+				result->omo_chain = DeeClsMethod_TYPE(self)->tp_methods;
+				result->omo_decl  = iter;
+				return true;
+			}
 		}
 	}
-	return NULL;
-}
-
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsMethod_GetDoc(DeeObject const *__restrict self) {
-	dobjmethod_t func;
-	struct type_method const *iter;
-	ASSERT_OBJECT(self);
-	ASSERT(DeeClsMethod_Check(self) || DeeKwClsMethod_Check(self));
-	func = DeeClsMethod_FUNC(self);
-	iter = DeeClsMethod_TYPE(self)->tp_methods;
-	if (iter) {
-		for (; iter->m_name; ++iter) {
-			if (iter->m_func == func)
-				return iter->m_doc;
-		}
-	}
-	return NULL;
+	return false;
 }
 
 
@@ -306,67 +209,76 @@ PRIVATE struct type_cmp objmethod_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_func(DeeObjMethodObject *__restrict self) {
-	DeeTypeObject *typ;
-	typ = DeeObjMethod_GetType((DeeObject *)self);
-	return DeeClsMethod_New(typ, self->om_func);
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+		return DeeClsMethod_New(origin.omo_type, self->om_func);
+	err_unbound_attribute_string(Dee_TYPE(self), "__func__");
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_name(DeeObjMethodObject *__restrict self) {
-	char const *name;
-	name = DeeObjMethod_GetName((DeeObject *)self);
-	if unlikely(!name)
-		return_none;
-	return DeeString_NewAuto(name);
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+		return DeeString_NewAuto(origin.omo_decl->m_name);
+	err_unbound_attribute_string(Dee_TYPE(self), STR___name__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_doc(DeeObjMethodObject *__restrict self) {
-	char const *doc;
-	doc = DeeObjMethod_GetDoc((DeeObject *)self);
-	if unlikely(!doc)
-		return_none;
-	return DeeString_NewAutoUtf8(doc);
+	struct objmethod_origin origin;
+	if (likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) &&
+	    origin.omo_decl->m_doc != NULL)
+		return DeeString_NewAutoUtf8(origin.omo_decl->m_doc);
+	return_none;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 objmethod_get_type(DeeObjMethodObject *__restrict self) {
-	DeeTypeObject *result;
-	result = DeeObjMethod_GetType((DeeObject *)self);
-	Dee_Incref(result);
-	return result;
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+		return_reference_(origin.omo_type);
+	err_unbound_attribute_string(Dee_TYPE(self), STR___type__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 objmethod_get_module(DeeObjMethodObject *__restrict self) {
-	DeeTypeObject *type;
-	DREF DeeObject *result;
-	type   = DeeObjMethod_GetType((DeeObject *)self);
-	result = DeeType_GetModule(type);
-	if (!result)
-		return_none;
-	return result;
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
+		DREF DeeObject *result = DeeType_GetModule(origin.omo_type);
+		if likely(result)
+			return result;
+	}
+	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
+	return NULL;
 }
 
 DOC_DEF(objmethod_get_func_doc,
         "->?DCallable\n"
+        "#t{UnboundAttribute}"
         "The unbound class-function that is being bound by this object-method");
 DOC_DEF(objmethod_get_name_doc,
-        "->?X2?Dstring?N\n"
-        "The name of the function, or ?N if unknown");
+        "->?Dstring\n"
+        "#t{UnboundAttribute}"
+        "The name of the function");
 DOC_DEF(objmethod_get_doc_doc,
         "->?X2?Dstring?N\n"
         "The documentation string of the function being bound, or ?N if unknown");
 DOC_DEF(objmethod_get_kwds_doc,
         "->?S?Dstring\n"
+        "#t{UnboundAttribute}"
         "Returns a sequence of keyword argument names accepted by @this function\n"
         "If @this function doesn't accept keyword arguments, an empty sequence is returned");
 DOC_DEF(objmethod_get_type_doc,
         "->?DType\n"
+        "#t{UnboundAttribute}"
         "The type implementing the function that is being bound");
 DOC_DEF(objmethod_get_module_doc,
-        "->?X2?DModule?N\n"
-        "The module implementing the function that is being bound, or ?N if unknown");
+        "->?DModule\n"
+        "#t{UnboundAttribute}"
+        "The module implementing the function that is being bound");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
 	TYPE_GETTER_F("__func__", &objmethod_get_func, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_func_doc)),
@@ -385,34 +297,29 @@ PRIVATE struct type_member tpconst objmethod_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
-objmethod_getname(DeeObjMethodObject *__restrict self) {
-	char const *result = DeeObjMethod_GetName((DeeObject *)self);
-	if unlikely(result == NULL)
-		result = "<unknown>";
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 objmethod_print(DeeObjMethodObject *__restrict self,
                 dformatprinter printer, void *arg) {
-	char const *name    = objmethod_getname(self);
-	DeeTypeObject *type = DeeObjMethod_GetType((DeeObject *)self);
-	if (!type) {
-		return DeeFormat_Printf(printer, arg,
-		                        "<object method <unknown>.%s, bound to %r>",
-		                        name, self->om_this);
-	} else {
+	struct objmethod_origin origin;
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin)) {
 		return DeeFormat_Printf(printer, arg,
 		                        "<object method %k.%s, bound to %r>",
-		                        type, name, self->om_this);
+		                        origin.omo_type,
+		                        origin.omo_decl->m_name, self->om_this);
+	} else {
+		return DeeFormat_Printf(printer, arg,
+		                        "<object method <unknown>.%s, bound to %r>",
+		                        origin.omo_decl->m_name, self->om_this);
 	}
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 objmethod_printrepr(DeeObjMethodObject *__restrict self,
                     dformatprinter printer, void *arg) {
-	char const *name = objmethod_getname(self);
+	struct objmethod_origin origin;
+	char const *name = "<unknown>";
+	if likely(DeeObjMethod_GetOrigin((DeeObject *)self, &origin))
+		name = origin.omo_decl->m_name;
 	return DeeFormat_Printf(printer, arg, "%r.%s", self->om_this, name);
 }
 
@@ -854,17 +761,20 @@ kwobjmethod_call_kw(DeeKwObjMethodObject *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_func(DeeKwObjMethodObject *__restrict self) {
-	DeeTypeObject *type;
-	type = DeeObjMethod_GetType((DeeObject *)self);
-	if (!type)
-		type = Dee_TYPE(self->om_this);
-	return DeeKwClsMethod_New(type, self->om_func);
+	struct objmethod_origin origin;
+	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
+		return DeeKwClsMethod_New(origin.omo_type, self->om_func);
+	err_unbound_attribute_string(Dee_TYPE(self), "__func__");
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
-	return doc_decode_kwds((DeeObject *)self,
-	                       DeeObjMethod_GetDoc((DeeObject *)self));
+	struct objmethod_origin origin;
+	if likely(DeeKwObjMethod_GetOrigin((DeeObject *)self, &origin))
+		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
+	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
+	return NULL;
 }
 
 #define kwobjmethod_get_name       objmethod_get_name
@@ -1021,10 +931,10 @@ clsmethod_visit(DeeClsMethodObject *__restrict self,
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 clsmethod_getname(DeeClsMethodObject *__restrict self) {
-	char const *result = DeeClsMethod_GetName((DeeObject *)self);
-	if unlikely(result == NULL)
-		result = "<unknown>";
-	return result;
+	struct objmethod_origin origin;
+	if likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin))
+		return origin.omo_decl->m_name;
+	return "<unknown>";
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -1121,35 +1031,39 @@ PRIVATE struct type_cmp clsmethod_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_name(DeeClsMethodObject *__restrict self) {
-	char const *name;
-	name = DeeClsMethod_GetName((DeeObject *)self);
-	if unlikely(!name)
-		return_none;
-	return DeeString_NewAuto(name);
+	struct objmethod_origin origin;
+	if likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin))
+		return DeeString_NewAuto(origin.omo_decl->m_name);
+	err_unbound_attribute_string(Dee_TYPE(self), STR___name__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_doc(DeeClsMethodObject *__restrict self) {
-	char const *doc;
-	doc = DeeClsMethod_GetDoc((DeeObject *)self);
-	if (!doc)
-		return_none;
-	return DeeString_NewAutoUtf8(doc);
+	struct objmethod_origin origin;
+	if (likely(DeeClsMethod_GetOrigin((DeeObject *)self, &origin)) &&
+	    origin.omo_decl->m_doc != NULL)
+		return DeeString_NewAutoUtf8(origin.omo_decl->m_doc);
+	return_none;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwclsmethod_get_kwds(DeeClsMethodObject *__restrict self) {
-	return doc_decode_kwds((DeeObject *)self,
-	                       DeeClsMethod_GetDoc((DeeObject *)self));
+	struct objmethod_origin origin;
+	if likely(DeeKwClsMethod_GetOrigin((DeeObject *)self, &origin))
+		return doc_decode_kwds((DeeObject *)self, origin.omo_decl->m_doc);
+	err_unbound_attribute_string(Dee_TYPE(self), STR___kwds__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->cm_type);
-	if (!result)
-		return_none;
-	return result;
+	if likely(result)
+		return result;
+	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
+	return NULL;
 }
 
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
@@ -1157,14 +1071,16 @@ PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
 	TYPE_GETTER_F(STR___kwds__, &kwclsmethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
 	              DOC_GET(objmethod_get_kwds_doc)),
 	TYPE_GETTER_F(STR___name__, &clsmethod_get_name, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The name of @this method, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "The name of @this method"),
 	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this method, or ?N if unknown"),
 	TYPE_GETTER_F(STR___module__, &clsmethod_get_module, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "The module implementing @this method, or ?N if unknown"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "The module implementing @this method"),
 	TYPE_GETSET_END
 };
 #define clsmethod_get_kwds_doc objmethod_get_kwds_doc
@@ -1325,10 +1241,11 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 
 
 
-/* Returns the name of the function bound by the given
- * `_ClassProperty', or `NULL' if the name could not be determined. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsProperty_GetName(DeeObject const *__restrict self) {
+/* Lookup the origin of the function bound by
+ * the given `_ClassProperty', or `NULL' if unknown. */
+PUBLIC WUNUSED NONNULL((1)) bool DCALL
+DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
+                         struct clsproperty_origin *__restrict result) {
 	struct type_getset const *iter;
 	ASSERT_OBJECT(self);
 	ASSERT(DeeClsProperty_Check(self));
@@ -1337,36 +1254,22 @@ DeeClsProperty_GetName(DeeObject const *__restrict self) {
 		for (; iter->gs_name; ++iter) {
 			if (iter->gs_get == DeeClsProperty_GET(self) &&
 			    iter->gs_del == DeeClsProperty_DEL(self) &&
-			    iter->gs_set == DeeClsProperty_SET(self))
-				return iter->gs_name;
+			    iter->gs_set == DeeClsProperty_SET(self)) {
+				result->cpo_type  = DeeClsProperty_TYPE(self);
+				result->cpo_chain = DeeClsProperty_TYPE(self)->tp_getsets;
+				result->cpo_decl  = iter;
+				return true;
+			}
 		}
 	}
-	return NULL;
-}
-
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsProperty_GetDoc(DeeObject const *__restrict self) {
-	struct type_getset const *iter;
-	ASSERT_OBJECT(self);
-	ASSERT(DeeClsProperty_Check(self));
-	iter = DeeClsProperty_TYPE(self)->tp_getsets;
-	if (iter) {
-		for (; iter->gs_name; ++iter) {
-			if (iter->gs_get == DeeClsProperty_GET(self) &&
-			    iter->gs_del == DeeClsProperty_DEL(self) &&
-			    iter->gs_set == DeeClsProperty_SET(self))
-				return iter->gs_doc;
-		}
-	}
-	return NULL;
+	return false;
 }
 
 
 /* Create a new unbound class property object. */
 PUBLIC WUNUSED NONNULL((1)) DREF /*ClsProperty*/ DeeObject *DCALL
 DeeClsProperty_New(DeeTypeObject *__restrict type,
-                   dgetmethod_t get,
-                   ddelmethod_t del,
+                   dgetmethod_t get, ddelmethod_t del,
                    dsetmethod_t set) {
 	DeeClsPropertyObject *result;
 	ASSERT_OBJECT_TYPE(type, &DeeType_Type);
@@ -1514,12 +1417,11 @@ PRIVATE struct type_method tpconst clsproperty_methods[] = {
 
 PRIVATE ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) char const *DCALL
 clsproperty_getname(DeeClsPropertyObject *__restrict self) {
-	char const *result = DeeClsProperty_GetName((DeeObject *)self);
-	if unlikely(result == NULL)
-		result = "<unknown>";
-	return result;
+	struct clsproperty_origin origin;
+	if likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin))
+		return origin.cpo_decl->gs_name;
+	return "<unknown>";
 }
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 clsproperty_print(DeeClsPropertyObject *__restrict self,
@@ -1549,29 +1451,30 @@ clsproperty_printrepr(DeeClsPropertyObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_name(DeeClsPropertyObject *__restrict self) {
-	char const *name;
-	name = DeeClsProperty_GetName((DeeObject *)self);
-	if unlikely(!name)
-		return_none;
-	return DeeString_NewAuto(name);
+	struct clsproperty_origin origin;
+	if likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin))
+		return DeeString_NewAuto(origin.cpo_decl->gs_name);
+	err_unbound_attribute_string(&DeeClsProperty_Type, STR___name__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_doc(DeeClsPropertyObject *__restrict self) {
-	char const *doc;
-	doc = DeeClsProperty_GetDoc((DeeObject *)self);
-	if (!doc)
-		return_none;
-	return DeeString_NewAutoUtf8(doc);
+	struct clsproperty_origin origin;
+	if (likely(DeeClsProperty_GetOrigin((DeeObject *)self, &origin)) &&
+	    origin.cpo_decl->gs_doc != NULL)
+		return DeeString_NewAutoUtf8(origin.cpo_decl->gs_doc);
+	return_none;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsproperty_get_module(DeeClsPropertyObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->cp_type);
-	if unlikely(!result)
-		return_none;
-	return result;
+	if likely(result)
+		return result;
+	err_unbound_attribute_string(&DeeClsProperty_Type, STR___module__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1600,14 +1503,16 @@ PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a setter callback"),
 	TYPE_GETTER_F(STR___name__, &clsproperty_get_name, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The name of @this property, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "The name of @this property"),
 	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc, TYPE_GETSET_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this property, or ?N if unknown"),
 	TYPE_GETTER_F(STR___module__, &clsproperty_get_module, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "The module implementing @this property, or ?N if unknown"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "The module implementing @this property"),
 	TYPE_GETSET_END
 };
 
@@ -1846,9 +1751,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 clsmember_get_module(DeeClsMemberObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->cm_type);
-	if (!result)
-		return_none;
-	return result;
+	if likely(result)
+		return result;
+	err_unbound_attribute_string(&DeeClsMember_Type, STR___module__);
+	return NULL;
 }
 
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
@@ -1859,8 +1765,9 @@ PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	              "->?Dbool\n"
 	              "Returns ?t if @this member can be modified"),
 	TYPE_GETTER_F(STR___module__, &clsmember_get_module, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "The module implementing @this member, or ?N if unknown"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "The module implementing @this member"),
 	TYPE_GETSET_END
 };
 
@@ -1911,18 +1818,6 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_class_members = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw
 };
-
-
-
-/* Make sure that we can re-use some functions from `ClassMethod' */
-STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
-              offsetof(DeeClsMethodObject, cm_func));
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeCMethod_CallFunc(self->cm_func, argc, argv);
-}
 
 PRIVATE WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
 cmethod_getmodsym(DeeModuleObject *__restrict mod,
@@ -2019,133 +1914,109 @@ cmethod_gettypefield(DeeModuleObject *mod,
 	return NULL;
 }
 
+
+/* Try to figure out doc information about `func' */
+PUBLIC WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_cmethod_origin_init(struct cmethod_origin *__restrict result, Dee_cmethod_t func) {
+	bzero(result, sizeof(*result));
+	result->cmo_module = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&func);
+	if likely(result->cmo_module) {
+		result->cmo_modsym = cmethod_getmodsym(result->cmo_module, func);
+		if (result->cmo_modsym) {
+			result->cmo_name = result->cmo_modsym->ss_name;
+			result->cmo_doc  = result->cmo_modsym->ss_doc;
+		} else {
+			result->cmo_member = cmethod_gettypefield(result->cmo_module, &result->cmo_type, func);
+			if (result->cmo_member) {
+				result->cmo_name = result->cmo_member->m_name;
+				result->cmo_doc  = result->cmo_member->m_doc;
+			}
+		}
+	}
+	if (result->cmo_name)
+		return true;
+	Dee_cmethod_origin_fini(result);
+	return false;
+}
+
+
+
+
+
+
+/* Make sure that we can re-use some functions from `ClassMethod' */
+STATIC_ASSERT(offsetof(DeeCMethodObject, cm_func) ==
+              offsetof(DeeClsMethodObject, cm_func));
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cmethod_call(DeeCMethodObject *self, size_t argc, DeeObject *const *argv) {
+	return DeeCMethod_CallFunc(self->cm_func, argc, argv);
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_module(DeeCMethodObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (!result)
-		return_none;
-	return result;
+	if (result)
+		return result;
+	err_unbound_attribute_string(Dee_TYPE(self), STR___module__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_get_kwds(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *mod;
-	DREF DeeObject *result;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (mod) {
-		struct module_symbol *symbol;
-		struct type_member const *member;
-		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func);
-		if (symbol) {
-			if (symbol->ss_doc) {
-				result = doc_decode_kwds((DeeObject *)mod,
-				                         MODULE_SYMBOL_GETDOCSTR(symbol));
-				Dee_Decref(mod);
-				return result;
-			}
+	struct cmethod_origin origin;
+	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+		DREF DeeObject *result;
+		if (origin.cmo_doc) {
+			DeeObject *owner = (DeeObject *)self;
+			if (origin.cmo_module)
+				owner = (DeeObject *)origin.cmo_module;
+			if (origin.cmo_type)
+				owner = (DeeObject *)origin.cmo_type;
+			result = doc_decode_kwds(owner, origin.cmo_doc);
 		} else {
-			member = cmethod_gettypefield(mod, &type, self->cm_func);
-			if (member) {
-				if (member->m_doc) {
-					result = doc_decode_kwds((DeeObject *)mod,
-					                         member->m_doc);
-				} else {
-					result = Dee_EmptySeq;
-					Dee_Incref(Dee_EmptySeq);
-				}
-				Dee_Decref(mod);
-				Dee_Decref(type);
-				return result;
-			}
+			result = Dee_EmptySeq;
+			Dee_Incref(result);
 		}
-		Dee_Decref(mod);
+		Dee_cmethod_origin_fini(&origin);
+		return result;
 	}
-	return_empty_seq;
+	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___kwds__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_name(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *mod;
-	DREF DeeObject *result;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (mod) {
-		struct module_symbol *symbol;
-		struct type_member const *member;
-		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func);
-		if (symbol) {
-			result = (DREF DeeObject *)module_symbol_getnameobj(symbol);
-			Dee_Decref(mod);
-			return result;
-		}
-		member = cmethod_gettypefield(mod, &type, self->cm_func);
-		if (member) {
-			result = DeeString_NewAuto(member->m_name);
-			Dee_Decref(type);
-			Dee_Decref(mod);
-			return result;
-		}
-		Dee_Decref(mod);
+	struct cmethod_origin origin;
+	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+		DREF DeeObject *result = DeeString_NewAuto(origin.cmo_name);
+		Dee_cmethod_origin_fini(&origin);
+		return result;
 	}
-	return_none;
+	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___name__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_type(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *mod;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (mod) {
-		struct module_symbol *symbol;
-		struct type_member const *member;
-		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func);
-		if (symbol) {
-			Dee_Decref(mod);
-			return_none;
-		}
-		member = cmethod_gettypefield(mod, &type, self->cm_func);
-		if (member) {
-			Dee_Decref(mod);
-			return (DREF DeeObject *)type;
-		}
-		Dee_Decref(mod);
+	struct cmethod_origin origin;
+	if (DeeKwCMethod_GetOrigin(self, &origin)) {
+		Dee_XDecref(origin.cmo_module);
+		if (origin.cmo_type)
+			return (DREF DeeObject *)origin.cmo_type;
 	}
-	return_none;
+	err_unbound_attribute_string(&DeeKwCMethod_Type, STR___type__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cmethod_get_doc(DeeCMethodObject *__restrict self) {
-	DREF DeeModuleObject *mod;
-	DREF DeeObject *result;
-	mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&self->cm_func);
-	if (mod) {
-		struct module_symbol *symbol;
-		struct type_member const *member;
-		DREF DeeTypeObject *type;
-		symbol = cmethod_getmodsym(mod, self->cm_func);
-		if (symbol) {
-			if (symbol->ss_doc) {
-				result = (DREF DeeObject *)module_symbol_getdocobj(symbol);
-				Dee_Decref(mod);
-				return result;
-			}
-		} else {
-			member = cmethod_gettypefield(mod, &type, self->cm_func);
-			if (member) {
-				if (member->m_doc) {
-					result = DeeString_NewAutoUtf8(member->m_doc);
-				} else {
-					result = Dee_None;
-					Dee_Incref(Dee_None);
-				}
-				Dee_Decref(mod);
-				Dee_Decref(type);
-				return result;
-			}
-		}
-		Dee_Decref(mod);
+	struct cmethod_origin origin;
+	if (DeeKwCMethod_GetOrigin(self, &origin) && origin.cmo_doc) {
+		DREF DeeObject *result = DeeString_NewAutoUtf8(origin.cmo_doc);
+		Dee_cmethod_origin_fini(&origin);
+		return result;
 	}
 	return_none;
 }
@@ -2158,16 +2029,17 @@ PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
 	TYPE_GETTER_F(STR___kwds__, &kwcmethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
 	              DOC_GET(cmethod_get_kwds_doc)),
 	TYPE_GETTER_F(STR___module__, &cmethod_get_module, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "Returns the module defining @this method, or ?N if that module could not be determined"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the module defining @this method"),
 	TYPE_GETTER_F(STR___type__, &cmethod_get_type, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?DType?N\n"
-	              "Returns the type as part of which @this method was declared, or ?N "
-	              /**/ "if @this method was declared as part of a module, or if the type could "
-	              /**/ "not be located"),
+	              "->?DType\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the type as part of which @this method was declared."),
 	TYPE_GETTER_F(STR___name__, &cmethod_get_name, TYPE_GETSET_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the name of @this method, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the name of @this method"),
 	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this method, or ?N if unknown"),
@@ -2306,19 +2178,19 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 
 
 /* Make sure that we can re-use some functions from `CMethod' */
-STATIC_ASSERT(offsetof(DeeKwCMethodObject, cm_func) ==
+STATIC_ASSERT(offsetof(DeeKwCMethodObject, kcm_func) ==
               offsetof(DeeCMethodObject, cm_func));
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_call(DeeKwCMethodObject *self, size_t argc, DeeObject *const *argv) {
-	return DeeKwCMethod_CallFunc(self->cm_func, argc, argv, NULL);
+	return DeeKwCMethod_CallFunc(self->kcm_func, argc, argv, NULL);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 kwcmethod_call_kw(DeeKwCMethodObject *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	return DeeKwCMethod_CallFunc(self->cm_func, argc, argv, kw);
+	return DeeKwCMethod_CallFunc(self->kcm_func, argc, argv, kw);
 }
 
 #define kwcmethod_print     cmethod_print
@@ -2397,34 +2269,11 @@ DeeKwCMethod_New(Dee_kwcmethod_t func) {
 	DREF DeeKwCMethodObject *result;
 	result = DeeObject_MALLOC(DeeKwCMethodObject);
 	if likely(result) {
-		result->cm_func = func;
+		result->kcm_func = func;
 		DeeObject_Init(result, &DeeKwCMethod_Type);
 	}
 	return (DREF DeeObject *)result;
 }
-
-
-/* Try to figure out doc information about `func' */
-PUBLIC NONNULL((1, 2)) void DCALL
-DeeCMethod_DocInfo(Dee_cmethod_t func, struct Dee_cmethod_docinfo *__restrict result) {
-	bzero(result, sizeof(*result));
-	result->dmdi_mod = (DREF DeeModuleObject *)DeeModule_FromStaticPointer(*(void **)&func);
-	if likely(result->dmdi_mod) {
-		result->dmdi_modsym = cmethod_getmodsym(result->dmdi_mod, func);
-		if (result->dmdi_modsym) {
-			result->dmdi_name = result->dmdi_modsym->ss_name;
-			result->dmdi_doc  = result->dmdi_modsym->ss_doc;
-		} else {
-			result->dmdi_typmem = cmethod_gettypefield(result->dmdi_mod, &result->dmdi_typ, func);
-			if (result->dmdi_typmem) {
-				result->dmdi_name = result->dmdi_typmem->m_name;
-				result->dmdi_doc  = result->dmdi_typmem->m_doc;
-			}
-		}
-	}
-}
-
-
 
 
 /* Invoke a given c-function callback.

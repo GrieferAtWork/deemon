@@ -31,15 +31,17 @@
 DECL_BEGIN
 
 #ifdef DEE_SOURCE
+#define Dee_objmethod_origin   objmethod_origin
 #define Dee_objmethod_object   objmethod_object
 #define Dee_kwobjmethod_object kwobjmethod_object
 #define Dee_clsmethod_object   clsmethod_object
 #define Dee_kwclsmethod_object kwclsmethod_object
+#define Dee_clsproperty_origin clsproperty_origin
 #define Dee_clsproperty_object clsproperty_object
 #define Dee_clsmember_object   clsmember_object
+#define Dee_cmethod_origin     cmethod_origin
 #define Dee_cmethod_object     cmethod_object
 #define Dee_kwcmethod_object   kwcmethod_object
-#define Dee_cmethod_docinfo    cmethod_docinfo
 #define Dee_module_object      module_object
 #define DEFINE_OBJMETHOD       Dee_DEFINE_OBJMETHOD
 #define DEFINE_KWOBJMETHOD     Dee_DEFINE_KWOBJMETHOD
@@ -88,6 +90,11 @@ typedef Dee_cmethod_t   dcmethod_t;
 typedef Dee_kwcmethod_t dkwcmethod_t;
 #endif /* DEE_SOURCE */
 
+struct Dee_objmethod_origin {
+	DeeTypeObject                *omo_type;  /* [1..1] Declaring type. */
+	struct Dee_type_method const *omo_chain; /* [1..1] Method declaration chain (either `omo_type->tp_methods' or `omo_type->tp_class_methods'). */
+	struct Dee_type_method const *omo_decl;  /* [1..1] Method declaration in question. */
+};
 
 struct Dee_objmethod_object {
 	Dee_OBJECT_HEAD /* Object-bound member function. */
@@ -120,20 +127,13 @@ DeeObjMethod_New(Dee_objmethod_t func, DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeKwObjMethod_New(Dee_kwobjmethod_t func, DeeObject *__restrict self);
 
-/* Returns the name of the function bound by the given
- * `_ObjMethod', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeObjMethod_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeObjMethod_GetDoc(DeeObject const *__restrict self);
-
-/* Returns the type that is implementing the bound method. */
-DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-DeeObjMethod_GetType(DeeObject const *__restrict self);
-
-#define DeeKwObjMethod_GetName(self) DeeObjMethod_GetName(self)
-#define DeeKwObjMethod_GetDoc(self)  DeeObjMethod_GetDoc(self)
-#define DeeKwObjMethod_GetType(self) DeeObjMethod_GetType(self)
+/* Lookup the origin of the function bound by
+ * the given `_ObjMethod', or `NULL' if unknown. */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeObjMethod_GetOrigin(DeeObject const *__restrict self,
+                       struct Dee_objmethod_origin *__restrict result);
+#define DeeKwObjMethod_GetOrigin(self, result) \
+	DeeObjMethod_GetOrigin(self, result)
 
 struct Dee_clsmethod_object {
 	/* Unbound member function (`ClassMethod') (may be invoked as a thiscall object). */
@@ -169,16 +169,21 @@ DeeClsMethod_New(DeeTypeObject *__restrict type, Dee_objmethod_t func);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*KwClsMethod*/ DeeObject *DCALL
 DeeKwClsMethod_New(DeeTypeObject *__restrict type, Dee_kwobjmethod_t func);
 
-/* Returns the name of the function bound by the given
- * `_ClsMethod', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsMethod_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsMethod_GetDoc(DeeObject const *__restrict self);
-#define DeeKwClsMethod_GetName(self) DeeClsMethod_GetName(self)
-#define DeeKwClsMethod_GetDoc(self)  DeeClsMethod_GetDoc(self)
+/* Lookup the origin of the function bound by
+ * the given `_ClsMethod', or `NULL' if unknown. */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeClsMethod_GetOrigin(DeeObject const *__restrict self,
+                       struct Dee_objmethod_origin *__restrict result);
+#define DeeKwClsMethod_GetOrigin(self, result) \
+	DeeClsMethod_GetOrigin(self, result)
 
 
+
+struct Dee_clsproperty_origin {
+	DeeTypeObject                *cpo_type;  /* [1..1] Declaring type. */
+	struct Dee_type_getset const *cpo_chain; /* [1..1] Method declaration chain (either `cpo_type->tp_methods' or `cpo_type->tp_class_methods'). */
+	struct Dee_type_getset const *cpo_decl;  /* [1..1] Method declaration in question. */
+};
 
 struct Dee_clsproperty_object {
 	Dee_OBJECT_HEAD
@@ -209,12 +214,11 @@ DeeClsProperty_New(DeeTypeObject *__restrict type,
                    Dee_delmethod_t del,
                    Dee_setmethod_t set); /* TODO: is-bound callback */
 
-/* Returns the name of the function bound by the given
- * `_ClassProperty', or `NULL' if the name could not be determined. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsProperty_GetName(DeeObject const *__restrict self);
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) char const *DCALL
-DeeClsProperty_GetDoc(DeeObject const *__restrict self);
+/* Lookup the origin of the function bound by
+ * the given `_ClassProperty', or `NULL' if unknown. */
+DFUNDEF WUNUSED NONNULL((1)) bool DCALL
+DeeClsProperty_GetOrigin(DeeObject const *__restrict self,
+                         struct Dee_clsproperty_origin *__restrict result);
 
 
 
@@ -237,19 +241,41 @@ DeeClsMember_New(DeeTypeObject *__restrict type,
  * objects and is the type for some helper functions found in the
  * deemon module which the compiler generates call to in some rare
  * corner cases. */
+struct Dee_module_object;
+struct Dee_cmethod_origin {
+	DREF struct Dee_module_object *cmo_module; /* [0..1] Module containing the C-method. */
+	struct module_symbol          *cmo_modsym; /* [0..1] Module symbol that exposes `func'. */
+	DREF DeeTypeObject            *cmo_type;   /* [0..1] Type containing the C-method. */
+	struct type_member const      *cmo_member; /* [0..1] Member of `cmo_type' that exposes the C-method. */
+	char const                    *cmo_name;   /* [1..1] Function name. */
+	char const                    *cmo_doc;    /* [0..1] Function doc string. */
+};
+
+/* Search for the origin of "func", filling in `self'
+ * @return: true:  Success (`self' was initialized)
+ * @return: false: Failure (origin of `func' could not be determined) */
+DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL
+Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict self,
+                        Dee_cmethod_t func);
+#define Dee_cmethod_origin_fini(self) \
+	(Dee_XDecref((self)->cmo_module), \
+	 Dee_XDecref((self)->cmo_type))
+
 struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
-	Dee_cmethod_t   cm_func; /* [1..1][const] */
+	Dee_cmethod_t cm_func; /* [1..1][const] */
 };
+
 struct Dee_kwcmethod_object {
 	Dee_OBJECT_HEAD
-	Dee_kwcmethod_t cm_func; /* [1..1][const] */
+	Dee_kwcmethod_t kcm_func; /* [1..1][const] */
 };
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeCMethod_FUNC(x)         ((DeeCMethodObject *)Dee_REQUIRES_OBJECT(x))->cm_func
 #define DeeCMethod_Check(x)        DeeObject_InstanceOfExact(x, &DeeCMethod_Type) /* `_CMethod' is final. */
 #define DeeCMethod_CheckExact(x)   DeeObject_InstanceOfExact(x, &DeeCMethod_Type)
+#define DeeKwCMethod_FUNC(x)       ((DeeKwCMethodObject *)Dee_REQUIRES_OBJECT(x))->kcm_func
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
 #define Dee_DEFINE_CMETHOD(name, func) \
@@ -268,26 +294,9 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func);
 
-
-struct Dee_module_object;
-struct Dee_cmethod_docinfo {
-	char const                    *dmdi_name;   /* [0..1] Function name. */
-	char const                    *dmdi_doc;    /* [0..1] Function doc string. */
-	DREF struct Dee_module_object *dmdi_mod;    /* [0..1] Module containing the C-method. */
-	struct module_symbol          *dmdi_modsym; /* [0..1] Module symbol that exposes `func'. */
-	DREF DeeTypeObject            *dmdi_typ;    /* [0..1] Type containing the C-method. */
-	struct type_member const      *dmdi_typmem; /* [0..1] Member of `dmdi_typ' that exposes the C-method. */
-};
-
-#define Dee_cmethod_docinfo_fini(self) \
-	(Dee_XDecref((self)->dmdi_mod),     \
-	 Dee_XDecref((self)->dmdi_typ))
-
-/* Try to figure out doc information about `func' */
-DFUNDEF NONNULL((1, 2)) void DCALL
-DeeCMethod_DocInfo(Dee_cmethod_t func, struct Dee_cmethod_docinfo *__restrict result);
-#define DeeKwCMethod_DocInfo(func, result) \
-	DeeCMethod_DocInfo((Dee_cmethod_t)(void const *)Dee_REQUIRES_KWCMETHOD(func), result)
+/* Try to figure out information about the origin of `self' */
+#define DeeCMethod_GetOrigin(self, result)   Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))
+#define DeeKwCMethod_GetOrigin(self, result) Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))
 
 
 /* Invoke a given c-function callback.

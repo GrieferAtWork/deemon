@@ -1270,7 +1270,9 @@
 #define clsmember_object               Dee_clsmember_object
 #define clsmethod_object               Dee_clsmethod_object
 #define clsproperty_object             Dee_clsproperty_object
+#define clsproperty_origin             Dee_clsproperty_origin
 #define cmethod_object                 Dee_cmethod_object
+#define cmethod_origin                 Dee_cmethod_origin
 #define code_frame                     Dee_code_frame
 #define code_object                    Dee_code_object
 #define compiler_error_loc             Dee_compiler_error_loc
@@ -1325,6 +1327,7 @@
 #define none_object                    Dee_none_object
 #define object                         Dee_object_
 #define objmethod_object               Dee_objmethod_object
+#define objmethod_origin               Dee_objmethod_origin
 #define opinfo                         Dee_opinfo
 #define property_object                Dee_property_object
 #define regex_range                    Dee_regex_range

@@ -667,12 +667,12 @@ got_small_method:
 			if (func->a_type == AST_CONSTEXPR && argc <= 1 &&
 			    (DeeObjMethod_Check(func->a_constexpr) ||
 			     DeeKwObjMethod_Check(func->a_constexpr))) {
-				char const *name = DeeObjMethod_GetName(func->a_constexpr);
-				if (name) {
+				struct objmethod_origin origin;
+				if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 					/* call to some other object. */
 					int32_t attrid;
 					DREF DeeObject *name_ob;
-					name_ob = DeeString_New(name);
+					name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 					if unlikely(!name_ob)
 						goto err;
 					attrid = asm_newconst(name_ob);
@@ -1048,11 +1048,11 @@ invoke_cattr_funsym_tuple:
 		if (func->a_type == AST_CONSTEXPR &&
 		    (DeeObjMethod_Check(func->a_constexpr) ||
 		     DeeKwObjMethod_Check(func->a_constexpr))) {
-			char const *name = DeeObjMethod_GetName(func->a_constexpr);
-			if (name) {
+			struct objmethod_origin origin;
+			if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 				int32_t attrid;
 				DREF DeeObject *name_ob;
-				name_ob = DeeString_New(name);
+				name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 				if unlikely(!name_ob)
 					goto err;
 				attrid = asm_newconst(name_ob);
@@ -1174,11 +1174,11 @@ check_getattr_base_symbol_class_tuple:
 				if (func->a_type == AST_CONSTEXPR &&
 				    (DeeObjMethod_Check(func->a_constexpr) ||
 				     DeeKwObjMethod_Check(func->a_constexpr))) {
-					char const *name = DeeObjMethod_GetName(func->a_constexpr);
-					if (name) {
+					struct objmethod_origin origin;
+					if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 						int32_t attrid;
 						DREF DeeObject *name_ob;
-						name_ob = DeeString_New(name);
+						name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 						if unlikely(!name_ob)
 							goto err;
 						attrid = asm_newconst(name_ob);
@@ -1644,11 +1644,11 @@ got_method:
 	if (func->a_type == AST_CONSTEXPR &&
 	    (DeeObjMethod_Check(func->a_constexpr) ||
 	     DeeKwObjMethod_Check(func->a_constexpr))) {
-		char const *name = DeeObjMethod_GetName(func->a_constexpr);
-		if (name) {
+		struct objmethod_origin origin;
+		if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 			int32_t attrid;
 			DREF DeeObject *name_ob;
-			name_ob = DeeString_New(name);
+			name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 			if unlikely(!name_ob)
 				goto err;
 			attrid = asm_newconst(name_ob);
@@ -1865,11 +1865,11 @@ asm_gcall_kw_expr(struct ast *__restrict func,
 	if (func->a_type == AST_CONSTEXPR &&
 	    (DeeObjMethod_Check(func->a_constexpr) ||
 	     DeeKwObjMethod_Check(func->a_constexpr))) {
-		char const *name = DeeObjMethod_GetName(func->a_constexpr);
-		if (name) {
+		struct objmethod_origin origin;
+		if (DeeObjMethod_GetOrigin(func->a_constexpr, &origin)) {
 			int32_t attrid;
 			DREF DeeObject *name_ob;
-			name_ob = DeeString_New(name);
+			name_ob = DeeString_NewAuto(origin.omo_decl->m_name);
 			if unlikely(!name_ob)
 				goto err;
 			attrid = asm_newconst(name_ob);

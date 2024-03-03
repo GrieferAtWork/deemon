@@ -32,7 +32,6 @@ EXPORTS
 	_DeeBytes_NewView@16=DeeBytes_NewView@16
 	_DeeBytes_ResizeBuffer@8=DeeBytes_ResizeBuffer@8
 	_DeeBytes_TruncateBuffer@8=DeeBytes_TruncateBuffer@8
-	_DeeCMethod_DocInfo@8=DeeCMethod_DocInfo@8
 	_DeeCMethod_New@4=DeeCMethod_New@4
 	_DeeCachedDict_New@4=DeeCachedDict_New@4
 	_DeeCell_CmpXch@12=DeeCell_CmpXch@12
@@ -59,11 +58,9 @@ EXPORTS
 	_DeeClass_TryGetOperator@8=DeeClass_TryGetOperator@8
 	_DeeClass_TryGetPrivateOperator@8=DeeClass_TryGetPrivateOperator@8
 	_DeeClsMember_New@8=DeeClsMember_New@8
-	_DeeClsMethod_GetDoc@4=DeeClsMethod_GetDoc@4
-	_DeeClsMethod_GetName@4=DeeClsMethod_GetName@4
+	_DeeClsMethod_GetOrigin@8=DeeClsMethod_GetOrigin@8
 	_DeeClsMethod_New@8=DeeClsMethod_New@8
-	_DeeClsProperty_GetDoc@4=DeeClsProperty_GetDoc@4
-	_DeeClsProperty_GetName@4=DeeClsProperty_GetName@4
+	_DeeClsProperty_GetOrigin@8=DeeClsProperty_GetOrigin@8
 	_DeeClsProperty_New@16=DeeClsProperty_New@16
 	_DeeCode_FindDDI@20=DeeCode_FindDDI@20
 	_DeeCode_GetASymbolName@8=DeeCode_GetASymbolName@8
@@ -535,9 +532,7 @@ EXPORTS
 	_DeeNotify_BroadcastString@8=DeeNotify_BroadcastString@8
 	_DeeNotify_EndListen@16=DeeNotify_EndListen@16
 	_DeeNotify_StartListen@16=DeeNotify_StartListen@16
-	_DeeObjMethod_GetDoc@4=DeeObjMethod_GetDoc@4
-	_DeeObjMethod_GetName@4=DeeObjMethod_GetName@4
-	_DeeObjMethod_GetType@4=DeeObjMethod_GetType@4
+	_DeeObjMethod_GetOrigin@8=DeeObjMethod_GetOrigin@8
 	_DeeObjMethod_New@8=DeeObjMethod_New@8
 	_DeeObject_Add@8=DeeObject_Add@8
 	_DeeObject_AddInt8@8=DeeObject_AddInt8@8
@@ -1115,6 +1110,7 @@ EXPORTS
 	_Dee_bytes_printer_putc@8=Dee_bytes_printer_putc@8
 	_Dee_bytes_printer_release@8=Dee_bytes_printer_release@8
 	_Dee_bytes_printer_repeat@12=Dee_bytes_printer_repeat@12
+	_Dee_cmethod_origin_init@8=Dee_cmethod_origin_init@8
 	_Dee_ddi_next_regs@8=Dee_ddi_next_regs@8
 	_Dee_ddi_next_simple@8=Dee_ddi_next_simple@8
 	_Dee_ddi_next_state@12=Dee_ddi_next_state@12

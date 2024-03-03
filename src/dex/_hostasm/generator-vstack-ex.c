@@ -1428,10 +1428,10 @@ vcall_kwcmethod(struct fungen *__restrict self,
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* [args...], kw */
 
 	/* Optimizations for special C methods from the builtin deemon module. */
-	if (func == DeeBuiltin_Compare.cm_func) {
+	if (func == DeeBuiltin_Compare.kcm_func) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopcompare(self);*/
-	} else if (func == DeeBuiltin_Import.cm_func) {
+	} else if (func == DeeBuiltin_Import.kcm_func) {
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopimport(self);*/
 	}
@@ -1740,17 +1740,21 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		DO(fg_vpush_const(self, func->om_this)); /* [args...], this */
 		DO(fg_vrrot(self, true_argc + 1));       /* this, [args...] */
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-			doc.di_doc = DeeObjMethod_GetDoc((DeeObject *)func);
-			if (doc.di_doc != NULL)
-				doc.di_typ = DeeObjMethod_GetType((DeeObject *)func);
+			struct objmethod_origin origin;
+			if (DeeObjMethod_GetOrigin((DeeObject *)func, &origin)) {
+				doc.di_typ = origin.omo_type;
+				doc.di_doc = origin.omo_decl->m_doc;
+			}
 		}
 		return vcall_objmethod(self, func->om_func, true_argc, &doc, NULL, 0);
 	} else if (func_type == &DeeKwObjMethod_Type) {
 		DeeKwObjMethodObject *func = (DeeKwObjMethodObject *)func_obj;
 		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-			doc.di_doc = DeeKwObjMethod_GetDoc((DeeObject *)func);
-			if (doc.di_doc != NULL)
-				doc.di_typ = DeeKwObjMethod_GetType((DeeObject *)func);
+			struct objmethod_origin origin;
+			if (DeeKwObjMethod_GetOrigin((DeeObject *)func, &origin)) {
+				doc.di_typ = origin.omo_type;
+				doc.di_doc = origin.omo_decl->m_doc;
+			}
 			DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL)); /* func, [args...], kw */
 		}                                        /* func, [args...], kw */
 		DO(fg_vpop_at(self, true_argc + 2));     /* [args...], kw */
@@ -1767,7 +1771,9 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->ob_type)); /* [args...], this */
 			DO(fg_vrrot(self, argc + 1));      /* this, [args...] */
 			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-				doc.di_doc = DeeClsMethod_GetDoc((DeeObject *)func);
+				struct objmethod_origin origin;
+				if (DeeClsMethod_GetOrigin((DeeObject *)func, &origin))
+					doc.di_doc = origin.omo_decl->m_doc;
 				doc.di_typ = func->cm_type;
 			}
 			return vcall_objmethod(self, func->cm_func, argc, &doc, NULL, 0);
@@ -1777,7 +1783,9 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		if (true_argc >= 1) {
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
 			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-				doc.di_doc = DeeKwClsMethod_GetDoc((DeeObject *)func);
+				struct objmethod_origin origin;
+				if (DeeKwClsMethod_GetOrigin((DeeObject *)func, &origin))
+					doc.di_doc = origin.omo_decl->m_doc;
 				doc.di_typ = func->cm_type;
 				DO(vinline_kwds_and_replace_with_null(self, &argc, &doc, NULL, NULL)); /* func, this, [args...], kw */
 			}                                                                          /* func, this, [args...], kw */
@@ -1794,8 +1802,11 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->cp_type)); /* func, this */
 			DO(fg_vpop_at(self, 2));                                            /* this */
 			doc.di_typ = func->cp_type;
-			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE))
-				doc.di_doc = DeeClsProperty_GetDoc((DeeObject *)func);
+			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
+				struct clsproperty_origin origin;
+				if (DeeClsProperty_GetOrigin((DeeObject *)func, &origin))
+					doc.di_doc = origin.cpo_decl->gs_doc;
+			}
 			return vcall_getmethod(self, func->cp_get, &doc, NULL, 0);
 		}
 	} else if (func_type == &DeeClsMember_Type) {
@@ -1809,33 +1820,41 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		}
 	} else if (func_type == &DeeCMethod_Type) {
 		int result;
-		struct cmethod_docinfo di;
+		struct cmethod_origin origin;
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self));           /* func, [args...] */
 		DO(fg_vpop_at(self, true_argc + 1)); /* [args...] */
-		DeeCMethod_DocInfo(func->cm_func, &di);
-		doc.di_doc = di.dmdi_doc;
-		doc.di_mod = di.dmdi_mod;
-		doc.di_typ = di.dmdi_typ;
-		result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
-		Dee_cmethod_docinfo_fini(&di);
+		if (DeeCMethod_GetOrigin(func, &origin)) {
+			doc.di_doc = origin.cmo_doc;
+			doc.di_mod = origin.cmo_module;
+			doc.di_typ = origin.cmo_type;
+			result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
+			Dee_cmethod_origin_fini(&origin);
+		} else {
+			result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
+		}
 		return result;
 	} else if (func_type == &DeeKwCMethod_Type) {
 		int result;
 		DeeKwCMethodObject *func = (DeeKwCMethodObject *)func_obj; /* func, [args...], kw */
 		DO(fg_vpop_at(self, true_argc + 2));                       /* [args...], kw */
 		if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) {
-			result = vcall_kwcmethod(self, func->cm_func, true_argc, &doc);
+			result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
 		} else {
-			struct cmethod_docinfo di;
-			DeeKwCMethod_DocInfo(func->cm_func, &di);
-			doc.di_doc = di.dmdi_doc;
-			doc.di_mod = di.dmdi_mod;
-			doc.di_typ = di.dmdi_typ;
-			result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
-			if likely(result == 0)
-				result = vcall_kwcmethod(self, func->cm_func, true_argc, &doc);
-			Dee_cmethod_docinfo_fini(&di);
+			struct cmethod_origin origin;
+			if (DeeCMethod_GetOrigin(func, &origin)) {
+				doc.di_doc = origin.cmo_doc;
+				doc.di_mod = origin.cmo_module;
+				doc.di_typ = origin.cmo_type;
+				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
+				if likely(result == 0)
+					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
+				Dee_cmethod_origin_fini(&origin);
+			} else {
+				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
+				if likely(result == 0)
+					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
+			}
 		}
 		return result;
 	} else if (func_type == &DeeType_Type) {
@@ -2242,7 +2261,7 @@ vopcallkw_consttype(struct fungen *__restrict self,
 		DO(fg_vswap(self));                    /* func, kw, [args...], argc, argv */
 		DO(fg_vlrot(self, true_argc + 3));     /* func, [args...], argc, argv, kw */
 		DO(fg_vlrot(self, true_argc + 4));     /* [args...], argc, argv, kw, func */
-		DO(fg_vind(self, offsetof(DeeKwCMethodObject, cm_func))); /* [args...], argc, argv, kw, func->cm_func */
+		DO(fg_vind(self, offsetof(DeeKwCMethodObject, kcm_func))); /* [args...], argc, argv, kw, func->kcm_func */
 		return fg_vcalldynapi_ex(self, VCALL_CC_OBJECT, 3, true_argc + 3); /* result */
 	} else if (func_type == &DeeNone_Type) {
 		/* Special case: call where this-argument is "none" -> pop all arguments and re-return "none" */
