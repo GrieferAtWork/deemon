@@ -168,8 +168,8 @@ LOCAL_DeeFunction_OptimizeAndCall(DeeFunctionObject *self
 	}
 
 	/* Fallback: do a normal invocation (in this case,
-	 * `DeeCode_OptimizeCallThreshold' was set
-	 * to (size_t)-1, so this won't loop) */
+	 * `DeeCode_OptimizeCallThreshold' was set to (size_t)-1,
+	 * or `CODE_FNOOPTIMIZE' was set, so this won't loop) */
 #if defined(CALL_THIS) && defined(CALL_KW) && defined(CALL_TUPLE)
 	return DeeFunction_ThisCallTupleKw(self, this_arg, args, kw);
 #elif defined(CALL_THIS) && defined(CALL_KW) && !defined(CALL_TUPLE)

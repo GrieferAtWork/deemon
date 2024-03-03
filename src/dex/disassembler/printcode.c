@@ -663,10 +663,10 @@ PRIVATE struct codeflag const codeflag_names[] = {
 	 CODE_FCONSTRUCTOR)
 
 
-INTERN dssize_t DCALL
+INTERN WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
 libdisasm_printcode(dformatprinter printer, void *arg,
-                    instruction_t *__restrict instr_start,
-                    instruction_t *__restrict instr_end,
+                    instruction_t *instr_start,
+                    instruction_t *instr_end,
                     DeeCodeObject *code,
                     char const *line_prefix,
                     unsigned int flags) {
@@ -675,8 +675,8 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 	uint16_t stacksz = 0, new_stacksz;
 	instruction_t *iter, *next;
 	instruction_t *start_addr = code ? code->co_code : instr_start;
-	size_t prefix_len         = line_prefix ? strlen(line_prefix) : 0;
-	uint16_t code_flags       = code ? code->co_flags : 0;
+	size_t prefix_len = line_prefix ? strlen(line_prefix) : 0;
+	uint16_t code_flags = code ? code->co_flags : 0;
 	struct ddi_state ddi;
 	uint8_t *ddi_ip = DDI_NEXT_DONE;
 	struct ddi_regs last_print_ddi;
