@@ -908,7 +908,7 @@ continue_uprefs_normal:
 					 * had to be retrieved retroactively. */
 #ifndef DEE_SYSTEM_FS_DRIVES
 					char const *pth_base;
-					pth_base = DeeString_AsUtf8(path);
+					pth_base = DeeString_AsUtf8((DeeObject *)path);
 					if unlikely(!pth_base)
 						goto err;
 #endif /* !DEE_SYSTEM_FS_DRIVES */
