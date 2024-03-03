@@ -118,7 +118,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(dwchar_t const *fil
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
+PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -147,7 +147,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_access_f_impl(/*utf-8*/ char cons
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_access_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_ACCESS_DEF { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_ACCESS_DEF_DOC(doc) { "access", (DeeObject *)&posix_access, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f);
+PRIVATE DEFINE_KWCMETHOD(posix_access, &posix_access_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -232,7 +232,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_euidaccess_f_impl(/*utf-8*/ char 
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_euidaccess_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_EUIDACCESS_DEF { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool") },
 #define POSIX_EUIDACCESS_DEF_DOC(doc) { "euidaccess", (DeeObject *)&posix_euidaccess, MODSYM_FREADONLY, DOC("(filename:?Dstring,how:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f);
+PRIVATE DEFINE_KWCMETHOD(posix_euidaccess, &posix_euidaccess_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FILENAME_HOW_DEFINED
 #define POSIX_KWDS_FILENAME_HOW_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_filename_how, { KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEND });
@@ -303,7 +303,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_faccessat_f_impl(int dfd, /*utf-8
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_faccessat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FACCESSAT_DEF { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool") },
 #define POSIX_FACCESSAT_DEF_DOC(doc) { "faccessat", (DeeObject *)&posix_faccessat, MODSYM_FREADONLY, DOC("(dfd:?Dint,filename:?Dstring,how:?Dint,atflags:?Dint)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_faccessat, &posix_faccessat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_FILENAME_HOW_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_filename_how_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("filename", 0x199d68d3, 0x4a5d0431e1a3caed), KEX("how", 0xdb5b834b, 0x1f0671eb224f8869), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });

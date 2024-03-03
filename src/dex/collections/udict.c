@@ -1325,10 +1325,10 @@ err:
 
 
 PRIVATE struct type_getset tpconst udict_getsets[] = {
-	TYPE_GETTER_F("frozen", &URoDict_FromUDict, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("frozen", &URoDict_FromUDict, METHOD_FNOREFESCAPE,
 	              "->?AFrozen?.\n"
 	              "Returns a read-only (frozen) copy of @this dict"),
-	TYPE_GETTER_F("__sizeof__", &udict_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &udict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1345,42 +1345,42 @@ PRIVATE struct type_member tpconst udict_class_members[] = {
 };
 
 PRIVATE struct type_method tpconst udict_methods[] = {
-	TYPE_METHOD_F("get", &udict_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("get", &udict_get, METHOD_FNOREFESCAPE,
 	              "(key,def=!N)->\n"
 	              "#r{The value associated with @key or @def when @key has no value associated}"),
-	TYPE_METHOD_F("pop", &udict_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pop", &udict_pop, METHOD_FNOREFESCAPE,
 	              "(key)->\n"
 	              "(key,def)->\n"
 	              "#tKeyError{No @def was given and @key was not found}"
 	              "Delete @key from @this and return its previously assigned value or @def when @key had no item associated"),
-	TYPE_METHOD_F("clear", &udict_clearfun, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("clear", &udict_clearfun, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all values from @this ?."),
-	TYPE_METHOD_F("popitem", &udict_popsomething, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popitem", &udict_popsomething, METHOD_FNOREFESCAPE,
 	              "->?T2?O?O\n"
 	              "#r{A random pair key-value pair that has been removed}"
 	              "#tValueError{@this ?. was empty}"),
-	TYPE_METHOD_F("setdefault", &udict_setdefault, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setdefault", &udict_setdefault, METHOD_FNOREFESCAPE,
 	              "(key,def=!N)->\n"
 	              "#r{The object currently assigned to @key}"
 	              "Lookup @key in @this ?. and return its value if found. Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD_F("setold", &udict_setold, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setold", &udict_setold, METHOD_FNOREFESCAPE,
 	              "(key,value)->?Dbool\n"
 	              "#r{Indicative of @value having been assigned to @key}"
 	              "Assign @value to @key, only succeeding when @key already existed to begin with"),
-	TYPE_METHOD_F("setnew", &udict_setnew, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setnew", &udict_setnew, METHOD_FNOREFESCAPE,
 	              "(key,value)->?Dbool\n"
 	              "#r{Indicative of @value having been assigned to @key}"
 	              "Assign @value to @key, only succeeding when @key didn't exist before"),
-	TYPE_METHOD_F("setold_ex", &udict_setold_ex, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setold_ex", &udict_setold_ex, METHOD_FNOREFESCAPE,
 	              "(key,value)->?T2?Dbool?O\n"
 	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	              "Same as #setold but also return the previously assigned object"),
-	TYPE_METHOD_F("setnew_ex", &udict_setnew_ex, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setnew_ex", &udict_setnew_ex, METHOD_FNOREFESCAPE,
 	              "(key,value)->?T2?Dbool?O\n"
 	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	              "Same as #setnew but return the previously assigned object on failure"),
-	TYPE_METHOD_F("update", &udict_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("update", &udict_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?T2?O?O)\n"
 	              "Iterate @items and unpack each element into 2 others, using them as "
 	              /**/ "key and value to insert into @this ?."),
@@ -2065,7 +2065,7 @@ urodict_sizeof(URoDict *self) {
 
 
 PRIVATE struct type_method tpconst urodict_methods[] = {
-	TYPE_METHOD_F("get", &urodict_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("get", &urodict_get, METHOD_FNOREFESCAPE,
 	              "(key,def=!N)->\n"
 	              "#r{The value associated with @key or @def when @key has no value associated}"),
 	TYPE_METHOD_END
@@ -2073,7 +2073,7 @@ PRIVATE struct type_method tpconst urodict_methods[] = {
 
 PRIVATE struct type_getset tpconst urodict_getsets[] = {
 	TYPE_GETTER("frozen", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &urodict_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &urodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

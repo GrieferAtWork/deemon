@@ -284,7 +284,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chown_f_impl(DeeObject *path, Dee
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHOWN_DEF { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_CHOWN_DEF_DOC(doc) { "chown", (DeeObject *)&posix_chown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_chown, &posix_chown_f);
+PRIVATE DEFINE_KWCMETHOD(posix_chown, &posix_chown_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_PATH_UID_GID_DEFINED
 #define POSIX_KWDS_PATH_UID_GID_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -399,7 +399,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lchown_f_impl(DeeObject *path, De
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LCHOWN_DEF { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_LCHOWN_DEF_DOC(doc) { "lchown", (DeeObject *)&posix_lchown, MODSYM_FREADONLY, DOC("(path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lchown, &posix_lchown_f);
+PRIVATE DEFINE_KWCMETHOD(posix_lchown, &posix_lchown_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_PATH_UID_GID_DEFINED
 #define POSIX_KWDS_PATH_UID_GID_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_path_uid_gid, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -539,7 +539,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchown_f_impl(DeeObject *fd, DeeO
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchown_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWN_DEF { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)") },
 #define POSIX_FCHOWN_DEF_DOC(doc) { "fchown", (DeeObject *)&posix_fchown, MODSYM_FREADONLY, DOC("(fd:?X2?Dint?DFile,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchown, &posix_fchown_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchown, &posix_fchown_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FD_UID_GID_DEFINED
 #define POSIX_KWDS_FD_UID_GID_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd_uid_gid, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEND });
@@ -676,7 +676,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchownat_f_impl(DeeObject *dfd, D
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchownat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHOWNAT_DEF { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags:?Dint=!0)") },
 #define POSIX_FCHOWNAT_DEF_DOC(doc) { "fchownat", (DeeObject *)&posix_fchownat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,uid:?X3?Dstring?Dint?N=!N,gid:?X3?Dstring?Dint?N=!N,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchownat, &posix_fchownat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_DFD_PATH_UID_GID_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_UID_GID_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_uid_gid_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("uid", 0x4ab38c00, 0x2b7634be3d12bdca), KEX("gid", 0x2fcfb954, 0x5b22a7472448739b), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });

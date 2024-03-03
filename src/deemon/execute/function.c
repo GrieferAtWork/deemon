@@ -538,33 +538,33 @@ PRIVATE struct type_method tpconst function_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst function_getsets[] = {
-	TYPE_GETTER_F(STR___name__, &function_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &function_get_name, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the name of @this function, or ?N if unknown"),
-	TYPE_GETTER_F(STR___doc__, &function_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &function_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this function, or ?N if unknown"),
-	TYPE_GETTER_F(STR___type__, &function_get_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &function_get_type, METHOD_FNOREFESCAPE,
 	              "->?X2?DType?N\n"
 	              "Try to determine if @this function is defined as part of a user-defined class, "
 	              /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
 	              /**/ "or if @this function is defined as stand-alone"),
-	TYPE_GETTER_F(STR___module__, &function_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &function_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "Return the module as part of which @this function's code was originally written"),
-	TYPE_GETTER_F("__operator__", &function_get_operator, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operator__", &function_get_operator, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Try to determine if @this function is defined as part of a user-defined class, "
 	              /**/ "and if so, if it is used to define an operator callback. If that is the case, "
 	              /**/ "return the internal ID of the operator that @this function provides, or ?N "
 	              /**/ "if that class couldn't be found, @this function is defined as stand-alone, or "
 	              /**/ "defined as a class- or instance-method"),
-	TYPE_GETTER_F("__operatorname__", &function_get_operatorname, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operatorname__", &function_get_operatorname, METHOD_FNOREFESCAPE,
 	              "->?X3?Dstring?Dint?N\n"
 	              "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	              /**/ "operator, though still return its ID if the operator isn't recognized as being "
 	              /**/ "part of the standard"),
-	TYPE_GETTER_F("__property__", &function_get_property, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__property__", &function_get_property, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Returns an integer describing the kind if @this function is part of a property or getset, "
 	              /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
@@ -577,7 +577,7 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	TYPE_GETTER("__refs__", &function_get_refs,
 	            "->?S?O\n"
 	            "Returns a sequence of all of the references used by @this function"),
-	TYPE_GETTER_F(STR___kwds__, &function_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &function_get_kwds, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
 	              "Returns a sequence of keyword argument names accepted by @this function\n"
 	              "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
@@ -1231,37 +1231,37 @@ yf_get_sizeof(YFunction *__restrict self) {
 
 PRIVATE struct type_getset tpconst yf_getsets[] = {
 	TYPE_GETTER("__args__", &yf_get_args, "->?S?O"),
-	TYPE_GETTER_F("__code__", &yf_get_code, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__code__", &yf_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "Alias for :Function.__code__ though ?#__func__"),
-	TYPE_GETTER_F(STR___name__, &yf_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &yf_get_name, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Alias for :Function.__name__ though ?#__func__"),
-	TYPE_GETTER_F(STR___doc__, &yf_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &yf_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Alias for :Function.__doc__ though ?#__func__"),
-	TYPE_GETTER_F(STR___type__, &yf_get_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &yf_get_type, METHOD_FNOREFESCAPE,
 	              "->?X2?DType?N\n"
 	              "Alias for :Function.__type__ though ?#__func__"),
-	TYPE_GETTER_F(STR___module__, &yf_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &yf_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "Alias for :Function.__module__ though ?#__func__"),
-	TYPE_GETTER_F("__operator__", &yf_get_operator, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operator__", &yf_get_operator, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Alias for :Function.__operator__ though ?#__func__"),
-	TYPE_GETTER_F("__operatorname__", &yf_get_operatorname, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operatorname__", &yf_get_operatorname, METHOD_FNOREFESCAPE,
 	              "->?X3?Dstring?Dint?N\n"
 	              "Alias for :Function.__operatorname__ though ?#__func__"),
-	TYPE_GETTER_F("__property__", &yf_get_property, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__property__", &yf_get_property, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Alias for :Function.__property__ though ?#__func__"),
-	TYPE_GETTER_F("__refs__", &yf_get_refs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__refs__", &yf_get_refs, METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Alias for :Function.__refs__ though ?#__func__"),
-	TYPE_GETTER_F(STR___kwds__, &yf_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &yf_get_kwds, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
 	              "Alias for :Function.__kwds__ though ?#__func__"),
-	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2039,56 +2039,56 @@ err:
 
 PRIVATE struct type_getset tpconst yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
-	TYPE_GETTER_F(STR_seq, &yfi_getyfunc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_seq, &yfi_getyfunc, METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Alias for ?#__yfunc__"),
 #endif /* !CONFIG_NO_THREADS */
 	TYPE_GETTER("__frame__", &yfi_getframe,
 	            "->?Dframe\n"
 	            "The execution stack-frame representing the current state of the iterator"),
-	TYPE_GETTER_F("__this__", &yfi_getthis, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__this__", &yfi_getthis, METHOD_FNOREFESCAPE,
 	              "#tUnboundAttribute{No $this-argument available}"
 	              "The $this-argument used during execution"),
 #ifndef CONFIG_NO_THREADS
-	TYPE_GETTER_F("__yfunc__", &yfi_getyfunc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__yfunc__", &yfi_getyfunc, METHOD_FNOREFESCAPE,
 	              "->?Ert:YieldFunction\n"
 	              "The underlying yield-function, describing the ?DFunction "
 	              /**/ "and arguments that are being executed"),
 #endif /* !CONFIG_NO_THREADS */
-	TYPE_GETTER_F("__func__", &yfi_getfunc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__func__", &yfi_getfunc, METHOD_FNOREFESCAPE,
 	              "->?Dfunction\n"
 	              "The function that is being executed"),
-	TYPE_GETTER_F("__code__", &yfi_getcode, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__code__", &yfi_getcode, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "The code object that is being executed"),
-	TYPE_GETTER_F("__refs__", &yfi_getrefs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__refs__", &yfi_getrefs, METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Returns a sequence of all of the references used by the function"),
-	TYPE_GETTER_F("__args__", &yfi_getargs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__args__", &yfi_getargs, METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Returns a sequence representing the positional arguments passed to the function"),
-	TYPE_GETTER_F(STR___name__, &yfi_getname, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &yfi_getname, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Alias for ?A__name__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___doc__, &yfi_getdoc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &yfi_getdoc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Alias for ?A__doc__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___kwds__, &yfi_getkwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &yfi_getkwds, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
 	              "Alias for ?A__kwds__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___type__, &yfi_gettype, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &yfi_gettype, METHOD_FNOREFESCAPE,
 	              "->?X2?DType?N\n"
 	              "Alias for ?A__type__?DFunction though ?#__func__"),
-	TYPE_GETTER_F(STR___module__, &yfi_getmodule, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &yfi_getmodule, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "Alias for ?A__module__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__operator__", &yfi_getoperator, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operator__", &yfi_getoperator, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Alias for ?A__operator__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__operatorname__", &yfi_getoperatorname, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__operatorname__", &yfi_getoperatorname, METHOD_FNOREFESCAPE,
 	              "->?X3?Dstring?Dint?N\n"
 	              "Alias for ?A__operatorname__?DFunction though ?#__func__"),
-	TYPE_GETTER_F("__property__", &yfi_getproperty, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__property__", &yfi_getproperty, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Alias for ?A__property__?DFunction though ?#__func__"),
 	TYPE_GETSET_END

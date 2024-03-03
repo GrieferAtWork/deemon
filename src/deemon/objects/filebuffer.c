@@ -1772,14 +1772,14 @@ err:
 }
 
 PRIVATE struct type_method tpconst buffer_methods[] = {
-	TYPE_METHOD_F(STR_size, &buffer_size, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_size, &buffer_size, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Forward to the $size function of the file being buffered"),
-	TYPE_METHOD_F("flush", &buffer_flush, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("flush", &buffer_flush, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Similar to ?#sync, but never synchronize the underlying file, regardless "
 	              /**/ "of whether or not $\"nosync\" was passed to the constructor, or ?#setbuf"),
-	TYPE_KWMETHOD_F("setbuf", &buffer_setbuf, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("setbuf", &buffer_setbuf, METHOD_FNOREFESCAPE,
 	                "(mode:?Dstring,size=!0)\n"
 	                "#tValueError{The given @mode is malformed, or not recognized}"
 	                "Set the buffering mode of @this buffer to @mode, with a buffer size of @size\n"
@@ -1844,15 +1844,15 @@ err:
 
 PRIVATE struct type_getset tpconst buffer_getsets[] = {
 #ifdef Dee_fd_GETSET
-	TYPE_GETTER_F(STR_getsysfd, &buffer_getsysfd, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_getsysfd, &buffer_getsysfd, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tAttributeError{The file being buffered does not implement a member function $" Dee_fd_GETSET "}"
 	              "Forward to the $" Dee_fd_GETSET " getset of the file being buffered"),
 #endif /* Dee_fd_GETSET */
-	TYPE_GETTER_F("file", &buffer_getfile, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("file", &buffer_getfile, METHOD_FNOREFESCAPE,
 	              "->?DFile\n"
 	              "Returns the file that is being buffered"),
-	TYPE_GETTER_F(STR_isatty, &buffer_isatty, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_isatty, &buffer_isatty, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Forward to the $isatty property of the file being buffered\n"
 	              "Note that in order to implement auto-buffering, file buffers are allowed to "
@@ -1860,7 +1860,7 @@ PRIVATE struct type_getset tpconst buffer_getsets[] = {
 	              /**/ "property to simply return that cached value, in other words meaning that "
 	              /**/ "any side-effects caused by the underlying $isatty may not come into effect "
 	              /**/ "following repeated calls"),
-	TYPE_GETTER_F(STR_filename, &buffer_filename, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_filename, &buffer_filename, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Forward the filename attribute of the file being buffered"),
 	TYPE_GETSET_END

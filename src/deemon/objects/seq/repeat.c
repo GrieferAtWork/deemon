@@ -310,8 +310,8 @@ err:
 
 
 PRIVATE struct type_getset tpconst repeatiter_getsets[] = {
-	TYPE_GETSET_F("__iter__", &repeatiter_get_iter, NULL, &repeatiter_set_iter, TYPE_GETSET_FNOREFESCAPE, "->?DIterator"),
-	TYPE_GETSET_F("__num__", &repeatiter_get_num, NULL, &repeatiter_set_num, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETSET_F("__iter__", &repeatiter_get_iter, NULL, &repeatiter_set_iter, METHOD_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETSET_F("__num__", &repeatiter_get_num, NULL, &repeatiter_set_num, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

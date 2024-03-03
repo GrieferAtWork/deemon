@@ -32,7 +32,7 @@ EXPORTS
 	DeeBytes_NewView@16=_DeeBytes_NewView@16
 	DeeBytes_ResizeBuffer@8=_DeeBytes_ResizeBuffer@8
 	DeeBytes_TruncateBuffer@8=_DeeBytes_TruncateBuffer@8
-	DeeCMethod_New@4=_DeeCMethod_New@4
+	DeeCMethod_New@8=_DeeCMethod_New@8
 	DeeCachedDict_New@4=_DeeCachedDict_New@4
 	DeeCell_CmpXch@12=_DeeCell_CmpXch@12
 	DeeCell_Del@4=_DeeCell_Del@4
@@ -398,7 +398,7 @@ EXPORTS
 	DeeKwArgs_Init@16=_DeeKwArgs_Init@16
 	DeeKwBlackList_Decref@4=_DeeKwBlackList_Decref@4
 	DeeKwBlackList_New@16=_DeeKwBlackList_New@16
-	DeeKwCMethod_New@4=_DeeKwCMethod_New@4
+	DeeKwCMethod_New@8=_DeeKwCMethod_New@8
 	DeeKwClsMethod_New@8=_DeeKwClsMethod_New@8
 	DeeKwMapping_Decref@12=_DeeKwMapping_Decref@12
 	DeeKwMapping_New@12=_DeeKwMapping_New@12

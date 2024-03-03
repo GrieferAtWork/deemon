@@ -721,7 +721,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst reader_getsets[] = {
-	TYPE_GETSET_F("owner", &reader_getowner, &reader_close, &reader_setowner, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("owner", &reader_getowner, &reader_close, &reader_setowner, METHOD_FNOREFESCAPE,
 	              "Assign the object from which data is being read"),
 	TYPE_GETSET_END
 };
@@ -1112,10 +1112,10 @@ writer_sizeof(Writer *self) {
 }
 
 PRIVATE struct type_getset tpconst writer_getsets[] = {
-	TYPE_GETSET_F(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F(STR_string, &DeeFileWriter_GetString, &writer_delstring, &writer_setstring, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Get/set the currently written text string"),
-	TYPE_GETTER_F("__sizeof__", &writer_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &writer_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1155,16 +1155,16 @@ err:
 }
 
 PRIVATE struct type_method tpconst writer_methods[] = {
-	TYPE_METHOD_F(STR_get, &writer_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_get, &writer_get, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Synchronize and retrieve all data that has already been written"),
-	TYPE_METHOD_F("pack", &writer_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pack", &writer_get, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Deprecated alias for reading from ?#string"),
-	TYPE_METHOD_F(STR_size, &writer_size, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_size, &writer_size, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Return the total amount of written bytes"),
-	TYPE_METHOD_F("allocated", &writer_allocated, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("allocated", &writer_allocated, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns the currently allocated buffer size (in bytes)"),
 	TYPE_METHOD_END
@@ -2019,7 +2019,7 @@ PRIVATE struct type_method tpconst mapfile_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst mapfile_getsets[] = {
-	TYPE_GETTER_F("ismmap", &mapfile_get_ismmap, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ismmap", &mapfile_get_ismmap, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this file map uses mmap to implement its buffer"),
 	TYPE_GETSET_END

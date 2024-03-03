@@ -896,17 +896,17 @@ classesiter_getseq(SeqSimpleProxyIterator *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst idsiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &idsiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqIds"),
+	TYPE_GETTER_F(STR_seq, &idsiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:SeqIds"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst typesiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &typesiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqTypes"),
+	TYPE_GETTER_F(STR_seq, &typesiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:SeqTypes"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst classesiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &classesiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqClasses"),
+	TYPE_GETTER_F(STR_seq, &classesiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:SeqClasses"),
 	TYPE_GETSET_END
 };
 

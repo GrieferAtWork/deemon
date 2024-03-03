@@ -1592,12 +1592,12 @@
 	T ha_start;\
 	T ha_outmod;\
 	T ha_table[256];
-#define DEFINE_LIBMATH_CONVERSION_1(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
-#define DEFINE_LIBMATH_CONVERSION_1_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
-#define DEFINE_LIBMATH_CONVERSION_2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
-#define DEFINE_LIBMATH_CONVERSION_2_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
-#define DEFINE_LIBMATH_FLOAT_TRAIT(n)  DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
-#define DEFINE_LIBMATH_FLOAT_TRAIT2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n);
+#define DEFINE_LIBMATH_CONVERSION_1(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_1_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_CONVERSION_2_E(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_FLOAT_TRAIT(n)  DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
+#define DEFINE_LIBMATH_FLOAT_TRAIT2(n) DeeObject*f_math_##n(size_t argc,DeeObject*const*argv){}DEFINE_CMETHOD(math_##n,&f_math_##n,0);
 #define DEFINE_SLABSTAT_COMPARE(n,...) DeeObject*n(SlabStatObject*self,SlabStatObject*other){}
 #define DEFINE_SLABSTATITERATOR_COMPARE(n,...) DeeObject*n(SlabStatIteratorObject*self,SlabStatIteratorObject*other){}
 #define DEFINE_SLABINFO_FIELD_READER(n) DeeObject*si_get_##n(SlabInfoObject*self){}

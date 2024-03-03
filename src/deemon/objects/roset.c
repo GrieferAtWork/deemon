@@ -530,7 +530,7 @@ PRIVATE struct type_method tpconst roset_methods[] = {
 
 PRIVATE struct type_getset tpconst roset_getsets[] = {
 	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &roset_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &roset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

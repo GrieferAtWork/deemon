@@ -85,7 +85,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst transiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &transiter_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqTransformation"),
+	TYPE_GETTER_F(STR_seq, &transiter_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqTransformation"),
 	TYPE_GETSET_END
 };
 

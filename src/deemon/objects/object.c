@@ -2499,7 +2499,7 @@ instance_get_itable(DeeObject *__restrict self);
 /* Runtime-versions of compiler-intrinsic standard attributes. */
 PRIVATE struct type_getset tpconst object_getsets[] = {
 	TYPE_GETTER(STR_this, &DeeObject_NewRef, "Always re-return @this object"),
-	TYPE_GETTER_F(STR_class, &object_class_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_class, &object_class_get, METHOD_FNOREFESCAPE,
 	              "->?DType\n"
 	              "Returns the class of @this Type, which is usually identical to "
 	              /**/ "?#type, however in the case of a super-proxy, the viewed "
@@ -2516,12 +2516,12 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	            "The class-attribute table can be accessed through ?A__ctable__?DType."),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
-	TYPE_GETTER_F("id", &object_id_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("id", &object_id_get, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns a unique id identifying @this specific object instance"),
 
 	/* Utility function: Return the size of a given object (in bytes) */
-	TYPE_GETTER_F("__sizeof__", &object_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__sizeof__", &object_sizeof, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Return the size of @this object in bytes."),
 	TYPE_GETSET_END
@@ -3815,7 +3815,7 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst type_methods[] = {
-	TYPE_KWMETHOD_F("baseof", &type_baseof, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("baseof", &type_baseof, METHOD_FNOREFESCAPE,
 	                "(other:?.)->?Dbool\n"
 	                "Returns ?t if @this ?. is equal to, or a base of @other.\n"
 	                "If @other isn't a ?., ?f is returned.\n"
@@ -3823,11 +3823,11 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                "${"
 	                /**/ "print y.baseof(type(x)); /* aka: `print x is y;' */"
 	                "}"),
-	TYPE_KWMETHOD_F("derivedfrom", &type_derivedfrom, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("derivedfrom", &type_derivedfrom, METHOD_FNOREFESCAPE,
 	                "(other:?.)->?Dbool\n"
 	                "Returns ?t if @this ?. is equal to, or has been derived from @other.\n"
 	                "If @other isn't a ?., ?f is returned."),
-	TYPE_KWMETHOD_F("implements", &type_implements, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("implements", &type_implements, METHOD_FNOREFESCAPE,
 	                "(other:?.)->?Dbool\n"
 	                "Check if @other appears in ?#__mro__"),
 	TYPE_KWMETHOD("newinstance", &type_newinstance,
@@ -3877,7 +3877,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	              /**/ "x.appendmember();\n"
 	              /**/ "print repr x;          /* [10, 20, 30, \"abc\"] */"
 	              "}"),
-	TYPE_KWMETHOD_F("hasattribute", &type_hasattribute, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("hasattribute", &type_hasattribute, METHOD_FNOREFESCAPE,
 	                "(name:?Dstring)->?Dbool\n"
 	                "Returns ?t if this type, or one of its super-classes defines an "
 	                /**/ "instance-attribute @name, and doesn't define any attribute-operators. "
@@ -3894,7 +3894,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                "Note that this function is quite similar to #hasinstanceattr, however unlike "
 	                /**/ "that function, this function will stop searching the base-classes of @this ?. "
 	                /**/ "when one of that types implements one of the attribute operators."),
-	TYPE_KWMETHOD_F("hasprivateattribute", &type_hasprivateattribute, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("hasprivateattribute", &type_hasprivateattribute, METHOD_FNOREFESCAPE,
 	                "(name:?Dstring)->?Dbool\n"
 	                "Similar to #hasattribute, but only looks at attributes declared "
 	                /**/ "by @this ?., excluding any defined by a super-class.\n"
@@ -3904,7 +3904,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                /**/ "	return attribute.exists(this, name, \"ic\", \"ic\", this)\n"
 	                /**/ "}"
 	                "}"),
-	TYPE_KWMETHOD_F("hasoperator", &type_hasoperator, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("hasoperator", &type_hasoperator, METHOD_FNOREFESCAPE,
 	                "(name:?Dint)->?Dbool\n"
 	                "(name:?Dstring)->?Dbool\n"
 	                "Returns ?t if instances of @this ?. implement an operator @name, "
@@ -3980,7 +3980,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	                /**/ "$\"enter\"|$\"enter\"|${operator enter(): none}&"
 	                /**/ "$\"leave\"|$\"leave\"|${operator leave(): none}"
 	                "}"),
-	TYPE_KWMETHOD_F("hasprivateoperator", &type_hasprivateoperator, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("hasprivateoperator", &type_hasprivateoperator, METHOD_FNOREFESCAPE,
 	                "(name:?Dint)->?Dbool\n"
 	                "(name:?Dstring)->?Dbool\n"
 	                "Returns ?t if instances of @this ?. implement an operator @name, "
@@ -4024,23 +4024,23 @@ PRIVATE struct type_method tpconst type_methods[] = {
 
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Deprecated functions */
-	TYPE_KWMETHOD_F("same_or_derived_from", &type_derivedfrom, TYPE_METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
-	TYPE_METHOD_F("derived_from", &type_derivedfrom_not_same, TYPE_METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
-	TYPE_METHOD_F("is_vartype", &type_is_vartype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
-	TYPE_METHOD_F("is_heaptype", &type_is_heaptype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
-	TYPE_METHOD_F("is_gctype", &type_is_gctype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isgc__"),
-	TYPE_METHOD_F("is_final", &type_is_final, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#isfinal"),
-	TYPE_METHOD_F("is_class", &type_is_class, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isclass__"),
-	TYPE_METHOD_F("is_complete", &type_is_complete, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?t)"),
-	TYPE_METHOD_F("is_classtype", &type_is_classtype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?f)"),
+	TYPE_KWMETHOD_F("same_or_derived_from", &type_derivedfrom, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ?#derivedfrom"),
+	TYPE_METHOD_F("derived_from", &type_derivedfrom_not_same, METHOD_FNOREFESCAPE, "(other:?.)->?Dbool\nDeprecated alias for ${this !== other && this.derivedfrom(other)}"),
+	TYPE_METHOD_F("is_vartype", &type_is_vartype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isvariable__"),
+	TYPE_METHOD_F("is_heaptype", &type_is_heaptype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__iscustom__"),
+	TYPE_METHOD_F("is_gctype", &type_is_gctype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isgc__"),
+	TYPE_METHOD_F("is_final", &type_is_final, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#isfinal"),
+	TYPE_METHOD_F("is_class", &type_is_class, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ?#__isclass__"),
+	TYPE_METHOD_F("is_complete", &type_is_complete, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?t)"),
+	TYPE_METHOD_F("is_classtype", &type_is_classtype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated (always returns ?f)"),
 	TYPE_METHOD("is_pointer", &type_is_pointer, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.ispointer catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_lvalue", &type_is_lvalue, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.islvalue catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_structured", &type_is_structured, "->?Dbool\nDeprecated alias for ${try this.isstructured catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_struct", &type_is_struct, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isstruct catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_array", &type_is_array, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isarray catch ((Error from deemon).AttributeError) false}"),
 	TYPE_METHOD("is_foreign_function", &type_is_foreign_function, "->?Dbool\nDeprecated alias for ${try this.isstructured && this.isfunction catch ((Error from deemon).AttributeError) false}"),
-	TYPE_METHOD_F("is_file", &type_is_filetype, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
-	TYPE_METHOD_F("is_super_base", &type_is_superbase, TYPE_METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ is none}"),
+	TYPE_METHOD_F("is_file", &type_is_filetype, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this is type(File from deemon)}"),
+	TYPE_METHOD_F("is_super_base", &type_is_superbase, METHOD_FNOREFESCAPE, "->?Dbool\nDeprecated alias for ${this.__base__ is none}"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 	TYPE_METHOD_END
@@ -4461,7 +4461,7 @@ PRIVATE struct type_member tpconst type_members[] = {
 };
 
 PRIVATE struct type_getset tpconst type_getsets[] = {
-	TYPE_GETTER_F("isbuffer", &type_isbuffer, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isbuffer", &type_isbuffer, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Type implements the buffer interface\n"
 	              "The most prominent Type to which this applies is ?DBytes, however other types also support this"),
@@ -4471,18 +4471,18 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETTER("__mro__", &TypeMRO_New,
 	            "->?Ert:TypeMRO\n"
 	            "Returns a sequence type ?S?DType that represents the MethodResolutionOrder of @this ?DType"),
-	TYPE_GETTER_F("__class__", &type_get_classdesc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__class__", &type_get_classdesc, METHOD_FNOREFESCAPE,
 	              "->?Ert:ClassDescriptor\n"
 	              "#tAttributeError{@this typeType is a user-defined class (s.a. ?#__isclass__)}"
 	              "Returns the internal class-descriptor descriptor for a user-defined class"),
-	TYPE_GETTER_F("__issingleton__", &type_issingleton, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__issingleton__", &type_issingleton, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Check if @this Type describes a singleton object, requiring that @this type not be "
 	              /**/ "implementing a constructor (or be deleting its constructor), as well as not be one "
 	              /**/ "of the special internal types used to represent implementation-specific wrapper "
 	              /**/ "objects for C attributes, or be generated by the compiler, such as code objects, "
 	              /**/ "class descriptors or DDI information providers"),
-	TYPE_GETTER_F(STR___module__, &type_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &type_get_module, METHOD_FNOREFESCAPE,
 	              "->?X2?DModule?N\n"
 	              "Return the module used to define @this Type, or ?N if the module cannot "
 	              /**/ "be determined, which may be the case if the type doesn't have any defining "
@@ -4517,24 +4517,24 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	            "Enumerate the ids of all the operators overwritten by @this Type as a set-like sequence\n"
 	            "This is the same as ?#__operators__, but the runtime will not attempt to translate known "
 	            /**/ "operator ids to their user-friendly name, as described in ?#hasoperator"),
-	TYPE_GETTER_F("__instancesize__", &type_get_instancesize, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__instancesize__", &type_get_instancesize, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Returns the heap allocation size of instances of @this Type, or ?N when @this Type cannot "
 	              /**/ "be instantiated, is a singleton (such as ?N), or has variable-length instances (?#isvariable)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETTER_F("__instance_size__", &type_get_instancesize, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__instance_size__", &type_get_instancesize, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Deprecated alias for ?#__instancesize__"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER_F("__istypetype__", &type_istypetype, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
-	TYPE_GETTER_F("__isnamespace__", &type_isnamespace, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__istypetype__", &type_istypetype, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isvarargconstructible__", &type_isvarargconstructible, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isconstructible__", &type_isconstructible, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__iscopyable__", &type_iscopyable, METHOD_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETTER_F("__isnamespace__", &type_isnamespace, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Instance methods/getsets of this type never look at the $this argument "
 	              /**/ "(allowing for optimizations in ?M_hostasm by passing undefined values for it)"),
-	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

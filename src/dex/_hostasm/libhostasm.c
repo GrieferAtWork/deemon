@@ -88,9 +88,9 @@ err:
 	return NULL;
 }
 
-DEFINE_CMETHOD(test_compile_and_run_o, &test_compile_and_run);
+PRIVATE DEFINE_CMETHOD(test_compile_and_run_o, &test_compile_and_run, METHOD_FNORMAL);
 #ifdef HAVE_test_throw
-DEFINE_CMETHOD(test_throw_o, &test_throw);
+PRIVATE DEFINE_CMETHOD(test_throw_o, &test_throw, METHOD_FNORMAL);
 #endif /* HAVE_test_throw */
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 

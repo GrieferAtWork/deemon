@@ -134,7 +134,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst aiter_getsets[] = {
-	TYPE_GETTER_F_NODOC("seq", &aiter_getseq, TYPE_GETSET_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC("seq", &aiter_getseq, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 

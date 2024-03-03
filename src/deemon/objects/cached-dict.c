@@ -1119,7 +1119,7 @@ err:
 
 DOC_REF(map_get_doc);
 PRIVATE struct type_method tpconst cdict_methods[] = {
-	TYPE_METHOD_F(STR_get, &cdict_get, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
+	TYPE_METHOD_F(STR_get, &cdict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
 	TYPE_METHOD_END
 };
 

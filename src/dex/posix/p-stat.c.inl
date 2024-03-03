@@ -1039,7 +1039,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstat_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTAT_DEF { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat") },
 #define POSIX_FSTAT_DEF_DOC(doc) { "fstat", (DeeObject *)&posix_fstat, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)->?Gstat\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fstat, &posix_fstat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fstat, &posix_fstat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -1078,7 +1078,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fstatat_f_impl(DeeObject *dfd, De
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fstatat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSTATAT_DEF { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat") },
 #define POSIX_FSTATAT_DEF_DOC(doc) { "fstatat", (DeeObject *)&posix_fstatat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)->?Gstat\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fstatat, &posix_fstatat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -2404,101 +2404,101 @@ err:
 
 
 PRIVATE struct type_getset tpconst stat_getsets[] = {
-	TYPE_GETTER_F("st_dev", &stat_get_dev, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_dev", &stat_get_dev, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid device information}"
 	              "Return the device number of the storage device on which the stat-file is located"),
-	TYPE_GETTER_F("st_ino", &stat_get_ino, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_ino", &stat_get_ino, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid inode information}"
 	              "Returns the inode number or file-id of the stat-file"),
-	TYPE_GETTER_F("st_mode", &stat_get_mode, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_mode", &stat_get_mode, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns a bitset describing the access permissions and mode of the stat-file. "
 	              "For more information, see ?GS_IFMT"),
-	TYPE_GETTER_F("st_nlink", &stat_get_nlink, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_nlink", &stat_get_nlink, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns the number of existing hard-links to this stat-file"),
-	TYPE_GETTER_F("st_uid", &stat_get_uid, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_uid", &stat_get_uid, METHOD_FNOREFESCAPE,
 	              "->?Guser\n"
 	              "Returns a descriptor for the user owning this file"),
-	TYPE_GETTER_F("st_gid", &stat_get_gid, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_gid", &stat_get_gid, METHOD_FNOREFESCAPE,
 	              "->?Ggroup\n"
 	              "Returns a descriptor for the group owning this file"),
-	TYPE_GETTER_F("st_rdev", &stat_get_rdev, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_rdev", &stat_get_rdev, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid r-dev information}"
 	              "Returns the device ID of the character/block device described by this stat-file"),
-	TYPE_GETTER_F("st_size", &stat_get_size, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_size", &stat_get_size, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid size information}"
 	              "Returns the size of the stat-file in bytes"),
-	TYPE_GETTER_F("st_blocks", &stat_get_blocks, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_blocks", &stat_get_blocks, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid block-count information}"
 	              "Returns the number of filesystem blocks used by the stat-file"),
-	TYPE_GETTER_F("st_blksize", &stat_get_blksize, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_blksize", &stat_get_blksize, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid block-count information}"
 	              "Returns the size of a filesystem blocks, as used by the stat-file"),
-	TYPE_GETTER_F("st_atime", &stat_get_atime, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_atime", &stat_get_atime, METHOD_FNOREFESCAPE,
 	              "->?Etime:Time\n"
 	              "#tValueError{@this stat-file does not contain valid time information}"
 	              "Return the last-accessed time of the stat-file"),
-	TYPE_GETTER_F("st_mtime", &stat_get_mtime, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_mtime", &stat_get_mtime, METHOD_FNOREFESCAPE,
 	              "->?Etime:Time\n"
 	              "#tValueError{@this stat-file does not contain valid time information}"
 	              "Return the last-modified (file content only) time of the stat-file"),
-	TYPE_GETTER_F("st_ctime", &stat_get_ctime, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_ctime", &stat_get_ctime, METHOD_FNOREFESCAPE,
 	              "->?Etime:Time\n"
 	              "#tValueError{@this stat-file does not contain valid time information}"
 	              "Return the lsat-changed (file content & file attributes) time of the stat-file"),
-	TYPE_GETTER_F("st_birthtime", &stat_get_birthtime, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("st_birthtime", &stat_get_birthtime, METHOD_FNOREFESCAPE,
 	              "->?Etime:Time\n"
 	              "#tValueError{@this stat-file does not contain valid time information}"
 	              "Return the creation (birth) time of the stat-file"),
-	TYPE_GETTER_F("isdir", &stat_isdir, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isdir", &stat_isdir, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a directory"),
-	TYPE_GETTER_F("ischr", &stat_ischr, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ischr", &stat_ischr, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a character-device"),
-	TYPE_GETTER_F("isblk", &stat_isblk, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isblk", &stat_isblk, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a block-device"),
-	TYPE_GETTER_F("isdev", &stat_isdev, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isdev", &stat_isdev, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a character- or block-device"),
-	TYPE_GETTER_F("isreg", &stat_isreg, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isreg", &stat_isreg, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a regular file"),
-	TYPE_GETTER_F("isfifo", &stat_isfifo, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isfifo", &stat_isfifo, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a pipe"),
-	TYPE_GETTER_F("islnk", &stat_islnk, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("islnk", &stat_islnk, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a symbolic link"),
-	TYPE_GETTER_F("issock", &stat_issock, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("issock", &stat_issock, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Check if @this stat-file refers to a socket"),
 
 	/* Non-portable NT extensions. */
 #ifdef HAVE_stat_getntattr_np
-	TYPE_GETTER_F("ntattr_np", &stat_getntattr_np, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ntattr_np", &stat_getntattr_np, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Non-portable windows extension for retrieving the NT attributes of the stat-file, those "
 	              /**/ "attributes being a set of the `FILE_ATTRIBUTE_*' constants found in windows system headers"),
 #endif /* HAVE_stat_getntattr_np */
 #ifdef HAVE_stat_getnttype_np
-	TYPE_GETTER_F("nttype_np", &stat_getnttype_np, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("nttype_np", &stat_getnttype_np, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this stat-file does not contain valid NT-type information}"
 	              "Non-portable windows extension for retrieving the NT type of this stat-file, that "

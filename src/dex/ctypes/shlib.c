@@ -339,7 +339,7 @@ err:
 
 
 PRIVATE struct type_method tpconst shlib_methods[] = {
-	TYPE_METHOD_F("base", &shlib_base, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("base", &shlib_base, METHOD_FNOREFESCAPE,
 	              "->?Aptr?Gvoid\n"
 	              "Returns the base address of the shared library"),
 	TYPE_METHOD_END

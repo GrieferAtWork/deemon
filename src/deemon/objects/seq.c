@@ -562,7 +562,7 @@ PRIVATE struct type_getset tpconst seqiterator_getsets[] = {
 	              &seqiterator_index_get,
 	              &seqiterator_index_del,
 	              &seqiterator_index_set,
-	              TYPE_GETSET_FNOREFESCAPE,
+	              METHOD_FNOREFESCAPE,
 	              "->?Dint"),
 	TYPE_GETSET_END
 };

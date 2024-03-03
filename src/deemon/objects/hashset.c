@@ -2012,44 +2012,44 @@ hashset_sizeof(HashSet *self) {
 
 
 PRIVATE struct type_method tpconst hashset_methods[] = {
-	TYPE_METHOD_F(STR_pop, &hashset_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_pop, &hashset_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{The set is empty}"
 	              "Pop a random item from the set and return it"),
-	TYPE_METHOD_F(STR_clear, &hashset_doclear, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_clear, &hashset_doclear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all items from the set"),
-	TYPE_METHOD_F("popitem", &hashset_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popitem", &hashset_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{The set is empty}"
 	              "Pop a random item from the set and return it (alias for ?#pop)"),
-	TYPE_METHOD_F("unify", &hashset_unify, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("unify", &hashset_unify, METHOD_FNOREFESCAPE,
 	              "(ob)->\n"
 	              "Insert @ob into the set if it wasn't inserted before, "
 	              /**/ "and re-return it, or the pre-existing instance"),
-	TYPE_METHOD_F(STR_insert, &hashset_insert, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_insert, &hashset_insert, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Returns ?t if the object wasn't apart of the set before"),
-	TYPE_METHOD_F("update", &hashset_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("update", &hashset_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?O)->?Dint\n"
 	              "Insert all items from @items into @this set, and return the number of inserted items"),
-	TYPE_METHOD_F("insertall", &hashset_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("insertall", &hashset_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?O)->?Dint\n"
 	              "Alias for ?#update"),
-	TYPE_METHOD_F(STR_remove, &hashset_remove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_remove, &hashset_remove, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Returns ?t if the object was removed from the set"),
 	/* TODO: HashSet.byhash(template:?O)->?DSequence */
 	/* Alternative function names. */
-	TYPE_METHOD_F("add", &hashset_insert, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("add", &hashset_insert, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Deprecated alias for ?#insert"),
-	TYPE_METHOD_F("discard", &hashset_remove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("discard", &hashset_remove, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Deprecated alias for ?#remove"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Old function names. */
-	TYPE_METHOD_F("insert_all", &hashset_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("insert_all", &hashset_update, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Deprecated alias for ?#update"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */

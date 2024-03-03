@@ -263,12 +263,14 @@ Dee_cmethod_origin_init(struct Dee_cmethod_origin *__restrict self,
 
 struct Dee_cmethod_object {
 	Dee_OBJECT_HEAD
-	Dee_cmethod_t cm_func; /* [1..1][const] */
+	Dee_cmethod_t cm_func;  /* [1..1][const] Method pointer. */
+	uintptr_t     cm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
 };
 
 struct Dee_kwcmethod_object {
 	Dee_OBJECT_HEAD
-	Dee_kwcmethod_t kcm_func; /* [1..1][const] */
+	Dee_kwcmethod_t kcm_func;  /* [1..1][const] Method pointer. */
+	uintptr_t       kcm_flags; /* [const] Method flags (set of `Dee_METHOD_F*') */
 };
 DDATDEF DeeTypeObject DeeCMethod_Type;
 DDATDEF DeeTypeObject DeeKwCMethod_Type;
@@ -278,10 +280,10 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeKwCMethod_FUNC(x)       ((DeeKwCMethodObject *)Dee_REQUIRES_OBJECT(x))->kcm_func
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
-#define Dee_DEFINE_CMETHOD(name, func) \
-	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), Dee_REQUIRES_CMETHOD(func) }
-#define Dee_DEFINE_KWCMETHOD(name, func) \
-	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func) }
+#define Dee_DEFINE_CMETHOD(name, func, flags) \
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), Dee_REQUIRES_CMETHOD(func), 0+flags }
+#define Dee_DEFINE_KWCMETHOD(name, func, flags) \
+	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func), 0+flags }
 
 /* Helpers for dynamically creating C method wrapper objects.
  * You really shouldn't use these (unless you *really* need to
@@ -291,8 +293,8 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
  * than C.
  *
  * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func);
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags);
 
 /* Try to figure out information about the origin of `self' */
 #define DeeCMethod_GetOrigin(self, result)   Dee_cmethod_origin_init(result, DeeCMethod_FUNC(self))

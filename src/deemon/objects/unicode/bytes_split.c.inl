@@ -878,7 +878,7 @@ blsi_getseq(BytesLineSplitIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst blsi_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &blsi_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:BytesLineSplit"),
+	TYPE_GETTER_F(STR_seq, &blsi_getseq, METHOD_FNOREFESCAPE, "->?Ert:BytesLineSplit"),
 	TYPE_GETSET_END
 };
 

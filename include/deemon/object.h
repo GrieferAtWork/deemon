@@ -2001,25 +2001,50 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 
-
-/* Possible values for `struct Dee_type_method::m_flag' */
-#define Dee_TYPE_METHOD_FNORMAL      0x0000 /* Normal type method flags. */
-#define Dee_TYPE_METHOD_FKWDS        0x0001 /* `m_func' takes a keywords argument.
-                                             * When set, `m_func' is actually a `dkwobjmethod_t' */
-#define Dee_TYPE_METHOD_FNOREFESCAPE 0x8000 /* Optimizer hint flag: when invoked, this method never incref's
-                                             * the "this" argument (unless it also appears in argv/kw, or "this"
-                                             * has an accessible reference via some other operator chain that
-                                             * does not involve "this" directly)
-                                             * Note that if an incref does happen, it must *always* be followed
-                                             * by another decref before the function returns (i.e. refcnt on
-                                             * entry must match refcnt on exit (except as listed above))
-                                             *
-                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
-
+/* Portable method attribute flags. These can be used in:
+ * - struct Dee_type_method::m_flag
+ * - struct Dee_type_getset::gs_flag
+ *   - here, flags describe all defined callbacks, except
+ *     - Dee_METHOD_FPURECALL and Dee_METHOD_FCONSTCALL only describe "gs_get" and "gs_bound"
+ */
+#define Dee_METHOD_FMASK        0xff00 /* Mask of portable method flags. */
+#define Dee_METHOD_FNORMAL      0x0000 /* Normal flags */
+#define Dee_METHOD_FNOTHROW     0x0800 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL') */
+#define Dee_METHOD_FNORETURN    0x1000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
+#define Dee_METHOD_FPURECALL    0x2000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
+                                        * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
+                                        * When set, repeated calls with identical arguments may be combined. */
+#define Dee_METHOD_FCONSTCALL   0x4000 /* ATTR_CONST: Function does not modify or read mutable args, or affect
+                                        * the global state (except for reference counts or memory usage).
+                                        * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
+                                        * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation. */
+#define Dee_METHOD_FNOREFESCAPE 0x8000 /* Optimizer hint flag: when invoked, this method never incref's
+                                        * the "this" argument (unless it also appears in argv/kw, or "this"
+                                        * has an accessible reference via some other operator chain that
+                                        * does not involve "this" directly)
+                                        * Note that if an incref does happen, it must *always* be followed
+                                        * by another decref before the function returns (i.e. refcnt on
+                                        * entry must match refcnt on exit (except as listed above))
+                                        *
+                                        * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
 #ifdef DEE_SOURCE
-#define TYPE_METHOD_FNORMAL      Dee_TYPE_METHOD_FNORMAL
-#define TYPE_METHOD_FKWDS        Dee_TYPE_METHOD_FKWDS
-#define TYPE_METHOD_FNOREFESCAPE Dee_TYPE_METHOD_FNOREFESCAPE
+#define METHOD_FMASK        Dee_METHOD_FMASK
+#define METHOD_FNORMAL      Dee_METHOD_FNORMAL
+#define METHOD_FNOTHROW     Dee_METHOD_FNOTHROW
+#define METHOD_FNORETURN    Dee_METHOD_FNORETURN
+#define METHOD_FPURECALL    Dee_METHOD_FPURECALL
+#define METHOD_FCONSTCALL   Dee_METHOD_FCONSTCALL
+#define METHOD_FNOREFESCAPE Dee_METHOD_FNOREFESCAPE
+#endif /* DEE_SOURCE */
+
+
+/* Possible values for `struct Dee_type_method::m_flag' (also accepts `Dee_METHOD_FMASK') */
+#define Dee_TYPE_METHOD_FNORMAL 0x0000 /* Normal type method flags. */
+#define Dee_TYPE_METHOD_FKWDS   0x0001 /* `m_func' takes a keywords argument.
+                                        * When set, `m_func' is actually a `dkwobjmethod_t' */
+#ifdef DEE_SOURCE
+#define TYPE_METHOD_FNORMAL Dee_TYPE_METHOD_FNORMAL
+#define TYPE_METHOD_FKWDS   Dee_TYPE_METHOD_FKWDS
 #endif /* DEE_SOURCE */
 
 struct Dee_type_method {
@@ -2049,21 +2074,10 @@ struct Dee_type_method {
 #define TYPE_METHOD_END       Dee_TYPE_METHOD_END
 #endif /* DEE_SOURCE */
 
-/* Possible values for `struct Dee_type_getset::gs_flag' */
-#define Dee_TYPE_GETSET_FNORMAL      0x0000 /* Normal type method flags. */
-#define Dee_TYPE_GETSET_FNOREFESCAPE 0x8000 /* Optimizer hint flag: none of the getset's callbacks ever incref(this)
-                                             * unless `gs_set's "value" is an alias of "this", or "this" has
-                                             * an accessible reference via some other operator chain that does
-                                             * not involve "this" directly)
-                                             * Note that if an incref does happen, it must *always* be followed
-                                             * by another decref before callbacks returns (i.e. refcnt on entry
-                                             * must match refcnt on exit (except as listed above))
-                                             *
-                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
-
+/* Possible values for `struct Dee_type_getset::gs_flag' (also accepts `Dee_METHOD_FMASK') */
+#define Dee_TYPE_GETSET_FNORMAL 0x0000 /* Normal type method flags. */
 #ifdef DEE_SOURCE
-#define TYPE_GETSET_FNORMAL      Dee_TYPE_GETSET_FNORMAL
-#define TYPE_GETSET_FNOREFESCAPE Dee_TYPE_GETSET_FNOREFESCAPE
+#define TYPE_GETSET_FNORMAL Dee_TYPE_GETSET_FNORMAL
 #endif /* DEE_SOURCE */
 
 struct Dee_type_getset {

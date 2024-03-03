@@ -1177,12 +1177,12 @@ fl_sizeof(FixedList *self) {
 }
 
 PRIVATE struct type_method tpconst fl_methods[] = {
-	TYPE_METHOD_F("clear", &fl_clear_meth, TYPE_METHOD_FNOREFESCAPE, "()"),
+	TYPE_METHOD_F("clear", &fl_clear_meth, METHOD_FNOREFESCAPE, "()"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst fl_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &fl_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &fl_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

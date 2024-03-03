@@ -2330,7 +2330,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(dhashmain, &dhashmain_f);
+PRIVATE DEFINE_KWCMETHOD(dhashmain, &dhashmain_f, METHOD_FNORMAL);
 
 
 

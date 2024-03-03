@@ -664,7 +664,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL tls_bool(TLS *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst tls_getsets[] = {
-	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_BOUND_F("value", &tls_getvalue, &tls_delvalue, &tls_setvalue, &tls_bool, METHOD_FNOREFESCAPE,
 	                    "#tAttributeError{The TLS variable isn't bound, or has already been unbound}"
 	                    "Read/write access to the object assigned to this TLS variable slot in the calling thread\n"
 	                    "If a factory has been defined, it will be invoked upon first access, unless that access is setting the TLS value.\n"
@@ -728,28 +728,28 @@ err:
 }
 
 PRIVATE struct type_method tpconst tls_methods[] = {
-	TYPE_METHOD_F("get", &tls_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("get", &tls_get, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tUnboundAttribute{The TLS variable isn't bound}"
 	              "Return the stored object. Same as ${this.item}"),
-	TYPE_METHOD_F("delete", &tls_delete, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("delete", &tls_delete, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Unbind the TLS variable slot, returning ?f if "
 	              /**/ "it had already been unbound and ?t otherwise"),
-	TYPE_METHOD_F("set", &tls_set, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("set", &tls_set, METHOD_FNOREFESCAPE,
 	              "(ob)\n"
 	              "Set the TLS variable. Same as ${this.item = ob}"),
-	TYPE_METHOD_F("xch", &tls_xch, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("xch", &tls_xch, METHOD_FNOREFESCAPE,
 	              "(ob)->\n"
 	              "#tAttributeError{The TLS variable had already been unbound}"
 	              "Exchange the stored TLS value with @ob and return the old value"),
-	TYPE_METHOD_F("pop", &tls_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pop", &tls_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tAttributeError{The TLS variable had already been unbound}"
 	              "Unbind the stored TLS object and return the previously stored object"),
 
 	/* Deprecated functions. */
-	TYPE_METHOD_F("exchange", &tls_xch, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("exchange", &tls_xch, METHOD_FNOREFESCAPE,
 	              "(ob)->\n"
 	              "Deprecated alias for ?#xch"),
 	TYPE_METHOD_END

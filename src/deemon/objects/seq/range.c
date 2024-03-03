@@ -345,7 +345,7 @@ ri_index_set(RangeIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst ri_getsets[] = {
-	TYPE_GETSET_F_NODOC(STR_index, &ri_index_get, &ri_index_del, &ri_index_set, TYPE_GETSET_FNOREFESCAPE),
+	TYPE_GETSET_F_NODOC(STR_index, &ri_index_get, &ri_index_del, &ri_index_set, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 

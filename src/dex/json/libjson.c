@@ -617,12 +617,12 @@ PRIVATE struct type_cmp jmapiter_cmp = {
 };
 
 PRIVATE struct type_getset tpconst jseqiter_getsets[] = {
-	TYPE_GETTER_F("seq", &jseqiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?GSequence"),
+	TYPE_GETTER_F("seq", &jseqiter_getseq, METHOD_FNOREFESCAPE, "->?GSequence"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst jmapiter_getsets[] = {
-	TYPE_GETTER_F("seq", &jmapiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?GMapping"),
+	TYPE_GETTER_F("seq", &jmapiter_getseq, METHOD_FNOREFESCAPE, "->?GMapping"),
 	TYPE_GETSET_END
 };
 
@@ -3475,8 +3475,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(libjson_parse, &f_libjson_parse);
-PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write);
+PRIVATE DEFINE_KWCMETHOD(libjson_parse, &f_libjson_parse, METHOD_FNORMAL);
+PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write, METHOD_FNORMAL);
 
 
 PRIVATE struct dex_symbol symbols[] = {

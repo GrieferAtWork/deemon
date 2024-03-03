@@ -749,7 +749,7 @@ traceback_sizeof(DeeTracebackObject *self) {
 }
 
 PRIVATE struct type_getset tpconst traceback_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &traceback_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &traceback_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

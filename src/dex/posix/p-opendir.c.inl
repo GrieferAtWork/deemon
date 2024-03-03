@@ -764,8 +764,8 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_CMETHOD(posix_DTTOIF, &posix_DTTOIF_f);
-INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f);
+INTERN DEFINE_CMETHOD(posix_DTTOIF, &posix_DTTOIF_f, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(posix_IFTODT, &posix_IFTODT_f, METHOD_FNORMAL);
 
 /* High-level wrappers around `struct dirent' and `DIR'
  * Note that `DIR' has a constructor that behaves just like `opendir(3)',
@@ -2002,44 +2002,44 @@ diriter_getseq(DeeDirIteratorObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst diriter_getsets[] = {
-	TYPE_GETTER_F("seq", &diriter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?GDIR"),
-	TYPE_GETTER_F("pathstr", &diriter_getpathstr, TYPE_GETSET_FNOREFESCAPE, "->?Dstring"),
-	TYPE_GETTER_F("d_name", &diriter_get_d_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("seq", &diriter_getseq, METHOD_FNOREFESCAPE, "->?GDIR"),
+	TYPE_GETTER_F("pathstr", &diriter_getpathstr, METHOD_FNOREFESCAPE, "->?Dstring"),
+	TYPE_GETTER_F("d_name", &diriter_get_d_name, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "The name of the current file"),
-	TYPE_GETTER_F("d_fullname", &diriter_get_d_fullname, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_fullname", &diriter_get_d_fullname, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "The full (absolute) filename of the current file"),
-	TYPE_GETTER_F("d_type", &diriter_get_d_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_type", &diriter_get_d_type, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "The type of the current file (one of ${DT_*})"),
-	TYPE_GETTER_F("d_ino", &diriter_get_d_ino, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_ino", &diriter_get_d_ino, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "The inode number of the current file"),
-	TYPE_GETTER_F("d_namlen", &diriter_get_d_namlen, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_namlen", &diriter_get_d_namlen, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Length of ?#d_name (in characters)"),
-	TYPE_GETTER_F("d_reclen", &diriter_get_d_reclen, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_reclen", &diriter_get_d_reclen, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Size of the directory record (in bytes)"),
-	TYPE_GETTER_F("d_off", &diriter_get_d_off, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("d_off", &diriter_get_d_off, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Offset of the next directory entry (non-portable!)"),
 
 	/* Additional (stat-like) fields (to take advantage of info that windows gives us) */
-	TYPE_GETTER_F("d_dev", &diriter_get_d_dev, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_dev?Gstat"),
-	TYPE_GETTER_F("d_mode", &diriter_get_d_mode, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_mode?Gstat"),
-	TYPE_GETTER_F("d_nlink", &diriter_get_d_nlink, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_nlink?Gstat"),
-	TYPE_GETTER_F("d_uid", &diriter_get_d_uid, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_uid?Gstat"),
-	TYPE_GETTER_F("d_gid", &diriter_get_d_gid, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_gid?Gstat"),
-	TYPE_GETTER_F("d_rdev", &diriter_get_d_rdev, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_rdev?Gstat"),
-	TYPE_GETTER_F("d_size", &diriter_get_d_size, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_size?Gstat"),
-	TYPE_GETTER_F("d_blocks", &diriter_get_d_blocks, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_blocks?Gstat"),
-	TYPE_GETTER_F("d_blksize", &diriter_get_d_blksize, TYPE_GETSET_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_blksize?Gstat"),
-	TYPE_GETTER_F("d_atime", &diriter_get_d_atime, TYPE_GETSET_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_atime?Gstat"),
-	TYPE_GETTER_F("d_mtime", &diriter_get_d_mtime, TYPE_GETSET_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_mtime?Gstat"),
-	TYPE_GETTER_F("d_ctime", &diriter_get_d_ctime, TYPE_GETSET_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_ctime?Gstat"),
-	TYPE_GETTER_F("d_birthtime", &diriter_get_d_birthtime, TYPE_GETSET_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_birthtime?Gstat"),
+	TYPE_GETTER_F("d_dev", &diriter_get_d_dev, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_dev?Gstat"),
+	TYPE_GETTER_F("d_mode", &diriter_get_d_mode, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_mode?Gstat"),
+	TYPE_GETTER_F("d_nlink", &diriter_get_d_nlink, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_nlink?Gstat"),
+	TYPE_GETTER_F("d_uid", &diriter_get_d_uid, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_uid?Gstat"),
+	TYPE_GETTER_F("d_gid", &diriter_get_d_gid, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_gid?Gstat"),
+	TYPE_GETTER_F("d_rdev", &diriter_get_d_rdev, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_rdev?Gstat"),
+	TYPE_GETTER_F("d_size", &diriter_get_d_size, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_size?Gstat"),
+	TYPE_GETTER_F("d_blocks", &diriter_get_d_blocks, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_blocks?Gstat"),
+	TYPE_GETTER_F("d_blksize", &diriter_get_d_blksize, METHOD_FNOREFESCAPE, "->?Dint\ns.a. ?Ast_blksize?Gstat"),
+	TYPE_GETTER_F("d_atime", &diriter_get_d_atime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_atime?Gstat"),
+	TYPE_GETTER_F("d_mtime", &diriter_get_d_mtime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_mtime?Gstat"),
+	TYPE_GETTER_F("d_ctime", &diriter_get_d_ctime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_ctime?Gstat"),
+	TYPE_GETTER_F("d_birthtime", &diriter_get_d_birthtime, METHOD_FNOREFESCAPE, "->?Etime:Time\ns.a. ?Ast_birthtime?Gstat"),
 	/* TODO: `stat->?Gstat' (returns the stat information for this directory entry) */
 
 	TYPE_GETSET_END
@@ -2157,7 +2157,7 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f);
+INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f, METHOD_FCONSTCALL);
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeDirIteratorObject *DCALL

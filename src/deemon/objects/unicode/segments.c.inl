@@ -140,7 +140,7 @@ ssegiter_getseq(StringSegmentsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ssegiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &ssegiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:StringSegments"),
+	TYPE_GETTER_F(STR_seq, &ssegiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:StringSegments"),
 	TYPE_GETSET_END
 };
 

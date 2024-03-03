@@ -346,13 +346,13 @@ attr_printrepr(Attr *__restrict self,
 
 
 PRIVATE struct type_getset tpconst attr_getsets[] = {
-	TYPE_GETTER_F("name", &attr_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("name", &attr_get_name, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "The name of this ?."),
-	TYPE_GETTER_F("doc", &attr_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("doc", &attr_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of this ?., or ?N when no documentation is present"),
-	TYPE_GETTER_F("flags", &attr_getflags, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("flags", &attr_getflags, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Return a set of characters descripting the flags of @this ?.:\n"
 	              "#T{Character|Mnemonic|Field|Flag description~"

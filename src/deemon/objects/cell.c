@@ -361,7 +361,7 @@ PRIVATE struct type_cmp cell_cmp = {
 
 PRIVATE struct type_getset tpconst cell_getsets[] = {
 	TYPE_GETSET_BOUND_F("value", &DeeCell_Get, &DeeCell_Del, &DeeCell_Set, &cell_bool,
-	                    TYPE_GETSET_FNOREFESCAPE,
+	                    METHOD_FNOREFESCAPE,
 	                    "#tUnboundAttribute{Attempted to read from an empty Cell}"
 	                    "Read/write access to the underlying, contained ?O"),
 	TYPE_GETSET_END
@@ -509,7 +509,7 @@ err:
 
 
 PRIVATE struct type_method tpconst cell_methods[] = {
-	TYPE_METHOD_F(STR_get, &cell_get, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_get, &cell_get, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{@this Cell is empty}"
 	              "Returns the contained value of the Cell\n"
@@ -517,22 +517,22 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 
 	              "(def)->\n"
 	              "Returns the contained value of the Cell or @def when it is empty"),
-	TYPE_METHOD_F("delete", &cell_delete, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("delete", &cell_delete, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Delete the value stored in @this Cell, returning ?t if "
 	              /**/ "the Cell wasn't empty before, or ?f if it already was"),
-	TYPE_METHOD_F(STR_pop, &cell_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_pop, &cell_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{The Cell was empty}"
 
 	              "\n"
 	              "(def)->\n"
 	              "Pop and return the previously contained object, @def, or throw a :ValueError"),
-	TYPE_METHOD_F(STR_set, &cell_set, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_set, &cell_set, METHOD_FNOREFESCAPE,
 	              "(value)->?Dbool\n"
 	              "Set (override) @this Cell's value, returning ?t if a previous value "
 	              /**/ "has been overwritten, or ?f if no value had been set before"),
-	TYPE_METHOD_F(STR_xch, &cell_xch, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_xch, &cell_xch, METHOD_FNOREFESCAPE,
 	              "(value)->\n"
 	              "#tValueError{@this Cell is empty}"
 	              "Overwrite the Cell's value and return the old value or throw an error when it was empty\n"
@@ -540,11 +540,11 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	              "\n"
 	              "(value,def)->\n"
 	              "Returns the contained value of the Cell or @def when it is empty"),
-	TYPE_METHOD_F("cmpdel", &cell_cmpdel, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("cmpdel", &cell_cmpdel, METHOD_FNOREFESCAPE,
 	              "(old_value)->?Dbool\n"
 	              "Atomically check if the stored object's id matches @{old_value}. If this is "
 	              /**/ "the case, delete the stored object and return ?t. Otherwise, return ?f"),
-	TYPE_METHOD_F("cmpxch", &cell_cmpxch, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("cmpxch", &cell_cmpxch, METHOD_FNOREFESCAPE,
 	              "(old_value,new_value)->\n"
 	              "#tValueError{@this Cell is empty}"
 	              "\n"
@@ -566,17 +566,17 @@ PRIVATE struct type_method tpconst cell_methods[] = {
 	              "(new_value)->?Dbool\n"
 	              "Return ?t and atomically set @new_value as stored object only "
 	              /**/ "if no object had been set before. Otherwise, return ?f"),
-	TYPE_METHOD_F("cmpset", &cell_cmpset, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("cmpset", &cell_cmpset, METHOD_FNOREFESCAPE,
 	              "(old_value)->?Dbool\n"
 	              "(old_value,new_value)->?Dbool\n"
 	              "Atomically check if the stored value equals @old_value and return ?t "
 	              /**/ "alongside storing @new_value if this is the case. Otherwise, return ?f\n"
 	              "When @new_value is omit, the function behaves identical to ?#cmpdel"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD_F("del", &cell_delete, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("del", &cell_delete, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#delete"),
-	TYPE_METHOD_F("exchange", &cell_xch, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("exchange", &cell_xch, METHOD_FNOREFESCAPE,
 	              "(value)->\n"
 	              "(value,def)->\n"
 	              "Deprecated alias for ?#xch"),

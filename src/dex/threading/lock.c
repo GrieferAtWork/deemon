@@ -1843,23 +1843,23 @@ PRIVATE struct type_with semaphore_with = {
 };
 
 PRIVATE struct type_method tpconst semaphore_methods[] = {
-	TYPE_METHOD_F(STR_tryacquire, &semaphore_tryacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD_F(STR_acquire, &semaphore_acquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD_F(STR_release, &semaphore_release, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_tryacquire, &semaphore_tryacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD_F(STR_acquire, &semaphore_acquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD_F(STR_release, &semaphore_release, METHOD_FNOREFESCAPE,
 	              "(tickets=!1)\n"
 	              "#tIntegerOverflow{The new total number of tickets would be too large}"
 	              "Release @tickets tickets to the semaphore"),
-	TYPE_METHOD_F(STR_timedacquire, &semaphore_timedacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD_F(STR_waitfor, &semaphore_waitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD_F(STR_timedwaitfor, &semaphore_timedwaitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
+	TYPE_METHOD_F(STR_timedacquire, &semaphore_timedacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD_F(STR_waitfor, &semaphore_waitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD_F(STR_timedwaitfor, &semaphore_timedwaitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst semaphore_getsets[] = {
-	TYPE_GETTER_F(STR_available, &semaphore_available_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_available)),
-	TYPE_GETTER_F(STR_acquired, &semaphore_acquired_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
+	TYPE_GETTER_F(STR_available, &semaphore_available_get, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_available)),
+	TYPE_GETTER_F(STR_acquired, &semaphore_acquired_get, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
 	TYPE_GETSET_F("tickets",
-	              &semaphore_tickets_get, NULL, &semaphore_tickets_set, TYPE_GETSET_FNOREFESCAPE,
+	              &semaphore_tickets_get, NULL, &semaphore_tickets_set, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Get or set the number of available semaphore tickets"),
 	TYPE_GETSET_END
@@ -2016,26 +2016,26 @@ err:
 }
 
 PRIVATE struct type_method tpconst event_methods[] = {
-	TYPE_METHOD_F(STR_waitfor, &event_waitfor, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_waitfor, &event_waitfor, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Wait until the event becomes set"),
-	TYPE_METHOD_F(STR_timedwaitfor, &event_timedwaitfor, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_timedwaitfor, &event_timedwaitfor, METHOD_FNOREFESCAPE,
 	              "(timeout_nanoseconds:?Dint)->?Dbool\n"
 	              "Same as ?#waitfor, returning ?t on success, but block for at "
 	              /**/ "most @timeout_nanoseconds. Once that amount of time has elapsed, "
 	              /**/ "stop trying to wait for the event to become set, and fail by "
 	              /**/ "returning ?f instead."),
-	TYPE_METHOD_F("set", &event_set, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("set", &event_set, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Trigger the event as having taken place"),
-	TYPE_METHOD_F("clear", &event_clear, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("clear", &event_clear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear the event as not having taken place"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst event_getsets[] = {
-	TYPE_GETSET_F("isset", &event_isset_get, NULL, &event_isset_set, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("isset", &event_isset_get, NULL, &event_isset_set, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Get or set the has-taken-place status of the event"),
 	TYPE_GETSET_END
@@ -2236,7 +2236,7 @@ libthreading_lockunion_all_f(size_t argc, DeeObject *const *argv) {
 }
 
 INTDEF DeeCMethodObject libthreading_lockunion_all;
-INTERN DEFINE_CMETHOD(libthreading_lockunion_all, &libthreading_lockunion_all_f);
+INTERN DEFINE_CMETHOD(libthreading_lockunion_all, &libthreading_lockunion_all_f, METHOD_FCONSTCALL);
 
 PRIVATE WUNUSED NONNULL((1)) DREF LockUnion *DCALL
 LockUnion_FromIterator(DeeObject *__restrict iter) {
@@ -2849,19 +2849,19 @@ PRIVATE struct type_with lock_union_with = {
 };
 
 PRIVATE struct type_method tpconst lock_union_methods[] = {
-	TYPE_METHOD_F(STR_tryacquire, &lock_union_tryacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
-	TYPE_METHOD_F(STR_acquire, &lock_union_acquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
-	TYPE_METHOD_F(STR_release, &lock_union_release, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_release)),
-	TYPE_METHOD_F(STR_timedacquire, &lock_union_timedacquire, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
-	TYPE_METHOD_F(STR_waitfor, &lock_union_waitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
-	TYPE_METHOD_F(STR_timedwaitfor, &lock_union_timedwaitfor, TYPE_METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
+	TYPE_METHOD_F(STR_tryacquire, &lock_union_tryacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_tryacquire)),
+	TYPE_METHOD_F(STR_acquire, &lock_union_acquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquire)),
+	TYPE_METHOD_F(STR_release, &lock_union_release, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_release)),
+	TYPE_METHOD_F(STR_timedacquire, &lock_union_timedacquire, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedacquire)),
+	TYPE_METHOD_F(STR_waitfor, &lock_union_waitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_waitfor)),
+	TYPE_METHOD_F(STR_timedwaitfor, &lock_union_timedwaitfor, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_timedwaitfor)),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst lock_union_getsets[] = {
-	TYPE_GETTER_F(STR_available, &lock_union_available_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_available)),
-	TYPE_GETTER_F(STR_acquired, &lock_union_acquired_get, TYPE_GETSET_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
-	TYPE_GETTER_F("__locks__", &lock_union_locks_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_available, &lock_union_available_get, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_available)),
+	TYPE_GETTER_F(STR_acquired, &lock_union_acquired_get, METHOD_FNOREFESCAPE, DOC_GET(doc_lock_acquired)),
+	TYPE_GETTER_F("__locks__", &lock_union_locks_get, METHOD_FNOREFESCAPE,
 	              "->?S?GLock\n"
 	              "Returns the sequence of locks that are acquired/released by @this ?."),
 	TYPE_GETSET_END

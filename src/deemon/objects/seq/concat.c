@@ -359,8 +359,8 @@ catiterator_curr_set(CatIterator *__restrict self,
 }
 
 PRIVATE struct type_getset tpconst catiterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &catiterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqConcat"),
-	TYPE_GETSET_F("__curr__", &catiterator_curr_get, NULL, &catiterator_curr_set, TYPE_GETSET_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETTER_F(STR_seq, &catiterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqConcat"),
+	TYPE_GETSET_F("__curr__", &catiterator_curr_get, NULL, &catiterator_curr_set, METHOD_FNOREFESCAPE, "->?DIterator"),
 	TYPE_GETSET_END
 };
 
@@ -493,7 +493,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst cat_getsets[] = {
-	TYPE_GETTER_F("__sequences__", &cat_get_sequences, TYPE_GETSET_FNOREFESCAPE, "->?S?DSequence"),
+	TYPE_GETTER_F("__sequences__", &cat_get_sequences, METHOD_FNOREFESCAPE, "->?S?DSequence"),
 	TYPE_GETTER(STR_frozen, &cat_get_frozen, "->?."),
 	TYPE_GETSET_END
 };

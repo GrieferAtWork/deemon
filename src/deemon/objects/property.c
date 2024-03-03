@@ -352,25 +352,25 @@ property_get_module(Property *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst property_getsets[] = {
-	TYPE_GETTER_F("canget", &property_canget, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("canget", &property_canget, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a getter callback"),
-	TYPE_GETTER_F("candel", &property_candel, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &property_candel, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a delete callback"),
-	TYPE_GETTER_F("canset", &property_canset, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &property_canset, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a setter callback"),
-	TYPE_GETTER_F(STR___name__, &property_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &property_get_name, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the name of @this Property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___doc__, &property_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &property_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this Property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___type__, &property_get_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &property_get_type, METHOD_FNOREFESCAPE,
 	              "->?X2?DType?N\n"
 	              "Returns the type implementing @this Property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &property_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &property_get_module, METHOD_FNOREFESCAPE,
 	              "->?X2?DModule?N\n"
 	              "Returns the module within which @this Property is declared, or ?N if unknown"),
 	TYPE_GETSET_END

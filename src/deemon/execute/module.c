@@ -1436,19 +1436,19 @@ PRIVATE struct type_getset tpconst module_getsets[] = {
 	            "Similar to ?#__exports__, however global variables are addressed using their "
 	            "internal index. Using this, anonymous global variables (such as property callbacks) "
 	            "can be accessed and modified"),
-	TYPE_GETTER_F("__code__", &module_get_code, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__code__", &module_get_code, METHOD_FNOREFESCAPE,
 	              "->?Ert:Code\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
 	              "Returns the code object for the Module's root initializer"),
-	TYPE_GETTER_F("__path__", &module_get_path, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__path__", &module_get_path, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "#tValueError{The Module hasn't been fully loaded}"
 	              "Returns the absolute filesystem path of the Module's source file, or ?N "
 	              "if the Module wasn't created from a file accessible via the filesystem"),
-	TYPE_GETTER_F("__isglobal__", &module_get_isglobal, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__isglobal__", &module_get_isglobal, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Module is global (i.e. can be accessed as ${import(this.__name__)})"),
-	TYPE_GETTER_F("__haspath__", &module_get_haspath, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__haspath__", &module_get_haspath, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this Module has a path found within the filesystem"),
 	TYPE_GETSET_END

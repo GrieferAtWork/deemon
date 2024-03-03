@@ -105,7 +105,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 ipc_SHELL_get_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return (DREF DeeObject *)process_get_shell();
 }
-PRIVATE DEFINE_CMETHOD(ipc_SHELL_get, &ipc_SHELL_get_f);
+PRIVATE DEFINE_CMETHOD(ipc_SHELL_get, &ipc_SHELL_get_f, METHOD_FPURECALL);
 
 
 PRIVATE struct dex_symbol symbols[] = {

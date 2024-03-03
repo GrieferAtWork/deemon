@@ -225,12 +225,12 @@ err:
 
 
 PRIVATE struct type_getset tpconst seq_filteriterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqHashFilter"),
+	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqHashFilter"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst map_filteriterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:MappingHashFilter"),
+	TYPE_GETTER_F(STR_seq, &filteriterator_seq_get, METHOD_FNOREFESCAPE, "->?Ert:MappingHashFilter"),
 	TYPE_GETSET_END
 };
 

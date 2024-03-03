@@ -281,11 +281,11 @@ DOC_DEF(objmethod_get_module_doc,
         "The module implementing the function that is being bound");
 
 PRIVATE struct type_getset tpconst objmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &objmethod_get_func, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_func_doc)),
-	TYPE_GETTER_F(STR___name__, &objmethod_get_name, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &objmethod_get_doc, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_doc_doc)),
-	TYPE_GETTER_F(STR___type__, &objmethod_get_type, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_type_doc)),
-	TYPE_GETTER_F(STR___module__, &objmethod_get_module, TYPE_GETSET_FNOREFESCAPE, DOC_GET(objmethod_get_module_doc)),
+	TYPE_GETTER_F("__func__", &objmethod_get_func, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_func_doc)),
+	TYPE_GETTER_F(STR___name__, &objmethod_get_name, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_name_doc)),
+	TYPE_GETTER_F(STR___doc__, &objmethod_get_doc, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_doc_doc)),
+	TYPE_GETTER_F(STR___type__, &objmethod_get_type, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_type_doc)),
+	TYPE_GETTER_F(STR___module__, &objmethod_get_module, METHOD_FNOREFESCAPE, DOC_GET(objmethod_get_module_doc)),
 	TYPE_GETSET_END
 };
 
@@ -524,7 +524,7 @@ dockwdsiter_getdocstr(DocKwdsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst dockwdsiter_getsets[] = {
-	TYPE_GETTER_F("__doc__", &dockwdsiter_getdocstr, TYPE_GETSET_FNOREFESCAPE, "->?Dstring"),
+	TYPE_GETTER_F("__doc__", &dockwdsiter_getdocstr, METHOD_FNOREFESCAPE, "->?Dstring"),
 	TYPE_GETSET_END
 };
 
@@ -789,12 +789,12 @@ kwobjmethod_get_kwds(DeeKwObjMethodObject *__restrict self) {
 #define kwobjmethod_get_module_doc objmethod_get_module_doc
 
 PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
-	TYPE_GETTER_F("__func__", &kwobjmethod_get_func, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_func_doc)),
-	TYPE_GETTER_F(STR___name__, &kwobjmethod_get_name, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_name_doc)),
-	TYPE_GETTER_F(STR___doc__, &kwobjmethod_get_doc, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_doc_doc)),
-	TYPE_GETTER_F(STR___kwds__, &kwobjmethod_get_kwds, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___type__, &kwobjmethod_get_type, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_type_doc)),
-	TYPE_GETTER_F(STR___module__, &kwobjmethod_get_module, TYPE_GETSET_FNOREFESCAPE, DOC_GET(kwobjmethod_get_module_doc)),
+	TYPE_GETTER_F("__func__", &kwobjmethod_get_func, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_func_doc)),
+	TYPE_GETTER_F(STR___name__, &kwobjmethod_get_name, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_name_doc)),
+	TYPE_GETTER_F(STR___doc__, &kwobjmethod_get_doc, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_doc_doc)),
+	TYPE_GETTER_F(STR___kwds__, &kwobjmethod_get_kwds, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_kwds_doc)),
+	TYPE_GETTER_F(STR___type__, &kwobjmethod_get_type, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_type_doc)),
+	TYPE_GETTER_F(STR___module__, &kwobjmethod_get_module, METHOD_FNOREFESCAPE, DOC_GET(kwobjmethod_get_module_doc)),
 	TYPE_GETSET_END
 };
 #define kwobjmethod_members   objmethod_members
@@ -1068,16 +1068,16 @@ clsmethod_get_module(DeeClsMethodObject *__restrict self) {
 
 #define clsmethod_getsets (kwclsmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwclsmethod_getsets[] = {
-	TYPE_GETTER_F(STR___kwds__, &kwclsmethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &kwclsmethod_get_kwds, METHOD_FNOREFESCAPE,
 	              DOC_GET(objmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___name__, &clsmethod_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &clsmethod_get_name, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "#t{UnboundAttribute}"
 	              "The name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &clsmethod_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this method, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &clsmethod_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &clsmethod_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "#t{UnboundAttribute}"
 	              "The module implementing @this method"),
@@ -1407,11 +1407,11 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
-	TYPE_KWMETHOD_F(STR_get, &clsproperty_get_kw, TYPE_METHOD_FNOREFESCAPE, "(thisarg)->"),
-	TYPE_KWMETHOD_F("delete", &clsproperty_delete, TYPE_METHOD_FNOREFESCAPE, "(thisarg)"),
-	TYPE_KWMETHOD_F(STR_set, &clsproperty_set, TYPE_METHOD_FNOREFESCAPE, "(thisarg,value)"),
-	TYPE_KWMETHOD_F("getter", &clsproperty_get_kw, TYPE_METHOD_FNOREFESCAPE, "(thisarg)->\nAlias for ?#get"),
-	TYPE_KWMETHOD_F("setter", &clsproperty_set, TYPE_METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
+	TYPE_KWMETHOD_F(STR_get, &clsproperty_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->"),
+	TYPE_KWMETHOD_F("delete", &clsproperty_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
+	TYPE_KWMETHOD_F(STR_set, &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
+	TYPE_KWMETHOD_F("getter", &clsproperty_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->\nAlias for ?#get"),
+	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
 	TYPE_METHOD_END
 };
 
@@ -1493,23 +1493,23 @@ clsproperty_canset(DeeClsPropertyObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsproperty_getsets[] = {
-	TYPE_GETTER_F("canget", &clsproperty_canget, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("canget", &clsproperty_canget, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a getter callback"),
-	TYPE_GETTER_F("candel", &clsproperty_candel, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &clsproperty_candel, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a delete callback"),
-	TYPE_GETTER_F("canset", &clsproperty_canset, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &clsproperty_canset, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this property has a setter callback"),
-	TYPE_GETTER_F(STR___name__, &clsproperty_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &clsproperty_get_name, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "#t{UnboundAttribute}"
 	              "The name of @this property"),
-	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &clsproperty_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of @this property, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &clsproperty_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &clsproperty_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "#t{UnboundAttribute}"
 	              "The module implementing @this property"),
@@ -1682,9 +1682,9 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsmember_methods[] = {
-	TYPE_KWMETHOD_F(STR_get, &clsmember_get_kw, TYPE_METHOD_FNOREFESCAPE, "(thisarg)->"),
-	TYPE_KWMETHOD_F("delete", &clsmember_delete, TYPE_METHOD_FNOREFESCAPE, "(thisarg)"),
-	TYPE_KWMETHOD_F(STR_set, &clsmember_set, TYPE_METHOD_FNOREFESCAPE, "(thisarg,value)"),
+	TYPE_KWMETHOD_F(STR_get, &clsmember_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->"),
+	TYPE_KWMETHOD_F("delete", &clsmember_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
+	TYPE_KWMETHOD_F(STR_set, &clsmember_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
 	TYPE_METHOD_END
 };
 
@@ -1758,13 +1758,13 @@ clsmember_get_module(DeeClsMemberObject *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst clsmember_getsets[] = {
-	TYPE_GETTER_F("candel", &clsmember_canset, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("candel", &clsmember_canset, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for #canset"),
-	TYPE_GETTER_F("canset", &clsmember_canset, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("canset", &clsmember_canset, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this member can be modified"),
-	TYPE_GETTER_F(STR___module__, &clsmember_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &clsmember_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "#t{UnboundAttribute}"
 	              "The module implementing @this member"),
@@ -2026,21 +2026,21 @@ cmethod_get_doc(DeeCMethodObject *__restrict self) {
 #define cmethod_members (objmethod_members + OBJMETHOD_MEMBERS_INDEXOF_KWDS)
 #define cmethod_getsets (kwcmethod_getsets + 1)
 PRIVATE struct type_getset tpconst kwcmethod_getsets[] = {
-	TYPE_GETTER_F(STR___kwds__, &kwcmethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &kwcmethod_get_kwds, METHOD_FNOREFESCAPE,
 	              DOC_GET(cmethod_get_kwds_doc)),
-	TYPE_GETTER_F(STR___module__, &cmethod_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &cmethod_get_module, METHOD_FNOREFESCAPE,
 	              "->?DModule\n"
 	              "#t{UnboundAttribute}"
 	              "Returns the module defining @this method"),
-	TYPE_GETTER_F(STR___type__, &cmethod_get_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &cmethod_get_type, METHOD_FNOREFESCAPE,
 	              "->?DType\n"
 	              "#t{UnboundAttribute}"
 	              "Returns the type as part of which @this method was declared."),
-	TYPE_GETTER_F(STR___name__, &cmethod_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &cmethod_get_name, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "#t{UnboundAttribute}"
 	              "Returns the name of @this method"),
-	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &cmethod_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this method, or ?N if unknown"),
 	TYPE_GETSET_END
@@ -2254,22 +2254,24 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
  *
  * If at all possible, use `Dee_DEFINE_CMETHOD' instead! */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeCMethod_New(Dee_cmethod_t func) {
+DeeCMethod_New(Dee_cmethod_t func, uintptr_t flags) {
 	DREF DeeCMethodObject *result;
 	result = DeeObject_MALLOC(DeeCMethodObject);
 	if likely(result) {
-		result->cm_func = func;
+		result->cm_func  = func;
+		result->cm_flags = flags;
 		DeeObject_Init(result, &DeeCMethod_Type);
 	}
 	return (DREF DeeObject *)result;
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeKwCMethod_New(Dee_kwcmethod_t func) {
+DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
 	DREF DeeKwCMethodObject *result;
 	result = DeeObject_MALLOC(DeeKwCMethodObject);
 	if likely(result) {
-		result->kcm_func = func;
+		result->kcm_func  = func;
+		result->kcm_flags = flags;
 		DeeObject_Init(result, &DeeKwCMethod_Type);
 	}
 	return (DREF DeeObject *)result;

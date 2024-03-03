@@ -932,14 +932,14 @@ DOC_REF(map_get_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst rodict_methods[] = {
-	TYPE_METHOD_F(STR_get, &rodict_get, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
+	TYPE_METHOD_F(STR_get, &rodict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
 	TYPE_KWMETHOD("byhash", &rodict_byhash, DOC_GET(map_byhash_doc)),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst rodict_getsets[] = {
 	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &rodict_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &rodict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

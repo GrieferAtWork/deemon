@@ -156,7 +156,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getcwd_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETCWD_DEF { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETCWD_DEF_DOC(doc) { "getcwd", (DeeObject *)&posix_getcwd, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_getcwd, posix_getcwd_f);
+PRIVATE DEFINE_CMETHOD(posix_getcwd, posix_getcwd_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getcwd_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getcwd"))
 		goto err;
@@ -183,7 +183,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gettmp_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETTMP_DEF { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETTMP_DEF_DOC(doc) { "gettmp", (DeeObject *)&posix_gettmp, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_gettmp, posix_gettmp_f);
+PRIVATE DEFINE_CMETHOD(posix_gettmp, posix_gettmp_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gettmp_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gettmp"))
 		goto err;
@@ -225,7 +225,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_gethostname_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETHOSTNAME_DEF { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring") },
 #define POSIX_GETHOSTNAME_DEF_DOC(doc) { "gethostname", (DeeObject *)&posix_gethostname, MODSYM_FREADONLY, DOC("->?Dstring\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_gethostname, posix_gethostname_f);
+PRIVATE DEFINE_CMETHOD(posix_gethostname, posix_gethostname_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_gethostname_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":gethostname"))
 		goto err;
@@ -329,7 +329,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_chdir_f_impl(DeeObject *path);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_chdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_CHDIR_DEF { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)") },
 #define POSIX_CHDIR_DEF_DOC(doc) { "chdir", (DeeObject *)&posix_chdir, MODSYM_FREADONLY, DOC("(path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_chdir, &posix_chdir_f);
+PRIVATE DEFINE_KWCMETHOD(posix_chdir, &posix_chdir_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_PATH_DEFINED
 #define POSIX_KWDS_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_path, { KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -462,7 +462,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdir_f_impl(DeeObject *fd);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdir_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIR_DEF { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)") },
 #define POSIX_FCHDIR_DEF_DOC(doc) { "fchdir", (DeeObject *)&posix_fchdir, MODSYM_FREADONLY, DOC("(fd:?X2?DFile?Dint)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchdir, &posix_fchdir_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchdir, &posix_fchdir_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_FD_DEFINED
 #define POSIX_KWDS_FD_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_fd, { KEX("fd", 0x10561ad6, 0xce2e588d84c6793), KEND });
@@ -532,7 +532,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fchdirat_f_impl(DeeObject *dfd, D
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fchdirat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCHDIRAT_DEF { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
 #define POSIX_FCHDIRAT_DEF_DOC(doc) { "fchdirat", (DeeObject *)&posix_fchdirat, MODSYM_FREADONLY, DOC("(dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, &posix_fchdirat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fchdirat, &posix_fchdirat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_DFD_PATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_dfd_path_atflags, { KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });

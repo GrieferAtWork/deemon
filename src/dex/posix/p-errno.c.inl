@@ -461,9 +461,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(posix_errno_get, &posix_errno_get_f);
-PRIVATE DEFINE_CMETHOD(posix_errno_del, &posix_errno_del_f);
-PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f);
+PRIVATE DEFINE_CMETHOD(posix_errno_get, &posix_errno_get_f, METHOD_FPURECALL);
+PRIVATE DEFINE_CMETHOD(posix_errno_del, &posix_errno_del_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_errno_set, &posix_errno_set_f, METHOD_FNORMAL);
 
 
 
@@ -500,7 +500,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerror_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerror_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_STRERROR_DEF { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
 #define POSIX_STRERROR_DEF_DOC(doc) { "strerror", (DeeObject *)&posix_strerror, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_strerror, posix_strerror_f);
+PRIVATE DEFINE_KWCMETHOD(posix_strerror, posix_strerror_f, METHOD_FCONSTCALL);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
 #define POSIX_KWDS_ERRNUM_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { K(errnum), KEND });
@@ -597,7 +597,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_strerrorname_f_impl(int errnum);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_strerrorname_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_STRERRORNAME_DEF { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring") },
 #define POSIX_STRERRORNAME_DEF_DOC(doc) { "strerrorname", (DeeObject *)&posix_strerrorname, MODSYM_FNORMAL, DOC("(errnum?:?Dint)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_strerrorname, posix_strerrorname_f);
+PRIVATE DEFINE_KWCMETHOD(posix_strerrorname, posix_strerrorname_f, METHOD_FCONSTCALL);
 #ifndef POSIX_KWDS_ERRNUM_DEFINED
 #define POSIX_KWDS_ERRNUM_DEFINED 1
 PRIVATE DEFINE_KWLIST(posix_kwds_errnum, { K(errnum), KEND });

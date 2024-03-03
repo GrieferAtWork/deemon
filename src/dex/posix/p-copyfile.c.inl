@@ -94,7 +94,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f_impl(DeeObject *oldfd
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FCOPYFILE_DEF { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
 #define POSIX_FCOPYFILE_DEF_DOC(doc) { "fcopyfile", (DeeObject *)&posix_fcopyfile, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fcopyfile, &posix_fcopyfile_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fcopyfile, &posix_fcopyfile_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDFD_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath_flags_progress_bufsize, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
@@ -182,7 +182,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfile_f_impl(DeeObject *oldpat
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_COPYFILE_DEF { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
 #define POSIX_COPYFILE_DEF_DOC(doc) { "copyfile", (DeeObject *)&posix_copyfile, MODSYM_FREADONLY, DOC("(oldpath:?X3?DFile?Dint?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_copyfile, &posix_copyfile_f);
+PRIVATE DEFINE_KWCMETHOD(posix_copyfile, &posix_copyfile_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
@@ -330,7 +330,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f_impl(DeeObject *oldpa
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_lcopyfile_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LCOPYFILE_DEF { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
 #define POSIX_LCOPYFILE_DEF_DOC(doc) { "lcopyfile", (DeeObject *)&posix_lcopyfile, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?X3?Dstring?DFile?Dint,flags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_lcopyfile, &posix_lcopyfile_f);
+PRIVATE DEFINE_KWCMETHOD(posix_lcopyfile, &posix_lcopyfile_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_FLAGS_PROGRESS_BUFSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath_flags_progress_bufsize, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
@@ -481,7 +481,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_copyfileat_f_impl(DeeObject *oldd
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_copyfileat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_COPYFILEAT_DEF { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)") },
 #define POSIX_COPYFILEAT_DEF_DOC(doc) { "copyfileat", (DeeObject *)&posix_copyfileat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0,progress:?DCallable=!N,bufsize:?Dint=!N)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_copyfileat, &posix_copyfileat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_copyfileat, &posix_copyfileat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_PROGRESS_BUFSIZE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags_progress_bufsize, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEX("progress", 0x2b0d4ed7, 0xcace2890c513a747), KEX("bufsize", 0x24b3a7e0, 0x94bf4a0770b058aa), KEND });
@@ -662,7 +662,7 @@ PRIVATE struct type_getset tpconst copyfile_progress_getsets[] = {
 	              &copyfile_progress_total_get,
 	              &copyfile_progress_total_del,
 	              &copyfile_progress_total_set,
-	              TYPE_GETSET_FNOREFESCAPE,
+	              METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Total total number of bytes that need to be copied"),
 	TYPE_GETSET_END

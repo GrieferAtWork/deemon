@@ -88,7 +88,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(dwchar_t const *com
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
+PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
@@ -116,7 +116,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_system_f_impl(/*utf-8*/ char cons
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_system_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYSTEM_DEF { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint") },
 #define POSIX_SYSTEM_DEF_DOC(doc) { "system", (DeeObject *)&posix_system, MODSYM_FREADONLY, DOC("(command:?Dstring)->?Dint\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f);
+PRIVATE DEFINE_KWCMETHOD(posix_system, &posix_system_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_COMMAND_DEFINED
 #define POSIX_KWDS_COMMAND_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_command, { KEX("command", 0xe876e30d, 0x2a35e05780aa8e3b), KEND });
@@ -239,7 +239,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv);
 #define POSIX_SCHED_YIELD_DEF { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_SCHED_YIELD_DEF_DOC(doc) { "sched_yield", (DeeObject *)&posix_sched_yield, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_sched_yield, posix_sched_yield_f);
+PRIVATE DEFINE_CMETHOD(posix_sched_yield, posix_sched_yield_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_sched_yield_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":sched_yield"))
 		goto err;
@@ -266,7 +266,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint") },
 #define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f);
+PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getpid"))
 		goto err;

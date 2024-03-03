@@ -483,8 +483,8 @@ PRIVATE struct type_member tpconst suiter_members[] = {
 };
 
 PRIVATE struct type_getset tpconst suiter_getsets[] = {
-	TYPE_GETSET_F("__iter__", &suiter_get_iter, NULL, &suiter_set_iter, TYPE_GETSET_FNOREFESCAPE, "->?DIterator"),
-	TYPE_GETSET_F("__in2nd__", &suiter_get_in2nd, NULL, &suiter_set_in2nd, TYPE_GETSET_FNOREFESCAPE, "->?Dbool"),
+	TYPE_GETSET_F("__iter__", &suiter_get_iter, NULL, &suiter_set_iter, METHOD_FNOREFESCAPE, "->?DIterator"),
+	TYPE_GETSET_F("__in2nd__", &suiter_get_in2nd, NULL, &suiter_set_in2nd, METHOD_FNOREFESCAPE, "->?Dbool"),
 	TYPE_GETSET_END
 };
 

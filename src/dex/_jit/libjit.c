@@ -203,7 +203,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f);
+PRIVATE DEFINE_KWCMETHOD(libjit_exec, &libjit_exec_f, METHOD_FNORMAL);
 
 
 

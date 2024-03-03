@@ -2436,7 +2436,7 @@ socket_wasclosed(Socket *__restrict self) {
 
 
 PRIVATE struct type_method tpconst socket_methods[] = {
-	TYPE_METHOD_F("close", &socket_close, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("close", &socket_close, METHOD_FNOREFESCAPE,
 	              "(shutdown_mode:?Dint)\n"
 	              "(shutdown_mode=!Prw)\n"
 	              "#t{:Interrupt}"
@@ -2446,7 +2446,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "Closes the socket's file descriptor. When @shutdown_socket is a non-empty :string, "
 	              "?#shutdown will automatically be invoked on @this socket if it hasn't before\n"
 	              "Note that in the event that ?#shutdown has already been called, "),
-	TYPE_METHOD_F("shutdown", &socket_shutdown, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("shutdown", &socket_shutdown, METHOD_FNOREFESCAPE,
 	              "(how:?Dint)\n"
 	              "(how=!Prw)\n"
 	              "#t{:Interrupt}"
@@ -2454,7 +2454,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tNetError{Failed to shutdown @this socket}"
 	              "#tFileClosed{@this socket has already been closed}"
 	              "Shuts down @this socket either for reading, for writing or for both"),
-	TYPE_METHOD_F("bind", &socket_bind, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("bind", &socket_bind, METHOD_FNOREFESCAPE,
 	              "(args!)\n"
 	              "#t{:Interrupt}"
 	              "#t{?AAddrInUse?GNetError}{The address specified for binding is already in use}"
@@ -2466,7 +2466,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tFileClosed{@this socket has already been closed}"
 	              "Binds @this socket to a given address.\n"
 	              "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr"),
-	TYPE_METHOD_F("connect", &socket_connect, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("connect", &socket_connect, METHOD_FNOREFESCAPE,
 	              "(args!)\n"
 	              "#t{:Interrupt}"
 	              "#t{?AAddrNotAvail?GNetError}{The speficied address is not reachable from this machine}"
@@ -2483,7 +2483,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tFileClosed{@this socket has already been closed}"
 	              "Connect @this socket with a given address.\n"
 	              "Accepted arguments are the same as ${sockaddr(this.sock_af, args...)} when creating ?Gsockaddr"),
-	TYPE_METHOD_F("listen", &socket_listen, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("listen", &socket_listen, METHOD_FNOREFESCAPE,
 	              "(max_backlog=!-1)\n"
 	              "#t{:Interrupt}"
 	              "#t{?ANotBound?GNetError}{@this socket has not been bound and the protocol does not allow listening on an unbound address}"
@@ -2496,7 +2496,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "${(int from deemon)((environ from fs)[\"DEEMON_MAXBACKLOG\"])}}"
 	              "Start listening for incoming connections on @this socket, preferrable after it has been ?#bound\n"
 	              "Note that calling this function may require the user to whitelist deemon in their firewall"),
-	TYPE_METHOD_F("accept", &socket_accept, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("accept", &socket_accept, METHOD_FNOREFESCAPE,
 	              "(timeout_nanoseconds=!-1)->?Gsocket\n"
 	              "(timeout_nanoseconds=!-1)->?N\n"
 	              "#t{:Interrupt}"
@@ -2508,7 +2508,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "You may pass ${-1} for an infinite timeout or $0 to fail immediately.}"
 	              "#r{A new socket object describing the connection to the new client, or ?N when @timeout_nanoseconds has passed}"
 	              "Accept new incoming connections on a listening socket"),
-	TYPE_METHOD_F("tryaccept", &socket_tryaccept, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("tryaccept", &socket_tryaccept, METHOD_FNOREFESCAPE,
 	              "->?Gsocket\n"
 	              "->?N\n"
 	              "#t{:Interrupt}"
@@ -2517,7 +2517,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tNetError{Failed to start accept a connection for some reason}"
 	              "#tFileClosed{@this socket has already been closed or was shut down}"
 	              "Same as calling ?#accept with a timeout_nanoseconds argument of ${0}"),
-	TYPE_METHOD_F("recv", &socket_recv, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("recv", &socket_recv, METHOD_FNOREFESCAPE,
 	              "(flags:?Dstring)->?DBytes\n"
 	              "(max_size=!-1,flags=!P{})->?DBytes\n"
 	              "(max_size=!-1,timeout_nanoseconds=!-1)->?DBytes\n"
@@ -2542,7 +2542,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "When @timeout_nanoseconds expires before any data is received, an empty string is returned\n"
 	              "Some protocols may also cause this function to return an empty string to indicate a graceful "
 	              "termination of the connection"),
-	TYPE_METHOD_F("recvinto", &socket_recvinto, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("recvinto", &socket_recvinto, METHOD_FNOREFESCAPE,
 	              "(dst:?DBytes,flags=!P{})->?Dint\n"
 	              "(dst:?DBytes,timeout_nanoseconds=!-1)->?Dint\n"
 	              "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
@@ -2556,7 +2556,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tFileClosed{@this socket has already been closed or was shut down}"
 	              "#pflags{A set of flags used during delivery. See ?#recv for information on the string-encoded version}"
 	              "Same as #recv, but received data is written into the given buffer @dst"),
-	TYPE_METHOD_F("recvfrom", &socket_recvfrom, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("recvfrom", &socket_recvfrom, METHOD_FNOREFESCAPE,
 	              "(flags:?Dstring)->?T2?Gsockaddr?DBytes\n"
 	              "(max_size=!-1,flags=!P{})->?T2?Gsockaddr?DBytes\n"
 	              "(max_size=!-1,timeout_nanoseconds=!-1)->?T2?Gsockaddr?DBytes\n"
@@ -2575,7 +2575,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "The given @timeout_nanoseconds can be passed as either $0 to try-receive pending packages, "
 	              "as ${-1} (default) to wait for incoming data indefinitely or until the socket is ?#{close}ed, or "
 	              "as any other integer value to specify how long to wait before returning ${(none, \"\")}"),
-	TYPE_METHOD_F("recvfrominto", &socket_recvfrominto, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("recvfrominto", &socket_recvfrominto, METHOD_FNOREFESCAPE,
 	              "(dst:?DBytes,flags=!P{})->?T2?Gsockaddr?Dint\n"
 	              "(dst:?DBytes,timeout_nanoseconds=!-1)->?T2?Gsockaddr?Dint\n"
 	              "(dst:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?T2?Gsockaddr?Dint\n"
@@ -2588,7 +2588,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#tFileClosed{@this socket has already been closed or was shut down}"
 	              "#pflags{A set of flags used during delivery. See ?#recv for information on the string-encoded version}"
 	              "Same as ?#recvfrom, buf read received data into the given buffer @dst"),
-	TYPE_METHOD_F("send", &socket_send, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("send", &socket_send, METHOD_FNOREFESCAPE,
 	              "(data:?DBytes,flags=!P{})->?Dint\n"
 	              "(data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 	              "(data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
@@ -2605,7 +2605,7 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "#pflags{A set of flags used during delivery. See ?#recv for information on the string-encoded version}"
 	              "#r{The total number of bytes that was sent}"
 	              "Send @data over the network to the peer of a connected socket"),
-	TYPE_METHOD_F("sendto", &socket_sendto, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("sendto", &socket_sendto, METHOD_FNOREFESCAPE,
 	              "(target:?DBytes,data:?DBytes,flags=!P{})->?Dint\n"
 	              "(target:?DBytes,data:?DBytes,timeout_nanoseconds=!-1,flags=!0)->?Dint\n"
 	              "(target:?DBytes,data:?DBytes,timeout_nanoseconds=!-1,flags=!P{})->?Dint\n"
@@ -2626,24 +2626,24 @@ PRIVATE struct type_method tpconst socket_methods[] = {
 	              "the same purpose in ${target = target is Tuple ? sockaddr(this.sock_af, target...) : sockaddr(this.sock_af, target)}.}"
 	              "#r{The total number of bytes that was sent}"
 	              "Same as ?#send, but used to transmit data to a specific network target, rather than one that is already connected."),
-	TYPE_METHOD_F("wasshutdown", &socket_wasshutdown, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("wasshutdown", &socket_wasshutdown, METHOD_FNOREFESCAPE,
 	              "(how:?Dint)->?Dbool\n"
 	              "(how=!?rw)->?Dbool\n"
 	              "Returns ?t if @this socket has been ?#shutdown according to @how (inclusive when multiple modes are specified)\n"
 	              "See ?#shutdown for possible values that may be passed to @how"),
-	TYPE_METHOD_F("fileno", &socket_fileno, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("fileno", &socket_fileno, METHOD_FNOREFESCAPE,
 	              "->?Dint\n" /* TODO: Use Dee_fd_fileno_GETSET / Dee_fd_osfhandle_GETSET for this! */
 	              "Returns the underlying file descriptor/handle associated @this socket"),
 	TYPE_METHOD_END
 };
 
 PRIVATE struct type_getset tpconst socket_getsets[] = {
-	TYPE_GETTER_F("sockname", &socket_sockname_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("sockname", &socket_sockname_get, METHOD_FNOREFESCAPE,
 	              "->?Gsockaddr\n"
 	              "#tFileClosed{@this socket has been closed}"
 	              "#t{?ANotConnected?GNetError}{@this socket is neither connected, nor bound}"
 	              "Returns the socket name (local address) of @this socket"),
-	TYPE_GETTER_F("peeraddr", &socket_peeraddr_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("peeraddr", &socket_peeraddr_get, METHOD_FNOREFESCAPE,
 	              "->?Gsockaddr\n"
 	              "#t{:Interrupt}"
 	              "#tFileClosed{@this socket has been closed}"
@@ -2651,7 +2651,7 @@ PRIVATE struct type_getset tpconst socket_getsets[] = {
 	              "#t{?ANoSupport?GNetError}{@this socket's protocol does not allow for peer addresses}"
 	              "#tNetError{Failed to query the peer address for some unknown reason}"
 	              "Returns the peer (remote) address of @this socket"),
-	TYPE_GETTER_F("wasclosed", &socket_wasclosed, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("wasclosed", &socket_wasclosed, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this socket has been ?#{close}ed"),
 	TYPE_GETSET_END

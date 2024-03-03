@@ -2259,16 +2259,16 @@ DOC_REF(map_update_doc);
 DOC_REF(map_byhash_doc);
 
 PRIVATE struct type_method tpconst dict_methods[] = {
-	TYPE_METHOD_F(STR_get, &dict_get, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
-	TYPE_METHOD_F(STR_pop, &dict_pop, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_pop_doc)),
-	TYPE_METHOD_F(STR_clear, &dict_doclear, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_clear_doc)),
-	TYPE_METHOD_F("popitem", &dict_popsomething, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_popitem_doc)),
-	TYPE_METHOD_F("setdefault", &dict_setdefault, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_setdefault_doc)),
-	TYPE_METHOD_F("setold", &dict_setold, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_setold_doc)),
-	TYPE_METHOD_F("setnew", &dict_setnew, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_setnew_doc)),
-	TYPE_METHOD_F("setold_ex", &dict_setold_ex, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_setold_ex_doc)),
-	TYPE_METHOD_F("setnew_ex", &dict_setnew_ex, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_setnew_ex_doc)),
-	TYPE_METHOD_F("update", &dict_update, TYPE_METHOD_FNOREFESCAPE, DOC_GET(map_update_doc)),
+	TYPE_METHOD_F(STR_get, &dict_get, METHOD_FNOREFESCAPE, DOC_GET(map_get_doc)),
+	TYPE_METHOD_F(STR_pop, &dict_pop, METHOD_FNOREFESCAPE, DOC_GET(map_pop_doc)),
+	TYPE_METHOD_F(STR_clear, &dict_doclear, METHOD_FNOREFESCAPE, DOC_GET(map_clear_doc)),
+	TYPE_METHOD_F("popitem", &dict_popsomething, METHOD_FNOREFESCAPE, DOC_GET(map_popitem_doc)),
+	TYPE_METHOD_F("setdefault", &dict_setdefault, METHOD_FNOREFESCAPE, DOC_GET(map_setdefault_doc)),
+	TYPE_METHOD_F("setold", &dict_setold, METHOD_FNOREFESCAPE, DOC_GET(map_setold_doc)),
+	TYPE_METHOD_F("setnew", &dict_setnew, METHOD_FNOREFESCAPE, DOC_GET(map_setnew_doc)),
+	TYPE_METHOD_F("setold_ex", &dict_setold_ex, METHOD_FNOREFESCAPE, DOC_GET(map_setold_ex_doc)),
+	TYPE_METHOD_F("setnew_ex", &dict_setnew_ex, METHOD_FNOREFESCAPE, DOC_GET(map_setnew_ex_doc)),
+	TYPE_METHOD_F("update", &dict_update, METHOD_FNOREFESCAPE, DOC_GET(map_update_doc)),
 	TYPE_KWMETHOD("byhash", &dict_byhash, DOC_GET(map_byhash_doc)),
 	TYPE_METHOD_END
 };

@@ -131,14 +131,14 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(lib_getafname, &lib_getafname_f);
-PRIVATE DEFINE_CMETHOD(lib_getafof, &lib_getafof_f);
-PRIVATE DEFINE_CMETHOD(lib_gettypename, &lib_gettypename_f);
-PRIVATE DEFINE_CMETHOD(lib_gettypeof, &lib_gettypeof_f);
-PRIVATE DEFINE_CMETHOD(lib_getprotoname, &lib_getprotoname_f);
-PRIVATE DEFINE_CMETHOD(lib_getprotoof, &lib_getprotoof_f);
-PRIVATE DEFINE_CMETHOD(lib_getmsgflagsname, &lib_getmsgflagsname_f);
-PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f);
+PRIVATE DEFINE_CMETHOD(lib_getafname, &lib_getafname_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_getafof, &lib_getafof_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_gettypename, &lib_gettypename_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_gettypeof, &lib_gettypeof_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_getprotoname, &lib_getprotoname_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_getprotoof, &lib_getprotoof_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_getmsgflagsname, &lib_getmsgflagsname_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_getmsgflagsof, &lib_getmsgflagsof_f, METHOD_FNORMAL);
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -201,12 +201,12 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f);
-PRIVATE DEFINE_CMETHOD(lib_ntoh32, lib_ntoh32_f);
-PRIVATE DEFINE_CMETHOD(lib_ntoh64, lib_ntoh64_f);
-PRIVATE DEFINE_CMETHOD(lib_hton16, lib_hton16_f);
-PRIVATE DEFINE_CMETHOD(lib_hton32, lib_hton32_f);
-PRIVATE DEFINE_CMETHOD(lib_hton64, lib_hton64_f);
+PRIVATE DEFINE_CMETHOD(lib_ntoh16, lib_ntoh16_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_ntoh32, lib_ntoh32_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_ntoh64, lib_ntoh64_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_hton16, lib_hton16_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_hton32, lib_hton32_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(lib_hton64, lib_hton64_f, METHOD_FNORMAL);
 
 
 PRIVATE struct dex_symbol symbols[] = {

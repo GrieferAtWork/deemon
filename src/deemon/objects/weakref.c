@@ -317,13 +317,13 @@ err:
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
 
 PRIVATE struct type_method tpconst ob_weakref_methods[] = {
-	TYPE_METHOD_F("lock", &ob_weakref_lock, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("lock", &ob_weakref_lock, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "(def)->\n"
 	              "#tReferenceError{The weak reference is no longer bound and no @def was given}"
 	              "Lock the weak reference and return the pointed-to object"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_METHOD_F("try_lock", &ob_weakref_try_lock, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("try_lock", &ob_weakref_try_lock, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "->\n"
 	              "Deprecated alias for ?#lock with passing ?N (${this.lock(none)})"),
@@ -332,11 +332,11 @@ PRIVATE struct type_method tpconst ob_weakref_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst ob_weakref_getsets[] = {
-	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bool, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_BOUND_F("value", &ob_weakref_get, &ob_weakref_del, &ob_weakref_set, &ob_weakref_bool, METHOD_FNOREFESCAPE,
 	                    "#tReferenceError{Attempted to get the value after the reference has been unbound}"
 	                    "#tValueError{Attempted to set an object that does not support weak referencing}"
 	                    "Access to the referenced object"),
-	TYPE_GETTER_F("alive", &ob_weakref_alive, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("alive", &ob_weakref_alive, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for ?#{op:bool}"),
 	TYPE_GETSET_END

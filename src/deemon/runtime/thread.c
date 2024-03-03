@@ -4141,40 +4141,40 @@ err:
 
 
 PRIVATE struct type_method tpconst thread_methods[] = {
-	TYPE_METHOD("start", &thread_start, /* Not TYPE_METHOD_FNOREFESCAPE, because incref's "this" for child thread. */
+	TYPE_METHOD("start", &thread_start, /* Not METHOD_FNOREFESCAPE, because incref's "this" for child thread. */
 	            "->?Dbool\n"
 	            "#tSystemError{Failed to start @this thread for some reason}"
 	            "#r{true The ?. is now running}"
 	            "#r{false The ?. had already been started}"
 	            "Starts @this thread"),
-	TYPE_METHOD_F("detach", &thread_detach, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("detach", &thread_detach, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "#r{true The ?. has been detached}"
 	              "#r{false The ?. was already detached}"
 	              "Detaches @this thread"),
-	TYPE_METHOD_F("join", &thread_join, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("join", &thread_join, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#t{:Interrupt}"
 	              "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	              "#r{The return value of @this thread}"
 	              "Joins @this thread and returns the return value of its main function"),
-	TYPE_METHOD_F("tryjoin", &thread_tryjoin, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("tryjoin", &thread_tryjoin, METHOD_FNOREFESCAPE,
 	              "->?T2?Dbool?O\n"
 	              "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	              "Same as ?#join, but don't check for interrupts and fail immediately"),
-	TYPE_METHOD_F("timedjoin", &thread_timedjoin, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("timedjoin", &thread_timedjoin, METHOD_FNOREFESCAPE,
 	              "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
 	              "#tThreadCrash{The error(s) that caused @this thread to crash, encapsulated in a :ThreadCrash error}"
 	              "Same as ?#join, but only attempt to join for a given @timeout_in_nanoseconds"),
-	TYPE_METHOD_F("waitfor", &thread_waitfor, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("waitfor", &thread_waitfor, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "#t{:Interrupt}"
 	              "Block until @this Thread ?#hasterminated"),
-	TYPE_METHOD_F("timedwaitfor", &thread_timedwaitfor, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("timedwaitfor", &thread_timedwaitfor, METHOD_FNOREFESCAPE,
 	              "(timeout_in_nanoseconds:?Dint)->?Dbool\n"
 	              "#t{:Interrupt}"
 	              "Same as ?#waitfor, but only attempt to wait at most @timeout_in_nanoseconds"),
-	TYPE_METHOD_F("interrupt", &thread_interrupt_impl, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("interrupt", &thread_interrupt_impl, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "(signal)->?Dbool\n"
 	              "(async_func:?DCallable,async_args:?DTuple)->?Dbool\n"
@@ -4205,33 +4205,33 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	              "User-code may also check for interrupts explicitly by calling ?#check_interrupt"),
 
 	/* Old, deprecated status-testing functions (replaced by getsets) */
-	TYPE_METHOD_F("started", &thread_started, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("started", &thread_started, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#hasstarted"),
-	TYPE_METHOD_F("detached", &thread_detached, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("detached", &thread_detached, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#wasdetached"),
-	TYPE_METHOD_F("terminated", &thread_terminated, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("terminated", &thread_terminated, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#hasterminated"),
-	TYPE_METHOD_F("interrupted", &thread_interrupted, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("interrupted", &thread_interrupted, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#wasinterrupted"),
-	TYPE_METHOD_F("crashed", &thread_crashed, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("crashed", &thread_crashed, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Deprecated alias for ?#hascrashed"),
 
 	/* Old, deprecated function names for backwards compatibility */
-	TYPE_METHOD_F("try_join", &thread_tryjoin, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("try_join", &thread_tryjoin, METHOD_FNOREFESCAPE,
 	              "->?T2?Dbool?O\n"
 	              "Old, deprecated name for ?#tryjoin"),
-	TYPE_METHOD_F("timed_join", &thread_timedjoin, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("timed_join", &thread_timedjoin, METHOD_FNOREFESCAPE,
 	              "(timeout_in_nanoseconds:?Dint)->?T2?Dbool?O\n"
 	              "Old, deprecated name for ?#timedjoin"),
-	TYPE_METHOD_F("crash_error", &thread_crash_error, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("crash_error", &thread_crash_error, METHOD_FNOREFESCAPE,
 	              "->?X2?O?N\n"
 	              "Deprecated function that does the same as ${this.crashinfo.first()[0]}"),
-	TYPE_METHOD_F("crash_traceback", &thread_crash_traceback, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("crash_traceback", &thread_crash_traceback, METHOD_FNOREFESCAPE,
 	              "->?X2?DTraceback?N\n"
 	              "Deprecated function that does the same as ${this.crashinfo.first()[1]}"),
 	TYPE_METHOD_END
@@ -4690,7 +4690,7 @@ thread_get_osfhandle_np(DeeThreadObject *__restrict self) {
 
 
 PRIVATE struct type_getset tpconst thread_getsets[] = {
-	TYPE_GETSET_F("callback", &thread_callback_get, &thread_callback_del, &thread_callback_set, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("callback", &thread_callback_get, &thread_callback_del, &thread_callback_set, METHOD_FNOREFESCAPE,
 	              "->?DCallable\n"
 	              "#tAttributeError{Attempted to overwrite the callback of a sub-class of ?., rather than an exact instance. "
 	              /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -4701,7 +4701,7 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	              "In the event that no callback has been set, or that the callback has been deleted, "
 	              /**/ "the getter will attempt to return the instance attribute $run which can be "
 	              /**/ "overwritten by sub-classes to provide an automatic and implicit thread-callback"),
-	TYPE_GETSET_F("callargs", &thread_callargs_get, &thread_callargs_del, &thread_callargs_set, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("callargs", &thread_callargs_get, &thread_callargs_del, &thread_callargs_set, METHOD_FNOREFESCAPE,
 	              "->?DTuple\n"
 	              "#tAttributeError{Attempted to overwrite the callback arguments of a sub-class of ?., rather than an exact instance. "
 	              /*                 */ "To prevent the need of overwriting this attribute whenever a sub-class wishes to provide a $run "
@@ -4710,13 +4710,13 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	              "#tValueError{Attempted to delete or set the attribute when @this thread has already been started}"
 	              "The callback arguments that are passed to ?#callback when the thread is started\n"
 	              "Deleting this member or setting ?N is the same as setting an empty tuple"),
-	TYPE_GETTER_F("result", &thread_result_get, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("result", &thread_result_get, METHOD_FNOREFESCAPE,
 	              "#tValueError{@this thread has not terminated yet}"
 	              "Return the result value of @this thread once it has terminated\n"
 	              "This is similar to what is returned by ?#join, but in the event that "
 	              /**/ "the thread terminated because it crashed, ?N is returned rather "
 	              /**/ "than all the errors that caused the thread to crash being encapsulated and propagated"),
-	TYPE_GETTER_F("crashinfo", &thread_crashinfo, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("crashinfo", &thread_crashinfo, METHOD_FNOREFESCAPE,
 	              "->?S?T2?O?DTraceback\n"
 	              "#tValueEror{@this thread hasn't terminated yet}"
 	              "Returns a sequence of 2-element tuples describing the errors that were "
@@ -4728,40 +4728,40 @@ PRIVATE struct type_getset tpconst thread_getsets[] = {
 	              /**/ "functions that did something similar prior to deemon 200\n"
 	              "When iterated, elements of the returned sequence identify errors that "
 	              /**/ "caused the crash from most to least recently thrown"),
-	TYPE_GETTER_F("traceback", &DeeThread_Trace, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("traceback", &DeeThread_Trace, METHOD_FNOREFESCAPE,
 	              "->?DTraceback\n"
 	              "Generate a traceback for the thread's current execution position"),
-	TYPE_GETTER_F("id", &thread_id, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("id", &thread_id, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{The thread hasn't been started yet}"
 	              "#tSystemError{The system does not provide a way to query thread ids}"
 	              "Returns an operating-system specific id of @this thread"),
 #ifndef DeeThread_USE_SINGLE_THREADED
-	TYPE_GETTER_F("isrunning", &thread_isrunning, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isrunning", &thread_isrunning, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this thread is current running (i.e. ?#hasstarted, but hasn't ?#hasterminated)"),
-	TYPE_GETTER_F("isstarting", &thread_isstarting, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isstarting", &thread_isstarting, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this thread is currently being started, or ?#hasstarted\n"
 	              "This is similar to ?#hasstarted, but becomes ?t a little bit earlier"),
 #endif /* !DeeThread_USE_SINGLE_THREADED */
-	TYPE_GETTER_F("hascrashed", &thread_hascrashed, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("hascrashed", &thread_hascrashed, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this thread has crashed, that "
 	              "is having ?#hasterminated while errors were still active\n"
 	              "When ?t, attempting to ?#join @this thread will cause all of the "
 	              /**/ "errors to be rethrown in the calling thread as a :ThreadCrash error"),
-	TYPE_GETTER_F("isterminating", &thread_isterminating, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isterminating", &thread_isterminating, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this thread is currently being terminated, or ?#hasterminated\n"
 	              "This is similar to ?#hasterminated, but becomes ?t a little bit earlier"),
 #ifdef Dee_THREAD_STATE_HASOSCTX
-	TYPE_GETTER_F("wasdetached", &thread_wasdetached, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("wasdetached", &thread_wasdetached, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this thread has been detached, joined, or hasn't been started, yet"),
 #endif /* Dee_THREAD_STATE_HASOSCTX */
 #ifdef DeeThread_USE_CreateThread
-	TYPE_GETTER_F(Dee_fd_osfhandle_GETSET, &thread_get_osfhandle_np, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(Dee_fd_osfhandle_GETSET, &thread_get_osfhandle_np, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns the windows HANDLE for this thread"),
 #endif /* DeeThread_USE_CreateThread */

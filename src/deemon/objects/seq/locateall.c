@@ -214,7 +214,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst locatoriter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &locatoriter_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqLocator"),
+	TYPE_GETTER_F(STR_seq, &locatoriter_seq_get, METHOD_FNOREFESCAPE, "->?Ert:SeqLocator"),
 	TYPE_GETSET_END
 };
 

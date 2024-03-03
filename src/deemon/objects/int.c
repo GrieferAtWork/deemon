@@ -4320,7 +4320,7 @@ DOC_REF(numeric_islessgreater_doc);
 DOC_REF(numeric_isunordered_doc);
 
 PRIVATE struct type_method tpconst int_methods[] = {
-	TYPE_KWMETHOD_F(STR_tostr, &int_tostr, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F(STR_tostr, &int_tostr, METHOD_FNOREFESCAPE,
 	                "(radix=!10,precision=!0,mode=!P{})->?Dstring\n"
 	                "#pprecision{The minimum number of digits (excluding radix/sign "
 	                /*            */ "prefixes) to print. Padding is done using $'0'-chars.}"
@@ -4334,10 +4334,10 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	                "$\"n\", $\"##\"|Prefix the integers with its number system prefix (e.g.: $\"0x\")&"
 	                "$\"s\", $\"+\"|Also prepend a sign prefix before positive integers&"
 	                "$\"_\"|Include canonical thousands/group-separators}"),
-	TYPE_KWMETHOD_F("hex", &int_hex, TYPE_METHOD_FNOREFESCAPE, numeric_hex_doc),
-	TYPE_KWMETHOD_F("bin", &int_bin, TYPE_METHOD_FNOREFESCAPE, numeric_bin_doc),
-	TYPE_KWMETHOD_F("oct", &int_oct, TYPE_METHOD_FNOREFESCAPE, numeric_oct_doc),
-	TYPE_KWMETHOD_F("tobytes", &int_tobytes, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("hex", &int_hex, METHOD_FNOREFESCAPE, numeric_hex_doc),
+	TYPE_KWMETHOD_F("bin", &int_bin, METHOD_FNOREFESCAPE, numeric_bin_doc),
+	TYPE_KWMETHOD_F("oct", &int_oct, METHOD_FNOREFESCAPE, numeric_oct_doc),
+	TYPE_KWMETHOD_F("tobytes", &int_tobytes, METHOD_FNOREFESCAPE,
 	                "(length?:?.,byteorder:?X2?Dstring?N=!N,signed=!f)->?DBytes\n"
 	                "#pbyteorder{The byteorder encoding used by the returned bytes. "
 	                /*            */ "One of $\"little\" (for little-endian), $\"big\" (for big-endian) "
@@ -4349,33 +4349,33 @@ PRIVATE struct type_method tpconst int_methods[] = {
 	                "When @signed is ?f, throw an :IntegerOverflow if @this "
 	                /**/ "integer is negative. Otherwise use two's complement to encode "
 	                /**/ "negative integers"),
-	TYPE_KWMETHOD_F("bitcount", &int_bitcount, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("bitcount", &int_bitcount, METHOD_FNOREFESCAPE,
 	                "(signed=!f)->?.\n"
 	                "#tIntegerOverflow{@signed is ?f and @this integer is negative}"
 	                "Return the number of bits needed to represent @this integer in base-2"),
-	TYPE_METHOD_F("divmod", &int_divmod_f, TYPE_METHOD_FNOREFESCAPE, numeric_divmod_doc),
-	TYPE_METHOD_F("nextafter", &int_nextafter, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("divmod", &int_divmod_f, METHOD_FNOREFESCAPE, numeric_divmod_doc),
+	TYPE_METHOD_F("nextafter", &int_nextafter, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?.\n"
 	              "Same as ${this > y ? this - 1 : this < y ? this + 1 : this}"),
-	TYPE_METHOD_F("isgreater", &int_isgreater, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("isgreater", &int_isgreater, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?Dbool\n"
 	              "Same as ${this > y}"),
-	TYPE_METHOD_F("isgreaterequal", &int_isgreaterequal, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("isgreaterequal", &int_isgreaterequal, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?Dbool\n"
 	              "Same as ${this >= y}"),
-	TYPE_METHOD_F("isless", &int_isless, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("isless", &int_isless, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?Dbool\n"
 	              "Same as ${this < y}"),
-	TYPE_METHOD_F("islessequal", &int_islessequal, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("islessequal", &int_islessequal, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?Dbool\n"
 	              "Same as ${this <= y}"),
-	TYPE_METHOD_F("islessgreater", &int_islessgreater, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("islessgreater", &int_islessgreater, METHOD_FNOREFESCAPE,
 	              "(y:?.)->?Dbool\n"
 	              "Same as ${this != y}"),
-	TYPE_METHOD_F("isunordered", &int_isunordered, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("isunordered", &int_isunordered, METHOD_FNOREFESCAPE,
 	              "(y:?X2?.?Dfloat)->?Dbool\n"
 	              "Same as ${y is float && y.isnan}"),
-	TYPE_METHOD_F("__forcecopy__", &int_forcecopy, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("__forcecopy__", &int_forcecopy, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              "Internal function to force the creation of a copy of @this "
 	              /**/ "integer without performing aliasing for known constants.\n"
@@ -4574,31 +4574,31 @@ err_printer:
 
 
 PRIVATE struct type_getset tpconst int_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &int_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?."),
+	TYPE_GETTER_F("__sizeof__", &int_sizeof, METHOD_FNOREFESCAPE, "->?."),
 	TYPE_GETTER("abs", &int_get_abs, "->?."),
 	TYPE_GETTER("trunc", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("floor", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("ceil", &DeeObject_NewRef, "->?."),
 	TYPE_GETTER("round", &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("isnormal", &int_return_nonzero, TYPE_GETSET_FNOREFESCAPE, "->?Dbool\nSame as {this != 0}"),
+	TYPE_GETTER_F("isnormal", &int_return_nonzero, METHOD_FNOREFESCAPE, "->?Dbool\nSame as {this != 0}"),
 
 	/* Binary property helper functions */
-	TYPE_GETTER_F("popcount", &int_get_popcount, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("popcount", &int_get_popcount, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this < 0}}"
 	              "Return the number of 1-bits in this integer"),
-	TYPE_GETTER_F("ffs", &int_get_ffs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ffs", &int_get_ffs, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "FindFirstSet: same as ?#ctz +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER_F("fls", &int_get_fls, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("fls", &int_get_fls, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this < 0}}"
 	              "FindLastSet: same as ?#msb +1, but returns $0 when ${this == 0}"),
-	TYPE_GETTER_F("partity", &int_get_partity, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("partity", &int_get_partity, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this < 0}}"
 	              "Return $0 or $1 indivative of the even/odd parity of @this. Same as ${this.popcount % 2}"),
-	TYPE_GETTER_F("ctz", &int_get_ctz, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ctz", &int_get_ctz, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this == 0}}"
 	              "CountTrailingZeros: return the number of trailing zero-bits:\n"
@@ -4606,7 +4606,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	              /**/ "local n = this.ctz;\n"
 	              /**/ "assert this == (this >> n) << n;"
 	              "}"),
-	TYPE_GETTER_F("msb", &int_get_msb, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("msb", &int_get_msb, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tIntegerOverflow{When ${this <= 0}}"
 	              "MostSignificantBit: return the index of the most significant 1-bit (0-based):\n"
@@ -4614,7 +4614,7 @@ PRIVATE struct type_getset tpconst int_getsets[] = {
 	              /**/ "assert (this >> this.msb) == 1;"
 	              "}"),
 
-	TYPE_GETTER_F("nth", &int_get_nth, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("nth", &int_get_nth, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Returns the value of @this ?. as a string (as per ?#op:str), with the "
 	              /**/ "standard english enumeration suffix applicable to the value of @{this}:\n"

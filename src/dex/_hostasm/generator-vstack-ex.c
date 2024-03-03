@@ -897,55 +897,38 @@ vcall_objmethod(struct fungen *__restrict self,
                 Dee_objmethod_t func, vstackaddr_t argc,
                 struct docinfo *doc, char const *funcname,
                 uintptr_t func_flags) {
-	DeeTypeObject *type = doc->di_typ;
-	if (type) {
-		if (fg_vallconst(self, argc + 1)) {
-			/* Inline the object method call. */
-			size_t i;
-			DeeObject *thisobj, **argv;
-			DREF DeeObject *retval;
-			struct memval *thisval;
-			argv = (DeeObject **)Dee_Mallocac(argc, sizeof(DeeObject *));
-			if unlikely(!argv)
+	if ((func_flags & METHOD_FCONSTCALL) && fg_vallconst(self, argc + 1)) {
+		/* Inline the object method call. */
+		size_t i;
+		DeeObject *thisobj, **argv;
+		DREF DeeObject *retval;
+		struct memval *thisval;
+		argv = (DeeObject **)Dee_Mallocac(argc, sizeof(DeeObject *));
+		if unlikely(!argv)
+			goto err;
+		thisval = fg_vtop(self) - argc;
+		thisobj = memval_const_getobj(thisval);
+		for (i = 0; i < argc; ++i)
+			argv[i] = memval_const_getobj(&thisval[i + 1]);
+		retval = (*func)(thisobj, argc, argv);
+		Dee_Freea(argv);
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
 				goto err;
-			thisval = fg_vtop(self) - argc;
-			thisobj = memval_const_getobj(thisval);
-			for (i = 0; i < argc; ++i)
-				argv[i] = memval_const_getobj(&thisval[i + 1]);
-			if (!DeeType_IsObjMethodConstexpr(type, func, thisobj, argc, argv, NULL)) {
-				Dee_Freea(argv);
-			} else {
-				retval = (*func)(thisobj, argc, argv);
-				Dee_Freea(argv);
-				if likely(retval != NULL) {
-					retval = fg_inlineref(self, retval);
-					if unlikely(!retval)
-						goto err;
-					DO(fg_vpopmany(self, argc + 1));
-					return fg_vpush_const(self, retval);
-				} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-					goto err;
-				} else {
-					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-				}
-			}
+			DO(fg_vpopmany(self, argc + 1));
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
-		if (funcname == NULL) {
-			struct type_method const *iter = type->tp_methods;
-			if likely(iter) {
-				while (iter->m_name && iter->m_func != func)
-					++iter;
-				if (iter->m_name) {
-					funcname   = iter->m_name;
-					func_flags = iter->m_flag;
-				}
-			}
-		}
-
+	}
+	if (doc->di_typ) {
 		/* Check if we have a known optimization for the function being called. */
 		if (funcname != NULL && argc <= CCALL_ARGC_MAX) {
 			struct ccall_optimization const *cco;
-			cco = ccall_find_attr_optimization(type, funcname, argc);
+			cco = ccall_find_attr_optimization(doc->di_typ, funcname, argc);
 			if (cco != NULL) {
 				int status;
 				status = (*cco->tcco_func)(self, argc);
@@ -953,23 +936,23 @@ vcall_objmethod(struct fungen *__restrict self,
 					return status; /* Success, or error */
 			}
 		}
-		if (DeeType_IsNamespace(type)) {
+		if (DeeType_IsNamespace(doc->di_typ)) {
 			/* Don't need a valid "this" argument (replace "this" with "undefined") */
 			DO(fg_vpop_at(self, argc + 1)); /* [args...] */
 			DO(fg_vpush_undefined(self));   /* [args...], undefined */
 			DO(fg_vrrot(self, argc + 1));   /* undefined, [args...] */
-			func_flags |= Dee_TYPE_METHOD_FNOREFESCAPE;
+			func_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
 	DO(fg_vnotoneref(self, argc));            /* this, [args...] */
-	if (!(func_flags & Dee_TYPE_METHOD_FNOREFESCAPE))             /* this, [args...] */
+	if (!(func_flags & METHOD_FNOREFESCAPE)) /* this, [args...] */
 		DO(fg_vnotoneref_at(self, argc + 1)); /* this, [args...] */
 	DO(fg_vlinear(self, argc, true));         /* this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));             /* [args...], argv, this */
 	DO(fg_vpush_immSIZ(self, argc));          /* [args...], argv, this, argc */
 	DO(fg_vlrot(self, 3));                    /* [args...], this, argc, argv */
 	DO(fg_vcallapi_ex(self, func, VCALL_CC_RAWINTPTR, 3, argc + 3)); /* UNCHECKED(result) */
-	return check_result_with_doc(self, argc, doc);                /* result */
+	return check_result_with_doc(self, argc, doc); /* result */
 err:
 	return -1;
 }
@@ -980,61 +963,43 @@ vcall_kwobjmethod(struct fungen *__restrict self,
                   Dee_kwobjmethod_t func, vstackaddr_t argc,
                   struct docinfo *doc, char const *funcname,
                   uintptr_t func_flags) {
-	DeeTypeObject *type;
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* this, [args...], kw */
-	type = doc->di_typ;
-	if (type) {
-		if (fg_vallconst(self, argc + 2)) {
-			/* Inline the object method call. */
-			size_t i;
-			DeeObject *thisobj, *kw, **argv;
-			DREF DeeObject *retval;
-			struct memval *thisval;
-			argv = (DeeObject **)Dee_Mallocac(argc, sizeof(DeeObject *));
-			if unlikely(!argv)
+	if ((func_flags & METHOD_FCONSTCALL) && fg_vallconst(self, argc + 2)) {
+		/* Inline the object method call. */
+		size_t i;
+		DeeObject *thisobj, *kw, **argv;
+		DREF DeeObject *retval;
+		struct memval *thisval;
+		argv = (DeeObject **)Dee_Mallocac(argc, sizeof(DeeObject *));
+		if unlikely(!argv)
+			goto err;
+		thisval = fg_vtop(self) - (argc + 1);
+		thisobj = memval_const_getobj(thisval);
+		for (i = 0; i < argc; ++i)
+			argv[i] = memval_const_getobj(&thisval[i + 1]);
+		kw = memval_const_getobj(&thisval[argc + 1]);
+		retval = (*func)(thisobj, argc, argv, kw);
+		Dee_Freea(argv);
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
 				goto err;
-			thisval = fg_vtop(self) - (argc + 1);
-			thisobj = memval_const_getobj(thisval);
-			for (i = 0; i < argc; ++i)
-				argv[i] = memval_const_getobj(&thisval[i + 1]);
-			kw = memval_const_getobj(&thisval[argc + 1]);
-			if (!DeeType_IsObjMethodConstexpr(type, (Dee_objmethod_t)(void const *)func,
-			                                  thisobj, argc, argv, kw)) {
-				Dee_Freea(argv);
-			} else {
-				retval = (*func)(thisobj, argc, argv, kw);
-				Dee_Freea(argv);
-				if likely(retval != NULL) {
-					retval = fg_inlineref(self, retval);
-					if unlikely(!retval)
-						goto err;
-					DO(fg_vpopmany(self, argc + 2));
-					return fg_vpush_const(self, retval);
-				} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-					goto err;
-				} else {
-					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-				}
-			}
+			DO(fg_vpopmany(self, argc + 2));
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
-		if (funcname == NULL) {
-			struct type_method const *iter = type->tp_methods;
-			if likely(iter) {
-				while (iter->m_name && iter->m_func != (Dee_objmethod_t)(void const *)func)
-					++iter;
-				if (iter->m_name) {
-					funcname   = iter->m_name;
-					func_flags = iter->m_flag;
-				}
-			}
-		}
+	}
 
+	if (doc->di_typ) {
 		/* Check if we have a known optimization for the function being called. */
 		if (funcname != NULL) {
 			struct memval *kwval = fg_vtop(self);
 			if (memval_isnull(kwval) && argc <= CCALL_ARGC_MAX) {
 				struct ccall_optimization const *cco;
-				cco = ccall_find_attr_optimization(type, funcname, argc);
+				cco = ccall_find_attr_optimization(doc->di_typ, funcname, argc);
 				if (cco != NULL) {
 					int status;
 					DO(fg_vpop(self)); /* this, [args...] */
@@ -1045,16 +1010,16 @@ vcall_kwobjmethod(struct fungen *__restrict self,
 				}
 			}
 		}
-		if (DeeType_IsNamespace(type)) {
+		if (DeeType_IsNamespace(doc->di_typ)) {
 			/* Don't need a valid "this" argument (replace "this" with "undefined") */
 			DO(fg_vpop_at(self, argc + 2)); /* [args...], kw */
 			DO(fg_vpush_undefined(self));   /* [args...], kw, undefined */
 			DO(fg_vrrot(self, argc + 2));   /* undefined, [args...], kw */
-			func_flags |= Dee_TYPE_METHOD_FNOREFESCAPE;
+			func_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
 	DO(fg_vnotoneref(self, argc + 1));                               /* this, [args...], kw */
-	if (!(func_flags & Dee_TYPE_METHOD_FNOREFESCAPE))                /* this, [args...], kw */
+	if (!(func_flags & METHOD_FNOREFESCAPE))                         /* this, [args...], kw */
 		DO(fg_vnotoneref_at(self, argc + 2));                        /* this, [args...], kw */
 	DO(fg_vrrot(self, argc + 1));                                    /* this, kw, [args...] */
 	DO(fg_vlinear(self, argc, true));                                /* this, kw, [args...], argv */
@@ -1073,8 +1038,6 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 vcall_getmethod(struct fungen *__restrict self,
                 Dee_getmethod_t func, struct docinfo *doc,
                 char const *getset_name, uintptr_t getset_flags) {
-	DeeTypeObject *type;
-
 	/* Optimizations for some well-known getter-like functions. */
 	if (func == &DeeObject_NewRef) {
 		/* This right here optimizes stuff like `Object.this' */
@@ -1097,55 +1060,43 @@ vcall_getmethod(struct fungen *__restrict self,
 		return fg_vopcast(self, &DeeRoSet_Type);
 	}
 
-	/* Do certain optimizations when the type is known. */
-	type = doc->di_typ;
-	if (type) {
-		if (fg_vallconst(self, 1) && DeeType_IsGetMethodConstexpr(type, func)) {
-			/* Inline the getter call. */
-			DeeObject *thisval = memval_const_getobj(fg_vtop(self));
-			DREF DeeObject *retval = (*func)(thisval);
-			if likely(retval != NULL) {
-				retval = fg_inlineref(self, retval);
-				if unlikely(!retval)
-					goto err;
-				DO(fg_vpop(self));
-				return fg_vpush_const(self, retval);
-			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+	if ((getset_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 1)) {
+		/* Inline the getter call. */
+		DeeObject *thisval = memval_const_getobj(fg_vtop(self));
+		DREF DeeObject *retval = (*func)(thisval);
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
 				goto err;
-			} else {
-				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-			}
+			DO(fg_vpop(self));
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
-		if (getset_name == NULL) {
-			struct type_getset const *iter = type->tp_getsets;
-			if likely(iter) {
-				while (iter->gs_name && iter->gs_get != func)
-					++iter;
-				if (iter->gs_name) {
-					getset_name  = iter->gs_name;
-					getset_flags = iter->gs_flags;
-				}
-			}
-		}
+	}
 
+	/* Do certain optimizations when the type is known. */
+	if (doc->di_typ) {
 		/* Check if we have a known optimization for the getter being called. */
 		if (getset_name != NULL) {
 			struct ccall_optimization const *cco;
-			cco = ccall_find_attr_optimization(type, getset_name, CCALL_ARGC_GETTER);
+			cco = ccall_find_attr_optimization(doc->di_typ, getset_name, CCALL_ARGC_GETTER);
 			if (cco != NULL && cco->tcco_argc == CCALL_ARGC_GETTER) {
 				int status = (*cco->tcco_func)(self, CCALL_ARGC_GETTER);
 				if (status <= 0)
 					return status; /* Success, or error */
 			}
 		}
-		if (DeeType_IsNamespace(type)) {
+		if (DeeType_IsNamespace(doc->di_typ)) {
 			/* Don't need a valid "this" argument (replace "this" with "undefined") */
 			DO(fg_vpop(self));            /* N/A */
 			DO(fg_vpush_undefined(self)); /* undefined */
-			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+			getset_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
-	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & METHOD_FNOREFESCAPE))
 		DO(fg_vnotoneref_at(self, 1));                  /* this */
 	DO(fg_vcallapi(self, func, VCALL_CC_RAWINTPTR, 1)); /* result */
 	return check_result_with_doc(self, 0, doc);
@@ -1158,32 +1109,20 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vcall_boundmethod(struct fungen *__restrict self,
                   Dee_boundmethod_t func, DeeTypeObject *type,
                   char const *getset_name, uintptr_t getset_flags) {
+	if ((getset_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 1)) {
+		/* Inline the is-bound call. */
+		DeeObject *thisval = memval_const_getobj(fg_vtop(self));
+		int retval = (*func)(thisval);
+		if likely(retval != -1) {
+			DO(fg_vpop(self));
+			return fg_vpush_const(self, DeeBool_For(retval > 0));
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+		}
+	}
 	if (type) {
-		if (fg_vallconst(self, 1) && DeeType_IsBoundMethodConstexpr(type, func)) {
-			/* Inline the is-bound call. */
-			DeeObject *thisval = memval_const_getobj(fg_vtop(self));
-			int retval = (*func)(thisval);
-			if likely(retval != -1) {
-				DO(fg_vpop(self));
-				return fg_vpush_const(self, DeeBool_For(retval > 0));
-			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-				goto err;
-			} else {
-				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-			}
-		}
-		if (getset_name == NULL) {
-			struct type_getset const *iter = type->tp_getsets;
-			if likely(iter) {
-				while (iter->gs_name && iter->gs_bound != func)
-					++iter;
-				if (iter->gs_name) {
-					getset_name  = iter->gs_name;
-					getset_flags = iter->gs_flags;
-				}
-			}
-		}
-
 		/* Check if we have a known optimization for the bound-function being called. */
 		if (getset_name != NULL) {
 			struct ccall_optimization const *cco;
@@ -1198,10 +1137,10 @@ vcall_boundmethod(struct fungen *__restrict self,
 			/* Don't need a valid "this" argument (replace "this" with "undefined") */
 			DO(fg_vpop(self));            /* N/A */
 			DO(fg_vpush_undefined(self)); /* undefined */
-			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+			getset_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
-	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & METHOD_FNOREFESCAPE))
 		DO(fg_vnotoneref_at(self, 1));              /* this */
 	DO(fg_vcallapi(self, func, VCALL_CC_M1INT, 1)); /* result */
 	DO(fg_vdirect1(self));
@@ -1218,18 +1157,6 @@ vcall_delmethod(struct fungen *__restrict self,
                 Dee_delmethod_t func, DeeTypeObject *type,
                 char const *getset_name, uintptr_t getset_flags) {
 	if (type != NULL) {
-		if (getset_name == NULL) {
-			struct type_getset const *iter = type->tp_getsets;
-			if likely(iter) {
-				while (iter->gs_name && iter->gs_del != func)
-					++iter;
-				if (iter->gs_name) {
-					getset_name  = iter->gs_name;
-					getset_flags = iter->gs_flags;
-				}
-			}
-		}
-
 		/* Check if we have a known optimization for the bound-function being called. */
 		if (getset_name != NULL) {
 			struct ccall_optimization const *cco;
@@ -1244,10 +1171,10 @@ vcall_delmethod(struct fungen *__restrict self,
 			/* Don't need a valid "this" argument (replace "this" with "undefined") */
 			DO(fg_vpop(self));            /* N/A */
 			DO(fg_vpush_undefined(self)); /* undefined */
-			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+			getset_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
-	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & METHOD_FNOREFESCAPE))
 		DO(fg_vnotoneref_at(self, 1));               /* this */
 	return fg_vcallapi(self, func, VCALL_CC_INT, 1); /* N/A */
 err:
@@ -1260,18 +1187,6 @@ vcall_setmethod(struct fungen *__restrict self,
                 Dee_setmethod_t func, DeeTypeObject *type,
                 char const *getset_name, uintptr_t getset_flags) {
 	if (type != NULL) {
-		if (getset_name == NULL) {
-			struct type_getset const *iter = type->tp_getsets;
-			if likely(iter) {
-				while (iter->gs_name && iter->gs_set != func)
-					++iter;
-				if (iter->gs_name) {
-					getset_name  = iter->gs_name;
-					getset_flags = iter->gs_flags;
-				}
-			}
-		}
-
 		/* Check if we have a known optimization for the bound-function being called. */
 		if (getset_name != NULL) {
 			struct ccall_optimization const *cco;
@@ -1287,11 +1202,11 @@ vcall_setmethod(struct fungen *__restrict self,
 			DO(fg_vpop_at(self, 2));      /* value */
 			DO(fg_vpush_undefined(self)); /* value, undefined */
 			DO(fg_vswap(self));           /* undefined, value */
-			getset_flags |= Dee_TYPE_GETSET_FNOREFESCAPE;
+			getset_flags |= METHOD_FNOREFESCAPE;
 		}
 	}
 	DO(fg_vnotoneref_at(self, 1)); /* this, value */
-	if (!(getset_flags & Dee_TYPE_GETSET_FNOREFESCAPE))
+	if (!(getset_flags & METHOD_FNOREFESCAPE))
 		DO(fg_vnotoneref_at(self, 2));               /* this, value */
 	return fg_vcallapi(self, func, VCALL_CC_INT, 2); /* N/A */
 err:
@@ -1301,8 +1216,7 @@ err:
 
 /* [args...] -> result */
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fg_vophash_n(struct fungen *__restrict self,
-                                 vstackaddr_t argc) {
+fg_vophash_n(struct fungen *__restrict self, vstackaddr_t argc) {
 	if (argc == 0) {
 		STATIC_ASSERT(DEE_HASHOF_EMPTY_SEQUENCE == 0);
 		return fg_vpush_const(self, DeeInt_Zero);
@@ -1323,8 +1237,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 vcall_cmethod(struct fungen *__restrict self,
               Dee_cmethod_t func, vstackaddr_t argc,
-              struct docinfo *doc) {
-	if (fg_vallconst(self, argc)) {
+              struct docinfo *doc, uintptr_t func_flags) {
+	if ((func_flags & METHOD_FCONSTCALL) && fg_vallconst(self, argc)) {
 		/* Inline the c-method call. */
 		size_t i;
 		DeeObject **argv;
@@ -1336,22 +1250,18 @@ vcall_cmethod(struct fungen *__restrict self,
 		argvalv = fg_vtop(self) - (argc - 1);
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&argvalv[i]);
-		if (!DeeCMethod_IsConstExpr(func, argc, argv, NULL)) {
-			Dee_Freea(argv);
-		} else {
-			retval = (*func)(argc, argv);
-			Dee_Freea(argv);
-			if likely(retval != NULL) {
-				retval = fg_inlineref(self, retval);
-				if unlikely(!retval)
-					goto err;
-				DO(fg_vpopmany(self, argc));
-				return fg_vpush_const(self, retval);
-			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+		retval = (*func)(argc, argv);
+		Dee_Freea(argv);
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
 				goto err;
-			} else {
-				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-			}
+			DO(fg_vpopmany(self, argc));
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
 	}
 
@@ -1392,8 +1302,8 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 vcall_kwcmethod(struct fungen *__restrict self,
                 Dee_kwcmethod_t func, vstackaddr_t argc,
-                struct docinfo *doc) {
-	if (fg_vallconst(self, argc + 1)) {
+                struct docinfo *doc, uintptr_t func_flags) {
+	if ((func_flags & METHOD_FCONSTCALL) && fg_vallconst(self, argc + 1)) {
 		/* Inline the c-method call. */
 		size_t i;
 		DeeObject *kw, **argv;
@@ -1406,25 +1316,20 @@ vcall_kwcmethod(struct fungen *__restrict self,
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&argvalv[i]);
 		kw = memval_const_getobj(&argvalv[argc]);
-		if (!DeeCMethod_IsConstExpr((Dee_cmethod_t)(void const *)func, argc, argv, kw)) {
-			Dee_Freea(argv);
-		} else {
-			retval = (*func)(argc, argv, kw);
-			Dee_Freea(argv);
-			if likely(retval != NULL) {
-				retval = fg_inlineref(self, retval);
-				if unlikely(!retval)
-					goto err;
-				DO(fg_vpopmany(self, argc + 1));
-				return fg_vpush_const(self, retval);
-			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+		retval = (*func)(argc, argv, kw);
+		Dee_Freea(argv);
+		if likely(retval != NULL) {
+			retval = fg_inlineref(self, retval);
+			if unlikely(!retval)
 				goto err;
-			} else {
-				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
-			}
+			DO(fg_vpopmany(self, argc + 1));
+			return fg_vpush_const(self, retval);
+		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+			goto err;
+		} else {
+			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
 		}
 	}
-
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* [args...], kw */
 
 	/* Optimizations for special C methods from the builtin deemon module. */
@@ -1734,80 +1639,97 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 	ASSERT_OBJECT_TYPE_A(func_obj, func_type);
 	bzero(&doc, sizeof(doc));
 	if (func_type == &DeeObjMethod_Type) {
+		struct objmethod_origin origin;
 		DeeObjMethodObject *func = (DeeObjMethodObject *)func_obj;
+		uintptr_t method_flags = METHOD_FNORMAL;
+		char const *method_name = NULL;
 		DO(vpop_empty_kwds(self));               /* func, [args...] */
 		DO(fg_vpop_at(self, true_argc + 1));     /* [args...] */
 		DO(fg_vpush_const(self, func->om_this)); /* [args...], this */
 		DO(fg_vrrot(self, true_argc + 1));       /* this, [args...] */
-		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-			struct objmethod_origin origin;
-			if (DeeObjMethod_GetOrigin((DeeObject *)func, &origin)) {
-				doc.di_typ = origin.omo_type;
-				doc.di_doc = origin.omo_decl->m_doc;
-			}
+		if (DeeObjMethod_GetOrigin((DeeObject *)func, &origin)) {
+			doc.di_typ   = origin.omo_type;
+			doc.di_doc   = origin.omo_decl->m_doc;
+			method_name  = origin.omo_decl->m_name;
+			method_flags = origin.omo_decl->m_flag;
 		}
-		return vcall_objmethod(self, func->om_func, true_argc, &doc, NULL, 0);
+		return vcall_objmethod(self, func->om_func, true_argc,
+		                       &doc, method_name, method_flags);
 	} else if (func_type == &DeeKwObjMethod_Type) {
 		DeeKwObjMethodObject *func = (DeeKwObjMethodObject *)func_obj;
-		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-			struct objmethod_origin origin;
-			if (DeeKwObjMethod_GetOrigin((DeeObject *)func, &origin)) {
-				doc.di_typ = origin.omo_type;
-				doc.di_doc = origin.omo_decl->m_doc;
-			}
-			DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL)); /* func, [args...], kw */
+		struct objmethod_origin origin;
+		uintptr_t method_flags = METHOD_FNORMAL;
+		char const *method_name = NULL;
+		if (DeeKwObjMethod_GetOrigin((DeeObject *)func, &origin)) {
+			doc.di_typ   = origin.omo_type;
+			doc.di_doc   = origin.omo_decl->m_doc;
+			method_name  = origin.omo_decl->m_name;
+			method_flags = origin.omo_decl->m_flag;
+			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE))
+				DO(vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL)); /* func, [args...], kw */
 		}                                        /* func, [args...], kw */
 		DO(fg_vpop_at(self, true_argc + 2));     /* [args...], kw */
 		DO(fg_vpush_const(self, func->om_this)); /* [args...], kw, this */
 		DO(fg_vrrot(self, true_argc + 2));       /* this, [args...], kw */
-		return vcall_kwobjmethod(self, func->om_func, true_argc, &doc, NULL, 0);
+		return vcall_kwobjmethod(self, func->om_func, true_argc,
+		                         &doc, method_name, method_flags);
 	} else if (func_type == &DeeClsMethod_Type) {
 		DeeClsMethodObject *func = (DeeClsMethodObject *)func_obj;
 		if (true_argc >= 1) {
+			struct objmethod_origin origin;
+			uintptr_t method_flags = METHOD_FNORMAL;
+			char const *method_name = NULL;
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
 			DO(vpop_empty_kwds(self));         /* func, this, [args...] */
 			DO(fg_vpop_at(self, argc + 2));    /* this, [args...] */
 			DO(fg_vlrot(self, argc + 1));      /* [args...], this */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->ob_type)); /* [args...], this */
 			DO(fg_vrrot(self, argc + 1));      /* this, [args...] */
-			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-				struct objmethod_origin origin;
-				if (DeeClsMethod_GetOrigin((DeeObject *)func, &origin))
-					doc.di_doc = origin.omo_decl->m_doc;
-				doc.di_typ = func->cm_type;
+			doc.di_typ = func->cm_type;
+			if (DeeClsMethod_GetOrigin((DeeObject *)func, &origin)) {
+				doc.di_doc   = origin.omo_decl->m_doc;
+				method_name  = origin.omo_decl->m_name;
+				method_flags = origin.omo_decl->m_flag;
 			}
-			return vcall_objmethod(self, func->cm_func, argc, &doc, NULL, 0);
+			return vcall_objmethod(self, func->cm_func, argc, &doc, method_name, method_flags);
 		}
 	} else if (func_type == &DeeKwClsMethod_Type) {
 		DeeKwClsMethodObject *func = (DeeKwClsMethodObject *)func_obj;
 		if (true_argc >= 1) {
 			vstackaddr_t argc = true_argc - 1; /* Account for "this" argument */
-			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-				struct objmethod_origin origin;
-				if (DeeKwClsMethod_GetOrigin((DeeObject *)func, &origin))
-					doc.di_doc = origin.omo_decl->m_doc;
-				doc.di_typ = func->cm_type;
+			uintptr_t method_flags = METHOD_FNORMAL;
+			char const *method_name = NULL;
+			struct objmethod_origin origin;
+			doc.di_typ = func->cm_type;
+			if (DeeKwClsMethod_GetOrigin((DeeObject *)func, &origin)) {
+				doc.di_doc   = origin.omo_decl->m_doc;
+				method_name  = origin.omo_decl->m_name;
+				method_flags = origin.omo_decl->m_flag;
+			}
+			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE))
 				DO(vinline_kwds_and_replace_with_null(self, &argc, &doc, NULL, NULL)); /* func, this, [args...], kw */
-			}                                                                          /* func, this, [args...], kw */
 			DO(fg_vpop_at(self, argc + 3));                                            /* this, [args...], kw */
 			DO(fg_vlrot(self, argc + 2));                                              /* [args...], kw, this */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->ob_type));        /* [args...], kw, this */
 			DO(fg_vrrot(self, argc + 2));                                              /* this, [args...], kw */
-			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, NULL, 0);        /* result */
+			return vcall_kwobjmethod(self, func->cm_func, argc, &doc, method_name, method_flags); /* result */
 		}
 	} else if (func_type == &DeeClsProperty_Type) {
 		DeeClsPropertyObject *func = (DeeClsPropertyObject *)func_obj;
 		if (func->cp_get && true_argc == 1) {
+			struct clsproperty_origin origin;
+			uintptr_t method_flags = METHOD_FNORMAL;
+			char const *method_name = NULL;
 			DO(vpop_empty_kwds(self));                                          /* func, this */
 			DO(fg_vcall_DeeObject_AssertTypeOrAbstract_c(self, func->cp_type)); /* func, this */
 			DO(fg_vpop_at(self, 2));                                            /* this */
 			doc.di_typ = func->cp_type;
-			if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
-				struct clsproperty_origin origin;
-				if (DeeClsProperty_GetOrigin((DeeObject *)func, &origin))
-					doc.di_doc = origin.cpo_decl->gs_doc;
+			if (DeeClsProperty_GetOrigin((DeeObject *)func, &origin)) {
+				doc.di_doc   = origin.cpo_decl->gs_doc;
+				method_name  = origin.cpo_decl->gs_name;
+				method_flags = origin.cpo_decl->gs_flags;
 			}
-			return vcall_getmethod(self, func->cp_get, &doc, NULL, 0);
+			return vcall_getmethod(self, func->cp_get, &doc, method_name, method_flags);
 		}
 	} else if (func_type == &DeeClsMember_Type) {
 		DeeClsMemberObject *func = (DeeClsMemberObject *)func_obj;
@@ -1824,14 +1746,15 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self));           /* func, [args...] */
 		DO(fg_vpop_at(self, true_argc + 1)); /* [args...] */
-		if (DeeCMethod_GetOrigin(func, &origin)) {
+		if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) &&
+		    DeeCMethod_GetOrigin(func, &origin)) {
 			doc.di_doc = origin.cmo_doc;
 			doc.di_mod = origin.cmo_module;
 			doc.di_typ = origin.cmo_type;
-			result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
+			result = vcall_cmethod(self, func->cm_func, true_argc, &doc, func->cm_flags);
 			Dee_cmethod_origin_fini(&origin);
 		} else {
-			result = vcall_cmethod(self, func->cm_func, true_argc, &doc);
+			result = vcall_cmethod(self, func->cm_func, true_argc, &doc, func->cm_flags);
 		}
 		return result;
 	} else if (func_type == &DeeKwCMethod_Type) {
@@ -1839,21 +1762,21 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		DeeKwCMethodObject *func = (DeeKwCMethodObject *)func_obj; /* func, [args...], kw */
 		DO(fg_vpop_at(self, true_argc + 2));                       /* [args...], kw */
 		if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE) {
-			result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
+			result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc, func->kcm_flags);
 		} else {
 			struct cmethod_origin origin;
-			if (DeeCMethod_GetOrigin(func, &origin)) {
+			if (DeeKwCMethod_GetOrigin(func, &origin)) {
 				doc.di_doc = origin.cmo_doc;
 				doc.di_mod = origin.cmo_module;
 				doc.di_typ = origin.cmo_type;
 				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
 				if likely(result == 0)
-					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
+					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc, func->kcm_flags);
 				Dee_cmethod_origin_fini(&origin);
 			} else {
 				result = vinline_kwds_and_replace_with_null(self, &true_argc, &doc, NULL, NULL); /* [args...], kw */
 				if likely(result == 0)
-					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc);
+					result = vcall_kwcmethod(self, func->kcm_func, true_argc, &doc, func->kcm_flags);
 			}
 		}
 		return result;

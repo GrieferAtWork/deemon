@@ -319,20 +319,20 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst im_getsets[] = {
-	TYPE_GETTER_F(STR___name__, &instancemethod_get_name, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___name__, &instancemethod_get_name, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The name of the function being bound, or ?N if unknown"),
-	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of the function being bound, or ?N if unknown"),
-	TYPE_GETTER_F(STR___kwds__, &instancemethod_get_kwds, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___kwds__, &instancemethod_get_kwds, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
 	              "Returns a sequence of keyword argument names accepted by @this function\n"
 	              "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
-	TYPE_GETTER_F(STR___type__, &instancemethod_get_type, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___type__, &instancemethod_get_type, METHOD_FNOREFESCAPE,
 	              "->?X2?DType?N\n"
 	              "The type implementing the function that is being bound, or ?N if unknown"),
-	TYPE_GETTER_F(STR___module__, &instancemethod_get_module, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR___module__, &instancemethod_get_module, METHOD_FNOREFESCAPE,
 	              "->?X2?DModule?N\n"
 	              "The type within which the bound function was defined "
 	              "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"

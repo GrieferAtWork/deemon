@@ -1739,24 +1739,24 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	            "->?S?Dint\n"
 	            "Returns a proxy view for the characters of @this ?. as a sequence of "
 	            /**/ "integers referring to the ordinal values of each character (s.a. ?#ord)"),
-	TYPE_GETTER_F("__hashed__", &string_hashed, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__hashed__", &string_hashed, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. has been hashed"),
-	TYPE_GETTER_F("__hasutf__", &string_hasutf, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__hasutf__", &string_hasutf, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. owns a UTF container"),
-	TYPE_GETTER_F("__hasregex__", &string_hasregex, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__hasregex__", &string_hasregex, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. has been compiled as a regex pattern in the past"),
-	TYPE_GETTER_F(STR_first, &string_getfirst, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_first, &string_getfirst, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              "#tValueError{@this ?. is empty}"
 	              "Returns the first character of @this ?."),
-	TYPE_GETTER_F(STR_last, &string_getlast, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F(STR_last, &string_getlast, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              "#tValueError{@this ?. is empty}"
 	              "Returns the last character of @this ?."),
-	TYPE_GETTER_F("__sizeof__", &string_sizeof, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__sizeof__", &string_sizeof, METHOD_FNOREFESCAPE,
 	              "->?Dint"),
 
 #ifdef CONFIG_HAVE_STRING_AUDITING_INTERNALS

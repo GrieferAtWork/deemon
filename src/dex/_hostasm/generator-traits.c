@@ -94,57 +94,6 @@ DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
 	return false;
 }
 
-
-/* Check if C-method attached to objects are constant expressions. */
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsGetMethodConstexpr(DeeTypeObject const *__restrict self,
-                             Dee_getmethod_t getter) {
-	/* TODO: Search for getters that are constant expressions.
-	 *       Note that a getter that returns a writable field
-	 *       is NOT a constant expression! Only read-only, or
-	 *       write-once fields (that have already been assigned)
-	 *       can be considered constant expressions! */
-	(void)self;
-	(void)getter;
-	return false;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
-                               Dee_boundmethod_t bound) {
-	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
-	(void)self;
-	(void)bound;
-	return false;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
-DeeType_IsObjMethodConstexpr(DeeTypeObject *decl_type, Dee_objmethod_t method,
-                             DeeObject *thisarg, size_t argc,
-                             DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
-	(void)decl_type;
-	(void)method;
-	(void)thisarg;
-	(void)argc;
-	(void)argv;
-	(void)kw;
-	return false;
-}
-
-INTERN ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
-DeeCMethod_IsConstExpr(Dee_cmethod_t method, size_t argc,
-                       DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: see `DeeType_IsGetMethodConstexpr()' */
-	(void)method;
-	(void)argc;
-	(void)argv;
-	(void)kw;
-	return false;
-}
-
-
 DECL_END
 #endif /* CONFIG_HAVE_LIBHOSTASM */
 

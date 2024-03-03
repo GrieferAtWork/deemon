@@ -1543,26 +1543,26 @@ bytes_sizeof(Bytes *self) {
 
 
 PRIVATE struct type_getset tpconst bytes_getsets[] = {
-	TYPE_GETTER_F("isreadonly", &bytes_isreadonly, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("isreadonly", &bytes_isreadonly, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. object cannot be written to"),
-	TYPE_GETTER_F("iswritable", &bytes_iswritable, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("iswritable", &bytes_iswritable, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
-	TYPE_GETTER_F("ismutable", &bytes_iswritable, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("ismutable", &bytes_iswritable, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
-	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this ?. object is empty}"
 	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	              "Access the first byte of @this ?. object"),
-	TYPE_GETSET_F(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast, METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this ?. object is empty}"
 	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	              "Access the last byte of @this ?. object"),
-	TYPE_GETTER_F("__sizeof__", &bytes_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &bytes_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

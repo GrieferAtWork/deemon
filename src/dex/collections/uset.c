@@ -750,10 +750,10 @@ uset_sizeof(USet *self) {
 }
 
 PRIVATE struct type_getset tpconst uset_getsets[] = {
-	TYPE_GETTER_F("frozen", &URoSet_FromUSet, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("frozen", &URoSet_FromUSet, METHOD_FNOREFESCAPE,
 	              "->?AFrozen?.\n"
 	              "Returns a read-only (frozen) copy of @this set"),
-	TYPE_GETTER_F("__sizeof__", &uset_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &uset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1241,35 +1241,35 @@ PRIVATE struct type_seq uset_seq = {
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
-	TYPE_METHOD_F("pop", &uset_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pop", &uset_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{The set is empty}"
 	              "Pop a random item from the set and return it"),
-	TYPE_METHOD_F("clear", &uset_doclear, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("clear", &uset_doclear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all items from the set"),
-	TYPE_METHOD_F("popitem", &uset_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popitem", &uset_pop, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{The set is empty}"
 	              "Pop a random item from the set and return it (alias for ?#pop)"),
-	TYPE_METHOD_F("unify", &uset_unify, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("unify", &uset_unify, METHOD_FNOREFESCAPE,
 	              "(ob)->\n"
 	              "Insert @ob into the set if it wasn't inserted before, "
 	              "and re-return it, or the pre-existing instance"),
-	TYPE_METHOD_F("insert", &uset_insert, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("insert", &uset_insert, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Returns ?t if the object wasn't apart of the set before"),
-	TYPE_METHOD_F("update", &uset_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("update", &uset_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?O)->?Dint\n"
 	              "Insert all items from @items into @this set, and return the number of inserted items"),
-	TYPE_METHOD_F("remove", &uset_remove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("remove", &uset_remove, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Returns ?t if the object was removed from the set"),
 	/* Alternative function names. */
-	TYPE_METHOD_F("add", &uset_insert, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("add", &uset_insert, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Deprecated alias for ?#insert"),
-	TYPE_METHOD_F("discard", &uset_remove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("discard", &uset_remove, METHOD_FNOREFESCAPE,
 	              "(ob)->?Dbool\n"
 	              "Deprecated alias for ?#remove"),
 	TYPE_METHOD_END
@@ -1970,7 +1970,7 @@ PRIVATE struct type_getset tpconst uroset_getsets[] = {
 	TYPE_GETTER("frozen", &DeeObject_NewRef,
 	            "->?AFrozen?.\n"
 	            "Simply re-return @this object"),
-	TYPE_GETTER_F("__sizeof__", &uroset_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &uroset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

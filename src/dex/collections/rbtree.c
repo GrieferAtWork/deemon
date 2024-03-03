@@ -1008,7 +1008,7 @@ PRIVATE struct type_cmp rbtreeiter_cmp = {
 };
 
 PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
-	TYPE_METHOD_F("removenode", &rbtreeiter_removenode, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("removenode", &rbtreeiter_removenode, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "#tValueError{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	              DOC_ERROR_RuntimeError_CHANGED
@@ -1018,32 +1018,32 @@ PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst rbtreeiter_getsets[] = {
-	TYPE_GETTER_F("minkey", &rbtreeiter_get_minkey, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("minkey", &rbtreeiter_get_minkey, METHOD_FNOREFESCAPE,
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "The lower-bound key of the selected node"),
-	TYPE_GETTER_F("maxkey", &rbtreeiter_get_maxkey, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("maxkey", &rbtreeiter_get_maxkey, METHOD_FNOREFESCAPE,
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "The upper-bound key of the selected node"),
-	TYPE_GETSET_F("value", &rbtreeiter_get_value, NULL, &rbtreeiter_set_value, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("value", &rbtreeiter_get_value, NULL, &rbtreeiter_set_value, METHOD_FNOREFESCAPE,
 	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "Get or set the value of the selected node"),
-	TYPE_GETTER_F("__lhs__", &rbtreeiter_get_lhs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__lhs__", &rbtreeiter_get_lhs, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	              "The left child of the selected node (or ?N if no such node exists)"),
-	TYPE_GETTER_F("__rhs__", &rbtreeiter_get_rhs, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__rhs__", &rbtreeiter_get_rhs, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	              "The right child of the selected node (or ?N if no such node exists)"),
-	TYPE_GETTER_F("__parent__", &rbtreeiter_get_parent, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__parent__", &rbtreeiter_get_parent, METHOD_FNOREFESCAPE,
 	              "->?.\n"
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
 	              "The parent of the selected node (or ?N if the node is the root node)"),
-	TYPE_GETTER_F("__isred__", &rbtreeiter_get_isred, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__isred__", &rbtreeiter_get_isred, METHOD_FNOREFESCAPE,
 	              "->?DBool\n"
 	              DOC_ERROR_RuntimeError_CHANGED
 	              "#tUnboundAttribute{" DOC_ERRMSG_NOTHING_SELECTED "}"
@@ -3494,30 +3494,30 @@ PRIVATE struct type_gc tpconst rbtree_gc = {
 
 PRIVATE struct type_method tpconst rbtree_methods[] = {
 	/* RBTree-specific methods */
-	TYPE_METHOD_F("locate", &rbtree_locate, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("locate", &rbtree_locate, METHOD_FNOREFESCAPE,
 	              "(key)->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple where @key is located within $minkey and $maxkey, "
 	              /**/ "or ?N when no node contains @key}"),
-	TYPE_METHOD_F("rlocate", &rbtree_rlocate, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("rlocate", &rbtree_rlocate, METHOD_FNOREFESCAPE,
 	              "(minkey,maxkey)->?S?T3?O?O?O\n"
 	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlap with the given key-range}"),
 	TYPE_METHOD("itlocate", &rbtree_itlocate,
 	            "(key)->?X2?#Iterator?N\n"
 	            "#r{An ?#Iterator bound to the node containing @key, or ?N when no node contains @key}"),
-	TYPE_METHOD_F("remove", &rbtree_remove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("remove", &rbtree_remove, METHOD_FNOREFESCAPE,
 	              "(key)->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple where @key was located within $minkey and $maxkey, "
 	              /**/ "or ?N when no node contained @key}"
 	              "Like ?#locate, but also remove the node"),
-	TYPE_METHOD_F("rremove", &rbtree_rremove, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("rremove", &rbtree_rremove, METHOD_FNOREFESCAPE,
 	              "(minkey,maxkey)->?S?T3?O?O?O\n"
 	              "#r{A list of ${minkey,maxkey,value} triples describing nodes which overlapped with the given key-range}"
 	              "Like ?#rlocate, but also remove the nodes"),
-	TYPE_METHOD_F("prevnode", &rbtree_prevnode, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("prevnode", &rbtree_prevnode, METHOD_FNOREFESCAPE,
 	              "(key)->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple of the node that comes before "
 	              /**/ "the one containing @key, or ?N when no such node exists}"),
-	TYPE_METHOD_F("nextnode", &rbtree_nextnode, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("nextnode", &rbtree_nextnode, METHOD_FNOREFESCAPE,
 	              "(key)->?X2?T3?O?O?O?N\n"
 	              "#r{The ${minkey,maxkey,value} triple of the node that comes after "
 	              /**/ "the one containing @key, or ?N when no such node exists}"),
@@ -3530,15 +3530,15 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	            "#r{An ?#Iterator bound to the node that comes after "
 	            /**/ "the one containing @key, or ?N when no such node exists}"),
 
-	TYPE_METHOD_F("popfront", &rbtree_popfront, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popfront", &rbtree_popfront, METHOD_FNOREFESCAPE,
 	              "->?T3?O?O?O\n"
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{the lowest element that used to be stored in @this ?. (s.a. ?#first)}"),
-	TYPE_METHOD_F("popback", &rbtree_popback, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popback", &rbtree_popback, METHOD_FNOREFESCAPE,
 	              "->?T3?O?O?O\n"
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{the greatest element that used to be stored in @this ?. (s.a. ?#last)}"),
-	TYPE_METHOD_F("optimize", &rbtree_optimize, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("optimize", &rbtree_optimize, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Search for adjacent nodes that can be merged due to having identical (as per ${===}) "
 	              /**/ "values, as well as consecutive key-ranges. By default, this sort of optimization "
@@ -3561,26 +3561,26 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 	              /**/ "that does not implement ${operator ++} and ${operator --} (like ?Dstring)}"),
 
 	/* Generic methods */
-	TYPE_METHOD_F("clear", &rbtree_doclear, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("clear", &rbtree_doclear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all values from @this ?."),
-	TYPE_METHOD_F("pop", &rbtree_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pop", &rbtree_pop, METHOD_FNOREFESCAPE,
 	              "(key)->\n"
 	              "(key,def)->\n"
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "#tKeyError{No @def was given and @key was not found}"
 	              "Delete @key from @this and return its previously assigned "
 	              /**/ "value or @def when @key had no item associated"),
-	TYPE_METHOD_F("popitem", &rbtree_popitem, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popitem", &rbtree_popitem, METHOD_FNOREFESCAPE,
 	              "->?T3?O?O?O\n"
 	              DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	              "#r{A random pair minkey-maxkey-value pair that has been removed}"),
-	TYPE_METHOD_F("setdefault", &rbtree_setdefault, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setdefault", &rbtree_setdefault, METHOD_FNOREFESCAPE,
 	              "(key,def=!N)->\n"
 	              "#r{The object currently assigned to @key}"
 	              "Lookup @key in @this ?. and return its value if found. "
 	              /**/ "Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD_F("update", &rbtree_update, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("update", &rbtree_update, METHOD_FNOREFESCAPE,
 	              "(items:?S?T3?O?O?O)\n"
 	              DOC_ERROR_NotImplemented_CANNOT_SPLIT
 	              "Iterate @items and unpack each element into 3 others, "
@@ -3589,23 +3589,23 @@ PRIVATE struct type_method tpconst rbtree_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst rbtree_getsets[] = {
-	TYPE_GETTER_F("first", &rbtree_get_first, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("first", &rbtree_get_first, METHOD_FNOREFESCAPE,
 	            "->?T3?O?O?O\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the lowest range in @this ?."),
-	TYPE_GETTER_F("last", &rbtree_get_last, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("last", &rbtree_get_last, METHOD_FNOREFESCAPE,
 	            "->?T3?O?O?O\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return the triple #C{minkey,maxkey,value} for the greatest range in @this ?."),
-	TYPE_GETTER_F("__root__", &rbtree_get_itroot, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__root__", &rbtree_get_itroot, METHOD_FNOREFESCAPE,
 	            "->?#Iterator\n"
 	            DOC_ERROR_ValueError_EMPTY_SEQUENCE
 	            "Return an ?#Iterator for the root node of the tree"),
-	TYPE_GETTER_F("__depth__", &rbtree_get_depth, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETTER_F("__depth__", &rbtree_get_depth, METHOD_FNOREFESCAPE,
 	            "->?Dint\n"
 	            "Depth of the left-most tree node (since the tree is balanced, "
 	            /**/ "this is either the tree's max-depth, or one less than that)"),
-	TYPE_GETTER_F("__sizeof__", &rbtree_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &rbtree_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

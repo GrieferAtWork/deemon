@@ -545,25 +545,25 @@ done:
 
 
 /* These functions are exported by the C api. */
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasAttr, &f_builtin_hasattr);
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &f_builtin_hasitem);
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &f_builtin_boundattr);
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &f_builtin_bounditem);
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &f_builtin_compare);
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &f_builtin_import);
-PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &f_builtin_hash);
-PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasAttr, &f_builtin_hasattr, METHOD_FNORMAL);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_HasItem, &f_builtin_hasitem, METHOD_FNORMAL);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundAttr, &f_builtin_boundattr, METHOD_FNORMAL);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_BoundItem, &f_builtin_bounditem, METHOD_FNORMAL);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Compare, &f_builtin_compare, METHOD_FNORMAL);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Import, &f_builtin_import, METHOD_FNORMAL);
+PUBLIC DEFINE_CMETHOD(DeeBuiltin_Hash, &f_builtin_hash, METHOD_FNORMAL);
+PUBLIC DEFINE_KWCMETHOD(DeeBuiltin_Exec, &f_builtin_exec, METHOD_FNORMAL);
 
 /* These CMETHOD objects are exported from `deemon' with the `rt_' prefix replaced with `__'
  * HINT: These are exported using the `MODSYM_FHIDDEN' flag, so you won't see them in listings. */
-INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert);
-INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad);
-INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb);
-INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi);
-INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr);
-INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa);
-INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall);
-INTERN DEFINE_CMETHOD(rt_roloc, &f_rt_roloc);
+INTERN DEFINE_CMETHOD(rt_assert, &f_rt_assert, METHOD_FNORETURN);
+INTERN DEFINE_CMETHOD(rt_pooad, &f_rt_pooad, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(rt_neosb, &f_rt_neosb, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(rt_giosi, &f_rt_giosi, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(rt_grosr, &f_rt_grosr, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(rt_gaosa, &f_rt_gaosa, METHOD_FNORMAL);
+INTERN DEFINE_CMETHOD(rt_badcall, &f_rt_badcall, METHOD_FNORETURN);
+INTERN DEFINE_CMETHOD(rt_roloc, &f_rt_roloc, METHOD_FNORETURN);
 
 DECL_END
 

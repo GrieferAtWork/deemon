@@ -331,7 +331,8 @@ function gii(
 @@>	/* .d_symbols = */symbols
 @@>};
 function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = true,
-            libname: string = none, visi: string = "PRIVATE", isvarying: bool = false) {
+            libname: string = none, visi: string = "PRIVATE", isvarying: bool = false,
+            ispure: bool = false, isconst: bool = false) {
 	/* Extract the library name from the filename that is being formatted. */
 	if (libname is none)
 		libname = AUTOLIBNAME();
@@ -469,17 +470,27 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	} else {
 		print(", DOC(doc) },");
 	}
-	local kwlist_name;
+	local kwlistName;
+	local methodFlags = "";
+	if (isconst)
+		methodFlags += " | METHOD_FCONSTCALL";
+	if (ispure)
+		methodFlags += " | Dee_METHOD_FPURECALL";
+	if (!methodFlags) {
+		methodFlags = "METHOD_FNORMAL";
+	} else {
+		methodFlags = methodFlags[3:];
+	}
 	if (kw && arg_data) {
-		print(visi, " DEFINE_KWCMETHOD(", libname, name, ", &", libname, name, "_f);");
-		//kwlist_name = f"{libname}{name}_kwds";
-		kwlist_name = f"{libname}kwds_{
+		print(f"{visi} DEFINE_KWCMETHOD({libname}{name}, &{libname}{name}_f, {methodFlags});");
+		//kwlistName = f"{libname}{name}_kwds";
+		kwlistName = f"{libname}kwds_{
 			'_'.join(for (local x, none, none: arg_data) x)
 		}";
-		local kwlist_def_name = f"{kwlist_name.upper()}_DEFINED";
+		local kwlist_def_name = f"{kwlistName.upper()}_DEFINED";
 		print("#ifndef ", kwlist_def_name);
 		print("#define ", kwlist_def_name);
-		print(visi, " DEFINE_KWLIST(", kwlist_name, ", { "),;
+		print(visi, " DEFINE_KWLIST(", kwlistName, ", { "),;
 		for (local x, y, z: arg_data) {
 			print("KEX(", repr x, ", ",
 				rtHash.hash32(x).hex(), ", ",
@@ -490,7 +501,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print(visi, " WUNUSED DREF DeeObject *DCALL ", libname, name,
 			"_f(size_t argc, DeeObject *const *argv, DeeObject *kw) {");
 	} else {
-		print(visi, " DEFINE_CMETHOD(", libname, name, ", ", libname, name, "_f);");
+		print(f"{visi} DEFINE_CMETHOD({libname}{name}, {libname}{name}_f, {methodFlags});");
 		print(visi, " WUNUSED DREF DeeObject *DCALL ", libname, name, "_f(size_t argc, DeeObject *const *argv) {");
 	}
 	for (local x, y, z: arg_data) {
@@ -528,7 +539,7 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 		print(";");
 	}
 	if (kw && arg_data) {
-		print("\tif (DeeArg_UnpackKw(argc, argv, kw, ", kwlist_name, ", "),;
+		print("\tif (DeeArg_UnpackKw(argc, argv, kw, ", kwlistName, ", "),;
 	} else {
 		print("\tif (DeeArg_Unpack(argc, argv, "),;
 	}

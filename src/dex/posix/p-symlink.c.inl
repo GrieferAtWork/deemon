@@ -99,7 +99,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__symlink_f_impl(DeeObject *text, 
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__SYMLINK_DEF { "_symlink", (DeeObject *)&posix__symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)") },
 #define POSIX__SYMLINK_DEF_DOC(doc) { "_symlink", (DeeObject *)&posix__symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__symlink, &posix__symlink_f);
+PRIVATE DEFINE_KWCMETHOD(posix__symlink, &posix__symlink_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_PATH_DEFINED
 #define POSIX_KWDS_TEXT_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -222,7 +222,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__fsymlinkat_f_impl(DeeObject *tex
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__fsymlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__FSYMLINKAT_DEF { "_fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
 #define POSIX__FSYMLINKAT_DEF_DOC(doc) { "_fsymlinkat", (DeeObject *)&posix__fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__fsymlinkat, &posix__fsymlinkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix__fsymlinkat, &posix__fsymlinkat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -330,7 +330,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix__symlinkat_f_impl(DeeObject *text
 PRIVATE WUNUSED DREF DeeObject *DCALL posix__symlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX__SYMLINKAT_DEF { "_symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)") },
 #define POSIX__SYMLINKAT_DEF_DOC(doc) { "_symlinkat", (DeeObject *)&posix__symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix__symlinkat, &posix__symlinkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix__symlinkat, &posix__symlinkat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -431,7 +431,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_symlink_f_impl(DeeObject *text, D
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYMLINK_DEF { "symlink", (DeeObject *)&posix_symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)") },
 #define POSIX_SYMLINK_DEF_DOC(doc) { "symlink", (DeeObject *)&posix_symlink, MODSYM_FREADONLY, DOC("(text:?Dstring,path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_symlink, &posix_symlink_f);
+PRIVATE DEFINE_KWCMETHOD(posix_symlink, &posix_symlink_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_PATH_DEFINED
 #define POSIX_KWDS_TEXT_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });
@@ -464,7 +464,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_fsymlinkat_f_impl(DeeObject *text
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_fsymlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FSYMLINKAT_DEF { "fsymlinkat", (DeeObject *)&posix_fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)") },
 #define POSIX_FSYMLINKAT_DEF_DOC(doc) { "fsymlinkat", (DeeObject *)&posix_fsymlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_fsymlinkat, &posix_fsymlinkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_fsymlinkat, &posix_fsymlinkat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path_atflags, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -499,7 +499,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_symlinkat_f_impl(DeeObject *text,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_symlinkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SYMLINKAT_DEF { "symlinkat", (DeeObject *)&posix_symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)") },
 #define POSIX_SYMLINKAT_DEF_DOC(doc) { "symlinkat", (DeeObject *)&posix_symlinkat, MODSYM_FREADONLY, DOC("(text:?Dstring,dfd:?X3?DFile?Dint?Dstring,path:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_symlinkat, &posix_symlinkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_symlinkat, &posix_symlinkat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 #define POSIX_KWDS_TEXT_DFD_PATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_text_dfd_path, { KEX("text", 0xc624ae24, 0x2a28a0084dd3a743), KEX("dfd", 0x1c30614d, 0x6edb9568429a136f), KEX("path", 0x1ab74e01, 0xc2dd5992f362b3c4), KEND });

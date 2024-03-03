@@ -167,7 +167,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst segiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &segiter_getseq, TYPE_GETSET_FNOREFESCAPE, "->?Ert:SeqSegments"),
+	TYPE_GETTER_F(STR_seq, &segiter_getseq, METHOD_FNOREFESCAPE, "->?Ert:SeqSegments"),
 	TYPE_GETSET_END
 };
 

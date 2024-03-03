@@ -1593,33 +1593,33 @@ err:
 }
 
 PRIVATE struct type_method tpconst proxy_asmap_methods[] = {
-	TYPE_METHOD_F("setdefault", &proxy_asmap_setdefault, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setdefault", &proxy_asmap_setdefault, METHOD_FNOREFESCAPE,
 	              "(key,def=!N)->\n"
 	              "#r{The object currently assigned to @key}"
 	              "Lookup @key in @this ?. and return its value if found. "
 	              /**/ "Otherwise, assign @def to @key and return it instead"),
-	TYPE_METHOD_F("pop", &proxy_asmap_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pop", &proxy_asmap_pop, METHOD_FNOREFESCAPE,
 	              "(key)->\n"
 	              "(key,def)->\n"
 	              "#tKeyError{No @def was given and @key was not found}"
 	              "Delete @key from @this ?. and return its previously assigned "
 	              /**/ "value or @def when @key had no item associated"),
-	TYPE_METHOD_F("clear", &proxy_asmap_clear, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("clear", &proxy_asmap_clear, METHOD_FNOREFESCAPE,
 	              "()\n"
 	              "Clear all values from @this ?."),
-	TYPE_METHOD_F("setold", &proxy_asmap_setold, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setold", &proxy_asmap_setold, METHOD_FNOREFESCAPE,
 	              "(key,value)->?Dbool\n"
 	              "#r{Indicative of @value having been assigned to @key}"
 	              "Assign @value to @key, only succeeding when @key already existed to begin with"),
-	TYPE_METHOD_F("setnew", &proxy_asmap_setnew, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setnew", &proxy_asmap_setnew, METHOD_FNOREFESCAPE,
 	              "(key,value)->?Dbool\n"
 	              "#r{Indicative of @value having been assigned to @key}"
 	              "Assign @value to @key, only succeeding when @key didn't exist before"),
-	TYPE_METHOD_F("setold_ex", &proxy_asmap_setold_ex, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setold_ex", &proxy_asmap_setold_ex, METHOD_FNOREFESCAPE,
 	              "(key,value)->?T2?Dbool?O\n"
 	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	              "Same as ?#setold but also return the previously assigned value"),
-	TYPE_METHOD_F("setnew_ex", &proxy_asmap_setnew_ex, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("setnew_ex", &proxy_asmap_setnew_ex, METHOD_FNOREFESCAPE,
 	              "(key,value)->?T2?Dbool?O\n"
 	              "#r{A pair of values (new-value-was-assigned, old-value-or-none)}"
 	              "Same as ?#setnew but return the previously assigned value on failure"),
@@ -1627,43 +1627,43 @@ PRIVATE struct type_method tpconst proxy_asmap_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst proxy_asmap_getsets[] = {
-	TYPE_GETTER_F("first", &proxy_asmap_get_first, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
-	TYPE_GETTER_F("last", &proxy_asmap_get_last, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
-	TYPE_GETTER_F("keys", &proxy_asmap_keys, TYPE_GETSET_FNOREFESCAPE, "->?#Keys"),
+	TYPE_GETTER_F("first", &proxy_asmap_get_first, METHOD_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("last", &proxy_asmap_get_last, METHOD_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("keys", &proxy_asmap_keys, METHOD_FNOREFESCAPE, "->?#Keys"),
 	/* NOT overwritten (our version wouldn't repeat values for every key in a range)
 	 * As such, simply make use of the default Mapping.Values type. */
 	/*TYPE_GETTER("values", &proxy_asmap_values, "->?#Values"),*/
-	TYPE_GETTER_F("items", &proxy_asmap_items, TYPE_GETSET_FNOREFESCAPE, "->?#Items"),
+	TYPE_GETTER_F("items", &proxy_asmap_items, METHOD_FNOREFESCAPE, "->?#Items"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_keys_getsets[] = {
-	TYPE_GETTER_F_NODOC("first", &proxy_keys_get_first, TYPE_GETSET_FNOREFESCAPE),
-	TYPE_GETTER_F_NODOC("last", &proxy_keys_get_last, TYPE_GETSET_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC("first", &proxy_keys_get_first, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC("last", &proxy_keys_get_last, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_values_getsets[] = {
-	TYPE_GETTER_F_NODOC("first", &proxy_values_get_first, TYPE_GETSET_FNOREFESCAPE),
-	TYPE_GETTER_F_NODOC("last", &proxy_values_get_last, TYPE_GETSET_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC("first", &proxy_values_get_first, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC("last", &proxy_values_get_last, METHOD_FNOREFESCAPE),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_items_getsets[] = {
-	TYPE_GETTER_F("first", &proxy_items_get_first, TYPE_GETSET_FNOREFESCAPE, "->?T3?O?O?O"),
-	TYPE_GETTER_F("last", &proxy_items_get_last, TYPE_GETSET_FNOREFESCAPE, "->?T3?O?O?O"),
+	TYPE_GETTER_F("first", &proxy_items_get_first, METHOD_FNOREFESCAPE, "->?T3?O?O?O"),
+	TYPE_GETTER_F("last", &proxy_items_get_last, METHOD_FNOREFESCAPE, "->?T3?O?O?O"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_ranges_getsets[] = {
-	TYPE_GETTER_F("first", &proxy_ranges_get_first, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
-	TYPE_GETTER_F("last", &proxy_ranges_get_last, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("first", &proxy_ranges_get_first, METHOD_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("last", &proxy_ranges_get_last, METHOD_FNOREFESCAPE, "->?T2?O?O"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_mapitems_getsets[] = {
-	TYPE_GETTER_F("first", &proxy_asmap_get_first, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
-	TYPE_GETTER_F("last", &proxy_asmap_get_last, TYPE_GETSET_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("first", &proxy_asmap_get_first, METHOD_FNOREFESCAPE, "->?T2?O?O"),
+	TYPE_GETTER_F("last", &proxy_asmap_get_last, METHOD_FNOREFESCAPE, "->?T2?O?O"),
 	TYPE_GETSET_END
 };
 
@@ -2355,37 +2355,37 @@ proxy_items_iterator_next_item(RangeMapProxyItemsIterator *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst proxy_iterator_keys_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_keys, TYPE_GETSET_FNOREFESCAPE, "->?AKeys?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_keys, METHOD_FNOREFESCAPE, "->?AKeys?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_values_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_values, TYPE_GETSET_FNOREFESCAPE, "->?AValues?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_values, METHOD_FNOREFESCAPE, "->?AValues?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_items_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_items, TYPE_GETSET_FNOREFESCAPE, "->?AItems?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_items, METHOD_FNOREFESCAPE, "->?AItems?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_nodes_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_nodes, TYPE_GETSET_FNOREFESCAPE, "->?ANodes?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_nodes, METHOD_FNOREFESCAPE, "->?ANodes?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_ranges_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_ranges, TYPE_GETSET_FNOREFESCAPE, "->?ARanges?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_ranges, METHOD_FNOREFESCAPE, "->?ARanges?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_mapitems_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_mapitems, TYPE_GETSET_FNOREFESCAPE, "->?AMapItems?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_mapitems, METHOD_FNOREFESCAPE, "->?AMapItems?GRangeMap"),
 	TYPE_GETSET_END
 };
 
 PRIVATE struct type_getset tpconst proxy_iterator_asmap_getsets[] = {
-	TYPE_GETTER_F("seq", &proxy_iterator_get_asmap, TYPE_GETSET_FNOREFESCAPE, "->?AAsMap?GRangeMap"),
+	TYPE_GETTER_F("seq", &proxy_iterator_get_asmap, METHOD_FNOREFESCAPE, "->?AAsMap?GRangeMap"),
 	TYPE_GETSET_END
 };
 

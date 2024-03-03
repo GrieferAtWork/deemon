@@ -2288,7 +2288,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_GETENV_DEF { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring") },
 #define POSIX_GETENV_DEF_DOC(doc) { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f);
+PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_VARNAME_DEFL_DEFINED
 #define POSIX_KWDS_VARNAME_DEFL_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_varname_defl, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEX("defl", 0x4353f18, 0x655c26b85fe0c07b), KEND });
@@ -2318,7 +2318,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_setenv_f_impl(DeeObject *varname,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_setenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_SETENV_DEF { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)") },
 #define POSIX_SETENV_DEF_DOC(doc) { "setenv", (DeeObject *)&posix_setenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,value:?Dstring,replace:?Dbool=!t)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_setenv, &posix_setenv_f);
+PRIVATE DEFINE_KWCMETHOD(posix_setenv, &posix_setenv_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
 #define POSIX_KWDS_VARNAME_VALUE_REPLACE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_varname_value_replace, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEX("value", 0xd9093f6e, 0x69e7413ae0c88471), KEX("replace", 0x54b94882, 0x2d4ba4f8cfd63bc6), KEND });
@@ -2355,7 +2355,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_putenv_f_impl(DeeObject *envline)
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_putenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_PUTENV_DEF { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)") },
 #define POSIX_PUTENV_DEF_DOC(doc) { "putenv", (DeeObject *)&posix_putenv, MODSYM_FREADONLY, DOC("(envline:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_putenv, &posix_putenv_f);
+PRIVATE DEFINE_KWCMETHOD(posix_putenv, &posix_putenv_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_ENVLINE_DEFINED
 #define POSIX_KWDS_ENVLINE_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_envline, { KEX("envline", 0x86f5873f, 0x891a6b77bb84dc09), KEND });
@@ -2414,7 +2414,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_unsetenv_f_impl(DeeObject *varnam
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_unsetenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_UNSETENV_DEF { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool") },
 #define POSIX_UNSETENV_DEF_DOC(doc) { "unsetenv", (DeeObject *)&posix_unsetenv, MODSYM_FREADONLY, DOC("(varname:?Dstring)->?Dbool\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_unsetenv, &posix_unsetenv_f);
+PRIVATE DEFINE_KWCMETHOD(posix_unsetenv, &posix_unsetenv_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_VARNAME_DEFINED
 #define POSIX_KWDS_VARNAME_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_varname, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEND });
@@ -2447,7 +2447,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_clearenv_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *const *argv);
 #define POSIX_CLEARENV_DEF { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()") },
 #define POSIX_CLEARENV_DEF_DOC(doc) { "clearenv", (DeeObject *)&posix_clearenv, MODSYM_FREADONLY, DOC("()\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_clearenv, posix_clearenv_f);
+PRIVATE DEFINE_CMETHOD(posix_clearenv, posix_clearenv_f, METHOD_FNORMAL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_clearenv_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":clearenv"))
 		goto err;

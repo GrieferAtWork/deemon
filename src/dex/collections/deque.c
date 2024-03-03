@@ -1385,35 +1385,35 @@ deq_sizeof(Deque *self) {
 
 
 PRIVATE struct type_method tpconst deq_methods[] = {
-	TYPE_KWMETHOD_F("insert", &deq_insert, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("insert", &deq_insert, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,ob)\n"
 	                "#tIntegerOverflow{@index is negative or too large}"
 	                "Insert the given object @ob at @index"),
-	TYPE_KWMETHOD_F("erase", &deq_erase, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("erase", &deq_erase, METHOD_FNOREFESCAPE,
 	                "(index:?Dint,num_items=!1)->?Dint\n"
 	                "#tIntegerOverflow{@index is negative or too large}"
 	                "#r{The actual number of erased items}"
 	                "Erase up to @num_items objects from @this deque, starting at @index"),
-	TYPE_KWMETHOD_F("pop", &deq_pop, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_KWMETHOD_F("pop", &deq_pop, METHOD_FNOREFESCAPE,
 	                "(index=!-1)->\n"
 	                "#tIntegerOverflow{@index is negative or too large}"
 	                "#r{The item that got removed}"
 	                "Pop (erase) the item located at @index and return it"),
-	TYPE_METHOD_F("pushfront", &deq_pushfront, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pushfront", &deq_pushfront, METHOD_FNOREFESCAPE,
 	              "(ob)\n"
 	              "Insert the given object @ob at the front of @this deque"),
-	TYPE_METHOD_F("pushback", &deq_pushback, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("pushback", &deq_pushback, METHOD_FNOREFESCAPE,
 	              "(ob)\n"
 	              "Insert the given object @ob at the back of @this deque"),
-	TYPE_METHOD_F("popfront", &deq_popfront, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popfront", &deq_popfront, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{@this deque is empty}"
 	              "Pop and return an item from the front of @this deque"),
-	TYPE_METHOD_F("popback", &deq_popback, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("popback", &deq_popback, METHOD_FNOREFESCAPE,
 	              "->\n"
 	              "#tValueError{@this deque is empty}"
 	              "Pop and return an item from the back of @this deque"),
-	TYPE_METHOD_F("llrot", &deq_llrot, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("llrot", &deq_llrot, METHOD_FNOREFESCAPE,
 	              "(num_items:?Dint)\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the first @num_items items left by 1:\n"
@@ -1423,7 +1423,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "x.llrot(3);\n"
 	              /**/ "print repr x; /* { 20, 30, 10, 40, 50 } */"
 	              "}"),
-	TYPE_METHOD_F("lrrot", &deq_lrrot, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("lrrot", &deq_lrrot, METHOD_FNOREFESCAPE,
 	              "(num_items:?Dint)\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the first @num_items items right by 1:\n"
@@ -1433,7 +1433,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "x.lrrot(3);\n"
 	              /**/ "print repr x; /* { 30, 10, 20, 40, 50 } */"
 	              "}"),
-	TYPE_METHOD_F("rlrot", &deq_rlrot, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("rlrot", &deq_rlrot, METHOD_FNOREFESCAPE,
 	              "(num_items:?Dint)\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the last @num_items items left by 1:\n"
@@ -1443,7 +1443,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 	              /**/ "x.rlrot(3);\n"
 	              /**/ "print repr x; /* { 10, 20, 40, 50, 30 } */"
 	              "}"),
-	TYPE_METHOD_F("rrrot", &deq_rrrot, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("rrrot", &deq_rrrot, METHOD_FNOREFESCAPE,
 	              "(num_items:?Dint)\n"
 	              "#tIndexError{@this deque contain less than @num_items items}"
 	              "Rotate the last @num_items items right by 1:\n"
@@ -1457,7 +1457,7 @@ PRIVATE struct type_method tpconst deq_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst deq_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &deq_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &deq_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1750,7 +1750,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst deqiter_getsets[] = {
-	TYPE_GETSET_F("index", &deqiter_getindex_ob, NULL, &deqiter_setindex_ob, TYPE_GETSET_FNOREFESCAPE,
+	TYPE_GETSET_F("index", &deqiter_getindex_ob, NULL, &deqiter_setindex_ob, METHOD_FNOREFESCAPE,
 	              "->?X2?Dint?N\n"
 	              "Get/set the index of @this iterator within its associated ?GDeque\n"
 	              "When ?N, the iterator has been invalidated, possibly due to the "

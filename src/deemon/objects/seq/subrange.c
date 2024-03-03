@@ -129,7 +129,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst subrangeiterator_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &subrangeiterator_seq_get, TYPE_GETSET_FNOREFESCAPE, "->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN"),
+	TYPE_GETTER_F(STR_seq, &subrangeiterator_seq_get, METHOD_FNOREFESCAPE, "->?X2?Ert:SeqSubRange?Ert:SeqSubRangeN"),
 	TYPE_GETSET_END
 };
 

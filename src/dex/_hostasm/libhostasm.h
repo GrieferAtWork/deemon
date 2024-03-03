@@ -3801,21 +3801,6 @@ DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
 #define OPERATOR_SEQ_ENUMERATE OPERATOR_VISIT /* Special operator to check if references leak if the object is enumerated
                                                * via OPERATOR_ITER (though the created iterator is destroyed at the end). */
 
-/* Check if C-method attached to objects are constant expressions. */
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsGetMethodConstexpr(DeeTypeObject const *__restrict self,
-                             Dee_getmethod_t getter);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsBoundMethodConstexpr(DeeTypeObject const *__restrict self,
-                               Dee_boundmethod_t bound);
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL /* Also usable for Dee_kwobjmethod_t */
-DeeType_IsObjMethodConstexpr(DeeTypeObject *decl_type, Dee_objmethod_t method,
-                             DeeObject *thisarg, size_t argc,
-                             DeeObject *const *argv, DeeObject *kw);
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL /* Also usable for Dee_kwcmethod_t */
-DeeCMethod_IsConstExpr(Dee_cmethod_t method, size_t argc,
-                       DeeObject *const *argv, DeeObject *kw);
-
 
 
 

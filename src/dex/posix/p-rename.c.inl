@@ -152,7 +152,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_rename_f_impl(DeeObject *oldpath,
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_rename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAME_DEF { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
 #define POSIX_RENAME_DEF_DOC(doc) { "rename", (DeeObject *)&posix_rename, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_rename, &posix_rename_f);
+PRIVATE DEFINE_KWCMETHOD(posix_rename, &posix_rename_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -261,7 +261,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_frename_f_impl(DeeObject *oldfd, 
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_frename_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FRENAME_DEF { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
 #define POSIX_FRENAME_DEF_DOC(doc) { "frename", (DeeObject *)&posix_frename, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_frename, &posix_frename_f);
+PRIVATE DEFINE_KWCMETHOD(posix_frename, &posix_frename_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDFD_NEWPATH_DEFINED
 #define POSIX_KWDS_OLDFD_NEWPATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -309,7 +309,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat_f_impl(DeeObject *olddir
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAMEAT_DEF { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)") },
 #define POSIX_RENAMEAT_DEF_DOC(doc) { "renameat", (DeeObject *)&posix_renameat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_renameat, &posix_renameat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_renameat, &posix_renameat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -405,7 +405,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_renameat2_f_impl(DeeObject *olddi
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_renameat2_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_RENAMEAT2_DEF { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)") },
 #define POSIX_RENAMEAT2_DEF_DOC(doc) { "renameat2", (DeeObject *)&posix_renameat2, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,flags:?Dint=!0,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_renameat2, &posix_renameat2_f);
+PRIVATE DEFINE_KWCMETHOD(posix_renameat2, &posix_renameat2_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_FLAGS_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_flags_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("flags", 0xd9e40622, 0x6afda85728fae70d), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });
@@ -607,7 +607,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_link_f_impl(DeeObject *oldpath, D
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_link_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINK_DEF { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)") },
 #define POSIX_LINK_DEF_DOC(doc) { "link", (DeeObject *)&posix_link, MODSYM_FREADONLY, DOC("(oldpath:?Dstring,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_link, &posix_link_f);
+PRIVATE DEFINE_KWCMETHOD(posix_link, &posix_link_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDPATH_NEWPATH_DEFINED
 #define POSIX_KWDS_OLDPATH_NEWPATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldpath_newpath, { KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -711,7 +711,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_flink_f_impl(DeeObject *oldfd, De
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_flink_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_FLINK_DEF { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)") },
 #define POSIX_FLINK_DEF_DOC(doc) { "flink", (DeeObject *)&posix_flink, MODSYM_FREADONLY, DOC("(oldfd:?X2?DFile?Dint,newpath:?Dstring)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_flink, &posix_flink_f);
+PRIVATE DEFINE_KWCMETHOD(posix_flink, &posix_flink_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDFD_NEWPATH_DEFINED
 #define POSIX_KWDS_OLDFD_NEWPATH_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_oldfd_newpath, { KEX("oldfd", 0x5a92fcdb, 0x3de145419f68339e), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEND });
@@ -773,7 +773,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_linkat_f_impl(DeeObject *olddirfd
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_linkat_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_LINKAT_DEF { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)") },
 #define POSIX_LINKAT_DEF_DOC(doc) { "linkat", (DeeObject *)&posix_linkat, MODSYM_FREADONLY, DOC("(olddirfd:?X3?DFile?Dint?Dstring,oldpath:?Dstring,newdirfd:?X3?DFile?Dint?Dstring,newpath:?Dstring,atflags:?Dint=!0)\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_linkat, &posix_linkat_f);
+PRIVATE DEFINE_KWCMETHOD(posix_linkat, &posix_linkat_f, METHOD_FNORMAL);
 #ifndef POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_ATFLAGS_DEFINED
 #define POSIX_KWDS_OLDDIRFD_OLDPATH_NEWDIRFD_NEWPATH_ATFLAGS_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_olddirfd_oldpath_newdirfd_newpath_atflags, { KEX("olddirfd", 0xfce5716b, 0x69852ead3adcc550), KEX("oldpath", 0x6af2d717, 0x74cfc4ae2e46bac3), KEX("newdirfd", 0xcef3d13f, 0x767804c5c500a418), KEX("newpath", 0x1e4b25cf, 0x18c3eb62ffd9a6ce), KEX("atflags", 0x250a5b0d, 0x79142af6dc89e37c), KEND });

@@ -1825,10 +1825,10 @@ err_empty:
 
 
 PRIVATE struct type_getset tpconst tuple_getsets[] = {
-	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, TYPE_GETSET_FNOREFESCAPE),
-	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, TYPE_GETSET_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC(STR_first, &tuple_first, METHOD_FNOREFESCAPE),
+	TYPE_GETTER_F_NODOC(STR_last, &tuple_last, METHOD_FNOREFESCAPE),
 	TYPE_GETTER(STR_frozen, &DeeObject_NewRef, "->?."),
-	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, TYPE_GETSET_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &tuple_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 

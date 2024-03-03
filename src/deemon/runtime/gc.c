@@ -1784,26 +1784,26 @@ err:
 
 
 PRIVATE struct type_method tpconst gcenum_methods[] = {
-	TYPE_METHOD_F("collect", &gcenum_collect, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("collect", &gcenum_collect, METHOD_FNOREFESCAPE,
 	              "(max=!-1)->?Dint\n"
 	              "Try to collect at least @max GC objects and return the actual number collected\n"
 	              "Note that more than @max objects may be collected if sufficiently large reference cycles exist"),
-	TYPE_METHOD_F("referred", &gcenum_referred, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("referred", &gcenum_referred, METHOD_FNOREFESCAPE,
 	              "(start)->?DSet\n"
 	              "Returns a set of objects that are immediately referred to by @start"),
-	TYPE_METHOD_F("referredgc", &gcenum_referredgc, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("referredgc", &gcenum_referredgc, METHOD_FNOREFESCAPE,
 	              "(start)->?DSet\n"
 	              "Same as ?#referred, but only include gc-objects (s.a. :Type.__isgc__)"),
-	TYPE_METHOD_F("reachable", &gcenum_reachable, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("reachable", &gcenum_reachable, METHOD_FNOREFESCAPE,
 	              "(start)->?DSet\n"
 	              "Returns a set of objects that are reachable from @start"),
-	TYPE_METHOD_F("reachablegc", &gcenum_reachablegc, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("reachablegc", &gcenum_reachablegc, METHOD_FNOREFESCAPE,
 	              "(start)->?DSet\n"
 	              "Same as ?#reachable, but only include gc-objects (s.a. :Type.__isgc__)"),
-	TYPE_METHOD_F("referring", &gcenum_referring, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("referring", &gcenum_referring, METHOD_FNOREFESCAPE,
 	              "(to)->?DSet\n"
 	              "Returns a set of gc-objects (s.a. :Type.__isgc__) that are referring to @to"),
-	TYPE_METHOD_F("isreferring", &gcenum_isreferring, TYPE_METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("isreferring", &gcenum_isreferring, METHOD_FNOREFESCAPE,
 	              "(from,to)->?Dbool\n"
 	              "Returns ?t if @to is referred to by @from, or ?f otherwise"),
 	TYPE_METHOD_END

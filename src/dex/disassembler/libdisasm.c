@@ -167,7 +167,9 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode, libdisasm_public_printcode_f);
+PRIVATE DEFINE_KWCMETHOD(libdisasm_public_printcode,
+                         libdisasm_public_printcode_f,
+                         METHOD_FNORMAL);
 
 PRIVATE struct dex_symbol symbols[] = {
 	{ "printcode", (DeeObject *)&libdisasm_public_printcode, MODSYM_FREADONLY,
