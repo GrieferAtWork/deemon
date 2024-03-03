@@ -232,7 +232,6 @@
 #ifndef CONFIG_HOST_WINDOWS
 #define CONFIG_IPC_HAVE_etc_shells
 #endif /* !CONFIG_HOST_WINDOWS */
-#define CONFIG_IPC_HAVE_etc_shells
 
 
 DECL_BEGIN

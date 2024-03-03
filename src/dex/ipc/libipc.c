@@ -114,7 +114,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SHELL", (DeeObject *)&ipc_SHELL_get, MODSYM_FREADONLY | MODSYM_FPROPERTY,
 	  DOC("->?Dstring\n"
 	      "The absolute filename of the used system shell command interpreter program\n"
-	      "When the $\"$SHELL\" environment variable is defined, this global evaluations "
+	      "When the $\"$SHELL\" environment variable is defined, this global evaluates "
 	      /**/ "to that variable's contents. Otherwise (except on windows), the system "
 	      /**/ "file #C{/etc/shells} is read line-by-line, and the first line containing "
 	      /**/ "an absolute filename that points to an executable file is used. If that "
