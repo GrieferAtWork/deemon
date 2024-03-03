@@ -2006,29 +2006,31 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  * - struct Dee_type_getset::gs_flag
  *   - here, flags describe all defined callbacks, except
  *     - Dee_METHOD_FPURECALL and Dee_METHOD_FCONSTCALL only describe "gs_get" and "gs_bound"
+ * - DeeCMethodObject::cm_flags
+ * - DeeKwCMethodObject::cm_flags
  */
-#define Dee_METHOD_FMASK        0xff00 /* Mask of portable method flags. */
-#define Dee_METHOD_FNORMAL      0x0000 /* Normal flags */
-#define Dee_METHOD_FEXACTRETURN 0x0400 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI')
-                                        * WARNING: _hostasm treats `struct type_member' with doc strings as though this flag was *always* set! */
-#define Dee_METHOD_FNOTHROW     0x0800 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL' and also means no OOM allowed) */
-#define Dee_METHOD_FNORETURN    0x1000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
-#define Dee_METHOD_FPURECALL    0x2000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
-                                        * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
-                                        * When set, repeated calls with identical arguments may be combined. */
-#define Dee_METHOD_FCONSTCALL   0x4000 /* ATTR_CONST: Function does not modify or read mutable args, or affect
-                                        * the global state (except for reference counts or memory usage).
-                                        * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
-                                        * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation. */
-#define Dee_METHOD_FNOREFESCAPE 0x8000 /* Optimizer hint flag: when invoked, this method never incref's
-                                        * the "this" argument (unless it also appears in argv/kw, or "this"
-                                        * has an accessible reference via some other operator chain that
-                                        * does not involve "this" directly)
-                                        * Note that if an incref does happen, it must *always* be followed
-                                        * by another decref before the function returns (i.e. refcnt on
-                                        * entry must match refcnt on exit (except as listed above))
-                                        *
-                                        * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
+#define Dee_METHOD_FMASK        0xffffff00 /* Mask of portable method flags. */
+#define Dee_METHOD_FNORMAL      0x00000000 /* Normal flags */
+#define Dee_METHOD_FEXACTRETURN 0x04000000 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI')
+                                            * WARNING: _hostasm treats `struct type_member' with doc strings as though this flag was *always* set! */
+#define Dee_METHOD_FNOTHROW     0x08000000 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL' and also means no OOM allowed) */
+#define Dee_METHOD_FNORETURN    0x10000000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
+#define Dee_METHOD_FPURECALL    0x20000000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
+                                            * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
+                                            * When set, repeated calls with identical arguments may be combined. */
+#define Dee_METHOD_FCONSTCALL   0x40000000 /* ATTR_CONST: Function does not modify or read mutable args, or affect
+                                            * the global state (except for reference counts or memory usage).
+                                            * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
+                                            * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation. */
+#define Dee_METHOD_FNOREFESCAPE 0x80000000 /* Optimizer hint flag: when invoked, this method never incref's
+                                            * the "this" argument (unless it also appears in argv/kw, or "this"
+                                            * has an accessible reference via some other operator chain that
+                                            * does not involve "this" directly)
+                                            * Note that if an incref does happen, it must *always* be followed
+                                            * by another decref before the function returns (i.e. refcnt on
+                                            * entry must match refcnt on exit (except as listed above))
+                                            *
+                                            * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
 #ifdef DEE_SOURCE
 #define METHOD_FMASK        Dee_METHOD_FMASK
 #define METHOD_FNORMAL      Dee_METHOD_FNORMAL
@@ -2042,9 +2044,9 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 
 
 /* Possible values for `struct Dee_type_method::m_flag' (also accepts `Dee_METHOD_FMASK') */
-#define Dee_TYPE_METHOD_FNORMAL 0x0000 /* Normal type method flags. */
-#define Dee_TYPE_METHOD_FKWDS   0x0001 /* `m_func' takes a keywords argument.
-                                        * When set, `m_func' is actually a `dkwobjmethod_t' */
+#define Dee_TYPE_METHOD_FNORMAL 0x00000000 /* Normal type method flags. */
+#define Dee_TYPE_METHOD_FKWDS   0x00000001 /* `m_func' takes a keywords argument.
+                                            * When set, `m_func' is actually a `dkwobjmethod_t' */
 #ifdef DEE_SOURCE
 #define TYPE_METHOD_FNORMAL Dee_TYPE_METHOD_FNORMAL
 #define TYPE_METHOD_FKWDS   Dee_TYPE_METHOD_FKWDS
@@ -2078,7 +2080,7 @@ struct Dee_type_method {
 #endif /* DEE_SOURCE */
 
 /* Possible values for `struct Dee_type_getset::gs_flag' (also accepts `Dee_METHOD_FMASK') */
-#define Dee_TYPE_GETSET_FNORMAL 0x0000 /* Normal type method flags. */
+#define Dee_TYPE_GETSET_FNORMAL 0x00000000 /* Normal type method flags. */
 #ifdef DEE_SOURCE
 #define TYPE_GETSET_FNORMAL Dee_TYPE_GETSET_FNORMAL
 #endif /* DEE_SOURCE */
