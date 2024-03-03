@@ -147,6 +147,11 @@ public:
 		args[0] = other;
 		return inherit(DeeObject_CallAttrStringHash(this, "derivedfrom", _Dee_HashSelectC(0xbfe72a33, 0x74a32a2fdaec5b52), 1, args));
 	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (implements)(DeeObject *other) {
+		DeeObject *args[1];
+		args[0] = other;
+		return inherit(DeeObject_CallAttrStringHash(this, "implements", _Dee_HashSelectC(0x1c8a7e28, 0x4a1dbab53b386755), 1, args));
+	}
 	WUNUSED Ref<Object> (newinstance)() {
 		return inherit(DeeObject_CallAttrStringHash(this, "newinstance", _Dee_HashSelectC(0x3d87f61d, 0x88cc2893ece6b9f5), 0, NULL));
 	}
@@ -207,14 +212,15 @@ public:
 	WUNUSED Ref<Object> (getinstanceattr)(char const *name) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "getinstanceattr", _Dee_HashSelectC(0xba156470, 0x893f73567697a84), "s", name));
 	}
-	WUNUSED NONNULL_CXX((1, 2)) Ref<Object> (callinstanceattr)(DeeObject *name, DeeObject *args) {
-		DeeObject *args_[2];
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<Object> (callinstanceattr)(DeeObject *name, DeeObject *args, DeeObject *kwds) {
+		DeeObject *args_[3];
 		args_[0] = name;
 		args_[1] = args;
-		return inherit(DeeObject_CallAttrStringHash(this, "callinstanceattr", _Dee_HashSelectC(0x2b36b487, 0xfbb7d2adb9d099eb), 2, args_));
+		args_[2] = kwds;
+		return inherit(DeeObject_CallAttrStringHash(this, "callinstanceattr", _Dee_HashSelectC(0x2b36b487, 0xfbb7d2adb9d099eb), 3, args_));
 	}
-	WUNUSED NONNULL_CXX((2)) Ref<Object> (callinstanceattr)(char const *name, DeeObject *args) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "callinstanceattr", _Dee_HashSelectC(0x2b36b487, 0xfbb7d2adb9d099eb), "so", name, args));
+	WUNUSED NONNULL_CXX((2, 3)) Ref<Object> (callinstanceattr)(char const *name, DeeObject *args, DeeObject *kwds) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "callinstanceattr", _Dee_HashSelectC(0x2b36b487, 0xfbb7d2adb9d099eb), "soo", name, args, kwds));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (hasinstanceattr)(DeeObject *name) {
 		DeeObject *args[1];
@@ -333,7 +339,41 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isbuffer", _Dee_HashSelectC(0xeb98ec1e, 0x97a811be95a96c82)));
 		}
 	};
-	WUNUSED _Wrap_isbuffer (isbuffer)() {
+	WUNUSED _Wrap_isbuffer (isbuffer)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___bases__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___bases__, Sequence<> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___bases__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__bases__", _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__bases__", _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9)));
+		}
+	};
+	WUNUSED _Wrap___bases__ (__bases__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___mro__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___mro__, Sequence<> > {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___mro__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__mro__", _Dee_HashSelectC(0x4b5e22f6, 0x8dbbdb5c2f99ff7a));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__mro__", _Dee_HashSelectC(0x4b5e22f6, 0x8dbbdb5c2f99ff7a)));
+		}
+	};
+	WUNUSED _Wrap___mro__ (__mro__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___class__
@@ -350,7 +390,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__class__", _Dee_HashSelectC(0x1358a219, 0x7833c05adf185360)));
 		}
 	};
-	WUNUSED _Wrap___class__ (__class__)() {
+	WUNUSED _Wrap___class__ (__class__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___issingleton__
@@ -367,7 +407,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__issingleton__", _Dee_HashSelectC(0xddda05c8, 0x2319af62149ba76f)));
 		}
 	};
-	WUNUSED _Wrap___issingleton__ (__issingleton__)() {
+	WUNUSED _Wrap___issingleton__ (__issingleton__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___module__
@@ -384,7 +424,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
 		}
 	};
-	WUNUSED _Wrap___module__ (__module__)() {
+	WUNUSED _Wrap___module__ (__module__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___ctable__
@@ -401,7 +441,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__ctable__", _Dee_HashSelectC(0xde5ff47, 0xf068a8ecedddcbef)));
 		}
 	};
-	WUNUSED _Wrap___ctable__ (__ctable__)() {
+	WUNUSED _Wrap___ctable__ (__ctable__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___operators__
@@ -418,7 +458,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operators__", _Dee_HashSelectC(0xed78c2be, 0xfc4c23ee6412f79c)));
 		}
 	};
-	WUNUSED _Wrap___operators__ (__operators__)() {
+	WUNUSED _Wrap___operators__ (__operators__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___operatorids__
@@ -435,7 +475,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operatorids__", _Dee_HashSelectC(0x8b1b1d9e, 0x36d3770a50f555aa)));
 		}
 	};
-	WUNUSED _Wrap___operatorids__ (__operatorids__)() {
+	WUNUSED _Wrap___operatorids__ (__operatorids__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___instancesize__
@@ -452,7 +492,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__instancesize__", _Dee_HashSelectC(0xfad7bde4, 0x2042e2e37306e26d)));
 		}
 	};
-	WUNUSED _Wrap___instancesize__ (__instancesize__)() {
+	WUNUSED _Wrap___instancesize__ (__instancesize__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___instance_size__
@@ -469,7 +509,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__instance_size__", _Dee_HashSelectC(0x8908a28a, 0x9bc41903b06d6da9)));
 		}
 	};
-	WUNUSED _Wrap___instance_size__ (__instance_size__)() {
+	WUNUSED _Wrap___instance_size__ (__instance_size__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___istypetype__
@@ -486,7 +526,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__istypetype__", _Dee_HashSelectC(0xb2bdc9b6, 0xf9c979c6fa38de96)));
 		}
 	};
-	WUNUSED _Wrap___istypetype__ (__istypetype__)() {
+	WUNUSED _Wrap___istypetype__ (__istypetype__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___isvarargconstructible__
@@ -503,7 +543,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isvarargconstructible__", _Dee_HashSelectC(0x224bd880, 0x4ad17e7c056f4362)));
 		}
 	};
-	WUNUSED _Wrap___isvarargconstructible__ (__isvarargconstructible__)() {
+	WUNUSED _Wrap___isvarargconstructible__ (__isvarargconstructible__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___isconstructible__
@@ -520,7 +560,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isconstructible__", _Dee_HashSelectC(0x574ef5f1, 0x86a5c49c02d17c23)));
 		}
 	};
-	WUNUSED _Wrap___isconstructible__ (__isconstructible__)() {
+	WUNUSED _Wrap___isconstructible__ (__isconstructible__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___iscopyable__
@@ -537,7 +577,24 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__iscopyable__", _Dee_HashSelectC(0x4a442794, 0x6cd8653d147c94fa)));
 		}
 	};
-	WUNUSED _Wrap___iscopyable__ (__iscopyable__)() {
+	WUNUSED _Wrap___iscopyable__ (__iscopyable__)() DEE_CXX_NOTHROW {
+		return this;
+	}
+	class _Wrap___isnamespace__
+		: public deemon::detail::ConstGetRefProxy<_Wrap___isnamespace__, deemon::bool_> {
+	private:
+		DeeObject *m_self; /* [1..1] Linked object */
+	public:
+		_Wrap___isnamespace__(DeeObject *self) DEE_CXX_NOTHROW
+			: m_self(self) {}
+		WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
+			return DeeObject_GetAttrStringHash(m_self, "__isnamespace__", _Dee_HashSelectC(0x51ea2523, 0x412fd04e6884621b));
+		}
+		WUNUSED bool bound() const {
+			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__isnamespace__", _Dee_HashSelectC(0x51ea2523, 0x412fd04e6884621b)));
+		}
+	};
+	WUNUSED _Wrap___isnamespace__ (__isnamespace__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___gcpriority__
@@ -554,7 +611,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__gcpriority__", _Dee_HashSelectC(0xcd14df35, 0x54dd6db0ab44f614)));
 		}
 	};
-	WUNUSED _Wrap___gcpriority__ (__gcpriority__)() {
+	WUNUSED _Wrap___gcpriority__ (__gcpriority__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

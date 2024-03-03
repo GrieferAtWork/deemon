@@ -183,7 +183,7 @@ public:
 			return DeeObject_SetAttrStringHash(m_self, "value", _Dee_HashSelectC(0xd9093f6e, 0x69e7413ae0c88471), value);
 		}
 	};
-	WUNUSED _Wrap_value (value)() {
+	WUNUSED _Wrap_value (value)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

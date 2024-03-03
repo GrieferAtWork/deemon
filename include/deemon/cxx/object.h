@@ -48,6 +48,7 @@ DEE_CXX_BEGIN
 /* C++ wrappers for deemon types */
 class Object;
 class string;
+class Bytes;
 class bool_;
 class int_;
 class float_;
@@ -3565,7 +3566,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__itable__", _Dee_HashSelectC(0xb7ec355a, 0xbcabfd5c3d01dac0)));
 		}
 	};
-	WUNUSED _Wrap___itable__ (__itable__)() {
+	WUNUSED _Wrap___itable__ (__itable__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_id
@@ -3582,7 +3583,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "id", _Dee_HashSelectC(0x98768be1, 0x828b9fe0c4522be2)));
 		}
 	};
-	WUNUSED _Wrap_id (id)() {
+	WUNUSED _Wrap_id (id)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___sizeof__
@@ -3599,7 +3600,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
-	WUNUSED _Wrap___sizeof__ (__sizeof__)() {
+	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

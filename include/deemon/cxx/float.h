@@ -137,7 +137,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "abs", _Dee_HashSelectC(0x62947f9, 0x7ce68cbaf722015c)));
 		}
 	};
-	WUNUSED _Wrap_abs (abs)() {
+	WUNUSED _Wrap_abs (abs)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_trunc
@@ -154,7 +154,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "trunc", _Dee_HashSelectC(0xbdb1d95d, 0x55dde3e4f51201b3)));
 		}
 	};
-	WUNUSED _Wrap_trunc (trunc)() {
+	WUNUSED _Wrap_trunc (trunc)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_floor
@@ -171,7 +171,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "floor", _Dee_HashSelectC(0x7819c83c, 0x213bace42059b42a)));
 		}
 	};
-	WUNUSED _Wrap_floor (floor)() {
+	WUNUSED _Wrap_floor (floor)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ceil
@@ -188,7 +188,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ceil", _Dee_HashSelectC(0x7ed4e8b7, 0x4ea23d981c754581)));
 		}
 	};
-	WUNUSED _Wrap_ceil (ceil)() {
+	WUNUSED _Wrap_ceil (ceil)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_round
@@ -205,7 +205,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "round", _Dee_HashSelectC(0xa33127a2, 0x973d8304b01a5682)));
 		}
 	};
-	WUNUSED _Wrap_round (round)() {
+	WUNUSED _Wrap_round (round)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isnan
@@ -222,7 +222,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnan", _Dee_HashSelectC(0x36d136ac, 0x428ff2e9a35f402a)));
 		}
 	};
-	WUNUSED _Wrap_isnan (isnan)() {
+	WUNUSED _Wrap_isnan (isnan)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isinf
@@ -239,7 +239,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isinf", _Dee_HashSelectC(0xc8a63b33, 0xf5f86dfadcc14b6a)));
 		}
 	};
-	WUNUSED _Wrap_isinf (isinf)() {
+	WUNUSED _Wrap_isinf (isinf)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isfinite
@@ -256,7 +256,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isfinite", _Dee_HashSelectC(0x797c83cf, 0x9838bbd14d676c85)));
 		}
 	};
-	WUNUSED _Wrap_isfinite (isfinite)() {
+	WUNUSED _Wrap_isfinite (isfinite)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isnormal
@@ -273,7 +273,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnormal", _Dee_HashSelectC(0x6a066cc5, 0x112aae54ed86881f)));
 		}
 	};
-	WUNUSED _Wrap_isnormal (isnormal)() {
+	WUNUSED _Wrap_isnormal (isnormal)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

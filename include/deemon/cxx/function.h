@@ -57,6 +57,86 @@ public:
 
 public:
 /*[[[deemon (CxxType from rt.gen.cxxapi)(Function from deemon).printCxxApi();]]]*/
+	void (optimize)() {
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), 0, NULL)));
+	}
+	NONNULL_CXX((1)) void (optimize)(DeeObject *tuple) {
+		DeeObject *args[1];
+		args[0] = tuple;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), 1, args)));
+	}
+	NONNULL_CXX((1, 2)) void (optimize)(DeeObject *tuple, DeeObject *kwds) {
+		DeeObject *args[2];
+		args[0] = tuple;
+		args[1] = kwds;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), 2, args)));
+	}
+	NONNULL_CXX((1, 2, 3)) void (optimize)(DeeObject *tuple, DeeObject *kwds, DeeObject *async) {
+		DeeObject *args[3];
+		args[0] = tuple;
+		args[1] = kwds;
+		args[2] = async;
+		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), 3, args)));
+	}
+	NONNULL_CXX((1, 2)) void (optimize)(DeeObject *tuple, DeeObject *kwds, bool async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "oob", tuple, kwds, async)));
+	}
+	NONNULL_CXX((1)) void (optimize)(DeeObject *tuple, bool kwds) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "ob", tuple, kwds)));
+	}
+	NONNULL_CXX((1, 3)) void (optimize)(DeeObject *tuple, bool kwds, DeeObject *async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "obo", tuple, kwds, async)));
+	}
+	NONNULL_CXX((1)) void (optimize)(DeeObject *tuple, bool kwds, bool async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "obb", tuple, kwds, async)));
+	}
+	void (optimize)(bool tuple) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "b", tuple)));
+	}
+	NONNULL_CXX((2)) void (optimize)(bool tuple, DeeObject *kwds) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "bo", tuple, kwds)));
+	}
+	NONNULL_CXX((2, 3)) void (optimize)(bool tuple, DeeObject *kwds, DeeObject *async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "boo", tuple, kwds, async)));
+	}
+	NONNULL_CXX((2)) void (optimize)(bool tuple, DeeObject *kwds, bool async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "bob", tuple, kwds, async)));
+	}
+	void (optimize)(bool tuple, bool kwds) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "bb", tuple, kwds)));
+	}
+	NONNULL_CXX((3)) void (optimize)(bool tuple, bool kwds, DeeObject *async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "bbo", tuple, kwds, async)));
+	}
+	void (optimize)(bool tuple, bool kwds, bool async) {
+		decref(throw_if_null(DeeObject_CallAttrStringHashf(this, "optimize", _Dee_HashSelectC(0x181ecddb, 0xd8ae351bcec097a8), "bbb", tuple, kwds, async)));
+	}
+	WUNUSED Ref<deemon::bool_> (optimized)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), 0, NULL));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (optimized)(DeeObject *tuple) {
+		DeeObject *args[1];
+		args[0] = tuple;
+		return inherit(DeeObject_CallAttrStringHash(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), 1, args));
+	}
+	WUNUSED NONNULL_CXX((1, 2)) Ref<deemon::bool_> (optimized)(DeeObject *tuple, DeeObject *kwds) {
+		DeeObject *args[2];
+		args[0] = tuple;
+		args[1] = kwds;
+		return inherit(DeeObject_CallAttrStringHash(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), 2, args));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (optimized)(DeeObject *tuple, bool kwds) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), "ob", tuple, kwds));
+	}
+	WUNUSED Ref<deemon::bool_> (optimized)(bool tuple) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), "b", tuple));
+	}
+	WUNUSED NONNULL_CXX((2)) Ref<deemon::bool_> (optimized)(bool tuple, DeeObject *kwds) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), "bo", tuple, kwds));
+	}
+	WUNUSED Ref<deemon::bool_> (optimized)(bool tuple, bool kwds) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "optimized", _Dee_HashSelectC(0xe5639100, 0x7c60221260961ed8), "bb", tuple, kwds));
+	}
 	class _Wrap___name__
 		: public deemon::detail::ConstGetRefProxy<_Wrap___name__, Object> {
 	private:
@@ -71,7 +151,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__name__", _Dee_HashSelectC(0x27a6cbdf, 0x9004f0806b170f3f)));
 		}
 	};
-	WUNUSED _Wrap___name__ (__name__)() {
+	WUNUSED _Wrap___name__ (__name__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___doc__
@@ -88,7 +168,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__doc__", _Dee_HashSelectC(0xd5eefba, 0x9e1c0e198ad451ff)));
 		}
 	};
-	WUNUSED _Wrap___doc__ (__doc__)() {
+	WUNUSED _Wrap___doc__ (__doc__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___type__
@@ -105,7 +185,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__type__", _Dee_HashSelectC(0xc25dc337, 0xd3fa545616840a4e)));
 		}
 	};
-	WUNUSED _Wrap___type__ (__type__)() {
+	WUNUSED _Wrap___type__ (__type__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___module__
@@ -122,7 +202,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__module__", _Dee_HashSelectC(0x3bea6c9f, 0x183a20d7d6c28dbb)));
 		}
 	};
-	WUNUSED _Wrap___module__ (__module__)() {
+	WUNUSED _Wrap___module__ (__module__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___operator__
@@ -139,7 +219,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operator__", _Dee_HashSelectC(0xce3dee75, 0x9d8d1bba3a878aad)));
 		}
 	};
-	WUNUSED _Wrap___operator__ (__operator__)() {
+	WUNUSED _Wrap___operator__ (__operator__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___operatorname__
@@ -156,7 +236,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__operatorname__", _Dee_HashSelectC(0x8893f1ad, 0x1bbac41c8a3c45b)));
 		}
 	};
-	WUNUSED _Wrap___operatorname__ (__operatorname__)() {
+	WUNUSED _Wrap___operatorname__ (__operatorname__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___property__
@@ -173,7 +253,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__property__", _Dee_HashSelectC(0x1267b4ff, 0x77922bbfee0194ee)));
 		}
 	};
-	WUNUSED _Wrap___property__ (__property__)() {
+	WUNUSED _Wrap___property__ (__property__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___refs__
@@ -190,7 +270,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__refs__", _Dee_HashSelectC(0x17cd1423, 0x6bbc6d8947e3c6a2)));
 		}
 	};
-	WUNUSED _Wrap___refs__ (__refs__)() {
+	WUNUSED _Wrap___refs__ (__refs__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___kwds__
@@ -207,7 +287,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__kwds__", _Dee_HashSelectC(0xd3926a14, 0xa90825b224a7262b)));
 		}
 	};
-	WUNUSED _Wrap___kwds__ (__kwds__)() {
+	WUNUSED _Wrap___kwds__ (__kwds__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

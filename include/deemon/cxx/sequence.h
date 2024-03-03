@@ -1531,19 +1531,19 @@ public:
 		args[1] = key_or_start;
 		return inherit(DeeObject_CallAttrStringHash(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), 2, args));
 	}
-	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<T> (blocate)(DeeObject *elem, DeeObject *key_or_start_or_start_or_start, DeeObject *defl_or_key_or_key_or_end) {
+	WUNUSED NONNULL_CXX((1, 2, 3)) Ref<T> (blocate)(DeeObject *elem, DeeObject *key_or_start_or_start, DeeObject *defl_or_key_or_end) {
 		DeeObject *args[3];
 		args[0] = elem;
-		args[1] = key_or_start_or_start_or_start;
-		args[2] = defl_or_key_or_key_or_end;
+		args[1] = key_or_start_or_start;
+		args[2] = defl_or_key_or_end;
 		return inherit(DeeObject_CallAttrStringHash(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), 3, args));
 	}
-	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<T> (blocate)(DeeObject *elem, DeeObject *start, DeeObject *key_or_end_or_end, DeeObject *defl_or_key_or_key) {
+	WUNUSED NONNULL_CXX((1, 2, 3, 4)) Ref<T> (blocate)(DeeObject *elem, DeeObject *start, DeeObject *key_or_end, DeeObject *defl_or_key) {
 		DeeObject *args[4];
 		args[0] = elem;
 		args[1] = start;
-		args[2] = key_or_end_or_end;
-		args[3] = defl_or_key_or_key;
+		args[2] = key_or_end;
+		args[3] = defl_or_key;
 		return inherit(DeeObject_CallAttrStringHash(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), 4, args));
 	}
 	WUNUSED NONNULL_CXX((1, 2, 3, 4, 5)) Ref<T> (blocate)(DeeObject *elem, DeeObject *start, DeeObject *end, DeeObject *key, DeeObject *defl) {
@@ -1579,8 +1579,8 @@ public:
 	WUNUSED NONNULL_CXX((1, 3)) Ref<T> (blocate)(DeeObject *elem, Dee_ssize_t start, DeeObject *key_or_end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKdSIZ "o", elem, start, key_or_end));
 	}
-	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<T> (blocate)(DeeObject *elem, Dee_ssize_t start, DeeObject *key_or_end_or_end, DeeObject *defl_or_key_or_key) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKdSIZ "oo", elem, start, key_or_end_or_end, defl_or_key_or_key));
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<T> (blocate)(DeeObject *elem, Dee_ssize_t start, DeeObject *key_or_end, DeeObject *defl_or_key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKdSIZ "oo", elem, start, key_or_end, defl_or_key));
 	}
 	WUNUSED NONNULL_CXX((1, 3, 4, 5)) Ref<T> (blocate)(DeeObject *elem, Dee_ssize_t start, DeeObject *end, DeeObject *key, DeeObject *defl) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKdSIZ "ooo", elem, start, end, key, defl));
@@ -1609,8 +1609,8 @@ public:
 	WUNUSED NONNULL_CXX((1, 3)) Ref<T> (blocate)(DeeObject *elem, size_t start, DeeObject *key_or_end) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKuSIZ "o", elem, start, key_or_end));
 	}
-	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<T> (blocate)(DeeObject *elem, size_t start, DeeObject *key_or_end_or_end, DeeObject *defl_or_key_or_key) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKuSIZ "oo", elem, start, key_or_end_or_end, defl_or_key_or_key));
+	WUNUSED NONNULL_CXX((1, 3, 4)) Ref<T> (blocate)(DeeObject *elem, size_t start, DeeObject *key_or_end, DeeObject *defl_or_key) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKuSIZ "oo", elem, start, key_or_end, defl_or_key));
 	}
 	WUNUSED NONNULL_CXX((1, 3, 4, 5)) Ref<T> (blocate)(DeeObject *elem, size_t start, DeeObject *end, DeeObject *key, DeeObject *defl) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "blocate", _Dee_HashSelectC(0x7aa979d3, 0xbda91c237d69489e), "o" DEE_PCKuSIZ "ooo", elem, start, end, key, defl));
@@ -1772,7 +1772,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "length", _Dee_HashSelectC(0xecef0c1, 0x2993e8eb119cab21)));
 		}
 	};
-	WUNUSED _Wrap_length (length)() {
+	WUNUSED _Wrap_length (length)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_first
@@ -1797,7 +1797,7 @@ public:
 			return DeeObject_SetAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7), value);
 		}
 	};
-	WUNUSED _Wrap_first (first)() {
+	WUNUSED _Wrap_first (first)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_last
@@ -1822,7 +1822,7 @@ public:
 			return DeeObject_SetAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc), value);
 		}
 	};
-	WUNUSED _Wrap_last (last)() {
+	WUNUSED _Wrap_last (last)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ismutable
@@ -1839,7 +1839,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ismutable", _Dee_HashSelectC(0x503e0af, 0x218befd96d70f7d4)));
 		}
 	};
-	WUNUSED _Wrap_ismutable (ismutable)() {
+	WUNUSED _Wrap_ismutable (ismutable)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isresizable
@@ -1856,7 +1856,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isresizable", _Dee_HashSelectC(0x8e5e51ee, 0x11d0a53385154152)));
 		}
 	};
-	WUNUSED _Wrap_isresizable (isresizable)() {
+	WUNUSED _Wrap_isresizable (isresizable)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_each
@@ -1873,7 +1873,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "each", _Dee_HashSelectC(0x9de8b13d, 0x374e052f37a5e158)));
 		}
 	};
-	WUNUSED _Wrap_each (each)() {
+	WUNUSED _Wrap_each (each)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ids
@@ -1890,7 +1890,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ids", _Dee_HashSelectC(0x3173a48f, 0x7cd9fae6cf17bb9f)));
 		}
 	};
-	WUNUSED _Wrap_ids (ids)() {
+	WUNUSED _Wrap_ids (ids)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_types
@@ -1907,7 +1907,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "types", _Dee_HashSelectC(0x871b2836, 0xde8693a2d24930)));
 		}
 	};
-	WUNUSED _Wrap_types (types)() {
+	WUNUSED _Wrap_types (types)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_classes
@@ -1924,7 +1924,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "classes", _Dee_HashSelectC(0x75e5899b, 0xc75d2d970415e4a0)));
 		}
 	};
-	WUNUSED _Wrap_classes (classes)() {
+	WUNUSED _Wrap_classes (classes)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isempty
@@ -1941,7 +1941,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isempty", _Dee_HashSelectC(0x693ca74b, 0xbdd6a8314c184088)));
 		}
 	};
-	WUNUSED _Wrap_isempty (isempty)() {
+	WUNUSED _Wrap_isempty (isempty)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isnonempty
@@ -1958,7 +1958,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnonempty", _Dee_HashSelectC(0xde7e1cb1, 0x837d8f16bac4b317)));
 		}
 	};
-	WUNUSED _Wrap_isnonempty (isnonempty)() {
+	WUNUSED _Wrap_isnonempty (isnonempty)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isfrozen
@@ -1975,7 +1975,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isfrozen", _Dee_HashSelectC(0xb418a8ca, 0xa1babf165e1b1733)));
 		}
 	};
-	WUNUSED _Wrap_isfrozen (isfrozen)() {
+	WUNUSED _Wrap_isfrozen (isfrozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_frozen
@@ -1992,7 +1992,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
-	WUNUSED _Wrap_frozen (frozen)() {
+	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

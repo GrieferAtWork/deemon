@@ -133,11 +133,6 @@ public:
 		args[0] = template_;
 		return inherit(DeeObject_CallAttrStringHash(this, "byhash", _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9), 1, args));
 	}
-	NONNULL_CXX((1)) void (insert_all)(DeeObject *items) {
-		DeeObject *args[1];
-		args[0] = items;
-		decref(throw_if_null(DeeObject_CallAttrStringHash(this, "insert_all", _Dee_HashSelectC(0xc6123bae, 0x6d5810c3bb999f3c), 1, args)));
-	}
 	class _Wrap_keys
 		: public deemon::detail::ConstGetRefProxy<_Wrap_keys, Sequence<Key> > {
 	private:
@@ -152,7 +147,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "keys", _Dee_HashSelectC(0x97e36be1, 0x654d31bc4825131c)));
 		}
 	};
-	WUNUSED _Wrap_keys (keys)() {
+	WUNUSED _Wrap_keys (keys)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_values
@@ -169,7 +164,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "values", _Dee_HashSelectC(0x33b551c8, 0xf6e3e991b86d1574)));
 		}
 	};
-	WUNUSED _Wrap_values (values)() {
+	WUNUSED _Wrap_values (values)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_items
@@ -186,7 +181,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "items", _Dee_HashSelectC(0x8858badc, 0xa52ef5f42baafa42)));
 		}
 	};
-	WUNUSED _Wrap_items (items)() {
+	WUNUSED _Wrap_items (items)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_frozen
@@ -203,7 +198,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
-	WUNUSED _Wrap_frozen (frozen)() {
+	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_max_load_factor
@@ -228,7 +223,7 @@ public:
 			return DeeObject_SetAttrStringHash(m_self, "max_load_factor", _Dee_HashSelectC(0xae8f7ef7, 0xa0a4981439b4c20f), value);
 		}
 	};
-	WUNUSED _Wrap_max_load_factor (max_load_factor)() {
+	WUNUSED _Wrap_max_load_factor (max_load_factor)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___sizeof__
@@ -245,7 +240,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
-	WUNUSED _Wrap___sizeof__ (__sizeof__)() {
+	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

@@ -302,9 +302,6 @@ public:
 	WUNUSED NONNULL_CXX((1)) Ref<string> (tostr)(DeeObject *radix, Dee_ssize_t precision, char const *mode) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73), "o" DEE_PCKdSIZ "s", radix, precision, mode));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<string> (tostr)(DeeObject *radix, char const *precision) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73), "os", radix, precision));
-	}
 	WUNUSED NONNULL_CXX((1)) Ref<string> (tostr)(DeeObject *radix, size_t precision) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73), "o" DEE_PCKuSIZ, radix, precision));
 	}
@@ -335,9 +332,6 @@ public:
 	WUNUSED Ref<string> (tostr)(Dee_ssize_t radix, Dee_ssize_t precision, char const *mode) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKdSIZ DEE_PCKdSIZ "s", radix, precision, mode));
 	}
-	WUNUSED Ref<string> (tostr)(Dee_ssize_t radix, char const *precision) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKdSIZ "s", radix, precision));
-	}
 	WUNUSED Ref<string> (tostr)(Dee_ssize_t radix, size_t precision) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKdSIZ DEE_PCKuSIZ, radix, precision));
 	}
@@ -346,9 +340,6 @@ public:
 	}
 	WUNUSED Ref<string> (tostr)(Dee_ssize_t radix, size_t precision, char const *mode) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKdSIZ DEE_PCKuSIZ "s", radix, precision, mode));
-	}
-	WUNUSED Ref<string> (tostr)(char const *radix) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73), "s", radix));
 	}
 	WUNUSED Ref<string> (tostr)(size_t radix) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKuSIZ, radix));
@@ -370,9 +361,6 @@ public:
 	}
 	WUNUSED Ref<string> (tostr)(size_t radix, Dee_ssize_t precision, char const *mode) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKuSIZ DEE_PCKdSIZ "s", radix, precision, mode));
-	}
-	WUNUSED Ref<string> (tostr)(size_t radix, char const *precision) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKuSIZ "s", radix, precision));
 	}
 	WUNUSED Ref<string> (tostr)(size_t radix, size_t precision) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tostr", _Dee_HashSelectC(0x6b502fcb, 0x9cdf9482b472ce73),  DEE_PCKuSIZ DEE_PCKuSIZ, radix, precision));
@@ -449,9 +437,6 @@ public:
 	WUNUSED NONNULL_CXX((1, 2)) Ref<Bytes> (tobytes)(DeeObject *length, DeeObject *byteorder, bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "oob", length, byteorder, signed_));
 	}
-	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (tobytes)(DeeObject *length, bool byteorder) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "ob", length, byteorder));
-	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (tobytes)(DeeObject *length, char const *byteorder) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "os", length, byteorder));
 	}
@@ -473,9 +458,6 @@ public:
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (tobytes)(Dee_ssize_t length, DeeObject *byteorder, bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKdSIZ "ob", length, byteorder, signed_));
 	}
-	WUNUSED Ref<Bytes> (tobytes)(Dee_ssize_t length, bool byteorder) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKdSIZ "b", length, byteorder));
-	}
 	WUNUSED Ref<Bytes> (tobytes)(Dee_ssize_t length, char const *byteorder) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKdSIZ "s", length, byteorder));
 	}
@@ -484,18 +466,6 @@ public:
 	}
 	WUNUSED Ref<Bytes> (tobytes)(Dee_ssize_t length, char const *byteorder, bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKdSIZ "sb", length, byteorder, signed_));
-	}
-	WUNUSED Ref<Bytes> (tobytes)(bool length) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "b", length));
-	}
-	WUNUSED Ref<Bytes> (tobytes)(char const *length) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "s", length));
-	}
-	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (tobytes)(char const *length, DeeObject *byteorder) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "so", length, byteorder));
-	}
-	WUNUSED Ref<Bytes> (tobytes)(char const *length, bool byteorder) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d), "sb", length, byteorder));
 	}
 	WUNUSED Ref<Bytes> (tobytes)(size_t length) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKuSIZ, length));
@@ -508,9 +478,6 @@ public:
 	}
 	WUNUSED NONNULL_CXX((2)) Ref<Bytes> (tobytes)(size_t length, DeeObject *byteorder, bool signed_) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKuSIZ "ob", length, byteorder, signed_));
-	}
-	WUNUSED Ref<Bytes> (tobytes)(size_t length, bool byteorder) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKuSIZ "b", length, byteorder));
 	}
 	WUNUSED Ref<Bytes> (tobytes)(size_t length, char const *byteorder) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "tobytes", _Dee_HashSelectC(0xb72dac45, 0x2c82795d5b9c763d),  DEE_PCKuSIZ "s", length, byteorder));
@@ -640,7 +607,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
-	WUNUSED _Wrap___sizeof__ (__sizeof__)() {
+	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_abs
@@ -657,7 +624,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "abs", _Dee_HashSelectC(0x62947f9, 0x7ce68cbaf722015c)));
 		}
 	};
-	WUNUSED _Wrap_abs (abs)() {
+	WUNUSED _Wrap_abs (abs)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_trunc
@@ -674,7 +641,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "trunc", _Dee_HashSelectC(0xbdb1d95d, 0x55dde3e4f51201b3)));
 		}
 	};
-	WUNUSED _Wrap_trunc (trunc)() {
+	WUNUSED _Wrap_trunc (trunc)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_floor
@@ -691,7 +658,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "floor", _Dee_HashSelectC(0x7819c83c, 0x213bace42059b42a)));
 		}
 	};
-	WUNUSED _Wrap_floor (floor)() {
+	WUNUSED _Wrap_floor (floor)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ceil
@@ -708,7 +675,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ceil", _Dee_HashSelectC(0x7ed4e8b7, 0x4ea23d981c754581)));
 		}
 	};
-	WUNUSED _Wrap_ceil (ceil)() {
+	WUNUSED _Wrap_ceil (ceil)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_round
@@ -725,7 +692,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "round", _Dee_HashSelectC(0xa33127a2, 0x973d8304b01a5682)));
 		}
 	};
-	WUNUSED _Wrap_round (round)() {
+	WUNUSED _Wrap_round (round)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_isnormal
@@ -742,7 +709,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "isnormal", _Dee_HashSelectC(0x6a066cc5, 0x112aae54ed86881f)));
 		}
 	};
-	WUNUSED _Wrap_isnormal (isnormal)() {
+	WUNUSED _Wrap_isnormal (isnormal)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_popcount
@@ -759,7 +726,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "popcount", _Dee_HashSelectC(0x9fb087f4, 0x1da7fbc6c1dd86dd)));
 		}
 	};
-	WUNUSED _Wrap_popcount (popcount)() {
+	WUNUSED _Wrap_popcount (popcount)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ffs
@@ -776,7 +743,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ffs", _Dee_HashSelectC(0xee0da7ec, 0xb86fa72e64f49d1e)));
 		}
 	};
-	WUNUSED _Wrap_ffs (ffs)() {
+	WUNUSED _Wrap_ffs (ffs)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_fls
@@ -793,7 +760,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "fls", _Dee_HashSelectC(0xc5cbbf7c, 0x60b5b1e4954fc54b)));
 		}
 	};
-	WUNUSED _Wrap_fls (fls)() {
+	WUNUSED _Wrap_fls (fls)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_partity
@@ -810,7 +777,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "partity", _Dee_HashSelectC(0x2e58034c, 0x667c0ca8cad072de)));
 		}
 	};
-	WUNUSED _Wrap_partity (partity)() {
+	WUNUSED _Wrap_partity (partity)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_ctz
@@ -827,7 +794,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "ctz", _Dee_HashSelectC(0xfc21ef39, 0xefcd17594063dd43)));
 		}
 	};
-	WUNUSED _Wrap_ctz (ctz)() {
+	WUNUSED _Wrap_ctz (ctz)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_msb
@@ -844,7 +811,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "msb", _Dee_HashSelectC(0xbe7ab876, 0xa4211b762e65939c)));
 		}
 	};
-	WUNUSED _Wrap_msb (msb)() {
+	WUNUSED _Wrap_msb (msb)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_nth
@@ -861,7 +828,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "nth", _Dee_HashSelectC(0x8e4eb0c, 0x3c51c11b465d5ad5)));
 		}
 	};
-	WUNUSED _Wrap_nth (nth)() {
+	WUNUSED _Wrap_nth (nth)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

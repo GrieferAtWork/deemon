@@ -340,6 +340,25 @@ public:
 	WUNUSED Ref<Bytes> (preadinto)(char const *dst, size_t pos, bool readall) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "preadinto", _Dee_HashSelectC(0x739ea18e, 0x69dbe6959249e490), "s" DEE_PCKuSIZ "b", dst, pos, readall));
 	}
+	WUNUSED Ref<string> (getutf8)() {
+		return inherit(DeeObject_CallAttrStringHash(this, "getutf8", _Dee_HashSelectC(0x793968d0, 0x250a8130a90938ba), 0, NULL));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (ungetutf8)(DeeObject *ch) {
+		DeeObject *args[1];
+		args[0] = ch;
+		return inherit(DeeObject_CallAttrStringHash(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8), 1, args));
+	}
+	WUNUSED Ref<deemon::bool_> (ungetutf8)(char const *ch) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "ungetutf8", _Dee_HashSelectC(0xa3df015d, 0x478925f9320a9ed8), "s", ch));
+	}
+	WUNUSED NONNULL_CXX((1)) Ref<deemon::bool_> (pututf8)(DeeObject *data) {
+		DeeObject *args[1];
+		args[0] = data;
+		return inherit(DeeObject_CallAttrStringHash(this, "pututf8", _Dee_HashSelectC(0xb8bfcee8, 0xbad5f3b7beb8cb05), 1, args));
+	}
+	WUNUSED Ref<deemon::bool_> (pututf8)(char const *data) {
+		return inherit(DeeObject_CallAttrStringHashf(this, "pututf8", _Dee_HashSelectC(0xb8bfcee8, 0xbad5f3b7beb8cb05), "s", data));
+	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos) {
 		DeeObject *args[1];
 		args[0] = pos;
@@ -369,9 +388,6 @@ public:
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, Dee_ssize_t maxbytes, bool readall) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKdSIZ "b", pos, maxbytes, readall));
-	}
-	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "ob", pos, maxbytes));
 	}
 	WUNUSED NONNULL_CXX((1)) Ref<Bytes> (readat)(DeeObject *pos, size_t maxbytes) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e), "o" DEE_PCKuSIZ, pos, maxbytes));
@@ -403,9 +419,6 @@ public:
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, Dee_ssize_t maxbytes, bool readall) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
 	}
-	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ "b", pos, maxbytes));
-	}
 	WUNUSED Ref<Bytes> (readat)(Dee_ssize_t pos, size_t maxbytes) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKdSIZ DEE_PCKuSIZ, pos, maxbytes));
 	}
@@ -435,9 +448,6 @@ public:
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, Dee_ssize_t maxbytes, bool readall) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKdSIZ "b", pos, maxbytes, readall));
-	}
-	WUNUSED Ref<Bytes> (readat)(size_t pos, bool maxbytes) {
-		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ "b", pos, maxbytes));
 	}
 	WUNUSED Ref<Bytes> (readat)(size_t pos, size_t maxbytes) {
 		return inherit(DeeObject_CallAttrStringHashf(this, "readat", _Dee_HashSelectC(0xba87cc58, 0xb190e1a01928006e),  DEE_PCKuSIZ DEE_PCKuSIZ, pos, maxbytes));
@@ -583,7 +593,7 @@ public:
 			return DeeObject_SetAttrStringHash(m_self, "pos", _Dee_HashSelectC(0xb1aecbb4, 0x277b6d36f75741ae), value);
 		}
 	};
-	WUNUSED _Wrap_pos (pos)() {
+	WUNUSED _Wrap_pos (pos)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_seq
@@ -600,7 +610,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "seq", _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)));
 		}
 	};
-	WUNUSED _Wrap_seq (seq)() {
+	WUNUSED _Wrap_seq (seq)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

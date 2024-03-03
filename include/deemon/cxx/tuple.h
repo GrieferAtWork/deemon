@@ -470,7 +470,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "first", _Dee_HashSelectC(0xa9f0e818, 0x9d12a485470a29a7)));
 		}
 	};
-	WUNUSED _Wrap_first (first)() {
+	WUNUSED _Wrap_first (first)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_last
@@ -487,7 +487,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "last", _Dee_HashSelectC(0x185a4f9a, 0x760894ca6d41e4dc)));
 		}
 	};
-	WUNUSED _Wrap_last (last)() {
+	WUNUSED _Wrap_last (last)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap_frozen
@@ -504,7 +504,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
-	WUNUSED _Wrap_frozen (frozen)() {
+	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
 	class _Wrap___sizeof__
@@ -521,7 +521,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "__sizeof__", _Dee_HashSelectC(0x422f56f1, 0x4240f7a183278760)));
 		}
 	};
-	WUNUSED _Wrap___sizeof__ (__sizeof__)() {
+	WUNUSED _Wrap___sizeof__ (__sizeof__)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

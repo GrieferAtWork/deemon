@@ -100,7 +100,7 @@ public:
 			return throw_if_minusone(DeeObject_BoundAttrStringHash(m_self, "frozen", _Dee_HashSelectC(0x82311b77, 0x7b55e2e6e642b6fd)));
 		}
 	};
-	WUNUSED _Wrap_frozen (frozen)() {
+	WUNUSED _Wrap_frozen (frozen)() DEE_CXX_NOTHROW {
 		return this;
 	}
 /*[[[end]]]*/

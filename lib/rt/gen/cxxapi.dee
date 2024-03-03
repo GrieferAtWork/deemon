@@ -199,12 +199,13 @@ function cxxEscapeReservedName(name: string): string {
 }
 
 function typeExprToCxxParameterTypes(tx: TypeExpr): {string...} {
-	local deemonType = commonType(tx.types);
-	while (deemonType !in cxxTypes)
-		deemonType = deemonType.__base__;
-	local types = cxxParameterTypes.get(deemonType);
-	if (types !is none)
-		yield types...;
+	for (local deemonType: tx.types) {
+		while (deemonType !in cxxTypes)
+			deemonType = deemonType.__base__;
+		local types = cxxParameterTypes.get(deemonType);
+		if (types !is none)
+			yield types...;
+	}
 	yield "DeeObject *";
 }
 
@@ -261,10 +262,11 @@ function getParameterPermutations(types: {{string | none...}...}): {{string...}.
 			}
 		} else {
 			for (local firstArgType: firstArgTypes) {
-				if (firstArgType is none) {
-					yield remainingArgsPermutations...;
-				} else {
-					for (local remainingArgs: remainingArgsPermutations) {
+				for (local remainingArgs: remainingArgsPermutations) {
+					if (firstArgType is none) {
+						if (!remainingArgs)
+							yield ();
+					} else {
 						yield (firstArgType, remainingArgs...);
 					}
 				}
@@ -460,7 +462,8 @@ final class CxxType {
 									for (local old, new: util.zip(
 											existingParameternames,
 											overloadParameterNames))
-										old == new ? old : f"{old}_or_{new}");
+										old == new ? old : f"{old}_or_{new}"
+								);
 							}
 						}
 						overloads[overloadArgs] = (
@@ -593,7 +596,7 @@ final class CxxType {
 					print("		}");
 				}
 				print("	};");
-				print("	WUNUSED ", propertyWrapperClassName, " (", cxxName, ")() {");
+				print("	WUNUSED ", propertyWrapperClassName, " (", cxxName, ")() DEE_CXX_NOTHROW {");
 				print("		return this;");
 				print("	}");
 			}	break;
