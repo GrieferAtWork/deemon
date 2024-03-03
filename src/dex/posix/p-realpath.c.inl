@@ -1518,7 +1518,8 @@ do_print_path_abs:
 		}
 
 		/* Return a path that is relative to the absolute path of the caller-given `dfd' */
-		result = posix_path_relpath_f(abspath, basedir);
+		result = (DREF DeeObject *)posix_path_relpath_f((DeeStringObject *)abspath,
+		                                                (DeeStringObject *)basedir);
 		Dee_Decref_likely(abspath);
 		Dee_Decref_likely(basedir);
 		return result;

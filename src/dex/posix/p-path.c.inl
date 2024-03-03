@@ -46,16 +46,16 @@ DeeSystem_DEFINE_memrchr(dee_memrchr)
 /* Path utilities (originally from `fs')                                */
 /************************************************************************/
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_headof_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_tailof_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_driveof_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_inctrail_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_exctrail_f(DeeObject *__restrict path);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL posix_path_walklink_f(DeeObject *link, DeeObject *linkname);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_abspath_f(DeeObject *path, DeeObject *pwd);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_relpath_f(DeeObject *path, DeeObject *pwd);
-PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv);
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL posix_path_normalpath_f(DeeObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_headof_f(DeeStringObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_tailof_f(DeeStringObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_driveof_f(DeeStringObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_inctrail_f(DeeStringObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_exctrail_f(DeeStringObject *__restrict path);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_abspath_f(DeeStringObject *path, DeeStringObject *pwd);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd);
+PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeStringObject *DCALL posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL posix_path_normalpath_f(DeeStringObject *__restrict path);
 
 
 
@@ -74,50 +74,50 @@ PRIVATE DEFINE_STRING(posix_FS_ALTSEP, DeeSystem_ALTSEP_S);
 #endif /* !DeeSystem_ALTSEP_S */
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_headof_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_headof_f(DeeStringObject *__restrict path) {
 	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(path);
+	pathstr = DeeString_AsUtf8((DREF DeeObject *)path);
 	if unlikely(!pathstr)
 		goto err;
 	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
-		return_empty_string;
+		return_reference_((DeeStringObject *)Dee_EmptyString);
 	/* Note that we *do* include the trailing slash! */
-	return DeeString_NewUtf8(pathstr,
-	                         (size_t)(tailsep - pathstr),
-	                         STRING_ERROR_FIGNORE);
+	return (DREF DeeStringObject *)DeeString_NewUtf8(pathstr,
+	                                                 (size_t)(tailsep - pathstr),
+	                                                 STRING_ERROR_FIGNORE);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_tailof_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_tailof_f(DeeStringObject *__restrict path) {
 	char const *tailsep, *pathstr;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(path);
+	pathstr = DeeString_AsUtf8((DeeObject *)path);
 	if unlikely(!pathstr)
 		goto err;
 	tailsep = DeeSystem_BaseName(pathstr, WSTR_LENGTH(pathstr));
 	ASSERT(tailsep >= pathstr);
 	if (tailsep <= pathstr)
 		return_reference_(path);
-	return DeeString_NewUtf8(tailsep,
-	                         (size_t)((pathstr + WSTR_LENGTH(pathstr)) - tailsep),
-	                         STRING_ERROR_FIGNORE);
+	return (DREF DeeStringObject *)DeeString_NewUtf8(tailsep,
+	                                                 (size_t)((pathstr + WSTR_LENGTH(pathstr)) - tailsep),
+	                                                 STRING_ERROR_FIGNORE);
 err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_driveof_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_driveof_f(DeeStringObject *__restrict path) {
 #ifdef DEE_SYSTEM_FS_DRIVES
 	char const *pathstr, *iter, *end;
-	DREF DeeObject *result;
+	DREF DeeStringObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	pathstr = DeeString_AsUtf8(path);
+	pathstr = DeeString_AsUtf8((DeeObject *)path);
 	if unlikely(!pathstr)
 		goto err;
 	iter = pathstr;
@@ -131,7 +131,7 @@ posix_path_driveof_f(DeeObject *__restrict path) {
 			continue; /* Found the drive character. */
 		++iter;
 		drive_length = (size_t)(iter - pathstr);
-		result       = DeeString_NewBuffer(drive_length + 1);
+		result       = (DREF DeeStringObject *)DeeString_NewBuffer(drive_length + 1);
 		if unlikely(!result)
 			goto err;
 		dst = DeeString_STR(result);
@@ -142,26 +142,26 @@ posix_path_driveof_f(DeeObject *__restrict path) {
 #else /* DeeSystem_ALTSEP */
 		*dst = DeeSystem_SEP;
 #endif /* !DeeSystem_ALTSEP */
-		return DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+		return (DREF DeeStringObject *)DeeString_SetUtf8((DREF DeeObject *)result, STRING_ERROR_FIGNORE);
 	}
-	return_empty_string;
+	return_reference_((DeeStringObject *)Dee_EmptyString);
 err:
 	return NULL;
 #else /* DEE_SYSTEM_FS_DRIVES */
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	(void)path;
-	return_reference_((DeeObject *)&posix_FS_SEP);
+	return_reference_((DeeStringObject *)&posix_FS_SEP);
 #endif /* !DEE_SYSTEM_FS_DRIVES */
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_inctrail_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_inctrail_f(DeeStringObject *__restrict path) {
 	uint32_t endch;
 	size_t wlength;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	wlength = DeeString_WLEN(path);
 	if unlikely(!wlength)
-		return_reference_((DeeObject *)&posix_FS_SEP);
+		return_reference_((DeeStringObject *)&posix_FS_SEP);
 	endch = DeeString_GetChar(path, wlength - 1);
 	if (DeeSystem_IsSep(endch))
 		return_reference_(path);
@@ -174,13 +174,13 @@ posix_path_inctrail_f(DeeObject *__restrict path) {
 	 * For this, we can always just search DeeString_STR. */
 	if (memchr(DeeString_STR(path), DeeSystem_ALTSEP, DeeString_SIZE(path) * sizeof(char)) != NULL &&
 	    memchr(DeeString_STR(path), DeeSystem_SEP, DeeString_SIZE(path) * sizeof(char)) == NULL)
-		return DeeObject_Add(path, (DeeObject *)&posix_FS_ALTSEP);
+		return (DREF DeeStringObject *)DeeObject_Add((DeeObject *)path, (DeeObject *)&posix_FS_ALTSEP);
 #endif /* DeeSystem_ALTSEP */
-	return DeeObject_Add(path, (DeeObject *)&posix_FS_SEP);
+	return (DREF DeeStringObject *)DeeObject_Add((DeeObject *)path, (DeeObject *)&posix_FS_SEP);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_exctrail_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_exctrail_f(DeeStringObject *__restrict path) {
 	int width;
 	size_t wlength, new_wlength;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
@@ -197,8 +197,8 @@ posix_path_exctrail_f(DeeObject *__restrict path) {
 	if (new_wlength >= wlength)
 		return_reference_(path);
 	width = DeeString_WIDTH(path);
-	return DeeString_NewWithWidth(DeeString_WSTR(path),
-	                              new_wlength, width);
+	return (DREF DeeStringObject *)DeeString_NewWithWidth(DeeString_WSTR(path),
+	                                                      new_wlength, width);
 }
 
 
@@ -374,9 +374,9 @@ is_special:
  * >> while (link.startswith("." + FS_SEP))
  * >>     link = link[#("." + FS_SEP):];
  * >> return headof(linkname) + link; */
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeStringObject *DCALL
+posix_path_walklink_f(DeeStringObject *link, DeeStringObject *linkname) {
+	DREF DeeStringObject *result;
 	char const *link_base, *link_start, *link_end;
 	char const *name_base, *name_end;
 
@@ -392,7 +392,7 @@ posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
 #endif /* CONFIG_HOST_WINDOWS */
 
 	/* Load `linkname' as UTF-8 and check where the containing directory ends. */
-	name_base = DeeString_AsUtf8(linkname);
+	name_base = DeeString_AsUtf8((DeeObject *)linkname);
 	if unlikely(!name_base)
 		goto err;
 	name_end = DeeSystem_BaseName(name_base, WSTR_LENGTH(name_base));
@@ -404,7 +404,7 @@ posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
 	}
 
 	/* Load the string as UTF-8 and strip leading `./' */
-	link_base = DeeString_AsUtf8(link);
+	link_base = DeeString_AsUtf8((DeeObject *)link);
 	if unlikely(!link_base)
 		goto err;
 	link_start = link_base;
@@ -419,7 +419,7 @@ posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
 		char *dst;
 		size_t name_len = (size_t)(name_end - name_base);
 		size_t link_len = (size_t)(link_end - link_start);
-		result = DeeString_NewBuffer(name_len + link_len);
+		result = (DREF DeeStringObject *)DeeString_NewBuffer(name_len + link_len);
 		if unlikely(!result)
 			goto err;
 		dst = DeeString_STR(result);
@@ -428,7 +428,8 @@ posix_path_walklink_f(DeeObject *link, DeeObject *linkname) {
 	}
 
 	/* Set the resulting string as UTF-8 */
-	result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+	result = (DREF DeeStringObject *)DeeString_SetUtf8((DREF DeeObject *)result,
+	                                                   STRING_ERROR_FIGNORE);
 	return result;
 return_link:
 	return_reference_(link);
@@ -437,9 +438,9 @@ err:
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_abspath_f(DeeObject *path, DeeObject *pwd) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_abspath_f(DeeStringObject *path, DeeStringObject *pwd) {
+	DREF DeeStringObject *result;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
 	ASSERT_OBJECT_TYPE_EXACT_OPT(pwd, &DeeString_Type);
 
@@ -478,7 +479,7 @@ return_unmodified:
 	} else if (pwd) {
 		Dee_Incref(pwd);
 	} else {
-		pwd = posix_getcwd_f_impl();
+		pwd = (DeeStringObject *)posix_getcwd_f_impl();
 		if unlikely(!pwd)
 			goto err;
 	}
@@ -487,10 +488,10 @@ return_unmodified:
 		char const *next;
 		char const *pwd_base, *pwd_begin, *pwd_end;
 		char const *pth_base, *pth_begin, *pth_end;
-		pwd_base = DeeString_AsUtf8(pwd);
+		pwd_base = DeeString_AsUtf8((DeeObject *)pwd);
 		if unlikely(!pwd_base)
 			goto err_pwd;
-		pth_base = DeeString_AsUtf8(path);
+		pth_base = DeeString_AsUtf8((DeeObject *)path);
 		if unlikely(!pth_base)
 			goto err_pwd;
 		pwd_end = (pwd_begin = pwd_base) + WSTR_LENGTH(pwd_base);
@@ -516,13 +517,13 @@ return_unmodified:
 				++pwd_drive_end;
 			pwd_drive_len = (size_t)(pwd_drive_end - pwd_begin);
 			pth_len       = (size_t)(pth_end - pth_begin);
-			result = DeeString_NewBuffer(pwd_drive_len + pth_len);
+			result = (DREF DeeStringObject *)DeeString_NewBuffer(pwd_drive_len + pth_len);
 			if unlikely(!result)
 				goto err_pwd;
 			dst = DeeString_STR(result);
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_drive_len, sizeof(char));
 			memcpyc(dst, pth_begin, pth_len, sizeof(char));
-			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_SetUtf8((DeeObject *)result, STRING_ERROR_FIGNORE);
 			goto done_decref_pwd;
 		}
 #endif /* DEE_SYSTEM_FS_DRIVES */
@@ -585,8 +586,8 @@ done_merge_paths:
 				result = path;
 				Dee_Incref(result);
 			} else {
-				result = DeeString_NewUtf8(pth_begin, pth_end - pth_begin,
-				                           STRING_ERROR_FIGNORE);
+				result = (DREF DeeStringObject *)DeeString_NewUtf8(pth_begin, pth_end - pth_begin,
+				                                                   STRING_ERROR_FIGNORE);
 			}
 		} else if (pth_begin >= pth_end) {
 			if (pwd_begin == pwd_base &&
@@ -594,22 +595,22 @@ done_merge_paths:
 				result = pwd;
 				Dee_Incref(result);
 			} else {
-				result = DeeString_NewUtf8(pwd_begin, pwd_end - pwd_begin,
-				                           STRING_ERROR_FIGNORE);
+				result = (DREF DeeStringObject *)DeeString_NewUtf8(pwd_begin, pwd_end - pwd_begin,
+				                                                   STRING_ERROR_FIGNORE);
 			}
 		} else {
 			/* Create the result buffer. */
 			char *dst;
 			size_t pth_length = (size_t)(pth_end - pth_begin);
 			size_t pwd_length = (size_t)(pwd_end - pwd_begin);
-			result = DeeString_NewBuffer(pwd_length + 1 + pth_length);
+			result = (DREF DeeStringObject *)DeeString_NewBuffer(pwd_length + 1 + pth_length);
 			if unlikely(!result)
 				goto err_pwd;
 			dst = DeeString_STR(result);
 			dst = (char *)mempcpyc(dst, pwd_begin, pwd_length, sizeof(char));
 			*dst++ = DeeSystem_SEP;
 			memcpyc(dst, pth_begin, pth_length, sizeof(char));
-			result = DeeString_SetUtf8(result, STRING_ERROR_FIGNORE);
+			result = (DREF DeeStringObject *)DeeString_SetUtf8((DREF DeeObject *)result, STRING_ERROR_FIGNORE);
 		}
 	}
 #ifdef DEE_SYSTEM_FS_DRIVES
@@ -632,9 +633,9 @@ PRIVATE char const aligned_upref_buffer[MAX_UPREF_COPY][3] = {
 	{ '.', '.', DeeSystem_SEP }
 };
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_relpath_f(DeeObject *path, DeeObject *pwd) {
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_relpath_f(DeeStringObject *path, DeeStringObject *pwd) {
+	DREF DeeStringObject *result;
 	size_t uprefs, pth_length;
 	char *dst;
 	char const *next;
@@ -688,14 +689,14 @@ posix_path_relpath_f(DeeObject *path, DeeObject *pwd) {
 		Dee_Incref(pwd);
 	} else {
 		/* Lookup the real PWD. */
-		pwd = posix_getcwd_f_impl();
+		pwd = (DeeStringObject *)posix_getcwd_f_impl();
 		if unlikely(!pwd)
 			goto err;
 	}
-	pth_iter = DeeString_AsUtf8(path);
+	pth_iter = DeeString_AsUtf8((DeeObject *)path);
 	if unlikely(!pth_iter)
 		goto err;
-	pwd_iter = DeeString_AsUtf8(pwd);
+	pwd_iter = DeeString_AsUtf8((DeeObject *)pwd);
 	if unlikely(!pwd_iter)
 		goto err;
 	pth_end = pth_iter + WSTR_LENGTH(pth_iter);
@@ -938,7 +939,7 @@ continue_uprefs_normal:
 
 #if 1 /* Small, optional memory-reuse optimization */
 	if (pth_begin == DeeString_STR(path) && !uprefs)
-		return_reference_((DeeObject *)path);
+		return_reference_(path);
 #endif
 
 	/* Strip leading slashes & whitespace from `path' */
@@ -961,15 +962,15 @@ continue_uprefs_normal:
 	if (!uprefs && pth_iter >= pth_end) {
 		/* Special case: The 2 given paths match each other exactly. */
 return_single_dot:
-		result = (DREF DeeObject *)&str_single_dot;
+		result = (DREF DeeStringObject *)&str_single_dot;
 		Dee_Incref(result);
 		goto done;
 	}
 
 	/* Create the string that'll be returned. */
 	pth_length = (size_t)(pth_end - pth_begin);
-	result = DeeString_NewBuffer(uprefs * COMPILER_LENOF(aligned_upref_buffer[0]) +
-	                             pth_length);
+	result = (DREF DeeStringObject *)DeeString_NewBuffer(uprefs * COMPILER_LENOF(aligned_upref_buffer[0]) +
+	                                                     pth_length);
 	if unlikely(!result)
 		goto err_pwd;
 	dst = DeeString_STR(result);
@@ -983,7 +984,8 @@ return_single_dot:
 
 	/* With upwards references out of the way, copy the remainder of the given path. */
 	memcpyc(dst, pth_begin, pth_length, sizeof(char));
-	result = DeeString_SetUtf8(result, STRING_ERROR_FSTRICT);
+	result = (DREF DeeStringObject *)DeeString_SetUtf8((DREF DeeObject *)result,
+	                                                   STRING_ERROR_FSTRICT);
 done:
 	Dee_Decref(pwd);
 	return result;
@@ -993,14 +995,14 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-posix_path_normalpath_f(DeeObject *__restrict path) {
+PRIVATE WUNUSED NONNULL((1)) DREF DeeStringObject *DCALL
+posix_path_normalpath_f(DeeStringObject *__restrict path) {
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
 	/*utf-8*/ char *iter, *begin, *end, *iter_next;
 	/*utf-8*/ char *flush_start, *flush_end;
 	uint32_t ch;
 	ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-	begin = DeeString_AsUtf8(path);
+	begin = DeeString_AsUtf8((DeeObject *)path);
 	if unlikely(!begin)
 		goto err;
 	end = begin + WSTR_LENGTH(begin);
@@ -1155,31 +1157,31 @@ done:
 	}
 
 	/* Pack everything together. */
-	return unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
 }
 
-PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeObject *DCALL
-posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv) {
+PRIVATE WUNUSED ATTR_INS(2, 1) DREF DeeStringObject *DCALL
+posix_path_joinpath_f(size_t pathc, DeeStringObject *const *__restrict pathv) {
 	size_t i;
 	char nextsep = DeeSystem_SEP;
 	struct unicode_printer printer;
 
 	/* Special case: Return `.' when no paths are given. */
 	if unlikely(!pathc)
-		return_reference_((DeeObject *)&str_single_dot);
+		return_reference_((DeeStringObject *)&str_single_dot);
 	unicode_printer_init(&printer);
 	for (i = 0; i < pathc; ++i) {
-		DeeObject *path = pathv[i];
+		DeeStringObject *path = pathv[i];
 		char const *begin, *end, *next;
 		uint32_t ch;
 
 		/* Validate that the path is actually a string. */
 		if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 			goto err;
-		begin = DeeString_AsUtf8(path);
+		begin = DeeString_AsUtf8((DeeObject *)path);
 		if unlikely(!begin)
 			goto err;
 		end = begin + WSTR_LENGTH(begin);
@@ -1216,7 +1218,7 @@ posix_path_joinpath_f(size_t pathc, DeeObject *const *__restrict pathv) {
 		if (!DeeSystem_IsSep(nextsep))
 			nextsep = DeeSystem_SEP;
 	}
-	return unicode_printer_pack(&printer);
+	return (DREF DeeStringObject *)unicode_printer_pack(&printer);
 err:
 	unicode_printer_fini(&printer);
 	return NULL;
@@ -1250,7 +1252,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_headof_f_impl(DeeObject *path)
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_headof_f(path);
+	return (DREF DeeObject *)posix_path_headof_f((DeeStringObject *)path);
 err:
 	return NULL;
 }
@@ -1278,7 +1280,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_tailof_f_impl(DeeObject *path)
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_tailof_f(path);
+	return (DREF DeeObject *)posix_path_tailof_f((DeeStringObject *)path);
 err:
 	return NULL;
 }
@@ -1306,7 +1308,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_driveof_f_impl(DeeObject *path)
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_driveof_f(path);
+	return (DREF DeeObject *)posix_path_driveof_f((DeeStringObject *)path);
 err:
 	return NULL;
 }
@@ -1334,7 +1336,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_inctrail_f_impl(DeeObject *path)
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_inctrail_f(path);
+	return (DREF DeeObject *)posix_path_inctrail_f((DeeStringObject *)path);
 err:
 	return NULL;
 }
@@ -1362,7 +1364,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_exctrail_f_impl(DeeObject *path)
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_exctrail_f(path);
+	return (DREF DeeObject *)posix_path_exctrail_f((DeeStringObject *)path);
 err:
 	return NULL;
 }
@@ -1393,7 +1395,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_abspath_f_impl(DeeObject *path, D
 		goto err;
 	if (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type))
 		goto err;
-	return posix_path_abspath_f(path, pwd);
+	return (DREF DeeObject *)posix_path_abspath_f((DeeStringObject *)path,
+	                                              (DeeStringObject *)pwd);
 err:
 	return NULL;
 }
@@ -1424,7 +1427,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_walklink_f_impl(DeeObject *linkte
 		goto err;
 	if (DeeObject_AssertTypeExact(linkname, &DeeString_Type))
 		goto err;
-	return posix_path_walklink_f(linktext, linkname);
+	return (DREF DeeObject *)posix_path_walklink_f((DeeStringObject *)linktext,
+	                                               (DeeStringObject *)linkname);
 err:
 	return NULL;
 }
@@ -1455,7 +1459,8 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_relpath_f_impl(DeeObject *path, D
 		goto err;
 	if (pwd && DeeObject_AssertTypeExact(pwd, &DeeString_Type))
 		goto err;
-	return posix_path_relpath_f(path, pwd);
+	return (DREF DeeObject *)posix_path_relpath_f((DeeStringObject *)path,
+	                                              (DeeStringObject *)pwd);
 err:
 	return NULL;
 }
@@ -1483,7 +1488,7 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_normalpath_f_impl(DeeObject *path
 {
 	if (DeeObject_AssertTypeExact(path, &DeeString_Type))
 		goto err;
-	return posix_path_normalpath_f(path);
+	return (DREF DeeObject *)posix_path_normalpath_f((DeeStringObject *)path);
 err:
 	return NULL;
 }

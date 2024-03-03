@@ -1812,7 +1812,6 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		struct cmethod_docinfo di;
 		DeeCMethodObject *func = (DeeCMethodObject *)func_obj;
 		DO(vpop_empty_kwds(self));           /* func, [args...] */
-		DO(fg_vlrot(self, true_argc + 1));   /* [args...], func */
 		DO(fg_vpop_at(self, true_argc + 1)); /* [args...] */
 		DeeCMethod_DocInfo(func->cm_func, &di);
 		doc.di_doc = di.dmdi_doc;
@@ -3286,8 +3285,7 @@ err:
 
 /* func, [args...], kw -> result -- Invoke `DeeObject_CallKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallkw(struct fungen *__restrict self,
-                                 vstackaddr_t argc) {
+fg_vopcallkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallkw(self, argc, false);
 }
 
@@ -3311,8 +3309,7 @@ err:
 
 /* func, this, [args...], kw -> result -- Invoke `DeeObject_ThisCallKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopthiscallkw(struct fungen *__restrict self,
-                                               vstackaddr_t argc) {
+fg_vopthiscallkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallkw(self, argc + 1, true);
 }
 
@@ -3337,8 +3334,7 @@ err:
 
 /* this, attr, [args...], kw -> result -- Invoke `DeeObject_CallAttrKw()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallattrkw(struct fungen *__restrict self,
-                                     vstackaddr_t argc) {
+fg_vopcallattrkw(struct fungen *__restrict self, vstackaddr_t argc) {
 	return impl_vopcallattrkw(self, argc);
 }
 
@@ -3662,29 +3658,25 @@ err:
 
 /* func, [items...] -> result -- Invoke `DeeObject_Call(func, DeeSharedVector_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallseq(struct fungen *__restrict self,
-                                  vstackaddr_t itemc) {
+fg_vopcallseq(struct fungen *__restrict self, vstackaddr_t itemc) {
 	return vopcallseqmap_impl(self, itemc, false, false, true);
 }
 
 /* func, [[key, value]...] -> result -- Invoke `DeeObject_Call(func, DeeSharedMap_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallmap(struct fungen *__restrict self,
-                                  vstackaddr_t pairc) {
+fg_vopcallmap(struct fungen *__restrict self, vstackaddr_t pairc) {
 	return vopcallseqmap_impl(self, pairc * 2, true, false, true);
 }
 
 /* func, attr, [items...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedVector_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallattrseq(struct fungen *__restrict self,
-                                      vstackaddr_t itemc) {
+fg_vopcallattrseq(struct fungen *__restrict self, vstackaddr_t itemc) {
 	return vopcallseqmap_impl(self, itemc, false, true, true);
 }
 
 /* func, attr, [[key, value]...] -> result -- Invoke `DeeObject_CallAttr(func, attr, DeeSharedMap_NewShared(...))' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallattrmap(struct fungen *__restrict self,
-                                      vstackaddr_t pairc) {
+fg_vopcallattrmap(struct fungen *__restrict self, vstackaddr_t pairc) {
 	return vopcallseqmap_impl(self, pairc * 2, true, true, true);
 }
 
@@ -3693,8 +3685,7 @@ fg_vopcallattrmap(struct fungen *__restrict self,
 
 /* func, [args...] -> [args...], result -- Invoke `DeeObject_Call()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcall(struct fungen *__restrict self,
-                               vstackaddr_t argc) {
+fg_vopcall(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
 	if likely(result == 0) /* func, [args...], kw=NULL */
 		result = fg_vopcallkw(self, argc);
@@ -3712,8 +3703,7 @@ fg_vopcalltuple(struct fungen *__restrict self) {
 
 /* func, this, [args...] -> [args...], result -- Invoke `DeeObject_ThisCall()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopthiscall(struct fungen *__restrict self,
-                                   vstackaddr_t argc) {
+fg_vopthiscall(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
 	if likely(result == 0) /* func, this, [args...], kw=NULL */
 		result = fg_vopthiscallkw(self, argc);
@@ -3731,8 +3721,7 @@ fg_vopthiscalltuple(struct fungen *__restrict self) {
 
 /* this, attr, [args...] -> [args...], result -- Invoke `DeeObject_CallAttr()' and push the result */
 INTERN WUNUSED NONNULL((1)) int DCALL
-fg_vopcallattr(struct fungen *__restrict self,
-                                   vstackaddr_t argc) {
+fg_vopcallattr(struct fungen *__restrict self, vstackaddr_t argc) {
 	int result = fg_vpush_NULL(self);
 	if likely(result == 0) /* this, attr, [args...], kw=NULL */
 		result = fg_vopcallattrkw(self, argc);

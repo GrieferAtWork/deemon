@@ -71,8 +71,8 @@ extern "C++" {
 namespace __intern {
 Dee_cmethod_t _Dee_RequiresCMethod(decltype(nullptr));
 Dee_kwcmethod_t _Dee_RequiresKwCMethod(decltype(nullptr));
-template<class _TReturn> Dee_cmethod_t _Dee_RequiresCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, DeeObject *const *));
-template<class _TReturn> Dee_kwcmethod_t _Dee_RequiresKwCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, DeeObject *const *, /*nullable*/ DeeObject *kw));
+template<class _TReturn, class _TObject> Dee_cmethod_t _Dee_RequiresCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, _TObject *const *));
+template<class _TReturn, class _TObject> Dee_kwcmethod_t _Dee_RequiresKwCMethod(WUNUSED_T NONNULL_T((1)) DREF _TReturn *(DCALL *_meth)(size_t, _TObject *const *, /*nullable*/ DeeObject *kw));
 } /* namespace __intern */
 } /* extern "C++" */
 #define Dee_REQUIRES_CMETHOD(meth)    ((decltype(::__intern::_Dee_RequiresCMethod(meth)))(meth))
