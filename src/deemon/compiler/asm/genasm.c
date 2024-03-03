@@ -399,6 +399,10 @@ done_push_none:
 			goto done;
 		}
 
+#if 0 /* This breaks. Not because the result is a proxy (if you want to ensure that the elements
+       * of a sequence aren't the result of a proxy, you must call ".frozen"), but because
+       * "(x as Sequence).operator iter()" isn't implemented (because Sequence doesn't implement
+       * that opeartor and expects its sub-classes to implement it *for* it) */
 		/* `{ foo... }' normally compiles as:
 		 * >> push   @foo
 		 * >> cast   top, Tuple
@@ -443,6 +447,7 @@ done_push_none:
 				goto err;
 			break;
 		}
+#endif
 
 		/* When `need_all' is true, we must push the results of all elements onto the stack. */
 		need_all    = (self->a_flag != AST_FMULTIPLE_KEEPLAST) ? PUSH_RESULT : ASM_G_FNORMAL;
