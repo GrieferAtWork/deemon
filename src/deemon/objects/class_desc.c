@@ -893,6 +893,8 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	              /**/ "$\"property\"|?#isproperty&"
 	              /**/ "$\"classns\"|?#isclassns"
 	              "}"),
+	TYPE_GETTER_F("__name__", &ca_getname, METHOD_FNOREFESCAPE, "->?Dstring\nAlias for ?#name"),
+	TYPE_GETTER_F("__doc__", &ca_getdoc, METHOD_FNOREFESCAPE, "->?X2?Dstring?N\nAlias for ?#doc"),
 	TYPE_GETSET_END
 };
 
@@ -1394,7 +1396,7 @@ PRIVATE struct type_member tpconst cd_members[] = {
 #endif /* CLASS_TP_FAUTOINIT */
 	TYPE_MEMBER_BITFIELD("__isinttruncated__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FTRUNCATE),
 	TYPE_MEMBER_BITFIELD("__hasmoveany__", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FMOVEANY),
-	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_name), "->?X2?Dstring?N"),
+	TYPE_MEMBER_FIELD_DOC(STR___name__, STRUCT_OBJECT, offsetof(ClassDescriptor, cd_name), "->?Dstring"),
 	TYPE_MEMBER_FIELD_DOC(STR___doc__, STRUCT_OBJECT_OPT, offsetof(ClassDescriptor, cd_doc), "->?X2?Dstring?N"),
 	TYPE_MEMBER_FIELD_DOC("__csize__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(ClassDescriptor, cd_cmemb_size), "Size of the class object table"),
 	TYPE_MEMBER_FIELD_DOC("__isize__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(ClassDescriptor, cd_imemb_size), "Size of the instance object table"),
@@ -2723,9 +2725,10 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemember_get_module(DeeInstanceMemberObject *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeType_GetModule(self->im_type);
-	if (!result)
-		return_none;
-	return result;
+	if (result)
+		return result;
+	err_unbound_attribute_string(&DeeInstanceMember_Type, STR___module__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2791,9 +2794,9 @@ PRIVATE struct type_getset tpconst instancemember_getsets[] = {
 	              "->?X2?Dstring?N\n"
 	              "The documentation string associated with @this instance member"),
 	TYPE_GETTER_F(STR___module__, &instancemember_get_module, METHOD_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "Returns the module that is defining @this instance "
-	              /**/ "member, or ?N if that module could not be defined"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the module that is defining @this instance member"),
 	TYPE_GETSET_END
 };
 

@@ -21,6 +21,7 @@
 import util;
 import deemon;
 import * from deemon;
+import * from errors;
 
 global Declaration;
 global Doc;
@@ -90,9 +91,13 @@ local function findObjectNameInModule(mod: Module, ob: Object): string | none {
 local function encodeType(tp: Type): string {
 	if (tp === Object)
 		return "?O";
-	local mod = Type.__module__(tp);
-	if (mod is none) /* Module could not be determined */
+	local mod;
+	try {
+		mod = Type.__module__(tp);
+	} catch (UnboundAttribute) {
+		/* Module could not be determined */
 		return "?U" + encodeName(tp.__name__);
+	}
 	local name = findObjectNameInModule(mod, tp);
 	if (name is none)
 		name = Type.__name__(tp);
@@ -1887,7 +1892,7 @@ done:
 				Edecode();
 			local result = m_cache[0];
 			if (result is Module)
-				result = Module.__name__(result);
+				result = try Module.__name__(result) catch (UnboundAttribute) none;
 			return result;
 		}
 	}
@@ -3157,7 +3162,7 @@ class Doc: WeakRefAble {
 		get(): string {
 			local result = none;
 			if (istype && object is bound)
-				result = Type.__name__(object);
+				result = try Type.__name__(object) catch (UnboundAttribute) none;
 			return result is none ? name : result;
 		}
 	}
@@ -3290,7 +3295,7 @@ class Doc: WeakRefAble {
 				m_attr    = none;
 				docstring = "";
 				m_parent  = none;
-				name = Module.__name__(docParentOrPath);
+				name = try Module.__name__(docParentOrPath) catch (UnboundAttribute) none;
 				return;
 			}
 			if (docParentOrPath is Type) {
@@ -3298,10 +3303,10 @@ class Doc: WeakRefAble {
 				local type_module;
 load_type_input:
 				object = docParentOrPath;
-				m_parent = type_module = Type.__module__(docParentOrPath);
+				m_parent = type_module = try Type.__module__(docParentOrPath) catch (UnboundAttribute) none;
 				docstring = Type.__doc__(docParentOrPath).rstrip();
 				istype = true;
-				name = Type.__name__(docParentOrPath);
+				name = try Type.__name__(docParentOrPath) catch (UnboundAttribute) none;
 				if (type_module is none) {
 					m_attr = none;
 					m_path = none;
@@ -3346,37 +3351,16 @@ load_type_input:
 					docParentOrPath = tp;
 					goto load_type_input;
 				}
-				name = docParentOrPath.__name__; /* NOTE: This may return `none'! */
+				name = try docParentOrPath.__name__ catch (UnboundAttribute) none;
 				local ds = docParentOrPath.__doc__;
 				if (ds is none)
 					ds = "";
 				docstring = ds.rstrip();
 				object = docParentOrPath;
-				if (hasattr(docParentOrPath, "__type__")) {
-					local doc_type;
-					try {
-						doc_type = docParentOrPath.__type__;
-					} catch (Error.AttributeError) {
-						goto do_load_wrapper_module;
-					}
-					if (doc_type is none)
-						goto do_load_wrapper_module;
-					m_parent = doc_type;
-				} else {
-do_load_wrapper_module:
-					local mod;
-					try {
-						mod = docParentOrPath.__module__;
-					} catch (Error.AttributeError) {
-						goto do_throw_unknown_object_origin;
-					}
-					if (mod is none) {
-do_throw_unknown_object_origin:
-						throw Error.AttributeError(
-							f"Failed to determine the declaring type "
-							f"or module of {repr docParentOrPath}");
-					}
-					m_parent = mod;
+				try {
+					m_parent = docParentOrPath.__type__;
+				} catch (AttributeError) {
+					m_parent = docParentOrPath.__module__;
 				}
 				return;
 			}
@@ -3405,12 +3389,12 @@ do_throw_unknown_object_origin:
 			if (attributeName.startswith("op:")) {
 				attributeName = attributeName[3:];
 err_unknown_operator:
-				throw Error.AttributeError(
+				throw AttributeError(
 					f"Unknown operator {repr attributeName} in {repr docParentOrPath.path}");
 			}
 			fixedAttributeName = attributeName.lsstrip("i:").lsstrip("c:");
 err_unknown_attribute:
-			throw Error.AttributeError(
+			throw AttributeError(
 				f"Unknown attribute {repr fixedAttributeName} in {repr docParentOrPath.path}");
 		}
 		m_parent = docParentOrPath;
@@ -3460,7 +3444,7 @@ err_unknown_attribute:
 					fixedAttributeName = attributeName;
 					myAttr = Attribute(docParentOrPath.object, fixedAttributeName);
 				}
-			} catch (Error.AttributeError) {
+			} catch (AttributeError) {
 				goto err_unknown_attribute;
 			}
 		}
@@ -3478,7 +3462,7 @@ err_unknown_attribute:
 					} else {
 						try {
 							object = parob.operator . (fixedAttributeName);
-						} catch (Error.AttributeError) {
+						} catch (AttributeError) {
 						}
 					}
 				}
@@ -3700,7 +3684,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = Type.__module__(x.object);
+					local mod = try Type.__module__(x.object) catch (UnboundAttribute) none;
 					if (mod !is none)
 						return Doc(mod);
 				}
@@ -3728,7 +3712,7 @@ set_is_type:
 			x = this;
 			for (;;) {
 				if (x.istype && x.object is bound) {
-					local mod = Type.__module__(x.object);
+					local mod = try Type.__module__(x.object) catch (UnboundAttribute) none;
 					if (mod !is none)
 						return mod;
 				}

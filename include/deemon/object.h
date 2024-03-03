@@ -2009,6 +2009,8 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  */
 #define Dee_METHOD_FMASK        0xff00 /* Mask of portable method flags. */
 #define Dee_METHOD_FNORMAL      0x0000 /* Normal flags */
+#define Dee_METHOD_FEXACTRETURN 0x0400 /* RTTI return types are exact (allowed to assume `return == NULL || Dee_TYPE(return) == TYPE_FROM_RTTI')
+                                        * WARNING: _hostasm treats `struct type_member' with doc strings as though this flag was *always* set! */
 #define Dee_METHOD_FNOTHROW     0x0800 /* Function never throws an exception and always returns normally (implies `ATTR_RETNONNULL') */
 #define Dee_METHOD_FNORETURN    0x1000 /* Function never returns normally (always throws an exception, or calls `exit(3)') */
 #define Dee_METHOD_FPURECALL    0x2000 /* ATTR_PURE: Function does not affect the global state (except for reference counts or memory usage)
@@ -2030,6 +2032,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #ifdef DEE_SOURCE
 #define METHOD_FMASK        Dee_METHOD_FMASK
 #define METHOD_FNORMAL      Dee_METHOD_FNORMAL
+#define METHOD_FEXACTRETURN Dee_METHOD_FEXACTRETURN
 #define METHOD_FNOTHROW     Dee_METHOD_FNOTHROW
 #define METHOD_FNORETURN    Dee_METHOD_FNORETURN
 #define METHOD_FPURECALL    Dee_METHOD_FPURECALL

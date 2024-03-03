@@ -819,9 +819,11 @@ unknown:
 /* UNCHECKED(result) -> result */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 check_result_with_doc(struct fungen *__restrict self,
-                      vstackaddr_t argc, struct docinfo *doc) {
+                      vstackaddr_t argc, struct docinfo *doc,
+                      uintptr_t method_flags) {
 	ASSERT(doc);
-	if (doc->di_doc != NULL && !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
+	if (doc->di_doc != NULL && (method_flags & METHOD_FEXACTRETURN) &&
+	    !(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NORTTITYPE)) {
 		DeeTypeObject *result_type;
 		DO(fg_state_unshare(self));
 		self->fg_state->ms_stackc += (argc - 1); /* Cheat a little here... */
@@ -952,7 +954,7 @@ vcall_objmethod(struct fungen *__restrict self,
 	DO(fg_vpush_immSIZ(self, argc));          /* [args...], argv, this, argc */
 	DO(fg_vlrot(self, 3));                    /* [args...], this, argc, argv */
 	DO(fg_vcallapi_ex(self, func, VCALL_CC_RAWINTPTR, 3, argc + 3)); /* UNCHECKED(result) */
-	return check_result_with_doc(self, argc, doc); /* result */
+	return check_result_with_doc(self, argc, doc, func_flags); /* result */
 err:
 	return -1;
 }
@@ -1028,7 +1030,7 @@ vcall_kwobjmethod(struct fungen *__restrict self,
 	DO(fg_vlrot(self, 3));                                           /* kw, [args...], this, argc, argv */
 	DO(fg_vlrot(self, argc + 4));                                    /* [args...], this, argc, argv, kw */
 	DO(fg_vcallapi_ex(self, func, VCALL_CC_RAWINTPTR, 4, argc + 4)); /* UNCHECKED(result) */
-	return check_result_with_doc(self, argc, doc);                   /* result */
+	return check_result_with_doc(self, argc, doc, func_flags);       /* result */
 err:
 	return -1;
 }
@@ -1099,7 +1101,7 @@ vcall_getmethod(struct fungen *__restrict self,
 	if (!(getset_flags & METHOD_FNOREFESCAPE))
 		DO(fg_vnotoneref_at(self, 1));                  /* this */
 	DO(fg_vcallapi(self, func, VCALL_CC_RAWINTPTR, 1)); /* result */
-	return check_result_with_doc(self, 0, doc);
+	return check_result_with_doc(self, 0, doc, getset_flags);
 err:
 	return -1;
 }
@@ -1293,7 +1295,7 @@ vcall_cmethod(struct fungen *__restrict self,
 	DO(fg_vpush_immSIZ(self, argc));                                 /* [args...], argv, argc */
 	DO(fg_vswap(self));                                              /* [args...], argc, argv */
 	DO(fg_vcallapi_ex(self, func, VCALL_CC_RAWINTPTR, 2, argc + 2)); /* UNCHECKED(result) */
-	return check_result_with_doc(self, argc, doc);                   /* result */
+	return check_result_with_doc(self, argc, doc, func_flags);       /* result */
 err:
 	return -1;
 }
@@ -1348,7 +1350,7 @@ vcall_kwcmethod(struct fungen *__restrict self,
 	DO(fg_vswap(self));                                              /* kw, [args...], argc, argv */
 	DO(fg_vlrot(self, argc + 3));                                    /* [args...], argc, argv, kw */
 	DO(fg_vcallapi_ex(self, func, VCALL_CC_RAWINTPTR, 3, argc + 3)); /* UNCHECKED(result) */
-	return check_result_with_doc(self, argc, doc);                   /* result */
+	return check_result_with_doc(self, argc, doc, func_flags);       /* result */
 err:
 	return -1;
 }

@@ -26,6 +26,7 @@
 #include <deemon/bool.h>
 #include <deemon/class.h>
 #include <deemon/code.h>
+#include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/module.h>
 #include <deemon/none.h>
@@ -258,13 +259,19 @@ done:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 property_callback_getattr(Property *self, DeeStringObject *name) {
-	if (self->p_get)
-		return DeeObject_GetAttr(self->p_get, (DeeObject *)name);
-	if (self->p_del)
-		return DeeObject_GetAttr(self->p_del, (DeeObject *)name);
-	if (self->p_set)
-		return DeeObject_GetAttr(self->p_set, (DeeObject *)name);
-	return ITER_DONE;
+	DREF DeeObject *result;
+	if (self->p_get) {
+		result = DeeObject_GetAttr(self->p_get, (DeeObject *)name);
+	} else if (self->p_del) {
+		result = DeeObject_GetAttr(self->p_del, (DeeObject *)name);
+	} else if (self->p_set) {
+		result = DeeObject_GetAttr(self->p_set, (DeeObject *)name);
+	} else {
+		return ITER_DONE;
+	}
+	if (result == NULL && DeeError_Catch(&DeeError_AttributeError))
+		result = ITER_DONE;
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -282,7 +289,7 @@ property_get_name(Property *__restrict self) {
 	result = property_callback_getattr(self, &str___name__);
 	if (result != ITER_DONE)
 		return result;
-	return_none;
+	err_unbound_attribute_string(&DeeProperty_Type, STR___name__);
 err:
 	return NULL;
 }
@@ -320,11 +327,9 @@ property_get_type(Property *__restrict self) {
 	if (info.fi_type)
 		return info.fi_type;
 	result = (DREF DeeTypeObject *)property_callback_getattr(self, &str___type__);
-	if (result == (DREF DeeTypeObject *)ITER_DONE) {
-		result = (DREF DeeTypeObject *)Dee_None;
-		Dee_Incref(result);
-	}
-	return result;
+	if (result != (DREF DeeTypeObject *)ITER_DONE)
+		return result;
+	err_unbound_attribute_string(&DeeProperty_Type, STR___type__);
 err:
 	return NULL;
 }
@@ -346,7 +351,8 @@ property_get_module(Property *__restrict self) {
 	result = property_callback_getattr(self, &str___module__);
 	if (result != ITER_DONE)
 		return result;
-	return_none;
+	err_unbound_attribute_string(&DeeProperty_Type, STR___module__);
+	return NULL;
 }
 
 
@@ -362,17 +368,20 @@ PRIVATE struct type_getset tpconst property_getsets[] = {
 	              "->?Dbool\n"
 	              "Returns ?t if @this Property has a setter callback"),
 	TYPE_GETTER_F(STR___name__, &property_get_name, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the name of @this Property, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the name of @this Property"),
 	TYPE_GETTER_F(STR___doc__, &property_get_doc, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this Property, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "Returns the documentation string of @this Property"),
 	TYPE_GETTER_F(STR___type__, &property_get_type, METHOD_FNOREFESCAPE,
-	              "->?X2?DType?N\n"
+	              "->?DType\n"
+	              "#t{UnboundAttribute}"
 	              "Returns the type implementing @this Property, or ?N if unknown"),
 	TYPE_GETTER_F(STR___module__, &property_get_module, METHOD_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
-	              "Returns the module within which @this Property is declared, or ?N if unknown"),
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the module within which @this Property is declared"),
 	TYPE_GETSET_END
 };
 

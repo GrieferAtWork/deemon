@@ -1287,11 +1287,13 @@ restart:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
-	if (!self->co_keywords)
-		return_empty_seq;
-	return DeeRefVector_NewReadonly((DeeObject *)self,
-	                                (size_t)self->co_argc_max,
-	                                (DeeObject *const *)self->co_keywords);
+	if likely(self->co_keywords) {
+		return DeeRefVector_NewReadonly((DeeObject *)self,
+		                                (size_t)self->co_argc_max,
+		                                (DeeObject *const *)self->co_keywords);
+	}
+	err_unbound_attribute_string(&DeeCode_Type, STR___kwds__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1317,9 +1319,9 @@ code_get_name(DeeCodeObject *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_doc);
-	if (!info.fi_name)
-		return_none;
-	return (DREF DeeObject *)info.fi_name;
+	if likely(info.fi_name)
+		return (DREF DeeObject *)info.fi_name;
+	err_unbound_attribute_string(&DeeCode_Type, STR___name__);
 err:
 	return NULL;
 }
@@ -1331,9 +1333,9 @@ code_get_doc(DeeCodeObject *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
-	if (!info.fi_doc)
-		return_none;
-	return (DREF DeeObject *)info.fi_doc;
+	if likely(info.fi_doc)
+		return (DREF DeeObject *)info.fi_doc;
+	return_none;
 err:
 	return NULL;
 }
@@ -1345,11 +1347,9 @@ code_get_type(DeeCodeObject *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (!info.fi_type) {
-		info.fi_type = (DREF DeeTypeObject *)Dee_None;
-		Dee_Incref(Dee_None);
-	}
-	return info.fi_type;
+	if likely(info.fi_type)
+		return info.fi_type;
+	err_unbound_attribute_string(&DeeCode_Type, STR___type__);
 err:
 	return NULL;
 }
@@ -1362,9 +1362,9 @@ code_get_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname == (uint16_t)-1)
-		return_none;
-	return DeeInt_NewUInt16(info.fi_opname);
+	if (info.fi_opname != (uint16_t)-1)
+		return DeeInt_NewUInt16(info.fi_opname);
+	err_unbound_attribute_string(&DeeCode_Type, "__operator__");
 err:
 	return NULL;
 }
@@ -1377,15 +1377,16 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname == (uint16_t)-1) {
+	if (info.fi_opname != (uint16_t)-1) {
+		op = Dee_OperatorInfo(info.fi_type ? Dee_TYPE(info.fi_type) : NULL,
+		                      info.fi_opname);
 		Dee_XDecref(info.fi_type);
-		return_none;
+		if (!op)
+			return DeeInt_NewUInt16(info.fi_opname);
+		return DeeString_New(op->oi_sname);
 	}
-	op = Dee_OperatorInfo(Dee_TYPE(info.fi_type), info.fi_opname);
 	Dee_XDecref(info.fi_type);
-	if (!op)
-		return DeeInt_NewUInt16(info.fi_opname);
-	return DeeString_New(op->oi_sname);
+	err_unbound_attribute_string(&DeeCode_Type, "__operatorname__");
 err:
 	return NULL;
 }
@@ -1398,9 +1399,9 @@ code_get_property(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	Dee_XDecref(info.fi_type);
-	if (info.fi_getset == (uint16_t)-1)
-		return_none;
-	return DeeInt_NewUInt16(info.fi_getset);
+	if (info.fi_getset != (uint16_t)-1)
+		return DeeInt_NewUInt16(info.fi_getset);
+	err_unbound_attribute_string(&DeeCode_Type, "__property__");
 err:
 	return NULL;
 }
@@ -1512,37 +1513,42 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	 * types, including `Function', `ObjMethod', etc.
 	 */
 	TYPE_GETTER_F(STR___name__, &code_get_name, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "Returns the name of @this code object, or ?N if unknown (s.a. ?A__name__?DFunction)"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "Returns the name of @this code object (s.a. ?A__name__?DFunction)"),
 	TYPE_GETTER_F(STR___doc__, &code_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
 	TYPE_GETTER_F(STR___type__, &code_get_type, METHOD_FNOREFESCAPE,
-	              "->?X2?DType?N\n"
-	              "Try to determine if @this code object is defined as part of a user-defined class, "
-	              /**/ "and if it is, return that class type, or ?N if that class couldn't be found, "
-	              /**/ "or if @this code object is defined as stand-alone (s.a. ?A__type__?DFunction)"),
+	              "->?DType\n"
+	              "#t{UnboundAttribute}"
+	              "Determine if @this code object is defined as part of a user-defined class, "
+	              /**/ "and if it is, return that class type (s.a. ?A__type__?DFunction)"),
 	TYPE_GETTER(STR___kwds__, &code_get_kwds,
 	            "->?S?Dstring\n"
+	            "#t{UnboundAttribute}"
 	            "Returns a sequence of keyword argument names accepted by @this code object\n"
-	            "If @this code doesn't accept keyword arguments, an empty sequence is returned"),
+	            "If @this code doesn't accept keyword arguments, throw :UnboundAttribute"),
 	TYPE_GETTER_F("__operator__", &code_get_operator, METHOD_FNOREFESCAPE,
-	              "->?X2?Dint?N\n"
+	              "->?Dint\n"
+	              "#t{UnboundAttribute}"
 	              "Try to determine if @this code object is defined as part of a user-defined class, "
 	              /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	              /**/ "return the internal ID of the operator that @this code object provides, or ?N "
-	              /**/ "if that class couldn't be found, @this code object is defined as stand-alone, or "
-	              /**/ "defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
+	              /**/ "return the internal ID of the operator that @this code object provides, or throw "
+	              /**/ ":UnboundAttribute if that class couldn't be found, @this code object is defined "
+	              /**/ "as stand-alone, or defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
 	TYPE_GETTER_F("__operatorname__", &code_get_operatorname, METHOD_FNOREFESCAPE,
-	              "->?X3?Dstring?Dint?N\n"
+	              "->?X2?Dstring?Dint\n"
+	              "#t{UnboundAttribute}"
 	              "Same as ?#__operator__, but instead try to return the unambiguous name of the "
 	              /**/ "operator, though still return its ID if the operator isn't recognized as being "
 	              /**/ "part of the standard (s.a. ?A__operatorname__?DFunction)"),
 	TYPE_GETTER_F("__property__", &code_get_property, METHOD_FNOREFESCAPE,
-	              "->?X2?Dint?N\n"
+	              "->?Dint\n"
+	              "#t{UnboundAttribute}"
 	              "Returns an integer describing the kind if @this code is part of a property or getset, "
-	              /**/ "or returns ?N if the function's property could not be found, or if the function isn't "
-	              /**/ "declared as a property callback (s.a. ?A__property__?DFunction)"),
+	              /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
+	              /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
 	TYPE_GETTER("__default__", &code_getdefault,
 	            "->?S?O\n"
 	            "Access to the default values of arguments"),

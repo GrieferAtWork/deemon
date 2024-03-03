@@ -35,6 +35,7 @@
 #include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
+#include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
 DECL_BEGIN
@@ -255,20 +256,9 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_name(InstanceMethod *__restrict self) {
 	struct class_attribute *attr;
 	attr = instancemethod_getattr(self, NULL, NULL);
-	if (!attr)
-		goto return_attr;
-	return_reference_((DeeObject *)attr->ca_name);
-	{
-		DREF DeeObject *result;
-return_attr:
-		result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
-		if unlikely(!result) {
-			if (DeeError_Catch(&DeeError_AttributeError) ||
-			    DeeError_Catch(&DeeError_NotImplemented))
-				return_none;
-		}
-		return result;
-	}
+	if (attr)
+		return_reference_((DeeObject *)attr->ca_name);
+	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___name__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -295,22 +285,16 @@ return_attr:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instancemethod_get_kwds(InstanceMethod *__restrict self) {
-	DREF DeeObject *result;
-	result = DeeObject_GetAttr(self->im_func, (DeeObject *)&str___kwds__);
-	if unlikely(!result) {
-		if (DeeError_Catch(&DeeError_AttributeError) ||
-		    DeeError_Catch(&DeeError_NotImplemented))
-			return_none;
-	}
-	return result;
+	return DeeObject_GetAttr(self->im_func, (DeeObject *)&str___kwds__);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
 instancemethod_get_type(InstanceMethod *__restrict self) {
 	DeeTypeObject *result;
-	if (!instancemethod_getattr(self, NULL, &result))
-		result = (DeeTypeObject *)Dee_None;
-	return_reference_(result);
+	if (instancemethod_getattr(self, NULL, &result))
+		return_reference_(result);
+	err_unbound_attribute_string(&DeeInstanceMethod_Type, STR___type__);
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -320,20 +304,24 @@ instancemethod_get_module(InstanceMethod *__restrict self) {
 
 PRIVATE struct type_getset tpconst im_getsets[] = {
 	TYPE_GETTER_F(STR___name__, &instancemethod_get_name, METHOD_FNOREFESCAPE,
-	              "->?X2?Dstring?N\n"
-	              "The name of the function being bound, or ?N if unknown"),
+	              "->?Dstring\n"
+	              "#t{UnboundAttribute}"
+	              "The name of the function being bound"),
 	TYPE_GETTER_F(STR___doc__, &instancemethod_get_doc, METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
 	              "The documentation string of the function being bound, or ?N if unknown"),
 	TYPE_GETTER_F(STR___kwds__, &instancemethod_get_kwds, METHOD_FNOREFESCAPE,
 	              "->?S?Dstring\n"
+	              "#t{UnboundAttribute}"
 	              "Returns a sequence of keyword argument names accepted by @this function\n"
 	              "If @this function doesn't accept keyword arguments, an empty sequence is returned"),
 	TYPE_GETTER_F(STR___type__, &instancemethod_get_type, METHOD_FNOREFESCAPE,
-	              "->?X2?DType?N\n"
-	              "The type implementing the function that is being bound, or ?N if unknown"),
+	              "->?DType\n"
+	              "#t{UnboundAttribute}"
+	              "The type implementing the function that is being bound"),
 	TYPE_GETTER_F(STR___module__, &instancemethod_get_module, METHOD_FNOREFESCAPE,
-	              "->?X2?DModule?N\n"
+	              "->?DModule\n"
+	              "#t{UnboundAttribute}"
 	              "The type within which the bound function was defined "
 	              "(alias for ?A__module__?DFunction though ${__func__.__module__})\n"
 	              "If something other than a user-level function was set for ?#__func__, "

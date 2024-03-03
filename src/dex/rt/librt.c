@@ -524,12 +524,8 @@ librt_get_DocKwds_impl_f(void) {
 	 * support, we can use it as a reference point for a C-level function
 	 * with a non-empty keyword list, without having to create such an
 	 * object ourself. */
-	DREF DeeObject *result, *kwds, *import_func;
-	import_func = DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import");
-	if unlikely(!import_func)
-		goto err;
-	kwds = DeeObject_GetAttrString(import_func, "__kwds__");
-	Dee_Decref_unlikely(import_func);
+	DREF DeeObject *result, *kwds;
+	kwds = DeeObject_GetAttrString((DeeObject *)&DeeBuiltin_Import, "__kwds__");
 	if unlikely(!kwds)
 		goto err;
 	result = (DREF DeeObject *)Dee_TYPE(kwds);

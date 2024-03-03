@@ -44,7 +44,7 @@ function testProperty(p: Property, canget: bool, candel: bool, canset: bool) {
 	assert p.canget == canget;
 	assert p.candel == candel;
 	assert p.canset == canset;
-	assert p.__type__ is none;
+	assert p.__type__ !is bound;
 	if (canget) {
 		assert p(10) == ((10,), {});
 		assert p(x: 20) == ((), {"x":20});
