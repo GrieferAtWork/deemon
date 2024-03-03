@@ -208,14 +208,15 @@ BUILTIN_DOC(compare, &DeeBuiltin_Compare, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
             "}")
 
 /* Load a module, given its name.
- * >> import(module_name: string, base?: Module): string;
+ * >> __import__(base: Module, name: string): string;
  * NOTE: This is what `import' links against when used
- *       as a stand-alone within an expression. */
-BUILTIN_DOC(import, &DeeBuiltin_Import, MODSYM_FNORMAL,
-            "(module_name:?Dstring,base?:?DModule)->?DModule\n"
-            "#tValueError{The given @module_name is invalid}"
-            "#tFileNotFound{The named @module_name could not be found}"
-            "#r{The ?DModule associated with the given @module_name}")
+ *       as a stand-alone within an expression (after
+ *       injecting the current module as a leading arg). */
+BUILTIN_DOC(__import__, &DeeBuiltin_Import, MODSYM_FREADONLY | MODSYM_FCONSTEXPR,
+            "(base:?DModule,name:?Dstring)->?DModule\n"
+            "#tValueError{The given @name is invalid}"
+            "#tFileNotFound{The named @name could not be found}"
+            "#r{The ?DModule associated with the given @name}")
 
 
 /* Load a module, given its name.

@@ -254,6 +254,7 @@ DEF_WARNING(W_EXPECTED_FROM_AFTER_SYMBOL_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR,
 DEF_WARNING(W_UNEXPECTED_STAR_DUPLICATION_IN_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected `*' in import list, when `*' had already been encountered before"))
 DEF_WARNING(W_UNEXPECTED_FROM_AFTER_MODULE_IMPORT_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Unexpected `from' following a module import list"))
 DEF_WARNING(W_EXPECTED_LPAREN_AFTER_IMPORT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `(' after `import' in expression, but got " TOK_S, TOK_A))
+DEF_WARNING(W_EXPECTED_RPAREN_AFTER_IMPORT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `)' after `import' in expression, but got " TOK_S, TOK_A))
 
 DEF_WARNING(W_EXPECTED_RBRACKET_AFTER_LIST, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `]' to end list, but got " TOK_S, TOK_A))
 DEF_WARNING(W_EXPECTED_RBRACE_AFTER_BRACEINIT, (WG_SYNTAX), WSTATE_ERROR, WARNF("Expected `}' to end a brace initializer, but got " TOK_S, TOK_A))

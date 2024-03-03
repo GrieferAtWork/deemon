@@ -1489,6 +1489,48 @@ PRIVATE struct type_getset tpconst module_class_getsets[] = {
 	TYPE_GETSET_END
 };
 
+/* WARNING: This right here doesn't work in _hostasm code (because that doesn't produce frames) */
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+module_import_with_frame_base(DeeObject *__restrict module_name) {
+	DREF DeeObject *result;
+	struct code_frame *frame = DeeThread_Self()->t_exec;
+	if (frame) {
+		DeeStringObject *path;
+		char *begin, *end;
+
+		/* Load the path of the currently executing code (for relative imports). */
+		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
+		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
+		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module, &DeeModule_Type);
+		path = frame->cf_func->fo_code->co_module->mo_path;
+		if unlikely(!path)
+			goto open_normal;
+		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
+		begin = DeeString_AsUtf8((DeeObject *)path);
+		if unlikely(!begin)
+			goto err;
+		end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
+
+		/* Find the end of the current path. */
+		while (end > begin && !DeeSystem_IsSep(end[-1]))
+			--end;
+		result = DeeModule_OpenRelative(module_name, begin, (size_t)(end - begin), NULL, true);
+	} else {
+open_normal:
+		/* Without an execution frame, dismiss the relative import() code handling. */
+		result = DeeModule_OpenGlobal(module_name, NULL, true);
+	}
+	if likely(result) {
+		if unlikely(DeeModule_RunInit(result) < 0)
+			goto err_r;
+	}
+	return result;
+err_r:
+	Dee_Decref(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 module_class_open(DeeObject *UNUSED(self),
                   size_t argc, DeeObject *const *argv) {
@@ -1500,7 +1542,7 @@ module_class_open(DeeObject *UNUSED(self),
 		goto err;
 	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 		goto err;
-	return DeeModule_Import(module_name);
+	return module_import_with_frame_base(module_name);
 err:
 	return NULL;
 }

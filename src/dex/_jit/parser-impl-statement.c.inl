@@ -1016,15 +1016,12 @@ FUNC(Import)(JITLexer *__restrict self) {
 
 	/* Special handling for `import(...)' expressions. */
 	if (self->jl_tok == '(' || JITLexer_ISKWD(self, "pack")) {
-		RETURN_TYPE result;
 #ifdef JIT_EVAL
-		result = JITContext_GetImport(self->jl_context);
+		RETURN_TYPE result;
+		result = JITLexer_EvalImportExpression(self);
 		if unlikely(!result)
 			goto err;
 #endif /* JIT_EVAL */
-		result = CALL_SECONDARY(UnaryOperand, result);
-		if (ISERR(result))
-			goto err;
 		return CALL_SECONDARY(Operand, result);
 	}
 

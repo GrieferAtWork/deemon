@@ -754,7 +754,7 @@ local function getTypeFromQualPath(docnode: WeakRef with Doc, qual: string): Typ
 		local mod;
 		if (modnam.startswith(".")) {
 			/* Import the module relatively to the one calling */
-			mod = import(modnam, base: docnode.value.module);
+			mod = deemon.__import__(docnode.value.module, modnam);
 		} else {
 			mod = import(modnam);
 		}
@@ -1870,7 +1870,7 @@ done:
 					local base = docnode.value.module;
 					result = result == "."
 						? base
-						: import(result, base: base)
+						: deemon.__import__(base, result)
 						;
 				} else {
 					result = import(result);

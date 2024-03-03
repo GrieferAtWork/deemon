@@ -1146,7 +1146,7 @@ DFUNDEF WUNUSED NONNULL((1)) uint64_t DCALL
 DeeModule_GetCTime(/*Module*/ DeeObject *__restrict self);
 #endif /* !CONFIG_NO_DEC */
 
-/* Same as `DeeModule_Import', but relative module paths are imported in relation to `basemodule'
+/* Import a module, with relative module paths being imported in relation to `basemodule'
  * Not that these functions invoke `DeeModule_RunInit()' on the returned module!*/
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF /*Module*/ DeeObject *DCALL
 DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,
@@ -1158,15 +1158,6 @@ DeeModule_ImportRelString(/*Module*/ DeeObject *__restrict basemodule,
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-/* Implementation of the builtin `import()' and `module.open()' functions.
- * Using the module declaring the code of the current top execution frame (if it exists),
- * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'. Not that
- * this function invokes `DeeModule_RunInit()' on the returned module!
- * @param: throw_error: When true, throw an error if the module couldn't be
- *                      found and return `NULL', otherwise return `ITER_DONE'. */
-INTDEF WUNUSED NONNULL((1)) DREF /*Module*/ DeeObject *DCALL
-DeeModule_Import(/*String*/ DeeObject *__restrict module_name);
-
 /* Access global variables of a given module by their name described by a C-string.
  * These functions act and behave just as once would expect, raising errors when
  * appropriate and returning NULL/false/-1 upon error or not knowing the given name. */

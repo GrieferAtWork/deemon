@@ -135,18 +135,14 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 f_builtin_import(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DeeObject *module_name, *base = NULL;
-	PRIVATE struct keyword kwlist[] = { K(name), K(base), KEND };
-	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|o:import", &module_name, &base))
+	PRIVATE struct keyword kwlist[] = { K(base), K(name), KEND };
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "oo:__import__", &base, &module_name))
+		goto err;
+	if (DeeObject_AssertType(base, &DeeModule_Type))
 		goto err;
 	if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
 		goto err;
-	if (base) {
-		if (DeeObject_AssertType(module_name, &DeeModule_Type))
-			goto err;
-		result = DeeModule_ImportRel(base, module_name);
-	} else {
-		result = DeeModule_Import(module_name);
-	}
+	result = DeeModule_ImportRel(base, module_name);
 	return result;
 err:
 	return NULL;

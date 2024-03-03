@@ -805,7 +805,7 @@ JITObjectTable_FindImportStar(JITObjectTable *__restrict self,
 #define JITCONTEXT_FSYNERR 0x0001 /* A syntax error occurred that may not be caught. */
 
 struct jit_context {
-	DeeObject       *jc_import;   /* [0..1] `import' function override (when NULL, use `deemon.operator . ("import")' instead) */
+	DeeObject       *jc_import;   /* [0..1] `import' function override (when NULL, use `DeeModule_ImportRel(jc_impbase)' instead) */
 	DeeModuleObject *jc_impbase;  /* [0..1] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                               * When `NULL', code isn't allowed to perform relative imports.
 	                               * NOTE: If this isn't a module, JIT itself will throw an error. */
@@ -833,11 +833,6 @@ struct jit_context {
 #define JITCONTEXT_INIT       { NULL, NULL, { NULL, 0 }, NULL, NULL, 0, JITCONTEXT_FNORMAL }
 #define JITContext_Init(self) bzero(self, sizeof(JITContext))
 #define JITContext_Fini(self) (void)0
-
-/* Return a reference to the used `import' function. */
-#define JITContext_GetImport(self)                                          \
-	((self)->jc_import ? (Dee_Incref((self)->jc_import), (self)->jc_import) \
-	                   : DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "import"))
 
 /* Return a reference to an object that implements attribute
  * operators such that it allows access to JIT globals. */
@@ -1004,6 +999,11 @@ JITLexer_SkipKeywordLabelList(JITLexer *__restrict self);
  *       If that is the case, the caller must instead access the attributes of the returned object! */
 INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalModule(JITLexer *__restrict self);
 #define JITLexer_SkipModule(self) JITLexer_SkipModuleName(self)
+
+/* Evaluate an import expression, starting on the token after "import".
+ * >> import("foo");
+ *          ^      ^ */
+INTDEF WUNUSED DREF DeeObject *DFCALL JITLexer_EvalImportExpression(JITLexer *__restrict self);
 
 
 /* Parse a comma-separated list of expressions,

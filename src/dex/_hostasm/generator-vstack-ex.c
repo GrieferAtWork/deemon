@@ -1432,7 +1432,7 @@ vcall_kwcmethod(struct fungen *__restrict self,
 		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopcompare(self);*/
 	} else if (func == DeeBuiltin_Import.cm_func) {
-		/*if (argc == 1 && memval_isnull(fg_vtop(self))) // XXX: Inline?
+		/*if (argc == 2 && memval_isnull(fg_vtop(self))) // XXX: Inline?
 			return fg_vopimport(self);*/
 	}
 

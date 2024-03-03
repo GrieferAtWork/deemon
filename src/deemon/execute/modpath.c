@@ -2561,54 +2561,7 @@ DeeModule_OpenRelativeString(/*utf-8*/ char const *__restrict module_name, size_
 	                                                          : (Dee_MODULE_OPENINPATH_FRELMODULE));
 }
 
-/* Implementation of the builtin `import()' and `module.open()' functions.
- * Using the module declaring the code of the current top execution frame (if it exists),
- * invoke `DeeModule_OpenRelative()' with its path and the given `module_name'.
- * @param: throw_error: When true, throw an error if the module couldn't be
- *                      found and return `NULL', otherwise return `ITER_DONE'. */
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeModule_Import(DeeObject *__restrict module_name) {
-	DREF DeeObject *result;
-	struct code_frame *frame = DeeThread_Self()->t_exec;
-	if (frame) {
-		DeeStringObject *path;
-		char *begin, *end;
-
-		/* Load the path of the currently executing code (for relative imports). */
-		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func, &DeeFunction_Type);
-		ASSERT_OBJECT_TYPE_EXACT(frame->cf_func->fo_code, &DeeCode_Type);
-		ASSERT_OBJECT_TYPE(frame->cf_func->fo_code->co_module, &DeeModule_Type);
-		path = frame->cf_func->fo_code->co_module->mo_path;
-		if unlikely(!path)
-			goto open_normal;
-		ASSERT_OBJECT_TYPE_EXACT(path, &DeeString_Type);
-		begin = DeeString_AsUtf8((DeeObject *)path);
-		if unlikely(!begin)
-			goto err;
-		end = (begin = DeeString_STR(path)) + DeeString_SIZE(path);
-
-		/* Find the end of the current path. */
-		while (end > begin && !ISSEP(end[-1]))
-			--end;
-		result = DeeModule_OpenRelative(module_name, begin, (size_t)(end - begin), NULL, true);
-	} else {
-open_normal:
-		/* Without an execution frame, dismiss the relative import() code handling. */
-		result = DeeModule_OpenGlobal(module_name, NULL, true);
-	}
-	if likely(result) {
-		if unlikely(DeeModule_RunInit(result) < 0)
-			goto err_r;
-	}
-	return result;
-err_r:
-	Dee_Decref(result);
-err:
-	return NULL;
-}
-
-
-/* Same as `DeeModule_Import', but relative module paths are imported in relation to `basemodule'
+/* Import a module, with relative module paths being imported in relation to `basemodule'
  * Not that these functions invoke `DeeModule_RunInit()' on the returned module!*/
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeModule_ImportRel(/*Module*/ DeeObject *__restrict basemodule,

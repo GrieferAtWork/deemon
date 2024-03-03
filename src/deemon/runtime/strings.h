@@ -104,7 +104,7 @@ local STRINGS = {
 	"set",
 	"enumattr",
 	"gc",
-	"import",
+	"__import__",
 	"hash",
 	"exec",
 	"isatty",
@@ -353,8 +353,8 @@ DEF_STRING(str_enumattr, "enumattr", 0x767e1f86, 0x6b627a9d4ba17e37)
 #define STR_enumattr DeeString_STR(&str_enumattr)
 DEF_STRING(str_gc, "gc", 0x73e7fc4c, 0x5369f38dbb7cb94e)
 #define STR_gc DeeString_STR(&str_gc)
-DEF_STRING(str_import, "import", 0x1a3f5a1f, 0x5a525def3865fbed)
-#define STR_import DeeString_STR(&str_import)
+DEF_STRING(str___import__, "__import__", 0x5ace85a6, 0x9083cbce4d7003c2)
+#define STR___import__ DeeString_STR(&str___import__)
 DEF_STRING(str_hash, "hash", 0x56c454fb, 0x4436b8a58bf97c51)
 #define STR_hash DeeString_STR(&str_hash)
 DEF_STRING(str_exec, "exec", 0x6b42be28, 0x2efd876517f0e883)

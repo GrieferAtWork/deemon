@@ -1651,8 +1651,10 @@ err:
 #ifndef CONFIG_NO_THREADS
 #ifdef NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY
 #define IF_VERBOSE_LOCK_LOGGING(x) /* nothing */
+#define HAVE_VERBOSE_LOCK_LOGGING 0
 #else /* NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY */
 #define IF_VERBOSE_LOCK_LOGGING(x) x
+#define HAVE_VERBOSE_LOCK_LOGGING 1
 #endif /* !NO_HOSTASM_VERBOSE_LOCK_ASSEMBLY */
 
 #ifndef __NO_hybrid_yield
@@ -1711,7 +1713,7 @@ _fungen_gpause_or_yield(struct fungen *__restrict self,
 	gen86_xorP_r_r(p_pc(sect), gen86_registers[HOST_REGNO_R_ARG0], gen86_registers[HOST_REGNO_R_ARG0]);
 	IF_VERBOSE_LOCK_LOGGING(gen86_printf(sect, "xor" Plq "\t%s, %s\n", gen86_regname(HOST_REGNO_R_ARG1), gen86_regname(HOST_REGNO_R_ARG1)));
 	gen86_xorP_r_r(p_pc(sect), gen86_registers[HOST_REGNO_R_ARG1], gen86_registers[HOST_REGNO_R_ARG1]);
-	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&SleepEx, 0, is_stractch_area_always_in_use, true))
+	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&SleepEx, 0, is_stractch_area_always_in_use, HAVE_VERBOSE_LOCK_LOGGING))
 		goto err;
 #else /* HOSTASM_X86_64 */
 	IF_VERBOSE_LOCK_LOGGING(gen86_printf(sect, "push" Plq "\t$0\n"));
@@ -1722,12 +1724,12 @@ _fungen_gpause_or_yield(struct fungen *__restrict self,
 	gen86_pushP_imm(p_pc(sect), 0);
 	if unlikely(fg_gadjust_cfa_offset(self, HOST_SIZEOF_POINTER))
 		goto err;
-	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&SleepEx, HOST_SIZEOF_POINTER * 2, is_stractch_area_always_in_use, true))
+	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&SleepEx, HOST_SIZEOF_POINTER * 2, is_stractch_area_always_in_use, HAVE_VERBOSE_LOCK_LOGGING))
 		goto err;
 #endif /* !HOSTASM_X86_64 */
 
 #else /* rt_sched_yield_IS_SleepEx */
-	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&rt_sched_yield, 0, is_stractch_area_always_in_use, true))
+	if unlikely(_fungen_gcall86_with_preserved_stack(self, (void const *)&rt_sched_yield, 0, is_stractch_area_always_in_use, HAVE_VERBOSE_LOCK_LOGGING))
 		goto err;
 #endif /* !rt_sched_yield_IS_SleepEx */
 

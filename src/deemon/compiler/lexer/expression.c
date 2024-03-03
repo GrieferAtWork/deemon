@@ -571,8 +571,8 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF struct ast *DFCALL
-ast_sym_import_from_deemon(void) {
+PRIVATE WUNUSED DREF struct ast *DFCALL
+ast_sym___import___from_deemon(void) {
 	struct symbol *import_symbol;
 	import_symbol = new_unnamed_symbol();
 	if unlikely(!import_symbol)
@@ -582,9 +582,106 @@ ast_sym_import_from_deemon(void) {
 	import_symbol->s_extern.e_module = DeeModule_GetDeemon();
 	Dee_Incref(import_symbol->s_extern.e_module);
 	import_symbol->s_extern.e_symbol = DeeModule_GetSymbol(import_symbol->s_extern.e_module,
-	                                                       (DeeObject *)&str_import);
+	                                                       (DeeObject *)&str___import__);
 	ASSERT(import_symbol->s_extern.e_symbol);
 	return ast_sym(import_symbol);
+err:
+	return NULL;
+}
+
+/* Inject a reference to "this_module" at the start of the argument list. */
+PRIVATE WUNUSED NONNULL((1)) int DFCALL
+ast_multiple_tuple_inject_this_module(struct ast *__restrict self) {
+	DREF struct ast **new_astv;
+	DREF struct ast *mymod_ast;
+	struct symbol *sym;
+	ASSERT(self->a_type == AST_MULTIPLE);
+	ASSERT(self->a_flag == AST_FMULTIPLE_TUPLE);
+	sym = new_unnamed_symbol();
+	if unlikely(!sym)
+		goto err;
+	sym->s_type = SYMBOL_TYPE_MYMOD;
+	mymod_ast = ast_sym(sym);
+	if unlikely(!mymod_ast)
+		goto err;
+	new_astv = (DREF struct ast **)Dee_Reallocc(self->a_multiple.m_astv,
+	                                            self->a_multiple.m_astc + 1,
+	                                            sizeof(DREF struct ast *));
+	if unlikely(!new_astv)
+		goto err_mymod_ast;
+	/* Inject the reference to "mymod_ast" */
+	memmoveupc(new_astv + 1, new_astv,
+	           self->a_multiple.m_astc,
+	           sizeof(DREF struct ast *));
+	new_astv[0] = mymod_ast; /* Inherit reference */
+	self->a_multiple.m_astv = new_astv;
+	++self->a_multiple.m_astc;
+	return 0;
+err_mymod_ast:
+	ast_decref(mymod_ast);
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import_expression_after_import(struct ast_loc *__restrict import_loc) {
+	bool has_paren;
+	struct ast_loc loc;
+	uint32_t old_flags;
+	DREF struct ast *result, *kw_labels, *other, *merge;
+	result = ast_setddi(ast_sym___import___from_deemon(), import_loc);
+	if unlikely(!result)
+		goto err;
+	old_flags = TPPLexer_Current->l_flags;
+	TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
+	if (paren_begin(&has_paren, W_EXPECTED_LPAREN_AFTER_IMPORT))
+		goto err_r_flags;
+	loc_here(&loc);
+	other = ast_parse_argument_list(AST_COMMA_FORCEMULTIPLE, &kw_labels);
+	if unlikely(!other)
+		goto err_r_flags;
+	/* Inject a hidden argument "this_module" at the start of "other". */
+	if unlikely(ast_multiple_tuple_inject_this_module(other)) {
+		ast_decref(other);
+		goto err_r_flags;
+	}
+	if (kw_labels) {
+		merge = ast_action3(AST_FACTION_CALL_KW,
+		                    result,
+		                    other,
+		                    kw_labels);
+		ast_decref(kw_labels);
+	} else {
+		merge = ast_operator2(OPERATOR_CALL, 0, result, other);
+	}
+	merge = ast_setddi(merge, &loc);
+	ast_decref(other);
+	ast_decref(result);
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	if unlikely(!merge)
+		goto err_flags;
+	result = merge;
+	if (paren_end(&has_paren, W_EXPECTED_RPAREN_AFTER_IMPORT))
+		goto err_r;
+	return result;
+err_flags:
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+	goto err;
+err_r_flags:
+	TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
+err_r:
+	ast_decref(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF struct ast *DFCALL
+ast_parse_import_expression(void) {
+	struct ast_loc import_loc;
+	loc_here(&import_loc);
+	if unlikely(yield() < 0)
+		goto err;
+	return ast_parse_import_expression_after_import(&import_loc);
 err:
 	return NULL;
 }
@@ -1099,17 +1196,7 @@ do_create_class:
 	}	break;
 
 	case KWD_import:
-		result = ast_sethere(ast_sym_import_from_deemon());
-		if unlikely(!result)
-			goto err;
-		if unlikely(yield() < 0)
-			goto err_r;
-
-		/* The specs officially only allow `import' in expression, when followed by `(' or `pack'
-		 * So we simply emit an error if what follows isn't one of those. */
-		if (tok != '(' && tok != KWD_pack &&
-		    WARN(W_EXPECTED_LPAREN_AFTER_IMPORT))
-			goto err_r;
+		result = ast_parse_import_expression();
 		break;
 
 	case KWD_do:

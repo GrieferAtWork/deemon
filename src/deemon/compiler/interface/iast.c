@@ -3336,17 +3336,12 @@ print_symbol(struct symbol *__restrict sym,
 	dssize_t temp, result = 0;
 	if (sym->s_name == &TPPKeyword_Empty) {
 		if (sym->s_type == SYMBOL_TYPE_EXTERN) {
-			if (sym->s_extern.e_module == &DeeModule_Deemon &&
-			    sym->s_extern.e_symbol->ss_index == id_import) {
-				print(STR_import, 6);
-			} else {
-				PRINT("(");
-				DO((*printer)(arg, sym->s_extern.e_symbol->ss_name,
-				              strlen(sym->s_extern.e_symbol->ss_name)));
-				PRINT(" from ");
-				DO(DeeObject_Print((DeeObject *)sym->s_extern.e_module->mo_name, printer, arg));
-				PRINT(")");
-			}
+			PRINT("(");
+			DO((*printer)(arg, sym->s_extern.e_symbol->ss_name,
+			              strlen(sym->s_extern.e_symbol->ss_name)));
+			PRINT(" from ");
+			DO(DeeObject_Print((DeeObject *)sym->s_extern.e_module->mo_name, printer, arg));
+			PRINT(")");
 			goto done;
 		}
 		if (sym->s_type == SYMBOL_TYPE_MODULE) {

@@ -1740,11 +1740,13 @@ err_oo_class_reinit_lvalue:
 			if (name == ENCODE_INT32('i', 'm', 'p', 'o') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {
 #ifdef JIT_EVAL
-				result = JITContext_GetImport(self->jl_context);
+				JITLexer_Yield(self);
+				result = JITLexer_EvalImportExpression(self);
+				goto done;
 #else /* JIT_EVAL */
 				result = 0;
-#endif /* !JIT_EVAL */
 				goto done_y1;
+#endif /* !JIT_EVAL */
 			}
 			if (name == ENCODE_INT32('a', 's', 's', 'e') &&
 			    UNALIGNED_GET16(tok_begin + 4) == ENCODE_INT16('r', 't')) {

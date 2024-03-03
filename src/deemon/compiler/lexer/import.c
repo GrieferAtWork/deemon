@@ -826,8 +826,6 @@ err:
 }
 
 
-INTDEF WUNUSED DREF struct ast *DFCALL ast_sym_import_from_deemon(void);
-
 INTERN int DFCALL ast_parse_post_import(void) {
 	/* - import deemon;
 	 * - import deemon, util;
@@ -1053,6 +1051,9 @@ err:
 	return -1;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL
+ast_parse_import_expression_after_import(struct ast_loc *__restrict import_loc);
+
 /* Same as `ast_parse_try_hybrid' but for import statements / expressions. */
 INTERN WUNUSED DREF struct ast *DFCALL
 ast_parse_import_hybrid(unsigned int *p_was_expression) {
@@ -1064,11 +1065,7 @@ ast_parse_import_hybrid(unsigned int *p_was_expression) {
 		goto err;
 	if (tok == '(' || tok == KWD_pack) {
 		/* `import', as seen in expressions. */
-		result = ast_sym_import_from_deemon();
-		result = ast_setddi(result, &import_loc);
-		if unlikely(!result)
-			goto err;
-		result = ast_parse_unary_operand(result);
+		result = ast_parse_import_expression_after_import(&import_loc);
 		if unlikely(!result)
 			goto err;
 		result = ast_parse_postexpr(result);
@@ -1250,10 +1247,7 @@ INTERN WUNUSED DREF struct ast *DFCALL ast_parse_import(void) {
 			goto err;
 		if (tok == '(' || tok == KWD_pack) {
 			/* `import', as seen in expressions. */
-			result = ast_setddi(ast_sym_import_from_deemon(), &import_loc);
-			if unlikely(!result)
-				goto err;
-			result = ast_parse_unary_operand(result);
+			result = ast_parse_import_expression_after_import(&import_loc);
 			if unlikely(!result)
 				goto err;
 			result = ast_parse_postexpr(result);

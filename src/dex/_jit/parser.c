@@ -24,16 +24,18 @@
 #include "libjit.h"
 /**/
 
+#include <deemon/arg.h>
 #include <deemon/class.h>
 #include <deemon/compiler/lexer.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
 #include <deemon/int.h>
+#include <deemon/kwds.h>
 #include <deemon/none.h>
 #include <deemon/stringutils.h>
 #include <deemon/super.h>
-#include <deemon/tuple.h>
 #include <deemon/system-features.h> /* memcpy(), ... */
+#include <deemon/tuple.h>
 
 #include <hybrid/unaligned.h>
 #include <hybrid/wordbits.h>
@@ -960,6 +962,87 @@ done:
 	return result;
 err_trace:
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
+err:
+	return NULL;
+}
+
+
+/* Evaluate an import expression, starting on the token after "import".
+ * >> import("foo");
+ *          ^      ^ */
+INTERN WUNUSED DREF DeeObject *DFCALL
+JITLexer_EvalImportExpression(JITLexer *__restrict self) {
+	DREF DeeObject *args, *kwds, *result;
+	ASSERT(self->jl_tok == '(' || JITLexer_ISKWD(self, "pack"));
+	if (self->jl_tok == '(') {
+do_with_paren:
+		JITLexer_Yield(self);
+		args = JITLexer_EvalArgumentList(self, &kwds);
+		if unlikely(!args)
+			goto err;
+		if likely(self->jl_tok == ')') {
+			JITLexer_Yield(self);
+		} else {
+			syn_paren_expected_rparen_after_lparen(self);
+			goto err_args_kwds;
+		}
+	} else {
+		JITLexer_Yield(self);
+		if (self->jl_tok == '(')
+			goto do_with_paren;
+		args = JITLexer_EvalArgumentList(self, &kwds);
+		if unlikely(!args)
+			goto err;
+	}
+	ASSERT_OBJECT_TYPE_EXACT(args, &DeeTuple_Type);
+	if (self->jl_context->jc_import) {
+		/* Invoke the import override function */
+		if (kwds) {
+			DREF DeeObject *fixed_kwds;
+			fixed_kwds = DeeKw_Wrap(kwds);
+			if unlikely(!fixed_kwds)
+				goto err_args_kwds;
+			result = DeeObject_CallTupleKw(self->jl_context->jc_import, args, fixed_kwds);
+			Dee_Decref(fixed_kwds);
+		} else {
+			result = DeeObject_CallTuple(self->jl_context->jc_import, args);
+		}
+	} else {
+		/* Do what `deemon.__import__' would do (except that we don't accept the "base" argument) */
+		DeeObject *module_name;
+		if (!kwds && DeeTuple_SIZE(args) == 1) {
+			module_name = DeeTuple_GET(args, 0);
+		} else if (kwds) {
+			PRIVATE struct keyword kwlist[] = { K(name), KEND };
+			DREF DeeObject *fixed_kwds;
+			fixed_kwds = DeeKw_Wrap(kwds);
+			if unlikely(!fixed_kwds)
+				goto err_args_kwds;
+			Dee_Decref(kwds);
+			kwds = fixed_kwds;
+			if (DeeArg_UnpackKw(DeeTuple_SIZE(args),
+			                    DeeTuple_ELEM(args), kwds, kwlist,
+			                    "o:__import__", &module_name))
+				goto err_args_kwds;
+		} else {
+			if (DeeArg_Unpack(DeeTuple_SIZE(args),
+			                  DeeTuple_ELEM(args),
+			                  "o:__import__", &module_name))
+				goto err_args_kwds;
+		}
+		if (DeeObject_AssertTypeExact(module_name, &DeeString_Type))
+			goto err_args_kwds;
+		/* Do the import */
+		result = self->jl_context->jc_impbase
+		         ? DeeModule_ImportRel((DeeObject *)self->jl_context->jc_impbase, module_name)
+		         : DeeModule_ImportGlobal(module_name);
+	}
+	Dee_XDecref(kwds);
+	Dee_Decref(args);
+	return result;
+err_args_kwds:
+	Dee_XDecref(kwds);
+	Dee_Decref(args);
 err:
 	return NULL;
 }
