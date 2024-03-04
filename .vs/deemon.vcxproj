@@ -230,6 +230,7 @@
 		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
+		<ClInclude Include="..\src\deemon\objects\file-type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\float-print.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\gc_inspect.h" />
@@ -251,6 +252,7 @@
 		<ClInclude Include="..\src\deemon\objects\seq\transform.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\typemro.h" />
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h" />
+		<ClInclude Include="..\src\deemon\objects\type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions-strip.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_functions.c.inl" />
@@ -381,6 +383,7 @@
 		<ClCompile Include="..\src\deemon\objects\dict.c" />
 		<ClCompile Include="..\src\deemon\objects\dictproxy.c" />
 		<ClCompile Include="..\src\deemon\objects\error_types.c" />
+		<ClCompile Include="..\src\deemon\objects\file-type-operators.c" />
 		<ClCompile Include="..\src\deemon\objects\file.c" />
 		<ClCompile Include="..\src\deemon\objects\filebuffer.c" />
 		<ClCompile Include="..\src\deemon\objects\filetypes.c" />
@@ -430,6 +433,7 @@
 		<ClCompile Include="..\src\deemon\objects\super.c" />
 		<ClCompile Include="..\src\deemon\objects\traceback.c" />
 		<ClCompile Include="..\src\deemon\objects\tuple.c" />
+		<ClCompile Include="..\src\deemon\objects\type-operators.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\cformat.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\codec.c" />
 		<ClCompile Include="..\src\deemon\objects\unicode\cscanf.c" />

@@ -43,7 +43,8 @@
 
 DECL_BEGIN
 
-#define Q3  "??" "?"
+#define Q3 "??" "?"
+#define OPNAME(opname) "operator " opname
 
 
 /* Throw a bad-allocation error for `req_bytes' bytes.
@@ -202,10 +203,11 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
-	struct opinfo const *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
+	struct opinfo const *info;
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Operator `%r.__%s__' is not implemented",
+	                       "Operator `%r." OPNAME("%s") "' is not implemented",
 	                       tp, info ? info->oi_sname : Q3);
 }
 
@@ -214,11 +216,11 @@ INTERN ATTR_COLD NONNULL((1)) int
                                     uint16_t operator_name,
                                     uint16_t operator_name2) {
 	struct opinfo const *info, *info2;
-	info  = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
-	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
+	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
+	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%r.__%s__', nor `%r.__%s__' are implemented",
+	                       "Neither `%r." OPNAME("%s") "', nor `%r." OPNAME("%s") "' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
 	                       tp, info2 ? info2->oi_sname : Q3);
 }
@@ -229,12 +231,13 @@ INTERN ATTR_COLD NONNULL((1)) int
                                     uint16_t operator_name2,
                                     uint16_t operator_name3) {
 	struct opinfo const *info, *info2, *info3;
-	info  = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
-	info2 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name2);
-	info3 = Dee_OperatorInfo(Dee_TYPE(tp), operator_name3);
+	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
+	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);
+	info3 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name3);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Neither `%r.__%s__', nor `%r.__%s__', nor `%r.__%s__' are implemented",
+	                       "Neither `%r." OPNAME("%s") "', nor `%r." OPNAME("%s") "', "
+	                       "nor `%r." OPNAME("%s") "' are implemented",
 	                       tp, info ? info->oi_sname : Q3,
 	                       tp, info2 ? info2->oi_sname : Q3,
 	                       tp, info3 ? info3->oi_sname : Q3);

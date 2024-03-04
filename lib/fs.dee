@@ -41,6 +41,7 @@ global final NotEmpty = Error.SystemError.FSError.FileExists.DirectoryNotEmpty;
 global final BusyFile = Error.SystemError.FSError.BusyFile;
 global final NoLink = Error.SystemError.FSError.FileNotFound.NoSymlink;
 
+/* Nowadays, this'd be called "Dir", but this is here for backwards compat */
 class dir: Sequence {
 	public static final member Iterator: Type = YieldFunctionIterator from rt;
 
@@ -60,6 +61,7 @@ class dir: Sequence {
 	}
 }
 
+/* Nowadays, this'd be called "Query", but this is here for backwards compat */
 class query: dir {
 	public static final member Iterator: Type = YieldFunctionIterator from rt;
 

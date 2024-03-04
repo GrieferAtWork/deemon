@@ -528,7 +528,7 @@ INTERN WUNUSED char const *DCALL
 libdisasm_get_operator_sname(uint16_t operator_id) {
 	char const *result;
 	struct opinfo const *info;
-	info = Dee_OperatorInfo(NULL, operator_id);
+	info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_id);
 	if (info) {
 		result = info->oi_sname;
 	} else {

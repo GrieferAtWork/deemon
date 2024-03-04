@@ -1364,6 +1364,7 @@
 #define type_nii                       Dee_type_nii
 #define type_nsi                       Dee_type_nsi
 #define type_object                    Dee_type_object
+#define type_operator                  Dee_type_operator
 #define type_seq                       Dee_type_seq
 #define type_with                      Dee_type_with
 #define unicode_printer                Dee_unicode_printer
@@ -1382,6 +1383,7 @@
 
 
 // Misc. local macros
+#define DEFINE_OPERATOR_INVOKE(name,instance_name)struct Dee_operator_invoke name={};DeeObject *invoke_##name(DeeTypeObject*tp_self,DeeObject*self,DeeObject**p_self,size_t argc,DeeObject*const*argv)
 #define DEFINE_STRING_TRAIT(n,function,test_ch) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv);
 #define DEFINE_ANY_STRING_TRAIT(n,function) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
 #define DEFINE_BYTES_TRAIT(n,function,test_ch) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv);

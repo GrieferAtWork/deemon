@@ -10533,15 +10533,15 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "$\"utf-32-be\"|$\"utf32-be\", $\"u32-be\", $\"utf-32be\", $\"utf32be\", $\"u32be\"|?DBytes|Encode @this ?. as a UTF-32 sequence, encoded in big-endian&"
 	              "$\"string-escape\"|$\"backslash-escape\", $\"c-escape\"|?.|Encode @this ?. as a backslash-escaped string. This is similar to ?#{op:repr}, however the string is not surrounded by $\"\\\"\"-characters}\n"
 	              "If the given @codec is not apart of this list, a call is made to ?Ecodecs:encode"),
-	TYPE_METHOD("bytes", &string_bytes,
-	            "(allow_invalid=!f)->?DBytes\n"
-	            "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
-	            "#tValueError{@allow_invalid is ?f, and @this ?. contains characters above $0xff}"
-	            "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
-	            /**/ "using a single byte per character. A character greater than $0xff either causes :ValueError "
-	            /**/ "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
-	            /**/ "$\"?\" in the returned Bytes object"),
-	TYPE_METHOD_F("ord", &string_ord, METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F("bytes", &string_bytes, METHOD_FCONSTCALL,
+	              "(allow_invalid=!f)->?DBytes\n"
+	              "(start:?Dint,end:?Dint,allow_invalid=!f)->?DBytes\n"
+	              "#tValueError{@allow_invalid is ?f, and @this ?. contains characters above $0xff}"
+	              "Returns a read-only bytes representation of the characters within ${this.substr(start, end)}, "
+	              /**/ "using a single byte per character. A character greater than $0xff either causes :ValueError "
+	              /**/ "to be thrown (when @allow_invalid is false), or is replaced with the ASCII character "
+	              /**/ "$\"?\" in the returned Bytes object"),
+	TYPE_METHOD_F("ord", &string_ord, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{The length of @this ?. is not equal to $1}"
 	              "Return the ordinal integral value of @this single-character ?.\n"
@@ -10552,7 +10552,8 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              "Returns the ordinal integral value of the @index'th character of @this ?."),
 
 	/* String formatting / scanning. */
-	TYPE_METHOD_F(STR_format, &string_format, METHOD_FNOREFESCAPE,
+	TYPE_METHOD_F(STR_format, &string_format,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST,
 	              "(args:?S?O)->?.\n"
 	              "Format @this ?. using @args:\n"
 
@@ -10649,36 +10650,36 @@ INTERN_TPCONST struct type_method tpconst string_methods[] = {
 	              /**/ "$\"{:^42:foo}\"|Will append ${selected_object.operator str().center(42, \"foo\")} to the resulting ?. (s.a. ?#center)&"
 	              /**/ "$\"{:=42:foo}\"|Will append ${selected_object.operator str().zfill(42, \"foo\")} to the resulting ?. (s.a. ?#zfill)"
 	              "}"),
-	TYPE_METHOD("scanf", &string_scanf,
-	            "(format:?.)->?S?O\n"
-	            "#tValueError{The given @format is malformed}"
-	            "#tValueError{Conversion to an integer failed}"
+	TYPE_METHOD_F("scanf", &string_scanf, METHOD_FCONSTCALL,
+	              "(format:?.)->?S?O\n"
+	              "#tValueError{The given @format is malformed}"
+	              "#tValueError{Conversion to an integer failed}"
 
-	            "Scan @this ?. using a scanf-like format string @format\n"
+	              "Scan @this ?. using a scanf-like format string @format\n"
 
-	            "No major changes have been made from C's scanf function, however regex-like range "
-	            /**/ "expressions are supported, and the returned sequence ends as soon as either @format "
-	            /**/ "or @this has been exhausted, or a miss-match has occurred\n"
+	              "No major changes have been made from C's scanf function, however regex-like range "
+	              /**/ "expressions are supported, and the returned sequence ends as soon as either @format "
+	              /**/ "or @this has been exhausted, or a miss-match has occurred\n"
 
-	            "Scanf command blocks are structured as ${%[*][width]pattern}\n"
+	              "Scanf command blocks are structured as ${%[*][width]pattern}\n"
 
-	            "Besides this, for convenience and better unicode integration, the following changes "
-	            /**/ "have been made to C's regular scanf function:\n"
+	              "Besides this, for convenience and better unicode integration, the following changes "
+	              /**/ "have been made to C's regular scanf function:\n"
 
-	            "#T{Format pattern|Yielded type|Description~"
-	            "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns ?t ($r\"\\s*\")&"
-	            "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns ?t ($r\"\\n\")&"
-	            "$\"%o\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-7]+\" and yield the result as an octal integer&"
-	            "$\"%d\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9]+\" and yield the result as an decimal integer&"
-	            "$\"%x\", $\"%p\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9a-fA-F]+\" and yield the result as a hexadecimal integer&"
-	            "$\"%i\", $\"%u\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*(0([xX][0-9a-fA-F]+#|[bB][01]+)#|[0-9]+)\" and yield the result as an integer with automatic radix&"
-	            "$\"%s\"|?.|Match up to `width' characters with $r\"\\S+\" and return them as a ?.&"
-	            "$\"%c\"|?.|Consume exactly `width' (see above) or one characters and return them as a ?.&"
-	            "$\"%[...]\"|?.|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")"
-	            "}\n"
+	              "#T{Format pattern|Yielded type|Description~"
+	              "$\" \"|-|Skip any number of characters from input data for which ?#isspace returns ?t ($r\"\\s*\")&"
+	              "$\"\\n\"|-|Skip any kind of line-feed, including $\"\\r\\n\", as well as any character for which ?#islf returns ?t ($r\"\\n\")&"
+	              "$\"%o\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-7]+\" and yield the result as an octal integer&"
+	              "$\"%d\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9]+\" and yield the result as an decimal integer&"
+	              "$\"%x\", $\"%p\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*[0-9a-fA-F]+\" and yield the result as a hexadecimal integer&"
+	              "$\"%i\", $\"%u\"|?Dint|Match up to #Cwidth characters with $r\"[+-]*(0([xX][0-9a-fA-F]+#|[bB][01]+)#|[0-9]+)\" and yield the result as an integer with automatic radix&"
+	              "$\"%s\"|?.|Match up to `width' characters with $r\"\\S+\" and return them as a ?.&"
+	              "$\"%c\"|?.|Consume exactly `width' (see above) or one characters and return them as a ?.&"
+	              "$\"%[...]\"|?.|Similar to the regex (s.a. ?#rematch) range function (e.g. $\"%[^xyz]\", $\"%[abc]\", $\"%[a-z]\", $\"%[^\\]]\")"
+	              "}\n"
 
-	            "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
-	            /**/ "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored"),
+	              "Integer-width modifiers ($\"h\", $\"hh\", $\"l\", $\"ll\", $\"j\", $\"z\", "
+	              /**/ "$\"t\", $\"L\", $\"I\", $\"I8\", $\"I16\", $\"I32\" and $\"I64\") are ignored"),
 
 	/* TODO: What about something like this?:
 	 * >> print "Your name is $your_name, and I'm ${my_name}"

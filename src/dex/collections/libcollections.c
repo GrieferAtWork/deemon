@@ -33,6 +33,9 @@
 
 DECL_BEGIN
 
+#define Q3  "??" "?"
+#define OPNAME(opname) "operator " opname
+
 INTERN ATTR_COLD NONNULL((1)) int DCALL
 err_changed_sequence(DeeObject *__restrict seq) {
 	ASSERT_OBJECT(seq);
@@ -106,11 +109,12 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
-	struct opinfo const *info = Dee_OperatorInfo(Dee_TYPE(tp), operator_name);
+	struct opinfo const *info;
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Operator `%r.__%s__' is not implemented",
-	                       tp, info ? info->oi_sname : "??" "?");
+	                       "Operator `%r." OPNAME("%s") "' is not implemented",
+	                       tp, info ? info->oi_sname : Q3);
 }
 
 

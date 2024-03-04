@@ -155,6 +155,15 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttr)(DeeTypeObjec
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TEnter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TLeave)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);
+#define DeeObject_TCallTuple(tp_self, self, args)                     DeeObject_TCall(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_TCallTupleKw(tp_self, self, args, kw)               DeeObject_TCallKw(tp_self, self, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+#define DeeObject_TThisCallTuple(tp_self, self, this_arg, args)       DeeObject_TThisCall(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_TThisCallTupleKw(tp_self, self, this_arg, args, kw) DeeObject_TThisCallKw(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
+
+/* GC operator invocation. */
+DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TVisit)(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
+DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TClear)(DeeTypeObject *tp_self, DeeObject *__restrict self);
+DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TPClear)(DeeTypeObject *tp_self, DeeObject *__restrict self, unsigned int gc_priority);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

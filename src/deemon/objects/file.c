@@ -50,6 +50,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "file-type-operators.h"
 
 #undef byte_t
 #define byte_t __BYTE_TYPE__
@@ -1931,7 +1932,11 @@ PUBLIC DeeTypeObject DeeFileType_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ file_type_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(file_type_operators)
 };
 
 

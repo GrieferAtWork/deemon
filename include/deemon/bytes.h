@@ -113,6 +113,11 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_Bytes(DeeObject *__restrict self,
                 unsigned int flags,
                 size_t start, size_t end);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_TBytes(DeeTypeObject *tp_self,
+                 DeeObject *__restrict self,
+                 unsigned int flags,
+                 size_t start, size_t end);
 
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 DFUNDEF WUNUSED DREF DeeObject *DCALL

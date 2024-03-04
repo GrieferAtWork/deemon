@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/set.h>
+#include <deemon/super.h>
 #include <deemon/util/atomic.h>
 
 #include "../runtime/strings.h"
@@ -493,19 +494,50 @@ GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReferred(DeeObject *__restrict start) {
-	GCSetMaker maker = GCSETMAKER_INIT;
-	if (DeeGC_CollectReferred(&maker, start))
-		goto err;
-	return GCSetMaker_Pack(&maker);
-err:
-	GCSetMaker_Fini(&maker);
-	return NULL;
+	DeeTypeObject *tp_start = Dee_TYPE(start);
+	if (tp_start == &DeeSuper_Type) {
+		tp_start = DeeSuper_TYPE(start);
+		start    = DeeSuper_SELF(start);
+	}
+	return DeeGC_TNewReferred(tp_start, start);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
 DeeGC_NewReachable(DeeObject *__restrict start) {
+	DeeTypeObject *tp_start = Dee_TYPE(start);
+	if (tp_start == &DeeSuper_Type) {
+		tp_start = DeeSuper_TYPE(start);
+		start    = DeeSuper_SELF(start);
+	}
+	return DeeGC_TNewReachable(tp_start, start);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
+DeeGC_NewReferredGC(DeeObject *__restrict start) {
+	DeeTypeObject *tp_start = Dee_TYPE(start);
+	if (tp_start == &DeeSuper_Type) {
+		tp_start = DeeSuper_TYPE(start);
+		start    = DeeSuper_SELF(start);
+	}
+	return DeeGC_TNewReferredGC(tp_start, start);
+}
+
+INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
+DeeGC_NewReachableGC(DeeObject *__restrict start) {
+	DeeTypeObject *tp_start = Dee_TYPE(start);
+	if (tp_start == &DeeSuper_Type) {
+		tp_start = DeeSuper_TYPE(start);
+		start    = DeeSuper_SELF(start);
+	}
+	return DeeGC_TNewReachableGC(tp_start, start);
+}
+
+
+INTERN WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL
+DeeGC_TNewReferred(DeeTypeObject *tp_start,
+                   DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
-	if (DeeGC_CollectReachable(&maker, start))
+	if (DeeGC_CollectReferred(&maker, tp_start, start))
 		goto err;
 	return GCSetMaker_Pack(&maker);
 err:
@@ -513,10 +545,23 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
-DeeGC_NewReferredGC(DeeObject *__restrict start) {
+INTERN WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL
+DeeGC_TNewReachable(DeeTypeObject *tp_start,
+                    DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
-	if (DeeGC_CollectReferred(&maker, start))
+	if (DeeGC_CollectReachable(&maker, tp_start, start))
+		goto err;
+	return GCSetMaker_Pack(&maker);
+err:
+	GCSetMaker_Fini(&maker);
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL
+DeeGC_TNewReferredGC(DeeTypeObject *tp_start,
+                     DeeObject *__restrict start) {
+	GCSetMaker maker = GCSETMAKER_INIT;
+	if (DeeGC_CollectReferred(&maker, tp_start, start))
 		goto err;
 	if (GCSetMaker_RemoveNonGC(&maker))
 		goto err;
@@ -526,10 +571,11 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1)) DREF GCSet *DCALL
-DeeGC_NewReachableGC(DeeObject *__restrict start) {
+INTERN WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL
+DeeGC_TNewReachableGC(DeeTypeObject *tp_start,
+                      DeeObject *__restrict start) {
 	GCSetMaker maker = GCSETMAKER_INIT;
-	if (DeeGC_CollectReachable(&maker, start))
+	if (DeeGC_CollectReachable(&maker, tp_start, start))
 		goto err;
 	if (GCSetMaker_RemoveNonGC(&maker))
 		goto err;
@@ -576,12 +622,13 @@ visit_reachable_func(DeeObject *__restrict self,
 /* Collect referred, or reachable objects.
  * @return:  0: Collection was OK.
  * @return: -1: An error occurred. (not enough memory) */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeGC_CollectReferred(GCSetMaker *__restrict self,
+                      DeeTypeObject *tp_start,
                       DeeObject *__restrict start) {
 again:
 	self->gs_err = 0;
-	DeeObject_Visit(start, (dvisit_t)&visit_referr_func, self);
+	DeeObject_TVisit(tp_start, start, (dvisit_t)&visit_referr_func, self);
 	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;
@@ -590,12 +637,13 @@ again:
 	return 0;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 DeeGC_CollectReachable(GCSetMaker *__restrict self,
+                       DeeTypeObject *tp_start,
                        DeeObject *__restrict start) {
 again:
 	self->gs_err = 0;
-	DeeObject_Visit(start, (dvisit_t)&visit_reachable_func, self);
+	DeeObject_TVisit(tp_start, start, (dvisit_t)&visit_reachable_func, self);
 	if unlikely(self->gs_err) {
 		if (Dee_CollectMemory(self->gs_err))
 			goto again;

@@ -374,7 +374,7 @@ super_pow(Super *self, DeeObject *some_object) {
 	Dee_Incref(value);                                                \
 	error = callback;                                                 \
 	if unlikely(error) {                                              \
-		Dee_Decref_unlikely(value);                                   \
+		Dee_DecrefNokill(value);                                      \
 	} else if (value == self->s_self) {                               \
 		Dee_DecrefNokill(value);                                      \
 	} else {                                                          \

@@ -1163,9 +1163,9 @@ done_fake_none:
 		if unlikely(self->a_operator.o_exflag & AST_OPERATOR_FVARARGS) {
 			struct symbol *prefix_symbol;
 			struct opinfo const *info;
-			info = Dee_OperatorInfo(NULL, operator_name);
+			info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);
 			if (self->a_operator.o_op0->a_type == AST_SYM &&
-			    (!info || (info->oi_type & OPTYPE_INPLACE))) {
+			    (!info || (info->oi_cc & OPCC_FINPLACE))) {
 				/* Generate a prefixed instruction. */
 				prefix_symbol = self->a_operator.o_op0->a_sym;
 				if ((self->a_operator.o_exflag & AST_OPERATOR_FMAYBEPFX) &&
@@ -2049,9 +2049,9 @@ push_a_if_used:
 			struct opinfo const *info;
 generic_operator:
 			argc = 0;
-			info = Dee_OperatorInfo(NULL, operator_name);
+			info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);
 			if (self->a_operator.o_op0->a_type == AST_SYM &&
-			    (!info || (info->oi_type & OPTYPE_INPLACE))) {
+			    (!info || (info->oi_cc & OPCC_FINPLACE))) {
 				/* Generate a prefixed instruction. */
 				prefix_symbol = self->a_operator.o_op0->a_sym;
 				/* Make sure that the symbol can actually be used as a prefix. */

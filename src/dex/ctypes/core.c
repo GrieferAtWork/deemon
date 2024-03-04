@@ -42,6 +42,9 @@
 
 DECL_BEGIN
 
+#define Q3 "??" "?"
+#define OPNAME(opname) "operator " opname
+
 DOC_DEF(ispointer_doc,
         "->?Dbool\n"
         "Returns ?t if @this ?GStructuredType is a ?GPointerType");
@@ -929,12 +932,12 @@ DeeSType_Get(DeeObject *__restrict self) {
 INTERN ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name) {
 	struct opinfo const *info;
-	info = Dee_OperatorInfo(Dee_TYPE(DeeSType_AsType(tp)), operator_name);
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(DeeSType_AsType(tp)), operator_name);
 	ASSERT_OBJECT(DeeSType_AsType(tp));
 	ASSERT(DeeType_Check(DeeSType_AsType(tp)));
 	return DeeError_Throwf(&DeeError_NotImplemented,
-	                       "Operator `%k.__%s__' is not implemented",
-	                       tp, info ? info->oi_sname : "??" "?");
+	                       "Operator `%k." OPNAME("%s") "' is not implemented",
+	                       tp, info ? info->oi_sname : Q3);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

@@ -87,19 +87,23 @@ INTDEF WUNUSED NONNULL((1)) int DCALL GCSetMaker_RemoveNonGC(GCSetMaker *__restr
 INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL GCSetMaker_Pack(/*inherit(always)*/ GCSetMaker *__restrict self);
 
 
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReferred(DeeObject *__restrict start);    /* Objects immediately referred to by X */
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReachable(DeeObject *__restrict start);   /* Objects reachable by X */
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReferredGC(DeeObject *__restrict start);  /* GC objects immediately referred to by X */
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReachableGC(DeeObject *__restrict start); /* GC objects reachable by X */
-INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewGCReferred(DeeObject *__restrict target); /* GC objects referring to X */
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReferred(DeeObject *__restrict start);                                 /* Objects immediately referred to by X */
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReachable(DeeObject *__restrict start);                                /* Objects reachable by X */
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReferredGC(DeeObject *__restrict start);                               /* GC objects immediately referred to by X */
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewReachableGC(DeeObject *__restrict start);                              /* GC objects reachable by X */
+INTDEF WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL DeeGC_TNewReferred(DeeTypeObject *tp_start, DeeObject *__restrict start);    /* Objects immediately referred to by X */
+INTDEF WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL DeeGC_TNewReachable(DeeTypeObject *tp_start, DeeObject *__restrict start);   /* Objects reachable by X */
+INTDEF WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL DeeGC_TNewReferredGC(DeeTypeObject *tp_start, DeeObject *__restrict start);  /* GC objects immediately referred to by X */
+INTDEF WUNUSED NONNULL((1, 2)) DREF GCSet *DCALL DeeGC_TNewReachableGC(DeeTypeObject *tp_start, DeeObject *__restrict start); /* GC objects reachable by X */
+INTDEF WUNUSED NONNULL((1)) DREF GCSet *DCALL DeeGC_NewGCReferred(DeeObject *__restrict target);                              /* GC objects referring to X */
 
 
 /* Collect referred, or reachable objects.
  * @return:  0: Collection was OK.
  * @return: -1: An error occurred. (not enough memory) */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectReferred(GCSetMaker *__restrict self, DeeObject *__restrict start);    /* Objects immediately referred to by X */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectReachable(GCSetMaker *__restrict self, DeeObject *__restrict start);   /* Objects reachable by X */
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject *__restrict target); /* GC objects referring to X */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeGC_CollectReferred(GCSetMaker *__restrict self, DeeTypeObject *tp_start, DeeObject *__restrict start);    /* Objects immediately referred to by X */
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeGC_CollectReachable(GCSetMaker *__restrict self, DeeTypeObject *tp_start, DeeObject *__restrict start);   /* Objects reachable by X */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeGC_CollectGCReferred(GCSetMaker *__restrict self, DeeObject *__restrict target);                             /* GC objects referring to X */
 
 /* Returns `true' if `target' is referred to by `source' */
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeGC_ReferredBy(DeeObject *source, DeeObject *target);

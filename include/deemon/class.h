@@ -322,6 +322,8 @@ class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
 
 
 struct Dee_class_operator {
+	/* TODO: It must be possible to define operators by-name (as in: "string"), and have the
+	 *       `DeeClass_New()' resolve that name using `DeeTypeType_GetOperatorById(Dee_TYPE(base))' */
 	uint16_t co_name; /* [const] Operator name (`(uint16_t)-1' for end-of-chain) */
 	uint16_t co_addr; /* [const] Operator address (within the class member table `cd_members').
 	                   * Operators are invoked like attributes with the following flags:

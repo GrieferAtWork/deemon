@@ -901,10 +901,14 @@ JITContext_LookupNth(JITContext *__restrict self,
  * @param: features: Set of `P_OPERATOR_F*'
  * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
  * @return: -1: An error occurred. */
-INTDEF int32_t DFCALL JITLexer_ParseOperatorName(JITLexer *__restrict self, uint16_t features);
+INTDEF WUNUSED NONNULL((1, 2)) int32_t DFCALL
+JITLexer_ParseOperatorName(JITLexer *__restrict self,
+                           DeeTypeObject *typetype,
+                           uint16_t features);
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipOperatorName(JITLexer *__restrict self);
 #define P_OPERATOR_FNORMAL 0x0000
 #define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
-#define P_OPERATOR_FNOFILE 0x0002 /* Don't allow file-specific operator names. */
 
 
 /* Ambiguous operator codes.
@@ -928,7 +932,8 @@ INTDEF bool DFCALL JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
 
 
 /* Return the operator function for `opname', as exported from the `operators' module. */
-INTDEF WUNUSED DREF DeeObject *DFCALL JIT_GetOperatorFunction(uint16_t opname);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, uint16_t opname);
 
 /* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */

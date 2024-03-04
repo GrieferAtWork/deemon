@@ -5388,67 +5388,84 @@ vtype_get_operator_api_function(struct fungen *__restrict self,
 	}
 
 	/* Lookup dynamic info on the operator. */
-	info = Dee_OperatorInfo(Dee_TYPE(type), operator_name);
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(type), operator_name);
 	if unlikely(!info)
 		goto nope;
 
 	/* Load the operator's C function pointer. */
-	switch (info->oi_class) {
-	case OPCLASS_TYPE: field_base = (byte_t const *)type; break;
-	case OPCLASS_GC: field_base = (byte_t const *)type->tp_gc; break;
-	case OPCLASS_MATH: field_base = (byte_t const *)type->tp_math; break;
-	case OPCLASS_CMP: field_base = (byte_t const *)type->tp_cmp; break;
-	case OPCLASS_SEQ: field_base = (byte_t const *)type->tp_seq; break;
-	case OPCLASS_ATTR: field_base = (byte_t const *)type->tp_attr; break;
-	case OPCLASS_WITH: field_base = (byte_t const *)type->tp_with; break;
-	case OPCLASS_BUFFER: field_base = (byte_t const *)type->tp_buffer; break;
-	default: goto nope;
-	}
-	if (!field_base)
+	field_base = (byte_t const *)type;
+	ASSERT(info->oi_class != OPCLASS_CUSTOM);
+	if (info->oi_class != OPCLASS_TYPE)
+		field_base = *(byte_t const **)(field_base + info->oi_class);
+	if (field_base == NULL)
 		goto nope;
 	field_base += info->oi_offset;
 	api_function = *(void const *const *)field_base;
-	if (!api_function)
+	if (api_function == NULL)
 		goto nope;
 	result->hos_apifunc = api_function;
 
 	/* Translate C RTTI info into a VCALL calling convention (an potentially rotate arguments) */
-	optype = info->oi_type;
-	result->hos_inplace = !!(optype & OPTYPE_INPLACE);
+	optype = info->oi_cc;
+	result->hos_inplace = !!(optype & OPCC_FINPLACE);
 	if unlikely(!!inplace != result->hos_inplace)
 		goto nope;
-	optype &= ~OPTYPE_INPLACE;
 	switch (optype) {
-
-	case OPTYPE_ROBJECT | OPTYPE_UNARY:
-	case OPTYPE_ROBJECT | OPTYPE_BINARY:
-	case OPTYPE_ROBJECT | OPTYPE_TRINARY:
-	case OPTYPE_ROBJECT | OPTYPE_QUAD: {
-		STATIC_ASSERT(OPTYPE_UNARY == 1);
-		STATIC_ASSERT(OPTYPE_BINARY == 2);
-		STATIC_ASSERT(OPTYPE_TRINARY == 3);
-		STATIC_ASSERT(OPTYPE_QUAD == 4);
-		result->hos_argc = optype & ~OPTYPE_ROBJECT;
-		result->hos_cc   = VCALL_CC_OBJECT;
-	}	break;
-
-	case OPTYPE_RUINTPTR | OPTYPE_UNARY:
-	case OPTYPE_RUINTPTR | OPTYPE_BINARY:
-	case OPTYPE_RUINTPTR | OPTYPE_TRINARY:
-	case OPTYPE_RUINTPTR | OPTYPE_QUAD: {
-		result->hos_argc = optype & ~OPTYPE_ROBJECT;
-		result->hos_cc   = VCALL_CC_MORPH_UINTPTR;
-	}	break;
-
-	case OPTYPE_RINT | OPTYPE_UNARY:
-	case OPTYPE_RINT | OPTYPE_BINARY:
-	case OPTYPE_RINT | OPTYPE_TRINARY:
-	case OPTYPE_RINT | OPTYPE_QUAD: {
-		result->hos_argc = optype & ~OPTYPE_RINT;
-		result->hos_cc   = VCALL_CC_INT;
-	}	break;
-
+	case OPCC_UNARY_OBJECT:
+	case OPCC_UNARY_VOID:
+	case OPCC_UNARY_INT:
+	case OPCC_UNARY_INPLACE:
+	case OPCC_UNARY_UINTPTR_NX:
+		result->hos_argc = 1;
+		break;
+	case OPCC_BINARY_OBJECT:
+	case OPCC_BINARY_VOID:
+	case OPCC_BINARY_INT:
+	case OPCC_BINARY_INPLACE:
+		result->hos_argc = 2;
+		break;
+	case OPCC_TRINARY_OBJECT:
+	case OPCC_TRINARY_VOID:
+	case OPCC_TRINARY_INT:
+	case OPCC_TRINARY_INPLACE:
+		result->hos_argc = 3;
+		break;
+	case OPCC_QUATERNARY_OBJECT:
+	case OPCC_QUATERNARY_VOID:
+	case OPCC_QUATERNARY_INT:
+	case OPCC_QUATERNARY_INPLACE:
+		result->hos_argc = 4;
+		break;
 	default: goto nope;
+	}
+
+	switch (optype) {
+	case OPCC_UNARY_OBJECT:
+	case OPCC_BINARY_OBJECT:
+	case OPCC_TRINARY_OBJECT:
+	case OPCC_QUATERNARY_OBJECT:
+		result->hos_cc = VCALL_CC_OBJECT;
+		break;
+	case OPCC_UNARY_VOID:
+	case OPCC_BINARY_VOID:
+	case OPCC_TRINARY_VOID:
+	case OPCC_QUATERNARY_VOID:
+		result->hos_cc = VCALL_CC_VOID;
+		break;
+	case OPCC_UNARY_INT:
+	case OPCC_BINARY_INT:
+	case OPCC_TRINARY_INT:
+	case OPCC_QUATERNARY_INT:
+	case OPCC_UNARY_INPLACE:
+	case OPCC_BINARY_INPLACE:
+	case OPCC_TRINARY_INPLACE:
+	case OPCC_QUATERNARY_INPLACE:
+		result->hos_cc = VCALL_CC_INT;
+		break;
+	case OPCC_UNARY_UINTPTR_NX:
+		result->hos_cc = VCALL_CC_MORPH_UINTPTR_NX;
+		break;
+	default: __builtin_unreachable();
 	}
 	if (result->hos_argc != (*p_extra_argc + 1))
 		goto nope;

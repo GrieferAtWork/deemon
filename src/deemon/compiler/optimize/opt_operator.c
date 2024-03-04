@@ -785,7 +785,7 @@ not_allowed:
 		if (operator_result &&
 		    allow_constexpr(operator_result) != CONSTEXPR_ILLEGAL) {
 			struct opinfo const *info;
-			info = Dee_OperatorInfo(Dee_TYPE(Dee_TYPE(argv[0])), self->a_flag);
+			info = DeeTypeType_GetOperatorById(Dee_TYPE(Dee_TYPE(argv[0])), self->a_flag);
 			OPTIMIZE_VERBOSE("Reduce constant expression `%r.operator %s %R -> %r'\n",
 			                 argv[0], info ? info->oi_uname : "?",
 			                 self->a_flag == OPERATOR_CALL && opcount == 2

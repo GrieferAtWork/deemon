@@ -2271,7 +2271,9 @@ get_operator_name(uint16_t opid) {
 		return DeeString_Chr((uint8_t)'.');
 	default: break;
 	}
-	info = Dee_OperatorInfo(NULL, opid);
+	/* TODO: Don't hard-code the "DeeType_Type" here. Generic, named operators must
+	 *       be queried at runtime (when the type of the "this" argument is known). */
+	info = DeeTypeType_GetOperatorById(&DeeType_Type, opid);
 	if unlikely(!info)
 		return DeeInt_NewUInt16(opid);
 	return DeeString_New(info->oi_sname);
@@ -3886,7 +3888,7 @@ got_except_symbol:
 
 	case AST_OPERATOR_FUNC: {
 		struct opinfo const *info;
-		info = Dee_OperatorInfo(NULL, self->a_flag);
+		info = DeeTypeType_GetOperatorById(&DeeType_Type, self->a_flag);
 		if (!info)
 			PRINT("(");
 		if (self->a_operator_func.of_binding) {
@@ -4238,7 +4240,7 @@ do_binary:
 
 		default:
 operator_fallback:
-			info = Dee_OperatorInfo(NULL, self->a_flag);
+			info = DeeTypeType_GetOperatorById(&DeeType_Type, self->a_flag);
 			/* TODO: if (self->a_operator.o_exflag & AST_OPERATOR_FPOSTOP); */
 			if (!info)
 				PRINT("(");
@@ -4687,7 +4689,7 @@ class_member_in_class:
 				PRINT("~this");
 			} else {
 				PRINT("operator ");
-				info = Dee_OperatorInfo(NULL, op->co_name);
+				info = DeeTypeType_GetOperatorById(&DeeType_Type, op->co_name);
 				if (info) {
 					printf("%s", info->oi_sname);
 				} else {
@@ -4880,7 +4882,7 @@ print_operator_name(uint16_t opid,
 
 	default: break;
 	}
-	info = Dee_OperatorInfo(NULL, opid);
+	info = DeeTypeType_GetOperatorById(&DeeType_Type, opid);
 	if unlikely(!info)
 		return DeeFormat_Printf(printer, arg, "%" PRFu16, opid);
 	return DeeFormat_Printf(printer, arg, "%q", info->oi_sname);

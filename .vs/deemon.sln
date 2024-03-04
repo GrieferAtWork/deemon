@@ -348,6 +348,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\compiler-range-expressions.dee = ..\util\test\compiler-range-expressions.dee
 		..\util\test\compiler-recursive-references.dee = ..\util\test\compiler-recursive-references.dee
 		..\util\test\compiler-self-recursion.dee = ..\util\test\compiler-self-recursion.dee
+		..\util\test\compiler-sequence-cast.dee = ..\util\test\compiler-sequence-cast.dee
 		..\util\test\compiler-sequence-copy.dee = ..\util\test\compiler-sequence-copy.dee
 		..\util\test\compiler-template-string-jit.dee = ..\util\test\compiler-template-string-jit.dee
 		..\util\test\compiler-template-string.dee = ..\util\test\compiler-template-string.dee

@@ -211,40 +211,30 @@ print define_Dee_HashStr("operator");
 /*[[[end]]]*/
 
 
-INTERN WUNUSED DREF DeeObject *DFCALL
-JIT_GetOperatorFunction(uint16_t opname) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
+JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, uint16_t opname) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *operators_module;
 	char const *symbol_name = NULL;
-	dhash_t hash            = 0;
-	if (opname >= AST_OPERATOR_MIN &&
-	    opname <= AST_OPERATOR_MAX) {
+	if (opname >= AST_OPERATOR_MIN && opname <= AST_OPERATOR_MAX) {
 		/* Special, ambiguous operator. */
 		symbol_name = rt_operator_names[opname - AST_OPERATOR_MIN];
-		hash        = Dee_HashPtr(symbol_name, 8);
 	} else {
-		struct opinfo const *info;
 		/* Default case: determine the operator symbol using generic-operator info. */
-		info = Dee_OperatorInfo(NULL, opname);
-		if (info) {
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorById(typetype, opname);
+		if (info)
 			symbol_name = info->oi_sname;
-			hash        = Dee_HashStr(symbol_name);
-		}
 	}
-	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
-	                                                                NULL,
-	                                                                true);
+	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators, NULL, true);
 	if unlikely(!operators_module)
 		goto err;
 	if (symbol_name) {
-		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
-		                                     symbol_name,
-		                                     hash);
+		dhash_t hash = Dee_HashStr(symbol_name);
+		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, symbol_name, hash);
 	} else {
 		/* Fallback: Invoke `operator(id)' to generate the default callback. */
-		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module,
-		                                     "operator",
-		                                     Dee_HashStr__operator);
+		result = DeeObject_GetAttrStringHash((DeeObject *)operators_module, "operator", Dee_HashStr__operator);
 		if likely(result) {
 			DREF DeeObject *callback_result;
 			callback_result = DeeObject_Callf(result, "I16u", opname);
@@ -261,8 +251,9 @@ err:
 
 
 
-INTERN int32_t DFCALL
+INTERN WUNUSED NONNULL((1, 2)) int32_t DFCALL
 JITLexer_ParseOperatorName(JITLexer *__restrict self,
+                           DeeTypeObject *typetype,
                            uint16_t features) {
 	int32_t result;
 	switch (self->jl_tok) {
@@ -426,7 +417,7 @@ do_operator_gr:
 			goto done_y1;
 		}
 		/* Parenthesis around operator name. */
-		result = JITLexer_ParseOperatorName(self, features);
+		result = JITLexer_ParseOperatorName(self, typetype, features);
 		if unlikely(result < 0)
 			goto err;
 		if unlikely(self->jl_tok != ')') {
@@ -439,7 +430,7 @@ do_operator_gr:
 		if (self->jl_tokend != self->jl_tokstart + 3)
 			goto err_empty_string;
 		result = OPERATOR_STR;
-		break;
+		goto done_y1;
 
 	case JIT_STRING:
 		if (self->jl_tokend != self->jl_tokstart + 2) {
@@ -465,10 +456,10 @@ err_rbrck_after_lbrck:
 			goto err_trace;
 		}
 		if (self->jl_tok == '=') {
-			JITLexer_Yield(self);
 			result = (result == AST_OPERATOR_GETITEM_OR_SETITEM
 			          ? OPERATOR_SETITEM
 			          : OPERATOR_SETRANGE);
+			goto done_y1;
 		}
 		goto done;
 
@@ -481,239 +472,387 @@ err_rbrck_after_lbrck:
 		}
 		goto done;
 
-		{
-			char const *name_begin;
-			size_t name_size;
-			uint32_t name;
-		default:
+	default: {
+		char const *name_begin;
+		size_t name_size;
+		uint32_t name;
 /*default_case:*/
-			if (self->jl_tok != JIT_KEYWORD)
-				goto unknown;
-			name_begin = (char const *)self->jl_tokstart;
-			name_size  = (size_t)((char const *)self->jl_tokend - name_begin);
-			/* Other operator names that technically should have their own
-			 * keyword, but since this is the only place that keyword would
-			 * ever get used, the overhead of manually checking for them is
-			 * smaller, causing me to opt for this route instead. */
-			switch (name_size) {
+		if (self->jl_tok != JIT_KEYWORD)
+			goto unknown;
+		name_begin = (char const *)self->jl_tokstart;
+		name_size  = (size_t)((char const *)self->jl_tokend - name_begin);
+		/* Other operator names that technically should have their own
+		 * keyword, but since this is the only place that keyword would
+		 * ever get used, the overhead of manually checking for them is
+		 * smaller, causing me to opt for this route instead. */
+		switch (name_size) {
 
-			case 3:
-				if (name_begin[0] == 's' &&
-				    name_begin[1] == 't' &&
-				    name_begin[2] == 'r') {
-					result = OPERATOR_STR;
-					goto done_y1;
-				}
-				if (name_begin[0] == 'd' &&
-				    name_begin[1] == 'e' &&
-				    name_begin[2] == 'l') {
-					JITLexer_Yield(self);
-					if (self->jl_tok == '[') {
-						JITLexer_Yield(self);
-						result = OPERATOR_DELITEM;
-						if (self->jl_tok == ':') {
-							result = OPERATOR_DELRANGE;
-							JITLexer_Yield(self);
-						}
-						if unlikely(self->jl_tok != ']')
-							goto err_rbrck_after_lbrck;
-						goto done_y1;
-					}
-					result = OPERATOR_DELATTR;
-					if unlikely(self->jl_tok != '.') {
-						syn_operator_expected_lbracket_or_dot_after_del(self);
-						goto err_trace;
-					}
-					goto done_y1;
-				}
-				if (name_begin[0] == 'f' &&
-				    name_begin[1] == 'o' &&
-				    name_begin[2] == 'r' &&
-				    (features & P_OPERATOR_FCLASS)) {
-					result = AST_OPERATOR_FOR;
-					goto done_y1;
-				}
-				break;
-
-			case 4:
-				name = UNALIGNED_GET32(name_begin);
-#ifndef __OPTIMIZE_SIZE__
-				if (name == ENCODE_INT32('h', 'a', 's', 'h')) {
-					result = OPERATOR_HASH;
-					goto done_y1;
-				}
-#endif /* !__OPTIMIZE_SIZE__ */
-				if (name == ENCODE_INT32('n', 'e', 'x', 't')) {
-					result = OPERATOR_ITERNEXT;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('i', 't', 'e', 'r')) {
-					result = OPERATOR_ITERSELF;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('r', 'e', 'p', 'r')) {
-					result = OPERATOR_REPR;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('c', 'o', 'p', 'y')) {
-					result = OPERATOR_COPY;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
-					JITLexer_Yield(self);
-					result = OPERATOR_MOVEASSIGN;
-					if unlikely(self->jl_tok != '=' &&
-					            self->jl_tok != TOK_COLON_EQUAL) {
-						DeeError_Throwf(&DeeError_SyntaxError,
-						                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
-						                JITLexer_TokLen(self),
-						                JITLexer_TokPtr(self));
-						goto err_trace;
-					}
-					goto done_y1;
-				}
-				break;
-
-#ifndef __OPTIMIZE_SIZE__
-			case 5:
-				name = UNALIGNED_GET32(name_begin);
-				if (name == ENCODE_INT32('e', 'n', 't', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r') {
-					result = OPERATOR_ENTER;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('l', 'e', 'a', 'v') && UNALIGNED_GET8(name_begin + 4) == 'e') {
-					result = OPERATOR_LEAVE;
-					goto done_y1;
-				}
-				if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & P_OPERATOR_FCLASS)) {
-					result = CLASS_OPERATOR_SUPERARGS;
-					goto done_y1;
-				}
-				break;
-
-			case 8:
-				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 't') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'i', 'n', 's')) {
-					result = OPERATOR_CONTAINS;
-					goto done_y1;
-				}
-				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 'e', 'p') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('c', 'o', 'p', 'y')) {
-					result = OPERATOR_DEEPCOPY;
-					goto done_y1;
-				}
-				break;
-
-			case 10:
-				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 's', 't') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'u', 'c', 't') &&
-				    UNALIGNED_GET16(name_begin + 8) == ENCODE_INT16('o', 'r')) {
-					result = OPERATOR_DESTRUCTOR;
-					goto done_y1;
-				}
-				break;
-
-			case 11:
-				if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 's') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('t', 'r', 'u', 'c') &&
-				    UNALIGNED_GET32(name_begin + 8) == ENCODE_INT32('t', 'o', 'r', 0)) {
-					result = OPERATOR_CONSTRUCTOR;
-					goto done_y1;
-				}
-				break;
-#endif /* !__OPTIMIZE_SIZE__ */
-
-			default: break;
+		case 3:
+			if (name_begin[0] == 's' &&
+			    name_begin[1] == 't' &&
+			    name_begin[2] == 'r') {
+				result = OPERATOR_STR;
+				goto done_y1;
 			}
-			while (name_size && *name_begin == '_')
-				++name_begin, --name_size;
-			while (name_size && name_begin[name_size - 1] == '_')
-				--name_size;
+			if (name_begin[0] == 'd' &&
+			    name_begin[1] == 'e' &&
+			    name_begin[2] == 'l') {
+				JITLexer_Yield(self);
+				if (self->jl_tok == '[') {
+					JITLexer_Yield(self);
+					result = OPERATOR_DELITEM;
+					if (self->jl_tok == ':') {
+						result = OPERATOR_DELRANGE;
+						JITLexer_Yield(self);
+					}
+					if unlikely(self->jl_tok != ']')
+						goto err_rbrck_after_lbrck;
+					goto done_y1;
+				}
+				result = OPERATOR_DELATTR;
+				if unlikely(self->jl_tok != '.') {
+					syn_operator_expected_lbracket_or_dot_after_del(self);
+					goto err_trace;
+				}
+				goto done_y1;
+			}
+			if (name_begin[0] == 'f' &&
+			    name_begin[1] == 'o' &&
+			    name_begin[2] == 'r' &&
+			    (features & P_OPERATOR_FCLASS)) {
+				result = AST_OPERATOR_FOR;
+				goto done_y1;
+			}
+			break;
+
+		case 4:
+			name = UNALIGNED_GET32(name_begin);
+#ifndef __OPTIMIZE_SIZE__
+			if (name == ENCODE_INT32('h', 'a', 's', 'h')) {
+				result = OPERATOR_HASH;
+				goto done_y1;
+			}
+#endif /* !__OPTIMIZE_SIZE__ */
+			if (name == ENCODE_INT32('n', 'e', 'x', 't')) {
+				result = OPERATOR_ITERNEXT;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('i', 't', 'e', 'r')) {
+				result = OPERATOR_ITERSELF;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('r', 'e', 'p', 'r')) {
+				result = OPERATOR_REPR;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('c', 'o', 'p', 'y')) {
+				result = OPERATOR_COPY;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
+				JITLexer_Yield(self);
+				result = OPERATOR_MOVEASSIGN;
+				if unlikely(self->jl_tok != '=' &&
+				            self->jl_tok != TOK_COLON_EQUAL) {
+					DeeError_Throwf(&DeeError_SyntaxError,
+					                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
+					                JITLexer_TokLen(self),
+					                JITLexer_TokPtr(self));
+					goto err_trace;
+				}
+				goto done_y1;
+			}
+			break;
+
+#ifndef __OPTIMIZE_SIZE__
+		case 5:
+			name = UNALIGNED_GET32(name_begin);
+			if (name == ENCODE_INT32('e', 'n', 't', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r') {
+				result = OPERATOR_ENTER;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('l', 'e', 'a', 'v') && UNALIGNED_GET8(name_begin + 4) == 'e') {
+				result = OPERATOR_LEAVE;
+				goto done_y1;
+			}
+			if (name == ENCODE_INT32('s', 'u', 'p', 'e') && UNALIGNED_GET8(name_begin + 4) == 'r' && (features & P_OPERATOR_FCLASS)) {
+				result = CLASS_OPERATOR_SUPERARGS;
+				goto done_y1;
+			}
+			break;
+
+		case 8:
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 't') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('a', 'i', 'n', 's')) {
+				result = OPERATOR_CONTAINS;
+				goto done_y1;
+			}
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 'e', 'p') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('c', 'o', 'p', 'y')) {
+				result = OPERATOR_DEEPCOPY;
+				goto done_y1;
+			}
+			break;
+
+		case 10:
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'e', 's', 't') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'u', 'c', 't') &&
+			    UNALIGNED_GET16(name_begin + 8) == ENCODE_INT16('o', 'r')) {
+				result = OPERATOR_DESTRUCTOR;
+				goto done_y1;
+			}
+			break;
+
+		case 11:
+			if (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('c', 'o', 'n', 's') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('t', 'r', 'u', 'c') &&
+			    UNALIGNED_GET32(name_begin + 8) == ENCODE_INT32('t', 'o', 'r', 0)) {
+				result = OPERATOR_CONSTRUCTOR;
+				goto done_y1;
+			}
+			break;
+#endif /* !__OPTIMIZE_SIZE__ */
+
+		default: break;
+		}
+		while (name_size && *name_begin == '_')
+			++name_begin, --name_size;
+		while (name_size && name_begin[name_size - 1] == '_')
+			--name_size;
 
 #if 0 /* Already handled by generic opinfo searches. */
-			/* Some special operators that didn't merit their own keyword. */
-			if (name_size == 4 &&
-			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('b', 'o', 'o', 'l')) {
-				result = OPERATOR_BOOL;
+		/* Some special operators that didn't merit their own keyword. */
+		if (name_size == 4 &&
+		    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('b', 'o', 'o', 'l')) {
+			result = OPERATOR_BOOL;
+			goto done_y1;
+		}
+		if (name_size == 3 &&
+		    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', 0)) {
+			result = OPERATOR_INT;
+			goto done_y1;
+		}
+		if (name_size == 5 &&
+		    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('f', 'l', 'o', 'a') &&
+		    UNALIGNED_GET8(name_begin + 4) == 't') {
+			result = OPERATOR_FLOAT;
+			goto done_y1;
+		}
+#endif
+
+		/* Query an explicit operator by its name.
+		 * NOTE: This is also where a lot of backwards-compatibility lies, as
+		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
+		{
+			struct opinfo const *info;
+			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size);
+			if (info) {
+				result = info->oi_id;
 				goto done_y1;
 			}
-			if (name_size == 3 &&
-			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', 0)) {
-				result = OPERATOR_INT;
+
+			/* Even more backwards compatibility. */
+			if (name_size == 2) {
+				if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('l', 't'))
+					goto do_operator_lo;
+				if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('g', 't'))
+					goto do_operator_gr;
+			}
+			if (name_size == 6 &&
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('r', 'e', 'a', 'd') &&
+			    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('n', 'p')) {
+				result = FILE_OPERATOR_READ;
 				goto done_y1;
 			}
-			if (name_size == 5 &&
-			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('f', 'l', 'o', 'a') &&
-			    UNALIGNED_GET8(name_begin + 4) == 't') {
+			if (name_size == 7 &&
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('w', 'r', 'i', 't') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('e', 'n', 'p', 0)) {
+				result = FILE_OPERATOR_WRITE;
+				goto done_y1;
+			}
+			if (name_size == 9 &&
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
+			    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
+			    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
+				result = CLASS_OPERATOR_SUPERARGS;
+				goto done_y1;
+			}
+			if (name_size == 6 &&
+			    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'o', 'u', 'b') &&
+			    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('l', 'e')) {
 				result = OPERATOR_FLOAT;
 				goto done_y1;
 			}
-#endif
-
-			/* Query an explicit operator by its name.
-			 * NOTE: This is also where a lot of backwards-compatibility lies, as
-			 *       the old deemon used to only accept e.g.: `operator __contains__'. */
-			{
-				uint16_t opid;
-				DeeTypeObject *typetype;
-				typetype = features & P_OPERATOR_FNOFILE ? NULL : &DeeFileType_Type;
-				opid     = Dee_OperatorFromNameLen(typetype, name_begin, name_size);
-				if (opid != (uint16_t)-1) {
-					result = opid;
-					goto done_y1;
-				}
-
-				/* Even more backwards compatibility. */
-				if (name_size == 2) {
-					if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('l', 't'))
-						goto do_operator_lo;
-					if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('g', 't'))
-						goto do_operator_gr;
-				}
-				if (name_size == 6 &&
-				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('r', 'e', 'a', 'd') &&
-				    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('n', 'p')) {
-					result = FILE_OPERATOR_READ;
-					goto done_y1;
-				}
-				if (name_size == 7 &&
-				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('w', 'r', 'i', 't') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('e', 'n', 'p', 0)) {
-					result = FILE_OPERATOR_WRITE;
-					goto done_y1;
-				}
-				if (name_size == 9 &&
-				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('s', 'u', 'p', 'e') &&
-				    UNALIGNED_GET32(name_begin + 4) == ENCODE_INT32('r', 'a', 'r', 'g') &&
-				    UNALIGNED_GET8(name_begin + 8) == 's' && (features & P_OPERATOR_FCLASS)) {
-					result = CLASS_OPERATOR_SUPERARGS;
-					goto done_y1;
-				}
-				if (name_size == 6 &&
-				    UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('d', 'o', 'u', 'b') &&
-				    UNALIGNED_GET16(name_begin + 4) == ENCODE_INT16('l', 'e')) {
-					result = OPERATOR_FLOAT;
-					goto done_y1;
-				}
-				if (name_size == 5 &&
-				    ((UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '3') &&
-				      UNALIGNED_GET8(name_begin + 4) == '2') ||
-				     (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '6') &&
-				      UNALIGNED_GET8(name_begin + 4) == '4'))) {
-					result = OPERATOR_INT;
-					goto done_y1;
-				}
+			if (name_size == 5 &&
+			    ((UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '3') &&
+			      UNALIGNED_GET8(name_begin + 4) == '2') ||
+			     (UNALIGNED_GET32(name_begin + 0) == ENCODE_INT32('i', 'n', 't', '6') &&
+			      UNALIGNED_GET8(name_begin + 4) == '4'))) {
+				result = OPERATOR_INT;
+				goto done_y1;
 			}
-unknown:
-			syn_operator_unknown_name(self);
-			goto err_trace;
 		}
-		break;
+unknown:
+		syn_operator_unknown_name(self);
+		goto err_trace;
+	}	break;
+
 	}
 done_y1:
 	JITLexer_Yield(self);
 done:
 	return result;
+err_trace:
+	JITLexer_ErrorTrace(self, self->jl_tokstart);
+err:
+	return -1;
+}
+
+INTDEF WUNUSED NONNULL((1)) int DFCALL
+JITLexer_SkipOperatorName(JITLexer *__restrict self) {
+	switch (self->jl_tok) {
+	case TOK_INT:
+	case '+':
+	case '-':
+	case '*':
+	case '/':
+	case '%':
+	case '&':
+	case '|':
+	case '^':
+	case '~':
+	case TOK_SHL:
+	case TOK_SHR:
+	case TOK_POW:
+	case TOK_ADD_EQUAL:
+	case TOK_SUB_EQUAL:
+	case TOK_MUL_EQUAL:
+	case TOK_DIV_EQUAL:
+	case TOK_MOD_EQUAL:
+	case TOK_SHL_EQUAL:
+	case TOK_SHR_EQUAL:
+	case TOK_AND_EQUAL:
+	case TOK_OR_EQUAL:
+	case TOK_XOR_EQUAL:
+	case TOK_POW_EQUAL:
+	case TOK_INC:
+	case TOK_DEC:
+	case TOK_EQUAL:
+	case TOK_NOT_EQUAL:
+	case TOK_LOWER:
+	case TOK_LOWER_EQUAL:
+	case TOK_GREATER:
+	case TOK_GREATER_EQUAL:
+	case '#':
+		goto done_y1;
+
+	case '=':
+	case TOK_COLON_EQUAL:
+		JITLexer_Yield(self);
+		if (JITLexer_ISKWD(self, "move"))
+			goto done_y1;
+		goto done;
+
+	case '(':
+		JITLexer_Yield(self);
+		if (self->jl_tok == ')')
+			goto done_y1;
+		/* Parenthesis around operator name. */
+		if unlikely(JITLexer_SkipOperatorName(self))
+			goto err;
+		if unlikely(self->jl_tok != ')') {
+			syn_paren_expected_rparen_after_lparen(self);
+			goto err_trace;
+		}
+		goto done_y1;
+
+	case JIT_RAWSTRING:
+		if (self->jl_tokend != self->jl_tokstart + 3)
+			goto err_empty_string;
+		goto done_y1;
+	case JIT_STRING:
+		if (self->jl_tokend != self->jl_tokstart + 2) {
+err_empty_string:
+			syn_operator_expected_empty_string(self);
+			goto err_trace;
+		}
+		goto done_y1;
+	case '[':
+		JITLexer_Yield(self);
+		if (self->jl_tok == ':')
+			JITLexer_Yield(self);
+		if likely(self->jl_tok == ']') {
+			JITLexer_Yield(self);
+		} else {
+err_rbrck_after_lbrck:
+			syn_bracket_expected_rbracket_after_lbracket(self);
+			goto err_trace;
+		}
+		if (self->jl_tok == '=')
+			goto done_y1;
+		goto done;
+
+	case '.':
+		JITLexer_Yield(self);
+		if (self->jl_tok == '=')
+			goto done_y1;
+		goto done;
+
+	case JIT_KEYWORD: {
+		char const *name_begin;
+		size_t name_size;
+		name_begin = (char const *)self->jl_tokstart;
+		name_size  = (size_t)((char const *)self->jl_tokend - name_begin);
+		switch (name_size) {
+
+		case 3:
+			if (name_begin[0] == 'd' && name_begin[1] == 'e' && name_begin[2] == 'l') {
+				JITLexer_Yield(self);
+				if (self->jl_tok == '[') {
+					JITLexer_Yield(self);
+					if (self->jl_tok == ':')
+						JITLexer_Yield(self);
+					if unlikely(self->jl_tok != ']')
+						goto err_rbrck_after_lbrck;
+					goto done_y1;
+				}
+				if unlikely(self->jl_tok != '.') {
+					syn_operator_expected_lbracket_or_dot_after_del(self);
+					goto err_trace;
+				}
+				goto done_y1;
+			}
+			break;
+
+		case 4: {
+			uint32_t name = UNALIGNED_GET32(name_begin);
+			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {
+				JITLexer_Yield(self);
+				if unlikely(self->jl_tok != '=' &&
+				            self->jl_tok != TOK_COLON_EQUAL) {
+					DeeError_Throwf(&DeeError_SyntaxError,
+					                "Expected `:=' or `=' after `move' in operator name, but got `%$s'",
+					                JITLexer_TokLen(self),
+					                JITLexer_TokPtr(self));
+					goto err_trace;
+				}
+				goto done_y1;
+			}
+		}	break;
+
+		default: break;
+		}
+		goto done_y1;
+	}	break;
+
+	default:
+		syn_operator_unknown_name(self);
+		goto err_trace;
+	}
+done_y1:
+	JITLexer_Yield(self);
+done:
+	return 0;
 err_trace:
 	JITLexer_ErrorTrace(self, self->jl_tokstart);
 err:

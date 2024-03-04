@@ -352,22 +352,6 @@ err:
 	return ast_operator2(name, flags | AST_OPERATOR_FVARARGS, self, args);
 }
 
-INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
-INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
-
-PRIVATE ATTR_PURE WUNUSED NONNULL((1, 3)) struct opinfo const *DCALL
-find_opinfo(struct opinfo const *__restrict v, unsigned int c,
-            char const *__restrict str, size_t len) {
-	unsigned int i;
-	for (i = 0; i < c; ++i) {
-		char const *name = v[i].oi_sname;
-		if (bcmpc(name, str, len, sizeof(char)) == 0 && !name[len])
-			return &v[i];
-	}
-	return NULL;
-}
-
-
 /* Parse and return an operator name.
  * @param: features: Set of `P_OPERATOR_F*'
  * @return: * : One of `OPERATOR_*' or `AST_OPERATOR_*'
@@ -784,18 +768,14 @@ default_case:
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
 			struct opinfo const *info;
-			info = find_opinfo(basic_opinfo, COMPILER_LENOF(basic_opinfo), name_begin, name_size);
+			/* TODO: Don't hard-code "DeeFileType_Type" here. Instead, hard-code "DeeType_Type"
+			 *       and query custom operators at runtime. */
+			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size);
 			if (info) {
-				result = (uint16_t)(info - basic_opinfo);
+				result = info->oi_id;
 				goto done_y1;
 			}
-			if (!(features & P_OPERATOR_FNOFILE)) {
-				info = find_opinfo(file_opinfo, COMPILER_LENOF(file_opinfo), name_begin, name_size);
-				if (info) {
-					result = OPERATOR_EXTENDED(0) + (uint16_t)(info - file_opinfo);
-					goto done_y1;
-				}
-			}
+
 			/* Even more backwards compatibility. */
 			if (name_size == 2) {
 				if (UNALIGNED_GET16(name_begin + 0) == ENCODE_INT16('l', 't'))
@@ -838,6 +818,8 @@ default_case:
 			}
 		}
 unknown:
+		/* TODO: Generic, named operators must be queried at runtime
+		 *       (when the type of the "this" argument is known). */
 		if (WARN(W_UNKNOWN_OPERATOR_NAME))
 			goto err;
 		result = (int32_t)0; /* Default to whatever operator #0 is. */

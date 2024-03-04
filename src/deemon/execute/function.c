@@ -543,7 +543,9 @@ function_get_operatorname(Function *__restrict self) {
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
 	if (info.fi_opname != (uint16_t)-1) {
-		op = Dee_OperatorInfo(Dee_TYPE(info.fi_type), info.fi_opname);
+		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
+		                                              : &DeeType_Type,
+		                                 info.fi_opname);
 		Dee_XDecref(info.fi_type);
 		if (!op)
 			return DeeInt_NewUInt16(info.fi_opname);

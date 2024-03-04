@@ -272,7 +272,6 @@ ast_parse_operator_name(uint16_t features);
 
 #define P_OPERATOR_FNORMAL 0x0000 /* Normal features */
 #define P_OPERATOR_FCLASS  0x0001 /* Allow class-specific operator names. */
-#define P_OPERATOR_FNOFILE 0x0002 /* Don't allow file-specific operator names. */
 
 
 /* Ambiguous operator codes.

@@ -136,17 +136,15 @@ DECL_BEGIN
 #define ERROR_CANNOT_TEST_BINDING_DEFINED 1
 PRIVATE ATTR_COLD int DCALL
 err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
-	DeeTypeObject *typetype;
+	DeeTypeObject *typetype = &DeeType_Type;
 	struct opinfo const *info;
-	if (!base) {
-		typetype = NULL;
-	} else {
+	if (base) {
 		typetype = Dee_TYPE(base);
 		if (typetype == &DeeSuper_Type)
 			typetype = DeeSuper_TYPE(base);
 		typetype = Dee_TYPE(typetype);
 	}
-	info = Dee_OperatorInfo(typetype, opname);
+	info = DeeTypeType_GetOperatorById(typetype, opname);
 	if likely(info) {
 		return DeeError_Throwf(&DeeError_TypeError,
 		                       "Cannot invoke inplace `operator %s' (`__%s__') without l-value",
@@ -1789,14 +1787,19 @@ err_oo_class_reinit_lvalue:
 			if (name == ENCODE_INT32('o', 'p', 'e', 'r') &&
 			    UNALIGNED_GET32(tok_begin + 4) == ENCODE_INT32('a', 't', 'o', 'r')) {
 				/* Operator function access. */
+#ifdef JIT_EVAL
 				int32_t opno;
 				JITLexer_Yield(self);
-				opno = JITLexer_ParseOperatorName(self, P_OPERATOR_FNORMAL);
+				/* TODO: Don't hard-code "DeeType_Type" here! Instead, lookup the operator
+				 *       via its name when the operator function actually gets called. */
+				opno = JITLexer_ParseOperatorName(self, &DeeType_Type, P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err;
-#ifdef JIT_EVAL
-				result = JIT_GetOperatorFunction((uint16_t)opno);
+				result = JIT_GetOperatorFunction(&DeeType_Type, (uint16_t)opno);
 #else /* JIT_EVAL */
+				JITLexer_Yield(self);
+				if unlikely(JITLexer_SkipOperatorName(self))
+					goto err;
 				result = 0;
 #endif /* !JIT_EVAL */
 				goto done;
@@ -1999,26 +2002,29 @@ err_result_copy:
 				goto err_r;
 			}
 			if (JITLexer_ISTOK(self, "operator")) {
+#ifdef JIT_EVAL
 				int32_t opno;
+				DREF DeeObject *opfun;
+				DeeTypeObject *typetype;
 				JITLexer_Yield(self);
-				opno = JITLexer_ParseOperatorName(self, P_OPERATOR_FNORMAL);
+				LOAD_LVALUE(lhs, err);
+				typetype = Dee_TYPE(Dee_TYPE(lhs));
+				opno = JITLexer_ParseOperatorName(self, typetype, P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err_r;
-#ifdef JIT_EVAL
-				{
-					DREF DeeObject *opfun;
-					LOAD_LVALUE(lhs, err);
-					opfun = JIT_GetOperatorFunction((uint16_t)opno);
-					if unlikely(!opfun)
-						goto err_r;
-					rhs = DeeInstanceMethod_New(opfun, lhs);
-					Dee_Decref(opfun);
-					if unlikely(!rhs)
-						goto err_r_invoke;
-					Dee_Decref(lhs);
-					lhs = rhs;
-				}
-#endif /* JIT_EVAL */
+				opfun = JIT_GetOperatorFunction(typetype, (uint16_t)opno);
+				if unlikely(!opfun)
+					goto err_r;
+				rhs = DeeInstanceMethod_New(opfun, lhs);
+				Dee_Decref(opfun);
+				if unlikely(!rhs)
+					goto err_r_invoke;
+				Dee_Decref(lhs);
+				lhs = rhs;
+#else /* JIT_EVAL */
+				if unlikely(JITLexer_SkipOperatorName(self))
+					goto err_r;
+#endif /* !JIT_EVAL */
 			} else if (JITLexer_ISTOK(self, "this")) {
 				JITLexer_Yield(self);
 			} else if (JITLexer_ISTOK(self, "class")) {

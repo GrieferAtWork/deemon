@@ -42,9 +42,15 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include "../objects/gc_inspect.h"
+#include <hybrid/typecore.h>
+
 #include "runtime_error.h"
 #include "strings.h"
+
+DECL_BEGIN
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 #ifndef NDEBUG
 #define DBG_memset (void)memset
@@ -52,7 +58,7 @@
 #define DBG_memset(dst, byte, n_bytes) (void)0
 #endif /* NDEBUG */
 
-DECL_BEGIN
+#define OPNAME(opname) "operator " opname
 
 #ifndef CONFIG_HAVE_strcmp
 #define CONFIG_HAVE_strcmp
@@ -63,147 +69,103 @@ DeeSystem_DEFINE_strcmp(dee_strcmp)
 
 typedef DeeTypeObject Type;
 
+#define LENGTHOF_type_operators (OPERATOR_USERCOUNT + ((OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1))
+INTDEF struct type_operator const type_operators[LENGTHOF_type_operators];
 
-INTDEF struct opinfo const basic_opinfo[OPERATOR_USERCOUNT];
-INTERN_CONST struct opinfo const basic_opinfo[OPERATOR_USERCOUNT] = {
-	/* [OPERATOR_CONSTRUCTOR]  = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_any_ctor),  "this",         "constructor", "tp_any_ctor" },
-	/* [OPERATOR_COPY]         = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_copy_ctor), "copy",         "copy",        "tp_copy_ctor" },
-	/* [OPERATOR_DEEPCOPY]     = */ { OPTYPE_SPECIAL,                                   OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_alloc.tp_deep_ctor), "deepcopy",     "deepcopy",    "tp_deep_ctor" },
-	/* [OPERATOR_DESTRUCTOR]   = */ { OPTYPE_RVOID | OPTYPE_UNARY,                      OPCLASS_TYPE, 1, offsetof(Type, tp_init.tp_dtor),               "~this",        "destructor",  "tp_dtor" },
-	/* [OPERATOR_ASSIGN]       = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_assign),             ":=",           "assign",      "tp_assign" },
-	/* [OPERATOR_MOVEASSIGN]   = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_TYPE, 0, offsetof(Type, tp_init.tp_move_assign),        "move:=",       "moveassign",  "tp_move_assign" },
-	/* [OPERATOR_STR]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type, tp_cast.tp_str),                "str",          "str",         "tp_str" },
-	/* [OPERATOR_REPR]         = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type, tp_cast.tp_repr),               "repr",         "repr",        "tp_repr" },
-	/* [OPERATOR_BOOL]         = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_TYPE, 0, offsetof(Type, tp_cast.tp_bool),               "bool",         "bool",        "tp_bool" },
-	/* [OPERATOR_ITERNEXT]     = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_TYPE, 0, offsetof(Type, tp_iter_next),                  "next",         "next",        "tp_iter_next" },
-#if 1 /* Both variants are valid */
-	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_TYPE, 0, offsetof(Type, tp_call),                       "()",           "call",        "tp_call" },
-#else
-	/* [OPERATOR_CALL]         = */ { OPTYPE_ROBJECT | OPTYPE_TRINARY,                  OPCLASS_TYPE, 0, offsetof(Type, tp_call_kw),                    "()",           "call",        "tp_call_kw" },
-#endif
-	/* [OPERATOR_INT]          = */ { OPTYPE_SPECIAL,                                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_int),            "int",          "int",         "tp_int" },
-	/* [OPERATOR_FLOAT]        = */ { OPTYPE_DOUBLE,                                    OPCLASS_MATH, 0, offsetof(struct type_math, tp_double),         "float",        "float",       "tp_double" },
-	/* [OPERATOR_INV]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_MATH, 0, offsetof(struct type_math, tp_inv),            "~",            "inv",         "tp_inv" },
-	/* [OPERATOR_POS]          = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_MATH, 0, offsetof(struct type_math, tp_pos),            "+",            "pos",         "tp_pos" },
-	/* [OPERATOR_NEG]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_neg),            "-",            "neg",         "tp_neg" },
-	/* [OPERATOR_ADD]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_add),            "+",            "add",         "tp_add" },
-	/* [OPERATOR_SUB]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_sub),            "-",            "sub",         "tp_sub" },
-	/* [OPERATOR_MUL]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_mul),            "*",            "mul",         "tp_mul" },
-	/* [OPERATOR_DIV]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_div),            "/",            "div",         "tp_div" },
-	/* [OPERATOR_MOD]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_mod),            "%",            "mod",         "tp_mod" },
-	/* [OPERATOR_SHL]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_shl),            "<<",           "shl",         "tp_shl" },
-	/* [OPERATOR_SHR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_shr),            ">>",           "shr",         "tp_shr" },
-	/* [OPERATOR_AND]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_and),            "&",            "and",         "tp_and" },
-	/* [OPERATOR_OR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_or),             "|",            "or",          "tp_or" },
-	/* [OPERATOR_XOR]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_xor),            "^",            "xor",         "tp_xor" },
-	/* [OPERATOR_POW]          = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_MATH, 0, offsetof(struct type_math, tp_pow),            "**",           "pow",         "tp_pow" },
-	/* [OPERATOR_INC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_inc),            "++",           "inc",         "tp_inc" },
-	/* [OPERATOR_DEC]          = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_UNARY,      OPCLASS_MATH, 0, offsetof(struct type_math, tp_dec),            "--",           "dec",         "tp_dec" },
-	/* [OPERATOR_INPLACE_ADD]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_add),    "+=",           "iadd",        "tp_inplace_add" },
-	/* [OPERATOR_INPLACE_SUB]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_sub),    ",=",           "isub",        "tp_inplace_sub" },
-	/* [OPERATOR_INPLACE_MUL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_mul),    "*=",           "imul",        "tp_inplace_mul" },
-	/* [OPERATOR_INPLACE_DIV]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_div),    "/=",           "idiv",        "tp_inplace_div" },
-	/* [OPERATOR_INPLACE_MOD]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_mod),    "%=",           "imod",        "tp_inplace_mod" },
-	/* [OPERATOR_INPLACE_SHL]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_shl),    "<<=",          "ishl",        "tp_inplace_shl" },
-	/* [OPERATOR_INPLACE_SHR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_shr),    ">>=",          "ishr",        "tp_inplace_shr" },
-	/* [OPERATOR_INPLACE_AND]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_and),    "&=",           "iand",        "tp_inplace_and" },
-	/* [OPERATOR_INPLACE_OR]   = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_or),     "|=",           "ior",         "tp_inplace_or" },
-	/* [OPERATOR_INPLACE_XOR]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_xor),    "^=",           "ixor",        "tp_inplace_xor" },
-	/* [OPERATOR_INPLACE_POW]  = */ { OPTYPE_RINT | OPTYPE_INPLACE | OPTYPE_BINARY,     OPCLASS_MATH, 0, offsetof(struct type_math, tp_inplace_pow),    "**=",          "ipow",        "tp_inplace_pow" },
-	/* [OPERATOR_HASH]         = */ { OPTYPE_RUINTPTR | OPTYPE_UNARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_hash),            "hash",         "hash",        "tp_hash" },
-	/* [OPERATOR_EQ]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_eq),              "==",           "eq",          "tp_eq" },
-	/* [OPERATOR_NE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_ne),              "!=",           "ne",          "tp_ne" },
-	/* [OPERATOR_LO]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_lo),              "<",            "lo",          "tp_lo" },
-	/* [OPERATOR_LE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_le),              "<=",           "le",          "tp_le" },
-	/* [OPERATOR_GR]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_gr),              ">",            "gr",          "tp_gr" },
-	/* [OPERATOR_GE]           = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_CMP,  0, offsetof(struct type_cmp, tp_ge),              ">=",           "ge",          "tp_ge" },
-	/* [OPERATOR_ITERSELF]     = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_iter_self),       "iter",         "iter",        "tp_iter_self" },
-	/* [OPERATOR_SIZE]         = */ { OPTYPE_ROBJECT | OPTYPE_UNARY,                    OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_size),            "#",            "size",        "tp_size" },
-	/* [OPERATOR_CONTAINS]     = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_contains),        "contains",     "contains",    "tp_contains" },
-	/* [OPERATOR_GETITEM]      = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_get),             "[]",           "getitem",     "tp_get" },
-	/* [OPERATOR_DELITEM]      = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_del),             "del[]",        "delitem",     "tp_del" },
-	/* [OPERATOR_SETITEM]      = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_set),             "[]=",          "setitem",     "tp_set" },
-	/* [OPERATOR_GETRANGE]     = */ { OPTYPE_ROBJECT | OPTYPE_TRINARY,                  OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_range_get),       "[:]",          "getrange",    "tp_range_get" },
-	/* [OPERATOR_DELRANGE]     = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_range_del),       "del[:]",       "delrange",    "tp_range_del" },
-	/* [OPERATOR_SETRANGE]     = */ { OPTYPE_RINT | OPTYPE_QUAD,                        OPCLASS_SEQ,  0, offsetof(struct type_seq, tp_range_set),       "[:]=",         "setrange",    "tp_range_set" },
-	/* [OPERATOR_GETATTR]      = */ { OPTYPE_ROBJECT | OPTYPE_BINARY,                   OPCLASS_ATTR, 0, offsetof(struct type_attr, tp_getattr),        ".",            "getattr",     "tp_getattr" },
-	/* [OPERATOR_DELATTR]      = */ { OPTYPE_RINT | OPTYPE_BINARY,                      OPCLASS_ATTR, 0, offsetof(struct type_attr, tp_delattr),        "del.",         "delattr",     "tp_delattr" },
-	/* [OPERATOR_SETATTR]      = */ { OPTYPE_RINT | OPTYPE_TRINARY,                     OPCLASS_ATTR, 0, offsetof(struct type_attr, tp_setattr),        ".=",           "setattr",     "tp_setattr" },
-	/* [OPERATOR_ENUMATTR]     = */ { OPTYPE_ENUMATTR,                                  OPCLASS_ATTR, 0, offsetof(struct type_attr, tp_enumattr),       "...",          "enumattr",    "tp_enumattr" },
-	/* [OPERATOR_ENTER]        = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_WITH, 0, offsetof(struct type_with, tp_enter),          "enter",        "enter",       "tp_enter" },
-	/* [OPERATOR_LEAVE]        = */ { OPTYPE_RINT | OPTYPE_UNARY,                       OPCLASS_WITH, 0, offsetof(struct type_with, tp_leave),          "leave",        "leave",       "tp_leave" }
-};
+/* Lookup information about operator `id', as defined by `typetype'
+ * Returns NULL if the given operator is not known.
+ * NOTE: The given `typetype' must be a type-type, meaning it must
+ *       be the result of `Dee_TYPE(Dee_TYPE(ob))', in order to return
+ *       information about generic operators that can be used on `ob' */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct opinfo const *DCALL
+DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, uint16_t id) {
+	/* Fallback: select operator defined by the core "DeeType_Type".
+	 * NOTE: This could be done by scanning its table using the below loop,
+	 *       but since this is the most common case, it gets optimized here. */
+	if (id < OPERATOR_USERCOUNT)
+		return &type_operators[id].to_decl;
+	if (id >= OPERATOR_PRIVMIN && id <= OPERATOR_PRIVMAX)
+		return &type_operators[OPERATOR_USERCOUNT + id - OPERATOR_PRIVMIN].to_decl;
 
-PRIVATE struct opinfo const private_opinfo[(OPERATOR_PRIVMAX - OPERATOR_PRIVMIN) + 1] = {
-	/* [OPERATOR_VISIT  - OPERATOR_PRIVMIN] = */ { OPTYPE_VISIT,                OPCLASS_TYPE,   1, offsetof(Type, tp_visit),               "", "", "tp_visit" },
-	/* [OPERATOR_CLEAR  - OPERATOR_PRIVMIN] = */ { OPTYPE_RVOID | OPTYPE_UNARY, OPCLASS_GC,     1, offsetof(struct type_gc, tp_clear),     "", "", "tp_clear" },
-	/* [OPERATOR_PCLEAR - OPERATOR_PRIVMIN] = */ { OPTYPE_PCLEAR,               OPCLASS_GC,     1, offsetof(struct type_gc, tp_pclear),    "", "", "tp_pclear" },
-	/* [OPERATOR_GETBUF - OPERATOR_PRIVMIN] = */ { OPTYPE_GETBUF,               OPCLASS_BUFFER, 1, offsetof(struct type_buffer, tp_getbuf),"", "", "tp_getbuf" }
-};
-
-INTDEF struct opinfo const file_opinfo[FILE_OPERATOR_COUNT];
-INTERN_CONST struct opinfo const file_opinfo[FILE_OPERATOR_COUNT] = {
-	/* [FILE_OPERATOR_READ   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_read),   "read",   "read",   "ft_read",   },
-	/* [FILE_OPERATOR_WRITE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_READWRITE,           OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_write),  "write",  "write",  "ft_write",  },
-	/* [FILE_OPERATOR_SEEK   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_SEEK,                OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_seek),   "seek",   "seek",   "ft_seek",   },
-	/* [FILE_OPERATOR_SYNC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_sync),   "sync",   "sync",   "ft_sync",   },
-	/* [FILE_OPERATOR_TRUNC  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_TRUNC,               OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_trunc),  "trunc",  "trunc",  "ft_trunc",  },
-	/* [FILE_OPERATOR_CLOSE  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_close),  "close",  "close",  "ft_close",  },
-	/* [FILE_OPERATOR_PREAD  - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_pread),  "pread",  "pread",  "ft_pread",  },
-	/* [FILE_OPERATOR_PWRITE - OPERATOR_EXTENDED(0)] = */ { OPTYPE_PREADWRITE,          OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_pwrite), "pwrite", "pwrite", "ft_pwrite", },
-	/* [FILE_OPERATOR_GETC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_RINT | OPTYPE_UNARY, OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_getc),   "getc",   "getc",   "ft_getc",   },
-	/* [FILE_OPERATOR_UNGETC - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,            OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_ungetc), "ungetc", "ungetc", "ft_ungetc", },
-	/* [FILE_OPERATOR_PUTC   - OPERATOR_EXTENDED(0)] = */ { OPTYPE_UNGETPUT,            OPCLASS_TYPE, 0, offsetof(DeeFileTypeObject, ft_putc),   "putc",   "putc",   "ft_putc",   }
-};
-
-PUBLIC WUNUSED ATTR_INS(2, 3) uint16_t DCALL
-Dee_OperatorFromNameLen(DeeTypeObject *typetype,
-                        char const *__restrict name,
-                        size_t namelen) {
-	char buf[32];
-	if (namelen >= COMPILER_LENOF(buf))
-		return (uint16_t)-1; /* No valid operator has that long of a name... */
-	*(char *)mempcpyc(buf, name, namelen, sizeof(char)) = '\0';
-	return Dee_OperatorFromName(typetype, buf);
+	/* Check for custom operators. */
+	while (typetype != &DeeType_Type) {
+		size_t lo = 0;
+		size_t hi = typetype->tp_operators_size;
+		ASSERT(DeeType_IsTypeType(typetype));
+		while (lo < hi) {
+			size_t mid = (lo + hi) / 2;
+			struct type_operator const *info = &typetype->tp_operators[mid];
+			if (id < info->to_id) {
+				hi = mid;
+			} else if (id > info->to_id) {
+				lo = mid + 1;
+			} else {
+				/* Found operator info descriptor! */
+				if likely(type_operator_isdecl(info))
+					return &info->to_decl;
+				/* Check if a neighboring slot might be what we're looking for... */
+				if (mid > lo && info[-1].to_id == id) {
+					do {
+						--info;
+						--mid;
+						if likely(type_operator_isdecl(info))
+							return &info->to_decl;
+					} while (mid > lo && info[-1].to_id == id);
+				}
+				if ((mid + 1) < hi && info[1].to_id == id) {
+					do {
+						++info;
+						++mid;
+						if likely(type_operator_isdecl(info))
+							return &info->to_decl;
+					} while ((mid + 1) < hi && info[1].to_id == id);
+				}
+				goto next_base;
+			}
+		}
+next_base:
+		typetype = typetype->tp_base;
+	}
+	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((2)) uint16_t DCALL
-Dee_OperatorFromName(DeeTypeObject *typetype,
-                     char const *__restrict name) {
+/* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
+ * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous). */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) struct opinfo const *DCALL
+DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
+                              char const *__restrict name) {
+	size_t i;
+	struct opinfo const *result;
+#ifndef __OPTIMIZE_SIZE__
 #define EQAT(ptr, str) (bcmp(ptr, str, sizeof(str)) == 0)
-#define RETURN(id)     \
-	do {               \
-		result = (id); \
-		goto done;     \
-	}	__WHILE0
-	uint16_t result = (uint16_t)-1;
+#define RETURN(name)   return &type_operators[name].to_decl
 	switch (*name) {
 
 	case '.':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_SETATTR);
-		goto done;
+		return NULL; /* Ambiguous */
 
 	case '[':
 		if (name[1] == ']' && name[2] == '=' && !name[3])
 			RETURN(OPERATOR_SETITEM);
 		if (name[1] == ':' && name[2] == ']' && name[3] == '=' && !name[4])
 			RETURN(OPERATOR_SETITEM);
-		goto done;
+		return NULL; /* Ambiguous */
 
 	case '+':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_INPLACE_ADD);
 		if (name[1] == '+' && !name[2])
 			RETURN(OPERATOR_INC);
-		goto done;
+		return NULL; /* Ambiguous */
 
 	case '-':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_INPLACE_SUB);
 		if (name[1] == '-' && !name[2])
 			RETURN(OPERATOR_DEC);
-		goto done;
+		return NULL; /* Ambiguous */
 
 	case '~':
 		if (!name[1])
@@ -557,874 +519,663 @@ Dee_OperatorFromName(DeeTypeObject *typetype,
 
 	default: break;
 	}
+#undef RETURN
+#undef EQAT
+#endif /* !__OPTIMIZE_SIZE__ */
 
-	/* Fallback: manually resolve names. */
-	for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
-		if (strcmp(basic_opinfo[result].oi_sname, name) == 0)
-			goto done;
-		if (strcmp(basic_opinfo[result].oi_uname, name) == 0)
-			goto done;
+	/* Check for custom operators. */
+	ASSERT(DeeType_IsTypeType(typetype));
+	while (typetype != &DeeType_Type) {
+		for (i = 0; i < typetype->tp_operators_size; ++i) {
+			struct type_operator const *info = &typetype->tp_operators[i];
+			if (type_operator_isdecl(info)) {
+				if (strcmp(info->to_decl.oi_sname, name) == 0)
+					return &info->to_decl;
+			}
+		}
+		result = NULL;
+		for (i = 0; i < typetype->tp_operators_size; ++i) {
+			struct type_operator const *info = &typetype->tp_operators[i];
+			if (type_operator_isdecl(info)) {
+				if (strcmp(info->to_decl.oi_uname, name) == 0) {
+					if (result)
+						return NULL; /* Ambiguous name */
+					result = &info->to_decl;
+				}
+			}
+		}
+		if (result)
+			return result;
+		typetype = typetype->tp_base;
 	}
-	if (typetype == &DeeFileType_Type) {
-		for (result = 0; result < OPERATOR_USERCOUNT; ++result) {
-			if (strcmp(file_opinfo[result].oi_sname, name) == 0)
-				goto done_extended;
-			if (strcmp(file_opinfo[result].oi_uname, name) == 0)
-				goto done_extended;
+
+	/* Fallback: scan the operator table of `DeeType_Type' */
+	for (i = 0; i < COMPILER_LENOF(type_operators); ++i) {
+		struct opinfo const *info = &type_operators[i].to_decl;
+		if (strcmp(info->oi_sname, name) == 0)
+			return info;
+	}
+	result = NULL;
+	for (i = 0; i < COMPILER_LENOF(type_operators); ++i) {
+		struct opinfo const *info = &type_operators[i].to_decl;
+		if (strcmp(info->oi_uname, name) == 0) {
+			if (result)
+				return NULL; /* Ambiguous name */
+			result = info;
 		}
 	}
-	result = (uint16_t)-1; /* Not found! */
-done:
 	return result;
-done_extended:
-	result += OPERATOR_EXTENDED(0);
-	goto done;
-#undef EQAT
-#undef RETURN
+}
+
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct opinfo const *DCALL
+DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
+                                 char const *__restrict name, size_t namelen) {
+#define LENGTHOF__opinfo__oi_sname COMPILER_LENOF(((struct opinfo *)0)->oi_sname)
+#define LENGTHOF__opinfo__oi_uname COMPILER_LENOF(((struct opinfo *)0)->oi_uname)
+	char buf[(LENGTHOF__opinfo__oi_sname > LENGTHOF__opinfo__oi_uname
+	          ? LENGTHOF__opinfo__oi_sname
+	          : LENGTHOF__opinfo__oi_uname) +
+	         1];
+	if (namelen >= COMPILER_LENOF(buf))
+		return NULL; /* No valid operator has that long of a name... */
+	*(char *)mempcpyc(buf, name, namelen, sizeof(char)) = '\0';
+	return DeeTypeType_GetOperatorByName(typetype, buf);
+#undef LENGTHOF__opinfo__oi_sname
+#undef LENGTHOF__opinfo__oi_uname
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
+DeeType_GetPrivateCustomOperatorById(DeeTypeObject const *__restrict type, uint16_t id) {
+	/* Check for custom operators. */
+	size_t lo = 0;
+	size_t hi = type->tp_operators_size;
+	ASSERT(DeeType_IsTypeType(type));
+	while (lo < hi) {
+		size_t mid = (lo + hi) / 2;
+		struct type_operator const *info = &type->tp_operators[mid];
+		if (id < info->to_id) {
+			hi = mid;
+		} else if (id > info->to_id) {
+			lo = mid + 1;
+		} else {
+			/* Found operator info descriptor! */
+			if likely(type_operator_iscustom(info))
+				return info;
+			/* Check if a neighboring slot might be what we're looking for... */
+			if (mid > lo && info[-1].to_id == id) {
+				do {
+					--info;
+					--mid;
+					if likely(type_operator_iscustom(info))
+						return info;
+				} while (mid > lo && info[-1].to_id == id);
+			}
+			if ((mid + 1) < hi && info[1].to_id == id) {
+				do {
+					++info;
+					++mid;
+					if likely(type_operator_iscustom(info))
+						return info;
+				} while ((mid + 1) < hi && info[1].to_id == id);
+			}
+			goto nope;
+		}
+	}
+nope:
+	return NULL;
 }
 
 
-PUBLIC WUNUSED struct opinfo const *DCALL
-Dee_OperatorInfo(DeeTypeObject *typetype, uint16_t id) {
-	ASSERT_OBJECT_TYPE_OPT(typetype, &DeeType_Type);
-	if (id < OPERATOR_USERCOUNT)
-		return &basic_opinfo[id];
-	if (id >= OPERATOR_PRIVMIN && id <= OPERATOR_PRIVMAX)
-		return &private_opinfo[id - OPERATOR_PRIVMIN];
-	if (typetype && id >= OPERATOR_EXTENDED(0)) {
-		/* Extended operator codes. */
-		ASSERT(DeeType_IsTypeType(typetype));
-		if (typetype == &DeeFileType_Type &&
-		    id < OPERATOR_EXTENDED(FILE_OPERATOR_COUNT))
-			return &file_opinfo[id - OPERATOR_EXTENDED(0)];
+
+/* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
+DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id) {
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	struct type_operator const *result;
+	result = DeeType_GetPrivateCustomOperatorById(self, id);
+	if (result)
+		return result;
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		result = DeeType_GetPrivateCustomOperatorById(self, id);
+		if (result)
+			return result;
 	}
 	return NULL;
 }
 
-PRIVATE WUNUSED ATTR_INS(5, 4) NONNULL((1)) DREF DeeObject *DCALL
-invoke_operator(DeeObject *self, DREF DeeObject **p_self,
-                uint16_t name, size_t argc, DeeObject *const *argv) {
-	DeeObject *other;
-	ASSERT_OBJECT(self);
-	/* Fast-pass for known operators. */
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) void const *DCALL
+DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
+                     struct opinfo const *__restrict info) {
+	ASSERT(info->oi_class != OPCLASS_CUSTOM);
+	if (info->oi_class != OPCLASS_TYPE) {
+		self = *(DeeTypeObject **)((uintptr_t)self + info->oi_class);
+		if (self == NULL)
+			return NULL;
+	}
+	return *(void const **)((uintptr_t)self + info->oi_offset);
+}
+
+/* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+	struct opinfo const *info;
 	switch (name) {
 
-	case OPERATOR_CONSTRUCTOR: {
-		/* Special wrapper: invoke the construction operator. */
-		DeeObject *kw = NULL;
-		if (DeeObject_AssertType(self, &DeeType_Type))
-			goto err;
-		if (DeeArg_Unpack(argc, argv, "o|o:__constructor__", &other, &kw))
-			goto err;
-		if (DeeObject_AssertTypeExact(other, &DeeTuple_Type))
-			goto err;
-		return DeeObject_NewTupleKw((DeeTypeObject *)self, other, kw);
-	}
-
-	case OPERATOR_COPY:
-		/* Special wrapper: invoke the copy constructor. */
-		if (DeeArg_Unpack(argc, argv, ":__copy__"))
-			goto err;
-		return DeeObject_Copy(self);
-
-	case OPERATOR_DEEPCOPY:
-		/* Special wrapper: invoke the deepcopy constructor. */
-		if (DeeArg_Unpack(argc, argv, ":__deepcopy__"))
-			goto err;
-		return DeeObject_DeepCopy(self);
-
-	case OPERATOR_ASSIGN:
-		if (DeeArg_Unpack(argc, argv, "o:__assign__", &other))
-			goto err;
-		if (DeeObject_Assign(self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_MOVEASSIGN:
-		if (DeeArg_Unpack(argc, argv, "o:__moveassign__", &other))
-			goto err;
-		if (DeeObject_MoveAssign(self, other))
-			goto err;
-		goto return_self;
+	case OPERATOR_CONSTRUCTOR:
+		/* Special case: the constructor operator (which cannot be inherited). */
+		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
+		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
+		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
 
 	case OPERATOR_STR:
-		if (DeeArg_Unpack(argc, argv, ":__str__"))
-			goto err;
-		return DeeObject_Str(self);
+		/* Special case: `operator str' can be implemented in 2 ways */
+		DeeType_mro_foreach_start(self) {
+			if (self->tp_cast.tp_str != NULL ||
+			    self->tp_cast.tp_print != NULL)
+				return true;
+		}
+		DeeType_mro_foreach_end(self);
+		return false;
 
 	case OPERATOR_REPR:
-		if (DeeArg_Unpack(argc, argv, ":__repr__"))
-			goto err;
-		return DeeObject_Repr(self);
-
-	case OPERATOR_BOOL: {
-		int result;
-		if (DeeArg_Unpack(argc, argv, ":__bool__"))
-			goto err;
-		result = DeeObject_Bool(self);
-		if unlikely(result < 0)
-			goto err;
-		return_bool_(result);
-	}
-
-	case OPERATOR_CALL: {
-		DeeObject *kw = NULL;
-		if (DeeArg_Unpack(argc, argv, "o|o:__call__", &other, &kw))
-			goto err;
-		if (DeeObject_AssertTypeExact(other, &DeeTuple_Type))
-			goto err;
-		return DeeObject_CallTupleKw(self, other, kw);
-	}
-
-	case OPERATOR_HASH: {
-		dhash_t result;
-		if (DeeArg_Unpack(argc, argv, ":__hash__"))
-			goto err;
-		result = DeeObject_Hash(self);
-		return DeeInt_NewHash(result);
-	}
-
-	case OPERATOR_ITERNEXT: {
-		DREF DeeObject *result;
-		if (DeeArg_Unpack(argc, argv, ":__next__"))
-			goto err;
-		result = DeeObject_IterNext(self);
-		if (result == ITER_DONE) {
-			DeeError_Throw(&DeeError_StopIteration_instance);
-			result = NULL;
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		DeeType_mro_foreach_start(self) {
+			if (self->tp_cast.tp_repr != NULL ||
+			    self->tp_cast.tp_printrepr != NULL)
+				return true;
 		}
-		return result;
+		DeeType_mro_foreach_end(self);
+		return false;
+
+	default:
+		break;
 	}
 
-	case OPERATOR_INT:
-		if (DeeArg_Unpack(argc, argv, ":__int__"))
-			goto err;
-		return DeeObject_Int(self);
-
-	case OPERATOR_FLOAT: {
-		double value;
-		if (DeeArg_Unpack(argc, argv, ":__float__"))
-			goto err;
-		if (DeeObject_AsDouble(self, &value))
-			goto err;
-		return DeeFloat_New(value);
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
+	if (info) {
+		DeeType_mro_foreach_start(self) {
+			/* TODO: This produces false positives for operators that can only be inherited in groups:
+			 * >> class Base {
+			 * >>     operator == (other: Base) { ... }
+			 * >>     operator < (other: Base) { ... }
+			 * >> }
+			 * >> class Sub: Base {
+			 * >>     operator == (other: Sub) { ... }
+			 * >> }
+			 * >> // Presence of "operator ==" in `Sub' would prevent inheritance of "operator <".
+			 * >> assert !Sub.hasoperator("<");
+			 */
+			if (DeeType_GetOpPointer(self, info) != NULL)
+				return true;
+		}
+		DeeType_mro_foreach_end(self);
 	}
 
-	case OPERATOR_INV:
-		if (DeeArg_Unpack(argc, argv, ":__inv__"))
-			goto err;
-		return DeeObject_Inv(self);
+	/* Fallback: check for a custom per-type operator. */
+	return DeeType_GetCustomOperatorById(self, name) != NULL;
+}
 
-	case OPERATOR_POS:
-		if (DeeArg_Unpack(argc, argv, ":__pos__"))
-			goto err;
-		return DeeObject_Pos(self);
+/* Same as `DeeType_HasOperator()', however don't return `true' if the
+ * operator has been inherited implicitly from a base-type of `self'. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+	void const *my_ptr;
+	struct opinfo const *info;
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	/* Special case: must look at what's implemented by the class! */
+	if (DeeType_IsClass(self))
+		return DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name) != NULL;
+	switch (name) {
 
-	case OPERATOR_NEG:
-		if (DeeArg_Unpack(argc, argv, ":__neg__"))
-			goto err;
-		return DeeObject_Neg(self);
+	case OPERATOR_CONSTRUCTOR:
+		/* Special case: the constructor operator (which cannot be inherited). */
+		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
+		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
+		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
 
-	case OPERATOR_ADD:
-		if (DeeArg_Unpack(argc, argv, "o:__add__", &other))
-			goto err;
-		return DeeObject_Add(self, other);
+	case OPERATOR_STR:
+		/* Special case: `operator str' can be implemented in 2 ways */
+		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
+			return false;
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
+			    self->tp_cast.tp_print == base->tp_cast.tp_print)
+				return false;
+		}
+		return true;
 
-	case OPERATOR_SUB:
-		if (DeeArg_Unpack(argc, argv, "o:__sub__", &other))
-			goto err;
-		return DeeObject_Sub(self, other);
+	case OPERATOR_REPR:
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
+			return false;
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
+			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
+				return false;
+		}
+		return true;
 
-	case OPERATOR_MUL:
-		if (DeeArg_Unpack(argc, argv, "o:__mul__", &other))
-			goto err;
-		return DeeObject_Mul(self, other);
-
-	case OPERATOR_DIV:
-		if (DeeArg_Unpack(argc, argv, "o:__div__", &other))
-			goto err;
-		return DeeObject_Div(self, other);
-
-	case OPERATOR_MOD:
-		if (DeeArg_Unpack(argc, argv, "o:__mod__", &other))
-			goto err;
-		return DeeObject_Mod(self, other);
-
-	case OPERATOR_SHL:
-		if (DeeArg_Unpack(argc, argv, "o:__shl__", &other))
-			goto err;
-		return DeeObject_Shl(self, other);
-
-	case OPERATOR_SHR:
-		if (DeeArg_Unpack(argc, argv, "o:__shr__", &other))
-			goto err;
-		return DeeObject_Shr(self, other);
-
-	case OPERATOR_AND:
-		if (DeeArg_Unpack(argc, argv, "o:__and__", &other))
-			goto err;
-		return DeeObject_And(self, other);
-
-	case OPERATOR_OR:
-		if (DeeArg_Unpack(argc, argv, "o:__or__", &other))
-			goto err;
-		return DeeObject_Or(self, other);
-
-	case OPERATOR_XOR:
-		if (DeeArg_Unpack(argc, argv, "o:__xor__", &other))
-			goto err;
-		return DeeObject_Xor(self, other);
-
-	case OPERATOR_POW:
-		if (DeeArg_Unpack(argc, argv, "o:__pow__", &other))
-			goto err;
-		return DeeObject_Pow(self, other);
-
-	case OPERATOR_INC:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, ":__inc__"))
-			goto err;
-		if (DeeObject_Inc(p_self))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_DEC:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, ":__dec__"))
-			goto err;
-		if (DeeObject_Dec(p_self))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_ADD:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__iadd__", &other))
-			goto err;
-		if (DeeObject_InplaceAdd(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_SUB:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__isub__", &other))
-			goto err;
-		if (DeeObject_InplaceSub(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_MUL:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__imul__", &other))
-			goto err;
-		if (DeeObject_InplaceMul(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_DIV:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__idiv__", &other))
-			goto err;
-		if (DeeObject_InplaceDiv(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_MOD:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__imod__", &other))
-			goto err;
-		if (DeeObject_InplaceMod(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_SHL:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__ishl__", &other))
-			goto err;
-		if (DeeObject_InplaceShl(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_SHR:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__ishr__", &other))
-			goto err;
-		if (DeeObject_InplaceShr(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_AND:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__iand__", &other))
-			goto err;
-		if (DeeObject_InplaceAnd(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_OR:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__ior__", &other))
-			goto err;
-		if (DeeObject_InplaceOr(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_XOR:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__ixor__", &other))
-			goto err;
-		if (DeeObject_InplaceXor(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_INPLACE_POW:
-		if unlikely(!p_self)
-			goto requires_inplace;
-		if (DeeArg_Unpack(argc, argv, "o:__ipow__", &other))
-			goto err;
-		if (DeeObject_InplacePow(p_self, other))
-			goto err;
-		goto return_self;
-
-	case OPERATOR_EQ:
-		if (DeeArg_Unpack(argc, argv, "o:__eq__", &other))
-			goto err;
-		return DeeObject_CompareEqObject(self, other);
-
-	case OPERATOR_NE:
-		if (DeeArg_Unpack(argc, argv, "o:__ne__", &other))
-			goto err;
-		return DeeObject_CompareNeObject(self, other);
-
-	case OPERATOR_LO:
-		if (DeeArg_Unpack(argc, argv, "o:__lo__", &other))
-			goto err;
-		return DeeObject_CompareLoObject(self, other);
-
-	case OPERATOR_LE:
-		if (DeeArg_Unpack(argc, argv, "o:__le__", &other))
-			goto err;
-		return DeeObject_CompareLeObject(self, other);
-
-	case OPERATOR_GR:
-		if (DeeArg_Unpack(argc, argv, "o:__gr__", &other))
-			goto err;
-		return DeeObject_CompareGrObject(self, other);
-
-	case OPERATOR_GE:
-		if (DeeArg_Unpack(argc, argv, "o:__ge__", &other))
-			goto err;
-		return DeeObject_CompareGeObject(self, other);
-
-	case OPERATOR_ITERSELF:
-		if (DeeArg_Unpack(argc, argv, ":__iter__"))
-			goto err;
-		return DeeObject_IterSelf(self);
-
-	case OPERATOR_SIZE:
-		if (DeeArg_Unpack(argc, argv, ":__size__"))
-			goto err;
-		return DeeObject_SizeObject(self);
-
-	case OPERATOR_CONTAINS:
-		if (DeeArg_Unpack(argc, argv, "o:__contains__", &other))
-			goto err;
-		return DeeObject_ContainsObject(self, other);
-
-	case OPERATOR_GETITEM:
-		if (DeeArg_Unpack(argc, argv, "o:__getitem__", &other))
-			goto err;
-		return DeeObject_GetItem(self, other);
-
-	case OPERATOR_DELITEM:
-		if (DeeArg_Unpack(argc, argv, "o:__delitem__", &other))
-			goto err;
-		if (DeeObject_DelItem(self, other))
-			goto err;
-		goto return_none_;
-
-	{
-		DeeObject *begin, *end;
-	case OPERATOR_SETITEM:
-		if (DeeArg_Unpack(argc, argv, "oo:__setitem__", &begin, &other))
-			goto err;
-		if (DeeObject_SetItem(self, begin, other))
-			goto err;
-		return_reference_(other);
-	case OPERATOR_GETRANGE:
-		if (DeeArg_Unpack(argc, argv, "oo:__getrange__", &begin, &end))
-			goto err;
-		return DeeObject_GetRange(self, begin, end);
-	case OPERATOR_DELRANGE:
-		if (DeeArg_Unpack(argc, argv, "oo:__delrange__", &begin, &end))
-			goto err;
-		if (DeeObject_DelRange(self, begin, end))
-			goto err;
-		goto return_none_;
-	case OPERATOR_SETRANGE:
-		if (DeeArg_Unpack(argc, argv, "ooo:__setrange__", &begin, &end, &other))
-			goto err;
-		if (DeeObject_SetRange(self, begin, end, other))
-			goto err;
-		return_reference_(other);
+	default:
+		break;
 	}
-
-	case OPERATOR_GETATTR:
-		if (DeeArg_Unpack(argc, argv, "o:__getattr__", &other))
-			goto err;
-		if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-			goto err;
-		return DeeObject_GetAttr(self, other);
-
-	case OPERATOR_DELATTR:
-		if (DeeArg_Unpack(argc, argv, "o:__delattr__", &other))
-			goto err;
-		if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-			goto err;
-		if (DeeObject_DelAttr(self, other))
-			goto err;
-		goto return_none_;
-
-	case OPERATOR_SETATTR: {
-		DeeObject *value;
-		if (DeeArg_Unpack(argc, argv, "oo:__setattr__", &other, &value))
-			goto err;
-		if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-			goto err;
-		if (DeeObject_SetAttr(self, other, value))
-			goto err;
-		return_reference_(value);
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
+	if (info == NULL)
+		return false; /* No such operator */
+	my_ptr = DeeType_GetOpPointer(self, info);
+	if (my_ptr == NULL) {
+		/* Not a standard operator. Check if it may be defined by the type itself */
+		return DeeType_GetPrivateCustomOperatorById(self, name) != NULL;
 	}
-
-	case OPERATOR_ENUMATTR:
-		if (DeeArg_Unpack(argc, argv, ":__enumattr__"))
-			goto err;
-		return DeeObject_New(&DeeEnumAttr_Type, 1, (DeeObject **)&self);
-
-	case OPERATOR_ENTER:
-		if (DeeArg_Unpack(argc, argv, ":__enter__"))
-			goto err;
-		if (DeeObject_Enter(self))
-			goto err;
-		goto return_none_;
-
-	case OPERATOR_LEAVE:
-		if (DeeArg_Unpack(argc, argv, ":__leave__"))
-			goto err;
-		if (DeeObject_Leave(self))
-			goto err;
-		goto return_none_;
-
-
-		/* Hidden private operators */
-	case OPERATOR_VISIT:
-		if (DeeArg_Unpack(argc, argv, ":__visit__"))
-			goto err;
-		return (DREF DeeObject *)DeeGC_NewReferred(self);
-
-	case OPERATOR_CLEAR:
-		if (DeeArg_Unpack(argc, argv, ":__clear__"))
-			goto err;
-		DeeObject_Clear(self);
-		goto return_none_;
-
-	case OPERATOR_PCLEAR: {
-		unsigned int gc_prio;
-		if (DeeArg_Unpack(argc, argv, "u:__pclear__", &gc_prio))
-			goto err;
-		DeeObject_PClear(self, gc_prio);
-		goto return_none_;
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		if (my_ptr == DeeType_GetOpPointer(base, info))
+			return false; /* Base has same impl -> operator was inherited */
 	}
+	return true; /* Operator is distinct from all bases. */
+}
 
-	case OPERATOR_GETBUF: {
-		bool writable = false;
-		size_t start = 0, end = (size_t)-1;
-		if (DeeArg_Unpack(argc, argv, "|b" UNPuSIZ UNPuSIZ ":__getbuf__", &writable, &start, &end))
-			goto err;
-		return DeeObject_Bytes(self,
-		                       writable ? Dee_BUFFER_FWRITABLE
-		                                : Dee_BUFFER_FREADONLY,
-		                       start,
-		                       end);
-	}	break;
-
-	default: break;
+/* Return the type from `self' inherited its operator `name'.
+ * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
+	void const *my_ptr;
+	struct opinfo const *info;
+	DeeTypeObject *base, *result;
+	DeeTypeMRO mro;
+	/* Special case: must look at what's implemented by the class! */
+	if (DeeType_IsClass(self)) {
+		if (!DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name)) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (DeeType_HasPrivateOperator(base, name))
+					return base;
+			}
+		}
+		return (DeeTypeObject *)self;
 	}
-	{
-		/* NOTE: We must query operator information on the
-		 *       type-type of `self'. Not the regular type! */
-		struct opinfo const *info;
-		DeeTypeObject *typetype;
-		typetype = Dee_TYPE(self);
-		/* Special handling for unwrapping super objects. */
-		if (typetype == &DeeSuper_Type)
-			typetype = DeeSuper_TYPE(self);
-		typetype = Dee_TYPE(typetype);
-		info     = Dee_OperatorInfo(typetype, name);
-		if (info) {
-			if (typetype == &DeeFileType_Type) {
-				/* Invoke file operators. */
-				switch (name) {
+	switch (name) {
 
-					/* >> operator __read__(buf: <Buffer>): int;
-					 * >> operator __read__(buf: <Buffer>, max_size: int): int;
-					 * >> operator __read__(buf: <Buffer>, start: int, end: int): int;
-					 * >> operator __read__(max_bytes: int): Bytes; 
-					 * >> operator __read__(): Bytes; */
-				case FILE_OPERATOR_READ: {
-					DeeObject *data  = NULL;
-					DeeObject *begin = NULL;
-					DeeObject *end   = NULL;
-					DeeBuffer buf;
-					size_t buf_begin, buf_end;
-					size_t result;
-					if (DeeArg_Unpack(argc, argv, "|ooo:__read__", &data, &begin, &end))
-						goto err;
-					if (!data)
-						return DeeFile_ReadBytes(self, (size_t)-1, false);
-					if (end) {
-						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
-							goto err;
-						if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
-							goto err;
-					} else if (begin) {
-						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
-							goto err;
-						buf_begin = 0;
-					} else {
-						if (DeeInt_Check(data)) {
-							size_t max_bytes;
-							if (DeeInt_AsSize(data, &max_bytes))
-								goto err;
-							return DeeFile_ReadBytes(self, max_bytes, false);
-						}
-						buf_begin = 0;
-						buf_end   = (size_t)-1;
-					}
-					if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FWRITABLE))
-						goto err;
-					if (buf_end > buf.bb_size)
-						buf_end = buf.bb_size;
-					if (buf_begin >= buf_end) {
-						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
-						return_reference_(DeeInt_Zero);
-					}
-					result = DeeFile_Read(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
-					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
-					if unlikely(result == (size_t)-1)
-						goto err;
-					return DeeInt_NewSize(result);
-				}	break;
+	case OPERATOR_CONSTRUCTOR:
+		/* Special case: the constructor operator (which cannot be inherited). */
+		return (DeeTypeObject *)self;
 
-					/* >> operator __write__(buf: <Buffer>): int;
-					 * >> operator __write__(buf: <Buffer>, max_size: int): int;
-					 * >> operator __write__(buf: <Buffer>, start: int, end: int): int; */
-				case FILE_OPERATOR_WRITE: {
-					DeeObject *data  = NULL;
-					DeeObject *begin = NULL;
-					DeeObject *end   = NULL;
-					DeeBuffer buf;
-					size_t buf_begin, buf_end;
-					size_t result;
-					if (DeeArg_Unpack(argc, argv, "o|oo:__write__", &data, &begin, &end))
-						goto err;
-					if (end) {
-						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
-							goto err;
-						if (DeeObject_AsSSize(end, (dssize_t *)&buf_end))
-							goto err;
-					} else if (begin) {
-						if (DeeObject_AsSSize(begin, (dssize_t *)&buf_end))
-							goto err;
-						buf_begin = 0;
-					} else {
-						buf_begin = 0;
-						buf_end   = (size_t)-1;
-					}
-					if (DeeObject_GetBuf(data, &buf, Dee_BUFFER_FREADONLY))
-						goto err;
-					if (buf_end > buf.bb_size)
-						buf_end = buf.bb_size;
-					if (buf_begin >= buf_end) {
-						DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
-						return_reference_(DeeInt_Zero);
-					}
-					result = DeeFile_Write(self, (uint8_t *)buf.bb_base + buf_begin, buf_end - buf_begin);
-					DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
-					if unlikely(result == (size_t)-1)
-						goto err;
-					return DeeInt_NewSize(result);
-				}	break;
-
-					/* >> operator __seek__(off: int, whence: int): int; */
-				case FILE_OPERATOR_SEEK: {
-					doff_t off;
-					dpos_t result;
-					int whence;
-					whence = SEEK_SET;
-					if (DeeArg_Unpack(argc, argv, UNPdN(DEE_SIZEOF_DEE_POS_T) "|d:__seek__", &off, &whence))
-						goto err;
-					result = DeeFile_Seek(self, off, whence);
-					if unlikely(result == (dpos_t)-1)
-						goto err;
-					return DeeInt_NewUInt64(result);
-				}	break;
-
-					/* >> operator __sync__(); */
-				case FILE_OPERATOR_SYNC: {
-					if (DeeArg_Unpack(argc, argv, ":__sync__"))
-						goto err;
-					if (DeeFile_Sync(self))
-						goto err;
-					goto return_none_;
-				}	break;
-
-					/* >> operator __trunc__(length: int);
-					 * >> operator __trunc__(): int; */
-				case FILE_OPERATOR_TRUNC: {
-					if (argc) {
-						dpos_t length;
-						if unlikely(argc != 1) {
-							err_invalid_argc("__turnc__", argc, 0, 1);
-							goto err;
-						}
-						if (DeeObject_AsUInt64(argv[0], &length))
-							goto err;
-						if (DeeFile_Trunc(self, length))
-							goto err;
-						goto return_none_;
-					} else {
-						dpos_t length;
-						if (DeeFile_TruncHere(self, &length))
-							goto err;
-						return DeeInt_NewUInt64(length);
-					}
-				}	break;
-
-					/* >> operator __close__() */
-				case FILE_OPERATOR_CLOSE: {
-					if (DeeArg_Unpack(argc, argv, ":__close__"))
-						goto err;
-					if (DeeFile_Close(self))
-						goto err;
-					goto return_none_;
-				}	break;
-
-					/* >> operator __pread__(buf: <Buffer>, pos: int): int;
-					 * >> operator __pread__(buf: <Buffer>, max_size: int, pos: int): int;
-					 * >> operator __pread__(buf: <Buffer>, start: int, end: int, pos: int): int;
-					 * >> operator __pread__(max_bytes: int, pos: int): Bytes; 
-					 * >> operator __pread__(pos: int): Bytes; */
-				case FILE_OPERATOR_PREAD: {
-					DeeObject *a;
-					DeeObject *b = NULL;
-					DeeObject *c = NULL;
-					DeeObject *d = NULL;
-					dpos_t pos;
-					size_t start, end;
-					size_t result;
-					DeeBuffer buf;
-					if (DeeArg_Unpack(argc, argv, "o|ooo:__pread__", &a, &b, &c, &d))
-						goto err;
-					if (d) {
-						if (DeeObject_AsUInt64(d, &pos))
-							goto err;
-						if (DeeObject_AsSSize(c, (dssize_t *)&end))
-							goto err;
-						if (DeeObject_AsSSize(b, (dssize_t *)&start))
-							goto err;
-					} else if (c) {
-						if (DeeObject_AsUInt64(c, &pos))
-							goto err;
-						if (DeeObject_AsSSize(b, (dssize_t *)&end))
-							goto err;
-						start = 0;
-					} else if (b) {
-						if (DeeObject_AsUInt64(b, &pos))
-							goto err;
-						if (DeeInt_Check(a)) {
-							if (DeeObject_AsSSize(a, (dssize_t *)&end))
-								goto err;
-							return DeeFile_PReadBytes(self, end, pos, false);
-						}
-						start = 0;
-						end   = (size_t)-1;
-					} else {
-						if (DeeObject_AsUInt64(a, &pos))
-							goto err;
-						return DeeFile_PReadBytes(self, (size_t)-1, pos, false);
-					}
-					if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FWRITABLE))
-						goto err;
-					if (end > buf.bb_size)
-						end = buf.bb_size;
-					if (start >= end) {
-						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
-						return_reference_(DeeInt_Zero);
-					}
-					result = DeeFile_PRead(self, (uint8_t *)buf.bb_base + start, end - start, pos);
-					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
-					if unlikely(result == (size_t)-1)
-						goto err;
-					return DeeInt_NewSize(result);
-				}	break;
-
-					/* >> operator __pwrite__(data: <Buffer>, pos: int): int;
-					 * >> operator __pwrite__(data: <Buffer>, max_size: int, pos: int): int;
-					 * >> operator __pwrite__(data: <Buffer>, start: int, end: int, pos: int): int; */
-				case FILE_OPERATOR_PWRITE: {
-					DeeObject *a;
-					DeeObject *b;
-					DeeObject *c = NULL;
-					DeeObject *d = NULL;
-					dpos_t pos;
-					size_t start, end;
-					size_t result;
-					DeeBuffer buf;
-					if (DeeArg_Unpack(argc, argv, "oo|oo:__pwrite__", &a, &b, &c, &d))
-						goto err;
-					if (d) {
-						if (DeeObject_AsUInt64(d, &pos))
-							goto err;
-						if (DeeObject_AsSSize(c, (dssize_t *)&end))
-							goto err;
-						if (DeeObject_AsSSize(b, (dssize_t *)&start))
-							goto err;
-					} else if (c) {
-						if (DeeObject_AsUInt64(c, &pos))
-							goto err;
-						if (DeeObject_AsSSize(b, (dssize_t *)&end))
-							goto err;
-						start = 0;
-					} else {
-						if (DeeObject_AsUInt64(b, &pos))
-							goto err;
-						start = 0;
-						end   = (size_t)-1;
-					}
-					if (DeeObject_GetBuf(a, &buf, Dee_BUFFER_FREADONLY))
-						goto err;
-					if (end > buf.bb_size)
-						end = buf.bb_size;
-					if (start >= end) {
-						DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
-						return_reference_(DeeInt_Zero);
-					}
-					result = DeeFile_PWrite(self, (uint8_t *)buf.bb_base + start, end - start, pos);
-					DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
-					if unlikely(result == (size_t)-1)
-						goto err;
-					return DeeInt_NewSize(result);
-				}	break;
-
-				case FILE_OPERATOR_GETC: {
-					int result;
-					if (DeeArg_Unpack(argc, argv, ":__getc__"))
-						goto err;
-					result = DeeFile_Getc(self);
-					if unlikely(result == GETC_ERR)
-						goto err;
-					return DeeInt_NewInt(result);
-				}	break;
-
-				case FILE_OPERATOR_UNGETC: {
-					int ch;
-					if (DeeArg_Unpack(argc, argv, "d:__ungetc__", &ch))
-						goto err;
-					ch = DeeFile_Ungetc(self, ch);
-					if unlikely(ch == GETC_ERR)
-						goto err;
-					return_bool_(ch != GETC_EOF);
-				}	break;
-
-				case FILE_OPERATOR_PUTC: {
-					int ch;
-					if (DeeArg_Unpack(argc, argv, "d:__putc__", &ch))
-						goto err;
-					ch = DeeFile_Putc(self, ch);
-					if unlikely(ch == GETC_ERR)
-						goto err;
-					return_bool_(ch != GETC_EOF);
-				}	break;
-
-				default: break;
+	case OPERATOR_STR:
+		/* Special case: `operator str' can be implemented in 2 ways */
+		result = (DeeTypeObject *)self;
+		if (self->tp_cast.tp_str || self->tp_cast.tp_print) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
+				    self->tp_cast.tp_print == base->tp_cast.tp_print) {
+					result = base;
+				} else {
+					break;
 				}
 			}
-			if (info->oi_type == OPTYPE_SPECIAL)
-				goto special_operator;
-			if (info->oi_private)
-				goto private_operator;
-			if (info->oi_type & OPTYPE_INPLACE && !p_self)
-				goto requires_inplace;
 		}
+		return result;
 
-		/* XXX: What about making a call to `operators.operator()' ??? */
-		DeeError_Throwf(&DeeError_TypeError,
-		                "Cannot invoke unknown operator #%X", name);
-		goto err;
-special_operator:
-		DeeError_Throwf(&DeeError_TypeError,
-		                "Cannot invoke special `operator %s' (`__%s__') directly",
-		                info->oi_uname, info->oi_sname);
-		goto err;
-private_operator:
-		DeeError_Throwf(&DeeError_TypeError,
-		                "Cannot invoke private `operator %s' (`__%s__') directly",
-		                info->oi_uname, info->oi_sname);
-		goto err;
-requires_inplace:
-		typetype = Dee_TYPE(self);
-		if (typetype == &DeeSuper_Type)
-			typetype = DeeSuper_TYPE(self);
-		typetype = Dee_TYPE(typetype);
-		info     = Dee_OperatorInfo(typetype, name);
-		if likely(info) {
-			DeeError_Throwf(&DeeError_TypeError,
-			                "Cannot invoke inplace `operator %s' (`__%s__') without l-value",
-			                info->oi_uname, info->oi_sname);
-		} else {
-			DeeError_Throwf(&DeeError_TypeError,
-			                "Cannot invoke inplace operator #%X without l-value",
-			                name);
+	case OPERATOR_REPR:
+		/* Special case: `operator repr' can be implemented in 2 ways */
+		result = (DeeTypeObject *)self;
+		if (self->tp_cast.tp_repr || self->tp_cast.tp_printrepr) {
+			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+				if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
+				    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr) {
+					result = base;
+				} else {
+					break;
+				}
+			}
 		}
-err:
-		return NULL;
-return_none_:
-		return_none;
-return_self:
-		return_reference_(self);
+		return result;
+
+	default:
+		break;
 	}
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
+	if (info == NULL) {
+		/* Not a standard operator. Check if it may be
+		 * defined by the type or one of its true bases. */
+		if (DeeType_GetPrivateCustomOperatorById(self, name) != NULL)
+			return (DeeTypeObject *)self;
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (DeeType_GetPrivateCustomOperatorById(base, name) != NULL)
+				return base;
+		}
+		return NULL; /* No such operator */
+	}
+	my_ptr = DeeType_GetOpPointer(self, info);
+	if (my_ptr == NULL)
+		return NULL; /* Operator not implemented */
+	result = (DeeTypeObject *)self;
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		if (my_ptr == DeeType_GetOpPointer(base, info)) {
+			result = base;
+		} else {
+			break;
+		}
+	}
+	return result; /* Operator is distinct from all bases. */
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetOperatorContainerOrigin(DeeTypeObject *__restrict self,
+                                   struct opinfo const *info,
+                                   void const *container_pointer) {
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	ASSERT(info->oi_class != OPCLASS_TYPE);
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		void *base_container = *(void **)((byte_t *)base + info->oi_class);
+		if (base_container == container_pointer)
+			return base;
+	}
+	return NULL;
+}
+
+/* Ensure that "self" is implementing "info", possibly inheriting it from a base type.
+ * @return: true:  Success
+ * @return: false: Error (the operator does not appear anywhere in `self.__mro__') */
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
+                               struct opinfo const *info) {
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		void const *base_ptr = DeeType_GetOpPointer(base, info);
+		if (base_ptr != NULL) {
+			/* Found a base that is implementing this operator!
+			 * -> inheirt it! */
+			if (info->oi_class == OPCLASS_TYPE) {
+				atomic_cmpxch_or_write((void **)((byte_t *)self + info->oi_offset), NULL, base_ptr);
+			} else {
+				DeeTypeObject *self_container_origin;
+				void **p_self_container = (void **)((byte_t *)self + info->oi_class);
+				void *base_container = *(void **)((byte_t *)base + info->oi_class);
+				void *self_container = atomic_read(p_self_container);
+				if (self_container == NULL) {
+					atomic_cmpxch_or_write(p_self_container, NULL, base_container);
+					self_container = atomic_read(p_self_container);
+					return true;
+				}
+				ASSERT(self_container != NULL);
+				ASSERT(base_container != NULL);
+
+				/* Ensure that "self_container" isn't inherited. If it is, then we must inherit the
+				 * operator not from the MRO of "self", but from that of the container's origin */
+				self_container_origin = DeeType_GetOperatorContainerOrigin(self, info, self_container);
+				if (self_container_origin != NULL && self_container_origin != self)
+					return DeeType_InheritGenericOperator(self_container_origin, info);
+				atomic_cmpxch_or_write((void **)((byte_t *)self_container + info->oi_offset), NULL, base_ptr);
+			}
+#if 1
+			Dee_DPRINTF("[RT] Inherit `" OPNAME("%s") "' from %q into %q\n",
+			            info->oi_sname, base->tp_name, self->tp_name);
+#endif
+			return true;
+		}
+	}
+
+	/* Fallback: re-check if the original type itself was already implementing the type. */
+	return DeeType_GetOpPointer(self, info) != NULL;
+}
+
+/* Check if the callback slot for `name' in `self' is populated.
+ * If it isn't, then search the MRO of `self' for the first type
+ * that *does* implement said operator, and cache that base's
+ * callback in `self'
+ * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
+ * @return: false: `self' doesn't implement the operator, and neither does one of its bases. In this
+ *                 case, trying to invoke the operator will result in a NotImplemented error. */
+PUBLIC NONNULL((1)) bool DCALL
+DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name) {
+	/* Some builtin operators require special handling in order to be inherited. */
+	switch (name) {
+	case OPERATOR_CONSTRUCTOR:
+		return self->tp_init.tp_var.tp_ctor ||
+		       self->tp_init.tp_var.tp_any_ctor ||
+		       self->tp_init.tp_var.tp_any_ctor_kw ||
+		       type_inherit_constructors(self);
+	case OPERATOR_STR:
+		/* "str" and "repr" are special in that we can *always* substitude str<=>print and repr<=>printrepr
+		 * As such, invoke the inherit function even if one has already been implemented, but the other hasn't. */
+		return (self->tp_cast.tp_str && self->tp_cast.tp_print) || type_inherit_str(self);
+	case OPERATOR_REPR:
+		return (self->tp_cast.tp_repr && self->tp_cast.tp_printrepr) || type_inherit_repr(self);
+	case OPERATOR_BOOL:
+		return self->tp_cast.tp_bool || type_inherit_bool(self);
+	case OPERATOR_CALL:
+		return self->tp_call || self->tp_call_kw || type_inherit_call(self);
+	case OPERATOR_HASH:
+		return (self->tp_cmp && (self->tp_cmp->tp_hash)) || type_inherit_hash(self);
+	case OPERATOR_INT:
+		return (self->tp_math && (self->tp_math->tp_int || self->tp_math->tp_int32 ||
+		                          self->tp_math->tp_int64 || self->tp_math->tp_double)) ||
+		       type_inherit_int(self);
+	case OPERATOR_INV:
+		return (self->tp_math && (self->tp_math->tp_inv)) || type_inherit_inv(self);
+	case OPERATOR_POS:
+		return (self->tp_math && (self->tp_math->tp_pos)) || type_inherit_pos(self);
+	case OPERATOR_NEG:
+		return (self->tp_math && (self->tp_math->tp_neg)) || type_inherit_neg(self);
+	case OPERATOR_ADD:
+	case OPERATOR_SUB:
+	case OPERATOR_INC:
+	case OPERATOR_DEC:
+	case OPERATOR_INPLACE_ADD:
+	case OPERATOR_INPLACE_SUB:
+		return (self->tp_math && (self->tp_math->tp_add || self->tp_math->tp_sub ||
+		                          self->tp_math->tp_inc || self->tp_math->tp_dec ||
+		                          self->tp_math->tp_inplace_add || self->tp_math->tp_inplace_sub)) ||
+		       type_inherit_add(self);
+	case OPERATOR_MUL:
+	case OPERATOR_INPLACE_MUL:
+		return (self->tp_math && (self->tp_math->tp_mul || self->tp_math->tp_inplace_mul)) || type_inherit_mul(self);
+	case OPERATOR_DIV:
+	case OPERATOR_INPLACE_DIV:
+		return (self->tp_math && (self->tp_math->tp_div || self->tp_math->tp_inplace_div)) || type_inherit_div(self);
+	case OPERATOR_MOD:
+	case OPERATOR_INPLACE_MOD:
+		return (self->tp_math && (self->tp_math->tp_mod || self->tp_math->tp_inplace_mod)) || type_inherit_mod(self);
+	case OPERATOR_SHL:
+	case OPERATOR_INPLACE_SHL:
+		return (self->tp_math && (self->tp_math->tp_shl || self->tp_math->tp_inplace_shl)) || type_inherit_shl(self);
+	case OPERATOR_SHR:
+	case OPERATOR_INPLACE_SHR:
+		return (self->tp_math && (self->tp_math->tp_shr || self->tp_math->tp_inplace_shr)) || type_inherit_shr(self);
+	case OPERATOR_AND:
+	case OPERATOR_INPLACE_AND:
+		return (self->tp_math && (self->tp_math->tp_and || self->tp_math->tp_inplace_and)) || type_inherit_and(self);
+	case OPERATOR_OR:
+	case OPERATOR_INPLACE_OR:
+		return (self->tp_math && (self->tp_math->tp_or || self->tp_math->tp_inplace_or)) || type_inherit_or(self);
+	case OPERATOR_XOR:
+	case OPERATOR_INPLACE_XOR:
+		return (self->tp_math && (self->tp_math->tp_xor || self->tp_math->tp_inplace_xor)) || type_inherit_xor(self);
+	case OPERATOR_POW:
+	case OPERATOR_INPLACE_POW:
+		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || type_inherit_pow(self);
+	case OPERATOR_EQ:
+	case OPERATOR_NE:
+	case OPERATOR_LO:
+	case OPERATOR_LE:
+	case OPERATOR_GR:
+	case OPERATOR_GE:
+		return (self->tp_cmp && (self->tp_cmp->tp_eq || self->tp_cmp->tp_ne ||
+		                         self->tp_cmp->tp_lo || self->tp_cmp->tp_le ||
+		                         self->tp_cmp->tp_gr || self->tp_cmp->tp_ge)) ||
+		       type_inherit_compare(self);
+	case OPERATOR_ITERNEXT:
+		return (self->tp_iter_next) || type_inherit_iternext(self);
+	case OPERATOR_ITERSELF:
+	case OPERATOR_SIZE:
+	case OPERATOR_CONTAINS:
+	case OPERATOR_GETITEM:
+	case OPERATOR_DELITEM:
+	case OPERATOR_SETITEM:
+	case OPERATOR_GETRANGE:
+	case OPERATOR_DELRANGE:
+	case OPERATOR_SETRANGE:
+		if (!self->tp_seq)
+			type_inherit_nsi(self);
+		switch (name) {
+		case OPERATOR_ITERSELF:
+			return (self->tp_seq && (self->tp_seq->tp_iter_self)) || type_inherit_iterself(self);
+		case OPERATOR_SIZE:
+			return (self->tp_seq && (self->tp_seq->tp_size)) || type_inherit_size(self);
+		case OPERATOR_CONTAINS:
+			return (self->tp_seq && (self->tp_seq->tp_contains)) || type_inherit_contains(self);
+		case OPERATOR_GETITEM:
+			return (self->tp_seq && (self->tp_seq->tp_get)) || type_inherit_getitem(self);
+		case OPERATOR_DELITEM:
+			return (self->tp_seq && (self->tp_seq->tp_del)) || type_inherit_delitem(self);
+		case OPERATOR_SETITEM:
+			return (self->tp_seq && (self->tp_seq->tp_set)) || type_inherit_setitem(self);
+		case OPERATOR_GETRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_get)) || type_inherit_getrange(self);
+		case OPERATOR_DELRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_del)) || type_inherit_delrange(self);
+		case OPERATOR_SETRANGE:
+			return (self->tp_seq && (self->tp_seq->tp_range_set)) || type_inherit_setrange(self);
+		default: __builtin_unreachable();
+		}
+		__builtin_unreachable();
+	case OPERATOR_ENTER:
+	case OPERATOR_LEAVE:
+		return (self->tp_with && (self->tp_with->tp_enter || self->tp_with->tp_leave)) || type_inherit_with(self);
+	case OPERATOR_GETBUF:
+		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) || type_inherit_buffer(self);
+	default: break;
+	}
+
+	/* Try to inherit a generic operator. */
+	{
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
+		if (info)
+			return DeeType_InheritGenericOperator(self, info);
+	}
+
+	/* Check if "name" is implemented as a custom operator. */
+	{
+		struct type_operator const *info;
+		info = DeeType_GetCustomOperatorById(self, name);
+		if (info)
+			return true; /* Operator is present, and it's custom. */
+	}
+	return false;
+}
+
+
+
+/* TODO: DEPRECATED BEGIN */
+PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) uint16_t DCALL
+Dee_OperatorFromNameLen(DeeTypeObject *typetype,
+                        char const *__restrict name,
+                        size_t namelen) {
+	struct opinfo const *info;
+	if (typetype == NULL)
+		typetype = &DeeType_Type;
+	info = DeeTypeType_GetOperatorByNameLen(typetype, name, namelen);
+	return info ? info->oi_id : (uint16_t)-1;
+}
+
+PUBLIC ATTR_PURE WUNUSED NONNULL((2)) uint16_t DCALL
+Dee_OperatorFromName(DeeTypeObject *typetype,
+                     char const *__restrict name) {
+	struct opinfo const *info;
+	if (typetype == NULL)
+		typetype = &DeeType_Type;
+	info = DeeTypeType_GetOperatorByName(typetype, name);
+	return info ? info->oi_id : (uint16_t)-1;
+}
+/* TODO: DEPRECATED END */
+
+
+PRIVATE WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *DCALL
+invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self,
+                uint16_t name, size_t argc, DeeObject *const *argv) {
+
+	/* Special case needed for super-wrappers. */
+	if (tp_self == &DeeSuper_Type) {
+		tp_self = DeeSuper_TYPE(self);
+		if (p_self) {
+			DREF DeeObject *result;
+			DeeObject *real_self = DeeSuper_SELF(self);
+			Dee_Incref(real_self);
+			ASSERT(self == *p_self);
+			result = invoke_operator(tp_self, real_self, &real_self, name, argc, argv);
+			ASSERT(self == *p_self);
+			if unlikely(!result) {
+				Dee_DecrefNokill(real_self);
+			} else if (real_self == DeeSuper_SELF(self)) {
+				Dee_DecrefNokill(real_self);
+			} else {
+				Dee_Decref(self);
+				*p_self = real_self; /* Inherit reference */
+			}
+			return result;
+		}
+		self = DeeSuper_SELF(self);
+	}
+
+	/* Check for standard operators the type type-type of "self". */
+	{
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorById(Dee_TYPE(tp_self), name);
+		if (info) {
+			/* Invoke operator using "info" */
+			ASSERT(info->oi_invoke);
+			ASSERT(info->oi_invoke->opi_invoke);
+			ASSERT(info->oi_class != OPCLASS_CUSTOM);
+			/* Inherit the operator if necessary. */
+			if (DeeType_GetOpPointer(tp_self, info) == NULL) {
+				if unlikely(!DeeType_InheritOperator(tp_self, name))
+					goto err_not_implemented;
+			}
+			return (*info->oi_invoke->opi_invoke)(tp_self, self, p_self, argc, argv);
+err_not_implemented:
+			DeeError_Throwf(&DeeError_NotImplemented,
+			                "Operator `%r." OPNAME("%s") "' is not implemented",
+			                tp_self, info->oi_sname);
+			goto err;
+		}
+	}
+
+	/* Check if this operator has a custom per-type implementation. */
+	{
+		struct type_operator const *
+		info = DeeType_GetCustomOperatorById(tp_self, name);
+		if (info && info->to_custom.s_invoke)
+			return (*info->to_custom.s_invoke)(tp_self, self, p_self, argc, argv);
+	}
+
+	/* Error: unknown operator (TODO: Invoke "operators.operator()" here). */
+	DeeError_Throwf(&DeeError_TypeError,
+	                "Unknown operator #%X",
+	                name);
+err:
+	return NULL;
 }
 
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
  *       extension operators as well as some operators marked as
- *       `OPTYPE_SPECIAL' (most notably: `tp_int'), as well as throwing
+ *       `OPCC_SPECIAL' (most notably: `tp_int'), as well as throwing
  *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
- * Special handling is performed for the read/write operators
- * of `DeeFileType_Type', which are invoked by passing Bytes
- * objects back/forth:
- *    - operator read(): Bytes;
- *    - operator read(max_bytes: int): Bytes;
- *    - operator write(data: Bytes): int;
- *    - operator write(data: Bytes, max_bytes: int): int;
- *    - operator write(data: Bytes, begin: int, end: int): int;
- *    - operator pread(pos: int): Bytes;
- *    - operator pread(max_bytes: int, pos: int): Bytes;
- *    - operator pwrite(data: Bytes, pos: int): int;
- *    - operator pwrite(data: Bytes, max_bytes: int, pos: int): int;
- *    - operator pwrite(data: Bytes, begin: int, end: int, pos: int): int;
  * Operators marked as `oi_private' cannot be invoked and
  * attempting to do so will cause an `Error.TypeError' to be thrown.
  * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
@@ -1435,14 +1186,30 @@ return_self:
 PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
                          size_t argc, DeeObject *const *argv) {
-	return invoke_operator(self, NULL, name, argc, argv);
+	return invoke_operator(Dee_TYPE(self), self, NULL, name, argc, argv);
+}
+
+PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_TInvokeOperator(DeeTypeObject *tp_self, DeeObject *self,
+                          uint16_t name, size_t argc, DeeObject *const *argv) {
+	ASSERT_OBJECT_TYPE(self, tp_self);
+	return invoke_operator(tp_self, self, NULL, name, argc, argv);
 }
 
 PUBLIC WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
 DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
                           size_t argc, DeeObject *const *argv) {
-	return invoke_operator(*p_self, p_self, name, argc, argv);
+	DeeObject *self = *p_self;
+	return invoke_operator(Dee_TYPE(self), self, p_self, name, argc, argv);
 }
+
+PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
+                           uint16_t name, size_t argc, DeeObject *const *argv) {
+	ASSERT_OBJECT_TYPE(*p_self, tp_self);
+	return invoke_operator(tp_self, *p_self, p_self, name, argc, argv);
+}
+
 
 
 
@@ -1507,7 +1274,7 @@ DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
                             char const *self_suffix, size_t self_suffix_len) {
 	Dee_ssize_t temp, result = 0;
 	struct opinfo const *info;
-	info = Dee_OperatorInfo(Dee_TYPE(Dee_TYPE(self)), name);
+	info = DeeTypeType_GetOperatorById(Dee_TYPE(DeeObject_Class(self)), name);
 	switch (name) {
 
 	case OPERATOR_COPY:
@@ -1746,251 +1513,10 @@ err:
 
 #undef DO
 
-
-PRIVATE WUNUSED NONNULL((1, 2)) void const *DCALL
-DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
-                     struct opinfo const *__restrict info) {
-	switch (info->oi_class) {
-
-	case OPCLASS_TYPE:
-		return *(void const **)((uintptr_t)self + info->oi_offset);
-
-	case OPCLASS_GC:
-		if (!self->tp_gc)
-			break;
-		return *(void const **)((uintptr_t)self->tp_gc + info->oi_offset);
-
-	case OPCLASS_MATH:
-		if (!self->tp_math)
-			break;
-		return *(void const **)((uintptr_t)self->tp_math + info->oi_offset);
-
-	case OPCLASS_CMP:
-		if (!self->tp_cmp)
-			break;
-		return *(void const **)((uintptr_t)self->tp_cmp + info->oi_offset);
-
-	case OPCLASS_SEQ:
-		if (!self->tp_seq)
-			break;
-		return *(void const **)((uintptr_t)self->tp_seq + info->oi_offset);
-
-	case OPCLASS_ATTR:
-		if (!self->tp_attr)
-			break;
-		return *(void const **)((uintptr_t)self->tp_attr + info->oi_offset);
-
-	case OPCLASS_WITH:
-		if (!self->tp_with)
-			break;
-		return *(void const **)((uintptr_t)self->tp_with + info->oi_offset);
-
-	case OPCLASS_BUFFER:
-		if (!self->tp_buffer)
-			break;
-		return *(void const **)((uintptr_t)self->tp_buffer + info->oi_offset);
-
-	default:
-		break; /* XXX: Extended operators? */
-	}
-	return NULL;
-}
-
-/* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
-	struct opinfo const *info;
-	switch (name) {
-
-	case OPERATOR_CONSTRUCTOR:
-		/* Special case: the constructor operator (which cannot be inherited). */
-		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
-
-	case OPERATOR_STR:
-		/* Special case: `operator str' can be implemented in 2 ways */
-		DeeType_mro_foreach_start(self) {
-			if (self->tp_cast.tp_str != NULL ||
-			    self->tp_cast.tp_print != NULL)
-				return true;
-		}
-		DeeType_mro_foreach_end(self);
-		return false;
-
-	case OPERATOR_REPR:
-		/* Special case: `operator repr' can be implemented in 2 ways */
-		DeeType_mro_foreach_start(self) {
-			if (self->tp_cast.tp_repr != NULL ||
-			    self->tp_cast.tp_printrepr != NULL)
-				return true;
-		}
-		DeeType_mro_foreach_end(self);
-		return false;
-
-	default:
-		break;
-	}
-	info = Dee_OperatorInfo(Dee_TYPE(self), name);
-	if (info) {
-		DeeType_mro_foreach_start(self) {
-			/* TODO: This produces false positives for operators that can only be inherited in groups:
-			 * >> class Base {
-			 * >>     operator == (other: Base) { ... }
-			 * >>     operator < (other: Base) { ... }
-			 * >> }
-			 * >> class Sub: Base {
-			 * >>     operator == (other: Sub) { ... }
-			 * >> }
-			 * >> // Presence of "operator ==" in `Sub' would prevent inheritance of "operator <".
-			 * >> assert !Sub.hasoperator("<");
-			 */
-			if (DeeType_GetOpPointer(self, info) != NULL)
-				return true;
-		}
-		DeeType_mro_foreach_end(self);
-	}
-	return false;
-}
-
-/* Same as `DeeType_HasOperator()', however don't return `true' if the
- * operator has been inherited implicitly from a base-type of `self'. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
-	void const *my_ptr;
-	struct opinfo const *info;
-	DeeTypeObject *base;
-	DeeTypeMRO mro;
-	/* Special case: must look at what's implemented by the class! */
-	if (DeeType_IsClass(self))
-		return DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name) != NULL;
-	switch (name) {
-
-	case OPERATOR_CONSTRUCTOR:
-		/* Special case: the constructor operator (which cannot be inherited). */
-		return (self->tp_init.tp_alloc.tp_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor != NULL ||
-		        self->tp_init.tp_alloc.tp_any_ctor_kw != NULL);
-
-	case OPERATOR_STR:
-		/* Special case: `operator str' can be implemented in 2 ways */
-		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
-			return false;
-		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
-			    self->tp_cast.tp_print == base->tp_cast.tp_print)
-				return false;
-		}
-		return true;
-
-	case OPERATOR_REPR:
-		/* Special case: `operator repr' can be implemented in 2 ways */
-		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
-			return false;
-		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
-			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
-				return false;
-		}
-		return true;
-
-	default:
-		break;
-	}
-	info = Dee_OperatorInfo(Dee_TYPE(self), name);
-	if (info == NULL)
-		return false; /* No such operator */
-	my_ptr = DeeType_GetOpPointer(self, info);
-	if (my_ptr == NULL)
-		return false; /* Operator not implemented */
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-		if (my_ptr == DeeType_GetOpPointer(base, info))
-			return false; /* Base has same impl -> operator was inherited */
-	}
-	return true; /* Operator is distinct from all bases. */
-}
-
-/* Return the type from `self' inherited its operator `name'.
- * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
-PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
-	void const *my_ptr;
-	struct opinfo const *info;
-	DeeTypeObject *base, *result;
-	DeeTypeMRO mro;
-	/* Special case: must look at what's implemented by the class! */
-	if (DeeType_IsClass(self)) {
-		if (!DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name)) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-				if (DeeType_HasPrivateOperator(base, name))
-					return base;
-			}
-		}
-		return (DeeTypeObject *)self;
-	}
-	switch (name) {
-
-	case OPERATOR_CONSTRUCTOR:
-		/* Special case: the constructor operator (which cannot be inherited). */
-		return (DeeTypeObject *)self;
-
-	case OPERATOR_STR:
-		/* Special case: `operator str' can be implemented in 2 ways */
-		result = (DeeTypeObject *)self;
-		if (self->tp_cast.tp_str || self->tp_cast.tp_print) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-				if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
-				    self->tp_cast.tp_print == base->tp_cast.tp_print) {
-					result = base;
-				} else {
-					break;
-				}
-			}
-		}
-		return result;
-
-	case OPERATOR_REPR:
-		/* Special case: `operator repr' can be implemented in 2 ways */
-		result = (DeeTypeObject *)self;
-		if (self->tp_cast.tp_repr || self->tp_cast.tp_printrepr) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-				if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
-				    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr) {
-					result = base;
-				} else {
-					break;
-				}
-			}
-		}
-		return result;
-
-	default:
-		break;
-	}
-	info = Dee_OperatorInfo(Dee_TYPE(self), name);
-	if (info == NULL)
-		return false; /* No such operator */
-	my_ptr = DeeType_GetOpPointer(self, info);
-	if (my_ptr == NULL)
-		return false; /* Operator not implemented */
-	result = (DeeTypeObject *)self;
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-		if (my_ptr == DeeType_GetOpPointer(base, info)) {
-			result = base;
-		} else {
-			break;
-		}
-	}
-	return result; /* Operator is distinct from all bases. */
-}
-
+/* When inlining stuff, gcc thinks that `self->tp_mro_iter' below is uninitialized.
+ * It's correct, but the the code it's complaining about is unreachable when said
+ * field hasn't been initialized, yet. */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
 
 /* Advance an MRO enumerator, returning the next type in MRO order.
  * @param: tp_iter: The previously enumerated type
@@ -2072,6 +1598,7 @@ select_from_mro_iter:
 	return result;
 }
 
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 
 
@@ -2219,7 +1746,7 @@ toi_next(TypeOperatorsIterator *__restrict self) {
 			void const *my_ptr;
 
 			/* Query information about the given operator. */
-			info = Dee_OperatorInfo(Dee_TYPE(tp), result);
+			info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), result);
 			if (result == OPERATOR_CONSTRUCTOR) {
 				/* Special case: the constructor operator (which cannot be inherited). */
 				if (tp->tp_init.tp_alloc.tp_ctor != NULL ||

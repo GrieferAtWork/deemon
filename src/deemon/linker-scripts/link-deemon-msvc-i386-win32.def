@@ -707,6 +707,7 @@ EXPORTS
 	DeeObject_OrUInt32@8=_DeeObject_OrUInt32@8
 	DeeObject_PClear@8=_DeeObject_PClear@8
 	DeeObject_PInvokeOperator@16=_DeeObject_PInvokeOperator@16
+	DeeObject_PTInvokeOperator@20=_DeeObject_PTInvokeOperator@20
 	DeeObject_Pos@4=_DeeObject_Pos@4
 	DeeObject_Pow@8=_DeeObject_Pow@8
 	DeeObject_Print@12=_DeeObject_Print@12
@@ -743,12 +744,14 @@ EXPORTS
 	DeeObject_TAssign@12=_DeeObject_TAssign@12
 	DeeObject_TBool@8=_DeeObject_TBool@8
 	DeeObject_TBoundAttr@12=_DeeObject_TBoundAttr@12
+	DeeObject_TBytes@20=_DeeObject_TBytes@20
 	DeeObject_TCall@16=_DeeObject_TCall@16
 	DeeObject_TCallAttr@20=_DeeObject_TCallAttr@20
 	DeeObject_TCallAttrKw@24=_DeeObject_TCallAttrKw@24
 	DeeObject_TCallAttrTuple@16=_DeeObject_TCallAttrTuple@16
 	DeeObject_TCallAttrTupleKw@20=_DeeObject_TCallAttrTupleKw@20
 	DeeObject_TCallKw@20=_DeeObject_TCallKw@20
+	DeeObject_TClear@8=_DeeObject_TClear@8
 	DeeObject_TCompareEqObject@12=_DeeObject_TCompareEqObject@12
 	DeeObject_TCompareGeObject@12=_DeeObject_TCompareGeObject@12
 	DeeObject_TCompareGrObject@12=_DeeObject_TCompareGrObject@12
@@ -803,6 +806,7 @@ EXPORTS
 	DeeObject_TInplaceXor@12=_DeeObject_TInplaceXor@12
 	DeeObject_TInt@8=_DeeObject_TInt@8
 	DeeObject_TInv@8=_DeeObject_TInv@8
+	DeeObject_TInvokeOperator@20=_DeeObject_TInvokeOperator@20
 	DeeObject_TIterNext@8=_DeeObject_TIterNext@8
 	DeeObject_TIterSelf@8=_DeeObject_TIterSelf@8
 	DeeObject_TLeave@8=_DeeObject_TLeave@8
@@ -811,6 +815,7 @@ EXPORTS
 	DeeObject_TMul@12=_DeeObject_TMul@12
 	DeeObject_TNeg@8=_DeeObject_TNeg@8
 	DeeObject_TOr@12=_DeeObject_TOr@12
+	DeeObject_TPClear@12=_DeeObject_TPClear@12
 	DeeObject_TPos@8=_DeeObject_TPos@8
 	DeeObject_TPow@12=_DeeObject_TPow@12
 	DeeObject_TPrint@16=_DeeObject_TPrint@16
@@ -826,6 +831,7 @@ EXPORTS
 	DeeObject_TSub@12=_DeeObject_TSub@12
 	DeeObject_TThisCall@20=_DeeObject_TThisCall@20
 	DeeObject_TThisCallKw@24=_DeeObject_TThisCallKw@24
+	DeeObject_TVisit@16=_DeeObject_TVisit@16
 	DeeObject_TXor@12=_DeeObject_TXor@12
 	DeeObject_ThisCall@16=_DeeObject_ThisCall@16
 	DeeObject_ThisCallKw@20=_DeeObject_ThisCallKw@20
@@ -1008,7 +1014,11 @@ EXPORTS
 	DeeTuple_VPackSymbolic@8=_DeeTuple_VPackSymbolic@8
 	DeeTuple_VTryPack@8=_DeeTuple_VTryPack@8
 	DeeTuple_VTryPackSymbolic@8=_DeeTuple_VTryPackSymbolic@8
+	DeeTypeType_GetOperatorById@8=_DeeTypeType_GetOperatorById@8
+	DeeTypeType_GetOperatorByName@8=_DeeTypeType_GetOperatorByName@8
+	DeeTypeType_GetOperatorByNameLen@12=_DeeTypeType_GetOperatorByNameLen@12
 	DeeType_Extends@8=_DeeType_Extends@8
+	DeeType_GetCustomOperatorById@8=_DeeType_GetCustomOperatorById@8
 	DeeType_GetModule@4=_DeeType_GetModule@4
 	DeeType_GetOperatorOrigin@8=_DeeType_GetOperatorOrigin@8
 	DeeType_HasOperator@8=_DeeType_HasOperator@8
@@ -1078,7 +1088,6 @@ EXPORTS
 	Dee_Movrefv_traced@20=_Dee_Movrefv_traced@20
 	Dee_OperatorFromName@8=_Dee_OperatorFromName@8
 	Dee_OperatorFromNameLen@12=_Dee_OperatorFromNameLen@12
-	Dee_OperatorInfo@8=_Dee_OperatorInfo@8
 	Dee_Realloc@8=_Dee_Realloc@8
 	Dee_RunAtExit@4=_Dee_RunAtExit@4
 	Dee_SetArgv@4=_Dee_SetArgv@4

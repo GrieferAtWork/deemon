@@ -128,7 +128,7 @@ coti_next(ClassOperatorTableIterator *__restrict self) {
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
-	info = Dee_OperatorInfo(NULL, ent->co_name);
+	info = DeeTypeType_GetOperatorById(&DeeType_Type, ent->co_name);
 	if (info) {
 		return DeeTuple_Newf("s" PCKu16,
 		                     info->oi_sname,
@@ -146,7 +146,7 @@ coti_next_key(ClassOperatorTableIterator *__restrict self) {
 	ent = coti_next_ent(self);
 	if (!ent)
 		return ITER_DONE;
-	info = Dee_OperatorInfo(NULL, ent->co_name);
+	info = DeeTypeType_GetOperatorById(&DeeType_Type, ent->co_name);
 	if (info)
 		return DeeString_New(info->oi_sname);
 	return DeeInt_NewUInt16(ent->co_name);
@@ -1508,7 +1508,7 @@ cd_printrepr(ClassDescriptor *__restrict self,
 				continue;
 			if (!is_first)
 				DO(err, DeeFormat_PRINT(printer, arg, ", "));
-			info = Dee_OperatorInfo(NULL, op.co_name);
+			info = DeeTypeType_GetOperatorById(&DeeType_Type, op.co_name);
 			if (info) {
 				DO(err, DeeFormat_Printf(printer, arg, "%q", info->oi_sname));
 			} else {
@@ -1896,7 +1896,7 @@ cd_add_operator(ClassDescriptor *__restrict self,
 	{
 		struct opinfo const *op;
 err_duplicate_name:
-		op = Dee_OperatorInfo(NULL, name);
+		op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
 		if (op) {
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Duplicate operator `%s'",
@@ -2076,7 +2076,7 @@ got_flag:
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
 			if (class_csize != (uint16_t)-1 && index >= class_csize) {
-				struct opinfo const *op = Dee_OperatorInfo(NULL, name);
+				struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
 				if (op) {
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Operator %s uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",

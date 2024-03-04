@@ -663,6 +663,9 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\file-type-operators.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -724,6 +727,9 @@
 			<Filter>src\objects\seq</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\seq_functions.h">
+			<Filter>src\objects</Filter>
+		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\type-operators.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\unicode\bytes_finder.c.inl">
@@ -1112,6 +1118,9 @@
 		<ClCompile Include="..\src\deemon\objects\error_types.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\file-type-operators.c">
+			<Filter>src\objects</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\file.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
@@ -1257,6 +1266,9 @@
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\tuple.c">
+			<Filter>src\objects</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\objects\type-operators.c">
 			<Filter>src\objects</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\objects\unicode\cformat.c">

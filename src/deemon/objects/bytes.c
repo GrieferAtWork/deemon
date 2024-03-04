@@ -435,6 +435,37 @@ err_r:
 	return NULL;
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_TBytes(DeeTypeObject *tp_self,
+                 DeeObject *__restrict self,
+                 unsigned int flags,
+                 size_t start, size_t end) {
+	DREF Bytes *result;
+	ASSERTF(!(flags & ~(Dee_BUFFER_FREADONLY | Dee_BUFFER_FWRITABLE)),
+	        "Invalid flags %x", flags);
+	ASSERT_OBJECT_TYPE(self, tp_self);
+	result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data));
+	if unlikely(!result)
+		goto done;
+	if (DeeObject_TGetBuf(tp_self, self, &result->b_buffer, flags))
+		goto err_r;
+	if (start > result->b_buffer.bb_size)
+		start = result->b_buffer.bb_size;
+	if (end > result->b_buffer.bb_size)
+		end = result->b_buffer.bb_size;
+	result->b_base  = (byte_t *)result->b_buffer.bb_base + start;
+	result->b_size  = (size_t)(end - start);
+	result->b_orig  = self;
+	result->b_flags = flags;
+	Dee_Incref(self);
+	DeeObject_Init(result, &DeeBytes_Type);
+done:
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_Free(result);
+	return NULL;
+}
+
 /* Construct a writable bytes-buffer, consisting of a total of `num_bytes' bytes. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeBytes_NewBuffer(size_t num_bytes, byte_t init) {

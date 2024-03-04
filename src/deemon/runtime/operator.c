@@ -2022,13 +2022,8 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) dhash_t
 #endif /* DEFINE_TYPED_OPERATORS */
 
 
-#ifndef DEFINE_TYPED_OPERATORS
-PUBLIC NONNULL((1, 2)) void DCALL
-DeeObject_Visit(DeeObject *__restrict self,
-                dvisit_t proc, void *arg) {
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+DEFINE_OPERATOR(void, Visit, (DeeObject *__restrict self, dvisit_t proc, void *arg)) {
+	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_visit) {
 			if (tp_self->tp_visit == &instance_visit) {
@@ -2048,11 +2043,8 @@ DeeObject_Visit(DeeObject *__restrict self,
 		(*proc)((DeeObject *)Dee_TYPE(self), arg);
 }
 
-PUBLIC NONNULL((1)) void DCALL
-DeeObject_Clear(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+DEFINE_OPERATOR(void, Clear, (DeeObject *__restrict self)) {
+	LOAD_TP_SELF;
 	do {
 		if (tp_self->tp_gc && tp_self->tp_gc->tp_clear) {
 			if (tp_self->tp_gc->tp_clear == &instance_clear) {
@@ -2066,16 +2058,16 @@ DeeObject_Clear(DeeObject *__restrict self) {
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 }
 
-PUBLIC void DCALL
-DeeObject_PClear(DeeObject *__restrict self,
-                 unsigned int gc_priority) {
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_priority)) {
+	LOAD_TP_SELF;
 	if unlikely(gc_priority == Dee_GC_PRIORITY_LATE) {
+#ifdef DEFINE_TYPED_OPERATORS
+		DeeObject_TClear(tp_self, self);
+#else /* DEFINE_TYPED_OPERATORS */
 		DeeObject_Clear(self);
+#endif /* !DEFINE_TYPED_OPERATORS */
 		return;
 	}
-	tp_self = Dee_TYPE(self);
 	do {
 		if (tp_self->tp_gc &&
 		    tp_self->tp_gc->tp_pclear) {
@@ -2089,7 +2081,6 @@ DeeObject_PClear(DeeObject *__restrict self,
 		}
 	} while ((tp_self = DeeType_Base(tp_self)) != NULL);
 }
-#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS

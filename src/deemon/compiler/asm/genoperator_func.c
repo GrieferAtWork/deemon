@@ -81,9 +81,12 @@ ast_gen_operator_func(struct ast *binding,
 		symbol_name = DeeString_STR(rt_operator_names[operator_name - AST_OPERATOR_MIN]);
 	} else {
 		/* Default case: determine the operator symbol using generic-operator info. */
-		info = Dee_OperatorInfo(NULL, operator_name);
-		if (info)
+		info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_name);
+		if (info) {
 			symbol_name = info->oi_sname;
+		} else {
+			/* TODO: Lookup the operator by its name at runtime! */
+		}
 	}
 	/* Import the operators module. */
 	operators_module = (DREF DeeModuleObject *)DeeModule_OpenGlobal((DeeObject *)&str_operators,
