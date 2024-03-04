@@ -402,7 +402,7 @@ done_push_none:
 #if 0 /* This breaks. Not because the result is a proxy (if you want to ensure that the elements
        * of a sequence aren't the result of a proxy, you must call ".frozen"), but because
        * "(x as Sequence).operator iter()" isn't implemented (because Sequence doesn't implement
-       * that opeartor and expects its sub-classes to implement it *for* it) */
+       * that operator and expects its sub-classes to implement it *for* it) */
 		/* `{ foo... }' normally compiles as:
 		 * >> push   @foo
 		 * >> cast   top, Tuple
