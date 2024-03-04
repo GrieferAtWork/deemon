@@ -331,9 +331,12 @@ cot_getitemdef(ClassOperatorTable *__restrict self,
 	uint16_t opname, i, perturb;
 	ClassDescriptor *desc = self->co_desc;
 	if (DeeString_Check(key)) {
-		opname = Dee_OperatorFromName(NULL, DeeString_STR(key));
-		if (opname == (uint16_t)-1)
+		struct opinfo const *info;
+		/* TODO: Check if the table contains a string-operator "key" */
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key));
+		if (info == NULL)
 			goto nope;
+		opname = info->oi_id;
 	} else {
 		if (DeeObject_AsUInt16(key, &opname))
 			goto err;
@@ -2062,13 +2065,17 @@ got_flag:
 			if (DeeObject_AsUInt16(data[1], &index))
 				goto err_r_imemb_iter_data;
 			if (DeeString_Check(data[0])) {
-				name = Dee_OperatorFromName(NULL, DeeString_STR(data[0]));
-				if (name == (uint16_t)-1) {
+				struct opinfo const *info;
+				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]));
+				if (info == NULL) {
+					/* TODO: In this case, must store the operator via its name
+					 *       (so the name-query can happen in `DeeClass_New()') */
 					DeeError_Throwf(&DeeError_ValueError,
 					                "Unknown operator %r",
 					                data[0]);
 					goto err_r_imemb_iter_data;
 				}
+				name = info->oi_id;
 			} else {
 				if (DeeObject_AsUInt16(data[0], &name))
 					goto err_r_imemb_iter_data;

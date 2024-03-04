@@ -1973,7 +1973,11 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ string_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ string_class_members
+	/* .tp_class_members = */ string_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ NULL, /* TODO */
+	/* .tp_operators_size= */ 0,
 };
 
 PRIVATE struct {

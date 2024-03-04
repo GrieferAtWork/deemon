@@ -3596,9 +3596,11 @@ type_hasoperator(DeeTypeObject *self, size_t argc,
 	                    "o:hasoperator", &name))
 		goto err;
 	if (DeeString_Check(name)) {
-		opid = Dee_OperatorFromName(Dee_TYPE(self), DeeString_STR(name));
-		if (opid == (uint16_t)-1)
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self), DeeString_STR(name));
+		if (info == NULL)
 			goto nope;
+		opid = info->oi_id;
 	} else {
 		if (DeeObject_AsUInt16(name, &opid))
 			goto err;
@@ -3620,9 +3622,11 @@ type_hasprivateoperator(DeeTypeObject *self, size_t argc,
 	                    "o:hasprivateoperator", &name))
 		goto err;
 	if (DeeString_Check(name)) {
-		opid = Dee_OperatorFromName(self, DeeString_STR(name));
-		if (opid == (uint16_t)-1)
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self), DeeString_STR(name));
+		if (info == NULL)
 			goto nope;
+		opid = info->oi_id;
 	} else {
 		if (DeeObject_AsUInt16(name, &opid))
 			goto err;

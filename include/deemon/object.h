@@ -2568,7 +2568,10 @@ struct Dee_membercache {
 #define OPERATOR_PRIVMIN    OPERATOR_VISIT
 #define OPERATOR_PRIVMAX    OPERATOR_GETBUF
 
-/* Aliases that should be used when operators need to appear sorted by ID. */
+/* Aliases that should be used when operators need to appear sorted by ID.
+ *
+ * By using these, you can ensure a proper operator order by simply doing
+ * a lexicographical line sort. */
 #define OPERATOR_0000_CONSTRUCTOR  OPERATOR_CONSTRUCTOR
 #define OPERATOR_0001_COPY         OPERATOR_COPY
 #define OPERATOR_0002_DEEPCOPY     OPERATOR_DEEPCOPY
@@ -2641,7 +2644,7 @@ struct Dee_membercache {
 
 #ifdef DEE_SOURCE
 /* Operator calling conventions (values for `oi_cc') */
-#define OPCC_SPECIAL            0x0000 /* A special operator that cannot be invoked directly (e.g.: `__constructor__'). */
+#define OPCC_SPECIAL            0x0000 /* A special operator that cannot be invoked directly (e.g.: `OPERATOR_CONSTRUCTOR'). */
 #define OPCC_FINPLACE           0x8000 /* Flag: this operator must be invoked as inplace. */
 #define OPCC_UNARY_OBJECT       0x0010 /* DREF DeeObject *(DCALL *)(DeeObject *__restrict self); */
 #define OPCC_UNARY_VOID         0x0011 /* void (DCALL *)(DeeObject *__restrict self); */
@@ -2820,6 +2823,8 @@ struct Dee_type_operator {
                                             * or any sort of container object capable of holding instances of the same type. */
 #define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
                                             * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
+#define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */
+#define Dee_TF_ISCONSTCASTABLE  0x40000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': true */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
 
 #ifdef DEE_SOURCE
@@ -3033,48 +3038,14 @@ DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id);
 
-/* TODO: These are deprecated */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((2)) uint16_t DCALL Dee_OperatorFromName(DeeTypeObject *typetype, char const *__restrict name);
-DFUNDEF ATTR_PURE WUNUSED ATTR_INS(2, 3) uint16_t DCALL Dee_OperatorFromNameLen(DeeTypeObject *typetype, char const *__restrict name, size_t namelen);
-
-/* Invoke an operator on a given object, given its ID and arguments.
- * NOTE: Using these function, any operator can be invoked, including
- *       extension operators as well as some operators marked as
- *       `OPCC_SPECIAL' (most notably: `tp_int'), as well as throwing
- *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
- * Operators marked as `oi_private' cannot be invoked and
- * attempting to do so will cause an `Error.TypeError' to be thrown.
- * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
- * HINT: `DeeObject_PInvokeOperator' can be used the same way `DeeObject_InvokeOperator'
- *        can be, with the addition of allowing inplace operators to be executed.
- *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
- *        will cause an `Error.TypeError' to be thrown. */
-DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
-                         size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_TInvokeOperator(DeeTypeObject *tp_self, DeeObject *self,
-                          uint16_t name, size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
-                          size_t argc, DeeObject *const *argv);
-DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
-                           uint16_t name, size_t argc, DeeObject *const *argv);
-#define DeeObject_InvokeOperatorTuple(self, name, args)              DeeObject_InvokeOperator(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_TInvokeOperatorTuple(tp_self, self, name, args)    DeeObject_TInvokeOperator(tp_self, self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_PInvokeOperatorTuple(p_self, name, args)           DeeObject_PInvokeOperator(p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeObject_PTInvokeOperatorTuple(tp_self, p_self, name, args) DeeObject_PTInvokeOperator(tp_self, p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-
-/* Lookup per-type 
- * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname". */
+/* Lookup per-type method flags that may be defined for "opname".
+ * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
+ * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
-DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
-                               uint16_t opname);
+DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, uint16_t opname);
 
 /* Helper for checking that every cast-like operators is
  * either not implemented, or marked as Dee_METHOD_FCONSTCALL:
- * >> (!DeeType_HasOperator(self, OPERATOR_STR) || (DeeType_GetOperatorFlags(self, OPERATOR_STR) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
@@ -3082,7 +3053,7 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
  * conditional. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsConstCastable(DeeTypeObject const *__restrict self); /* TODO */
+DeeType_IsConstCastable(DeeTypeObject const *__restrict self);
 
 /* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
@@ -3144,6 +3115,35 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);
 INTDEF NONNULL((1)) bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
 INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #endif /* CONFIG_BUILDING_DEEMON */
+
+/* Invoke an operator on a given object, given its ID and arguments.
+ * NOTE: Using these function, any operator can be invoked, including
+ *       extension operators as well as some operators marked as
+ *       `OPCC_SPECIAL' (most notably: `tp_int'), as well as throwing
+ *       a `Signal.StopIteration' when `tp_iter_next' is exhausted.
+ * Operators marked as `oi_private' cannot be invoked and
+ * attempting to do so will cause an `Error.TypeError' to be thrown.
+ * Attempting to invoke an unknown operator will cause an `Error.TypeError' to be thrown.
+ * HINT: `DeeObject_PInvokeOperator' can be used the same way `DeeObject_InvokeOperator'
+ *        can be, with the addition of allowing inplace operators to be executed.
+ *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
+ *        will cause an `Error.TypeError' to be thrown. */
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
+                         size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_TInvokeOperator(DeeTypeObject *tp_self, DeeObject *self,
+                          uint16_t name, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
+DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
+                          size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
+                           uint16_t name, size_t argc, DeeObject *const *argv);
+#define DeeObject_InvokeOperatorTuple(self, name, args)              DeeObject_InvokeOperator(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_TInvokeOperatorTuple(tp_self, self, name, args)    DeeObject_TInvokeOperator(tp_self, self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_PInvokeOperatorTuple(p_self, name, args)           DeeObject_PInvokeOperator(p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
+#define DeeObject_PTInvokeOperatorTuple(tp_self, p_self, name, args) DeeObject_PTInvokeOperator(tp_self, p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 
 struct Dee_attribute_info;
 struct Dee_attribute_lookup_rules;

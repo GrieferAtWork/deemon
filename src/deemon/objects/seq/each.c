@@ -693,13 +693,17 @@ seo_init(SeqEachOperator *__restrict self,
 		goto err;
 	}
 	if (DeeString_Check(name)) {
-		self->so_opname = Dee_OperatorFromName(NULL, DeeString_STR(name));
-		if unlikely(self->so_opname == (uint16_t)-1) {
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name));
+		if unlikely(info == NULL) {
+			/* TODO: In this case, remember the used "name" string,
+			 * and query the operator on a per-element basis */
 			DeeError_Throwf(&DeeError_ValueError,
 			                "Unknown operator %q",
 			                DeeString_STR(name));
 			goto err;
 		}
+		self->so_opname = info->oi_id;
 	} else {
 		if (DeeObject_AsUInt16(name, &self->so_opname))
 			goto err;

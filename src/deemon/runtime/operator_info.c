@@ -646,6 +646,52 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id)
 }
 
 
+/* Lookup per-type method flags that may be defined for "opname".
+ * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
+ * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
+DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
+                         uint16_t opname) {
+	struct type_operator const *result;
+	result = DeeType_GetCustomOperatorById(self, opname);
+	if (result)
+		return result->to_custom.s_flags;
+	return METHOD_FNORMAL;
+}
+
+
+/* Helper for checking that every cast-like operators is
+ * either not implemented, or marked as Dee_METHOD_FCONSTCALL:
+ * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
+ * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
+ * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
+ * This is the condition that must be fulfilled by all arguments other than "this" when
+ * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
+ * conditional. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_IsConstCastable(DeeTypeObject const *__restrict self) {
+	size_t i;
+	PRIVATE uint16_t const cast_operators[] = { OPERATOR_BOOL, OPERATOR_INT, OPERATOR_FLOAT };
+	if (self->tp_features & (Dee_TF_NOTCONSTCASTABLE | Dee_TF_ISCONSTCASTABLE))
+		return (self->tp_features & Dee_TF_ISCONSTCASTABLE) != 0;
+	for (i = 0; i < COMPILER_LENOF(cast_operators); ++i) {
+		uint16_t id = cast_operators[i];
+		uintptr_t opflags;
+		if (!DeeType_HasOperator(self, id))
+			continue;
+		opflags = DeeType_GetOperatorFlags(self, id);
+		if (!(opflags & Dee_METHOD_FCONSTCALL))
+			goto nope;
+	}
+	atomic_or(&((DeeTypeObject *)self)->tp_features, Dee_TF_ISCONSTCASTABLE);
+	return true;
+nope:
+	atomic_or(&((DeeTypeObject *)self)->tp_features, Dee_TF_NOTCONSTCASTABLE);
+	return false;
+}
+
+
+
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) void const *DCALL
 DeeType_GetOpPointer(DeeTypeObject const *__restrict self,
                      struct opinfo const *__restrict info) {
@@ -1081,34 +1127,9 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name) {
 
 
 
-/* TODO: DEPRECATED BEGIN */
-PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) uint16_t DCALL
-Dee_OperatorFromNameLen(DeeTypeObject *typetype,
-                        char const *__restrict name,
-                        size_t namelen) {
-	struct opinfo const *info;
-	if (typetype == NULL)
-		typetype = &DeeType_Type;
-	info = DeeTypeType_GetOperatorByNameLen(typetype, name, namelen);
-	return info ? info->oi_id : (uint16_t)-1;
-}
-
-PUBLIC ATTR_PURE WUNUSED NONNULL((2)) uint16_t DCALL
-Dee_OperatorFromName(DeeTypeObject *typetype,
-                     char const *__restrict name) {
-	struct opinfo const *info;
-	if (typetype == NULL)
-		typetype = &DeeType_Type;
-	info = DeeTypeType_GetOperatorByName(typetype, name);
-	return info ? info->oi_id : (uint16_t)-1;
-}
-/* TODO: DEPRECATED END */
-
-
 PRIVATE WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *DCALL
 invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self,
                 uint16_t name, size_t argc, DeeObject *const *argv) {
-
 	/* Special case needed for super-wrappers. */
 	if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
@@ -1132,7 +1153,7 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 		self = DeeSuper_SELF(self);
 	}
 
-	/* Check for standard operators the type type-type of "self". */
+	/* Check for standard operators in the type-type of "self". */
 	{
 		struct opinfo const *info;
 		info = DeeTypeType_GetOperatorById(Dee_TYPE(tp_self), name);
@@ -1668,10 +1689,12 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 to_contains(TypeOperators *self, DeeObject *name_or_id) {
 	uint16_t id;
 	if (DeeString_Check(name_or_id)) {
-		id = Dee_OperatorFromName(Dee_TYPE(self->to_type),
-		                          DeeString_STR(name_or_id));
-		if (id == (uint16_t)-1)
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self->to_type),
+		                                     DeeString_STR(name_or_id));
+		if (info == NULL)
 			return_false;
+		id = info->oi_id;
 	} else {
 		if (DeeObject_AsUInt16(name_or_id, &id))
 			goto err;

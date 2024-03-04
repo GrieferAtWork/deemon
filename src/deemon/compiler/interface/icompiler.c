@@ -1385,10 +1385,13 @@ done:
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict p_result) {
 	if (DeeString_Check(opid)) {
-		char *name = DeeString_STR(opid);
-		*p_result   = Dee_OperatorFromName(NULL, name);
-		if (*p_result != (uint16_t)-1)
+		char const *name = DeeString_STR(opid);
+		struct opinfo const *info;
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name);
+		if (info != NULL) {
+			*p_result = info->oi_id;
 			return 0;
+		}
 		/* Resolve special operator names. */
 		switch (name[0]) {
 
@@ -1428,6 +1431,9 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict p_result) {
 
 		default:
 unknown_str:
+			/* TODO: Must support loading the operator ID at
+			 *       runtime, and remembering its name until
+			 *       then! */
 			return DeeError_Throwf(&DeeError_ValueError,
 			                       "Unknown operator %q",
 			                       name);
