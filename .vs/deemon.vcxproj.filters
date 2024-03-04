@@ -1340,6 +1340,9 @@
 		<ClCompile Include="..\src\deemon\runtime\notify.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>
+		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c">
+			<Filter>src\runtime</Filter>
+		</ClCompile>
 		<ClCompile Include="..\src\deemon\runtime\operator.c">
 			<Filter>src\runtime</Filter>
 		</ClCompile>

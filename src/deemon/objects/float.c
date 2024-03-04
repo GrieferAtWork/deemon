@@ -53,24 +53,6 @@ DECL_BEGIN
 typedef DeeFloatObject Float;
 
 #ifdef CONFIG_HAVE_FPU
-LOCAL WUNUSED DREF Float *DCALL
-DeeFloat_NewReuse(Float *__restrict self, double value) {
-	DREF Float *result;
-	if (!DeeObject_IsShared(self)) {
-		result = self;
-		Dee_Incref(result);
-		goto done_ok;
-	}
-	result = DeeObject_MALLOC(Float);
-	if unlikely(!result)
-		goto done;
-	DeeObject_Init(result, &DeeFloat_Type);
-done_ok:
-	result->f_value = value;
-done:
-	return result;
-}
-
 /* Create and return a new floating point object. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
 DeeFloat_New(double value) {
@@ -148,7 +130,7 @@ float_double(Float *__restrict self, double *__restrict result) {
 
 PRIVATE WUNUSED NONNULL((1)) DREF Float *DCALL
 float_neg(Float *__restrict self) {
-	return DeeFloat_NewReuse(self, -self->f_value);
+	return (DREF Float *)DeeFloat_New(-self->f_value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF Float *DCALL
@@ -157,7 +139,7 @@ float_add(Float *__restrict self,
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
 		goto err;
-	return DeeFloat_NewReuse(self, self->f_value + other_val);
+	return (DREF Float *)DeeFloat_New(self->f_value + other_val);
 err:
 	return NULL;
 }
@@ -168,7 +150,7 @@ float_sub(Float *__restrict self,
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
 		goto err;
-	return DeeFloat_NewReuse(self, self->f_value - other_val);
+	return (DREF Float *)DeeFloat_New(self->f_value - other_val);
 err:
 	return NULL;
 }
@@ -179,7 +161,7 @@ float_mul(Float *__restrict self,
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
 		goto err;
-	return DeeFloat_NewReuse(self, self->f_value * other_val);
+	return (DREF Float *)DeeFloat_New(self->f_value * other_val);
 err:
 	return NULL;
 }
@@ -190,7 +172,7 @@ float_div(Float *__restrict self,
 	double other_val;
 	if (DeeObject_AsDouble(other, &other_val))
 		goto err;
-	return DeeFloat_NewReuse(self, self->f_value / other_val);
+	return (DREF Float *)DeeFloat_New(self->f_value / other_val);
 err:
 	return NULL;
 }
@@ -760,6 +742,28 @@ PRIVATE struct type_member tpconst float_members[] = {
 
 #endif /* CONFIG_HAVE_FPU */
 
+#ifdef CONFIG_HAVE_FPU
+PRIVATE struct type_operator tpconst float_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_000C_FLOAT, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_000E_POS, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_000F_NEG, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0010_ADD, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0011_SUB, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0012_MUL, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0013_DIV, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+};
+#endif /* CONFIG_HAVE_FPU */
 
 
 PUBLIC DeeTypeObject DeeFloat_Type = {
@@ -843,7 +847,11 @@ PUBLIC DeeTypeObject DeeFloat_Type = {
 	/* .tp_members       = */ float_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ float_class_getsets,
-	/* .tp_class_members = */ float_class_members
+	/* .tp_class_members = */ float_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ float_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(float_operators)
 #endif /* CONFIG_HAVE_FPU */
 };
 

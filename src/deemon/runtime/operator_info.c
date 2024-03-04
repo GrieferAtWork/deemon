@@ -584,15 +584,17 @@ DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
 #undef LENGTHOF__opinfo__oi_uname
 }
 
+#define DeeType_GetPrivateCustomOperatorById(type, id) \
+	type_operator_table_get_custom_operator_by_id((self)->tp_operators, (self)->tp_operators_size, id)
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
-DeeType_GetPrivateCustomOperatorById(DeeTypeObject const *__restrict type, uint16_t id) {
+type_operator_table_get_custom_operator_by_id(struct type_operator const *table,
+                                              size_t count, uint16_t id) {
 	/* Check for custom operators. */
 	size_t lo = 0;
-	size_t hi = type->tp_operators_size;
-	ASSERT(DeeType_IsTypeType(type));
+	size_t hi = count;
 	while (lo < hi) {
 		size_t mid = (lo + hi) / 2;
-		struct type_operator const *info = &type->tp_operators[mid];
+		struct type_operator const *info = &table[mid];
 		if (id < info->to_id) {
 			hi = mid;
 		} else if (id > info->to_id) {
@@ -627,6 +629,14 @@ nope:
 
 
 
+PRIVATE struct type_operator const type_operator_flags[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
+};
+
 /* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id) {
@@ -642,11 +652,27 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id)
 		if (result)
 			return result;
 	}
+
+	/* Special case when querying for "DeeType_Type" (which can't define method
+	 * flags for the operators it *itself* implements (e.g. `type_str'), since
+	 * its list "type_operators" is a special case that needs to be linear) */
+	if (self == &DeeType_Type) {
+		return type_operator_table_get_custom_operator_by_id(type_operator_flags,
+		                                                     COMPILER_LENOF(type_operator_flags),
+		                                                     id);
+	}
+
 	return NULL;
 }
 
 
 /* Lookup per-type method flags that may be defined for "opname".
+ * IMPORTANT: When querying the flags for `OPERATOR_ITERSELF', the `Dee_METHOD_FCONSTCALL',
+ *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
+ *            you can call `operator iter()' at compile-time. Instead, it means that
+ *            *enumerating* the object can be done at compile-time (so-long as the associated
+ *            iterator is never exposed). Alternatively, think of this case as allowing a
+ *            call to `DeeObject_Foreach()' at compile-time.
  * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
  * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
@@ -656,6 +682,17 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
 	result = DeeType_GetCustomOperatorById(self, opname);
 	if (result)
 		return result->to_custom.s_flags;
+
+	/* Default flags for certain operators. */
+	switch (opname) {
+	case OPERATOR_HASH:
+	case OPERATOR_DESTRUCTOR:
+	case OPERATOR_VISIT:
+	case OPERATOR_CLEAR:
+	case OPERATOR_PCLEAR:
+		return METHOD_FNOTHROW;
+	default: break;
+	}
 	return METHOD_FNORMAL;
 }
 
@@ -665,13 +702,19 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
+ * >> (!DeeType_HasOperator(self, OPERATOR_ITERSELF) || (DeeType_GetOperatorFlags(self, OPERATOR_ITERSELF) & Dee_METHOD_FCONSTCALL));
  * This is the condition that must be fulfilled by all arguments other than "this" when
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
  * conditional. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsConstCastable(DeeTypeObject const *__restrict self) {
 	size_t i;
-	PRIVATE uint16_t const cast_operators[] = { OPERATOR_BOOL, OPERATOR_INT, OPERATOR_FLOAT };
+	PRIVATE uint16_t const cast_operators[] = {
+		OPERATOR_BOOL,
+		OPERATOR_INT,
+		OPERATOR_FLOAT,
+		OPERATOR_ITERSELF,
+	};
 	if (self->tp_features & (Dee_TF_NOTCONSTCASTABLE | Dee_TF_ISCONSTCASTABLE))
 		return (self->tp_features & Dee_TF_ISCONSTCASTABLE) != 0;
 	for (i = 0; i < COMPILER_LENOF(cast_operators); ++i) {
@@ -742,7 +785,8 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
 	if (info) {
-		DeeType_mro_foreach_start(self) {
+		DeeTypeObject const *tp_iter = self;
+		DeeType_mro_foreach_start(tp_iter) {
 			/* TODO: This produces false positives for operators that can only be inherited in groups:
 			 * >> class Base {
 			 * >>     operator == (other: Base) { ... }
@@ -754,10 +798,10 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 			 * >> // Presence of "operator ==" in `Sub' would prevent inheritance of "operator <".
 			 * >> assert !Sub.hasoperator("<");
 			 */
-			if (DeeType_GetOpPointer(self, info) != NULL)
+			if (DeeType_GetOpPointer(tp_iter, info) != NULL)
 				return true;
 		}
-		DeeType_mro_foreach_end(self);
+		DeeType_mro_foreach_end(tp_iter);
 	}
 
 	/* Fallback: check for a custom per-type operator. */

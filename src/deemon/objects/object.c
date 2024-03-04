@@ -2549,6 +2549,11 @@ PRIVATE struct type_member tpconst object_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_operator const object_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+};
 
 PUBLIC DeeTypeObject DeeObject_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2615,7 +2620,11 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 	/* .tp_members       = */ object_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ object_class_members
+	/* .tp_class_members = */ object_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ object_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(object_operators)
 };
 
 
@@ -4335,32 +4344,37 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL type_get_ctable(DeeTypeObject 
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_istypetype(DeeObject *__restrict self) {
+type_istypetype(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsTypeType(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isvarargconstructible(DeeObject *__restrict self) {
+type_isvarargconstructible(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsVarArgConstructible(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isconstructible(DeeObject *__restrict self) {
+type_isconstructible(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsConstructible(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_iscopyable(DeeObject *__restrict self) {
+type_iscopyable(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsCopyable(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_isnamespace(DeeObject *__restrict self) {
+type_isnamespace(DeeTypeObject *__restrict self) {
 	return_bool(DeeType_IsNamespace(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-type_gcpriority(DeeObject *__restrict self) {
+type_isconstcastable(DeeTypeObject *__restrict self) {
+	return_bool(DeeType_IsConstCastable(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+type_gcpriority(DeeTypeObject *__restrict self) {
 	return DeeInt_NewUInt(DeeType_GCPriority(self));
 }
 
@@ -4501,6 +4515,10 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	              "->?Dbool\n"
 	              "Instance methods/getsets of this type never look at the $this argument "
 	              /**/ "(allowing for optimizations in ?M_hostasm by passing undefined values for it)"),
+	TYPE_GETTER_F("__isconstcastable__", &type_isconstcastable, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dbool\n"
+	              "Allow constant propagation when instances of this type as used as arguments "
+	              /**/ "to functions marked as #C{METHOD_FCONSTCALL_IF_ARGS_CONSTCAST}."),
 	TYPE_GETTER_F("__gcpriority__", &type_gcpriority, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };

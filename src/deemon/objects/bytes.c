@@ -2034,6 +2034,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	/* .tp_class_methods = */ bytes_class_methods,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ bytes_class_members
+	/* TODO: Operator flags (based on the Bytes object being writable) */
 };
 
 

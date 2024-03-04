@@ -36,22 +36,22 @@ struct Dee_property_object {
 	/* A wrapper object describing an instance
 	 * property when accessed through the class:
 	 * >> class MyClass {
-	 * >>     private foo_value = 42;
-	 * >>     
-	 * >>     foo = {
+	 * >>     private member fooValue = 42;
+	 * >>
+	 * >>     public property foo = {
 	 * >>         get() {
 	 * >>             print "In getter";
-	 * >>             return foo_value;
+	 * >>             return fooValue;
 	 * >>         }
 	 * >>         set(v) {
 	 * >>             print "In setter";
-	 * >>             foo_value = v;
+	 * >>             fooValue = v;
 	 * >>         }
 	 * >>     }
 	 * >> }
 	 * >>
-	 * >> local prop = MyClass.foo; // This is a `struct Dee_property_object'
-	 * >> print repr prop;          // `property { get = @thiscall function(), set = @thiscall function(v) }'
+	 * >> local prop = MyClass.foo; // This is a `DeePropertyObject'
+	 * >> print repr prop;          // `Property(...)'
 	 * >> local inst = MyClass();
 	 * >> print inst.foo;           // `In getter' `42'
 	 * >> print prop.get(inst);     // `In getter' `42'

@@ -457,6 +457,7 @@
 		<ClCompile Include="..\src\deemon\runtime\misc.c" />
 		<ClCompile Include="..\src\deemon\runtime\mro.c" />
 		<ClCompile Include="..\src\deemon\runtime\notify.c" />
+		<ClCompile Include="..\src\deemon\runtime\operator-constcall.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator.c" />
 		<ClCompile Include="..\src\deemon\runtime\operator_info.c" />
 		<ClCompile Include="..\src\deemon\runtime\runtime_error.c" />

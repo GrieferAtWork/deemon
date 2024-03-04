@@ -2687,8 +2687,7 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref(struct fungen *__restrict se
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_at(struct fungen *__restrict self, vstackaddr_t off);
 
 /* Same as `fg_vnotoneref()', but only clear when the
- * types aren't known, or the type's `operator_name' lets references escape.
- * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
+ * types aren't known, or the type's `operator_name' lets references escape. */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator(struct fungen *__restrict self, uint16_t operator_name, vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator_at(struct fungen *__restrict self, uint16_t operator_name, vstackaddr_t off);
 
@@ -3784,25 +3783,9 @@ ccall_find_operator_optimization(DeeTypeObject *__restrict type,
 /* Type traits                                                          */
 /************************************************************************/
 
-/* Returns `true' if operator `operator_name' of `self' can be invoked without
- * unintended side-effects, which includes the possibility of other threads
- * accessing any an instance of the type at the same time, which must *NOT*
- * affect the result of the operator being invoked (iow: `List.operator +' is
- * not constexpr). */
-INTDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_IsOperatorConstexpr(DeeTypeObject const *__restrict self,
-                            uint16_t operator_name);
-
-/* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape.
- * NOTE: You can pass `OPERATOR_SEQ_ENUMERATE' to see if `for (none: seq);' might let references escape. */
-INTDEF ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
-DeeType_IsOperatorNoRefEscape(DeeTypeObject const *__restrict self,
-                              uint16_t operator_name);
-#define OPERATOR_SEQ_ENUMERATE OPERATOR_VISIT /* Special operator to check if references leak if the object is enumerated
-                                               * via OPERATOR_ITER (though the created iterator is destroyed at the end). */
-
-
-
+/* Check if operator `operator_name' of `self' doesn't let references to the "this" argument escape. */
+#define DeeType_IsOperatorNoRefEscape(self, operator_name) \
+	(DeeType_GetOperatorFlags(self, operator_name) & METHOD_FNOREFESCAPE)
 
 
 /************************************************************************/

@@ -377,6 +377,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\deemon-mapping-byhash.dee = ..\util\test\deemon-mapping-byhash.dee
 		..\util\test\deemon-numeric-isfloat.dee = ..\util\test\deemon-numeric-isfloat.dee
 		..\util\test\deemon-object-id.dee = ..\util\test\deemon-object-id.dee
+		..\util\test\deemon-primitives-are-const-castable.dee = ..\util\test\deemon-primitives-are-const-castable.dee
 		..\util\test\deemon-property.dee = ..\util\test\deemon-property.dee
 		..\util\test\deemon-sequence-bsearch.dee = ..\util\test\deemon-sequence-bsearch.dee
 		..\util\test\deemon-sequence-compare.dee = ..\util\test\deemon-sequence-compare.dee

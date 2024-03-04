@@ -912,18 +912,22 @@ vcall_objmethod(struct fungen *__restrict self,
 		thisobj = memval_const_getobj(thisval);
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&thisval[i + 1]);
-		retval = (*func)(thisobj, argc, argv);
-		Dee_Freea(argv);
-		if likely(retval != NULL) {
-			retval = fg_inlineref(self, retval);
-			if unlikely(!retval)
-				goto err;
-			DO(fg_vpopmany(self, argc + 1));
-			return fg_vpush_const(self, retval);
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
+		if (!DeeMethodFlags_VerifyConstCallCondition(func_flags, thisobj, argc, argv, NULL)) {
+			Dee_Freea(argv);
 		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			retval = (*func)(thisobj, argc, argv);
+			Dee_Freea(argv);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpopmany(self, argc + 1));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 	if (doc->di_typ) {
@@ -980,18 +984,22 @@ vcall_kwobjmethod(struct fungen *__restrict self,
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&thisval[i + 1]);
 		kw = memval_const_getobj(&thisval[argc + 1]);
-		retval = (*func)(thisobj, argc, argv, kw);
-		Dee_Freea(argv);
-		if likely(retval != NULL) {
-			retval = fg_inlineref(self, retval);
-			if unlikely(!retval)
-				goto err;
-			DO(fg_vpopmany(self, argc + 2));
-			return fg_vpush_const(self, retval);
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
+		if (!DeeMethodFlags_VerifyConstCallCondition(func_flags, thisobj, argc, argv, kw)) {
+			Dee_Freea(argv);
 		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			retval = (*func)(thisobj, argc, argv, kw);
+			Dee_Freea(argv);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpopmany(self, argc + 2));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 
@@ -1065,17 +1073,19 @@ vcall_getmethod(struct fungen *__restrict self,
 	if ((getset_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 1)) {
 		/* Inline the getter call. */
 		DeeObject *thisval = memval_const_getobj(fg_vtop(self));
-		DREF DeeObject *retval = (*func)(thisval);
-		if likely(retval != NULL) {
-			retval = fg_inlineref(self, retval);
-			if unlikely(!retval)
+		if (DeeMethodFlags_VerifyConstCallCondition(getset_flags, thisval, 0, NULL, NULL)) {
+			DREF DeeObject *retval = (*func)(thisval);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpop(self));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
 				goto err;
-			DO(fg_vpop(self));
-			return fg_vpush_const(self, retval);
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
-		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 
@@ -1114,14 +1124,16 @@ vcall_boundmethod(struct fungen *__restrict self,
 	if ((getset_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 1)) {
 		/* Inline the is-bound call. */
 		DeeObject *thisval = memval_const_getobj(fg_vtop(self));
-		int retval = (*func)(thisval);
-		if likely(retval != -1) {
-			DO(fg_vpop(self));
-			return fg_vpush_const(self, DeeBool_For(retval > 0));
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
-		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+		if (DeeMethodFlags_VerifyConstCallCondition(getset_flags, thisval, 0, NULL, NULL)) {
+			int retval = (*func)(thisval);
+			if likely(retval != -1) {
+				DO(fg_vpop(self));
+				return fg_vpush_const(self, DeeBool_For(retval > 0));
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 	if (type) {
@@ -1252,18 +1264,22 @@ vcall_cmethod(struct fungen *__restrict self,
 		argvalv = fg_vtop(self) - (argc - 1);
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&argvalv[i]);
-		retval = (*func)(argc, argv);
-		Dee_Freea(argv);
-		if likely(retval != NULL) {
-			retval = fg_inlineref(self, retval);
-			if unlikely(!retval)
-				goto err;
-			DO(fg_vpopmany(self, argc));
-			return fg_vpush_const(self, retval);
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
+		if (!DeeMethodFlags_VerifyConstCallCondition(func_flags, NULL, argc, argv, NULL)) {
+			Dee_Freea(argv);
 		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			retval = (*func)(argc, argv);
+			Dee_Freea(argv);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpopmany(self, argc));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 
@@ -1318,18 +1334,22 @@ vcall_kwcmethod(struct fungen *__restrict self,
 		for (i = 0; i < argc; ++i)
 			argv[i] = memval_const_getobj(&argvalv[i]);
 		kw = memval_const_getobj(&argvalv[argc]);
-		retval = (*func)(argc, argv, kw);
-		Dee_Freea(argv);
-		if likely(retval != NULL) {
-			retval = fg_inlineref(self, retval);
-			if unlikely(!retval)
-				goto err;
-			DO(fg_vpopmany(self, argc + 1));
-			return fg_vpush_const(self, retval);
-		} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-			goto err;
+		if (!DeeMethodFlags_VerifyConstCallCondition(func_flags, NULL, argc, argv, kw)) {
+			Dee_Freea(argv);
 		} else {
-			DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			retval = (*func)(argc, argv, kw);
+			Dee_Freea(argv);
+			if likely(retval != NULL) {
+				retval = fg_inlineref(self, retval);
+				if unlikely(!retval)
+					goto err;
+				DO(fg_vpopmany(self, argc + 1));
+				return fg_vpush_const(self, retval);
+			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+				goto err;
+			} else {
+				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+			}
 		}
 	}
 	DO(vinline_kwds_and_replace_with_null(self, &argc, doc, NULL, NULL)); /* [args...], kw */
@@ -1849,8 +1869,8 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 		if (DeeType_InheritOperator(type, OPERATOR_CONSTRUCTOR)) {
 			unsigned int ctor_type;
 			struct memval *kwval;
-			if (DeeType_IsOperatorConstexpr(type, OPERATOR_CONSTRUCTOR) &&
-			    fg_vallconst(self, true_argc + 1)) {
+			uintptr_t ctor_flags = DeeType_GetOperatorFlags(type, OPERATOR_CONSTRUCTOR);
+			if ((ctor_flags & METHOD_FCONSTCALL) && fg_vallconst(self, true_argc + 1)) {
 				/* Inline the result of the constructor call. */
 				size_t i;
 				DeeObject *kw, **argv;
@@ -1863,18 +1883,22 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 				for (i = 0; i < true_argc; ++i)
 					argv[i] = memval_const_getobj(&argvalv[i]);
 				kw = memval_const_getobj(&argvalv[true_argc]);
-				retval = DeeObject_NewKw(type, true_argc, argv, kw);
-				Dee_Freea(argv);
-				if likely(retval != NULL) {
-					retval = fg_inlineref(self, retval);
-					if unlikely(!retval)
-						goto err;
-					DO(fg_vpopmany(self, true_argc + 2));
-					return fg_vpush_const(self, retval);
-				} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-					goto err;
+				if (!DeeMethodFlags_VerifyConstCallCondition(ctor_flags, NULL, true_argc, argv, kw)) {
+					Dee_Freea(argv);
 				} else {
-					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+					retval = DeeObject_NewKw(type, true_argc, argv, kw);
+					Dee_Freea(argv);
+					if likely(retval != NULL) {
+						retval = fg_inlineref(self, retval);
+						if unlikely(!retval)
+							goto err;
+						DO(fg_vpopmany(self, true_argc + 2));
+						return fg_vpush_const(self, retval);
+					} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+						goto err;
+					} else {
+						DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+					}
 				}
 			}
 
@@ -3421,7 +3445,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 		 *      set on a per-function basis.
 		 * NOPE: not that easy. Technically, `string.format' can let its argument escape, because it
 		 *       calls `operator iter' on its argument. What we need to know here is: "can references
-		 *       escape, assuming that OPERATOR_SEQ_ENUMERATE doesn't let references escape?" */
+		 *       escape, assuming that OPERATOR_ITERSELF doesn't let references escape?" */
 #ifndef CONFIG_TRACE_REFCHANGES
 		if (func_type == &DeeString_Type && hasattr && !asmap &&
 		    memval_isconst(&funcval[1]) &&
@@ -3950,27 +3974,32 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 	seq_type = memval_typeof(fg_vtop(self) - 2);
 	if (seq_type) {
 		/* Try to inline a constant expression */
-		if (fg_vallconst(self, 3) &&
-		    DeeType_IsOperatorConstexpr(seq_type, OPERATOR_GETITEM)) {
+		uintptr_t getitem_flags = DeeType_GetOperatorFlags(seq_type, OPERATOR_GETITEM);
+		if ((getitem_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 3)) {
 			DREF DeeObject *result;
-			DeeObject *seq = memval_const_getobj(&fg_vtop(self)[-2]);
-			DeeObject *key = memval_const_getobj(&fg_vtop(self)[-1]);
-			DeeObject *def = memval_const_getobj(&fg_vtop(self)[-0]);
-			result = DeeObject_GetItemDef(seq, key, def);
-			if likely(result != NULL) {
-				if (result != ITER_DONE) {
-					result = fg_inlineref(self, result);
-					if unlikely(!result)
-						goto err;
-				}
-				DO(fg_vpop(self)); /* seq, key_or_index */
-				DO(fg_vpop(self)); /* seq */
-				DO(fg_vpop(self)); /* N/A */
-				return fg_vpush_const(self, result); /* result */
-			} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
-				goto err;
+			DeeObject *seq, *key_def[2];
+			seq        = memval_const_getobj(&fg_vtop(self)[-2]);
+			key_def[0] = memval_const_getobj(&fg_vtop(self)[-1]);
+			key_def[1] = memval_const_getobj(&fg_vtop(self)[-0]);
+			if (!DeeMethodFlags_VerifyConstCallCondition(getitem_flags, seq, 2, key_def, NULL)) {
+				/* Not allowed */
 			} else {
-				DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				result = DeeObject_GetItemDef(seq, key_def[0], key_def[1]);
+				if likely(result != NULL) {
+					if (result != ITER_DONE) {
+						result = fg_inlineref(self, result);
+						if unlikely(!result)
+							goto err;
+					}
+					DO(fg_vpop(self)); /* seq, key_or_index */
+					DO(fg_vpop(self)); /* seq */
+					DO(fg_vpop(self)); /* N/A */
+					return fg_vpush_const(self, result); /* result */
+				} else if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR) {
+					goto err;
+				} else {
+					DeeError_Handled(Dee_ERROR_HANDLED_RESTORE);
+				}
 			}
 		}
 
@@ -4149,7 +4178,7 @@ fg_vopbool(struct fungen *__restrict self,
 		if (memval_const_typeof(vtop) == &DeeBool_Type)
 			return 0; /* Already a constant boolean */
 		constval = memval_const_getobj(vtop);
-		if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), OPERATOR_BOOL)) {
+		if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_BOOL) & METHOD_FCONSTCALL) {
 			int temp = DeeObject_Bool(constval);
 			if unlikely(temp < 0) {
 				if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
@@ -4244,7 +4273,7 @@ again:
 	default:
 		if (memval_isconst(vtop)) {
 			DeeObject *constval = memval_const_getobj(vtop);
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), OPERATOR_BOOL)) {
+			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_BOOL) & METHOD_FCONSTCALL) {
 				int temp = DeeObject_Bool(constval);
 				if likely(temp >= 0) {
 					memval_const_setobj_ex(vtop, DeeBool_For(!temp), &DeeBool_Type);
@@ -4316,7 +4345,7 @@ fg_vopsize(struct fungen *__restrict self) {
 		/* Optimization when operands are constant. */
 		if (memval_direct_isconst(vtop)) {
 			DeeObject *constval = memval_const_getobj(vtop);
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), OPERATOR_SIZE)) {
+			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_SIZE) & METHOD_FCONSTCALL) {
 				DREF DeeObject *sizeval = DeeObject_SizeObject(constval);
 				if unlikely(!sizeval) {
 					if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
@@ -4400,7 +4429,7 @@ fg_vopint(struct fungen *__restrict self) {
 			if (memval_const_typeof(vtop) == &DeeString_Type)
 				return 0; /* Already a constant integer */
 			constval = memval_const_getobj(vtop);
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), OPERATOR_INT)) {
+			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_INT) & METHOD_FCONSTCALL) {
 				DREF DeeObject *intval = DeeObject_Int(constval);
 				if unlikely(!intval) {
 					if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
@@ -4478,7 +4507,7 @@ fg_vopstr(struct fungen *__restrict self) {
 			if (memval_const_typeof(vtop) == &DeeString_Type)
 				return 0; /* Already a constant string */
 			constval = memval_const_getobj(vtop);
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), OPERATOR_STR)) {
+			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), OPERATOR_STR) & METHOD_FCONSTCALL) {
 				DREF DeeObject *strval = DeeObject_Str(constval);
 				if unlikely(!strval) {
 					if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
@@ -4872,9 +4901,14 @@ again:
 			vstackaddr_t key_voffset;
 			Dee_hash_t template_i, perturb, hash;
 			DeeObject *key = memval_const_getobj(keyval);
-			if (!DeeType_IsOperatorConstexpr(Dee_TYPE(key), OPERATOR_HASH))
+			uintptr_t eq_flags;
+			if (!(DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_HASH) & METHOD_FCONSTCALL))
 				goto next_key;
-			if (!DeeType_IsOperatorConstexpr(Dee_TYPE(key), OPERATOR_EQ))
+			eq_flags = DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_EQ);
+			if (!(eq_flags & METHOD_FCONSTCALL))
+				goto next_key;
+			if ((eq_flags & METHOD_FCONSTCALL_IF_MASK) != METHOD_FCONSTCALL_IF_TRUE &&
+			    (eq_flags & METHOD_FCONSTCALL_IF_MASK) != METHOD_FCONSTCALL_IF_ARGS_CONSTCAST)
 				goto next_key;
 			hash = DeeObject_Hash(key);
 			key_voffset = (vstackaddr_t)((self->fg_state->ms_stackv +
@@ -4894,7 +4928,12 @@ again:
 
 				if (it->ti_hash == hash) {
 					/* Check if this is a duplicate key. */
-					int temp = DeeObject_CompareEq(it->ti_key, key);
+					int temp;
+					if ((eq_flags & METHOD_FCONSTCALL_IF_MASK) == METHOD_FCONSTCALL_IF_ARGS_CONSTCAST) {
+						if (!DeeType_IsConstCastable(Dee_TYPE(it->ti_key)))
+							goto next_key; /* Must do the insert at runtime. */
+					}
+					temp = DeeObject_CompareEq(it->ti_key, key);
 					if unlikely(temp < 0) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;
@@ -5574,7 +5613,8 @@ fg_vop(struct fungen *__restrict self,
 			DeeObject *thisobj = memval_const_getobj(thisval);
 			/* Try to produce a compile-time call if the operator is
 			 * constexpr, and all arguments are constants as well. */
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(thisobj), operator_name)) {
+			uintptr_t op_flags = DeeType_GetOperatorFlags(Dee_TYPE(thisobj), operator_name);
+			if (op_flags & METHOD_FCONSTCALL) {
 				size_t i;
 				DeeObject **constant_argv;
 				DREF DeeObject *op_result;
@@ -5586,6 +5626,8 @@ fg_vop(struct fungen *__restrict self,
 						goto not_all_args_are_constant;
 					constant_argv[i - 1] = memval_const_getobj(&thisval[i]);
 				}
+				if (!DeeMethodFlags_VerifyConstCallCondition(op_flags, thisobj, argc - 1, constant_argv, NULL))
+					goto not_all_args_are_constant; /* Cannot do call at compile-time :( */
 				op_result = DeeObject_InvokeOperator(thisobj, operator_name, argc - 1, constant_argv);
 				if unlikely(!op_result) {
 					if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR)) {
@@ -5721,7 +5763,9 @@ done_without_result:
 	DO(fg_vnotoneref(self, argc));           /* this, [args...] */
 	DO(fg_vlinear(self, argc, true));        /* this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, this */
-	DO(fg_vnotoneref_if_operator_at(self, operator_name, 1)); /* [args...], argv, this */
+	/* Special case: for `OPERATOR_ITERSELF', the ONEREF flag has special meaning. */
+	DO(operator_name == OPERATOR_ITERSELF ? fg_vnotoneref_at(self, 1) /* [args...], argv, this */
+	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vpush_imm16(self, operator_name)); /* [args...], argv, this, opname */
 	DO(fg_vpush_immSIZ(self, argc));         /* [args...], argv, this, opname, argc */
 	DO(fg_vlrot(self, 4));                   /* [args...], this, opname, argc, argv */
@@ -5799,7 +5843,8 @@ fg_vinplaceop(struct fungen *__restrict self,
 		DeeObject *thisobj = memval_const_getobj(thisval);
 		/* Try to produce a compile-time call if the operator is
 		 * constexpr, and all arguments are constants as well. */
-		if (DeeType_IsOperatorConstexpr(Dee_TYPE(thisobj), operator_name)) {
+		uintptr_t op_flags = DeeType_GetOperatorFlags(Dee_TYPE(thisobj), operator_name);
+		if (op_flags & METHOD_FCONSTCALL) {
 			size_t i;
 			DeeObject **constant_argv;
 			DREF DeeObject *op_result, *new_thisobj;
@@ -5811,6 +5856,8 @@ fg_vinplaceop(struct fungen *__restrict self,
 					goto not_all_args_are_constant;
 				constant_argv[i] = memval_const_getobj(&thisval[i + 1]);
 			}
+			if (!DeeMethodFlags_VerifyConstCallCondition(op_flags, thisobj, argc, constant_argv, NULL))
+				goto not_all_args_are_constant; /* Cannot do call at compile-time :( */
 			new_thisobj = thisobj;
 			Dee_Incref(new_thisobj);
 			op_result = DeeObject_PInvokeOperator(&new_thisobj, operator_name, argc, constant_argv);
@@ -5995,7 +6042,9 @@ done_without_result:
 	DO(fg_vlinear(self, argc, true));        /* [ref]:this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, [ref]:this */
 	DO(fg_vref_noalias(self));               /* [args...], argv, ref:this */
-	DO(fg_vnotoneref_if_operator_at(self, operator_name, 1)); /* [args...], argv, ref:this */
+	/* Special case: for `OPERATOR_ITERSELF', the ONEREF flag has special meaning. */
+	DO(operator_name == OPERATOR_ITERSELF ? fg_vnotoneref_at(self, 1) /* [args...], argv, ref:this */
+	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vlinear(self, 1, false));          /* [args...], argv, ref:this, p_this */
 	DO(fg_vswap(self));                      /* [args...], argv, p_this, ref:this */
 	DO(fg_vrrot(self, argc + 3));            /* ref:this, [args...], argv, p_this */
@@ -6194,7 +6243,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			return 0;
 		}
 		if (memval_isconst(seqval) &&
-		    DeeType_IsOperatorConstexpr(seqtype, OPERATOR_SEQ_ENUMERATE)) {
+		    (DeeType_GetOperatorFlags(seqtype, OPERATOR_ITERSELF) & METHOD_FCONSTCALL)) {
 			/* Optimizations to inline-expand a constant expression */
 			DREF DeeObject **elemv;
 			DeeObject *seqobj = memval_const_getobj(seqval);
@@ -6333,7 +6382,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 		ASSERT(!fg_vtop_direct_isref(self));
 	}                                                                  /* seq, [elems...] */
 	DO(fg_vlrot(self, n + 1));                                         /* [elems...], seq */
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1)); /* [elems...], seq */
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* [elems...], seq */
 	DO(fg_vpush_immSIZ(self, n));                                      /* [elems...], seq, objc */
 	DO(fg_vpush_hstack(self, cfa_offset));                             /* [elems...], seq, objc, objv */
 	DO(fg_vcallapi(self, &DeeObject_Unpack, VCALL_CC_INT, 3));         /* [elems...] */
@@ -6768,7 +6817,7 @@ is_constexpr_empty_sequence(struct fungen *__restrict gen,
 		return ((DeeRoDictObject *)self)->rd_size == 0;
 	if (tp_self == &DeeRoSet_Type)
 		return ((DeeRoSetObject *)self)->rs_size == 0;
-	if (DeeType_IsOperatorConstexpr(tp_self, OPERATOR_SEQ_ENUMERATE)) {
+	if (DeeType_GetOperatorFlags(tp_self, OPERATOR_ITERSELF) & METHOD_FCONSTCALL) {
 		/* Construct an iterator to see if the sequence is empty. */
 		DREF DeeObject *elem = NULL;
 		DREF DeeObject *iter = DeeObject_IterSelf(self);
@@ -6815,7 +6864,7 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 	if (oldtype == newtype) {
 		if (fg_isoneref_noalias(self, objval))
 			return 0; /* location is already distinct and of the proper type -> no-op */
-		if (DeeType_IsOperatorConstexpr(newtype, OPERATOR_COPY))
+		if (DeeType_GetOperatorFlags(newtype, OPERATOR_COPY) & METHOD_FCONSTCALL)
 			return 0; /* Copy doesn't have side-effects, and type already matches -> no-op */
 		/* Types already match, but object isn't distinct -> must create a copy. */
 		return fg_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES);
@@ -6825,6 +6874,7 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 	 * NOTE: Other object types aren't constexpr, so can't be inlined here! */
 	if (memval_direct_isconst(objval)) {
 		DeeObject *obj = memval_const_getobj(objval);
+		uintptr_t ctor_flags;
 		if (DeeType_Extends(newtype, &DeeSeq_Type)) {
 			int temp = is_constexpr_empty_sequence(self, obj);
 			if (temp) {
@@ -6837,8 +6887,9 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 			}
 		}
 
-		if (DeeType_IsOperatorConstexpr(Dee_TYPE(obj), OPERATOR_COPY) &&
-		    DeeType_IsOperatorConstexpr(newtype, OPERATOR_COPY)) {
+		ctor_flags = DeeType_GetOperatorFlags(Dee_TYPE(obj), OPERATOR_CONSTRUCTOR);
+		if ((ctor_flags & METHOD_FCONSTCALL) &&
+		    DeeMethodFlags_VerifyConstCallCondition(ctor_flags, NULL, 1, &obj, NULL)) {
 			/* Cast the object at compile-time. */
 			DREF DeeObject *cast_result;
 			cast_result = DeeObject_New(newtype, 1, &obj);
@@ -6898,7 +6949,7 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 				}
 			}
 		}
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 		DO(fg_vcallapi(self, cast_api_function, VCALL_CC_OBJECT, 1));
 		if (cast_api_function != (void const *)&DeeTuple_FromSequence && /* These casters may re-return the given argument */
 		    cast_api_function != (void const *)&DeeRoDict_FromSequence &&

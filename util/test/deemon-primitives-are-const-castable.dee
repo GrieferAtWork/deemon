@@ -1,0 +1,42 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+/* Test the GATW-specific "__isconstcastable__" type trait. */
+
+if (hasattr(Type, "__isconstcastable__")) {
+	/* Types that should be constant castable. If these asserts fail,
+	 * if means that the deemon compiler is no longer able to efficiently
+	 * inline expressions where these types of objects appear. */
+	assert Object.__isconstcastable__;
+	assert string.__isconstcastable__;
+	assert type(none).__isconstcastable__;
+	assert float.__isconstcastable__ || !float.hasoperator("constructor"),
+		"float should be constant castable, except when deemon was built with CONFIG_NO_FPU";
+	assert bool.__isconstcastable__;
+	assert Tuple.__isconstcastable__;
+
+	/* Types that shouldn't be constant castable */
+	assert !List.__isconstcastable__,
+		"Not possible because the type is mutable";
+}
+

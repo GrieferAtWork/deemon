@@ -218,7 +218,7 @@ PRIVATE struct ccall_optimization tpconst cca_Object[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Sequence_sum(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 	return fg_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1); /* result */
 err:
 	return -1;
@@ -228,7 +228,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 impl_cca_Sequence_anyall(struct fungen *__restrict self,
                          void const *api_function) {
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 	DO(fg_vcallapi(self, api_function, VCALL_CC_NEGINT, 1));
 	DO(fg_vdirect1(self));
 	ASSERT(fg_vtop_isdirect(self));
@@ -263,7 +263,7 @@ impl_cca_Sequence_minmax(struct fungen *__restrict self,
 		DO(fg_vpush_NULL(self)); /* seq, key */
 	}
 	DO(fg_vnotoneref_at(self, 1));
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 2));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 2));
 	return fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 2);
 err:
 	return -1;
@@ -433,7 +433,7 @@ cca_List_extend(struct fungen *__restrict self, vstackaddr_t argc) {
 		DO(fg_vcallapi(self, &DeeList_AppendVector, VCALL_CC_INT, 3)); /* seq */
 		DO(fg_vpop(self));                                     /* N/A */
 	} else {
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1)); /* this, seq */
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* this, seq */
 		DO(fg_vcallapi(self, &DeeList_AppendSequence, VCALL_CC_INT, 2)); /* N/A */
 	}
 	return fg_vpush_none(self); /* none */
@@ -473,7 +473,7 @@ cca_List_insertall(struct fungen *__restrict self, vstackaddr_t argc) {
 		DO(fg_vcallapi(self, &DeeList_InsertVector, VCALL_CC_INT, 4)); /* seq */
 		DO(fg_vpop(self));                                     /* N/A */
 	} else {
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1)); /* this, uint:index, seq */
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* this, uint:index, seq */
 		DO(fg_vcallapi(self, &DeeList_InsertSequence, VCALL_CC_INT, 3)); /* N/A */
 	}
 	return fg_vpush_none(self); /* none */

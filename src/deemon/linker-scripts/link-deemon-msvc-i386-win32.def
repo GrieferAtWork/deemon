@@ -446,6 +446,7 @@ EXPORTS
 	DeeMapFile_InitFile@32=_DeeMapFile_InitFile@32
 	DeeMapFile_InitSysFd@32=_DeeMapFile_InitSysFd@32
 	DeeMem_ClearCaches@4=_DeeMem_ClearCaches@4
+	DeeMethodFlags_VerifyConstCallCondition@20=_DeeMethodFlags_VerifyConstCallCondition@20
 	DeeModule_BoundAttrSymbol@8=_DeeModule_BoundAttrSymbol@8
 	DeeModule_CallExtern@16=_DeeModule_CallExtern@16
 	DeeModule_CallExternString@16=_DeeModule_CallExternString@16

@@ -395,7 +395,7 @@ gen_print_to_file(struct fungen *__restrict self,
 		print_operator = repr ? OPERATOR_REPR : OPERATOR_STR;
 		if (memval_isconst(value_mval)) {
 			DeeObject *constval = memval_const_getobj(value_mval);
-			if (DeeType_IsOperatorConstexpr(Dee_TYPE(constval), print_operator)) {
+			if (DeeType_GetOperatorFlags(Dee_TYPE(constval), print_operator) & METHOD_FCONSTCALL) {
 				char const *utf8;
 				if (repr || !DeeString_Check(constval)) {
 					constval = repr ? DeeObject_Repr(constval)
@@ -519,15 +519,15 @@ gen_print_with_stdout_in_vtop(struct fungen *__restrict self,
 			break;
 		case ASM_PRINTALL:
 			api_function = (void const *)&DeeFile_PrintAll;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		case ASM_PRINTALL_SP:
 			api_function = (void const *)&DeeFile_PrintAllSp;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		case ASM_PRINTALL_NL:
 			api_function = (void const *)&DeeFile_PrintAllNl;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		default: __builtin_unreachable();
 		}
@@ -1607,15 +1607,15 @@ do_jcc:
 			break;
 		case ASM_FPRINTALL: /* print top, pop... */
 			api_function = (void const *)&DeeFile_PrintAll;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		case ASM_FPRINTALL_SP: /* print top, pop..., sp */
 			api_function = (void const *)&DeeFile_PrintAllSp;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		case ASM_FPRINTALL_NL: /* print top, pop..., nl */
 			api_function = (void const *)&DeeFile_PrintAllNl;
-			value_operators = OPERATOR_SEQ_ENUMERATE;
+			value_operators = OPERATOR_ITERSELF;
 			break;
 		default: __builtin_unreachable();
 		}
@@ -2194,22 +2194,22 @@ do_jcc:
 	}	break;
 
 	TARGET(ASM_REDUCE_MIN)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 		DO(fg_vpush_addr(self, NULL));
 		return fg_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_MAX)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 		DO(fg_vpush_addr(self, NULL));
 		return fg_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_SUM)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 		return fg_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_ANY)
 	TARGET(ASM_REDUCE_ALL)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_SEQ_ENUMERATE, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
 		DO(fg_vcallapi(self,
 		               opcode == ASM_REDUCE_ANY ? (void const *)&DeeSeq_Any
 		                                        : (void const *)&DeeSeq_All,

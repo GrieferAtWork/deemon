@@ -2032,7 +2032,12 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define Dee_METHOD_FCONSTCALL   0x40000000 /* ATTR_CONST: Function does not modify or read mutable args, or affect
                                             * the global state (except for reference counts or memory usage).
                                             * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
-                                            * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation. */
+                                            * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation.
+                                            * IMPORTANT: when attached to `OPERATOR_ITERSELF', the meaning isn't that `operator iter()'
+                                            *            can be called at compile-time (it never can, since the whole point of an iterator
+                                            *            is that it holds a small state usable for enumeration of a sequence).
+                                            *            Instead, here the meaning is that `DeeObject_Foreach()' can be called at compile-
+                                            *            time (or alternatively creating an iterator, and then enumerating it). */
 #define Dee_METHOD_FNOREFESCAPE 0x80000000 /* Optimizer hint flag: when invoked, this method never incref's
                                             * the "this" argument (unless it also appears in argv/kw, or "this"
                                             * has an accessible reference via some other operator chain that
@@ -2041,29 +2046,72 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
                                             * by another decref before the function returns (i.e. refcnt on
                                             * entry must match refcnt on exit (except as listed above))
                                             *
-                                            * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it! */
+                                            * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it!
+                                            * IMPORTANT: when attached to `OPERATOR_ITERSELF', same special case as `Dee_METHOD_FCONSTCALL' */
 
 /* Extra conditions that may be used to restrict when `Dee_METHOD_FPURECALL'
  * and `Dee_METHOD_FCONSTCALL' should be considered enabled (must be combined
- * with the resp. flag in order to affect anything). */
-#define Dee_METHOD_FCONSTCALL_IF_MASK           0x00000f00 /* Mask of possible CONSTCALL conditions. */
-#define Dee_METHOD_FCONSTCALL_IF_TRUE           0x00000000 /* No extra condition (default) */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST 0x00000100 /* All arguments (other than "this") must fulfill `DeeType_IsConstCastable(Dee_TYPE(arg))'
-                                                            * Use this condition to allow compatible objects in arguments when `DeeArg_Unpack()' is used. */
+ * with the resp. flag in order to affect anything).
+ *
+ * NOTES:
+ * - IS_CONSTEXPR(ob.operator foo) (where "foo" is a unary operators) means:
+ *   >> !DeeType_HasOperator(Dee_TYPE(ob), OPERATOR_FOO) ||
+ *   >> (DeeType_GetOperatorFlags(Dee_TYPE(ob), OPERATOR_FOO) & METHOD_FCONSTCALL);
+ * - IS_CONSTEXPR(elem <=> arg) means:
+ *   >> // TODO
+ */
+#define Dee_METHOD_FCONSTCALL_IF_MASK                      0x0000ff00 /* Mask of possible CONSTCALL conditions. */
+#define Dee_METHOD_FCONSTCALL_IF_TRUE                      0x00000000 /* >> true; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST            0x00000100 /* >> (for (local arg: ...) DeeType_IsConstCastable(Dee_TYPE(arg))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR             0x00000200 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator str)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR         0x00000300 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator str)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR        0x00000400 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator repr)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH        0x00000500 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator hash)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP        0x00000600 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator deepcopy)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE          0x00000700 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a <=> b))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS         0x00000800 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS         0x00000900 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS         0x00000a00 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key, _: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES 0x00000b00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES    0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
 
 #ifdef DEE_SOURCE
-#define METHOD_FMASK                        Dee_METHOD_FMASK
-#define METHOD_FNORMAL                      Dee_METHOD_FNORMAL
-#define METHOD_FEXACTRETURN                 Dee_METHOD_FEXACTRETURN
-#define METHOD_FNOTHROW                     Dee_METHOD_FNOTHROW
-#define METHOD_FNORETURN                    Dee_METHOD_FNORETURN
-#define METHOD_FPURECALL                    Dee_METHOD_FPURECALL
-#define METHOD_FCONSTCALL                   Dee_METHOD_FCONSTCALL
-#define METHOD_FNOREFESCAPE                 Dee_METHOD_FNOREFESCAPE
-#define METHOD_FCONSTCALL_IF_MASK           Dee_METHOD_FCONSTCALL_IF_MASK
-#define METHOD_FCONSTCALL_IF_TRUE           Dee_METHOD_FCONSTCALL_IF_TRUE
-#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST
+#define METHOD_FMASK                                   Dee_METHOD_FMASK
+#define METHOD_FNORMAL                                 Dee_METHOD_FNORMAL
+#define METHOD_FEXACTRETURN                            Dee_METHOD_FEXACTRETURN
+#define METHOD_FNOTHROW                                Dee_METHOD_FNOTHROW
+#define METHOD_FNORETURN                               Dee_METHOD_FNORETURN
+#define METHOD_FPURECALL                               Dee_METHOD_FPURECALL
+#define METHOD_FCONSTCALL                              Dee_METHOD_FCONSTCALL
+#define METHOD_FNOREFESCAPE                            Dee_METHOD_FNOREFESCAPE
+#define METHOD_FCONSTCALL_IF_MASK                      Dee_METHOD_FCONSTCALL_IF_MASK
+#define METHOD_FCONSTCALL_IF_TRUE                      Dee_METHOD_FCONSTCALL_IF_TRUE
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST            Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTSTR             Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE          Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES    Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES
 #endif /* DEE_SOURCE */
+
+/* Check if the condition from `flags & Dee_METHOD_FCONSTCALL_IF_MASK' is
+ * fulfilled when applied to the given argument list (which does not
+ * include the "this" argument, if there would have been one). */
+DFUNDEF ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
+(DCALL DeeMethodFlags_VerifyConstCallCondition)(uintptr_t flags, DeeObject *thisarg,
+                                                size_t argc, DeeObject *const *argv,
+                                                DeeObject *kw);
+#ifndef __OPTIMIZE_SIZE__
+#define DeeMethodFlags_VerifyConstCallCondition(flags, thisarg, argc, argv, kw)      \
+	((((flags) & Dee_METHOD_FCONSTCALL_IF_MASK) == Dee_METHOD_FCONSTCALL_IF_TRUE) || \
+	 DeeMethodFlags_VerifyConstCallCondition(flags, thisarg, argc, argv, kw))
+#endif /* !__OPTIMIZE_SIZE__ */
 
 
 /* Possible values for `struct Dee_type_method::m_flag' (also accepts `Dee_METHOD_FMASK') */
@@ -2706,7 +2754,7 @@ struct Dee_opinfo {
 	{ id, class, offset, cc, uname, sname, iname, invoke }
 #define _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke)                                                           \
 	{ id, OPCLASS_CUSTOM, 0, OPCC_SPECIAL, { _DEE_UINTPTR_AS_CHAR_LIST((char)(unsigned char), flags) }, "", "", \
-	  (struct Dee_operator_invoke const *)(void const *)(invoke) }
+	  (struct Dee_operator_invoke Dee_tpconst *)(void Dee_tpconst *)(void const *)(invoke) }
 #ifdef DEE_SOURCE
 #define OPINFO_INIT Dee_OPINFO_INIT
 #endif /* DEE_SOURCE */
@@ -3039,6 +3087,12 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id);
 
 /* Lookup per-type method flags that may be defined for "opname".
+ * IMPORTANT: When querying the flags for `OPERATOR_ITERSELF', the `Dee_METHOD_FCONSTCALL',
+ *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
+ *            you can call `operator iter()' at compile-time. Instead, it means that
+ *            *enumerating* the object can be done at compile-time (so-long as the associated
+ *            iterator is never exposed). Alternatively, think of this case as allowing a
+ *            call to `DeeObject_Foreach()' at compile-time.
  * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
  * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
@@ -3049,6 +3103,7 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, uint16_t opname);
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
+ * >> (!DeeType_HasOperator(self, OPERATOR_ITERSELF) || (DeeType_GetOperatorFlags(self, OPERATOR_ITERSELF) & Dee_METHOD_FCONSTCALL));
  * This is the condition that must be fulfilled by all arguments other than "this" when
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
  * conditional. */

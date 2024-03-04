@@ -629,7 +629,12 @@ PRIVATE struct type_method tpconst attr_class_methods[] = {
 	TYPE_METHOD_END
 };
 
-
+PRIVATE struct type_operator tpconst attr_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+};
 
 /* `Attribute from deemon' */
 PUBLIC DeeTypeObject DeeAttribute_Type = {
@@ -720,7 +725,11 @@ PUBLIC DeeTypeObject DeeAttribute_Type = {
 	/* .tp_members       = */ attr_members,
 	/* .tp_class_methods = */ attr_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ attr_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(attr_operators)
 };
 
 
