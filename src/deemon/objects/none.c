@@ -242,7 +242,7 @@ PRIVATE struct type_buffer none_buffer = {
 
 /* All operators implemented by "none" can be constant propagated.
  * They also never throw any exceptions. */
-PRIVATE struct type_operator tpconst none_operators[] = {
+PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),

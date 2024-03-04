@@ -2974,7 +2974,7 @@ struct Dee_type_object {
 	 * IMPORTANT: Sub-type-types are *NOT* allowed to re-define operator IDs that were already defined
 	 *            by bases (e.g. when creating a new type-type, you're not allowed to re-defined operators
 	 *            types already defined by DeeType_Type) */
-	struct Dee_type_operator Dee_tpconst *tp_operators;
+	struct Dee_type_operator const *tp_operators;
 	size_t tp_operators_size; /* Size of "tp_operators" in items. */
 
 	/* Lazily-filled hash-table of instance members.
