@@ -2060,44 +2060,51 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  * - IS_CONSTEXPR(elem <=> arg) means:
  *   >> // TODO
  */
-#define Dee_METHOD_FCONSTCALL_IF_MASK                      0x0000ff00 /* Mask of possible CONSTCALL conditions. */
-#define Dee_METHOD_FCONSTCALL_IF_TRUE                      0x00000000 /* >> true; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST            0x00000100 /* >> (for (local arg: ...) DeeType_IsConstCastable(Dee_TYPE(arg))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR             0x00000200 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator str)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR         0x00000300 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator str)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR        0x00000400 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator repr)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH        0x00000500 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator hash)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP        0x00000600 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator deepcopy)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE          0x00000700 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a <=> b))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS         0x00000800 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS         0x00000900 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS         0x00000a00 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key, _: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES 0x00000b00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES    0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_MASK                       0x0000ff00 /* Mask of possible CONSTCALL conditions. */
+#define Dee_METHOD_FCONSTCALL_IF_TRUE                       0x00000000 /* >> true; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST             0x00000100 /* >> (for (local arg: ...) DeeType_IsConstCastable(Dee_TYPE(arg))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          0x00000200 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator str)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         0x00000300 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator repr)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         0x00000400 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator hash)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         0x00000500 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator deepcopy)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE           0x00000600 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a <=> b))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          0x00000700 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          0x00000800 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS          0x00000900 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key, _: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES 0x00000a00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) DeeType_IsConstCastable(Dee_TYPE(x)))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000b00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00000e00 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
 
 #ifdef DEE_SOURCE
-#define METHOD_FMASK                                   Dee_METHOD_FMASK
-#define METHOD_FNORMAL                                 Dee_METHOD_FNORMAL
-#define METHOD_FEXACTRETURN                            Dee_METHOD_FEXACTRETURN
-#define METHOD_FNOTHROW                                Dee_METHOD_FNOTHROW
-#define METHOD_FNORETURN                               Dee_METHOD_FNORETURN
-#define METHOD_FPURECALL                               Dee_METHOD_FPURECALL
-#define METHOD_FCONSTCALL                              Dee_METHOD_FCONSTCALL
-#define METHOD_FNOREFESCAPE                            Dee_METHOD_FNOREFESCAPE
-#define METHOD_FCONSTCALL_IF_MASK                      Dee_METHOD_FCONSTCALL_IF_MASK
-#define METHOD_FCONSTCALL_IF_TRUE                      Dee_METHOD_FCONSTCALL_IF_TRUE
-#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST            Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST
-#define METHOD_FCONSTCALL_IF_ARGS_CONSTSTR             Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR
-#define METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR
-#define METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR
-#define METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH
-#define METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP        Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP
-#define METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE          Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE
-#define METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS
-#define METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS
-#define METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS         Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS
-#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES
-#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES    Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES
+#define METHOD_FMASK                                    Dee_METHOD_FMASK
+#define METHOD_FNORMAL                                  Dee_METHOD_FNORMAL
+#define METHOD_FEXACTRETURN                             Dee_METHOD_FEXACTRETURN
+#define METHOD_FNOTHROW                                 Dee_METHOD_FNOTHROW
+#define METHOD_FNORETURN                                Dee_METHOD_FNORETURN
+#define METHOD_FPURECALL                                Dee_METHOD_FPURECALL
+#define METHOD_FCONSTCALL                               Dee_METHOD_FCONSTCALL
+#define METHOD_FNOREFESCAPE                             Dee_METHOD_FNOREFESCAPE
+#define METHOD_FCONSTCALL_IF_MASK                       Dee_METHOD_FCONSTCALL_IF_MASK
+#define METHOD_FCONSTCALL_IF_TRUE                       Dee_METHOD_FCONSTCALL_IF_TRUE
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST             Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH
+#define METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE           Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST         Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR          Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES
+#define METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES
+#define METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL
+#define METHOD_FCONSTCALL_IF_THISARG_ROBYTES            Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES
 #endif /* DEE_SOURCE */
 
 /* Check if the condition from `flags & Dee_METHOD_FCONSTCALL_IF_MASK' is

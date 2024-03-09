@@ -1574,26 +1574,33 @@ bytes_sizeof(Bytes *self) {
 
 
 PRIVATE struct type_getset tpconst bytes_getsets[] = {
-	TYPE_GETTER_F("isreadonly", &bytes_isreadonly, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("isreadonly", &bytes_isreadonly,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. object cannot be written to"),
-	TYPE_GETTER_F("iswritable", &bytes_iswritable, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("iswritable", &bytes_iswritable,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
-	TYPE_GETTER_F("ismutable", &bytes_iswritable, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("ismutable", &bytes_iswritable,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
-	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst, METHOD_FNOREFESCAPE,
+	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst,
+	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this ?. object is empty}"
 	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	              "Access the first byte of @this ?. object"),
-	TYPE_GETSET_F(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast, METHOD_FNOREFESCAPE,
+	TYPE_GETSET_F(STR_last, &bytes_getlast, &bytes_dellast, &bytes_setlast,
+	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "#tValueError{@this ?. object is empty}"
 	              "#tBufferError{Attempted to modify the byte when @this ?. object is not writable}"
 	              "Access the last byte of @this ?. object"),
-	TYPE_GETTER_F("__sizeof__", &bytes_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &bytes_sizeof,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1603,7 +1610,7 @@ PRIVATE struct type_member tpconst bytes_members[] = {
 };
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_getbuf(Bytes *__restrict self,
              DeeBuffer *__restrict info,
              unsigned int flags) {
@@ -1777,29 +1784,31 @@ err:
 
 
 PRIVATE struct type_method tpconst bytes_class_methods[] = {
-	TYPE_METHOD("fromseq", &bytes_fromseq,
-	            "(seq:?S?Dint)->?.\n"
-	            "#tNotImplemented{The given @seq cannot be iterated, or contains at "
-	            /*            */ "least one item that cannot be converted into an integer}"
-	            "#tIntegerOverflow{At least one of the integers found in @seq is lower "
-	            /*             */ "than $0, or greater than $0xff}"
-	            "Convert the items of the given sequence @seq into integers, "
-	            /**/ "and construct a writable ?. object from their values\n"
-	            "Passing ?N for @seq will return an empty ?. object"),
-	TYPE_METHOD("fromhex", &bytes_fromhex,
-	            "(hex_string:?Dstring)->?.\n"
-	            "#tValueError{The given @hex_string contains non-hexadecimal and non-space characters}"
-	            "#tValueError{The given @hex_string contains an unbalanced hexadecimal digit}"
-	            "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
-	            /**/ "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
-	            "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
-	            /**/ "the resulting ?. object.\n"
-	            "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
-	            /**/ "is the same as calling this functions, while ${Bytes.encode(\"hex\")} is the same as calling ?#hex\n"
-	            "${"
-	            /**/ "local data = \"DEAD BEEF\".decode(\"hex\");\n"
-	            /**/ "print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */"
-	            "}"),
+	TYPE_METHOD_F("fromseq", &bytes_fromseq,
+	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because returns writable buffer */
+	              "(seq:?S?Dint)->?.\n"
+	              "#tNotImplemented{The given @seq cannot be iterated, or contains at "
+	              /*            */ "least one item that cannot be converted into an integer}"
+	              "#tIntegerOverflow{At least one of the integers found in @seq is lower "
+	              /*             */ "than $0, or greater than $0xff}"
+	              "Convert the items of the given sequence @seq into integers, "
+	              /**/ "and construct a writable ?. object from their values\n"
+	              "Passing ?N for @seq will return an empty ?. object"),
+	TYPE_METHOD_F("fromhex", &bytes_fromhex,
+	              METHOD_FNOREFESCAPE, /* Not CONSTCALL, because returns writable buffer */
+	              "(hex_string:?Dstring)->?.\n"
+	              "#tValueError{The given @hex_string contains non-hexadecimal and non-space characters}"
+	              "#tValueError{The given @hex_string contains an unbalanced hexadecimal digit}"
+	              "Decode a given string containing only digit characters, characters between $\"a\" and $\"f\" "
+	              /**/ "or $\"A\" and $\"F\", or optional space characters separating pairs of such characters.\n"
+	              "Each pair of hexadecimal digits is then interpreted as a byte that is then used to construct "
+	              /**/ "the resulting ?. object.\n"
+	              "Note that this function is also called by the $\"hex\" codec, meaning that ${string.decode(\"hex\")} "
+	              /**/ "is the same as calling this functions, while ${Bytes.encode(\"hex\")} is the same as calling ?#hex\n"
+	              "${"
+	              /**/ "local data = \"DEAD BEEF\".decode(\"hex\");\n"
+	              /**/ "print repr data; /* \"\\xDE\\xAD\\xBE\\xEF\".bytes() */"
+	              "}"),
 	TYPE_METHOD_END
 };
 
@@ -1821,6 +1830,29 @@ PUBLIC DeeBytesObject DeeBytes_Empty = {
 	/* .b_data   = */ { 0 }
 };
 
+PRIVATE struct type_operator const bytes_operators[] = {
+//	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL), /* TODO: Allow when the result is a read-only buffer */
+	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0010_ADD, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0012_MUL, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES),
+	TYPE_OPERATOR_FLAGS(OPERATOR_8003_GETBUF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES),
+};
 
 PUBLIC DeeTypeObject DeeBytes_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2033,8 +2065,11 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	/* .tp_members       = */ bytes_members,
 	/* .tp_class_methods = */ bytes_class_methods,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ bytes_class_members
-	/* TODO: Operator flags (based on the Bytes object being writable) */
+	/* .tp_class_members = */ bytes_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ bytes_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(bytes_operators)
 };
 
 

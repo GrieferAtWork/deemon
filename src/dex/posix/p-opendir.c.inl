@@ -2157,7 +2157,7 @@ err:
 	return NULL;
 }
 
-INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f, METHOD_FCONSTCALL);
+INTERN DEFINE_KWCMETHOD(posix_fdopendir, &posix_fdopendir_f, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeDirIteratorObject *DCALL

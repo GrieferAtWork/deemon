@@ -3475,8 +3475,8 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_KWCMETHOD(libjson_parse, &f_libjson_parse, METHOD_FNORMAL);
-PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write, METHOD_FNORMAL);
+PRIVATE DEFINE_KWCMETHOD(libjson_parse, &f_libjson_parse, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
+PRIVATE DEFINE_KWCMETHOD(libjson_write, &f_libjson_write, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES);
 
 
 PRIVATE struct dex_symbol symbols[] = {

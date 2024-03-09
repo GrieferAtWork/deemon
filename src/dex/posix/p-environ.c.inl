@@ -2283,12 +2283,12 @@ INTERN DeeTypeObject DeeEnviron_Type = {
 /* High-level environ API                                               */
 /************************************************************************/
 
-/*[[[deemon import("rt.gen.dexutils").gw("getenv", "varname:?Dstring,defl:?Dstring=NULL->?Dstring", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("getenv", "varname:?Dstring,defl:?Dstring=NULL->?Dstring", libname: "posix", ispure: true); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getenv_f_impl(DeeObject *varname, DeeObject *defl);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getenv_f(size_t argc, DeeObject *const *argv, DeeObject *kw);
 #define POSIX_GETENV_DEF { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring") },
 #define POSIX_GETENV_DEF_DOC(doc) { "getenv", (DeeObject *)&posix_getenv, MODSYM_FREADONLY, DOC("(varname:?Dstring,defl?:?Dstring)->?Dstring\n" doc) },
-PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f, METHOD_FNORMAL);
+PRIVATE DEFINE_KWCMETHOD(posix_getenv, &posix_getenv_f, METHOD_FPURECALL);
 #ifndef POSIX_KWDS_VARNAME_DEFL_DEFINED
 #define POSIX_KWDS_VARNAME_DEFL_DEFINED
 PRIVATE DEFINE_KWLIST(posix_kwds_varname_defl, { KEX("varname", 0x4d384ee, 0x68ff72c018adb0c4), KEX("defl", 0x4353f18, 0x655c26b85fe0c07b), KEND });

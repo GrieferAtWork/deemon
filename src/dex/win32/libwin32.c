@@ -929,12 +929,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetHandle_f_impl(HANDLE hHandl
 	return libwin32_CreateHandle(hHandle);
 }
 
-/*[[[deemon import("rt.gen.dexutils").gw("GetLastError", "->?Dint"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("GetLastError", "->?Dint", ispure: true); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject *const *argv);
 #define LIBWIN32_GETLASTERROR_DEF { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FREADONLY, DOC("->?Dint") },
 #define LIBWIN32_GETLASTERROR_DEF_DOC(doc) { "GetLastError", (DeeObject *)&libwin32_GetLastError, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(libwin32_GetLastError, libwin32_GetLastError_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libwin32_GetLastError, libwin32_GetLastError_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL libwin32_GetLastError_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":GetLastError"))
 		goto err;

@@ -34,6 +34,9 @@ if (hasattr(Type, "__isconstcastable__")) {
 		"float should be constant castable, except when deemon was built with CONFIG_NO_FPU";
 	assert bool.__isconstcastable__;
 	assert Tuple.__isconstcastable__;
+	assert Bytes.__isconstcastable__,
+		"It is const castable, but there's an internal check to ensure that the Bytes object"
+		"isn't writable";
 
 	/* Types that shouldn't be constant castable */
 	assert !List.__isconstcastable__,

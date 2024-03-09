@@ -261,12 +261,12 @@ FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_sched_yield_f_impl(void)
 /* getpid()                                                             */
 /************************************************************************/
 
-/*[[[deemon import("rt.gen.dexutils").gw("getpid", "->?Dint", libname: "posix"); ]]]*/
+/*[[[deemon import("rt.gen.dexutils").gw("getpid", "->?Dint", libname: "posix", ispure: true); ]]]*/
 FORCELOCAL WUNUSED DREF DeeObject *DCALL posix_getpid_f_impl(void);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv);
 #define POSIX_GETPID_DEF { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint") },
 #define POSIX_GETPID_DEF_DOC(doc) { "getpid", (DeeObject *)&posix_getpid, MODSYM_FREADONLY, DOC("->?Dint\n" doc) },
-PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(posix_getpid, posix_getpid_f, METHOD_FPURECALL);
 PRIVATE WUNUSED DREF DeeObject *DCALL posix_getpid_f(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":getpid"))
 		goto err;

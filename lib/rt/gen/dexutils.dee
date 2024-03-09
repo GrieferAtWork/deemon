@@ -473,9 +473,9 @@ function gw(name: string, args: string = "", docdecl: bool = true, kw: bool = tr
 	local kwlistName;
 	local methodFlags = "";
 	if (isconst)
-		methodFlags += " | METHOD_FCONSTCALL";
+		methodFlags += " | METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST";
 	if (ispure)
-		methodFlags += " | Dee_METHOD_FPURECALL";
+		methodFlags += " | METHOD_FPURECALL";
 	if (!methodFlags) {
 		methodFlags = "METHOD_FNORMAL";
 	} else {

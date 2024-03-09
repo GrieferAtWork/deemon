@@ -2284,27 +2284,31 @@ deprecated_d100_set_maxloadfactor(DeeObject *self, DeeObject *value);
 
 INTDEF struct type_getset tpconst dict_getsets[];
 INTERN_TPCONST struct type_getset tpconst dict_getsets[] = {
-	TYPE_GETTER("keys", &dict_keys,
-	            "->?AKeys?.\n"
-	            "#r{A proxy sequence for viewing the keys of @this ?.}"),
-	TYPE_GETTER("values", &dict_values,
-	            "->?AValues?.\n"
-	            "#r{A proxy sequence for viewing the values of @this ?.}"),
-	TYPE_GETTER("items", &dict_items,
-	            "->?AItems?.\n"
-	            "#r{A proxy sequence for viewing the key-value pairs of @this ?.}"),
-	TYPE_GETTER(STR_frozen, &DeeRoDict_FromSequence,
-	            "->?Ert:RoDict\n"
-	            "Returns a read-only (frozen) copy of @this ?."),
+	TYPE_GETTER_F("keys", &dict_keys,
+	              METHOD_FCONSTCALL, /* CONSTCALL because this returns a proxy */
+	              "->?AKeys?.\n"
+	              "#r{A proxy sequence for viewing the keys of @this ?.}"),
+	TYPE_GETTER_F("values", &dict_values,
+	              METHOD_FCONSTCALL, /* CONSTCALL because this returns a proxy */
+	              "->?AValues?.\n"
+	              "#r{A proxy sequence for viewing the values of @this ?.}"),
+	TYPE_GETTER_F("items", &dict_items,
+	              METHOD_FCONSTCALL, /* CONSTCALL because this returns a proxy */
+	              "->?AItems?.\n"
+	              "#r{A proxy sequence for viewing the key-value pairs of @this ?.}"),
+	TYPE_GETTER_F(STR_frozen, &DeeRoDict_FromSequence, METHOD_FNOREFESCAPE,
+	              "->?Ert:RoDict\n"
+	              "Returns a read-only (frozen) copy of @this ?."),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETSET("max_load_factor",
-	            &deprecated_d100_get_maxloadfactor,
-	            &deprecated_d100_del_maxloadfactor,
-	            &deprecated_d100_set_maxloadfactor,
-	            "->?Dfloat\n"
-	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
+	TYPE_GETSET_F("max_load_factor",
+	              &deprecated_d100_get_maxloadfactor,
+	              &deprecated_d100_del_maxloadfactor,
+	              &deprecated_d100_set_maxloadfactor,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "->?Dfloat\n"
+	              "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER("__sizeof__", &dict_sizeof, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &dict_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2323,6 +2327,29 @@ PRIVATE struct type_member tpconst dict_class_members[] = {
 
 PRIVATE struct type_gc tpconst dict_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&dict_clear
+};
+
+PRIVATE struct type_operator const dict_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0004_ASSIGN, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0005_MOVEASSIGN, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0033_DELITEM, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0034_SETITEM, METHOD_FNOREFESCAPE),
 };
 
 PUBLIC DeeTypeObject DeeDict_Type = {
@@ -2354,8 +2381,8 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL,
+		/* .tp_assign      = */ NULL, /* TODO */
+		/* .tp_move_assign = */ NULL, /* TODO */
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload
 	},
 	/* .tp_cast = */ {
@@ -2380,7 +2407,11 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ dict_class_members
+	/* .tp_class_members = */ dict_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ dict_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(dict_operators)
 };
 
 DECL_END

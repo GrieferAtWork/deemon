@@ -3515,24 +3515,30 @@ INTERN DeeTypeObject DeeTime_Type = {
 PRIVATE DEFINE_CMETHOD(libtime_gmtime, &f_libtime_gmtime, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(libtime_localtime, &f_libtime_localtime, METHOD_FNORMAL);
 PRIVATE DEFINE_CMETHOD(libtime_tick, &f_libtime_tick, METHOD_FNORMAL);
-PRIVATE DEFINE_CMETHOD(libtime_nanoseconds, &f_libtime_nanoseconds, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_microseconds, &f_libtime_microseconds, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_milliseconds, &f_libtime_milliseconds, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_seconds, &f_libtime_seconds, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_minutes, &f_libtime_minutes, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_hours, &f_libtime_hours, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_days, &f_libtime_days, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_weeks, &f_libtime_weeks, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_months, &f_libtime_months, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_years, &f_libtime_years, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_decades, &f_libtime_decades, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_centuries, &f_libtime_centuries, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime_millennia, &f_libtime_millennia, METHOD_FCONSTCALL);
-PRIVATE DEFINE_KWCMETHOD(libtime_maketime, &f_libtime_maketime, METHOD_FCONSTCALL);
-PRIVATE DEFINE_KWCMETHOD(libtime_makedate, &f_libtime_makedate, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(libtime__mkunix, &f_libtime__mkunix, METHOD_FCONSTCALL);
+/* NOTE: All of this stuff can't be CONSTEXPR because `Time' objects are mutable :(
+ * XXX: Maybe reconsider if Time objects really need to be mutable... The only reason
+ *      right now is due to setters like `Time.second = 42'. I feel like it would be
+ *      nicer if these weren't writable, but instead there was `Time.with(second: 42)'
+ *      in order to construct a new time object with certain fields changed to other
+ *      values. */
+PRIVATE DEFINE_CMETHOD(libtime_nanoseconds, &f_libtime_nanoseconds, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_microseconds, &f_libtime_microseconds, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_milliseconds, &f_libtime_milliseconds, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_seconds, &f_libtime_seconds, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_minutes, &f_libtime_minutes, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_hours, &f_libtime_hours, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_days, &f_libtime_days, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_weeks, &f_libtime_weeks, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_months, &f_libtime_months, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_years, &f_libtime_years, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_decades, &f_libtime_decades, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_centuries, &f_libtime_centuries, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime_millennia, &f_libtime_millennia, METHOD_FNORMAL);
+PRIVATE DEFINE_KWCMETHOD(libtime_maketime, &f_libtime_maketime, METHOD_FNORMAL);
+PRIVATE DEFINE_KWCMETHOD(libtime_makedate, &f_libtime_makedate, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(libtime__mkunix, &f_libtime__mkunix, METHOD_FNORMAL);
 #ifdef CONFIG_HOST_WINDOWS
-PRIVATE DEFINE_CMETHOD(libtime__mkFILETIME, &f_libtime__mkFILETIME, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(libtime__mkFILETIME, &f_libtime__mkFILETIME, METHOD_FNORMAL);
 #endif /* CONFIG_HOST_WINDOWS */
 
 PRIVATE struct dex_symbol symbols[] = {

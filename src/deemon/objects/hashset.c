@@ -2078,18 +2078,19 @@ deprecated_d100_set_maxloadfactor(DeeObject *UNUSED(self),
 
 INTDEF struct type_getset tpconst hashset_getsets[];
 INTERN_TPCONST struct type_getset tpconst hashset_getsets[] = {
-	TYPE_GETTER(STR_frozen, &DeeRoSet_FromSequence,
-	            "->?Ert:RoSet\n"
-	            "Returns a read-only (frozen) copy of @this HashSet"),
+	TYPE_GETTER_F(STR_frozen, &DeeRoSet_FromSequence, METHOD_FNOREFESCAPE,
+	              "->?Ert:RoSet\n"
+	              "Returns a read-only (frozen) copy of @this HashSet"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
-	TYPE_GETSET("max_load_factor",
-	            &deprecated_d100_get_maxloadfactor,
-	            &deprecated_d100_del_maxloadfactor,
-	            &deprecated_d100_set_maxloadfactor,
-	            "->?Dfloat\n"
-	            "Deprecated. Always returns ${1.0}, with del/set being ignored"),
+	TYPE_GETSET_F("max_load_factor",
+	              &deprecated_d100_get_maxloadfactor,
+	              &deprecated_d100_del_maxloadfactor,
+	              &deprecated_d100_set_maxloadfactor,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dfloat\n"
+	              "Deprecated. Always returns ${1.0}, with del/set being ignored"),
 #endif /* !CONFIG_NO_DEEMON_100_COMPAT */
-	TYPE_GETTER("__sizeof__", &hashset_sizeof, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &hashset_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -2101,6 +2102,26 @@ PRIVATE struct type_member tpconst hashset_class_members[] = {
 
 PRIVATE struct type_gc tpconst hashset_gc = {
 	/* .tp_clear = */ (void (DCALL *)(DeeObject *__restrict))&hashset_clear
+};
+
+PRIVATE struct type_operator const hashset_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0004_ASSIGN, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0005_MOVEASSIGN, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FNOREFESCAPE),
+//	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FNOREFESCAPE),
 };
 
 PUBLIC DeeTypeObject DeeHashSet_Type = {
@@ -2181,7 +2202,11 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_members       = */ NULL,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ hashset_class_members
+	/* .tp_class_members = */ hashset_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ hashset_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(hashset_operators)
 };
 
 DECL_END

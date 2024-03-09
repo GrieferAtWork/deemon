@@ -4902,13 +4902,17 @@ again:
 			Dee_hash_t template_i, perturb, hash;
 			DeeObject *key = memval_const_getobj(keyval);
 			uintptr_t eq_flags;
-			if (!(DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_HASH) & METHOD_FCONSTCALL))
-				goto next_key;
-			eq_flags = DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_EQ);
+
+			/* Verify that `DeeObject_Hash(key)' is a constant call. */
+			eq_flags = DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_HASH);
 			if (!(eq_flags & METHOD_FCONSTCALL))
 				goto next_key;
-			if ((eq_flags & METHOD_FCONSTCALL_IF_MASK) != METHOD_FCONSTCALL_IF_TRUE &&
-			    (eq_flags & METHOD_FCONSTCALL_IF_MASK) != METHOD_FCONSTCALL_IF_ARGS_CONSTCAST)
+			if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 0, NULL, NULL))
+				goto next_key;
+
+			/* Figure out how "key.operator ==" must be treated when it comes to constant calls. */
+			eq_flags = DeeType_GetOperatorFlags(Dee_TYPE(key), OPERATOR_EQ);
+			if (!(eq_flags & METHOD_FCONSTCALL))
 				goto next_key;
 			hash = DeeObject_Hash(key);
 			key_voffset = (vstackaddr_t)((self->fg_state->ms_stackv +
@@ -4927,13 +4931,13 @@ again:
 					break;
 
 				if (it->ti_hash == hash) {
-					/* Check if this is a duplicate key. */
 					int temp;
-					if ((eq_flags & METHOD_FCONSTCALL_IF_MASK) == METHOD_FCONSTCALL_IF_ARGS_CONSTCAST) {
-						if (!DeeType_IsConstCastable(Dee_TYPE(it->ti_key)))
-							goto next_key; /* Must do the insert at runtime. */
-					}
-					temp = DeeObject_CompareEq(it->ti_key, key);
+					/* Verify that `DeeObject_CompareEq(key, it->ti_key)' is a constant call. */
+					if (!DeeMethodFlags_VerifyConstCallCondition(eq_flags, key, 1, &it->ti_key, NULL))
+						goto next_key;
+
+					/* Check if this is a duplicate key. */
+					temp = DeeObject_CompareEq(key, it->ti_key);
 					if unlikely(temp < 0) {
 						if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_NOEARLYERR))
 							goto err;

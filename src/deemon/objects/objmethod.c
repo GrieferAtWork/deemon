@@ -178,9 +178,8 @@ objmethod_hash(DeeObjMethodObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_eq(DeeObjMethodObject *self,
-             DeeObjMethodObject *other) {
-	if (DeeObject_AssertType(other, &DeeObjMethod_Type))
+objmethod_eq(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	if (self->om_func != other->om_func)
 		return_false;
@@ -190,9 +189,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-objmethod_ne(DeeObjMethodObject *self,
-             DeeObjMethodObject *other) {
-	if (DeeObject_AssertType(other, &DeeObjMethod_Type))
+objmethod_ne(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	if (self->om_func != other->om_func)
 		return_true;
@@ -201,10 +199,66 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+objmethod_lo(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self->om_func < other->om_func)
+		return_true;
+	if (self->om_func > other->om_func)
+		return_false;
+	return DeeObject_CompareLoObject(self->om_this, other->om_this);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+objmethod_gr(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self->om_func > other->om_func)
+		return_true;
+	if (self->om_func < other->om_func)
+		return_false;
+	return DeeObject_CompareGrObject(self->om_this, other->om_this);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+objmethod_le(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self->om_func < other->om_func)
+		return_true;
+	if (self->om_func > other->om_func)
+		return_false;
+	return DeeObject_CompareLeObject(self->om_this, other->om_this);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+objmethod_ge(DeeObjMethodObject *self, DeeObjMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self->om_func > other->om_func)
+		return_true;
+	if (self->om_func < other->om_func)
+		return_false;
+	return DeeObject_CompareGeObject(self->om_this, other->om_this);
+err:
+	return NULL;
+}
+
 PRIVATE struct type_cmp objmethod_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&objmethod_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ne
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&objmethod_ge,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -356,6 +410,18 @@ objmethod_printrepr(DeeObjMethodObject *__restrict self,
 }
 
 
+PRIVATE struct type_operator const objmethod_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),  /* TODO: CONSTCALL_IF_FIELDS_CONSTSTR */
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FNOREFESCAPE), /* TODO: CONSTCALL_IF_FIELDS_CONSTREPR */
+	TYPE_OPERATOR_FLAGS(OPERATOR_000A_CALL, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS (as in: compare object fields) */
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS */
+	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS */
+	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS */
+	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS */
+	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FNOREFESCAPE),   /* TODO: CONSTCALL_IF_COMPARE_FIELDS */
+};
+
 PUBLIC DeeTypeObject DeeObjMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ObjMethod",
@@ -400,7 +466,11 @@ PUBLIC DeeTypeObject DeeObjMethod_Type = {
 	/* .tp_members       = */ objmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ objmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(objmethod_operators)
 };
 
 
@@ -749,6 +819,7 @@ INTERN DeeTypeObject DocKwds_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ dockwds_class_members
+	/* TODO: Operator flags */
 };
 
 
@@ -850,6 +921,7 @@ PRIVATE struct type_getset tpconst kwobjmethod_getsets[] = {
 #define kwobjmethod_members   objmethod_members
 #define kwobjmethod_print     objmethod_print
 #define kwobjmethod_printrepr objmethod_printrepr
+#define kwobjmethod_operators objmethod_operators
 
 PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -897,6 +969,9 @@ PUBLIC DeeTypeObject DeeKwObjMethod_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwobjmethod_call_kw,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ kwobjmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(kwobjmethod_operators)
 };
 
 
@@ -1010,9 +1085,8 @@ clsmethod_hash(DeeClsMethodObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_eq(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_eq(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func == other->cm_func);
 err:
@@ -1020,9 +1094,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_ne(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_ne(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func != other->cm_func);
 err:
@@ -1030,9 +1103,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_lo(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_lo(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func < other->cm_func);
 err:
@@ -1040,9 +1112,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_le(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_le(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func <= other->cm_func);
 err:
@@ -1050,9 +1121,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_gr(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_gr(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func > other->cm_func);
 err:
@@ -1060,9 +1130,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-clsmethod_ge(DeeClsMethodObject *self,
-             DeeClsMethodObject *other) {
-	if (DeeObject_AssertType(other, Dee_TYPE(self)))
+clsmethod_ge(DeeClsMethodObject *self, DeeClsMethodObject *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
 		goto err;
 	return_bool_(self->cm_func >= other->cm_func);
 err:
@@ -1169,6 +1238,18 @@ PRIVATE struct type_member tpconst kwclsmethod_members[] = {
 };
 
 
+PRIVATE struct type_operator const clsmethod_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FNOREFESCAPE),  /* TODO: CONSTCALL_IF_FIELDS_CONSTSTR */
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FNOREFESCAPE), /* TODO: CONSTCALL_IF_FIELDS_CONSTREPR */
+	TYPE_OPERATOR_FLAGS(OPERATOR_000A_CALL, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+};
+
 PUBLIC DeeTypeObject DeeClsMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassMethod",
@@ -1213,7 +1294,11 @@ PUBLIC DeeTypeObject DeeClsMethod_Type = {
 	/* .tp_members       = */ clsmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ clsmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(clsmethod_operators)
 };
 
 
@@ -1263,6 +1348,7 @@ err:
 #define kwclsmethod_visit     clsmethod_visit
 #define kwclsmethod_hash      clsmethod_hash
 #define kwclsmethod_cmp       clsmethod_cmp
+#define kwclsmethod_operators clsmethod_operators
 
 PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -1309,7 +1395,10 @@ PUBLIC DeeTypeObject DeeKwClsMethod_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwclsmethod_call_kw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwclsmethod_call_kw,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ kwclsmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(kwclsmethod_operators)
 };
 
 
@@ -1390,10 +1479,70 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+clsproperty_lo(DeeClsPropertyObject *self,
+               DeeClsPropertyObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
+		goto err;
+	return_bool(self->cp_get < other->cp_get ||
+	            (self->cp_get == other->cp_get &&
+	             (self->cp_del < other->cp_del ||
+	              (self->cp_del == other->cp_del &&
+	               self->cp_set < other->cp_set))));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+clsproperty_le(DeeClsPropertyObject *self,
+               DeeClsPropertyObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
+		goto err;
+	return_bool(self->cp_get < other->cp_get ||
+	            (self->cp_get == other->cp_get &&
+	             (self->cp_del < other->cp_del ||
+	              (self->cp_del == other->cp_del &&
+	               self->cp_set <= other->cp_set))));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+clsproperty_gr(DeeClsPropertyObject *self,
+               DeeClsPropertyObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
+		goto err;
+	return_bool(self->cp_get > other->cp_get ||
+	            (self->cp_get == other->cp_get &&
+	             (self->cp_del > other->cp_del ||
+	              (self->cp_del == other->cp_del &&
+	               self->cp_set > other->cp_set))));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+clsproperty_ge(DeeClsPropertyObject *self,
+               DeeClsPropertyObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeClsProperty_Type))
+		goto err;
+	return_bool(self->cp_get > other->cp_get ||
+	            (self->cp_get == other->cp_get &&
+	             (self->cp_del > other->cp_del ||
+	              (self->cp_del == other->cp_del &&
+	               self->cp_set >= other->cp_set))));
+err:
+	return NULL;
+}
+
 PRIVATE struct type_cmp clsproperty_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&clsproperty_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ne
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&clsproperty_ge
 };
 
 INTERN struct keyword getter_kwlist[] = { K(thisarg), KEND };
@@ -1480,10 +1629,14 @@ err:
 }
 
 PRIVATE struct type_method tpconst clsproperty_methods[] = {
-	TYPE_KWMETHOD_F(STR_get, &clsproperty_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->"),
+	TYPE_KWMETHOD_F(STR_get, &clsproperty_get_kw,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL | METHOD_FNOREFESCAPE,
+	                "(thisarg)->"),
 	TYPE_KWMETHOD_F("delete", &clsproperty_delete, METHOD_FNOREFESCAPE, "(thisarg)"),
 	TYPE_KWMETHOD_F(STR_set, &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)"),
-	TYPE_KWMETHOD_F("getter", &clsproperty_get_kw, METHOD_FNOREFESCAPE, "(thisarg)->\nAlias for ?#get"),
+	TYPE_KWMETHOD_F("getter", &clsproperty_get_kw,
+	                METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL | METHOD_FNOREFESCAPE,
+	                "(thisarg)->\nAlias for ?#get"),
 	TYPE_KWMETHOD_F("setter", &clsproperty_set, METHOD_FNOREFESCAPE, "(thisarg,value)\nAlias for ?#set"),
 	TYPE_METHOD_END
 };
@@ -1624,6 +1777,7 @@ PRIVATE struct type_member tpconst clsproperty_members[] = {
 STATIC_ASSERT(offsetof(DeeClsPropertyObject, cp_type) ==
               offsetof(DeeClsMethodObject, cm_type));
 
+#define clsproperty_operators clsmethod_operators
 PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassProperty",
@@ -1670,6 +1824,9 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
 	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsproperty_get_kw,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ clsproperty_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(clsproperty_operators)
 };
 
 
@@ -1795,14 +1952,14 @@ clsmember_hash(DeeClsMemberObject *__restrict self) {
 	memcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
 #define CLSMEMBER_BCMP(a, b) \
 	bcmp(&(a)->cm_memb, &(b)->cm_memb, sizeof(DeeClsMemberObject) - offsetof(DeeClsMemberObject, cm_memb))
-#define DEFINE_CLSMEMBER_COMPARE(name, CLSMEMBER_CMP, op)       \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL       \
-	name(DeeClsMemberObject *self, DeeClsMemberObject *other) { \
-		if (DeeObject_AssertType(other, &DeeClsMember_Type))    \
-			goto err;                                           \
-		return_bool(CLSMEMBER_CMP(self, other) op 0);           \
-	err:                                                        \
-		return NULL;                                            \
+#define DEFINE_CLSMEMBER_COMPARE(name, CLSMEMBER_CMP, op)         \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL         \
+	name(DeeClsMemberObject *self, DeeClsMemberObject *other) {   \
+		if (DeeObject_AssertTypeExact(other, &DeeClsMember_Type)) \
+			goto err;                                             \
+		return_bool(CLSMEMBER_CMP(self, other) op 0);             \
+	err:                                                          \
+		return NULL;                                              \
 	}
 DEFINE_CLSMEMBER_COMPARE(clsmember_eq, CLSMEMBER_BCMP, ==)
 DEFINE_CLSMEMBER_COMPARE(clsmember_ne, CLSMEMBER_BCMP, !=)
@@ -1885,6 +2042,7 @@ PRIVATE struct type_getset tpconst clsmember_getsets[] = {
 	TYPE_GETSET_END
 };
 
+#define clsmember_operators clsmethod_operators
 PUBLIC DeeTypeObject DeeClsMember_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_ClassMember",
@@ -1930,7 +2088,10 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&clsmember_get_kw,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ clsmember_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(clsmember_operators)
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) struct module_symbol *DCALL
@@ -2282,6 +2443,8 @@ cmethod_printrepr(DeeCMethodObject *__restrict self,
 	return result;
 }
 
+#define cmethod_operators clsmethod_operators
+
 PUBLIC DeeTypeObject DeeCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_CMethod",
@@ -2326,7 +2489,11 @@ PUBLIC DeeTypeObject DeeCMethod_Type = {
 	/* .tp_members       = */ cmethod_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
+	/* .tp_class_members = */ NULL,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ cmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(cmethod_operators)
 };
 
 
@@ -2348,6 +2515,7 @@ kwcmethod_call_kw(DeeKwCMethodObject *self, size_t argc,
 
 #define kwcmethod_print     cmethod_print
 #define kwcmethod_printrepr cmethod_printrepr
+#define kwcmethod_operators cmethod_operators
 
 PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2394,7 +2562,10 @@ PUBLIC DeeTypeObject DeeKwCMethod_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL,
-	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwcmethod_call_kw
+	/* .tp_call_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t, DeeObject *const *, DeeObject *))&kwcmethod_call_kw,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ kwcmethod_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(kwcmethod_operators)
 };
 
 
@@ -2436,17 +2607,21 @@ DeeKwCMethod_New(Dee_kwcmethod_t func, uintptr_t flags) {
  * we use this point to add some debug checks for proper use of exceptions.
  * That means we assert that the exception depth is manipulated as follows:
  * >> Dee_ASSERT(old_except_depth == new_except_depth + (return == NULL ? 1 : 0));
+ *
  * This way we can quickly determine improper use of exceptions in most cases,
  * even before the interpreter would crash because it tried to handle exceptions
  * when there were none.
+ *
  * A very common culprit for improper exception propagation is the return value
  * of printf-style format functions. Usually, code can just check for a non-zero
  * return value to determine if an integer-returning function has failed.
  * However, printf-style format functions return a negative value when that
  * happens, but return the positive sum of all printer calls on success (which
  * unless nothing was printed, is also non-zero).
+ *
  * This can easily be fixed by replacing:
  * >> if (DeeFormat_Printf(...)) goto err;
+ *
  * with this:
  * >> if (DeeFormat_Printf(...) < 0) goto err;
  */

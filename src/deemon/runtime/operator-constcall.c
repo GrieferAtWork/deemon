@@ -22,8 +22,10 @@
 
 #include <deemon/api.h>
 #include <deemon/bytes.h>
+#include <deemon/instancemethod.h>
 #include <deemon/kwds.h>
 #include <deemon/object.h>
+#include <deemon/objmethod.h>
 #include <deemon/rodict.h>
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
@@ -165,8 +167,68 @@ ob_is_const_deep(DeeObject *ob) {
 }
 
 PRIVATE ATTR_PURE WUNUSED bool DCALL
+ob_is_elem_const_castable(DeeObject *ob) {
+	return check_foreach_elem(ob, &ob_is_const_castable);
+}
+
+PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_elem_const_str(DeeObject *ob) {
 	return check_foreach_elem(ob, &ob_is_const_str);
+}
+
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+ob_is_func_constcall(DeeObject *ob, size_t argc,
+                     DeeObject *const *argv, DeeObject *kw) {
+	DeeTypeObject *tp = Dee_TYPE(ob);
+	if (tp == &DeeInstanceMethod_Type) {
+		DeeInstanceMethodObject *me = (DeeInstanceMethodObject *)ob;
+		uintptr_t flags = DeeType_GetOperatorFlags(Dee_TYPE(me->im_func), OPERATOR_CALL);
+		return (flags & METHOD_FCONSTCALL) &&
+		       DeeMethodFlags_VerifyConstCallCondition(flags, me->im_this, argc, argv, kw);
+	} else if (tp == &DeeObjMethod_Type ||
+	           tp == &DeeKwObjMethod_Type) {
+		struct objmethod_origin origin;
+		DeeObjMethodObject *me = (DeeObjMethodObject *)ob;
+		if (!DeeObjMethod_GetOrigin((DeeObject *)me, &origin))
+			goto nope;
+		return (origin.omo_decl->m_flag & METHOD_FCONSTCALL) &&
+		       DeeMethodFlags_VerifyConstCallCondition(origin.omo_decl->m_flag,
+		                                               me->om_this, argc, argv, kw);
+	} else if (tp == &DeeClsMethod_Type ||
+	           tp == &DeeKwClsMethod_Type) {
+		struct objmethod_origin origin;
+		DeeClsMethodObject *me = (DeeClsMethodObject *)ob;
+		if (argc == 0)
+			goto nope;
+		if (!DeeClsMethod_GetOrigin((DeeObject *)me, &origin))
+			goto nope;
+		return (origin.omo_decl->m_flag & METHOD_FCONSTCALL) &&
+		       DeeMethodFlags_VerifyConstCallCondition(origin.omo_decl->m_flag,
+		                                               argv[0], argc + 1, argv - 1, kw);
+	} else if (tp == &DeeClsProperty_Type) {
+		struct clsproperty_origin origin;
+		DeeClsPropertyObject *me = (DeeClsPropertyObject *)ob;
+		if (argc == 0)
+			goto nope;
+		if (!DeeClsProperty_GetOrigin((DeeObject *)me, &origin))
+			goto nope;
+		return (origin.cpo_decl->gs_flags & METHOD_FCONSTCALL) &&
+		       DeeMethodFlags_VerifyConstCallCondition(origin.cpo_decl->gs_flags,
+		                                               argv[0], argc + 1, argv - 1, kw);
+	} else if (tp == &DeeClsMember_Type) {
+		DeeClsMemberObject *me = (DeeClsMemberObject *)ob;
+		if (TYPE_MEMBER_ISCONST(&me->cm_memb))
+			return true;
+		/* "Const && Atomic" would mean that the field can change, so we require "Const && !Atomic" */
+		return (me->cm_memb.m_field.m_type & (STRUCT_ATOMIC | STRUCT_CONST)) == STRUCT_CONST;
+	} else if (tp == &DeeCMethod_Type ||
+	           tp == &DeeKwCMethod_Type) {
+		DeeCMethodObject *me = (DeeCMethodObject *)ob;
+		return (me->cm_flags & METHOD_FCONSTCALL) &&
+		       DeeMethodFlags_VerifyConstCallCondition(me->cm_flags, NULL, argc, argv, kw);
+	}
+nope:
+	return false;
 }
 
 
@@ -186,9 +248,6 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 	case METHOD_FCONSTCALL_IF_ARGS_CONSTCAST:
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_castable);
 
-	case METHOD_FCONSTCALL_IF_ARGS_CONSTSTR:
-		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_str);
-
 	case METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR:
 		return thisarg && check_foreach_elem(thisarg, &ob_is_const_str);
 
@@ -201,10 +260,15 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 	case METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP:
 		return thisarg && check_foreach_elem(thisarg, &ob_is_const_deep);
 
-	//TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE:
-	//TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS:
-	//TODO: case METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS:
-	//TODO: case METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS:
+	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE:
+	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS:
+	// TODO: case METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS:
+	// TODO: case METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS:
+
+	case METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES:
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+			goto nope;
+		return check_foreach_args_kw(argc, argv, kw, &ob_is_elem_const_castable);
 
 	case METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES:
 		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
@@ -216,6 +280,13 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 			goto nope;
 		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_castable_or_robytes);
 
+	case METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES:
+		if (thisarg && DeeBytes_Check(thisarg) && DeeBytes_WRITABLE(thisarg))
+			goto nope;
+		return check_foreach_args_kw(argc, argv, kw, &ob_is_const_str);
+
+	case METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL:
+		return thisarg && ob_is_func_constcall(thisarg, argc, argv, kw);
 
 	default: break;
 	}

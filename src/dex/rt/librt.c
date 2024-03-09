@@ -160,7 +160,7 @@ PRIVATE DEFINE_CMETHOD(librt_setstacklimit, &librt_setstacklimit_f, METHOD_FNORM
 
 PRIVATE DEFINE_CMETHOD(librt_getcalloptimizethreshold, &librt_getcalloptimizethreshold_f, METHOD_FPURECALL);
 PRIVATE DEFINE_CMETHOD(librt_setcalloptimizethreshold, &librt_setcalloptimizethreshold_f, METHOD_FNORMAL);
-PRIVATE DEFINE_KWCMETHOD(librt_makeclass, &librt_makeclass_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_KWCMETHOD(librt_makeclass, &librt_makeclass_f, METHOD_FNORMAL);
 
 #if 1
 #define str_Iterator (*COMPILER_CONTAINER_OF(DeeIterator_Type.tp_name, DeeStringObject, s_str))

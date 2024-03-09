@@ -205,46 +205,46 @@
  * >>     RETURN *(REG_SP - nth_item);
  * >> END
  * >>
- * >> Object &EXTERN(Integer module_index, Integer symbol_index) BEGIN
- * >>     IF module_index >= LENGTH(REG_EXTERN) THEN
+ * >> Object &EXTERN(Integer mid, Integer gid) BEGIN
+ * >>     IF mid >= LENGTH(REG_EXTERN) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     IF symbol_index >= LENGTH(REG_EXTERN[module_index]) THEN
+ * >>     IF gid >= LENGTH(REG_EXTERN[mid]) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     RETURN REG_EXTERN[module_index][symbol_index];
+ * >>     RETURN REG_EXTERN[mid][gid];
  * >> END
  * >>
- * >> Object &GLOBAL(Integer symbol_index) BEGIN
- * >>     IF symbol_index >= LENGTH(REG_GLOBALS) THEN
+ * >> Object &GLOBAL(Integer gid) BEGIN
+ * >>     IF gid >= LENGTH(REG_GLOBALS) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     RETURN REG_GLOBALS[symbol_index];
+ * >>     RETURN REG_GLOBALS[gid];
  * >> END
  * >>
- * >> Object &LOCAL(Integer local_index) BEGIN
- * >>     IF symbol_index >= LENGTH(REG_LOCALS) THEN
+ * >> Object &LOCAL(Integer lid) BEGIN
+ * >>     IF lid >= LENGTH(REG_LOCALS) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     RETURN REG_LOCALS[symbol_index];
+ * >>     RETURN REG_LOCALS[lid];
  * >> END
  * >>
- * >> Object &STATIC(Integer static_index) BEGIN
- * >>     IF symbol_index >= LENGTH(REG_CONSTANTS) THEN
+ * >> Object &STATIC(Integer sid) BEGIN
+ * >>     IF sid >= LENGTH(REG_CONSTANTS) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     RETURN REG_CONSTANTS[symbol_index];
+ * >>     RETURN REG_CONSTANTS[sid];
  * >> END
  * >>
- * >> Object CONSTANT(Integer static_index) BEGIN
- * >>     RETURN STATIC(symbol_index); // Constant and static symbols use the same indices
+ * >> Object CONSTANT(Integer cid) BEGIN
+ * >>     RETURN STATIC(cid); // Constant and static symbols use the same indices
  * >> END
  * >>
- * >> Object MODULE(Integer module_index) BEGIN
- * >>     IF module_index >= LENGTH(REG_EXTERN) THEN
+ * >> Object MODULE(Integer mid) BEGIN
+ * >>     IF mid >= LENGTH(REG_EXTERN) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
- * >>     RETURN REG_EXTERN[module_index];
+ * >>     RETURN REG_EXTERN[mid];
  * >> END
  * >>
  * >> Object REF(Integer reference_index) BEGIN

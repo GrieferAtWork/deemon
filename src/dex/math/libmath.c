@@ -164,7 +164,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                 \
 		return NULL;                                     \
 	}                                                    \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #define DEFINE_LIBMATH_CONVERSION_1_E(name)              \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                \
 	f_math_##name(size_t argc, DeeObject *const *argv) { \
@@ -179,7 +179,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                 \
 		return NULL;                                     \
 	}                                                    \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #define DEFINE_LIBMATH_CONVERSION_2(name)                   \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
 	f_math_##name(size_t argc, DeeObject *const *argv) {    \
@@ -190,7 +190,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                    \
 		return NULL;                                        \
 	}                                                       \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #define DEFINE_LIBMATH_CONVERSION_2_E(name)                 \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
 	f_math_##name(size_t argc, DeeObject *const *argv) {    \
@@ -205,7 +205,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                    \
 		return NULL;                                        \
 	}                                                       \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #define DEFINE_LIBMATH_FLOAT_TRAIT(name)                 \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                \
 	f_math_##name(size_t argc, DeeObject *const *argv) { \
@@ -216,7 +216,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                 \
 		return NULL;                                     \
 	}                                                    \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #define DEFINE_LIBMATH_FLOAT_TRAIT2(name)                   \
 	PRIVATE WUNUSED DREF DeeObject *DCALL                   \
 	f_math_##name(size_t argc, DeeObject *const *argv) {    \
@@ -227,7 +227,7 @@ LOCAL int DCALL math_checkerr_i(int x) {
 	err:                                                    \
 		return NULL;                                        \
 	}                                                       \
-	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FNORMAL);
+	PRIVATE DEFINE_CMETHOD(math_##name, &f_math_##name, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 
 #ifndef CONFIG_HAVE_errno
 #undef DEFINE_LIBMATH_CONVERSION_1_E
@@ -505,7 +505,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_ilogb, &f_math_ilogb, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_ilogb, &f_math_ilogb, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_ilogb */
 
 #ifdef CONFIG_HAVE_frexp
@@ -539,7 +539,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_frexp, &f_math_frexp, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_frexp, &f_math_frexp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_frexp */
 
 #ifdef CONFIG_HAVE_modf
@@ -569,7 +569,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_modf, &f_math_modf, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_modf, &f_math_modf, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_modf */
 
 #ifdef CONFIG_HAVE_ldexp
@@ -599,7 +599,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_ldexp, &f_math_ldexp, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_ldexp, &f_math_ldexp, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_ldexp */
 
 #if (defined(CONFIG_HAVE_sincos) || \
@@ -623,7 +623,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_sincos, &f_math_sincos, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_sincos, &f_math_sincos, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_sincos || (CONFIG_HAVE_sin && CONFIG_HAVE_cos) */
 
 #if (defined(CONFIG_HAVE_asincos) || \
@@ -648,7 +648,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_asincos, &f_math_asincos, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_asincos, &f_math_asincos, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_asincos || (CONFIG_HAVE_asin && CONFIG_HAVE_acos) */
 
 #if (defined(CONFIG_HAVE_sincosh) || \
@@ -673,7 +673,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_sincosh, &f_math_sincosh, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_sincosh, &f_math_sincosh, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_sincosh || (CONFIG_HAVE_sinh && CONFIG_HAVE_cosh) */
 
 #if (defined(CONFIG_HAVE_asincosh) || \
@@ -698,7 +698,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_asincosh, &f_math_asincosh, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_asincosh, &f_math_asincosh, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_asincosh || (CONFIG_HAVE_asinh && CONFIG_HAVE_acosh) */
 
 
@@ -729,7 +729,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_scalbn, &f_math_scalbn, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_scalbn, &f_math_scalbn, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_scalbln || CONFIG_HAVE_scalbn */
 
 #ifdef CONFIG_HAVE_remquo
@@ -749,7 +749,7 @@ err:
 	return NULL;
 }
 
-PRIVATE DEFINE_CMETHOD(math_remquo, &f_math_remquo, METHOD_FNORMAL);
+PRIVATE DEFINE_CMETHOD(math_remquo, &f_math_remquo, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST);
 #endif /* CONFIG_HAVE_remquo */
 
 
