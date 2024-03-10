@@ -783,7 +783,7 @@ DeeSharedMap_Decref(DeeObject *__restrict self) {
 
 	/* Difficult case: must duplicate the vector. */
 	SharedMap_LockWrite(me);
-	vector_copy = (DREF DeeSharedItem *)Dee_TryMallocc(me->sm_length,
+	vector_copy = (DREF DeeSharedItem *)Dee_TryMallocc(me->sm_length * 2,
 	                                                   sizeof(DREF DeeSharedItem *));
 	if unlikely(!vector_copy)
 		goto err_cannot_inherit;
@@ -791,7 +791,8 @@ DeeSharedMap_Decref(DeeObject *__restrict self) {
 	/* Simply copy all the elements, transferring
 	 * all the references that they represent. */
 	vector_copy = (DREF DeeSharedItem *)memcpyc(vector_copy, me->sm_vector,
-	                                            me->sm_length * 2, sizeof(DREF DeeObject *));
+	                                            me->sm_length * 2,
+	                                            sizeof(DREF DeeObject *));
 
 	/* Give the SharedMap its very own copy
 	 * which it will take to its grave. */
