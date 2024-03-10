@@ -93,7 +93,8 @@ DeeFloat_Print(LOCAL_float_t value, dformatprinter printer, void *arg,
 	max_prec = (unsigned int)precision;
 	min_prec = (unsigned int)precision;
 	if (!(flags & DEEFLOAT_PRINT_FPRECISION)) {
-		max_prec = 6, min_prec = 0;
+		max_prec = 6;
+		min_prec = 0;
 	} else if (max_prec > 9) {
 		max_prec = min_prec = 9;
 	}

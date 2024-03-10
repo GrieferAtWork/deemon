@@ -3684,7 +3684,7 @@ int_bool(DeeIntObject *__restrict self) {
 PRIVATE struct type_math int_math = {
 	/* .tp_int32       = */ &DeeInt_Get32Bit,
 	/* .tp_int64       = */ &DeeInt_Get64Bit,
-	/* .tp_double      = */ NULL,
+	/* .tp_double      = */ NULL, /* TODO */
 	/* .tp_int         = */ &DeeObject_NewRef,
 	/* .tp_inv         = */ (DeeObject *(DCALL *)(DeeObject *__restrict))&int_inv,
 	/* .tp_pos         = */ &DeeObject_NewRef,

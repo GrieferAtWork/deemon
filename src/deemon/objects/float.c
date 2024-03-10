@@ -46,6 +46,9 @@
 #ifdef CONFIG_HAVE_MATH_H
 #include <math.h>
 #endif /* CONFIG_HAVE_MATH_H */
+/**/
+
+#include "int_logic.h" /* `DeeInt_Alloc()' */
 #endif /* CONFIG_HAVE_FPU */
 
 DECL_BEGIN
@@ -177,11 +180,67 @@ err:
 	return NULL;
 }
 
+#ifndef INTPTR_MIN
+#define INTPTR_MIN __INTPTR_MIN__
+#endif /* !INTPTR_MIN */
+#ifndef INTPTR_MAX
+#define INTPTR_MAX __INTPTR_MAX__
+#endif /* !INTPTR_MAX */
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
+float_int(Float *__restrict self) {
+	DREF DeeIntObject *result;
+	double frac, v = self->f_value;
+	int exp;
+	/* Check if we can just directly cast to an intptr_t
+	 * NOTE: We add +1.0 here because that results in a clean power-of-2,
+	 *       which (combined with the use of ">" and "<") means that there
+	 *       are no rounding inaccuracies here. */
+	PRIVATE double const fmt_INTPTR_MIN = -((double)INTPTR_MAX + 1.0);
+	PRIVATE double const fmt_INTPTR_MAX = +((double)INTPTR_MAX + 1.0);
+	if (v > fmt_INTPTR_MIN && v < fmt_INTPTR_MAX)
+		return (DREF DeeIntObject *)DeeInt_NewIntptr((intptr_t)v);
+
+
+	/* Decompose "v" into it an expression:
+	 * >> v == frac * 2**exp
+	 * Where "frac" is in the range [0.5,1.0), and "exp" is positive
+	 * NOTE: "frexp" can produce negative "exp", but only for small
+	 *       float values, which we already filter by handling all
+	 *       values that fit directly into intptr_t above. */
+	v    = fabs(v);
+	frac = frexp(v, &exp);
+	ASSERT(frac >= 0.5);
+	ASSERT(frac < 1.0);
+	ASSERT(exp > 0);
+	--exp; /* Treat as a bit-shift; needed because: 2 << (v-1) <==> 2**v */
+	{
+		div_t exp_rem = div(exp, Dee_DIGIT_BITS);
+		frac   = ldexp(frac, exp_rem.rem + 1); /* Upscale for most significant digit */
+		result = DeeInt_Alloc(exp_rem.quot + 1);
+	}
+	if likely(result) {
+		size_t i = (size_t)result->ob_size - 1;
+		for (;;) {
+			digit d = (digit)frac;
+			result->ob_digit[i] = (digit)d;
+			if (i == 0)
+				break;
+			--i;
+			frac = frac - (double)d;
+			frac = ldexp(frac, Dee_DIGIT_BITS);
+		}
+		if (self->f_value < 0)
+			result->ob_size = -result->ob_size;
+	}
+	return result;
+}
+
 PRIVATE struct type_math float_math = {
 	/* .tp_int32  = */ (int (DCALL *)(DeeObject *__restrict, int32_t *__restrict))NULL,
 	/* .tp_int64  = */ (int (DCALL *)(DeeObject *__restrict, int64_t *__restrict))NULL,
 	/* .tp_double = */ (int (DCALL *)(DeeObject *__restrict, double *__restrict))&float_double,
-	/* .tp_int    = */ NULL,
+	/* .tp_int    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_int,
 	/* .tp_inv    = */ NULL,
 	/* .tp_pos    = */ &DeeObject_NewRef,
 	/* .tp_neg    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&float_neg,
@@ -748,6 +807,7 @@ PRIVATE struct type_operator const float_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_000B_INT, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_000C_FLOAT, METHOD_FCONSTCALL | METHOD_FNOTHROW | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_000E_POS, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_000F_NEG, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
