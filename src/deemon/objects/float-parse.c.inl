@@ -44,8 +44,8 @@ DECL_BEGIN
 PUBLIC NONNULL((1)) LOCAL_float_t DCALL
 LOCAL_Dee_Strtod(char const *str, char **p_endptr) {
 	char sign, ch = *str;
-	LOCAL_float_t fltval = 0.0;
-	int numsys, more, float_extension_mult;
+	LOCAL_float_t float_extension_mult, fltval = 0.0;
+	int numsys, more;
 	sign = ch;
 	if (ch == '+' || ch == '-')
 		ch = *++str;
@@ -175,9 +175,9 @@ flt_ext:
 		ch = *str++;
 	}
 	--str; /* Point *at* the first character after the digit-sequence */
-	float_extension_mult = 1;
+	float_extension_mult = 1.0;
 	while (float_extension_off != 0) {
-		float_extension_mult *= 10;
+		float_extension_mult *= 10.0;
 		--float_extension_off;
 	}
 	if (float_extension_pos) {
