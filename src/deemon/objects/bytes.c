@@ -208,6 +208,11 @@ INTERN DeeTypeObject BytesIterator_Type = {
 
 
 
+/* Unpack the given sequence `seq' into `num_bytes', invoking the
+ * `operator int' on each, converting their values into bytes, before
+ * storing those bytes in the given `dst' vector.
+ * If the length of `seq' doesn't match `num_bytes', an UnpackError is thrown.
+ * If `seq' is the none-singleton, `dst...+=num_bytes' is zero-initialized. */
 PUBLIC WUNUSED NONNULL((1, 3)) int
 (DCALL DeeSeq_ItemsToBytes)(byte_t *__restrict dst, size_t num_bytes,
                             DeeObject *__restrict seq) {
@@ -266,6 +271,8 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		return 0;
 	}
 
+	/* TODO: Use DeeObject_Foreach() */
+
 	/* Fallback: use an iterator. */
 	iter = DeeObject_IterSelf(seq);
 	if unlikely(!iter)
@@ -303,10 +310,12 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	DREF Bytes *result;
 	size_t i, bufsize;
 	DREF DeeObject *iter, *elem;
-	if (DeeNone_Check(seq))
-		return_empty_bytes;
+	if (DeeBytes_Check(seq))
+		return DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq));
 	bufsize = DeeFastSeq_GetSize(seq);
 	if (bufsize != DEE_FASTSEQ_NOTFAST) {
+		if (bufsize == 0)
+			return_empty_bytes;
 		result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
 		                                        bufsize);
 		if unlikely(!result)
@@ -325,6 +334,8 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		}
 		goto done;
 	}
+
+	/* TODO: Use DeeObject_Foreach() */
 
 	/* Fallback: use an iterator. */
 	bufsize = 256;

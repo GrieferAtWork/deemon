@@ -29,7 +29,7 @@
 
 DECL_BEGIN
 
-PRIVATE WUNUSED int DCALL
+PRIVATE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(3, 4) int DCALL
 mergesort_impl(DREF DeeObject **__restrict dst,
                DeeObject **__restrict temp,
                DREF DeeObject *const *__restrict src,
@@ -124,7 +124,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((5)) int DCALL
+PRIVATE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(3, 4) NONNULL((5)) int DCALL
 mergesort_impl_p(DREF DeeObject **__restrict dst,
                  DeeObject **__restrict temp,
                  DREF DeeObject *const *__restrict src,
@@ -201,7 +201,7 @@ err:
 
 
 
-PRIVATE WUNUSED int DCALL
+PRIVATE WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
 insertsort_impl(DREF DeeObject **__restrict dst,
                 DREF DeeObject *const *__restrict src,
                 size_t objc) {
@@ -228,7 +228,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((4)) int DCALL
+PRIVATE WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) NONNULL((4)) int DCALL
 insertsort_impl_p(DREF DeeObject **__restrict dst,
                   DREF DeeObject *const *__restrict src,
                   size_t objc, DeeObject *key) {
@@ -257,7 +257,7 @@ err:
 
 
 
-INTERN WUNUSED int DCALL
+INTERN WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
 DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
                  DREF DeeObject *const *__restrict src,
                  size_t objc, DeeObject *key) {
@@ -315,7 +315,7 @@ err:
 
 
 
-INTERN WUNUSED int DCALL
+INTERN WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
 DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                      DREF DeeObject *const *__restrict src,
                      size_t objc, DeeObject *key) {

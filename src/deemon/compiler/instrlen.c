@@ -1191,14 +1191,14 @@ PRIVATE uint8_t const prefix_length[8] = {
 };
 
 PRIVATE uint8_t const prefix_length_f0[8] = {
-	/* [0xf0f8       - 0xf000 | ASM_PREFIXMIN] */ 2,
-	/* [0xf0f9       - 0xf000 | ASM_PREFIXMIN] */ 2,
-	/* [ASM16_STACK  - 0xf000 | ASM_PREFIXMIN] */ 4,
-	/* [ASM16_STATIC - 0xf000 | ASM_PREFIXMIN] */ 4,
-	/* [ASM16_EXTERN - 0xf000 | ASM_PREFIXMIN] */ 6,
-	/* [0xf0fd       - 0xf000 | ASM_PREFIXMIN] */ 2,
-	/* [ASM16_GLOBAL - 0xf000 | ASM_PREFIXMIN] */ 4,
-	/* [ASM16_LOCAL  - 0xf000 | ASM_PREFIXMIN] */ 4
+	/* [0xf0f8       - (0xf000 | ASM_PREFIXMIN)] */ 2,
+	/* [0xf0f9       - (0xf000 | ASM_PREFIXMIN)] */ 2,
+	/* [ASM16_STACK  - (0xf000 | ASM_PREFIXMIN)] */ 4,
+	/* [ASM16_STATIC - (0xf000 | ASM_PREFIXMIN)] */ 4,
+	/* [ASM16_EXTERN - (0xf000 | ASM_PREFIXMIN)] */ 6,
+	/* [0xf0fd       - (0xf000 | ASM_PREFIXMIN)] */ 2,
+	/* [ASM16_GLOBAL - (0xf000 | ASM_PREFIXMIN)] */ 4,
+	/* [ASM16_LOCAL  - (0xf000 | ASM_PREFIXMIN)] */ 4
 };
 
 
@@ -1258,7 +1258,7 @@ again:
 /* Return if the given `instr' doesn't return normally (i.e. doesn't fall
  * through to its successor instruction) when executed in a context where
  * `code_flags' (which is the set of CODE_F* flags) is active. */
-PUBLIC WUNUSED bool DCALL
+PUBLIC ATTR_CONST WUNUSED bool DCALL
 DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	bool result = false;
 	switch (instr) {

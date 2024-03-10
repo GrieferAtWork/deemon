@@ -25,6 +25,7 @@
 #include <deemon/int.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
+#include <deemon/seq.h>
 #include <deemon/string.h>
 
 #include "../runtime/strings.h"
@@ -88,6 +89,15 @@ none_i4(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
 	return 0;
 }
 
+#if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
+#define none_s1 none_i1
+#else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
+PRIVATE size_t DCALL
+none_s1(void *UNUSED(a)) {
+	return 0;
+}
+#endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 none_bool(DeeObject *__restrict UNUSED(a)) {
 	return 0;
@@ -150,6 +160,21 @@ none_ne(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(!DeeNone_Check(other));
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+none_nii_getindex(DeeObject *UNUSED(self)) {
+	return (size_t)-2;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+none_nii_revert(DeeObject *UNUSED(self), size_t UNUSED(step)) {
+	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+none_nii_prev(DeeObject *UNUSED(self)) {
+	return 1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 none_enumattr(DeeTypeObject *UNUSED(tp_self), DeeObject *UNUSED(self),
               denum_t UNUSED(proc), void *UNUSED(arg)) {
@@ -191,6 +216,25 @@ PRIVATE struct type_math none_math = {
 	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&none_i2
 };
 
+PRIVATE struct type_nii tpconst none_nii = {
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	{
+		/* .nii_common = */ {
+			/* .nii_getseq   = */ (dfunptr_t)&none_1,
+			/* .nii_getindex = */ (dfunptr_t)&none_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&none_i2,
+			/* .nii_rewind   = */ (dfunptr_t)&none_i1,
+			/* .nii_revert   = */ (dfunptr_t)&none_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&none_nii_revert,
+			/* .nii_prev     = */ (dfunptr_t)&none_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&none_nii_prev,
+			/* .nii_hasprev  = */ (dfunptr_t)&none_i1,
+			/* .nii_peek     = */ (dfunptr_t)&none_iternext
+		}
+	}
+};
+
 PRIVATE struct type_cmp none_cmp = {
 	/* .tp_hash = */ &none_hash,
 	/* .tp_eq   = */ &none_eq,
@@ -198,7 +242,41 @@ PRIVATE struct type_cmp none_cmp = {
 	/* .tp_lo   = */ &none_ne,
 	/* .tp_le   = */ &none_eq,
 	/* .tp_gr   = */ &none_ne,
-	/* .tp_ge   = */ &none_eq
+	/* .tp_ge   = */ &none_eq,
+	/* .tp_nii  = */ &none_nii
+};
+
+PRIVATE struct type_nsi tpconst none_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&none_s1,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&none_s1,
+			/* .nsi_getitem      = */ (dfunptr_t)&none_2,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)&none_3,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&none_2,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
+	}
 };
 
 PRIVATE struct type_seq none_seq = {
@@ -211,6 +289,7 @@ PRIVATE struct type_seq none_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
+	/* .tp_nsi       = */ &none_nsi
 };
 
 PRIVATE struct type_attr tpconst none_attr = {

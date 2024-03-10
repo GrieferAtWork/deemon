@@ -151,7 +151,7 @@ local function __ctypes_new(tp) {
 #define __builtin_offsetof(s, t)           ((s).offsetof(#t))
 
 /* Define some unary-expression keywords that got removed */
-#define weak   WeakRef from deemon pack /* Create weak referece */
+#define weak   WeakRef from deemon pack /* Create weak reference */
 #define move   copy                     /* Move-construct (emulate as copy-construct) */
 
 /* Stub-implement removed static-if keywords (as far as possible). */
@@ -220,9 +220,11 @@ from deemon import
 ;
 
 /* Import some C-types.
+ *
  * Note however that we can't actually support stuff
  * like `x = (unsigned int)42', because there's no way
  * of defining multi-keyword identifiers.
+ *
  * As a quick & dirty work-around, such code can be altered
  * to instead be `x = (unsigned)42', which means the same,
  * and is still portable between d100+ and d200! */
@@ -288,7 +290,8 @@ from ctypes import
  * slash+star repeated inside of comments, or line-comments
  * being continued following an escaped line feed. (Deemon 200+
  * will only warn about the later if the next line doesn't start
- * with a line-comment, optionally preceded by white-space)
+ * with a line-comment, optionally preceded by white-space).
+ *
  * Since some legacy code does actually contain such comments,
  * disable warnings about them so-as not to annoy anyone. */
 #pragma warning("-Wno-comments")
@@ -299,16 +302,19 @@ from ctypes import
  * HINT: `__FORMAT_SCRIPT__' -- Defined for scripts found in comments by `deemon -F' */
 #if defined(__FORMAT__) && defined(__FORMAT_SCRIPT__)
 /* We're currently inside of an old-style format script.
+ *
  * Due to the way that deemon 100+ executed these, and how
  * deemon 200+ does now, there is a discrepancy in the value of
  * the current working directory in relation to the DDI filename,
  * as well as the __FILE__ macro.
+ *
  * In deemon 200+, the PWD will have automatically been set to
  * the folder that the script being formated is located inside
  * of. However in deemon 100+, the current working directory
  * will refer to whatever folder was set by the command-line
  * user, with __FILE__ either being an absolute path, or being
  * relative to that directory.
+ *
  * However in deemon 200+, __FILE__ may still be a relative path,
  * though not relative to the current working directory.
  * Using the combination of macros above, alongside the fact that
@@ -316,13 +322,15 @@ from ctypes import
  * deemon, and included whenever user-code uses one of the old-
  * style headers, we can reverse-engineer the value of PWD that
  * an old-style format script would expect.
+ *
  * NOTE: Old-style scripts often used to do something like the
  *       following to change PWD to their script:
  *       >> #include <fs>
- *       >> fs.chdir(fs.path.head(__FILE__));
+ *       >> fs::chdir(fs::path::head(__FILE__));
  *       Because after doing that, they'd get a consistent system
  *       context for opening other files in order to produce format
  *       output.
+ *
  * In deemon 200+ this is no longer necessary because PWD
  * will have already been set to what the above would achieve,
  * with the following code undoing that directory change.

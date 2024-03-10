@@ -58,7 +58,7 @@ DEF_K(as)
  * local, global, or external variable is currently bound, as well as
  * if an object implements a specific attribute:
  * >> if (bound(foo)) { // Check if a symbol `foo' is currently bound.
- * >>     // `(hasattr from deemon)(foo, "attribute_name")'
+ * >>     // `(boundattr from deemon)(foo, "attribute_name")'
  * >>     if (bound(foo.attribute_name)) {
  * >>     }
  * >> }

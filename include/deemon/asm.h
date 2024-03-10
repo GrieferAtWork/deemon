@@ -1622,21 +1622,21 @@ typedef Dee_instruction_t instruction_t;
 /* Return a pointer to the instruction, given the base address of the previous one.
  * >> Use this function if you want to enumerate instructions.
  * NOTE: Unknown instructions will return a pointer to `pc + 1' */
-DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
-DeeAsm_NextInstr(instruction_t const *__restrict pc);
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_instruction_t *DCALL
+DeeAsm_NextInstr(Dee_instruction_t const *__restrict pc);
 
 /* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
  * The returned pointer points to the first actual instruction byte.
  * When no prefix is present, simply re-return `pc' */
-DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
-DeeAsm_SkipPrefix(instruction_t const *__restrict pc);
+DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_instruction_t *DCALL
+DeeAsm_SkipPrefix(Dee_instruction_t const *__restrict pc);
 
 /* Same as `DeeAsm_NextInstr()', but also keep track of the current stack depth.
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
  * WARNING: This also goes for instructions that always take a branch! */
-DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
-DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2)) Dee_instruction_t *DCALL
+DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict p_stacksz);
 
 /* Same as `DeeAsm_NextInstr', but also returns the effective stack effect (sub/add) of the instruction.
@@ -1650,8 +1650,8 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
  *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
  *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
-DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
-DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
+DFUNDEF ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) Dee_instruction_t *DCALL
+DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
                    /*in|out*/ uint16_t *__restrict p_stacksz,
                    /*out*/ uint16_t *__restrict p_sp_add,
                    /*out*/ uint16_t *__restrict p_sp_sub);
@@ -1661,10 +1661,8 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
  * fall through to the follow-up instruction).
  * @param: instr:      The instruction encoded in big-endian.
  * @param: code_flags: Set of `CODE_F*' describing the execution mode. */
-DFUNDEF WUNUSED bool DCALL
+DFUNDEF ATTR_CONST WUNUSED bool DCALL
 DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags);
-
-
 
 DECL_END
 #endif /* __CC__ */

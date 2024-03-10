@@ -741,11 +741,11 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_RStripSeq(DeeObject 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_SplitSeq(DeeObject *self, DeeObject *sep_seq, DeeObject *key);
 
 /* Vector-sorting functions. */
-INTDEF WUNUSED int DCALL
+INTDEF WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
 DeeSeq_MergeSort(DREF DeeObject **__restrict dst,
                  DREF DeeObject *const *__restrict src,
                  size_t objc, DeeObject *key);
-INTDEF int DCALL
+INTDEF WUNUSED ATTR_OUTS(1, 3) ATTR_INS(2, 3) int DCALL
 DeeSeq_InsertionSort(DREF DeeObject **__restrict dst,
                      DREF DeeObject *const *__restrict src,
                      size_t objc, DeeObject *key);

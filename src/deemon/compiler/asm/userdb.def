@@ -66,124 +66,124 @@ for (local l: file.open("../../../../include/deemon/compiler/assembler.h")) {
 		longest_name = #name;
 }
 for (local x: names) {
-	print "#define", x, " " * (longest_name - #x), "OPERAND_CLASS_" + x;
+	print "#define", x, (" " * (longest_name - #x)) + "OPERAND_CLASS_" + x;
 }
 ]]]*/
-#define FMASK           OPERAND_CLASS_FMASK
-#define FIMMVAL         OPERAND_CLASS_FIMMVAL
-#define FBRACKETFLAG    OPERAND_CLASS_FBRACKETFLAG
-#define FBRACEFLAG      OPERAND_CLASS_FBRACEFLAG
-#define FDOTSFLAG       OPERAND_CLASS_FDOTSFLAG
-#define FSTACKFLAG      OPERAND_CLASS_FSTACKFLAG
-#define FSTACKFLAG2     OPERAND_CLASS_FSTACKFLAG2
-#define FSPADD          OPERAND_CLASS_FSPADD
-#define FSPSUB          OPERAND_CLASS_FSPSUB
-#define FSUBSP          OPERAND_CLASS_FSUBSP
-#define UNUSED          OPERAND_CLASS_UNUSED
-#define POP             OPERAND_CLASS_POP
-#define TOP             OPERAND_CLASS_TOP
-#define POP_OR_TOP      OPERAND_CLASS_POP_OR_TOP
-#define REF             OPERAND_CLASS_REF
-#define ARG             OPERAND_CLASS_ARG
-#define CONST           OPERAND_CLASS_CONST
-#define STATIC          OPERAND_CLASS_STATIC
-#define MODULE          OPERAND_CLASS_MODULE
-#define EXTERN          OPERAND_CLASS_EXTERN
-#define GLOBAL          OPERAND_CLASS_GLOBAL
-#define LOCAL           OPERAND_CLASS_LOCAL
-#define PREFIX          OPERAND_CLASS_PREFIX
-#define SDISP8          OPERAND_CLASS_SDISP8
-#define SDISP16         OPERAND_CLASS_SDISP16
-#define SDISP32         OPERAND_CLASS_SDISP32
-#define DISP8           OPERAND_CLASS_DISP8
-#define DISP16          OPERAND_CLASS_DISP16
-#define DISP32          OPERAND_CLASS_DISP32
-#define DISP_EQ_N2      OPERAND_CLASS_DISP_EQ_N2
-#define DISP_EQ_N1      OPERAND_CLASS_DISP_EQ_N1
-#define DISP_EQ_0       OPERAND_CLASS_DISP_EQ_0
-#define DISP_EQ_1       OPERAND_CLASS_DISP_EQ_1
-#define DISP_EQ_2       OPERAND_CLASS_DISP_EQ_2
-#define DISP8_HALF      OPERAND_CLASS_DISP8_HALF
-#define DISP16_HALF     OPERAND_CLASS_DISP16_HALF
-#define NONE            OPERAND_CLASS_NONE
-#define FOREACH         OPERAND_CLASS_FOREACH
-#define EXCEPT          OPERAND_CLASS_EXCEPT
-#define CATCH           OPERAND_CLASS_CATCH
-#define FINALLY         OPERAND_CLASS_FINALLY
-#define THIS            OPERAND_CLASS_THIS
-#define THIS_MODULE     OPERAND_CLASS_THIS_MODULE
-#define THIS_FUNCTION   OPERAND_CLASS_THIS_FUNCTION
-#define TRUE            OPERAND_CLASS_TRUE
-#define FALSE           OPERAND_CLASS_FALSE
-#define LIST            OPERAND_CLASS_LIST
-#define TUPLE           OPERAND_CLASS_TUPLE
-#define HASHSET         OPERAND_CLASS_HASHSET
-#define DICT            OPERAND_CLASS_DICT
-#define INT             OPERAND_CLASS_INT
-#define BOOL            OPERAND_CLASS_BOOL
-#define EQ              OPERAND_CLASS_EQ
-#define NE              OPERAND_CLASS_NE
-#define LO              OPERAND_CLASS_LO
-#define LE              OPERAND_CLASS_LE
-#define GR              OPERAND_CLASS_GR
-#define GE              OPERAND_CLASS_GE
-#define SO              OPERAND_CLASS_SO
-#define DO              OPERAND_CLASS_DO
-#define BREAK           OPERAND_CLASS_BREAK
-#define MIN             OPERAND_CLASS_MIN
-#define MAX             OPERAND_CLASS_MAX
-#define SUM             OPERAND_CLASS_SUM
-#define ANY             OPERAND_CLASS_ANY
-#define ALL             OPERAND_CLASS_ALL
-#define SP              OPERAND_CLASS_SP
-#define NL              OPERAND_CLASS_NL
-#define MOVE            OPERAND_CLASS_MOVE
-#define DEFAULT         OPERAND_CLASS_DEFAULT
-#define VARARGS         OPERAND_CLASS_VARARGS
-#define VARKWDS         OPERAND_CLASS_VARKWDS
-#define POP_DOTS        OPERAND_CLASS_POP_DOTS
-#define SPPOP           OPERAND_CLASS_SPPOP
-#define SPADDIMM_EQ_N2  OPERAND_CLASS_SPADDIMM_EQ_N2
-#define SPADDIMM_EQ_N1  OPERAND_CLASS_SPADDIMM_EQ_N1
-#define SPADDIMM_EQ_0   OPERAND_CLASS_SPADDIMM_EQ_0
-#define SPADDIMM_EQ_1   OPERAND_CLASS_SPADDIMM_EQ_1
-#define SPADDIMM_EQ_2   OPERAND_CLASS_SPADDIMM_EQ_2
-#define SPADDIMM8       OPERAND_CLASS_SPADDIMM8
-#define SPADDSIMM8      OPERAND_CLASS_SPADDSIMM8
-#define SPSUBIMM_EQ_N2  OPERAND_CLASS_SPSUBIMM_EQ_N2
-#define SPSUBIMM_EQ_N1  OPERAND_CLASS_SPSUBIMM_EQ_N1
-#define SPSUBIMM_EQ_0   OPERAND_CLASS_SPSUBIMM_EQ_0
-#define SPSUBIMM_EQ_1   OPERAND_CLASS_SPSUBIMM_EQ_1
-#define SPSUBIMM_EQ_2   OPERAND_CLASS_SPSUBIMM_EQ_2
-#define SPSUBIMM8       OPERAND_CLASS_SPSUBIMM8
-#define SPSUBSIMM8      OPERAND_CLASS_SPSUBSIMM8
-#define SPIMM8          OPERAND_CLASS_SPIMM8
-#define SPSIMM8         OPERAND_CLASS_SPSIMM8
-#define BRSPIMM8        OPERAND_CLASS_BRSPIMM8
-#define BRSPSIMM8       OPERAND_CLASS_BRSPSIMM8
-#define BCSPIMM8        OPERAND_CLASS_BCSPIMM8
-#define BCSPSIMM8       OPERAND_CLASS_BCSPSIMM8
-#define SPADDIMM16      OPERAND_CLASS_SPADDIMM16
-#define SPADDSIMM16     OPERAND_CLASS_SPADDSIMM16
-#define SPSUBIMM16      OPERAND_CLASS_SPSUBIMM16
-#define SPSUBSIMM16     OPERAND_CLASS_SPSUBSIMM16
-#define SPIMM16         OPERAND_CLASS_SPIMM16
-#define SPSIMM16        OPERAND_CLASS_SPSIMM16
-#define BRSPIMM16       OPERAND_CLASS_BRSPIMM16
-#define BRSPSIMM16      OPERAND_CLASS_BRSPSIMM16
-#define BCSPIMM16       OPERAND_CLASS_BCSPIMM16
-#define BCSPSIMM16      OPERAND_CLASS_BCSPSIMM16
-#define SIMM8           OPERAND_CLASS_SIMM8
-#define SIMM16          OPERAND_CLASS_SIMM16
-#define SIMM32          OPERAND_CLASS_SIMM32
-#define IMM8            OPERAND_CLASS_IMM8
-#define IMM16           OPERAND_CLASS_IMM16
-#define IMM32           OPERAND_CLASS_IMM32
-#define IMM_EQ_2        OPERAND_CLASS_IMM_EQ_2
-#define IMM_EQ_1        OPERAND_CLASS_IMM_EQ_1
-#define IMM_EQ_0        OPERAND_CLASS_IMM_EQ_0
-#define IMM_EQ_N1       OPERAND_CLASS_IMM_EQ_N1
-#define IMM_EQ_N2       OPERAND_CLASS_IMM_EQ_N2
+#define FMASK          OPERAND_CLASS_FMASK
+#define FIMMVAL        OPERAND_CLASS_FIMMVAL
+#define FBRACKETFLAG   OPERAND_CLASS_FBRACKETFLAG
+#define FBRACEFLAG     OPERAND_CLASS_FBRACEFLAG
+#define FDOTSFLAG      OPERAND_CLASS_FDOTSFLAG
+#define FSTACKFLAG     OPERAND_CLASS_FSTACKFLAG
+#define FSTACKFLAG2    OPERAND_CLASS_FSTACKFLAG2
+#define FSPADD         OPERAND_CLASS_FSPADD
+#define FSPSUB         OPERAND_CLASS_FSPSUB
+#define FSUBSP         OPERAND_CLASS_FSUBSP
+#define UNUSED         OPERAND_CLASS_UNUSED
+#define POP            OPERAND_CLASS_POP
+#define TOP            OPERAND_CLASS_TOP
+#define POP_OR_TOP     OPERAND_CLASS_POP_OR_TOP
+#define REF            OPERAND_CLASS_REF
+#define ARG            OPERAND_CLASS_ARG
+#define CONST          OPERAND_CLASS_CONST
+#define STATIC         OPERAND_CLASS_STATIC
+#define MODULE         OPERAND_CLASS_MODULE
+#define EXTERN         OPERAND_CLASS_EXTERN
+#define GLOBAL         OPERAND_CLASS_GLOBAL
+#define LOCAL          OPERAND_CLASS_LOCAL
+#define PREFIX         OPERAND_CLASS_PREFIX
+#define SDISP8         OPERAND_CLASS_SDISP8
+#define SDISP16        OPERAND_CLASS_SDISP16
+#define SDISP32        OPERAND_CLASS_SDISP32
+#define DISP8          OPERAND_CLASS_DISP8
+#define DISP16         OPERAND_CLASS_DISP16
+#define DISP32         OPERAND_CLASS_DISP32
+#define DISP_EQ_N2     OPERAND_CLASS_DISP_EQ_N2
+#define DISP_EQ_N1     OPERAND_CLASS_DISP_EQ_N1
+#define DISP_EQ_0      OPERAND_CLASS_DISP_EQ_0
+#define DISP_EQ_1      OPERAND_CLASS_DISP_EQ_1
+#define DISP_EQ_2      OPERAND_CLASS_DISP_EQ_2
+#define DISP8_HALF     OPERAND_CLASS_DISP8_HALF
+#define DISP16_HALF    OPERAND_CLASS_DISP16_HALF
+#define NONE           OPERAND_CLASS_NONE
+#define FOREACH        OPERAND_CLASS_FOREACH
+#define EXCEPT         OPERAND_CLASS_EXCEPT
+#define CATCH          OPERAND_CLASS_CATCH
+#define FINALLY        OPERAND_CLASS_FINALLY
+#define THIS           OPERAND_CLASS_THIS
+#define THIS_MODULE    OPERAND_CLASS_THIS_MODULE
+#define THIS_FUNCTION  OPERAND_CLASS_THIS_FUNCTION
+#define TRUE           OPERAND_CLASS_TRUE
+#define FALSE          OPERAND_CLASS_FALSE
+#define LIST           OPERAND_CLASS_LIST
+#define TUPLE          OPERAND_CLASS_TUPLE
+#define HASHSET        OPERAND_CLASS_HASHSET
+#define DICT           OPERAND_CLASS_DICT
+#define INT            OPERAND_CLASS_INT
+#define BOOL           OPERAND_CLASS_BOOL
+#define EQ             OPERAND_CLASS_EQ
+#define NE             OPERAND_CLASS_NE
+#define LO             OPERAND_CLASS_LO
+#define LE             OPERAND_CLASS_LE
+#define GR             OPERAND_CLASS_GR
+#define GE             OPERAND_CLASS_GE
+#define SO             OPERAND_CLASS_SO
+#define DO             OPERAND_CLASS_DO
+#define BREAK          OPERAND_CLASS_BREAK
+#define MIN            OPERAND_CLASS_MIN
+#define MAX            OPERAND_CLASS_MAX
+#define SUM            OPERAND_CLASS_SUM
+#define ANY            OPERAND_CLASS_ANY
+#define ALL            OPERAND_CLASS_ALL
+#define SP             OPERAND_CLASS_SP
+#define NL             OPERAND_CLASS_NL
+#define MOVE           OPERAND_CLASS_MOVE
+#define DEFAULT        OPERAND_CLASS_DEFAULT
+#define VARARGS        OPERAND_CLASS_VARARGS
+#define VARKWDS        OPERAND_CLASS_VARKWDS
+#define POP_DOTS       OPERAND_CLASS_POP_DOTS
+#define SPPOP          OPERAND_CLASS_SPPOP
+#define SPADDIMM_EQ_N2 OPERAND_CLASS_SPADDIMM_EQ_N2
+#define SPADDIMM_EQ_N1 OPERAND_CLASS_SPADDIMM_EQ_N1
+#define SPADDIMM_EQ_0  OPERAND_CLASS_SPADDIMM_EQ_0
+#define SPADDIMM_EQ_1  OPERAND_CLASS_SPADDIMM_EQ_1
+#define SPADDIMM_EQ_2  OPERAND_CLASS_SPADDIMM_EQ_2
+#define SPADDIMM8      OPERAND_CLASS_SPADDIMM8
+#define SPADDSIMM8     OPERAND_CLASS_SPADDSIMM8
+#define SPSUBIMM_EQ_N2 OPERAND_CLASS_SPSUBIMM_EQ_N2
+#define SPSUBIMM_EQ_N1 OPERAND_CLASS_SPSUBIMM_EQ_N1
+#define SPSUBIMM_EQ_0  OPERAND_CLASS_SPSUBIMM_EQ_0
+#define SPSUBIMM_EQ_1  OPERAND_CLASS_SPSUBIMM_EQ_1
+#define SPSUBIMM_EQ_2  OPERAND_CLASS_SPSUBIMM_EQ_2
+#define SPSUBIMM8      OPERAND_CLASS_SPSUBIMM8
+#define SPSUBSIMM8     OPERAND_CLASS_SPSUBSIMM8
+#define SPIMM8         OPERAND_CLASS_SPIMM8
+#define SPSIMM8        OPERAND_CLASS_SPSIMM8
+#define BRSPIMM8       OPERAND_CLASS_BRSPIMM8
+#define BRSPSIMM8      OPERAND_CLASS_BRSPSIMM8
+#define BCSPIMM8       OPERAND_CLASS_BCSPIMM8
+#define BCSPSIMM8      OPERAND_CLASS_BCSPSIMM8
+#define SPADDIMM16     OPERAND_CLASS_SPADDIMM16
+#define SPADDSIMM16    OPERAND_CLASS_SPADDSIMM16
+#define SPSUBIMM16     OPERAND_CLASS_SPSUBIMM16
+#define SPSUBSIMM16    OPERAND_CLASS_SPSUBSIMM16
+#define SPIMM16        OPERAND_CLASS_SPIMM16
+#define SPSIMM16       OPERAND_CLASS_SPSIMM16
+#define BRSPIMM16      OPERAND_CLASS_BRSPIMM16
+#define BRSPSIMM16     OPERAND_CLASS_BRSPSIMM16
+#define BCSPIMM16      OPERAND_CLASS_BCSPIMM16
+#define BCSPSIMM16     OPERAND_CLASS_BCSPSIMM16
+#define SIMM8          OPERAND_CLASS_SIMM8
+#define SIMM16         OPERAND_CLASS_SIMM16
+#define SIMM32         OPERAND_CLASS_SIMM32
+#define IMM8           OPERAND_CLASS_IMM8
+#define IMM16          OPERAND_CLASS_IMM16
+#define IMM32          OPERAND_CLASS_IMM32
+#define IMM_EQ_2       OPERAND_CLASS_IMM_EQ_2
+#define IMM_EQ_1       OPERAND_CLASS_IMM_EQ_1
+#define IMM_EQ_0       OPERAND_CLASS_IMM_EQ_0
+#define IMM_EQ_N1      OPERAND_CLASS_IMM_EQ_N1
+#define IMM_EQ_N2      OPERAND_CLASS_IMM_EQ_N2
 /*[[[end]]]*/
 
 #undef FF0
@@ -205,7 +205,7 @@ for (local x: names) {
 #define FSTKABS ASM_OVERLOAD_FSTKABS
 #define FSTKDSP ASM_OVERLOAD_FSTKDSP
 
-
+/* clang-format off */
 
 /* NOTE: When multiple overloads could be used, 
  *       the first overload is always preferred.
@@ -459,14 +459,14 @@ INSTR("push", (
 	O1(ASM_PUSH_THIS,          FPREFIX,                       (THIS))                        /* `PREFIX: push this' */
 	O1(ASM_PUSH_THIS_MODULE,   FPREFIX,                       (THIS_MODULE))                 /* `PREFIX: push this_module' */
 	O1(ASM_PUSH_THIS_FUNCTION, FPREFIX,                       (THIS_FUNCTION))               /* `PREFIX: push this_function' */
-	O1(ASM_PUSH_MODULE,        FPREFIX | FF0,                 (MODULE))                      /* `PREFIX: module <imm8/16>' */
-	O1(ASM_PUSH_REF,           FPREFIX | FF0,                 (REF))                         /* `PREFIX: ref <imm8/16>' */
-	O1(ASM_PUSH_ARG,           FPREFIX | FF0,                 (ARG))                         /* `PREFIX: arg <imm8/16>' */
-	O1(ASM_PUSH_CONST,         FPREFIX | FF0,                 (CONST))                       /* `PREFIX: const <imm8/16>' */
-	O1(ASM_PUSH_STATIC,        FPREFIX | FF0,                 (STATIC))                      /* `PREFIX: static <imm8/16>' */
-	O1(ASM_PUSH_EXTERN,        FPREFIX | FF0,                 (EXTERN))                      /* `PREFIX: extern <imm8/16>:<imm8/16>' */
-	O1(ASM_PUSH_GLOBAL,        FPREFIX | FF0,                 (GLOBAL))                      /* `PREFIX: global <imm8/16>' */
-	O1(ASM_PUSH_LOCAL,         FPREFIX | FF0,                 (LOCAL))                       /* `PREFIX: local <imm8/16>' */
+	O1(ASM_PUSH_MODULE,        FPREFIX | FF0,                 (MODULE))                      /* `PREFIX: push module <imm8/16>' */
+	O1(ASM_PUSH_REF,           FPREFIX | FF0,                 (REF))                         /* `PREFIX: push ref <imm8/16>' */
+	O1(ASM_PUSH_ARG,           FPREFIX | FF0,                 (ARG))                         /* `PREFIX: push arg <imm8/16>' */
+	O1(ASM_PUSH_CONST,         FPREFIX | FF0,                 (CONST))                       /* `PREFIX: push const <imm8/16>' */
+	O1(ASM_PUSH_STATIC,        FPREFIX | FF0,                 (STATIC))                      /* `PREFIX: push static <imm8/16>' */
+	O1(ASM_PUSH_EXTERN,        FPREFIX | FF0,                 (EXTERN))                      /* `PREFIX: push extern <imm8/16>:<imm8/16>' */
+	O1(ASM_PUSH_GLOBAL,        FPREFIX | FF0,                 (GLOBAL))                      /* `PREFIX: push global <imm8/16>' */
+	O1(ASM_PUSH_LOCAL,         FPREFIX | FF0,                 (LOCAL))                       /* `PREFIX: push local <imm8/16>' */
 	O1(ASM_PUSH_TRUE,          FPREFIX,                       (TRUE))                        /* `PREFIX: push true' */
 	O1(ASM_PUSH_FALSE,         FPREFIX,                       (FALSE))                       /* `PREFIX: push false' */
 	O1(ASM_PUSH_VARARGS,       FPREFIX,                       (VARARGS))                     /* `PREFIX: push varargs' */
@@ -501,12 +501,12 @@ INSTR("pop", (
 
 /* CONSTRAINTS: `adjstack ...' */
 INSTR("adjstack", (
-	O1(ASM_POP,        FNORMAL, (SPADDIMM_EQ_N1)) /* `adjstack #SP - 1' --> `pop' */
-	O1(ASM_POP,        FNORMAL, (SPSUBIMM_EQ_1))  /* `adjstack #SP - 1' --> `pop' */
-	O1(ASM_DELOP,      FNORMAL, (SPADDIMM_EQ_0))  /* `adjstack #SP + 0' --> `---' */
-	O1(ASM_DELOP,      FNORMAL, (SPSUBIMM_EQ_0))  /* `adjstack #SP + 0' --> `---' */
-	O1(ASM_PUSH_NONE,  FNORMAL, (SPADDIMM_EQ_1))  /* `adjstack #SP + 1' --> `push none' */
-	O1(ASM_PUSH_NONE,  FNORMAL, (SPSUBIMM_EQ_N1)) /* `adjstack #SP + 1' --> `push none' */
+	O1(ASM_POP,        FNORMAL, (SPADDIMM_EQ_N1)) /* `adjstack #SP + -1' --> `adjstack #SP - 1' --> `pop' */
+	O1(ASM_POP,        FNORMAL, (SPSUBIMM_EQ_1))  /* `adjstack #SP - 1'  --> `adjstack #SP - 1' --> `pop' */
+	O1(ASM_DELOP,      FNORMAL, (SPADDIMM_EQ_0))  /* `adjstack #SP + 0'  --> `adjstack #SP + 0' --> `---' */
+	O1(ASM_DELOP,      FNORMAL, (SPSUBIMM_EQ_0))  /* `adjstack #SP - 0'  --> `adjstack #SP + 0' --> `---' */
+	O1(ASM_PUSH_NONE,  FNORMAL, (SPADDIMM_EQ_1))  /* `adjstack #SP + 1'  --> `adjstack #SP + 1' --> `push none' */
+	O1(ASM_PUSH_NONE,  FNORMAL, (SPSUBIMM_EQ_N1)) /* `adjstack #SP - -1' --> `adjstack #SP + 1' --> `push none' */
 	O1(ASM_ADJSTACK,   FSTKDSP, (SPADDSIMM8))     /* `adjstack #SP + <Simm8>' */
 	O1(ASM16_ADJSTACK, FSTKDSP, (SPADDSIMM16))    /* `adjstack #SP + <Simm16>' */
 ))
@@ -1158,6 +1158,7 @@ INSTR("mov", (
 	O2(ASM_POP_LOCAL,          FF0,                 (LOCAL)(PREFIX))            /* `mov local <imm8/16>, PREFIX' */
 ))
 
+/* clang-format on */
 
 /*[[[deemon
 #include <file>

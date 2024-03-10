@@ -521,7 +521,7 @@ constant("AT_NO_AUTOMOUNT");
 constant("AT_EMPTY_PATH");
 constant("AT_SYMLINK_REGULAR");
 constant("AT_CHANGE_BTIME");
-//constant("AT_READLINK_REQSIZE"); // Note needed (Only used by; and also implied by `freadlinkat()')
+//constant("AT_READLINK_REQSIZE"); // Not needed (Only used by; and also implied by `freadlinkat()')
 constant("AT_REMOVEREG");
 constant("AT_ALTPATH");
 constant("AT_DOSPATH");
