@@ -557,7 +557,7 @@ again:
 			(void)Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
-		Dee_Free(result);
+		DeeString_Free2ByteBuffer(result);
 	}
 	return (uint16_t *)utf->u_data[STRING_WIDTH_2BYTE];
 err:
@@ -615,7 +615,7 @@ again:
 			(void)Dee_UntrackAlloc((size_t *)result - 1);
 			return result;
 		}
-		Dee_Free(result);
+		DeeString_Free4ByteBuffer(result);
 	}
 	return (uint32_t *)utf->u_data[STRING_WIDTH_4BYTE];
 err:
@@ -1868,7 +1868,7 @@ err_r_utf:
 err_r:
 	DeeObject_Free(result);
 err:
-	/*Dee_Free((size_t *)text-1);*/
+	/*Dee_Free((size_t *)text - 1);*/
 	return NULL;
 }
 
@@ -2010,7 +2010,7 @@ DeeString_TryPackUtf32Buffer(/*inherit(on_success)*/ uint32_t *__restrict text) 
 err_r:
 	DeeObject_Free(result);
 err:
-	/*Dee_Free((size_t *)text-1);*/
+	/*Dee_Free((size_t *)text - 1);*/
 	return NULL;
 }
 
@@ -5013,6 +5013,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 		}
 		ASSERT(buf >= (char *)((uint8_t *)self->up_buffer));
 		ASSERT(buf + confirm_length <= (char *)((uint8_t *)self->up_buffer + self->up_length));
+
 		/* Now that the caller initialized the UTF-8 content, we must
 		 * check if it contains any unicode sequences that cannot appear
 		 * as part of a 1-byte string. */
@@ -5023,6 +5024,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 			ch = *iter++;
 			if (ch < 0xc0)
 				continue; /* Pure ASCII / invalid UTF-8 (which we ignore here) */
+
 			/* Decode the full unicode character. */
 			utf8_length = unicode_utf8seqlen[ch];
 			ASSERT(utf8_length >= 2);
@@ -5034,6 +5036,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 				confirm_length -= count;
 				break;
 			}
+
 			/* Decode the unicode character. */
 			ASSERT(count != 0);
 			ch32 = utf8_getchar(iter - 1, utf8_length);
@@ -5049,6 +5052,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 				iter = new_iter;
 				continue;
 			}
+
 			/* Must up-cast to a 16-bit, or 32-bit string. */
 			{
 				uint8_t *utf8_start       = iter - 1;
@@ -5078,12 +5082,14 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 							utf8_convlength = i;
 							break;
 						}
+
 						/* All utf-8 sequences of less than 4 characters can fit into 16 bits. */
 						if (utf8_length >= 4)
 							goto upcast_to_32bit;
 						w16_length -= (utf8_length - 1);
 						i += utf8_length;
 					}
+
 					/* Allocate the new 16-bit string. */
 					string16 = DeeString_New2ByteBuffer(w16_length);
 					if unlikely(!string16)
@@ -5105,6 +5111,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 						i += utf8_length;
 					}
 					ASSERT(dst == string16 + w16_length);
+
 					/* All right! we've got the 16-bit string all created
 					 * (including the new content from the caller's buffer)
 					 * Now get rid of the old 8-bit string and upgrade the printer. */
@@ -5121,6 +5128,7 @@ Dee_unicode_printer_commit_utf8(struct unicode_printer *__restrict self,
 					uint32_t *string32, *dst;
 upcast_to_32bit:
 					w32_length = singlebyte_length + utf8_convlength;
+
 					/* Determine the length of the 32-bit string that we're about to construct. */
 					for (i = utf8_convlength; i < utf8_convlength;) {
 						ch = utf8_start[i];
@@ -5133,6 +5141,7 @@ upcast_to_32bit:
 						w32_length -= (utf8_length - 1);
 						i += utf8_length;
 					}
+
 					/* Allocate the new 32-bit string. */
 					string32 = DeeString_New4ByteBuffer(w32_length);
 					if unlikely(!string32)
@@ -5153,6 +5162,7 @@ upcast_to_32bit:
 						i += utf8_length;
 					}
 					ASSERT(dst == string32 + w32_length);
+
 					/* All right! we've got the 32-bit string all created
 					 * (including the new content from the caller's buffer)
 					 * Now get rid of the old 8-bit string and upgrade the printer. */
@@ -5167,12 +5177,14 @@ upcast_to_32bit:
 				}
 			}
 		}
+
 		/* Remember the actual length of the buffer. */
 		self->up_length = (size_t)(((uint8_t *)buf + confirm_length) - (uint8_t *)self->up_buffer);
 return_final_length:
 		return (dssize_t)final_length;
 	} else {
 		dssize_t result;
+
 		/* Simply print the buffer as UTF-8 text. */
 		result = unicode_printer_print(self,
 		                               buf,
@@ -5199,6 +5211,7 @@ Dee_unicode_printer_tryalloc_utf16(struct unicode_printer *__restrict self,
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
 		if (self->up_flags & UNICODE_PRINTER_FPENDING)
 			++length;
+
 		/* Allocate the initial buffer. */
 		initial_alloc = length;
 		if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
@@ -5271,6 +5284,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 		ASSERT(string != NULL);
 		ASSERT(buf >= string);
 		ASSERT(buf <= string + self->up_length);
+
 		/* The buffer was allocated in-line. */
 		old_length  = (size_t)((string + self->up_length) - buf);
 		total_avail = (size_t)((string + WSTR_LENGTH(string)) - buf);
@@ -5281,6 +5295,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 			self->up_length += new_length;
 			return buf;
 		}
+
 		/* Must allocate a new buffer. */
 		old_alloc = WSTR_LENGTH(string);
 		new_alloc = (self->up_length - old_length) + new_length;
@@ -5289,6 +5304,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 		do {
 			old_alloc *= 2;
 		} while (old_alloc < new_alloc);
+
 		/* Reallocate the buffer to fit the requested size. */
 		string = DeeString_TryResize2ByteBuffer(string, old_alloc);
 		if unlikely(!string) {
@@ -5296,6 +5312,7 @@ Dee_unicode_printer_tryresize_utf16(struct unicode_printer *__restrict self,
 			if unlikely(!string)
 				goto err;
 		}
+
 		/* Install the reallocated buffer. */
 		self->up_buffer = string;
 		self->up_length -= old_length;
@@ -5336,10 +5353,12 @@ Dee_unicode_printer_free_utf16(struct unicode_printer *__restrict self,
 	if ((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_2BYTE) {
 		if (!buf)
 			return;
+
 		/* Deal with pending characters. */
 		buf -= (self->up_flags & UNICODE_PRINTER_FPENDING) >> UNICODE_PRINTER_FPENDING_SHFT;
 		ASSERT(buf >= (uint16_t *)self->up_buffer);
 		ASSERT(buf <= (uint16_t *)self->up_buffer + self->up_length);
+
 		/* Mark the buffer memory as having been freed again. */
 		self->up_length = (size_t)((uint16_t *)buf - (uint16_t *)self->up_buffer);
 	} else {
@@ -5363,6 +5382,7 @@ Dee_unicode_printer_commit_utf16(struct unicode_printer *__restrict self,
 		}
 		ASSERT(buf >= (uint16_t *)self->up_buffer);
 		ASSERT(buf + confirm_length <= (uint16_t *)self->up_buffer + self->up_length);
+
 		/* Search for surrogates to see if the string can works as a pure 16-bit string. */
 		iter = buf, count = confirm_length;
 		while (count--) {
@@ -5376,6 +5396,7 @@ Dee_unicode_printer_commit_utf16(struct unicode_printer *__restrict self,
 				self->up_flags |= 1 << UNICODE_PRINTER_FPENDING_SHFT;
 				break;
 			}
+
 			/* Must up-cast to a full 32-bit string. */
 			{
 				uint32_t *w32_string, *dst;
@@ -5407,6 +5428,7 @@ check_low_surrogate:
 						continue;
 					}
 				}
+
 				/* Allocate the combined 32-bit string. */
 				w32_string = DeeString_New4ByteBuffer(result_length);
 				if unlikely(!w32_string)
@@ -5414,6 +5436,7 @@ check_low_surrogate:
 				dst = w32_string;
 				for (i = 0; i < doublebyte_length; ++i)
 					*dst++ = doublebyte_start[i];
+
 				/* Decode the utf-16 surrogates */
 				for (i = 0; i < utf16_length; ++i) {
 					uint16_t high;
@@ -5429,6 +5452,7 @@ check_low_surrogate:
 				}
 				*dst = 0;
 				ASSERT(dst == w32_string + result_length);
+
 				/* Store the new 32-bit string buffer in the printer. */
 				Dee_Free((size_t *)self->up_buffer - 1);
 				self->up_buffer = w32_string;
@@ -5438,12 +5462,14 @@ check_low_surrogate:
 				goto return_final_length;
 			}
 		}
+
 		/* Remember the actual length of the buffer. */
 		self->up_length = (size_t)(((uint16_t *)buf + confirm_length) - (uint16_t *)self->up_buffer);
 return_final_length:
 		return (dssize_t)final_length;
 	} else {
 		dssize_t result;
+
 		/* Simply print the buffer as UTF-16 text. */
 		result = unicode_printer_printutf16(self,
 		                                    buf,
@@ -5467,6 +5493,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		ASSERT(!self->up_length);
 		ASSERT((self->up_flags & UNICODE_PRINTER_FWIDTH) == STRING_WIDTH_1BYTE);
 #endif /* !CONFIG_UNICODE_PRINTER_LAZY_PREALLOCATION */
+
 		/* Allocate the initial buffer. */
 		initial_alloc = length;
 		if (initial_alloc < UNICODE_PRINTER_INITIAL_BUFSIZE)
@@ -5497,6 +5524,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		uint32_t *result;
 		if (self->up_length + length > WSTR_LENGTH(string)) {
 			size_t new_alloc;
+
 			/* Must allocate more memory. */
 			new_alloc = WSTR_LENGTH(string);
 			do {
@@ -5531,6 +5559,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		ASSERT(string != NULL);
 		ASSERT(buf >= string);
 		ASSERT(buf <= string + self->up_length);
+
 		/* The buffer was allocated in-line. */
 		old_length  = (size_t)((string + self->up_length) - buf);
 		total_avail = (size_t)((string + WSTR_LENGTH(string)) - buf);
@@ -5541,6 +5570,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 			self->up_length += new_length;
 			return buf;
 		}
+
 		/* Must allocate a new buffer. */
 		old_alloc = WSTR_LENGTH(string);
 		new_alloc = (self->up_length - old_length) + new_length;
@@ -5549,6 +5579,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 		do {
 			old_alloc *= 2;
 		} while (old_alloc < new_alloc);
+
 		/* Reallocate the buffer to fit the requested size. */
 		string = DeeString_TryResize4ByteBuffer(string, old_alloc);
 		if unlikely(!string) {
@@ -5556,6 +5587,7 @@ PUBLIC WUNUSED NONNULL((1)) uint32_t *
 			if unlikely(!string)
 				goto err;
 		}
+
 		/* Install the reallocated buffer. */
 		self->up_buffer = string;
 		self->up_length -= old_length;
@@ -5615,7 +5647,8 @@ PUBLIC WUNUSED NONNULL((1)) dssize_t
 		ASSERT(buf >= (uint32_t *)self->up_buffer);
 		ASSERT(buf + final_length <= (uint32_t *)self->up_buffer + self->up_length);
 		/* Remember the actual length of the buffer. */
-		self->up_length = (size_t)(((uint32_t *)buf + final_length) - (uint32_t *)self->up_buffer);
+		self->up_length = (size_t)(((uint32_t *)buf + final_length) -
+		                           ((uint32_t *)self->up_buffer));
 		return (dssize_t)final_length;
 	} else {
 		dssize_t result;
@@ -5800,6 +5833,7 @@ parse_oct_integer:
 				if (DeeUniTrait_AsDigit(desc, 8, &digit_value))
 					goto parse_oct_integer; /* Unicode digit character. */
 			}
+
 			/* Fallback: Disregard the character being escaped, and include
 			 *           the following character as part of the next flush. */
 			flush_start = iter - 1;
@@ -5818,6 +5852,7 @@ continue_or_replace:
 		}
 		flush_start = iter;
 	}
+
 	/* Flush the remainder. */
 	if unlikely(unicode_printer_print(printer, flush_start,
 	                                  (size_t)(end - flush_start)) < 0)
@@ -5885,6 +5920,7 @@ again_flush:
 			me->bp_numpend = (uint8_t)textlen;
 			goto done;
 		}
+
 		/* Expand the utf-8 sequence and emit it as a single character. */
 		ch32 = utf8_getchar((uint8_t *)text, seqlen);
 		if unlikely(ch32 > 0xff)
@@ -5911,6 +5947,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	 *              ASCII range, just append it as a byte. */
 	if likely((uint8_t)ch < 0x80)
 		return bytes_printer_putb(self, (uint8_t)ch);
+
 	/* Print the character as a UTF-8 string. */
 	return unlikely(bytes_printer_print(self, &ch, 1) < 0) ? -1 : 0;
 }

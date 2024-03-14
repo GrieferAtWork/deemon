@@ -2029,7 +2029,7 @@ PRIVATE struct string_utf empty_string_utf = {
 PUBLIC struct Dee_empty_string_struct DeeString_Empty = {
 	OBJECT_HEAD_INIT(&DeeString_Type),
 	/* .s_data = */ &empty_string_utf,
-	/* .s_hash = */ 0,
+	/* .s_hash = */ /*[[[deemon print (_Dee_HashSelect from rt.gen.hash)("");]]]*/_Dee_HashSelectC(0x0, 0x0)/*[[[end]]]*/,
 	/* .s_len  = */ 0,
 	/* .s_zero = */ '\0'
 };
