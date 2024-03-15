@@ -43,11 +43,16 @@ public:
 	@@Members may be declared as final, indicating that a sub-class should not
 	@@attempt to override the member, as the base-class may still continue to
 	@@make use of its own member variable, rather than the overwritten one.
-	@@By default, all members/function/properties declared as `private', as
-	@@well as everything inside of a class marked as final all-together will
-	@@automatically be marked as final.
+	@@The same effect is also applied when to "private" attributes, or when the
+	@@containing class is declared as "final".
+	@@
+	@@Additionally, the member can only be assigned once. Attempting to assign
+	@@a value when the member is already bound results in an AttributeError.
+	@@This effect can be disabled by declaring the member as "final varying"
+	@@
 	@@When a variable is final the compiler may choose to address that variable
-	@@directly (which is faster) instead of addressing it as an attribute
+	@@directly (which is faster), or inline it (which is even faster) instead
+	@@of addressing it as an attribute at runtime.
 	final member my_final_member;
 
 	@@Lastly, member variables can also be declared as `static', in which case
