@@ -175,7 +175,7 @@ global final rename = posix.rename;
 @@Helper class to wrap @posix.CopyFileProgress in a way that is
 @@compatible with the traditional progress-info-DTO format of
 @@the @copyfile method of the `fs` module.
-local class _FsCopyFileProgress {
+local final class _FsCopyFileProgress {
 	private member posixInfo: posix.CopyFileProgress;
 	this = default;
 	public operator float() {
