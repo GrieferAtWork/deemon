@@ -459,7 +459,6 @@ err:
 	return -1;
 }
 
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_deepload(Dict *__restrict self) {
 	typedef struct {
@@ -614,6 +613,72 @@ dict_fini(Dict *__restrict self) {
 		}
 		Dee_Free(self->d_elem);
 	}
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_assign(Dict *self, DeeObject *other) {
+	Dict temp;
+	size_t old_mask;
+	struct Dee_dict_item *old_elem;
+	if unlikely(dict_init_sequence(&temp, other))
+		goto err;
+	DeeDict_LockWrite(self);
+	old_mask = self->d_mask;
+	old_elem = self->d_elem;
+	self->d_mask = temp.d_mask;
+	self->d_size = temp.d_size;
+	self->d_used = temp.d_used;
+	self->d_elem = temp.d_elem;
+	DeeDict_LockEndWrite(self);
+	if (old_elem != empty_dict_items) {
+		struct dict_item *iter, *end;
+		end = (iter = old_elem) + (old_mask + 1);
+		for (; iter < end; ++iter) {
+			if (!iter->di_key)
+				continue;
+			Dee_Decref(iter->di_key);
+			Dee_XDecref(iter->di_value);
+		}
+		Dee_Free(old_elem);
+	}
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_moveassign(Dict *self, Dict *other) {
+	size_t old_mask;
+	struct Dee_dict_item *old_elem;
+	if unlikely(self == other)
+		return 0;
+	/* Steal everything from "other" and put it into "self" */
+	DeeLock_Acquire2(DeeDict_LockWrite(self), DeeDict_LockTryWrite(self), DeeDict_LockEndWrite(self),
+	                 DeeDict_LockWrite(other), DeeDict_LockTryWrite(other), DeeDict_LockEndWrite(other));
+	old_mask = self->d_mask;
+	old_elem = self->d_elem;
+	self->d_mask = other->d_mask;
+	self->d_size = other->d_size;
+	self->d_used = other->d_used;
+	self->d_elem = other->d_elem;
+	other->d_mask = 0;
+	other->d_size = 0;
+	other->d_used = 0;
+	other->d_elem = empty_dict_items;
+	DeeDict_LockEndWrite(self);
+	DeeDict_LockEndWrite(other);
+	if (old_elem != empty_dict_items) {
+		struct dict_item *iter, *end;
+		end = (iter = old_elem) + (old_mask + 1);
+		for (; iter < end; ++iter) {
+			if (!iter->di_key)
+				continue;
+			Dee_Decref(iter->di_key);
+			Dee_XDecref(iter->di_value);
+		}
+		Dee_Free(old_elem);
+	}
+	return 0;
 }
 
 PRIVATE NONNULL((1)) void DCALL
@@ -2381,8 +2446,8 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&dict_fini,
-		/* .tp_assign      = */ NULL, /* TODO */
-		/* .tp_move_assign = */ NULL, /* TODO */
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_moveassign,
 		/* .tp_deepload    = */ (int (DCALL *)(DeeObject *__restrict))&dict_deepload
 	},
 	/* .tp_cast = */ {
