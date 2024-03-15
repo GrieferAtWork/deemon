@@ -723,7 +723,7 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *se
                                     struct attribute_info *__restrict result,
                                     struct attribute_lookup_rules const *__restrict rules);
 
-/* Used to initialize attributes in deault constructor calls.
+/* Used to initialize attributes in default constructor calls.
  * @return:  0: Basic attribute successfully set
  * @return: -1: An error occurred. */
 INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL

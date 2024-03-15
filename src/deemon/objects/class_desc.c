@@ -3402,8 +3402,7 @@ DeeClass_GetInstanceAttribute(DeeTypeObject *__restrict class_type,
 	DeeObject_Init(result, &DeeProperty_Type);
 	return (DREF DeeObject *)result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 err:
 	return NULL;
 }
@@ -3488,8 +3487,7 @@ DeeClass_CallInstanceAttribute(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 err:
 	return NULL;
 }
@@ -3545,8 +3543,7 @@ DeeClass_CallInstanceAttributeKw(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 err:
 	return NULL;
 }
@@ -3605,8 +3602,7 @@ DeeClass_CallInstanceAttributeTuple(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 err:
 	return NULL;
 }
@@ -3662,8 +3658,7 @@ DeeClass_CallInstanceAttributeTupleKw(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 err:
 	return NULL;
 }
@@ -3726,8 +3721,7 @@ DeeClass_VCallInstanceAttributef(DeeTypeObject *class_type,
 	Dee_Decref(callback);
 	return result;
 unbound:
-	err_unbound_attribute_string(class_type,
-	                      DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string(class_type, DeeString_STR(attr->ca_name));
 	goto err;
 err_args_tuple:
 	Dee_Decref(args_tuple);
@@ -3744,8 +3738,8 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
 		return err_cant_access_attribute_string(class_type,
-		                                 DeeString_STR(attr->ca_name),
-		                                 ATTR_ACCESS_DEL);
+		                                        DeeString_STR(attr->ca_name),
+		                                        ATTR_ACCESS_DEL);
 	}
 	if (!(attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)) {
 		DREF DeeObject *old_value;
@@ -3772,8 +3766,8 @@ DeeClass_DelInstanceAttribute(DeeTypeObject *__restrict class_type,
 	return 0;
 err_noaccess:
 	return err_cant_access_attribute_string(class_type,
-	                                 DeeString_STR(attr->ca_name),
-	                                 ATTR_ACCESS_DEL);
+	                                        DeeString_STR(attr->ca_name),
+	                                        ATTR_ACCESS_DEL);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -3787,8 +3781,8 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	/* Make sure not to re-write readonly attributes. */
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
 		err_cant_access_attribute_string(class_type,
-		                          DeeString_STR(attr->ca_name),
-		                          ATTR_ACCESS_SET);
+		                                 DeeString_STR(attr->ca_name),
+		                                 ATTR_ACCESS_SET);
 		goto err;
 	}
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
@@ -3828,8 +3822,8 @@ DeeClass_SetInstanceAttribute(DeeTypeObject *class_type,
 	return 0;
 err_noaccess:
 	err_cant_access_attribute_string(class_type,
-	                          DeeString_STR(attr->ca_name),
-	                          ATTR_ACCESS_SET);
+	                                 DeeString_STR(attr->ca_name),
+	                                 ATTR_ACCESS_SET);
 err:
 	return -1;
 }
@@ -3886,8 +3880,8 @@ unbound:
 	return NULL;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 	return NULL;
 }
 
@@ -3976,13 +3970,12 @@ DeeInstance_CallAttribute(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -4032,13 +4025,12 @@ DeeInstance_VCallAttributef(struct class_desc *__restrict desc,
 	}
 	return result;
 unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 err:
 	return NULL;
 }
@@ -4145,13 +4137,12 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 	}
 	return result;
 unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 err:
 	return NULL;
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -4208,13 +4199,12 @@ PUBLIC WUNUSED NONNULL((1, 2, 3, 4, 5)) DREF DeeObject *
 	}
 	return result;
 unbound:
-	err_unbound_attribute_string_c(desc,
-	                        DeeString_STR(attr->ca_name));
+	err_unbound_attribute_string_c(desc, DeeString_STR(attr->ca_name));
 	goto err;
 illegal:
 	err_cant_access_attribute_string_c(desc,
-	                            DeeString_STR(attr->ca_name),
-	                            ATTR_ACCESS_GET);
+	                                   DeeString_STR(attr->ca_name),
+	                                   ATTR_ACCESS_GET);
 err:
 	return NULL;
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
