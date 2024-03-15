@@ -1770,13 +1770,13 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 	TYPE_GETTER_F("__str_bytes__", &string_audit_str_bytes, METHOD_FCONSTCALL,
 	              "->?DBytes\n"
 	              "Internal function to view the bytes of ${DeeString_STR()}"),
-	TYPE_GETTER_F("__str_bytes_isutf8__", &string_audit_str_bytes_isutf8, METHOD_FCONSTCALL,
+	TYPE_GETTER_F("__str_bytes_isutf8__", &string_audit_str_bytes_isutf8, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Value of ${DeeString_STR_ISUTF8()}"),
-	TYPE_GETTER_F("__str_bytes_islatin1__", &string_audit_str_bytes_islatin1, METHOD_FCONSTCALL,
+	TYPE_GETTER_F("__str_bytes_islatin1__", &string_audit_str_bytes_islatin1, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Value of ${DeeString_STR_ISLATIN1()}"),
-	TYPE_GETTER_F("__str_width__", &string_audit_str_width, METHOD_FCONSTCALL,
+	TYPE_GETTER_F("__str_width__", &string_audit_str_width, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns $1, $2 or $4 based on ${DeeString_WIDTH()}"),
 	TYPE_GETTER_F("__wstr_bytes__", &string_audit_wstr_bytes, METHOD_FCONSTCALL,

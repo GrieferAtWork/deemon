@@ -682,7 +682,7 @@ DDATDEF DeeTypeObject DeeString_Type; /* `string from deemon' */
 #define DeeString_WEND(x) _DeeString_WEnd((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
 #define DeeString_WSIZ(x) _DeeString_WSiz((DeeStringObject *)Dee_REQUIRES_OBJECT(x))
 
-LOCAL ATTR_PURE size_t *DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t *DCALL
 _DeeString_WStr(DeeStringObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	if ((utf = self->s_data) != NULL)
@@ -690,7 +690,7 @@ _DeeString_WStr(DeeStringObject *__restrict self) {
 	return (size_t *)self->s_str;
 }
 
-LOCAL ATTR_PURE void *DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) void *DCALL
 _DeeString_WEnd(DeeStringObject *__restrict self) {
 	struct Dee_string_utf *utf;
 	if ((utf = self->s_data) != NULL) {
@@ -715,7 +715,7 @@ _DeeString_WEnd(DeeStringObject *__restrict self) {
 	return self->s_str + self->s_len;
 }
 
-LOCAL ATTR_PURE size_t DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 _DeeString_WLen(DeeStringObject const *__restrict self) {
 	struct Dee_string_utf const *utf;
 	if ((utf = self->s_data) != NULL)
@@ -723,7 +723,7 @@ _DeeString_WLen(DeeStringObject const *__restrict self) {
 	return self->s_len;
 }
 
-LOCAL ATTR_PURE size_t DCALL
+LOCAL ATTR_PURE WUNUSED NONNULL((1)) size_t DCALL
 _DeeString_WSiz(DeeStringObject const *__restrict self) {
 	struct Dee_string_utf const *utf;
 	if ((utf = self->s_data) != NULL) {
@@ -1167,8 +1167,9 @@ DeeString_NewWideAltEndian(Dee_wchar_t const *__restrict str,
 
 /* API for string construction from buffers. */
 #if 0
-#define DeeString_SizeOf2ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 2)
-#define DeeString_SizeOf4ByteBuffer(num_chars) (sizeof(size_t) + ((num_chars) + 1) * 4)
+#define DeeString_SizeOf2ByteBuffer(num_chars)        (sizeof(size_t) + ((num_chars) + 1) * 2)
+#define DeeString_SizeOf4ByteBuffer(num_chars)        (sizeof(size_t) + ((num_chars) + 1) * 4)
+#define DeeString_SizeOfWidthBuffer(num_chars, width) (sizeof(size_t) + (num_chars + 1) * Dee_STRING_SIZEOF_WIDTH(width))
 #else
 LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf2ByteBuffer)(size_t num_chars) {
 	size_t result;
@@ -1177,7 +1178,7 @@ LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf2ByteBuffer)(size_t num_c
 	if unlikely(__hybrid_overflow_uadd(result, sizeof(size_t) + 2, &result))
 		goto overflow;
 	return result;
-overflow:
+overflow: /* Force downstream failure */
 	return (size_t)-1;
 }
 LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf4ByteBuffer)(size_t num_chars) {
@@ -1187,7 +1188,17 @@ LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOf4ByteBuffer)(size_t num_c
 	if unlikely(__hybrid_overflow_uadd(result, sizeof(size_t) + 4, &result))
 		goto overflow;
 	return result;
-overflow:
+overflow: /* Force downstream failure */
+	return (size_t)-1;
+}
+LOCAL ATTR_CONST WUNUSED size_t (DCALL DeeString_SizeOfWidthBuffer)(size_t num_chars, unsigned int width) {
+	size_t result, chwidth = Dee_STRING_SIZEOF_WIDTH(width);
+	if unlikely(__hybrid_overflow_umul(num_chars, chwidth, &result)) /* XXX: overflow_ushl() ??? */
+		goto overflow;
+	if unlikely(__hybrid_overflow_uadd(result, sizeof(size_t) + chwidth, &result))
+		goto overflow;
+	return result;
+overflow: /* Force downstream failure */
 	return (size_t)-1;
 }
 #endif
@@ -1803,7 +1814,7 @@ LOCAL WUNUSED NONNULL((1)) DREF DeeObject *
 /* API for string construction from buffers, with character size being determined at runtime.
  * NOTE: All of these functions take a `width' argument that is one of `STRING_WIDTH_*BYTE',
  *       behaving identical to the same `DeeString_*NByteBuffer' function.
- * NOTE: Packing of strings is done as raw byte streams (no utf-8/16/32 decoding is performed!) */
+ * NOTE: Packing of strings is done as raw word streams (no utf-8/16/32 decoding is performed!) */
 #ifdef __INTELLISENSE__
 LOCAL ATTR_MALLOC WUNUSED void *(DCALL DeeString_NewWidthBuffer)(size_t num_chars, unsigned int width);
 LOCAL ATTR_MALLOC WUNUSED void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_chars, unsigned int width);
@@ -1850,9 +1861,7 @@ LOCAL ATTR_MALLOC WUNUSED void *
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)Dee_Malloc(sizeof(size_t) +
-		                              (num_chars + 1) *
-		                              Dee_STRING_SIZEOF_WIDTH(width));
+		result = (size_t *)Dee_Malloc(DeeString_SizeOfWidthBuffer(num_chars, width));
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -1873,9 +1882,7 @@ LOCAL ATTR_MALLOC WUNUSED void *(DCALL DeeString_TryNewWidthBuffer)(size_t num_c
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)Dee_TryMalloc(sizeof(size_t) +
-		                                 (num_chars + 1) *
-		                                 Dee_STRING_SIZEOF_WIDTH(width));
+		result = (size_t *)Dee_TryMalloc(DeeString_SizeOfWidthBuffer(num_chars, width));
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -1899,10 +1906,7 @@ LOCAL WUNUSED void *(DCALL DeeString_ResizeWidthBuffer)(void *buffer, size_t num
 	} else {
 		size_t *result;
 		result = buffer ? (size_t *)buffer - 1 : NULL;
-		result = (size_t *)Dee_Realloc(result,
-		                               sizeof(size_t) +
-		                               (num_chars + 1) *
-		                               Dee_STRING_SIZEOF_WIDTH(width));
+		result = (size_t *)Dee_Realloc(result, DeeString_SizeOfWidthBuffer(num_chars, width));
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -1926,10 +1930,7 @@ LOCAL WUNUSED void *(DCALL DeeString_TryResizeWidthBuffer)(void *buffer, size_t 
 	} else {
 		size_t *result;
 		result = buffer ? (size_t *)buffer - 1 : NULL;
-		result = (size_t *)Dee_TryRealloc(result,
-		                                  sizeof(size_t) +
-		                                  (num_chars + 1) *
-		                                  Dee_STRING_SIZEOF_WIDTH(width));
+		result = (size_t *)Dee_TryRealloc(result, DeeString_SizeOfWidthBuffer(num_chars, width));
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -1953,10 +1954,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1,
-		                                  sizeof(size_t) +
-		                                  (num_chars + 1) *
-		                                  Dee_STRING_SIZEOF_WIDTH(width));
+		result = (size_t *)Dee_TryRealloc((size_t *)buffer - 1, DeeString_SizeOfWidthBuffer(num_chars, width));
 		if unlikely(!result)
 			result = (size_t *)buffer - 1;
 		*result++ = num_chars;
@@ -2002,10 +2000,7 @@ LOCAL ATTR_MALLOC WUNUSED void *
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)DeeDbg_Malloc(sizeof(size_t) +
-		                                 (num_chars + 1) *
-		                                 Dee_STRING_SIZEOF_WIDTH(width),
-		                                 file, line);
+		result = (size_t *)DeeDbg_Malloc(DeeString_SizeOfWidthBuffer(num_chars, width), file, line);
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -2028,10 +2023,7 @@ LOCAL ATTR_MALLOC WUNUSED void *
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)DeeDbg_TryMalloc(sizeof(size_t) +
-		                                    (num_chars + 1) *
-		                                    Dee_STRING_SIZEOF_WIDTH(width),
-		                                    file, line);
+		result = (size_t *)DeeDbg_TryMalloc(DeeString_SizeOfWidthBuffer(num_chars, width), file, line);
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -2057,11 +2049,7 @@ LOCAL WUNUSED void *
 	} else {
 		size_t *result;
 		result = buffer ? (size_t *)buffer - 1 : NULL;
-		result = (size_t *)DeeDbg_Realloc(result,
-		                                  sizeof(size_t) +
-		                                  (num_chars + 1) *
-		                                  Dee_STRING_SIZEOF_WIDTH(width),
-		                                  file, line);
+		result = (size_t *)DeeDbg_Realloc(result, DeeString_SizeOfWidthBuffer(num_chars, width), file, line);
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -2087,11 +2075,7 @@ LOCAL WUNUSED void *
 	} else {
 		size_t *result;
 		result = buffer ? (size_t *)buffer - 1 : NULL;
-		result = (size_t *)DeeDbg_TryRealloc(result,
-		                                     sizeof(size_t) +
-		                                     (num_chars + 1) *
-		                                     Dee_STRING_SIZEOF_WIDTH(width),
-		                                     file, line);
+		result = (size_t *)DeeDbg_TryRealloc(result, DeeString_SizeOfWidthBuffer(num_chars, width), file, line);
 		if unlikely(!result)
 			goto err;
 		*result++ = num_chars;
@@ -2117,11 +2101,7 @@ LOCAL WUNUSED ATTR_RETNONNULL NONNULL((1)) void *
 		return (uint8_t *)result->s_str;
 	} else {
 		size_t *result;
-		result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1,
-		                                     sizeof(size_t) +
-		                                     (num_chars + 1) *
-		                                     Dee_STRING_SIZEOF_WIDTH(width),
-		                                     file, line);
+		result = (size_t *)DeeDbg_TryRealloc((size_t *)buffer - 1, DeeString_SizeOfWidthBuffer(num_chars, width), file, line);
 		if unlikely(!result)
 			result = (size_t *)buffer - 1;
 		*result++ = num_chars;
