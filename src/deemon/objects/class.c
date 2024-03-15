@@ -2974,11 +2974,11 @@ done:
 	return result;
 }
 
-LOCAL WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+LOCAL WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members(DeeTypeObject *tp_self,
                           struct class_desc *__restrict desc,
                           struct instance_desc *__restrict instance,
-                          DeeObject *self, size_t argc, DeeObject *const *argv) {
+                          size_t argc, DeeObject *const *argv) {
 	size_t i;
 	uint16_t next_table_index = 0;
 	for (i = 0; i < argc; ++i) {
@@ -2986,8 +2986,7 @@ instance_autoload_members(DeeTypeObject *tp_self,
 		at = find_next_attribute(desc->cd_desc, &next_table_index);
 		if unlikely(!at)
 			goto err_argc;
-		if unlikely(DeeInstance_SetAttribute(desc, instance,
-			                                 self, at, argv[i]))
+		if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
 		goto err;
 	}
 	return 0;
@@ -2997,16 +2996,15 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_autoload_members_kw(DeeTypeObject *tp_self,
                              struct class_desc *__restrict desc,
                              struct instance_desc *__restrict instance,
-                             DeeObject *self, size_t argc,
-                             DeeObject *const *argv, DeeObject *kw) {
+                             size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	uint16_t next_table_index;
 	DREF DeeObject *iterator, *elem, *data[2];
 	if (!kw)
-		return instance_autoload_members(tp_self, desc, instance, self, argc, argv);
+		return instance_autoload_members(tp_self, desc, instance, argc, argv);
 	next_table_index = 0;
 	if (DeeKwds_Check(kw)) {
 		DeeKwdsObject *kwds = (DeeKwdsObject *)kw;
@@ -3024,7 +3022,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at, argv[i]))
+			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
 				goto err;
 		}
 		for (i = 0; i <= kwds->kw_mask; ++i) {
@@ -3045,8 +3043,8 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_keywords_shadows_positional(DeeString_STR(kwds->kw_map[i].ke_name));
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc, instance, self, at,
-			                                     kw_argv[kwds->kw_map[i].ke_index]))
+			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at,
+			                                          kw_argv[kwds->kw_map[i].ke_index]))
 				goto err;
 		}
 	} else {
@@ -3059,8 +3057,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_invalid_argc(tp_self->tp_name, argc, 0, i);
 				goto err;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc, instance,
-			                                     self, at, argv[i]))
+			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
 				goto err;
 		}
 		iterator = DeeObject_IterSelf((DeeObject *)kw);
@@ -3085,8 +3082,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 				err_keywords_shadows_positional(DeeString_STR(data[0]));
 				goto err_iter_data;
 			}
-			if unlikely(DeeInstance_SetAttribute(desc, instance,
-			                                     self, at, data[1]))
+			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, data[1]))
 				goto err_iter_data;
 			Dee_Decref(data[1]);
 			Dee_Decref(data[0]);
@@ -3208,8 +3204,7 @@ instance_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self, desc, instance,
-	                                      self, argc, argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance, argc, argv))
 		goto err_super;
 	Dee_Decref(func);
 	return 0;
@@ -3263,8 +3258,7 @@ instance_auto_tinitkw(DeeTypeObject *tp_self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
-	                                         self, argc, argv, kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance, argc, argv, kw))
 		goto err_super;
 	Dee_Decref(func);
 	return 0;
@@ -3303,8 +3297,7 @@ instance_builtin_auto_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	}
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self, desc, instance,
-	                                      self, argc, argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance, argc, argv))
 		goto err_super;
 	return 0;
 err_super:
@@ -3341,8 +3334,7 @@ instance_builtin_auto_tinitkw(DeeTypeObject *tp_self,
 	}
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
-	                                         self, argc, argv, kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance, argc, argv, kw))
 		goto err_super;
 	return 0;
 err_super:
@@ -3408,8 +3400,7 @@ instance_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self, desc, instance,
-	                                      self, argc, argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance, argc, argv))
 		goto err_members;
 	Dee_Decref(func);
 	return 0;
@@ -3448,8 +3439,7 @@ instance_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	Dee_Decref(result);
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
-	                                         self, argc, argv, kw))
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance, argc, argv, kw))
 		goto err_members;
 	Dee_Decref(func);
 	return 0;
@@ -3473,8 +3463,7 @@ instance_builtin_auto_nobase_tinit(DeeTypeObject *tp_self, DeeObject *__restrict
 	       sizeof(DREF DeeObject *));
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members(tp_self, desc, instance,
-	                                      self, argc, argv))
+	if unlikely(instance_autoload_members(tp_self, desc, instance, argc, argv))
 		goto err_members;
 	return 0;
 err_members:
@@ -3497,9 +3486,8 @@ instance_builtin_auto_nobase_tinitkw(DeeTypeObject *tp_self,
 	       sizeof(DREF DeeObject *));
 
 	/* Auto-initialize members. */
-	if unlikely(instance_autoload_members_kw(tp_self, desc, instance,
-		                                     self, argc, argv, kw))
-	goto err_members;
+	if unlikely(instance_autoload_members_kw(tp_self, desc, instance, argc, argv, kw))
+		goto err_members;
 	return 0;
 err_members:
 	instance_clear_members(instance, desc->cd_desc->cd_imemb_size);

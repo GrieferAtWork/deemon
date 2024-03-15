@@ -1112,6 +1112,12 @@ INSTR("setmember", (
 	O4(ASM_SETMEMBER_THIS_R, FRELABS | FF0 | FF0_IMM, (THIS)(REF)(IMM16)(POP)) /* `setmember this, ref <imm8/16>, $<imm16>, pop' */
 ))
 
+/* CONSTRAINTS: `setmemberi <T>, <r>, ..., <s>' */
+INSTR("setmemberi", (
+	O4(ASM_SETMEMBERI_THIS_R, FRELABS | FF0 | FF0_IMM, (THIS)(REF)(IMM8)(POP))  /* `setmemberi this, ref <imm8/16>, $<imm8>, pop' */
+	O4(ASM_SETMEMBERI_THIS_R, FRELABS | FF0 | FF0_IMM, (THIS)(REF)(IMM16)(POP)) /* `setmemberi this, ref <imm8/16>, $<imm16>, pop' */
+))
+
 /* CONSTRAINTS: `reduce <s>, ...' */
 INSTR("reduce", (
 	O2(ASM_REDUCE_MIN, FNORMAL, (TOP)(MIN)) /* `reduce top, min' */

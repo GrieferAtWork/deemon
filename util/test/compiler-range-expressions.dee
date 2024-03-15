@@ -35,8 +35,8 @@ function assert_range(r, e) {
 		assert x in r;
 }
 
-class IntWrapper: Numeric {
-	public final member i: int = 0;
+final class IntWrapper: Numeric {
+	public member i: int = 0;
 	this = default;
 	operator ++ () { return IntWrapper(i + 1); }
 	operator -- () { return IntWrapper(i - 1); }

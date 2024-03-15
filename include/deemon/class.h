@@ -673,10 +673,12 @@ DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeInstance_GetMember(/*Cl
 DFUNDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeInstance_BoundMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_DelMember(/*Class*/ DeeTypeObject *__restrict tp_self, /*Instance*/ DeeObject *__restrict self, uint16_t addr);
 DFUNDEF NONNULL((1, 2, 4)) void DCALL DeeInstance_SetMember(/*Class*/ DeeTypeObject *tp_self, /*Instance*/ DeeObject *self, uint16_t addr, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeInstance_SetMemberInitial(/*Class*/ DeeTypeObject *tp_self, /*Instance*/ DeeObject *self, uint16_t addr, DeeObject *value);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeInstance_GetMemberSafe(DeeTypeObject *tp_self, DeeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_BoundMemberSafe(DeeTypeObject *tp_self, DeeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeInstance_DelMemberSafe(DeeTypeObject *tp_self, DeeObject *__restrict self, uint16_t addr);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeInstance_SetMemberSafe(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeInstance_SetMemberInitialSafe(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr, DeeObject *value);
 
 /* Class member access (by addr) */
 DFUNDEF NONNULL((1, 3)) void DCALL DeeClass_SetMember(DeeTypeObject *self, uint16_t addr, DeeObject *value);
@@ -721,25 +723,14 @@ DeeClass_FindClassInstanceAttribute(DeeTypeObject *tp_invoker, DeeTypeObject *se
                                     struct attribute_info *__restrict result,
                                     struct attribute_lookup_rules const *__restrict rules);
 
-/* @return:  2: Attribute isn't a basic one
+/* Used to initialize attributes in deault constructor calls.
  * @return:  0: Basic attribute successfully set
  * @return: -1: An error occurred. */
-#ifdef __INTELLISENSE__
-INTDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL
+INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
 DeeInstance_SetBasicAttribute(struct Dee_class_desc *__restrict desc,
                               struct Dee_instance_desc *__restrict self,
-                              DeeObject *this_arg,
                               struct Dee_class_attribute const *__restrict attr,
                               DeeObject *value);
-#else /* __INTELLISENSE__ */
-#define DeeInstance_SetBasicAttribute(desc, self, this_arg, attr, value) \
-	DeeInstance_SetBasicAttribute_(desc, self, attr, value)
-INTDEF WUNUSED NONNULL((1, 2, 3, 4)) int
-(DCALL DeeInstance_SetBasicAttribute_)(struct Dee_class_desc *__restrict desc,
-                                       struct Dee_instance_desc *__restrict self,
-                                       struct Dee_class_attribute const *__restrict attr,
-                                       DeeObject *__restrict value);
-#endif /* !__INTELLISENSE__ */
 
 /* Get/Call/Del/Set a class attribute, as acquired
  * through `DeeClassDescriptor_QueryClassAttribute()'. */

@@ -337,6 +337,8 @@ EXPORTS
 	DeeInstance_GetMemberSafe@12=_DeeInstance_GetMemberSafe@12
 	DeeInstance_SetAttribute@20=_DeeInstance_SetAttribute@20
 	DeeInstance_SetMember@16=_DeeInstance_SetMember@16
+	DeeInstance_SetMemberInitial@16=_DeeInstance_SetMemberInitial@16
+	DeeInstance_SetMemberInitialSafe@16=_DeeInstance_SetMemberInitialSafe@16
 	DeeInstance_SetMemberSafe@16=_DeeInstance_SetMemberSafe@16
 	DeeInstance_VCallAttributef@24=_DeeInstance_VCallAttributef@24
 	DeeInt_AsBytes@20=_DeeInt_AsBytes@20

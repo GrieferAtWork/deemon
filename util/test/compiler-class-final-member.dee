@@ -1,0 +1,96 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from errors;
+
+/* Rules for "final" class members:
+ * - If a sub-class tries to override the member, it is undefined if said override
+ *   is actually used during some given access (iow: the compiler doesn't need to
+ *   emit a dynamic attribute lookup).
+ *   The same effect applies when the member is "private", or the class is "final"
+ * - The member can only be assigned its value *once*. Trying to assign a value
+ *   when the member is already bound results in an AttributeError. (This behavior
+ *   mirrors java semantics).
+ *   This second part of the behavior can be suppressed by adding "varying", which
+ *   results in a member that can't be overwritten, but can be re-assigned.
+ *   - The "varying" modifier can also only be used on members (not properties or functions)
+ */
+class MyClass {
+	public final member foo = 42;
+	public final member bar;
+	public final varying member baz;
+	this = default;
+
+	setFoo() {
+		foo = 10;
+		return this;
+	}
+
+	setBar() {
+		bar = 20;
+		return this;
+	}
+
+	setBaz() {
+		baz = 30;
+		return this;
+	}
+}
+
+function setFoo(x) {
+	x.foo = 10;
+	return x;
+}
+
+function setBar(x) {
+	x.bar = 20;
+	return x;
+}
+
+function setBaz(x) {
+	x.baz = 30;
+	return x;
+}
+
+assert MyClass().foo == 42;
+assert MyClass().bar !is bound;
+assert MyClass().baz !is bound;
+assert MyClass(foo: 10).foo == 10;
+assert MyClass(foo: 10).bar !is bound;
+assert MyClass(bar: 20).foo == 42;
+assert MyClass(bar: 20).bar == 20;
+assert MyClass(baz: 30).foo == 42;
+assert MyClass(baz: 30).bar !is bound;
+assert MyClass(baz: 30).baz == 30;
+assert (try setFoo(MyClass()).foo catch (e...) e) is AttributeError;
+assert (try setBar(MyClass()).bar catch (e...) e) == 20;
+assert (try setBaz(MyClass()).baz catch (e...) e) == 30;
+assert (try MyClass().setFoo().foo catch (e...) e) is AttributeError;
+assert (try MyClass().setBar().bar catch (e...) e) == 20;
+assert (try MyClass().setBaz().baz catch (e...) e) == 30;
+assert (try setFoo(setFoo(MyClass())).foo catch (e...) e) is AttributeError;
+assert (try setBar(setBar(MyClass())).bar catch (e...) e) is AttributeError;
+assert (try setBaz(setBaz(MyClass())).baz catch (e...) e) == 30;
+assert (try MyClass().setFoo().setFoo().foo catch (e...) e) is AttributeError;
+assert (try MyClass().setBar().setBar().bar catch (e...) e) is AttributeError;
+assert (try MyClass().setBaz().setBaz().baz catch (e...) e) == 30;
+
+

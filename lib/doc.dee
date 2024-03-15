@@ -802,7 +802,7 @@ class TypeRef: WeakRefAble {
 			return m_docstring;
 		}
 	}
-	public final member m_docstring: string | Type;
+	private member m_docstring: string | Type;
 
 	@@The doc node that contains a reference to @this TypeRef
 	public final member docnode: WeakRef with Doc;

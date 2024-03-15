@@ -3760,6 +3760,23 @@ do_setmember_r:
 			DISPATCH();
 		}
 
+		TARGET(ASM_SETMEMBERI_THIS_R, -1, +0) {
+			imm_val  = READ_imm8();
+			imm_val2 = READ_imm8();
+do_setmemberi_r:
+			ASSERT_THISCALL();
+			ASSERT_REFimm();
+#ifdef EXEC_SAFE
+			if unlikely(DeeInstance_SetMemberInitialSafe((DeeTypeObject *)REFimm, THIS, imm_val2, TOP))
+				HANDLE_EXCEPT();
+#else /* EXEC_SAFE */
+			if unlikely(DeeInstance_SetMemberInitial((DeeTypeObject *)REFimm, THIS,
+			                                         imm_val2, TOP))
+				HANDLE_EXCEPT();
+#endif /* !EXEC_SAFE */
+			POPREF();
+			DISPATCH();
+		}
 
 		{
 			DREF DeeObject *call_object, *call_result;
@@ -5018,6 +5035,12 @@ do_setmember_this:
 					imm_val  = READ_imm16();
 					imm_val2 = READ_imm16();
 					goto do_setmember_r;
+				}
+
+				TARGET(ASM16_SETMEMBERI_THIS_R, -1, +0) {
+					imm_val  = READ_imm16();
+					imm_val2 = READ_imm16();
+					goto do_setmemberi_r;
 				}
 
 				TARGET(ASM16_BOUNDMEMBER_THIS_R, -1, +0) {

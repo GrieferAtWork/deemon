@@ -1686,11 +1686,13 @@ use_object_base:
 		uint16_t *p_usage_counter;
 		struct ast_loc loc;
 		bool modifiers_encountered;
+		bool varying_encountered;
 next_member:
 		member_class          = MEMBER_CLASS_AUTO;
 		member_flags          = default_member_flags;
 		is_class_member       = false;
 		modifiers_encountered = false;
+		varying_encountered   = false;
 
 		/* Reset member tags. */
 		if unlikely(ast_tags_clear())
@@ -1756,6 +1758,16 @@ set_visibility:
 			if unlikely(yield() < 0)
 				goto err;
 			member_flags |= CLASS_ATTRIBUTE_FFINAL;
+			if (!varying_encountered)
+				member_flags |= CLASS_ATTRIBUTE_FREADONLY;
+			modifiers_encountered = true;
+			goto next_modifier;
+
+		case KWD_varying:
+			if unlikely(yield() < 0)
+				goto err;
+			member_flags &= ~CLASS_ATTRIBUTE_FREADONLY;
+			varying_encountered   = true;
 			modifiers_encountered = true;
 			goto next_modifier;
 
@@ -2511,6 +2523,9 @@ err_ctor_expr:
 					    member_class != MEMBER_CLASS_GETSET &&
 					    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
 						goto err_decl;
+					if (varying_encountered &&
+					    WARNAT(&loc, W_CLASS_MEMBER_VARYING_IGNORED_FOR_PROPERTY, member_name))
+						goto err_decl;
 					if unlikely(yield() < 0)
 						goto err_decl;
 
@@ -2634,6 +2649,9 @@ err_property:
 			    member_class != MEMBER_CLASS_METHOD &&
 			    WARNAT(&loc, W_CLASS_MEMBER_TYPE_NOT_MATCHED, member_name))
 				goto err_decl;
+			if (varying_encountered &&
+			    WARNAT(&loc, W_CLASS_MEMBER_VARYING_IGNORED_FOR_FUNCTION, member_name))
+				goto err_decl;
 
 			/* Everything else is parsed as a member function.
 			 * NOTE: We mark such members are read-only because the intention is to never overwrite them. */
@@ -2753,6 +2771,7 @@ do_yield_semicolon:
 					goto err;
 			}
 		}	break;
+
 		}
 	}
 done_class_modal:

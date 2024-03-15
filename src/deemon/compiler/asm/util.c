@@ -2081,12 +2081,12 @@ check_sym_class:
 			this_sym  = sym->s_attr.a_this;
 			attr      = sym->s_attr.a_attr;
 			SYMBOL_INPLACE_UNWIND_ALIAS(class_sym);
-			if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
-				break; /* TODO: Dedicated warning. */
 			if (!this_sym) {
 set_class_attribute:
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-					/* Must invoke the getter callback. */
+					if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+						break;
+					/* Must invoke the setter callback. */
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
 						if unlikely(symid < 0)
@@ -2118,16 +2118,20 @@ set_class_attribute:
 					goto err; /* value, class */
 				if (asm_gswap())
 					goto err; /* class, value */
+				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY) {
+					/* XXX: Assert that not already bound? */
+				}
 				if (asm_gdefcmember(attr->ca_addr))
 					goto err;      /* class */
 				return asm_gpop(); /* - */
 			}
 
-			/* The attribute must be accessed as virtual. */
+			/* Check if the attribute must be accessed as virtual. */
 			if unlikely(asm_check_thiscall(sym, warn_ast))
 				goto err;
 			SYMBOL_INPLACE_UNWIND_ALIAS(this_sym);
 			if (!(attr->ca_flag & (CLASS_ATTRIBUTE_FPRIVATE | CLASS_ATTRIBUTE_FFINAL))) {
+do_virtual_access:
 				symid = asm_newconst((DeeObject *)attr->ca_name);
 				if unlikely(symid < 0)
 					goto err;
@@ -2143,7 +2147,9 @@ set_class_attribute:
 
 			/* Regular, old member variable. */
 			if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) {
-				/* Call the delete function of the attribute. */
+				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+					break;
+				/* Call the setter function of the attribute. */
 				if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 					if (ASM_SYMBOL_MAY_REFERENCE(class_sym)) {
 						symid = asm_rsymid(class_sym);
@@ -2153,7 +2159,7 @@ set_class_attribute:
 						    (CLASS_ATTRIBUTE_FGETSET | CLASS_ATTRIBUTE_FMETHOD) &&
 						    this_sym->s_type == SYMBOL_TYPE_THIS &&
 						    !SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
-							/* Invoke the delete callback. */
+							/* Invoke the setter callback. */
 							if (asm_gcallcmember_this_r((uint16_t)symid, attr->ca_addr + CLASS_GETSET_SET, 0))
 								goto err;
 							goto pop_unused_result;
@@ -2209,6 +2215,8 @@ pop_unused_result:
 				goto set_class_attribute;
 			if (this_sym->s_type != SYMBOL_TYPE_THIS ||
 			    SYMBOL_MUST_REFERENCE_THIS(this_sym)) {
+				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+					goto do_virtual_access; /* There is no `setmemberi pop, pop, $<imm8>, pop' instruction, so use fallback */
 				if (asm_gpush_symbol(this_sym, warn_ast))
 					goto err; /* value, this */
 				if (asm_gpush_symbol(class_sym, warn_ast))
@@ -2221,9 +2229,13 @@ pop_unused_result:
 				symid = asm_rsymid(class_sym);
 				if unlikely(symid < 0)
 					goto err;
-				if (asm_gsetmember_this_r((uint16_t)symid, attr->ca_addr))
+				if ((attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+				    ? asm_gsetmemberi_this_r((uint16_t)symid, attr->ca_addr)
+				    : asm_gsetmember_this_r((uint16_t)symid, attr->ca_addr))
 					goto err;
 			} else {
+				if (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)
+					goto do_virtual_access; /* There is no `setmemberi this, pop, $<imm8>, pop' instruction, so use fallback */
 				if (asm_gpush_symbol(class_sym, warn_ast))
 					goto err; /* value, class */
 				if (asm_gswap())

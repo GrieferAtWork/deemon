@@ -4394,6 +4394,40 @@ target_setmember_this_r:
 
 
 
+target16_setmemberi_this_r:
+	/* `setmemberi this, ref <imm16>, $<imm16>, pop' */
+	lodsw
+	movl   %eax, %ecx
+	lodsw
+	jmp    1f
+target_setmemberi_this_r:
+	/* `setmemberi this, ref <imm8>, $<imm8>, pop' */
+	lodsb
+	movl   %eax, %ecx
+	lodsb
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
+#endif /* !NDEBUG */
+	pushl  TOP                  /* DeeInstance_SetMemberInitial:value */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax                 /* DeeInstance_SetMemberInitial:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FRAME_THIS           /* DeeInstance_SetMemberInitial:self */
+	ADJUST_CFA_OFFSET(4)
+	movl   FRAME_FUNC, %edx
+	pushl  fo_refv(%edx,%ecx,4) /* DeeInstance_SetMemberInitial:tp_self */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeInstance_SetMemberInitial,16)
+	ADJUST_CFA_OFFSET(-16)
+	testl  %eax, %eax
+	jnz    .except /* DeeInstance_SetMemberInitial can throw errors... */
+	sp_popref
+	jmp    .disp
+
+
+
 target16_getmember:
 	/* `getmember top, pop, $<imm16>' */
 	lodsw
@@ -8964,6 +8998,9 @@ prefix_target_delmember_this_r = prefix_invop
 .ifndef prefix_target_setmember_this_r
 prefix_target_setmember_this_r = prefix_invop
 .endif
+.ifndef prefix_target_setmemberi_this_r
+prefix_target_setmemberi_this_r = prefix_invop
+.endif
 .ifndef prefix_target_boundmember_this_r
 prefix_target_boundmember_this_r = prefix_invop
 .endif
@@ -9404,6 +9441,9 @@ prefix_target16_delmember_this_r = prefix_invop
 .endif
 .ifndef prefix_target16_setmember_this_r
 prefix_target16_setmember_this_r = prefix_invop
+.endif
+.ifndef prefix_target16_setmemberi_this_r
+prefix_target16_setmemberi_this_r = prefix_invop
 .endif
 .ifndef prefix_target16_boundmember_this_r
 prefix_target16_boundmember_this_r = prefix_invop
@@ -10035,6 +10075,9 @@ repr_target_delmember_this_r = repr_invop
 .ifndef repr_target_setmember_this_r
 repr_target_setmember_this_r = repr_invop
 .endif
+.ifndef repr_target_setmemberi_this_r
+repr_target_setmemberi_this_r = repr_invop
+.endif
 .ifndef repr_target_boundmember_this_r
 repr_target_boundmember_this_r = repr_invop
 .endif
@@ -10303,10 +10346,10 @@ inst_table:
 	.long target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
 	.long target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
 	.long target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
-	.long invop
-	.long target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
-	.long target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
-	.long target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long target_getmember_this_r        /* 0xd8 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long target_delmember_this_r        /* 0xd9 : `delmember this, ref <imm8>, $<imm8>' */
+	.long target_setmember_this_r        /* 0xda : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long target_setmemberi_this_r       /* 0xdb : `setmemberi this, ref <imm8>, $<imm8>, pop' */
 	.long target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
 	.long target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
 	.long target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */
@@ -10561,10 +10604,10 @@ inst_table_f0:
 	.long target16_callattr_this_c_tuple /* 0xd5 : `callattr this, const <imm16>, pop' */
 	.long target16_callattr_c_seq        /* 0xd6 : `callattr top, const <imm16>, [#<imm8>]' */
 	.long target16_callattr_c_map        /* 0xd7 : `callattr top, const <imm16>, {#<imm8>*2}' */
-	.long invop
-	.long target16_getmember_this_r      /* 0xd9 : `push getmember this, ref <imm16>, $<imm16>' */
-	.long target16_delmember_this_r      /* 0xda : `delmember this, ref <imm16>, $<imm16>' */
-	.long target16_setmember_this_r      /* 0xdb : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long target16_getmember_this_r      /* 0xd8 : `push getmember this, ref <imm16>, $<imm16>' */
+	.long target16_delmember_this_r      /* 0xd9 : `delmember this, ref <imm16>, $<imm16>' */
+	.long target16_setmember_this_r      /* 0xda : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long target16_setmemberi_this_r     /* 0xdb : `setmemberi this, ref <imm16>, $<imm16>, pop' */
 	.long target16_boundmember_this_r    /* 0xdc : `push boundmember this, ref <imm16>, $<imm16>' */
 	.long target16_call_extern           /* 0xdd : `push call extern <imm16>:<imm16>, #<imm8>' */
 	.long target16_call_global           /* 0xde : `push call global <imm16>, #<imm8>' */
@@ -10819,10 +10862,10 @@ prefix_inst_table:
 	.long prefix_target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
 	.long prefix_target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
 	.long prefix_target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
-	.long prefix_invop
-	.long prefix_target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
-	.long prefix_target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long prefix_target_getmember_this_r        /* 0xd8 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_delmember_this_r        /* 0xd9 : `delmember this, ref <imm8>, $<imm8>' */
+	.long prefix_target_setmember_this_r        /* 0xda : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long prefix_target_setmemberi_this_r       /* 0xdb : `setmemberi this, ref <imm8>, $<imm8>, pop' */
 	.long prefix_target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
 	.long prefix_target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
 	.long prefix_target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */
@@ -11077,10 +11120,10 @@ prefix_inst_table_f0:
 	.long prefix_target16_callattr_this_c_tuple /* 0xd5 : `callattr this, const <imm16>, pop' */
 	.long prefix_target16_callattr_c_seq        /* 0xd6 : `callattr top, const <imm16>, [#<imm8>]' */
 	.long prefix_target16_callattr_c_map        /* 0xd7 : `callattr top, const <imm16>, {#<imm8>*2}' */
-	.long prefix_invop
-	.long prefix_target16_getmember_this_r      /* 0xd9 : `push getmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_delmember_this_r      /* 0xda : `delmember this, ref <imm16>, $<imm16>' */
-	.long prefix_target16_setmember_this_r      /* 0xdb : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long prefix_target16_getmember_this_r      /* 0xd8 : `push getmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_delmember_this_r      /* 0xd9 : `delmember this, ref <imm16>, $<imm16>' */
+	.long prefix_target16_setmember_this_r      /* 0xda : `setmember this, ref <imm16>, $<imm16>, pop' */
+	.long prefix_target16_setmemberi_this_r     /* 0xdb : `setmemberi this, ref <imm16>, $<imm16>, pop' */
 	.long prefix_target16_boundmember_this_r    /* 0xdc : `push boundmember this, ref <imm16>, $<imm16>' */
 	.long prefix_target16_call_extern           /* 0xdd : `push call extern <imm16>:<imm16>, #<imm8>' */
 	.long prefix_target16_call_global           /* 0xde : `push call global <imm16>, #<imm8>' */
@@ -11335,10 +11378,10 @@ repr_inst_table:
 	.long repr_target_callattr_this_c_tuple   /* 0xd5 : `push callattr this, const <imm8>, pop...' */
 	.long repr_target_callattr_c_seq          /* 0xd6 : `callattr top, const <imm8>, [#<imm8>]' */
 	.long repr_target_callattr_c_map          /* 0xd7 : `callattr top, const <imm8>, {#<imm8>*2}' */
-	.long repr_invop
-	.long repr_target_getmember_this_r        /* 0xd9 : `push getmember this, ref <imm8>, $<imm8>' */
-	.long repr_target_delmember_this_r        /* 0xda : `delmember this, ref <imm8>, $<imm8>' */
-	.long repr_target_setmember_this_r        /* 0xdb : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long repr_target_getmember_this_r        /* 0xd8 : `push getmember this, ref <imm8>, $<imm8>' */
+	.long repr_target_delmember_this_r        /* 0xd9 : `delmember this, ref <imm8>, $<imm8>' */
+	.long repr_target_setmember_this_r        /* 0xda : `setmember this, ref <imm8>, $<imm8>, pop' */
+	.long repr_target_setmemberi_this_r       /* 0xdb : `setmemberi this, ref <imm8>, $<imm8>, pop' */
 	.long repr_target_boundmember_this_r      /* 0xdc : `push boundmember this, ref <imm8>, $<imm8>' */
 	.long repr_target_call_extern             /* 0xdd : `push call extern <imm8>:<imm8>, #<imm8>' */
 	.long repr_target_call_global             /* 0xde : `push call global <imm8>, #<imm8>' */

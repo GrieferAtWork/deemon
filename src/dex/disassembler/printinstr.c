@@ -394,10 +394,10 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xd5 */ "push   callattr this, ", /* `ASM_CALLATTR_THIS_C_TUPLE' */
 	/* 0xd6 */ "callattr top, ", /* `ASM_CALLATTR_C_SEQ' */
 	/* 0xd7 */ "callattr top, ", /* `ASM_CALLATTR_C_MAP' */
-	/* 0xd8 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xd9 */ "push   getmember this, ", /* `ASM_GETMEMBER_THIS_R' */
-	/* 0xda */ "delmember this, ", /* `ASM_DELMEMBER_THIS_R' */
-	/* 0xdb */ "setmember this, ", /* `ASM_SETMEMBER_THIS_R' */
+	/* 0xd8 */ "push   getmember this, ", /* `ASM_GETMEMBER_THIS_R' */
+	/* 0xd9 */ "delmember this, ", /* `ASM_DELMEMBER_THIS_R' */
+	/* 0xda */ "setmember this, ", /* `ASM_SETMEMBER_THIS_R' */
+	/* 0xdb */ "setmemberi this, ", /* `ASM_SETMEMBERI_THIS_R' */
 	/* 0xdc */ "push   boundmember this, ", /* `ASM_BOUNDMEMBER_THIS_R' */
 	/* 0xdd */ "push   call ", /* `ASM_CALL_EXTERN' */
 	/* 0xde */ "push   call ", /* `ASM_CALL_GLOBAL' */
@@ -653,10 +653,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf0d5 */ "callattr this, ", /* `ASM16_CALLATTR_THIS_C_TUPLE' */
 	/* 0xf0d6 */ "callattr top, ", /* `ASM16_CALLATTR_C_SEQ' */
 	/* 0xf0d7 */ "callattr top, ", /* `ASM16_CALLATTR_C_MAP' */
-	/* 0xf0d8 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf0d9 */ "push   getmember this, ", /* `ASM16_GETMEMBER_THIS_R' */
-	/* 0xf0da */ "delmember this, ", /* `ASM16_DELMEMBER_THIS_R' */
-	/* 0xf0db */ "setmember this, ", /* `ASM16_SETMEMBER_THIS_R' */
+	/* 0xf0d8 */ "push   getmember this, ", /* `ASM16_GETMEMBER_THIS_R' */
+	/* 0xf0d9 */ "delmember this, ", /* `ASM16_DELMEMBER_THIS_R' */
+	/* 0xf0da */ "setmember this, ", /* `ASM16_SETMEMBER_THIS_R' */
+	/* 0xf0db */ "setmemberi this, ", /* `ASM16_SETMEMBERI_THIS_R' */
 	/* 0xf0dc */ "push   boundmember this, ", /* `ASM16_BOUNDMEMBER_THIS_R' */
 	/* 0xf0dd */ "push   call ", /* `ASM16_CALL_EXTERN' */
 	/* 0xf0de */ "push   call ", /* `ASM16_CALL_GLOBAL' */
@@ -2297,6 +2297,7 @@ print_local:
 	case ASM16_BOUNDMEMBER_THIS_R:
 	case ASM16_DELMEMBER_THIS_R:
 	case ASM16_SETMEMBER_THIS_R:
+	case ASM16_SETMEMBERI_THIS_R:
 	case ASM16_GETCMEMBER_R:
 	case ASM16_CALLCMEMBER_THIS_R:
 		imm = READ_imm16(iter);
@@ -2308,6 +2309,7 @@ print_local:
 	case ASM_BOUNDMEMBER_THIS_R:
 	case ASM_DELMEMBER_THIS_R:
 	case ASM_SETMEMBER_THIS_R:
+	case ASM_SETMEMBERI_THIS_R:
 	case ASM_GETCMEMBER_R:
 	case ASM_CALLCMEMBER_THIS_R:
 		imm = READ_imm8(iter);
@@ -2319,6 +2321,7 @@ print_ref:
 		case ASM_BOUNDMEMBER_THIS_R:
 		case ASM_DELMEMBER_THIS_R:
 		case ASM_SETMEMBER_THIS_R:
+		case ASM_SETMEMBERI_THIS_R:
 		case ASM_GETCMEMBER_R:
 		case ASM_CALLCMEMBER_THIS_R:
 			PRINT(", " PREFIX_INTEGERAL);
@@ -2326,7 +2329,7 @@ print_ref:
 			INVOKE(libdisasm_printmembername(printer, arg, imm, imm2, code, flags,
 			                                 opcode == ASM_GETCMEMBER_R ||
 			                                 opcode == ASM_CALLCMEMBER_THIS_R));
-			if (opcode == ASM_SETMEMBER_THIS_R)
+			if (opcode == ASM_SETMEMBER_THIS_R || opcode == ASM_SETMEMBERI_THIS_R)
 				PRINT(", pop");
 			if (opcode == ASM_CALLCMEMBER_THIS_R)
 				printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));
@@ -2336,6 +2339,7 @@ print_ref:
 		case ASM16_BOUNDMEMBER_THIS_R:
 		case ASM16_DELMEMBER_THIS_R:
 		case ASM16_SETMEMBER_THIS_R:
+		case ASM16_SETMEMBERI_THIS_R:
 		case ASM16_GETCMEMBER_R:
 		case ASM16_CALLCMEMBER_THIS_R:
 			PRINT(", " PREFIX_INTEGERAL);
@@ -2343,7 +2347,7 @@ print_ref:
 			INVOKE(libdisasm_printmembername(printer, arg, imm, imm2, code, flags,
 			                                 opcode == ASM16_GETCMEMBER_R ||
 			                                 opcode == ASM16_CALLCMEMBER_THIS_R));
-			if (opcode == ASM16_SETMEMBER_THIS_R)
+			if (opcode == ASM16_SETMEMBER_THIS_R || opcode == ASM16_SETMEMBERI_THIS_R)
 				PRINT(", pop");
 			if (opcode == ASM16_CALLCMEMBER_THIS_R)
 				printf(", " PREFIX_STACKEFFECT "%" PRFu8, READ_imm8(iter));

@@ -4333,35 +4333,38 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3, 4)) int
-(DCALL DeeInstance_SetBasicAttribute_)(struct class_desc *__restrict desc,
-                                       struct instance_desc *__restrict self,
-                                       struct class_attribute const *__restrict attr,
-                                       DeeObject *__restrict value) {
+(DCALL DeeInstance_SetBasicAttribute)(struct class_desc *__restrict desc,
+                                      struct instance_desc *__restrict self,
+                                      struct class_attribute const *__restrict attr,
+                                      DeeObject *__restrict value) {
 	DREF DeeObject *old_value;
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
 		self = class_desc_as_instance(desc);
 	if (attr->ca_flag & CLASS_ATTRIBUTE_FGETSET)
-		return 2; /* Not a basic attribute. */
+		goto illegal; /* Not a basic attribute. */
 
 	/* Simply override the field in the attr table. */
+	Dee_Incref(value);
 	Dee_instance_desc_lock_write(self);
 	old_value = self->id_vtab[attr->ca_addr];
+#if 0 /* Special case: `this = default' constructors are allowed to override default initializers of "final" members! */
 	if (old_value && (attr->ca_flag & CLASS_ATTRIBUTE_FREADONLY)) {
 		Dee_instance_desc_lock_endwrite(self);
-		goto illegal; /* readonly fields can only be set once. */
-	} else {
-		Dee_Incref(value);
-		self->id_vtab[attr->ca_addr] = value;
+		goto illegal;
+	}
+#endif
+	self->id_vtab[attr->ca_addr] = value;
+	if unlikely(old_value) {
+		Dee_instance_desc_lock_endwrite(self);
+		Dee_Decref_unlikely(old_value);
+		return 0;
 	}
 	Dee_instance_desc_lock_endwrite(self);
-
-	/* Drop a reference from the old value. */
-	Dee_XDecref(old_value);
 	return 0;
 illegal:
 	return err_cant_access_attribute_string_c(desc,
-	                                   DeeString_STR(attr->ca_name),
-	                                   ATTR_ACCESS_SET);
+	                                          DeeString_STR(attr->ca_name),
+	                                          ATTR_ACCESS_SET);
 }
 
 
@@ -4655,6 +4658,57 @@ PUBLIC NONNULL((1, 2, 4)) void
 	Dee_XDecref(old_value);
 }
 
+PRIVATE ATTR_COLD NONNULL((1)) int
+(DCALL err_readonly_member_already_bound)(struct class_desc *__restrict desc,
+                                          uint16_t addr) {
+	/* Check if we can find the proper member so we can pass its name. */
+	size_t i;
+	char const *name = "??" "?";
+	for (i = 0; i <= desc->cd_desc->cd_iattr_mask; ++i) {
+		struct class_attribute *attr;
+		attr = &desc->cd_desc->cd_iattr_list[i];
+		if (!attr->ca_name)
+			continue;
+		if (addr < attr->ca_addr)
+			continue;
+		if (addr >= (attr->ca_addr + ((attr->ca_flag & CLASS_ATTRIBUTE_FGETSET) ? 3 : 1)))
+			continue;
+		if (attr->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM)
+			continue;
+		name = DeeString_STR(attr->ca_name);
+		break;
+	}
+
+	/* Throw the error. */
+	return err_cant_access_attribute_string_c(desc, name, ATTR_ACCESS_SET);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeInstance_SetMemberInitial)(/*Class*/ DeeTypeObject *tp_self,
+                                     /*Instance*/ DeeObject *self,
+                                     uint16_t addr, DeeObject *value) {
+	struct class_desc *desc;
+	struct instance_desc *inst;
+	ASSERT_OBJECT_TYPE(tp_self, &DeeType_Type);
+	ASSERT(DeeType_IsClass(tp_self));
+	ASSERT_OBJECT_TYPE_A(self, tp_self);
+	desc = DeeClass_DESC(tp_self);
+	ASSERT(addr < desc->cd_desc->cd_imemb_size);
+	inst = DeeInstance_DESC(desc, self);
+
+	/* Lock and extract the member. */
+	Dee_Incref(value);
+	Dee_instance_desc_lock_write(inst);
+	if unlikely(inst->id_vtab[addr]) {
+		Dee_instance_desc_lock_endwrite(inst);
+		Dee_DecrefNokill(value);
+		return err_readonly_member_already_bound(desc, addr);
+	}
+	inst->id_vtab[addr] = value;
+	Dee_instance_desc_lock_endwrite(inst);
+	return 0;
+}
+
 
 PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeInstance_GetMemberSafe)(DeeTypeObject *tp_self,
@@ -4734,6 +4788,27 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 		goto err_bad_index;
 	DeeInstance_SetMember(tp_self, self, addr, value);
 	return 0;
+err_bad_index:
+	return err_invalid_instance_addr(tp_self, self, addr);
+err_req_class:
+	return err_requires_class(tp_self);
+err:
+	return -1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) int
+(DCALL DeeInstance_SetMemberInitialSafe)(DeeTypeObject *tp_self,
+                                         DeeObject *self,
+                                         uint16_t addr, DeeObject *value) {
+	if (DeeObject_AssertType(tp_self, &DeeType_Type))
+		goto err;
+	if (DeeObject_AssertType(self, tp_self))
+		goto err;
+	if (!DeeType_IsClass(tp_self))
+		goto err_req_class;
+	if (addr >= DeeClass_DESC(tp_self)->cd_desc->cd_imemb_size)
+		goto err_bad_index;
+	return DeeInstance_SetMemberInitial(tp_self, self, addr, value);
 err_bad_index:
 	return err_invalid_instance_addr(tp_self, self, addr);
 err_req_class:

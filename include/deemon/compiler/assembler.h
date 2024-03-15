@@ -1443,6 +1443,7 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_ggetmember_this_r(rid, iid) (asm_incsp(), asm_put881616(ASM_GETMEMBER_THIS_R, rid, iid))
 #define asm_gdelmember_this_r(rid, iid) (asm_put881616(ASM_DELMEMBER_THIS_R, rid, iid))
 #define asm_gsetmember_this_r(rid, iid) (asm_decsp(), asm_put881616(ASM_SETMEMBER_THIS_R, rid, iid))
+#define asm_gsetmemberi_this_r(rid, iid) (asm_decsp(), asm_put881616(ASM_SETMEMBERI_THIS_R, rid, iid))
 #define asm_gboundmember_this_r(rid, iid) (asm_incsp(), asm_put881616(ASM_BOUNDMEMBER_THIS_R, rid, iid))
 #define asm_goperator(oid, n)                                            \
 	(asm_subsp((n) + 1), asm_incsp(),                                    \

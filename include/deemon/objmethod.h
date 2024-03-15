@@ -281,9 +281,9 @@ DDATDEF DeeTypeObject DeeKwCMethod_Type;
 #define DeeKwCMethod_Check(x)      DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type) /* `_KwCMethod' is final. */
 #define DeeKwCMethod_CheckExact(x) DeeObject_InstanceOfExact(x, &DeeKwCMethod_Type)
 #define Dee_DEFINE_CMETHOD(name, func, flags) \
-	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), Dee_REQUIRES_CMETHOD(func), 0+flags }
+	DeeCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeCMethod_Type), Dee_REQUIRES_CMETHOD(func), flags }
 #define Dee_DEFINE_KWCMETHOD(name, func, flags) \
-	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func), 0+flags }
+	DeeKwCMethodObject name = { Dee_OBJECT_HEAD_INIT(&DeeKwCMethod_Type), Dee_REQUIRES_KWCMETHOD(func), flags }
 
 /* Helpers for dynamically creating C method wrapper objects.
  * You really shouldn't use these (unless you *really* need to

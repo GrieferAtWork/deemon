@@ -2342,6 +2342,21 @@ do_jcc:
 		return fg_vpop_imember(self, addr, FG_CIMEMBER_F_NORMAL);
 	}	break;
 
+	//TODO:TARGET(ASM_SETMEMBERI_THIS_R) {
+	//TODO:	uint16_t type_rid, addr;
+	//TODO:	type_rid = instr[1];
+	//TODO:	addr     = instr[2];
+	//TODO:	__IF0 {
+	//TODO:TARGET(ASM16_SETMEMBERI_THIS_R)
+	//TODO:		type_rid = UNALIGNED_GETLE16(instr + 2);
+	//TODO:		addr     = UNALIGNED_GETLE16(instr + 4);
+	//TODO:	}
+	//TODO:	DO(fg_vpush_this(self, instr));   /* value, this */
+	//TODO:	DO(fg_vpush_rid(self, type_rid)); /* value, this, type */
+	//TODO:	DO(fg_vlrot(self, 3));            /* this, type, value */
+	//TODO:	return fg_vpop_imember(self, addr, FG_CIMEMBER_F_NORMAL);
+	//TODO:}	break;
+
 	TARGET(ASM_BOUNDMEMBER_THIS_R) {
 		uint16_t type_rid, addr;
 		type_rid = instr[1];
