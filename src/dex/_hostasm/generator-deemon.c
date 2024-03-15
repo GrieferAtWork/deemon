@@ -47,10 +47,9 @@
 #include <deemon/tuple.h>
 
 #include <hybrid/align.h>
+#include <hybrid/bitset.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
-
-#include "utils.h"
 
 DECL_BEGIN
 

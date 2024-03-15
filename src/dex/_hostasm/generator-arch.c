@@ -37,8 +37,8 @@
 #include <deemon/super.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/bitset.h>
 #include <hybrid/sched/__yield.h>
-#include <hybrid/sequence/bitset.h>
 #include <hybrid/unaligned.h>
 
 #ifdef HOSTASM_X86
@@ -3158,15 +3158,15 @@ PRIVATE ATTR_PURE WUNUSED host_regno_t DCALL
 alloc_unused_reg_for_call_args(struct memloc const *locv, size_t argc) {
 	size_t i;
 	host_regno_t result;
-	BITSET(HOST_REGNO_COUNT) inuse_bitset;
-	bzero(&inuse_bitset, sizeof(inuse_bitset));
+	bitset_t inuse_bitset[BITSET_LENGTHOF(HOST_REGNO_COUNT)];
+	bitset_clearall(inuse_bitset, HOST_REGNO_COUNT);
 	for (i = 0; i <= argc; ++i) { /* <= because +1 extra api_function arg */
 		struct memloc const *arg = &locv[i];
 		if (memloc_hasreg(arg))
-			BITSET_TURNON(&inuse_bitset, memloc_getreg(arg));
+			bitset_set(inuse_bitset, memloc_getreg(arg));
 	}
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
-		if (!BITSET_GET(&inuse_bitset, result))
+		if (!bitset_test(inuse_bitset, result))
 			break;
 	}
 	return result;

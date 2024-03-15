@@ -28,10 +28,9 @@
 #include <deemon/alloc.h>
 #include <deemon/asm.h>
 
+#include <hybrid/bitset.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/unaligned.h>
-
-#include "utils.h"
 
 DECL_BEGIN
 
@@ -408,7 +407,7 @@ scan_instr:
 PRIVATE NONNULL((1, 2, 3)) void DCALL
 basic_block_locuse_pass1(struct function_assembler *__restrict assembler,
                          struct basic_block *__restrict block,
-                         byte_t *b_written) {
+                         bitset_t *b_written) {
 	Dee_instruction_t const *instr;
 	lid_t n_locals = assembler->fa_xlocalc;
 	bitset_clearall(b_written, n_locals);
@@ -436,17 +435,17 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 basic_block_locuse_or(struct function_assembler *__restrict assembler,
                       struct basic_block *__restrict block,
                       struct basic_block const *__restrict other,
-                      byte_t const *b_written) {
+                      bitset_t const *b_written) {
 	bool result = false;
 	lid_t n_locals = assembler->fa_xlocalc;
-	size_t i, n_bytes = _bitset_sizeof(n_locals);
-	for (i = 0; i < n_bytes; ++i) {
-		byte_t old_byte = block->bb_locuse[i];
-		byte_t oth_byte = other->bb_locuse[i];
-		byte_t wrt_byte = b_written[i];
-		byte_t new_byte = old_byte | (oth_byte & ~wrt_byte);
-		if (old_byte != new_byte) {
-			block->bb_locuse[i] = new_byte;
+	size_t i, n_words = BITSET_LENGTHOF(n_locals);
+	for (i = 0; i < n_words; ++i) {
+		bitset_t old_word = block->bb_locuse[i];
+		bitset_t oth_word = other->bb_locuse[i];
+		bitset_t wrt_word = b_written[i];
+		bitset_t new_word = old_word | (oth_word & ~wrt_word);
+		if (old_word != new_word) {
+			block->bb_locuse[i] = new_word;
 			result = true;
 		}
 	}
@@ -463,7 +462,7 @@ basic_block_locuse_or(struct function_assembler *__restrict assembler,
 PRIVATE WUNUSED NONNULL((1, 2, 3)) bool DCALL
 basic_block_locuse_pass2(struct function_assembler *__restrict assembler,
                          struct basic_block *__restrict block,
-                         byte_t *b_written) {
+                         bitset_t *b_written) {
 	bool result = false;
 	Dee_instruction_t const *instr;
 	struct jump_descriptor **exit_iter, **exit_end;
@@ -697,7 +696,7 @@ function_assembler_loadlocuse(struct function_assembler *__restrict self) {
 	size_t i;
 	union u_temps {
 		Dee_instruction_t const **i_lastread;
-		byte_t                   *b_written;
+		bitset_t                 *b_written;
 	};
 	union u_temps tempbuf;
 	tempbuf.i_lastread = (Dee_instruction_t const **)Dee_Mallocac(self->fa_xlocalc,

@@ -44,8 +44,6 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include "utils.h"
-
 DECL_BEGIN
 
 /************************************************************************/

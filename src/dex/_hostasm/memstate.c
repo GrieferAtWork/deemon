@@ -32,9 +32,9 @@
 #include <deemon/module.h>
 #include <deemon/none.h>
 
+#include <hybrid/bitset.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
-#include <hybrid/sequence/bitset.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
@@ -140,39 +140,39 @@ INTERN WUNUSED NONNULL((1)) host_regno_t DCALL
 memstate_hregs_find_unused_ex(struct memstate *__restrict self,
                               host_regno_t const *not_these) {
 	host_regno_t result;
-	BITSET(HOST_REGNO_COUNT) used;
-	bzero(&used, sizeof(used));
+	bitset_t used[BITSET_LENGTHOF(HOST_REGNO_COUNT)];
+	bitset_clearall(used, HOST_REGNO_COUNT);
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
 		if (memstate_hregs_isused(self, result))
-			BITSET_TURNON(&used, result);
+			bitset_set(used, result);
 	}
 
 	/* If specified, exclude certain registers. */
 	if (not_these != NULL) {
 		size_t i;
 		for (i = 0; (result = not_these[i]) < HOST_REGNO_COUNT; ++i)
-			BITSET_TURNON(&used, result);
+			bitset_set(used, result);
 	}
 
 	/* Even when other usage registers can be re-used, try not to do so unless necessary. */
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
-		if (!BITSET_GET(&used, result) &&
+		if (!bitset_test(used, result) &&
 		    self->ms_rusage[result] == HOST_REGUSAGE_GENERIC &&
 		    self->ms_memequiv.meqs_regs[result] == 0)
 			goto done;
 	}
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
-		if (!BITSET_GET(&used, result) &&
+		if (!bitset_test(used, result) &&
 		    self->ms_rusage[result] == HOST_REGUSAGE_GENERIC)
 			goto done;
 	}
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
-		if (!BITSET_GET(&used, result) &&
+		if (!bitset_test(used, result) &&
 		    self->ms_memequiv.meqs_regs[result] == 0)
 			goto done;
 	}
 	for (result = 0; result < HOST_REGNO_COUNT; ++result) {
-		if (!BITSET_GET(&used, result))
+		if (!bitset_test(used, result))
 			break; /* Found an unused register! */
 	}
 done:

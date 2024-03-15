@@ -35,6 +35,7 @@
 #include <deemon/objmethod.h> /* Dee_cmethod_t */
 #include <deemon/system-features.h>
 
+#include <hybrid/bitset.h>
 #include <hybrid/sequence/list.h>
 #include <hybrid/typecore.h>
 
@@ -1975,18 +1976,17 @@ struct basic_block {
 	struct host_section      bb_htext;        /* Host assembly text */
 
 	/* Load variable usage data */
-	struct bb_loclastread          *bb_locreadv; /* [SORT(bbl_instr)][0..bb_locreadc][owned] Information about the final times a variable is read (+ trailing entry with `bbl_instr=-1') */
-	size_t                          bb_locreadc; /* # of times a local variable is read for the final time in this block. */
-	COMPILER_FLEXIBLE_ARRAY(byte_t, bb_locuse);  /* [CEILDIV(bb_mem_start->ms_localc, 8)][valid_if(bb_deemon_start < bb_deemon_end)]
-	                                              * Bitset of locals read-from before being written to by this basic block (including
-	                                              * any branch taken prior to writing a local). NOTE: The [valid_if] is correct, but
-	                                              * technically, this bitset only exists for `function_assembler::fa_blockv', but
-	                                              * not `except_exitinfo::exi_block'. */
+	struct bb_loclastread            *bb_locreadv; /* [SORT(bbl_instr)][0..bb_locreadc][owned] Information about the final times a variable is read (+ trailing entry with `bbl_instr=-1') */
+	size_t                            bb_locreadc; /* # of times a local variable is read for the final time in this block. */
+	COMPILER_FLEXIBLE_ARRAY(bitset_t, bb_locuse);  /* [CEILDIV(bb_mem_start->ms_localc, 8)][valid_if(bb_deemon_start < bb_deemon_end)]
+	                                                * Bitset of locals read-from before being written to by this basic block (including
+	                                                * any branch taken prior to writing a local). NOTE: The [valid_if] is correct, but
+	                                                * technically, this bitset only exists for `function_assembler::fa_blockv', but
+	                                                * not `except_exitinfo::exi_block'. */
 };
 
-#define basic_block_alloc(n_locals)                                             \
-	((struct basic_block *)Dee_Malloc(offsetof(struct basic_block, bb_locuse) + \
-	                                  ((n_locals) + __CHAR_BIT__ - 1) / __CHAR_BIT__))
+#define basic_block_alloc(n_locals) \
+	((struct basic_block *)Dee_Malloc(offsetof(struct basic_block, bb_locuse) + BITSET_SIZEOF(n_locals)))
 #define basic_block_free(self) Dee_Free(self)
 
 /* Initialize common fields of `self'. The caller must still initialize:

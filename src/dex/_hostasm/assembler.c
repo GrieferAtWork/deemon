@@ -32,13 +32,12 @@
 #include <deemon/none.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/bitset.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/limitcore.h>
 #include <hybrid/minmax.h>
 #include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
-
-#include "utils.h"
 
 DECL_BEGIN
 

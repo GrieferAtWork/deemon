@@ -37,8 +37,6 @@
 
 #include <hybrid/overflow.h>
 
-#include "utils.h"
-
 DECL_BEGIN
 
 /************************************************************************/

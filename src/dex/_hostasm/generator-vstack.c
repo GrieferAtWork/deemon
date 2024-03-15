@@ -50,7 +50,7 @@
 #include <deemon/tuple.h>
 #include <deemon/util/atomic.h>
 
-#include "utils.h"
+#include <hybrid/bitset.h>
 
 DECL_BEGIN
 
@@ -4463,11 +4463,11 @@ fg_vlinear(struct fungen *__restrict self,
 			bitset_t *hstack_inuse;    /* Bitset for currently in-use hstack locations (excluding locations used by linear slots) */
 			bitset_t *hstack_reserved; /* Bitset of hstack locations that can never be used (because they belong to `MEMOBJ_F_LINEAR' items) */
 			size_t hstack_inuse_sizeof;
-			hstack_inuse_sizeof = _bitset_sizeof((state->ms_host_cfa_offset / HOST_SIZEOF_POINTER) * 2);
+			hstack_inuse_sizeof = BITSET_SIZEOF(state->ms_host_cfa_offset / HOST_SIZEOF_POINTER);
 			hstack_inuse = (bitset_t *)Dee_Calloca(hstack_inuse_sizeof * 2);
 			if unlikely(!hstack_inuse)
 				goto err;
-			hstack_reserved = hstack_inuse + hstack_inuse_sizeof;
+			hstack_reserved = (bitset_t *)((byte_t *)hstack_inuse + hstack_inuse_sizeof);
 			memstate_foreach(mval, state) {
 				struct memobj *mobj;
 				memval_foreach_obj(mobj, mval) {

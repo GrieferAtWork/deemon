@@ -327,6 +327,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\compiler-c-cast.dee = ..\util\test\compiler-c-cast.dee
 		..\util\test\compiler-call-non-tuple.dee = ..\util\test\compiler-call-non-tuple.dee
 		..\util\test\compiler-class-constructors.dee = ..\util\test\compiler-class-constructors.dee
+		..\util\test\compiler-class-final-member.dee = ..\util\test\compiler-class-final-member.dee
 		..\util\test\compiler-class-with-multiple-bases.dee = ..\util\test\compiler-class-with-multiple-bases.dee
 		..\util\test\compiler-conversion-operator.dee = ..\util\test\compiler-conversion-operator.dee
 		..\util\test\compiler-destructor-order.dee = ..\util\test\compiler-destructor-order.dee

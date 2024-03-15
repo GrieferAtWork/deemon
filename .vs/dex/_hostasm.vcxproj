@@ -41,7 +41,6 @@
 		<ClInclude Include="..\..\src\dex\_hostasm\libgen86\register.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\libhostasm.h" />
 		<ClInclude Include="..\..\src\dex\_hostasm\unwind.h" />
-		<ClInclude Include="..\..\src\dex\_hostasm\utils.h" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClCompile Include="..\..\src\dex\_hostasm\api.c" />

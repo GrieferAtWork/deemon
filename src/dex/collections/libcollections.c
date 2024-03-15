@@ -127,6 +127,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "RangeMap", (DeeObject *)&RangeMap_Type, MODSYM_FREADONLY },
 	{ "RBTree", (DeeObject *)&RBTree_Type, MODSYM_FREADONLY },
 	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
+	/* TODO: Bitset (implementing `Set with int', where the # of bits must be specified during construction) */
 	/* TODO: STailQ (singly linked list; internally: STAILQ) */
 	/* TODO: TailQ (double linked list; internally: TAILQ) */
 	{ NULL }

@@ -363,6 +363,9 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitfield.h">
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitset.h">
+			<Filter>include\kos-headers\hybrid</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__byteswap.h">
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
@@ -382,6 +385,9 @@
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__rotate.h">
+			<Filter>include\kos-headers\hybrid</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__string.h">
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__unaligned.h">
@@ -406,6 +412,9 @@
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bit.h">
+			<Filter>include\kos-headers\hybrid</Filter>
+		</ClInclude>
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bitset.h">
 			<Filter>include\kos-headers\hybrid</Filter>
 		</ClInclude>
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\byteorder.h">

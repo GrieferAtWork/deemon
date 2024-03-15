@@ -130,6 +130,7 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__atomic.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bit.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitfield.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__bitset.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__byteswap.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__debug-alignment.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__minmax.h" />
@@ -137,6 +138,7 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer-cxx-impl.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__pointer.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__rotate.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__string.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__unaligned.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__va_size.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\__wordbits.h" />
@@ -145,6 +147,7 @@
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\altint.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\atomic.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bit.h" />
+		<ClInclude Include="..\include\deemon\kos-headers\hybrid\bitset.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\byteorder.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\byteswap.h" />
 		<ClInclude Include="..\include\deemon\kos-headers\hybrid\compiler.h" />
