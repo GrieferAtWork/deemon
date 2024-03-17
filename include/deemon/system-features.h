@@ -12449,6 +12449,25 @@ dee_memmove(void *dst, void const *src, size_t num_bytes) {
 DECL_END
 #endif /* !CONFIG_HAVE_memmove */
 
+#ifndef CONFIG_HAVE_memcmp
+#define CONFIG_HAVE_memcmp
+DECL_BEGIN
+#undef memcmp
+#define memcmp dee_memcmp
+LOCAL WUNUSED NONNULL((1, 2)) int
+dee_memcmp(void const *s1, void const *s2, size_t n) {
+	uint8_t const *p1 = (uint8_t const *)s1;
+	uint8_t const *p2 = (uint8_t const *)s2;
+	while (n--) {
+		uint8_t v1, v2;
+		if ((v1 = *p1++) != (v2 = *p2++)) {
+			return v1 < v2 ? -1 : 1;
+		}
+	}
+	return 0;
+}
+DECL_END
+#endif /* !CONFIG_HAVE_memcmp */
 
 #define _DeeSystem_DEFINE_memccpyT(rT, T, Tneedle, name)        \
 	LOCAL ATTR_PURE WUNUSED ATTR_OUTS(1, 4) ATTR_INS(2, 4) rT * \

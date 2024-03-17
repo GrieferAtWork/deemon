@@ -78,6 +78,13 @@ DECL_BEGIN
 		result += temp;                  \
 	}	__WHILE0
 
+
+
+
+
+
+/************************************************************************/
+
 typedef struct {
 	OBJECT_HEAD
 	size_t                            bs_nbits;   /* [const] # of bits in this bitset */
@@ -140,6 +147,13 @@ typedef struct {
 #define BitsetIterator_GetEndBit(self) \
 	((self)->bsi_nbits)
 
+
+
+
+
+
+/************************************************************************/
+
 PRIVATE ATTR_COLD int DCALL
 bitset_err_bad_index(size_t bitno, size_t nbits) {
 	return DeeError_Throwf(&DeeError_IndexError,
@@ -152,6 +166,81 @@ PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 bs_err_bad_index(Bitset *__restrict self, size_t bitno) {
 	return bitset_err_bad_index(bitno, self->bs_nbits);
 }
+
+
+
+
+
+
+/************************************************************************/
+
+PRIVATE NONNULL((1, 2)) void DCALL
+bitset_ncopy0_and_zero_unused_bits(bitset_t *dst, bitset_t const *src,
+                                   size_t src_startbitno, size_t n_bits) {
+#if 1
+#define bitset_ncopy0_and_maybe_zero_unused_bits bitset_ncopy0_and_zero_unused_bits
+	if (src_startbitno > _BITSET_WORD_BMSK) {
+		src += src_startbitno >> _BITSET_WORD_SHFT;
+		src_startbitno &= _BITSET_WORD_BMSK;
+	}
+	ASSERT(src_startbitno <= _BITSET_WORD_BMSK);
+	if (src_startbitno == 0) {
+		size_t whole_words = n_bits >> _BITSET_WORD_SHFT;
+		memcpyc(dst, src, whole_words, sizeof(bitset_t));
+		if (n_bits & _BITSET_WORD_BMSK) {
+			bitset_t mask;
+			dst += whole_words;
+			src += whole_words;
+			mask = _BITSET_LO_MASKIN(n_bits & _BITSET_WORD_BMSK);
+			*dst = (*src & mask);
+		}
+	} else {
+		/* Bitsets aren't aligned -> copy 1 bit at-a-time */
+		size_t i;
+		if (dst <= src) {
+			for (i = 0; i < n_bits; ++i) {
+				if (bitset_test(src, src_startbitno + i)) {
+					bitset_set(dst, i);
+				} else {
+					bitset_clear(dst, i);
+				}
+			}
+		} else {
+			i = n_bits;
+			while (i) {
+				--i;
+				if (bitset_test(src, src_startbitno + i)) {
+					bitset_set(dst, i);
+				} else {
+					bitset_clear(dst, i);
+				}
+			}
+		}
+	}
+#else
+#define bitset_ncopy0_and_maybe_zero_unused_bits bitset_ncopy0
+	bitset_ncopy0(dst, src, src_startbitno, n_bits);
+	if (n_bits & _BITSET_WORD_BMSK)
+		dst[n_bits >> _BITSET_WORD_SHFT] &= _BITSET_LO_MASKIN(n_bits & _BITSET_WORD_BMSK);
+#endif
+}
+
+PRIVATE NONNULL((1)) void DCALL
+bitset_setall_and_zero_unused_bits(bitset_t *self, size_t n_bits) {
+	bitset_setall(self, n_bits);
+	if (n_bits & _BITSET_WORD_BMSK) {
+		/* bitset_setall() may set the unused high bits of the last word.
+		 * We don't want that, so fix the last word if that happened */
+		self[n_bits >> _BITSET_WORD_SHFT] &= _BITSET_LO_MASKIN(n_bits & _BITSET_WORD_BMSK);
+	}
+}
+
+
+
+
+
+
+/************************************************************************/
 
 struct bitset_fromseq_data {
 	DREF Bitset *bsfsd_bitset; /* [1..1] The bitset being created. */
@@ -327,64 +416,13 @@ bitset_ref_assign(struct bitset_ref *__restrict dst,
 		src_bits = dst_bits;
 	}
 
+	/* Copy the actual contents of the bitsets. */
 	ASSERT(src_bits == bitset_ref_nbits(src));
-	if (dst->bsr_startbit == src->bsr_startbit) {
-		size_t minbitno = src->bsr_startbit;
-		size_t maxbitno = src->bsr_endbit - 1;
-		size_t minword = (size_t)_BITSET_WORD(minbitno);
-		size_t maxword = (size_t)_BITSET_WORD(maxbitno);
-		if (minword >= maxword) {
-			bitset_t mask = ~((_BITSET_WORD_BMAX >> (_BITSET_WORD_BITS - (minbitno & _BITSET_WORD_BMSK))) |
-			                  (_BITSET_WORD_BMAX << ((maxbitno & _BITSET_WORD_BMSK) + 1)));
-			dst->bsr_bitset[maxword] = (dst->bsr_bitset[maxword] & ~mask) |
-			                           (src->bsr_bitset[maxword] & mask);
-		} else if (dst->bsr_bitset < src->bsr_bitset) {
-			size_t n_words;
-			bitset_t mask;
-			mask = ~(_BITSET_WORD_BMAX >> (_BITSET_WORD_BITS - (minbitno & _BITSET_WORD_BMSK)));
-			dst->bsr_bitset[minword] = (dst->bsr_bitset[minword] & ~mask) |
-			                           (src->bsr_bitset[minword] & mask);
-			n_words = maxword - (minword + 1);
-			memmovedown(&dst->bsr_bitset[minword + 1],
-			            &src->bsr_bitset[minword + 1],
-			            n_words * sizeof(bitset_t));
-			mask = ~(_BITSET_WORD_BMAX << ((maxbitno & _BITSET_WORD_BMSK) + 1));
-			dst->bsr_bitset[maxword] = (dst->bsr_bitset[maxword] & ~mask) |
-			                           (src->bsr_bitset[maxword] & mask);
-		} else {
-			size_t n_words;
-			bitset_t mask;
-			mask = ~(_BITSET_WORD_BMAX << ((maxbitno & _BITSET_WORD_BMSK) + 1));
-			dst->bsr_bitset[maxword] = (dst->bsr_bitset[maxword] & ~mask) |
-			                           (src->bsr_bitset[maxword] & mask);
-			n_words = maxword - (minword + 1);
-			memmoveup(&dst->bsr_bitset[minword + 1],
-			          &src->bsr_bitset[minword + 1],
-			          n_words * sizeof(bitset_t));
-			mask = ~(_BITSET_WORD_BMAX >> (_BITSET_WORD_BITS - (minbitno & _BITSET_WORD_BMSK)));
-			dst->bsr_bitset[minword] = (dst->bsr_bitset[minword] & ~mask) |
-			                           (src->bsr_bitset[minword] & mask);
-		}
-	} else if (dst->bsr_bitset < src->bsr_bitset) {
-		size_t bitno;
-		for (bitno = 0; bitno < src_bits; ++bitno) {
-			if (bitset_ref_test(src, bitno)) {
-				bitset_set(dst->bsr_bitset, dst->bsr_startbit + bitno);
-			} else {
-				bitset_clear(dst->bsr_bitset, dst->bsr_startbit + bitno);
-			}
-		}
-	} else {
-		size_t bitno = src_bits;
-		while (bitno) {
-			--bitno;
-			if (bitset_ref_test(src, bitno)) {
-				bitset_set(dst->bsr_bitset, dst->bsr_startbit + bitno);
-			} else {
-				bitset_clear(dst->bsr_bitset, dst->bsr_startbit + bitno);
-			}
-		}
-	}
+	ASSERT(dst->bsr_startbit <= _BITSET_WORD_BMSK);
+	ASSERT(src->bsr_startbit <= _BITSET_WORD_BMSK);
+	bitset_ncopy(dst->bsr_bitset, dst->bsr_startbit,
+	             src->bsr_bitset, src->bsr_startbit,
+	             src_bits);
 
 	/* Clear out all bits that weren't copied from "src" */
 	if (src_bits < dst_bits) {
@@ -423,19 +461,6 @@ DeeObject_AsBitset(DeeObject const *__restrict self,
 	}
 }
 
-PRIVATE NONNULL((1, 2)) void DCALL
-copy_aligned_bits_to_0(bitset_t *__restrict dst,
-                       bitset_t const *__restrict src,
-                       size_t nbits) {
-	memcpy(dst, src, BITSET_SIZEOF(nbits));
-	if (nbits & _BITSET_WORD_BMSK) {
-		/* Ensure that unused bits of the last byte are all zero */
-		size_t maxword = _BITSET_WORD(nbits);
-		bitset_t mask = __HYBRID_BITSET_LO_MASKIN(nbits & _BITSET_WORD_BMSK);
-		dst[maxword] &= mask;
-	}
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 	/* Check for special case: is `seq' a bitset-like object? */
@@ -451,37 +476,19 @@ bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 				result = Bitset_Calloc(minbits);
 				if unlikely(!result)
 					goto err;
-				if (ref.bsr_startbit == 0) {
-					copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
-				} else {
-					/* Slow case: bits don't align, so we must copy them one-at-a-time */
-					size_t i;
-					for (i = 0; i < ref_nbits; ++i) {
-						if (bitset_ref_test(&ref, i))
-							bitset_set(result->bs_bitset, i);
-					}
-				}
+				ASSERT(ref.bsr_startbit <= _BITSET_WORD_BMSK);
+				bitset_ncopy0_and_maybe_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
+				                                         ref.bsr_startbit, ref_nbits);
 				result->bs_nbits = minbits;
 				DeeObject_Init(result, &Bitset_Type);
 				return result;
 			}
 		}
-		if (ref.bsr_startbit == 0) {
-			result = Bitset_Alloc(ref_nbits);
-			if unlikely(!result)
-				goto err;
-			copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
-		} else {
-			/* Slow case: bits don't align, so we must copy them one-at-a-time */
-			size_t i;
-			result = Bitset_Calloc(ref_nbits);
-			if unlikely(!result)
-				goto err;
-			for (i = 0; i < ref_nbits; ++i) {
-				if (bitset_ref_test(&ref, i))
-					bitset_set(result->bs_bitset, i);
-			}
-		}
+		result = Bitset_Alloc(ref_nbits);
+		if unlikely(!result)
+			goto err;
+		bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
+		                                   ref.bsr_startbit, ref_nbits);
 		result->bs_nbits = ref_nbits;
 		DeeObject_Init(result, &Bitset_Type);
 		return result;
@@ -493,87 +500,69 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 bs_cmp_eqne_bitset_ref(Bitset *__restrict self,
-                       struct bitset_ref *__restrict other) {
+                       struct bitset_ref *__restrict ref) {
 	size_t self_nbits = self->bs_nbits;
-	if (self_nbits != bitset_ref_nbits(other)) {
+	if (self_nbits != bitset_ref_nbits(ref)) {
 		/* Trim trailing 0-bits from "other" */
 		size_t ot_nbits;
-		ot_nbits = bitset_nfls(other->bsr_bitset,
-		                       other->bsr_startbit,
-		                       other->bsr_endbit);
-		if (ot_nbits >= other->bsr_endbit) {
+		ot_nbits = bitset_nfls(ref->bsr_bitset,
+		                       ref->bsr_startbit,
+		                       ref->bsr_endbit);
+		if (ot_nbits >= ref->bsr_endbit) {
 			/* "other" is empty -> check if "self" is empty, too */
 			return !bitset_anyset(self->bs_bitset, self->bs_nbits);
 		}
-		other->bsr_endbit = ot_nbits + 1;
-		if (self_nbits != bitset_ref_nbits(other)) {
+		ref->bsr_endbit = ot_nbits + 1;
+		if (self_nbits != bitset_ref_nbits(ref)) {
 			/* Trim trailing 0-bits from "self" */
 			size_t lastset = bitset_fls(self->bs_bitset, self_nbits);
 			if (lastset >= self_nbits)
 				goto nope; /* "self" is empty */
 			self_nbits = lastset + 1;
-			if (self_nbits != bitset_ref_nbits(other))
+			if (self_nbits != bitset_ref_nbits(ref))
 				goto nope; /* "self" has a different greatest-set-bit */
 		}
 	}
-	if (other->bsr_startbit == 0) {
-		size_t num_bytes = self_nbits >> _BITSET_WORD_SHFT;
-		if (memcmp(self->bs_bitset, other->bsr_bitset, num_bytes) != 0)
-			goto nope;
-		if (self_nbits & _BITSET_WORD_BMSK) {
-			bitset_t mask = ((bitset_t)1 << (self_nbits & _BITSET_WORD_BMSK)) - 1;
-			bitset_t my_last = self->bs_bitset[num_bytes] & mask;
-			bitset_t ot_last = other->bsr_bitset[num_bytes] & mask;
-			if (my_last != ot_last)
-				goto nope;
-		}
-	} else {
-		size_t bitno;
-		for (bitno = 0; bitno < self_nbits; ++bitno) {
-			if ((!!bitset_test(self->bs_bitset, bitno)) !=
-			    (!!bitset_ref_test(other, bitno)))
-				goto nope;
-		}
-	}
-	return true;
+
+	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
+	return bitset_ncmpeq0(self->bs_bitset, ref->bsr_bitset,
+	                      ref->bsr_startbit, self_nbits);
 nope:
 	return false;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_eq(Bitset *self, DeeObject *other) {
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_eq)((DeeObject *)self, other);
-	return_bool(bs_cmp_eqne_bitset_ref(self, &bs_other));
+	return_bool(bs_cmp_eqne_bitset_ref(self, &ref));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_ne(Bitset *self, DeeObject *other) {
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_ne)((DeeObject *)self, other);
-	return_bool(!bs_cmp_eqne_bitset_ref(self, &bs_other));
+	return_bool(!bs_cmp_eqne_bitset_ref(self, &ref));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_le(Bitset *self, DeeObject *other) {
-	size_t bitno, nbits;
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	size_t n_bits;
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_le)((DeeObject *)self, other);
 	/* All bits from "self" must also be set in "other" */
-	nbits = self->bs_nbits;
-	if (nbits > bitset_ref_nbits(&bs_other)) {
-		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits))
+	n_bits = self->bs_nbits;
+	if (n_bits > bitset_ref_nbits(&ref)) {
+		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&ref), n_bits))
 			goto nope;
-		nbits = bitset_ref_nbits(&bs_other);
+		n_bits = bitset_ref_nbits(&ref);
 	}
-	for (bitno = 0; bitno < nbits; ++bitno) {
-		if (bitset_test(self->bs_bitset, bitno) &&
-		    !bitset_ref_test(&bs_other, bitno))
-			goto nope;
-	}
+	ASSERT(ref.bsr_startbit <= _BITSET_WORD_BMSK);
+	if (!bitset_ncmple0(self->bs_bitset, ref.bsr_bitset, ref.bsr_startbit, n_bits))
+		goto nope;
 	return_true;
 nope:
 	return_false;
@@ -581,22 +570,20 @@ nope:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_ge(Bitset *self, DeeObject *other) {
-	size_t bitno, nbits;
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	size_t n_bits;
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_ge)((DeeObject *)self, other);
 	/* All bits from "other" must also be set in "self" */
-	nbits = bitset_ref_nbits(&bs_other);
-	if (nbits > self->bs_nbits) {
-		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits))
+	n_bits = bitset_ref_nbits(&ref);
+	if (n_bits > self->bs_nbits) {
+		if (bitset_ref_nanyset(&ref, self->bs_nbits, n_bits))
 			goto nope;
-		nbits = self->bs_nbits;
+		n_bits = self->bs_nbits;
 	}
-	for (bitno = 0; bitno < nbits; ++bitno) {
-		if (bitset_ref_test(&bs_other, bitno) &&
-		    !bitset_test(self->bs_bitset, bitno))
-			goto nope;
-	}
+	ASSERT(ref.bsr_startbit <= _BITSET_WORD_BMSK);
+	if (!bitset_ncmpge0(self->bs_bitset, ref.bsr_bitset, ref.bsr_startbit, n_bits))
+		goto nope;
 	return_true;
 nope:
 	return_false;
@@ -604,48 +591,44 @@ nope:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_gr(Bitset *self, DeeObject *other) {
-	size_t bitno, nbits;
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	size_t n_bits;
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_gr)((DeeObject *)self, other);
 	/* not(All bits from "self" must also be set in "other") */
-	nbits = self->bs_nbits;
-	if (nbits > bitset_ref_nbits(&bs_other)) {
-		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits))
+	n_bits = self->bs_nbits;
+	if (n_bits > bitset_ref_nbits(&ref)) {
+		if (!bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&ref), n_bits))
 			goto nope;
-		nbits = bitset_ref_nbits(&bs_other);
+		n_bits = bitset_ref_nbits(&ref);
 	}
-	for (bitno = 0; bitno < nbits; ++bitno) {
-		if (bitset_test(self->bs_bitset, bitno) &&
-		    !bitset_ref_test(&bs_other, bitno))
-			goto nope;
-	}
-	return_false;
-nope:
+	ASSERT(ref.bsr_startbit <= _BITSET_WORD_BMSK);
+	if (!bitset_ncmpgr0(self->bs_bitset, ref.bsr_bitset, ref.bsr_startbit, n_bits))
+		goto nope;
 	return_true;
+nope:
+	return_false;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bs_lo(Bitset *self, DeeObject *other) {
-	size_t bitno, nbits;
-	struct bitset_ref bs_other;
-	if (!DeeObject_AsBitset(other, &bs_other))
+	size_t n_bits;
+	struct bitset_ref ref;
+	if (!DeeObject_AsBitset(other, &ref))
 		return (*DeeSeq_Type.tp_cmp->tp_lo)((DeeObject *)self, other);
 	/* not(All bits from "other" must also be set in "self") */
-	nbits = bitset_ref_nbits(&bs_other);
-	if (nbits > self->bs_nbits) {
-		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits))
+	n_bits = bitset_ref_nbits(&ref);
+	if (n_bits > self->bs_nbits) {
+		if (!bitset_ref_nanyset(&ref, self->bs_nbits, n_bits))
 			goto nope;
-		nbits = self->bs_nbits;
+		n_bits = self->bs_nbits;
 	}
-	for (bitno = 0; bitno < nbits; ++bitno) {
-		if (bitset_ref_test(&bs_other, bitno) &&
-		    !bitset_test(self->bs_bitset, bitno))
-			goto nope;
-	}
-	return_false;
-nope:
+	ASSERT(ref.bsr_startbit <= _BITSET_WORD_BMSK);
+	if (!bitset_ncmplo0(self->bs_bitset, ref.bsr_bitset, ref.bsr_startbit, n_bits))
+		goto nope;
 	return_true;
+nope:
+	return_false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetIterator *DCALL
@@ -943,7 +926,7 @@ bs_init(size_t argc, DeeObject *const *argv) {
 		result = Bitset_Alloc(nbits);
 		if unlikely(!result)
 			goto err;
-		bitset_setall(result->bs_bitset, nbits);
+		bitset_setall_and_zero_unused_bits(result->bs_bitset, nbits);
 	} else {
 init_fixed_length_as_empty:
 		result = Bitset_Calloc(nbits);
@@ -959,44 +942,63 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bs_assign_bitset(Bitset *self, struct bitset_ref *__restrict other) {
-	size_t ot_bits = bitset_ref_nbits(other);
-	if (ot_bits > self->bs_nbits) {
+bs_assign_bitset(Bitset *self, struct bitset_ref *__restrict ref) {
+	size_t copy_bits = bitset_ref_nbits(ref);
+	if (copy_bits > self->bs_nbits) {
 		/* Ensure that no bit is set that can't be represented in "self" */
 		size_t oob_index;
-		oob_index = bitset_nffs(other->bsr_bitset,
-		                        other->bsr_startbit + self->bs_nbits,
-		                        other->bsr_endbit);
-		if (oob_index < other->bsr_endbit) {
-			oob_index -= other->bsr_startbit;
+		oob_index = bitset_nffs(ref->bsr_bitset,
+		                        ref->bsr_startbit + self->bs_nbits,
+		                        ref->bsr_endbit);
+		if (oob_index < ref->bsr_endbit) {
+			oob_index -= ref->bsr_startbit;
 			ASSERT(oob_index >= self->bs_nbits);
 			return bs_err_bad_index(self, oob_index);
 		}
 		/* Trim to the size of our own bitset. */
-		other->bsr_endbit = other->bsr_startbit + self->bs_nbits;
-		ot_bits = self->bs_nbits;
+		ref->bsr_endbit = ref->bsr_startbit + self->bs_nbits;
+		copy_bits = self->bs_nbits;
 	}
 
-	ASSERT(ot_bits == bitset_ref_nbits(other));
-	if (other->bsr_startbit == 0) {
-		/* Optimization for when direct word-copy is possible.
-		 * NOTE: Still use "memmove" in case "other" is a view of "self" */
-		memmove(self->bs_bitset, other->bsr_bitset, BITSET_SIZEOF(ot_bits));
-	} else {
-		/* Slow case: bits don't align, so we must copy them one-at-a-time */
-		size_t i;
-		for (i = 0; i < ot_bits; ++i) {
-			if (bitset_test(other->bsr_bitset, other->bsr_startbit + i)) {
-				bitset_set(self->bs_bitset, i);
-			} else {
-				bitset_clear(self->bs_bitset, i);
-			}
-		}
-	}
+	ASSERT(copy_bits == bitset_ref_nbits(ref));
+	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
+	bitset_ncopy0_and_maybe_zero_unused_bits(self->bs_bitset, ref->bsr_bitset, ref->bsr_startbit, copy_bits);
 
 	/* Clear out all bits that weren't copied from "other" */
-	if (ot_bits < self->bs_nbits)
-		bitset_nclear(self->bs_bitset, ot_bits, self->bs_nbits);
+	if (copy_bits < self->bs_nbits)
+		bitset_nclear(self->bs_bitset, copy_bits, self->bs_nbits);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplaceop_bitset(Bitset *self, struct bitset_ref *__restrict ref, unsigned int op) {
+	size_t copy_bits = bitset_ref_nbits(ref);
+	if (copy_bits > self->bs_nbits) {
+		if (op != BITSET_OP_AND) {
+			/* Ensure that no bit is set that can't be represented in "self" */
+			size_t oob_index;
+			oob_index = bitset_nffs(ref->bsr_bitset,
+			                        ref->bsr_startbit + self->bs_nbits,
+			                        ref->bsr_endbit);
+			if (oob_index < ref->bsr_endbit) {
+				oob_index -= ref->bsr_startbit;
+				ASSERT(oob_index >= self->bs_nbits);
+				return bs_err_bad_index(self, oob_index);
+			}
+		}
+
+		/* Trim to the size of our own bitset. */
+		ref->bsr_endbit = ref->bsr_startbit + self->bs_nbits;
+		copy_bits = self->bs_nbits;
+	}
+
+	ASSERT(copy_bits == bitset_ref_nbits(ref));
+	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
+	bitset_nbitop(self->bs_bitset, 0, ref->bsr_bitset, ref->bsr_startbit, copy_bits, op);
+	if (copy_bits < self->bs_nbits) {
+		if (op == BITSET_OP_AND)
+			bitset_nclear(self->bs_bitset, copy_bits, self->bs_nbits);
+	}
 	return 0;
 }
 
@@ -1004,9 +1006,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bs_assign(Bitset *self, DeeObject *other) {
 	int result;
 	DREF Bitset *temp;
-	struct bitset_ref bs_other;
-	if (DeeObject_AsBitset(other, &bs_other))
-		return bs_assign_bitset(self, &bs_other);
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(other, &ref))
+		return bs_assign_bitset(self, &ref);
 
 	/* Must create a temp bitset from "other" and then assign that one.
 	 * We can't directly assign from "other" in case "other" somehow
@@ -1014,14 +1016,54 @@ bs_assign(Bitset *self, DeeObject *other) {
 	temp = bs_init_fromseq(other, NULL);
 	if unlikely(!temp)
 		goto err;
-	bs_other.bsr_bitset   = temp->bs_bitset;
-	bs_other.bsr_startbit = 0;
-	bs_other.bsr_endbit   = temp->bs_nbits;
-	result = bs_assign_bitset(self, &bs_other);
+	ref.bsr_bitset   = temp->bs_bitset;
+	ref.bsr_startbit = 0;
+	ref.bsr_endbit   = temp->bs_nbits;
+	result = bs_assign_bitset(self, &ref);
 	Dee_DecrefDokill(temp);
 	return result;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplaceop(DREF Bitset **p_self, DeeObject *other, unsigned int op) {
+	Bitset *self = *p_self;
+	int result;
+	DREF Bitset *temp;
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(other, &ref))
+		return bs_inplaceop_bitset(self, &ref, op);
+
+	/* Must create a temp bitset from "other" and then assign that one.
+	 * We can't directly assign from "other" in case "other" somehow
+	 * re-uses the state of "self" (e.g.: is a yield function) */
+	temp = bs_init_fromseq(other, NULL);
+	if unlikely(!temp)
+		goto err;
+	ref.bsr_bitset   = temp->bs_bitset;
+	ref.bsr_startbit = 0;
+	ref.bsr_endbit   = temp->bs_nbits;
+	result = bs_inplaceop_bitset(self, &ref, op);
+	Dee_DecrefDokill(temp);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplace_or(DREF Bitset **p_self, DeeObject *other) {
+	return bs_inplaceop(p_self, other, BITSET_OP_OR);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplace_and(DREF Bitset **p_self, DeeObject *other) {
+	return bs_inplaceop(p_self, other, BITSET_OP_AND);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplace_xor(DREF Bitset **p_self, DeeObject *other) {
+	return bs_inplaceop(p_self, other, BITSET_OP_XOR);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1064,6 +1106,40 @@ PRIVATE struct type_nsi tpconst bs_nsi = {
 			/* .nsi_remove  = */ (dfunptr_t)&bs_nsi_remove,
 		}
 	}
+};
+
+PRIVATE struct type_math bs_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ NULL,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ NULL,
+	/* .tp_sub         = */ NULL,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL, /* TODO */
+	/* .tp_shr         = */ NULL, /* TODO */
+	/* .tp_and         = */ NULL,
+	/* .tp_or          = */ NULL,
+	/* .tp_xor         = */ NULL,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ NULL,
+	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL, /* TODO */
+	/* .tp_inplace_shr = */ NULL, /* TODO */
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bs_inplace_and,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bs_inplace_or,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bs_inplace_xor,
+	/* .tp_inplace_pow = */ NULL
 };
 
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
@@ -1276,7 +1352,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL, /* TODO: "|=" "&=" "^=" */
+	/* .tp_math          = */ &bs_math,
 	/* .tp_cmp           = */ &bs_cmp,
 	/* .tp_seq           = */ &bs_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -1341,22 +1417,11 @@ robs_init_fromseq_or_bitset(DeeObject *seq) {
 	if (DeeObject_AsBitset(seq, &ref)) {
 		DREF Bitset *result;
 		size_t ref_nbits = bitset_ref_nbits(&ref);
-		if (ref.bsr_startbit == 0) {
-			result = Bitset_Alloc(ref_nbits);
-			if unlikely(!result)
-				goto err;
-			copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
-		} else {
-			/* Slow case: bits don't align, so we must copy them one-at-a-time */
-			size_t i;
-			result = Bitset_Calloc(ref_nbits);
-			if unlikely(!result)
-				goto err;
-			for (i = 0; i < ref_nbits; ++i) {
-				if (bitset_ref_test(&ref, i))
-					bitset_set(result->bs_bitset, i);
-			}
-		}
+		result = Bitset_Alloc(ref_nbits);
+		if unlikely(!result)
+			goto err;
+		bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
+		                                   ref.bsr_startbit, ref_nbits);
 		result->bs_nbits = ref_nbits;
 		DeeObject_Init(result, &RoBitset_Type);
 		return result;
@@ -1641,7 +1706,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ NULL, /* TODO: "<<", ">>" */
 	/* .tp_cmp           = */ &robs_cmp,
 	/* .tp_seq           = */ &robs_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -1768,52 +1833,18 @@ bitset_ref_cmp_eq(struct bitset_ref *__restrict a,
 		}
 		goto nope;
 	}
-	if (a->bsr_startbit == b->bsr_startbit) {
-		size_t minbitno = a->bsr_startbit;
-		size_t maxbitno = a->bsr_endbit - 1;
-		size_t minword = (size_t)_BITSET_WORD(minbitno);
-		size_t maxword = (size_t)_BITSET_WORD(maxbitno);
-		if (minword >= maxword) {
-			bitset_t mask = ~((_BITSET_WORD_BMAX >> (_BITSET_WORD_BITS - (minbitno & _BITSET_WORD_BMSK))) |
-			                  (_BITSET_WORD_BMAX << ((maxbitno & _BITSET_WORD_BMSK) + 1)));
-			if ((a->bsr_bitset[maxword] & mask) != (b->bsr_bitset[maxword] & mask))
-				goto nope;
-		} else {
-			size_t n_words;
-			bitset_t mask;
-			mask = ~(_BITSET_WORD_BMAX >> (_BITSET_WORD_BITS - (minbitno & _BITSET_WORD_BMSK)));
-			if ((a->bsr_bitset[minword] & mask) != (b->bsr_bitset[minword] & mask))
-				goto nope;
-			n_words = maxword - (minword + 1);
-			if (memcmp(&a->bsr_bitset[minword + 1],
-			           &b->bsr_bitset[minword + 1],
-			           n_words * sizeof(bitset_t)) != 0)
-				goto nope;
-			mask = ~(_BITSET_WORD_BMAX << ((maxbitno & _BITSET_WORD_BMSK) + 1));
-			if ((a->bsr_bitset[maxword] & mask) != (b->bsr_bitset[maxword] & mask))
-				goto nope;
-		}
-	} else {
-		size_t bitno;
-		for (bitno = 0; bitno < a_nbits; ++bitno) {
-			if ((!!bitset_ref_test(a, bitno)) !=
-			    (!!bitset_ref_test(b, bitno)))
-				goto nope;
-		}
-	}
-	return true;
+	ASSERT(a->bsr_startbit <= _BITSET_WORD_BMSK);
+	ASSERT(b->bsr_startbit <= _BITSET_WORD_BMSK);
+	return bitset_ncmpeq(a->bsr_bitset, a->bsr_startbit,
+	                     b->bsr_bitset, b->bsr_startbit,
+	                     a_nbits);
 nope:
 	return false;
 }
 
-#define bitset_ref_cmp_ne(a, b) (!bitset_ref_cmp_eq(a, b))
-#define bitset_ref_cmp_lo(a, b) (!bitset_ref_cmp_ge(a, b))
-#define bitset_ref_cmp_gr(a, b) (!bitset_ref_cmp_le(a, b))
-#define bitset_ref_cmp_ge(a, b) bitset_ref_cmp_le(b, a)
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 bitset_ref_cmp_le(struct bitset_ref const *__restrict a,
                   struct bitset_ref const *__restrict b) {
-	size_t bitno;
 	size_t a_nbits = bitset_ref_nbits(a);
 	size_t b_nbits = bitset_ref_nbits(b);
 
@@ -1825,14 +1856,20 @@ bitset_ref_cmp_le(struct bitset_ref const *__restrict a,
 			goto nope;
 		a_nbits = b_nbits;
 	}
-	for (bitno = 0; bitno < a_nbits; ++bitno) {
-		if (bitset_ref_test(a, bitno) && !bitset_ref_test(b, bitno))
-			goto nope;
-	}
-	return true;
+	ASSERT(a->bsr_startbit <= _BITSET_WORD_BMSK);
+	ASSERT(b->bsr_startbit <= _BITSET_WORD_BMSK);
+	return bitset_ncmple(a->bsr_bitset, a->bsr_startbit,
+	                     b->bsr_bitset, b->bsr_startbit,
+	                     a_nbits);
 nope:
 	return false;
 }
+
+#define bitset_ref_cmp_ne(a, b) (!bitset_ref_cmp_eq(a, b))
+#define bitset_ref_cmp_ge(a, b) bitset_ref_cmp_le(b, a)
+#define bitset_ref_cmp_lo(a, b) (!bitset_ref_cmp_ge(a, b))
+#define bitset_ref_cmp_gr(a, b) (!bitset_ref_cmp_le(a, b))
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsv_eq(BitsetView *self, DeeObject *other) {
@@ -2182,22 +2219,11 @@ bsv_frozen(BitsetView *__restrict self) {
 	/* Must create a new frozen bitset from "self". */
 	bitset_ref_fromview(&ref, self);
 	ref_nbits = bitset_ref_nbits(&ref);
-	if (ref.bsr_startbit == 0) {
-		result = Bitset_Alloc(ref_nbits);
-		if unlikely(!result)
-			goto err;
-		copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
-	} else {
-		/* Slow case: bits don't align, so we must copy them one-at-a-time */
-		size_t i;
-		result = Bitset_Calloc(ref_nbits);
-		if unlikely(!result)
-			goto err;
-		for (i = 0; i < ref_nbits; ++i) {
-			if (bitset_ref_test(&ref, i))
-				bitset_set(result->bs_bitset, i);
-		}
-	}
+	result = Bitset_Alloc(ref_nbits);
+	if unlikely(!result)
+		goto err;
+	bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, ref.bsr_bitset,
+	                                   ref.bsr_startbit, ref_nbits);
 	result->bs_nbits = ref_nbits;
 	DeeObject_Init(result, &RoBitset_Type);
 	return (DREF DeeObject *)result;
@@ -2239,8 +2265,8 @@ bsv_copy(BitsetView *__restrict self,
 #endif /* !__INTELLISENSE__ */
 	Dee_Incref(self->bsi_owner);
 	self->bsi_startbit = other->bsi_startbit;
-	self->bsi_endbit   = other->bsi_startbit;
-	self->bsi_bflags   = other->bsi_startbit;
+	self->bsi_endbit   = other->bsi_endbit;
+	self->bsi_bflags   = other->bsi_bflags;
 	return 0;
 }
 
@@ -2347,6 +2373,84 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_inplaceop_bitset(BitsetView *self, struct bitset_ref *__restrict ref, unsigned int op) {
+	size_t self_bits = BitsetView_GetNBits(self);
+	size_t copy_bits = bitset_ref_nbits(ref);
+	if (copy_bits > self_bits) {
+		if (op != BITSET_OP_AND) {
+			/* Ensure that no bit is set that can't be represented in "self" */
+			size_t oob_index;
+			oob_index = bitset_nffs(ref->bsr_bitset,
+			                        ref->bsr_startbit + self_bits,
+			                        ref->bsr_endbit);
+			if (oob_index < ref->bsr_endbit) {
+				oob_index -= ref->bsr_startbit;
+				ASSERT(oob_index >= self_bits);
+				return bsv_err_bad_index(self, oob_index);
+			}
+		}
+
+		/* Trim to the size of our own bitset. */
+		ref->bsr_endbit = ref->bsr_startbit + self_bits;
+		copy_bits = self_bits;
+	}
+
+	ASSERT(copy_bits == bitset_ref_nbits(ref));
+	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
+	bitset_nbitop(BitsetView_GetBitset(self), self->bsi_startbit,
+	              ref->bsr_bitset, ref->bsr_startbit, copy_bits, op);
+	if (copy_bits < self_bits) {
+		if (op == BITSET_OP_AND)
+			bitset_nclear(BitsetView_GetBitset(self), copy_bits, self_bits);
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_inplaceop(DREF BitsetView **p_self, DeeObject *other, unsigned int op) {
+	int result;
+	BitsetView *self = *p_self;
+	DREF Bitset *temp;
+	struct bitset_ref ref;
+	if unlikely(!BitsetView_IsWritable(self))
+		goto err_readonly;
+	if (DeeObject_AsBitset(other, &ref))
+		return bsv_inplaceop_bitset(self, &ref, op);
+
+	/* Must create a temp bitset from "other" and then assign that one.
+	 * We can't directly assign from "other" in case "other" somehow
+	 * re-uses the state of "self" (e.g.: is a yield function) */
+	temp = bs_init_fromseq(other, NULL);
+	if unlikely(!temp)
+		goto err;
+	ref.bsr_bitset   = temp->bs_bitset;
+	ref.bsr_startbit = 0;
+	ref.bsr_endbit   = temp->bs_nbits;
+	result = bsv_inplaceop_bitset(self, &ref, op);
+	Dee_DecrefDokill(temp);
+	return result;
+err_readonly:
+	return bsv_err_readonly(self);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_inplace_or(DREF BitsetView **p_self, DeeObject *other) {
+	return bsv_inplaceop(p_self, other, BITSET_OP_OR);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_inplace_and(DREF BitsetView **p_self, DeeObject *other) {
+	return bsv_inplaceop(p_self, other, BITSET_OP_AND);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bsv_inplace_xor(DREF BitsetView **p_self, DeeObject *other) {
+	return bsv_inplaceop(p_self, other, BITSET_OP_XOR);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_bool(BitsetView *self) {
 	return bitset_nanyset(BitsetView_GetBitset(self),
@@ -2393,6 +2497,40 @@ PRIVATE struct type_nsi tpconst bsv_nsi = {
 			/* .nsi_remove  = */ (dfunptr_t)&bsv_nsi_remove,
 		}
 	}
+};
+
+PRIVATE struct type_math bsv_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ NULL,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ NULL,
+	/* .tp_sub         = */ NULL,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL, /* TODO */
+	/* .tp_shr         = */ NULL, /* TODO */
+	/* .tp_and         = */ NULL,
+	/* .tp_or          = */ NULL,
+	/* .tp_xor         = */ NULL,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ NULL,
+	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL, /* TODO */
+	/* .tp_inplace_shr = */ NULL, /* TODO */
+	/* .tp_inplace_and = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bsv_inplace_and,
+	/* .tp_inplace_or  = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bsv_inplace_or,
+	/* .tp_inplace_xor = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&bsv_inplace_xor,
+	/* .tp_inplace_pow = */ NULL
 };
 
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
@@ -2603,7 +2741,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsv_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL, /* TODO: "|=" "&=" "^=" */
+	/* .tp_math          = */ &bsv_math,
 	/* .tp_cmp           = */ &bsv_cmp,
 	/* .tp_seq           = */ &bsv_seq,
 	/* .tp_iter_next     = */ NULL,

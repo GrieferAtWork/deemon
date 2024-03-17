@@ -30,7 +30,18 @@ function intbits(i: int): BitsetView {
 	return view;
 }
 
-function assertBitsetImpl(expected: {int...}, actual: BitsetView | Bitset.Frozen) {
+function assertBitsetOk(b: Bitset | BitsetView) {
+	local orig = copy b;
+	assert orig == b;
+	b &= b;
+	assert orig == b;
+	b |= b;
+	assert orig == b;
+	b ^= b;
+	assert {} == b;
+}
+
+function assertBitsetImpl2(expected: {int...}, actual: Bitset | BitsetView | Bitset.Frozen) {
 	assert expected == actual;
 	assert !(expected != actual);
 	assert expected <= actual;
@@ -43,31 +54,33 @@ function assertBitsetImpl(expected: {int...}, actual: BitsetView | Bitset.Frozen
 	}
 }
 
+function assertBitsetImpl(expected: {int...}, actual: BitsetView) {
+	assertBitsetImpl2(expected, actual);
+	assertBitsetImpl2(expected, actual.frozen);
+	assertBitsetImpl2(expected, Bitset(actual));
+	assertBitsetImpl2(expected, Bitset(actual).frozen);
+	assertBitsetImpl2(expected, Bitset.Frozen(actual));
+	assertBitsetImpl2(expected, Bitset.Frozen(actual).frozen);
+	assertBitsetImpl2(expected, BitsetView(actual));
+	assertBitsetImpl2(expected, BitsetView(actual).frozen);
+	assertBitsetImpl2(expected, BitsetView(actual.frozen));
+	assertBitsetImpl2(expected, BitsetView(actual.frozen).frozen);
+	assertBitsetImpl2(expected, BitsetView(actual.bytes()));
+	assertBitsetImpl2(expected, BitsetView(actual.bytes()).frozen);
+	assertBitsetImpl2(expected, BitsetView(Bitset(actual).bytes()));
+	assertBitsetImpl2(expected, BitsetView(Bitset(actual).bytes()).frozen);
+	assertBitsetImpl2(expected, BitsetView(Bitset(actual).frozen.bytes()));
+	assertBitsetImpl2(expected, BitsetView(Bitset(actual).frozen.bytes()).frozen);
+}
+
 function assertBitset(expected: {int...}, actual: BitsetView) {
-	for (local usedExpected: {
-		expected,
-		Bitset(expected),
-		Bitset(expected).frozen,
-		Bitset.Frozen(expected),
-		Bitset.Frozen(expected).frozen,
-	}) {
-		assertBitsetImpl(usedExpected, actual);
-		assertBitsetImpl(usedExpected, actual.frozen);
-		assertBitsetImpl(usedExpected, Bitset(actual));
-		assertBitsetImpl(usedExpected, Bitset(actual).frozen);
-		assertBitsetImpl(usedExpected, Bitset.Frozen(actual));
-		assertBitsetImpl(usedExpected, Bitset.Frozen(actual).frozen);
-		assertBitsetImpl(usedExpected, BitsetView(actual));
-		assertBitsetImpl(usedExpected, BitsetView(actual).frozen);
-		assertBitsetImpl(usedExpected, BitsetView(actual.frozen));
-		assertBitsetImpl(usedExpected, BitsetView(actual.frozen).frozen);
-		assertBitsetImpl(usedExpected, BitsetView(actual.bytes()));
-		assertBitsetImpl(usedExpected, BitsetView(actual.bytes()).frozen);
-		assertBitsetImpl(usedExpected, BitsetView(Bitset(actual).bytes()));
-		assertBitsetImpl(usedExpected, BitsetView(Bitset(actual).bytes()).frozen);
-		assertBitsetImpl(usedExpected, BitsetView(Bitset(actual).frozen.bytes()));
-		assertBitsetImpl(usedExpected, BitsetView(Bitset(actual).frozen.bytes()).frozen);
-	}
+	assertBitsetOk(Bitset(actual));
+	assertBitsetOk(BitsetView(Bitset(actual), "w"));
+	assertBitsetImpl(expected, actual);
+	assertBitsetImpl(Bitset(expected), actual);
+	assertBitsetImpl(Bitset(expected).frozen, actual);
+	assertBitsetImpl(Bitset.Frozen(expected), actual);
+	assertBitsetImpl(Bitset.Frozen(expected).frozen, actual);
 }
 
 assertBitset({},      intbits(0));
