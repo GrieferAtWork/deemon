@@ -926,6 +926,13 @@ INTDEF DeeTypeObject RBTreeIterator_Type;
 
 
 
+/* Bitset-related types. */
+INTDEF DeeTypeObject Bitset_Type; /* TODO: BitsetFrozen_Type */
+INTDEF DeeTypeObject BitsetView_Type;
+INTDEF DeeTypeObject BitsetIterator_Type;
+
+
+
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_empty_sequence)(DeeObject *__restrict seq);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_index_out_of_bounds)(DeeObject *__restrict self, size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unbound_index)(DeeObject *__restrict self, size_t index);
@@ -934,6 +941,7 @@ INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key)(DeeObject *__restri
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTERN ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
 INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name);
+INTDEF ATTR_COLD int (DCALL err_invalid_argc)(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
 
 #define ATTR_ACCESS_GET     0
 #define ATTR_ACCESS_DEL     1

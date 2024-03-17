@@ -1500,12 +1500,6 @@ bytes_isreadonly(Bytes *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_iswritable(Bytes *__restrict self) {
-	return_bool_(self->b_flags & Dee_BUFFER_FWRITABLE);
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_getfirst(Bytes *__restrict self) {
 	if unlikely(DeeBytes_IsEmpty(self))
 		goto err_empty;
@@ -1589,14 +1583,6 @@ PRIVATE struct type_getset tpconst bytes_getsets[] = {
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this ?. object cannot be written to"),
-	TYPE_GETTER_F("iswritable", &bytes_iswritable,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
-	TYPE_GETTER_F("ismutable", &bytes_iswritable,
-	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?Dbool\n"
-	              "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
 	TYPE_GETSET_F(STR_first, &bytes_getfirst, &bytes_delfirst, &bytes_setfirst,
 	              METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
@@ -1616,7 +1602,12 @@ PRIVATE struct type_getset tpconst bytes_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst bytes_members[] = {
+	TYPE_MEMBER_BITFIELD_DOC("iswritable", STRUCT_CONST, Bytes, b_flags, Dee_BUFFER_FWRITABLE,
+	                         "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
+	TYPE_MEMBER_BITFIELD_DOC("ismutable", STRUCT_CONST, Bytes, b_flags, Dee_BUFFER_FWRITABLE,
+	                         "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
 	TYPE_MEMBER_FIELD("length", STRUCT_CONST | STRUCT_SIZE_T, offsetof(Bytes, b_size)),
+	TYPE_MEMBER_FIELD("__flags__", STRUCT_CONST | STRUCT_UINT, offsetof(Bytes, b_flags)),
 	TYPE_MEMBER_END
 };
 
@@ -1992,6 +1983,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "\n"
 
 	                         "del[:]->\n"
+	                         "#tBufferError{@this ?. object is not writable}"
 	                         "Same as ${this[start:end] = none}, assigning zero-bytes within the given range\n"
 	                         "\n"
 
@@ -2045,7 +2037,7 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 			/* .tp_var = */ {
 				/* .tp_ctor      = */ (dfunptr_t)&bytes_ctor,
 				/* .tp_copy_ctor = */ (dfunptr_t)&bytes_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)&bytes_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bytes_init,
 				/* .tp_free      = */ (dfunptr_t)NULL
 			}

@@ -39,6 +39,7 @@
 		<ClInclude Include="..\..\src\dex\collections\libcollections.h" />
 	</ItemGroup>
 	<ItemGroup>
+		<ClCompile Include="..\..\src\dex\collections\bitset.c" />
 		<ClCompile Include="..\..\src\dex\collections\deque.c" />
 		<ClCompile Include="..\..\src\dex\collections\fixedlist.c" />
 		<ClCompile Include="..\..\src\dex\collections\libcollections.c" />

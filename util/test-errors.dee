@@ -78,13 +78,13 @@ function getTypeInstances(t: Type | TypeExpr): {Object...} {
 	}
 	switch (t) {
 	case int:
-		yield -0x8000000000000000;
+//		yield -0x8000000000000000;
 		yield -0x80000000;
 		yield -1;
 		yield 0;
 		yield 1;
 		yield 0x7fffffff;
-		yield 0x7fffffffffffffff;
+//		yield 0x7fffffffffffffff;
 		return;
 	case bool:
 		yield true;
@@ -296,15 +296,15 @@ function invokeAsync(args..., **kwds) {
 
 @@Invoke member functions of the given @Type @t
 function invokeTypeMembers(t: Type) {
-	//for (local a: enumattr(t)) {
-	//	if (a.decl !== t)
-	//		continue;
-	//	local wrapper = t.operator . (a.name);
-	//	if (wrapper is Callable) {
-	//		print(f"invokeAsync({repr wrapper});");
-	//		//invoke(wrapper, name: f"{repr t}.{a.name}");
-	//	}
-	//}
+	for (local a: enumattr(t)) {
+		if (a.decl !== t)
+			continue;
+		local wrapper = t.operator . (a.name);
+		if (wrapper is Callable) {
+			print(f"invokeAsync({repr wrapper});");
+			//invoke(wrapper, name: f"{repr t}.{a.name}");
+		}
+	}
 	local d = Doc(t);
 	for (local op: d.operators) {
 		local f = op.operatorfunc;
@@ -322,6 +322,77 @@ function invokeTypeMembers(t: Type) {
 
 function main() {
 	//invokeTypeMembers(deemon.string);
+
+	invokeAsync(deemon.string.casesplit);
+	invokeAsync(deemon.string.splitlines);
+	invokeAsync(deemon.string.indent);
+	invokeAsync(deemon.string.dedent);
+	invokeAsync(deemon.string.common);
+	invokeAsync(deemon.string.rcommon);
+	invokeAsync(deemon.string.casecommon);
+	invokeAsync(deemon.string.casercommon);
+	invokeAsync(deemon.string.findmatch);
+	invokeAsync(deemon.string.indexmatch);
+	invokeAsync(deemon.string.casefindmatch);
+	invokeAsync(deemon.string.caseindexmatch);
+	invokeAsync(deemon.string.rfindmatch);
+	invokeAsync(deemon.string.rindexmatch);
+	invokeAsync(deemon.string.caserfindmatch);
+	invokeAsync(deemon.string.caserindexmatch);
+//	invokeAsync(deemon.string.partitionmatch);
+//	invokeAsync(deemon.string.rpartitionmatch);
+//	invokeAsync(deemon.string.casepartitionmatch);
+//	invokeAsync(deemon.string.caserpartitionmatch);
+//	invokeAsync(deemon.string.segments);
+//	invokeAsync(deemon.string.distribute);
+//	invokeAsync(deemon.string.rematch);
+//	invokeAsync(deemon.string.rematches);
+//	invokeAsync(deemon.string.refind);
+//	invokeAsync(deemon.string.rerfind);
+//	invokeAsync(deemon.string.reindex);
+//	invokeAsync(deemon.string.rerindex);
+//	invokeAsync(deemon.string.relocate);
+//	invokeAsync(deemon.string.rerlocate);
+//	invokeAsync(deemon.string.repartition);
+//	invokeAsync(deemon.string.rerpartition);
+//	invokeAsync(deemon.string.rereplace);
+//	invokeAsync(deemon.string.refindall);
+//	invokeAsync(deemon.string.relocateall);
+//	invokeAsync(deemon.string.resplit);
+//	invokeAsync(deemon.string.restartswith);
+//	invokeAsync(deemon.string.reendswith);
+//	invokeAsync(deemon.string.restrip);
+//	invokeAsync(deemon.string.relstrip);
+//	invokeAsync(deemon.string.rerstrip);
+//	invokeAsync(deemon.string.recount);
+//	invokeAsync(deemon.string.recontains);
+//	invokeAsync(deemon.string.rescanf);
+//	invokeAsync(deemon.string.regmatch);
+//	invokeAsync(deemon.string.regfind);
+//	invokeAsync(deemon.string.regrfind);
+//	invokeAsync(deemon.string.regfindall);
+//	invokeAsync(deemon.string.regindex);
+//	invokeAsync(deemon.string.regrindex);
+//	invokeAsync(deemon.string.reversed);
+//	invokeAsync(deemon.string.ordinals);
+//	invokeAsync(deemon.string.__hashed__);
+//	invokeAsync(deemon.string.__hasutf__);
+//	invokeAsync(deemon.string.__hasregex__);
+//	invokeAsync(deemon.string.first);
+//	invokeAsync(deemon.string.last);
+//	invokeAsync(deemon.string.__sizeof__);
+//	invokeAsync(deemon.string.__str_bytes__);
+//	invokeAsync(deemon.string.__str_bytes_isutf8__);
+//	invokeAsync(deemon.string.__str_bytes_islatin1__);
+//	invokeAsync(deemon.string.__str_width__);
+//	invokeAsync(deemon.string.__wstr_bytes__);
+//	invokeAsync(deemon.string.__utf8_bytes__);
+//	invokeAsync(deemon.string.__utf16_bytes__);
+//	invokeAsync(deemon.string.__utf32_bytes__);
+//	invokeAsync(deemon.string.__1byte_bytes__);
+//	invokeAsync(deemon.string.__2byte_bytes__);
+//	invokeAsync(deemon.string.__utf32_bytes__);
+
 	//invokeTypeMembers(deemon.Bytes);
 	//invokeTypeMembers(deemon.int);
 	//invokeTypeMembers(deemon.List);
@@ -329,7 +400,7 @@ function main() {
 	//invokeTypeMembers(deemon.Sequence);
 	//invokeTypeMembers(deemon.Object);
 	//invokeTypeMembers(deemon.bool);
-	invokeTypeMembers(type(none));
+	//invokeTypeMembers(type(none));
 	//invokeTypeMembers(deemon.float);
 	//invokeTypeMembers(deemon.Cell);
 	//invokeTypeMembers(deemon.WeakRef);

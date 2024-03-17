@@ -117,6 +117,22 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       tp, info ? info->oi_sname : Q3);
 }
 
+INTERN ATTR_COLD int
+(DCALL err_invalid_argc)(char const *function_name, size_t argc_cur,
+                         size_t argc_min, size_t argc_max) {
+	if (argc_min == argc_max) {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects %" PRFuSIZ " arguments when %" PRFuSIZ " w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       argc_min, argc_cur, argc_cur == 1 ? "as" : "ere");
+	} else {
+		return DeeError_Throwf(&DeeError_TypeError,
+		                       "function%s%s expects between %" PRFuSIZ " and %" PRFuSIZ " "
+		                       "arguments when %" PRFuSIZ " w%s given",
+		                       function_name ? " " : "", function_name ? function_name : "",
+		                       argc_min, argc_max, argc_cur, argc_cur == 1 ? "as" : "ere");
+	}
+}
 
 
 PRIVATE struct dex_symbol symbols[] = {
@@ -127,7 +143,12 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "RangeMap", (DeeObject *)&RangeMap_Type, MODSYM_FREADONLY },
 	{ "RBTree", (DeeObject *)&RBTree_Type, MODSYM_FREADONLY },
 	{ "CachedDict", (DeeObject *)&DeeCachedDict_Type, MODSYM_FREADONLY },
-	/* TODO: Bitset (implementing `Set with int', where the # of bits must be specified during construction) */
+	{ "Bitset", (DeeObject *)&Bitset_Type, MODSYM_FREADONLY },
+	{ "BitsetView", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY },
+	{ "bits", (DeeObject *)&BitsetView_Type, MODSYM_FREADONLY,
+	  DOC("Alias for ?GBitsetView, that should be used as a "
+	      "function to access the bits of some buffer-like object") },
+
 	/* TODO: STailQ (singly linked list; internally: STAILQ) */
 	/* TODO: TailQ (double linked list; internally: TAILQ) */
 	{ NULL }

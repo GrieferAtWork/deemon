@@ -44,7 +44,7 @@ struct Dee_bytes_object {
 	size_t                                 b_size;   /* [<= b_buffer.bb_size][const] Size of the used portion of the buffer */
 	DREF DeeObject                        *b_orig;   /* [1..1][const][ref_if(!= self)] The object for which this is the buffer view. */
 	DeeBuffer                              b_buffer; /* [const] The buffer being accessed. */
-	unsigned int                           b_flags;  /* [const] Buffer access flags (Set of `DEE_BUFFER_F*') */
+	unsigned int                           b_flags;  /* [const] Buffer access flags (Set of `Dee_BUFFER_F*') */
 	COMPILER_FLEXIBLE_ARRAY(__BYTE_TYPE__, b_data);  /* ... Inline buffer data (Pointed to by `b_buffer.bb_base' if the Bytes object owns its own data) */
 };
 
