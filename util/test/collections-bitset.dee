@@ -22,12 +22,165 @@
 import * from deemon;
 import * from collections;
 
+function knownGood_ffs(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int | none {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	for (local i: [start:end]) {
+		if (b[i])
+			return i;
+	}
+	return none;
+}
+
+function knownGood_ffc(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int | none {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	for (local i: [start:end]) {
+		if (!b[i])
+			return i;
+	}
+	return none;
+}
+
+function knownGood_fls(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int | none {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	for (local i: [end-1:start-1,-1]) {
+		if (b[i])
+			return i;
+	}
+	return none;
+}
+
+function knownGood_flc(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int | none {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	for (local i: [end-1:start-1,-1]) {
+		if (!b[i])
+			return i;
+	}
+	return none;
+}
+
+function knownGood_clz(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	local result = 0;
+	for (local i: [end-1:start-1,-1]) {
+		if (b[i])
+			break;
+		++result;
+	}
+	return result;
+}
+
+function knownGood_ctz(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	local result = 0;
+	for (local i: [start:end]) {
+		if (b[i])
+			break;
+		++result;
+	}
+	return result;
+}
+
+function knownGood_clo(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	local result = 0;
+	for (local i: [end-1:start-1,-1]) {
+		if (!b[i])
+			break;
+		++result;
+	}
+	return result;
+}
+
+function knownGood_cto(b: Bitset | Bitset.Frozen | BitsetView,
+                       start: int = 0, end: int = 0): int {
+	if (end < 0 || end > b.nbits)
+		end = b.nbits;
+	if (start > end)
+		start = end;
+	local result = 0;
+	for (local i: [start:end]) {
+		if (!b[i])
+			break;
+		++result;
+	}
+	return result;
+}
+
 function intbits(i: int): BitsetView {
 	local iBytes = i.tobytes(byteorder: "little", signed: false);
 	local view = BitsetView(iBytes, "w", 0, i.bitcount(signed: false));
 	assert view.bytes() == iBytes;
 	assert Bitset(view).bytes() == iBytes;
 	return view;
+}
+
+global testedBitops: {string...} = HashSet();
+
+function assertBitops(b: Bitset | BitsetView | Bitset.Frozen) {
+	/* Speed up the test by only testing each bitset permuation once.
+	 * This is done because our "knownGood_*" implementation (while
+	 * definitely known to be good, as the name implies), are also
+	 * rather slow since they are written such that it's easy to
+	 * prove that they produce the correct results (as opposed to:
+	 * for performance). */
+	local r = repr b;
+	if (!testedBitops.insert(r))
+		return;
+	local nbits = b.nbits;
+	for (local start, end: {
+		(0, -1),
+		(1, -1),
+		(7, -1),
+		(8, -1),
+		(9, -1),
+		(0, nbits - 1),
+		(1, nbits - 1),
+		(7, nbits - 1),
+		(8, nbits - 1),
+		(9, nbits - 1),
+		(0, nbits - 9),
+		(1, nbits - 9),
+		(7, nbits - 9),
+		(8, nbits - 9),
+		(9, nbits - 9),
+	}) {
+		assert knownGood_ffs(b, start, end) == b.ffs(start, end), f"{repr b}.ffs({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_ffc(b, start, end) == b.ffc(start, end), f"{repr b}.ffc({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_fls(b, start, end) == b.fls(start, end), f"{repr b}.fls({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_flc(b, start, end) == b.flc(start, end), f"{repr b}.flc({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_clz(b, start, end) == b.clz(start, end), f"{repr b}.clz({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_clo(b, start, end) == b.clo(start, end), f"{repr b}.clo({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_ctz(b, start, end) == b.ctz(start, end), f"{repr b}.ctz({start}, {end}) [nbits: {nbits}]";
+		assert knownGood_cto(b, start, end) == b.cto(start, end), f"{repr b}.cto({start}, {end}) [nbits: {nbits}]";
+	}
 }
 
 function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
@@ -58,6 +211,8 @@ function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
 		assert inv[i] === (i in inv);
 		assert b[i] == !inv[i];
 	}
+
+	assertBitops(b);
 }
 
 function assertBitsetOk(b: Bitset | BitsetView) {
@@ -87,30 +242,20 @@ function assertBitsetImpl2(expected: {int...}, actual: Bitset | BitsetView | Bit
 }
 
 function assertBitsetImpl(expected: {int...}, actual: BitsetView) {
+	assert actual is BitsetView;
 	assertBitsetImpl2(expected, actual);
 	assertBitsetImpl2(expected, actual.frozen);
 	assertBitsetImpl2(expected, Bitset(actual));
-	assertBitsetImpl2(expected, Bitset(actual).frozen);
-	assertBitsetImpl2(expected, Bitset.Frozen(actual));
-	assertBitsetImpl2(expected, Bitset.Frozen(actual).frozen);
-	assertBitsetImpl2(expected, BitsetView(actual));
-	assertBitsetImpl2(expected, BitsetView(actual).frozen);
-	assertBitsetImpl2(expected, BitsetView(actual.frozen));
-	assertBitsetImpl2(expected, BitsetView(actual.frozen).frozen);
-	assertBitsetImpl2(expected, BitsetView(actual.bytes()));
-	assertBitsetImpl2(expected, BitsetView(actual.bytes()).frozen);
-	assertBitsetImpl2(expected, BitsetView(Bitset(actual).bytes()));
-	assertBitsetImpl2(expected, BitsetView(Bitset(actual).bytes()).frozen);
-	assertBitsetImpl2(expected, BitsetView(Bitset(actual).frozen.bytes()));
-	assertBitsetImpl2(expected, BitsetView(Bitset(actual).frozen.bytes()).frozen);
+	assertBitsetImpl2(Bitset.Frozen(expected)[1:], actual[1:]);
+	assertBitsetImpl2(Bitset.Frozen(expected)[1:-1], actual[1:-1]);
+	assertBitsetImpl2(Bitset.Frozen(expected)[8:], actual[8:]);
 }
 
 function assertBitset(expected: {int...}, actual: BitsetView) {
 	assertBitsetImpl(expected, actual);
 	assertBitsetImpl(Bitset(expected), actual);
 	assertBitsetImpl(Bitset(expected).frozen, actual);
-	assertBitsetImpl(Bitset.Frozen(expected), actual);
-	assertBitsetImpl(Bitset.Frozen(expected).frozen, actual);
+	assertBitsetImpl(BitsetView(Bitset(expected)), actual);
 
 	/* Ensure that trying to open a frozen bitset for writing throws a BufferError */
 	assert (try BitsetView(actual.frozen, "w") catch (e...) e) is BufferError from errors;
@@ -157,48 +302,76 @@ assertBitset(
 	 189,190,192,193,197,198,200,202,205,206,208,213},
 	intbits(0x216563756173207465726365732065687420646e756f6620756f59));
 
-function testSetAndClear(setrange, delrange) {
-	local b = Bitset(32);
-	assertBitset({}, b);
+
+
+
+function assertBitsetFast(expected: {int...}, actual: BitsetView) {
+	assertBitsetImpl2(expected, actual);
+	assertBitsetOk(Bitset(actual));
+	assertBitsetOk(BitsetView(Bitset(actual), "w"));
+	assertBitsetOkReadonly(Bitset(actual).frozen);
+}
+
+function testSetAndClearImpl(b, setrange, delrange) {
+	assertBitsetFast({}, b);
 	setrange(b, 0, 0);
-	assertBitset({}, b);
+	assertBitsetFast({}, b);
 	delrange(b, 0, 0);
-	assertBitset({}, b);
+	assertBitsetFast({}, b);
 	setrange(b, 0, 1);
-	assertBitset({0}, b);
+	assertBitsetFast({0}, b);
 	setrange(b, 0, -1);
-	assertBitset([:31], b);
+	assertBitsetFast([:31], b);
 	setrange(b, 0, 32);
-	assertBitset([:32], b);
+	assertBitsetFast([:32], b);
 	delrange(b, 1, 31);
-	assertBitset({0,31}, b);
+	assertBitsetFast({0,31}, b);
 	delrange(b, 0, 32);
-	assertBitset({}, b);
+	assertBitsetFast({}, b);
 	setrange(b, 9999, 9999);
-	assertBitset({}, b);
+	assertBitsetFast({}, b);
 	setrange(b, -1, 9999);
-	assertBitset({31}, b);
+	assertBitsetFast({31}, b);
 	setrange(b, 0, 9999);
-	assertBitset([:32], b);
+	assertBitsetFast([:32], b);
 	delrange(b, -1, 9999);
-	assertBitset([:31], b);
+	assertBitsetFast([:31], b);
 	delrange(b, -8, 9999);
-	assertBitset([:24], b);
+	assertBitsetFast([:24], b);
 	delrange(b, -30, -9);
-	assertBitset({0,1,23}, b);
+	assertBitsetFast({0,1,23}, b);
 	delrange(b, -32, -31);
-	assertBitset({1,23}, b);
+	assertBitsetFast({1,23}, b);
 	delrange(b, -32, -30);
-	assertBitset({23}, b);
+	assertBitsetFast({23}, b);
 	b[23] = false;
-	assertBitset({}, b);
+	assertBitsetFast({}, b);
 	b[7] = true;
 	b[9] = true;
-	assertBitset({7,9}, b);
+	assertBitsetFast({7,9}, b);
 	del b[9];
-	assertBitset({7}, b);
+	assertBitsetFast({7}, b);
 	del b[8];
-	assertBitset({7}, b);
+	assertBitsetFast({7}, b);
+	b.set(8);
+	assertBitsetFast({7,8}, b);
+	b.set(10, 13);
+	assertBitsetFast({7,8,10,11,12}, b);
+	b.set(30, 999);
+	assertBitsetFast({7,8,10,11,12,30,31}, b);
+	b.clear();
+	assertBitsetFast({}, b);
+	b.set();
+	assertBitsetFast([:32], b);
+	b.flip();
+	assertBitsetFast({}, b);
+	b.flip();
+	assertBitsetFast([:32], b);
+}
+
+function testSetAndClear(setrange, delrange) {
+	testSetAndClearImpl(Bitset(32), setrange, delrange);
+	testSetAndClearImpl(BitsetView(Bitset(32), "w"), setrange, delrange);
 }
 
 testSetAndClear((b, s, e) -> { b[s:e] = true; }, (b, s, e) -> { del b[s:e]; });

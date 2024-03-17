@@ -144,7 +144,7 @@
  * >> __HYBRID_BITSET_HI_MASKOU(7) == 0xb00000001
  * >> __HYBRID_BITSET_HI_MASKOU(8) == 0xb00000000 // requires use of __HYBRID_BITSET_HI_MASKOU_P1
  *
- * NOTE: When "n >= 8", behavior is HARD undefined. If you
+ * NOTE: When  "n >= 8", behavior is HARD undefined. If you
  *       need to value of `__HYBRID_BITSET_*_MASK*(n + 1)',
  *       the `*_P1' variant must be used.
  */
@@ -232,9 +232,8 @@ __DECL_BEGIN
 
 
 
-/* >> void __hybrid_bitset_nclear(__hybrid_bitset_t *self, size_t startbitno, size_t endbitno);
- * Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno >= endbitno', the result is weak undefined behavior,
+/* Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
@@ -254,9 +253,8 @@ __LOCAL __ATTR_NONNULL((1)) void
 	}
 }
 
-/* >> void __hybrid_bitset_nset(__hybrid_bitset_t *self, size_t startbitno, size_t endbitno);
- * Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno >= endbitno', the result is weak undefined behavior,
+/* Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __LOCAL __ATTR_NONNULL((1)) void
@@ -273,6 +271,29 @@ __LOCAL __ATTR_NONNULL((1)) void
 		__self[(__SIZE_TYPE__)__minword] |= __HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK);
 		__hybrid_memset_one(&__self[__minword + 1], (__SIZE_TYPE__)__maxword - ((__SIZE_TYPE__)__minword + 1));
 		__self[(__SIZE_TYPE__)__maxword] |= __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK);
+	}
+}
+
+/* Flip bits [startbitno, endbitno) (non-inclusive) in `self'
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
+ *       in that the way in which `self' is modified is undefined, though the
+ *       function still guaranties that nothing but `self' gets modified. */
+__LOCAL __ATTR_NONNULL((1)) void
+(__hybrid_bitset_nflip)(__hybrid_bitset_t *__restrict __self,
+                        __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
+	__SSIZE_TYPE__ __maxbitno  = (__SSIZE_TYPE__)__endbitno - 1;
+	__SSIZE_TYPE__ __minword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__startbitno);
+	__SSIZE_TYPE__ __maxword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__maxbitno);
+	__hybrid_assert(__startbitno <= __endbitno);
+	if (__minword == __maxword) {
+		__self[(__SIZE_TYPE__)__maxword] ^= (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
+		                                     __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
+	} else if likely(__startbitno < __endbitno) {
+		__SSIZE_TYPE__ __i;
+		__self[(__SIZE_TYPE__)__minword] ^= __HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK);
+		for (__i = __minword + 1; __i < __maxword; ++__i)
+			__self[(__SIZE_TYPE__)__i] ^= __HYBRID_BITSET_WORD_BMAX;
+		__self[(__SIZE_TYPE__)__maxword] ^= __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK);
 	}
 }
 
@@ -430,7 +451,7 @@ __NOTHROW_NCX(__hybrid_bitset_fls)(__hybrid_bitset_t const *__restrict __self, _
 }
 
 /* Find the first bitno within [startbitno,endbitno) that is on and return
- * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffs)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -438,12 +459,14 @@ __NOTHROW_NCX(__hybrid_bitset_nffs)(__hybrid_bitset_t const *__restrict __self,
 	__SSIZE_TYPE__ __minword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__startbitno);
 	__SSIZE_TYPE__ __maxword = __HYBRID_BITSET_WORD(__maxbitno);
 	if (__minword >= __maxword) {
-		__hybrid_bitset_t __word;
-		__word = __self[__maxword] & (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
-		                              __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
-		if (__word != 0) {
-			__word >>= __startbitno & __HYBRID_BITSET_WORD_BMSK;
-			return __startbitno + __HYBRID_BITSET_WORD_CTZ(__word);
+		if likely(__startbitno < __endbitno) {
+			__hybrid_bitset_t __word;
+			__word = __self[__maxword] & (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
+			                              __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
+			if (__word != 0) {
+				__word >>= __startbitno & __HYBRID_BITSET_WORD_BMSK;
+				return __startbitno + __HYBRID_BITSET_WORD_CTZ(__word);
+			}
 		}
 	} else {
 		__SSIZE_TYPE__ __i;
@@ -466,7 +489,7 @@ __NOTHROW_NCX(__hybrid_bitset_nffs)(__hybrid_bitset_t const *__restrict __self,
 }
 
 /* Find the first bitno within [startbitno,endbitno) that is off and return
- * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
+ * its  index.  If no  such bit  exists,  return some  value `>= endbitno'. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nffc)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -474,14 +497,16 @@ __NOTHROW_NCX(__hybrid_bitset_nffc)(__hybrid_bitset_t const *__restrict __self,
 	__SSIZE_TYPE__ __minword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__startbitno);
 	__SSIZE_TYPE__ __maxword = __HYBRID_BITSET_WORD(__maxbitno);
 	if (__minword >= __maxword) {
-		__hybrid_bitset_t __word;
-		__hybrid_bitset_t __mask;
-		__mask = (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
-		          __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
-		__word = __self[__maxword] & __mask;
-		if (__word != __mask) {
-			__word >>= __startbitno & __HYBRID_BITSET_WORD_BMSK;
-			return __startbitno + __HYBRID_BITSET_WORD_CTO(__word);
+		if likely(__startbitno < __endbitno) {
+			__hybrid_bitset_t __word;
+			__hybrid_bitset_t __mask;
+			__mask = (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
+			          __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
+			__word = __self[__maxword] & __mask;
+			if (__word != __mask) {
+				__word >>= __startbitno & __HYBRID_BITSET_WORD_BMSK;
+				return __startbitno + __HYBRID_BITSET_WORD_CTO(__word);
+			}
 		}
 	} else {
 		__SSIZE_TYPE__ __i;
@@ -507,7 +532,7 @@ __NOTHROW_NCX(__hybrid_bitset_nffc)(__hybrid_bitset_t const *__restrict __self,
 }
 
 /* Find the last bitno within [startbitno,endbitno) that is on and return
- * its  index. If no  such bit exists,  return some value `>= endbitno'. */
+ * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nfls)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -515,12 +540,14 @@ __NOTHROW_NCX(__hybrid_bitset_nfls)(__hybrid_bitset_t const *__restrict __self,
 	__SSIZE_TYPE__ __minword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__startbitno);
 	__SSIZE_TYPE__ __maxword = __HYBRID_BITSET_WORD(__maxbitno);
 	if (__minword >= __maxword) {
-		__hybrid_bitset_t __word;
-		__word = __self[__maxword] & (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
-		                              __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
-		if (__word != 0) {
-			__word <<= __HYBRID_BITSET_WORD_BMSK - (__maxbitno & __HYBRID_BITSET_WORD_BMSK);
-			return (__SIZE_TYPE__)(__maxbitno - __HYBRID_BITSET_WORD_CLZ(__word));
+		if likely(__startbitno < __endbitno) {
+			__hybrid_bitset_t __word;
+			__word = __self[__maxword] & (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
+			                              __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
+			if (__word != 0) {
+				__word <<= __HYBRID_BITSET_WORD_BMSK - (__maxbitno & __HYBRID_BITSET_WORD_BMSK);
+				return (__SIZE_TYPE__)(__maxbitno - __HYBRID_BITSET_WORD_CLZ(__word));
+			}
 		}
 	} else {
 		__SSIZE_TYPE__ __i;
@@ -538,14 +565,16 @@ __NOTHROW_NCX(__hybrid_bitset_nfls)(__hybrid_bitset_t const *__restrict __self,
 			}
 		}
 		__word = __self[__minword] & __HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK);
-		if (__word != 0)
-			return __startbitno + (__HYBRID_BITSET_WORD_BMSK - __HYBRID_BITSET_WORD_CLZ(__word));
+		if (__word != 0) {
+			return (__minword << __HYBRID_BITSET_WORD_SHFT) +
+			       (__HYBRID_BITSET_WORD_BMSK - __HYBRID_BITSET_WORD_CLZ(__word));
+		}
 	}
 	return __endbitno;
 }
 
 /* Find the last bitno within [startbitno,endbitno) that is off and return
- * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_nflc)(__hybrid_bitset_t const *__restrict __self,
                                     __SIZE_TYPE__ __startbitno, __SIZE_TYPE__ __endbitno) {
@@ -553,14 +582,16 @@ __NOTHROW_NCX(__hybrid_bitset_nflc)(__hybrid_bitset_t const *__restrict __self,
 	__SSIZE_TYPE__ __minword = (__SSIZE_TYPE__)__HYBRID_BITSET_WORD(__startbitno);
 	__SSIZE_TYPE__ __maxword = __HYBRID_BITSET_WORD(__maxbitno);
 	if (__minword >= __maxword) {
-		__hybrid_bitset_t __word;
-		__hybrid_bitset_t __mask;
-		__mask = (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
-		          __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
-		__word = __self[__maxword] & __mask;
-		if (__word != __mask) {
-			__word <<= __HYBRID_BITSET_WORD_BMSK - (__maxbitno & __HYBRID_BITSET_WORD_BMSK);
-			return (__SIZE_TYPE__)(__maxbitno - __HYBRID_BITSET_WORD_CLO(__word));
+		if likely(__startbitno < __endbitno) {
+			__hybrid_bitset_t __word;
+			__hybrid_bitset_t __mask;
+			__mask = (__HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK) &
+			          __HYBRID_BITSET_LO_MASKIN_P1(__maxbitno & __HYBRID_BITSET_WORD_BMSK));
+			__word = __self[__maxword] & __mask;
+			if (__word != __mask) {
+				__word <<= __HYBRID_BITSET_WORD_BMSK - (__maxbitno & __HYBRID_BITSET_WORD_BMSK);
+				return (__SIZE_TYPE__)(__maxbitno - __HYBRID_BITSET_WORD_CLO(__word));
+			}
 		}
 	} else {
 		__SSIZE_TYPE__ __i;
@@ -581,8 +612,10 @@ __NOTHROW_NCX(__hybrid_bitset_nflc)(__hybrid_bitset_t const *__restrict __self,
 		}
 		__mask = __HYBRID_BITSET_LO_MASKOU(__startbitno & __HYBRID_BITSET_WORD_BMSK);
 		__word = __self[__minword] & __mask;
-		if (__word != __mask)
-			return __startbitno + (__HYBRID_BITSET_WORD_BMSK - __HYBRID_BITSET_WORD_CLO(__word));
+		if (__word != __mask) {
+			return (__minword << __HYBRID_BITSET_WORD_SHFT) +
+			       (__HYBRID_BITSET_WORD_BMSK - __HYBRID_BITSET_WORD_CLO(__word));
+		}
 	}
 	return __endbitno;
 }
@@ -714,7 +747,7 @@ __NOTHROW_NCX(__hybrid_bitset_npopcount)(__hybrid_bitset_t const *__restrict __s
 /* Count-leading-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
 __LOCAL __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__
 __NOTHROW_NCX(__hybrid_bitset_clz)(__hybrid_bitset_t const *__restrict __self, __SIZE_TYPE__ __n_bits) {
-	__SIZE_TYPE__ __result  = 0;
+	__SIZE_TYPE__ __result = 0;
 	__SIZE_TYPE__ __endword = __HYBRID_BITSET_WORD(__n_bits + __HYBRID_BITSET_WORD_BMSK);
 	if (__n_bits & __HYBRID_BITSET_WORD_BMSK) {
 		__hybrid_bitset_t __word;
@@ -1040,7 +1073,7 @@ __LOCAL __ATTR_NONNULL((1, 2)) void
 #define __hybrid_bitset_nbitop0(dst, src, src_startbitno, n_bits, op) \
 	__hybrid_bitset_nbitop(dst, 0, src, src_startbitno, n_bits, op)
 
-/* Perform a bit-operation "op" on the "n_bits" from "src:src_startbitno",
+/* Perform  a  bit-operation  "op"  on  the  "n_bits"  from  "src:src_startbitno",
  * together with "dst:dst_startbitno", storing the result at "dst:dst_startbitno".
  * NOTE: Overlap is allowed!
  * @param: op: One of `__HYBRID_BITSET_OP_*' */

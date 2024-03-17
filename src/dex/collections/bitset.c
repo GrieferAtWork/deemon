@@ -108,41 +108,31 @@ typedef struct {
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *bsi_owner;    /* [1..1][const] Some object that is providing the buffer whose bits are being enumerated. */
-	DeeBuffer       bsi_buf;      /* [const] The buffer of raw bytes that are being viewed.
+	DREF DeeObject *bsv_owner;    /* [1..1][const] Some object that is providing the buffer whose bits are being enumerated. */
+	DeeBuffer       bsv_buf;      /* [const] The buffer of raw bytes that are being viewed.
 	                               * Unused bits in the first/last byte are undefined. */
-	size_t          bsi_startbit; /* [const] Starting bit number part of the bitset (based at `bsi_buf.bb_base') */
-	size_t          bsi_endbit;   /* [const] End bit number part of the bitset (based at `bsi_buf.bb_base') */
-	unsigned int    bsi_bflags;   /* [const] Buffer flags (Set of `Dee_BUFFER_F*'; of relevance is `Dee_BUFFER_FWRITABLE') */
+	size_t          bsv_startbit; /* [const][<= bsv_endbit] Starting bit number part of the bitset (based at `bsv_buf.bb_base') */
+	size_t          bsv_endbit;   /* [const][<= bsv_startbit] End bit number part of the bitset (based at `bsv_buf.bb_base') */
+	unsigned int    bsv_bflags;   /* [const] Buffer flags (Set of `Dee_BUFFER_F*'; of relevance is `Dee_BUFFER_FWRITABLE') */
 } BitsetView;
 
 #define BitsetView_Check(ob) /* BitsetView is final, so exact check */ \
 	DeeObject_InstanceOfExact(ob, &BitsetView_Type)
-#define BitsetView_IsWritable(ob) ((ob)->bsi_bflags & Dee_BUFFER_FWRITABLE)
-#define BitsetView_GetBitset(ob)  ((bitset_t *)(ob)->bsi_buf.bb_base)
-#define BitsetView_GetNBits(ob)   ((ob)->bsi_endbit - (ob)->bsi_startbit)
+#define BitsetView_IsWritable(ob) ((ob)->bsv_bflags & Dee_BUFFER_FWRITABLE)
+#define BitsetView_GetBitset(ob)  ((bitset_t *)(ob)->bsv_buf.bb_base)
+#define BitsetView_GetNBits(ob)   ((ob)->bsv_endbit - (ob)->bsv_startbit)
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *bsi_owner;  /* [1..1][const] Either the Bitset or BitsetView that is being iterated */
-	bitset_t       *bsi_bitset; /* [1..1][const] Base address of the bitset begin iterated */
-	size_t          bsi_nbits;  /* [const] # of bits at which iteration should be stopped. */
-	size_t          bsi_bitno;  /* [<= bsi_nbits][lock(ATOMIC)] Next bitno to iterate. */
+	DREF DeeObject *bsi_owner;    /* [1..1][const] Either the Bitset or BitsetView that is being iterated */
+	bitset_t       *bsi_bitset;   /* [1..1][const] Base address of the bitset begin iterated */
+	size_t          bsi_startbit; /* [const][<= bsi_endbit] Staring bit number */
+	size_t          bsi_endbit;   /* [const][>= bsi_startbit] End bit number */
+	size_t          bsi_bitno;    /* [<= bsi_nbits][lock(ATOMIC)] Next bitno to iterate. */
 } BitsetIterator;
 
 #define BitsetIterator_Check(ob) /* BitsetIterator is final, so exact check */ \
 	DeeObject_InstanceOfExact(ob, &BitsetIterator_Type)
-
-/* Return the bit number where iteration started (and
- * where it gets reset to when the iterator is rewound) */
-#define BitsetIterator_GetStartBit(self)                \
-	(BitsetView_Check((self)->bsi_owner)               \
-	 ? ((BitsetView *)(self)->bsi_owner)->bsi_startbit \
-	 : 0)
-
-/* Return the bit number where iteration will end */
-#define BitsetIterator_GetEndBit(self) \
-	((self)->bsi_nbits)
 
 
 
@@ -446,8 +436,8 @@ PRIVATE ATTR_IN(2) ATTR_OUT(1) void DCALL
 bitset_ref_fromview(struct bitset_ref *__restrict self,
                     BitsetView const *__restrict view) {
 	self->bsr_bitset   = BitsetView_GetBitset(view);
-	self->bsr_startbit = view->bsi_startbit;
-	self->bsr_endbit   = view->bsi_endbit;
+	self->bsr_startbit = view->bsv_startbit;
+	self->bsr_endbit   = view->bsv_endbit;
 	bitset_ref_fix(self);
 }
 
@@ -646,9 +636,10 @@ bs_iter(Bitset *__restrict self) {
 		goto err;
 	result->bsi_owner = (DREF DeeObject *)self;
 	Dee_Incref(self);
-	result->bsi_bitset = self->bs_bitset;
-	result->bsi_nbits  = self->bs_nbits;
-	result->bsi_bitno  = 0;
+	result->bsi_bitset   = self->bs_bitset;
+	result->bsi_startbit = 0;
+	result->bsi_endbit   = self->bs_nbits;
+	result->bsi_bitno    = 0;
 	DeeObject_Init(result, &BitsetIterator_Type);
 	return result;
 err:
@@ -717,16 +708,16 @@ bs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
-	result->bsi_owner = (DREF DeeObject *)self;
+	result->bsv_owner = (DREF DeeObject *)self;
 	Dee_Incref(self);
-	result->bsi_buf.bb_base = self->bs_bitset;
-	result->bsi_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
+	result->bsv_buf.bb_base = self->bs_bitset;
+	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
 #ifndef __INTELLISENSE__
-	result->bsi_buf.bb_put = NULL;
+	result->bsv_buf.bb_put = NULL;
 #endif /* !__INTELLISENSE__ */
-	result->bsi_startbit = range.sr_start;
-	result->bsi_endbit   = range.sr_end;
-	result->bsi_bflags   = Dee_BUFFER_FWRITABLE;
+	result->bsv_startbit = range.sr_start;
+	result->bsv_endbit   = range.sr_end;
+	result->bsv_bflags   = Dee_BUFFER_FWRITABLE;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -818,6 +809,356 @@ bs_getbuf(Bitset *__restrict self,
 	info->bb_size = BITSET_SIZEOF(self->bs_nbits);
 	return 0;
 }
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_flip(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
+	switch (argc) {
+	case 0:
+		bitset_flipall_and_zero_unused_bits(self->bs_bitset, self->bs_nbits);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= self->bs_nbits) {
+			bs_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchflip(self->bs_bitset, index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		if (end > self->bs_nbits)
+			end = self->bs_nbits;
+		if (start > end)
+			start = end;
+		bitset_nflip(self->bs_bitset, start, end);
+	}	break;
+
+	default:
+		err_invalid_argc("flip", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_set(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
+	switch (argc) {
+	case 0:
+		bitset_setall_and_zero_unused_bits(self->bs_bitset, self->bs_nbits);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= self->bs_nbits) {
+			bs_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchset(self->bs_bitset, index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		if (end > self->bs_nbits)
+			end = self->bs_nbits;
+		if (start > end)
+			start = end;
+		bitset_nset(self->bs_bitset, start, end);
+	}	break;
+
+	default:
+		err_invalid_argc("set", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_clear(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
+	switch (argc) {
+	case 0:
+		bitset_clearall(self->bs_bitset, self->bs_nbits);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= self->bs_nbits) {
+			bs_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchclear(self->bs_bitset, index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		if (end > self->bs_nbits)
+			end = self->bs_nbits;
+		if (start > end)
+			start = end;
+		bitset_nclear(self->bs_bitset, start, end);
+	}	break;
+
+	default:
+		err_invalid_argc("clear", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err:
+	return NULL;
+}
+
+PRIVATE DEFINE_KWLIST(kwlist_start_end, { K(start), K(end), KEND });
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_popcount(Bitset *__restrict self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":popcount",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_npopcount(self->bs_bitset, start, end);
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_any(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":any",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	return_bool(bitset_nanyset(self->bs_bitset, start, end));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_all(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":all",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	return_bool(bitset_nallset(self->bs_bitset, start, end));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_ffs(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ffs",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nffs(self->bs_bitset, start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_ffc(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ffc",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nffc(self->bs_bitset, start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_fls(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":fls",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nfls(self->bs_bitset, start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_flc(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":flc",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nflc(self->bs_bitset, start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_clz(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":clz",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nfls(self->bs_bitset, start, end);
+	if (result >= end)
+		result = (start - 1);
+	return DeeInt_NewSize((end - 1) - result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_ctz(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ctz",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nffs(self->bs_bitset, start, end);
+	if (result > end)
+		result = end;
+	return DeeInt_NewSize(result - start);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_clo(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":clo",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nflc(self->bs_bitset, start, end);
+	if (result >= end)
+		result = (start - 1);
+	return DeeInt_NewSize((end - 1) - result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_cto(Bitset *__restrict self, size_t argc,
+       DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":cto",
+	                    &start, &end))
+		goto err;
+	if (end > self->bs_nbits)
+		end = self->bs_nbits;
+	if (start > end)
+		start = end;
+	result = bitset_nffc(self->bs_bitset, start, end);
+	if (result > end)
+		result = end;
+	return DeeInt_NewSize(result - start);
+err:
+	return NULL;
+}
+
 
 PRIVATE DEFINE_KWLIST(kwlist_bitno, { K(bitno), KEND });
 
@@ -1277,24 +1618,129 @@ PRIVATE struct type_buffer bs_buffer = {
 };
 
 PRIVATE struct type_method tpconst bs_methods[] = {
-	/* TODO: flip()  (flip all) */
-	/* TODO: flip(bitno:?Dint) */
-	/* TODO: flip(start:?Dint,end:?Dint) */
+	TYPE_METHOD_F("flip", &bs_flip, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Flip all bits\n"
+	              "\n"
 
-	/* TODO: set()  (set all) */
-	/* TODO: set(bitno:?Dint) */
-	/* TODO: set(start:?Dint,end:?Dint) */
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Flip the state of @bitno, returning its old state. This is an atomic operation\n"
+	              "\n"
 
-	/* TODO: clear()  (clear all) */
-	/* TODO: clear(bitno:?Dint) */
-	/* TODO: clear(start:?Dint,end:?Dint) */
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Flip the state of all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 
-	/* TODO: any(start=!0,end=!-1)->?Dbool */
-	/* TODO: all(start=!0,end=!-1)->?Dbool */
-	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
+	TYPE_METHOD_F("set", &bs_set, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Set all bits\n"
+	              "\n"
+
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Set @bitno, returning its old state. This is an atomic operation. "
+	              /**/ "Same as ${!this.insert(bitno)}.\n"
+	              "\n"
+
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Set all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+
+	TYPE_METHOD_F("clear", &bs_clear, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Clear all bits\n"
+	              "\n"
+
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Clear @bitno, returning its old state. This is an atomic operation. "
+	              /**/ "Same as ${this.remove(bitno)}.\n"
+	              "\n"
+
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Clear all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+
+	TYPE_KWMETHOD_F("popcount", &bs_popcount, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Return the # of 1-bits in #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("any", &bs_any, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("all", &bs_all, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if all bits in #C{[start,end)} are on. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffs", &bs_ffs, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffc", &bs_ffc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("fls", &bs_fls, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("flc", &bs_flc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clz", &bs_clz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ctz", &bs_ctz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clo", &bs_clo, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("cto", &bs_cto, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_KWMETHOD_F("insert", &bs_insert, METHOD_FNOREFESCAPE,
 	                "(bitno:?Dint)->?Dbool\n"
 	                "#tIntegerOverflow{@bitno is negative or too large}"
@@ -1375,7 +1821,8 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "\n"
 
 	                         "#->\n"
-	                         "Returns the number of 1-bits (that is: the population count) of this ?.\n"
+	                         "Returns the number of 1-bits (that is: the population count) of this ?.. "
+	                         /**/ "Same as ${this.popcount(0, this.nbits)}\n"
 	                         "\n"
 
 	                         "move:=->\n"
@@ -1581,16 +2028,16 @@ robs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
-	result->bsi_owner = (DREF DeeObject *)self;
+	result->bsv_owner = (DREF DeeObject *)self;
 	Dee_Incref(self);
-	result->bsi_buf.bb_base = self->bs_bitset;
-	result->bsi_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
+	result->bsv_buf.bb_base = self->bs_bitset;
+	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
 #ifndef __INTELLISENSE__
-	result->bsi_buf.bb_put = NULL;
+	result->bsv_buf.bb_put = NULL;
 #endif /* !__INTELLISENSE__ */
-	result->bsi_startbit = range.sr_start;
-	result->bsi_endbit   = range.sr_end;
-	result->bsi_bflags   = Dee_BUFFER_FREADONLY;
+	result->bsv_startbit = range.sr_start;
+	result->bsv_endbit   = range.sr_end;
+	result->bsv_bflags   = Dee_BUFFER_FREADONLY;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -1612,6 +2059,18 @@ err:
 }
 
 #define robs_getbuf bs_getbuf
+
+#define robs_popcount bs_popcount
+#define robs_any      bs_any
+#define robs_all      bs_all
+#define robs_ffs      bs_ffs
+#define robs_ffc      bs_ffc
+#define robs_fls      bs_fls
+#define robs_flc      bs_flc
+#define robs_clz      bs_clz
+#define robs_ctz      bs_ctz
+#define robs_clo      bs_clo
+#define robs_cto      bs_cto
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 robs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
@@ -1752,12 +2211,76 @@ PRIVATE struct type_buffer robs_buffer = {
 };
 
 PRIVATE struct type_method tpconst robs_methods[] = {
-	/* TODO: any(start=!0,end=!-1)->?Dbool */
-	/* TODO: all(start=!0,end=!-1)->?Dbool */
-	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
+	TYPE_KWMETHOD_F("popcount", &robs_popcount, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Return the # of 1-bits in #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("any", &robs_any, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("all", &robs_all, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if all bits in #C{[start,end)} are on. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffs", &robs_ffs, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffc", &robs_ffc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("fls", &robs_fls, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("flc", &robs_flc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clz", &robs_clz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ctz", &robs_ctz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clo", &robs_clo, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("cto", &robs_cto, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 	TYPE_METHOD("bytes", &robs_bytes,
 	            "->?DBytes\n"
 	            "Returns a view for the underlying bytes of ?."),
@@ -1819,7 +2342,8 @@ INTERN DeeTypeObject RoBitset_Type = {
 	                         "\n"
 
 	                         "#->\n"
-	                         "Returns the number of 1-bits (that is: the population count) of this ?.\n"
+	                         "Returns the number of 1-bits (that is: the population count) of this ?.. "
+	                         /**/ "Same as ${this.popcount(0, this.nbits)}\n"
 	                         "\n"
 
 	                         "bool->\n"
@@ -1930,8 +2454,8 @@ bsv_err_readonly(BitsetView *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bsv_nsi_getsize(BitsetView *__restrict self) {
 	return bitset_npopcount(BitsetView_GetBitset(self),
-	                        self->bsi_startbit,
-	                        self->bsi_endbit);
+	                        self->bsv_startbit,
+	                        self->bsv_endbit);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1944,7 +2468,7 @@ bsv_nsi_insert(BitsetView *self, DeeObject *key) {
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	return bitset_atomic_fetchset(BitsetView_GetBitset(self),
-	                              self->bsi_startbit + bitno)
+	                              self->bsv_startbit + bitno)
 	       ? 0
 	       : 1;
 err_readonly:
@@ -1965,7 +2489,7 @@ bsv_nsi_remove(BitsetView *self, DeeObject *key) {
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	return bitset_atomic_fetchclear(BitsetView_GetBitset(self),
-	                                self->bsi_startbit + bitno)
+	                                self->bsv_startbit + bitno)
 	       ? 1
 	       : 0;
 err_readonly:
@@ -1981,10 +2505,10 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bsv_hash(BitsetView *__restrict self) {
 	size_t bitno;
 	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	for (bitno = self->bsi_startbit;
-	     bitno < self->bsi_endbit; ++bitno) {
+	for (bitno = self->bsv_startbit;
+	     bitno < self->bsv_endbit; ++bitno) {
 		if (bitset_test(BitsetView_GetBitset(self), bitno)) {
-			size_t index = bitno - self->bsi_startbit;
+			size_t index = bitno - self->bsv_startbit;
 			result = Dee_HashCombine(result, index);
 		}
 	}
@@ -2017,7 +2541,6 @@ bitset_ref_cmp_eq(struct bitset_ref *__restrict a,
 			if (a_nbits != b_nbits)
 				goto nope; /* "a" has a different greatest-set-bit */
 		}
-		goto nope;
 	}
 	ASSERT(a->bsr_startbit <= _BITSET_WORD_BMSK);
 	ASSERT(b->bsr_startbit <= _BITSET_WORD_BMSK);
@@ -2120,9 +2643,10 @@ bsv_iter(BitsetView *__restrict self) {
 		goto err;
 	result->bsi_owner = (DREF DeeObject *)self;
 	Dee_Incref(self);
-	result->bsi_bitset = BitsetView_GetBitset(self);
-	result->bsi_nbits  = self->bsi_endbit;
-	result->bsi_bitno  = self->bsi_startbit;
+	result->bsi_bitset   = BitsetView_GetBitset(self);
+	result->bsi_startbit = self->bsv_startbit;
+	result->bsi_endbit   = self->bsv_endbit;
+	result->bsi_bitno    = self->bsv_startbit;
 	DeeObject_Init(result, &BitsetIterator_Type);
 	return result;
 err:
@@ -2141,7 +2665,7 @@ bsv_contains(BitsetView *self, DeeObject *key) {
 		goto err;
 	return_bool(bitno < BitsetView_GetNBits(self) &&
 	            bitset_test(BitsetView_GetBitset(self),
-	                        bitno + self->bsi_startbit));
+	                        bitno + self->bsv_startbit));
 err:
 	return NULL;
 }
@@ -2200,18 +2724,18 @@ bsv_getrange_i(BitsetView *self, dssize_t start, dssize_t end) {
 	if unlikely(!result)
 		goto err;
 	DeeSeqRange_Clamp(&range, start, end, BitsetView_GetNBits(self));
-	result->bsi_owner = (DREF DeeObject *)self;
-	result->bsi_buf.bb_base = self->bsi_buf.bb_base;
-	result->bsi_buf.bb_size = self->bsi_buf.bb_size;
+	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
+	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
 #ifndef __INTELLISENSE__
-	result->bsi_buf.bb_put = self->bsi_buf.bb_put;
-	if (!result->bsi_buf.bb_put)
-		result->bsi_owner = self->bsi_owner;
+	result->bsv_buf.bb_put = self->bsv_buf.bb_put;
+	if (!result->bsv_buf.bb_put)
+		result->bsv_owner = self->bsv_owner;
 #endif /* !__INTELLISENSE__ */
-	Dee_Incref(result->bsi_owner);
-	result->bsi_startbit = range.sr_start + self->bsi_startbit;
-	result->bsi_endbit   = range.sr_end + self->bsi_startbit;
-	result->bsi_bflags   = self->bsi_bflags;
+	Dee_Incref(result->bsv_owner);
+	result->bsv_startbit = range.sr_start + self->bsv_startbit;
+	result->bsv_endbit   = range.sr_end + self->bsv_startbit;
+	result->bsv_bflags   = self->bsv_bflags;
 	DeeObject_Init(result, &BitsetView_Type);
 	return result;
 err:
@@ -2246,8 +2770,8 @@ bsv_delrange(BitsetView *self, DeeObject *start, DeeObject *end) {
 		goto err_readonly;
 	DeeSeqRange_Clamp(&range, start_i, end_i, BitsetView_GetNBits(self));
 	bitset_nclear(BitsetView_GetBitset(self),
-	              self->bsi_startbit + range.sr_start,
-	              self->bsi_startbit + range.sr_end);
+	              self->bsv_startbit + range.sr_start,
+	              self->bsv_startbit + range.sr_end);
 	return 0;
 err_readonly:
 	return bsv_err_readonly(self);
@@ -2272,24 +2796,24 @@ bsv_setrange(BitsetView *self, DeeObject *start,
 	if (DeeBool_Check(value)) {
 		if (DeeBool_IsTrue(value)) {
 			bitset_nset(BitsetView_GetBitset(self),
-			            self->bsi_startbit + range.sr_start,
-			            self->bsi_startbit + range.sr_end);
+			            self->bsv_startbit + range.sr_start,
+			            self->bsv_startbit + range.sr_end);
 		} else {
 			bitset_nclear(BitsetView_GetBitset(self),
-			              self->bsi_startbit + range.sr_start,
-			              self->bsi_startbit + range.sr_end);
+			              self->bsv_startbit + range.sr_start,
+			              self->bsv_startbit + range.sr_end);
 		}
 	} else if (DeeNone_Check(value)) {
 		bitset_nclear(BitsetView_GetBitset(self),
-		              self->bsi_startbit + range.sr_start,
-		              self->bsi_startbit + range.sr_end);
+		              self->bsv_startbit + range.sr_start,
+		              self->bsv_startbit + range.sr_end);
 	} else {
 		int result;
 		DREF Bitset *value_bitset;
 		struct bitset_ref dst, src;
 		dst.bsr_bitset   = BitsetView_GetBitset(self);
-		dst.bsr_startbit = self->bsi_startbit + range.sr_start;
-		dst.bsr_endbit   = self->bsi_startbit + range.sr_end;
+		dst.bsr_startbit = self->bsv_startbit + range.sr_start;
+		dst.bsr_endbit   = self->bsv_startbit + range.sr_end;
 		bitset_ref_fix(&dst);
 		if (DeeObject_AsBitset(value, &src))
 			return bitset_ref_assign(&dst, &src);
@@ -2315,14 +2839,419 @@ bsv_getbuf(BitsetView *__restrict self,
            DeeBuffer *__restrict info,
            unsigned int flags) {
 	struct bitset_ref ref;
-	if ((flags & Dee_BUFFER_FWRITABLE) && !(self->bsi_bflags & Dee_BUFFER_FWRITABLE))
+	if ((flags & Dee_BUFFER_FWRITABLE) && !(self->bsv_bflags & Dee_BUFFER_FWRITABLE))
 		goto err_readonly;
 	bitset_ref_fromview(&ref, self);
+	if (ref.bsr_startbit || (ref.bsr_endbit & _BITSET_WORD_BMSK)) {
+		/* Bitset view isn't byte-aligned :( */
+		return DeeError_Throwf(&DeeError_BufferError,
+		                       "Cannot access bytes of BitsetView: underlying memory isn't byte-aligned "
+		                       "(unaligned bits are: %" PRFuSIZ " leading, %" PRFuSIZ " trailing)",
+		                       (size_t)(ref.bsr_startbit),
+		                       (size_t)(ref.bsr_endbit & _BITSET_WORD_BMSK));
+	}
 	info->bb_base = ref.bsr_bitset;
-	info->bb_size = (ref.bsr_endbit + _BITSET_WORD_BMSK) >> _BITSET_WORD_SHFT;
+	info->bb_size = ref.bsr_endbit >> _BITSET_WORD_SHFT;
 	return 0;
 err_readonly:
 	return bsv_err_readonly(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_flip(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
+	if unlikely(!BitsetView_IsWritable(self))
+		goto err_readonly;
+	switch (argc) {
+	case 0:
+		bitset_nflip(BitsetView_GetBitset(self),
+		             self->bsv_startbit,
+		             self->bsv_endbit);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= BitsetView_GetNBits(self)) {
+			bsv_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchflip(BitsetView_GetBitset(self),
+		                                    self->bsv_startbit + index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end, nbits;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		nbits = BitsetView_GetNBits(self);
+		if (end > nbits)
+			end = nbits;
+		if (start > end)
+			start = end;
+		bitset_nflip(BitsetView_GetBitset(self),
+		             self->bsv_startbit + start,
+		             self->bsv_startbit + end);
+	}	break;
+
+	default:
+		err_invalid_argc("flip", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err_readonly:
+	bsv_err_readonly(self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_set(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
+	if unlikely(!BitsetView_IsWritable(self))
+		goto err_readonly;
+	switch (argc) {
+	case 0:
+		bitset_nset(BitsetView_GetBitset(self),
+		            self->bsv_startbit, self->bsv_endbit);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= BitsetView_GetNBits(self)) {
+			bsv_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchset(BitsetView_GetBitset(self),
+		                                   self->bsv_startbit + index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end, nbits;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		nbits = BitsetView_GetNBits(self);
+		if (end > nbits)
+			end = nbits;
+		if (start > end)
+			start = end;
+		bitset_nset(BitsetView_GetBitset(self),
+		            self->bsv_startbit + start,
+		            self->bsv_startbit + end);
+	}	break;
+
+	default:
+		err_invalid_argc("set", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err_readonly:
+	bsv_err_readonly(self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_clear(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
+	if unlikely(!BitsetView_IsWritable(self))
+		goto err_readonly;
+	switch (argc) {
+	case 0:
+		bitset_nclear(BitsetView_GetBitset(self),
+		              self->bsv_startbit, self->bsv_endbit);
+		break;
+
+	case 1: {
+		size_t index;
+		bool old_state;
+		if (DeeObject_AsSize(argv[0], &index))
+			goto err;
+		if unlikely(index >= BitsetView_GetNBits(self)) {
+			bsv_err_bad_index(self, index);
+			goto err;
+		}
+		old_state = bitset_atomic_fetchclear(BitsetView_GetBitset(self),
+		                                     self->bsv_startbit + index);
+		return_bool_(old_state);
+	}	break;
+
+	case 2: {
+		size_t start, end, nbits;
+		if (DeeObject_AsSize(argv[0], &start))
+			goto err;
+		if (DeeObject_AsSize(argv[1], &end))
+			goto err;
+		nbits = BitsetView_GetNBits(self);
+		if (end > nbits)
+			end = nbits;
+		if (start > end)
+			start = end;
+		bitset_nclear(BitsetView_GetBitset(self),
+		              self->bsv_startbit + start,
+		              self->bsv_startbit + end);
+	}	break;
+
+	default:
+		err_invalid_argc("clear", argc, 0, 2);
+		goto err;
+	}
+	return_none;
+err_readonly:
+	bsv_err_readonly(self);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_popcount(BitsetView *__restrict self, size_t argc,
+             DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":popcount",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	result = bitset_npopcount(BitsetView_GetBitset(self),
+	                          self->bsv_startbit + start,
+	                          self->bsv_startbit + end);
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_any(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":any",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	return_bool(bitset_nanyset(BitsetView_GetBitset(self),
+	                           self->bsv_startbit + start,
+	                           self->bsv_startbit + end));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_all(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":all",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	return_bool(bitset_nallset(BitsetView_GetBitset(self),
+	                           self->bsv_startbit + start,
+	                           self->bsv_startbit + end));
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_ffs(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ffs",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nffs(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result - self->bsv_startbit);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_ffc(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ffc",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nffc(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result - self->bsv_startbit);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_fls(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":fls",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nfls(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result - self->bsv_startbit);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_flc(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":flc",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nflc(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		return_none;
+	return DeeInt_NewSize(result - self->bsv_startbit);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_clz(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":clz",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nfls(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		result = (start - 1);
+	return DeeInt_NewSize((end - 1) - result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_ctz(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":ctz",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nffs(BitsetView_GetBitset(self), start, end);
+	if (result > end)
+		result = end;
+	return DeeInt_NewSize(result - start);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_clo(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":clo",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nflc(BitsetView_GetBitset(self), start, end);
+	if (result >= end)
+		result = (start - 1);
+	return DeeInt_NewSize((end - 1) - result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_cto(BitsetView *__restrict self, size_t argc,
+        DeeObject *const *argv, DeeObject *kw) {
+	size_t result;
+	size_t start = 0, end = (size_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_start_end,
+	                    "|" UNPdSIZ UNPdSIZ ":cto",
+	                    &start, &end))
+		goto err;
+	if (end > BitsetView_GetNBits(self))
+		end = BitsetView_GetNBits(self);
+	if (start > end)
+		start = end;
+	start += self->bsv_startbit;
+	end += self->bsv_startbit;
+	result = bitset_nffc(BitsetView_GetBitset(self), start, end);
+	if (result > end)
+		result = end;
+	return DeeInt_NewSize(result - start);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2336,7 +3265,7 @@ bsv_insert(BitsetView *__restrict self, size_t argc,
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	return_bool(!bitset_atomic_fetchset(BitsetView_GetBitset(self),
-	                                    self->bsi_startbit + bitno));
+	                                    self->bsv_startbit + bitno));
 err_readonly:
 	bsv_err_readonly(self);
 	goto err;
@@ -2357,7 +3286,7 @@ bsv_remove(BitsetView *__restrict self, size_t argc,
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
 	return_bool(bitset_atomic_fetchclear(BitsetView_GetBitset(self),
-	                                     self->bsi_startbit + bitno));
+	                                     self->bsv_startbit + bitno));
 err_readonly:
 	bsv_err_readonly(self);
 	goto err;
@@ -2376,12 +3305,12 @@ bsv_bytes(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	bitset_ref_fromview(&ref, self);
 	owner = (DeeObject *)self;
 #ifndef __INTELLISENSE__
-	if (!self->bsi_buf.bb_put)
-		owner = self->bsi_owner;
+	if (!self->bsv_buf.bb_put)
+		owner = self->bsv_owner;
 #endif /* !__INTELLISENSE__ */
 	return DeeBytes_NewView(owner, ref.bsr_bitset,
 	                        (ref.bsr_endbit + _BITSET_WORD_BMSK) >> _BITSET_WORD_SHFT,
-	                        self->bsi_bflags);
+	                        self->bsv_bflags);
 err:
 	return NULL;
 }
@@ -2391,8 +3320,8 @@ bsv_frozen(BitsetView *__restrict self) {
 	DREF Bitset *result;
 	struct bitset_ref ref;
 	size_t ref_nbits;
-	if (!(self->bsi_bflags & Dee_BUFFER_FWRITABLE)) {
-		DeeTypeObject *tp_owner = Dee_TYPE(self->bsi_owner);
+	if (!(self->bsv_bflags & Dee_BUFFER_FWRITABLE)) {
+		DeeTypeObject *tp_owner = Dee_TYPE(self->bsv_owner);
 		while (tp_owner && !tp_owner->tp_buffer)
 			tp_owner = DeeType_Base(tp_owner);
 		if (tp_owner && tp_owner->tp_buffer &&
@@ -2426,33 +3355,33 @@ bsv_nbits(BitsetView *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_ctor(BitsetView *__restrict self) {
 	Dee_Incref(Dee_EmptyBytes);
-	self->bsi_owner       = Dee_EmptyBytes;
-	self->bsi_buf.bb_base = DeeBytes_DATA(Dee_EmptyBytes);
-	self->bsi_buf.bb_size = 0;
+	self->bsv_owner       = Dee_EmptyBytes;
+	self->bsv_buf.bb_base = DeeBytes_DATA(Dee_EmptyBytes);
+	self->bsv_buf.bb_size = 0;
 #ifndef __INTELLISENSE__
-	self->bsi_buf.bb_put = NULL;
+	self->bsv_buf.bb_put = NULL;
 #endif /* !__INTELLISENSE__ */
-	self->bsi_startbit = 0;
-	self->bsi_endbit   = 0;
-	self->bsi_bflags   = Dee_BUFFER_FREADONLY;
+	self->bsv_startbit = 0;
+	self->bsv_endbit   = 0;
+	self->bsv_bflags   = Dee_BUFFER_FREADONLY;
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_copy(BitsetView *__restrict self,
          BitsetView *__restrict other) {
-	self->bsi_owner = other->bsi_owner;
-	self->bsi_buf.bb_base = other->bsi_buf.bb_base;
-	self->bsi_buf.bb_size = other->bsi_buf.bb_size;
+	self->bsv_owner = other->bsv_owner;
+	self->bsv_buf.bb_base = other->bsv_buf.bb_base;
+	self->bsv_buf.bb_size = other->bsv_buf.bb_size;
 #ifndef __INTELLISENSE__
-	self->bsi_buf.bb_put = NULL;
-	if (other->bsi_buf.bb_put)
-		self->bsi_owner = (DREF DeeObject *)other;
+	self->bsv_buf.bb_put = NULL;
+	if (other->bsv_buf.bb_put)
+		self->bsv_owner = (DREF DeeObject *)other;
 #endif /* !__INTELLISENSE__ */
-	Dee_Incref(self->bsi_owner);
-	self->bsi_startbit = other->bsi_startbit;
-	self->bsi_endbit   = other->bsi_endbit;
-	self->bsi_bflags   = other->bsi_bflags;
+	Dee_Incref(self->bsv_owner);
+	self->bsv_startbit = other->bsv_startbit;
+	self->bsv_endbit   = other->bsv_endbit;
+	self->bsv_bflags   = other->bsv_bflags;
 	return 0;
 }
 
@@ -2499,19 +3428,61 @@ bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 			goto err_args;
 		ob = argv[0];
 	}
-	if (DeeObject_GetBuf(ob, &self->bsi_buf, flags))
-		goto err;
-	nbits = self->bsi_buf.bb_size << _BITSET_WORD_SHFT;
-	if (start > nbits)
-		start = nbits;
+
+	/* Special casing for when "ob" is bitset-like.
+	 *
+	 * This is needed so we're able to load other bitset views,
+	 * even when those views contain unaligned bits (since the
+	 * normal `DeeObject_GetBuf()' interface throws an error if
+	 * there are unaligned bits) */
+	if (Bitset_Check(ob)) {
+		Bitset *o;
+handle_bitset_ob:
+		o = (Bitset *)ob;
+		self->bsv_buf.bb_base = o->bs_bitset;
+		self->bsv_buf.bb_size = BITSET_SIZEOF(o->bs_nbits);
+#ifndef __INTELLISENSE__
+		self->bsv_buf.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+		nbits = o->bs_nbits;
+	} else if (RoBitset_Check(ob)) {
+		if (flags & Dee_BUFFER_FWRITABLE)
+			goto err_readonly;
+		goto handle_bitset_ob;
+	} else if (BitsetView_Check(ob)) {
+		BitsetView *o = (BitsetView *)ob;
+		self->bsv_buf.bb_base = o->bsv_buf.bb_base;
+		self->bsv_buf.bb_size = o->bsv_buf.bb_size;
+		nbits = BitsetView_GetNBits(o);
+		start += o->bsv_startbit;
+		end += o->bsv_startbit;
+#ifndef __INTELLISENSE__
+		self->bsv_buf.bb_put = NULL;
+		if (!o->bsv_buf.bb_put)
+			ob = o->bsv_owner; /* Inline owner */
+#endif /* !__INTELLISENSE__ */
+	} else {
+		/* Fallback: load byte-aligned buffer from "ob" */
+		if (DeeObject_GetBuf(ob, &self->bsv_buf, flags))
+			goto err;
+		nbits = self->bsv_buf.bb_size << _BITSET_WORD_SHFT;
+	}
+
 	if (end > nbits)
 		end = nbits;
-	self->bsi_owner = ob;
+	if (start > end)
+		start = end;
+	self->bsv_owner = ob;
 	Dee_Incref(ob);
-	self->bsi_startbit = start;
-	self->bsi_endbit   = end;
-	self->bsi_bflags   = flags;
+	self->bsv_startbit = start;
+	self->bsv_endbit   = end;
+	self->bsv_bflags   = flags;
 	return 0;
+err_readonly:
+	DeeError_Throwf(&DeeError_BufferError,
+	                "Cannot write to read-only buffer of type %k",
+	                Dee_TYPE(ob));
+	goto err;
 err_args:
 	err_invalid_argc("BitsetView", argc, 1, 4);
 	goto err;
@@ -2525,13 +3496,13 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 bsv_fini(BitsetView *__restrict self) {
-	DeeObject_PutBuf(self->bsi_owner, &self->bsi_buf, self->bsi_bflags);
-	Dee_Decref(self->bsi_owner);
+	DeeObject_PutBuf(self->bsv_owner, &self->bsv_buf, self->bsv_bflags);
+	Dee_Decref(self->bsv_owner);
 }
 
 PRIVATE NONNULL((1)) void DCALL
 bsv_visit(BitsetView *__restrict self, dvisit_t proc, void *arg) {
-	Dee_Visit(self->bsi_owner);
+	Dee_Visit(self->bsv_owner);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -2584,7 +3555,7 @@ bsv_inplaceop_bitset(BitsetView *self, struct bitset_ref *__restrict ref, unsign
 
 	ASSERT(copy_bits == bitset_ref_nbits(ref));
 	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
-	bitset_nbitop(BitsetView_GetBitset(self), self->bsi_startbit,
+	bitset_nbitop(BitsetView_GetBitset(self), self->bsv_startbit,
 	              ref->bsr_bitset, ref->bsr_startbit, copy_bits, op);
 	if (copy_bits < self_bits) {
 		if (op == BITSET_OP_AND)
@@ -2645,7 +3616,7 @@ bsv_inv(BitsetView *__restrict self) {
 		goto err;
 	bitset_ncopy0_and_maybe_zero_unused_bits(result->bs_bitset,
 	                                         BitsetView_GetBitset(self),
-	                                         self->bsi_startbit, self_bits);
+	                                         self->bsv_startbit, self_bits);
 	bitset_flipall_and_zero_unused_bits(result->bs_bitset, self_bits);
 	result->bs_nbits = self_bits;
 	DeeObject_Init(result, &RoBitset_Type);
@@ -2748,27 +3719,27 @@ bsv_xor(BitsetView *self, DeeObject *other) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_bool(BitsetView *self) {
-	return bitset_nanyset(BitsetView_GetBitset(self), self->bsi_startbit, self->bsi_endbit) ? 1 : 0;
+	return bitset_nanyset(BitsetView_GetBitset(self), self->bsv_startbit, self->bsv_endbit) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
 bsv_printrepr(BitsetView *__restrict self, dformatprinter printer, void *arg) {
 	dssize_t temp, result;
-	DeeObject *owner = self->bsi_owner;
+	DeeObject *owner = self->bsv_owner;
 	result = DeeFormat_Printf(printer, arg, "BitsetView(%r", owner);
 	if unlikely(result < 0)
 		goto done;
-	if (self->bsi_bflags & Dee_BUFFER_FWRITABLE)
+	if (self->bsv_bflags & Dee_BUFFER_FWRITABLE)
 		DO(err, DeeFormat_PRINT(printer, arg, ", \"w\""));
-	if (self->bsi_startbit != 0) {
+	if (self->bsv_startbit != 0) {
 do_print_start_and_end:
 		DO(err, DeeFormat_Printf(printer, arg, ", %" PRFuSIZ ", %" PRFuSIZ,
-		                         self->bsi_startbit, self->bsi_endbit));
+		                         self->bsv_startbit, self->bsv_endbit));
 	} else {
-		size_t max_endbit = self->bsi_buf.bb_size << _BITSET_WORD_SHFT;
+		size_t max_endbit = self->bsv_buf.bb_size << _BITSET_WORD_SHFT;
 		if (Bitset_Check(owner))
 			max_endbit = ((Bitset *)owner)->bs_nbits;
-		if (self->bsi_endbit != max_endbit)
+		if (self->bsv_endbit != max_endbit)
 			goto do_print_start_and_end;
 	}
 	DO(err, DeeFormat_PRINT(printer, arg, ")"));
@@ -2855,24 +3826,130 @@ PRIVATE struct type_buffer bsv_buffer = {
 };
 
 PRIVATE struct type_method tpconst bsv_methods[] = {
-	/* TODO: flip()  (flip all) */
-	/* TODO: flip(bitno:?Dint) */
-	/* TODO: flip(start:?Dint,end:?Dint) */
+	TYPE_METHOD_F("flip", &bsv_flip, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Flip all bits\n"
+	              "\n"
 
-	/* TODO: set()  (set all) */
-	/* TODO: set(bitno:?Dint) */
-	/* TODO: set(start:?Dint,end:?Dint) */
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Flip the state of @bitno, returning its old state. This is an atomic operation\n"
+	              "\n"
 
-	/* TODO: clear()  (clear all) */
-	/* TODO: clear(bitno:?Dint) */
-	/* TODO: clear(start:?Dint,end:?Dint) */
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Flip the state of all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
 
-	/* TODO: any(start=!0,end=!-1)->?Dbool */
-	/* TODO: all(start=!0,end=!-1)->?Dbool */
-	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
-	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
+	TYPE_METHOD_F("set", &bsv_set, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Set all bits\n"
+	              "\n"
+
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Set @bitno, returning its old state. This is an atomic operation. "
+	              /**/ "Same as ${!this.insert(bitno)}.\n"
+	              "\n"
+
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Set all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+
+	TYPE_METHOD_F("clear", &bsv_clear, METHOD_FNOREFESCAPE,
+	              "()\n"
+	              "Clear all bits\n"
+	              "\n"
+
+	              "(bitno:?Dint)->?DBool\n"
+	              "#tIntegerOverflow{@bitno is negative or too large}"
+	              "#tValueError{@bitno is greater than or equal to ?#nbits}"
+	              "Clear @bitno, returning its old state. This is an atomic operation. "
+	              /**/ "Same as ${this.remove(bitno)}.\n"
+	              "\n"
+
+	              "(start:?Dint,end:?Dint)\n"
+	              "#tIntegerOverflow{@start or @end is negative or too large}"
+	              "Clear all bits in #C{[start,end)}. "
+	              /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	              /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+
+	TYPE_KWMETHOD_F("popcount", &bsv_popcount, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Return the # of 1-bits in #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("any", &bsv_any, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if there any bits in #C{[start,end)} are on. Same as ${this.popcount(start, end) > 0}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("all", &bsv_all, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dbool\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "Returns !t if all bits in #C{[start,end)} are on. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffs", &bsv_ffs, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstSet: find the index of the lowest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ffc", &bsv_ffc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindFirstClear: find the index of the lowest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("fls", &bsv_fls, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastSet: find the index of the greatest 1-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("flc", &bsv_flc, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?X2?Dint?N\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "FindLastClear: find the index of the greatest 0-bit that within #C{[start,end)}. "
+	                /**/ "If no such bit exists, return ?N instead. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clz", &bsv_clz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingZeroes: Return number of consecutive 0-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("ctz", &bsv_ctz, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingZeroes: Return number of consecutive 0-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("clo", &bsv_clo, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountLeadingOnes: Return number of consecutive 1-bits that exist, starting at the high end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+	TYPE_KWMETHOD_F("cto", &bsv_cto, METHOD_FNOREFESCAPE,
+	                "(start=!0,end=!-1)->?Dint\n"
+	                "#tIntegerOverflow{@start or @end is negative or too large}"
+	                "CountTrailingOnes: Return number of consecutive 1-bits that exist, starting at the low end of #C{[start,end)}. "
+	                /**/ "If @end is greater than or equal to ?#nbits, it is automatically clamped. "
+	                /**/ "If @start is greater than @end (after clamping), the call is a no-op"),
+
 	TYPE_KWMETHOD_F("insert", &bsv_insert, METHOD_FNOREFESCAPE,
 	                "(bitno:?Dint)->?Dbool\n"
 	                "#tValueError{@bitno is negative or too large}"
@@ -2905,16 +3982,16 @@ PRIVATE struct type_getset tpconst bsv_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst bsv_members[] = {
-	TYPE_MEMBER_BITFIELD_DOC("iswritable", STRUCT_CONST, BitsetView, bsi_bflags, Dee_BUFFER_FWRITABLE,
+	TYPE_MEMBER_BITFIELD_DOC("iswritable", STRUCT_CONST, BitsetView, bsv_bflags, Dee_BUFFER_FWRITABLE,
 	                         "Evaluates to ?t if @this ?. object not be written to (the inverse of ?#isreadonly)"),
-	TYPE_MEMBER_BITFIELD_DOC("ismutable", STRUCT_CONST, BitsetView, bsi_bflags, Dee_BUFFER_FWRITABLE,
+	TYPE_MEMBER_BITFIELD_DOC("ismutable", STRUCT_CONST, BitsetView, bsv_bflags, Dee_BUFFER_FWRITABLE,
 	                         "Alias for ?#iswritable, overriding ?Aismutable?DSequence"),
-	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(BitsetView, bsi_owner), "->?X2?GBitset?O"),
-	TYPE_MEMBER_FIELD_DOC("__startbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsi_startbit),
+	TYPE_MEMBER_FIELD_DOC("__owner__", STRUCT_OBJECT, offsetof(BitsetView, bsv_owner), "->?X2?GBitset?O"),
+	TYPE_MEMBER_FIELD_DOC("__startbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsv_startbit),
 	                      "Starting bit number in the buffer of ?#__owner__"),
-	TYPE_MEMBER_FIELD_DOC("__endbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsi_endbit),
+	TYPE_MEMBER_FIELD_DOC("__endbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetView, bsv_endbit),
 	                      "Ending bit number in the buffer of ?#__owner__"),
-	TYPE_MEMBER_FIELD("__flags__", STRUCT_CONST | STRUCT_UINT, offsetof(BitsetView, bsi_bflags)),
+	TYPE_MEMBER_FIELD("__flags__", STRUCT_CONST | STRUCT_UINT, offsetof(BitsetView, bsv_bflags)),
 	TYPE_MEMBER_END
 };
 
@@ -2954,7 +4031,8 @@ INTERN DeeTypeObject BitsetView_Type = {
 	                         "\n"
 
 	                         "#->\n"
-	                         "Returns the number of 1-bits (that is: the population count) of this ?.\n"
+	                         "Returns the number of 1-bits (that is: the population count) of this ?.. "
+	                         /**/ "Same as ${this.popcount(0, this.nbits)}\n"
 	                         "\n"
 
 	                         "bool->\n"
@@ -3041,7 +4119,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 				/* .tp_copy_ctor = */ (dfunptr_t)&bsv_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&bsv_init,
-				TYPE_FIXED_ALLOCATOR_GC(BitsetView)
+				TYPE_FIXED_ALLOCATOR(BitsetView)
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&bsv_fini,
@@ -3089,71 +4167,65 @@ bsiter_nii_getseq(BitsetIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bsiter_nii_getindex(BitsetIterator *__restrict self) {
-	size_t startbit = BitsetIterator_GetStartBit(self);
-	size_t endbit   = BitsetIterator_GetEndBit(self);
 	size_t bitno = atomic_read(&self->bsi_bitno);
-	if (bitno >= startbit && bitno <= endbit) /* NOTE: `<= endbit' due to final, exhausted position */
-		return bitno - startbit;
+	if (bitno >= self->bsi_startbit &&
+	    bitno <= self->bsi_endbit) /* NOTE: `<= endbit' due to final, exhausted position */
+		return bitno - self->bsi_startbit;
 	return (size_t)-2; /* Indeterminate */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_setindex(BitsetIterator *__restrict self, size_t index) {
-	size_t startbit = BitsetIterator_GetStartBit(self);
-	size_t endbit   = BitsetIterator_GetEndBit(self);
-	size_t nbits    = endbit - startbit;
+	size_t nbits = self->bsi_endbit - self->bsi_startbit;
 	if (index > nbits)
 		index = nbits;
-	atomic_write(&self->bsi_bitno, startbit + index);
+	atomic_write(&self->bsi_bitno, self->bsi_startbit + index);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_rewind(BitsetIterator *__restrict self) {
-	size_t startbit = BitsetIterator_GetStartBit(self);
+	size_t startbit = self->bsi_startbit;
 	atomic_write(&self->bsi_bitno, startbit);
 	return 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_revert(BitsetIterator *__restrict self, size_t step) {
-	size_t old_bitno, new_bitno, min_bitno;
-	min_bitno = BitsetIterator_GetStartBit(self);
+	size_t old_bitno, new_bitno;
 	do {
 		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno <= min_bitno)
+		if (old_bitno <= self->bsi_startbit)
 			return 1; /* Already at starting position */
-		if (OVERFLOW_USUB(old_bitno, step, &new_bitno) || new_bitno < min_bitno)
-			new_bitno = min_bitno;
+		if (OVERFLOW_USUB(old_bitno, step, &new_bitno) || new_bitno < self->bsi_startbit)
+			new_bitno = self->bsi_startbit;
 	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	if (new_bitno <= min_bitno)
+	if (new_bitno <= self->bsi_startbit)
 		return 1; /* Now at starting position */
 	return 2;     /* Iterator isn't at its starting position */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_advance(BitsetIterator *__restrict self, size_t step) {
-	size_t old_bitno, new_bitno, end_bitno;
-	end_bitno = BitsetIterator_GetEndBit(self);
+	size_t old_bitno, new_bitno;
 	do {
 		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno >= end_bitno)
+		if (old_bitno >= self->bsi_endbit)
 			return 1; /* Already at end position */
-		if (OVERFLOW_UADD(old_bitno, step, &new_bitno) || new_bitno >= end_bitno)
-			new_bitno = end_bitno;
+		if (OVERFLOW_UADD(old_bitno, step, &new_bitno) || new_bitno >= self->bsi_endbit)
+			new_bitno = self->bsi_endbit;
 	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
-	if (new_bitno >= end_bitno)
+	if (new_bitno >= self->bsi_endbit)
 		return 1; /* Now at end position */
 	return 2;     /* Iterator isn't at its end position */
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_prev(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno, min_bitno;
-	min_bitno = BitsetIterator_GetStartBit(self);
+	size_t old_bitno, new_bitno;
 	do {
 		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno <= min_bitno)
+		if (old_bitno <= self->bsi_startbit)
 			return 1; /* Already at starting position */
 		new_bitno = old_bitno - 1;
 	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
@@ -3162,11 +4234,10 @@ bsiter_nii_prev(BitsetIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_next(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno, end_bitno;
-	end_bitno = BitsetIterator_GetEndBit(self);
+	size_t old_bitno, new_bitno;
 	do {
 		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno >= end_bitno)
+		if (old_bitno >= self->bsi_endbit)
 			return 1; /* Already at end position */
 		new_bitno = old_bitno + 1;
 	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno));
@@ -3176,47 +4247,45 @@ bsiter_nii_next(BitsetIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_nii_hasprev(BitsetIterator *__restrict self) {
-	size_t startbit = BitsetIterator_GetStartBit(self);
+	size_t startbit = self->bsi_startbit;
 	size_t bitno    = atomic_read(&self->bsi_bitno);
 	return bitno > startbit ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsiter_nii_peek(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno, end_bitno;
-	end_bitno = BitsetIterator_GetEndBit(self);
+	size_t old_bitno, new_bitno;
 	old_bitno = atomic_read(&self->bsi_bitno);
-	if (old_bitno >= end_bitno)
+	if (old_bitno >= self->bsi_endbit)
 		return ITER_DONE; /* Already at end position */
-	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno);
-	if (new_bitno >= end_bitno)
+	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, self->bsi_endbit);
+	if (new_bitno >= self->bsi_endbit)
 		return ITER_DONE; /* End position reached */
-	return DeeInt_NewSize(new_bitno);
+	return DeeInt_NewSize(new_bitno - self->bsi_startbit);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsiter_next(BitsetIterator *__restrict self) {
-	size_t old_bitno, new_bitno, end_bitno;
-	end_bitno = BitsetIterator_GetEndBit(self);
+	size_t old_bitno, new_bitno;
 	do {
 		old_bitno = atomic_read(&self->bsi_bitno);
-		if (old_bitno >= end_bitno)
+		if (old_bitno >= self->bsi_endbit)
 			return ITER_DONE; /* Already at end position */
-		new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno);
-		if (new_bitno >= end_bitno) {
+		new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, self->bsi_endbit);
+		if (new_bitno >= self->bsi_endbit) {
 #ifndef __OPTIMIZE_SIZE__
 			atomic_cmpxch_weak_or_write(&self->bsi_bitno, old_bitno, new_bitno);
 #endif /* !__OPTIMIZE_SIZE__ */
 			return ITER_DONE; /* End position reached */
 		}
 	} while (!atomic_cmpxch_or_write(&self->bsi_bitno, old_bitno, new_bitno + 1));
-	return DeeInt_NewSize(new_bitno);
+	return DeeInt_NewSize(new_bitno - self->bsi_startbit);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsiter_bool(BitsetIterator *__restrict self) {
 	size_t old_bitno, new_bitno, end_bitno;
-	end_bitno = BitsetIterator_GetEndBit(self);
+	end_bitno = self->bsi_endbit;
 	old_bitno = atomic_read(&self->bsi_bitno);
 	if (old_bitno >= end_bitno)
 		return 0; /* Already at end position */
@@ -3232,7 +4301,8 @@ bsiter_eq(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
 	return_bool(self->bsi_bitset == other->bsi_bitset &&
-	            self->bsi_nbits == other->bsi_nbits &&
+	            self->bsi_startbit == other->bsi_startbit &&
+	            self->bsi_endbit == other->bsi_endbit &&
 	            atomic_read(&self->bsi_bitno) == atomic_read(&other->bsi_bitno));
 err:
 	return NULL;
@@ -3243,7 +4313,8 @@ bsiter_ne(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
 	return_bool(self->bsi_bitset != other->bsi_bitset ||
-	            self->bsi_nbits != other->bsi_nbits ||
+	            self->bsi_startbit != other->bsi_startbit ||
+	            self->bsi_endbit != other->bsi_endbit ||
 	            atomic_read(&self->bsi_bitno) != atomic_read(&other->bsi_bitno));
 err:
 	return NULL;
@@ -3253,10 +4324,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsiter_lo(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset && self->bsi_nbits == other->bsi_nbits)
+	return_bool((self->bsi_bitset == other->bsi_bitset &&
+	             self->bsi_startbit == other->bsi_startbit &&
+	             self->bsi_endbit == other->bsi_endbit)
 	            ? (atomic_read(&self->bsi_bitno) < atomic_read(&other->bsi_bitno))
 	            : (self->bsi_bitset < other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset && self->bsi_nbits < other->bsi_nbits)));
+	               (self->bsi_bitset == other->bsi_bitset &&
+	                (self->bsi_startbit < other->bsi_startbit ||
+	                 (self->bsi_startbit == other->bsi_startbit &&
+	                  self->bsi_endbit < other->bsi_endbit)))));
 err:
 	return NULL;
 }
@@ -3265,10 +4341,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsiter_le(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset && self->bsi_nbits == other->bsi_nbits)
+	return_bool((self->bsi_bitset == other->bsi_bitset &&
+	             self->bsi_startbit == other->bsi_startbit &&
+	             self->bsi_endbit == other->bsi_endbit)
 	            ? (atomic_read(&self->bsi_bitno) <= atomic_read(&other->bsi_bitno))
 	            : (self->bsi_bitset < other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset && self->bsi_nbits < other->bsi_nbits)));
+	               (self->bsi_bitset == other->bsi_bitset &&
+	                (self->bsi_startbit < other->bsi_startbit ||
+	                 (self->bsi_startbit == other->bsi_startbit &&
+	                  self->bsi_endbit <= other->bsi_endbit)))));
 err:
 	return NULL;
 }
@@ -3277,10 +4358,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsiter_gr(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset && self->bsi_nbits == other->bsi_nbits)
+	return_bool((self->bsi_bitset == other->bsi_bitset &&
+	             self->bsi_startbit == other->bsi_startbit &&
+	             self->bsi_endbit == other->bsi_endbit)
 	            ? (atomic_read(&self->bsi_bitno) > atomic_read(&other->bsi_bitno))
 	            : (self->bsi_bitset > other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset && self->bsi_nbits > other->bsi_nbits)));
+	               (self->bsi_bitset == other->bsi_bitset &&
+	                (self->bsi_startbit > other->bsi_startbit ||
+	                 (self->bsi_startbit == other->bsi_startbit &&
+	                  self->bsi_endbit > other->bsi_endbit)))));
 err:
 	return NULL;
 }
@@ -3289,10 +4375,15 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bsiter_ge(BitsetIterator *self, BitsetIterator *other) {
 	if (DeeObject_AssertTypeExact(other, &BitsetIterator_Type))
 		goto err;
-	return_bool((self->bsi_bitset == other->bsi_bitset && self->bsi_nbits == other->bsi_nbits)
+	return_bool((self->bsi_bitset == other->bsi_bitset &&
+	             self->bsi_startbit == other->bsi_startbit &&
+	             self->bsi_endbit == other->bsi_endbit)
 	            ? (atomic_read(&self->bsi_bitno) >= atomic_read(&other->bsi_bitno))
 	            : (self->bsi_bitset > other->bsi_bitset ||
-	               (self->bsi_bitset == other->bsi_bitset && self->bsi_nbits > other->bsi_nbits)));
+	               (self->bsi_bitset == other->bsi_bitset &&
+	                (self->bsi_startbit > other->bsi_startbit ||
+	                 (self->bsi_startbit == other->bsi_startbit &&
+	                  self->bsi_endbit >= other->bsi_endbit)))));
 err:
 	return NULL;
 }
@@ -3302,9 +4393,10 @@ bsiter_ctor(BitsetIterator *__restrict self) {
 	self->bsi_owner = (DREF DeeObject *)bs_ctor();
 	if unlikely(!self->bsi_owner)
 		goto err;
-	self->bsi_bitset = ((Bitset *)self->bsi_owner)->bs_bitset;
-	self->bsi_nbits  = 0;
-	self->bsi_bitno  = 0;
+	self->bsi_bitset   = ((Bitset *)self->bsi_owner)->bs_bitset;
+	self->bsi_startbit = 0;
+	self->bsi_endbit   = 0;
+	self->bsi_bitno    = 0;
 	return 0;
 err:
 	return -1;
@@ -3315,9 +4407,10 @@ bsiter_copy(BitsetIterator *__restrict self,
             BitsetIterator *__restrict other) {
 	self->bsi_owner = other->bsi_owner;
 	Dee_Incref(self->bsi_owner);
-	self->bsi_bitset = other->bsi_bitset;
-	self->bsi_nbits  = other->bsi_nbits;
-	self->bsi_bitno  = atomic_read(&other->bsi_bitno);
+	self->bsi_bitset   = other->bsi_bitset;
+	self->bsi_startbit = other->bsi_startbit;
+	self->bsi_endbit   = other->bsi_endbit;
+	self->bsi_bitno    = atomic_read(&other->bsi_bitno);
 	return 0;
 }
 
@@ -3329,15 +4422,19 @@ bsiter_init(BitsetIterator *__restrict self,
 	if (BitsetView_Check(self->bsi_owner)) {
 		BitsetView *o = (BitsetView *)self->bsi_owner;
 		self->bsi_bitset = BitsetView_GetBitset(o);
-		self->bsi_nbits  = o->bsi_endbit;
-		self->bsi_bitno  = o->bsi_startbit;
+		self->bsi_startbit = o->bsv_startbit;
+		self->bsi_endbit   = o->bsv_endbit;
+		self->bsi_bitno    = o->bsv_startbit;
 	} else {
 		Bitset *o = (Bitset *)self->bsi_owner;
-		if (DeeObject_AssertTypeExact(self->bsi_owner, &Bitset_Type))
-			goto err;
-		self->bsi_bitset = o->bs_bitset;
-		self->bsi_nbits  = o->bs_nbits;
-		self->bsi_bitno  = 0;
+		if (!RoBitset_Check(o)) {
+			if (DeeObject_AssertTypeExact(o, &Bitset_Type))
+				goto err;
+		}
+		self->bsi_bitset   = o->bs_bitset;
+		self->bsi_startbit = 0;
+		self->bsi_endbit   = o->bs_nbits;
+		self->bsi_bitno    = 0;
 	}
 	Dee_Incref(self->bsi_owner);
 	return 0;
@@ -3390,8 +4487,10 @@ PRIVATE struct type_member tpconst bsiter_members[] = {
 	TYPE_MEMBER_FIELD_DOC("seq", STRUCT_OBJECT, offsetof(BitsetIterator, bsi_owner),
 	                      "->?X2?GBitset?AView?GBitset\n"
 	                      "The ?GBitset or ?AView?GBitset that is being iterated"),
-	TYPE_MEMBER_FIELD_DOC("__nbits__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetIterator, bsi_nbits),
-	                      "The bit index at which iteration will stop"),
+	TYPE_MEMBER_FIELD_DOC("__startbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetIterator, bsi_startbit),
+	                      "Starting bit number in the buffer of ?#__owner__"),
+	TYPE_MEMBER_FIELD_DOC("__endbit__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(BitsetIterator, bsi_endbit),
+	                      "Ending bit number in the buffer of ?#__owner__"),
 	TYPE_MEMBER_FIELD_DOC("__bitno__", STRUCT_ATOMIC | STRUCT_SIZE_T, offsetof(BitsetIterator, bsi_bitno),
 	                      "The next bit index to iterate (skipping bits that aren't turned on)"),
 	TYPE_MEMBER_END

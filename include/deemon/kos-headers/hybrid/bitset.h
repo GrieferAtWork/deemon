@@ -64,7 +64,7 @@ __DECL_BEGIN
  * >> _BITSET_HI_MASKOU(8) == 0xb00000000 // requires use of _BITSET_HI_MASKOU_P1
  *
  * NOTE: When "n >= 8", behavior is HARD undefined. If you
- *       need to value of `_BITSET_*_MASK*(n + 1)', the
+ *       need  to  value of  `_BITSET_*_MASK*(n + 1)', the
  *       `*_P1' variant must be used.
  */
 #define _BITSET_LO_MASKIN(n)    __HYBRID_BITSET_LO_MASKIN(n)
@@ -101,16 +101,22 @@ __ATTR_NONNULL((1)) void bitset_clearall(bitset_t *__restrict self, __SIZE_TYPE_
 __ATTR_NONNULL((1)) void bitset_flipall(bitset_t *__restrict self, __SIZE_TYPE__ n_bits);
 
 /* Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno >= endbitno', the result is weak undefined behavior,
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __ATTR_NONNULL((1)) void bitset_nclear(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
- * NOTE: When `startbitno >= endbitno', the result is weak undefined behavior,
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __ATTR_NONNULL((1)) void bitset_nset(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
+
+/* Flip bits [startbitno, endbitno) (non-inclusive) in `self'
+ * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
+ *       in that the way in which `self' is modified is undefined, though the
+ *       function still guaranties that nothing but `self' gets modified. */
+__ATTR_NONNULL((1)) void bitset_nflip(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Find the  first bitno  within [0,  n_bits) that  is off  and store  its
  * index in `*p_value'. If no such bit exists, write `-1' into `*p_value'. */
@@ -137,19 +143,19 @@ __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_flc(bitset_t
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_fls(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
 /* Find the first bitno within [startbitno,endbitno) that is on and return
- * its index. If  no such  bit exists, return  some value  `> endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nffs(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Find the first bitno within [startbitno,endbitno) that is off and return
- * its index.  If no  such bit  exists, return  some value  `> endbitno'. */
+ * its  index.  If no  such bit  exists,  return some  value `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nffc(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Find the last bitno within [startbitno,endbitno) that is on and return
- * its  index. If no  such bit exists,  return some value `> endbitno'. */
+ * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nfls(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Find the last bitno within [startbitno,endbitno) that is off and return
- * its index. If  no such  bit exists, return  some value  `> endbitno'. */
+ * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nflc(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
 /* Check if the bitset contains any 1-elements */
@@ -197,7 +203,7 @@ bitset_ncopy0(bitset_t *dst, bitset_t const *src,
 #define BITSET_OP_OR  __HYBRID_BITSET_OP_OR
 #define BITSET_OP_XOR __HYBRID_BITSET_OP_XOR
 
-/* Perform a bit-operation "op" on the "n_bits" from "src:src_startbitno",
+/* Perform  a  bit-operation  "op"  on  the  "n_bits"  from  "src:src_startbitno",
  * together with "dst:dst_startbitno", storing the result at "dst:dst_startbitno".
  * NOTE: Overlap is allowed!
  * @param: op: One of `BITSET_OP_*' */
@@ -258,6 +264,7 @@ __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 2)) __BOOL bitset_ncmpgr0(bitset_t
 #define bitset_flipall(self, n_bits)                 __hybrid_bitset_flipall(self, n_bits)
 #define bitset_nclear(self, startbitno, endbitno)    __hybrid_bitset_nclear(self, startbitno, endbitno)
 #define bitset_nset(self, startbitno, endbitno)      __hybrid_bitset_nset(self, startbitno, endbitno)
+#define bitset_nflip(self, startbitno, endbitno)     __hybrid_bitset_nflip(self, startbitno, endbitno)
 #define bitset_ffc_i(self, n_bits, p_value)          __hybrid_bitset_ffc_i(self, n_bits, p_value)
 #define bitset_ffs_i(self, n_bits, p_value)          __hybrid_bitset_ffs_i(self, n_bits, p_value)
 #define bitset_ffc(self, n_bits)                     __hybrid_bitset_ffc(self, n_bits)
