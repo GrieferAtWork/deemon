@@ -1,0 +1,127 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+import * from collections;
+
+function intbits(i: int): BitsetView {
+	local iBytes = i.tobytes(byteorder: "little", signed: false);
+	local view = BitsetView(iBytes, "w", 0, i.bitcount(signed: false));
+	assert view.bytes() == iBytes;
+	assert Bitset(view).bytes() == iBytes;
+	return view;
+}
+
+function assertBitsetEqual(expected: {int...}, actual: BitsetView) {
+	local bsExpected = Bitset(expected);
+	local bsActual = Bitset(actual);
+	assert expected == actual;
+	assert expected == bsActual;
+	assert bsExpected == actual;
+	assert bsExpected == bsActual;
+	assert !(expected != actual);
+	assert !(expected != bsActual);
+	assert !(bsExpected != actual);
+	assert !(bsExpected != bsActual);
+	assert expected <= actual;
+	assert expected <= bsActual;
+	assert bsExpected <= actual;
+	assert bsExpected <= bsActual;
+	assert expected >= actual;
+	assert expected >= bsActual;
+	assert bsExpected >= actual;
+	assert bsExpected >= bsActual;
+	assert !(expected < actual);
+	assert !(expected < bsActual);
+	assert !(bsExpected < actual);
+	assert !(bsExpected < bsActual);
+	assert !(expected > actual);
+	assert !(expected > bsActual);
+	assert !(bsExpected > actual);
+	assert !(bsExpected > bsActual);
+
+	for (local x: expected) {
+		assert actual[x];
+		assert bsActual[x];
+		assert x in actual;
+		assert x in bsActual;
+	}
+}
+
+assertBitsetEqual({},     intbits(0));
+assertBitsetEqual({0},    intbits(1));
+assertBitsetEqual({1},    intbits(2));
+assertBitsetEqual({0,1},  intbits(3));
+assertBitsetEqual([:8],   intbits(0xff));
+assertBitsetEqual([:64],  intbits(0xffffffffffffffff));
+assertBitsetEqual(
+	{0,3,4,7,8,10,12,14,15,17,21},
+	intbits(0b1000101101010110011001));
+assertBitsetEqual({0,63}, intbits(0x8000000000000001));
+
+
+function testSetAndClear(setrange, delrange) {
+	local b = Bitset(32);
+	assertBitsetEqual({}, b);
+	setrange(b, 0, 0);
+	assertBitsetEqual({}, b);
+	delrange(b, 0, 0);
+	assertBitsetEqual({}, b);
+	setrange(b, 0, 1);
+	assertBitsetEqual({0}, b);
+	setrange(b, 0, -1);
+	assertBitsetEqual([:31], b);
+	setrange(b, 0, 32);
+	assertBitsetEqual([:32], b);
+	delrange(b, 1, 31);
+	assertBitsetEqual({0,31}, b);
+	delrange(b, 0, 32);
+	assertBitsetEqual({}, b);
+	setrange(b, 9999, 9999);
+	assertBitsetEqual({}, b);
+	setrange(b, -1, 9999);
+	assertBitsetEqual({31}, b);
+	setrange(b, 0, 9999);
+	assertBitsetEqual([:32], b);
+	delrange(b, -1, 9999);
+	assertBitsetEqual([:31], b);
+	delrange(b, -8, 9999);
+	assertBitsetEqual([:24], b);
+	delrange(b, -30, -9);
+	assertBitsetEqual({0,1,23}, b);
+	delrange(b, -32, -31);
+	assertBitsetEqual({1,23}, b);
+	delrange(b, -32, -30);
+	assertBitsetEqual({23}, b);
+	b[23] = false;
+	assertBitsetEqual({}, b);
+	b[7] = true;
+	b[9] = true;
+	assertBitsetEqual({7,9}, b);
+	del b[9];
+	assertBitsetEqual({7}, b);
+	del b[8];
+	assertBitsetEqual({7}, b);
+}
+
+testSetAndClear((b, s, e) -> { b[s:e] = true; }, (b, s, e) -> { del b[s:e]; });
+testSetAndClear((b, s, e) -> { b[s:e] = true; }, (b, s, e) -> { b[s:e] = false; });
+testSetAndClear((b, s, e) -> { b[s:e] = true; }, (b, s, e) -> { b[s:e] = none; });

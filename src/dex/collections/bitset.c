@@ -81,7 +81,8 @@ DECL_BEGIN
 typedef struct {
 	OBJECT_HEAD
 	size_t                            bs_nbits;   /* [const] # of bits in this bitset */
-	COMPILER_FLEXIBLE_ARRAY(bitset_t, bs_bitset); /* [0..bs_nbits] The actual bitset (writable). */
+	COMPILER_FLEXIBLE_ARRAY(bitset_t, bs_bitset); /* [0..bs_nbits] The actual bitset (writable).
+	                                               * Unused bits within the last byte should be 0. */
 } Bitset;
 
 #define Bitset_Calloc(n_bits) \
@@ -99,7 +100,8 @@ typedef struct {
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject *bsi_owner;    /* [1..1][const] Some object that is providing the buffer whose bits are being enumerated. */
-	DeeBuffer       bsi_buf;      /* [const] The buffer of raw bytes that are being viewed. */
+	DeeBuffer       bsi_buf;      /* [const] The buffer of raw bytes that are being viewed.
+	                               * Unused bits in the first/last byte are undefined. */
 	size_t          bsi_startbit; /* [const] Starting bit number part of the bitset (based at `bsi_buf.bb_base') */
 	size_t          bsi_endbit;   /* [const] End bit number part of the bitset (based at `bsi_buf.bb_base') */
 	unsigned int    bsi_bflags;   /* [const] Buffer flags (Set of `Dee_BUFFER_F*'; of relevance is `Dee_BUFFER_FWRITABLE') */
@@ -134,7 +136,7 @@ typedef struct {
 
 /* Return the bit number where iteration will end */
 #define BitsetIterator_GetEndBit(self) \
-	((self)->bsi_bitno)
+	((self)->bsi_nbits)
 
 PRIVATE ATTR_COLD int DCALL
 bitset_err_bad_index(size_t bitno, size_t nbits) {
@@ -180,7 +182,7 @@ bitset_fromseq_cb(void *cookie, DeeObject *item) {
 			if unlikely(!new_bitset)
 				goto err;
 		}
-		bitset_nclear(new_bitset->bs_bitset, new_bitset->bs_nbits, new_abits - 1);
+		bitset_nclear(new_bitset->bs_bitset, new_bitset->bs_nbits, new_abits);
 		me->bsfsd_bitset = new_bitset;
 		me->bsfsd_abits  = new_abits;
 	}
@@ -213,6 +215,8 @@ bs_init_fromseq(DeeObject *seq, DeeObject *minbits_ob) {
 			data.bsfsd_abits &= ~_BITSET_WORD_BMSK;
 		}
 	}
+
+	/* Fallback: allocate a full Bitset object and enumerate given "seq" */
 	data.bsfsd_bitset = Bitset_Calloc(data.bsfsd_abits);
 	if unlikely(!data.bsfsd_bitset)
 		goto err;
@@ -288,8 +292,8 @@ struct bitset_ref {
 
 #define bitset_ref_test(self, bitno) bitset_test((self)->bsr_bitset, (self)->bsr_startbit + (bitno))
 #define bitset_ref_nbits(self)       ((self)->bsr_endbit - (self)->bsr_startbit)
-#define bitset_ref_nanyset(self, minbitno, maxbitno) \
-	bitset_nanyset((self)->bsr_bitset, (self)->bsr_startbit + (minbitno), (self)->bsr_startbit + (maxbitno))
+#define bitset_ref_nanyset(self, startbitno, endbitno) \
+	bitset_nanyset((self)->bsr_bitset, (self)->bsr_startbit + (startbitno), (self)->bsr_startbit + (endbitno))
 
 PRIVATE NONNULL((1)) void DCALL
 bitset_ref_fix(struct bitset_ref *__restrict self) {
@@ -310,7 +314,7 @@ bitset_ref_assign(struct bitset_ref *__restrict dst,
 		size_t oob_index;
 		oob_index = bitset_nffs(src->bsr_bitset,
 		                        src->bsr_startbit + dst_bits,
-		                        src->bsr_endbit - 1);
+		                        src->bsr_endbit);
 		if (oob_index < src->bsr_endbit) {
 			oob_index -= src->bsr_startbit;
 			ASSERT(oob_index >= dst_bits);
@@ -384,7 +388,7 @@ bitset_ref_assign(struct bitset_ref *__restrict dst,
 	if (src_bits < dst_bits) {
 		bitset_nclear(dst->bsr_bitset,
 		              dst->bsr_startbit + src_bits,
-		              dst->bsr_endbit - 1);
+		              dst->bsr_endbit);
 	}
 	return 0;
 }
@@ -417,6 +421,62 @@ DeeObject_AsBitset(DeeObject const *__restrict self,
 	}
 }
 
+
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
+	/* Check for special case: is `seq' a bitset-like object? */
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(seq, &ref)) {
+		DREF Bitset *result;
+		size_t ref_nbits = bitset_ref_nbits(&ref);
+		if (minbits_ob) {
+			size_t minbits;
+			if (DeeInt_AsSize(minbits_ob, &minbits))
+				goto err;
+			if (ref_nbits < minbits) {
+				result = Bitset_Calloc(minbits);
+				if unlikely(!result)
+					goto err;
+				if (ref.bsr_startbit == 0) {
+					memcpy(result->bs_bitset, ref.bsr_bitset, BITSET_SIZEOF(ref_nbits));
+				} else {
+					/* Slow case: bits don't align, so we must copy them one-at-a-time */
+					size_t i;
+					for (i = 0; i < ref_nbits; ++i) {
+						if (bitset_ref_test(&ref, i))
+							bitset_set(result->bs_bitset, i);
+					}
+				}
+				result->bs_nbits = minbits;
+				DeeObject_Init(result, &Bitset_Type);
+				return result;
+			}
+		}
+		if (ref.bsr_startbit == 0) {
+			result = Bitset_Alloc(ref_nbits);
+			if unlikely(!result)
+				goto err;
+			memcpy(result->bs_bitset, ref.bsr_bitset, BITSET_SIZEOF(ref_nbits));
+		} else {
+			/* Slow case: bits don't align, so we must copy them one-at-a-time */
+			size_t i;
+			result = Bitset_Calloc(ref_nbits);
+			if unlikely(!result)
+				goto err;
+			for (i = 0; i < ref_nbits; ++i) {
+				if (bitset_ref_test(&ref, i))
+					bitset_set(result->bs_bitset, i);
+			}
+		}
+		result->bs_nbits = ref_nbits;
+		DeeObject_Init(result, &Bitset_Type);
+		return result;
+	}
+	return bs_init_fromseq(seq, minbits_ob);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
 bs_cmp_eqne_bitset_ref(Bitset *__restrict self,
                        struct bitset_ref *__restrict other) {
@@ -426,7 +486,7 @@ bs_cmp_eqne_bitset_ref(Bitset *__restrict self,
 		size_t ot_nbits;
 		ot_nbits = bitset_nfls(other->bsr_bitset,
 		                       other->bsr_startbit,
-		                       other->bsr_endbit - 1);
+		                       other->bsr_endbit);
 		if (ot_nbits >= other->bsr_endbit) {
 			/* "other" is empty -> check if "self" is empty, too */
 			return !bitset_anyset(self->bs_bitset, self->bs_nbits);
@@ -491,7 +551,7 @@ bs_le(Bitset *self, DeeObject *other) {
 	/* All bits from "self" must also be set in "other" */
 	nbits = self->bs_nbits;
 	if (nbits > bitset_ref_nbits(&bs_other)) {
-		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits - 1))
+		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits))
 			goto nope;
 		nbits = bitset_ref_nbits(&bs_other);
 	}
@@ -514,7 +574,7 @@ bs_ge(Bitset *self, DeeObject *other) {
 	/* All bits from "other" must also be set in "self" */
 	nbits = bitset_ref_nbits(&bs_other);
 	if (nbits > self->bs_nbits) {
-		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits - 1))
+		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits))
 			goto nope;
 		nbits = self->bs_nbits;
 	}
@@ -537,7 +597,7 @@ bs_gr(Bitset *self, DeeObject *other) {
 	/* not(All bits from "self" must also be set in "other") */
 	nbits = self->bs_nbits;
 	if (nbits > bitset_ref_nbits(&bs_other)) {
-		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits - 1))
+		if (bitset_nanyset(self->bs_bitset, bitset_ref_nbits(&bs_other), nbits))
 			goto nope;
 		nbits = bitset_ref_nbits(&bs_other);
 	}
@@ -560,7 +620,7 @@ bs_lo(Bitset *self, DeeObject *other) {
 	/* not(All bits from "other" must also be set in "self") */
 	nbits = bitset_ref_nbits(&bs_other);
 	if (nbits > self->bs_nbits) {
-		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits - 1))
+		if (bitset_ref_nanyset(&bs_other, self->bs_nbits, nbits))
 			goto nope;
 		nbits = self->bs_nbits;
 	}
@@ -694,7 +754,7 @@ bs_delrange(Bitset *self, DeeObject *start, DeeObject *end) {
 			goto err;
 	}
 	DeeSeqRange_Clamp(&range, start_i, end_i, self->bs_nbits);
-	bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end - 1);
+	bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end);
 	return 0;
 err:
 	return -1;
@@ -714,12 +774,12 @@ bs_setrange(Bitset *self, DeeObject *start,
 	DeeSeqRange_Clamp(&range, start_i, end_i, self->bs_nbits);
 	if (DeeBool_Check(value)) {
 		if (DeeBool_IsTrue(value)) {
-			bitset_nset(self->bs_bitset, range.sr_start, range.sr_end - 1);
+			bitset_nset(self->bs_bitset, range.sr_start, range.sr_end);
 		} else {
-			bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end - 1);
+			bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end);
 		}
 	} else if (DeeNone_Check(value)) {
-		bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end - 1);
+		bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end);
 	} else {
 		int result;
 		DREF Bitset *value_bitset;
@@ -842,7 +902,7 @@ bs_init(size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:Bitset", &seq_or_nbits, &init_or_minbits))
 		goto err;
 	if (!DeeInt_Check(seq_or_nbits))
-		return bs_init_fromseq(seq_or_nbits, init_or_minbits);
+		return bs_init_fromseq_or_bitset(seq_or_nbits, init_or_minbits);
 	/* Initialize fixed-length bitset. */
 	if (DeeInt_AsSize(seq_or_nbits, &nbits))
 		goto err;
@@ -878,7 +938,7 @@ bs_assign_bitset(Bitset *self, struct bitset_ref *__restrict other) {
 		size_t oob_index;
 		oob_index = bitset_nffs(other->bsr_bitset,
 		                        other->bsr_startbit + self->bs_nbits,
-		                        other->bsr_endbit - 1);
+		                        other->bsr_endbit);
 		if (oob_index < other->bsr_endbit) {
 			oob_index -= other->bsr_startbit;
 			ASSERT(oob_index >= self->bs_nbits);
@@ -908,7 +968,7 @@ bs_assign_bitset(Bitset *self, struct bitset_ref *__restrict other) {
 
 	/* Clear out all bits that weren't copied from "other" */
 	if (ot_bits < self->bs_nbits)
-		bitset_nclear(self->bs_bitset, ot_bits, self->bs_nbits - 1);
+		bitset_nclear(self->bs_bitset, ot_bits, self->bs_nbits);
 	return 0;
 }
 
@@ -953,7 +1013,7 @@ bs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
 	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
 		DO(err, DeeFormat_Printf(printer, arg,
 		                         "%s%" PRFuSIZ,
-		                         is_first ? ", " : " ",
+		                         is_first ? " " : ", ",
 		                         bitno));
 		is_first = false;
 	}
@@ -1282,16 +1342,16 @@ bitset_ref_cmp_eq(struct bitset_ref *__restrict a,
 	ASSERT(b->bsr_startbit <= _BITSET_WORD_BMSK);
 	if (a_nbits != b_nbits) {
 		/* Trim trailing 0-bits from "b" */
-		b_nbits = bitset_nfls(b->bsr_bitset, b->bsr_startbit, b->bsr_endbit - 1);
+		b_nbits = bitset_nfls(b->bsr_bitset, b->bsr_startbit, b->bsr_endbit);
 		if (b_nbits >= b->bsr_endbit) {
 			/* "b" is empty -> check if "a" is empty, too */
-			return !bitset_nanyset(a->bsr_bitset, a->bsr_startbit, a->bsr_endbit - 1);
+			return !bitset_nanyset(a->bsr_bitset, a->bsr_startbit, a->bsr_endbit);
 		}
 		b->bsr_endbit = b_nbits + 1;
 		b_nbits = bitset_ref_nbits(b);
 		if (a_nbits != b_nbits) {
 			/* Trim trailing 0-bits from "a" */
-			size_t lastset = bitset_nfls(a->bsr_bitset, a->bsr_startbit, a->bsr_endbit - 1);
+			size_t lastset = bitset_nfls(a->bsr_bitset, a->bsr_startbit, a->bsr_endbit);
 			if (lastset >= a->bsr_endbit)
 				goto nope; /* "a" is empty */
 			a->bsr_endbit = lastset + 1;
@@ -1354,7 +1414,7 @@ bitset_ref_cmp_le(struct bitset_ref const *__restrict a,
 	if (a_nbits > b_nbits) {
 		if (bitset_nanyset(a->bsr_bitset,
 		                   a->bsr_startbit + b_nbits,
-		                   a->bsr_endbit - 1))
+		                   a->bsr_endbit))
 			goto nope;
 		a_nbits = b_nbits;
 	}
@@ -1557,7 +1617,7 @@ bsv_delrange(BitsetView *self, DeeObject *start, DeeObject *end) {
 	DeeSeqRange_Clamp(&range, start_i, end_i, BitsetView_GetNBits(self));
 	bitset_nclear(BitsetView_GetBitset(self),
 	              self->bsi_startbit + range.sr_start,
-	              self->bsi_startbit + range.sr_end - 1);
+	              self->bsi_startbit + range.sr_end);
 	return 0;
 err_readonly:
 	return bsv_err_readonly(self);
@@ -1583,16 +1643,16 @@ bsv_setrange(BitsetView *self, DeeObject *start,
 		if (DeeBool_IsTrue(value)) {
 			bitset_nset(BitsetView_GetBitset(self),
 			            self->bsi_startbit + range.sr_start,
-			            self->bsi_startbit + range.sr_end - 1);
+			            self->bsi_startbit + range.sr_end);
 		} else {
 			bitset_nclear(BitsetView_GetBitset(self),
 			              self->bsi_startbit + range.sr_start,
-			              self->bsi_startbit + range.sr_end - 1);
+			              self->bsi_startbit + range.sr_end);
 		}
 	} else if (DeeNone_Check(value)) {
 		bitset_nclear(BitsetView_GetBitset(self),
 		              self->bsi_startbit + range.sr_start,
-		              self->bsi_startbit + range.sr_end - 1);
+		              self->bsi_startbit + range.sr_end);
 	} else {
 		int result;
 		DREF Bitset *value_bitset;
@@ -2205,7 +2265,7 @@ bsiter_nii_peek(BitsetIterator *__restrict self) {
 	old_bitno = atomic_read(&self->bsi_bitno);
 	if (old_bitno >= end_bitno)
 		return ITER_DONE; /* Already at end position */
-	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno - 1);
+	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno);
 	if (new_bitno >= end_bitno)
 		return ITER_DONE; /* End position reached */
 	return DeeInt_NewSize(new_bitno);
@@ -2219,7 +2279,7 @@ bsiter_next(BitsetIterator *__restrict self) {
 		old_bitno = atomic_read(&self->bsi_bitno);
 		if (old_bitno >= end_bitno)
 			return ITER_DONE; /* Already at end position */
-		new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno - 1);
+		new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno);
 		if (new_bitno >= end_bitno) {
 #ifndef __OPTIMIZE_SIZE__
 			atomic_cmpxch_weak_or_write(&self->bsi_bitno, old_bitno, new_bitno);
@@ -2237,7 +2297,7 @@ bsiter_bool(BitsetIterator *__restrict self) {
 	old_bitno = atomic_read(&self->bsi_bitno);
 	if (old_bitno >= end_bitno)
 		return 0; /* Already at end position */
-	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno - 1);
+	new_bitno = bitset_nffs(self->bsi_bitset, old_bitno, end_bitno);
 	if (new_bitno >= end_bitno)
 		return 0; /* End position reached */
 	return 1;
