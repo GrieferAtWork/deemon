@@ -30,7 +30,38 @@ function intbits(i: int): BitsetView {
 	return view;
 }
 
+function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
+	local inv = ~b;
+	local nbits = b.nbits;
+	assert nbits == inv.nbits;
+	assert {} == (b & inv);
+	assert {} == (inv & b);
+	assert [:nbits] == (b | inv);
+	assert [:nbits] == (inv | b);
+	assert [:nbits] == (b ^ inv);
+	assert [:nbits] == (inv ^ b);
+	assert (#b + #inv) == nbits;
+	if (b) {
+		assert {} != b;
+		assert (#b) > 0;
+		if (b == [:nbits]) {
+			assert !inv;
+		}
+	} else {
+		assert {} == b;
+		assert (#b) == 0;
+		assert inv == [:nbits];
+	}
+
+	for (local i: [:nbits]) {
+		assert b[i] === (i in b);
+		assert inv[i] === (i in inv);
+		assert b[i] == !inv[i];
+	}
+}
+
 function assertBitsetOk(b: Bitset | BitsetView) {
+	assertBitsetOkReadonly(b);
 	local orig = copy b;
 	assert orig == b;
 	b &= b;
@@ -39,6 +70,7 @@ function assertBitsetOk(b: Bitset | BitsetView) {
 	assert orig == b;
 	b ^= b;
 	assert {} == b;
+	assertBitsetOkReadonly(b);
 }
 
 function assertBitsetImpl2(expected: {int...}, actual: Bitset | BitsetView | Bitset.Frozen) {
@@ -74,16 +106,25 @@ function assertBitsetImpl(expected: {int...}, actual: BitsetView) {
 }
 
 function assertBitset(expected: {int...}, actual: BitsetView) {
-	/* Ensure that trying to open a frozen bitset for writing throws a BufferError */
-	assert (try BitsetView(actual.frozen, "w") catch (e...) e) is BufferError from errors;
-	assertBitsetOk(Bitset(actual));
-	assertBitsetOk(BitsetView(Bitset(actual), "w"));
 	assertBitsetImpl(expected, actual);
 	assertBitsetImpl(Bitset(expected), actual);
 	assertBitsetImpl(Bitset(expected).frozen, actual);
 	assertBitsetImpl(Bitset.Frozen(expected), actual);
 	assertBitsetImpl(Bitset.Frozen(expected).frozen, actual);
+
+	/* Ensure that trying to open a frozen bitset for writing throws a BufferError */
+	assert (try BitsetView(actual.frozen, "w") catch (e...) e) is BufferError from errors;
+
+	assertBitsetOk(Bitset(actual));
+	assertBitsetOk(BitsetView(Bitset(actual), "w"));
+	assertBitsetOkReadonly(Bitset(actual).frozen);
 }
+
+assertBitsetOk(Bitset(0));
+assertBitsetOk(Bitset(15));
+assertBitsetOk(Bitset(16));
+assertBitsetOk(Bitset(63));
+assertBitsetOk(Bitset(64));
 
 assertBitset({},      intbits(0));
 assertBitset({0},     intbits(1));

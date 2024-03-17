@@ -118,12 +118,9 @@ typedef struct {
 
 #define BitsetView_Check(ob) /* BitsetView is final, so exact check */ \
 	DeeObject_InstanceOfExact(ob, &BitsetView_Type)
-#define BitsetView_IsWritable(ob)  ((ob)->bsi_bflags & Dee_BUFFER_FWRITABLE)
-#define BitsetView_GetBitset(ob)   ((bitset_t *)(ob)->bsi_buf.bb_base)
-#define BitsetView_GetNBits(ob)    ((ob)->bsi_endbit - (ob)->bsi_startbit)
-#define BitsetView_GetMinBitno(ob) ((ob)->bsi_startbit)
-#define BitsetView_GetMaxBitno(ob) ((ob)->bsi_endbit - 1)
-#define BitsetView_GetEndBitno(ob) ((ob)->bsi_endbit)
+#define BitsetView_IsWritable(ob) ((ob)->bsi_bflags & Dee_BUFFER_FWRITABLE)
+#define BitsetView_GetBitset(ob)  ((bitset_t *)(ob)->bsi_buf.bb_base)
+#define BitsetView_GetNBits(ob)   ((ob)->bsi_endbit - (ob)->bsi_startbit)
 
 typedef struct {
 	OBJECT_HEAD
@@ -230,6 +227,16 @@ bitset_setall_and_zero_unused_bits(bitset_t *self, size_t n_bits) {
 	bitset_setall(self, n_bits);
 	if (n_bits & _BITSET_WORD_BMSK) {
 		/* bitset_setall() may set the unused high bits of the last word.
+		 * We don't want that, so fix the last word if that happened */
+		self[n_bits >> _BITSET_WORD_SHFT] &= _BITSET_LO_MASKIN(n_bits & _BITSET_WORD_BMSK);
+	}
+}
+
+PRIVATE NONNULL((1)) void DCALL
+bitset_flipall_and_zero_unused_bits(bitset_t *self, size_t n_bits) {
+	bitset_flipall(self, n_bits);
+	if (n_bits & _BITSET_WORD_BMSK) {
+		/* bitset_flipall() may set the unused high bits of the last word.
 		 * We don't want that, so fix the last word if that happened */
 		self[n_bits >> _BITSET_WORD_SHFT] &= _BITSET_LO_MASKIN(n_bits & _BITSET_WORD_BMSK);
 	}
@@ -1052,18 +1059,115 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bs_inplace_or(DREF Bitset **p_self, DeeObject *other) {
-	return bs_inplaceop(p_self, other, BITSET_OP_OR);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bs_inplace_and(DREF Bitset **p_self, DeeObject *other) {
 	return bs_inplaceop(p_self, other, BITSET_OP_AND);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bs_inplace_or(DREF Bitset **p_self, DeeObject *other) {
+	return bs_inplaceop(p_self, other, BITSET_OP_OR);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bs_inplace_xor(DREF Bitset **p_self, DeeObject *other) {
 	return bs_inplaceop(p_self, other, BITSET_OP_XOR);
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+bs_inv(Bitset *__restrict self) {
+	DREF Bitset *result = Bitset_Alloc(self->bs_nbits);
+	if unlikely(!result)
+		goto err;
+	memcpy(result->bs_bitset, self->bs_bitset,
+	       BITSET_SIZEOF(self->bs_nbits));
+	bitset_flipall_and_zero_unused_bits(result->bs_bitset,
+	                                    self->bs_nbits);
+	result->bs_nbits = self->bs_nbits;
+	DeeObject_Init(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bs_bitop_bitset(Bitset *self, struct bitset_ref *__restrict ref, unsigned int op) {
+	DREF Bitset *result;
+	size_t lhs_bits = self->bs_nbits;
+	size_t rhs_bits = bitset_ref_nbits(ref);
+	size_t com_bits = lhs_bits < rhs_bits ? lhs_bits : rhs_bits;
+	size_t res_bits = lhs_bits > rhs_bits ? lhs_bits : rhs_bits;
+	result = Bitset_Calloc(res_bits);
+	if unlikely(!result)
+		goto err;
+	ASSERT(ref->bsr_startbit <= _BITSET_WORD_BMSK);
+	memcpy(result->bs_bitset, self->bs_bitset, BITSET_SIZEOF(lhs_bits));
+	bitset_nbitop(result->bs_bitset, 0, ref->bsr_bitset, ref->bsr_startbit, com_bits, op);
+	if (com_bits < res_bits) {
+		if (op == BITSET_OP_AND) {
+			/* This part was already done by the `Bitset_Calloc()' above. */
+			/*bitset_nclear(result->bs_bitset, com_bits, res_bits);*/
+		} else {
+			/* Insert bits from the larger operand */
+			if (lhs_bits < rhs_bits) {
+				ASSERT(com_bits == lhs_bits);
+				ASSERT(res_bits == rhs_bits);
+				bitset_ncopy(result->bs_bitset, lhs_bits,
+				             ref->bsr_bitset, ref->bsr_startbit + lhs_bits,
+				             rhs_bits - lhs_bits);
+			} else {
+				ASSERT(lhs_bits > rhs_bits);
+				ASSERT(com_bits == rhs_bits);
+				ASSERT(res_bits == lhs_bits);
+				bitset_ncopy(result->bs_bitset, rhs_bits,
+				             self->bs_bitset, rhs_bits,
+				             lhs_bits - rhs_bits);
+			}
+		}
+	}
+	result->bs_nbits = res_bits;
+	DeeObject_Init(result, &RoBitset_Type); /* Yes: this returns a read-only bitset! */
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bs_bitop(Bitset *self, DeeObject *other, unsigned int op) {
+	DREF Bitset *result, *temp;
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(other, &ref))
+		return bs_bitop_bitset(self, &ref, op);
+
+	/* Must create a temp bitset from "other" and then assign that one.
+	 * We can't directly assign from "other" in case "other" somehow
+	 * re-uses the state of "self" (e.g.: is a yield function) */
+	temp = bs_init_fromseq(other, NULL);
+	if unlikely(!temp)
+		goto err;
+	ref.bsr_bitset   = temp->bs_bitset;
+	ref.bsr_startbit = 0;
+	ref.bsr_endbit   = temp->bs_nbits;
+	result = bs_bitop_bitset(self, &ref, op);
+	Dee_DecrefDokill(temp);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bs_and(Bitset *self, DeeObject *other) {
+	return bs_bitop(self, other, BITSET_OP_AND);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bs_or(Bitset *self, DeeObject *other) {
+	return bs_bitop(self, other, BITSET_OP_OR);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bs_xor(Bitset *self, DeeObject *other) {
+	return bs_bitop(self, other, BITSET_OP_XOR);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1113,7 +1217,7 @@ PRIVATE struct type_math bs_math = {
 	/* .tp_int64       = */ NULL,
 	/* .tp_double      = */ NULL,
 	/* .tp_int         = */ NULL,
-	/* .tp_inv         = */ NULL,
+	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&bs_inv,
 	/* .tp_pos         = */ NULL,
 	/* .tp_neg         = */ NULL,
 	/* .tp_add         = */ NULL,
@@ -1123,9 +1227,9 @@ PRIVATE struct type_math bs_math = {
 	/* .tp_mod         = */ NULL,
 	/* .tp_shl         = */ NULL, /* TODO */
 	/* .tp_shr         = */ NULL, /* TODO */
-	/* .tp_and         = */ NULL,
-	/* .tp_or          = */ NULL,
-	/* .tp_xor         = */ NULL,
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_or,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_xor,
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
@@ -1185,9 +1289,12 @@ PRIVATE struct type_method tpconst bs_methods[] = {
 	/* TODO: clear(bitno:?Dint) */
 	/* TODO: clear(start:?Dint,end:?Dint) */
 
-	/* TODO: any(start=0,end=-1) */
-	/* TODO: all(start=0,end=-1) */
-	/* TODO: ffs() ffc() fls() flc() */
+	/* TODO: any(start=!0,end=!-1)->?Dbool */
+	/* TODO: all(start=!0,end=!-1)->?Dbool */
+	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
 	TYPE_KWMETHOD_F("insert", &bs_insert, METHOD_FNOREFESCAPE,
 	                "(bitno:?Dint)->?Dbool\n"
 	                "#tIntegerOverflow{@bitno is negative or too large}"
@@ -1286,6 +1393,25 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "repr->\n"
 	                         "Print the representation of @this in the form of ${Bitset({ 0, 1, 2, ... })} "
 	                         /**/ "(listing all bit indices where the associated bit is on)\n"
+	                         "\n"
+
+	                         "~->?#Frozen\n"
+	                         "Return a frozen ?. with the same ?#nbits as @this, but with the state "
+	                         /**/ "of all bits inverted.\n"
+	                         "\n"
+
+	                         "&(other:?X4?S?Dint?.?GBitsetView?#Frozen)->?#Frozen\n"
+	                         "|(other:?X4?S?Dint?.?GBitsetView?#Frozen)->?#Frozen\n"
+	                         "^(other:?X4?S?Dint?.?GBitsetView?#Frozen)->?#Frozen\n"
+	                         "Combine this ?. with another ?. or bitset-like object by performing "
+	                         /**/ "the specified bit-wise operator.\n"
+	                         "\n"
+
+	                         "&=(other:?X4?S?Dint?.?GBitsetView?#Frozen)\n"
+	                         "|=(other:?X4?S?Dint?.?GBitsetView?#Frozen)\n"
+	                         "^=(other:?X4?S?Dint?.?GBitsetView?#Frozen)\n"
+	                         "Inplace-combine this ?. with another ?. or bitset-like object by performing "
+	                         /**/ "the specified bit-wise operator, and assigning the result back to @this.\n"
 	                         "\n"
 
 	                         "[]->?Dbool\n"
@@ -1431,6 +1557,12 @@ err:
 	return NULL;
 }
 
+
+#define robs_inv bs_inv
+#define robs_and bs_and
+#define robs_or  bs_or
+#define robs_xor bs_xor
+
 #define robs_eq       bs_eq
 #define robs_ne       bs_ne
 #define robs_le       bs_le
@@ -1555,6 +1687,40 @@ PRIVATE struct type_nsi tpconst robs_nsi = {
 	}
 };
 
+PRIVATE struct type_math robs_math = {
+	/* .tp_int32       = */ NULL,
+	/* .tp_int64       = */ NULL,
+	/* .tp_double      = */ NULL,
+	/* .tp_int         = */ NULL,
+	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&robs_inv,
+	/* .tp_pos         = */ NULL,
+	/* .tp_neg         = */ NULL,
+	/* .tp_add         = */ NULL,
+	/* .tp_sub         = */ NULL,
+	/* .tp_mul         = */ NULL,
+	/* .tp_div         = */ NULL,
+	/* .tp_mod         = */ NULL,
+	/* .tp_shl         = */ NULL, /* TODO */
+	/* .tp_shr         = */ NULL, /* TODO */
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_or,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_xor,
+	/* .tp_pow         = */ NULL,
+	/* .tp_inc         = */ NULL,
+	/* .tp_dec         = */ NULL,
+	/* .tp_inplace_add = */ NULL,
+	/* .tp_inplace_sub = */ NULL,
+	/* .tp_inplace_mul = */ NULL,
+	/* .tp_inplace_div = */ NULL,
+	/* .tp_inplace_mod = */ NULL,
+	/* .tp_inplace_shl = */ NULL,
+	/* .tp_inplace_shr = */ NULL,
+	/* .tp_inplace_and = */ NULL,
+	/* .tp_inplace_or  = */ NULL,
+	/* .tp_inplace_xor = */ NULL,
+	/* .tp_inplace_pow = */ NULL
+};
+
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
 PRIVATE struct type_cmp robs_cmp = {
 	/* .tp_hash = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&robs_hash,
@@ -1586,9 +1752,12 @@ PRIVATE struct type_buffer robs_buffer = {
 };
 
 PRIVATE struct type_method tpconst robs_methods[] = {
-	/* TODO: any(start=0,end=-1) */
-	/* TODO: all(start=0,end=-1) */
-	/* TODO: ffs() ffc() fls() flc() */
+	/* TODO: any(start=!0,end=!-1)->?Dbool */
+	/* TODO: all(start=!0,end=!-1)->?Dbool */
+	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
 	TYPE_METHOD("bytes", &robs_bytes,
 	            "->?DBytes\n"
 	            "Returns a view for the underlying bytes of ?."),
@@ -1662,8 +1831,23 @@ INTERN DeeTypeObject RoBitset_Type = {
 	                         "\n"
 
 	                         "repr->\n"
-	                         "Print the representation of @this in the form of ${Bitset({ 0, 1, 2, ... })} "
+	                         "Print the representation of @this in the form of ${Bitset.Frozen({ 0, 1, 2, ... })} "
 	                         /**/ "(listing all bit indices where the associated bit is on)\n"
+	                         "\n"
+
+	                         "~->?.\n"
+	                         "Return a frozen ?GBitset with the same ?#nbits as @this, but with the state "
+	                         /**/ "of all bits inverted. The implementation is allowed to return a sequence "
+	                         /**/ "proxy instead.\n"
+	                         "\n"
+
+	                         "&(other:?X4?S?Dint?GBitset?GBitsetView?.)->?.\n"
+	                         "|(other:?X4?S?Dint?GBitset?GBitsetView?.)->?.\n"
+	                         "^(other:?X4?S?Dint?GBitset?GBitsetView?.)->?.\n"
+	                         "Combine this ?. with another ?GBitset or bitset-like object by performing "
+	                         /**/ "the specified bit-wise operator. If @other is another ?., or ?GBitsetView "
+	                         /**/ "that cannot be modified, the implementation of this function is allowed "
+	                         /**/ "to return a sequence proxy instead or a new ?..\n"
 	                         "\n"
 
 	                         "[]->?Dbool\n"
@@ -1706,7 +1890,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL, /* TODO: "<<", ">>" */
+	/* .tp_math          = */ &robs_math,
 	/* .tp_cmp           = */ &robs_cmp,
 	/* .tp_seq           = */ &robs_seq,
 	/* .tp_iter_next     = */ NULL,
@@ -1745,7 +1929,9 @@ bsv_err_readonly(BitsetView *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bsv_nsi_getsize(BitsetView *__restrict self) {
-	return BitsetView_GetNBits(self);
+	return bitset_npopcount(BitsetView_GetBitset(self),
+	                        self->bsi_startbit,
+	                        self->bsi_endbit);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1795,10 +1981,10 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bsv_hash(BitsetView *__restrict self) {
 	size_t bitno;
 	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	for (bitno = BitsetView_GetMinBitno(self);
-	     bitno < BitsetView_GetEndBitno(self); ++bitno) {
+	for (bitno = self->bsi_startbit;
+	     bitno < self->bsi_endbit; ++bitno) {
 		if (bitset_test(BitsetView_GetBitset(self), bitno)) {
-			size_t index = bitno - BitsetView_GetMinBitno(self);
+			size_t index = bitno - self->bsi_startbit;
 			result = Dee_HashCombine(result, index);
 		}
 	}
@@ -2451,13 +2637,118 @@ bsv_inplace_xor(DREF BitsetView **p_self, DeeObject *other) {
 	return bsv_inplaceop(p_self, other, BITSET_OP_XOR);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+bsv_inv(BitsetView *__restrict self) {
+	size_t self_bits = BitsetView_GetNBits(self);
+	DREF Bitset *result = Bitset_Alloc(self_bits);
+	if unlikely(!result)
+		goto err;
+	bitset_ncopy0_and_maybe_zero_unused_bits(result->bs_bitset,
+	                                         BitsetView_GetBitset(self),
+	                                         self->bsi_startbit, self_bits);
+	bitset_flipall_and_zero_unused_bits(result->bs_bitset, self_bits);
+	result->bs_nbits = self_bits;
+	DeeObject_Init(result, &RoBitset_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bitset_ref_bitop(struct bitset_ref const *__restrict lhs,
+                 struct bitset_ref const *__restrict rhs,
+                 unsigned int op) {
+	DREF Bitset *result;
+	size_t lhs_bits = bitset_ref_nbits(lhs);
+	size_t rhs_bits = bitset_ref_nbits(rhs);
+	size_t com_bits = lhs_bits < rhs_bits ? lhs_bits : rhs_bits;
+	size_t res_bits = lhs_bits > rhs_bits ? lhs_bits : rhs_bits;
+	result = Bitset_Calloc(res_bits);
+	if unlikely(!result)
+		goto err;
+	ASSERT(rhs->bsr_startbit <= _BITSET_WORD_BMSK);
+	bitset_ncopy0_and_zero_unused_bits(result->bs_bitset, lhs->bsr_bitset,
+	                                   lhs->bsr_startbit, lhs_bits);
+	bitset_nbitop(result->bs_bitset, 0, rhs->bsr_bitset,
+	              rhs->bsr_startbit, com_bits, op);
+	if (com_bits < res_bits) {
+		if (op == BITSET_OP_AND) {
+			/* This part was already done by the `Bitset_Calloc()' above. */
+			/*bitset_nclear(result->bs_bitset, com_bits, res_bits);*/
+		} else {
+			/* Insert bits from the larger operand */
+			if (lhs_bits < rhs_bits) {
+				ASSERT(com_bits == lhs_bits);
+				ASSERT(res_bits == rhs_bits);
+				bitset_ncopy(result->bs_bitset, lhs_bits,
+				             rhs->bsr_bitset, rhs->bsr_startbit + lhs_bits,
+				             rhs_bits - lhs_bits);
+			} else {
+				ASSERT(lhs_bits > rhs_bits);
+				ASSERT(com_bits == rhs_bits);
+				ASSERT(res_bits == lhs_bits);
+				bitset_ncopy(result->bs_bitset, rhs_bits,
+				             lhs->bsr_bitset, lhs->bsr_startbit + rhs_bits,
+				             lhs_bits - rhs_bits);
+			}
+		}
+	}
+	result->bs_nbits = res_bits;
+	DeeObject_Init(result, &RoBitset_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bsv_bitop_bitset(BitsetView *self, struct bitset_ref *__restrict ref,
+                 unsigned int op) {
+	struct bitset_ref lhs;
+	bitset_ref_fromview(&lhs, self);
+	return bitset_ref_bitop(&lhs, ref, op);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bsv_bitop(BitsetView *self, DeeObject *other, unsigned int op) {
+	DREF Bitset *result, *temp;
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(other, &ref))
+		return bsv_bitop_bitset(self, &ref, op);
+
+	/* Must create a temp bitset from "other" and then assign that one.
+	 * We can't directly assign from "other" in case "other" somehow
+	 * re-uses the state of "self" (e.g.: is a yield function) */
+	temp = bs_init_fromseq(other, NULL);
+	if unlikely(!temp)
+		goto err;
+	ref.bsr_bitset   = temp->bs_bitset;
+	ref.bsr_startbit = 0;
+	ref.bsr_endbit   = temp->bs_nbits;
+	result = bsv_bitop_bitset(self, &ref, op);
+	Dee_DecrefDokill(temp);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bsv_and(BitsetView *self, DeeObject *other) {
+	return bsv_bitop(self, other, BITSET_OP_AND);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bsv_or(BitsetView *self, DeeObject *other) {
+	return bsv_bitop(self, other, BITSET_OP_OR);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF Bitset *DCALL
+bsv_xor(BitsetView *self, DeeObject *other) {
+	return bsv_bitop(self, other, BITSET_OP_XOR);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 bsv_bool(BitsetView *self) {
-	return bitset_nanyset(BitsetView_GetBitset(self),
-	                      BitsetView_GetMinBitno(self),
-	                      BitsetView_GetMaxBitno(self))
-	       ? 1
-	       : 0;
+	return bitset_nanyset(BitsetView_GetBitset(self), self->bsi_startbit, self->bsi_endbit) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
@@ -2504,7 +2795,7 @@ PRIVATE struct type_math bsv_math = {
 	/* .tp_int64       = */ NULL,
 	/* .tp_double      = */ NULL,
 	/* .tp_int         = */ NULL,
-	/* .tp_inv         = */ NULL,
+	/* .tp_inv         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&bsv_inv,
 	/* .tp_pos         = */ NULL,
 	/* .tp_neg         = */ NULL,
 	/* .tp_add         = */ NULL,
@@ -2514,9 +2805,9 @@ PRIVATE struct type_math bsv_math = {
 	/* .tp_mod         = */ NULL,
 	/* .tp_shl         = */ NULL, /* TODO */
 	/* .tp_shr         = */ NULL, /* TODO */
-	/* .tp_and         = */ NULL,
-	/* .tp_or          = */ NULL,
-	/* .tp_xor         = */ NULL,
+	/* .tp_and         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_and,
+	/* .tp_or          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_or,
+	/* .tp_xor         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_xor,
 	/* .tp_pow         = */ NULL,
 	/* .tp_inc         = */ NULL,
 	/* .tp_dec         = */ NULL,
@@ -2576,9 +2867,12 @@ PRIVATE struct type_method tpconst bsv_methods[] = {
 	/* TODO: clear(bitno:?Dint) */
 	/* TODO: clear(start:?Dint,end:?Dint) */
 
-	/* TODO: any(start=0,end=-1) */
-	/* TODO: all(start=0,end=-1) */
-	/* TODO: ffs() ffc() fls() flc() */
+	/* TODO: any(start=!0,end=!-1)->?Dbool */
+	/* TODO: all(start=!0,end=!-1)->?Dbool */
+	/* TODO: ffs(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: ffc(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: fls(start=!0,end=!-1)->?X2?Dint?N */
+	/* TODO: flc(start=!0,end=!-1)->?X2?Dint?N */
 	TYPE_KWMETHOD_F("insert", &bsv_insert, METHOD_FNOREFESCAPE,
 	                "(bitno:?Dint)->?Dbool\n"
 	                "#tValueError{@bitno is negative or too large}"
@@ -2669,6 +2963,30 @@ INTERN DeeTypeObject BitsetView_Type = {
 
 	                         "iter->\n"
 	                         "Returns an iterator for enumerating the bit indices that are turned on\n"
+	                         "\n"
+
+	                         "~->?AFrozen?GBitset\n"
+	                         "Return a frozen ?GBitset with the same ?#nbits as @this, but with the state "
+	                         /**/ "of all bits inverted. When the buffer of @this bitset can't be modified, "
+	                         /**/ "the implementation is allowed to return a sequence proxy instead.\n"
+	                         "\n"
+
+	                         "&(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)->?AFrozen?GBitset\n"
+	                         "|(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)->?AFrozen?GBitset\n"
+	                         "^(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)->?AFrozen?GBitset\n"
+	                         "Combine this ?. with another ?GBitset or bitset-like object by performing "
+	                         /**/ "the specified bit-wise operator. When the buffer of @this bitset can't "
+	                         /**/ "be modified, and @other is a ?AFrozen?GBitset or another ?. where the "
+	                         /**/ "underlying buffer can't be modified, the implementation is allowed to "
+	                         /**/ "return a sequence proxy instead.\n"
+	                         "\n"
+
+	                         "&=(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)\n"
+	                         "|=(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)\n"
+	                         "^=(other:?X4?S?Dint?GBitset?.?AFrozen?GBitset)\n"
+	                         "#tBufferError{@this ?. object is not writable}"
+	                         "Inplace-combine this ?. with another ?GBitset or bitset-like object by performing "
+	                         /**/ "the specified bit-wise operator, and assigning the result back to @this.\n"
 	                         "\n"
 
 	                         "[]->?Dbool\n"
