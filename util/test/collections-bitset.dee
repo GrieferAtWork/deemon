@@ -142,9 +142,8 @@ function intbits(i: int): BitsetView {
 	return view;
 }
 
-global testedBitops: {string...} = HashSet();
-
-function assertBitops(b: Bitset | BitsetView | Bitset.Frozen) {
+global testedBitsetOkReadonly: {string...} = HashSet();
+function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
 	/* Speed up the test by only testing each bitset permuation once.
 	 * This is done because our "knownGood_*" implementation (while
 	 * definitely known to be good, as the name implies), are also
@@ -152,9 +151,43 @@ function assertBitops(b: Bitset | BitsetView | Bitset.Frozen) {
 	 * prove that they produce the correct results (as opposed to:
 	 * for performance). */
 	local r = repr b;
-	if (!testedBitops.insert(r))
+	if (!testedBitsetOkReadonly.insert(r))
 		return;
+
+	local inv = ~b;
 	local nbits = b.nbits;
+	assert nbits == inv.nbits;
+	assert #b == b.popcount();
+	assert #inv == inv.popcount();
+	assert {} == (b & inv);
+	assert {} == (inv & b);
+	assert [:nbits] == (b | inv);
+	assert [:nbits] == (inv | b);
+	assert [:nbits] == (b ^ inv);
+	assert [:nbits] == (inv ^ b);
+	assert (#b + #inv) == nbits;
+	if (b) {
+		assert {} != b;
+		assert (#b) > 0;
+		assert b.any();
+		if (b == [:nbits]) {
+			assert b.all();
+			assert !inv;
+		}
+	} else {
+		assert !b.any();
+		assert !b.all();
+		assert {} == b;
+		assert (#b) == 0;
+		assert inv == [:nbits];
+	}
+
+	for (local i: [:nbits]) {
+		assert b[i] === (i in b);
+		assert inv[i] === (i in inv);
+		assert b[i] == !inv[i];
+	}
+
 	for (local start, end: {
 		(0, -1),
 		(1, -1),
@@ -181,38 +214,6 @@ function assertBitops(b: Bitset | BitsetView | Bitset.Frozen) {
 		assert knownGood_ctz(b, start, end) == b.ctz(start, end), f"{repr b}.ctz({start}, {end}) [nbits: {nbits}]";
 		assert knownGood_cto(b, start, end) == b.cto(start, end), f"{repr b}.cto({start}, {end}) [nbits: {nbits}]";
 	}
-}
-
-function assertBitsetOkReadonly(b: Bitset | BitsetView | Bitset.Frozen) {
-	local inv = ~b;
-	local nbits = b.nbits;
-	assert nbits == inv.nbits;
-	assert {} == (b & inv);
-	assert {} == (inv & b);
-	assert [:nbits] == (b | inv);
-	assert [:nbits] == (inv | b);
-	assert [:nbits] == (b ^ inv);
-	assert [:nbits] == (inv ^ b);
-	assert (#b + #inv) == nbits;
-	if (b) {
-		assert {} != b;
-		assert (#b) > 0;
-		if (b == [:nbits]) {
-			assert !inv;
-		}
-	} else {
-		assert {} == b;
-		assert (#b) == 0;
-		assert inv == [:nbits];
-	}
-
-	for (local i: [:nbits]) {
-		assert b[i] === (i in b);
-		assert inv[i] === (i in inv);
-		assert b[i] == !inv[i];
-	}
-
-	assertBitops(b);
 }
 
 function assertBitsetOk(b: Bitset | BitsetView) {
