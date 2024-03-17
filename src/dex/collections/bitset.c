@@ -1772,8 +1772,7 @@ PRIVATE struct type_member tpconst bs_members[] = {
 
 PRIVATE struct type_member tpconst bs_class_members[] = {
 	TYPE_MEMBER_CONST("Frozen", &RoBitset_Type),
-	TYPE_MEMBER_CONST("View", &BitsetView_Type),
-#define bsv_class_members (bs_class_members + 2)
+#define bsv_class_members (bs_class_members + 1)
 	TYPE_MEMBER_CONST("Iterator", &BitsetIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1788,8 +1787,9 @@ INTERN DeeTypeObject Bitset_Type = {
 	/* .tp_doc      = */ DOC("Implements a bitset, that is a tightly packed array of bits, where "
 	                         /**/ "each bit can either be on or off. The # of bits stored cannot be "
 	                         /**/ "changed, but their state can using ?DSet operators, or by assigning "
-	                         /**/ "!t or !f to the bit's index. Additionally, the state of a bit can "
-	                         /**/ "be queried as either ${bitno in this} or ${this[bitno]}\n"
+	                         /**/ "!t or !f to the bit's index (${this[bitno] = true}), or by using the "
+	                         /**/ "?#set, ?#clear and ?#flip methods. Additionally, the state of a simple "
+	                         /**/ "bit can be queried as either ${bitno in this} or ${this[bitno]}\n"
 	                         "\n"
 
 	                         "()\n"
@@ -1870,7 +1870,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "[]=(index:?Dint,value:?Dbool)\n"
 	                         "#tIntegerOverflow{@index is negative or too large}"
 	                         "#tIndexError{@index is greater that or equal to ?#nbits}"
-	                         "Set the state of the @index'th bit to @value\n"
+	                         "Atomically set the state of the @index'th bit to @valuen"
 	                         "\n"
 
 	                         "del[]->\n"
@@ -1883,7 +1883,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "Alias for ${this[index]}\n"
 	                         "\n"
 
-	                         "[:](start:?X2?N?Dint,end:?X2?N?Dint)->?#View\n"
+	                         "[:](start:?X2?N?Dint,end:?X2?N?Dint)->?GBitsetView\n"
 	                         "Returns a proxy-view for reading/writing the bit-range #C{[start,end)}\n"
 	                         "\n"
 
