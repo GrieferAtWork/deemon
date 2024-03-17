@@ -1811,7 +1811,8 @@ PRIVATE struct type_getset tpconst string_getsets[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_getbuf(String *__restrict self,
               DeeBuffer *__restrict info,
-              unsigned int UNUSED(flags)) {
+              unsigned int flags) {
+	(void)flags;
 	info->bb_base = DeeString_AsBytes((DeeObject *)self, false);
 	if unlikely(!info->bb_base)
 		goto err;

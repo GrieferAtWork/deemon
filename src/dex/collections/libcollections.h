@@ -927,7 +927,8 @@ INTDEF DeeTypeObject RBTreeIterator_Type;
 
 
 /* Bitset-related types. */
-INTDEF DeeTypeObject Bitset_Type; /* TODO: BitsetFrozen_Type */
+INTDEF DeeTypeObject Bitset_Type;
+INTDEF DeeTypeObject RoBitset_Type;
 INTDEF DeeTypeObject BitsetView_Type;
 INTDEF DeeTypeObject BitsetIterator_Type;
 

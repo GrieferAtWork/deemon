@@ -96,6 +96,8 @@ typedef struct {
 
 #define Bitset_Check(ob) /* Bitset is final, so exact check */ \
 	DeeObject_InstanceOfExact(ob, &Bitset_Type)
+#define RoBitset_Check(ob) /* RoBitset is final, so exact check */ \
+	DeeObject_InstanceOfExact(ob, &RoBitset_Type)
 
 typedef struct {
 	OBJECT_HEAD
@@ -407,7 +409,7 @@ bitset_ref_fromview(struct bitset_ref *__restrict self,
 PRIVATE WUNUSED ATTR_IN(1) ATTR_OUT(2) bool DCALL
 DeeObject_AsBitset(DeeObject const *__restrict self,
                    struct bitset_ref *__restrict result) {
-	if (Bitset_Check(self)) {
+	if (Bitset_Check(self) || RoBitset_Check(self)) {
 		Bitset *me = (Bitset *)self;
 		result->bsr_bitset   = me->bs_bitset;
 		result->bsr_startbit = 0;
@@ -421,6 +423,18 @@ DeeObject_AsBitset(DeeObject const *__restrict self,
 	}
 }
 
+PRIVATE NONNULL((1, 2)) void DCALL
+copy_aligned_bits_to_0(bitset_t *__restrict dst,
+                       bitset_t const *__restrict src,
+                       size_t nbits) {
+	memcpy(dst, src, BITSET_SIZEOF(nbits));
+	if (nbits & _BITSET_WORD_BMSK) {
+		/* Ensure that unused bits of the last byte are all zero */
+		size_t maxword = _BITSET_WORD(nbits);
+		bitset_t mask = __HYBRID_BITSET_LO_MASKIN(nbits & _BITSET_WORD_BMSK);
+		dst[maxword] &= mask;
+	}
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
 bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
@@ -438,7 +452,7 @@ bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 				if unlikely(!result)
 					goto err;
 				if (ref.bsr_startbit == 0) {
-					memcpy(result->bs_bitset, ref.bsr_bitset, BITSET_SIZEOF(ref_nbits));
+					copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
 				} else {
 					/* Slow case: bits don't align, so we must copy them one-at-a-time */
 					size_t i;
@@ -456,7 +470,7 @@ bs_init_fromseq_or_bitset(DeeObject *seq, DeeObject *minbits_ob) {
 			result = Bitset_Alloc(ref_nbits);
 			if unlikely(!result)
 				goto err;
-			memcpy(result->bs_bitset, ref.bsr_bitset, BITSET_SIZEOF(ref_nbits));
+			copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
 		} else {
 			/* Slow case: bits don't align, so we must copy them one-at-a-time */
 			size_t i;
@@ -890,6 +904,20 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+bs_frozen(Bitset *__restrict self) {
+	DREF Bitset *result = Bitset_Alloc(self->bs_nbits);
+	if unlikely(!result)
+		goto err;
+	result->bs_nbits = self->bs_nbits;
+	memcpy(result->bs_bitset, self->bs_bitset,
+	       BITSET_SIZEOF(self->bs_nbits));
+	DeeObject_Init(result, &RoBitset_Type);
+	return result;
+err:
+	return NULL;
+}
+
 
 /* (nbits:?Dint,init=!f)
  * (seq:?S?Dint,minbits=!0) */
@@ -1069,6 +1097,18 @@ PRIVATE struct type_buffer bs_buffer = {
 };
 
 PRIVATE struct type_method tpconst bs_methods[] = {
+	/* TODO: flip()  (flip all) */
+	/* TODO: flip(bitno:?Dint) */
+	/* TODO: flip(start:?Dint,end:?Dint) */
+
+	/* TODO: set()  (set all) */
+	/* TODO: set(bitno:?Dint) */
+	/* TODO: set(start:?Dint,end:?Dint) */
+
+	/* TODO: clear()  (clear all) */
+	/* TODO: clear(bitno:?Dint) */
+	/* TODO: clear(start:?Dint,end:?Dint) */
+
 	/* TODO: any(start=0,end=-1) */
 	/* TODO: all(start=0,end=-1) */
 	/* TODO: ffs() ffc() fls() flc() */
@@ -1089,7 +1129,8 @@ PRIVATE struct type_method tpconst bs_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst bs_getsets[] = {
-	TYPE_GETTER_F("__sizeof__", &bs_sizeof, METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETTER_F("frozen", &bs_frozen, METHOD_FNOREFESCAPE, "->?#Frozen"),
+	TYPE_GETTER_F("__sizeof__", &bs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
 	TYPE_GETSET_END
 };
 
@@ -1101,8 +1142,9 @@ PRIVATE struct type_member tpconst bs_members[] = {
 };
 
 PRIVATE struct type_member tpconst bs_class_members[] = {
+	TYPE_MEMBER_CONST("Frozen", &RoBitset_Type),
 	TYPE_MEMBER_CONST("View", &BitsetView_Type),
-#define bsv_class_members (bs_class_members + 1)
+#define bsv_class_members (bs_class_members + 2)
 	TYPE_MEMBER_CONST("Iterator", &BitsetIterator_Type),
 	TYPE_MEMBER_END
 };
@@ -1122,7 +1164,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "\n"
 
 	                         "()\n"
-	                         "Construct an empty Bitset\n"
+	                         "Construct an empty ?.\n"
 	                         "\n"
 
 	                         "(nbits:?Dint,init=!f)\n"
@@ -1136,7 +1178,7 @@ INTERN DeeTypeObject Bitset_Type = {
 	                         "\n"
 
 	                         "copy->\n"
-	                         "Returns a copy @this Bitset\n"
+	                         "Returns a copy @this ?.\n"
 	                         "\n"
 
 	                         "deepcopy->\n"
@@ -1251,6 +1293,371 @@ INTERN DeeTypeObject Bitset_Type = {
 	/* .tp_mro           = */ NULL,
 	/* .tp_operators     = */ bs_operators,
 	/* .tp_operators_size= */ COMPILER_LENOF(bs_operators)
+};
+
+
+
+
+
+
+
+
+#define robs_nsi_getsize bs_nsi_getsize
+#define robs_hash        bs_hash
+
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+robs_init_fromseq(DeeObject *seq) {
+	DREF Bitset *result;
+	struct bitset_fromseq_data data;
+
+	/* Fallback: allocate a full Bitset object and enumerate given "seq" */
+	data.bsfsd_abits  = 128;
+	data.bsfsd_bitset = Bitset_Calloc(data.bsfsd_abits);
+	if unlikely(!data.bsfsd_bitset)
+		goto err;
+	data.bsfsd_bitset->bs_nbits = 0;
+	if unlikely(DeeObject_Foreach(seq, &bitset_fromseq_cb, &data) < 0) {
+		DeeObject_Free(data.bsfsd_bitset);
+		goto err;
+	}
+	result = data.bsfsd_bitset;
+	ASSERT(data.bsfsd_abits >= result->bs_nbits);
+	if (data.bsfsd_abits > result->bs_nbits) {
+		DREF Bitset *new_result;
+		new_result = Bitset_TryRealloc(result, result->bs_nbits);
+		if likely(new_result)
+			result = new_result;
+	}
+	DeeObject_Init(result, &RoBitset_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
+robs_init_fromseq_or_bitset(DeeObject *seq) {
+	/* Check for special case: is `seq' a bitset-like object? */
+	struct bitset_ref ref;
+	if (DeeObject_AsBitset(seq, &ref)) {
+		DREF Bitset *result;
+		size_t ref_nbits = bitset_ref_nbits(&ref);
+		if (ref.bsr_startbit == 0) {
+			result = Bitset_Alloc(ref_nbits);
+			if unlikely(!result)
+				goto err;
+			copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
+		} else {
+			/* Slow case: bits don't align, so we must copy them one-at-a-time */
+			size_t i;
+			result = Bitset_Calloc(ref_nbits);
+			if unlikely(!result)
+				goto err;
+			for (i = 0; i < ref_nbits; ++i) {
+				if (bitset_ref_test(&ref, i))
+					bitset_set(result->bs_bitset, i);
+			}
+		}
+		result->bs_nbits = ref_nbits;
+		DeeObject_Init(result, &RoBitset_Type);
+		return result;
+	}
+	return robs_init_fromseq(seq);
+err:
+	return NULL;
+}
+
+#define robs_eq       bs_eq
+#define robs_ne       bs_ne
+#define robs_le       bs_le
+#define robs_ge       bs_ge
+#define robs_gr       bs_gr
+#define robs_lo       bs_lo
+#define robs_iter     bs_iter
+#define robs_size     bs_size
+#define robs_contains bs_contains
+
+PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
+robs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
+	struct Dee_seq_range range;
+	DREF BitsetView *result;
+	result = DeeObject_MALLOC(BitsetView);
+	if unlikely(!result)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
+	result->bsi_owner = (DREF DeeObject *)self;
+	Dee_Incref(self);
+	result->bsi_buf.bb_base = self->bs_bitset;
+	result->bsi_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
+#ifndef __INTELLISENSE__
+	result->bsi_buf.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+	result->bsi_startbit = range.sr_start;
+	result->bsi_endbit   = range.sr_end;
+	result->bsi_bflags   = Dee_BUFFER_FREADONLY;
+	DeeObject_Init(result, &BitsetView_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
+robs_getrange(Bitset *self, DeeObject *start, DeeObject *end) {
+	Dee_ssize_t start_i, end_i = self->bs_nbits;
+	if (DeeObject_AsSSize(start, &start_i))
+		goto err;
+	if (!DeeNone_Check(end)) {
+		if (DeeObject_AsSSize(end, &end_i))
+			goto err;
+	}
+	return robs_getrange_i(self, start_i, end_i);
+err:
+	return NULL;
+}
+
+#define robs_getbuf bs_getbuf
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+robs_bytes(Bitset *__restrict self, size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, ":bytes"))
+		goto err;
+	return DeeBytes_NewView((DeeObject *)self,
+	                        self->bs_bitset,
+	                        BITSET_SIZEOF(self->bs_nbits),
+	                        Dee_BUFFER_FREADONLY);
+err:
+	return NULL;
+}
+
+#define robs_sizeof bs_sizeof
+PRIVATE WUNUSED DREF Bitset *DCALL robs_ctor(void) {
+	DREF Bitset *result = Bitset_Alloc(0);
+	if unlikely(!result)
+		goto err;
+	result->bs_nbits = 0;
+	DeeObject_Init(result, &RoBitset_Type);
+	return result;
+err:
+	return NULL;
+}
+
+/* (seq:?S?Dint) */
+PRIVATE WUNUSED DREF Bitset *DCALL
+robs_init(size_t argc, DeeObject *const *argv) {
+	DeeObject *seq;
+	if (DeeArg_Unpack(argc, argv, "o:Bitset.Frozen", &seq))
+		goto err;
+	return robs_init_fromseq_or_bitset(seq);
+err:
+	return NULL;
+}
+
+#define robs_bool bs_bool
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+robs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
+	bool is_first;
+	size_t bitno;
+	dssize_t temp, result;
+	result = DeeFormat_PRINT(printer, arg, "Bitset.Frozen({");
+	if unlikely(result < 0)
+		goto done;
+	is_first = true;
+	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
+		DO(err, DeeFormat_Printf(printer, arg,
+		                         "%s%" PRFuSIZ,
+		                         is_first ? " " : ", ",
+		                         bitno));
+		is_first = false;
+	}
+	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                 : DeeFormat_PRINT(printer, arg, " })"));
+done:
+	return result;
+err:
+	return temp;
+}
+
+
+PRIVATE struct type_nsi tpconst robs_nsi = {
+	/* .nsi_class = */ TYPE_SEQX_CLASS_SET,
+	/* .nsi_flags = */ TYPE_SEQX_FNORMAL,
+	{
+		/* .nsi_setlike = */ {
+			/* .nsi_getsize = */ (dfunptr_t)&robs_nsi_getsize,
+			/* .nsi_insert  = */ NULL,
+			/* .nsi_remove  = */ NULL,
+		}
+	}
+};
+
+/* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
+PRIVATE struct type_cmp robs_cmp = {
+	/* .tp_hash = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&robs_hash,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ge,
+};
+
+PRIVATE struct type_seq robs_seq = {
+	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&robs_iter,
+	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&robs_size,
+	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_contains,
+	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_contains,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&robs_getrange,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &robs_nsi
+};
+
+PRIVATE struct type_buffer robs_buffer = {
+	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&robs_getbuf,
+	/* .tp_putbuf       = */ NULL,
+	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
+};
+
+PRIVATE struct type_method tpconst robs_methods[] = {
+	/* TODO: any(start=0,end=-1) */
+	/* TODO: all(start=0,end=-1) */
+	/* TODO: ffs() ffc() fls() flc() */
+	TYPE_METHOD("bytes", &robs_bytes,
+	            "->?DBytes\n"
+	            "Returns a view for the underlying bytes of ?."),
+	TYPE_METHOD_END
+};
+
+PRIVATE struct type_getset tpconst robs_getsets[] = {
+	TYPE_GETTER_F("frozen", &DeeObject_NewRef, METHOD_FCONSTCALL, "->?Dint"),
+	TYPE_GETTER_F("__sizeof__", &robs_sizeof, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE, "->?Dint"),
+	TYPE_GETSET_END
+};
+
+#define robs_members       bs_members
+#define robs_class_members bs_class_members
+
+PRIVATE struct type_operator const robs_operators[] = {
+	TYPE_OPERATOR_FLAGS(OPERATOR_0000_CONSTRUCTOR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0001_COPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0002_DEEPCOPY, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0008_BOOL, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0028_HASH, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE | METHOD_FNOTHROW),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0029_EQ, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002B_LO, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_8003_GETBUF, METHOD_FCONSTCALL),
+};
+
+INTERN DeeTypeObject RoBitset_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "RoBitset",
+	/* .tp_doc      = */ DOC("Frozen (read-only) variant of ?GBitset\n"
+	                         "\n"
+
+	                         "()\n"
+	                         "Construct an empty ?.\n"
+	                         "\n"
+
+	                         "(seq:?S?Dint)\n"
+	                         "#tIntegerOverflow{One of the elements of @seq is negative, or greater than ?ASIZE_MAX?Dint}"
+	                         "Construct a Bitset, turning on all the bits from @seq. The resulting "
+	                         /**/ "?.'s ?#nbits is ${(seq.each + 1) > ...}\n"
+	                         "\n"
+
+	                         "copy->\n"
+	                         "Always re-returns @this\n"
+	                         "\n"
+
+	                         "deepcopy->\n"
+	                         "Always re-returns @this\n"
+	                         "\n"
+
+	                         "#->\n"
+	                         "Returns the number of 1-bits (that is: the population count) of this ?.\n"
+	                         "\n"
+
+	                         "bool->\n"
+	                         "Returns ?t if at least one bit has been turned on\n"
+	                         "\n"
+
+	                         "iter->\n"
+	                         "Returns an iterator for enumerating the bit indices that are turned on\n"
+	                         "\n"
+
+	                         "repr->\n"
+	                         "Print the representation of @this in the form of ${Bitset({ 0, 1, 2, ... })} "
+	                         /**/ "(listing all bit indices where the associated bit is on)\n"
+	                         "\n"
+
+	                         "[]->?Dbool\n"
+	                         "#tIntegerOverflow{@index is negative or too large}"
+	                         "#tIndexError{@index is greater that or equal to ?#nbits}"
+	                         "Returns !t or !f indicative of he the state of the @index'th bit\n"
+	                         "\n"
+
+	                         "contains(index:?Dint)->?Dbool\n"
+	                         "Alias for ${this[index]}\n"
+	                         "\n"
+
+	                         "[:](start:?X2?N?Dint,end:?X2?N?Dint)->?#View\n"
+	                         "Returns a proxy-view for reading the bit-range #C{[start,end)}"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL | TP_FVARIABLE,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSet_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_var = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&robs_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_deep_ctor = */ (dfunptr_t)&DeeObject_NewRef,
+				/* .tp_any_ctor  = */ (dfunptr_t)&robs_init,
+			}
+		},
+		/* .tp_dtor        = */ NULL, /* No destructor needed! */
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL,
+		/* .tp_deepload    = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&robs_bool,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&robs_printrepr,
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &robs_cmp,
+	/* .tp_seq           = */ &robs_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ &robs_buffer,
+	/* .tp_methods       = */ robs_methods,
+	/* .tp_getsets       = */ robs_getsets,
+	/* .tp_members       = */ robs_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ robs_class_members,
+	/* .tp_call_kw       = */ NULL,
+	/* .tp_mro           = */ NULL,
+	/* .tp_operators     = */ robs_operators,
+	/* .tp_operators_size= */ COMPILER_LENOF(robs_operators)
 };
 
 
@@ -1757,7 +2164,49 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bsb_nbits(BitsetView *__restrict self) {
+bsv_frozen(BitsetView *__restrict self) {
+	DREF Bitset *result;
+	struct bitset_ref ref;
+	size_t ref_nbits;
+	if (!(self->bsi_bflags & Dee_BUFFER_FWRITABLE)) {
+		DeeTypeObject *tp_owner = Dee_TYPE(self->bsi_owner);
+		while (tp_owner && !tp_owner->tp_buffer)
+			tp_owner = DeeType_Base(tp_owner);
+		if (tp_owner && tp_owner->tp_buffer &&
+		    (tp_owner->tp_buffer->tp_buffer_flags & Dee_BUFFER_TYPE_FREADONLY)) {
+			/* Underlying buffer is always read-only -> can re-return "self" */
+			return_reference_((DeeObject *)self);
+		}
+	}
+
+	/* Must create a new frozen bitset from "self". */
+	bitset_ref_fromview(&ref, self);
+	ref_nbits = bitset_ref_nbits(&ref);
+	if (ref.bsr_startbit == 0) {
+		result = Bitset_Alloc(ref_nbits);
+		if unlikely(!result)
+			goto err;
+		copy_aligned_bits_to_0(result->bs_bitset, ref.bsr_bitset, ref_nbits);
+	} else {
+		/* Slow case: bits don't align, so we must copy them one-at-a-time */
+		size_t i;
+		result = Bitset_Calloc(ref_nbits);
+		if unlikely(!result)
+			goto err;
+		for (i = 0; i < ref_nbits; ++i) {
+			if (bitset_ref_test(&ref, i))
+				bitset_set(result->bs_bitset, i);
+		}
+	}
+	result->bs_nbits = ref_nbits;
+	DeeObject_Init(result, &RoBitset_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_nbits(BitsetView *__restrict self) {
 	size_t result = BitsetView_GetNBits(self);
 	return DeeInt_NewSize(result);
 }
@@ -1840,7 +2289,7 @@ bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 	}
 	if (DeeObject_GetBuf(ob, &self->bsi_buf, flags))
 		goto err;
-	nbits = self->bsi_buf.bb_size << _BITSET_WORD_BITS;
+	nbits = self->bsi_buf.bb_size << _BITSET_WORD_SHFT;
 	if (start > nbits)
 		start = nbits;
 	if (end > nbits)
@@ -1977,6 +2426,18 @@ PRIVATE struct type_buffer bsv_buffer = {
 };
 
 PRIVATE struct type_method tpconst bsv_methods[] = {
+	/* TODO: flip()  (flip all) */
+	/* TODO: flip(bitno:?Dint) */
+	/* TODO: flip(start:?Dint,end:?Dint) */
+
+	/* TODO: set()  (set all) */
+	/* TODO: set(bitno:?Dint) */
+	/* TODO: set(start:?Dint,end:?Dint) */
+
+	/* TODO: clear()  (clear all) */
+	/* TODO: clear(bitno:?Dint) */
+	/* TODO: clear(start:?Dint,end:?Dint) */
+
 	/* TODO: any(start=0,end=-1) */
 	/* TODO: all(start=0,end=-1) */
 	/* TODO: ffs() ffc() fls() flc() */
@@ -1998,7 +2459,13 @@ PRIVATE struct type_method tpconst bsv_methods[] = {
 };
 
 PRIVATE struct type_getset tpconst bsv_getsets[] = {
-	TYPE_GETTER_F("nbits", &bsb_nbits, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	TYPE_GETTER_F("frozen", &bsv_frozen, METHOD_FNORMAL,
+	              "->?X2?.?AFrozen?GBitset\n"
+	              "Returns a frozen copy of @this ?., which is either @this when the view is "
+	              /**/ "read-only, and the underlying object is also read-only, or a @this view "
+	              /**/ "wrapped as a ?AFrozen?GBitset when the underlying bits may be modified "
+	              /**/ "by something"),
+	TYPE_GETTER_F("nbits", &bsv_nbits, METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
 	              "->?Dint\n"
 	              "The # of bits stored in this bitset. Attempting to alter the state of "
 	              /**/ "a bit greater than or equal to this value result in an :IndexError"),
@@ -2136,7 +2603,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsv_visit,
 	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
+	/* .tp_math          = */ NULL, /* TODO: "|=" "&=" "^=" */
 	/* .tp_cmp           = */ &bsv_cmp,
 	/* .tp_seq           = */ &bsv_seq,
 	/* .tp_iter_next     = */ NULL,
