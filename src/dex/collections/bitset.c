@@ -1582,7 +1582,7 @@ PRIVATE struct type_seq robs_seq = {
 PRIVATE struct type_buffer robs_buffer = {
 	/* .tp_getbuf       = */ (int (DCALL *)(DeeObject *__restrict, DeeBuffer *__restrict, unsigned int))&robs_getbuf,
 	/* .tp_putbuf       = */ NULL,
-	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
+	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FREADONLY
 };
 
 PRIVATE struct type_method tpconst robs_methods[] = {

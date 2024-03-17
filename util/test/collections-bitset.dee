@@ -74,6 +74,8 @@ function assertBitsetImpl(expected: {int...}, actual: BitsetView) {
 }
 
 function assertBitset(expected: {int...}, actual: BitsetView) {
+	/* Ensure that trying to open a frozen bitset for writing throws a BufferError */
+	assert (try BitsetView(actual.frozen, "w") catch (e...) e) is BufferError from errors;
 	assertBitsetOk(Bitset(actual));
 	assertBitsetOk(BitsetView(Bitset(actual), "w"));
 	assertBitsetImpl(expected, actual);
