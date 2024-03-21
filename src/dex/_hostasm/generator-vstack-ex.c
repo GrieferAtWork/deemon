@@ -1475,6 +1475,19 @@ vcall_Type_tp_copy_ctor_unchecked(struct fungen *__restrict self, DeeTypeObject 
 	ASSERT(tp_copy_ctor);
 	ASSERT(type->tp_init.tp_alloc.tp_copy_ctor == tp_copy_ctor);
 	(void)type; /* XXX: Inline select constructor implementations? */
+
+	/* Inline select constructor implementations
+	 * NOTE: We *always* compare against "tp_copy_ctor", so we also hit
+	 *       sub-classes that inherited these special constructors. */
+	if (tp_copy_ctor == DeeNone_Type.tp_init.tp_assign) {
+		/* This one is known as "none_i2", and a bunch of types
+		 * use it to implement no-op copy constructors. */
+		DO(fg_vpop(self));
+		return 1;
+	}
+
+	/* TODO: Inline some well-known copy-constructors. */
+
 	DO(fg_vnotoneref_at(self, 1)); /* instance, other */
 	if (!DeeType_IsOperatorNoRefEscape(type, OPERATOR_CONSTRUCTOR))
 		DO(fg_vnotoneref_at(self, 2));                                /* instance, other */
@@ -1935,19 +1948,34 @@ vopcallkw_constfunc(struct fungen *__restrict self,
 					/* In case of TP_FVARIABLE types, we can simply inline the call to a var-constructor */
 					DO(fg_vnotoneref(self, true_argc + 1)); /* type, [args...], kw */
 					switch (ctor_type) {
-					case CTOR_TYPE_NOARGS:
+
+					case CTOR_TYPE_NOARGS: {
+						DREF DeeObject *(DCALL *tp_ctor)(void);
 						ASSERT(true_argc == 0);                /* type, kw */
 						DO(vpop_empty_kwds(self));             /* type */
 						DO(fg_vpop(self));                     /* N/A */
-						DO(fg_vcallapi(self, type->tp_init.tp_var.tp_ctor, VCALL_CC_OBJECT, 0)); /* result */
+						tp_ctor = type->tp_init.tp_var.tp_ctor;
+						if (tp_ctor == DeeBool_Type.tp_init.tp_var.tp_ctor)
+							return fg_vpush_const(self, Dee_False);
+						DO(fg_vcallapi(self, tp_ctor, VCALL_CC_OBJECT, 0)); /* result */
 						return fg_vsettyp_noalias(self, type); /* result */
-					case CTOR_TYPE_COPY:
-						/* TODO: Optimize when `type->tp_init.tp_var.tp_copy_ctor == &DeeObject_NewRef' */
+					}	break;
+
+					case CTOR_TYPE_COPY: {
+						DREF DeeObject *(DCALL *tp_copy_ctor)(DeeObject *__restrict other);
 						ASSERT(true_argc == 1);                /* type, copyme, kw */
 						DO(vpop_empty_kwds(self));             /* type, copyme */
 						DO(fg_vpop_at(self, 2));               /* copyme */
-						DO(fg_vcallapi(self, type->tp_init.tp_var.tp_copy_ctor, VCALL_CC_OBJECT, 1)); /* result */
+						tp_copy_ctor = type->tp_init.tp_var.tp_copy_ctor;
+
+						/* Optimizations for special, known callbacks. */
+						if (tp_copy_ctor == &DeeObject_NewRef)
+							return 0;
+						/* TODO: More optimizations from `vcall_getmethod()' */
+						DO(fg_vcallapi(self, tp_copy_ctor, VCALL_CC_OBJECT, 1)); /* result */
 						return fg_vsettyp_noalias(self, type); /* result */
+					}	break;
+
 					case CTOR_TYPE_VARARGS:                    /* type, [args...], kw */
 						DO(vpop_empty_kwds(self));             /* type, [args...] */
 						DO(fg_vpop_at(self, true_argc + 1));   /* [args...] */

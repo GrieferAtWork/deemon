@@ -258,7 +258,7 @@ PRIVATE struct type_math bool_math = {
 	/* .tp_shr    = */ &bool_shr, /* 0, 0 -> 0 >> 0 = 0;
 	                               * 0, 1 -> 0 >> 1 = 0;
 	                               * 1, 0 -> 1 >> 0 = 1;
-	                               * 1, 1 -> 1 >> 1 = 0; // No sign extension because `bool' is unsigned. */
+	                               * 1, 1 -> 1 >> 1 = 0; // No sign extension because `bool' is positive, unsigned. */
 	/* .tp_and    = */ &bool_and,
 	/* .tp_or     = */ &bool_or,
 	/* .tp_xor    = */ &bool_xor,

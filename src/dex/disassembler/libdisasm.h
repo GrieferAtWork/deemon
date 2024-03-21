@@ -37,7 +37,7 @@ DECL_BEGIN
                                                * `tl_name' is the address of the jump-like instruction. */
 struct textlabel {
 	code_addr_t tl_addr;   /* The absolute address of this text label. */
-	uint8_t     tl_class;  /* The type of special text location. */
+	uint8_t     tl_class;  /* The type of special text location (one of `TEXTBYTE_LABELCLASS_*'). */
 	uint8_t    _tl_pad[3]; /* ... */
 	uint32_t    tl_name;   /* The name of this label (dependent on `tl_class') */
 };
@@ -67,10 +67,10 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 /* Print assembly for `code', one instruction per line.
  * When non-NULL, prefix `line_prefix' infront of every
  * line, allowing the caller to specify an indentation. */
-INTDEF dssize_t DCALL
+INTDEF WUNUSED NONNULL((1, 3, 4)) dssize_t DCALL
 libdisasm_printcode(dformatprinter printer, void *arg,
-                    instruction_t *__restrict instr_start,
-                    instruction_t *__restrict instr_end,
+                    instruction_t *instr_start,
+                    instruction_t *instr_end,
                     DeeCodeObject *code,
                     char const *line_prefix,
                     unsigned int flags);

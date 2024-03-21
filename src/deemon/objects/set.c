@@ -222,13 +222,13 @@ PRIVATE struct type_seq invset_seq = {
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-invset_iterator_get(DeeTypeObject *__restrict self) {
+invset_Iterator_get(DeeTypeObject *__restrict self) {
 	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
 	return NULL;
 }
 
 PRIVATE struct type_getset tpconst invset_class_getsets[] = {
-	TYPE_GETTER_NODOC(STR_Iterator, &invset_iterator_get),
+	TYPE_GETTER_NODOC(STR_Iterator, &invset_Iterator_get),
 	TYPE_GETSET_END
 };
 
@@ -758,12 +758,19 @@ INTERN_TPCONST struct type_getset tpconst set_getsets[] = {
 	            /**/ "constructing a snapshot of the set's current elements. - The actual type of "
 	            /**/ "set returned is implementation- and type- specific, and copying itself may "
 	            /**/ "either be done immediately, or as copy-on-write"),
+	/* TODO: "asseq->?DSequence"
+	 * Returns a wrapper for @this ?. that behaves just like a regular sequence,
+	 * supporting index-based item lookup and the like (though this sort of lookup
+	 * will be rather slow, as it will enumerate elements of @this underlying ?.
+	 * every time an item is accessed). Note however that the resulting ?DSequence's
+	 * ${operator iter} simply produces an iterator that wraps around @this ?.'s, so
+	 * enumeration is just as fast as enumeration on the actual ?.. */
 	TYPE_GETSET_END
 };
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-set_iterator_get(DeeTypeObject *__restrict self) {
+set_Iterator_get(DeeTypeObject *__restrict self) {
 	if (self == &DeeSet_Type)
 		return_reference_(&DeeIterator_Type);
 	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
@@ -818,7 +825,7 @@ err:
 
 
 PRIVATE struct type_getset tpconst set_class_getsets[] = {
-	TYPE_GETTER(STR_Iterator, &set_iterator_get,
+	TYPE_GETTER(STR_Iterator, &set_Iterator_get,
 	            "->?DType\n"
 	            "Returns the iterator class used by instances of @this ?. type\n"
 	            "This member must be overwritten by sub-classes of ?."),
