@@ -521,60 +521,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
-DeeString_Join(String *self, DeeObject *seq) {
-	DREF DeeObject *iter, *elem;
-	bool is_first = true;
-	size_t fast_size;
-	struct unicode_printer printer = UNICODE_PRINTER_INIT;
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		/* Fast-sequence optimizations. */
-		size_t i;
-		for (i = 0; i < fast_size; ++i) {
-			/* Print `self' prior to every object, starting with the 2nd one. */
-			if unlikely(!is_first && unicode_printer_printstring(&printer, (DeeObject *)self) < 0)
-				goto err;
-			elem = DeeFastSeq_GetItem(seq, i);
-			if unlikely(!elem)
-				goto err;
-			if unlikely(unicode_printer_printobject(&printer, elem) < 0)
-				goto err_elem_noiter;
-			Dee_Decref(elem);
-			is_first = false;
-		}
-	} else {
-		iter = DeeObject_IterSelf(seq);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			/* Print `self' prior to every object, starting with the 2nd one. */
-			if unlikely(!is_first && unicode_printer_printstring(&printer, (DeeObject *)self) < 0)
-				goto err_elem;
-			if unlikely(unicode_printer_printobject(&printer, elem) < 0)
-				goto err_elem;
-			Dee_Decref(elem);
-			is_first = false;
-			if (DeeThread_CheckInterrupt())
-				goto err_iter;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	return (DREF String *)unicode_printer_pack(&printer);
-err_elem_noiter:
-	Dee_Decref(elem);
-	goto err;
-err_elem:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iter);
-err:
-	unicode_printer_fini(&printer);
-	return NULL;
-}
-
 #define DeeString_IsCntrl(self, start, end)    DeeString_TestTrait(self, start, end, UNICODE_ISCNTRL)
 #define DeeString_IsTab(self, start, end)      DeeString_TestTrait(self, start, end, UNICODE_ISTAB)
 #define DeeString_IsCempty(self, start, end)   DeeString_TestTrait(self, start, end, UNICODE_ISEMPTY)
@@ -2401,8 +2347,8 @@ string_rfind_specific_needle(String *self, String *needle,
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memmemb(lhs.cp8 + start, end - start,
-		                  rhs.cp8, WSTR_LENGTH(rhs.cp8));
+		ptr.cp8 = memrmemb(lhs.cp8 + start, end - start,
+		                   rhs.cp8, WSTR_LENGTH(rhs.cp8));
 		if (!ptr.cp8)
 			goto not_found;
 		result = (size_t)(ptr.cp8 - lhs.cp8);
@@ -2415,8 +2361,8 @@ string_rfind_specific_needle(String *self, String *needle,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memmemw(lhs.cp16 + start, end - start,
-		                   rhs.cp16, WSTR_LENGTH(rhs.cp16));
+		ptr.cp16 = memrmemw(lhs.cp16 + start, end - start,
+		                    rhs.cp16, WSTR_LENGTH(rhs.cp16));
 		if unlikely(!ptr.cp16)
 			goto not_found;
 		result = (size_t)(ptr.cp16 - lhs.cp16);
@@ -2429,8 +2375,8 @@ string_rfind_specific_needle(String *self, String *needle,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memmeml(lhs.cp32 + start, end - start,
-		                   rhs.cp32, WSTR_LENGTH(rhs.cp32));
+		ptr.cp32 = memrmeml(lhs.cp32 + start, end - start,
+		                    rhs.cp32, WSTR_LENGTH(rhs.cp32));
 		if unlikely(!ptr.cp32)
 			goto not_found;
 		result = (size_t)(ptr.cp32 - lhs.cp32);
@@ -2445,10 +2391,10 @@ err:
 	return -1;
 }
 
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_findany(String *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DREF DeeObject *iter;
 	DREF String *elem;
 	size_t fastsize, mylen, orig_end;
@@ -2511,6 +2457,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_indexany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DREF DeeObject *iter;
 	DREF String *elem;
 	size_t fastsize, mylen, orig_end;
@@ -2574,6 +2521,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rfindany(String *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
@@ -2637,6 +2585,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_rindexany(String *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
@@ -3181,9 +3130,9 @@ string_caserfind_specific_needle(String *self, String *needle,
 	CASE_WIDTH_1BYTE:
 		lhs.cp8 = DeeString_As1Byte((DeeObject *)self);
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)needle);
-		ptr.cp8 = memcasememb(lhs.cp8 + start, end - start,
-		                      rhs.cp8, WSTR_LENGTH(rhs.cp8),
-		                      &match_length);
+		ptr.cp8 = memcasermemb(lhs.cp8 + start, end - start,
+		                       rhs.cp8, WSTR_LENGTH(rhs.cp8),
+		                       &match_length);
 		if (!ptr.cp8)
 			goto not_found;
 		result = (size_t)(ptr.cp8 - lhs.cp8);
@@ -3196,9 +3145,9 @@ string_caserfind_specific_needle(String *self, String *needle,
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp16)
 			goto err;
-		ptr.cp16 = memcasememw(lhs.cp16 + start, end - start,
-		                       rhs.cp16, WSTR_LENGTH(rhs.cp16),
-		                       &match_length);
+		ptr.cp16 = memcasermemw(lhs.cp16 + start, end - start,
+		                        rhs.cp16, WSTR_LENGTH(rhs.cp16),
+		                        &match_length);
 		if unlikely(!ptr.cp16)
 			goto not_found;
 		result = (size_t)(ptr.cp16 - lhs.cp16);
@@ -3211,9 +3160,9 @@ string_caserfind_specific_needle(String *self, String *needle,
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)needle);
 		if unlikely(!rhs.cp32)
 			goto err;
-		ptr.cp32 = memcasememl(lhs.cp32 + start, end - start,
-		                       rhs.cp32, WSTR_LENGTH(rhs.cp32),
-		                       &match_length);
+		ptr.cp32 = memcasermeml(lhs.cp32 + start, end - start,
+		                        rhs.cp32, WSTR_LENGTH(rhs.cp32),
+		                        &match_length);
 		if unlikely(!ptr.cp32)
 			goto not_found;
 		result = (size_t)(ptr.cp32 - lhs.cp32);
@@ -3233,6 +3182,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_casefindany(String *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DREF DeeObject *iter;
 	DREF String *elem;
 	size_t fastsize, mylen, orig_end, match_length;
@@ -3300,6 +3250,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caseindexany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DREF DeeObject *iter;
 	DREF String *elem;
 	size_t fastsize, mylen, orig_end, match_length;
@@ -3368,6 +3319,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserfindany(String *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
@@ -3436,6 +3388,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_caserindexany(String *self, size_t argc,
                      DeeObject *const *argv, DeeObject *kw) {
+	/* TODO: Re-write to use `DeeObject_Foreach()' */
 	DeeObject *needles;
 	DREF DeeObject *iter;
 	DREF String *elem;
@@ -4764,12 +4717,42 @@ err:
 	return NULL;
 }
 
+struct string_join_data {
+	struct unicode_printer sjd_out;   /* Output printer */
+	String                *sjd_sep;   /* [1..1] Separator */
+	bool                   sjd_first; /* True if this is the first element. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+string_join_cb(void *arg, DeeObject *elem) {
+	struct string_join_data *data = (struct string_join_data *)arg;
+	/* Print `self' prior to every object, starting with the 2nd one. */
+	if (!data->sjd_first) {
+		if unlikely(unicode_printer_printstring(&data->sjd_out, (DeeObject *)data->sjd_sep) < 0)
+			goto err;
+	}
+	if unlikely(unicode_printer_printobject(&data->sjd_out, elem) < 0)
+		goto err;
+	data->sjd_first = false;
+	return 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 string_join(String *self, size_t argc, DeeObject *const *argv) {
-	DeeObject *items;
-	if (DeeArg_Unpack(argc, argv, "o:join", &items))
+	DeeObject *seq;
+	struct string_join_data data;
+	if (DeeArg_Unpack(argc, argv, "o:join", &seq))
 		goto err;
-	return DeeString_Join(self, items);
+	unicode_printer_init(&data.sjd_out);
+	data.sjd_sep   = self;
+	data.sjd_first = true;
+	if unlikely(DeeObject_Foreach(seq, &string_join_cb, &data) < 0)
+		goto err_printer;
+	return (DREF String *)unicode_printer_pack(&data.sjd_out);
+err_printer:
+	unicode_printer_fini(&data.sjd_out);
 err:
 	return NULL;
 }

@@ -20,137 +20,187 @@
  */
 
 import * from deemon;
+import * from errors;
 
-local text  = "*+#";
-local bytes = text.bytes();
-
-function callFindAnyFunctions(name: string, needles: {string...}) {
-	local a = text.operator . (name)(needles);
-	local b = bytes.operator . (name)(needles);
+function identical(a, b) {
+	assert type(a) === type(b), f"{repr a} == {repr b}";
 	assert a == b;
-	local c = bytes.operator . (name)(for (local s: needles) s.bytes());
-	assert a == c;
-	local indexName = name.replace("find", "index");
-	if (a !is none) {
-		local ia = text.operator . (indexName)(needles);
-		assert a == ia;
-		local ib = bytes.operator . (indexName)(needles);
-		assert a == ib;
-		local ic = bytes.operator . (indexName)(for (local s: needles) s.bytes());
-		assert a == ic;
-	} else {
-		import IndexError from errors;
-		local ia = try ({ text.operator . (indexName)(needles); false; }) catch (IndexError) none;
-		assert ia is none;
-		local ib = try ({ bytes.operator . (indexName)(needles); false; }) catch (IndexError) none;
-		assert ib is none;
-		local ic = try ({ bytes.operator . (indexName)(for (local s: needles) s.bytes()); false; }) catch (IndexError) none;
-		assert ic is none;
+	assert a <= b;
+	assert a >= b;
+	assert !(a != b);
+	assert !(a < b);
+	assert !(a > b);
+}
+
+function nonIdentical(a, b) {
+	assert type(a) !== type(b) || (a != b);
+}
+
+function assertFindAnyImpl(expected: none | int | (int, int), s: string, method: string, needles: {string...}) {
+	local b = s.bytes();
+	local indexMethod = {
+		"findany": "indexany",
+		"rfindany": "rindexany",
+		"casefindany": "caseindexany",
+		"caserfindany": "caserindexany",
+	}[method];
+	identical(expected, s.operator . (method)(needles));
+	identical(expected, b.operator . (method)(needles));
+	identical(expected, b.operator . (method)(needles.each.bytes()));
+	identical(expected, try s.operator . (indexMethod)(needles) catch (IndexError) none);
+	identical(expected, try b.operator . (indexMethod)(needles) catch (IndexError) none);
+	identical(expected, try b.operator . (indexMethod)(needles.each.bytes()) catch (IndexError) none);
+	if ((expected is int && expected >= 1) ||
+	    (expected is Sequence && #expected == 2 && expected[0] >= 1)) {
+		identical(expected, s.operator . (method)(needles, 1));
+		identical(expected, b.operator . (method)(needles, 1));
+		identical(expected, b.operator . (method)(needles.each.bytes(), 1));
+		identical(expected, try s.operator . (indexMethod)(needles, 1) catch (IndexError) none);
+		identical(expected, try b.operator . (indexMethod)(needles, 1) catch (IndexError) none);
+		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
+	} else if ((expected is int && expected < 1) ||
+	           (expected is Sequence && #expected == 2 && expected[0] < 1)) {
+		nonIdentical(expected, s.operator . (method)(needles, 1));
+		nonIdentical(expected, b.operator . (method)(needles, 1));
+		nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 1));
+		nonIdentical(expected, try s.operator . (indexMethod)(needles, 1) catch (IndexError) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles, 1) catch (IndexError) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
 	}
-	return a;
+	local lenMinusOne = #s - 1;
+	if ((expected is int && expected < lenMinusOne) ||
+	    (expected is Sequence && #expected == 2 && expected[1] < lenMinusOne)) {
+		identical(expected, s.operator . (method)(needles, 0, lenMinusOne));
+		identical(expected, b.operator . (method)(needles, 0, lenMinusOne));
+		identical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+		identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+		identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+	} else if ((expected is int && expected < lenMinusOne) ||
+	           (expected is Sequence && #expected == 2 && expected[1] < lenMinusOne)) {
+		nonIdentical(expected, s.operator . (method)(needles, 0, lenMinusOne));
+		nonIdentical(expected, b.operator . (method)(needles, 0, lenMinusOne));
+		nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
+		nonIdentical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
+		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
+	}
+}
+
+function assertFindAny(expected: none | (int, int), s: string, method: string, needles: {string...}) {
+	local caseMethod = {
+		"findany": "casefindany",
+		"rfindany": "caserfindany"
+	}[method];
+	assertFindAnyImpl(expected.first, s, method, needles);
+	assertFindAnyImpl(expected, s, caseMethod, needles);
+	assertFindAnyImpl(expected, s.swapcase(), caseMethod, needles);
+	assertFindAnyImpl(expected, s, caseMethod, for (local x: needles) x.swapcase());
+	if ((needles.each.length + ...) == #needles) {
+		local sNeedles = "".join(needles);
+		assertFindAnyImpl(expected.first, s, method, sNeedles);
+		assertFindAnyImpl(expected, s, caseMethod, sNeedles);
+		assertFindAnyImpl(expected, s.swapcase(), caseMethod, sNeedles);
+		assertFindAnyImpl(expected, s, caseMethod, sNeedles.swapcase());
+	}
 }
 
 /* findany: Find the lowest position of any of the given sub-strings. */
-assert callFindAnyFunctions("findany", { }) is none;
-assert callFindAnyFunctions("findany", { "" }) is none;
-assert callFindAnyFunctions("findany", { "", "+" }) == 1;
-assert callFindAnyFunctions("findany", { "+", "" }) == 1;
-assert callFindAnyFunctions("findany", { "*" }) == 0;
-assert callFindAnyFunctions("findany", { "+" }) == 1;
-assert callFindAnyFunctions("findany", { "#" }) == 2;
-assert callFindAnyFunctions("findany", { "+#" }) == 1;
-assert callFindAnyFunctions("findany", { "#+" }) is none;
-assert callFindAnyFunctions("findany", { "#+", "#" }) == 2;
-assert callFindAnyFunctions("findany", { "+#", "#" }) == 1;
-assert callFindAnyFunctions("findany", { "#", "#+" }) == 2;
-assert callFindAnyFunctions("findany", { "#", "+#" }) == 1;
-assert callFindAnyFunctions("findany", { "*+", "*" }) == 0;
-assert callFindAnyFunctions("findany", { "+*", "*" }) == 0;
-assert callFindAnyFunctions("findany", { "*", "*+" }) == 0;
-assert callFindAnyFunctions("findany", { "*", "+*" }) == 0;
-assert callFindAnyFunctions("findany", { "*+", "+" }) == 0;
-assert callFindAnyFunctions("findany", { "+*", "+" }) == 1;
-assert callFindAnyFunctions("findany", { "+", "*+" }) == 0;
-assert callFindAnyFunctions("findany", { "+", "+*" }) == 1;
+assertFindAny(none, "", "findany", {});
+assertFindAny(none, "", "findany", { "" });
+assertFindAny(none, "foo", "findany", {});
+assertFindAny(none, "foo", "findany", { "" });
+assertFindAny(none, "foo[bar,baz]foo", "findany", {});
+assertFindAny(none, "foo[bar,baz]foo", "findany", { "" });
+assertFindAny((7, 8), "foo[bar,baz]foo", "findany", { "," });
+assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[" });
+assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { "[", "," });
+assertFindAny((3, 4), "foo[bar,baz]foo", "findany", { ",", "[" });
 
-assert callFindAnyFunctions("rfindany", { }) is none;
-assert callFindAnyFunctions("rfindany", { "" }) is none;
-assert callFindAnyFunctions("rfindany", { "", "+" }) == 1;
-assert callFindAnyFunctions("rfindany", { "+", "" }) == 1;
-assert callFindAnyFunctions("rfindany", { "*" }) == 0;
-assert callFindAnyFunctions("rfindany", { "+" }) == 1;
-assert callFindAnyFunctions("rfindany", { "#" }) == 2;
-assert callFindAnyFunctions("rfindany", { "+#" }) == 1;
-assert callFindAnyFunctions("rfindany", { "#+" }) is none;
-assert callFindAnyFunctions("rfindany", { "#+", "#" }) == 2;
-assert callFindAnyFunctions("rfindany", { "+#", "#" }) == 2;
-assert callFindAnyFunctions("rfindany", { "#", "#+" }) == 2;
-assert callFindAnyFunctions("rfindany", { "#", "+#" }) == 2;
-assert callFindAnyFunctions("rfindany", { "*+", "*" }) == 0;
-assert callFindAnyFunctions("rfindany", { "+*", "*" }) == 0;
-assert callFindAnyFunctions("rfindany", { "*", "*+" }) == 0;
-assert callFindAnyFunctions("rfindany", { "*", "+*" }) == 0;
-assert callFindAnyFunctions("rfindany", { "*+", "+" }) == 1;
-assert callFindAnyFunctions("rfindany", { "+*", "+" }) == 1;
-assert callFindAnyFunctions("rfindany", { "+", "*+" }) == 1;
-assert callFindAnyFunctions("rfindany", { "+", "+*" }) == 1;
+assertFindAny(none, "", "rfindany", {});
+assertFindAny(none, "", "rfindany", { "" });
+assertFindAny(none, "foo", "rfindany", {});
+assertFindAny(none, "foo", "rfindany", { "" });
+assertFindAny(none, "foo[bar,baz]foo", "rfindany", {});
+assertFindAny(none, "foo[bar,baz]foo", "rfindany", { "" });
+assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "," });
+assertFindAny((3, 4), "foo[bar,baz]foo", "rfindany", { "[" });
+assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { "[", "," });
+assertFindAny((7, 8), "foo[bar,baz]foo", "rfindany", { ",", "[" });
 
-assert callFindAnyFunctions("casefindany", { }) is none;
-assert callFindAnyFunctions("casefindany", { "" }) is none;
-assert callFindAnyFunctions("casefindany", { "", "+" }) == (1, 2);
-assert callFindAnyFunctions("casefindany", { "+", "" }) == (1, 2);
-assert callFindAnyFunctions("casefindany", { "*" }) == (0, 1);
-assert callFindAnyFunctions("casefindany", { "+" }) == (1, 2);
-assert callFindAnyFunctions("casefindany", { "#" }) == (2, 3);
-assert callFindAnyFunctions("casefindany", { "+#" }) == (1, 3);
-assert callFindAnyFunctions("casefindany", { "#+" }) is none;
-assert callFindAnyFunctions("casefindany", { "#+", "#" }) == (2, 3);
-assert callFindAnyFunctions("casefindany", { "+#", "#" }) == (1, 3);
-assert callFindAnyFunctions("casefindany", { "#", "#+" }) == (2, 3);
-assert callFindAnyFunctions("casefindany", { "#", "+#" }) == (1, 3);
-assert callFindAnyFunctions("casefindany", { "*+", "*" }) == (0, 2);
-assert callFindAnyFunctions("casefindany", { "+*", "*" }) == (0, 1);
-assert callFindAnyFunctions("casefindany", { "*", "*+" }) == (0, 1);
-assert callFindAnyFunctions("casefindany", { "*", "+*" }) == (0, 1);
-assert callFindAnyFunctions("casefindany", { "*+", "+" }) == (0, 2);
-assert callFindAnyFunctions("casefindany", { "+*", "+" }) == (1, 2);
-assert callFindAnyFunctions("casefindany", { "+", "*+" }) == (0, 2);
-assert callFindAnyFunctions("casefindany", { "+", "+*" }) == (1, 2);
+assertFindAny((1, 3),   "foo[bar,o,baz]foo", "findany", { "oo" });
+assertFindAny((13, 15), "f[bar,o,baz]foo", "findany", { "oo" });
+assertFindAny((6, 7),   "f[bar,o,baz]foo", "findany", { "oo", "o" });
+assertFindAny((2, 4),   "f[bar,o,baz]foo", "findany", { "oo", "ba" });
+assertFindAny((0, 1),   "f[bar,o,baz]foo", "findany", { "oo", "ba", "f" });
+assertFindAny((15, 17), "foo[bar,o,baz]foo", "rfindany", { "oo" });
+assertFindAny((13, 15), "f[bar,o,baz]foo", "rfindany", { "oo" });
+assertFindAny((14, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "o" });
+assertFindAny((13, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba" });
+assertFindAny((14, 15), "f[bar,o,baz]foo", "rfindany", { "oo", "ba", "f", "o" });
 
-assert callFindAnyFunctions("caserfindany", { }) is none;
-assert callFindAnyFunctions("caserfindany", { "" }) is none;
-assert callFindAnyFunctions("caserfindany", { "", "+" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "+", "" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "*" }) == (0, 1);
-assert callFindAnyFunctions("caserfindany", { "+" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "#" }) == (2, 3);
-assert callFindAnyFunctions("caserfindany", { "+#" }) == (1, 3);
-assert callFindAnyFunctions("caserfindany", { "#+" }) is none;
-assert callFindAnyFunctions("caserfindany", { "#+", "#" }) == (2, 3);
-assert callFindAnyFunctions("caserfindany", { "+#", "#" }) == (2, 3);
-assert callFindAnyFunctions("caserfindany", { "#", "#+" }) == (2, 3);
-assert callFindAnyFunctions("caserfindany", { "#", "+#" }) == (2, 3);
-assert callFindAnyFunctions("caserfindany", { "*+", "*" }) == (0, 1);
-assert callFindAnyFunctions("caserfindany", { "+*", "*" }) == (0, 1);
-assert callFindAnyFunctions("caserfindany", { "*", "*+" }) == (0, 2);
-assert callFindAnyFunctions("caserfindany", { "*", "+*" }) == (0, 1);
-assert callFindAnyFunctions("caserfindany", { "*+", "+" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "+*", "+" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "+", "*+" }) == (1, 2);
-assert callFindAnyFunctions("caserfindany", { "+", "+*" }) == (1, 2);
+assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+" });
+assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+", "" });
+assertFindAny((5, 6), "*#foo++foo#*", "findany", { "", "+" });
+assertFindAny((5, 6), "*#foo++foo#*", "findany", { "+", "+" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "", "*" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "*" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "*", "+" });
+assertFindAny((0, 1), "*#foo++foo#*", "findany", { "+", "*" });
 
+assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+" });
+assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+", "" });
+assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "", "+" });
+assertFindAny((6, 7), "*#foo++foo#*", "rfindany", { "+", "+" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "", "*" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "*" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "*", "+" });
+assertFindAny((11, 12), "*#foo++foo#*", "rfindany", { "+", "*" });
 
+assertFindAny(none,   "*+#", "findany", { });
+assertFindAny(none,   "*+#", "findany", { "" });
+assertFindAny((1, 2), "*+#", "findany", { "", "+" });
+assertFindAny((1, 2), "*+#", "findany", { "+", "" });
+assertFindAny((0, 1), "*+#", "findany", { "*" });
+assertFindAny((1, 2), "*+#", "findany", { "+" });
+assertFindAny((2, 3), "*+#", "findany", { "#" });
+assertFindAny((1, 3), "*+#", "findany", { "+#" });
+assertFindAny(none,   "*+#", "findany", { "#+" });
+assertFindAny((2, 3), "*+#", "findany", { "#+", "#" });
+assertFindAny((1, 3), "*+#", "findany", { "+#", "#" });
+assertFindAny((2, 3), "*+#", "findany", { "#", "#+" });
+assertFindAny((1, 3), "*+#", "findany", { "#", "+#" });
+assertFindAny((0, 2), "*+#", "findany", { "*+", "*" });
+assertFindAny((0, 1), "*+#", "findany", { "+*", "*" });
+assertFindAny((0, 1), "*+#", "findany", { "*", "*+" });
+assertFindAny((0, 1), "*+#", "findany", { "*", "+*" });
+assertFindAny((0, 2), "*+#", "findany", { "*+", "+" });
+assertFindAny((1, 2), "*+#", "findany", { "+*", "+" });
+assertFindAny((0, 2), "*+#", "findany", { "+", "*+" });
+assertFindAny((1, 2), "*+#", "findany", { "+", "+*" });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+assertFindAny(none,   "*+#", "rfindany", { });
+assertFindAny(none,   "*+#", "rfindany", { "" });
+assertFindAny((1, 2), "*+#", "rfindany", { "", "+" });
+assertFindAny((1, 2), "*+#", "rfindany", { "+", "" });
+assertFindAny((0, 1), "*+#", "rfindany", { "*" });
+assertFindAny((1, 2), "*+#", "rfindany", { "+" });
+assertFindAny((2, 3), "*+#", "rfindany", { "#" });
+assertFindAny((1, 3), "*+#", "rfindany", { "+#" });
+assertFindAny(none,   "*+#", "rfindany", { "#+" });
+assertFindAny((2, 3), "*+#", "rfindany", { "#+", "#" });
+assertFindAny((2, 3), "*+#", "rfindany", { "+#", "#" });
+assertFindAny((2, 3), "*+#", "rfindany", { "#", "#+" });
+assertFindAny((2, 3), "*+#", "rfindany", { "#", "+#" });
+assertFindAny((0, 1), "*+#", "rfindany", { "*+", "*" });
+assertFindAny((0, 1), "*+#", "rfindany", { "+*", "*" });
+assertFindAny((0, 2), "*+#", "rfindany", { "*", "*+" });
+assertFindAny((0, 1), "*+#", "rfindany", { "*", "+*" });
+assertFindAny((1, 2), "*+#", "rfindany", { "*+", "+" });
+assertFindAny((1, 2), "*+#", "rfindany", { "+*", "+" });
+assertFindAny((1, 2), "*+#", "rfindany", { "+", "*+" });
+assertFindAny((1, 2), "*+#", "rfindany", { "+", "+*" });

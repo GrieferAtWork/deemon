@@ -1,0 +1,63 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+
+function tryAsBytes(x) {
+	for (local y: x) {
+		if (y is string) {
+			yield y.bytes();
+		} else {
+			yield y;
+		}
+	}
+}
+
+function identical(a, b) {
+	assert a == b;
+	assert a <= b;
+	assert a >= b;
+	assert !(a != b);
+	assert !(a < b);
+	assert !(a > b);
+	assert type(a) === type(b);
+}
+
+function assertJoin(expected, sep, seq) {
+	identical(expected, sep.join(seq));
+	identical(expected, sep.join(Tuple(seq)));
+	identical(expected, sep.join(List(seq)));
+	assert expected == sep.bytes().join(seq);
+	assert expected == sep.bytes().join(Tuple(seq));
+	assert expected == sep.bytes().join(List(seq));
+	identical(expected.bytes(), sep.bytes().join(seq));
+	identical(expected.bytes(), sep.bytes().join(Tuple(seq)));
+	identical(expected.bytes(), sep.bytes().join(List(seq)));
+	identical(expected, sep.join(tryAsBytes(seq)));
+	assert expected == sep.bytes().join(tryAsBytes(seq));
+	identical(expected.bytes(), sep.bytes().join(tryAsBytes(seq)));
+}
+
+assertJoin("", "", {});
+assertJoin("", ",", {});
+assertJoin("", "foobar", {});
+assertJoin("10,20,30", ",", {10, 20, 30});
+assertJoin("10,20,30", ",", {"10", 20, "30"});
+assertJoin("10foobar20foobar30", "foobar", {"10", 20, "30"});
