@@ -77,118 +77,149 @@ __DECL_BEGIN
 #define _BITSET_HI_MASKOU_P1(n) __HYBRID_BITSET_HI_MASKOU_P1(n)
 
 
-/* >> bitset_t bitset_decl(self, 256); */
+/* >> bitset_t(3H)
+ * Example:
+ * >> bitset_t bitset_decl(self, 256); */
 #define bitset_decl(self, nbits) __hybrid_bitset_decl(self, nbits)
 
 
 #ifdef __INTELLISENSE__
-/* >> bitset_t bitset_decl(bitset, 42);
+/* >> bitset_t(3H)
+ * Example:
+ * >> bitset_t bitset_decl(bitset, 42);
  * >> bitset_clearall(bitset, 42);
  * >> ... */
 typedef __hybrid_bitset_t bitset_t;
 
-/* Check if a given "bitset" is set. */
+/* >> bitset_test(3H)
+ * Check if a given "bitset" is set. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL bitset_test(bitset_t const *__restrict self, __SIZE_TYPE__ bitno);
 
-/* Change the state of a single "bitno". */
+/* >> bitset_set(3H), bitset_clear(3H), bitset_flip(3H)
+ * Change the state of a single "bitno". */
 __ATTR_NONNULL((1)) void bitset_set(bitset_t *__restrict self, __SIZE_TYPE__ bitno);
 __ATTR_NONNULL((1)) void bitset_clear(bitset_t *__restrict self, __SIZE_TYPE__ bitno);
 __ATTR_NONNULL((1)) void bitset_flip(bitset_t *__restrict self, __SIZE_TYPE__ bitno);
 
-/* Change the state of the first "n_bits". */
+/* >> bitset_setall(3H), bitset_clearall(3H), bitset_flipall(3H)
+ * Change the state of the first "n_bits". */
 __ATTR_NONNULL((1)) void bitset_setall(bitset_t *__restrict self, __SIZE_TYPE__ n_bits);
 __ATTR_NONNULL((1)) void bitset_clearall(bitset_t *__restrict self, __SIZE_TYPE__ n_bits);
 __ATTR_NONNULL((1)) void bitset_flipall(bitset_t *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
+/* >> bitset_nclear(3H)
+ * Turn off bits [startbitno, endbitno) (non-inclusive) in `self'
  * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __ATTR_NONNULL((1)) void bitset_nclear(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
+/* >> bitset_nset(3H)
+ * Turn on bits [startbitno, endbitno) (non-inclusive) in `self'
  * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __ATTR_NONNULL((1)) void bitset_nset(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Flip bits [startbitno, endbitno) (non-inclusive) in `self'
+/* >> bitset_nflip(3H)
+ * Flip bits [startbitno, endbitno) (non-inclusive) in `self'
  * NOTE: When `startbitno > endbitno', the result is weak undefined behavior,
  *       in that the way in which `self' is modified is undefined, though the
  *       function still guaranties that nothing but `self' gets modified. */
 __ATTR_NONNULL((1)) void bitset_nflip(bitset_t *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Find the  first bitno  within [0,  n_bits) that  is off  and store  its
+/* >> bitset_ffc_i(3H)
+ * Find the  first bitno  within [0,  n_bits) that  is off  and store  its
  * index in `*p_value'. If no such bit exists, write `-1' into `*p_value'. */
 __ATTR_NONNULL((1)) void bitset_ffc_i(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits, __SSIZE_TYPE__ *p_value);
 
-/* Find the  first bitno  within [0,  n_bits)  that is  on and  store  its
+/* >> bitset_ffs_i(3H)
+ * Find the  first bitno  within [0,  n_bits)  that is  on and  store  its
  * index in `*p_value'. If no such bit exists, write `-1' into `*p_value'. */
 __ATTR_NONNULL((1)) void bitset_ffs_i(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits, __SSIZE_TYPE__ *p_value);
 
-/* Find the first bitno within [0,  n_bits) that is off and  return
+/* >> bitset_ffc(3H)
+ * Find the first bitno within [0,  n_bits) that is off and  return
  * its index. If no such bit exists, return some value `>= n_bits'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_ffc(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Find  the first bitno  within [0, n_bits) that  is on and return
+/* >> bitset_ffs(3H)
+ * Find  the first bitno  within [0, n_bits) that  is on and return
  * its index. If no such bit exists, return some value `>= n_bits'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_ffs(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Find  the last bitno  within [0, n_bits) that  is off and return
+/* >> bitset_flc(3H)
+ * Find  the last bitno  within [0, n_bits) that  is off and return
  * its index. If no such bit exists, return some value `>= n_bits'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_flc(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Find  the last  bitno within [0,  n_bits) that is  on and return
+/* >> bitset_fls(3H)
+ * Find  the last  bitno within [0,  n_bits) that is  on and return
  * its index. If no such bit exists, return some value `>= n_bits'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_fls(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Find the first bitno within [startbitno,endbitno) that is on and return
+/* >> bitset_nffs(3H)
+ * Find the first bitno within [startbitno,endbitno) that is on and return
  * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nffs(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Find the first bitno within [startbitno,endbitno) that is off and return
+/* >> bitset_nffc(3H)
+ * Find the first bitno within [startbitno,endbitno) that is off and return
  * its  index.  If no  such bit  exists,  return some  value `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nffc(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Find the last bitno within [startbitno,endbitno) that is on and return
+/* >> bitset_nfls(3H)
+ * Find the last bitno within [startbitno,endbitno) that is on and return
  * its index. If  no such  bit exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nfls(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Find the last bitno within [startbitno,endbitno) that is off and return
+/* >> bitset_nflc(3H)
+ * Find the last bitno within [startbitno,endbitno) that is off and return
  * its index.  If no  such bit  exists, return  some value  `>= endbitno'. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_nflc(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Check if the bitset contains any 1-elements */
+/* >> bitset_anyset(3H)
+ * Check if the bitset contains any 1-elements */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL bitset_anyset(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Check if the bitset contains only 1-elements */
+/* >> bitset_allset(3H)
+ * Check if the bitset contains only 1-elements */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL bitset_allset(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Check if the bitset contains any 1-elements within the given range */
+/* >> bitset_nanyset(3H)
+ * Check if the bitset contains any 1-elements within the given range */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL bitset_nanyset(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Check if the bitset contains only 1-elements within the given range */
+/* >> bitset_nallset(3H)
+ * Check if the bitset contains only 1-elements within the given range */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __BOOL bitset_nallset(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Returns the # of 1-bits in `self' */
+/* >> bitset_popcount(3H)
+ * Returns the # of 1-bits in `self' */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_popcount(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Returns the # of 1-bits within the given range */
+/* >> bitset_npopcount(3H)
+ * Returns the # of 1-bits within the given range */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_npopcount(bitset_t const *__restrict self, __SIZE_TYPE__ startbitno, __SIZE_TYPE__ endbitno);
 
-/* Count-leading-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
+/* >> bitset_clz(3H)
+ * Count-leading-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_clz(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Count-trailing-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
+/* >> bitset_ctz(3H)
+ * Count-trailing-zeroes (returns ">= n_bits" when `self' doesn't contain any set bits) */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_ctz(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Count-leading-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
+/* >> bitset_rawclz(3H)
+ * Count-leading-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_rawclz(bitset_t const *__restrict self, __SIZE_TYPE__ n_bits);
 
-/* Count-trailing-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
+/* >> bitset_rawctz(3H)
+ * Count-trailing-zeroes (hard undefined behavior when `self' doesn't contain any set bits) */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1)) __SIZE_TYPE__ bitset_rawctz(bitset_t const *__restrict self);
 
-/* Take "n_bits" from "src:src_startbitno" and store them to "dst:dst_startbitno".
+/* >> bitset_ncopy(3H)
+ * Take "n_bits" from "src:src_startbitno" and store them to "dst:dst_startbitno".
  * NOTE: Overlap is allowed! */
 __ATTR_NONNULL((1, 3)) void
 bitset_ncopy(bitset_t *dst, __SIZE_TYPE__ dst_startbitno,
@@ -203,7 +234,8 @@ bitset_ncopy0(bitset_t *dst, bitset_t const *src,
 #define BITSET_OP_OR  __HYBRID_BITSET_OP_OR
 #define BITSET_OP_XOR __HYBRID_BITSET_OP_XOR
 
-/* Perform  a  bit-operation  "op"  on  the  "n_bits"  from  "src:src_startbitno",
+/* >> bitset_nbitop(3H)
+ * Perform  a  bit-operation  "op"  on  the  "n_bits"  from  "src:src_startbitno",
  * together with "dst:dst_startbitno", storing the result at "dst:dst_startbitno".
  * NOTE: Overlap is allowed!
  * @param: op: One of `BITSET_OP_*' */
@@ -216,20 +248,24 @@ bitset_nbitop0(bitset_t *dst, bitset_t const *src,
                __SIZE_TYPE__ src_startbitno,
                __SIZE_TYPE__ n_bits, unsigned int op);
 
-/* Check if "n_bits" at "lhs:lhs_startbitno" and "rhs:rhs_startbitno" are equal. */
+/* >> bitset_ncmpeq(3H)
+ * Check if "n_bits" at "lhs:lhs_startbitno" and "rhs:rhs_startbitno" are equal. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 bitset_ncmpeq(bitset_t const *lhs, __SIZE_TYPE__ lhs_startbitno,
               bitset_t const *rhs, __SIZE_TYPE__ rhs_startbitno,
               __SIZE_TYPE__ n_bits);
 
-/* Check if all 1-bits from `lhs:lhs_startbitno...+=n_bits' also appear in `rhs:rhs_startbitno...+=n_bits'.
+/* >> bitset_ncmple(3H)
+ * Check if all 1-bits from `lhs:lhs_startbitno...+=n_bits' also appear in `rhs:rhs_startbitno...+=n_bits'.
  * This function implements the a is-subset-or-equal check. */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 bitset_ncmple(bitset_t const *lhs, __SIZE_TYPE__ lhs_startbitno,
               bitset_t const *rhs, __SIZE_TYPE__ rhs_startbitno,
               __SIZE_TYPE__ n_bits);
 
-/* All of the other compare operator */
+/* >> bitset_ncmpne(3H), bitset_ncmpge(3H), bitset_ncmplo(3H), bitset_ncmpgr(3H)
+ * All of the other compare operator.
+ * @see bitset_ncmpeq, bitset_ncmple */
 __ATTR_PURE __ATTR_WUNUSED __ATTR_NONNULL((1, 3)) __BOOL
 bitset_ncmpne(bitset_t const *lhs, __SIZE_TYPE__ lhs_startbitno,
               bitset_t const *rhs, __SIZE_TYPE__ rhs_startbitno,
