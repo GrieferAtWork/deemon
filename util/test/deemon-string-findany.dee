@@ -33,10 +33,10 @@ function identical(a, b) {
 }
 
 function nonIdentical(a, b) {
-	assert type(a) !== type(b) || (a != b);
+	assert type(a) !== type(b) || (a != b), f"{repr a} != {repr b}";
 }
 
-function assertFindAnyImpl(expected: none | int | (int, int), s: string, method: string, needles: {string...}) {
+function assertFindAnyImpl2(expected: none | int | (int, int), s: string, method: string, needles: {string...}) {
 	local b = s.bytes();
 	local indexMethod = {
 		"findany": "indexany",
@@ -68,16 +68,14 @@ function assertFindAnyImpl(expected: none | int | (int, int), s: string, method:
 		nonIdentical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 1) catch (IndexError) none);
 	}
 	local lenMinusOne = #s - 1;
-	if ((expected is int && expected < lenMinusOne) ||
-	    (expected is Sequence && #expected == 2 && expected[1] < lenMinusOne)) {
+	if (expected is Sequence && #expected == 2 && expected[1] <= lenMinusOne) {
 		identical(expected, s.operator . (method)(needles, 0, lenMinusOne));
 		identical(expected, b.operator . (method)(needles, 0, lenMinusOne));
 		identical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
 		identical(expected, try s.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
 		identical(expected, try b.operator . (indexMethod)(needles, 0, lenMinusOne) catch (IndexError) none);
 		identical(expected, try b.operator . (indexMethod)(needles.each.bytes(), 0, lenMinusOne) catch (IndexError) none);
-	} else if ((expected is int && expected < lenMinusOne) ||
-	           (expected is Sequence && #expected == 2 && expected[1] < lenMinusOne)) {
+	} else if (expected is Sequence && #expected == 2 && expected[1] > lenMinusOne) {
 		nonIdentical(expected, s.operator . (method)(needles, 0, lenMinusOne));
 		nonIdentical(expected, b.operator . (method)(needles, 0, lenMinusOne));
 		nonIdentical(expected, b.operator . (method)(needles.each.bytes(), 0, lenMinusOne));
@@ -87,6 +85,23 @@ function assertFindAnyImpl(expected: none | int | (int, int), s: string, method:
 	}
 }
 
+function _hide(x) {
+	local result = x;
+	__asm__("" : "+X" (result));
+	return result;
+}
+
+function assertFindAnyImpl(expected: none | int | (int, int), s: string, method: string, needles: {string...}) {
+	assertFindAnyImpl2(expected, s, method, needles);
+	assertFindAnyImpl2(expected, s, method, Tuple(needles));
+	/* Force test for the case where the "needles"
+	 * argument doesn't support `DeeFastSeq_GetSize()',
+	 * and the call needs to use an iterator internally. */
+	assertFindAnyImpl2(expected, s, method, () -> {
+		for (local x: needles)
+			yield _hide(x);
+	}());
+}
 function assertFindAny(expected: none | (int, int), s: string, method: string, needles: {string...}) {
 	local caseMethod = {
 		"findany": "casefindany",
@@ -196,9 +211,10 @@ assertFindAny((2, 3), "*+#", "rfindany", { "#+", "#" });
 assertFindAny((2, 3), "*+#", "rfindany", { "+#", "#" });
 assertFindAny((2, 3), "*+#", "rfindany", { "#", "#+" });
 assertFindAny((2, 3), "*+#", "rfindany", { "#", "+#" });
-assertFindAny((0, 1), "*+#", "rfindany", { "*+", "*" });
+assertFindAny((0, 2), "*+#", "rfindany", { "*+", "*" });
+assertFindAny((1, 2), "*+#", "rfindany", { "*+", "+" });
 assertFindAny((0, 1), "*+#", "rfindany", { "+*", "*" });
-assertFindAny((0, 2), "*+#", "rfindany", { "*", "*+" });
+assertFindAny((0, 1), "*+#", "rfindany", { "*", "*+" });
 assertFindAny((0, 1), "*+#", "rfindany", { "*", "+*" });
 assertFindAny((1, 2), "*+#", "rfindany", { "*+", "+" });
 assertFindAny((1, 2), "*+#", "rfindany", { "+*", "+" });

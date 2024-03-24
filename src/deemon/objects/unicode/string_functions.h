@@ -1269,6 +1269,22 @@ dee_mempfill(uint32_t *__restrict dst, size_t num_dwords,
 
 
 
+/* Helper macro to facilitate the logic when it comes to custom string sub-ranges.
+ * @param: p_start: [1..1] Pointer to the "size_t start" given by the callers
+ * @param: p_end:   [1..1] Pointer to the "size_t end" given by the callers (may get adjusted)
+ * @param: p_mylen: [1..1][in]  Pointer to the *full* length of the associated string
+ *                        [out] Size of the effective sub-range (OUT(*p_end) - OUT(*p_start))
+ * @param: Lempty_len: Name of a label to jump to when OUT(*p_mylen) would end up 0 or negative */
+#define CLAMP_SUBSTR(/*in*/ p_start, /*in|out*/ p_end,            \
+                     /*in|out*/ p_mylen, Lempty_len)              \
+	do {                                                          \
+		if likely(*(p_end) > *(p_mylen))                          \
+			*(p_end) = *(p_mylen);                                \
+		if unlikely(OVERFLOW_USUB(*(p_end), *(p_start), p_mylen)) \
+			goto Lempty_len;                                      \
+	}	__WHILE0
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_UNICODE_STRING_FUNCTIONS_H */

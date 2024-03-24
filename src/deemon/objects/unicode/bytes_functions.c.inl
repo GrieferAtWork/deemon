@@ -47,17 +47,51 @@ DECL_BEGIN
 
 typedef DeeBytesObject Bytes;
 
+#ifndef DeeTuple_NewII_DEFINED
+#define DeeTuple_NewII_DEFINED
+#ifdef __OPTIMIZE_SIZE__
+#define DeeTuple_NewII(a, b) DeeTuple_Newf(PCKuSIZ PCKuSIZ, a, b)
+#else /* __OPTIMIZE_SIZE__ */
+PRIVATE WUNUSED DREF DeeObject *DCALL
+DeeTuple_NewII(size_t a, size_t b) {
+	DREF DeeObject *aval, *bval;
+	DREF DeeTupleObject *result;
+	aval = DeeInt_NewSize(a);
+	if unlikely(!aval)
+		goto err;
+	bval = DeeInt_NewSize(b);
+	if unlikely(!bval)
+		goto err_aval;
+	result = DeeTuple_NewUninitialized(2);
+	if unlikely(!result)
+		goto err_aval_bval;
+	DeeTuple_SET(result, 0, aval); /* Inherit reference */
+	DeeTuple_SET(result, 1, bval); /* Inherit reference */
+	return (DREF DeeObject *)result;
+err_aval_bval:
+	Dee_Decref(bval);
+err_aval:
+	Dee_Decref(aval);
+err:
+	return NULL;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* !DeeTuple_NewII_DEFINED */
+
+
+#ifndef __NO_builtin_expect
+#define get_needle(self, ob) __builtin_expect(get_needle(self, ob), 0)
+#endif /* !__NO_builtin_expect */
+
 typedef struct {
 	byte_t *n_data;
 	size_t  n_size;
 	byte_t _n_buf[sizeof(size_t)];
 } Needle;
 
-#ifndef __NO_builtin_expect
-#define get_needle(self, ob) __builtin_expect(get_needle(self, ob), 0)
-#endif /* !__NO_builtin_expect */
-
-PRIVATE int (DCALL get_needle)(Needle *__restrict self, DeeObject *__restrict ob) {
+PRIVATE WUNUSED NONNULL((1, 2)) int
+(DCALL get_needle)(/*out*/ Needle *__restrict self,
+                   /*in*/ DeeObject *__restrict ob) {
 	if (DeeString_Check(ob)) {
 		self->n_data = DeeString_AsBytes(ob, false);
 		if unlikely(!self->n_data)
@@ -100,9 +134,9 @@ PRIVATE struct keyword find_kwlist[] = { K(needle), K(start), K(end), KEND };
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_find(Bytes *self, size_t argc,
            DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
 	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":find",
@@ -110,123 +144,14 @@ bytes_find(Bytes *self, size_t argc,
 		goto err;
 	if (get_needle(&needle, find_ob))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		result = NULL;
-	} else {
-		result = (byte_t *)memmemb(DeeBytes_DATA(self) + start,
-		                           end - start,
-		                           needle.n_data,
-		                           needle.n_size);
-	}
-	if (!result)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_casefind(Bytes *self, size_t argc,
-               DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
-	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	byte_t *ptr;
-	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":casefind",
-	                    &find_ob, &start, &end))
-		goto err;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		ptr = NULL;
-	} else {
-		ptr = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start,
-		                                end - start,
-		                                needle.n_data,
-		                                needle.n_size);
-	}
-	if (!ptr)
-		goto not_found;
-	result = (size_t)(ptr - DeeBytes_DATA(self));
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + needle.n_size);
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memmemb(DeeBytes_DATA(self) + start, mylen,
+	                           needle.n_data, needle.n_size);
+	if (result)
+		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
 not_found:
-	return_none;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_rfind(Bytes *self, size_t argc,
-            DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
-	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	byte_t *result;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":rfind",
-	                    &find_ob, &start, &end))
-		goto err;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		result = NULL;
-	} else {
-		result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start,
-		                            end - start,
-		                            needle.n_data,
-		                            needle.n_size);
-	}
-	if (!result)
-		return_reference_(DeeInt_MinusOne);
-	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_caserfind(Bytes *self, size_t argc,
-                DeeObject *const *argv, DeeObject *kw) {
-	DeeObject *find_ob;
-	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	byte_t *ptr;
-	size_t result;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserfind",
-	                    &find_ob, &start, &end))
-		goto err;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		ptr = NULL;
-	} else {
-		ptr = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start,
-		                                 end - start,
-		                                 needle.n_data,
-		                                 needle.n_size);
-	}
-	if (!ptr)
-		goto not_found;
-	result = (size_t)(ptr - DeeBytes_DATA(self));
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + needle.n_size);
-not_found:
-	return_none;
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -234,9 +159,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_index(Bytes *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
 	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":index",
@@ -244,21 +169,41 @@ bytes_index(Bytes *self, size_t argc,
 		goto err;
 	if (get_needle(&needle, find_ob))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		result = NULL;
-	} else {
-		result = (byte_t *)memmemb(DeeBytes_DATA(self) + start,
-		                           end - start,
-		                           needle.n_data,
-		                           needle.n_size);
-	}
-	if (!result) {
-		err_index_not_found((DeeObject *)self, find_ob);
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memmemb(DeeBytes_DATA(self) + start, mylen,
+	                           needle.n_data, needle.n_size);
+	if likely(result)
+		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+not_found:
+	err_index_not_found((DeeObject *)self, find_ob);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_casefind(Bytes *self, size_t argc,
+               DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
+	DeeObject *find_ob;
+	Needle needle;
+	byte_t *result;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":casefind",
+	                    &find_ob, &start, &end))
 		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start, mylen,
+	                                   needle.n_data, needle.n_size);
+	if (result) {
+		size_t index = (size_t)(result - DeeBytes_DATA(self));
+		return DeeTuple_NewII(index, index + needle.n_size);
 	}
-	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+not_found:
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -266,36 +211,51 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseindex(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
 	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	byte_t *ptr;
-	size_t result;
+	byte_t *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":caseindex",
 	                    &find_ob, &start, &end))
 		goto err;
 	if (get_needle(&needle, find_ob))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		ptr = NULL;
-	} else {
-		ptr = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start,
-		                                end - start,
-		                                needle.n_data,
-		                                needle.n_size);
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start, mylen,
+	                                   needle.n_data, needle.n_size);
+	if likely(result) {
+		size_t index = (size_t)(result - DeeBytes_DATA(self));
+		return DeeTuple_NewII(index, index + needle.n_size);
 	}
-	if (!ptr) {
-		err_index_not_found((DeeObject *)self, find_ob);
+not_found:
+	err_index_not_found((DeeObject *)self, find_ob);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_rfind(Bytes *self, size_t argc,
+            DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
+	DeeObject *find_ob;
+	Needle needle;
+	byte_t *result;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":rfind",
+	                    &find_ob, &start, &end))
 		goto err;
-	}
-	result = (size_t)(ptr - DeeBytes_DATA(self));
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + needle.n_size);
+	if (get_needle(&needle, find_ob))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start, mylen,
+	                            needle.n_data, needle.n_size);
+	if (result)
+		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+not_found:
+	return_reference_(DeeInt_MinusOne);
 err:
 	return NULL;
 }
@@ -303,9 +263,9 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rindex(Bytes *self, size_t argc,
              DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
 	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
 	byte_t *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":rindex",
@@ -313,21 +273,41 @@ bytes_rindex(Bytes *self, size_t argc,
 		goto err;
 	if (get_needle(&needle, find_ob))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		result = NULL;
-	} else {
-		result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start,
-		                            end - start,
-		                            needle.n_data,
-		                            needle.n_size);
-	}
-	if (!result) {
-		err_index_not_found((DeeObject *)self, find_ob);
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start, mylen,
+	                            needle.n_data, needle.n_size);
+	if likely(result)
+		return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+not_found:
+	err_index_not_found((DeeObject *)self, find_ob);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserfind(Bytes *self, size_t argc,
+                DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
+	DeeObject *find_ob;
+	Needle needle;
+	byte_t *result;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserfind",
+	                    &find_ob, &start, &end))
 		goto err;
+	if (get_needle(&needle, find_ob))
+		goto err;
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start, mylen,
+	                                    needle.n_data, needle.n_size);
+	if (result) {
+		size_t index = (size_t)(result - DeeBytes_DATA(self));
+		return DeeTuple_NewII(index, index + needle.n_size);
 	}
-	return DeeInt_NewSize((size_t)(result - DeeBytes_DATA(self)));
+not_found:
+	return_none;
 err:
 	return NULL;
 }
@@ -335,142 +315,35 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserindex(Bytes *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
+	size_t mylen, start = 0, end = (size_t)-1;
 	DeeObject *find_ob;
 	Needle needle;
-	size_t start = 0, end = (size_t)-1;
-	byte_t *ptr;
-	size_t result;
+	byte_t *result;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":caserindex",
 	                    &find_ob, &start, &end))
 		goto err;
 	if (get_needle(&needle, find_ob))
 		goto err;
-	if (end > DeeBytes_SIZE(self))
-		end = DeeBytes_SIZE(self);
-	if (start >= end) {
-		ptr = NULL;
-	} else {
-		ptr = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start,
-		                                 end - start,
-		                                 needle.n_data,
-		                                 needle.n_size);
+	mylen = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &mylen, not_found);
+	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start, mylen,
+	                                    needle.n_data, needle.n_size);
+	if likely(result) {
+		size_t index = (size_t)(result - DeeBytes_DATA(self));
+		return DeeTuple_NewII(index, index + needle.n_size);
 	}
-	if (!ptr) {
-		err_index_not_found((DeeObject *)self, find_ob);
-		goto err;
-	}
-	result = (size_t)(ptr - DeeBytes_DATA(self));
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + needle.n_size);
+not_found:
+	err_index_not_found((DeeObject *)self, find_ob);
 err:
 	return NULL;
 }
 
 
-LOCAL NONNULL((1, 2, 5)) int DCALL
-bytes_find_specific_needle(Bytes *self, DeeObject *find_ob,
-                           size_t start, size_t mylen,
-                           size_t *__restrict p_end) {
-	Needle needle;
-	size_t end;
-	byte_t *result;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	end = *p_end + needle.n_size;
-	if (end > mylen)
-		end = mylen;
-	result = (byte_t *)memmemb(DeeBytes_DATA(self) + start,
-	                           end - start,
-	                           needle.n_data,
-	                           needle.n_size);
-	if (result != NULL)
-		*p_end = (size_t)(result - DeeBytes_DATA(self));
-	return 0;
-err:
-	return -1;
-}
-
-LOCAL NONNULL((1, 2, 3, 5)) int DCALL
-bytes_rfind_specific_needle(Bytes *self, DeeObject *find_ob,
-                            size_t *__restrict p_start, size_t end,
-                            bool *__restrict p_did_find_any) {
-	Needle needle;
-	size_t start;
-	byte_t *result;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	start = *p_start;
-	result = (byte_t *)memrmemb(DeeBytes_DATA(self) + start,
-	                            end - start,
-	                            needle.n_data,
-	                            needle.n_size);
-	if (result != NULL) {
-		*p_start        = (size_t)(result - DeeBytes_DATA(self));
-		*p_did_find_any = true;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-LOCAL NONNULL((1, 2, 5, 6)) int DCALL
-bytes_casefind_specific_needle(Bytes *self, DeeObject *find_ob,
-                               size_t start, size_t mylen,
-                               size_t *__restrict p_end,
-                               size_t *__restrict p_match_length) {
-	Needle needle;
-	size_t end;
-	byte_t *result;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	end = *p_end + needle.n_size;
-	if (end > mylen)
-		end = mylen;
-	result = (byte_t *)memasciicasemem(DeeBytes_DATA(self) + start,
-	                                   end - start,
-	                                   needle.n_data,
-	                                   needle.n_size);
-	if (result != NULL) {
-		*p_end = (size_t)(result - DeeBytes_DATA(self));
-		*p_match_length = needle.n_size;
-	}
-	return 0;
-err:
-	return -1;
-}
-
-LOCAL NONNULL((1, 2, 3, 5, 6)) int DCALL
-bytes_caserfind_specific_needle(Bytes *self, DeeObject *find_ob,
-                                size_t *__restrict p_start, size_t end,
-                                bool *__restrict p_did_find_any,
-                                size_t *__restrict p_match_length) {
-	Needle needle;
-	size_t start;
-	byte_t *result;
-	if (get_needle(&needle, find_ob))
-		goto err;
-	start = *p_start;
-	result = (byte_t *)memasciicasermem(DeeBytes_DATA(self) + start,
-	                                    end - start,
-	                                    needle.n_data,
-	                                    needle.n_size);
-	if (result != NULL) {
-		*p_start        = (size_t)(result - DeeBytes_DATA(self));
-		*p_did_find_any = true;
-		*p_match_length = needle.n_size;
-	}
-	return 0;
-err:
-	return -1;
-}
-
 struct bytes_findany_data {
-	byte_t *bfad_base;   /* [1..1] Search range start. */
-	size_t  bfad_size;   /* Search range size (in bytes). */
-	size_t  bfad_result; /* Offset from `bfad_base' of first match. */
+	byte_t *bfad_base;   /* [1..1][const] Search range start. */
+	size_t  bfad_size;   /* [const] Search range size (in bytes). */
+	size_t  bfad_result; /* [<= bfad_size] Offset from `bfad_base' of best match. */
 };
 
 PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -481,19 +354,17 @@ bytes_findany_cb(void *arg, DeeObject *elem) {
 	size_t search_size;
 	if (get_needle(&needle, elem))
 		goto err;
-	if likely(needle.n_size > 0) {
-		search_size = data->bfad_result + needle.n_size - 1;
-		if (search_size > data->bfad_size)
-			search_size = data->bfad_size;
-		result = (byte_t *)memmemb(data->bfad_base, search_size,
-		                           needle.n_data, needle.n_size);
-		if (result != NULL) {
-			size_t hit = (size_t)(result - data->bfad_base);
-			ASSERT(hit < data->bfad_result);
-			data->bfad_result = hit;
-			if (hit == 0)
-				return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
-		}
+	search_size = data->bfad_result + needle.n_size - 1;
+	if (search_size > data->bfad_size)
+		search_size = data->bfad_size;
+	result = (byte_t *)memmemb(data->bfad_base, search_size,
+	                           needle.n_data, needle.n_size);
+	if (result != NULL) {
+		size_t hit = (size_t)(result - data->bfad_base);
+		ASSERT(hit < data->bfad_result);
+		data->bfad_result = hit;
+		if (hit == 0)
+			return -2; /* Found hit at offset=0 -> can stop enumerating needles. */
 	}
 	return 0;
 err:
@@ -503,26 +374,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_findany(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
+	size_t start = 0, end = (size_t)-1;
 	DeeObject *needles;
+	struct bytes_findany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":findany",
 	                    &needles, &start, &end))
 		goto err;
-	mylen = DeeBytes_SIZE(self);
-	if likely(end > mylen)
-		end = mylen;
-	if likely(start < end) {
-		size_t orig_result;
-		struct bytes_findany_data data;
-		data.bfad_base   = DeeBytes_DATA(self) + start;
-		data.bfad_result = orig_result = end - start;
-		data.bfad_size   = mylen - start;
-		if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
-			goto err;
-		if (data.bfad_result < orig_result)
-			return DeeInt_NewSize(start + data.bfad_result);
-	}
+	data.bfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bfad_size, not_found);
+	data.bfad_base   = DeeBytes_DATA(self) + start;
+	data.bfad_result = data.bfad_size;
+	if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
+		goto err;
+	if (data.bfad_result < data.bfad_size)
+		return DeeInt_NewSize(start + data.bfad_result);
+not_found:
 	return_none;
 err:
 	return NULL;
@@ -531,26 +398,22 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_indexany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
+	struct bytes_findany_data data;
+	size_t start = 0, end = (size_t)-1;
 	DeeObject *needles;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":indexany",
 	                    &needles, &start, &end))
 		goto err;
-	mylen = DeeBytes_SIZE(self);
-	if likely(end > mylen)
-		end = mylen;
-	if likely(start < end) {
-		size_t orig_result;
-		struct bytes_findany_data data;
-		data.bfad_base   = DeeBytes_DATA(self) + start;
-		data.bfad_result = orig_result = end - start;
-		data.bfad_size   = mylen - start;
-		if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
-			goto err;
-		if (data.bfad_result < orig_result)
-			return DeeInt_NewSize(start + data.bfad_result);
-	}
+	data.bfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bfad_size, not_found);
+	data.bfad_base   = DeeBytes_DATA(self) + start;
+	data.bfad_result = data.bfad_size;
+	if unlikely(DeeObject_Foreach(needles, &bytes_findany_cb, &data) == -1)
+		goto err;
+	if (data.bfad_result < data.bfad_size)
+		return DeeInt_NewSize(start + data.bfad_result);
+not_found:
 	err_index_not_found((DeeObject *)self, needles);
 err:
 	return NULL;
@@ -559,7 +422,7 @@ err:
 struct bytes_casefindany_data {
 	byte_t *bcfad_base;   /* [1..1] Search range start. */
 	size_t  bcfad_size;   /* Search range size (in bytes). */
-	size_t  bcfad_result; /* Offset from `bcfad_base' of first match. */
+	size_t  bcfad_result; /* [(. + bcfad_reslen) <= bcfad_size] Offset from `bcfad_base' of best match. */
 	size_t  bcfad_reslen; /* # of matched bytes at `bcfad_result'. */
 };
 
@@ -571,18 +434,16 @@ bytes_casefindany_cb(void *arg, DeeObject *elem) {
 	size_t search_size;
 	if (get_needle(&needle, elem))
 		goto err;
-	if likely(needle.n_size > 0) {
-		search_size = data->bcfad_result + needle.n_size - 1;
-		if (search_size > data->bcfad_size)
-			search_size = data->bcfad_size;
-		result = (byte_t *)memasciicasemem(data->bcfad_base, search_size,
-		                                   needle.n_data, needle.n_size);
-		if (result != NULL) {
-			size_t hit = (size_t)(result - data->bcfad_base);
-			ASSERT(hit < data->bcfad_result);
-			data->bcfad_result = hit;
-			data->bcfad_reslen = needle.n_size;
-		}
+	search_size = data->bcfad_result + needle.n_size - 1;
+	if (search_size > data->bcfad_size)
+		search_size = data->bcfad_size;
+	result = (byte_t *)memasciicasemem(data->bcfad_base, search_size,
+	                                   needle.n_data, needle.n_size);
+	if (result != NULL) {
+		size_t hit = (size_t)(result - data->bcfad_base);
+		ASSERT(hit < data->bcfad_result);
+		data->bcfad_result = hit;
+		data->bcfad_reslen = needle.n_size;
 	}
 	return 0;
 err:
@@ -592,29 +453,25 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casefindany(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
+	size_t start = 0, end = (size_t)-1;
 	DeeObject *needles;
+	struct bytes_casefindany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":casefindany",
 	                    &needles, &start, &end))
 		goto err;
-	mylen = DeeBytes_SIZE(self);
-	if likely(end > mylen)
-		end = mylen;
-	if likely(start < end) {
-		struct bytes_casefindany_data data;
-		data.bcfad_base   = DeeBytes_DATA(self) + start;
-		data.bcfad_result = end - start;
-		data.bcfad_reslen = 0;
-		data.bcfad_size   = mylen - start;
-		if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
-			goto err;
-		if (data.bcfad_reslen) {
-			return DeeTuple_Newf(PCKuSIZ PCKuSIZ,
-			                     start + data.bcfad_result,
-			                     start + data.bcfad_result + data.bcfad_reslen);
-		}
+	data.bcfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bcfad_size, not_found);
+	data.bcfad_base   = DeeBytes_DATA(self) + start;
+	data.bcfad_result = data.bcfad_size;
+	data.bcfad_reslen = 0;
+	if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
+		goto err;
+	if (data.bcfad_result < data.bcfad_size) {
+		return DeeTuple_NewII(start + data.bcfad_result,
+		                      start + data.bcfad_result + data.bcfad_reslen);
 	}
+not_found:
 	return_none;
 err:
 	return NULL;
@@ -623,295 +480,182 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caseindexany(Bytes *self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
-	size_t mylen, start = 0, end = (size_t)-1;
+	size_t start = 0, end = (size_t)-1;
 	DeeObject *needles;
+	struct bytes_casefindany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":caseindexany",
 	                    &needles, &start, &end))
 		goto err;
-	mylen = DeeBytes_SIZE(self);
-	if likely(end > mylen)
-		end = mylen;
-	if likely(start < end) {
-		struct bytes_casefindany_data data;
-		data.bcfad_base   = DeeBytes_DATA(self) + start;
-		data.bcfad_result = end - start;
-		data.bcfad_reslen = 0;
-		data.bcfad_size   = mylen - start;
-		if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
-			goto err;
-		if (data.bcfad_reslen) {
-			return DeeTuple_Newf(PCKuSIZ PCKuSIZ,
-			                     start + data.bcfad_result,
-			                     start + data.bcfad_result + data.bcfad_reslen);
-		}
+	data.bcfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bcfad_size, not_found);
+	data.bcfad_base   = DeeBytes_DATA(self) + start;
+	data.bcfad_result = data.bcfad_size;
+	data.bcfad_reslen = 0;
+	if unlikely(DeeObject_Foreach(needles, &bytes_casefindany_cb, &data) == -1)
+		goto err;
+	if (data.bcfad_result < data.bcfad_size) {
+		return DeeTuple_NewII(start + data.bcfad_result,
+		                      start + data.bcfad_result + data.bcfad_reslen);
 	}
+not_found:
 	err_index_not_found((DeeObject *)self, needles);
 err:
 	return NULL;
+}
+
+struct bytes_rfindany_data {
+	byte_t *brfad_base; /* [1..1] Search range start. */
+	size_t  brfad_size; /* Search range size (in bytes). */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+bytes_rfindany_cb(void *arg, DeeObject *elem) {
+	struct bytes_rfindany_data *data = (struct bytes_rfindany_data *)arg;
+	Needle needle;
+	byte_t *result;
+	if (get_needle(&needle, elem))
+		goto err;
+	result = (byte_t *)memrmemb(data->brfad_base, data->brfad_size,
+	                            needle.n_data, needle.n_size);
+	if (result != NULL) {
+		size_t hit = (size_t)(result - data->brfad_base) + 1;
+		ASSERT(hit <= data->brfad_size);
+		data->brfad_base += hit;
+		data->brfad_size -= hit;
+		if (data->brfad_size == 0)
+			return -2; /* Found hit at the very end -> can stop enumerating needles. */
+	}
+	return 0;
+err:
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rfindany(Bytes *self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: Re-write to use `DeeObject_Foreach()' */
-	DeeObject *needles;
-	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
-	bool did_find_any;
+	DeeObject *needles;
+	byte_t *orig_base;
+	struct bytes_rfindany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":rfindany",
 	                    &needles, &start, &end))
 		goto err;
-	did_find_any = false;
-	mylen = DeeBytes_SIZE(self);
-	if unlikely(start > mylen)
-		start = mylen;
-	if likely(end > mylen)
-		end = mylen;
-	if unlikely(end <= start)
-		goto not_found;
-	fastsize = DeeFastSeq_GetSize(needles);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		for (i = 0; i < fastsize; ++i) {
-			elem = DeeFastSeq_GetItem(needles, i);
-			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
-				goto err_elem;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-	} else {
-		/* Must use an iterator. */
-		iter = DeeObject_IterSelf(needles);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
-				goto err_elem_iter;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	if (did_find_any)
-		return DeeInt_NewSize(start);
-not_found:
-	return_none;
-err_elem_iter:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iter);
-	goto err;
-err_elem:
-	Dee_Decref(elem);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_caserfindany(Bytes *self, size_t argc,
-                   DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: Re-write to use `DeeObject_Foreach()' */
-	DeeObject *needles;
-	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, match_length;
-	size_t start = 0, end = (size_t)-1;
-	bool did_find_any;
-	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
-	                    "o|" UNPdSIZ UNPdSIZ ":caserfindany",
-	                    &needles, &start, &end))
+	data.brfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.brfad_size, not_found);
+	data.brfad_base = orig_base = DeeBytes_DATA(self) + start;
+	if unlikely(DeeObject_Foreach(needles, &bytes_rfindany_cb, &data) == -1)
 		goto err;
-	did_find_any = false;
-	mylen = DeeBytes_SIZE(self);
-	if unlikely(start > mylen)
-		start = mylen;
-	if likely(end > mylen)
-		end = mylen;
-	if unlikely(end <= start)
-		goto not_found;
-	match_length = 0; /* Prevent compiler warnings... */
-	fastsize     = DeeFastSeq_GetSize(needles);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		for (i = 0; i < fastsize; ++i) {
-			elem = DeeFastSeq_GetItem(needles, i);
-			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
-				goto err_elem;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-	} else {
-		/* Must use an iterator. */
-		iter = DeeObject_IterSelf(needles);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
-				goto err_elem_iter;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	if (did_find_any) {
-		return DeeTuple_Newf(PCKuSIZ
-		                     PCKuSIZ,
-		                     start,
-		                     start + match_length);
-	}
+	if (data.brfad_base > orig_base)
+		return DeeInt_NewSize(start + ((data.brfad_base - 1) - orig_base));
 not_found:
 	return_none;
-err_elem_iter:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iter);
-	goto err;
-err_elem:
-	Dee_Decref(elem);
 err:
 	return NULL;
 }
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_rindexany(Bytes *self, size_t argc,
                 DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: Re-write to use `DeeObject_Foreach()' */
-	DeeObject *needles;
-	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen;
 	size_t start = 0, end = (size_t)-1;
-	bool did_find_any;
+	DeeObject *needles;
+	byte_t *orig_base;
+	struct bytes_rfindany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":rindexany",
 	                    &needles, &start, &end))
 		goto err;
-	did_find_any = false;
-	mylen = DeeBytes_SIZE(self);
-	if unlikely(start > mylen)
-		start = mylen;
-	if likely(end > mylen)
-		end = mylen;
-	if unlikely(end <= start)
-		goto not_found;
-	fastsize = DeeFastSeq_GetSize(needles);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		for (i = 0; i < fastsize; ++i) {
-			elem = DeeFastSeq_GetItem(needles, i);
-			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
-				goto err_elem;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-	} else {
-		/* Must use an iterator. */
-		iter = DeeObject_IterSelf(needles);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if unlikely(bytes_rfind_specific_needle(self, elem, &start, mylen, &did_find_any))
-				goto err_elem_iter;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	if (did_find_any)
-		return DeeInt_NewSize(start);
+	data.brfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.brfad_size, not_found);
+	data.brfad_base = orig_base = DeeBytes_DATA(self) + start;
+	if unlikely(DeeObject_Foreach(needles, &bytes_rfindany_cb, &data) == -1)
+		goto err;
+	if (data.brfad_base > orig_base)
+		return DeeInt_NewSize(start + ((data.brfad_base - 1) - orig_base));
 not_found:
 	err_index_not_found((DeeObject *)self, needles);
-	goto err;
-err_elem_iter:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iter);
-	goto err;
-err_elem:
-	Dee_Decref(elem);
 err:
 	return NULL;
 }
 
+struct bytes_caserfindany_data {
+	byte_t *bcrfad_base;   /* [1..1] Search range start. */
+	size_t  bcrfad_size;   /* Search range size (in bytes). */
+	size_t  bcrfad_reslen; /* # of matched bytes at last match. */
+};
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+bytes_caserfindany_cb(void *arg, DeeObject *elem) {
+	struct bytes_caserfindany_data *data = (struct bytes_caserfindany_data *)arg;
+	Needle needle;
+	byte_t *result;
+	if (get_needle(&needle, elem))
+		goto err;
+	result = (byte_t *)memasciicasermem(data->bcrfad_base, data->bcrfad_size,
+	                                    needle.n_data, needle.n_size);
+	if (result != NULL) {
+		size_t hit = (size_t)(result - data->bcrfad_base) + 1;
+		ASSERT(hit <= data->bcrfad_size);
+		data->bcrfad_base += hit;
+		data->bcrfad_size -= hit;
+		data->bcrfad_reslen = needle.n_size;
+		if (data->bcrfad_size == 0)
+			return -2; /* Found hit at the very end -> can stop enumerating needles. */
+	}
+	return 0;
+err:
+	return -1;
+}
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_caserfindany(Bytes *self, size_t argc,
+                   DeeObject *const *argv, DeeObject *kw) {
+	size_t start = 0, end = (size_t)-1;
+	DeeObject *needles;
+	byte_t *orig_base;
+	struct bytes_caserfindany_data data;
+	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
+	                    "o|" UNPdSIZ UNPdSIZ ":caserfindany",
+	                    &needles, &start, &end))
+		goto err;
+	data.bcrfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bcrfad_size, not_found);
+	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + start;
+	if unlikely(DeeObject_Foreach(needles, &bytes_caserfindany_cb, &data) == -1)
+		goto err;
+	if (data.bcrfad_base > orig_base) {
+		size_t index = start + ((data.bcrfad_base - 1) - orig_base);
+		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
+	}
+not_found:
+	return_none;
+err:
+	return NULL;
+}
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_caserindexany(Bytes *self, size_t argc,
                     DeeObject *const *argv, DeeObject *kw) {
-	/* TODO: Re-write to use `DeeObject_Foreach()' */
-	DeeObject *needles;
-	DREF DeeObject *iter, *elem;
-	size_t fastsize, mylen, match_length;
 	size_t start = 0, end = (size_t)-1;
-	bool did_find_any;
+	DeeObject *needles;
+	byte_t *orig_base;
+	struct bytes_caserfindany_data data;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":caserindexany",
 	                    &needles, &start, &end))
 		goto err;
-	did_find_any = false;
-	mylen = DeeBytes_SIZE(self);
-	if unlikely(start > mylen)
-		start = mylen;
-	if likely(end > mylen)
-		end = mylen;
-	if unlikely(end <= start)
-		goto not_found;
-	match_length = 0; /* Prevent compiler warnings... */
-	fastsize     = DeeFastSeq_GetSize(needles);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		for (i = 0; i < fastsize; ++i) {
-			elem = DeeFastSeq_GetItem(needles, i);
-			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
-				goto err_elem;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-	} else {
-		/* Must use an iterator. */
-		iter = DeeObject_IterSelf(needles);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if unlikely(bytes_caserfind_specific_needle(self, elem, &start, mylen, &did_find_any, &match_length))
-				goto err_elem_iter;
-			Dee_Decref(elem);
-			if unlikely(end <= start)
-				break;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	if (did_find_any) {
-		return DeeTuple_Newf(PCKuSIZ
-		                     PCKuSIZ,
-		                     start,
-		                     start + match_length);
+	data.bcrfad_size = DeeBytes_SIZE(self);
+	CLAMP_SUBSTR(&start, &end, &data.bcrfad_size, not_found);
+	data.bcrfad_base = orig_base = DeeBytes_DATA(self) + start;
+	if unlikely(DeeObject_Foreach(needles, &bytes_caserfindany_cb, &data) == -1)
+		goto err;
+	if (data.bcrfad_base > orig_base) {
+		size_t index = start + ((data.bcrfad_base - 1) - orig_base);
+		return DeeTuple_NewII(index, index + data.bcrfad_reslen);
 	}
 not_found:
 	err_index_not_found((DeeObject *)self, needles);
-	goto err;
-err_elem_iter:
-	Dee_Decref(elem);
-err_iter:
-	Dee_Decref(iter);
-	goto err;
-err_elem:
-	Dee_Decref(elem);
 err:
 	return NULL;
 }
@@ -3677,10 +3421,7 @@ bytes_casefindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	                           s_clos.n_data, s_clos.n_size);
 	if unlikely(!ptr)
 		goto err_not_found;
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     (size_t)(ptr - scan_str),
-	                     s_clos.n_size);
+	return DeeTuple_NewII((size_t)(ptr - scan_str), s_clos.n_size);
 err_not_found:
 	return_none;
 err:
@@ -3713,10 +3454,7 @@ bytes_caserfindmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + s_open.n_size);
+	return DeeTuple_NewII(result, result + s_open.n_size);
 err_not_found:
 	return_none;
 err:
@@ -3749,10 +3487,7 @@ bytes_caseindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + s_clos.n_size);
+	return DeeTuple_NewII(result, result + s_clos.n_size);
 err_not_found:
 	err_index_not_found((DeeObject *)self, s_clos_ob);
 err:
@@ -3785,10 +3520,7 @@ bytes_caserindexmatch(Bytes *self, size_t argc, DeeObject *const *argv) {
 	if unlikely(!ptr)
 		goto err_not_found;
 	result = (size_t)(ptr - scan_str);
-	return DeeTuple_Newf(PCKuSIZ
-	                     PCKuSIZ,
-	                     result,
-	                     result + s_open.n_size);
+	return DeeTuple_NewII(result, result + s_open.n_size);
 err_not_found:
 	err_index_not_found((DeeObject *)self, s_open_ob);
 err:
@@ -4310,7 +4042,7 @@ bytes_refind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (result == DEE_RE_STATUS_NOMATCH)
 		return_none;
 	match_size += (size_t)result;
-	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err:
 	return NULL;
 }
@@ -4330,7 +4062,7 @@ bytes_rerfind(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (result == DEE_RE_STATUS_NOMATCH)
 		return_none;
 	match_size += (size_t)result;
-	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err:
 	return NULL;
 }
@@ -4447,7 +4179,7 @@ bytes_reindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	if (result == DEE_RE_STATUS_NOMATCH)
 		goto err_not_found;
 	match_size += (size_t)result;
-	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err_not_found:
 	err_regex_index_not_found((DeeObject *)self);
 err:
@@ -4469,7 +4201,7 @@ bytes_rerindex(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw) 
 	if (result == DEE_RE_STATUS_NOMATCH)
 		goto err_not_found;
 	match_size += (size_t)result;
-	return DeeTuple_Newf(PCKuSIZ PCKuSIZ, (size_t)result, (size_t)match_size);
+	return DeeTuple_NewII((size_t)result, (size_t)match_size);
 err_not_found:
 	err_regex_index_not_found((DeeObject *)self);
 err:
