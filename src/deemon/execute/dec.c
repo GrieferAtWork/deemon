@@ -2469,8 +2469,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		result->co_argc_max += defaultc;
 	}
 
-	result->co_staticc = 0;
-	result->co_staticv = NULL;
+	result->co_constc = 0;
+	result->co_constv = NULL;
 	if (header.co_staticoff) {
 		uint16_t staticc;
 		DREF DeeObject **staticv;
@@ -2488,8 +2488,8 @@ DecFile_LoadCode(DecFile *__restrict self,
 		}
 
 		/* Save the static object vectors. */
-		result->co_staticv = staticv;
-		result->co_staticc = staticc;
+		result->co_constv = staticv;
+		result->co_constc = staticc;
 	}
 
 	result->co_exceptc = 0;
@@ -2670,7 +2670,7 @@ err_kwds_i:
 	        self->df_base + header.co_textoff,
 	        header.co_textsiz,
 	        sizeof(instruction_t));
-	Dee_atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_constlock);
 
 	/* Fill in remaining, basic fields of the resulting code object. */
 	result->co_flags  = header.co_flags;
@@ -2711,8 +2711,8 @@ err_r_except:
 	}
 	Dee_Free(result->co_exceptv);
 err_r_static:
-	Dee_Decrefv(result->co_staticv, result->co_staticc);
-	Dee_Free(result->co_staticv);
+	Dee_Decrefv(result->co_constv, result->co_constc);
+	Dee_Free(result->co_constv);
 err_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);
@@ -2732,8 +2732,8 @@ corrupt_r_except:
 	}
 	Dee_Free(result->co_exceptv);
 corrupt_r_static:
-	Dee_Decrefv(result->co_staticv, result->co_staticc);
-	Dee_Free(result->co_staticv);
+	Dee_Decrefv(result->co_constv, result->co_constc);
+	Dee_Free(result->co_constv);
 corrupt_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);

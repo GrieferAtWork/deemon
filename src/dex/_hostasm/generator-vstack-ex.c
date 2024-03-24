@@ -3515,6 +3515,11 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 			 * >>     call  string_format
 			 * >>     addl  $28, %esp
 			 * >>     ret   $8 */
+			/* TODO: Can inline more than this! (see impl of `string_format()'):
+			 * - Inline "DeeArg_Unpack(argc, argv, "o:format", &args)"
+			 * - Inline "DeeString_AsUtf8((DeeObject *)self)"
+			 */
+
 			/* TODO: Inline constant arguments into the format string */
 			DO(fg_vnotoneref(self, itemc));               /* func, attr, [items...] */ /* XXX: Based on how items are used by the format string... ("{}" -> OPERATOR_STR, "{!r}" -> OPERATOR_REPR) */
 			DO(fg_vpush_immSIZ(self, itemc));             /* func, attr, [items...], t_size */

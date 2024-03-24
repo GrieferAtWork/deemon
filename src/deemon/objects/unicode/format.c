@@ -148,6 +148,8 @@ do_variable_length_index:
 		result = Dee_None;
 		Dee_Incref(result);
 	} else {
+		/* TODO: Support for fast-sequence index access (primarily for tuples) */
+
 		/* Fallback: No key or index -> Yield the next iterator-item. */
 		if (!self->f_seqiter &&
 		    (self->f_seqiter = DeeObject_IterSelf(self->f_args)) == NULL)

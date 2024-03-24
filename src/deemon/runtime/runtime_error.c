@@ -662,9 +662,9 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 					if (!code_name)
 						code_name = DeeCode_NAME(code);
 					DeeError_Throwf(&DeeError_UnboundLocal,
-					                "Unbound local variable `%s' %s%s",
+					                "Unbound local variable `%s'%s%s",
 					                local_name,
-					                code_name ? "in function " : "",
+					                code_name ? " in function " : "",
 					                code_name ? code_name : "");
 					Dee_ddi_state_fini(&state);
 					return -1;
@@ -682,6 +682,31 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       code_name ? " in function " : "",
 	                       code_name ? code_name : "");
 }
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_static)(struct code_object *code, void *ip, uint16_t static_index) {
+	char const *code_name;
+	char const *symbol_name;
+	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
+	ASSERT(static_index < code->co_refstaticc);
+	(void)ip;
+	code_name   = DeeCode_NAME(code);
+	symbol_name = DeeCode_GetRSymbolName((DeeObject *)code, static_index);
+	if (symbol_name) {
+		return DeeError_Throwf(&DeeError_UnboundLocal,
+		                       "Unbound static variable `%s'%s%s",
+		                       symbol_name,
+		                       code_name ? " in function " : "",
+		                       code_name ? code_name : "");
+	}
+	return DeeError_Throwf(&DeeError_UnboundLocal,
+	                       "Unbound static variable %" PRFu16 "%s%s",
+	                       static_index,
+	                       code_name ? " in function " : "",
+	                       code_name ? code_name : "");
+}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 INTERN ATTR_COLD NONNULL((1, 2)) int
 (DCALL err_unbound_arg)(struct code_object *code, void *ip, uint16_t arg_index) {

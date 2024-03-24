@@ -1570,20 +1570,20 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	       (current_basescope->bs_argc_min != current_basescope->bs_argc_max));
 	result->co_flags    = current_basescope->bs_flags;
 	result->co_localc   = current_assembler.a_localc;
-	result->co_staticc  = current_assembler.a_constc;
+	result->co_constc  = current_assembler.a_constc;
 	result->co_refc     = current_assembler.a_refc;
 	result->co_exceptc  = current_assembler.a_exceptc;
 	result->co_argc_min = current_basescope->bs_argc_min;
 	result->co_argc_max = current_basescope->bs_argc_max;
 	result->co_padding  = 0;
-	Dee_atomic_rwlock_init(&result->co_static_lock);
+	Dee_atomic_rwlock_init(&result->co_constlock);
 	result->co_framesize = (current_assembler.a_localc +
 	                        current_assembler.a_stackmax) *
 	                       sizeof(DeeObject *);
 	result->co_codebytes = total_codesize;
 	result->co_keywords  = kwds;
 	result->co_defaultv  = current_basescope->bs_default;
-	result->co_staticv   = current_assembler.a_constv;
+	result->co_constv   = current_assembler.a_constv;
 	result->co_exceptv   = exceptv;
 	result->co_ddi       = ddi; /* Inherit reference. */
 	result->co_next      = current_rootscope->rs_code;

@@ -1552,7 +1552,7 @@ INTERN WUNUSED NONNULL((1)) int
 		goto err;
 	dec_defsymat(text_sym, dec_ptr2addr(ptr));
 
-	if (self->co_staticc) {
+	if (self->co_constc) {
 		/* Generate the static/constant variable vector. */
 		struct dec_section *static_sec;
 		static_sec = dec_newsection_after(SC_ROOT);
@@ -1562,7 +1562,7 @@ INTERN WUNUSED NONNULL((1)) int
 		static_sym = &static_sec->ds_start; /* This is where static object data starts. */
 
 		/* Generate static object vector. */
-		if (dec_putobjv(self->co_staticc, self->co_staticv))
+		if (dec_putobjv(self->co_constc, self->co_constv))
 			goto err;
 	}
 

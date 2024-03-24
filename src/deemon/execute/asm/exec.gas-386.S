@@ -172,11 +172,11 @@ CODE_DDI_NAME = (char *)((*(unsigned int *)((*(unsigned int *)(*(unsigned int *)
 _impl_assert_failed:
 	IF_USE_CFI(.cfi_startproc)
 	pushl  %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  $1b
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  $0
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	call   fSYM(_DeeAssert_Fail,12)
 	IF_USE_CFI(.cfi_endproc)
 END(_impl_assert_failed)
@@ -393,24 +393,29 @@ END(_impl_assert_failed)
 #define ob_type         DEE_OBJECT_OFFSETOF_TYPE     /* DeeTypeObject *ob_type; */
 #define co_flags        DEE_OBJECT_OFFSETOF_DATA     /* uint16_t co_flags; */
 #define co_localc      (DEE_OBJECT_OFFSETOF_DATA+2)  /* uint16_t co_localc; */
-#define co_staticc     (DEE_OBJECT_OFFSETOF_DATA+4)  /* uint16_t co_staticc; */
+#define co_constc      (DEE_OBJECT_OFFSETOF_DATA+4)  /* uint16_t co_constc; */
 #define co_refc        (DEE_OBJECT_OFFSETOF_DATA+6)  /* uint16_t co_refc; */
-#define co_exceptc     (DEE_OBJECT_OFFSETOF_DATA+8)  /* uint16_t co_exceptc; */
-#define co_argc_min    (DEE_OBJECT_OFFSETOF_DATA+10) /* uint16_t co_argc_min; */
-#define co_argc_max    (DEE_OBJECT_OFFSETOF_DATA+12) /* uint16_t co_argc_max; */
-#define co_padding     (DEE_OBJECT_OFFSETOF_DATA+14) /* uint16_t co_padding; */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define co_refstaticc  (DEE_OBJECT_OFFSETOF_DATA+8)  /* uint16_t co_refstaticc; */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define co_padding     (DEE_OBJECT_OFFSETOF_DATA+8)  /* uint16_t co_padding; */
+#define co_refstaticc   co_refc
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define co_exceptc     (DEE_OBJECT_OFFSETOF_DATA+10) /* uint16_t co_exceptc; */
+#define co_argc_min    (DEE_OBJECT_OFFSETOF_DATA+12) /* uint16_t co_argc_min; */
+#define co_argc_max    (DEE_OBJECT_OFFSETOF_DATA+14) /* uint16_t co_argc_max; */
 #define co_framesize   (DEE_OBJECT_OFFSETOF_DATA+16) /* uint32_t co_framesize; */
 #define co_codebytes   (DEE_OBJECT_OFFSETOF_DATA+20) /* code_size_t co_codebytes; */
-#ifndef CONFIG_NO_THREADS
-#define co_static_lock (DEE_OBJECT_OFFSETOF_DATA+24) /* Dee_atomic_rwlock_t co_static_lock; */
+#if !defined(CONFIG_NO_THREADS) && !defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
+#define co_constlock   (DEE_OBJECT_OFFSETOF_DATA+24) /* Dee_atomic_rwlock_t co_constlock; */
 #define co_module      (DEE_OBJECT_OFFSETOF_DATA+28) /* DREF DeeModuleObject *co_module; */
-#else /* !CONFIG_NO_THREADS */
+#else /* !CONFIG_NO_THREADS && !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define co_module      (DEE_OBJECT_OFFSETOF_DATA+24) /* DREF DeeModuleObject *co_module; */
-#endif /* CONFIG_NO_THREADS */
+#endif /* CONFIG_NO_THREADS || CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define co_next        co_module      /* DREF DeeCodeObject *co_next; */
 #define co_keywords    (co_module+4)  /* DREF struct kwds_object *co_keywords; */
 #define co_defaultv    (co_module+8)  /* DREF DeeObject *const *co_defaultv; */
-#define co_staticv     (co_module+12) /* DREF DeeObject **co_staticv; */
+#define co_constv     (co_module+12) /* DREF DeeObject **co_constv; */
 #define co_exceptv     (co_module+16) /* struct except_handler *co_exceptv; */
 #define co_ddi         (co_module+20) /* DREF DeeDDIObject *co_ddi; */
 #ifdef CONFIG_HAVE_CODE_METRICS
@@ -470,10 +475,21 @@ END(_impl_assert_failed)
 #define SIZEOF_Dee_hostasm_function 12
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #define fo_hostasm  (DEE_OBJECT_OFFSETOF_DATA+4) /* struct Dee_hostasm_function fo_hostasm; */
-#define fo_refv     (DEE_OBJECT_OFFSETOF_DATA+4+SIZEOF_Dee_hostasm_function) /* DREF DeeObject **fo_refv; */
+#define _AFTER_fo_hostasm  (DEE_OBJECT_OFFSETOF_DATA+4+SIZEOF_Dee_hostasm_function)
 #else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
-#define fo_refv     (DEE_OBJECT_OFFSETOF_DATA+4) /* DREF DeeObject **fo_refv; */
+#define _AFTER_fo_hostasm (DEE_OBJECT_OFFSETOF_DATA+4)
 #endif /* !CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#ifndef CONFIG_NO_THREADS
+#define fo_reflock  _AFTER_fo_hostasm /* Dee_atomic_rwlock_t fo_reflock; */
+#define _AFTER_fo_reflock (_AFTER_fo_hostasm+4)
+#else /* !CONFIG_NO_THREADS */
+#define _AFTER_fo_reflock _AFTER_fo_hostasm
+#endif /* !CONFIG_NO_THREADS */
+#define fo_refv     _AFTER_fo_reflock /* DREF DeeObject *fo_refv[]; */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define fo_refv     _AFTER_fo_hostasm /* DREF DeeObject *fo_refv[]; */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /* }; */
 
 
@@ -550,26 +566,26 @@ IF_USE_CFI(.cfi_startproc)
 
 	/* Preserve callee-save registers. */
 	pushl  %ebx
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 IF_USE_CFI(.cfi_rel_offset %ebx, 0)
 	pushl  %esi
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 IF_USE_CFI(.cfi_rel_offset %esi, 0)
 	pushl  %edi
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 IF_USE_CFI(.cfi_rel_offset %edi, 0)
 
 #ifdef CODE_IS_REGISTER
 	/* Use `%ebp' as the general-purpose register it is. */
 	pushl  %ebp
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 IF_USE_CFI(.cfi_rel_offset %ebp, 0)
 #elif !defined(NDEBUG)
 	/* Don't break tracebacks: re-push the return address. */
 	pushl  12(%esp)
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %ebp
-IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 IF_USE_CFI(.cfi_rel_offset %ebp, 0)
 	movl   %esp, %ebp
 IF_USE_CFI(.cfi_def_cfa_register %ebp)
@@ -807,21 +823,21 @@ IF_USE_CFI(.cfi_def_cfa_register %ebp)
 	movl   %edx, %esp
 	IF_USE_CFI(.cfi_def_cfa %esp, 24)
 	leave
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	addl   $4, %esp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
 
 	/* Restore registers. */
 	popl   %edi
 	IF_USE_CFI(.cfi_restore %edi)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	popl   %esi
 	IF_USE_CFI(.cfi_restore %esi)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	popl   %ebx
 	IF_USE_CFI(.cfi_restore %ebp)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 
 	ret
 END(DEECODE_EXECFRAMEFAST)
@@ -1296,24 +1312,24 @@ exec_on_altstack:
 #ifdef CODE_IS_REGISTER
 	/* Use `%ebp' as the general-purpose register it is. */
 	popl   %ebp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	IF_USE_CFI(.cfi_same_value %ebp)
 #elif !defined(NDEBUG)
 	movl   %ebp, %esp
 	IF_USE_CFI(.cfi_def_cfa %esp, 28)
 	popl   %ebp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	addl   $4, %esp
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* ... */
 	popl   %edi
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	IF_USE_CFI(.cfi_same_value %edi)
 	popl   %esi
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	IF_USE_CFI(.cfi_same_value %esi)
 	popl   %ebx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	IF_USE_CFI(.cfi_same_value %ebx)
 
 	/* Redirect to `DeeCode_ExecFrameSafeAltStack()' */
@@ -2165,8 +2181,8 @@ target_call_kw:
 	movzbl %al, %ecx /* argc */
 	lodsb
 1:	LOAD_CODE(%edx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
+	movl   co_constv(CODE_OR_EDX), %edx
 	subl   $8, %esp      /* RESERVE(backup(new_sp),backup(argc)) */
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%edx,%eax,4) /* DeeObject_CallKw:kw */
@@ -2207,8 +2223,8 @@ target16_call_tuple_kw:
 target_call_tuple_kw:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* DeeObject_CallTupleKw:kwds */
 	ADJUST_CFA_OFFSET(4)
 	pushl  FIRST         /* DeeObject_CallTupleKw:args */
@@ -2742,25 +2758,47 @@ target16_pop_static:
 	jmp    1f
 target_pop_static:
 	lodsb
-1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	rwlock_write fo_reflock(%ecx), %edx
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	sp_pop %edx
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	xchgl  fo_refv(%ecx,%eax,4), %edx /* Exchange the static variable. */
+#ifndef CONFIG_NO_THREADS
+	movl   FRAME_FUNC, %ecx
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	testl  %edx, %edx
+	jz     .disp
+	decref %edx
+	jmp    .disp
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	sp_pop %edx
+	movl   co_constv(CODE_OR_ECX), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
-	rwlock_endwrite co_static_lock(CODE_OR_ECX)
+	rwlock_endwrite co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_NONZERO(%edx)
 	decref %edx
 	jmp    .disp
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
@@ -3004,50 +3042,74 @@ target_push_varkwds:
 
 
 
-#if defined(__OPTIMIZE_SIZE__) || defined(CONFIG_NO_THREADS)
-#define HAVE_TARGET_PUSH_CONST
-target16_push_const:
-#endif /* __OPTIMIZE_SIZE__ || CONFIG_NO_THREADS  */
 target16_push_static:
 	lodsw
 	jmp    1f
-#ifdef HAVE_TARGET_PUSH_CONST
-target_push_const:
-#endif /* !HAVE_TARGET_PUSH_CONST */
 target_push_static:
 	lodsb
-1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	rwlock_read co_static_lock(CODE_OR_ECX), %edx
+	rwlock_read fo_reflock(%ecx), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	movl   fo_refv(%ecx,%eax,4), %edx
+	testl  %edx, %edx
+	jz     99f
+	sp_push %edx, 1 /* Push the static variable. */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	jmp    .disp
+99:	/* Handle unbound static variable */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	pushl  %eax        /* SID */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FRAME_PC    /* PC */
+	ADJUST_CFA_OFFSET(4)
+	pushl  CODE_OR_LOC /* CODE */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(err_unbound_static,12)
+	ADJUST_CFA_OFFSET(-12)
+	jmp    .except
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	LOAD_CODE(%ecx)
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	rwlock_read co_constlock(CODE_OR_ECX), %edx
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	movl   (%edx,%eax,4), %edx
 	sp_push %edx, 1 /* Push the static variable. */
 #ifndef CONFIG_NO_THREADS
-	rwlock_endread co_static_lock(CODE_OR_ECX)
+	rwlock_endread co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	jmp    .disp
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
-#ifndef HAVE_TARGET_PUSH_CONST
 target16_push_const:
 	lodsw
 	jmp    1f
 target_push_const:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	sp_push %edx, 1 /* Push the static variable. */
 	jmp    .disp
-#endif /* !HAVE_TARGET_PUSH_CONST */
 
 
 
@@ -3925,10 +3987,10 @@ target16_class_c:
 target_class_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	pushl  co_module(CODE_OR_ECX) /* DeeClass_New:declaring_module */
 	ADJUST_CFA_OFFSET(4)
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4)          /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP                    /* DeeClass_New:base */
@@ -3959,8 +4021,8 @@ target_class_ec:
 	pushl  %ecx           /* backup GID / reserve `DeeClass_New:descriptor' */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %ecx            /* ECX = descriptor */
 	xchgl  %ecx, 0(%esp)                  /* DeeClass_New:descriptor; ECX = gid */
 	/* Read the class base from `extern %EDX:%ECX' */
@@ -3985,8 +4047,8 @@ target_class_gc:
 1:	subl   $8, %esp       /* Reserve memory for BASE_BACKUP + `DeeClass_New:declaring_module' */
 	ADJUST_CFA_OFFSET(8)
 	LOAD_CODE(%edx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
+	movl   co_constv(CODE_OR_EDX), %edx
 	pushl  (%edx,%eax,4) /* DeeClass_New:descriptor */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%edx)
@@ -4557,8 +4619,8 @@ target_function_c:
 	lodsb
 .do_function_c:
 	LOAD_CODE(%edx)
-	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	ASSERT_BELOW(%cx,co_constc(CODE_OR_EDX))
+	movl   co_constv(CODE_OR_EDX), %edx
 	incl   %eax /* EAX = refc */
 	subl   $8, %esp
 	ADJUST_CFA_OFFSET(8)
@@ -4961,8 +5023,8 @@ target16_print_c:
 target_print_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	subl   $4, %esp /* Make space for a backup of `DeeFile_Stdout' */
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
@@ -4990,8 +5052,8 @@ target16_print_c_sp:
 target_print_c_sp:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	subl   $4, %esp /* Make space for a backup of `DeeFile_Stdout' */
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
@@ -5019,8 +5081,8 @@ target16_print_c_nl:
 target_print_c_nl:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	subl   $4, %esp /* Make space for a backup of `DeeFile_Stdout' */
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
@@ -5051,8 +5113,8 @@ target16_fprint_c:
 target_fprint_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP /* The file that should be printed to. */
@@ -5068,8 +5130,8 @@ target16_fprint_c_sp:
 target_fprint_c_sp:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP /* The file that should be printed to. */
@@ -5085,8 +5147,8 @@ target16_fprint_c_nl:
 target_fprint_c_nl:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* Push the referenced constant. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP /* The file that should be printed to. */
@@ -5389,8 +5451,8 @@ target16_contains_c:
 target_contains_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Constant set. */
@@ -5411,8 +5473,8 @@ target16_getitem_c:
 target_getitem_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* Constant index. */
 	ADJUST_CFA_OFFSET(4)
 	pushl  TOP
@@ -5430,8 +5492,8 @@ target16_setitem_c:
 target_setitem_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  FIRST
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%ecx,%eax,4) /* Constant index. */
@@ -5804,8 +5866,8 @@ target_callattr_c:
 	lodsb
 1:	/* At this point, the attribute constant id is stored in EAX */
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
 	ASSERT_NONZERO(%edx)
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
@@ -5853,8 +5915,8 @@ target16_callattr_c_tuple:
 target_callattr_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
 	pushl  FIRST        /* DeeObject_CallAttrTuple:args */
@@ -5881,9 +5943,9 @@ target_callattr_this_c:
 	lodsb
 1:	/* At this point, the attribute constant id is stored in EAX */
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %edx /* Attribute name object is now stored in EDX */
 	ASSERT_NONZERO(%edx)
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
@@ -5927,8 +5989,8 @@ target_callattr_this_c_tuple:
 	lodsb
 1:	LOAD_CODE(%ecx)
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%eax,4), %eax
 	WASSERT_EQUAL(l,ob_type(%eax),$(SYM(DeeString_Type)))
 	pushl  FIRST        /* DeeObject_CallAttrTuple:args */
@@ -5958,8 +6020,8 @@ target_callattr_c_seq:
 	pushl  $1            /* DeeObject_CallAttr:argc */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
 	xorl   %eax, %eax    /* In case of `target16_callattr_c_seq', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
@@ -6009,8 +6071,8 @@ target_callattr_c_map:
 	pushl  $1            /* DeeObject_CallAttr:argc */
 	ADJUST_CFA_OFFSET(4)
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	pushl  (%ecx,%eax,4) /* DeeObject_CallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
 	xorl   %eax, %eax    /* In case of `target16_callattr_c_seq', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
@@ -6067,9 +6129,9 @@ target_callattr_c_kw:
 	movl   %ecx, 4(%esp)  /* DeeObject_CallAttrKw:argc */
 	movl   %ecx, 20(%esp) /* BACKUP(argc) */
 	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%dx,co_staticc(CODE_OR_ECX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%dx,co_constc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%edx,4), %edx
 	movl   (%ecx,%eax,4), %eax
 	movl   %edx, 0(%esp)  /* DeeObject_CallAttrKw:attr_name */
@@ -6111,9 +6173,9 @@ target_callattr_c_tuple_kw:
 	movzbl  %al, %edx
 	lodsb
 1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	ASSERT_BELOW(%dx,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	ASSERT_BELOW(%dx,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	movl   (%ecx,%edx,4), %edx /* edx = STATICV[attr_name_cid] */
 	pushl  (%ecx,%eax,4)      /* DeeObject_CallAttrTupleKw:kw */
 	ADJUST_CFA_OFFSET(4)
@@ -6437,8 +6499,8 @@ target16_getattr_c:
 target_getattr_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  %edx /* Attribute name. */
@@ -6458,8 +6520,8 @@ target16_delattr_c:
 target_delattr_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  %edx /* Attribute name. */
@@ -6478,8 +6540,8 @@ target16_setattr_c:
 target_setattr_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  FIRST /* The value to-be assigned. */
@@ -6504,9 +6566,9 @@ target16_getattr_this_c:
 target_getattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
+	movl   co_constv(CODE_OR_ECX), %edx
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  %edx /* Attribute name. */
@@ -6525,9 +6587,9 @@ target16_delattr_this_c:
 target_delattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
+	movl   co_constv(CODE_OR_ECX), %edx
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  %edx /* Attribute name. */
@@ -6545,9 +6607,9 @@ target16_setattr_this_c:
 target_setattr_this_c:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
+	movl   co_constv(CODE_OR_ECX), %edx
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_ECX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	WASSERT_EQUAL(l,ob_type(%edx),$(SYM(DeeString_Type)))
 	pushl  TOP /* Attribute value. */
@@ -6577,9 +6639,9 @@ target_supergetattr_this_rc:
 	/* ECX: tp_this_rid */
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	movl   co_constv(CODE_OR_EDX), %edx
 	pushl (%edx,%eax,4)  /* DeeObject_TGetAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
 	movl   FRAME_FUNC, %edx
@@ -6619,9 +6681,9 @@ target_supercallattr_this_rc:
 	ADJUST_CFA_OFFSET(12)
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_refc(CODE_OR_EDX))
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_EDX))
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_EDX))
 	ASSERT_BIT(w,$(CODE_FTHISCALL),co_flags(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	movl   co_constv(CODE_OR_EDX), %edx
 	pushl (%edx,%eax,4)    /* DeeObject_TCallAttr:attr_name */
 	ADJUST_CFA_OFFSET(4)
 	xorl   %eax, %eax      /* In case of `target16_supercallattr_this_rc', but clear upper 8 bits (`xorb %ah, %ah' would also work) */
@@ -6954,8 +7016,8 @@ prefix_target_function_c:
 	lodsb
 .prefix_do_function_c:
 	LOAD_CODE(%edx)
-	ASSERT_BELOW(%cx,co_staticc(CODE_OR_EDX))
-	movl   co_staticv(CODE_OR_EDX), %edx
+	ASSERT_BELOW(%cx,co_constc(CODE_OR_EDX))
+	movl   co_constv(CODE_OR_EDX), %edx
 	incl   %eax /* EAX = refc */
 	subl   $8, %esp
 	ADJUST_CFA_OFFSET(4)
@@ -7135,17 +7197,40 @@ prefix_target_pop_static:
 	call   get_prefix_object
 	xorl   %eax, %eax
 	lodsb
-1:	LOAD_CODE(%ecx)
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	xchgl  fo_refv(%ecx,%eax,4), %edx /* Exchange the static variable. */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	testl  %edx, %edx
+	jz     .disp
+	decref %edx
+	jmp    .disp
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
 #ifdef CODE_IS_REGISTER
-	rwlock_write co_static_lock(CODE_OR_ECX), %ecx
+	rwlock_write co_constlock(CODE_OR_ECX), %ecx
 #else /* CODE_IS_REGISTER */
 	pushl  %edx
 	ADJUST_CFA_OFFSET(4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
 	popl   %edx
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
@@ -7153,15 +7238,16 @@ prefix_target_pop_static:
 	ADJUST_CFA_OFFSET(-4)
 	LOAD_CODE(%ecx)
 #endif /* !CONFIG_NO_THREADS */
-	movl   co_staticv(CODE_OR_ECX), %ecx
+	movl   co_constv(CODE_OR_ECX), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
-	rwlock_endwrite co_static_lock(CODE_OR_ECX)
+	rwlock_endwrite co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT_NONZERO(%edx)
 	decref %edx
 	jmp    .disp
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
@@ -7443,48 +7529,73 @@ prefix_target_push_varkwds:
 
 
 
-#ifdef HAVE_TARGET_PUSH_CONST
-prefix_target16_push_const:
-#endif /* HAVE_TARGET_PUSH_CONST */
 prefix_target16_push_static:
 	lodsw
 	jmp    1f
-#ifdef HAVE_TARGET_PUSH_CONST
-prefix_target_push_const:
-#endif /* HAVE_TARGET_PUSH_CONST */
 prefix_target_push_static:
 	lodsb
-1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
-	rwlock_read co_static_lock(CODE_OR_ECX), %edx
+	rwlock_read fo_reflock(%ecx), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	movl   fo_refv(%ecx,%eax,4), %edx
+	testl  %edx, %edx
+	jz     99f
+	incref %edx
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	jmp    set_prefix_object
+99:	/* Handle unbound static variable */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	pushl  %eax        /* SID */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FRAME_PC    /* PC */
+	ADJUST_CFA_OFFSET(4)
+	pushl  CODE_OR_LOC /* CODE */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(err_unbound_static,12)
+	ADJUST_CFA_OFFSET(-12)
+	jmp    .except
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	LOAD_CODE(%ecx)
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	rwlock_read co_constlock(CODE_OR_ECX), %edx
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	movl   (%edx,%eax,4), %edx
 	incref %edx
 #ifndef CONFIG_NO_THREADS
-	rwlock_endread co_static_lock(CODE_OR_ECX)
+	rwlock_endread co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	jmp    set_prefix_object
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
-#ifndef HAVE_TARGET_PUSH_CONST
 prefix_target16_push_const:
 	lodsw
 	jmp    1f
 prefix_target_push_const:
 	lodsb
 1:	LOAD_CODE(%ecx)
-	movl   co_staticv(CODE_OR_ECX), %edx
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
 	jmp    set_prefix_object_incref
-#endif /* !HAVE_TARGET_PUSH_CONST */
 
 
 prefix_target16_push_extern:
@@ -7723,49 +7834,88 @@ impl_set_prefix_stack:
 	decref %edx /* Drop the value that got exchanged. */
 	jmp    .disp
 impl_set_prefix16_static:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	movl   FRAME_PC, %eax
+#endif /* !CONFIG_NO_THREADS */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	LOAD_CODE(%ecx)
 #ifndef CONFIG_NO_THREADS
 #ifdef CODE_IS_REGISTER
-	rwlock_write co_static_lock(CODE), %ecx
+	rwlock_write co_constlock(CODE), %ecx
 #else /* CODE_IS_REGISTER */
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
 	movl   FRAME_PC, %eax
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	movzwl 2(%eax), %eax
 	jmp    1f
 impl_set_prefix_static:
 	/* Static variable prefix. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	movl   FRAME_PC, %eax
+#endif /* !CONFIG_NO_THREADS */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	LOAD_CODE(%ecx)
 #ifndef CONFIG_NO_THREADS
 #ifdef CODE_IS_REGISTER
-	rwlock_write co_static_lock(CODE), %ecx
+	rwlock_write co_constlock(CODE), %ecx
 #else /* CODE_IS_REGISTER */
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
 	movl   FRAME_PC, %eax
 #endif /* !CONFIG_NO_THREADS */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	movzbl 1(%eax), %eax
-1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	/* Exchange the static variable. */
+	ASSERT_NONZERO(%edx)
+	xchgl  fo_refv(%ecx,%eax,4), %edx
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	testl  %edx, %edx
+	jz     .disp
+	decref %edx /* Drop the value that got exchanged. */
+	jmp    .disp
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	/* Exchange the static variable. */
 	ASSERT_NONZERO(%edx)
 	xchgl  (%ecx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
-	rwlock_endwrite co_static_lock(CODE_OR_ECX)
+	rwlock_endwrite co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	decref %edx /* Drop the value that got exchanged. */
 	jmp    .disp
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 impl_set_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
@@ -7797,22 +7947,22 @@ impl_set_prefix_global:
 	/* Prefix with an extern/global variable. */
 #ifndef CONFIG_NO_THREADS
 	pushl  %ecx /* Save the module for below. */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	rwlock_write mo_lock(%ecx), %edx
 	popl   %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the global. */
 #ifndef CONFIG_NO_THREADS
 	popl   %ecx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	rwlock_endwrite mo_lock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	testl  %edx, %edx
@@ -7919,18 +8069,66 @@ impl_xch_prefix_stack:
 	ret
 
 
-
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+impl_xch_prefix16_static:
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	movl   FRAME_PC, %eax
+#endif /* !CONFIG_NO_THREADS */
+	movzwl 2(%eax), %eax
+	jmp    1f
+impl_xch_prefix_static:
+	/* Static variable prefix. */
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	movl   FRAME_PC, %eax
+#endif /* !CONFIG_NO_THREADS */
+	movzbl 1(%eax), %eax
+1:	/* Exchange the static variable. */
+	ASSERT_NONZERO(%edx)
+	xchgl  fo_refv(%ecx,%eax,4), %edx
+	testl  %edx, %edx
+	jz     99f
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite co_constlock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	ret
+99:	xchgl  fo_refv(%ecx,%eax,4), %edx
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite co_constlock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	decref %edx, 1, 1
+	pushl  %eax     /* err_unbound_static:index */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FRAME_PC /* err_unbound_static:ip */
+	ADJUST_CFA_OFFSET(4)
+	pushl  CODE_OR_LOC /* err_unbound_static:code */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(err_unbound_static,12)
+	ADJUST_CFA_OFFSET(-12)
+	jmp    .except_x4
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 impl_xch_prefix16_static:
 	LOAD_CODE(%ecx)
 #ifndef CONFIG_NO_THREADS
 #ifdef CODE_IS_REGISTER
-	rwlock_write co_static_lock(CODE), %ecx
+	rwlock_write co_constlock(CODE), %ecx
 #else /* CODE_IS_REGISTER */
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
 	movl   FRAME_PC, %eax
 #endif /* !CONFIG_NO_THREADS */
@@ -7941,28 +8139,30 @@ impl_xch_prefix_static:
 	LOAD_CODE(%ecx)
 #ifndef CONFIG_NO_THREADS
 #ifdef CODE_IS_REGISTER
-	rwlock_write co_static_lock(CODE), %ecx
+	rwlock_write co_constlock(CODE), %ecx
 #else /* CODE_IS_REGISTER */
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	rwlock_write co_static_lock(CODE_OR_ECX), %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write co_constlock(CODE_OR_ECX), %edx
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CODE_IS_REGISTER */
 	movl   FRAME_PC, %eax
 #endif /* !CONFIG_NO_THREADS */
 	movzbl 1(%eax), %eax
-1:	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %ecx
+1:	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
 	/* Exchange the static variable. */
 	ASSERT_NONZERO(%edx)
 	xchgl  (%ecx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
 #ifndef CONFIG_NO_THREADS
 	LOAD_CODE(%ecx)
-	rwlock_endwrite co_static_lock(CODE_OR_ECX)
+	rwlock_endwrite co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ret
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 impl_xch_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
@@ -7993,43 +8193,43 @@ impl_xch_prefix_global:
 1:	ASSERT_BELOW(%ax,mo_globalc(%ecx))
 	/* Prefix with an extern/global variable. */
 	pushl  %ecx /* Save the module for below. */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 #ifndef CONFIG_NO_THREADS
 	pushl  %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	rwlock_write mo_lock(%ecx), %edx
 	popl   %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 	popl   %edx
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	movl   mo_globalv(%ecx), %ecx
 	xchgl  (%ecx,%eax,4), %edx /* Exchange the global. */
 	testl  %edx, %edx
 	jz     70f
 	popl   %ecx /* ECX = module; */
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	ret
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 70:	xchgl  (%ecx,%eax,4), %edx /* Restore the NULL-entry. */
 	popl   %ecx /* ECX = module; */
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite mo_lock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	decref %edx, 1, 1
 	/* err_unbound_global(module,imm_val); */
 	pushl  %eax /* imm_val */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %ecx /* module */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -8)
+	ADJUST_CFA_OFFSET(-8)
 	jmp    .except_x4
 
 impl_xch_prefix16_local:
@@ -8050,13 +8250,13 @@ impl_xch_prefix_local:
 70:	xchgl  (%ecx,%eax,4), %edx /* Restore the NULL-value. */
 	decref %edx, 1, 1
 	pushl  %eax     /* err_unbound_local:index */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_PC /* err_unbound_local:ip */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC /* err_unbound_local:code */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_local,12)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -12)
+	ADJUST_CFA_OFFSET(-12)
 	jmp    .except_x4
 
 
@@ -8156,23 +8356,55 @@ impl_get_prefix16_static:
 impl_get_prefix_static:
 	movzbl 1(%eax), %eax
 1:	/* Static variable prefix. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	rwlock_read fo_reflock(%ecx), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	movl   fo_refv(%ecx,%eax,4), %edx
+	testl  %edx, %edx
+	jz     99f
+	incref %edx /* Save a reference in EDX */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	ret /* Return to the caller. */
+99:
+#ifndef CONFIG_NO_THREADS
+	rwlock_endread fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	pushl  %eax        /* SID */
+	ADJUST_CFA_OFFSET(4)
+	pushl  FRAME_PC    /* PC */
+	ADJUST_CFA_OFFSET(4)
+	pushl  CODE_OR_LOC /* CODE */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(err_unbound_static,12)
+	ADJUST_CFA_OFFSET(-12)
+	jmp    .except_x4
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	LOAD_CODE(%ecx)
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
-	rwlock_read co_static_lock(CODE_OR_ECX), %edx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_read co_constlock(CODE_OR_ECX), %edx
 	popl   %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
-	ASSERT_BELOW(%ax,co_staticc(CODE_OR_ECX))
-	movl   co_staticv(CODE_OR_ECX), %edx
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %edx
 	movl   (%edx,%eax,4), %edx
 	ASSERT_NONZERO(%edx)
 	incref %edx /* Save a reference in EDX */
 #ifndef CONFIG_NO_THREADS
-	rwlock_endread co_static_lock(CODE_OR_ECX)
+	rwlock_endread co_constlock(CODE_OR_ECX)
 #endif /* !CONFIG_NO_THREADS */
 	ret /* Return to the caller. */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 impl_get_prefix16_extern:
 	LOAD_CODE(%ecx)
 	movl   co_module(CODE_OR_ECX), %ecx
@@ -8202,10 +8434,10 @@ impl_get_prefix_global:
 	/* Prefix with an extern/global variable. */
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	rwlock_read mo_lock(%ecx), %edx
 	popl   %eax
-	IF_USE_CFI(.cfi_adjust_cfa_offset -4)
+	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	movl   mo_globalv(%ecx), %edx
 	movl   (%edx,%eax,4), %edx
@@ -8221,11 +8453,11 @@ impl_get_prefix_global:
 	rwlock_endread mo_lock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
 	pushl  %eax /* GID */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  %ecx /* MODULE */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_global,8)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -8)
+	ADJUST_CFA_OFFSET(-8)
 	jmp    .except_x4 /* Pop the return address of `get_prefix_object' */
 impl_get_prefix16_local:
 	movzwl 2(%eax), %eax
@@ -8244,13 +8476,13 @@ impl_get_prefix_local:
 	incref %edx
 	ret /* Return to the caller. */
 99:	pushl  %eax        /* LID */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  FRAME_PC    /* PC */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	pushl  CODE_OR_LOC /* CODE */
-	IF_USE_CFI(.cfi_adjust_cfa_offset 4)
+	ADJUST_CFA_OFFSET(4)
 	call   fSYM(err_unbound_local,12)
-	IF_USE_CFI(.cfi_adjust_cfa_offset -12)
+	ADJUST_CFA_OFFSET(-12)
 	jmp    .except_x4
 impl_get_prefix_extended:
 	movzbl 1(%eax), %ecx

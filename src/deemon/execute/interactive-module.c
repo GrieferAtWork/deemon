@@ -480,7 +480,7 @@ do_exec_code:
 	ASSERT(current_code->co_keywords == NULL);
 	old_co_flags     = current_code->co_flags;
 	old_co_localc    = current_code->co_localc;
-	old_co_staticc   = current_code->co_staticc;
+	old_co_staticc   = current_code->co_constc;
 	old_co_exceptc   = current_code->co_exceptc;
 	old_co_exceptv   = current_code->co_exceptv;
 	old_co_framesize = current_code->co_framesize;
@@ -493,9 +493,9 @@ do_exec_code:
 		                     preexisting_codesize);
 		Dee_DecrefNokill(&DeeCode_Type);     /* current_code->ob_type */
 		Dee_DecrefNokill((DeeObject *)self); /* current_code->co_module */
-		current_assembler.a_constv = current_code->co_staticv;
-		current_code->co_staticv   = NULL;
-		current_code->co_staticc   = 0;
+		current_assembler.a_constv = current_code->co_constv;
+		current_code->co_constv   = NULL;
+		current_code->co_constc   = 0;
 	} else {
 		instruction_t *text;
 		assembler_init();
@@ -505,11 +505,11 @@ do_exec_code:
 			goto done_assembler_fini;
 
 		/* Copy over static variables. */
-		DeeCode_StaticLockRead(current_code);
+		DeeCode_ConstLockRead(current_code);
 		Dee_Movrefv(current_assembler.a_constv,
-		            current_code->co_staticv,
+		            current_code->co_constv,
 		            current_assembler.a_constc);
-		DeeCode_StaticLockEndRead(current_code);
+		DeeCode_ConstLockEndRead(current_code);
 
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
@@ -767,8 +767,8 @@ recover_old_code_object:
 			current_code->co_code[preexisting_codesize] = ASM_UD;
 			current_code->co_flags     = old_co_flags;
 			current_code->co_localc    = old_co_localc;
-			current_code->co_staticc   = old_co_staticc;
-			current_code->co_staticv   = current_assembler.a_constv;
+			current_code->co_constc   = old_co_staticc;
+			current_code->co_constv   = current_assembler.a_constv;
 			current_code->co_refc      = 0;
 			current_code->co_exceptc   = old_co_exceptc;
 			current_code->co_exceptv   = old_co_exceptv;
@@ -776,7 +776,7 @@ recover_old_code_object:
 			current_code->co_argc_max  = 0;
 			current_code->co_framesize = old_co_framesize;
 			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
-			Dee_atomic_rwlock_init(&current_code->co_static_lock);
+			Dee_atomic_rwlock_init(&current_code->co_constlock);
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
@@ -1364,17 +1364,17 @@ err_compiler_basefile:
 			goto err_globals;
 		init_code->co_flags     = INTERACTIVE_MODULE_CODE_FLAGS;
 		init_code->co_localc    = 0;
-		init_code->co_staticc   = 0;
+		init_code->co_constc   = 0;
 		init_code->co_refc      = 0;
 		init_code->co_exceptc   = 0;
 		init_code->co_argc_min  = 0;
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
-		Dee_atomic_rwlock_init(&init_code->co_static_lock);
+		Dee_atomic_rwlock_init(&init_code->co_constlock);
 		init_code->co_module   = (DREF struct module_object *)self;
 		init_code->co_defaultv = NULL;
-		init_code->co_staticv  = NULL;
+		init_code->co_constv  = NULL;
 		init_code->co_exceptv  = NULL;
 		init_code->co_keywords = NULL;
 		init_code->co_ddi      = &DeeDDI_Empty;

@@ -21,7 +21,7 @@
 #define GUARD_DEEMON_API_H 1
 
 /* Since we use and include a small portable sub-set of KOS system headers, we
- * still need to tell those headers that remainder of the KOS system header
+ * still need to tell those headers that the remainder of the KOS system header
  * suite isn't available unless we're being hosted by true KOS. */
 #ifndef __KOS__
 #define __NO_KOS_SYSTEM_HEADERS__ 1
@@ -387,6 +387,25 @@ DECL_BEGIN
 #undef CONFIG_NO_OBJECT_SLABS
 #define CONFIG_NO_OBJECT_SLABS /* Unrecognized environment (disable slabs) */
 #endif /* ... */
+
+
+/* Experimental option that will eventually become the default (with backwards
+ * compat getting removed as well):
+ * - ASM_STATIC & friends live in "DeeFunctionObject::fo_refv" instead
+ *   of "DeeCodeObject::co_constv".
+ * - This effectively means that "static" variables defined in user-code have
+ *   individual instantiations for every time the "function" declaration is
+ *   reached, as opposed to only a single one within the bytecode that makes
+ *   up the function's underlying code. */
+#if (!defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_STATIC_IN_FUNCTION))
+#if 0 /* TODO */
+#define CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#else
+#define CONFIG_NO_EXPERIMENTAL_STATIC_IN_FUNCTION
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 
 
 #ifdef CONFIG_HOST_WINDOWS

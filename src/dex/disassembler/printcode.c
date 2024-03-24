@@ -1080,16 +1080,20 @@ prefix_except_prefix:
 	}
 	if (!(flags & PCODE_FNOINNER) && code) {
 		size_t i;
-		DeeCode_StaticLockRead(code);
-		for (i = 0; i < code->co_staticc; ++i) {
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		DeeCode_ConstLockRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		for (i = 0; i < code->co_constc; ++i) {
 			DREF DeeCodeObject *inner_code;
 			char const *kind = "code";
-			inner_code       = (DREF DeeCodeObject *)code->co_staticv[i];
+			inner_code       = (DREF DeeCodeObject *)code->co_constv[i];
 			if (!DeeCode_Check(inner_code)) {
 				if (!DeeFunction_Check(inner_code)) {
 					if (DeeClassDescriptor_Check(inner_code)) {
 						Dee_Incref(inner_code);
-						DeeCode_StaticLockEndRead(code);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+						DeeCode_ConstLockEndRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 						temp = libdisasm_printclass(printer, arg,
 						                            (DeeClassDescriptorObject *)inner_code,
 						                            i, line_prefix);
@@ -1097,7 +1101,9 @@ prefix_except_prefix:
 						if unlikely(temp < 0)
 							goto err;
 						result += temp;
-						DeeCode_StaticLockRead(code);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+						DeeCode_ConstLockRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 					continue;
 				}
@@ -1105,7 +1111,9 @@ prefix_except_prefix:
 				kind       = "function";
 			}
 			Dee_Incref(inner_code);
-			DeeCode_StaticLockEndRead(code);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			DeeCode_ConstLockEndRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			temp = DeeFormat_Printf(printer, arg,
 			                        "%s.const %" PRFuSIZ " = %s {\n",
 			                        line_prefix ? line_prefix : "",
@@ -1138,9 +1146,13 @@ prefix_except_prefix:
 			Dee_Decref(inner_code);
 			if unlikely(temp < 0)
 				goto err;
-			DeeCode_StaticLockRead(code);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			DeeCode_ConstLockRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		}
-		DeeCode_StaticLockEndRead(code);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		DeeCode_ConstLockEndRead(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}
 done:
 	if (code)

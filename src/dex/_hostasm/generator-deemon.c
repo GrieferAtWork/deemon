@@ -2401,7 +2401,7 @@ do_jcc:
 				return err_illegal_stack_effect();
 			break;
 		case ASM_STATIC:
-			if unlikely(id1 >= self->fg_assembler->fa_code->co_staticc)
+			if unlikely(id1 >= self->fg_assembler->fa_code->co_constc)
 				return err_illegal_sid(id1);
 			break;
 		case ASM_EXTERN: {

@@ -28,7 +28,7 @@
  * $ deemon -F src/deemon/execute/asm/exec.gas-386.S
  * $ deemon -F src/dex/disassembler/printinstr.c
  * $ deemon -F lib/rt/bytecode.dee
- * Or the 1-line variant (read for copy-n-pasting into your terminal):
+ * Or the 1-line variant (read: for copy-n-pasting into your terminal):
  * $ deemon -F src/deemon/compiler/instrlen.c src/deemon/execute/code-exec-targets.c.inl src/deemon/execute/asm/exec.gas-386.S src/dex/disassembler/printinstr.c lib/rt/bytecode.dee
  * Also: Don't forget to add new instructions to
  *      `/src/deemon/compiler/asm/userdb.def'
@@ -77,6 +77,7 @@
  *  >> Attempting to handle an exception thrown by a caller:
  *       throw an `Error.RuntimeError.IllegalInstruction'
  *
+ * #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  * Additional changes in behavior when `CODE_FASSEMBLY' is set:
  *  >> `ASM_PUSH_CONST' and `ASM_PUSH_CONST16' behave identical to
  *     `ASM_PUSH_STATIC' and `ASM_PUSH_STATIC16' in that they always
@@ -84,6 +85,7 @@
  *     variable vector.
  *     Similarly, all other instructions that use constants also acquire
  *     this lock (i.e.: `ASM_GETITEM_C', `ASM_GETATTR_C', etc...)
+ * #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  */
 
 /* Interpreter registers:
@@ -94,8 +96,13 @@
  *   - bool    REG_RESULT_ITERDONE; // When true, the function shall return to indicate iterator exhaustion. Only available in yielding function.
  *   - Integer REG_EXCEPTION_START; // Value of `thread->t_exceptsz' when the frame got created
  *   - Object  REG_LOCALS[];        // A variable number of object slots for local variables, limited by code requirements.
+ * #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+ *   - Object  REG_CONSTANTS[];     // A variable number of constant object slots, stored alongside code.
+ *   - Object  REG_REFS[];          // A variable number of object slots for referenced variables, limited by code requirements. Also contained are static variables (which always appear near the end and can be UNBOUND)
+ * #else // CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  *   - Object  REG_CONSTANTS[];     // A variable number of constant object slots, stored alongside code. Also contained are static variables.
  *   - Object  REG_REFS[];          // A variable number of object slots for referenced variables, limited by code requirements.
+ * #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  *   - Object  REG_ARGS[];          // A variable number of object slots for function arguments, limited by code requirements.
  *   - Object  REG_GLOBALS[];       // A variable number of object slots for global variables, limited by module requirements.
  *   - Object  REG_EXTERN[][];      // A variable number of object slots, accessible through a variable number of module slots.
@@ -230,14 +237,27 @@
  * >> END
  * >>
  * >> Object &STATIC(Integer sid) BEGIN
+ * >> #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+ * >>     IF reference_index >= code->co_refstaticc THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     IF CURRENT_INSTRUCTION_WRITES_TO_STATIC && reference_index < code->co_refc THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_REFS[reference_index];
+ * >> #else // CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  * >>     IF sid >= LENGTH(REG_CONSTANTS) THEN
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
  * >>     RETURN REG_CONSTANTS[sid];
+ * >> #endif // !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
  * >> END
  * >>
  * >> Object CONSTANT(Integer cid) BEGIN
- * >>     RETURN STATIC(cid); // Constant and static symbols use the same indices
+ * >>     IF sid >= LENGTH(REG_CONSTANTS) THEN
+ * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
+ * >>     FI
+ * >>     RETURN REG_CONSTANTS[sid];
  * >> END
  * >>
  * >> Object MODULE(Integer mid) BEGIN
@@ -248,7 +268,7 @@
  * >> END
  * >>
  * >> Object REF(Integer reference_index) BEGIN
- * >>     IF reference_index >= LENGTH(REG_REFS) THEN
+ * >>     IF reference_index >= code->co_refc THEN // Not able to access static variables
  * >>         THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction());
  * >>     FI
  * >>     RETURN REG_REFS[reference_index];

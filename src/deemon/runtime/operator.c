@@ -2019,6 +2019,28 @@ PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) dhash_t
 	}
 	return result;
 }
+
+PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) dhash_t
+(DCALL DeeObject_XHashv)(DeeObject *const *__restrict object_vector,
+                         size_t object_count) {
+	size_t i;
+	dhash_t result;
+	/* Check for special case: no objects, i.e.: an empty sequence */
+	if unlikely(!object_count)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+
+	/* Important: when only a single object is given, our
+	 * return value must be equal to `DeeObject_Hash()'. */
+	result = object_vector[0] ? DeeObject_Hash(object_vector[0])
+	                          : DEE_HASHOF_UNBOUND_ITEM;
+	for (i = 1; i < object_count; ++i) {
+		dhash_t item;
+		item = object_vector[i] ? DeeObject_Hash(object_vector[i])
+		                        : DEE_HASHOF_UNBOUND_ITEM;
+		result = Dee_HashCombine(result, item);
+	}
+	return result;
+}
 #endif /* DEFINE_TYPED_OPERATORS */
 
 

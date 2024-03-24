@@ -175,7 +175,7 @@ PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
 fg_getconst(struct fungen *__restrict self, uint16_t cid) {
 	DeeObject *result;
 	DeeCodeObject *code;
-	if unlikely(cid >= self->fg_assembler->fa_code->co_staticc) {
+	if unlikely(cid >= self->fg_assembler->fa_code->co_constc) {
 		err_illegal_cid(cid);
 		goto err;
 	}
@@ -184,15 +184,15 @@ fg_getconst(struct fungen *__restrict self, uint16_t cid) {
 		/* When needing to be safe, constants could illegally be re-assigned
 		 * via statics. This isn't allowed, but if it happens we mustn't crash,
 		 * so we have to inline all constants as references. */
-		DeeCode_StaticLockRead(code);
-		result = code->co_staticv[cid];
+		DeeCode_ConstLockRead(code);
+		result = code->co_constv[cid];
 		Dee_Incref(result);
-		DeeCode_StaticLockEndRead(code);
+		DeeCode_ConstLockEndRead(code);
 		result = fg_inlineref(self, result);
 		/*if unlikely(!result)
 			goto err;*/
 	} else {
-		result = code->co_staticv[cid];
+		result = code->co_constv[cid];
 	}
 	return result;
 err:
@@ -3740,11 +3740,11 @@ fg_vpop_extern(struct fungen *__restrict self, uint16_t mid, uint16_t gid) {
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpush_static(struct fungen *__restrict self, uint16_t sid) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
-	if unlikely(sid >= code->co_staticc)
+	if unlikely(sid >= code->co_constc)
 		return err_illegal_sid(sid);
-	DO(fg_vpush_addr(self, &code->co_staticv[sid]));
+	DO(fg_vpush_addr(self, &code->co_constv[sid]));
 #ifndef CONFIG_NO_THREADS
-	DO(fg_grwlock_read_const(self, &code->co_static_lock));
+	DO(fg_grwlock_read_const(self, &code->co_constlock));
 #endif /* !CONFIG_NO_THREADS */
 	DO(fg_vind(self, 0));
 	DO(fg_vreg(self, NULL));
@@ -3755,7 +3755,7 @@ fg_vpush_static(struct fungen *__restrict self, uint16_t sid) {
 	ASSERT(!fg_vtop_direct_isref(self));
 	fg_vtop_direct_setref(self);
 #ifndef CONFIG_NO_THREADS
-	DO(fg_grwlock_endread_const(self, &code->co_static_lock));
+	DO(fg_grwlock_endread_const(self, &code->co_constlock));
 #endif /* !CONFIG_NO_THREADS */
 	return 0;
 err:
@@ -3765,19 +3765,19 @@ err:
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpop_static(struct fungen *__restrict self, uint16_t sid) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
-	if unlikely(sid >= code->co_staticc)
+	if unlikely(sid >= code->co_constc)
 		return err_illegal_sid(sid);
 	DO(fg_vdirect1(self));
 	DO(fg_vref2(self, 1));
 	ASSERT(fg_vtop_direct_isref(self));
-	DO(fg_vpush_addr(self, &code->co_staticv[sid])); /* value, addr */
+	DO(fg_vpush_addr(self, &code->co_constv[sid])); /* value, addr */
 	DO(fg_vswap(self));                              /* addr, value */
 #ifndef CONFIG_NO_THREADS
-	DO(fg_grwlock_write_const(self, &code->co_static_lock));
+	DO(fg_grwlock_write_const(self, &code->co_constlock));
 #endif /* !CONFIG_NO_THREADS */
 	DO(fg_vswapind(self, 0)); /* old_value */
 #ifndef CONFIG_NO_THREADS
-	DO(fg_grwlock_endwrite_const(self, &code->co_static_lock));
+	DO(fg_grwlock_endwrite_const(self, &code->co_constlock));
 #endif /* !CONFIG_NO_THREADS */
 	ASSERT(!fg_vtop_direct_isref(self));
 	fg_vtop_direct_setref(self);
