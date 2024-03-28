@@ -240,6 +240,8 @@ typedef Dee_wchar_t dwchar_t;
 #define Dee_charptr dcharptr
 #endif /* DEE_SOURCE */
 
+#ifndef DEE_CHARPTR_DEFINED
+#define DEE_CHARPTR_DEFINED
 union Dee_charptr {
 	void        *ptr;
 	uint8_t     *cp8;
@@ -248,6 +250,7 @@ union Dee_charptr {
 	char        *cp_char;
 	Dee_wchar_t *cp_wchar;
 };
+#endif /* !DEE_CHARPTR_DEFINED */
 
 
 

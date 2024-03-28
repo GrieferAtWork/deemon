@@ -1636,7 +1636,7 @@ bytes_replace(Bytes *self, size_t argc,
 	end += (find_needle.n_size - 1);
 	ASSERT(block_begin <= end);
 #ifndef __OPTIMIZE_SIZE__
-	if unlikely(block_begin == begin) {
+	if unlikely(block_begin == DeeBytes_DATA(self)) {
 		bytes_printer_fini(&printer);
 		goto return_self;
 	}
@@ -1707,6 +1707,12 @@ bytes_casereplace(Bytes *self, size_t argc,
 	}
 	end += (find_needle.n_size - 1);
 	ASSERT(block_begin <= end);
+#ifndef __OPTIMIZE_SIZE__
+	if unlikely(block_begin == DeeBytes_DATA(self)) {
+		bytes_printer_fini(&printer);
+		goto return_self;
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
 	if unlikely(bytes_printer_append(&printer, block_begin,
 	                                 (size_t)(end - block_begin)) < 0)
 		goto err_printer;
