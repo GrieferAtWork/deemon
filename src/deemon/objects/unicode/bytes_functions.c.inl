@@ -845,14 +845,20 @@ bytes_resized(Bytes *self, size_t argc, DeeObject *const *argv) {
 	DREF Bytes *result;
 	size_t new_size;
 	if (argc == 1) {
+		size_t old_size;
 		if (DeeObject_AsSize(argv[0], &new_size))
 			goto err;
 		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(new_size);
 		if unlikely(!result)
 			goto err;
-		memcpy(result->b_data,
-		       DeeBytes_DATA(self),
-		       MIN(DeeBytes_SIZE(self), new_size));
+		old_size = DeeBytes_SIZE(self);
+		if (new_size > old_size) {
+			void *p;
+			p = mempcpy(result->b_data, DeeBytes_DATA(self), old_size);
+			bzero(p, new_size - old_size);
+		} else {
+			memcpy(result->b_data, DeeBytes_DATA(self), new_size);
+		}
 	} else {
 		byte_t init;
 		if (DeeArg_Unpack(argc, argv, UNPuSIZ "|" UNPuB ":resized", &new_size, &init))
@@ -1585,7 +1591,6 @@ PRIVATE struct keyword replace_kwlist[] = { K(find), K(replace), K(max), KEND };
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_replace(Bytes *self, size_t argc,
               DeeObject *const *argv, DeeObject *kw) {
-	DREF Bytes *result;
 	byte_t *begin, *end, *block_begin;
 	DeeObject *find_ob, *replace_ob;
 	size_t max_count = (size_t)-1;
@@ -1605,10 +1610,7 @@ bytes_replace(Bytes *self, size_t argc,
 	if unlikely(!find_needle.n_size) {
 		if (DeeBytes_SIZE(self))
 			goto return_self;
-		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
-		if likely(result)
-			memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
-		return result;
+		return (DREF Bytes *)DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
 	}
 	bytes_printer_init(&printer);
 	begin       = DeeBytes_DATA(self);
@@ -1657,7 +1659,6 @@ return_self:
 PRIVATE WUNUSED DREF Bytes *DCALL
 bytes_casereplace(Bytes *self, size_t argc,
                   DeeObject *const *argv, DeeObject *kw) {
-	DREF Bytes *result;
 	byte_t *begin, *end, *block_begin;
 	DeeObject *find_ob, *replace_ob;
 	size_t max_count = (size_t)-1;
@@ -1677,10 +1678,7 @@ bytes_casereplace(Bytes *self, size_t argc,
 	if unlikely(!find_needle.n_size) {
 		if (DeeBytes_SIZE(self))
 			goto return_self;
-		result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(replace_needle.n_size);
-		if likely(result)
-			memcpy(result->b_data, replace_needle.n_data, replace_needle.n_size);
-		return result;
+		return (DREF Bytes *)DeeBytes_NewBufferData(replace_needle.n_data, replace_needle.n_size);
 	}
 	bytes_printer_init(&printer);
 	begin       = DeeBytes_DATA(self);
@@ -1723,10 +1721,7 @@ err_printer:
 err:
 	return NULL;
 return_self:
-	result = (DREF Bytes *)DeeBytes_NewBufferUninitialized(DeeBytes_SIZE(self));
-	if likely(result)
-		memcpy(result->b_data, DeeBytes_DATA(self), DeeBytes_SIZE(self));
-	return result;
+	return_reference_(self);
 }
 
 
@@ -2773,7 +2768,7 @@ bytes_center(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
-		filler._n_buf[0] = 0x20; /* ' ' */
+		filler._n_buf[0] = UNICODE_SPACE;
 	}
 	if (width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
@@ -2815,7 +2810,7 @@ bytes_ljust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
-		filler._n_buf[0] = 0x20; /* ' ' */
+		filler._n_buf[0] = UNICODE_SPACE;
 	}
 	if (width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
@@ -2854,7 +2849,7 @@ bytes_rjust(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
-		filler._n_buf[0] = 0x20; /* ' ' */
+		filler._n_buf[0] = UNICODE_SPACE;
 	}
 	if (width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
@@ -2892,7 +2887,7 @@ bytes_zfill(Bytes *self, size_t argc, DeeObject *const *argv) {
 	} else {
 		filler.n_data    = filler._n_buf;
 		filler.n_size    = 1;
-		filler._n_buf[0] = 0x30; /* '0' */
+		filler._n_buf[0] = UNICODE_ZERO;
 	}
 	if (width <= DeeBytes_SIZE(self)) {
 		result = (DREF DeeObject *)self;
@@ -3127,10 +3122,12 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					++iter;
 					if (ch == UNICODE_CR && *iter == UNICODE_LF)
 						++iter;
+
 					/* Flush all unwritten data up to this point. */
 					if (bytes_printer_append(&printer, flush_start,
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err;
+
 					/* Skip up to `max_chars' characters after a linefeed. */
 					for (i = 0; i < max_chars && memchr(mask.n_data, *iter, mask.n_size); ++i)
 						++iter;
@@ -3139,6 +3136,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				}
 				++iter;
 			}
+
 			/* Flush the remainder. */
 			if (bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
@@ -3154,10 +3152,12 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 					++iter;
 					if (ch == ASCII_CR && *iter == ASCII_LF)
 						++iter;
+
 					/* Flush all unwritten data up to this point. */
 					if (bytes_printer_append(&printer, flush_start,
 					                         (size_t)(iter - flush_start)) < 0)
 						goto err;
+
 					/* Skip up to `max_chars' characters after a linefeed. */
 					for (i = 0; i < max_chars && DeeUni_IsSpace(*iter); ++i)
 						++iter;
@@ -3166,6 +3166,7 @@ bytes_dedent(Bytes *self, size_t argc, DeeObject *const *argv) {
 				}
 				++iter;
 			}
+
 			/* Flush the remainder. */
 			if (bytes_printer_append(&printer, flush_start,
 			                         (size_t)(iter - flush_start)) < 0)
@@ -4499,10 +4500,11 @@ bytes_rereplace(Bytes *self, size_t argc, DeeObject *const *argv, DeeObject *kw)
 			goto err;
 		if (match_offset == DEE_RE_STATUS_NOMATCH)
 			break;
+
 		/* Flush until start-of-match. */
 		if unlikely(bytes_printer_append(&printer,
-		                                  (byte_t const *)exec.rx_inbase + exec.rx_startoff,
-		                                  (size_t)match_offset - exec.rx_startoff) < 0)
+		                                 (byte_t const *)exec.rx_inbase + exec.rx_startoff,
+		                                 (size_t)match_offset - exec.rx_startoff) < 0)
 			goto err;
 
 		/* Parse and print the replacement bytes. */
