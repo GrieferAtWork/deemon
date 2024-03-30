@@ -108,6 +108,27 @@ DeeArg_VUnpackKw(size_t argc, DeeObject *const *argv,
                  DeeObject *kw, struct dee_keyword *__restrict kwlist,
                  char const *__restrict format, va_list args);
 
+/* Same as the non-*Struct functions, but rather than taking 1 pointer per argument,
+ * these take a single pointer to an aligned struct-blob (where each element is always
+ * properly aligned, such that "uint32_t a; uint8_t b; uint32_t c;" has 3 padding bytes
+ * before the "c" element).
+ * Instead of:
+ * >> size_t a, b, c;
+ * >> if (DeeArg_Unpack(argc, argv, UNPuSIZ UNPuSIZ UNPuSIZ ":foo", &a, &b, &c))
+ * >>     goto err;
+ * You can do this, which will execute faster at runtime:
+ * >> struct {
+ * >>     size_t a;
+ * >>     size_t b;
+ * >>     size_t c;
+ * >> } args;
+ * >> if (DeeArg_UnpackStruct(argc, argv, UNPuSIZ UNPuSIZ UNPuSIZ ":foo", &args))
+ * >>     goto err;
+ */
+/* TODO: int DeeArg_UnpackStruct(size_t argc, DeeObject *const *argv, char const *__restrict format, void *out); */
+/* TODO: int DeeArg_UnpackStructKw(size_t argc, DeeObject *const *argv, DeeObject *kw, struct dee_keyword *__restrict kwlist, char const *__restrict format, void *out); */
+
+
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect
 #define DeeArg_UnpackKw(argc, argv, kw, kwlist, ...)           __builtin_expect(DeeArg_UnpackKw(argc, argv, kw, kwlist, __VA_ARGS__), 0)
