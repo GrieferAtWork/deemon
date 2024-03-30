@@ -4663,7 +4663,6 @@ target_function_c:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_constc(CODE_OR_EDX))
 	movl   co_constv(CODE_OR_EDX), %edx
-	incl   %eax /* EAX = refc */
 	subl   $8, %esp
 	ADJUST_CFA_OFFSET(8)
 	pushl  %eax            /* DeeFunction_NewInherited:refc */
@@ -4681,7 +4680,7 @@ target_function_c:
 	jz     .except_x4
 	popl   SP              /* SP = SP - refc */
 	ADJUST_CFA_OFFSET(-4)
-	sp_push %eax            /* PUSH(function) */
+	sp_push %eax           /* PUSH(function) */
 	jmp    .disp
 
 
@@ -7060,9 +7059,8 @@ prefix_target_function_c:
 	LOAD_CODE(%edx)
 	ASSERT_BELOW(%cx,co_constc(CODE_OR_EDX))
 	movl   co_constv(CODE_OR_EDX), %edx
-	incl   %eax /* EAX = refc */
 	subl   $8, %esp
-	ADJUST_CFA_OFFSET(4)
+	ADJUST_CFA_OFFSET(8)
 	pushl  %eax            /* DeeFunction_NewInherited:refc */
 	ADJUST_CFA_OFFSET(4)
 	pushl  (%edx,%ecx,4)   /* DeeFunction_NewInherited:code */

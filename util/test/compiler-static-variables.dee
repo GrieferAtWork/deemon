@@ -1,0 +1,91 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+#if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+function foo() {
+	return a -> {
+		/* TODO: Once static-one-initialization is implemented, change this to:
+		 * >> static local x = a;
+		 * The compiler is supposed to ensure that the variable only
+		 * gets initialized the first time execution gets here!
+		 */
+		static local x;
+		if (x !is bound)
+			x = a;
+		return x;
+	};
+}
+function bar() {
+	return a -> {
+		return a;
+	};
+}
+
+/* Static variables are allocated every time the relevant function is.
+ * As such, each call to `foo()' returns a function with a distinct
+ * storage location for a static variable.
+ *
+ * With old static variable semantics (!CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION),
+ * there would only a 1 storage location within the code object itself,
+ * which would that `y1(43)' would still return the initial `42`.
+ *
+ * This was not only unintuitive, but also impossible to support _jit,
+ * which doesn't have a concept of Code vs. Function objects. As such,
+ * CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION introduces these new, more
+ * intuitive semantics for static variables (that also align with what
+ * is done by _jit)
+ */
+local x1 = foo();
+try {
+	/* Also try to test _hostasm needing to create function objects. */
+	foo.optimize();
+} catch (...) {
+}
+local y1 = foo();
+assert x1(42) == 42;
+assert x1(none) == 42;
+assert y1(43) == 43;
+assert y1(none) == 43;
+
+local x2 = bar();
+local y2 = bar();
+assert x2(42) == 42;
+assert x2(none) == none;
+assert y2(43) == 43;
+assert y2(none) == none;
+
+#if __DEEMON_VARIANT__ == "gatw"
+/* Explicitly assert the state of static variables. */
+assert x1.__statics__ == {42};
+assert y1.__statics__ == {43};
+assert x2.__statics__ == {};
+assert y2.__statics__ == {};
+
+/* Explicitly assert that the compiler don't encode functions with static
+ * variables as inlined constant expressions, but instead as Code objects
+ * that get created at runtime. */
+import * from rt;
+assert #foo.__code__.__constants__ == 1;
+assert #bar.__code__.__constants__ == 1;
+assert foo.__code__.__constants__[0] is Code;
+assert bar.__code__.__constants__[0] is Function;
+#endif /* __DEEMON_VARIANT__ == "gatw" */
+#endif

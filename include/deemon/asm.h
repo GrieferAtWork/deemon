@@ -832,10 +832,10 @@
 #define ASM_CALLCMEMBER_THIS_R 0x6b/* [4][-n,+1]   `push callcmember this, ref <imm8>, $<imm8>, #<imm8>'- Lookup a class member of `ref <imm8>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0x6c  *               --------                            - ------------------ */
 /*      ASM_                  0x6d  *               --------                            - ------------------ */
-#define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>+1' - Create a new function Object, using constant slot <imm8> as code and popping $<imm8>+1 objects for use as references.
-                                    * [3][-n,+0]   `PREFIX: function const <imm8>, #<imm8>+1' */
-#define ASM_FUNCTION_C_16     0x6f /* [4][-n,+1]   `push function const <imm8>, #<imm16>+1' - Create a new function Object, using constant slot <imm8> as code and popping $<imm16>+1 objects for use as references.
-                                    * [4][-n,+0]   `PREFIX: function const <imm8>, #<imm16>+1' */
+#define ASM_FUNCTION_C        0x6e /* [3][-n,+1]   `push function const <imm8>, #<imm8>' - Create a new function Object, using constant slot <imm8> as code and popping $<imm8> objects for use as references.
+                                    * [3][-n,+0]   `PREFIX: function const <imm8>, #<imm8>' */
+#define ASM_FUNCTION_C_16     0x6f /* [4][-n,+1]   `push function const <imm8>, #<imm16>' - Create a new function Object, using constant slot <imm8> as code and popping $<imm16> objects for use as references.
+                                    * [4][-n,+0]   `PREFIX: function const <imm8>, #<imm16>' */
 
 /* Arithmetic instructions (NOTE: Some of these may be prefixed to perform an inplace operation). */
 #define ASM_CAST_INT          0x70 /* [1][-1,+1]   `cast top, int'                      - Convert the top-most stack entry into an integer. */
@@ -1337,10 +1337,10 @@
 #define ASM16_CALLCMEMBER_THIS_R 0xf06b/*[7][-n,+1]  `push callcmember this, ref <imm16>, $<imm16>, #<imm8>'- Lookup a class member of `ref <imm16>', given its index, then call that attribute as a this-call by popping #<imm8> arguments. */
 /*      ASM_                  0xf06c  *               --------                            - ------------------ */
 /*      ASM_                  0xf06d  *               --------                            - ------------------ */
-#define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>+1' - Create a new function Object, using constant slot <imm16> as code and popping $<imm8>+1 objects for use by references.
-                                      * [5][-n,+0]   `PREFIX: function const <imm16>, #<imm8>+1' */
-#define ASM16_FUNCTION_C_16   0xf06f /* [6][-n,+1]   `push function const <imm16>, #<imm16>+1' - Create a new function Object, using constant slot <imm16> as code and popping $<imm16>+1 objects for use by references.
-                                      * [6][-n,+0]   `PREFIX: function const <imm16>, #<imm16>+1' */
+#define ASM16_FUNCTION_C      0xf06e /* [5][-n,+1]   `push function const <imm16>, #<imm8>' - Create a new function Object, using constant slot <imm16> as code and popping $<imm8> objects for use by references.
+                                      * [5][-n,+0]   `PREFIX: function const <imm16>, #<imm8>' */
+#define ASM16_FUNCTION_C_16   0xf06f /* [6][-n,+1]   `push function const <imm16>, #<imm16>' - Create a new function Object, using constant slot <imm16> as code and popping $<imm16> objects for use by references.
+                                      * [6][-n,+0]   `PREFIX: function const <imm16>, #<imm16>' */
 #define ASM_SUPERGETATTR_THIS_RC 0xf070/*[4][-0,+1]  `push getattr this, ref <imm8>, const <imm8>' - Perform a super attribute lookup `(this as ref <imm8>).operator . (const <imm8>)'. */
 #define ASM16_SUPERGETATTR_THIS_RC 0xf071/*[6][-0,+1]`push getattr this, ref <imm16>, const <imm16>' - Perform a super attribute lookup `(this as ref <imm16>).operator . (const <imm16>)'. */
 #define ASM_SUPERCALLATTR_THIS_RC 0xf072/*[5][-n,+1] `push callattr this, ref <imm8>, const <imm8>, #<imm8>' - Perform a supercall on `(this as ref <imm8>).operator . (const <imm8>)', using `#<imm8>' arguments from the stack. */

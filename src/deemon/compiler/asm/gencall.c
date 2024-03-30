@@ -226,7 +226,13 @@ asm_gcall_func(struct ast *__restrict func,
 		goto err;
 	if (asm_putddi(func))
 		goto err_refv;
-	if (!refc) {
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	ASSERT(code->co_refstaticc >= code->co_refc);
+	if (!refc && code->co_refstaticc <= code->co_refc)
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	if (!refc)
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	{
 		/* Special case: The function doesn't reference any code.
 		 * -> In this case, we can construct the function object
 		 *    itself as a constant. */
@@ -257,7 +263,6 @@ asm_gcall_func(struct ast *__restrict func,
 		}
 		Dee_Free(refv);
 		/* Generate assembly to create (and push) the new function object. */
-		ASSERT(refc != 0);
 		if (asm_gfunction_ii((uint16_t)cid, (uint16_t)refc))
 			goto err_refargv;
 	}

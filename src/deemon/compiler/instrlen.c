@@ -1381,10 +1381,21 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		--*p_stacksz;
 		break;
 
+	case ASM_CALLATTR_THIS_C:
+	case ASM_CALL_GLOBAL:
+	case ASM_CALL_LOCAL:
+	case ASM_FUNCTION_C:
+		*p_sp_add = 1;
+		*p_sp_sub = UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz -= *p_sp_sub;
+		*p_stacksz += 1;
+		break;
+
 	case ASM_FUNCTION_C_16:
 		*p_sp_add = 1;
-		*p_sp_sub = 1 + UNALIGNED_GETLE16(pc + 2);
-		*p_stacksz -= (*p_sp_sub - 1);
+		*p_sp_sub = UNALIGNED_GETLE16(pc + 2);
+		*p_stacksz -= *p_sp_sub;
+		*p_stacksz += 1;
 		break;
 
 	case ASM_CALLATTR:
@@ -1394,7 +1405,6 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		break;
 
 	case ASM_CALLATTR_C_KW:
-	case ASM_FUNCTION_C:
 	case ASM_CALLATTR_C:
 	case ASM_CALLATTR_C_SEQ:
 		*p_sp_add = 1;
@@ -1408,15 +1418,6 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		*p_stacksz -= (*p_sp_sub - 1);
 		break;
 
-	case ASM_CALLATTR_THIS_C:
-	case ASM_CALL_GLOBAL:
-	case ASM_CALL_LOCAL:
-		*p_sp_add = 1;
-		*p_sp_sub = UNALIGNED_GETLE8(pc + 2);
-		*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
-		*p_stacksz += 1;
-		break;
-
 	case ASM_CALL_EXTERN:
 		*p_sp_add = 1;
 		*p_sp_sub = UNALIGNED_GETLE8(pc + 3);
@@ -1427,7 +1428,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 	case ASM_OPERATOR:
 		*p_sp_add = 1;
 		*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 2);
-		*p_stacksz -= UNALIGNED_GETLE8(pc + 2);
+		*p_stacksz -= *p_sp_sub;
 		break;
 
 	case ASM_EXTENDED1:
@@ -1482,14 +1483,16 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 
 		case ASM16_FUNCTION_C & 0xff:
 			*p_sp_add = 1;
-			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
-			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_sp_sub = UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= *p_sp_sub;
+			*p_stacksz += 1;
 			break;
 
 		case ASM16_FUNCTION_C_16 & 0xff:
 			*p_sp_add = 1;
-			*p_sp_sub = 1 + UNALIGNED_GETLE16(pc + 4);
-			*p_stacksz -= (*p_sp_sub - 1);
+			*p_sp_sub = UNALIGNED_GETLE16(pc + 4);
+			*p_stacksz -= *p_sp_sub;
+			*p_stacksz += 1;
 			break;
 
 		case ASM_CALLATTR_KWDS & 0xff:
@@ -1503,13 +1506,13 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		case ASM16_CALLATTR_C_SEQ & 0xff:
 			*p_sp_add = 1;
 			*p_sp_sub = 1 + UNALIGNED_GETLE8(pc + 4);
-			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= *p_sp_sub;
 			break;
 
 		case ASM16_CALLATTR_C_MAP & 0xff:
 			*p_sp_add = 1;
 			*p_sp_sub = 1 + (uint16_t)(UNALIGNED_GETLE8(pc + 4) * 2);
-			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= UNALIGNED_GETLE8(pc + 4) * 2;
 			break;
 
 		case ASM16_CALLATTR_THIS_C & 0xff:
@@ -1517,7 +1520,7 @@ DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
 		case ASM16_CALL_LOCAL & 0xff:
 			*p_sp_add = 1;
 			*p_sp_sub = UNALIGNED_GETLE8(pc + 4);
-			*p_stacksz -= UNALIGNED_GETLE8(pc + 4);
+			*p_stacksz -= *p_sp_sub;
 			*p_stacksz += 1;
 			break;
 
@@ -1698,13 +1701,13 @@ do_prefix:
 
 		case ASM_FUNCTION_C:
 			*p_sp_add = 0;
-			*p_sp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 2);
-			*p_stacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 2);
+			*p_sp_sub = UNALIGNED_GETLE8(prefix_ip + 2);
+			*p_stacksz -= *p_sp_sub;
 			break;
 
 		case ASM_FUNCTION_C_16:
 			*p_sp_add = 0;
-			*p_sp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 2);
+			*p_sp_sub = UNALIGNED_GETLE16(prefix_ip + 2);
 			*p_stacksz -= *p_sp_sub;
 			break;
 
@@ -1726,13 +1729,13 @@ do_prefix:
 
 			case ASM16_FUNCTION_C & 0xff:
 				*p_sp_add = 0;
-				*p_sp_sub = 1 + UNALIGNED_GETLE8(prefix_ip + 4);
-				*p_stacksz -= 1 + UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_sp_sub = UNALIGNED_GETLE8(prefix_ip + 4);
+				*p_stacksz -= *p_sp_sub;
 				break;
 
 			case ASM16_FUNCTION_C_16 & 0xff:
 				*p_sp_add = 0;
-				*p_sp_sub = 1 + UNALIGNED_GETLE16(prefix_ip + 4);
+				*p_sp_sub = UNALIGNED_GETLE16(prefix_ip + 4);
 				*p_stacksz -= *p_sp_sub;
 				break;
 

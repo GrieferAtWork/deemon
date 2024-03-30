@@ -1446,19 +1446,19 @@ do_jcc:
 		switch (opcode) {
 		case ASM_FUNCTION_C:
 			code_cid = instr[1];
-			refc     = instr[2] + 1;
+			refc     = instr[2];
 			break;
 		case ASM16_FUNCTION_C:
-			code_cid = UNALIGNED_GETLE16(instr + 2) + 1;
+			code_cid = UNALIGNED_GETLE16(instr + 2);
 			refc     = instr[4];
 			break;
 		case ASM_FUNCTION_C_16:
 			code_cid = instr[1];
-			refc     = UNALIGNED_GETLE16(instr + 2) + 1;
+			refc     = UNALIGNED_GETLE16(instr + 2);
 			break;
 		case ASM16_FUNCTION_C_16:
 			code_cid = UNALIGNED_GETLE16(instr + 2);
-			refc     = UNALIGNED_GETLE16(instr + 4) + 1;
+			refc     = UNALIGNED_GETLE16(instr + 4);
 			break;
 		default: __builtin_unreachable();
 		}
@@ -1475,8 +1475,8 @@ do_jcc:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
 		                  ((size_t)code->co_refstaticc * sizeof(DREF DeeObject *));
-		ASSERT(code->co_refstaticc <= refc);
-		if likely(code->co_refstaticc == refc) {
+		ASSERT(code->co_refstaticc >= refc);
+		if likely(code->co_refstaticc <= refc) {
 			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, false)); /* [refs...], ref:function */
 		} else {
 			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, true));  /* [refs...], ref:function */
@@ -2514,10 +2514,10 @@ do_jcc:
 		case ASM_PUSH_EXTERN:        /* mov  PREFIX, extern <imm8>:<imm8> */
 		case ASM_PUSH_GLOBAL:        /* mov  PREFIX, global <imm8> */
 		case ASM_PUSH_LOCAL:         /* mov  PREFIX, local <imm8> */
-		case ASM_FUNCTION_C:         /* PREFIX: function const <imm8>, #<imm8>+1 */
-		case ASM16_FUNCTION_C:       /* PREFIX: function const <imm16>, #<imm8>+1 */
-		case ASM_FUNCTION_C_16:      /* PREFIX: function const <imm8>, #<imm16>+1 */
-		case ASM16_FUNCTION_C_16:    /* PREFIX: function const <imm16>, #<imm16>+1 */
+		case ASM_FUNCTION_C:         /* PREFIX: function const <imm8>, #<imm8> */
+		case ASM16_FUNCTION_C:       /* PREFIX: function const <imm16>, #<imm8> */
+		case ASM_FUNCTION_C_16:      /* PREFIX: function const <imm8>, #<imm16> */
+		case ASM16_FUNCTION_C_16:    /* PREFIX: function const <imm16>, #<imm16> */
 		case ASM_PUSH_EXCEPT:        /* mov  PREFIX, except */
 		case ASM_PUSH_THIS:          /* mov  PREFIX, this */
 		case ASM_PUSH_THIS_MODULE:   /* mov  PREFIX, this_module */

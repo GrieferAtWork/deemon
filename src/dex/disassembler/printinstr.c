@@ -2562,7 +2562,7 @@ print_const:
 		case ASM16_FUNCTION_C:
 			imm = READ_imm8(iter);
 do_print_stackeffect_after_const:
-			printf(", " PREFIX_STACKEFFECT "%" PRFu32, (uint32_t)imm + 1);
+			printf(", " PREFIX_STACKEFFECT "%" PRFu32, (uint32_t)imm);
 			break;
 
 		default: break;

@@ -2431,7 +2431,7 @@ do_callcmember_this_r:
 			imm_val  = READ_imm8();
 			imm_val2 = READ_imm8();
 do_function_c:
-			ASSERT_USAGE(-(int)(imm_val2 + 1), +1);
+			ASSERT_USAGE(-(int)(imm_val2), +1);
 			ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 			{
@@ -2450,28 +2450,24 @@ do_function_c:
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					HANDLE_EXCEPT();
 				}
-				if (((DeeCodeObject *)code_object)->co_refc != imm_val2 + 1) {
-					err_invalid_refs_size(code_object, imm_val2 + 1);
+				if (((DeeCodeObject *)code_object)->co_refc != imm_val2) {
+					err_invalid_refs_size(code_object, imm_val2);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 					Dee_Decref_unlikely(code_object);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					HANDLE_EXCEPT();
 				}
-				function = DeeFunction_NewInherited(code_object,
-				                                    imm_val2 + 1,
-				                                    sp - (imm_val2 + 1));
+				function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				Dee_Decref_unlikely(code_object);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 #else /* EXEC_SAFE */
-			function = DeeFunction_NewInherited(CONSTimm,
-			                                    imm_val2 + 1,
-			                                    sp - (imm_val2 + 1));
+			function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
 #endif /* !EXEC_SAFE */
 			if unlikely(!function)
 				HANDLE_EXCEPT();
-			sp -= imm_val2 + 1;
+			sp -= imm_val2;
 			PUSH(function);
 			DISPATCH();
 		}
@@ -6229,7 +6225,7 @@ prefix_foreach_16:
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
 prefix_do_function_c:
-					ASSERT_USAGE(-(int)(imm_val2 + 1), +0);
+					ASSERT_USAGE(-(int)(imm_val2), +0);
 					ASSERT_CONSTimm();
 #ifdef EXEC_SAFE
 					{
@@ -6248,28 +6244,24 @@ prefix_do_function_c:
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 							HANDLE_EXCEPT();
 						}
-						if (((DeeCodeObject *)code_object)->co_refc != imm_val2 + 1) {
-							err_invalid_refs_size(code_object, imm_val2 + 1);
+						if (((DeeCodeObject *)code_object)->co_refc != imm_val2) {
+							err_invalid_refs_size(code_object, imm_val2);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 							Dee_Decref_unlikely(code_object);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 							HANDLE_EXCEPT();
 						}
-						function = DeeFunction_NewInherited(code_object,
-						                                    imm_val2 + 1,
-						                                    sp - (imm_val2 + 1));
+						function = DeeFunction_NewInherited(code_object, imm_val2, sp - imm_val2);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						Dee_Decref_unlikely(code_object);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					}
 #else /* EXEC_SAFE */
-					function = DeeFunction_NewInherited(CONSTimm,
-					                                    imm_val2 + 1,
-					                                    sp - (imm_val2 + 1));
+					function = DeeFunction_NewInherited(CONSTimm, imm_val2, sp - imm_val2);
 #endif /* !EXEC_SAFE */
 					if unlikely(!function)
 						HANDLE_EXCEPT();
-					sp -= imm_val2 + 1;
+					sp -= imm_val2;
 					if unlikely(set_prefix_object(function))
 						HANDLE_EXCEPT();
 					DISPATCH();

@@ -540,7 +540,6 @@ do_exec_code:
 	current_assembler.a_localc = old_co_localc;
 	current_assembler.a_constc = old_co_constc;
 	current_assembler.a_consta = old_co_constc;
-	current_assembler.a_staticc;
 
 	/* Configure the currently active stack-depth. */
 	current_assembler.a_stackcur = (uint16_t)(self->im_frame.cf_sp -

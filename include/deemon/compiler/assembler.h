@@ -1181,15 +1181,15 @@ INTDEF WUNUSED NONNULL((1)) int DCALL asm_gadjhand(struct asm_sym *__restrict ta
  * This must be called before `return'-ing from within a catch/finally handler. */
 INTDEF WUNUSED int DCALL asm_gunwind(void);
 
-#define asm_private_gfunction_ii(code_cid, n_refs)                                          \
-	((code_cid) <= UINT8_MAX                                                                \
-	 ? (((n_refs) - 1) <= UINT8_MAX                                                         \
-	    ? asm_putimm8_8(ASM_FUNCTION_C, (uint8_t)(code_cid), (uint8_t)((n_refs) - 1))       \
-	    : asm_putimm8_16(ASM_FUNCTION_C_16, (uint8_t)(code_cid), (uint16_t)((n_refs) - 1))) \
-	 : (asm_put(ASM_EXTENDED1) ||                                                           \
-	    (((n_refs) - 1) <= UINT8_MAX                                                        \
-	     ? asm_putimm16_8(ASM_FUNCTION_C, (uint16_t)(code_cid), (uint8_t)((n_refs) - 1))    \
-	     : asm_putimm16_16(ASM_FUNCTION_C_16, (uint16_t)(code_cid), (uint16_t)((n_refs) - 1)))))
+#define asm_private_gfunction_ii(code_cid, n_refs)                                    \
+	((code_cid) <= UINT8_MAX                                                          \
+	 ? ((n_refs) <= UINT8_MAX                                                         \
+	    ? asm_putimm8_8(ASM_FUNCTION_C, (uint8_t)(code_cid), (uint8_t)(n_refs))       \
+	    : asm_putimm8_16(ASM_FUNCTION_C_16, (uint8_t)(code_cid), (uint16_t)(n_refs))) \
+	 : (asm_put(ASM_EXTENDED1) ||                                                     \
+	    ((n_refs) <= UINT8_MAX                                                        \
+	     ? asm_putimm16_8(ASM_FUNCTION_C, (uint16_t)(code_cid), (uint8_t)(n_refs))    \
+	     : asm_putimm16_16(ASM_FUNCTION_C_16, (uint16_t)(code_cid), (uint16_t)(n_refs)))))
 
 
 /* Prefix instructions. */
