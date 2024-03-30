@@ -413,7 +413,12 @@
                                     * >> PUSH(bool(IS_BOUND(ARG(IMM8)))); */
 #define ASM_PUSH_BND_EXTERN   0x0c /* [3][-0,+1]   `push bound extern <imm8>:<imm8>'    - Check if the extern variable indexed by `<imm8>:<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(EXTERN(IMM8, IMM8)))); */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define ASM_PUSH_BND_STATIC   0x0d /* [2][-0,+1]   `push bound static <imm8>'           - Check if the static variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
+                                    * >> PUSH(bool(IS_BOUND(STATIC(IMM8)))); */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /*      ASM_                  0x0d  *               --------                            - ------------------ */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_PUSH_BND_GLOBAL   0x0e /* [2][-0,+1]   `push bound global <imm8>'           - Check if the global variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
                                     * >> PUSH(bool(IS_BOUND(GLOBAL(IMM8)))); */
 #define ASM_PUSH_BND_LOCAL    0x0f /* [2][-0,+1]   `push bound local <imm8>'            - Check if the local variable indexed by `<imm8>' is bound, pushing true/false indicative of that state.
@@ -502,7 +507,12 @@
                                     * >>     EXCEPT();
                                     * >> FI
                                     * >> PUSH(func(args...)); */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define ASM_DEL_STATIC        0x1d /* [2][-0,+0]   `del static <imm8>'                  - Unlink the static variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
+                                    * >> GLOBAL(IMM8) = UNBOUND; */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /*      ASM_                  0x1d  *               --------                            - ------------------ */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_DEL_GLOBAL        0x1e /* [2][-0,+0]   `del global <imm8>'                  - Unlink the global variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
                                     * >> GLOBAL(IMM8) = UNBOUND; */
 #define ASM_DEL_LOCAL         0x1f /* [2][-0,+0]   `del local <imm8>'                   - Unlink the local variable indexed by `<imm8>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with.
@@ -582,13 +592,13 @@
 #define ASM_SUPER_THIS_R      0x29 /* [2][-0,+1]   `push super this, ref <imm8>'        - Similar to `ASM_SUPER', but use a referenced variable `<imm8>' as type and the this-argument as Object.
                                     * >> PUSH(THIS as REF(IMM8)); */
 /*      ASM_                  0x2a  *               --------                            - ------------------ */
-#define ASM_POP_STATIC        0x2b /* [2][-1,+0]   `pop static <imm8>'                  - Pop the top stack value into the static variable indexed by `<imm8>', overwriting the previous value.
-                                    * [2][-0,+0]   `mov static <imm8>, PREFIX'          - `PREFIX: pop static <imm8>'
-                                    * >> STATIC(IMM8) = SOURCE; */
+/*      ASM_                  0x2b  *               --------                            - ------------------ */
 #define ASM_POP_EXTERN        0x2c /* [3][-1,+0]   `pop extern <imm8>:<imm8>'           - Pop the top stack value into the extern variable indexed by `<imm8>:<imm8>', overwriting the previous value.
                                     * [3][-0,+0]   `mov extern <imm8>:<imm8>, PREFIX'   - `PREFIX: pop extern <imm8>:<imm8>'
                                     * >> EXTERN(IMM8, IMM8) = SOURCE; */
-/*      ASM_                  0x2d  *               --------                            - ------------------ */
+#define ASM_POP_STATIC        0x2d /* [2][-1,+0]   `pop static <imm8>'                  - Pop the top stack value into the static variable indexed by `<imm8>', overwriting the previous value.
+                                    * [2][-0,+0]   `mov static <imm8>, PREFIX'          - `PREFIX: pop static <imm8>'
+                                    * >> STATIC(IMM8) = SOURCE; */
 #define ASM_POP_GLOBAL        0x2e /* [2][-1,+0]   `pop global <imm8>'                  - Pop the top stack value into the global variable indexed by `<imm8>', overwriting the previous value.
                                     * [2][-0,+0]   `mov global <imm8>, PREFIX'          - `PREFIX: pop global <imm8>'
                                     * >> GLOBAL(IMM8) = SOURCE; */
@@ -631,13 +641,13 @@
                                     * [2][-0,+0]   `mov  PREFIX, ref <imm8>'            - `PREFIX: push ref <imm8>'
                                     * >> DESTINATION = REF(IMM8); */
 /*      ASM_                  0x3a  *               --------                            - ------------------ */
-#define ASM_PUSH_STATIC       0x3b /* [2][-0,+1]   `push static <imm8>'                 - Push the static variable indexed by `<imm8>'.
-                                    * [2][-0,+0]   `mov  PREFIX, static <imm8>'         - `PREFIX: push static <imm8>'
-                                    * >> DESTINATION = STATIC(IMM8); */
+/*      ASM_                  0x3b  *               --------                            - ------------------ */
 #define ASM_PUSH_EXTERN       0x3c /* [3][-0,+1]   `push extern <imm8>:<imm8>'          - Push the extern variable indexed by `<imm8>:<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                     * [3][-0,+0]   `mov  PREFIX, extern <imm8>:<imm8>'  - `PREFIX: push extern <imm8>:<imm8>'
                                     * >> DESTINATION = EXTERN(IMM8, IMM8); */
-/*      ASM_                  0x3d  *               --------                            - ------------------ */
+#define ASM_PUSH_STATIC       0x3d /* [2][-0,+1]   `push static <imm8>'                 - Push the static variable indexed by `<imm8>'.
+                                    * [2][-0,+0]   `mov  PREFIX, static <imm8>'         - `PREFIX: push static <imm8>'
+                                    * >> DESTINATION = STATIC(IMM8); */
 #define ASM_PUSH_GLOBAL       0x3e /* [2][-0,+1]   `push global <imm8>'                 - Push the global variable indexed by `<imm8>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                     * [2][-0,+0]   `mov  PREFIX, global <imm8>'         - `PREFIX: push global <imm8>'
                                     * >> DESTINATION = GLOBAL(IMM8); */
@@ -1049,9 +1059,9 @@
 /*      ASM_                  0xf9  *  --------                            - ------------------ */
 #define ASM_STACK             0xfa /* `stack #<imm8>'                      - Use an Object located on the stack as storage class.
                                     *                                        The associated operand is an absolute offset from the stack's base. */
-#define ASM_STATIC            0xfb /* `static <imm8>'                      - Same as `ASM_LOCAL', but used to write to static variables. */
+/*      ASM_                  0xfb  *  --------                            - ------------------ */
 #define ASM_EXTERN            0xfc /* `extern <imm8>:<imm8>'               - Same as `ASM_LOCAL', but used to write to extern variables. */
-/*      ASM_                  0xfd  *  --------                            - ------------------ */
+#define ASM_STATIC            0xfd /* `static <imm8>'                      - Same as `ASM_LOCAL', but used to write to static variables. */
 #define ASM_GLOBAL            0xfe /* `global <imm8>'                      - Same as `ASM_LOCAL', but used to write to global variables. */
 #define ASM_LOCAL             0xff /* `local <imm8>'
                                     * PREFX: Changes the target of the following instruction normally
@@ -1137,7 +1147,11 @@
 /*      ASM_                  0xf00a  *               --------                            - ------------------ */
 #define ASM16_PUSH_BND_ARG    0xf00b /* [4][-0,+1]   `push bound arg <imm16>'             - Check if the argument variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_EXTERN 0xf00c /* [6][-0,+1]   `push bound extern <imm16>:<imm16>'  - Check if the extern variable indexed by `<imm16>:<imm16>' is bound, pushing true/false indicative of that state. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define ASM16_PUSH_BND_STATIC 0xf00d /* [2][-0,+1]   `push bound static <imm16>'           - Check if the static variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /*      ASM_                  0xf00d  *               --------                            - ------------------ */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM16_PUSH_BND_GLOBAL 0xf00e /* [4][-0,+1]   `push bound global <imm16>'          - Check if the global variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 #define ASM16_PUSH_BND_LOCAL  0xf00f /* [4][-0,+1]   `push bound local <imm16>'           - Check if the local variable indexed by `<imm16>' is bound, pushing true/false indicative of that state. */
 /*      ASM_                  0xf010  *               --------                            - ------------------ */
@@ -1181,7 +1195,19 @@
                                       * [4][-1,+1]   `PREFIX: push op $<imm16>, pop...' */
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n,+1] `call top, {#<imm8>*2}'              - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
-#define ASM_THISCALL_TUPLE    0xf01d /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of inserting `pop' before `pop...', then using the result as argument list).
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define ASM16_DEL_STATIC      0xf01d /* [2][-0,+0]   `del static <imm16>'                  - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+/*      ASM_                  0xf01d  *               --------                            - ------------------ */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define ASM16_DEL_GLOBAL      0xf01e /* [4][-0,+0]   `del global <imm16>'                 - Unlink the global variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
+#define ASM16_DEL_LOCAL       0xf01f /* [4][-0,+0]   `del local <imm16>'                  - Unlink the local variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
+#define ASM_CALL_TUPLE_KWDS   0xf020 /* [2][-3,+1]   `call top, pop..., pop'              - The universal call-with-keywords instruction that also takes keywords from the stack. */
+#define ASM16_LROT            0xf021 /* [4][-n,+n]   `lrot #<imm16>+3'                    - Rotate the top #<imm16>+2 stack objects left by one; away from SP.
+                                      * [4][-n,+n]   `lrot #<imm16>+2, PREFIX'            - `PREFIX: lrot #<imm16>+3' */
+#define ASM16_RROT            0xf022 /* [4][-n,+n]   `rrot #<imm16>+3'                    - Rotate the top #<imm16>+2 stack objects right by one; towards SP.
+                                      * [4][-n,+n]   `rrot #<imm16>+2, PREFIX'            - `PREFIX: rrot #<imm16>+3' */
+#define ASM_THISCALL_TUPLE    0xf023 /* [2][-3,+1]   `call top, pop, pop...'              - Perform a this-call (which is the equivalent of inserting `pop' before `pop...', then using the result as argument list).
                                       * >> Object args    = POP();
                                       * >> Object thisarg = POP();
                                       * >> Object func    = POP();
@@ -1190,14 +1216,6 @@
                                       * >>     EXCEPT();
                                       * >> FI
                                       * >> PUSH(func(thisarg, args...)); */
-#define ASM16_DEL_GLOBAL      0xf01e /* [4][-0,+0]   `del global <imm16>'                 - Unlink the global variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
-#define ASM16_DEL_LOCAL       0xf01f /* [4][-0,+0]   `del local <imm16>'                  - Unlink the local variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
-#define ASM_CALL_TUPLE_KWDS   0xf020 /* [2][-3,+1]   `call top, pop..., pop'              - The universal call-with-keywords instruction that also takes keywords from the stack. */
-#define ASM16_LROT            0xf021 /* [4][-n,+n]   `lrot #<imm16>+3'                    - Rotate the top #<imm16>+2 stack objects left by one; away from SP.
-                                      * [4][-n,+n]   `lrot #<imm16>+2, PREFIX'            - `PREFIX: lrot #<imm16>+3' */
-#define ASM16_RROT            0xf022 /* [4][-n,+n]   `rrot #<imm16>+3'                    - Rotate the top #<imm16>+2 stack objects right by one; towards SP.
-                                      * [4][-n,+n]   `rrot #<imm16>+2, PREFIX'            - `PREFIX: rrot #<imm16>+3' */
-/*      ASM_                  0xf023  *               --------                            - ------------------ */
 #define ASM16_DUP_N           0xf024 /* [4][-n,+n+1] `dup #SP - <imm16> - 2', `push #SP   - <imm16> - 2' - Push the #<imm16>+1'th stack entry (before adjustment).
                                       * [4][-n-1,+n+1] `mov PREFIX, #SP - <imm16> - 2'    - `PREFIX: dup #SP - <imm16> - 2', `PREFIX: push #SP - <imm16> - 2' */
 /*      ASM_                  0xf025  *               --------                            - ------------------ */
@@ -1207,11 +1225,11 @@
 /*      ASM_                  0xf028  *               --------                            - ------------------ */
 #define ASM16_SUPER_THIS_R    0xf029 /* [4][-0,+1]   `push super this, ref <imm16>'       - Similar to `ASM_SUPER', but use a referenced variable `<imm16>' as type and the this-argument as Object. */
 /*      ASM_                  0xf02a  *               --------                            - ------------------ */
-#define ASM16_POP_STATIC      0xf02b /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.
-                                      * [4][-0,+0]   `mov static <imm16>, PREFIX'         - `PREFIX: pop static <imm16>' */
+/*      ASM_                  0xf02b  *               --------                            - ------------------ */
 #define ASM16_POP_EXTERN      0xf02c /* [6][-1,+0]   `pop extern <imm16>:<imm16>'         - Pop the top stack value into the extern variable indexed by `<imm16>:<imm16>', overwriting the previous value.
                                       * [6][-0,+0]   `mov extern <imm16>:<imm16>, PREFIX' - `PREFIX: pop extern <imm16>:<imm16>' */
-/*      ASM_                  0xf02d  *               --------                            - ------------------ */
+#define ASM16_POP_STATIC      0xf02d /* [4][-1,+0]   `pop static <imm16>'                 - Pop the top stack value into the static variable indexed by `<imm16>', overwriting the previous value.
+                                      * [4][-0,+0]   `mov static <imm16>, PREFIX'         - `PREFIX: pop static <imm16>' */
 #define ASM16_POP_GLOBAL      0xf02e /* [4][-1,+0]   `pop global <imm16>'                 - Pop the top stack value into the global variable indexed by `<imm16>', overwriting the previous value.
                                       * [4][-0,+0]   `mov global <imm16>, PREFIX'         - `PREFIX: pop global <imm16>' */
 #define ASM16_POP_LOCAL       0xf02f /* [4][-1,+0]   `pop local <imm16>'                  - Pop the top stack value into the local variable indexed by `<imm16>', overwriting the previous value.
@@ -1235,11 +1253,11 @@
 #define ASM16_PUSH_REF        0xf039 /* [4][-0,+1]   `push ref <imm16>'                   - Push a referenced variable indexed by `<imm16>'.
                                       * [4][-0,+0]   `mov  PREFIX, ref <imm16>'           - `PREFIX: push ref <imm16>' */
 /*      ASM_                  0xf03a  *               --------                            - ------------------ */
-#define ASM16_PUSH_STATIC     0xf03b /* [4][-0,+1]   `push static <imm16>'                - Push the static variable indexed by `<imm16>'.
-                                      * [4][-0,+0]   `mov  PREFIX, static <imm16>'        - `PREFIX: push static <imm16>' */
+/*      ASM_                  0xf03b  *               --------                            - ------------------ */
 #define ASM16_PUSH_EXTERN     0xf03c /* [6][-0,+1]   `push extern <imm16>:<imm16>'        - Push the extern variable indexed by `<imm16>:<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                       * [4][-0,+0]   `mov  PREFIX, extern <imm16>:<imm16>'- `PREFIX: push extern <imm16>:<imm16>' */
-/*      ASM_                  0xf03d  *               --------                            - ------------------ */
+#define ASM16_PUSH_STATIC     0xf03d /* [4][-0,+1]   `push static <imm16>'                - Push the static variable indexed by `<imm16>'.
+                                      * [4][-0,+0]   `mov  PREFIX, static <imm16>'        - `PREFIX: push static <imm16>' */
 #define ASM16_PUSH_GLOBAL     0xf03e /* [4][-0,+1]   `push global <imm16>'                - Push the global variable indexed by `<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
                                       * [4][-0,+0]   `mov  PREFIX, global <imm16>'        - `PREFIX: push global <imm16>' */
 #define ASM16_PUSH_LOCAL      0xf03f /* [4][-0,+1]   `push local <imm16>'                 - Push the local variable indexed by `<imm16>'. If it isn't bound, throw an `Error.RuntimeError.UnboundLocal'
@@ -1467,9 +1485,9 @@
 /*      ASM_                  0xf0f9  *               --------                            - ------------------ */
 #define ASM16_STACK           0xf0fa /* `stack #<imm16>'                                  - Use an Object located on the stack as storage class.
                                       *                                                     The associated operand is an absolute offset from the stack's base. */
-#define ASM16_STATIC          0xf0fb /* `static <imm16>'                                  - Same as `ASM_LOCAL16', but used to write to static variables. */
+/*      ASM_                  0xf0fb  *               --------                            - ------------------ */
 #define ASM16_EXTERN          0xf0fc /* `extern <imm16>:<imm16>'                          - Same as `ASM_LOCAL16', but used to write to extern variables. */
-/*      ASM_                  0xf0fd  *               --------                            - ------------------ */
+#define ASM16_STATIC          0xf0fd /* `static <imm16>'                                  - Same as `ASM_LOCAL16', but used to write to static variables. */
 #define ASM16_GLOBAL          0xf0fe /* `global <imm16>'                                  - Same as `ASM_LOCAL16', but used to write to global variables. */
 #define ASM16_LOCAL           0xf0ff /* `local  <imm16>'                                  - Same as `ASM_LOCAL', but encodes a little-endian 16-bit local id. */
 

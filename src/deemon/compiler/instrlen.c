@@ -156,7 +156,7 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x0a */ 1, /* --- */
 	/* 0x0b */ 2, /* `ASM_PUSH_BND_ARG':            `push bound arg <imm8>' */
 	/* 0x0c */ 3, /* `ASM_PUSH_BND_EXTERN':         `push bound extern <imm8>:<imm8>' */
-	/* 0x0d */ 1, /* --- */
+	/* 0x0d */ 2, /* `ASM_PUSH_BND_STATIC':         `push bound static <imm8>' */
 	/* 0x0e */ 2, /* `ASM_PUSH_BND_GLOBAL':         `push bound global <imm8>' */
 	/* 0x0f */ 2, /* `ASM_PUSH_BND_LOCAL':          `push bound local <imm8>' */
 	/* 0x10 */ 2, /* `ASM_JF':                      `jf pop, <Sdisp8>' */
@@ -172,7 +172,7 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x1a */ 2, /* `ASM_OPERATOR_TUPLE':          `op top, $<imm8>, pop...' */
 	/* 0x1b */ 2, /* `ASM_CALL':                    `call top, #<imm8>' */
 	/* 0x1c */ 1, /* `ASM_CALL_TUPLE':              `call top, pop...' */
-	/* 0x1d */ 1, /* --- */
+	/* 0x1d */ 2, /* `ASM_DEL_STATIC':              `del static <imm8>' */
 	/* 0x1e */ 2, /* `ASM_DEL_GLOBAL':              `del global <imm8>' */
 	/* 0x1f */ 2, /* `ASM_DEL_LOCAL':               `del local <imm8>' */
 	/* 0x20 */ 1, /* `ASM_SWAP':                    `swap' */
@@ -186,9 +186,9 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x28 */ 1, /* `ASM_SUPER':                   `super top, pop' */
 	/* 0x29 */ 2, /* `ASM_SUPER_THIS_R':            `push super this, ref <imm8>' */
 	/* 0x2a */ 1, /* --- */
-	/* 0x2b */ 2, /* `ASM_POP_STATIC':              `pop static <imm8>' */
+	/* 0x2b */ 1, /* --- */
 	/* 0x2c */ 3, /* `ASM_POP_EXTERN':              `pop extern <imm8>:<imm8>' */
-	/* 0x2d */ 1, /* --- */
+	/* 0x2d */ 2, /* `ASM_POP_STATIC':              `pop static <imm8>' */
 	/* 0x2e */ 2, /* `ASM_POP_GLOBAL':              `pop global <imm8>' */
 	/* 0x2f */ 2, /* `ASM_POP_LOCAL':               `pop local <imm8>' */
 	/* 0x30 */ 1, /* --- */
@@ -202,9 +202,9 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x38 */ 2, /* `ASM_PUSH_CONST':              `push const <imm8>' */
 	/* 0x39 */ 2, /* `ASM_PUSH_REF':                `push ref <imm8>' */
 	/* 0x3a */ 1, /* --- */
-	/* 0x3b */ 2, /* `ASM_PUSH_STATIC':             `push static <imm8>' */
+	/* 0x3b */ 1, /* --- */
 	/* 0x3c */ 3, /* `ASM_PUSH_EXTERN':             `push extern <imm8>:<imm8>' */
-	/* 0x3d */ 1, /* --- */
+	/* 0x3d */ 2, /* `ASM_PUSH_STATIC':             `push static <imm8>' */
 	/* 0x3e */ 2, /* `ASM_PUSH_GLOBAL':             `push global <imm8>' */
 	/* 0x3f */ 2, /* `ASM_PUSH_LOCAL':              `push local <imm8>' */
 	/* 0x40 */ 1, /* `ASM_CAST_TUPLE':              `cast top, Tuple' */
@@ -415,7 +415,7 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x0a */ 2, /* --- */
 	/* 0x0b */ 4, /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm16>' */
 	/* 0x0c */ 6, /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
-	/* 0x0d */ 2, /* --- */
+	/* 0x0d */ 2, /* `ASM16_PUSH_BND_STATIC':       `push bound static <imm16>' */
 	/* 0x0e */ 4, /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
 	/* 0x0f */ 4, /* `ASM16_PUSH_BND_LOCAL':        `push bound local <imm16>' */
 	/* 0x10 */ 2, /* --- */
@@ -431,13 +431,13 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x1a */ 4, /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop...' */
 	/* 0x1b */ 3, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
 	/* 0x1c */ 3, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
-	/* 0x1d */ 2, /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
+	/* 0x1d */ 2, /* `ASM16_DEL_STATIC':            `del static <imm16>' */
 	/* 0x1e */ 4, /* `ASM16_DEL_GLOBAL':            `del global <imm16>' */
 	/* 0x1f */ 4, /* `ASM16_DEL_LOCAL':             `del local <imm16>' */
 	/* 0x20 */ 2, /* `ASM_CALL_TUPLE_KWDS':         `call top, pop..., pop' */
 	/* 0x21 */ 4, /* `ASM16_LROT':                  `lrot #<imm16>+3' */
 	/* 0x22 */ 4, /* `ASM16_RROT':                  `rrot #<imm16>+3' */
-	/* 0x23 */ 2, /* --- */
+	/* 0x23 */ 2, /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
 	/* 0x24 */ 4, /* `ASM16_DUP_N':                 `dup #SP - <imm16> - 2' */
 	/* 0x25 */ 2, /* --- */
 	/* 0x26 */ 4, /* `ASM16_POP_N':                 `pop #SP - <imm16> - 2' */
@@ -445,9 +445,9 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x28 */ 2, /* --- */
 	/* 0x29 */ 4, /* `ASM16_SUPER_THIS_R':          `push super this, ref <imm16>' */
 	/* 0x2a */ 2, /* --- */
-	/* 0x2b */ 4, /* `ASM16_POP_STATIC':            `pop static <imm16>' */
+	/* 0x2b */ 2, /* --- */
 	/* 0x2c */ 6, /* `ASM16_POP_EXTERN':            `pop extern <imm16>:<imm16>' */
-	/* 0x2d */ 2, /* --- */
+	/* 0x2d */ 4, /* `ASM16_POP_STATIC':            `pop static <imm16>' */
 	/* 0x2e */ 4, /* `ASM16_POP_GLOBAL':            `pop global <imm16>' */
 	/* 0x2f */ 4, /* `ASM16_POP_LOCAL':             `pop local <imm16>' */
 	/* 0x30 */ 2, /* --- */
@@ -461,9 +461,9 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x38 */ 4, /* `ASM16_PUSH_CONST':            `push const <imm16>' */
 	/* 0x39 */ 4, /* `ASM16_PUSH_REF':              `push ref <imm16>' */
 	/* 0x3a */ 2, /* --- */
-	/* 0x3b */ 4, /* `ASM16_PUSH_STATIC':           `push static <imm16>' */
+	/* 0x3b */ 2, /* --- */
 	/* 0x3c */ 6, /* `ASM16_PUSH_EXTERN':           `push extern <imm16>:<imm16>' */
-	/* 0x3d */ 2, /* --- */
+	/* 0x3d */ 4, /* `ASM16_PUSH_STATIC':           `push static <imm16>' */
 	/* 0x3e */ 4, /* `ASM16_PUSH_GLOBAL':           `push global <imm16>' */
 	/* 0x3f */ 4, /* `ASM16_PUSH_LOCAL':            `push local <imm16>' */
 	/* 0x40 */ 2, /* `ASM_CAST_HASHSET':            `cast top, HashSet' */
@@ -674,7 +674,7 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x0a */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x0b */ STACK_EFFECT(0, 1), /* `ASM_PUSH_BND_ARG':            `push bound arg <imm8>' */
 	/* 0x0c */ STACK_EFFECT(0, 1), /* `ASM_PUSH_BND_EXTERN':         `push bound extern <imm8>:<imm8>' */
-	/* 0x0d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x0d */ STACK_EFFECT(0, 1), /* `ASM_PUSH_BND_STATIC':         `push bound static <imm8>' */
 	/* 0x0e */ STACK_EFFECT(0, 1), /* `ASM_PUSH_BND_GLOBAL':         `push bound global <imm8>' */
 	/* 0x0f */ STACK_EFFECT(0, 1), /* `ASM_PUSH_BND_LOCAL':          `push bound local <imm8>' */
 	/* 0x10 */ STACK_EFFECT(1, 0), /* `ASM_JF':                      `jf pop, <Sdisp8>' */
@@ -690,7 +690,7 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x1a */ STACK_EFFECT(2, 1), /* `ASM_OPERATOR_TUPLE':          `op top, $<imm8>, pop...' */
 	/* 0x1b */ STACK_EFFECT_UNDEF, /* `ASM_CALL':                    `call top, #<imm8>' */
 	/* 0x1c */ STACK_EFFECT(2, 1), /* `ASM_CALL_TUPLE':              `call top, pop...' */
-	/* 0x1d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x1d */ STACK_EFFECT(0, 0), /* `ASM_DEL_STATIC':              `del static <imm8>' */
 	/* 0x1e */ STACK_EFFECT(0, 0), /* `ASM_DEL_GLOBAL':              `del global <imm8>' */
 	/* 0x1f */ STACK_EFFECT(0, 0), /* `ASM_DEL_LOCAL':               `del local <imm8>' */
 	/* 0x20 */ STACK_EFFECT(2, 2), /* `ASM_SWAP':                    `swap' */
@@ -704,9 +704,9 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x28 */ STACK_EFFECT(2, 1), /* `ASM_SUPER':                   `super top, pop' */
 	/* 0x29 */ STACK_EFFECT(0, 1), /* `ASM_SUPER_THIS_R':            `push super this, ref <imm8>' */
 	/* 0x2a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x2b */ STACK_EFFECT(1, 0), /* `ASM_POP_STATIC':              `pop static <imm8>' */
+	/* 0x2b */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x2c */ STACK_EFFECT(1, 0), /* `ASM_POP_EXTERN':              `pop extern <imm8>:<imm8>' */
-	/* 0x2d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x2d */ STACK_EFFECT(1, 0), /* `ASM_POP_STATIC':              `pop static <imm8>' */
 	/* 0x2e */ STACK_EFFECT(1, 0), /* `ASM_POP_GLOBAL':              `pop global <imm8>' */
 	/* 0x2f */ STACK_EFFECT(1, 0), /* `ASM_POP_LOCAL':               `pop local <imm8>' */
 	/* 0x30 */ STACK_EFFECT_UNDEF, /* --- */
@@ -720,9 +720,9 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x38 */ STACK_EFFECT(0, 1), /* `ASM_PUSH_CONST':              `push const <imm8>' */
 	/* 0x39 */ STACK_EFFECT(0, 1), /* `ASM_PUSH_REF':                `push ref <imm8>' */
 	/* 0x3a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x3b */ STACK_EFFECT(0, 1), /* `ASM_PUSH_STATIC':             `push static <imm8>' */
+	/* 0x3b */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x3c */ STACK_EFFECT(0, 1), /* `ASM_PUSH_EXTERN':             `push extern <imm8>:<imm8>' */
-	/* 0x3d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x3d */ STACK_EFFECT(0, 1), /* `ASM_PUSH_STATIC':             `push static <imm8>' */
 	/* 0x3e */ STACK_EFFECT(0, 1), /* `ASM_PUSH_GLOBAL':             `push global <imm8>' */
 	/* 0x3f */ STACK_EFFECT(0, 1), /* `ASM_PUSH_LOCAL':              `push local <imm8>' */
 	/* 0x40 */ STACK_EFFECT(1, 1), /* `ASM_CAST_TUPLE':              `cast top, Tuple' */
@@ -933,7 +933,7 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x0a */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x0b */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_ARG':          `push bound arg <imm16>' */
 	/* 0x0c */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_EXTERN':       `push bound extern <imm16>:<imm16>' */
-	/* 0x0d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x0d */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_STATIC':       `push bound static <imm16>' */
 	/* 0x0e */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_GLOBAL':       `push bound global <imm16>' */
 	/* 0x0f */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_BND_LOCAL':        `push bound local <imm16>' */
 	/* 0x10 */ STACK_EFFECT_UNDEF, /* --- */
@@ -949,13 +949,13 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x1a */ STACK_EFFECT(2, 1), /* `ASM16_OPERATOR_TUPLE':        `op top, $<imm16>, pop...' */
 	/* 0x1b */ STACK_EFFECT_UNDEF, /* `ASM_CALL_SEQ':                `call top, [#<imm8>]' */
 	/* 0x1c */ STACK_EFFECT_UNDEF, /* `ASM_CALL_MAP':                `call top, {#<imm8>*2}' */
-	/* 0x1d */ STACK_EFFECT(3, 1), /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
+	/* 0x1d */ STACK_EFFECT(0, 0), /* `ASM16_DEL_STATIC':            `del static <imm16>' */
 	/* 0x1e */ STACK_EFFECT(0, 0), /* `ASM16_DEL_GLOBAL':            `del global <imm16>' */
 	/* 0x1f */ STACK_EFFECT(0, 0), /* `ASM16_DEL_LOCAL':             `del local <imm16>' */
 	/* 0x20 */ STACK_EFFECT(3, 1), /* `ASM_CALL_TUPLE_KWDS':         `call top, pop..., pop' */
 	/* 0x21 */ STACK_EFFECT_UNDEF, /* `ASM16_LROT':                  `lrot #<imm16>+3' */
 	/* 0x22 */ STACK_EFFECT_UNDEF, /* `ASM16_RROT':                  `rrot #<imm16>+3' */
-	/* 0x23 */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x23 */ STACK_EFFECT(3, 1), /* `ASM_THISCALL_TUPLE':          `call top, pop, pop...' */
 	/* 0x24 */ STACK_EFFECT(0, 1), /* `ASM16_DUP_N':                 `dup #SP - <imm16> - 2' */
 	/* 0x25 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x26 */ STACK_EFFECT(1, 0), /* `ASM16_POP_N':                 `pop #SP - <imm16> - 2' */
@@ -963,9 +963,9 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x28 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x29 */ STACK_EFFECT(0, 1), /* `ASM16_SUPER_THIS_R':          `push super this, ref <imm16>' */
 	/* 0x2a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x2b */ STACK_EFFECT(1, 0), /* `ASM16_POP_STATIC':            `pop static <imm16>' */
+	/* 0x2b */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x2c */ STACK_EFFECT(1, 0), /* `ASM16_POP_EXTERN':            `pop extern <imm16>:<imm16>' */
-	/* 0x2d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x2d */ STACK_EFFECT(1, 0), /* `ASM16_POP_STATIC':            `pop static <imm16>' */
 	/* 0x2e */ STACK_EFFECT(1, 0), /* `ASM16_POP_GLOBAL':            `pop global <imm16>' */
 	/* 0x2f */ STACK_EFFECT(1, 0), /* `ASM16_POP_LOCAL':             `pop local <imm16>' */
 	/* 0x30 */ STACK_EFFECT_UNDEF, /* --- */
@@ -979,9 +979,9 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x38 */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_CONST':            `push const <imm16>' */
 	/* 0x39 */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_REF':              `push ref <imm16>' */
 	/* 0x3a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x3b */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_STATIC':           `push static <imm16>' */
+	/* 0x3b */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x3c */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_EXTERN':           `push extern <imm16>:<imm16>' */
-	/* 0x3d */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x3d */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_STATIC':           `push static <imm16>' */
 	/* 0x3e */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_GLOBAL':           `push global <imm16>' */
 	/* 0x3f */ STACK_EFFECT(0, 1), /* `ASM16_PUSH_LOCAL':            `push local <imm16>' */
 	/* 0x40 */ STACK_EFFECT(1, 1), /* `ASM_CAST_HASHSET':            `cast top, HashSet' */
@@ -1183,9 +1183,9 @@ PRIVATE uint8_t const prefix_length[8] = {
 	/* [0xf8       - ASM_PREFIXMIN] */ 1,
 	/* [0xf9       - ASM_PREFIXMIN] */ 1,
 	/* [ASM_STACK  - ASM_PREFIXMIN] */ 2,
-	/* [ASM_STATIC - ASM_PREFIXMIN] */ 2,
+	/* [0xfb       - ASM_PREFIXMIN] */ 1,
 	/* [ASM_EXTERN - ASM_PREFIXMIN] */ 3,
-	/* [0xfd       - ASM_PREFIXMIN] */ 1,
+	/* [ASM_STATIC - ASM_PREFIXMIN] */ 2,
 	/* [ASM_GLOBAL - ASM_PREFIXMIN] */ 2,
 	/* [ASM_LOCAL  - ASM_PREFIXMIN] */ 2
 };
@@ -1194,9 +1194,9 @@ PRIVATE uint8_t const prefix_length_f0[8] = {
 	/* [0xf0f8       - (0xf000 | ASM_PREFIXMIN)] */ 2,
 	/* [0xf0f9       - (0xf000 | ASM_PREFIXMIN)] */ 2,
 	/* [ASM16_STACK  - (0xf000 | ASM_PREFIXMIN)] */ 4,
-	/* [ASM16_STATIC - (0xf000 | ASM_PREFIXMIN)] */ 4,
+	/* [0xf0fb       - (0xf000 | ASM_PREFIXMIN)] */ 2,
 	/* [ASM16_EXTERN - (0xf000 | ASM_PREFIXMIN)] */ 6,
-	/* [0xf0fd       - (0xf000 | ASM_PREFIXMIN)] */ 2,
+	/* [ASM16_STATIC - (0xf000 | ASM_PREFIXMIN)] */ 4,
 	/* [ASM16_GLOBAL - (0xf000 | ASM_PREFIXMIN)] */ 4,
 	/* [ASM16_LOCAL  - (0xf000 | ASM_PREFIXMIN)] */ 4
 };

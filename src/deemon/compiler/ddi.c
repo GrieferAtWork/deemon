@@ -628,9 +628,15 @@ do_realloc:
 			                           (uint32_t)(name - strtab.ap_string->s_str)))
 				goto err_xwriter;
 		}
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		ASSERT(current_assembler.a_constc >= current_assembler.a_staticc);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if (current_assembler.a_staticc != 0) {
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			offset = current_assembler.a_refc;
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			offset = current_assembler.a_constc - current_assembler.a_staticc;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			/* Generate information about the names of static variables. */
 			for (i = 0; i < current_assembler.a_staticc; ++i) {
 				char *name;
@@ -644,9 +650,15 @@ do_realloc:
 				                              sym->s_name->k_size + 1);
 				if unlikely(!name)
 					goto err_xwriter;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+				if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_RNAM, offset + i,
+				                           (uint32_t)(name - strtab.ap_string->s_str)))
+					goto err_xwriter;
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 				if unlikely(xddi_putsymbol(&writer, DDI_EXDAT_O_SNAM, offset + i,
 				                           (uint32_t)(name - strtab.ap_string->s_str)))
 					goto err_xwriter;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 		}
 		((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);

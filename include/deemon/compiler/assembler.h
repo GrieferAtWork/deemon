@@ -42,7 +42,11 @@ DECL_BEGIN
 struct ascii_printer;
 
 #define R_DMN_NONE      0 /* `// Nothing' */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define R_DMN_STATIC16  1 /* `u16 = u16 + a_refc;' */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define R_DMN_STATIC16  1 /* `u16 = u16 + a_constc;' */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define R_DMN_ABS8      2 /* `u8  = u8 + ar_sym->as_addr;' */
 #define R_DMN_ABS16     3 /* `u16 = u16 + ar_sym->as_addr;' */
 #define R_DMN_ABS32     4 /* `u32 = u32 + ar_sym->as_addr;' */
@@ -654,7 +658,9 @@ struct asm_symbol_ref {
 };
 
 struct asm_symbol_static {
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	DREF DeeObject        *ss_init; /* [1..1] Static symbol initializer. */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	struct symbol         *ss_sym;  /* [0..1] The symbol descriptor associated with this state symbol. */
 };
 
@@ -664,8 +670,12 @@ struct assembler {
 	struct asm_sym_slist   a_syms;     /* [0..1][owned] Chain of assembly symbols allocated by the assembler. */
 	struct asm_sym        *a_finsym;   /* [0..1] The address of the current, top finally handler. */
 	uint8_t               *a_localuse; /* [0..((a_localc+7)/8)|ALLOC(a_locala)][if(!ASM_FREUSELOC, == NULL)][owned] Bitset of local variables that are currently in use. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	DREF DeeObject       **a_constv;   /* [1..1][0..a_constc|ALLOC(a_consta)][owned] Vector of constant variables. */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	DREF DeeObject       **a_constv;   /* [1..1][0..a_constc|ALLOC(a_consta)][owned] Vector of constant variables.
 	                                    * WARNING: Elements are only guarantied to always be non-NULL before `asm_mergestatic()' has been called. */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	struct asm_symbol_static
 	                      *a_staticv;  /* [1..1][0..a_staticc|ALLOC(a_statica)][owned] Vector of static variable initializers. */
 	struct asm_symbol_ref *a_refv;     /* [1..1][0..a_refc|ALLOC(a_refa)][owned] Vector of symbol references used from the previous base scope.
@@ -881,10 +891,17 @@ INTDEF bool DCALL asm_delunusedsyms(void);
  * section, adjusting relocations in the process. */
 INTDEF WUNUSED int DCALL asm_mergetext(void);
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 /* Merge constant and static variables into only
  * constants, resolving all `R_DMN_STATIC16' relocations.
  * NOTE: This function must be called after `asm_mergetext()' */
 INTDEF WUNUSED int DCALL asm_mergestatic(void);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+/* Merge constant and static variables into only
+ * constants, resolving all `R_DMN_STATIC16' relocations.
+ * NOTE: This function must be called after `asm_mergetext()' */
+INTDEF WUNUSED int DCALL asm_mergestatic(void);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 INTDEF WUNUSED int DCALL asm_check_user_labels_defined(void);
 INTDEF WUNUSED int DCALL asm_applyconstrel(void);
@@ -1027,12 +1044,20 @@ INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newconst_string(char const *__rest
  * generate code capable of pushing the given value onto the stack. */
 INTDEF WUNUSED NONNULL((1)) bool DCALL asm_allowconst(DeeObject *__restrict constvalue);
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+/* Create a new static variable ID and return it.
+ * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
+ * NOTE: The caller must encode the returned index alongside a `R_DMN_STATIC16' relocation.
+ *       This can easily be achieved using the `asm_putsid16()' function. */
+INTDEF WUNUSED int32_t DCALL asm_newstatic(struct symbol *sym);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /* Similar to `asm_newconst', but don't re-use identical static variables.
  * @param: sym: The symbol with which to associated the static variable, or NULL if anonymous.
  * NOTE: The given `initializer' is required and the caller must encode
  *       the returned index alongside a `R_DMN_STATIC16' relocation.
  *       This can easily be achieved using the `asm_putsid16()' function. */
 INTDEF WUNUSED NONNULL((1)) int32_t DCALL asm_newstatic(DeeObject *__restrict initializer, struct symbol *sym);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 /* Allocate a new local variable index. */
 INTDEF WUNUSED int32_t DCALL asm_newlocal(void);
@@ -1194,6 +1219,9 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gendfinally_n(n)          ((n) ? (asm_put((ASM_ENDFINALLY_N&0xff00) >> 8) || asm_putimm8(ASM_ENDFINALLY_N&0xff, (uint8_t)((n) - 1))) : asm_gendfinally())
 #define asm_gpush_bnd_arg(aid)        (asm_incsp(), asm_put816(ASM_PUSH_BND_ARG, aid))
 #define asm_gpush_bnd_extern(mid, gid) (asm_incsp(), asm_put881616(ASM_PUSH_BND_EXTERN, mid, gid))
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define asm_gpush_bnd_static(sid)     (asm_incsp(), asm_putsid16(ASM16_PUSH_BND_STATIC, sid))
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define asm_gpush_bnd_global(gid)     (asm_incsp(), asm_put816(ASM_PUSH_BND_GLOBAL, gid))
 #define asm_gpush_bnd_local(lid)      (asm_incsp(), asm_put816(ASM_PUSH_BND_LOCAL, lid))
 #define asm_gjf(target)               (asm_gjmp(ASM_JF, target))
@@ -1208,6 +1236,9 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gthiscall_tuple()         (asm_dddicsp(), asm_put16(ASM_THISCALL_TUPLE))
 #define asm_gjmp_pop()                (asm_decsp(), asm_put(ASM_JMP_POP))
 #define asm_gjmp_pop_pop()            (asm_ddcsp(), asm_put16(ASM_JMP_POP_POP))
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define asm_gdel_static(sid)          (asm_putsid16(ASM16_DEL_STATIC, sid))
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define asm_gdel_global(gid)          (asm_put816(ASM_DEL_GLOBAL, gid))
 #define asm_gdel_local(lid)           (asm_put816(ASM_DEL_LOCAL, lid))
 #define asm_gswap()                   (asm_ddiicsp(), asm_put(ASM_SWAP))

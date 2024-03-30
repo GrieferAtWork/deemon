@@ -1300,8 +1300,12 @@ struct assembler_state {
                                                      * Output operand: Same as `eglCsS' (Any prefix operand, excluding const-as-static) */
 #define ASM_OP_INTEGER       OPNAME1('i')           /* Same as `I32N32' (Any integer operand). */
 #define ASM_OP_SYMBOL        OPNAME1('v')           /* Same as `raAvAkcCseglRS' (Any symbol, potentially immutable). */
-#define ASM_OP_VARIABLE      OPNAME1('V')           /* Same as `eglS' (Any symbol, must be mutable). */
+#define ASM_OP_VARIABLE      OPNAME1('V')           /* Same as `eglSCs' (Any symbol, must be mutable). */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define ASM_OP_BINDABLE      OPNAME1('b')           /* Same as `eglCs' (Any symbol, must be able to be unbound). */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_OP_BINDABLE      OPNAME1('b')           /* Same as `egl' (Any symbol, must be able to be unbound). */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_OP_PUSH          OPNAME1('P')           /* Input operand:  Same as `nEMTiTmTfraAvAkcCseglTTFFTcI64N64SR' (All operands accepted by the `push' instruction)
                                                      * Output operand: Same as `eglCsS' (All operands accepted by the `pop' instruction)
                                                      * In/out operand: Same as output operand (All operands accepted by both the `push' and `pop' instructions) */
@@ -1990,7 +1994,7 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_VARIABLE:
-		result = get_assembly_formatter_oprepr(self, "eglS", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "eglSCs", mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 		if (!result)
 			goto err;
@@ -1999,8 +2003,13 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_BINDABLE:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		result = get_assembly_formatter_oprepr(self, "eglCs", mode | OPTION_MODE_TRY,
+		                                       cleanup, init_state);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		result = get_assembly_formatter_oprepr(self, "egl", mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if (!result)
 			goto err;
 		if (result != ITER_DONE)

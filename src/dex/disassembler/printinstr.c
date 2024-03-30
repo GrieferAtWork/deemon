@@ -191,7 +191,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x0a */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x0b */ "push   bound ", /* `ASM_PUSH_BND_ARG' */
 	/* 0x0c */ "push   bound ", /* `ASM_PUSH_BND_EXTERN' */
-	/* 0x0d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x0d */ "push   bound ", /* `ASM_PUSH_BND_STATIC' */
 	/* 0x0e */ "push   bound ", /* `ASM_PUSH_BND_GLOBAL' */
 	/* 0x0f */ "push   bound ", /* `ASM_PUSH_BND_LOCAL' */
 	/* 0x10 */ "jf     pop, ", /* `ASM_JF' */
@@ -207,7 +207,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x1a */ "op     top, " PREFIX_INTEGERAL, /* `ASM_OPERATOR_TUPLE' */
 	/* 0x1b */ "call   top, " PREFIX_STACKEFFECT, /* `ASM_CALL' */
 	/* 0x1c */ "call   top, pop...", /* `ASM_CALL_TUPLE' */
-	/* 0x1d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x1d */ "del    ", /* `ASM_DEL_STATIC' */
 	/* 0x1e */ "del    ", /* `ASM_DEL_GLOBAL' */
 	/* 0x1f */ "del    ", /* `ASM_DEL_LOCAL' */
 	/* 0x20 */ "swap", /* `ASM_SWAP' */
@@ -221,9 +221,9 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x28 */ "super  top, pop", /* `ASM_SUPER' */
 	/* 0x29 */ "push   super this, ", /* `ASM_SUPER_THIS_R' */
 	/* 0x2a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x2b */ "pop    ", /* `ASM_POP_STATIC' */
+	/* 0x2b */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x2c */ "pop    ", /* `ASM_POP_EXTERN' */
-	/* 0x2d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x2d */ "pop    ", /* `ASM_POP_STATIC' */
 	/* 0x2e */ "pop    ", /* `ASM_POP_GLOBAL' */
 	/* 0x2f */ "pop    ", /* `ASM_POP_LOCAL' */
 	/* 0x30 */ UNKNOWN_MNEMONIC, /* --- */
@@ -237,9 +237,9 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0x38 */ "push   ", /* `ASM_PUSH_CONST' */
 	/* 0x39 */ "push   ", /* `ASM_PUSH_REF' */
 	/* 0x3a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0x3b */ "push   ", /* `ASM_PUSH_STATIC' */
+	/* 0x3b */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0x3c */ "push   ", /* `ASM_PUSH_EXTERN' */
-	/* 0x3d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0x3d */ "push   ", /* `ASM_PUSH_STATIC' */
 	/* 0x3e */ "push   ", /* `ASM_PUSH_GLOBAL' */
 	/* 0x3f */ "push   ", /* `ASM_PUSH_LOCAL' */
 	/* 0x40 */ "cast   top, Tuple", /* `ASM_CAST_TUPLE' */
@@ -429,9 +429,9 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xf8 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf9 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xfa */ "stack  " PREFIX_STACKEFFECT, /* `ASM_STACK' */
-	/* 0xfb */ "static ", /* `ASM_STATIC' */
+	/* 0xfb */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xfc */ "extern ", /* `ASM_EXTERN' */
-	/* 0xfd */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xfd */ "static ", /* `ASM_STATIC' */
 	/* 0xfe */ "global ", /* `ASM_GLOBAL' */
 	/* 0xff */ "local  ", /* `ASM_LOCAL' */
 };
@@ -450,7 +450,7 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf00a */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf00b */ "push   bound ", /* `ASM16_PUSH_BND_ARG' */
 	/* 0xf00c */ "push   bound ", /* `ASM16_PUSH_BND_EXTERN' */
-	/* 0xf00d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf00d */ "push   bound ", /* `ASM16_PUSH_BND_STATIC' */
 	/* 0xf00e */ "push   bound ", /* `ASM16_PUSH_BND_GLOBAL' */
 	/* 0xf00f */ "push   bound ", /* `ASM16_PUSH_BND_LOCAL' */
 	/* 0xf010 */ UNKNOWN_MNEMONIC, /* --- */
@@ -466,13 +466,13 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf01a */ "op     top, " PREFIX_INTEGERAL, /* `ASM16_OPERATOR_TUPLE' */
 	/* 0xf01b */ "call   top, [" PREFIX_STACKEFFECT, /* `ASM_CALL_SEQ' */
 	/* 0xf01c */ "call   top, {" PREFIX_STACKEFFECT, /* `ASM_CALL_MAP' */
-	/* 0xf01d */ "call   top, pop, pop...", /* `ASM_THISCALL_TUPLE' */
+	/* 0xf01d */ "del    ", /* `ASM16_DEL_STATIC' */
 	/* 0xf01e */ "del    ", /* `ASM16_DEL_GLOBAL' */
 	/* 0xf01f */ "del    ", /* `ASM16_DEL_LOCAL' */
 	/* 0xf020 */ "call   top, pop..., pop", /* `ASM_CALL_TUPLE_KWDS' */
 	/* 0xf021 */ "lrot   " PREFIX_STACKEFFECT, /* `ASM16_LROT' */
 	/* 0xf022 */ "rrot   " PREFIX_STACKEFFECT, /* `ASM16_RROT' */
-	/* 0xf023 */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf023 */ "call   top, pop, pop...", /* `ASM_THISCALL_TUPLE' */
 	/* 0xf024 */ "dup    #SP - ", /* `ASM16_DUP_N' */
 	/* 0xf025 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf026 */ "pop    #SP - ", /* `ASM16_POP_N' */
@@ -480,9 +480,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf028 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf029 */ "push   super this, ", /* `ASM16_SUPER_THIS_R' */
 	/* 0xf02a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf02b */ "pop    ", /* `ASM16_POP_STATIC' */
+	/* 0xf02b */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf02c */ "pop    ", /* `ASM16_POP_EXTERN' */
-	/* 0xf02d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf02d */ "pop    ", /* `ASM16_POP_STATIC' */
 	/* 0xf02e */ "pop    ", /* `ASM16_POP_GLOBAL' */
 	/* 0xf02f */ "pop    ", /* `ASM16_POP_LOCAL' */
 	/* 0xf030 */ UNKNOWN_MNEMONIC, /* --- */
@@ -496,9 +496,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf038 */ "push   ", /* `ASM16_PUSH_CONST' */
 	/* 0xf039 */ "push   ", /* `ASM16_PUSH_REF' */
 	/* 0xf03a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf03b */ "push   ", /* `ASM16_PUSH_STATIC' */
+	/* 0xf03b */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf03c */ "push   ", /* `ASM16_PUSH_EXTERN' */
-	/* 0xf03d */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf03d */ "push   ", /* `ASM16_PUSH_STATIC' */
 	/* 0xf03e */ "push   ", /* `ASM16_PUSH_GLOBAL' */
 	/* 0xf03f */ "push   ", /* `ASM16_PUSH_LOCAL' */
 	/* 0xf040 */ "cast   top, HashSet", /* `ASM_CAST_HASHSET' */
@@ -688,9 +688,9 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf0f8 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0f9 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0fa */ "stack  " PREFIX_STACKEFFECT, /* `ASM16_STACK' */
-	/* 0xf0fb */ "static ", /* `ASM16_STATIC' */
+	/* 0xf0fb */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0fc */ "extern ", /* `ASM16_EXTERN' */
-	/* 0xf0fd */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf0fd */ "static ", /* `ASM16_STATIC' */
 	/* 0xf0fe */ "global ", /* `ASM16_GLOBAL' */
 	/* 0xf0ff */ "local  ", /* `ASM16_LOCAL' */
 };
@@ -754,13 +754,19 @@ print_generic:
 }
 
 PRIVATE dssize_t DCALL
-libdisasm_printstatic(dformatprinter printer, void *arg,
-                      uint16_t sid, bool readonly,
-                      DeeCodeObject *code, unsigned int flags) {
-#if 1
+libdisasm_printstatic(dformatprinter printer, void *arg, uint16_t sid,
+                      DeeCodeObject *code, unsigned int flags
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+                      , bool readonly
+#else /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define libdisasm_printstatic(printer, arg, sid, code, flags, readonly) \
+	libdisasm_printstatic(printer, arg, sid, code, flags)
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+                      ) {
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (readonly)
 		return libdisasm_printconst(printer, arg, sid, code, flags, false);
-#endif
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (code) {
 		char *name;
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
@@ -1193,9 +1199,16 @@ libdisasm_printarg(dformatprinter printer, void *arg,
 
 PRIVATE dssize_t DCALL
 libdisasm_printprefix(dformatprinter printer, void *arg,
-                      instruction_t *__restrict instr_start, bool readonly,
+                      instruction_t *__restrict instr_start,
                       struct ddi_state *ddi, DeeCodeObject *code,
-                      unsigned int flags) {
+                      unsigned int flags
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+                      , bool readonly
+#else /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, readonly) \
+	libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags)
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+                      ) {
 	uint16_t opcode;
 	instruction_t *iter = instr_start;
 	uint16_t imm, imm2;
@@ -1218,7 +1231,7 @@ do_stack_prefix:
 	case ASM_STATIC:
 		imm = *(uint8_t *)(iter + 0);
 do_static_prefix:
-		return libdisasm_printstatic(printer, arg, imm, readonly, code, flags);
+		return libdisasm_printstatic(printer, arg, imm, code, flags, readonly);
 
 	case ASM16_GLOBAL:
 		imm = *(uint16_t *)(iter + 0);
@@ -1421,14 +1434,14 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 			mnemonic = "throw  ";
 do_mnemonic_prefix_readonly:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, true, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, true));
 			goto done;
 
 		case ASM_SWAP:
 			mnemonic = "swap   top, ";
 do_mnemonic_prefix:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			goto done;
 
 		case ASM_JF16:
@@ -1461,7 +1474,7 @@ prefix_do_jmp_target:
 
 			default: __builtin_unreachable();
 			}
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, true, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, true));
 			PRINT(", ");
 			goto do_jmp_target;
 
@@ -1476,7 +1489,7 @@ do_pop_as_mov:
 			PRINT("mov    ");
 			INVOKE(libdisasm_printrelstack(printer, arg, stacksz, imm, ddi, code, flags));
 do_print_prefix:
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, true, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, true));
 			goto done;
 
 
@@ -1488,14 +1501,14 @@ do_print_prefix:
 			imm = READ_imm8(iter) + 2;
 do_dup_as_mov:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printrelstack(printer, arg, stacksz, imm, ddi, code, flags));
 			goto done;
 
 		case ASM_DUP:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", top");
 			goto done;
 
@@ -1520,7 +1533,7 @@ do_lr_rot:
 			imm = READ_imm8(iter);
 do_prefix_pop_static:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printstatic(printer, arg, imm, false, code, flags));
+			INVOKE(libdisasm_printstatic(printer, arg, imm, code, flags, false));
 do_print_comma_then_prefix:
 			PRINT(", ");
 			goto do_print_prefix;
@@ -1572,7 +1585,7 @@ do_prefix_pop_local:
 			imm = READ_imm8(iter);
 do_prefix_push_module:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printmodule(printer, arg, imm, code, flags));
 			goto done;
@@ -1586,7 +1599,7 @@ do_prefix_push_module:
 			imm = READ_imm8(iter);
 do_prefix_push_ref:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printref(printer, arg, imm, code, flags));
 			goto done;
@@ -1594,7 +1607,7 @@ do_prefix_push_ref:
 
 		case ASM_PUSH_VARARGS:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", varargs");
 			if (code && !(code->co_flags & CODE_FVARARGS) && !(flags & PCODE_FNOBADCOMMENT))
 				PRINT(" /* Illegal instruction */");
@@ -1603,7 +1616,7 @@ do_prefix_push_ref:
 
 		case ASM_PUSH_VARKWDS:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", varkwds");
 			if (code && !(code->co_flags & CODE_FVARKWDS) && !(flags & PCODE_FNOBADCOMMENT))
 				PRINT(" /* Illegal instruction */");
@@ -1618,7 +1631,7 @@ do_prefix_push_ref:
 			imm = READ_imm8(iter);
 do_prefix_push_arg:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printarg(printer, arg, imm, code, flags));
 			goto done;
@@ -1632,7 +1645,7 @@ do_prefix_push_arg:
 			imm = READ_imm8(iter);
 do_prefix_push_const:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, true));
 			goto done;
@@ -1646,12 +1659,12 @@ do_prefix_push_const:
 			imm = READ_imm8(iter);
 do_prefix_push_static:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 #if 1
-			INVOKE(libdisasm_printstatic(printer, arg, imm, false, code, flags));
+			INVOKE(libdisasm_printstatic(printer, arg, imm, code, flags, false));
 #else
-			INVOKE(libdisasm_printstatic(printer, arg, imm, true, code, flags));
+			INVOKE(libdisasm_printstatic(printer, arg, imm, code, flags, true));
 #endif
 			goto done;
 
@@ -1666,7 +1679,7 @@ do_prefix_push_static:
 			imm2 = READ_imm8(iter);
 do_prefix_push_extern:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printextern(printer, arg, imm, imm2, code, flags));
 			goto done;
@@ -1680,7 +1693,7 @@ do_prefix_push_extern:
 			imm = READ_imm8(iter);
 do_prefix_push_global:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printglobal(printer, arg, imm, code, flags));
 			goto done;
@@ -1694,7 +1707,7 @@ do_prefix_push_global:
 			imm = READ_imm8(iter);
 do_prefix_push_local:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", ");
 			INVOKE(libdisasm_printlocal(printer, arg, imm, ddi, code, flags));
 			goto done;
@@ -1708,7 +1721,7 @@ do_prefix_push_local:
 			imm = READ_imm8(iter);
 do_prefix_unpack:
 			PRINT("unpack ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, true, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, true));
 			printf(", #%u", imm);
 			goto done;
 
@@ -1717,7 +1730,7 @@ do_prefix_unpack:
 			mnemonic = "add    ";
 do_prefix_mnemonic_pop:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			PRINT(", pop");
 			goto done;
 
@@ -1781,7 +1794,7 @@ do_prefix_mnemonic_pop:
 			mnemonic = "add    ";
 do_prefix_mnemonic_simm8:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			printf(", " PREFIX_INTEGERAL "%d", (int)READ_Simm8(iter));
 			goto done;
 
@@ -1789,7 +1802,7 @@ do_prefix_mnemonic_simm8:
 			mnemonic = "add    ";
 do_prefix_mnemonic_imm32:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			printf(", " PREFIX_INTEGERAL "%#I32x", READ_imm32(iter));
 			goto done;
 
@@ -1817,7 +1830,7 @@ do_prefix_mnemonic_imm32:
 			mnemonic = "shl    ";
 do_prefix_mnemonic_imm8:
 			print(mnemonic, strlen(mnemonic));
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			printf(", " PREFIX_INTEGERAL "%u", (unsigned int)READ_imm8(iter));
 			goto done;
 
@@ -1851,7 +1864,7 @@ do_prefix_mnemonic_imm8:
 			mnemonic = ", except";
 do_mov_prefix_mnemonic:
 			PRINT("mov    ");
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			print(mnemonic, strlen(mnemonic));
 			goto done;
 
@@ -1891,7 +1904,7 @@ do_mov_prefix_mnemonic:
 		case ASM_OPERATOR_TUPLE:
 		case ASM16_OPERATOR:
 		case ASM16_OPERATOR_TUPLE:
-			INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 			printf(": push op %s", mnemonic + COMPILER_STRLEN("op     top, "));
 			goto do_instruction_specific;
 
@@ -1899,7 +1912,7 @@ do_mov_prefix_mnemonic:
 		}
 
 		/* fallback: print the default prefix. */
-		INVOKE(libdisasm_printprefix(printer, arg, instr_start, false, ddi, code, flags));
+		INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
 		PRINT(": ");
 	}
 
@@ -2399,22 +2412,29 @@ print_arg:
 		INVOKE(libdisasm_printarg(printer, arg, imm, code, flags));
 		break;
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	case ASM16_PUSH_BND_STATIC:
+	case ASM16_DEL_STATIC:
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	case ASM16_POP_STATIC:
 	case ASM16_PUSH_STATIC:
 		imm = READ_imm16(iter);
 		goto print_static;
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	case ASM_PUSH_BND_STATIC:
+	case ASM_DEL_STATIC:
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	case ASM_POP_STATIC:
 	case ASM_PUSH_STATIC:
 		imm = READ_imm8(iter);
 print_static:
 #if 1
-		INVOKE(libdisasm_printstatic(printer, arg, imm, false, code, flags));
+		INVOKE(libdisasm_printstatic(printer, arg, imm, code, flags, false));
 #else
-		INVOKE(libdisasm_printstatic(printer, arg, imm,
+		INVOKE(libdisasm_printstatic(printer, arg, imm, code, flags,
 		                             opcode == ASM_PUSH_STATIC ||
-		                             opcode == ASM16_PUSH_STATIC,
-		                             code, flags));
+		                             opcode == ASM16_PUSH_STATIC));
 #endif
 		break;
 

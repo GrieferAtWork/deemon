@@ -1561,6 +1561,59 @@ check_dst_sym_class:
 
 		case SYMBOL_TYPE_STATIC:
 			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+				/* TODO: In the new static variable model, the first assignment should
+				 *       still only be executed *once*, however this definitely needs
+				 *       a special instruction that store a value in a static *only* if
+				 *       the static is currently unbound (use this to assign constants
+				 *       to static variables, or expressions that can be executed many
+				 *       times without side-effects)
+				 * >> static local x = 42;
+				 * ASM:
+				 * >> push const @42                       # Value to store
+				 * >> push cmpxch static @x, unbound, pop  # Pushes true/false indicative of cmpxch success
+				 * >> pop                                  # Get rid of the true/false
+				 *
+				 * In order to execute initializers with side-effects:
+				 * >> static local x = foo();
+				 * ASM:
+				 * >>     push  startinit static @x # Pushes "true" if initialization started, "false" otherwise
+				 * >>     jf    pop, 1f
+				 * >> .Linit_except_start:
+				 * >>     call  @foo, #1
+				 * >> .Linit_except_end:
+				 * >>     pop   static @x
+				 * >> 1:
+				 * >>
+				 * >> .pushsection .cold    # Only needed if initializer can throw an exception
+				 * >> .except .Linit_except_start, .Linit_except_end, .Linit_except_entry, @finally
+				 * >> .Linit_except_entry:  # Clear "ITER_DONE" value on initialization exception
+				 * >>     del   static @x
+				 * >>     end   finally
+				 * >>     throw except      # Shouldn't get here, but satisfies peephole and code integrity checks
+				 * >> .popsection
+				 *
+				 * NOTES:
+				 * - >> again:
+				 *   >> if (!ITER_ISOK(fo_refv[x])) {
+				 *   >>     if (!atomic_cmpxch(&fo_refv[x], NULL, ITER_DONE)) {
+				 *   >>         DeeFutex_WaitPtr(&fo_refv[x], ITER_DONE);
+				 *   >>         goto again;
+				 *   >>     }
+				 *   >>     DREF DeeObject *init = ...;
+				 *   >>     if (!init) { // For exception handler...
+				 *   >>         fo_refv[x] = NULL;              // ASM_DEL_STATIC
+				 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
+				 *   >>         HANDLE_EXCEPT();
+				 *   >>     } else { // When initializer doesn't throw an exception...
+				 *   >>         fo_refv[x] = init;              // ASM_POP_STATIC
+				 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
+				 *   >>     }
+				 *   >> }
+				 * - ASM_PUSH_STATIC and Function.__static__ must imply handle ITER_DONE like NULL
+				 * - ASM_POP_STATIC and ASM_DEL_STATIC must call `DeeFutex_WakeAll()'
+				 */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 				int32_t sid;
 				/* Special case: Unallocated static variable
 				 * > The first assignment is used as the static initializer */
@@ -1633,6 +1686,7 @@ check_dst_sym_class:
 				 * >>     throw except // Shouldn't get here, but satisfies peephole and code integrity checks
 				 */
 				/* TODO */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 			break;
 
@@ -1818,19 +1872,19 @@ check_dst_sym_class_hybrid:
 	default: break;
 	}
 	/* TODO: Special handling when the stored value uses the target:
-	 *  >> local my_list = [10, 20, my_list]; // Should create a self-referencing list.
+	 *  >> local myList = [10, 20, myList]; // Should create a self-referencing list.
 	 * ASM:
 	 *  >>    pack List 0
-	 *  >>    pop  local @my_list
-	 *  >>    push local @my_list  // May be optimized to a dup
+	 *  >>    pop  local @myList
+	 *  >>    push local @myList  // May be optimized to a dup
 	 *  >>    push $10
 	 *  >>    push $20
-	 *  >>    push local @my_list
+	 *  >>    push local @myList
 	 *  >>    pack List 3
 	 *  >>    move assign top, pop // Move-assign the second list.
 	 * Essentially, this would look like this:
-	 *  >> local my_list = [];
-	 *  >> my_list := [10, 20, my_list]; */
+	 *  >> local myList = [];
+	 *  >> myList := [10, 20, myList]; */
 	if (asm_gpop_expr_enter(dst))
 		goto err;
 	if (ast_genasm(src, ASM_G_FPUSHRES))

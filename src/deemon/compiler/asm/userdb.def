@@ -250,12 +250,22 @@ INSTR("end", (
 	O2(ASM_ENDFINALLY_N, FNORMAL, (FINALLY)(SPIMM8, -1))             /* `end finally, #<imm8> + 1' */
 ))
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+/* CONSTRAINTS: `bound b' / `bound eglCs' */
+INSTR("bound", (
+	O1(ASM_PUSH_BND_EXTERN, FF0 | FPUSH, (EXTERN)) /* push bound extern <imm8/16>:<imm8/16> */
+	O1(ASM_PUSH_BND_GLOBAL, FF0 | FPUSH, (GLOBAL)) /* push bound global <imm8/16> */
+	O1(ASM_PUSH_BND_LOCAL,  FF0 | FPUSH, (LOCAL))  /* push bound local <imm8/16> */
+	O1(ASM_PUSH_BND_STATIC, FF0 | FPUSH, (STATIC)) /* push bound static <imm8/16> */
+))
 /* CONSTRAINTS: `bound b' / `bound egl' */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 INSTR("bound", (
 	O1(ASM_PUSH_BND_EXTERN, FF0 | FPUSH, (EXTERN)) /* push bound extern <imm8/16>:<imm8/16> */
 	O1(ASM_PUSH_BND_GLOBAL, FF0 | FPUSH, (GLOBAL)) /* push bound global <imm8/16> */
 	O1(ASM_PUSH_BND_LOCAL,  FF0 | FPUSH, (LOCAL))  /* push bound local <imm8/16> */
 ))
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 /* CONSTRAINTS: `jf <ps>, ...' */
 INSTR("jf", (
@@ -330,11 +340,20 @@ INSTR("op", (
 	O2(ASM16_OPERATOR_TUPLE, FPREFIX | FPUSH,           (IMM16)(POP | FDOTSFLAG))         /* `PREFIX: push op <imm16>, pop...' */
 ))
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+/* CONSTRAINTS: `del <glCs>' */
+INSTR("del", (
+	O1(ASM_DEL_GLOBAL, FF0, (GLOBAL)) /* `del global <imm8/16>' */
+	O1(ASM_DEL_LOCAL,  FF0, (LOCAL))  /* `del local <imm8/16>' */
+	O1(ASM_DEL_STATIC, FF0, (STATIC)) /* `del static <imm8/16>' */
+))
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /* CONSTRAINTS: `del <gl>' */
 INSTR("del", (
 	O1(ASM_DEL_GLOBAL, FF0, (GLOBAL)) /* `del global <imm8/16>' */
 	O1(ASM_DEL_LOCAL,  FF0, (LOCAL))  /* `del local <imm8/16>' */
 ))
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 /* CONSTRAINTS: `swap' */
 /* CONSTRAINTS: `swap <s>, <s>' */

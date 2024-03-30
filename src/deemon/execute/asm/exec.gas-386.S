@@ -1589,6 +1589,19 @@ target_push_bnd_extern:
 
 
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+target16_push_bnd_static:
+	lodsw
+	jmp    1f
+target_push_bnd_static:
+	lodsb
+1:	movl   FRAME_FUNC, %ecx
+	movl   fo_refv(%ecx,%eax,4), %eax /* ATOMIC! */
+	jmp    .push_eax_nonnull
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+
+
 target16_push_bnd_global:
 	lodsw
 	jmp    1f
@@ -2404,6 +2417,35 @@ prefix_target_operator_tuple:
 	popl   %edx         /* Write back the new prefix object. */
 	ADJUST_CFA_OFFSET(-4)
 	jmp    set_prefix_object
+
+
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+target16_del_static:
+	lodsw
+	jmp    1f
+target_del_static:
+	lodsb
+1:	LOAD_CODE(%ecx)
+	movl   FRAME_FUNC, %ecx
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax /* Preserve EAX */
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	xorl   %edx, %edx
+	movl   fo_refv(%ecx,%eax,4), %edx
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite mo_lock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	/* Drop a reference from the exchanged value when it is non-NULL. */
+	testl  %edx, %edx
+	jz     .disp
+	decref %edx
+	jmp    .disp
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 
@@ -8663,6 +8705,9 @@ prefix_target_push_bnd_arg = prefix_invop
 .ifndef prefix_target_push_bnd_extern
 prefix_target_push_bnd_extern = prefix_invop
 .endif
+.ifndef prefix_target_push_bnd_static
+prefix_target_push_bnd_static = prefix_invop
+.endif
 .ifndef prefix_target_push_bnd_global
 prefix_target_push_bnd_global = prefix_invop
 .endif
@@ -8708,6 +8753,9 @@ prefix_target_call = prefix_invop
 .ifndef prefix_target_call_tuple
 prefix_target_call_tuple = prefix_invop
 .endif
+.ifndef prefix_target_del_static
+prefix_target_del_static = prefix_invop
+.endif
 .ifndef prefix_target_del_global
 prefix_target_del_global = prefix_invop
 .endif
@@ -8744,11 +8792,11 @@ prefix_target_super = prefix_invop
 .ifndef prefix_target_super_this_r
 prefix_target_super_this_r = prefix_invop
 .endif
-.ifndef prefix_target_pop_static
-prefix_target_pop_static = prefix_invop
-.endif
 .ifndef prefix_target_pop_extern
 prefix_target_pop_extern = prefix_invop
+.endif
+.ifndef prefix_target_pop_static
+prefix_target_pop_static = prefix_invop
 .endif
 .ifndef prefix_target_pop_global
 prefix_target_pop_global = prefix_invop
@@ -8777,11 +8825,11 @@ prefix_target_push_const = prefix_invop
 .ifndef prefix_target_push_ref
 prefix_target_push_ref = prefix_invop
 .endif
-.ifndef prefix_target_push_static
-prefix_target_push_static = prefix_invop
-.endif
 .ifndef prefix_target_push_extern
 prefix_target_push_extern = prefix_invop
+.endif
+.ifndef prefix_target_push_static
+prefix_target_push_static = prefix_invop
 .endif
 .ifndef prefix_target_push_global
 prefix_target_push_global = prefix_invop
@@ -9272,11 +9320,11 @@ prefix_target_reserved7 = prefix_invop
 .ifndef prefix_target_stack
 prefix_target_stack = prefix_invop
 .endif
-.ifndef prefix_target_static
-prefix_target_static = prefix_invop
-.endif
 .ifndef prefix_target_extern
 prefix_target_extern = prefix_invop
+.endif
+.ifndef prefix_target_static
+prefix_target_static = prefix_invop
 .endif
 .ifndef prefix_target_global
 prefix_target_global = prefix_invop
@@ -9302,6 +9350,9 @@ prefix_target16_push_bnd_arg = prefix_invop
 .ifndef prefix_target16_push_bnd_extern
 prefix_target16_push_bnd_extern = prefix_invop
 .endif
+.ifndef prefix_target16_push_bnd_static
+prefix_target16_push_bnd_static = prefix_invop
+.endif
 .ifndef prefix_target16_push_bnd_global
 prefix_target16_push_bnd_global = prefix_invop
 .endif
@@ -9326,8 +9377,8 @@ prefix_target_call_seq = prefix_invop
 .ifndef prefix_target_call_map
 prefix_target_call_map = prefix_invop
 .endif
-.ifndef prefix_target_thiscall_tuple
-prefix_target_thiscall_tuple = prefix_invop
+.ifndef prefix_target16_del_static
+prefix_target16_del_static = prefix_invop
 .endif
 .ifndef prefix_target16_del_global
 prefix_target16_del_global = prefix_invop
@@ -9344,6 +9395,9 @@ prefix_target16_lrot = prefix_invop
 .ifndef prefix_target16_rrot
 prefix_target16_rrot = prefix_invop
 .endif
+.ifndef prefix_target_thiscall_tuple
+prefix_target_thiscall_tuple = prefix_invop
+.endif
 .ifndef prefix_target16_dup_n
 prefix_target16_dup_n = prefix_invop
 .endif
@@ -9356,11 +9410,11 @@ prefix_target16_adjstack = prefix_invop
 .ifndef prefix_target16_super_this_r
 prefix_target16_super_this_r = prefix_invop
 .endif
-.ifndef prefix_target16_pop_static
-prefix_target16_pop_static = prefix_invop
-.endif
 .ifndef prefix_target16_pop_extern
 prefix_target16_pop_extern = prefix_invop
+.endif
+.ifndef prefix_target16_pop_static
+prefix_target16_pop_static = prefix_invop
 .endif
 .ifndef prefix_target16_pop_global
 prefix_target16_pop_global = prefix_invop
@@ -9392,11 +9446,11 @@ prefix_target16_push_const = prefix_invop
 .ifndef prefix_target16_push_ref
 prefix_target16_push_ref = prefix_invop
 .endif
-.ifndef prefix_target16_push_static
-prefix_target16_push_static = prefix_invop
-.endif
 .ifndef prefix_target16_push_extern
 prefix_target16_push_extern = prefix_invop
+.endif
+.ifndef prefix_target16_push_static
+prefix_target16_push_static = prefix_invop
 .endif
 .ifndef prefix_target16_push_global
 prefix_target16_push_global = prefix_invop
@@ -9692,11 +9746,11 @@ prefix_target16_call_local = prefix_invop
 .ifndef prefix_target16_stack
 prefix_target16_stack = prefix_invop
 .endif
-.ifndef prefix_target16_static
-prefix_target16_static = prefix_invop
-.endif
 .ifndef prefix_target16_extern
 prefix_target16_extern = prefix_invop
+.endif
+.ifndef prefix_target16_static
+prefix_target16_static = prefix_invop
 .endif
 .ifndef prefix_target16_global
 prefix_target16_global = prefix_invop
@@ -9739,6 +9793,9 @@ repr_target_push_bnd_arg = repr_invop
 .endif
 .ifndef repr_target_push_bnd_extern
 repr_target_push_bnd_extern = repr_invop
+.endif
+.ifndef repr_target_push_bnd_static
+repr_target_push_bnd_static = repr_invop
 .endif
 .ifndef repr_target_push_bnd_global
 repr_target_push_bnd_global = repr_invop
@@ -9785,6 +9842,9 @@ repr_target_call = repr_invop
 .ifndef repr_target_call_tuple
 repr_target_call_tuple = repr_invop
 .endif
+.ifndef repr_target_del_static
+repr_target_del_static = repr_invop
+.endif
 .ifndef repr_target_del_global
 repr_target_del_global = repr_invop
 .endif
@@ -9821,11 +9881,11 @@ repr_target_super = repr_invop
 .ifndef repr_target_super_this_r
 repr_target_super_this_r = repr_invop
 .endif
-.ifndef repr_target_pop_static
-repr_target_pop_static = repr_invop
-.endif
 .ifndef repr_target_pop_extern
 repr_target_pop_extern = repr_invop
+.endif
+.ifndef repr_target_pop_static
+repr_target_pop_static = repr_invop
 .endif
 .ifndef repr_target_pop_global
 repr_target_pop_global = repr_invop
@@ -9854,11 +9914,11 @@ repr_target_push_const = repr_invop
 .ifndef repr_target_push_ref
 repr_target_push_ref = repr_invop
 .endif
-.ifndef repr_target_push_static
-repr_target_push_static = repr_invop
-.endif
 .ifndef repr_target_push_extern
 repr_target_push_extern = repr_invop
+.endif
+.ifndef repr_target_push_static
+repr_target_push_static = repr_invop
 .endif
 .ifndef repr_target_push_global
 repr_target_push_global = repr_invop
@@ -10349,11 +10409,11 @@ repr_target_reserved7 = repr_invop
 .ifndef repr_target_stack
 repr_target_stack = repr_invop
 .endif
-.ifndef repr_target_static
-repr_target_static = repr_invop
-.endif
 .ifndef repr_target_extern
 repr_target_extern = repr_invop
+.endif
+.ifndef repr_target_static
+repr_target_static = repr_invop
 .endif
 .ifndef repr_target_global
 repr_target_global = repr_invop
@@ -10375,7 +10435,7 @@ inst_table:
 	.long invop
 	.long target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
 	.long target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
-	.long invop
+	.long target_push_bnd_static         /* 0x0d : `push bound static <imm8>' */
 	.long target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
 	.long target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
 	.long target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
@@ -10391,7 +10451,7 @@ inst_table:
 	.long target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
 	.long target_call                    /* 0x1b : `call top, #<imm8>' */
 	.long target_call_tuple              /* 0x1c : `call top, pop...' */
-	.long invop
+	.long target_del_static              /* 0x1d : `del static <imm8>' */
 	.long target_del_global              /* 0x1e : `del global <imm8>' */
 	.long target_del_local               /* 0x1f : `del local <imm8>' */
 	.long target_swap                    /* 0x20 : `swap' */
@@ -10405,9 +10465,9 @@ inst_table:
 	.long target_super                   /* 0x28 : `super top, pop' */
 	.long target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
 	.long invop
-	.long target_pop_static              /* 0x2b : `pop static <imm8>' */
-	.long target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
 	.long invop
+	.long target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
+	.long target_pop_static              /* 0x2d : `pop static <imm8>' */
 	.long target_pop_global              /* 0x2e : `pop global <imm8>' */
 	.long target_pop_local               /* 0x2f : `pop local <imm8>' */
 	.long invop
@@ -10421,9 +10481,9 @@ inst_table:
 	.long target_push_const              /* 0x38 : `push const <imm8>' */
 	.long target_push_ref                /* 0x39 : `push ref <imm8>' */
 	.long invop
-	.long target_push_static             /* 0x3b : `push static <imm8>' */
-	.long target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
 	.long invop
+	.long target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long target_push_static             /* 0x3d : `push static <imm8>' */
 	.long target_push_global             /* 0x3e : `push global <imm8>' */
 	.long target_push_local              /* 0x3f : `push local <imm8>' */
 	.long target_cast_tuple              /* 0x40 : `cast top, Tuple' */
@@ -10613,9 +10673,9 @@ inst_table:
 	.long invop
 	.long invop
 	.long target_stack                   /* 0xfa : `stack #<imm8>' */
-	.long target_static                  /* 0xfb : `static <imm8>' */
-	.long target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
 	.long invop
+	.long target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long target_static                  /* 0xfd : `static <imm8>' */
 	.long target_global                  /* 0xfe : `global <imm8>' */
 	.long target_local                   /* 0xff : `local <imm8>' */
 END(inst_table)
@@ -10633,7 +10693,7 @@ inst_table_f0:
 	.long invop
 	.long target16_push_bnd_arg          /* 0x0b : `push bound arg <imm16>' */
 	.long target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
-	.long invop
+	.long target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
 	.long invop
@@ -10649,13 +10709,13 @@ inst_table_f0:
 	.long target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
 	.long target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
 	.long target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
-	.long target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
+	.long target16_del_static            /* 0x1d : `del static <imm16>' */
 	.long target16_del_global            /* 0x1e : `del global <imm16>' */
 	.long target16_del_local             /* 0x1f : `del local <imm16>' */
 	.long target_call_tuple_kwds         /* 0x20 : `call top, pop..., pop' */
 	.long target16_lrot                  /* 0x21 : `lrot #<imm16>+3' */
 	.long target16_rrot                  /* 0x22 : `rrot #<imm16>+3' */
-	.long invop
+	.long target_thiscall_tuple          /* 0x23 : `call top, pop, pop...' */
 	.long target16_dup_n                 /* 0x24 : `dup #SP - <imm16> - 2' */
 	.long invop
 	.long target16_pop_n                 /* 0x26 : `pop #SP - <imm16> - 2' */
@@ -10663,9 +10723,9 @@ inst_table_f0:
 	.long invop
 	.long target16_super_this_r          /* 0x29 : `push super this, ref <imm16>' */
 	.long invop
-	.long target16_pop_static            /* 0x2b : `pop static <imm16>' */
-	.long target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
 	.long invop
+	.long target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
+	.long target16_pop_static            /* 0x2d : `pop static <imm16>' */
 	.long target16_pop_global            /* 0x2e : `pop global <imm16>' */
 	.long target16_pop_local             /* 0x2f : `pop local <imm16>' */
 	.long invop
@@ -10679,9 +10739,9 @@ inst_table_f0:
 	.long target16_push_const            /* 0x38 : `push const <imm16>' */
 	.long target16_push_ref              /* 0x39 : `push ref <imm16>' */
 	.long invop
-	.long target16_push_static           /* 0x3b : `push static <imm16>' */
-	.long target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
 	.long invop
+	.long target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
+	.long target16_push_static           /* 0x3d : `push static <imm16>' */
 	.long target16_push_global           /* 0x3e : `push global <imm16>' */
 	.long target16_push_local            /* 0x3f : `push local <imm16>' */
 	.long target_cast_hashset            /* 0x40 : `cast top, HashSet' */
@@ -10871,9 +10931,9 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long target16_stack                 /* 0xfa : `stack #<imm16>' */
-	.long target16_static                /* 0xfb : `static <imm16>' */
-	.long target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
 	.long invop
+	.long target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
+	.long target16_static                /* 0xfd : `static <imm16>' */
 	.long target16_global                /* 0xfe : `global <imm16>' */
 	.long target16_local                 /* 0xff : `local  <imm16>' */
 END(inst_table_f0)
@@ -10891,7 +10951,7 @@ prefix_inst_table:
 	.long prefix_invop
 	.long prefix_target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
 	.long prefix_target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
-	.long prefix_invop
+	.long prefix_target_push_bnd_static         /* 0x0d : `push bound static <imm8>' */
 	.long prefix_target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
 	.long prefix_target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
 	.long prefix_target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
@@ -10907,7 +10967,7 @@ prefix_inst_table:
 	.long prefix_target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
 	.long prefix_target_call                    /* 0x1b : `call top, #<imm8>' */
 	.long prefix_target_call_tuple              /* 0x1c : `call top, pop...' */
-	.long prefix_invop
+	.long prefix_target_del_static              /* 0x1d : `del static <imm8>' */
 	.long prefix_target_del_global              /* 0x1e : `del global <imm8>' */
 	.long prefix_target_del_local               /* 0x1f : `del local <imm8>' */
 	.long prefix_target_swap                    /* 0x20 : `swap' */
@@ -10921,9 +10981,9 @@ prefix_inst_table:
 	.long prefix_target_super                   /* 0x28 : `super top, pop' */
 	.long prefix_target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
 	.long prefix_invop
-	.long prefix_target_pop_static              /* 0x2b : `pop static <imm8>' */
-	.long prefix_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
 	.long prefix_invop
+	.long prefix_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
+	.long prefix_target_pop_static              /* 0x2d : `pop static <imm8>' */
 	.long prefix_target_pop_global              /* 0x2e : `pop global <imm8>' */
 	.long prefix_target_pop_local               /* 0x2f : `pop local <imm8>' */
 	.long prefix_invop
@@ -10937,9 +10997,9 @@ prefix_inst_table:
 	.long prefix_target_push_const              /* 0x38 : `push const <imm8>' */
 	.long prefix_target_push_ref                /* 0x39 : `push ref <imm8>' */
 	.long prefix_invop
-	.long prefix_target_push_static             /* 0x3b : `push static <imm8>' */
-	.long prefix_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
 	.long prefix_invop
+	.long prefix_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long prefix_target_push_static             /* 0x3d : `push static <imm8>' */
 	.long prefix_target_push_global             /* 0x3e : `push global <imm8>' */
 	.long prefix_target_push_local              /* 0x3f : `push local <imm8>' */
 	.long prefix_target_cast_tuple              /* 0x40 : `cast top, Tuple' */
@@ -11129,9 +11189,9 @@ prefix_inst_table:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target_stack                   /* 0xfa : `stack #<imm8>' */
-	.long prefix_target_static                  /* 0xfb : `static <imm8>' */
-	.long prefix_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
 	.long prefix_invop
+	.long prefix_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long prefix_target_static                  /* 0xfd : `static <imm8>' */
 	.long prefix_target_global                  /* 0xfe : `global <imm8>' */
 	.long prefix_target_local                   /* 0xff : `local <imm8>' */
 END(prefix_inst_table)
@@ -11149,7 +11209,7 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target16_push_bnd_arg          /* 0x0b : `push bound arg <imm16>' */
 	.long prefix_target16_push_bnd_extern       /* 0x0c : `push bound extern <imm16>:<imm16>' */
-	.long prefix_invop
+	.long prefix_target16_push_bnd_static       /* 0x0d : `push bound static <imm16>' */
 	.long prefix_target16_push_bnd_global       /* 0x0e : `push bound global <imm16>' */
 	.long prefix_target16_push_bnd_local        /* 0x0f : `push bound local <imm16>' */
 	.long prefix_invop
@@ -11165,13 +11225,13 @@ prefix_inst_table_f0:
 	.long prefix_target16_operator_tuple        /* 0x1a : `op top, $<imm16>, pop...' */
 	.long prefix_target_call_seq                /* 0x1b : `call top, [#<imm8>]' */
 	.long prefix_target_call_map                /* 0x1c : `call top, {#<imm8>*2}' */
-	.long prefix_target_thiscall_tuple          /* 0x1d : `call top, pop, pop...' */
+	.long prefix_target16_del_static            /* 0x1d : `del static <imm16>' */
 	.long prefix_target16_del_global            /* 0x1e : `del global <imm16>' */
 	.long prefix_target16_del_local             /* 0x1f : `del local <imm16>' */
 	.long prefix_target_call_tuple_kwds         /* 0x20 : `call top, pop..., pop' */
 	.long prefix_target16_lrot                  /* 0x21 : `lrot #<imm16>+3' */
 	.long prefix_target16_rrot                  /* 0x22 : `rrot #<imm16>+3' */
-	.long prefix_invop
+	.long prefix_target_thiscall_tuple          /* 0x23 : `call top, pop, pop...' */
 	.long prefix_target16_dup_n                 /* 0x24 : `dup #SP - <imm16> - 2' */
 	.long prefix_invop
 	.long prefix_target16_pop_n                 /* 0x26 : `pop #SP - <imm16> - 2' */
@@ -11179,9 +11239,9 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target16_super_this_r          /* 0x29 : `push super this, ref <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_pop_static            /* 0x2b : `pop static <imm16>' */
-	.long prefix_target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
 	.long prefix_invop
+	.long prefix_target16_pop_extern            /* 0x2c : `pop extern <imm16>:<imm16>' */
+	.long prefix_target16_pop_static            /* 0x2d : `pop static <imm16>' */
 	.long prefix_target16_pop_global            /* 0x2e : `pop global <imm16>' */
 	.long prefix_target16_pop_local             /* 0x2f : `pop local <imm16>' */
 	.long prefix_invop
@@ -11195,9 +11255,9 @@ prefix_inst_table_f0:
 	.long prefix_target16_push_const            /* 0x38 : `push const <imm16>' */
 	.long prefix_target16_push_ref              /* 0x39 : `push ref <imm16>' */
 	.long prefix_invop
-	.long prefix_target16_push_static           /* 0x3b : `push static <imm16>' */
-	.long prefix_target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
 	.long prefix_invop
+	.long prefix_target16_push_extern           /* 0x3c : `push extern <imm16>:<imm16>' */
+	.long prefix_target16_push_static           /* 0x3d : `push static <imm16>' */
 	.long prefix_target16_push_global           /* 0x3e : `push global <imm16>' */
 	.long prefix_target16_push_local            /* 0x3f : `push local <imm16>' */
 	.long prefix_target_cast_hashset            /* 0x40 : `cast top, HashSet' */
@@ -11387,9 +11447,9 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_target16_stack                 /* 0xfa : `stack #<imm16>' */
-	.long prefix_target16_static                /* 0xfb : `static <imm16>' */
-	.long prefix_target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
 	.long prefix_invop
+	.long prefix_target16_extern                /* 0xfc : `extern <imm16>:<imm16>' */
+	.long prefix_target16_static                /* 0xfd : `static <imm16>' */
 	.long prefix_target16_global                /* 0xfe : `global <imm16>' */
 	.long prefix_target16_local                 /* 0xff : `local  <imm16>' */
 END(prefix_inst_table_f0)
@@ -11407,7 +11467,7 @@ repr_inst_table:
 	.long repr_invop
 	.long repr_target_push_bnd_arg            /* 0x0b : `push bound arg <imm8>' */
 	.long repr_target_push_bnd_extern         /* 0x0c : `push bound extern <imm8>:<imm8>' */
-	.long repr_invop
+	.long repr_target_push_bnd_static         /* 0x0d : `push bound static <imm8>' */
 	.long repr_target_push_bnd_global         /* 0x0e : `push bound global <imm8>' */
 	.long repr_target_push_bnd_local          /* 0x0f : `push bound local <imm8>' */
 	.long repr_target_jf                      /* 0x10 : `jf pop, <Sdisp8>' */
@@ -11423,7 +11483,7 @@ repr_inst_table:
 	.long repr_target_operator_tuple          /* 0x1a : `op top, $<imm8>, pop...' */
 	.long repr_target_call                    /* 0x1b : `call top, #<imm8>' */
 	.long repr_target_call_tuple              /* 0x1c : `call top, pop...' */
-	.long repr_invop
+	.long repr_target_del_static              /* 0x1d : `del static <imm8>' */
 	.long repr_target_del_global              /* 0x1e : `del global <imm8>' */
 	.long repr_target_del_local               /* 0x1f : `del local <imm8>' */
 	.long repr_target_swap                    /* 0x20 : `swap' */
@@ -11437,9 +11497,9 @@ repr_inst_table:
 	.long repr_target_super                   /* 0x28 : `super top, pop' */
 	.long repr_target_super_this_r            /* 0x29 : `push super this, ref <imm8>' */
 	.long repr_invop
-	.long repr_target_pop_static              /* 0x2b : `pop static <imm8>' */
-	.long repr_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
 	.long repr_invop
+	.long repr_target_pop_extern              /* 0x2c : `pop extern <imm8>:<imm8>' */
+	.long repr_target_pop_static              /* 0x2d : `pop static <imm8>' */
 	.long repr_target_pop_global              /* 0x2e : `pop global <imm8>' */
 	.long repr_target_pop_local               /* 0x2f : `pop local <imm8>' */
 	.long repr_invop
@@ -11453,9 +11513,9 @@ repr_inst_table:
 	.long repr_target_push_const              /* 0x38 : `push const <imm8>' */
 	.long repr_target_push_ref                /* 0x39 : `push ref <imm8>' */
 	.long repr_invop
-	.long repr_target_push_static             /* 0x3b : `push static <imm8>' */
-	.long repr_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
 	.long repr_invop
+	.long repr_target_push_extern             /* 0x3c : `push extern <imm8>:<imm8>' */
+	.long repr_target_push_static             /* 0x3d : `push static <imm8>' */
 	.long repr_target_push_global             /* 0x3e : `push global <imm8>' */
 	.long repr_target_push_local              /* 0x3f : `push local <imm8>' */
 	.long repr_target_cast_tuple              /* 0x40 : `cast top, Tuple' */
@@ -11645,9 +11705,9 @@ repr_inst_table:
 	.long repr_invop
 	.long repr_invop
 	.long repr_target_stack                   /* 0xfa : `stack #<imm8>' */
-	.long repr_target_static                  /* 0xfb : `static <imm8>' */
-	.long repr_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
 	.long repr_invop
+	.long repr_target_extern                  /* 0xfc : `extern <imm8>:<imm8>' */
+	.long repr_target_static                  /* 0xfd : `static <imm8>' */
 	.long repr_target_global                  /* 0xfe : `global <imm8>' */
 	.long repr_target_local                   /* 0xff : `local <imm8>' */
 END(repr_inst_table)

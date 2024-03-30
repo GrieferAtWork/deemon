@@ -1466,6 +1466,16 @@ check_sym_class:
 			goto err;
 		return asm_gpush_bnd_local((uint16_t)symid);
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	case SYMBOL_TYPE_STATIC:
+		if (!sym->s_nwrite)
+			return asm_gpush_false();
+		symid = asm_ssymid(sym);
+		if unlikely(symid < 0)
+			goto err;
+		return asm_gpush_bnd_static((uint16_t)symid);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 	case SYMBOL_TYPE_CATTR: {
 		struct symbol *class_sym, *this_sym;
 		struct class_attribute *attr;
@@ -1690,6 +1700,20 @@ check_sym_class:
 			if unlikely(symid < 0)
 				goto err;
 			return asm_gdel_local((uint16_t)symid);
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		case SYMBOL_TYPE_STATIC:
+			if unlikely(sym->s_flag & SYMBOL_FFINAL) {
+				if (ASM_WARN(W_ASM_UNBIND_FINAL_SYMBOL, sym))
+					goto err;
+			}
+			if (!(sym->s_flag & SYMBOL_FALLOC) && !sym->s_nwrite)
+				return 0;
+			symid = asm_ssymid(sym);
+			if unlikely(symid < 0)
+				goto err;
+			return asm_gdel_static((uint16_t)symid);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		case SYMBOL_TYPE_EXTERN: {
 			struct module_symbol *modsym;

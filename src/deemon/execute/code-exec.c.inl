@@ -1233,6 +1233,18 @@ do_push_bnd_extern:
 			DISPATCH();
 		}
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		TARGET(ASM_PUSH_BND_STATIC, -0, +1) {
+			imm_val = READ_imm8();
+do_push_bnd_static:
+			ASSERT_GLOBALimm();
+			/*STATIC_LOCKREAD();*/
+			PUSHREF(DeeBool_For(STATICimm != NULL));
+			/*STATIC_LOCKENDREAD();*/
+			DISPATCH();
+		}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 		TARGET(ASM_PUSH_BND_GLOBAL, -0, +1) {
 			imm_val = READ_imm8();
 do_push_bnd_global:
@@ -1471,6 +1483,22 @@ do_operator_tuple:
 		}
 
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		TARGET(ASM_DEL_STATIC, -0, +0) {
+			DeeObject **p_object, *del_object;
+			imm_val = READ_imm8();
+do_del_static:
+			ASSERT_GLOBALimm();
+			STATIC_LOCKWRITE();
+			p_object   = &STATICimm;
+			del_object = *p_object;
+			*p_object  = NULL;
+			STATIC_LOCKENDWRITE();
+			Dee_XDecref(del_object);
+			DISPATCH();
+		}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 		TARGET(ASM_DEL_GLOBAL, -0, +0) {
 			DeeObject **p_object, *del_object;
 			imm_val = READ_imm8();
@@ -1481,9 +1509,7 @@ do_del_global:
 			del_object = *p_object;
 			*p_object  = NULL;
 			GLOBAL_LOCKENDWRITE();
-			if unlikely(!del_object)
-				goto err_unbound_global;
-			Dee_Decref(del_object);
+			Dee_XDecref(del_object);
 			DISPATCH();
 		}
 
@@ -1493,9 +1519,7 @@ do_del_global:
 do_del_local:
 			ASSERT_LOCALimm();
 			p_local = &LOCALimm;
-			if unlikely(!*p_local)
-				goto err_unbound_local;
-			Dee_Clear(*p_local);
+			Dee_XClear(*p_local);
 			DISPATCH();
 		}
 
@@ -4376,6 +4400,13 @@ do_setattr_this_c:
 					goto do_push_bnd_extern;
 				}
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+				TARGET(ASM16_PUSH_BND_STATIC, -0, +1) {
+					imm_val = READ_imm16();
+					goto do_push_bnd_static;
+				}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 				TARGET(ASM16_PUSH_BND_GLOBAL, -0, +1) {
 					imm_val = READ_imm16();
 					goto do_push_bnd_global;
@@ -4602,6 +4633,13 @@ do_setattr_this_c:
 					imm_val = READ_imm16();
 					goto do_operator_tuple;
 				}
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+				TARGET(ASM16_DEL_STATIC, -0, +0) {
+					imm_val = READ_imm16();
+					goto do_del_static;
+				}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 				TARGET(ASM16_DEL_GLOBAL, -0, +0) {
 					imm_val = READ_imm16();
