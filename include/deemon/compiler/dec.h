@@ -279,9 +279,9 @@ INTDEF WUNUSED NONNULL((1)) int
 (DCALL dec_generate_and_link)(DeeModuleObject *__restrict mod);
 
 /* Encode an object using DTYPE codes. */
-INTDEF WUNUSED int (DCALL dec_putobj)(DeeObject *self);
+INTDEF WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self);
 INTDEF WUNUSED NONNULL((1)) int (DCALL dec_putcode)(DeeCodeObject *__restrict self);
-INTDEF WUNUSED int (DCALL dec_putobjv)(uint16_t count, DeeObject **vec); /* `Dec_Objects' */
+INTDEF WUNUSED ATTR_INS(2, 1) int (DCALL dec_putobjv)(uint16_t count, DeeObject *const *vec); /* `Dec_Objects' */
 
 /* Create and emit a DEC file for the given module. */
 INTDEF WUNUSED NONNULL((1)) int

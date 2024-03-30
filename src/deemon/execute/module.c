@@ -130,23 +130,37 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeModule_GetRoot(DeeObject *__restrict self,
                   bool set_initialized) {
 	DREF DeeFunctionObject *result;
+	DREF DeeCodeObject *code;
 	DeeModuleObject *me = (DeeModuleObject *)self;
 	ASSERT_OBJECT_TYPE(self, &DeeModule_Type);
 
 	/* Check if this module has been loaded. */
 	if unlikely(DeeModule_InitImports(self))
 		goto err;
+
+	/* Load the code object of the module initializer. */
+	DeeModule_LockRead(me);
+	code = me->mo_root;
+	if unlikely(!code)
+		code = &DeeCode_Empty;
+	Dee_Incref(code);
+	DeeModule_LockEndRead(me);
+
+	/* Wrap the module's code object in a Function. */
+	ASSERT(code->co_refc == 0);
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if likely(code->co_refstaticc == 0) {
+		result = (DREF DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
+	} else {
+		result = (DREF DeeFunctionObject *)DeeGCObject_Calloc(offsetof(DeeFunctionObject, fo_refv) +
+		                                                      (code->co_refstaticc * sizeof(DREF DeeObject *)));
+	}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	result = (DREF DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!result)
 		goto err;
-	DeeModule_LockRead(me);
-	result->fo_code = me->mo_root;
-	Dee_XIncref(result->fo_code);
-	DeeModule_LockEndRead(me);
-	if (!result->fo_code) {
-		result->fo_code = &DeeCode_Empty;
-		Dee_Incref(&DeeCode_Empty);
-	}
+	result->fo_code = code; /* Inherit reference */
 	DeeObject_Init(result, &DeeFunction_Type);
 #ifdef CONFIG_HAVE_CODE_METRICS
 	atomic_inc(&result->fo_code->co_metrics.com_functions);
@@ -154,6 +168,10 @@ DeeModule_GetRoot(DeeObject *__restrict self,
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 	Dee_hostasm_function_init(&result->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	Dee_atomic_rwlock_init(&result->fo_reflock);
+	result = (DREF DeeFunctionObject *)DeeGC_Track((DeeObject *)result);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (set_initialized) {
 		uint16_t flags;
 		/* Try to set the `MODULE_FDIDINIT' flag */

@@ -1441,6 +1441,8 @@ do_jcc:
 		uint32_t refc;
 		uint16_t code_cid;
 		size_t sizeof_function;
+		DeeCodeObject *code;
+		bool calloc_used;
 		switch (opcode) {
 		case ASM_FUNCTION_C:
 			code_cid = instr[1];
@@ -1460,13 +1462,34 @@ do_jcc:
 			break;
 		default: __builtin_unreachable();
 		}
+		code = (DeeCodeObject *)fg_getconst(self, code_cid);
+		if unlikely(!code)
+			goto err;
+		if unlikely(DeeObject_AssertTypeExact(code, &DeeCode_Type))
+			goto err;
+		if unlikely(code->co_refc != refc) {
+			err_invalid_refs_size(code, refc);
+			goto err;
+		}
+		calloc_used = false;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
+		                  ((size_t)code->co_refstaticc * sizeof(DREF DeeObject *));
+		ASSERT(code->co_refstaticc <= refc);
+		if likely(code->co_refstaticc == refc) {
+			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, false)); /* [refs...], ref:function */
+		} else {
+			DO(fg_vcall_DeeGCObject_Malloc(self, sizeof_function, true));  /* [refs...], ref:function */
+			calloc_used = true;
+		}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		sizeof_function = offsetof(DeeFunctionObject, fo_refv) +
 		                  ((size_t)refc * sizeof(DREF DeeObject *));
-		DO(fg_vpush_immSIZ(self, sizeof_function));                   /* [refs...], sizeof_function */
-		DO(fg_vcallapi(self, &DeeObject_Malloc, VCALL_CC_OBJECT, 1)); /* [refs...], ref:function */
-		ASSERT(fg_vtop_direct_isref(self));                           /* [refs...], ref:function */
-		DO(fg_voneref_noalias(self));                                 /* [refs...], ref:function */
-		DO(fg_vcall_DeeObject_Init_c(self, &DeeFunction_Type));       /* [refs...], ref:function */
+		DO(fg_vcall_DeeObject_Malloc(self, sizeof_function, false));    /* [refs...], ref:function */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		ASSERT(fg_vtop_direct_isref(self));                             /* [refs...], ref:function */
+		DO(fg_voneref_noalias(self));                                   /* [refs...], ref:function */
+		DO(fg_vcall_DeeObject_Init_c(self, &DeeFunction_Type));         /* [refs...], ref:function */
 		/* TODO: When "FUNCTION_ASSEMBLER_F_SAFE" isn't set, check if the
 		 *       associated code object is used by any other ASM_FUNCTION instruction.
 		 *       If it isn't (which should always be the case), then store information
@@ -1484,21 +1507,26 @@ do_jcc:
 		 * >>     return l;
 		 * >> }
 		 */
-		DO(fg_vpush_cid_t(self, code_cid, &DeeCode_Type));          /* [refs...], ref:function, code */
-		DO(fg_vref2(self, (vstackaddr_t)(refc + 2)));               /* [refs...], ref:function, ref:code */
+		DO(fg_vpush_const(self, code));               /* [refs...], ref:function, code */
+		DO(fg_vref2(self, (vstackaddr_t)(refc + 2))); /* [refs...], ref:function, ref:code */
 #ifdef CONFIG_HAVE_CODE_METRICS
 		/* TODO: atomic_inc(&code->co_metrics.com_functions); */
 #endif /* CONFIG_HAVE_CODE_METRICS */
 		DO(fg_vpopind(self, offsetof(DeeFunctionObject, fo_code))); /* [refs...], ref:function */
+		if (!calloc_used) {
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
-		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_data)));
-		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call)));
-		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_kw)));
+			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_data)));
+			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call)));
+			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_kw)));
 #ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
-		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple)));
-		DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple_kw)));
+			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple)));
+			DO(fg_vpush_NULL(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_hostasm.hafu_call_tuple_kw)));
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#if !defined(CONFIG_NO_THREADS) && defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION)
+			DO(fg_vpush_ATOMIC_RWLOCK_INIT(self) || fg_vpopind(self, offsetof(DeeFunctionObject, fo_reflock)));
+#endif /* !CONFIG_NO_THREADS && CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		}
 		while (refc) {
 			--refc;
 			DO(fg_vswap(self));                           /* [refs...], ref:function, ref */
@@ -1508,6 +1536,12 @@ do_jcc:
 			              (refc * sizeof(DREF DeeObject *))));
 		}
 		ASSERT(fg_vtop_direct_isref(self)); /* ref:function */
+		fg_vtop_direct_clearref(self);
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		DO(fg_vcallapi(self, &DeeGC_Track, VCALL_CC_RAWINTPTR_NX, 1));
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		ASSERT(!fg_vtop_direct_isref(self));
+		fg_vtop_direct_setref(self); /* ref:function */
 	}	break;
 
 	TARGET(ASM_CAST_INT)

@@ -1808,6 +1808,12 @@ do_push_const:
 do_push_static:
 			ASSERT_STATICimm();
 			STATIC_LOCKREAD();
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			if unlikely(!STATICimm) {
+				STATIC_LOCKENDREAD();
+				goto err_unbound_static;
+			}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			PUSHREF(STATICimm);
 			STATIC_LOCKENDREAD();
 			DISPATCH();
@@ -3546,10 +3552,10 @@ do_setitem_c:
 					goto err_requires_string;
 				}
 				call_result = DeeObject_CallAttrKw(new_sp[-1],
-				                                   CONSTimm,
+				                                   attr_name,
 				                                   argc,
 				                                   new_sp,
-				                                   CONSTimm2);
+				                                   kwds_map);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 				Dee_Decref_unlikely(attr_name);
 				Dee_Decref_unlikely(kwds_map);
@@ -5071,10 +5077,10 @@ do_setattr_this_c:
 							goto err_requires_string;
 						}
 						call_result = DeeObject_CallAttrKw(new_sp[-1],
-						                                   CONSTimm,
+						                                   attr_name,
 						                                   argc,
 						                                   new_sp,
-						                                   CONSTimm2);
+						                                   kwds_map);
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						Dee_Decref_unlikely(attr_name);
 						Dee_Decref_unlikely(kwds_map);
@@ -7031,6 +7037,12 @@ do_prefix_push_static:
 					ASSERT_STATICimm();
 					STATIC_LOCKREAD();
 					value = CONSTimm;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+					if unlikely(!value) {
+						STATIC_LOCKENDREAD();
+						goto err_unbound_static;
+					}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					Dee_Incref(value);
 					STATIC_LOCKENDREAD();
 					if (set_prefix_object(value))

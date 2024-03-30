@@ -428,14 +428,16 @@ err:
 
 
 INTERN void DCALL assembler_init(void) {
+	DeeCodeObject *code;
 	bzero(&current_assembler, sizeof(struct assembler));
 	current_assembler.a_curr = &current_assembler.a_sect[SECTION_TEXT];
 	/* Allocate an initial buffer for the text section. */
-	current_assembler.a_sect[SECTION_TEXT].sec_code  = (DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) + INITIAL_TEXTALLOC);
-	current_assembler.a_sect[SECTION_TEXT].sec_begin = current_assembler.a_sect[SECTION_TEXT].sec_code->co_code;
+	code = DeeCode_TryMalloc(INITIAL_TEXTALLOC);
+	current_assembler.a_sect[SECTION_TEXT].sec_code  = code;
+	current_assembler.a_sect[SECTION_TEXT].sec_begin = code ? code->co_code : NULL;
 	current_assembler.a_sect[SECTION_TEXT].sec_iter  = current_assembler.a_sect[SECTION_TEXT].sec_begin;
-	current_assembler.a_sect[SECTION_TEXT].sec_end   = current_assembler.a_sect[SECTION_TEXT].sec_begin + INITIAL_TEXTALLOC;
-	current_assembler.a_ddi.da_last                  = (code_addr_t)-1;
+	current_assembler.a_sect[SECTION_TEXT].sec_end   = code ? code->co_code + INITIAL_TEXTALLOC : NULL;
+	current_assembler.a_ddi.da_last = (code_addr_t)-1;
 #ifndef CONFIG_LANGUAGE_NO_ASM
 	userassembler_init();
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
@@ -1100,9 +1102,7 @@ INTERN WUNUSED int DCALL asm_mergetext(void) {
 		/* Make sure to allocate enough text. */
 		DeeCodeObject *new_code;
 		ASSERT(sc_main.sec_code != NULL);
-		new_code = (DeeCodeObject *)DeeGCObject_Realloc(sc_main.sec_code,
-		                                                offsetof(DeeCodeObject, co_code) +
-		                                                total_code * sizeof(instruction_t));
+		new_code = DeeCode_Realloc(sc_main.sec_code, total_code * sizeof(instruction_t));
 		if unlikely(!new_code)
 			goto err;
 		sc_main.sec_code  = new_code;
@@ -1146,9 +1146,10 @@ err:
 }
 
 INTERN WUNUSED int DCALL asm_mergestatic(void) {
-	uint16_t static_offset, total_count, i;
+	uint16_t static_offset, total_count;
 	struct asm_rel *iter, *end;
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	uint16_t i;
 	DREF DeeObject **total_vector;
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	/* Simple case: Without any static variables, we've got nothing to do! */
@@ -1241,14 +1242,14 @@ INTERN WUNUSED int DCALL asm_mergestatic(void) {
 	return 0;
 err_too_many:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	DeeError_Throwf(&DeeError_CompilerError,
-	                "Too many reference/static variables");
+	return DeeError_Throwf(&DeeError_CompilerError,
+	                       "Too many reference/static variables");
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	DeeError_Throwf(&DeeError_CompilerError,
 	                "Too many constant/static variables");
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 }
 
 INTERN WUNUSED int DCALL asm_linkstack(void) {
@@ -1534,10 +1535,9 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	total_codesize = (code_size_t)(sc_main.sec_iter - sc_main.sec_begin);
 	if (sc_main.sec_iter < sc_main.sec_end) {
 		/* Try to release as much code memory as possible. - We won't be needing it anymore. */
-		result = (DREF DeeCodeObject *)DeeGCObject_TryRealloc(sc_main.sec_code,
-		                                                      offsetof(DeeCodeObject, co_code) +
-		                                                      (sc_main.sec_iter - sc_main.sec_begin) *
-		                                                      sizeof(instruction_t));
+		result = (DREF DeeCodeObject *)DeeCode_TryRealloc(sc_main.sec_code,
+		                                                  (sc_main.sec_iter - sc_main.sec_begin) *
+		                                                  sizeof(instruction_t));
 		if (!result)
 			result = sc_main.sec_code;
 	} else {
@@ -1648,7 +1648,9 @@ INTERN WUNUSED DREF DeeCodeObject *DCALL asm_gencode(void) {
 	current_assembler.a_excepta    = 0;
 
 	/* Now that it's fully initialized, start tracking the generated code object! */
-	DeeGC_Track((DeeObject *)result);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* And we're done! */
 	return result;
@@ -1713,9 +1715,8 @@ INTERN WUNUSED instruction_t *(DFCALL asm_alloc)(size_t n_bytes) {
 		/* Must re-allocate the code object instead. */
 		ASSERT(current_assembler.a_curr->sec_begin ==
 		       current_assembler.a_curr->sec_code->co_code);
-		result = (instruction_t *)DeeGCObject_TryRealloc(current_assembler.a_curr->sec_code,
-		                                                 offsetof(DeeCodeObject, co_code) +
-		                                                 new_size * sizeof(instruction_t));
+		result = (instruction_t *)DeeCode_TryRealloc(current_assembler.a_curr->sec_code,
+		                                             new_size * sizeof(instruction_t));
 		if unlikely(!result) {
 			if (new_size != min_size) {
 				new_size = min_size;
@@ -1727,7 +1728,7 @@ INTERN WUNUSED instruction_t *(DFCALL asm_alloc)(size_t n_bytes) {
 			return NULL;
 		}
 		current_assembler.a_curr->sec_code = (DeeCodeObject *)result;
-		result                             = ((DeeCodeObject *)result)->co_code;
+		result = ((DeeCodeObject *)result)->co_code;
 	} else {
 	realloc_instr: /* Directly re-allocate code. */
 		result = (instruction_t *)Dee_TryReallocc(current_assembler.a_curr->sec_begin,

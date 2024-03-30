@@ -171,7 +171,7 @@ fg_vpush_const_(struct fungen *__restrict self,
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DeeObject *DCALL
 fg_getconst(struct fungen *__restrict self, uint16_t cid) {
 	DeeObject *result;
 	DeeCodeObject *code;
@@ -180,6 +180,7 @@ fg_getconst(struct fungen *__restrict self, uint16_t cid) {
 		goto err;
 	}
 	code = self->fg_assembler->fa_code;
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if (self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_SAFE) {
 		/* When needing to be safe, constants could illegally be re-assigned
 		 * via statics. This isn't allowed, but if it happens we mustn't crash,
@@ -191,7 +192,9 @@ fg_getconst(struct fungen *__restrict self, uint16_t cid) {
 		result = fg_inlineref(self, result);
 		/*if unlikely(!result)
 			goto err;*/
-	} else {
+	} else
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	{
 		result = code->co_constv[cid];
 	}
 	return result;
@@ -3740,6 +3743,12 @@ fg_vpop_extern(struct fungen *__restrict self, uint16_t mid, uint16_t gid) {
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpush_static(struct fungen *__restrict self, uint16_t sid) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if unlikely(sid < code->co_refc || sid >= code->co_refstaticc)
+		return err_illegal_sid(sid);
+	/* TODO */
+	return DeeError_NOTIMPLEMENTED();
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(sid >= code->co_constc)
 		return err_illegal_sid(sid);
 	DO(fg_vpush_addr(self, &code->co_constv[sid]));
@@ -3760,11 +3769,18 @@ fg_vpush_static(struct fungen *__restrict self, uint16_t sid) {
 	return 0;
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 }
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vpop_static(struct fungen *__restrict self, uint16_t sid) {
 	DeeCodeObject *code = self->fg_assembler->fa_code;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if unlikely(sid < code->co_refc || sid >= code->co_refstaticc)
+		return err_illegal_sid(sid);
+	/* TODO */
+	return DeeError_NOTIMPLEMENTED();
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(sid >= code->co_constc)
 		return err_illegal_sid(sid);
 	DO(fg_vdirect1(self));
@@ -3784,6 +3800,7 @@ fg_vpop_static(struct fungen *__restrict self, uint16_t sid) {
 	return fg_vpop(self);
 err:
 	return -1;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 }
 
 #ifndef CONFIG_NO_THREADS
@@ -4232,6 +4249,23 @@ fg_vcall_DeeObject_Malloc(struct fungen *__restrict self,
 	DO(fg_vcallapi(self,
 	               do_calloc ? (void const *)&DeeObject_Calloc
 	                         : (void const *)&DeeObject_Malloc,
+	               VCALL_CC_OBJECT, 1));
+	DO(fg_vdirect1(self));
+	DO(fg_state_unshare(self));
+	/* The NOREF flag must *NOT* be set (because the intend is for the caller to create an object) */
+	ASSERT(fg_vtop_direct_isref(self));
+	return fg_voneref_noalias(self); /* Initial reference -> oneref */
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1)) int DCALL
+fg_vcall_DeeGCObject_Malloc(struct fungen *__restrict self,
+                            size_t alloc_size, bool do_calloc) {
+	DO(fg_vpush_immSIZ(self, alloc_size));
+	DO(fg_vcallapi(self,
+	               do_calloc ? (void const *)&DeeGCObject_Calloc
+	                         : (void const *)&DeeGCObject_Malloc,
 	               VCALL_CC_OBJECT, 1));
 	DO(fg_vdirect1(self));
 	DO(fg_state_unshare(self));

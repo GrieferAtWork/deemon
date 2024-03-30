@@ -1797,6 +1797,15 @@ err_unsupported_opcode(DeeCodeObject *__restrict code, Dee_instruction_t const *
 	}
 }
 
+INTERN ATTR_COLD NONNULL((1)) int
+(DCALL err_invalid_refs_size)(DeeCodeObject *__restrict code, size_t num_refs) {
+	ASSERT_OBJECT_TYPE_EXACT(code, &DeeCode_Type);
+	return DeeError_Throwf(&DeeError_TypeError,
+	                       "Code object expects %" PRFu16 " references when %" PRFuSIZ " were given",
+	                       code->co_refc, num_refs);
+}
+
+
 
 
 /************************************************************************/

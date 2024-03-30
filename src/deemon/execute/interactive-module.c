@@ -328,7 +328,7 @@ imod_next(InteractiveModule *__restrict self) {
 	bool is_reusing_code_object;
 	uint16_t old_co_flags;
 	uint16_t old_co_localc;
-	uint16_t old_co_staticc;
+	uint16_t old_co_constc;
 	uint16_t old_co_exceptc;
 	uint32_t old_co_framesize;
 	struct except_handler *old_co_exceptv;
@@ -480,7 +480,7 @@ do_exec_code:
 	ASSERT(current_code->co_keywords == NULL);
 	old_co_flags     = current_code->co_flags;
 	old_co_localc    = current_code->co_localc;
-	old_co_staticc   = current_code->co_constc;
+	old_co_constc    = current_code->co_constc;
 	old_co_exceptc   = current_code->co_exceptc;
 	old_co_exceptv   = current_code->co_exceptv;
 	old_co_framesize = current_code->co_framesize;
@@ -493,9 +493,9 @@ do_exec_code:
 		                     preexisting_codesize);
 		Dee_DecrefNokill(&DeeCode_Type);     /* current_code->ob_type */
 		Dee_DecrefNokill((DeeObject *)self); /* current_code->co_module */
-		current_assembler.a_constv = current_code->co_constv;
-		current_code->co_constv   = NULL;
-		current_code->co_constc   = 0;
+		current_assembler.a_constv = (DREF DeeObject **)current_code->co_constv;
+		current_code->co_constv    = NULL;
+		current_code->co_constc    = 0;
 	} else {
 		instruction_t *text;
 		assembler_init();
@@ -505,11 +505,15 @@ do_exec_code:
 			goto done_assembler_fini;
 
 		/* Copy over static variables. */
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		DeeCode_ConstLockRead(current_code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		Dee_Movrefv(current_assembler.a_constv,
 		            current_code->co_constv,
 		            current_assembler.a_constc);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		DeeCode_ConstLockEndRead(current_code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		/* Copy over all the unwritten text. */
 		text = asm_alloc(preexisting_codesize);
@@ -534,8 +538,9 @@ do_exec_code:
 	ASSERT(current_assembler.a_flag & ASM_FNOREUSECONST);
 	ASSERT(current_assembler.a_flag & ASM_FBIGCODE);
 	current_assembler.a_localc = old_co_localc;
-	current_assembler.a_constc = old_co_staticc;
-	current_assembler.a_consta = old_co_staticc;
+	current_assembler.a_constc = old_co_constc;
+	current_assembler.a_consta = old_co_constc;
+	current_assembler.a_staticc;
 
 	/* Configure the currently active stack-depth. */
 	current_assembler.a_stackcur = (uint16_t)(self->im_frame.cf_sp -
@@ -767,16 +772,21 @@ recover_old_code_object:
 			current_code->co_code[preexisting_codesize] = ASM_UD;
 			current_code->co_flags     = old_co_flags;
 			current_code->co_localc    = old_co_localc;
-			current_code->co_constc   = old_co_staticc;
-			current_code->co_constv   = current_assembler.a_constv;
+			current_code->co_constc    = old_co_constc;
+			current_code->co_constv    = current_assembler.a_constv;
 			current_code->co_refc      = 0;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			current_code->co_refstaticc = 0;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			current_code->co_exceptc   = old_co_exceptc;
 			current_code->co_exceptv   = old_co_exceptv;
 			current_code->co_argc_min  = 0;
 			current_code->co_argc_max  = 0;
 			current_code->co_framesize = old_co_framesize;
 			current_code->co_codebytes = (code_size_t)(preexisting_codesize + 1);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 			Dee_atomic_rwlock_init(&current_code->co_constlock);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			Dee_Incref((DeeObject *)self);
 			current_code->co_module   = (DREF DeeModuleObject *)self;
 			current_code->co_defaultv = NULL;
@@ -1167,7 +1177,11 @@ imod_init(InteractiveModule *__restrict self,
 	Dee_Incref(argv);
 
 	/* Allocate the function object for the initial code frame. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	self->im_frame.cf_func = (DeeFunctionObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	self->im_frame.cf_func = (DeeFunctionObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv));
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if unlikely(!self->im_frame.cf_func)
 		goto err_stream;
 	DeeObject_Init(self->im_frame.cf_func, &DeeFunction_Type);
@@ -1358,23 +1372,27 @@ err_compiler_basefile:
 	 * SO to start out: Create a single-instruction ASM_UD code-object. */
 	{
 		DREF DeeCodeObject *init_code;
-		init_code = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
-		                                                     sizeof(instruction_t));
+		init_code = DeeCode_Malloc(sizeof(instruction_t));
 		if unlikely(!init_code)
 			goto err_globals;
 		init_code->co_flags     = INTERACTIVE_MODULE_CODE_FLAGS;
 		init_code->co_localc    = 0;
-		init_code->co_constc   = 0;
+		init_code->co_constc    = 0;
 		init_code->co_refc      = 0;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		init_code->co_refstaticc = 0;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		init_code->co_exceptc   = 0;
 		init_code->co_argc_min  = 0;
 		init_code->co_argc_max  = 0;
 		init_code->co_framesize = 0;
 		init_code->co_codebytes = sizeof(instruction_t);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		Dee_atomic_rwlock_init(&init_code->co_constlock);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		init_code->co_module   = (DREF struct module_object *)self;
 		init_code->co_defaultv = NULL;
-		init_code->co_constv  = NULL;
+		init_code->co_constv   = NULL;
 		init_code->co_exceptv  = NULL;
 		init_code->co_keywords = NULL;
 		init_code->co_ddi      = &DeeDDI_Empty;
@@ -1403,6 +1421,9 @@ err_compiler_basefile:
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 		Dee_hostasm_function_init(&self->im_frame.cf_func->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		Dee_atomic_rwlock_init(&self->im_frame.cf_func->fo_reflock);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}
 
 	return 0;

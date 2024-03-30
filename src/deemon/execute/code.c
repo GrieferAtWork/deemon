@@ -43,6 +43,7 @@
 #include <hybrid/byteorder.h>
 #include <hybrid/byteswap.h>
 #include <hybrid/host.h>
+#include <hybrid/overflow.h>
 #include <hybrid/unaligned.h>
 
 #include <stdint.h>
@@ -1051,7 +1052,11 @@ DeeCode_GetDDIString(DeeObject const *__restrict self, uint16_t id) {
 
 
 /* Define the special `DeeCode_Empty' object. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define DeeCode_Empty_head DeeCode_Empty
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define DeeCode_Empty DeeCode_Empty_head.ob
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 INTERN DEFINE_CODE(DeeCode_Empty_head,
                    /* co_flags:      */ CODE_FCOPYABLE,
                    /* co_localc:     */ 0,
@@ -1326,6 +1331,15 @@ code_getconstants(DeeCodeObject *__restrict self) {
 	                                self->co_constv);
 }
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+code_get_nstatic(DeeCodeObject *__restrict self) {
+	ASSERT(self->co_refstaticc >= self->co_refc);
+	return DeeInt_NewUInt16(self->co_refstaticc - self->co_refc);
+}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_name(DeeCodeObject *__restrict self) {
 	struct function_info info;
@@ -1526,6 +1540,14 @@ PRIVATE struct type_member tpconst code_members[] = {
 	                      "The number of times @this ?. was called with args-tuple, and with keywords"),
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 #endif /* CONFIG_HAVE_CODE_METRICS */
+	TYPE_MEMBER_FIELD_DOC("__nlocal__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_localc),
+	                      "Number of available local variables during execution"),
+	TYPE_MEMBER_FIELD_DOC("__nconst__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_constc),
+	                      "Number of constant objects during execution"),
+	TYPE_MEMBER_FIELD_DOC("__nref__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_refc),
+	                      "Number of referenced objects during execution"),
+	TYPE_MEMBER_FIELD_DOC("__nexcept__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_exceptc),
+	                      "Number of exception handlers"),
 	TYPE_MEMBER_END
 };
 
@@ -1629,6 +1651,11 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	TYPE_GETTER_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Access to the constants of @this code object"),
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	TYPE_GETTER_F("__nstatic__", &code_get_nstatic, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of static variables during execution"),
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETSET_END
 };
 
@@ -1707,6 +1734,10 @@ code_eq_impl(DeeCodeObject *__restrict self,
 		goto nope;
 	if (self->co_refc != other->co_refc)
 		goto nope;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if (self->co_refstaticc != other->co_refstaticc)
+		goto nope;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_exceptc != other->co_exceptc)
 		goto nope;
 	if (self->co_argc_min != other->co_argc_min)
@@ -1839,13 +1870,7 @@ PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {
 PRIVATE WUNUSED NONNULL((1)) DREF DeeCodeObject *DCALL
 code_copy(DeeCodeObject *__restrict self) {
 	DREF DeeCodeObject *result;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	result = (DREF DeeCodeObject *)DeeObject_Malloc(offsetof(DeeCodeObject, co_code) +
-	                                                self->co_codebytes);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
-	                                                  self->co_codebytes);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	result = DeeCode_Malloc(self->co_codebytes);
 	if unlikely(!result)
 		goto done;
 	memcpy(result, self, offsetof(DeeCodeObject, co_code) + self->co_codebytes);
@@ -2098,12 +2123,13 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeDDIObject *ddi       = (DeeDDIObject *)Dee_None;
 	uint16_t nlocal         = 0;
 	uint16_t nstack         = 0;
-	uint16_t refc           = 0;
+	uint16_t nref           = 0;
+	uint16_t nstatic        = 0;
 	uint16_t coargc         = 0;
 	DeeBuffer text_buf;
 	/* (text:?DBytes=!N,module:?DModule=!N,constants:?S?O=!N,
 	 *  except:?S?X2?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType=!N,
-	 *  nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
+	 *  nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,defaults:?S?O=!N,
 	 *  flags:?X2?Dstring?Dint=!P{lenient},ddi:?Ert:Ddi=!N) */
 	PRIVATE DEFINE_KWLIST(kwlist, { K(text),
 	                                K(module),
@@ -2111,7 +2137,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                                K(except),
 	                                K(nlocal),
 	                                K(nstack),
-	                                K(refc),
+	                                K(nref),
+	                                K(nstatic),
 	                                K(argc),
 	                                K(keywords),
 	                                K(defaults),
@@ -2126,7 +2153,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    "o"    /* except */
 	                    "I16u" /* nlocal */
 	                    "I16u" /* nstack */
-	                    "I16u" /* refc */
+	                    "I16u" /* nref */
+	                    "I16u" /* nstatic */
 	                    "I16u" /* argc */
 	                    "o"    /* keywords */
 	                    "o"    /* defaults */
@@ -2139,7 +2167,8 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	                    &except,
 	                    &nlocal,
 	                    &nstack,
-	                    &refc,
+	                    &nref,
+	                    &nstatic,
 	                    &coargc,
 	                    &keywords,
 	                    &defaults,
@@ -2156,8 +2185,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		goto err_buf;
 	}
 #endif /* __SIZEOF_SIZE_T__ > 4 */
-	result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
-	                                                  text_buf.bb_size + INSTRLEN_MAX);
+	result = DeeCode_Malloc(text_buf.bb_size + INSTRLEN_MAX);
 	if unlikely(!result)
 		goto err_buf;
 	/* Copy text bytes. */
@@ -2399,9 +2427,15 @@ got_flag:
 	Dee_Incref(ddi);
 	result->co_module = module;
 	Dee_Incref(module);
-	result->co_localc    = nlocal;
-	result->co_refc      = refc;
-	result->co_framesize = (nlocal + nstack) * sizeof(DREF DeeObject *);
+	result->co_localc = nlocal;
+	result->co_refc   = nref;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if (OVERFLOW_UADD(nref, nstatic, &result->co_refstaticc)) {
+		DeeError_Throwf(&DeeError_ValueError, "Too many references or static variables");
+		goto err_r_ddi;
+	}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	result->co_framesize  = (nlocal + nstack) * sizeof(DREF DeeObject *);
 	if (result->co_framesize > CODE_LARGEFRAME_THRESHOLD)
 		result->co_flags |= CODE_FHEAPFRAME;
 #ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
@@ -2420,6 +2454,10 @@ got_flag:
 	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+err_r_ddi:
+	Dee_Decref(result->co_ddi);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 err_r_except:
 	if (result->co_exceptv) {
 		while (result->co_exceptc--)
@@ -2578,7 +2616,11 @@ code_printrepr(DeeCodeObject *__restrict self,
 			DO(DeeFormat_Printf(printer, arg, ", nstack: %" PRFu16, nstack));
 	}
 	if (self->co_refc > 0)
-		DO(DeeFormat_Printf(printer, arg, ", refc: %" PRFu16, self->co_refc));
+		DO(DeeFormat_Printf(printer, arg, ", nref: %" PRFu16, self->co_refc));
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if (self->co_refstaticc > self->co_refc)
+		DO(DeeFormat_Printf(printer, arg, ", nstatic: %" PRFu16, self->co_refstaticc - self->co_refc));
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_argc_max > 0)
 		DO(DeeFormat_Printf(printer, arg, ", argc: %" PRFu16, self->co_argc_max));
 	if (self->co_keywords != NULL) {
@@ -2652,7 +2694,7 @@ PUBLIC DeeTypeObject DeeCode_Type = {
 	                         /**/ /*       */ "?T5?Dint?Dint?Dint?Dint?X2?Dstring?Dint"
 	                         /**/ /*       */ "?T6?Dint?Dint?Dint?Dint?X2?Dstring?Dint?DType"
 	                         /**/ /*       */ "=!N,"
-	                         /**/ "nlocal=!0,nstack=!0,refc=!0,argc=!0,keywords:?S?Dstring=!N,"
+	                         /**/ "nlocal=!0,nstack=!0,nref=!0,nstatic=!0,argc=!0,keywords:?S?Dstring=!N,"
 	                         /**/ "defaults:?S?O=!N,flags:?X2?Dstring?Dint=!P{},ddi:?Ert:Ddi=!N"
 	                         ")\n"
 	                         "#tIntegerOverflow{One of the specified arguments exceeds its associated implementation limit (the "

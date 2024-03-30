@@ -242,10 +242,14 @@ typedef struct ATTR_PACKED {
 	                           *       interpreted as an `Dec_8BitCode' object */
 	uint16_t   co_localc;     /* Amount of local variables used by code. */
 	uint16_t   co_refc;       /* Amount of reference variables used by this code. */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	uint16_t   co_staticc;    /* Number of static variables that appear after `co_refc' */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	uint16_t   co_padding;    /* ... */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	uint16_t   co_argc_min;   /* Min amount of arguments required to execute this code. */
 	uint16_t   co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
-	uint16_t   co_pad;        /* ... */
-	uint32_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects').
+	uint32_t   co_constoff;   /* Absolute file offset to a constant variable descriptor table (`Dec_Objects').
 	                           * NOTE: `DTYPE_NULL' is not allowed. */
 	uint32_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_CodeExceptions'). */
 	uint32_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
@@ -268,7 +272,7 @@ typedef struct ATTR_PACKED {
 	uint8_t    co_refc;       /* Amount of reference variables used by this code. */
 	uint8_t    co_argc_min;   /* Min amount of arguments required to execute this code. */
 	uint8_t    co_stackmax;   /* The greatest allowed stack depth of the assembly associated with this code. */
-	uint16_t   co_staticoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects'). */
+	uint16_t   co_constoff;  /* Absolute file offset to a static/constant variable descriptor table (`Dec_Objects'). */
 	uint16_t   co_exceptoff;  /* Absolute file offset to an exception handler descriptor table (`Dec_8BitCodeExceptions'). */
 	uint16_t   co_defaultoff; /* Absolute file offset to an argument-default descriptor table (`Dec_Objects').
 	                           * NOTE: When ZERO(0), there are no default arguments, but if not,

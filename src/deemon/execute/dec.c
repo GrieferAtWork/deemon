@@ -1359,9 +1359,20 @@ set_none_result:
 				goto err;
 			goto corrupt;
 		}
-		refc   = code->co_refc;
+		refc = code->co_refc;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		ASSERT(code->co_refstaticc >= refc);
+		if likely(code->co_refstaticc == refc) {
+			result = (DREF DeeObject *)DeeGCObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
+			                                              (refc * sizeof(DREF DeeObject *)));
+		} else {
+			result = (DREF DeeObject *)DeeGCObject_Calloc(offsetof(DeeFunctionObject, fo_refv) +
+			                                              (code->co_refstaticc * sizeof(DREF DeeObject *)));
+		}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		result = (DREF DeeObject *)DeeObject_Malloc(offsetof(DeeFunctionObject, fo_refv) +
 		                                            (refc * sizeof(DREF DeeObject *)));
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if unlikely(!result) {
 err_function_code:
 			Dee_Decref(code);
@@ -1388,6 +1399,10 @@ err_function_code:
 		Dee_hostasm_function_init(&((DREF DeeFunctionObject *)result)->fo_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(result, &DeeFunction_Type);
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		Dee_atomic_rwlock_init(&((DREF DeeFunctionObject *)result)->fo_reflock);
+		result = DeeGC_Track(result);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	}	break;
 
 	case DTYPE_TUPLE: {
@@ -2377,13 +2392,16 @@ DecFile_LoadCode(DecFile *__restrict self,
 		header.co_refc       = UNALIGNED_GETLE8(reader), reader += 1;
 		header.co_argc_min   = UNALIGNED_GETLE8(reader), reader += 1;
 		header.co_stackmax   = UNALIGNED_GETLE8(reader), reader += 1;
-		header.co_staticoff  = UNALIGNED_GETLE16(reader), reader += 2;
+		header.co_constoff   = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_exceptoff  = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_defaultoff = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_ddioff     = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_kwdoff     = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_textsiz    = UNALIGNED_GETLE16(reader), reader += 2;
 		header.co_textoff    = UNALIGNED_GETLE16(reader), reader += 2;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		header.co_staticc = 0;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	} else {
 		if unlikely(reader + sizeof(Dec_Code) - 2 >= end)
 			GOTO_CORRUPTED(reader, done); /* Validate bounds. */
@@ -2392,9 +2410,12 @@ DecFile_LoadCode(DecFile *__restrict self,
 #if __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
 		header.co_localc     = LETOH16(header.co_localc);
 		header.co_refc       = LETOH16(header.co_refc);
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		header.co_staticc    = LETOH16(header.co_staticc);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		header.co_argc_min   = LETOH16(header.co_argc_min);
 		header.co_stackmax   = LETOH16(header.co_stackmax);
-		header.co_staticoff  = LETOH32(header.co_staticoff);
+		header.co_constoff   = LETOH32(header.co_constoff);
 		header.co_exceptoff  = LETOH32(header.co_exceptoff);
 		header.co_defaultoff = LETOH32(header.co_defaultoff);
 		header.co_ddioff     = LETOH32(header.co_ddioff);
@@ -2416,8 +2437,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 
 		/* Allocate the resulting code object, as well as set the CODE_FASSEMBLY flag. */
 		header.co_flags |= CODE_FASSEMBLY;
-		result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
-		                                                  header.co_textsiz + INSTRLEN_MAX);
+		result = DeeCode_Malloc(header.co_textsiz + INSTRLEN_MAX);
 		if likely(result) {
 			/* Initialize trailing bytes as `ret none' instructions. */
 #if ASM_RET_NONE == 0
@@ -2428,8 +2448,7 @@ DecFile_LoadCode(DecFile *__restrict self,
 		}
 	} else {
 		/* Allocate the resulting code object. */
-		result = (DREF DeeCodeObject *)DeeGCObject_Malloc(offsetof(DeeCodeObject, co_code) +
-		                                                  header.co_textsiz);
+		result = (DREF DeeCodeObject *)DeeCode_Malloc(header.co_textsiz);
 	}
 
 	/* Check for errors during code allocation. */
@@ -2471,11 +2490,11 @@ DecFile_LoadCode(DecFile *__restrict self,
 
 	result->co_constc = 0;
 	result->co_constv = NULL;
-	if (header.co_staticoff) {
+	if (header.co_constoff) {
 		uint16_t staticc;
 		DREF DeeObject **staticv;
 		uint8_t const *sta_reader;
-		sta_reader = self->df_base + header.co_staticoff;
+		sta_reader = self->df_base + header.co_constoff;
 		if unlikely(sta_reader >= end)
 			GOTO_CORRUPTED(reader, corrupt_r_default);
 
@@ -2670,12 +2689,17 @@ err_kwds_i:
 	        self->df_base + header.co_textoff,
 	        header.co_textsiz,
 	        sizeof(instruction_t));
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	Dee_atomic_rwlock_init(&result->co_constlock);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Fill in remaining, basic fields of the resulting code object. */
 	result->co_flags  = header.co_flags;
 	result->co_localc = header.co_localc;
 	result->co_refc   = header.co_refc;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	result->co_refstaticc = header.co_refc + header.co_staticc;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	/* Calculate the size of the required execution frame. */
 	result->co_framesize = ((uint32_t)header.co_localc +
@@ -2698,7 +2722,9 @@ err_kwds_i:
 
 	/* Finally, initialize the resulting code object and start tracking it. */
 	DeeObject_Init(result, &DeeCode_Type);
-	DeeGC_Track((DeeObject *)result);
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	result = (DREF DeeCodeObject *)DeeGC_Track((DeeObject *)result);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 done:
 	*p_reader = reader;
 	return result;
@@ -2712,7 +2738,7 @@ err_r_except:
 	Dee_Free(result->co_exceptv);
 err_r_static:
 	Dee_Decrefv(result->co_constv, result->co_constc);
-	Dee_Free(result->co_constv);
+	Dee_Free((void *)result->co_constv);
 err_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);
@@ -2733,7 +2759,7 @@ corrupt_r_except:
 	Dee_Free(result->co_exceptv);
 corrupt_r_static:
 	Dee_Decrefv(result->co_constv, result->co_constc);
-	Dee_Free(result->co_constv);
+	Dee_Free((void *)result->co_constv);
 corrupt_r_default:
 	/* Destroy default objects. */
 	ASSERT(result->co_argc_max >= result->co_argc_min);

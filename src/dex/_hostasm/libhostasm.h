@@ -2425,6 +2425,7 @@ struct fungen {
 #define fg_vtop_direct_setref(self)     memobj_setref(memval_direct_getobj(fg_vtop(self)))
 #define fg_vtop_direct_clearref(self)   memobj_clearref(memval_direct_getobj(fg_vtop(self)))
 #define fg_isoneref_noalias(self, mval) memstate_isoneref_noalias((self)->fg_state, mval)
+INTDEF WUNUSED NONNULL((1)) DeeObject *DCALL fg_getconst(struct fungen *__restrict self, uint16_t cid);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vswap(struct fungen *__restrict self); /* ASM_SWAP */
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vlrot(struct fungen *__restrict self, vstackaddr_t n);
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vrrot(struct fungen *__restrict self, vstackaddr_t n);
@@ -2962,6 +2963,9 @@ fg_vcall_DeeObject_MALLOC(struct fungen *__restrict self,
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vcall_DeeObject_Malloc(struct fungen *__restrict self,
                           size_t alloc_size, bool do_calloc);
+INTDEF WUNUSED NONNULL((1)) int DCALL
+fg_vcall_DeeGCObject_Malloc(struct fungen *__restrict self,
+                            size_t alloc_size, bool do_calloc);
 
 /* Arrange the top `argc' stack-items linearly, such that they all appear somewhere in memory
  * (probably on the host-stack), in consecutive order (with `vtop' at the greatest address,
@@ -3949,6 +3953,7 @@ INTDEF ATTR_COLD int DCALL err_illegal_cid(uint16_t cid);
 INTDEF ATTR_COLD int DCALL err_illegal_rid(uint16_t rid);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_illegal_gid(struct Dee_module_object *__restrict mod, uint16_t gid);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unsupported_opcode(DeeCodeObject *__restrict code, Dee_instruction_t const *instr);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(DeeCodeObject *__restrict code, size_t num_refs);
 
 
 /************************************************************************/

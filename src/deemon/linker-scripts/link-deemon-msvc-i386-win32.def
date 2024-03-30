@@ -68,7 +68,6 @@ EXPORTS
 	DeeCode_GetInfo@8=_DeeCode_GetInfo@8
 	DeeCode_GetOptimizeCallThreshold@0=_DeeCode_GetOptimizeCallThreshold@0
 	DeeCode_GetRSymbolName@8=_DeeCode_GetRSymbolName@8
-	DeeCode_GetSSymbolName@8=_DeeCode_GetSSymbolName@8
 	DeeCode_HandleBreakpoint@4=_DeeCode_HandleBreakpoint@4
 	DeeCode_SetAssembly@4=_DeeCode_SetAssembly@4
 	DeeCode_SetOptimizeCallThreshold@4=_DeeCode_SetOptimizeCallThreshold@4
@@ -858,6 +857,7 @@ EXPORTS
 	DeeObject_VTGenericCallAttrStringHashf@24=_DeeObject_VTGenericCallAttrStringHashf@24
 	DeeObject_VThisCallf@16=_DeeObject_VThisCallf@16
 	DeeObject_Visit@12=_DeeObject_Visit@12
+	DeeObject_XHashv@8=_DeeObject_XHashv@8
 	DeeObject_XInplaceDeepCopyWithLock@8=_DeeObject_XInplaceDeepCopyWithLock@8
 	DeeObject_Xor@8=_DeeObject_Xor@8
 	DeeObject_XorUInt32@8=_DeeObject_XorUInt32@8

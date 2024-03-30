@@ -751,8 +751,8 @@ err:
 }
 
 
-INTERN WUNUSED int
-(DCALL dec_putobjv)(uint16_t count, DeeObject **vec) {
+INTERN WUNUSED ATTR_INS(2, 1) int
+(DCALL dec_putobjv)(uint16_t count, DeeObject *const *vec) {
 	uint16_t i;
 	if (dec_putw(count))
 		goto err; /* Dec_Objects.os_len */
@@ -817,7 +817,7 @@ err_recursion:
 
 
 /* Encode an object using DTYPE codes. */
-INTERN WUNUSED int (DCALL dec_putobj)(DeeObject *self) {
+INTERN WUNUSED int (DCALL dec_putobj)(/*nullable*/ DeeObject *self) {
 	DeeTypeObject *tp_self;
 	/* Special handling for encoding various different types of objects. */
 	uint16_t builtin_id;
@@ -1244,6 +1244,10 @@ allow_8bit_code(DeeCodeObject *__restrict self) {
 		goto nope;
 	if (self->co_refc > UINT8_MAX)
 		goto nope;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	if (self->co_refstaticc > self->co_refc)
+		goto nope; /* Static variables can't be represented in 8-bit mode */
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	if (self->co_argc_min > UINT8_MAX)
 		goto nope;
 	if (((self->co_framesize / sizeof(DeeObject *)) - self->co_localc) > UINT8_MAX)
@@ -1412,7 +1416,10 @@ dec_putddi_xdat_ptr(DeeDDIObject *__restrict ddi,
 			switch (op & ~DDI_EXDAT_OPMASK) {
 
 			case DDI_EXDAT_O_RNAM:
-			case DDI_EXDAT_O_SNAM: {
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			case DDI_EXDAT_O_SNAM:
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+			{
 				uint32_t string_offset;
 				uint16_t symbol_id;
 				char const *string;
@@ -1522,10 +1529,15 @@ INTERN WUNUSED NONNULL((1)) int
 	descr.co_flags      = self->co_flags & CODE_FMASK;
 	descr.co_localc     = self->co_localc;
 	descr.co_refc       = self->co_refc;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	ASSERT(self->co_refstaticc >= self->co_refc);
+	descr.co_staticc    = self->co_refstaticc - self->co_refc;
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	descr.co_padding    = 0;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	descr.co_argc_min   = self->co_argc_min;
 	descr.co_stackmax   = (uint16_t)(self->co_framesize / sizeof(DeeObject *)) - self->co_localc;
-	descr.co_pad        = 0;
-	descr.co_staticoff  = 0;
+	descr.co_constoff   = 0;
 	descr.co_exceptoff  = 0;
 	descr.co_defaultoff = 0;
 	descr.co_ddioff     = 0;
@@ -1774,7 +1786,7 @@ INTERN WUNUSED NONNULL((1)) int
 		pdesc8->co_refc     = (uint8_t)descr.co_refc;                             /* Dec_Code.co_refc */
 		pdesc8->co_argc_min = (uint8_t)descr.co_argc_min;                         /* Dec_Code.co_argc_min */
 		pdesc8->co_stackmax = (uint8_t)descr.co_stackmax;                         /* Dec_Code.co_stackmax */
-		UNALIGNED_SETLE16(&pdesc8->co_staticoff, (uint16_t)descr.co_staticoff);   /* Dec_Code.co_staticoff */
+		UNALIGNED_SETLE16(&pdesc8->co_constoff, (uint16_t)descr.co_constoff);     /* Dec_Code.co_constoff */
 		UNALIGNED_SETLE16(&pdesc8->co_exceptoff, (uint16_t)descr.co_exceptoff);   /* Dec_Code.co_exceptoff */
 		UNALIGNED_SETLE16(&pdesc8->co_defaultoff, (uint16_t)descr.co_defaultoff); /* Dec_Code.co_defaultoff */
 		UNALIGNED_SETLE16(&pdesc8->co_ddioff, (uint16_t)descr.co_ddioff);         /* Dec_Code.co_ddioff */
@@ -1783,7 +1795,7 @@ INTERN WUNUSED NONNULL((1)) int
 		UNALIGNED_SETLE16(&pdesc8->co_textoff, (uint16_t)descr.co_textoff);       /* Dec_Code.co_textoff */
 
 		/* Create relocations. */
-		if (static_sym && dec_putrelat(code_addr + offsetof(Dec_8BitCode, co_staticoff), DECREL_ABS16, static_sym))
+		if (static_sym && dec_putrelat(code_addr + offsetof(Dec_8BitCode, co_constoff), DECREL_ABS16, static_sym))
 			goto err;
 		if (except_sym && dec_putrelat(code_addr + offsetof(Dec_8BitCode, co_exceptoff), DECREL_ABS16, except_sym))
 			goto err;
@@ -1803,9 +1815,12 @@ INTERN WUNUSED NONNULL((1)) int
 		descr.co_flags      = HTOLE16(descr.co_flags);      /* Dec_Code.co_flags */
 		descr.co_localc     = HTOLE16(descr.co_localc);     /* Dec_Code.co_localc */
 		descr.co_refc       = HTOLE16(descr.co_refc);       /* Dec_Code.co_refc */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		descr.co_staticc    = HTOLE16(descr.co_staticc);    /* Dec_Code.co_staticc */
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		descr.co_argc_min   = HTOLE16(descr.co_argc_min);   /* Dec_Code.co_argc_min */
 		descr.co_stackmax   = HTOLE16(descr.co_stackmax);   /* Dec_Code.co_stackmax */
-		descr.co_staticoff  = HTOLE32(descr.co_staticoff);  /* Dec_Code.co_staticoff */
+		descr.co_constoff   = HTOLE32(descr.co_constoff);   /* Dec_Code.co_constoff */
 		descr.co_exceptoff  = HTOLE32(descr.co_exceptoff);  /* Dec_Code.co_exceptoff */
 		descr.co_defaultoff = HTOLE32(descr.co_defaultoff); /* Dec_Code.co_defaultoff */
 		descr.co_ddioff     = HTOLE32(descr.co_ddioff);     /* Dec_Code.co_ddioff */
@@ -1821,7 +1836,7 @@ INTERN WUNUSED NONNULL((1)) int
 
 		/* Create relocations. */
 		if (static_sym) {
-			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_staticoff), DECREL_ABS32, static_sym))
+			if (dec_putrelat(code_addr + offsetof(Dec_Code, co_constoff), DECREL_ABS32, static_sym))
 				goto err;
 		}
 		if (except_sym) {
