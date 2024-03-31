@@ -277,6 +277,15 @@ PRIVATE struct type_getset tpconst jy_getsets[] = {
 	TYPE_GETTER_F("__refsbyname__", &jy_getrefsbyname, METHOD_FNOREFESCAPE,
 	              "->?M?Dstring?O\n"
 	              "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
+	/* TODO: __argsbyname__ */
+	/* TODO: __defaults__ */
+	/* TODO: __type__ */
+	/* TODO: __operator__ */
+	/* TODO: __operatorname__ */
+	/* TODO: __property__ */
+	/* TODO: __statics__ */
+	/* TODO: __staticsbyname__ */
+	/* TODO: __symbols__ */
 	TYPE_GETSET_END
 };
 
@@ -1938,6 +1947,15 @@ PRIVATE struct type_getset tpconst ji_getsets[] = {
 	TYPE_GETTER_F("__refsbyname__", &ji_getrefsbyname, METHOD_FNOREFESCAPE,
 	              "->?M?Dstring?O\n"
 	              "Alias for ?A__refsbyname__?GFunction though ?#__func__"),
+	/* TODO: __argsbyname__ */
+	/* TODO: __defaults__ */
+	/* TODO: __type__ */
+	/* TODO: __operator__ */
+	/* TODO: __operatorname__ */
+	/* TODO: __property__ */
+	/* TODO: __statics__ */
+	/* TODO: __staticsbyname__ */
+	/* TODO: __symbols__ */
 	TYPE_GETSET_END
 };
 

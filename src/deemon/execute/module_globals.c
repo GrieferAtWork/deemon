@@ -345,7 +345,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 me_contains(ModuleExports *self, DeeObject *key) {
 	bool result;
 	DeeModuleObject *mod = self->me_module;
-	if (!DeeString_Check(key))
+	if (!DeeString_Check(key)) /* TODO: Also allow gid:?Dint instead of only ?Dstring */
 		return_false;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
@@ -411,7 +411,7 @@ me_get(ModuleExports *self, DeeObject *key) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (!DeeString_Check(key))
+	if (!DeeString_Check(key)) /* TODO: Also allow gid:?Dint instead of only ?Dstring */
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
@@ -438,7 +438,7 @@ me_get_f(ModuleExports *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *defl = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &defl))
 		goto err;
-	if (!DeeString_Check(key))
+	if (!DeeString_Check(key)) /* TODO: Also allow gid:?Dint instead of only ?Dstring */
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
@@ -465,7 +465,7 @@ me_del(ModuleExports *__restrict self, DeeObject *__restrict key) {
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (!DeeString_Check(key))
+	if (!DeeString_Check(key)) /* TODO: Also allow gid:?Dint instead of only ?Dstring */
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
@@ -490,7 +490,7 @@ me_set(ModuleExports *__restrict self,
 	int result;
 	DeeModuleObject *mod = self->me_module;
 	struct module_symbol *symbol;
-	if (!DeeString_Check(key))
+	if (!DeeString_Check(key)) /* TODO: Also allow gid:?Dint instead of only ?Dstring */
 		goto err_unknown_key;
 	if (DeeModule_LockSymbols(mod))
 		goto err;

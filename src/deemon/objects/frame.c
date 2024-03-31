@@ -45,9 +45,28 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+/**/
+#include "../execute/function-wrappers.h"
+
 DECL_BEGIN
 
 typedef DeeFrameObject Frame;
+
+#define DOC_ReferenceError \
+	"#tReferenceError{The Frame has continued execution, or was otherwise released}"
+
+PRIVATE ATTR_COLD int DCALL
+err_dead_frame(Frame *__restrict UNUSED(self)) {
+	return DeeError_Throwf(&DeeError_ReferenceError,
+	                       "Frame access was revoked");
+}
+
+PRIVATE ATTR_COLD int DCALL
+err_readonly_frame(Frame *__restrict UNUSED(self)) {
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "The Frame is readonly and cannot be modifed");
+}
+
 
 /* Construct a frame object owned by `owner'
  * The intended use of this is for tracebacks and yield_function-iterators.
@@ -442,7 +461,7 @@ again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame) {
 		DeeFrame_LockEndRead(self);
-		return_none;
+		goto err_dead;
 	}
 	if (!DeeFrame_PLockTryRead(self)) {
 		DeeFrame_LockEndRead(self);
@@ -455,20 +474,10 @@ again:
 	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
+err_dead:
+	err_dead_frame(self);
 err:
 	return NULL;
-}
-
-PRIVATE ATTR_COLD int DCALL
-err_dead_frame(Frame *__restrict UNUSED(self)) {
-	return DeeError_Throwf(&DeeError_ReferenceError,
-	                       "Frame access was revoked");
-}
-
-PRIVATE ATTR_COLD int DCALL
-err_readonly_frame(Frame *__restrict UNUSED(self)) {
-	return DeeError_Throwf(&DeeError_ValueError,
-	                       "The Frame is readonly and cannot be modifed");
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -477,7 +486,7 @@ frame_getcode(Frame *__restrict self) {
 again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
-		goto err_df;
+		goto err_dead;
 	if (!DeeFrame_PLockTryRead(self)) {
 		DeeFrame_LockEndRead(self);
 		if unlikely(DeeFrame_PLockWaitRead(self))
@@ -489,7 +498,7 @@ again:
 	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return (DREF DeeObject *)result;
-err_df:
+err_dead:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 err:
@@ -502,7 +511,7 @@ frame_getpc(Frame *__restrict self) {
 again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
-		goto err_df;
+		goto err_dead;
 	if (!DeeFrame_PLockTryRead(self)) {
 		DeeFrame_LockEndRead(self);
 		if unlikely(DeeFrame_PLockWaitRead(self))
@@ -515,7 +524,7 @@ again:
 	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return DeeInt_NewUInt32(pc);
-err_df:
+err_dead:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 err:
@@ -597,7 +606,7 @@ frame_setpc(Frame *self, DeeObject *value) {
 again:
 	DeeFrame_LockRead(self);
 	if unlikely(!self->f_frame)
-		goto err_df;
+		goto err_dead;
 	if (!DeeFrame_PLockTryRead(self)) {
 		DeeFrame_LockEndRead(self);
 		if unlikely(DeeFrame_PLockWaitRead(self))
@@ -608,7 +617,7 @@ again:
 	DeeFrame_PLockEndRead(self);
 	DeeFrame_LockEndRead(self);
 	return 0;
-err_df:
+err_dead:
 	DeeFrame_LockEndRead(self);
 	err_dead_frame(self);
 err:
@@ -635,6 +644,403 @@ err:
 	return NULL;
 }
 
+/* @return: 1 : Failure (no frame present)
+ * @return: 0 : Succes
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_lockread_frame_for_bound(Frame *__restrict self) {
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		return 1;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	return 0;
+err:
+	return -1;
+}
+
+/* @return: 0 : Succes
+ * @return: -1: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+frame_lockread_frame(Frame *__restrict self) {
+	int result = frame_lockread_frame_for_bound(self);
+	if unlikely(result > 0)
+		result = err_dead_frame(self);
+	return result;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+frame_lockendread_frame(Frame *__restrict self) {
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_lockwrite_frame(Frame *__restrict self) {
+	if unlikely(!(self->f_flags & DEEFRAME_FWRITABLE))
+		return err_readonly_frame(self);
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		return err_dead_frame(self);
+	}
+	if (!DeeFrame_PLockTryWrite(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitWrite(self))
+			goto err;
+		goto again;
+	}
+	return 0;
+err:
+	return -1;
+
+}
+
+PRIVATE NONNULL((1)) void DCALL
+frame_lockendwrite_frame(Frame *__restrict self) {
+	DeeFrame_PLockEndWrite(self);
+	DeeFrame_LockEndRead(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_thisarg(Frame *__restrict self) {
+	DREF DeeObject *result;
+	if unlikely(frame_lockread_frame(self))
+		goto err;
+	if unlikely(!(self->f_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL))
+		goto err_unlock_unbound;
+	result = self->f_frame->cf_this;
+	if unlikely(!result)
+		goto err_unlock_unbound;
+	Dee_Incref(result);
+	frame_lockendread_frame(self);
+	return result;
+err_unlock_unbound:
+	frame_lockendread_frame(self);
+	err_unbound_attribute_string(&DeeFrame_Type, "__thisarg__");
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_bound_thisarg(Frame *__restrict self) {
+	bool is_bound;
+	int temp = frame_lockread_frame_for_bound(self);
+	if (temp > 0)
+		return 0;
+	if unlikely(temp)
+		goto err;
+	is_bound = (self->f_frame->cf_func->fo_code->co_flags & CODE_FTHISCALL) != 0 &&
+	           (self->f_frame->cf_this != NULL);
+	frame_lockendread_frame(self);
+	return is_bound ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_return(Frame *__restrict self) {
+	DREF DeeObject *result;
+	if unlikely(frame_lockread_frame(self))
+		goto err;
+	result = self->f_frame->cf_result;
+	if unlikely(!result)
+		goto err_unlock_unbound;
+	Dee_Incref(result);
+	frame_lockendread_frame(self);
+	return result;
+err_unlock_unbound:
+	frame_lockendread_frame(self);
+	err_unbound_attribute_string(&DeeFrame_Type, "__return__");
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_bound_return(Frame *__restrict self) {
+	bool is_bound;
+	int temp = frame_lockread_frame_for_bound(self);
+	if (temp > 0)
+		return 0;
+	if unlikely(temp)
+		goto err;
+	is_bound = (self->f_frame->cf_result != NULL);
+	frame_lockendread_frame(self);
+	return is_bound ? 1 : 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_del_return(Frame *__restrict self) {
+	DREF DeeObject *old_result;
+	if unlikely(frame_lockwrite_frame(self))
+		goto err;
+	old_result = self->f_frame->cf_result;
+	self->f_frame->cf_result = NULL;
+	frame_lockendwrite_frame(self);
+	Dee_XDecref(old_result);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+frame_set_return(Frame *__restrict self, DeeObject *value) {
+	DREF DeeObject *old_result;
+	if unlikely(frame_lockwrite_frame(self))
+		goto err;
+	Dee_Incref(value);
+	old_result = self->f_frame->cf_result;
+	self->f_frame->cf_result = value;
+	frame_lockendwrite_frame(self);
+	Dee_XDecref(old_result);
+	return 0;
+err:
+	return -1;
+}
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frame_bound_frame(Frame *__restrict self) {
+	return atomic_read(&self->f_frame) != NULL ? 1 : 0;
+}
+
+#define frame_bound_function_statics frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_function_statics(Frame *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = DeeFunction_GetStaticsWrapper(func);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+
+#define frame_bound_function_refs frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_function_refs(Frame *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = DeeRefVector_NewReadonly((DeeObject *)func,
+	                                  func->fo_code->co_refc,
+	                                  func->fo_refv);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+
+#define frame_bound_function_kwds frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_function_kwds(Frame *__restrict self) {
+	DeeCodeObject *code;
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	code = func->fo_code;
+	if unlikely(!code->co_keywords)
+		goto err_unbound_func;
+	result = DeeRefVector_NewReadonly((DeeObject *)code,
+	                                  (size_t)code->co_argc_max,
+	                                  (DeeObject *const *)code->co_keywords);
+	Dee_Decref_unlikely(func);
+	return result;
+err_unbound_func:
+	Dee_Decref_unlikely(func);
+	err_unbound_attribute_string(&DeeFrame_Type, "__kwds__");
+err:
+	return NULL;
+err_dead:
+	err_dead_frame(self);
+	goto err;
+}
+
+#define frame_bound_function_refsbyname frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_function_refsbyname(Frame *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = DeeFunction_GetRefsByNameWrapper(func);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+
+#define frame_bound_function_staticsbyname frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_function_staticsbyname(Frame *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = DeeFunction_GetStaticsByNameWrapper(func);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getdefaults(DeeCodeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getconstants(DeeCodeObject *__restrict self);
+
+#define frame_bound_code_defaults frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_code_defaults(DeeFrameObject *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = code_getdefaults(func->fo_code);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+
+#define frame_bound_code_constants frame_bound_frame
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frame_get_code_constants(DeeFrameObject *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFunctionObject *func;
+again:
+	DeeFrame_LockRead(self);
+	if unlikely(!self->f_frame) {
+		DeeFrame_LockEndRead(self);
+		goto err_dead;
+	}
+	if (!DeeFrame_PLockTryRead(self)) {
+		DeeFrame_LockEndRead(self);
+		if unlikely(DeeFrame_PLockWaitRead(self))
+			goto err;
+		goto again;
+	}
+	func = self->f_frame->cf_func;
+	Dee_Incref(func);
+	DeeFrame_PLockEndRead(self);
+	DeeFrame_LockEndRead(self);
+	result = code_getconstants(func->fo_code);
+	Dee_Decref_unlikely(func);
+	return result;
+err_dead:
+	err_dead_frame(self);
+err:
+	return NULL;
+}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+
 PRIVATE struct type_getset tpconst frame_getsets[] = {
 	TYPE_GETTER("location", &frame_getlocation,
 	            "->?S?T4?X2?Dstring?N?X2?Dint?N?X2?Dint?N?X2?Dstring?N\n"
@@ -658,52 +1064,103 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	            "->?X2?Dstring?N\n"
 	            "The name of this Frame's function, or ?N when indeterminate"),
 	TYPE_GETTER("func", &frame_getfunc,
-	            "->?X2?DFunction?N\n"
-	            "Returns the function that is referenced by @this Frame, or ?N if not available"),
+	            "->?DFunction\n"
+	            DOC_ReferenceError
+	            "Returns the function that is referenced by @this Frame"),
+	TYPE_GETTER("__func__", &frame_getfunc,
+	            "->?DFunction\n"
+	            DOC_ReferenceError
+	            "Alias for ?#func"),
 	TYPE_GETTER("__code__", &frame_getcode,
 	            "->?Ert:Code\n"
-	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
+	            DOC_ReferenceError
 	            "The code object that is being executed"),
 	TYPE_GETSET("__pc__", &frame_getpc, NULL, &frame_setpc,
 	            "->?Dint\n"
-	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
+	            DOC_ReferenceError
 	            "#tValueError{Attempted to set PC within a read-only Frame}"
 	            "The current program counter"),
 	TYPE_GETTER("__sp__", &frame_getsp_obj,
 	            "->?Dint\n"
-	            "#tReferenceError{The Frame has continued execution, or was otherwise released}"
+	            DOC_ReferenceError
 	            "#tValueError{The stack depth was undefined and could not be determined}"
 	            "Get the current stack depth (same as ${##this.__stack__})\n"
 	            "To modify this value, use ?#__stack__ to append/pop objects"),
-	/* TODO: __stack__ (read-write, custom, modifiable & resizable, sequence-like object)
-	 * TODO: __args__ (readonly, custom, sequence-like object for accessing arguments)
-	 *                 -> reading is the same as it would for the `push arg ...' instruction
-	 * TODO: __thisarg__ (readonly) access to the this argument
-	 * TODO: __return__ (read-write) access to the return register
-	 * TODO: __locals__ (custom, modifiable, sequence-like object)
-	 * TODO: __variables__ (A special sequence that combines `__locals__' with `__stack__',
-	 *                      allowing for universal indices to identify objects with local
-	 *                      life-time, which are then returned by other members, such as `__names__')
-	 *                      When the stack depth is unknown, simply return `__locals__'
-	 * TODO: __names__ (Access to a mapping-like object for converting local/stack
-	 *                  names to indices into the `__variables__' sequence)
-	 *                  >> local vars = f.__variables__;
-	 *                  >> for (local name, addr: f.__names__) {
-	 *                  >>     print "{}@{} = {}".format({
-	 *                  >>         name,
-	 *                  >>         addr,
-	 *                  >>         vars[addr] is bound ? repr vars[addr] : "<unbound>"
-	 *                  >>     });
-	 *                  >> }
-	 * TODO: __symbols__ (custom, modifiable (for some elements), mapping-like object)
-	 *                 -> By using DDI information for names of locals/stack symbols,
-	 *                    and combining this information with knowledge of argument
-	 *                    names, as well as adding special cases for `this' and `return',
-	 *                    provide access to symbols visible within user-code via their
-	 *                    individual names.
-	 *                    Resolution name order here is (from most->least visible):
-	 *                    LOCALS/STACK (DDI) -> ARGUMENTS -> STATIC/CONST -> REF -> `return' + `this'
-	 */
+	TYPE_GETTER_BOUND("__thisarg__", &frame_get_thisarg, &frame_bound_thisarg,
+	                  "->?O\n"
+	                  DOC_ReferenceError
+	                  "#tUnboundAttribute{The associated code doesn't take a this-argument}"
+	                  "Returns the special $this argument linked to @this frame"),
+	TYPE_GETSET_BOUND("__return__",
+	                  &frame_get_return, &frame_del_return, &frame_set_return, &frame_bound_return,
+	                  "->?O\n"
+	                  DOC_ReferenceError
+	                  "#tValueError{The Frame is readonly}"
+	                  "#tUnboundAttribute{No return value is assigned at the moment}"
+	                  "Read-write access to the currently set frame return value"),
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	TYPE_GETTER_BOUND("__statics__", &frame_get_function_statics, &frame_bound_function_statics,
+	                  "->?S?O\n"
+	                  DOC_ReferenceError
+	                  "Alias for ?A__statics__?DFunction through ?#func"),
+	TYPE_GETTER_BOUND("__refs__", &frame_get_function_refs, &frame_bound_function_refs,
+	                  "->?S?O\n"
+	                  DOC_ReferenceError
+	                  "Alias for ?A__refs__?DFunction through ?#func"),
+	TYPE_GETTER_BOUND("__kwds__", &frame_get_function_kwds, &frame_bound_function_kwds,
+	                  "->?S?Dstring\n"
+	                  DOC_ReferenceError
+	                  "#tUnboundAttribute{The associated ?#__code__ doesn't have keyword argument support}"
+	                  "Alias for ?A__kwds__?DFunction through ?#func"),
+	TYPE_GETTER_BOUND("__refsbyname__", &frame_get_function_refsbyname, &frame_bound_function_refsbyname,
+	                  "->?M?X2?Dstring?Dint?O\n"
+	                  DOC_ReferenceError
+	                  "Alias for ?A__refsbyname__?DFunction through ?#func"),
+	TYPE_GETTER_BOUND("__staticsbyname__", &frame_get_function_staticsbyname, &frame_bound_function_staticsbyname,
+	                  "->?M?X2?Dstring?Dint?O\n"
+	                  DOC_ReferenceError
+	                  "Alias for ?A__staticsbyname__?DFunction through ?#func"),
+	TYPE_GETTER("__stack__", &DeeFrame_GetStackWrapper,
+	            "->?S?O\n"
+	            "Returns (possibly) resizable (up to a certain limit), (possibly) mutable "
+	            /**/ "sequence that can be used to read/write the values of the stack"),
+	TYPE_GETTER("__args__", &DeeFrame_GetArgsWrapper,
+	            "->?S?O\n"
+	            "Returns a read-only sequence for accessing arguments passed to this frame. "
+	            /**/ "Use the 0-based index of the argument with this sequence to access an "
+	            /**/ "argument the same way the #C{push arg <n>} instruction would"),
+	TYPE_GETTER("__locals__", &DeeFrame_GetLocalsWrapper,
+	            "->?S?O\n"
+	            "Returns fixed-length, (possibly) mutable sequence that can be "
+	            /**/ "used to read/write the values of local variables. Note that "
+	            /**/ "depending on optimization, some local variables may not exist "
+	            /**/ "even when they should still be in-scope, and that some local "
+	            /**/ "variables may appear already be assigned prior to initialization "
+	            /**/ "as a result of local variable re-use"),
+	TYPE_GETTER("__argsbyname__", &DeeFrame_GetArgsByNameWrapper,
+	            "->?M?X2?Dstring?Dint?O\n"
+	            "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
+	TYPE_GETTER("__variablesbyname__", &DeeFrame_GetVariablesByNameWrapper,
+	            "->?M?X2?Dstring?Dint?O\n"
+	            "Combine ?#__locals__ and ?#__stack__ with debug information to form a writable "
+	            /**/ "mapping that can be used to manipulate the values of named locals and stack "
+	            /**/ "locations. (requires debug information to be present)"),
+	TYPE_GETTER("__symbols__", &DeeFrame_GetSymbolsByNameWrapper,
+	            "->?M?X2?Dstring?Dint?O\n"
+	            "The combination of ?#__refsbyname__, ?#__staticsbyname__, ?#__argsbyname__ "
+	            /**/ "and ?#__variablesbyname__, allowing access to all named symbol. "
+	            /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_BOUND_F("__defaults__", &frame_get_code_defaults, &frame_bound_code_defaults,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    DOC_ReferenceError
+	                    "Alias for :Function.__defaults__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__constants__", &frame_get_code_constants, &frame_bound_code_constants,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    DOC_ReferenceError
+	                    "Alias for :Function.__constants__ though ?#__func__"),
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETSET_END
 };
 

@@ -672,6 +672,9 @@
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
+			<Filter>src\execute</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\file-type-operators.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
@@ -1074,6 +1077,9 @@
 			<Filter>src\execute</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\exec.c">
+			<Filter>src\execute</Filter>
+		</ClCompile>
+		<ClCompile Include="..\src\deemon\execute\function-wrappers.c">
 			<Filter>src\execute</Filter>
 		</ClCompile>
 		<ClCompile Include="..\src\deemon\execute\function.c">

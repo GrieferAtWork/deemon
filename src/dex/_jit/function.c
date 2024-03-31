@@ -1220,18 +1220,20 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	TYPE_GETTER_F("__text__", &jf_gettext, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Returns the source text executed by @this function"),
-	/* TODO: __default__ */
 	TYPE_GETTER("__refs__", &jf_getrefs,
 	            "->?S?O\n"
 	            "Returns a sequence of all of the references used by @this function"),
 	TYPE_GETTER("__refsbyname__", &jf_getrefsbyname,
 	            "->?M?Dstring?O\n"
 	            "Similar to ?#__refs__, but return a mapping from symbol name to object"),
+	/* TODO: __defaults__ */
 	/* TODO: __type__ */
 	/* TODO: __operator__ */
 	/* TODO: __operatorname__ */
 	/* TODO: __property__ */
-	/* etc... */
+	/* TODO: __statics__ */
+	/* TODO: __staticsbyname__ */
+	/* TODO: __symbols__ */
 	TYPE_GETTER_F("hasvarargs", &jf_hasvarargs, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Check if @this function accepts variable arguments as overflow"),

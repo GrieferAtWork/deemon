@@ -1315,15 +1315,15 @@ code_bound_kwds(DeeCodeObject *__restrict self) {
 	return self->co_keywords ? 1 : 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-code_getdefault(DeeCodeObject *__restrict self) {
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+code_getdefaults(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
 	                                (size_t)(self->co_argc_max - self->co_argc_min),
 	                                self->co_defaultv);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getconstants(DeeCodeObject *__restrict self) {
 	ASSERT(self->co_argc_max >= self->co_argc_min);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
@@ -1645,7 +1645,7 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	                    "Returns an integer describing the kind if @this code is part of a property or getset, "
 	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
 	                    /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
-	TYPE_GETTER_F("__default__", &code_getdefault, METHOD_FCONSTCALL,
+	TYPE_GETTER_F("__defaults__", &code_getdefaults, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Access to the default values of arguments"),
 	TYPE_GETTER_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,

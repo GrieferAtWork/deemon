@@ -233,6 +233,7 @@
 		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />
+		<ClInclude Include="..\src\deemon\execute\function-wrappers.h" />
 		<ClInclude Include="..\src\deemon\objects\file-type-operators.h" />
 		<ClInclude Include="..\src\deemon\objects\float-parse.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\float-print.c.inl" />
@@ -369,6 +370,7 @@
 		<ClCompile Include="..\src\deemon\execute\dec.c" />
 		<ClCompile Include="..\src\deemon\execute\dex.c" />
 		<ClCompile Include="..\src\deemon\execute\exec.c" />
+		<ClCompile Include="..\src\deemon\execute\function-wrappers.c" />
 		<ClCompile Include="..\src\deemon\execute\function.c" />
 		<ClCompile Include="..\src\deemon\execute\interactive-module.c" />
 		<ClCompile Include="..\src\deemon\execute\modpath.c" />

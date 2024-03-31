@@ -80,7 +80,7 @@ try {
 	assert x2.__statics__ == {};
 	assert y2.__statics__ == {};
 } catch (NotImplemented from errors) {
-	// TODO: Remove this once `function_get_statics()' was been implemented
+	// TODO: Remove this try-catch once `function_get_statics()' was been implemented
 }
 
 /* Explicitly assert that the compiler don't encode functions with static

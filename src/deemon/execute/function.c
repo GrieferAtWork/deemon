@@ -47,6 +47,9 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+/**/
+#include "function-wrappers.h"
+
 DECL_BEGIN
 
 #ifndef NDEBUG
@@ -471,34 +474,6 @@ function_get_refs(Function *__restrict self) {
 	                                self->fo_refv);
 }
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-function_get_statics(Function *__restrict self) {
-#if 1
-	(void)self;
-	/* TODO: Need a custom sequence wrapper that handles ITER_DONE as alias for NULL (unbound),
-	 *       and does `DeeFutex_WakeAll()' whenever an item is written to. */
-	/* TODO: Once this is implemented, remove the hack from util/test/compiler-static-variables.dee */
-	DeeError_NOTIMPLEMENTED();
-	return NULL;
-#else
-	DeeCodeObject *code = self->fo_code;
-	ASSERT(code->co_refstaticc >= code->co_refc);
-#ifdef CONFIG_NO_THREADS
-	return DeeRefVector_New((DeeObject *)self,
-	                        code->co_refstaticc - code->co_refc,
-	                        self->fo_refv + code->co_refc,
-	                        true);
-#else /* CONFIG_NO_THREADS */
-	return DeeRefVector_New((DeeObject *)self,
-	                        code->co_refstaticc - code->co_refc,
-	                        self->fo_refv + code->co_refc,
-	                        &self->fo_reflock);
-#endif /* !CONFIG_NO_THREADS */
-#endif
-}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_kwds(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
@@ -677,6 +652,20 @@ err:
 	return -1;
 }
 
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getdefaults(DeeCodeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL code_getconstants(DeeCodeObject *__restrict self);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_defaults(DeeFunctionObject *__restrict self) {
+	return code_getdefaults(self->fo_code);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_constants(DeeFunctionObject *__restrict self) {
+	return code_getconstants(self->fo_code);
+}
+
+
 DOC_REF(code_optimize_doc);
 DOC_REF(code_optimized_doc);
 
@@ -747,19 +736,35 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	              "->?S?O\n"
 	              "Returns a sequence of all of the references used by @this function"),
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	TYPE_GETTER_F("__statics__", &function_get_statics, METHOD_FCONSTCALL,
+	TYPE_GETTER_F("__statics__", &DeeFunction_GetStaticsWrapper, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Returns a (writable) sequence of all of the static variables that appear in @this function"),
+	TYPE_GETTER_F("__refsbyname__", &DeeFunction_GetRefsByNameWrapper, METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Returns a read-only mapping to access ?#__refs__ by their name "
+	              /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_F("__staticsbyname__", &DeeFunction_GetStaticsByNameWrapper, METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Returns a writable mapping to access ?#__statics__ by their name "
+	              /**/ "(requires debug information to be present)"),
+	TYPE_GETTER_F("__symbols__", &DeeFunction_GetSymbolsByNameWrapper, METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "The combination of ?#__refsbyname__ and ?#__staticsbyname__, allowing "
+	              /**/ "access to all named symbol that need to maintain their value across "
+	              /**/ "different calls to ?. (requires debug information to be present)"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-	/* TODO: __refsbyname__->?M?Dstring?O     (use DDI information to access references variables by name) */
-	/* TODO: __staticsbyname__->?M?Dstring?O  (use DDI information to access static variables by name) */
-	/* TODO: __symbolsbyname__->?M?Dstring?O  (combination of __staticsbyname__ and __refsbyname__) */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Returns a sequence of keyword argument names accepted by @this function\n"
 	                    "If @this function doesn't accept keyword arguments, throw :UnboundAttribute"),
+	TYPE_GETTER_F("__defaults__", &function_get_code_defaults, METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Access to the default values of arguments"),
+	TYPE_GETTER_F("__constants__", &function_get_code_constants, METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Access to the constants of @this code object"),
 	TYPE_GETSET_END
 };
 
@@ -1603,7 +1608,17 @@ yf_get_refs(YFunction *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_statics(YFunction *__restrict self) {
-	return function_get_statics(self->yf_func);
+	return DeeFunction_GetStaticsWrapper(self->yf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yf_get_refsbyname(YFunction *__restrict self) {
+	return DeeFunction_GetRefsByNameWrapper(self->yf_func);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yf_get_staticsbyname(YFunction *__restrict self) {
+	return DeeFunction_GetStaticsByNameWrapper(self->yf_func);
 }
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
@@ -1621,6 +1636,16 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 yf_get_sizeof(YFunction *__restrict self) {
 	size_t size = DeeYieldFunction_Sizeof(self->yf_argc);
 	return DeeInt_NewSize(size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yf_get_code_defaults(YFunction *__restrict self) {
+	return code_getdefaults(self->yf_func->fo_code);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yf_get_code_constants(YFunction *__restrict self) {
+	return code_getconstants(self->yf_func->fo_code);
 }
 
 PRIVATE struct type_getset tpconst yf_getsets[] = {
@@ -1674,12 +1699,40 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?S?O\n"
 	              "Alias for :Function.__statics__ though ?#__func__"),
+	TYPE_GETTER_F("__refsbyname__", &yf_get_refsbyname,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Alias for :Function.__refsbyname__ though ?#__func__"),
+	TYPE_GETTER_F("__staticsbyname__", &yf_get_staticsbyname,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Alias for :Function.__staticsbyname__ though ?#__func__"),
+	TYPE_GETTER_F("__argsbyname__", &DeeYieldFunction_GetArgsByNameWrapper,
+	              METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
+	TYPE_GETTER_F("__symbols__", &DeeYieldFunction_GetSymbolsByNameWrapper,
+	              METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "The combination of ?#__refsbyname__, ?#__staticsbyname__ and ?#__argsbyname__, "
+	              /**/ "allowing access to all named symbol that need to maintain their value across "
+	              /**/ "different calls to ?. (requires debug information to be present in the case "
+	              /**/ "of ?#__refsbyname__, ?#__staticsbyname__, and keyword argument support in the "
+	              /**/ "case of ?#__argsbyname__)"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &yf_get_kwds, &yf_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for :Function.__kwds__ though ?#__func__"),
+	TYPE_GETTER_F("__defaults__", &yf_get_code_defaults,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Alias for :Function.__defaults__ though ?#__func__"),
+	TYPE_GETTER_F("__constants__", &yf_get_code_constants,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?S?O\n"
+	              "Alias for :Function.__constants__ though ?#__func__"),
 	TYPE_GETTER_F("__sizeof__", &yf_get_sizeof,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint"),
@@ -2256,15 +2309,15 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
 yfi_get_frame(YFIterator *__restrict self) {
-	return DeeFrame_NewReferenceWithLock((DeeObject *)self,
-	                                     &self->yi_frame,
-	                                     DEEFRAME_FREADONLY |
-	                                     DEEFRAME_FUNDEFSP |
-	                                     DEEFRAME_FSHRLOCK |
-	                                     DEEFRAME_FRECLOCK,
-	                                     &self->yi_lock);
+	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock((DeeObject *)self,
+	                                                            &self->yi_frame,
+	                                                            DEEFRAME_FWRITABLE | /* DEEFRAME_FREADONLY */
+	                                                            DEEFRAME_FUNDEFSP |
+	                                                            DEEFRAME_FSHRLOCK |
+	                                                            DEEFRAME_FRECLOCK,
+	                                                            &self->yi_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
@@ -2342,13 +2395,131 @@ yfi_get_statics(YFIterator *__restrict self) {
 	func = self->yi_func->yf_func;
 	Dee_Incref(func);
 	DeeYieldFunctionIterator_LockEndRead(self);
-	result = function_get_statics(func);
+	result = DeeFunction_GetStaticsWrapper(func);
 	Dee_Decref(func);
 	return result;
 err:
 	return NULL;
 }
 #define yfi_bound_statics yfi_bound_yfunc
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_refsbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF Function *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	if unlikely(!self->yi_func) {
+		DeeYieldFunctionIterator_LockEndRead(self);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__refsbyname__");
+		goto err;
+	}
+	func = self->yi_func->yf_func;
+	Dee_Incref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	result = DeeFunction_GetRefsByNameWrapper(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+#define yfi_bound_refsbyname yfi_bound_yfunc
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_staticsbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF Function *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	if unlikely(!self->yi_func) {
+		DeeYieldFunctionIterator_LockEndRead(self);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__staticsbyname__");
+		goto err;
+	}
+	func = self->yi_func->yf_func;
+	Dee_Incref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	result = DeeFunction_GetStaticsByNameWrapper(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+#define yfi_bound_staticsbyname yfi_bound_yfunc
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_argsbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeYieldFunctionObject *func;
+	if unlikely(DeeYieldFunctionIterator_LockRead(self))
+		goto err;
+	if unlikely(!self->yi_func) {
+		DeeYieldFunctionIterator_LockEndRead(self);
+		err_unbound_attribute_string(&DeeYieldFunctionIterator_Type, "__argsbyname__");
+		goto err;
+	}
+	func = self->yi_func;
+	Dee_Incref(func);
+	DeeYieldFunctionIterator_LockEndRead(self);
+	result = DeeYieldFunction_GetArgsByNameWrapper(func);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+#define yfi_bound_argsbyname yfi_bound_yfunc
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_locals(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetLocalsWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_stack(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetStackWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_variablesbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetVariablesByNameWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_symbols(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetSymbolsByNameWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2610,6 +2781,36 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_code_defaults(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF YFunction *func;
+	func = yfi_get_func_reference(self, "__defaults__");
+	if unlikely(!func)
+		goto err;
+	result = code_getdefaults(func->yf_func->fo_code);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+#define yfi_bound_code_defaults yfi_bound_yfunc
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_code_constants(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF YFunction *func;
+	func = yfi_get_func_reference(self, "__constants__");
+	if unlikely(!func)
+		goto err;
+	result = code_getconstants(func->yf_func->fo_code);
+	Dee_Decref(func);
+	return result;
+err:
+	return NULL;
+}
+#define yfi_bound_code_constants yfi_bound_yfunc
+
 
 PRIVATE struct type_getset tpconst yfi_getsets[] = {
 #ifndef CONFIG_NO_THREADS
@@ -2650,6 +2851,34 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?O\n"
 	                    "Returns a writable sequence of all of the static variables that appear in the function"),
+	TYPE_GETTER_BOUND_F("__refsbyname__", &yfi_get_refsbyname, &yfi_bound_refsbyname,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?M??X2Dstring?Dint?O\n"
+	                    "Alias for ?A__refsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+	TYPE_GETTER_BOUND_F("__staticsbyname__", &yfi_get_staticsbyname, &yfi_bound_staticsbyname,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?M??X2Dstring?Dint?O\n"
+	                    "Alias for ?A__staticsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+	TYPE_GETTER_BOUND_F("__argsbyname__", &yfi_get_argsbyname, &yfi_bound_argsbyname,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?M??X2Dstring?Dint?O\n"
+	                    "Alias for ?A__argsbyname__?Ert:YieldFunction though ?#__yfunc__"),
+	TYPE_GETTER_F("__locals__", &yfi_get_frame_locals,
+	              METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Alias for ?A__locals__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_F("__stack__", &yfi_get_frame_stack,
+	              METHOD_FCONSTCALL,
+	              "->?S?O\n"
+	              "Alias for ?A__stack__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_F("__variablesbyname__", &yfi_get_frame_variablesbyname,
+	              METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Alias for ?A__variablesbyname__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_F("__symbols__", &yfi_get_frame_symbols,
+	              METHOD_FCONSTCALL,
+	              "->?M??X2Dstring?Dint?O\n"
+	              "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -2694,6 +2923,16 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
 	                    "Alias for ?A__property__?DFunction though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__defaults__", &yfi_get_code_defaults, &yfi_bound_code_defaults,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__defaults__ though ?#__func__"),
+	TYPE_GETTER_BOUND_F("__constants__", &yfi_get_code_constants, &yfi_bound_code_constants,
+	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	                    "->?S?O\n"
+	                    "#t{UnboundAttribute}"
+	                    "Alias for :Function.__constants__ though ?#__func__"),
 	TYPE_GETSET_END
 };
 
