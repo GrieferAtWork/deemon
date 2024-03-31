@@ -67,14 +67,14 @@ class Overload: Callable {
 
 	@@Register a new overload to-be considered for invocation
 	public function register(func: Function): Overload {
-		__stack local code = func.__code__;
-		__stack local min = code.__argc_min__;
-		__stack local max = code.__argc_max__;
+		__stack local min = func.__argc_min__;
+		__stack local max = func.__argc_max__;
+		__stack local overloads = this.overloads;
 		__stack local count = #overloads;
 		if (max >= count) {
 			overloads.resize(max + 1, invalidOverload);
-			__stack local primCode = primary.__code__;
-			overloads.fill(primCode.__argc_min__, primCode.__argc_max__ + 1, primary);
+			__stack local primary = this.primary;
+			overloads.fill(primary.__argc_min__, primary.__argc_max__ + 1, primary);
 		}
 		for (__stack local i: [min:max + 1])
 			overloads[i] = func;

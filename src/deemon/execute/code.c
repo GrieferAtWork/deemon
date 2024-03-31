@@ -1193,7 +1193,7 @@ code_fini(DeeCodeObject *__restrict self) {
 		Dee_hostasm_code_data_destroy(self->co_hostasm.haco_data);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 
-	ASSERT(self->co_argc_max >= self->co_argc_min);
+	ASSERT(self->co_argc_min <= self->co_argc_max);
 	/* Clear default argument objects. */
 	if (self->co_argc_max != self->co_argc_min) {
 		uint16_t count = self->co_argc_max - self->co_argc_min;
@@ -1300,24 +1300,25 @@ restart:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_get_kwds(DeeCodeObject *__restrict self) {
-	ASSERT(self->co_argc_max >= self->co_argc_min);
 	if likely(self->co_keywords) {
 		return DeeRefVector_NewReadonly((DeeObject *)self,
 		                                (size_t)self->co_argc_max,
 		                                (DeeObject *const *)self->co_keywords);
 	}
+	if (self->co_argc_max == 0)
+		return_empty_seq;
 	err_unbound_attribute_string(&DeeCode_Type, STR___kwds__);
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 code_bound_kwds(DeeCodeObject *__restrict self) {
-	return self->co_keywords ? 1 : 0;
+	return (self->co_keywords || self->co_argc_max == 0) ? 1 : 0;
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getdefaults(DeeCodeObject *__restrict self) {
-	ASSERT(self->co_argc_max >= self->co_argc_min);
+	ASSERT(self->co_argc_min <= self->co_argc_max);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
 	                                (size_t)(self->co_argc_max - self->co_argc_min),
 	                                self->co_defaultv);
@@ -1325,7 +1326,7 @@ code_getdefaults(DeeCodeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 code_getconstants(DeeCodeObject *__restrict self) {
-	ASSERT(self->co_argc_max >= self->co_argc_min);
+	ASSERT(self->co_argc_min <= self->co_argc_max);
 	return DeeRefVector_NewReadonly((DeeObject *)self,
 	                                self->co_constc,
 	                                self->co_constv);
@@ -1494,33 +1495,33 @@ PRIVATE struct type_member tpconst code_members[] = {
 	TYPE_MEMBER_FIELD_DOC(STR___module__, STRUCT_OBJECT, offsetof(DeeCodeObject, co_module),
 	                      "->?DModule"),
 	TYPE_MEMBER_FIELD_DOC("__argc_min__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_min),
-	                      "Min amount of arguments required to execute @this code"),
+	                      "Min amount of arguments required to execute @this ?."),
 	TYPE_MEMBER_FIELD_DOC("__argc_max__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(DeeCodeObject, co_argc_max),
-	                      "Max amount of arguments accepted by @this code (excluding a varargs or varkwds argument)"),
+	                      "Max amount of arguments accepted by @this ?. (excluding a varargs or varkwds argument)"),
 	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FYIELDING,
-	                         "Check if @this code object is for a yield-function"),
+	                         "Check if @this ?. is for a yield-function"),
 	TYPE_MEMBER_BITFIELD_DOC("iscopyable", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCOPYABLE,
-	                         "Check if execution frames of @this code object can be copied"),
-	TYPE_MEMBER_BITFIELD_DOC("hasassembly", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FASSEMBLY,
-	                         "Check if assembly of @this code object is executed in safe-mode"),
-	TYPE_MEMBER_BITFIELD_DOC("islenient", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FLENIENT,
-	                         "Check if the runtime stack allocation allows for leniency"),
+	                         "Check if execution frames of @this ?. can be copied"),
 	TYPE_MEMBER_BITFIELD_DOC("hasvarargs", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARARGS,
-	                         "Check if @this code object accepts variable arguments as overflow"),
+	                         "Check if @this ?. accepts variable arguments as overflow"),
 	TYPE_MEMBER_BITFIELD_DOC("hasvarkwds", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FVARKWDS,
-	                         "Check if @this code object accepts variable keyword arguments as overflow"),
-	TYPE_MEMBER_BITFIELD_DOC("isthiscall", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FTHISCALL,
-	                         "Check if @this code object requires a hidden leading this-argument"),
-	TYPE_MEMBER_BITFIELD_DOC("hasheapframe", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FHEAPFRAME,
+	                         "Check if @this ?. accepts variable keyword arguments as overflow"),
+	TYPE_MEMBER_BITFIELD_DOC("__isthiscall__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FTHISCALL,
+	                         "Check if @this ?. takes an extra leading $this-argument"),
+	TYPE_MEMBER_BITFIELD_DOC("__hasassembly__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FASSEMBLY,
+	                         "Check if assembly of @this ?. is executed in safe-mode"),
+	TYPE_MEMBER_BITFIELD_DOC("__islenient__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FLENIENT,
+	                         "Check if the runtime stack allocation allows for leniency"),
+	TYPE_MEMBER_BITFIELD_DOC("__hasheapframe__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FHEAPFRAME,
 	                         "Check if the runtime stack-frame must be allocated on the heap"),
-	TYPE_MEMBER_BITFIELD_DOC("hasfinally", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FFINALLY,
+	TYPE_MEMBER_BITFIELD_DOC("__hasfinally__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FFINALLY,
 	                         "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
-	                         "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in "
-	                         "the user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
-	TYPE_MEMBER_BITFIELD_DOC("isconstructor", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCONSTRUCTOR,
-	                         "True for class constructor code objects. - When set, don't include the this-argument in "
-	                         "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
-	                         "causes some sort of exception to be thrown"),
+	                         "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in the "
+	                         /**/ "user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
+	TYPE_MEMBER_BITFIELD_DOC("__isconstructor__", STRUCT_CONST, DeeCodeObject, co_flags, CODE_FCONSTRUCTOR,
+	                         "True for class constructor ?. objects. - When set, don't include the this-argument in "
+	                         /**/ "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
+	                         /**/ "causes some sort of exception to be thrown"),
 #ifdef CONFIG_HAVE_CODE_METRICS
 	TYPE_MEMBER_FIELD_DOC("__stat_functions__", STRUCT_CONST | STRUCT_SIZE_T,
 	                      offsetof(DeeCodeObject, co_metrics.com_functions),
@@ -1605,31 +1606,31 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns the name of @this code object (s.a. ?A__name__?DFunction)"),
+	                    "Returns the name of @this ?. (s.a. ?A__name__?DFunction)"),
 	TYPE_GETTER_F(STR___doc__, &code_get_doc,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this code object, or ?N if unknown (s.a. ?A__doc__?DFunction)"),
+	              "Returns the documentation string of @this ?., or ?N if unknown (s.a. ?A__doc__?DFunction)"),
 	TYPE_GETTER_BOUND_F(STR___type__, &code_get_type, &code_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
 	                    "#t{UnboundAttribute}"
-	                    "Determine if @this code object is defined as part of a user-defined class, "
+	                    "Determine if @this ?. is defined as part of a user-defined class, "
 	                    /**/ "and if it is, return that class type (s.a. ?A__type__?DFunction)"),
 	TYPE_GETTER_BOUND_F(STR___kwds__, &code_get_kwds, &code_bound_kwds,
 	                    METHOD_FCONSTCALL,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns a sequence of keyword argument names accepted by @this code object\n"
-	                    "If @this code doesn't accept keyword arguments, throw :UnboundAttribute"),
+	                    "Returns a sequence of keyword argument names accepted by @this ?.\n"
+	                    "If @this ?. doesn't accept keyword arguments, throw :UnboundAttribute"),
 	TYPE_GETTER_BOUND_F("__operator__", &code_get_operator, &code_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Try to determine if @this code object is defined as part of a user-defined class, "
+	                    "Try to determine if @this ?. is defined as part of a user-defined class, "
 	                    /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	                    /**/ "return the internal ID of the operator that @this code object provides, or throw "
-	                    /**/ ":UnboundAttribute if that class couldn't be found, @this code object is defined "
+	                    /**/ "return the internal ID of the operator that @this ?. provides, or throw "
+	                    /**/ ":UnboundAttribute if that class couldn't be found, @this ?. is defined "
 	                    /**/ "as stand-alone, or defined as a class- or instance-method (s.a. ?A__operator__?DFunction)"),
 	TYPE_GETTER_BOUND_F("__operatorname__", &code_get_operatorname, &code_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -1642,7 +1643,7 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns an integer describing the kind if @this code is part of a property or getset, "
+	                    "Returns an integer describing the kind if @this ?. is part of a property or getset, "
 	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if "
 	                    /**/ "the function isn't declared as a property callback (s.a. ?A__property__?DFunction)"),
 	TYPE_GETTER_F("__defaults__", &code_getdefaults, METHOD_FCONSTCALL,
@@ -1650,7 +1651,7 @@ PRIVATE struct type_getset tpconst code_getsets[] = {
 	              "Access to the default values of arguments"),
 	TYPE_GETTER_F("__constants__", &code_getconstants, METHOD_FCONSTCALL,
 	              "->?S?O\n"
-	              "Access to the constants of @this code object"),
+	              "Access to the constants of @this ?."),
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_F("__nstatic__", &code_get_nstatic, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?Dint\n"

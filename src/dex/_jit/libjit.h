@@ -1424,7 +1424,6 @@ struct jit_function_object {
 	DREF DeeModuleObject   *jf_impbase;      /* [0..1][const] Base module used for relative, static imports (such as `foo from .baz.bar')
 	                                          * When `NULL', code isn't allowed to perform relative imports. */
 	DREF DeeObject         *jf_globals;      /* [0..1][const] Mapping-like object for global variables. */
-	DREF DeeTypeObject     *jf_thiscall_cls; /* [0..1][const] When non-NULL, the thiscall class type. */
 	JITObjectTable          jf_args;         /* [const] A template for the arguments accepted by this function.
 	                                          *  - NULL-values identify optional arguments
 	                                          * NOTE: The back-pointer of this object table is pointed
@@ -1440,6 +1439,7 @@ struct jit_function_object {
 	uint16_t                jf_argc_min;     /* [const] Minimum amount of required positional arguments. */
 	uint16_t                jf_argc_max;     /* [const] Maximum amount of required positional arguments. */
 	uint16_t                jf_flags;        /* [const] Function flags (Set of `JIT_FUNCTION_F*'). */
+	/* TODO: Support for static variables. */
 };
 
 INTDEF DeeTypeObject JITFunction_Type;

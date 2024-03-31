@@ -1234,10 +1234,12 @@ PRIVATE struct type_getset tpconst jf_getsets[] = {
 	/* TODO: __statics__ */
 	/* TODO: __staticsbyname__ */
 	/* TODO: __symbols__ */
-	TYPE_GETTER_F("hasvarargs", &jf_hasvarargs, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("hasvarargs", &jf_hasvarargs,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
 	              "->?Dbool\n"
 	              "Check if @this function accepts variable arguments as overflow"),
-	TYPE_GETTER_F("hasvarkwds", &jf_hasvarkwds, METHOD_FNOREFESCAPE,
+	TYPE_GETTER_F("hasvarkwds", &jf_hasvarkwds,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
 	              "->?Dbool\n"
 	              "Check if @this function accepts variable keyword arguments as overflow"),
 	TYPE_GETSET_END
@@ -1247,7 +1249,7 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isyielding", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FYIELDING,
 	                         "Check if @this function behaves as yielding (i.e. contains a yield statement "
 	                         "that doesn't appear as part of a recursively defined inner function)"),
-	TYPE_MEMBER_BITFIELD_DOC("isretexpr", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
+	TYPE_MEMBER_BITFIELD_DOC("__isretexpr__", STRUCT_CONST, JITFunction, jf_flags, JIT_FUNCTION_FRETEXPR,
 	                         "Evaluates to ?t if @this function was defined like ${[] -> 42}, meaning "
 	                         "that ?#__text__ is merely the expression that should be returned by the function\n"
 	                         "When ?f, the function was defined like ${[] { return 42; }}"),
@@ -1269,6 +1271,7 @@ PRIVATE struct type_member tpconst jf_members[] = {
 	                      "Min amount of arguments required to execute @this function"),
 	TYPE_MEMBER_FIELD_DOC("__argc_max__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(JITFunction, jf_argc_max),
 	                      "Max amount of arguments accepted by @this function (excluding a varargs or varkwds argument)"),
+	/* TODO: __nstatic__ */
 	TYPE_MEMBER_END
 };
 

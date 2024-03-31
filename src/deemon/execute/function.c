@@ -482,6 +482,8 @@ function_get_kwds(Function *__restrict self) {
 		                                (size_t)code->co_argc_max,
 		                                (DeeObject *const *)code->co_keywords);
 	}
+	if (code->co_argc_max == 0)
+		return_empty_seq;
 	err_unbound_attribute_string(&DeeFunction_Type, STR___kwds__);
 	return NULL;
 }
@@ -489,7 +491,7 @@ function_get_kwds(Function *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 function_bound_kwds(Function *__restrict self) {
 	DeeCodeObject *code = self->fo_code;
-	return code->co_keywords ? 1 : 0;
+	return (code->co_keywords || code->co_argc_max == 0) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -665,6 +667,95 @@ function_get_code_constants(DeeFunctionObject *__restrict self) {
 	return code_getconstants(self->fo_code);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_argc_min(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_argc_min);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_argc_max(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_argc_max);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_hasvarargs(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FVARARGS);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_hasvarkwds(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FVARKWDS);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_isyielding(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FYIELDING);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_iscopyable(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FCOPYABLE);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_isthiscall(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FTHISCALL);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_hasassembly(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FASSEMBLY);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_islenient(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FLENIENT);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_hasheapframe(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FHEAPFRAME);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_hasfinally(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FFINALLY);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_isconstructor(DeeFunctionObject *__restrict self) {
+	return_bool(self->fo_code->co_flags & CODE_FCONSTRUCTOR);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_nlocal(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_localc);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_nconst(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_constc);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_nref(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_refc);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_nexcept(DeeFunctionObject *__restrict self) {
+	return DeeInt_NewUInt16(self->fo_code->co_exceptc);
+}
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+function_get_code_nstatic(DeeFunctionObject *__restrict self) {
+	DeeCodeObject *code = self->fo_code;
+	ASSERT(code->co_refstaticc >= code->co_refc);
+	return DeeInt_NewUInt16(code->co_refstaticc - code->co_refc);
+}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
 
 DOC_REF(code_optimize_doc);
 DOC_REF(code_optimized_doc);
@@ -687,31 +778,31 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns the name of @this function"),
+	                    "Returns the name of @this ?."),
 	TYPE_GETTER_F(STR___doc__, &function_get_doc,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	              "->?X2?Dstring?N\n"
-	              "Returns the documentation string of @this function, or ?N if there is none"),
+	              "Returns the documentation string of @this ?., or ?N if there is none"),
 	TYPE_GETTER_BOUND_F(STR___type__, &function_get_type, &function_bound_type,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DType\n"
 	                    "#t{UnboundAttribute}"
-	                    "Try to determine if @this function is defined as part of a user-defined class, "
+	                    "Try to determine if @this ?. is defined as part of a user-defined class, "
 	                    /**/ "and if it is, return that class type, or throw :UnboundAttribute if that "
-	                    /**/ "class couldn't be found, or if @this function is defined as stand-alone"),
+	                    /**/ "class couldn't be found, or if @this ?. is defined as stand-alone"),
 	TYPE_GETTER_BOUND_F(STR___module__, &function_get_module, &function_bound_module,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?DModule\n"
 	                    "#t{UnboundAttribute}"
-	                    "Return the module as part of which @this function's code was originally written"),
+	                    "Return the module as part of which @this ?.'s code was originally written"),
 	TYPE_GETTER_BOUND_F("__operator__", &function_get_operator, &function_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Try to determine if @this function is defined as part of a user-defined class, "
+	                    "Try to determine if @this ?. is defined as part of a user-defined class, "
 	                    /**/ "and if so, if it is used to define an operator callback. If that is the case, "
-	                    /**/ "return the internal ID of the operator that @this function provides, or throw "
-	                    /**/ ":UnboundAttribute if that class couldn't be found, @this function is defined "
+	                    /**/ "return the internal ID of the operator that @this ?. provides, or throw "
+	                    /**/ ":UnboundAttribute if that class couldn't be found, @this ?. is defined "
 	                    /**/ "as stand-alone, or defined as a class- or instance-method"),
 	TYPE_GETTER_BOUND_F("__operatorname__", &function_get_operatorname, &function_bound_operator,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
@@ -724,7 +815,7 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?Dint\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns an integer describing the kind if @this function is part of a property or getset, "
+	                    "Returns an integer describing the kind if @this ?. is part of a property or getset, "
 	                    /**/ "or throw :UnboundAttribute if the function's property could not be found, or if the "
 	                    /**/ "function isn't declared as a property callback\n"
 	                    "#T{Id|Callback|Compatible prototype~"
@@ -734,11 +825,11 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	                    "}"),
 	TYPE_GETTER_F("__refs__", &function_get_refs, METHOD_FCONSTCALL,
 	              "->?S?O\n"
-	              "Returns a sequence of all of the references used by @this function"),
+	              "Returns a sequence of all of the references used by @this ?."),
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	TYPE_GETTER_F("__statics__", &DeeFunction_GetStaticsWrapper, METHOD_FCONSTCALL,
 	              "->?S?O\n"
-	              "Returns a (writable) sequence of all of the static variables that appear in @this function"),
+	              "Returns a (writable) sequence of all of the static variables that appear in @this ?."),
 	TYPE_GETTER_F("__refsbyname__", &DeeFunction_GetRefsByNameWrapper, METHOD_FCONSTCALL,
 	              "->?M??X2Dstring?Dint?O\n"
 	              "Returns a read-only mapping to access ?#__refs__ by their name "
@@ -752,19 +843,89 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	              "The combination of ?#__refsbyname__ and ?#__staticsbyname__, allowing "
 	              /**/ "access to all named symbol that need to maintain their value across "
 	              /**/ "different calls to ?. (requires debug information to be present)"),
+	TYPE_GETTER_F("__nstatic__", &function_get_code_nstatic,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of static variables during execution"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
 	                    "#t{UnboundAttribute}"
-	                    "Returns a sequence of keyword argument names accepted by @this function\n"
-	                    "If @this function doesn't accept keyword arguments, throw :UnboundAttribute"),
+	                    "Returns a sequence of keyword argument names accepted by @this ?.\n"
+	                    "If @this ?. doesn't accept keyword arguments, throw :UnboundAttribute"),
 	TYPE_GETTER_F("__defaults__", &function_get_code_defaults, METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Access to the default values of arguments"),
 	TYPE_GETTER_F("__constants__", &function_get_code_constants, METHOD_FCONSTCALL,
 	              "->?S?O\n"
-	              "Access to the constants of @this code object"),
+	              "Access to the constants of @this ?."),
+	TYPE_GETTER_F("__argc_min__", &function_get_code_argc_min, METHOD_FCONSTCALL,
+	              "->?Dint\n"
+	              "Min amount of arguments required to execute @this ?."),
+	TYPE_GETTER_F("__argc_max__", &function_get_code_argc_max, METHOD_FCONSTCALL,
+	              "->?Dint\n"
+	              "Max amount of arguments accepted by @this ?. (excluding a varargs or varkwds argument)"),
+	TYPE_GETTER_F("isyielding", &function_get_code_isyielding,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if calls to @this ?. produce yield-functions"),
+	TYPE_GETTER_F("iscopyable", &function_get_code_iscopyable,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if yield-function iterators of @this ?. are copyable (as per ${@[copyable]})"),
+	TYPE_GETTER_F("hasvarargs", &function_get_code_hasvarargs,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if @this ?. accepts variable arguments as overflow"),
+	TYPE_GETTER_F("hasvarkwds", &function_get_code_hasvarkwds,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if @this ?. accepts variable keyword arguments as overflow"),
+	TYPE_GETTER_F("__isthiscall__", &function_get_code_isthiscall,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if @this ?. takes an extra leading $this-argument"),
+	TYPE_GETTER_F("__hasassembly__", &function_get_code_hasassembly,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if assembly of @this ?. is executed in safe-mode"),
+	TYPE_GETTER_F("__islenient__", &function_get_code_islenient,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if the runtime stack allocation allows for leniency"),
+	TYPE_GETTER_F("__hasheapframe__", &function_get_code_hasheapframe,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "Check if the runtime stack-frame must be allocated on the heap"),
+	TYPE_GETTER_F("__hasfinally__", &function_get_code_hasfinally,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "True if execution will jump to the nearest finally-block when a return instruction is encountered\n"
+	              "Note that this does not necessarily guaranty, or deny the presence of a try...finally statement in the "
+	              /**/ "user's source code, as the compiler may try to optimize this flag away to speed up runtime execution"),
+	TYPE_GETTER_F("__isconstructor__", &function_get_code_isconstructor,
+	              METHOD_FNOREFESCAPE | METHOD_FNOTHROW | METHOD_FCONSTCALL,
+	              "->?Dbool\n"
+	              "True for class constructor ?. objects. - When set, don't include the this-argument in "
+	              /**/ "tracebacks, thus preventing incomplete instances from being leaked when the constructor "
+	              /**/ "causes some sort of exception to be thrown"),
+	TYPE_GETTER_F("__nlocal__", &function_get_code_nlocal,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of available local variables during execution"),
+	TYPE_GETTER_F("__nconst__", &function_get_code_nconst,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of constant objects during execution"),
+	TYPE_GETTER_F("__nref__", &function_get_code_nref,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of referenced objects during execution"),
+	TYPE_GETTER_F("__nexcept__", &function_get_code_nexcept,
+	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
+	              "->?Dint\n"
+	              "Number of exception handlers"),
 	TYPE_GETSET_END
 };
 
@@ -2545,13 +2706,12 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 yfi_bound_kwds(YFIterator *__restrict self) {
-	bool bound;
+	int result;
 	if unlikely(DeeYieldFunctionIterator_LockRead(self))
 		goto err;
-	bound = self->yi_func &&
-	        self->yi_func->yf_func->fo_code->co_keywords;
+	result = function_bound_kwds(self->yi_func->yf_func);
 	DeeYieldFunctionIterator_LockEndRead(self);
-	return bound ? 1 : 0;
+	return result;
 err:
 	return -1;
 }

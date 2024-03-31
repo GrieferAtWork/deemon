@@ -2379,12 +2379,11 @@ class Parameter: WeakRefAble {
 							local ob = node.object;
 							if (ob is Function) {
 								/* Extract from default argument list of user-level function */
-								local code = ob.__code__;
-								local argcMin = code.__argc_min__;
+								local argcMin = ob.__argc_min__;
 								if (docargi >= argcMin &&
-								    docargi <  code.__argc_max__) {
+								    docargi <  ob.__argc_max__) {
 									/* Default argument is available. */
-									local val = code.__default__[docargi - argcMin];
+									local val = ob.__defaults__[docargi - argcMin];
 									m_defexpr = Expression(docdecl, false, val);
 									goto done;
 								}
@@ -3004,10 +3003,9 @@ class DocSection: WeakRefAble {
 @@Automatically generate documentation for a given @fun
 local function generateFunctionParams(fp: File, fun: Function) {
 	/* We can actually figure out a lot about this function! */
-	local code = fun.__code__;
-	local argcMin = code.__argc_min__;
-	local argcMax = code.__argc_max__;
-	local kwds = code.__kwds__;
+	local argcMin = fun.__argc_min__;
+	local argcMax = fun.__argc_max__;
+	local kwds = fun.__kwds__;
 	local nKwds = #kwds;
 	fp << "(";
 	for (local i: [:argcMin]) {
@@ -3020,7 +3018,7 @@ local function generateFunctionParams(fp: File, fun: Function) {
 		}
 	}
 	if (argcMax > argcMin) {
-		local defl = code.__default__;
+		local defl = fun.__defaults__;
 		if (argcMin)
 			fp << ",";
 		for (local i: [:argcMax - argcMin]) {
@@ -3046,7 +3044,7 @@ local function generateFunctionParams(fp: File, fun: Function) {
 			}
 		}
 	}
-	if (code.hasvarargs) {
+	if (fun.hasvarargs) {
 		if (argcMax)
 			fp << ",";
 		fp << (argcMax < nKwds
@@ -3858,7 +3856,7 @@ set_is_type:
 		} else if (object is bound && object is Function) {
 			File.Writer resdoc;
 			generateFunctionParams(resdoc, object);
-			if (object.__code__.isconstructor) {
+			if (object.__isconstructor__) {
 				/* Constructors always return @none */
 			} else {
 				resdoc << "->";

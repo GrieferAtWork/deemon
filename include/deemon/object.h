@@ -3849,7 +3849,7 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
  * Otherwise, return the sum of all calls to it.
  * NOTE: This function does some special optimizations for known sequence types.
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_IterSelf()' */
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */

@@ -1626,7 +1626,7 @@ INTERN WUNUSED NONNULL((1)) int
 		}
 	}
 
-	ASSERT(self->co_argc_max >= self->co_argc_min);
+	ASSERT(self->co_argc_min <= self->co_argc_max);
 	if (self->co_argc_min < self->co_argc_max) {
 		/* Create the argument descriptor data. */
 		struct dec_section *args_sec;
