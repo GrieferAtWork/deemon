@@ -93,7 +93,7 @@ typedef struct {
 struct host_unwind {
 	/* NOTE: This stuff will eventually be registered with "RtlAddFunctionTable" */
 	/* Because MS is dumb and doesn't want you to change %Psp while in the middle
-	 * or a function, we actually have to encode every change to %Psp as its own
+	 * of a function, we actually have to encode every change to %Psp as its own
 	 * function (wow...) */
 	uint32_t             hu_currsp;  /* Currently active SP */
 	size_t               hu_unwinda; /* Allocated # of unwind info segments */
@@ -136,7 +136,7 @@ INTDEF WUNUSED bool DCALL hostfunc_unwind_enabled(void);
 #define HAVE_hostfunc_unwind_enabled
 
 struct hostfunc_unwind {
-	NT_RUNTIME_FUNCTION *hfu_FunctionTable; /* Pointer to the end of actual text. */
+	NT_RUNTIME_FUNCTION *hfu_FunctionTable; /* [0..1] Function table pointer (or NULL if not present). */
 };
 
 /* Initialize host function unwind data. */

@@ -46,6 +46,8 @@ DECL_BEGIN
 #define CONFIG_LANGUAGE_NO_ASM
 #endif
 
+
+/* TODO: Get rid of these config options (having them on is mandatory) */
 #undef CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 #define CONFIG_LANGUAGE_DECLARATION_DOCUMENTATION
 

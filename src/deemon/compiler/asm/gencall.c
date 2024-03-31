@@ -353,8 +353,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((2)) int DCALL
-asm_gargv(size_t argc, struct ast **__restrict argv) {
+PRIVATE WUNUSED ATTR_INS(2, 1) int DCALL
+asm_gargv(size_t argc, struct ast *const *argv) {
 	size_t i;
 	for (i = 0; i < argc; ++i) {
 		if (ast_genasm_one(argv[i], ASM_G_FPUSHRES))

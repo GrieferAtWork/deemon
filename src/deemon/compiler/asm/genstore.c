@@ -1562,6 +1562,18 @@ check_dst_sym_class:
 		case SYMBOL_TYPE_STATIC:
 			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+				if (dst->a_scope != dst_sym->s_scope) {
+					/* TODO: Warn about initial store to static variable
+					 *       happening in different score than declaration. */
+				} else if (dst->a_ddi.l_file && dst_sym->s_decl.l_file &&
+				           (dst->a_ddi.l_file != dst_sym->s_decl.l_file ||
+				            dst->a_ddi.l_line != dst_sym->s_decl.l_line ||
+				            dst->a_ddi.l_col != dst_sym->s_decl.l_col)) {
+					/* TODO: Warn that only an assignment to the initial
+					 *       declaration is portable for the purpose of
+					 *       having the initializer only run once. */
+				}
+
 				/* TODO: In the new static variable model, the first assignment should
 				 *       still only be executed *once*, however this definitely needs
 				 *       a special instruction that store a value in a static *only* if
@@ -1573,11 +1585,15 @@ check_dst_sym_class:
 				 * >> push const @42                       # Value to store
 				 * >> push cmpxch static @x, unbound, pop  # Pushes true/false indicative of cmpxch success
 				 * >> pop                                  # Get rid of the true/false
+				 * XXX: Why not have the caller assign the initial static value?
+				 *      >> push const @42
+				 *      >> push function const 1, #1  // Code has 0 refs, but allow caller to pre-assign statics
 				 *
 				 * In order to execute initializers with side-effects:
 				 * >> static local x = foo();
+				 *
 				 * ASM:
-				 * >>     push  startinit static @x # Pushes "true" if initialization started, "false" otherwise
+				 * >>     push  cmpxch static @x, unbound, initializing # Pushes "true" if initialization started, "false" otherwise
 				 * >>     jf    pop, 1f
 				 * >> .Linit_except_start:
 				 * >>     call  @foo, #1

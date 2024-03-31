@@ -141,6 +141,8 @@ for (local x: names) {
 #define DEFAULT        OPERAND_CLASS_DEFAULT
 #define VARARGS        OPERAND_CLASS_VARARGS
 #define VARKWDS        OPERAND_CLASS_VARKWDS
+#define UNBOUND        OPERAND_CLASS_UNBOUND
+#define LOCK           OPERAND_CLASS_LOCK
 #define POP_DOTS       OPERAND_CLASS_POP_DOTS
 #define SPPOP          OPERAND_CLASS_SPPOP
 #define SPADDIMM_EQ_N2 OPERAND_CLASS_SPADDIMM_EQ_N2
@@ -1183,6 +1185,21 @@ INSTR("mov", (
 	O2(ASM_POP_LOCAL,          FF0,                 (LOCAL)(PREFIX))            /* `mov local <imm8/16>, PREFIX' */
 ))
 
+/* CONSTRAINTS: `cmpxch <p>, unbound, lock'  (only when "<p>" is a static variable) */
+/* CONSTRAINTS: `cmpxch <p>, unbound, <s>' */
+/* CONSTRAINTS: `cmpxch <p>, <s>', unbound */
+/* CONSTRAINTS: `cmpxch <p>, <s>', <s> */
+INSTR("cmpxch", (
+	O2(ASM_CMPXCH_UB_LOCK, FPREFIX | FPUSH,    (UNBOUND)(LOCK))         /* `PREFIX: push  cmpxch unbound, lock' */
+	O3(ASM_CMPXCH_UB_LOCK, FPUSH,              (PREFIX)(UNBOUND)(LOCK)) /* `push  cmpxch PREFIX, unbound, lock' */
+	O2(ASM_CMPXCH_UB_POP, FPREFIX | FPUSH,     (UNBOUND)(POP))          /* `PREFIX: push  cmpxch unbound, pop' */
+	O3(ASM_CMPXCH_UB_POP, FPUSH,               (PREFIX)(UNBOUND)(POP))  /* `push  cmpxch PREFIX, unbound, pop' */
+	O2(ASM_CMPXCH_POP_UB, FPREFIX | FPUSH,     (POP)(UNBOUND))          /* `PREFIX: push  cmpxch pop, unbound' */
+	O3(ASM_CMPXCH_POP_UB, FPUSH,               (PREFIX)(POP)(UNBOUND))  /* `push  cmpxch PREFIX, pop, unbound' */
+	O2(ASM_CMPXCH_POP_POP, FPREFIX | FPUSH,    (POP)(POP))              /* `PREFIX: push  cmpxch pop, pop' */
+	O3(ASM_CMPXCH_POP_POP, FPUSH,              (PREFIX)(POP)(POP))      /* `push  cmpxch PREFIX, pop, pop' */
+))
+
 /* clang-format on */
 
 /*[[[deemon
@@ -1249,6 +1266,8 @@ for (local x: names) {
 #undef SPADDIMM_EQ_N2
 #undef SPPOP
 #undef POP_DOTS
+#undef LOCK
+#undef UNBOUND
 #undef VARKWDS
 #undef VARARGS
 #undef DEFAULT

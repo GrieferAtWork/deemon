@@ -1735,6 +1735,14 @@ parse_local_operand:
 				result->io_class = OPERAND_CLASS_VARKWDS;
 				goto done_yield_1;
 			}
+			if (IS_KWD_NOCASE("unbound")) {
+				result->io_class = OPERAND_CLASS_UNBOUND;
+				goto done_yield_1;
+			}
+			if (IS_KWD_NOCASE("lock")) {
+				result->io_class = OPERAND_CLASS_LOCK;
+				goto done_yield_1;
+			}
 		}
 		/* Fallback: Parse an address expression. */
 		if unlikely(uasm_parse_intexpr(&result->io_intexpr,

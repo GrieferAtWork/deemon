@@ -381,6 +381,8 @@ struct asm_invoke_operand {
 #define OPERAND_CLASS_DEFAULT          0x00a1     /* `default' */
 #define OPERAND_CLASS_VARARGS          0x00a2     /* `varargs' */
 #define OPERAND_CLASS_VARKWDS          0x00a3     /* `varkwds' */
+#define OPERAND_CLASS_UNBOUND          0x00a4     /* `unbound' */
+#define OPERAND_CLASS_LOCK             0x00a5     /* `lock' */
 	uint16_t                           io_class;  /* Operand class (One of `OPERAND_CLASS_*'). */
 	union {
 		uint16_t                       io_symid;  /* Symbol id. */
@@ -1549,6 +1551,12 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gdec()                    (asm_put(ASM_DEC))
 #define asm_gincpost()                (asm_incsp(), asm_put16(ASM_INCPOST))
 #define asm_gdecpost()                (asm_incsp(), asm_put16(ASM_DECPOST))
+
+/* Instructions for atomic compare-and-exchange of prefixable symbols. */
+#define asm_gcmpxch_ub_lock()         (asm_incsp(), asm_put16(ASM_CMPXCH_UB_LOCK))
+#define asm_gcmpxch_ub_pop()          (asm_dicsp(), asm_put16(ASM_CMPXCH_UB_POP))
+#define asm_gcmpxch_pop_ub()          (asm_dicsp(), asm_put16(ASM_CMPXCH_POP_UB))
+#define asm_gcmpxch_pop_pop()         (asm_ddicsp(), asm_put16(ASM_CMPXCH_POP_POP))
 
 /* Push/pop the current top value into a location on the stack, given its absolute address.
  * HINT: These functions are useful because `asm_gdup_n()' / `asm_gpop_n()' use relative addresses. */

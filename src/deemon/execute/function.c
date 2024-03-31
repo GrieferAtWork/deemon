@@ -474,6 +474,14 @@ function_get_refs(Function *__restrict self) {
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 function_get_statics(Function *__restrict self) {
+#if 1
+	(void)self;
+	/* TODO: Need a custom sequence wrapper that handles ITER_DONE as alias for NULL (unbound),
+	 *       and does `DeeFutex_WakeAll()' whenever an item is written to. */
+	/* TODO: Once this is implemented, remove the hack from util/test/compiler-static-variables.dee */
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+#else
 	DeeCodeObject *code = self->fo_code;
 	ASSERT(code->co_refstaticc >= code->co_refc);
 #ifdef CONFIG_NO_THREADS
@@ -487,6 +495,7 @@ function_get_statics(Function *__restrict self) {
 	                        self->fo_refv + code->co_refc,
 	                        &self->fo_reflock);
 #endif /* !CONFIG_NO_THREADS */
+#endif
 }
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
@@ -742,6 +751,9 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	              "->?S?O\n"
 	              "Returns a (writable) sequence of all of the static variables that appear in @this function"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	/* TODO: __refsbyname__->?M?Dstring?O     (use DDI information to access references variables by name) */
+	/* TODO: __staticsbyname__->?M?Dstring?O  (use DDI information to access static variables by name) */
+	/* TODO: __symbolsbyname__->?M?Dstring?O  (combination of __staticsbyname__ and __refsbyname__) */
 	TYPE_GETTER_BOUND_F(STR___kwds__, &function_get_kwds, &function_bound_kwds,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
 	                    "->?S?Dstring\n"
@@ -854,8 +866,14 @@ function_fini(Function *__restrict self) {
 	refv_iter = Dee_Decprefv(self->fo_refv, code->co_refc);
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	ASSERT(code->co_refstaticc >= code->co_refc);
-	if unlikely(code->co_refstaticc > code->co_refc)
-		Dee_XDecrefv(refv_iter, code->co_refstaticc - code->co_refc);
+	if unlikely(code->co_refstaticc > code->co_refc) {
+		uint16_t i, n = (uint16_t)(code->co_refstaticc - code->co_refc);
+		for (i = 0; i < n; ++i) {
+			DREF DeeObject *ob = refv_iter[i];
+			if (ITER_ISOK(ob))
+				Dee_Decref(ob);
+		}
+	}
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	(void)refv_iter;
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -869,8 +887,13 @@ function_visit(Function *__restrict self,
 	for (i = 0; i < self->fo_code->co_refc; ++i)
 		Dee_Visit(self->fo_refv[i]);
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	for (; i < self->fo_code->co_refstaticc; ++i)
-		Dee_XVisit(self->fo_refv[i]);
+	DeeFunction_RefLockRead(self);
+	for (; i < self->fo_code->co_refstaticc; ++i) {
+		DeeObject *ob = self->fo_refv[i];
+		if (ITER_ISOK(ob))
+			Dee_Visit(ob);
+	}
+	DeeFunction_RefLockEndRead(self);
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	Dee_Visit(self->fo_code);
 }
@@ -933,7 +956,7 @@ restart:
 	DeeFunction_RefLockWrite(self);
 	for (i = code->co_refc; i < code->co_refstaticc; ++i) {
 		DREF DeeObject *ob = self->fo_refv[i];
-		if (!ob)
+		if (!ITER_ISOK(ob))
 			continue;
 
 		/* Don't clear out simple primitives */
@@ -948,6 +971,7 @@ restart:
 
 		/* Clear out this static variable */
 		self->fo_refv[i] = NULL;
+		DeeFutex_WakeAll(&self->fo_refv[i]);
 		if (!Dee_DecrefIfNotOne(ob)) {
 			buffer[bufi] = ob; /* Inherit reference */
 			++bufi;
@@ -976,8 +1000,21 @@ function_hash(Function *__restrict self) {
 	result = Dee_HashCombine(result, DeeObject_Hashv(self->fo_refv, code->co_refc));
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	if unlikely(code->co_refstaticc > code->co_refc) {
-		result = Dee_HashCombine(result, DeeObject_XHashv(self->fo_refv + code->co_refc,
-		                                                  code->co_refstaticc - code->co_refc));
+		uint16_t i;
+		for (i = code->co_refc; i < code->co_refstaticc; ++i) {
+			DREF DeeObject *ob;
+			DeeFunction_RefLockRead(self);
+			ob = self->fo_refv[i];
+			if (!ITER_ISOK(ob)) {
+				DeeFunction_RefLockEndRead(self);
+				result = Dee_HashCombine(result, DEE_HASHOF_UNBOUND_ITEM);
+			} else {
+				Dee_Incref(ob);
+				DeeFunction_RefLockEndRead(self);
+				result = Dee_HashCombine(result, DeeObject_Hash(ob));
+				Dee_Decref_unlikely(ob);
+			}
+		}
 	}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	return result;
@@ -1001,17 +1038,37 @@ function_eq(Function *self, Function *other) {
 			goto err_or_not_equal;
 	}
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
 	for (; i < code->co_refstaticc; ++i) {
-		if (self->fo_refv[i]) {
-			if (!other->fo_refv[i])
-				goto not_equal;
+		DREF DeeObject *lhs, *rhs;
+		DeeFunction_RefLockRead(self);
+		lhs = self->fo_refv[i];
+		if (ITER_ISOK(lhs))
+			Dee_Incref(lhs);
+		DeeFunction_RefLockEndRead(self);
+		DeeFunction_RefLockRead(other);
+		rhs = other->fo_refv[i];
+		if (ITER_ISOK(rhs))
+			Dee_Incref(rhs);
+		DeeFunction_RefLockEndRead(other);
+		if (lhs == rhs) {
+			if (ITER_ISOK(lhs)) {
+				Dee_DecrefNokill(lhs);
+				Dee_Decref_unlikely(lhs);
+			}
+		} else if (!ITER_ISOK(lhs) || !ITER_ISOK(rhs)) {
+			if (ITER_ISOK(lhs))
+				Dee_Decref_unlikely(lhs);
+			if (ITER_ISOK(rhs))
+				Dee_Decref_unlikely(rhs);
+			goto not_equal;
+		} else {
 			result = DeeObject_CompareEq(self->fo_refv[i],
 			                             other->fo_refv[i]);
+			Dee_Decref_unlikely(lhs);
+			Dee_Decref_unlikely(rhs);
 			if (result <= 0)
 				goto err_or_not_equal;
-		} else {
-			if (other->fo_refv[i])
-				goto not_equal;
 		}
 	}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -1045,17 +1102,37 @@ function_ne(Function *self, Function *other) {
 			goto err_or_not_equal;
 	}
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	ASSERT(code->co_refstaticc == other->fo_code->co_refstaticc);
 	for (; i < code->co_refstaticc; ++i) {
-		if (self->fo_refv[i]) {
-			if (!other->fo_refv[i])
-				goto not_equal;
-			result = DeeObject_CompareNe(self->fo_refv[i],
-			                             other->fo_refv[i]);
-			if (result != 0)
-				goto err_or_not_equal;
+		DREF DeeObject *lhs, *rhs;
+		DeeFunction_RefLockRead(self);
+		lhs = self->fo_refv[i];
+		if (ITER_ISOK(lhs))
+			Dee_Incref(lhs);
+		DeeFunction_RefLockEndRead(self);
+		DeeFunction_RefLockRead(other);
+		rhs = other->fo_refv[i];
+		if (ITER_ISOK(rhs))
+			Dee_Incref(rhs);
+		DeeFunction_RefLockEndRead(other);
+		if (lhs == rhs) {
+			if (ITER_ISOK(lhs)) {
+				Dee_DecrefNokill(lhs);
+				Dee_Decref_unlikely(lhs);
+			}
+		} else if (!ITER_ISOK(lhs) || !ITER_ISOK(rhs)) {
+			if (ITER_ISOK(lhs))
+				Dee_Decref_unlikely(lhs);
+			if (ITER_ISOK(rhs))
+				Dee_Decref_unlikely(rhs);
+			goto not_equal;
 		} else {
-			if (other->fo_refv[i])
-				goto not_equal;
+			result = DeeObject_CompareEq(self->fo_refv[i],
+			                             other->fo_refv[i]);
+			Dee_Decref_unlikely(lhs);
+			Dee_Decref_unlikely(rhs);
+			if (result <= 0)
+				goto err_or_not_equal;
 		}
 	}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */

@@ -857,7 +857,6 @@ EXPORTS
 	DeeObject_VTGenericCallAttrStringHashf@24=_DeeObject_VTGenericCallAttrStringHashf@24
 	DeeObject_VThisCallf@16=_DeeObject_VThisCallf@16
 	DeeObject_Visit@12=_DeeObject_Visit@12
-	DeeObject_XHashv@8=_DeeObject_XHashv@8
 	DeeObject_XInplaceDeepCopyWithLock@8=_DeeObject_XInplaceDeepCopyWithLock@8
 	DeeObject_Xor@8=_DeeObject_Xor@8
 	DeeObject_XorUInt32@8=_DeeObject_XorUInt32@8

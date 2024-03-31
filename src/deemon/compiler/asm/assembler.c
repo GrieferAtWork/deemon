@@ -3532,7 +3532,7 @@ do_savearg:
 			goto err;
 	}
 
-	/* Merge const + static variables. */
+	/* Merge ref + static variables. */
 	if unlikely(asm_mergestatic())
 		goto err;
 

@@ -226,7 +226,7 @@ do_get_static:
 #endif /* !EXEC_SAFE */
 		DeeFunction_RefLockRead(frame->cf_func);
 		result = frame->cf_func->fo_refv[imm_val];
-		if likely(result) {
+		if likely(ITER_ISOK(result)) {
 			ASSERT_OBJECT(result);
 			Dee_Incref(result);
 			DeeFunction_RefLockEndRead(frame->cf_func);
@@ -266,7 +266,7 @@ err_invalid_extern:
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		imm_val = UNALIGNED_GETLE8(ip + 1);
 		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
@@ -334,223 +334,13 @@ err_invalid_extern16:
 				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
 				return NULL;
 			}
-			mod  = code->co_module->mo_importv[imm_val];
+			mod = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
 			if unlikely(imm_val >= mod->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
-			mod  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16(ip + 2);
-			ASSERT(imm_val < mod->mo_globalc);
-#endif /* !EXEC_SAFE */
-			goto do_get_module_object;
-
-		case ASM16_GLOBAL & 0xff:
-			imm_val = UNALIGNED_GETLE16(ip + 0);
-			goto do_get_global;
-
-		case ASM16_LOCAL & 0xff:
-			imm_val = UNALIGNED_GETLE16(ip + 0);
-			goto do_get_local;
-
-		default:
-#ifdef EXEC_SAFE
-			goto ill_instr;
-#else /* EXEC_SAFE */
-			__builtin_unreachable();
-#endif /* !EXEC_SAFE */
-		}
-		break;
-
-	default:
-#ifdef EXEC_SAFE
-ill_instr:
-		err_illegal_instruction(code, frame->cf_ip);
-		return NULL;
-#else /* EXEC_SAFE */
-		__builtin_unreachable();
-#endif /* !EXEC_SAFE */
-	}
-	return result;
-}
-
-
-/* NOTE: A reference to `value' is only inherited upon success (return != NULL) */
-#ifdef EXEC_FAST
-#define xch_prefix_object(v) xch_prefix_object_fast(frame, code, sp, v)
-PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-xch_prefix_object_fast(struct code_frame *__restrict frame,
-                       DeeCodeObject *__restrict code,
-                       DeeObject **__restrict sp,
-                       DREF DeeObject *__restrict value)
-#else /* EXEC_FAST */
-#define xch_prefix_object(v) xch_prefix_object_safe(frame, code, sp, v)
-PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
-xch_prefix_object_safe(struct code_frame *__restrict frame,
-                       DeeCodeObject *__restrict code,
-                       DeeObject **__restrict sp,
-                       DREF DeeObject *__restrict value)
-#endif /* !EXEC_FAST */
-{
-	DREF DeeObject *result;
-	instruction_t *ip = frame->cf_ip;
-	DeeModuleObject *mod;
-	uint16_t imm_val;
-	switch (*ip++) {
-
-	case ASM_STACK:
-		imm_val = *(uint8_t *)ip;
-do_get_stack:
-#ifdef EXEC_SAFE
-		if unlikely((frame->cf_stack + imm_val) >= sp) {
-			frame->cf_sp = sp;
-			err_srt_invalid_sp(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT((frame->cf_stack + imm_val) < sp);
-#endif /* !EXEC_SAFE */
-		result                   = frame->cf_stack[imm_val]; /* Inherit reference. */
-		frame->cf_stack[imm_val] = value;                    /* Inherit reference. */
-		ASSERT_OBJECT(result);
-		break;
-
-	case ASM_STATIC:
-		imm_val = *(uint8_t *)ip;
-do_get_static:
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_refstaticc ||
-		            imm_val < code->co_refc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val >= code->co_refc);
-		ASSERT(imm_val < code->co_refstaticc);
-#endif /* !EXEC_SAFE */
-		DeeFunction_RefLockWrite(frame->cf_func);
-		result = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
-		if likely(result) {
-			frame->cf_func->fo_refv[imm_val] = value; /* Inherit reference. */
-			DeeFunction_RefLockEndWrite(frame->cf_func);
-		} else {
-			DeeFunction_RefLockEndWrite(frame->cf_func);
-			err_unbound_static(code, frame->cf_ip, imm_val);
-		}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_constc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_static(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_constc);
-#endif /* !EXEC_SAFE */
-		DeeCode_ConstLockWrite(code);
-		result = code->co_constv[imm_val]; /* Inherit reference. */
-		code->co_constv[imm_val] = value;  /* Inherit reference. */
-		DeeCode_ConstLockEndWrite(code);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		ASSERT_OBJECT(result);
-		break;
-
-	case ASM_EXTERN:
-#ifdef EXEC_SAFE
-		imm_val = UNALIGNED_GETLE8(ip + 1);
-		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
-err_invalid_extern:
-			frame->cf_sp = sp;
-			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
-			return NULL;
-		}
-		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
-		if unlikely(imm_val >= mod->mo_globalc)
-			goto err_invalid_extern;
-#else /* EXEC_SAFE */
-		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
-		imm_val = UNALIGNED_GETLE8(ip + 1);
-		ASSERT(imm_val < mod->mo_globalc);
-#endif /* !EXEC_SAFE */
-		goto do_get_module_object;
-
-	case ASM_GLOBAL:
-		imm_val = UNALIGNED_GETLE8(ip + 0);
-do_get_global:
-		mod = code->co_module;
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= mod->mo_globalc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_global(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < mod->mo_globalc);
-#endif /* !EXEC_SAFE */
-do_get_module_object:
-		DeeModule_LockWrite(mod);
-		result = mod->mo_globalv[imm_val]; /* Inherit reference. */
-		if unlikely(!result) {
-			DeeModule_LockEndWrite(mod);
-			err_unbound_global(mod, imm_val);
-			return NULL;
-		}
-		mod->mo_globalv[imm_val] = value; /* Inherit reference. */
-		DeeModule_LockEndWrite(mod);
-		ASSERT_OBJECT(result);
-		break;
-
-	case ASM_LOCAL:
-		imm_val = UNALIGNED_GETLE8(ip + 0);
-do_get_local:
-#ifdef EXEC_SAFE
-		if unlikely(imm_val >= code->co_localc) {
-			frame->cf_sp = sp;
-			err_srt_invalid_locale(frame, imm_val);
-			return NULL;
-		}
-#else /* EXEC_SAFE */
-		ASSERT(imm_val < code->co_localc);
-#endif /* !EXEC_SAFE */
-		result = frame->cf_frame[imm_val]; /* Inherit reference. */
-		if likely(result) {
-			frame->cf_frame[imm_val] = value; /* Inherit reference. */
-		} else {
-			err_unbound_local(code, frame->cf_ip, imm_val);
-		}
-		break;
-
-	case ASM_EXTENDED1:
-		switch (*ip++) {
-
-		case ASM16_STACK & 0xff:
-			imm_val = UNALIGNED_GETLE16(ip + 0);
-			goto do_get_stack;
-
-		case ASM16_STATIC & 0xff:
-			imm_val = UNALIGNED_GETLE16(ip + 0);
-			goto do_get_static;
-
-		case ASM16_EXTERN & 0xff:
-			imm_val = UNALIGNED_GETLE16(ip + 0);
-#ifdef EXEC_SAFE
-			if unlikely(imm_val >= code->co_module->mo_importc) {
-err_invalid_extern16:
-				frame->cf_sp = sp;
-				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
-				return NULL;
-			}
-			mod  = code->co_module->mo_importv[imm_val];
-			imm_val = UNALIGNED_GETLE16(ip + 2);
-			if unlikely(imm_val >= mod->mo_globalc)
-				goto err_invalid_extern16;
-#else /* EXEC_SAFE */
-			ASSERT(imm_val < code->co_module->mo_importc);
-			mod  = code->co_module->mo_importv[imm_val];
+			mod = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
 			ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
@@ -648,8 +438,11 @@ do_set_static:
 		old_value = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
 		frame->cf_func->fo_refv[imm_val] = value;     /* Inherit reference. */
 		DeeFunction_RefLockEndWrite(frame->cf_func);
-		ASSERT_OBJECT_OPT(old_value);
-		Dee_XDecref(old_value);
+		DeeFutex_WakeAll(&frame->cf_func->fo_refv[imm_val]);
+		if (ITER_ISOK(old_value)) {
+			ASSERT_OBJECT(old_value);
+			Dee_Decref(old_value);
+		}
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #ifdef EXEC_SAFE
 		if unlikely(imm_val >= code->co_constc) {
@@ -685,7 +478,7 @@ err_invalid_extern:
 			goto err_invalid_extern;
 #else /* EXEC_SAFE */
 		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
-		mod  = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
 		imm_val = UNALIGNED_GETLE8(ip + 1);
 		ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
@@ -752,13 +545,13 @@ err_invalid_extern16:
 				Dee_Decref(value);
 				return -1;
 			}
-			mod  = code->co_module->mo_importv[imm_val];
+			mod = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
 			if unlikely(imm_val >= mod->mo_globalc)
 				goto err_invalid_extern16;
 #else /* EXEC_SAFE */
 			ASSERT(imm_val < code->co_module->mo_importc);
-			mod  = code->co_module->mo_importv[imm_val];
+			mod = code->co_module->mo_importv[imm_val];
 			imm_val = UNALIGNED_GETLE16(ip + 2);
 			ASSERT(imm_val < mod->mo_globalc);
 #endif /* !EXEC_SAFE */
@@ -794,6 +587,438 @@ ill_instr:
 	}
 	return 0;
 }
+
+/* NOTE: A reference to `value' is only inherited upon success (return != NULL) */
+#ifdef EXEC_FAST
+#define xch_prefix_object(v) xch_prefix_object_fast(frame, code, sp, v)
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
+xch_prefix_object_fast(struct code_frame *__restrict frame,
+                       DeeCodeObject *__restrict code,
+                       DeeObject **__restrict sp,
+                       DREF DeeObject *__restrict value)
+#else /* EXEC_FAST */
+#define xch_prefix_object(v) xch_prefix_object_safe(frame, code, sp, v)
+PRIVATE WUNUSED DREF DeeObject *ATTR_FASTCALL
+xch_prefix_object_safe(struct code_frame *__restrict frame,
+                       DeeCodeObject *__restrict code,
+                       DeeObject **__restrict sp,
+                       DREF DeeObject *__restrict value)
+#endif /* !EXEC_FAST */
+{
+	DREF DeeObject *result;
+	instruction_t *ip = frame->cf_ip;
+	DeeModuleObject *mod;
+	uint16_t imm_val;
+	switch (*ip++) {
+
+	case ASM_STACK:
+		imm_val = *(uint8_t *)ip;
+do_get_stack:
+#ifdef EXEC_SAFE
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
+			frame->cf_sp = sp;
+			err_srt_invalid_sp(frame, imm_val);
+			return NULL;
+		}
+#else /* EXEC_SAFE */
+		ASSERT((frame->cf_stack + imm_val) < sp);
+#endif /* !EXEC_SAFE */
+		result                   = frame->cf_stack[imm_val]; /* Inherit reference. */
+		frame->cf_stack[imm_val] = value;                    /* Inherit reference. */
+		ASSERT_OBJECT(result);
+		break;
+
+	case ASM_STATIC:
+		imm_val = *(uint8_t *)ip;
+do_get_static:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_refstaticc ||
+		            imm_val < code->co_refc) {
+			frame->cf_sp = sp;
+			err_srt_invalid_static(frame, imm_val);
+			return NULL;
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val >= code->co_refc);
+		ASSERT(imm_val < code->co_refstaticc);
+#endif /* !EXEC_SAFE */
+		DeeFunction_RefLockWrite(frame->cf_func);
+		result = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
+		if likely(ITER_ISOK(result)) {
+			frame->cf_func->fo_refv[imm_val] = value; /* Inherit reference. */
+			DeeFunction_RefLockEndWrite(frame->cf_func);
+			DeeFutex_WakeAll(&frame->cf_func->fo_refv[imm_val]);
+		} else {
+			DeeFunction_RefLockEndWrite(frame->cf_func);
+			err_unbound_static(code, frame->cf_ip, imm_val);
+		}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_constc) {
+			frame->cf_sp = sp;
+			err_srt_invalid_static(frame, imm_val);
+			return NULL;
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < code->co_constc);
+#endif /* !EXEC_SAFE */
+		DeeCode_ConstLockWrite(code);
+		result = code->co_constv[imm_val]; /* Inherit reference. */
+		code->co_constv[imm_val] = value;  /* Inherit reference. */
+		DeeCode_ConstLockEndWrite(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		ASSERT_OBJECT(result);
+		break;
+
+	case ASM_EXTERN:
+#ifdef EXEC_SAFE
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
+err_invalid_extern:
+			frame->cf_sp = sp;
+			err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
+			return NULL;
+		}
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		if unlikely(imm_val >= mod->mo_globalc)
+			goto err_invalid_extern;
+#else /* EXEC_SAFE */
+		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+		goto do_get_module_object;
+
+	case ASM_GLOBAL:
+		imm_val = UNALIGNED_GETLE8(ip + 0);
+do_get_global:
+		mod = code->co_module;
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= mod->mo_globalc) {
+			frame->cf_sp = sp;
+			err_srt_invalid_global(frame, imm_val);
+			return NULL;
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+do_get_module_object:
+		DeeModule_LockWrite(mod);
+		result = mod->mo_globalv[imm_val]; /* Inherit reference. */
+		if unlikely(!result) {
+			DeeModule_LockEndWrite(mod);
+			err_unbound_global(mod, imm_val);
+			return NULL;
+		}
+		mod->mo_globalv[imm_val] = value; /* Inherit reference. */
+		DeeModule_LockEndWrite(mod);
+		ASSERT_OBJECT(result);
+		break;
+
+	case ASM_LOCAL:
+		imm_val = UNALIGNED_GETLE8(ip + 0);
+do_get_local:
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_localc) {
+			frame->cf_sp = sp;
+			err_srt_invalid_locale(frame, imm_val);
+			return NULL;
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < code->co_localc);
+#endif /* !EXEC_SAFE */
+		result = frame->cf_frame[imm_val]; /* Inherit reference. */
+		if likely(result) {
+			frame->cf_frame[imm_val] = value; /* Inherit reference. */
+		} else {
+			err_unbound_local(code, frame->cf_ip, imm_val);
+		}
+		break;
+
+	case ASM_EXTENDED1:
+		switch (*ip++) {
+
+		case ASM16_STACK & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_stack;
+
+		case ASM16_STATIC & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_static;
+
+		case ASM16_EXTERN & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+#ifdef EXEC_SAFE
+			if unlikely(imm_val >= code->co_module->mo_importc) {
+err_invalid_extern16:
+				frame->cf_sp = sp;
+				err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
+				return NULL;
+			}
+			mod = code->co_module->mo_importv[imm_val];
+			imm_val = UNALIGNED_GETLE16(ip + 2);
+			if unlikely(imm_val >= mod->mo_globalc)
+				goto err_invalid_extern16;
+#else /* EXEC_SAFE */
+			ASSERT(imm_val < code->co_module->mo_importc);
+			mod = code->co_module->mo_importv[imm_val];
+			imm_val = UNALIGNED_GETLE16(ip + 2);
+			ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+			goto do_get_module_object;
+
+		case ASM16_GLOBAL & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_global;
+
+		case ASM16_LOCAL & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_local;
+
+		default:
+#ifdef EXEC_SAFE
+			goto ill_instr;
+#else /* EXEC_SAFE */
+			__builtin_unreachable();
+#endif /* !EXEC_SAFE */
+		}
+		break;
+
+	default:
+#ifdef EXEC_SAFE
+ill_instr:
+		err_illegal_instruction(code, frame->cf_ip);
+		return NULL;
+#else /* EXEC_SAFE */
+		__builtin_unreachable();
+#endif /* !EXEC_SAFE */
+	}
+	return result;
+}
+
+
+/* NOTE: A reference to `newvalue' is only inherited upon success (return != NULL)
+ * @return: > 0:  Success
+ * @return: == 0: Failure
+ * @return: < 0:  Error (only in SAFE-mode)
+ */
+#ifdef EXEC_FAST
+#define cmpxch_prefix_object(oldvalue, newvalue) cmpxch_prefix_object_fast(frame, code, sp, oldvalue, newvalue)
+PRIVATE WUNUSED bool ATTR_FASTCALL
+cmpxch_prefix_object_fast(struct code_frame *__restrict frame,
+                          DeeCodeObject *__restrict code,
+                          DeeObject **__restrict sp,
+                          DeeObject *oldvalue, DREF DeeObject *newvalue)
+#else /* EXEC_FAST */
+#define cmpxch_prefix_object(oldvalue, newvalue) cmpxch_prefix_object_safe(frame, code, sp, oldvalue, newvalue)
+PRIVATE WUNUSED int ATTR_FASTCALL
+cmpxch_prefix_object_safe(struct code_frame *__restrict frame,
+                          DeeCodeObject *__restrict code,
+                          DeeObject **__restrict sp,
+                          DeeObject *oldvalue, DREF DeeObject *newvalue)
+#endif /* !EXEC_FAST */
+{
+	DREF DeeObject *real_result;
+	instruction_t *ip = frame->cf_ip;
+	DeeModuleObject *mod;
+	uint16_t imm_val;
+	switch (*ip++) {
+
+	case ASM_STACK:
+		imm_val = *(uint8_t *)ip;
+do_get_stack:
+#ifdef EXEC_SAFE
+		if unlikely((frame->cf_stack + imm_val) >= sp) {
+			frame->cf_sp = sp;
+			return err_srt_invalid_sp(frame, imm_val);
+		}
+		if unlikely(!newvalue)
+			goto ill_instr;
+#else /* EXEC_SAFE */
+		ASSERT((frame->cf_stack + imm_val) < sp);
+		ASSERT(newvalue);
+#endif /* !EXEC_SAFE */
+		real_result = frame->cf_stack[imm_val]; /* Inherit reference. */
+		if (real_result != oldvalue)
+			goto nope;
+		frame->cf_stack[imm_val] = newvalue; /* Inherit reference. */
+		ASSERT_OBJECT(real_result);
+		Dee_Decref(real_result);
+		break;
+
+	case ASM_STATIC:
+		imm_val = *(uint8_t *)ip;
+do_get_static:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_refstaticc ||
+		            imm_val < code->co_refc) {
+			frame->cf_sp = sp;
+			return err_srt_invalid_static(frame, imm_val);
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val >= code->co_refc);
+		ASSERT(imm_val < code->co_refstaticc);
+#endif /* !EXEC_SAFE */
+		DeeFunction_RefLockWrite(frame->cf_func);
+		real_result = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
+		if (real_result != oldvalue && (real_result != ITER_DONE || oldvalue)) {
+			DeeFunction_RefLockEndWrite(frame->cf_func);
+			goto nope;
+		}
+		frame->cf_func->fo_refv[imm_val] = newvalue; /* Inherit reference. */
+		DeeFunction_RefLockEndWrite(frame->cf_func);
+		DeeFutex_WakeAll(&frame->cf_func->fo_refv[imm_val]);
+		Dee_XDecref(oldvalue);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_constc) {
+			frame->cf_sp = sp;
+			err_srt_invalid_static(frame, imm_val);
+			return NULL;
+		}
+		if unlikely(!newvalue)
+			goto ill_instr;
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < code->co_constc);
+		ASSERT(newvalue);
+#endif /* !EXEC_SAFE */
+		DeeCode_ConstLockWrite(code);
+		real_result = code->co_constv[imm_val]; /* Inherit reference. */
+		if (real_result != oldvalue) {
+			DeeCode_ConstLockEndWrite(code);
+			goto nope;
+		}
+		code->co_constv[imm_val] = newvalue;  /* Inherit reference. */
+		DeeCode_ConstLockEndWrite(code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		ASSERT_OBJECT(real_result);
+		break;
+
+	case ASM_EXTERN:
+#ifdef EXEC_SAFE
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		if unlikely(UNALIGNED_GETLE8(ip + 0) >= code->co_module->mo_importc) {
+err_invalid_extern:
+			frame->cf_sp = sp;
+			return err_srt_invalid_extern(frame, UNALIGNED_GETLE8(ip + 0), imm_val);
+		}
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		if unlikely(imm_val >= mod->mo_globalc)
+			goto err_invalid_extern;
+#else /* EXEC_SAFE */
+		ASSERT(UNALIGNED_GETLE8(ip + 0) < code->co_module->mo_importc);
+		mod = code->co_module->mo_importv[UNALIGNED_GETLE8(ip + 0)];
+		imm_val = UNALIGNED_GETLE8(ip + 1);
+		ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+		goto do_get_module_object;
+
+	case ASM_GLOBAL:
+		imm_val = UNALIGNED_GETLE8(ip + 0);
+do_get_global:
+		mod = code->co_module;
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= mod->mo_globalc) {
+			frame->cf_sp = sp;
+			return err_srt_invalid_global(frame, imm_val);
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+do_get_module_object:
+		DeeModule_LockWrite(mod);
+		real_result = mod->mo_globalv[imm_val]; /* Inherit reference. */
+		if (real_result != oldvalue) {
+			DeeModule_LockEndWrite(mod);
+			goto nope;
+		}
+		mod->mo_globalv[imm_val] = newvalue; /* Inherit reference. */
+		DeeModule_LockEndWrite(mod);
+		Dee_XDecref(real_result);
+		break;
+
+	case ASM_LOCAL:
+		imm_val = UNALIGNED_GETLE8(ip + 0);
+do_get_local:
+#ifdef EXEC_SAFE
+		if unlikely(imm_val >= code->co_localc) {
+			frame->cf_sp = sp;
+			return err_srt_invalid_locale(frame, imm_val);
+		}
+#else /* EXEC_SAFE */
+		ASSERT(imm_val < code->co_localc);
+#endif /* !EXEC_SAFE */
+		real_result = frame->cf_frame[imm_val]; /* Inherit reference. */
+		if (real_result != oldvalue)
+			goto nope;
+		frame->cf_frame[imm_val] = newvalue; /* Inherit reference. */
+		Dee_XDecref(real_result);
+		break;
+
+	case ASM_EXTENDED1:
+		switch (*ip++) {
+
+		case ASM16_STACK & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_stack;
+
+		case ASM16_STATIC & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_static;
+
+		case ASM16_EXTERN & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+#ifdef EXEC_SAFE
+			if unlikely(imm_val >= code->co_module->mo_importc) {
+err_invalid_extern16:
+				frame->cf_sp = sp;
+				return err_srt_invalid_extern(frame, UNALIGNED_GETLE16(ip + 0), imm_val);
+			}
+			mod = code->co_module->mo_importv[imm_val];
+			imm_val = UNALIGNED_GETLE16(ip + 2);
+			if unlikely(imm_val >= mod->mo_globalc)
+				goto err_invalid_extern16;
+#else /* EXEC_SAFE */
+			ASSERT(imm_val < code->co_module->mo_importc);
+			mod = code->co_module->mo_importv[imm_val];
+			imm_val = UNALIGNED_GETLE16(ip + 2);
+			ASSERT(imm_val < mod->mo_globalc);
+#endif /* !EXEC_SAFE */
+			goto do_get_module_object;
+
+		case ASM16_GLOBAL & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_global;
+
+		case ASM16_LOCAL & 0xff:
+			imm_val = UNALIGNED_GETLE16(ip + 0);
+			goto do_get_local;
+
+		default:
+#ifdef EXEC_SAFE
+			goto ill_instr;
+#else /* EXEC_SAFE */
+			__builtin_unreachable();
+#endif /* !EXEC_SAFE */
+		}
+		break;
+
+	default:
+#ifdef EXEC_SAFE
+ill_instr:
+		return err_illegal_instruction(code, frame->cf_ip);
+#else /* EXEC_SAFE */
+		__builtin_unreachable();
+#endif /* !EXEC_SAFE */
+	}
+	return true;
+nope:
+	return false;
+}
+
 
 #ifdef EXEC_FAST
 PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
@@ -1235,12 +1460,14 @@ do_push_bnd_extern:
 
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		TARGET(ASM_PUSH_BND_STATIC, -0, +1) {
+			DeeObject *value;
 			imm_val = READ_imm8();
 do_push_bnd_static:
 			ASSERT_GLOBALimm();
 			/*STATIC_LOCKREAD();*/
-			PUSHREF(DeeBool_For(STATICimm != NULL));
+			value = STATICimm;
 			/*STATIC_LOCKENDREAD();*/
+			PUSHREF(DeeBool_For(ITER_ISOK(value)));
 			DISPATCH();
 		}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -1494,7 +1721,9 @@ do_del_static:
 			del_object = *p_object;
 			*p_object  = NULL;
 			STATIC_LOCKENDWRITE();
-			Dee_XDecref(del_object);
+			DeeFutex_WakeAll(p_object);
+			if (ITER_ISOK(del_object))
+				Dee_Decref(del_object);
 			DISPATCH();
 		}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -1649,16 +1878,26 @@ do_super_this_r:
 		}
 
 		TARGET(ASM_POP_STATIC, -1, +0) {
+			DeeObject **p_old_value;
 			DeeObject *old_value;
 			imm_val = READ_imm8();
 do_pop_static:
 			ASSERT_STATICimm();
+			p_old_value = &STATICimm;
 			STATIC_LOCKWRITE();
-			old_value = STATICimm;
-			STATICimm = POP();
+			old_value = *p_old_value;
+			*p_old_value = POP();
 			STATIC_LOCKENDWRITE();
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			DeeFutex_WakeAll(p_old_value);
+			if (ITER_ISOK(old_value)) {
+				ASSERT_OBJECT(old_value);
+				Dee_Decref(old_value);
+			}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			ASSERT_OBJECT(old_value);
 			Dee_Decref(old_value);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DISPATCH();
 		}
 
@@ -1804,18 +2043,21 @@ do_push_const:
 		}
 
 		TARGET(ASM_PUSH_STATIC, -0, +1) {
+			DeeObject *value;
 			imm_val = READ_imm8();
 do_push_static:
 			ASSERT_STATICimm();
 			STATIC_LOCKREAD();
+			value = STATICimm;
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-			if unlikely(!STATICimm) {
+			if unlikely(!ITER_ISOK(value)) {
 				STATIC_LOCKENDREAD();
 				goto err_unbound_static;
 			}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-			PUSHREF(STATICimm);
+			Dee_Incref(value);
 			STATIC_LOCKENDREAD();
+			PUSH(value);
 			DISPATCH();
 		}
 
@@ -6534,6 +6776,109 @@ prefix_do_unpack:
 							DISPATCH();
 						}
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+						PREFIX_TARGET(ASM_CMPXCH_UB_LOCK) {
+							/* Only allowed for static variables:
+							 *    fd xx    f0 9c   // 8-bit static ID
+							 * f0 fd xx xx f0 9c   // 16-bit static ID
+							 */
+							DeeObject *value;
+							if (frame->cf_ip[0] == ((ASM16_STATIC & 0xff00) >> 8)) {
+#ifdef EXEC_FAST
+								ASSERT(frame->cf_ip[1] == (ASM16_STATIC & 0xff));
+#else /* EXEC_FAST */
+								if unlikely(frame->cf_ip[1] != (ASM16_STATIC & 0xff))
+									goto unknown_instruction;
+#endif /* !EXEC_FAST */
+								imm_val = UNALIGNED_GETLE16(frame->cf_ip + 2);
+							} else {
+#ifdef EXEC_FAST
+								ASSERT(frame->cf_ip[0] == ASM_STATIC);
+#else /* EXEC_FAST */
+								if unlikely(frame->cf_ip[0] != ASM_STATIC)
+									goto unknown_instruction;
+#endif /* !EXEC_FAST */
+								imm_val = *(frame->cf_ip + 1);
+							}
+							ASSERT_STATICimm();
+again_check_staticimm_for_cmpxch_ub_lock:
+							STATIC_LOCKWRITE();
+							value = STATICimm;
+							if (value == NULL) {
+								STATICimm = ITER_DONE;
+								STATIC_LOCKENDWRITE();
+								/* Special case: don't wake waiting threads here! */
+								value = Dee_True;
+							} else if (value == ITER_DONE) {
+								STATIC_LOCKENDWRITE();
+								if unlikely(DeeFutex_WaitPtr(&STATICimm, (uintptr_t)(void *)ITER_DONE))
+									HANDLE_EXCEPT();
+								goto again_check_staticimm_for_cmpxch_ub_lock;
+							} else {
+								STATIC_LOCKENDWRITE();
+								value = Dee_False;
+							}
+							PUSHREF(value);
+							DISPATCH();
+						}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+						PREFIX_TARGET(ASM_CMPXCH_UB_POP) {
+#ifdef EXEC_FAST
+							bool ok = cmpxch_prefix_object(NULL, FIRST);
+#else /* EXEC_FAST */
+							int ok = cmpxch_prefix_object(NULL, FIRST);
+							if unlikely(ok < 0)
+								HANDLE_EXCEPT();
+#endif /* !EXEC_FAST */
+							if (ok) {
+								FIRST = Dee_True;
+							} else {
+								Dee_Decref(FIRST);
+								FIRST = Dee_False;
+							}
+							Dee_Incref(FIRST);
+							DISPATCH();
+						}
+
+						PREFIX_TARGET(ASM_CMPXCH_POP_UB) {
+#ifdef EXEC_FAST
+							bool ok = cmpxch_prefix_object(FIRST, NULL);
+#else /* EXEC_FAST */
+							int ok = cmpxch_prefix_object(FIRST, NULL);
+							if unlikely(ok < 0)
+								HANDLE_EXCEPT();
+#endif /* !EXEC_FAST */
+							if (ok) {
+								FIRST = Dee_True;
+							} else {
+								Dee_Decref(FIRST);
+								FIRST = Dee_False;
+							}
+							Dee_Incref(FIRST);
+							DISPATCH();
+						}
+
+						PREFIX_TARGET(ASM_CMPXCH_POP_POP) {
+#ifdef EXEC_FAST
+							bool ok = cmpxch_prefix_object(SECOND, FIRST);
+#else /* EXEC_FAST */
+							int ok = cmpxch_prefix_object(SECOND, FIRST);
+							if unlikely(ok < 0)
+								HANDLE_EXCEPT();
+#endif /* !EXEC_FAST */
+							Dee_Decref(SECOND);
+							if (ok) {
+								(void)POP();
+								FIRST = Dee_True;
+							} else {
+								POPREF();
+								FIRST = Dee_False;
+							}
+							Dee_Incref(FIRST);
+							DISPATCH();
+						}
+
 						PREFIX_TARGET(ASM16_LROT) {
 							DREF DeeObject *drop_object;
 							DREF DeeObject *append_object;
@@ -6810,6 +7155,7 @@ prefix_do_unpack:
 				}
 
 				PREFIX_TARGET(ASM_POP_STATIC) {
+					DeeObject **p_old_value;
 					DeeObject *old_value;
 					DREF DeeObject *value;
 					imm_val = READ_imm8();
@@ -6818,12 +7164,21 @@ do_prefix_pop_static:
 					value = get_prefix_object();
 					if unlikely(!value)
 						HANDLE_EXCEPT();
+					p_old_value = &STATICimm;
 					STATIC_LOCKWRITE();
-					old_value = STATICimm;
-					STATICimm = value; /* Inherit reference. */
+					old_value = *p_old_value;
+					*p_old_value = value; /* Inherit reference. */
 					STATIC_LOCKENDWRITE();
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+					DeeFutex_WakeAll(p_old_value);
+					if (ITER_ISOK(old_value)) {
+						ASSERT_OBJECT(old_value);
+						Dee_Decref(old_value);
+					}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					ASSERT_OBJECT(old_value);
 					Dee_Decref(old_value);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 					DISPATCH();
 				}
 
@@ -7198,6 +7553,10 @@ prefix_unknown_instruction:
 	default:
 #endif /* USE_SWITCH */
 #ifndef USE_SWITCH
+target_ASM_CMPXCH_UB_LOCK:
+target_ASM_CMPXCH_POP_POP:
+target_ASM_CMPXCH_POP_UB:
+target_ASM_CMPXCH_UB_POP:
 target_ASM_UD:
 target_ASM_RESERVED1:
 target_ASM_RESERVED2:
@@ -7622,7 +7981,8 @@ __pragma_GCC_diagnostic_pop
 #undef YIELD
 #undef RETURN
 #undef USE_SWITCH
-#undef set_prefix_object
+#undef cmpxch_prefix_object
 #undef xch_prefix_object
 #undef get_prefix_object_ptr
+#undef set_prefix_object
 #undef get_prefix_object

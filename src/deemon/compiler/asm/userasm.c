@@ -340,6 +340,14 @@ asm_invoke_operand_print(struct asm_invoke_operand *__restrict self,
 
 	case OPERAND_CLASS_VARKWDS:
 		raw_operand_string = "varkwds";
+		goto do_raw_string;
+
+	case OPERAND_CLASS_UNBOUND:
+		raw_operand_string = "unbound";
+		goto do_raw_string;
+
+	case OPERAND_CLASS_LOCK:
+		raw_operand_string = "lock";
 do_raw_string:
 		temp = ascii_printer_print(printer,
 		                           raw_operand_string,

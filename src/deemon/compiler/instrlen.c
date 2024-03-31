@@ -253,8 +253,8 @@ PRIVATE uint8_t const intr_len[256] = {
 	/* 0x6b */ 4, /* `ASM_CALLCMEMBER_THIS_R':      `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	/* 0x6c */ 1, /* --- */
 	/* 0x6d */ 1, /* --- */
-	/* 0x6e */ 3, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
-	/* 0x6f */ 4, /* `ASM_FUNCTION_C_16':           `push function const <imm8>, #<imm16>+1' */
+	/* 0x6e */ 3, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>' */
+	/* 0x6f */ 4, /* `ASM_FUNCTION_C_16':           `push function const <imm8>, #<imm16>' */
 	/* 0x70 */ 1, /* `ASM_CAST_INT':                `cast top, int' */
 	/* 0x71 */ 1, /* `ASM_INV':                     `inv top' */
 	/* 0x72 */ 1, /* `ASM_POS':                     `pos top' */
@@ -512,8 +512,8 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x6b */ 7, /* `ASM16_CALLCMEMBER_THIS_R':    `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	/* 0x6c */ 2, /* --- */
 	/* 0x6d */ 2, /* --- */
-	/* 0x6e */ 5, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
-	/* 0x6f */ 6, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>+1' */
+	/* 0x6e */ 5, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>' */
+	/* 0x6f */ 6, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>' */
 	/* 0x70 */ 4, /* `ASM_SUPERGETATTR_THIS_RC':    `push getattr this, ref <imm8>, const <imm8>' */
 	/* 0x71 */ 6, /* `ASM16_SUPERGETATTR_THIS_RC':  `push getattr this, ref <imm16>, const <imm16>' */
 	/* 0x72 */ 5, /* `ASM_SUPERCALLATTR_THIS_RC':   `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
@@ -558,10 +558,10 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x99 */ 2, /* --- */
 	/* 0x9a */ 2, /* --- */
 	/* 0x9b */ 2, /* --- */
-	/* 0x9c */ 2, /* --- */
-	/* 0x9d */ 2, /* --- */
-	/* 0x9e */ 2, /* --- */
-	/* 0x9f */ 2, /* --- */
+	/* 0x9c */ 2, /* `ASM_CMPXCH_UB_LOCK':          `push  cmpxch PREFIX, unbound, lock' */
+	/* 0x9d */ 2, /* `ASM_CMPXCH_UB_POP':           `push  cmpxch PREFIX, unbound, pop' */
+	/* 0x9e */ 2, /* `ASM_CMPXCH_POP_UB':           `push  cmpxch PREFIX, pop, unbound' */
+	/* 0x9f */ 2, /* `ASM_CMPXCH_POP_POP':          `push  cmpxch PREFIX, pop, pop' */
 	/* 0xa0 */ 2, /* --- */
 	/* 0xa1 */ 4, /* `ASM16_PRINT_C':               `print const <imm16>' */
 	/* 0xa2 */ 4, /* `ASM16_PRINT_C_SP':            `print const <imm16>, sp' */
@@ -771,8 +771,8 @@ PRIVATE uint8_t const stack_effect[256] = {
 	/* 0x6b */ STACK_EFFECT_UNDEF, /* `ASM_CALLCMEMBER_THIS_R':      `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	/* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>+1' */
-	/* 0x6f */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C_16':           `push function const <imm8>, #<imm16>+1' */
+	/* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C':              `push function const <imm8>, #<imm8>' */
+	/* 0x6f */ STACK_EFFECT_UNDEF, /* `ASM_FUNCTION_C_16':           `push function const <imm8>, #<imm16>' */
 	/* 0x70 */ STACK_EFFECT(1, 1), /* `ASM_CAST_INT':                `cast top, int' */
 	/* 0x71 */ STACK_EFFECT(1, 1), /* `ASM_INV':                     `inv top' */
 	/* 0x72 */ STACK_EFFECT(1, 1), /* `ASM_POS':                     `pos top' */
@@ -1030,8 +1030,8 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x6b */ STACK_EFFECT_UNDEF, /* `ASM16_CALLCMEMBER_THIS_R':    `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	/* 0x6c */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x6d */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>+1' */
-	/* 0x6f */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>+1' */
+	/* 0x6e */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C':            `push function const <imm16>, #<imm8>' */
+	/* 0x6f */ STACK_EFFECT_UNDEF, /* `ASM16_FUNCTION_C_16':         `push function const <imm16>, #<imm16>' */
 	/* 0x70 */ STACK_EFFECT(0, 1), /* `ASM_SUPERGETATTR_THIS_RC':    `push getattr this, ref <imm8>, const <imm8>' */
 	/* 0x71 */ STACK_EFFECT(0, 1), /* `ASM16_SUPERGETATTR_THIS_RC':  `push getattr this, ref <imm16>, const <imm16>' */
 	/* 0x72 */ STACK_EFFECT_UNDEF, /* `ASM_SUPERCALLATTR_THIS_RC':   `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
@@ -1076,10 +1076,10 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x99 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x9a */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0x9b */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9c */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9d */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9e */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9f */ STACK_EFFECT_UNDEF, /* --- */
+	/* 0x9c */ STACK_EFFECT(0, 1), /* `ASM_CMPXCH_UB_LOCK':          `push  cmpxch PREFIX, unbound, lock' */
+	/* 0x9d */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_UB_POP':           `push  cmpxch PREFIX, unbound, pop' */
+	/* 0x9e */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_POP_UB':           `push  cmpxch PREFIX, pop, unbound' */
+	/* 0x9f */ STACK_EFFECT(2, 1), /* `ASM_CMPXCH_POP_POP':          `push  cmpxch PREFIX, pop, pop' */
 	/* 0xa0 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0xa1 */ STACK_EFFECT(0, 0), /* `ASM16_PRINT_C':               `print const <imm16>' */
 	/* 0xa2 */ STACK_EFFECT(0, 0), /* `ASM16_PRINT_C_SP':            `print const <imm16>, sp' */

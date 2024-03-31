@@ -52,9 +52,9 @@ struct host_unwind_ms64_writer {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 host_unwind_ms64_writer_writefun(struct host_unwind_ms64_writer *__restrict self,
-                                     uint32_t imagerel_BeginAddress,
-                                     uint32_t imagerel_EndAddress,
-                                     uint32_t sp_offset) {
+                                 uint32_t imagerel_BeginAddress,
+                                 uint32_t imagerel_EndAddress,
+                                 uint32_t sp_offset) {
 	NT_RUNTIME_FUNCTION *pFunction;
 	NT_UNWIND_INFO *pUnwindInfo;
 	NT_UNWIND_CODE *pCode;

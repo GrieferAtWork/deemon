@@ -1388,10 +1388,27 @@
 /*      ASM_                  0xf099  *               --------                            - ------------------ */
 /*      ASM_                  0xf09a  *               --------                            - ------------------ */
 /*      ASM_                  0xf09b  *               --------                            - ------------------ */
-/*      ASM_                  0xf09c  *               --------                            - ------------------ */
-/*      ASM_                  0xf09d  *               --------                            - ------------------ */
-/*      ASM_                  0xf09e  *               --------                            - ------------------ */
-/*      ASM_                  0xf09f  *               --------                            - ------------------ */
+#define ASM_CMPXCH_UB_LOCK    0xf09c /* [2][-0,+1]   `push  cmpxch PREFIX, unbound, lock' - Atomically check if PREFIX is unbound, and replace its value with a special "lock" value.
+                                      * NOTE: Unless otherwise documented, other instructions (except ASM_CMPXCH_UB_LOCK)
+                                      *       will treat "lock" values the same as "unbound", whereas ASM_CMPXCH_UB_LOCK
+                                      *       will block if the current value is "lock".
+                                      * NOTE: This instruction requires "PREFIX" to be `ASM_STATIC' or `ASM16_STATIC'.
+                                      * >> again:
+                                      * >> LOCK();
+                                      * >> if (PREFIX is bound) {
+                                      * >>     PUSH(false);
+                                      * >> } else {
+                                      * >>     if (PREFIX === lock) {
+                                      * >>         WHILE_WHILE(PREFIX === lock);
+                                      * >>         goto again;
+                                      * >>     }
+                                      * >>     PREFIX = lock;
+                                      * >>     PUSH(true);
+                                      * >> }
+                                      * >> UNLOCK(); */
+#define ASM_CMPXCH_UB_POP     0xf09d /* [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_POP_UB     0xf09e /* [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened. */
 /*      ASM_                  0xf0a0  *               --------                            - ------------------ */
 #define ASM16_PRINT_C         0xf0a1 /* [4][-0,+0]   `print const <imm16>'                - Print a constant from `<imm16>' to stdout. */
 #define ASM16_PRINT_C_SP      0xf0a2 /* [4][-0,+0]   `print const <imm16>, sp'            - Same as `ASM_PRINT_C16', but follow up by printing a space character. */
@@ -1457,6 +1474,8 @@
 #define ASM16_CALL_EXTERN     0xf0dd /* [7][-n,+1]   `push call extern <imm16>:<imm16>, #<imm8>' - Pop #<imm8> values from the stack, pack then into a Tuple, then call an external function referenced by <imm16>:<imm16>. */
 #define ASM16_CALL_GLOBAL     0xf0de /* [5][-n,+1]   `push call global <imm16>, #<imm8>'  - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in global slot <imm16>. */
 #define ASM16_CALL_LOCAL      0xf0df /* [5][-n,+1]   `push call local <imm16>, #<imm8>'   - Pop #<imm8> values from the stack, pack then into a Tuple, then call a function in local slot <imm16>. */
+
+/* Reserved. */
 /*      ASM_                  0xf0e0  *               --------                            - ------------------ */
 /*      ASM_                  0xf0e1  *               --------                            - ------------------ */
 /*      ASM_                  0xf0e2  *               --------                            - ------------------ */
@@ -1473,6 +1492,8 @@
 /*      ASM_                  0xf0ed  *               --------                            - ------------------ */
 /*      ASM_                  0xf0ee  *               --------                            - ------------------ */
 /*      ASM_                  0xf0ef  *               --------                            - ------------------ */
+
+/* Reserved. */
 /*      ASM_                  0xf0f0  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f1  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f2  *               --------                            - ------------------ */
@@ -1481,6 +1502,8 @@
 /*      ASM_                  0xf0f5  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f6  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f7  *               --------                            - ------------------ */
+
+/* 16-bit prefixes. */
 /*      ASM_                  0xf0f8  *               --------                            - ------------------ */
 /*      ASM_                  0xf0f9  *               --------                            - ------------------ */
 #define ASM16_STACK           0xf0fa /* `stack #<imm16>'                                  - Use an Object located on the stack as storage class.

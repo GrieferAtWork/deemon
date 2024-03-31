@@ -1152,9 +1152,10 @@ struct Dee_function_object {
 	Dee_atomic_rwlock_t                       fo_reflock; /* Lock used by `ASM_STATIC', `ASM_PUSH_STATIC' and `ASM_POP_STATIC' instructions when accessing `fo_refv'. */
 #endif /* !CONFIG_NO_THREADS */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv);   /* [if(. <  fo_code->co_refc), [1..1, const]]
-	                                                       * [if(. >= fo_code->co_refc), [0..1, lock(fo_reflock)]]
+	                                                       * [if(. >= fo_code->co_refc), [0..1|ITER_DONE, lock(fo_reflock)]]
 	                                                       * [fo_code->co_refstaticc]
-	                                                       * Vector of referenced objects & static variables. */
+	                                                       * Vector of referenced objects & static variables
+	                                                       * Values may be set to ITER_DONE by `ASM_CMPXCH_UB_LOCK'. */
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, fo_refv);   /* [1..1][const][fo_code->co_refstaticc] Vector of referenced objects. */
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */

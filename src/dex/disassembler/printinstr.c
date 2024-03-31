@@ -436,7 +436,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xff */ "local  ", /* `ASM_LOCAL' */
 };
 
-PRIVATE char const mnemonic_names_f0[256][32] = {
+PRIVATE char const mnemonic_names_f0[256][36] = {
 	/* 0xf000 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf001 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf002 */ UNKNOWN_MNEMONIC, /* --- */
@@ -593,10 +593,10 @@ PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf099 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf09a */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf09b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09c */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09d */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09e */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09f */ UNKNOWN_MNEMONIC, /* --- */
+	/* 0xf09c */ "push   cmpxch PREFIX, unbound, lock", /* `ASM_CMPXCH_UB_LOCK' */
+	/* 0xf09d */ "push   cmpxch PREFIX, unbound, pop", /* `ASM_CMPXCH_UB_POP' */
+	/* 0xf09e */ "push   cmpxch PREFIX, pop, unbound", /* `ASM_CMPXCH_POP_UB' */
+	/* 0xf09f */ "push   cmpxch PREFIX, pop, pop", /* `ASM_CMPXCH_POP_POP' */
 	/* 0xf0a0 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0a1 */ "print  ", /* `ASM16_PRINT_C' */
 	/* 0xf0a2 */ "print  ", /* `ASM16_PRINT_C_SP' */
@@ -1892,6 +1892,24 @@ do_mov_prefix_mnemonic:
 			mnemonic = ", none";
 			goto do_mov_prefix_mnemonic;
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+		case ASM_CMPXCH_UB_LOCK:
+			mnemonic = ", unbound, lock";
+do_cmpxch_prefix_mnemonic:
+			PRINT("cmpxch ");
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
+			print(mnemonic, strlen(mnemonic));
+			goto done;
+		case ASM_CMPXCH_UB_POP:
+			mnemonic = ", unbound, pop";
+			goto do_cmpxch_prefix_mnemonic;
+		case ASM_CMPXCH_POP_UB:
+			mnemonic = ", pop, unbound";
+			goto do_cmpxch_prefix_mnemonic;
+		case ASM_CMPXCH_POP_POP:
+			mnemonic = ", pop, pop";
+			goto do_cmpxch_prefix_mnemonic;
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		case ASM_FUNCTION_C:
 		case ASM_FUNCTION_C_16:

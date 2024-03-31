@@ -545,6 +545,10 @@ END(_impl_assert_failed)
 #define SYM_DeeInt_Zero     (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 1)
 #define SYM_DeeInt_One      (SYM(DeeInt_MinusOne_Zero_One) + _SYM_DeeInt_STRIDE * 2)
 
+
+#define SYM_Dee_False (SYM(Dee_FalseTrue)+0)
+#define SYM_Dee_True  (SYM(Dee_FalseTrue)+8)
+
 .text
 
 
@@ -1344,6 +1348,10 @@ exec_on_altstack:
 
 
 
+	ADJUST_CFA_OFFSET(4)
+invop_x4:
+	addl   $4, %esp
+	ADJUST_CFA_OFFSET(-4)
 invop:
 #if !defined(CODE_IS_REGISTER) && !defined(NDEBUG)
 	/* Assert that the host's stack is correctly aligned. */
@@ -2803,6 +2811,7 @@ target_pop_static:
 1:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	movl   FRAME_FUNC, %ecx
+	leal   fo_refv(%ecx,%eax,4), %eax
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
@@ -2811,13 +2820,23 @@ target_pop_static:
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
 	sp_pop %edx
-	xchgl  fo_refv(%ecx,%eax,4), %edx /* Exchange the static variable. */
+	xchgl  (%eax), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	movl   FRAME_FUNC, %ecx
 	rwlock_endwrite fo_reflock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_WakeAll,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
 	testl  %edx, %edx
 	jz     .disp
+	cmpl   $(ITER_DONE), %edx
+	je     .disp
 	decref %edx
 	jmp    .disp
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -3102,6 +3121,8 @@ target_push_static:
 	movl   fo_refv(%ecx,%eax,4), %edx
 	testl  %edx, %edx
 	jz     99f
+	cmpl   $(ITER_DONE), %edx
+	je     99f
 	sp_push %edx, 1 /* Push the static variable. */
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread fo_reflock(%ecx)
@@ -3150,7 +3171,7 @@ target_push_const:
 	movl   co_constv(CODE_OR_ECX), %edx
 	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
 	movl   (%edx,%eax,4), %edx
-	sp_push %edx, 1 /* Push the static variable. */
+	sp_push %edx, 1 /* Push the constant variable. */
 	jmp    .disp
 
 
@@ -3576,12 +3597,12 @@ target_push_none:
 	sp_push $(SYM(DeeNone_Singleton))
 	jmp    .disp
 target_push_true:
-	incref_addr SYM(Dee_FalseTrue)+8
-	sp_push $(SYM(Dee_FalseTrue)+8)
+	incref_addr SYM_Dee_True
+	sp_push $(SYM_Dee_True)
 	jmp    .disp
 target_push_false:
-	incref_addr SYM(Dee_FalseTrue)+0
-	sp_push $(SYM(Dee_FalseTrue)+0)
+	incref_addr SYM_Dee_False
+	sp_push $(SYM_Dee_False)
 	jmp    .disp
 
 
@@ -7149,6 +7170,335 @@ prefix_target_decpost:
 ADJUST_CFA_OFFSET(-4)
 
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+prefix_target_cmpxch_ub_lock:
+	/* Only allowed for static variables:
+	 *    fd xx    f0 9c   // 8-bit static ID
+	 * f0 fd xx xx f0 9c   // 16-bit static ID
+	 *
+	 * In both cases, "PC" points after the "9c"
+	 */
+	movl   FRAME_PC, %ecx
+	movzbl 1(%ecx), %eax
+	cmpb   $((ASM16_STATIC & 0xff00) >> 8), (%ecx)
+	jne    1f
+	movzwl 2(%ecx), %eax
+1:	/* %eax == sid */
+	movl   FRAME_FUNC, %ecx
+	leal   fo_refv(%ecx,%eax,4), %eax
+	/* %eax == &func->fo_refv[sid] */
+.Lagain_check_staticimm_for_cmpxch_ub_lock:
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%ecx), %edx
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+
+	/* Load the current value */
+	movl   (%eax), %edx
+	testl  %edx, %edx
+	jz     .Lprefix_target_cmpxch_ub_lock__set__ITER_DONE
+	cmpl   $(ITER_DONE), %edx
+	jz     .Lprefix_target_cmpxch_ub_lock__waitfor__ITER_DONE
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	jmp    target_push_false
+
+.Lprefix_target_cmpxch_ub_lock__set__ITER_DONE:
+	movl   $(ITER_DONE), (%eax)
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	/* Special case: don't wake waiting threads here! */
+	jmp    target_push_true
+
+.Lprefix_target_cmpxch_ub_lock__waitfor__ITER_DONE:
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%ecx)
+#endif /* !CONFIG_NO_THREADS */
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  $(ITER_DONE)  /* DeeFutex_Wait32:expected */
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax          /* DeeFutex_Wait32:addr */
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_Wait32,8)
+	ADJUST_CFA_OFFSET(-8)
+	testl  %eax, %eax
+	jnz    .except_x4
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	jmp    .Lagain_check_staticimm_for_cmpxch_ub_lock
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+prefix_target_cmpxch_ub_pop:
+	movl   -4(SP), %edx    /* Inherit reference */
+	xorl   %ecx, %ecx
+.do_prefix_target_cmpxchg_ecx_to_edx_inherited:
+	/* %ecx:      DeeObject *old_value; // [0..1]
+	 * %edx: DREF DeeObject *new_value; // [0..1] Inherit: always
+	 * SP    == OUT_SP
+	 * FIRST == UNDEFINED  (to-be filled in with true/false)
+	 */
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	movl   FRAME_PC, %eax
+	movzbl 0(%eax), %edx
+	ASSERT_ABOVE_EQUAL(%edx,$0xf0)
+	ASSERT_BELOW_EQUAL(%edx,$0xff)
+	/* Select the proper functionality for doing this:
+	 * - FRAME_PC: %eax
+	 * - old_value: %ecx
+	 * - new_value: 0(%esp) */
+	jmp    *(impl_cmpxch_prefix_table-(0xf0*4))(,%edx,4)
+
+
+
+impl_cmpxch_prefix16_stack:  /* 0xf0fa : ASM16_STACK */
+	movzwl 2(%eax), %eax
+	jmp    1f
+impl_cmpxch_prefix_stack:    /* 0xfa : ASM_STACK */
+	movzbl 1(%eax), %eax
+1:	movl   FRAME_STACK, %edx
+	leal   (%edx,%eax,4), %edx
+	ASSERT_BELOW(%edx,SP) /* Stack address is too large. */
+	ASSERT_ABOVE_EQUAL(%edx,FRAME_STACK) /* Stack address overflows. */
+	cmpl   %ecx, (%edx)
+	jne    .Lpopref_from_esp_and_set_FIRST_to_false
+	popl   %ecx
+	ASSERT_NONZERO(%ecx)
+	ADJUST_CFA_OFFSET(-4)
+	xchgl  %ecx, (%edx)
+	jmp    .Lxdecref_ecx_and_set_FIRST_to_true
+	ADJUST_CFA_OFFSET(4)
+
+
+
+impl_cmpxch_prefix16_static: /* 0xf0fd : ASM16_STATIC */
+	movzwl 2(%eax), %eax
+	jmp    1f
+impl_cmpxch_prefix_static:   /* 0xfd : ASM_STATIC */
+	movzbl 1(%eax), %eax
+1:
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_ABOVE_EQUAL(%ax,co_refc(CODE_OR_EDX))
+	ASSERT_BELOW(%ax,co_refstaticc(CODE_OR_EDX))
+#endif /* !NDEBUG */
+	movl   FRAME_FUNC, %edx
+#ifndef CONFIG_NO_THREADS
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write fo_reflock(%edx), %ecx
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	movl   FRAME_FUNC, %edx
+#endif /* !CONFIG_NO_THREADS */
+	leal   fo_refv(%edx,%eax,4), %eax
+	cmpl   %ecx, (%eax)
+	jne    .Lunlock_function_and_xpopref_from_esp_and_set_FIRST_to_false
+	popl   %ecx          /* Inherit reference */
+	xchgl  %ecx, (%eax)  /* Inherit reference */
+#ifndef CONFIG_NO_THREADS
+	rwlock_endwrite fo_reflock(%edx)
+#endif /* !CONFIG_NO_THREADS */
+	pushl  %ecx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_WakeAll,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+	jmp    .Lxdecref_ecx_and_set_FIRST_to_true
+	ADJUST_CFA_OFFSET(4)
+
+#ifndef CONFIG_NO_THREADS
+.Lunlock_function_and_xpopref_from_esp_and_set_FIRST_to_false:
+	rwlock_endwrite fo_reflock(%edx)
+	jmp    .Lxpopref_from_esp_and_set_FIRST_to_false
+#else /* !CONFIG_NO_THREADS */
+.Lunlock_function_and_xpopref_from_esp_and_set_FIRST_to_false = .Lxpopref_from_esp_and_set_FIRST_to_false
+#endif /* CONFIG_NO_THREADS */
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	/* XXX: This part will probably never be implementd, since "#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION" is deprecated! */
+	jmp    impl_cmpxch_prefix_invop
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+
+
+impl_cmpxch_prefix16_extern: /* 0xf0fc : ASM16_EXTERN */
+	LOAD_CODE(%edx)
+	movl   co_module(CODE_OR_EDX), %edx
+	movzwl 2(%eax), %eax
+	ASSERT_BELOW(%ax,mo_importc(%edx))
+	movl   mo_importv(%edx), %edx
+	movl   (%edx,%eax,4), %edx
+	movl   FRAME_PC, %eax
+	movzwl 4(%eax), %eax
+	jmp    1f
+impl_cmpxch_prefix_extern:   /* 0xfc : ASM_EXTERN */
+	LOAD_CODE(%edx)
+	movl   co_module(CODE_OR_EDX), %edx
+	movzbl 1(%eax), %eax
+	ASSERT_BELOW(%ax,mo_importc(%edx))
+	movl   mo_importv(%edx), %edx
+	movl   (%edx,%eax,4), %edx
+	movl   FRAME_PC, %eax
+	movzbl 2(%eax), %eax
+1:	/* Select the proper functionality for doing this:
+	 * - uint16_t         mid:       %eax
+	 * - DeeModuleObject *mod:       %edx
+	 * - DeeObject       *old_value: %ecx
+	 * - DREF DeeObject  *new_value: 0(%esp) */
+.Lcommon_cmpxch_prefix_extern_or_global:
+	ASSERT_BELOW(%ax,mo_globalc(%edx))
+#ifndef CONFIG_NO_THREADS
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	pushl  %ecx
+	ADJUST_CFA_OFFSET(4)
+	rwlock_write mo_lock(%edx), %ecx
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	movl   0(%esp), %edx
+#endif /* ONFIG_NO_THREADS */
+	movl   mo_globalv(%edx), %edx
+	leal   (%edx,%eax,4), %eax
+	cmpl   %ecx, (%eax)
+	jne    .Lunlock_module_and_xpopref_from_esp_and_set_FIRST_to_false
+#ifdef CONFIG_NO_THREADS
+	popl   %ecx
+	ADJUST_CFA_OFFSET(-4)
+#else /* CONFIG_NO_THREADS */
+	movl   4(%esp), %ecx
+#endif /* !CONFIG_NO_THREADS */
+	xchgl  %ecx, (%eax)
+#ifndef CONFIG_NO_THREADS
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	rwlock_endwrite mo_lock(%edx)
+	addl   $(4), %esp
+	ADJUST_CFA_OFFSET(-4)
+#endif /* !CONFIG_NO_THREADS */
+	jmp    .Lxdecref_ecx_and_set_FIRST_to_true
+#ifndef CONFIG_NO_THREADS
+	ADJUST_CFA_OFFSET(4)
+.Lunlock_module_and_xpopref_from_esp_and_set_FIRST_to_false:
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
+	rwlock_endwrite mo_lock(%edx)
+	jmp    .Lxpopref_from_esp_and_set_FIRST_to_false
+#else /* !CONFIG_NO_THREADS */
+.Lunlock_module_and_xpopref_from_esp_and_set_FIRST_to_false = .Lxpopref_from_esp_and_set_FIRST_to_false
+#endif /* CONFIG_NO_THREADS */
+
+
+
+impl_cmpxch_prefix16_global: /* 0xf0fe : ASM16_GLOBAL */
+	movzwl 2(%eax), %eax
+	jmp    1f
+impl_cmpxch_prefix_global:   /* 0xfe : ASM_GLOBAL */
+	movzbl 1(%eax), %eax
+1:	LOAD_CODE(%edx)
+	movl   co_module(CODE_OR_EDX), %edx
+	jmp    .Lcommon_cmpxch_prefix_extern_or_global
+
+
+
+impl_cmpxch_prefix16_local:  /* 0xf0ff : ASM16_LOCAL */
+	movzwl 2(%eax), %eax
+	jmp    1f
+impl_cmpxch_prefix_local:    /* 0xff : ASM_LOCAL */
+	movzbl 1(%eax), %eax
+1:
+#ifndef NDEBUG
+	LOAD_CODE(%edx)
+	ASSERT_BELOW(%ax,co_localc(CODE_OR_EDX))
+#endif /* !NDEBUG */
+	movl   FRAME_FRAME, %edx
+	cmpl   %ecx, (%edx,%eax,4)
+	jne    .Lxpopref_from_esp_and_set_FIRST_to_false
+	popl   %ecx
+	ADJUST_CFA_OFFSET(4)
+	xchgl  %ecx, (%edx,%eax,4)
+.Lxdecref_ecx_and_set_FIRST_to_true:
+	testl  %ecx, %ecx
+	jz     .Lset_FIRST_to_true
+/*.Ldecref_ecx_and_set_FIRST_to_true:*/
+	decref %ecx
+.Lset_FIRST_to_true:
+	incref_addr SYM_Dee_True
+	movl   $(SYM_Dee_True), FIRST
+	jmp    .disp
+	ADJUST_CFA_OFFSET(4)
+
+
+
+.Lpopref_from_esp_and_set_FIRST_to_false:
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	ASSERT_NONZERO(%eax)
+	decref %eax
+	incref_addr SYM_Dee_False
+	movl   $(SYM_Dee_False), FIRST
+	jmp    .disp
+	ADJUST_CFA_OFFSET(4)
+
+.Lxpopref_from_esp_and_set_FIRST_to_false:
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     1f
+	decref %eax
+1:	incref_addr SYM_Dee_False
+	movl   $(SYM_Dee_False), FIRST
+	jmp    .disp
+	ADJUST_CFA_OFFSET(4)
+
+
+
+impl_cmpxch_prefix_extended:
+	movzbl 1(%eax), %edx
+	ASSERT_ABOVE_EQUAL(%edx,$0xf8)
+	ASSERT_BELOW_EQUAL(%edx,$0xff)
+	jmp    *(impl_cmpxch_prefix_table_f0-(0xf8*4))(,%edx,4)
+impl_cmpxch_prefix_invop:
+	popl   %eax
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     invop
+	decref %eax
+	jmp    invop
+/*	ADJUST_CFA_OFFSET(4) */
+
+
+prefix_target_cmpxch_pop_ub:
+	movl   -4(SP), %ecx    /* Inherit reference */
+	decref %ecx, 0, 1, 0   /* save_ecx=true */
+	xorl   %edx, %edx
+	jmp    .do_prefix_target_cmpxchg_ecx_to_edx_inherited
+
+prefix_target_cmpxch_pop_pop:
+	movl   -8(SP), %ecx    /* Inherit reference */
+	decref %ecx, 0, 1, 0   /* save_ecx=true */
+	movl   -4(SP), %edx    /* Inherit reference */
+	subl   $(4), SP
+	jmp    .do_prefix_target_cmpxchg_ecx_to_edx_inherited
+
+
 	/* mov-extensions. */
 prefix_target16_lrot:
 	call   get_prefix_object
@@ -7173,7 +7523,7 @@ prefix_target_lrot:
 	subl   $4, %ecx
 	pushl  %ecx /* memmove.dst = SP - shift */
 	ADJUST_CFA_OFFSET(4)
-	call   SYM(memmove) /* TODO: KOS-specific: memmoveupl */
+	call   SYM(memmove) /* XXX: KOS-specific: memmoveupl */
 	addl   $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl   %edx /* drop_object */
@@ -7207,7 +7557,7 @@ prefix_target_rrot:
 	addl   $4, %ecx
 	pushl  %ecx /* memmove.dst = SP - (shift - 1) */
 	ADJUST_CFA_OFFSET(4)
-	call   SYM(memmove) /* TODO: KOS-specific: memmovedownl */
+	call   SYM(memmove) /* XXX: KOS-specific: memmovedownl */
 	addl   $12, %esp
 	ADJUST_CFA_OFFSET(-12)
 	popl   %edx /* drop_object */
@@ -7240,6 +7590,7 @@ prefix_target_pop_static:
 1:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	movl   FRAME_FUNC, %ecx
+	leal   fo_refv(%ecx,%eax,4), %eax
 #ifndef CONFIG_NO_THREADS
 	pushl  %eax
 	ADJUST_CFA_OFFSET(4)
@@ -7251,12 +7602,22 @@ prefix_target_pop_static:
 	popl   %eax
 	ADJUST_CFA_OFFSET(-4)
 #endif /* !CONFIG_NO_THREADS */
-	xchgl  fo_refv(%ecx,%eax,4), %edx /* Exchange the static variable. */
+	xchgl  (%eax), %edx /* Exchange the static variable. */
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite fo_reflock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_WakeAll,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
 	testl  %edx, %edx
 	jz     .disp
+	cmpl   $(ITER_DONE), %edx
+	je     .disp
 	decref %edx
 	jmp    .disp
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -7587,6 +7948,8 @@ prefix_target_push_static:
 	movl   fo_refv(%ecx,%eax,4), %edx
 	testl  %edx, %edx
 	jz     99f
+	cmpl   $(ITER_DONE), %edx
+	je     99f
 	incref %edx
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread fo_reflock(%ecx)
@@ -7832,10 +8195,10 @@ prefix_target_throw:
 
 
 prefix_target_push_true:
-	leal   SYM(Dee_FalseTrue)+8, %edx
+	leal   SYM_Dee_True, %edx
 	jmp    set_prefix_object_incref
 prefix_target_push_false:
-	leal   SYM(Dee_FalseTrue)+0, %edx
+	leal   SYM_Dee_False, %edx
 	jmp    set_prefix_object_incref
 
 
@@ -7933,12 +8296,23 @@ impl_set_prefix_static:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	/* Exchange the static variable. */
 	ASSERT_NONZERO(%edx)
-	xchgl  fo_refv(%ecx,%eax,4), %edx
+	leal   fo_refv(%ecx,%eax,4), %eax
+	xchgl  (%eax), %edx
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite fo_reflock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_WakeAll,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
 	testl  %edx, %edx
 	jz     .disp
+	cmpl   $(ITER_DONE), %edx
+	je     .disp
 	decref %edx /* Drop the value that got exchanged. */
 	jmp    .disp
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -8030,6 +8404,10 @@ impl_set_prefix_extended:
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf8)
 	ASSERT_BELOW_EQUAL(%ecx,$0xff)
 	jmp    *(impl_set_prefix_table_f0-(0xf8*4))(,%ecx,4)
+
+impl_set_prefix_invop:
+	decref %edx
+	jmp    invop
 IF_USE_CFI(.cfi_endproc)
 
 
@@ -8037,32 +8415,34 @@ IF_USE_CFI(.cfi_endproc)
 .section .rodata
 impl_set_prefix_table:
 	.long  impl_set_prefix_extended /* 0xf0 : ASM_EXTENDED1 */
-	.long  invop                    /* 0xf1 : ASM_RESERVED1 */
-	.long  invop                    /* 0xf2 : ASM_RESERVED2 */
-	.long  invop                    /* 0xf3 : ASM_RESERVED3 */
-	.long  invop                    /* 0xf4 : ASM_RESERVED4 */
-	.long  invop                    /* 0xf5 : ASM_RESERVED5 */
-	.long  invop                    /* 0xf6 : ASM_RESERVED6 */
-	.long  invop                    /* 0xf7 : ASM_RESERVED7 */
-	.long  invop                    /* 0xf8 : ??? */
-	.long  invop                    /* 0xf9 : ??? */
+	.long  impl_set_prefix_invop    /* 0xf1 : ASM_RESERVED1 */
+	.long  impl_set_prefix_invop    /* 0xf2 : ASM_RESERVED2 */
+	.long  impl_set_prefix_invop    /* 0xf3 : ASM_RESERVED3 */
+	.long  impl_set_prefix_invop    /* 0xf4 : ASM_RESERVED4 */
+	.long  impl_set_prefix_invop    /* 0xf5 : ASM_RESERVED5 */
+	.long  impl_set_prefix_invop    /* 0xf6 : ASM_RESERVED6 */
+	.long  impl_set_prefix_invop    /* 0xf7 : ASM_RESERVED7 */
+	.long  impl_set_prefix_invop    /* 0xf8 : ??? */
+	.long  impl_set_prefix_invop    /* 0xf9 : ??? */
 	.long  impl_set_prefix_stack    /* 0xfa : ASM_STACK */
-	.long  impl_set_prefix_static   /* 0xfb : ASM_STATIC */
+	.long  impl_set_prefix_invop    /* 0xfb : ??? */
 	.long  impl_set_prefix_extern   /* 0xfc : ASM_EXTERN */
-	.long  invop                    /* 0xfd : ??? */
+	.long  impl_set_prefix_static   /* 0xfd : ASM_STATIC */
 	.long  impl_set_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_set_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_set_prefix_table)
 impl_set_prefix_table_f0:
-	.long  invop                    /* 0xf0f8 : ??? */
-	.long  invop                    /* 0xf0f9 : ??? */
+	.long  impl_set_prefix_invop    /* 0xf0f8 : ??? */
+	.long  impl_set_prefix_invop    /* 0xf0f9 : ??? */
 	.long  impl_set_prefix16_stack  /* 0xf0fa : ASM16_STACK */
-	.long  impl_set_prefix16_static /* 0xf0fb : ASM16_STATIC */
+	.long  impl_set_prefix_invop    /* 0xf0fb : ??? */
 	.long  impl_set_prefix16_extern /* 0xf0fc : ASM16_EXTERN */
-	.long  invop                    /* 0xf0fd : ??? */
+	.long  impl_set_prefix16_static /* 0xf0fd : ASM16_STATIC */
 	.long  impl_set_prefix16_global /* 0xf0fe : ASM16_GLOBAL */
 	.long  impl_set_prefix16_local  /* 0xf0ff : ASM16_LOCAL */
 END(impl_set_prefix_table_f0)
+
+
 
 
 
@@ -8139,9 +8519,20 @@ impl_xch_prefix_static:
 	xchgl  fo_refv(%ecx,%eax,4), %edx
 	testl  %edx, %edx
 	jz     99f
+	cmpl   $(ITER_DONE), %edx
+	je     99f
 #ifndef CONFIG_NO_THREADS
 	rwlock_endwrite co_constlock(%ecx)
 #endif /* !CONFIG_NO_THREADS */
+	leal   fo_refv(%ecx,%eax,4), %eax
+	pushl  %edx
+	ADJUST_CFA_OFFSET(4)
+	pushl  %eax
+	ADJUST_CFA_OFFSET(4)
+	call   fSYM(DeeFutex_WakeAll,4)
+	ADJUST_CFA_OFFSET(-4)
+	popl   %edx
+	ADJUST_CFA_OFFSET(-4)
 	ret
 99:	xchgl  fo_refv(%ecx,%eax,4), %edx
 #ifndef CONFIG_NO_THREADS
@@ -8306,6 +8697,10 @@ impl_xch_prefix_extended:
 	ASSERT_ABOVE_EQUAL(%ecx,$0xf8)
 	ASSERT_BELOW_EQUAL(%ecx,$0xff)
 	jmp    *(impl_xch_prefix_table_f0-(0xf8*4))(,%ecx,4)
+
+impl_xch_prefix_invop:
+	decref %edx
+	jmp    invop_x4
 IF_USE_CFI(.cfi_endproc)
 
 
@@ -8313,36 +8708,68 @@ IF_USE_CFI(.cfi_endproc)
 .section .rodata
 impl_xch_prefix_table:
 	.long  impl_xch_prefix_extended /* 0xf0 : ASM_EXTENDED1 */
-	.long  invop                    /* 0xf1 : ASM_RESERVED1 */
-	.long  invop                    /* 0xf2 : ASM_RESERVED2 */
-	.long  invop                    /* 0xf3 : ASM_RESERVED3 */
-	.long  invop                    /* 0xf4 : ASM_RESERVED4 */
-	.long  invop                    /* 0xf5 : ASM_RESERVED5 */
-	.long  invop                    /* 0xf6 : ASM_RESERVED6 */
-	.long  invop                    /* 0xf7 : ASM_RESERVED7 */
-	.long  invop                    /* 0xf8 : ??? */
-	.long  invop                    /* 0xf9 : ??? */
+	.long  impl_xch_prefix_invop    /* 0xf1 : ASM_RESERVED1 */
+	.long  impl_xch_prefix_invop    /* 0xf2 : ASM_RESERVED2 */
+	.long  impl_xch_prefix_invop    /* 0xf3 : ASM_RESERVED3 */
+	.long  impl_xch_prefix_invop    /* 0xf4 : ASM_RESERVED4 */
+	.long  impl_xch_prefix_invop    /* 0xf5 : ASM_RESERVED5 */
+	.long  impl_xch_prefix_invop    /* 0xf6 : ASM_RESERVED6 */
+	.long  impl_xch_prefix_invop    /* 0xf7 : ASM_RESERVED7 */
+	.long  impl_xch_prefix_invop    /* 0xf8 : ??? */
+	.long  impl_xch_prefix_invop    /* 0xf9 : ??? */
 	.long  impl_xch_prefix_stack    /* 0xfa : ASM_STACK */
 	.long  impl_xch_prefix_static   /* 0xfb : ASM_STATIC */
 	.long  impl_xch_prefix_extern   /* 0xfc : ASM_EXTERN */
-	.long  invop                    /* 0xfd : ??? */
+	.long  impl_xch_prefix_invop    /* 0xfd : ??? */
 	.long  impl_xch_prefix_global   /* 0xfe : ASM_GLOBAL */
 	.long  impl_xch_prefix_local    /* 0xff : ASM_LOCAL */
 END(impl_xch_prefix_table)
 
-
-
 .section .rodata
 impl_xch_prefix_table_f0:
-	.long  invop                    /* 0xf0f8 : ??? */
-	.long  invop                    /* 0xf0f9 : ??? */
-	.long  invop                    /* 0xf0fa : ??? */
+	.long  impl_xch_prefix_invop    /* 0xf0f8 : ??? */
+	.long  impl_xch_prefix_invop    /* 0xf0f9 : ??? */
+	.long  impl_xch_prefix_invop    /* 0xf0fa : ??? */
 	.long  impl_xch_prefix16_stack  /* 0xf0fb : ASM16_STACK */
 	.long  impl_xch_prefix16_static /* 0xf0fc : ASM16_STATIC */
 	.long  impl_xch_prefix16_extern /* 0xf0fd : ASM16_EXTERN */
 	.long  impl_xch_prefix16_global /* 0xf0fe : ASM16_GLOBAL */
 	.long  impl_xch_prefix16_local  /* 0xf0ff : ASM16_LOCAL */
 END(impl_xch_prefix_table_f0)
+
+
+
+.section .rodata
+impl_cmpxch_prefix_table:
+	.long  impl_cmpxch_prefix_extended /* 0xf0 : ASM_EXTENDED1 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf1 : ASM_RESERVED1 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf2 : ASM_RESERVED2 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf3 : ASM_RESERVED3 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf4 : ASM_RESERVED4 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf5 : ASM_RESERVED5 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf6 : ASM_RESERVED6 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf7 : ASM_RESERVED7 */
+	.long  impl_cmpxch_prefix_invop    /* 0xf8 : ??? */
+	.long  impl_cmpxch_prefix_invop    /* 0xf9 : ??? */
+	.long  impl_cmpxch_prefix_stack    /* 0xfa : ASM_STACK */
+	.long  impl_cmpxch_prefix_invop    /* 0xfb : ??? */
+	.long  impl_cmpxch_prefix_extern   /* 0xfc : ASM_EXTERN */
+	.long  impl_cmpxch_prefix_static   /* 0xfd : ASM_STATIC */
+	.long  impl_cmpxch_prefix_global   /* 0xfe : ASM_GLOBAL */
+	.long  impl_cmpxch_prefix_local    /* 0xff : ASM_LOCAL */
+END(impl_cmpxch_prefix_table)
+impl_cmpxch_prefix_table_f0:
+	.long  impl_cmpxch_prefix_invop    /* 0xf0f8 : ??? */
+	.long  impl_cmpxch_prefix_invop    /* 0xf0f9 : ??? */
+	.long  impl_cmpxch_prefix16_stack  /* 0xf0fa : ASM16_STACK */
+	.long  impl_cmpxch_prefix_invop    /* 0xf0fb : ??? */
+	.long  impl_cmpxch_prefix16_extern /* 0xf0fc : ASM16_EXTERN */
+	.long  impl_cmpxch_prefix16_static /* 0xf0fd : ASM16_STATIC */
+	.long  impl_cmpxch_prefix16_global /* 0xf0fe : ASM16_GLOBAL */
+	.long  impl_cmpxch_prefix16_local  /* 0xf0ff : ASM16_LOCAL */
+END(impl_cmpxch_prefix_table_f0)
+
+
 
 
 
@@ -8408,6 +8835,8 @@ impl_get_prefix_static:
 	movl   fo_refv(%ecx,%eax,4), %edx
 	testl  %edx, %edx
 	jz     99f
+	cmpl   $(ITER_DONE), %edx
+	je     99f
 	incref %edx /* Save a reference in EDX */
 #ifndef CONFIG_NO_THREADS
 	rwlock_endread fo_reflock(%ecx)
@@ -9585,6 +10014,18 @@ prefix_target_reduce_any = prefix_invop
 .ifndef prefix_target_reduce_all
 prefix_target_reduce_all = prefix_invop
 .endif
+.ifndef prefix_target_cmpxch_ub_lock
+prefix_target_cmpxch_ub_lock = prefix_invop
+.endif
+.ifndef prefix_target_cmpxch_ub_pop
+prefix_target_cmpxch_ub_pop = prefix_invop
+.endif
+.ifndef prefix_target_cmpxch_pop_ub
+prefix_target_cmpxch_pop_ub = prefix_invop
+.endif
+.ifndef prefix_target_cmpxch_pop_pop
+prefix_target_cmpxch_pop_pop = prefix_invop
+.endif
 .ifndef prefix_target16_print_c
 prefix_target16_print_c = prefix_invop
 .endif
@@ -10530,8 +10971,8 @@ inst_table:
 	.long target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long invop
 	.long invop
-	.long target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
-	.long target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>' */
+	.long target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>' */
 	.long target_cast_int                /* 0x70 : `cast top, int' */
 	.long target_inv                     /* 0x71 : `inv top' */
 	.long target_pos                     /* 0x72 : `pos top' */
@@ -10788,8 +11229,8 @@ inst_table_f0:
 	.long target16_callcmember_this_r    /* 0x6b : `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long invop
 	.long invop
-	.long target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>+1' */
-	.long target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>+1' */
+	.long target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>' */
+	.long target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>' */
 	.long target_supergetattr_this_rc    /* 0x70 : `push getattr this, ref <imm8>, const <imm8>' */
 	.long target16_supergetattr_this_rc  /* 0x71 : `push getattr this, ref <imm16>, const <imm16>' */
 	.long target_supercallattr_this_rc   /* 0x72 : `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
@@ -10834,10 +11275,10 @@ inst_table_f0:
 	.long invop
 	.long invop
 	.long invop
-	.long invop
-	.long invop
-	.long invop
-	.long invop
+	.long target_cmpxch_ub_lock          /* 0x9c : `push  cmpxch PREFIX, unbound, lock' */
+	.long target_cmpxch_ub_pop           /* 0x9d : `push  cmpxch PREFIX, unbound, pop' */
+	.long target_cmpxch_pop_ub           /* 0x9e : `push  cmpxch PREFIX, pop, unbound' */
+	.long target_cmpxch_pop_pop          /* 0x9f : `push  cmpxch PREFIX, pop, pop' */
 	.long invop
 	.long target16_print_c               /* 0xa1 : `print const <imm16>' */
 	.long target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */
@@ -11046,8 +11487,8 @@ prefix_inst_table:
 	.long prefix_target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
-	.long prefix_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long prefix_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>' */
+	.long prefix_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>' */
 	.long prefix_target_cast_int                /* 0x70 : `cast top, int' */
 	.long prefix_target_inv                     /* 0x71 : `inv top' */
 	.long prefix_target_pos                     /* 0x72 : `pos top' */
@@ -11304,8 +11745,8 @@ prefix_inst_table_f0:
 	.long prefix_target16_callcmember_this_r    /* 0x6b : `push callcmember this, ref <imm16>, $<imm16>, #<imm8>' */
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>+1' */
-	.long prefix_target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>+1' */
+	.long prefix_target16_function_c            /* 0x6e : `push function const <imm16>, #<imm8>' */
+	.long prefix_target16_function_c_16         /* 0x6f : `push function const <imm16>, #<imm16>' */
 	.long prefix_target_supergetattr_this_rc    /* 0x70 : `push getattr this, ref <imm8>, const <imm8>' */
 	.long prefix_target16_supergetattr_this_rc  /* 0x71 : `push getattr this, ref <imm16>, const <imm16>' */
 	.long prefix_target_supercallattr_this_rc   /* 0x72 : `push callattr this, ref <imm8>, const <imm8>, #<imm8>' */
@@ -11350,10 +11791,10 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
+	.long prefix_target_cmpxch_ub_lock          /* 0x9c : `push  cmpxch PREFIX, unbound, lock' */
+	.long prefix_target_cmpxch_ub_pop           /* 0x9d : `push  cmpxch PREFIX, unbound, pop' */
+	.long prefix_target_cmpxch_pop_ub           /* 0x9e : `push  cmpxch PREFIX, pop, unbound' */
+	.long prefix_target_cmpxch_pop_pop          /* 0x9f : `push  cmpxch PREFIX, pop, pop' */
 	.long prefix_invop
 	.long prefix_target16_print_c               /* 0xa1 : `print const <imm16>' */
 	.long prefix_target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */
@@ -11562,8 +12003,8 @@ repr_inst_table:
 	.long repr_target_callcmember_this_r      /* 0x6b : `push callcmember this, ref <imm8>, $<imm8>, #<imm8>' */
 	.long repr_invop
 	.long repr_invop
-	.long repr_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>+1' */
-	.long repr_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>+1' */
+	.long repr_target_function_c              /* 0x6e : `push function const <imm8>, #<imm8>' */
+	.long repr_target_function_c_16           /* 0x6f : `push function const <imm8>, #<imm16>' */
 	.long repr_target_cast_int                /* 0x70 : `cast top, int' */
 	.long repr_target_inv                     /* 0x71 : `inv top' */
 	.long repr_target_pos                     /* 0x72 : `pos top' */
