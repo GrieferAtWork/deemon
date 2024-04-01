@@ -668,7 +668,7 @@ err:
 
 /* @return: 0 : Succes
  * @return: -1: Error */
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_lockread_frame(Frame *__restrict self) {
 	int result = frame_lockread_frame_for_bound(self);
 	if unlikely(result > 0)

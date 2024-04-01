@@ -1832,10 +1832,6 @@ prefix_symbol_usage(instruction_t const *__restrict pc) {
 	case ASM_DEC:
 	case ASM_OPERATOR:
 	case ASM_OPERATOR_TUPLE:
-	case ASM_CMPXCH_UB_LOCK:
-	case ASM_CMPXCH_UB_POP:
-	case ASM_CMPXCH_POP_UB:
-	case ASM_CMPXCH_POP_POP:
 		/* Inplace operations read & write. */
 		result = ASM_USING_READ | ASM_USING_WRITE;
 		break;
@@ -1886,6 +1882,10 @@ prefix_symbol_usage(instruction_t const *__restrict pc) {
 		case ASM_DECPOST & 0xff:
 		case ASM16_OPERATOR & 0xff:
 		case ASM16_OPERATOR_TUPLE & 0xff:
+		case ASM_CMPXCH_UB_LOCK & 0xff:
+		case ASM_CMPXCH_UB_POP & 0xff:
+		case ASM_CMPXCH_POP_UB & 0xff:
+		case ASM_CMPXCH_POP_POP & 0xff:
 			result = ASM_USING_READ | ASM_USING_WRITE;
 			break;
 
