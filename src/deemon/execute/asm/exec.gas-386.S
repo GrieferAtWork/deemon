@@ -4772,36 +4772,56 @@ target_reduce_all:
 	jmp    .disp
 
 
-/* TODO: */
-#define ASM_CMPXCH_UB_C       0xf09a /* [3][-1,+1]   `cmpxch top, none, const <imm8>'              - If FIRST === none, replace it with const <imm8>.
-                                      * [3][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm8>'  - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
-#define ASM16_CMPXCH_UB_C     0xf09b /* [4][-1,+1]   `cmpxch top, none, const <imm16>'             - If FIRST === none, replace it with const <imm16>.
-                                      * [4][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm16>' - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
-#define ASM_CMPXCH_UB_LOCK    0xf09c /* [2][-1,+1]   `cmpxch top, none, none'             - No-op (deletable)
-                                      * [2][-0,+1]   `push  cmpxch PREFIX, unbound, lock' - Atomically check if PREFIX is unbound, and replace its value with a special "lock" value.
-                                      * NOTE: Unless otherwise documented, other instructions (except ASM_CMPXCH_UB_LOCK)
-                                      *       will treat "lock" values the same as "unbound", whereas ASM_CMPXCH_UB_LOCK
-                                      *       will block if the current value is "lock".
-                                      * NOTE: This instruction requires "PREFIX" to be `ASM_STATIC' or `ASM16_STATIC'.
-                                      * >> again:
-                                      * >> LOCK();
-                                      * >> if (PREFIX is bound) {
-                                      * >>     PUSH(false);
-                                      * >> } else {
-                                      * >>     if (PREFIX === lock) {
-                                      * >>         WHILE_WHILE(PREFIX === lock);
-                                      * >>         goto again;
-                                      * >>     }
-                                      * >>     PREFIX = lock;
-                                      * >>     PUSH(true);
-                                      * >> }
-                                      * >> UNLOCK(); */
-#define ASM_CMPXCH_UB_POP     0xf09d /* [2][-2,+1]   `cmpxch top, none, pop'              - If SECOND === none, replace it with FIRST. FIRST is always popped.
-                                      * [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
-#define ASM_CMPXCH_POP_UB     0xf09e /* [2][-2,+1]   `cmpxch top, pop, none'              - If SECOND === FIRST, replace it with none. FIRST is always popped.
-                                      * [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened (compare is done using `==='). */
-#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-3,+1]   `cmpxch top, pop, pop'               - If THIRD === SECOND, replace it with FIRST. FIRST AND SECOND are always popped.
-                                      * [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened (compare is done using `==='). */
+/* Compare-exchange instructions for stack-elements */
+target16_cmpxch_ub_c:
+	lodsw
+	jmp    1f
+target_cmpxch_ub_c:
+	lodsb
+1:	cmpl   $(SYM(DeeNone_Singleton)), FIRST
+	jne    .disp
+	LOCK_PREFIX decl (SYM(DeeNone_Singleton) + ob_refcnt)
+	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %eax
+	incref %eax
+	movl   %eax, FIRST
+	jmp    .disp
+
+target_cmpxch_ub_pop:
+	cmpl   $(SYM(DeeNone_Singleton)), SECOND
+	jne    target_pop
+	LOCK_PREFIX decl (SYM(DeeNone_Singleton) + ob_refcnt)
+	sp_pop %eax
+	movl   %eax, FIRST
+	jmp    .disp
+
+target_cmpxch_pop_ub:
+	movl   FIRST, %eax
+	cmpl   %eax, SECOND
+	jne    target_pop
+	LOCK_PREFIX decl ob_refcnt(%eax)
+	subl   $4, SP
+	incref_addr SYM(DeeNone_Singleton)
+	movl   $(SYM(DeeNone_Singleton)), FIRST
+	jmp    .disp
+
+target_cmpxch_pop_pop:
+	movl   SECOND, %eax
+	decref %eax, 1, 0, 0 /* safe_eax=1 */
+	cmpl   %eax, THIRD
+	je     1f
+	movl   FIRST, %eax
+	decref %eax
+	subl   $8, SP
+	jmp    .disp
+1:	movl   THIRD, %eax
+	decref %eax
+	movl   FIRST, %eax
+	subl   $8, SP
+	movl   %eax, FIRST
+	jmp    .disp
 
 
 
@@ -4876,6 +4896,7 @@ target_delop          = .disp
 target_nop            = .disp
 target16_delop        = .disp
 target16_nop          = .disp
+target_cmpxch_ub_lock = .disp
 prefix_target_delop   = .disp
 prefix_target_nop     = .disp
 prefix_target16_delop = .disp
@@ -7269,7 +7290,7 @@ prefix_target_cmpxch_ub_lock:
 prefix_target_cmpxch_ub_pop:
 	movl   -4(SP), %edx    /* Inherit reference */
 	xorl   %ecx, %ecx
-.do_prefix_target_cmpxchg_ecx_to_edx_inherited:
+.do_prefix_target_cmpxch_ecx_to_edx_inherited:
 	/* %ecx:      DeeObject *old_value; // [0..1]
 	 * %edx: DREF DeeObject *new_value; // [0..1] Inherit: always
 	 * SP    == OUT_SP
@@ -7517,18 +7538,31 @@ impl_cmpxch_prefix_invop:
 /*	ADJUST_CFA_OFFSET(4) */
 
 
+prefix_target16_cmpxch_ub_c:
+	lodsw
+	jmp    1f
+prefix_target_cmpxch_ub_c:
+	lodsb
+1:	LOAD_CODE(%ecx)
+	ASSERT_BELOW(%ax,co_constc(CODE_OR_ECX))
+	movl   co_constv(CODE_OR_ECX), %ecx
+	movl   (%ecx,%eax,4), %edx
+	incref %edx
+	xorl   %ecx, %ecx
+	jmp    .do_prefix_target_cmpxch_ecx_to_edx_inherited
+
 prefix_target_cmpxch_pop_ub:
 	movl   -4(SP), %ecx    /* Inherit reference */
 	decref %ecx, 0, 1, 0   /* save_ecx=true */
 	xorl   %edx, %edx
-	jmp    .do_prefix_target_cmpxchg_ecx_to_edx_inherited
+	jmp    .do_prefix_target_cmpxch_ecx_to_edx_inherited
 
 prefix_target_cmpxch_pop_pop:
 	movl   -8(SP), %ecx    /* Inherit reference */
 	decref %ecx, 0, 1, 0   /* save_ecx=true */
 	movl   -4(SP), %edx    /* Inherit reference */
 	subl   $(4), SP
-	jmp    .do_prefix_target_cmpxchg_ecx_to_edx_inherited
+	jmp    .do_prefix_target_cmpxch_ecx_to_edx_inherited
 
 
 	/* mov-extensions. */
