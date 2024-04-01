@@ -752,7 +752,7 @@ frame_get_return(Frame *__restrict self) {
 	if unlikely(frame_lockread_frame(self))
 		goto err;
 	result = self->f_frame->cf_result;
-	if unlikely(!result)
+	if unlikely(!ITER_ISOK(result))
 		goto err_unlock_unbound;
 	Dee_Incref(result);
 	frame_lockendread_frame(self);
@@ -772,7 +772,7 @@ frame_bound_return(Frame *__restrict self) {
 		return 0;
 	if unlikely(temp)
 		goto err;
-	is_bound = (self->f_frame->cf_result != NULL);
+	is_bound = ITER_ISOK(self->f_frame->cf_result);
 	frame_lockendread_frame(self);
 	return is_bound ? 1 : 0;
 err:
@@ -787,7 +787,8 @@ frame_del_return(Frame *__restrict self) {
 	old_result = self->f_frame->cf_result;
 	self->f_frame->cf_result = NULL;
 	frame_lockendwrite_frame(self);
-	Dee_XDecref(old_result);
+	if (ITER_ISOK(old_result))
+		Dee_Decref(old_result);
 	return 0;
 err:
 	return -1;
@@ -802,7 +803,8 @@ frame_set_return(Frame *__restrict self, DeeObject *value) {
 	old_result = self->f_frame->cf_result;
 	self->f_frame->cf_result = value;
 	frame_lockendwrite_frame(self);
-	Dee_XDecref(old_result);
+	if (ITER_ISOK(old_result))
+		Dee_Decref(old_result);
 	return 0;
 err:
 	return -1;

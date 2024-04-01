@@ -61,7 +61,6 @@ DEFINE_OPERATOR_INVOKE(operator_read, NULL) { /* TODO: Allow user-code to overri
 	size_t buf_begin, buf_end;
 	size_t result;
 	(void)tp_self; /* TODO: Must look at this! */
-	(void)tp_self; /* TODO: Must look at this! */
 	(void)p_self;
 	if (DeeArg_Unpack(argc, argv, "|ooo:" OPNAME("read"), &data, &begin, &end))
 		goto err;

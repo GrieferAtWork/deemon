@@ -3926,7 +3926,7 @@ target_repr:
 	lodsb
 	jmpl   *repr_inst_table(,%eax,4)
 repr_invop: /* Every instruction byte without a custom repr target goes here */
-	decl   %esi /* Execute the next instruction as its own thing. */
+	decl   PC        /* Execute the next instruction as its own thing. */
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
 	call   fSYM(DeeObject_Repr,4)

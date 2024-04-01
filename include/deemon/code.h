@@ -1007,7 +1007,8 @@ struct Dee_code_frame {
 	DeeObject                *cf_this;    /* [1..1][valid_if(cf_func->fo_code->co_flags & CODE_FTHISCALL)][const]
 	                                       * The `this' argument passed for this-calls. */
 	DeeObject                *cf_result;  /* [0..1] Storage location of the frame's currently set return value.
-	                                       *        The caller of the frame should pre-initialize this field to NULL. */
+	                                       *        The caller of the frame should pre-initialize this field to NULL.
+	                                       * NOTE: May be set to ITER_DONE in yield functions! */
 	uint16_t                  cf_stacksz; /* [valid_if(DeeCode_ExecFrameSafe)] Size of the heap-allocated stack.
 	                                       * HINT: This field is not used by code running in fast mode
 	                                       *       (aka. Code without the `CODE_FASSEMBLY' flag set). */
