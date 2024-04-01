@@ -4772,6 +4772,38 @@ target_reduce_all:
 	jmp    .disp
 
 
+/* TODO: */
+#define ASM_CMPXCH_UB_C       0xf09a /* [3][-1,+1]   `cmpxch top, none, const <imm8>'              - If FIRST === none, replace it with const <imm8>.
+                                      * [3][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm8>'  - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
+#define ASM16_CMPXCH_UB_C     0xf09b /* [4][-1,+1]   `cmpxch top, none, const <imm16>'             - If FIRST === none, replace it with const <imm16>.
+                                      * [4][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm16>' - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_UB_LOCK    0xf09c /* [2][-1,+1]   `cmpxch top, none, none'             - No-op (deletable)
+                                      * [2][-0,+1]   `push  cmpxch PREFIX, unbound, lock' - Atomically check if PREFIX is unbound, and replace its value with a special "lock" value.
+                                      * NOTE: Unless otherwise documented, other instructions (except ASM_CMPXCH_UB_LOCK)
+                                      *       will treat "lock" values the same as "unbound", whereas ASM_CMPXCH_UB_LOCK
+                                      *       will block if the current value is "lock".
+                                      * NOTE: This instruction requires "PREFIX" to be `ASM_STATIC' or `ASM16_STATIC'.
+                                      * >> again:
+                                      * >> LOCK();
+                                      * >> if (PREFIX is bound) {
+                                      * >>     PUSH(false);
+                                      * >> } else {
+                                      * >>     if (PREFIX === lock) {
+                                      * >>         WHILE_WHILE(PREFIX === lock);
+                                      * >>         goto again;
+                                      * >>     }
+                                      * >>     PREFIX = lock;
+                                      * >>     PUSH(true);
+                                      * >> }
+                                      * >> UNLOCK(); */
+#define ASM_CMPXCH_UB_POP     0xf09d /* [2][-2,+1]   `cmpxch top, none, pop'              - If SECOND === none, replace it with FIRST. FIRST is always popped.
+                                      * [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_POP_UB     0xf09e /* [2][-2,+1]   `cmpxch top, pop, none'              - If SECOND === FIRST, replace it with none. FIRST is always popped.
+                                      * [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened (compare is done using `==='). */
+#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-3,+1]   `cmpxch top, pop, pop'               - If THIRD === SECOND, replace it with FIRST. FIRST AND SECOND are always popped.
+                                      * [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened (compare is done using `==='). */
+
+
 
 /* Unary arithmethic/math operators. */
 define_unary_op target_cast_int, fSYM(DeeObject_Int,4)
@@ -10014,6 +10046,12 @@ prefix_target_reduce_any = prefix_invop
 .ifndef prefix_target_reduce_all
 prefix_target_reduce_all = prefix_invop
 .endif
+.ifndef prefix_target_cmpxch_ub_c
+prefix_target_cmpxch_ub_c = prefix_invop
+.endif
+.ifndef prefix_target16_cmpxch_ub_c
+prefix_target16_cmpxch_ub_c = prefix_invop
+.endif
 .ifndef prefix_target_cmpxch_ub_lock
 prefix_target_cmpxch_ub_lock = prefix_invop
 .endif
@@ -11273,12 +11311,12 @@ inst_table_f0:
 	.long target_reduce_any              /* 0x97 : `reduce top, any' */
 	.long target_reduce_all              /* 0x98 : `reduce top, all' */
 	.long invop
-	.long invop
-	.long invop
-	.long target_cmpxch_ub_lock          /* 0x9c : `push  cmpxch PREFIX, unbound, lock' */
-	.long target_cmpxch_ub_pop           /* 0x9d : `push  cmpxch PREFIX, unbound, pop' */
-	.long target_cmpxch_pop_ub           /* 0x9e : `push  cmpxch PREFIX, pop, unbound' */
-	.long target_cmpxch_pop_pop          /* 0x9f : `push  cmpxch PREFIX, pop, pop' */
+	.long target_cmpxch_ub_c             /* 0x9a : `cmpxch top, none, const <imm8>' */
+	.long target16_cmpxch_ub_c           /* 0x9b : `cmpxch top, none, const <imm16>' */
+	.long target_cmpxch_ub_lock          /* 0x9c : `cmpxch top, none, none' */
+	.long target_cmpxch_ub_pop           /* 0x9d : `cmpxch top, none, pop' */
+	.long target_cmpxch_pop_ub           /* 0x9e : `cmpxch top, pop, none' */
+	.long target_cmpxch_pop_pop          /* 0x9f : `cmpxch top, pop, pop' */
 	.long invop
 	.long target16_print_c               /* 0xa1 : `print const <imm16>' */
 	.long target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */
@@ -11789,12 +11827,12 @@ prefix_inst_table_f0:
 	.long prefix_target_reduce_any              /* 0x97 : `reduce top, any' */
 	.long prefix_target_reduce_all              /* 0x98 : `reduce top, all' */
 	.long prefix_invop
-	.long prefix_invop
-	.long prefix_invop
-	.long prefix_target_cmpxch_ub_lock          /* 0x9c : `push  cmpxch PREFIX, unbound, lock' */
-	.long prefix_target_cmpxch_ub_pop           /* 0x9d : `push  cmpxch PREFIX, unbound, pop' */
-	.long prefix_target_cmpxch_pop_ub           /* 0x9e : `push  cmpxch PREFIX, pop, unbound' */
-	.long prefix_target_cmpxch_pop_pop          /* 0x9f : `push  cmpxch PREFIX, pop, pop' */
+	.long prefix_target_cmpxch_ub_c             /* 0x9a : `cmpxch top, none, const <imm8>' */
+	.long prefix_target16_cmpxch_ub_c           /* 0x9b : `cmpxch top, none, const <imm16>' */
+	.long prefix_target_cmpxch_ub_lock          /* 0x9c : `cmpxch top, none, none' */
+	.long prefix_target_cmpxch_ub_pop           /* 0x9d : `cmpxch top, none, pop' */
+	.long prefix_target_cmpxch_pop_ub           /* 0x9e : `cmpxch top, pop, none' */
+	.long prefix_target_cmpxch_pop_pop          /* 0x9f : `cmpxch top, pop, pop' */
 	.long prefix_invop
 	.long prefix_target16_print_c               /* 0xa1 : `print const <imm16>' */
 	.long prefix_target16_print_c_sp            /* 0xa2 : `print const <imm16>, sp' */

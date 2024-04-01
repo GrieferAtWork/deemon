@@ -436,7 +436,7 @@ PRIVATE char const mnemonic_names[256][31] = {
 	/* 0xff */ "local  ", /* `ASM_LOCAL' */
 };
 
-PRIVATE char const mnemonic_names_f0[256][36] = {
+PRIVATE char const mnemonic_names_f0[256][32] = {
 	/* 0xf000 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf001 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf002 */ UNKNOWN_MNEMONIC, /* --- */
@@ -591,12 +591,12 @@ PRIVATE char const mnemonic_names_f0[256][36] = {
 	/* 0xf097 */ "reduce top, any", /* `ASM_REDUCE_ANY' */
 	/* 0xf098 */ "reduce top, all", /* `ASM_REDUCE_ALL' */
 	/* 0xf099 */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09a */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09b */ UNKNOWN_MNEMONIC, /* --- */
-	/* 0xf09c */ "push   cmpxch PREFIX, unbound, lock", /* `ASM_CMPXCH_UB_LOCK' */
-	/* 0xf09d */ "push   cmpxch PREFIX, unbound, pop", /* `ASM_CMPXCH_UB_POP' */
-	/* 0xf09e */ "push   cmpxch PREFIX, pop, unbound", /* `ASM_CMPXCH_POP_UB' */
-	/* 0xf09f */ "push   cmpxch PREFIX, pop, pop", /* `ASM_CMPXCH_POP_POP' */
+	/* 0xf09a */ "cmpxch top, none, ", /* `ASM_CMPXCH_UB_C' */
+	/* 0xf09b */ "cmpxch top, none, ", /* `ASM16_CMPXCH_UB_C' */
+	/* 0xf09c */ "cmpxch top, none, none", /* `ASM_CMPXCH_UB_LOCK' */
+	/* 0xf09d */ "cmpxch top, none, pop", /* `ASM_CMPXCH_UB_POP' */
+	/* 0xf09e */ "cmpxch top, pop, none", /* `ASM_CMPXCH_POP_UB' */
+	/* 0xf09f */ "cmpxch top, pop, pop", /* `ASM_CMPXCH_POP_POP' */
 	/* 0xf0a0 */ UNKNOWN_MNEMONIC, /* --- */
 	/* 0xf0a1 */ "print  ", /* `ASM16_PRINT_C' */
 	/* 0xf0a2 */ "print  ", /* `ASM16_PRINT_C_SP' */
@@ -701,7 +701,7 @@ PRIVATE dssize_t DCALL
 libdisasm_printconst(dformatprinter printer, void *arg,
                      uint16_t cid, DeeCodeObject *code,
                      unsigned int flags,
-                     bool print_interal) {
+                     bool print_integral) {
 	if (code) {
 		DeeObject *constval;
 		if (cid >= code->co_constc) {
@@ -721,7 +721,7 @@ libdisasm_printconst(dformatprinter printer, void *arg,
 			dssize_t temp, result = 0;
 			unsigned int numsys;
 			uint32_t value;
-			if (print_interal) {
+			if (print_integral) {
 				temp = (*printer)(arg, PREFIX_INTEGERAL, COMPILER_STRLEN(PREFIX_INTEGERAL));
 			} else {
 				temp = (*printer)(arg, PREFIX_CONSTANT, COMPILER_STRLEN(PREFIX_CONSTANT));
@@ -1892,7 +1892,6 @@ do_mov_prefix_mnemonic:
 			mnemonic = ", none";
 			goto do_mov_prefix_mnemonic;
 
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		case ASM_CMPXCH_UB_LOCK:
 			mnemonic = ", unbound, lock";
 do_cmpxch_prefix_mnemonic:
@@ -1909,7 +1908,18 @@ do_cmpxch_prefix_mnemonic:
 		case ASM_CMPXCH_POP_POP:
 			mnemonic = ", pop, pop";
 			goto do_cmpxch_prefix_mnemonic;
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+		case ASM_CMPXCH_UB_C:
+			imm = READ_imm8(iter);
+			goto do_cmpxch_prefix_c;
+		case ASM16_CMPXCH_UB_C:
+			imm = READ_imm16(iter);
+do_cmpxch_prefix_c:
+			PRINT("cmpxch ");
+			INVOKE(libdisasm_printprefix(printer, arg, instr_start, ddi, code, flags, false));
+			PRINT(", pop, ");
+			INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));
+			goto done;
 
 		case ASM_FUNCTION_C:
 		case ASM_FUNCTION_C_16:
@@ -2492,6 +2502,7 @@ print_const_int:
 	case ASM16_FUNCTION_C_16:
 	case ASM16_CALL_TUPLE_KW:
 	case ASM16_CLASS_C:
+	case ASM16_CMPXCH_UB_C:
 		imm = READ_imm16(iter);
 		goto print_const;
 
@@ -2520,6 +2531,7 @@ print_const_int:
 	case ASM_FUNCTION_C_16:
 	case ASM_CALL_TUPLE_KW:
 	case ASM_CLASS_C:
+	case ASM_CMPXCH_UB_C:
 		imm = READ_imm8(iter);
 print_const:
 		INVOKE(libdisasm_printconst(printer, arg, imm, code, flags, false));

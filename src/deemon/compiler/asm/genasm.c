@@ -720,6 +720,230 @@ done_fake_none:
 		    self->a_conditional.c_ff) {
 			unsigned int cond_flags = ASM_G_FPUSHRES | ASM_G_FLAZYBOOL;
 
+			if (!(self->a_flag & AST_FCOND_BOOL)) {
+				struct ast *replace_this_1 = self->a_conditional.c_ff;
+				struct ast *replace_this_2;
+				DeeObject *if_equal_to = Dee_None;
+				struct ast *if_equal_to_ast = NULL;
+				struct ast *with_this = self->a_conditional.c_tt;
+				if (invert_condition) {
+					struct ast *temp = replace_this_1;
+					replace_this_1 = with_this;
+					with_this = temp;
+				}
+
+				/* Check for special cases that can be encoded using the "cmpxch" instruction:
+				 * >> a1 is none ? b : a2
+				 * >> a1 is type(none) ? b : a2
+				 * >> a1 === <if_equal_to> ? b : a2
+				 * >> a1 !== <if_equal_to> ? a2 : b
+				 * >> <if_equal_to> === a1 ? b : a2
+				 * >> <if_equal_to> !== a1 ? a2 : b
+				 * Where "b" is a constant expression, and a1 and a2 are either the exact
+				 * same AST, or both refer to the same stack/local symbol. */
+				if (condition->a_type == AST_ACTION &&
+				    condition->a_flag == AST_FACTION_IS &&
+				    ((condition->a_action.a_act1->a_type == AST_CONSTEXPR &&
+				      (condition->a_action.a_act1->a_constexpr == Dee_None ||
+				       condition->a_action.a_act1->a_constexpr == (DeeObject *)&DeeNone_Type)) ||
+				     (condition->a_action.a_act1->a_type == AST_ACTION &&
+				      condition->a_action.a_act1->a_flag == AST_FACTION_TYPEOF &&
+				      condition->a_action.a_act1->a_action.a_act0->a_type == AST_CONSTEXPR &&
+				      condition->a_action.a_act1->a_action.a_act0->a_constexpr == Dee_None))) {
+					/* replace_this_alias is none */
+					/* replace_this_alias is type(none) */
+					replace_this_2 = condition->a_action.a_act0;
+do_check_encode_cmpxch:
+#define BRANCHES_IDENTICAL(a, b) \
+	((a) == (b) || (ast_equal(a, b) && !ast_has_sideeffects(b)))
+					if (BRANCHES_IDENTICAL(replace_this_1, replace_this_2)) {
+do_encode_cmpxch_or_reuse_replace_this_branch:
+						if ((if_equal_to_ast && BRANCHES_IDENTICAL(if_equal_to_ast, with_this)) ||
+						    (if_equal_to && ast_isconstexpr(with_this, if_equal_to))) {
+							/* Special case: `x === y ? y : x'.
+							 * Always evaluates to "x", but evaluates "y" as well. */
+							if (ast_genasm(replace_this_1, gflags))
+								goto err;
+							if (if_equal_to_ast && ast_genasm_one(if_equal_to_ast, gflags & ~ASM_G_FPUSHRES))
+								goto err;
+							break;
+						} else if ((if_equal_to_ast && BRANCHES_IDENTICAL(if_equal_to_ast, replace_this_1)) ||
+						           (if_equal_to && ast_isconstexpr(replace_this_1, if_equal_to))) {
+							/* Special case: `y === y ? with_this : ...'.
+							 * -> replacement always happens */
+							if (if_equal_to_ast && ast_genasm(if_equal_to_ast, gflags & ~ASM_G_FPUSHRES))
+								goto err;
+							if (ast_genasm(with_this, gflags))
+								goto err;
+							break;
+						} else if (!ast_has_sideeffects(with_this)) {
+							/* Generate code:
+							 * >> push @replace_this_1
+							 * >> push @if_equal_to[_ast]
+							 * >> push @with_this
+							 * >> cmpxch top, pop, pop */
+							if (ast_genasm(replace_this_1, gflags))
+								goto err;
+							if (PUSH_RESULT) {
+								if (if_equal_to && DeeNone_Check(if_equal_to)) {
+									if (with_this->a_type == AST_CONSTEXPR) {
+										int32_t cid = asm_newconst(with_this->a_constexpr);
+										if unlikely(cid < 0)
+											goto err;
+										if (asm_putddi(self))
+											goto err;
+										if (asm_gcmpxch_top_none_c((uint16_t)cid))
+											goto err;
+									} else {
+										if (ast_genasm_one(with_this, gflags))
+											goto err;
+										if (asm_putddi(self))
+											goto err;
+										if (asm_gcmpxch_top_none_pop())
+											goto err;
+									}
+								} else {
+									if (if_equal_to_ast ? ast_genasm_one(if_equal_to_ast, gflags)
+									                    : asm_gpush_constexpr(if_equal_to))
+										goto err;
+									if (with_this->a_type == AST_CONSTEXPR &&
+									    DeeNone_Check(with_this->a_constexpr)) {
+										if (asm_putddi(self))
+											goto err;
+										if (asm_gcmpxch_top_pop_none())
+											goto err;
+									} else {
+										if (ast_genasm_one(with_this, gflags))
+											goto err;
+										if (asm_putddi(self))
+											goto err;
+										if (asm_gcmpxch_top_pop_pop())
+											goto err;
+									}
+								}
+							}
+							break;
+						} else {
+							/* Generate code:
+							 * >>     push @replace_this_1        # replace_this_1
+							 * >>     dup                         # replace_this_1, replace_this_1
+							 * >>     push @if_equal_to[_ast]     # replace_this_1, replace_this_1, if_equal_to
+							 * >>     push cmp  so, pop, pop      # replace_this_1, is_same
+							 * >>     jf   pop, 1f                # replace_this_1
+							 * >>     pop                         # N/A
+							 * >>     push @with_this             # with_this     (this push is known to have side-effects, meaning it can't be optimized away)
+							 * >> 1:                              # replace_this_1|with_this
+							 */
+							if (ast_genasm(replace_this_1, gflags | ASM_G_FPUSHRES))
+								goto err;
+							if (PUSH_RESULT && asm_gdup())
+								goto err;
+							if (if_equal_to && DeeNone_Check(if_equal_to)) {
+								if (asm_putddi(condition))
+									goto err;
+								if (asm_gisnone())
+									goto err;
+							} else {
+								if (if_equal_to_ast ? ast_genasm_one(if_equal_to_ast, gflags)
+								                    : asm_gpush_constexpr(if_equal_to))
+									goto err;
+								if (asm_putddi(condition))
+									goto err;
+								if (asm_gsameobj())
+									goto err;
+							}
+							if (asm_putddi(self))
+								goto err;
+							if (((with_this == self->a_conditional.c_tt && (self->a_flag & AST_FCOND_UNLIKELY)) ||
+							     (with_this == self->a_conditional.c_ff && (self->a_flag & AST_FCOND_LIKELY))) &&
+							    (current_assembler.a_curr != &current_assembler.a_sect[SECTION_COLD]) &&
+							    !(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE)) {
+								/* User explicitly stated that it is unlikely that the value needs to be replaced.
+								 * In this case, generate slightly different code:
+								 * >> // BEGIN: ALREADY GENERATED
+								 * >>     push @replace_this_1        # replace_this_1
+								 * >>     dup                         # replace_this_1, replace_this_1
+								 * >>     push @if_equal_to[_ast]     # replace_this_1, replace_this_1, if_equal_to
+								 * >>     push cmp  so, pop, pop      # replace_this_1, is_same
+								 * >> // END: ALREADY GENERATED
+								 * >>     jt   pop, 1f                # replace_this_1
+								 * >> .section .cold
+								 * >> 1:  pop                         # N/A
+								 * >>     push @with_this             # with_this     (this push is known to have side-effects, meaning it can't be optimized away)
+								 * >>     jmp  1f
+								 * >> .section .text
+								 * >> 1:                              # replace_this_1|with_this
+								 */
+								struct asm_sym *enter_cold_sym;
+								struct asm_sym *leave_cold_sym;
+								struct asm_sec *prev_section;
+								enter_cold_sym = asm_newsym();
+								if unlikely(!enter_cold_sym)
+									goto err;
+								leave_cold_sym = asm_newsym();
+								if unlikely(!leave_cold_sym)
+									goto err;
+								if (asm_gjmp(ASM_JT, enter_cold_sym))
+									goto err;
+								prev_section = current_assembler.a_curr;
+								current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
+								asm_decsp();
+								asm_defsym(enter_cold_sym);
+								if (PUSH_RESULT && (asm_putddi(with_this) || asm_gpop()))
+									goto err;
+								if (ast_genasm_one(with_this, gflags))
+									goto err;
+								if (asm_gjmp(ASM_JMP, leave_cold_sym))
+									goto err;
+								current_assembler.a_curr = prev_section;
+								asm_defsym(leave_cold_sym);
+							} else {
+								struct asm_sym *expr_end;
+								expr_end = asm_newsym();
+								if unlikely(!expr_end)
+									goto err;
+								if (asm_gjmp(ASM_JF, expr_end))
+									goto err;
+								asm_decsp();
+								if (PUSH_RESULT && (asm_putddi(with_this) || asm_gpop()))
+									goto err;
+								if (ast_genasm_one(with_this, gflags))
+									goto err;
+								asm_defsym(expr_end);
+							}
+							break;
+						}
+					}
+				} else if (condition->a_type == AST_ACTION) {
+					if (condition->a_flag == AST_FACTION_DIFFOBJ) {
+						struct ast *temp = replace_this_1;
+						replace_this_1 = with_this;
+						with_this = temp;
+						goto do_check_encode_cmpxch_for_sameobj_condition;
+					} else if (condition->a_flag == AST_FACTION_SAMEOBJ) {
+do_check_encode_cmpxch_for_sameobj_condition:
+						if (condition->a_action.a_act0->a_type == AST_CONSTEXPR) {
+							if_equal_to    = condition->a_action.a_act0->a_constexpr;
+							replace_this_2 = condition->a_action.a_act1;
+							goto do_check_encode_cmpxch;
+						} else if (condition->a_action.a_act1->a_type == AST_CONSTEXPR) {
+							if_equal_to    = condition->a_action.a_act1->a_constexpr;
+							replace_this_2 = condition->a_action.a_act0;
+							goto do_check_encode_cmpxch;
+						} else if (BRANCHES_IDENTICAL(replace_this_1, condition->a_action.a_act0)) {
+							if_equal_to_ast = condition->a_action.a_act1;
+							if_equal_to     = NULL;
+							goto do_encode_cmpxch_or_reuse_replace_this_branch;
+						} else if (BRANCHES_IDENTICAL(replace_this_1, condition->a_action.a_act1)) {
+							if_equal_to_ast = condition->a_action.a_act0;
+							if_equal_to     = NULL;
+							goto do_encode_cmpxch_or_reuse_replace_this_branch;
+						}
+					}
+				}
+			}
+
+
 			/* If the condition expression is re-used, we can't
 			 * have it auto-optimize itself into a boolean value
 			 * if the caller expects the real expression value. */

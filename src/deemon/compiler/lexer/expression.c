@@ -2245,6 +2245,30 @@ err_r:
 }
 
 
+/* Create a ??-expression AST. */
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF struct ast *DFCALL
+ast_substitute_none(struct ast *__restrict this_value,
+                    struct ast *__restrict or_this_if_none,
+                    struct ast_loc *__restrict info) {
+	DREF struct ast *none_ast;
+	DREF struct ast *is_none_ast;
+	DREF struct ast *result;
+	none_ast = ast_constexpr(Dee_None);
+	none_ast = ast_setddi(none_ast, info);
+	if unlikely(!none_ast)
+		goto err;
+	is_none_ast = ast_action2(AST_FACTION_IS, this_value, none_ast);
+	ast_decref(none_ast);
+	is_none_ast = ast_setddi(is_none_ast, info);
+	if unlikely(!is_none_ast)
+		goto err;
+	result = ast_conditional(AST_FCOND_EVAL, is_none_ast, or_this_if_none, this_value);
+	ast_decref(is_none_ast);
+	return ast_setddi(result, info);
+err:
+	return NULL;
+}
+
 INTERN WUNUSED NONNULL((1)) DREF struct ast *DFCALL
 ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	DREF struct ast *rhs, *merge;
@@ -2252,74 +2276,90 @@ ast_parse_cmpeq_operand(/*inherit(always)*/ DREF struct ast *__restrict lhs) {
 	tok_t cmd = tok;
 	ASSERT(TOKEN_IS_CMPEQ(cmd));
 	for (;;) {
-		bool invert;
 		loc_here(&loc);
-		invert = cmd == '!';
-yield_again:
-		if unlikely(yield() < 0)
-			goto err_r;
-		if (tok == '!') {
-			invert ^= 1;
-			goto yield_again;
-		}
-		if (cmd == '!') {
-			if (tok == KWD_is || tok == KWD_in) {
-				cmd = tok;
-				if unlikely(yield() < 0)
-					goto err_r;
-			} else {
-				/* TODO: Must rewind to start of '!'-sequence in this case and
-				 *       not try to parse any additional in/is expressions:
-				 * >> local foo = "value";
-				 * >> local bar = f"foo = {foo!r}"; // << we mustn't parse the '!' here!
-				 * 
-				 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM' warning needs to go away
-				 */
-				if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
-					goto err_r;
-				cmd = KWD_is;
-			}
-		}
-		if (tok == KWD_bound && cmd == KWD_is) {
-			/* Special cast: `foo is bound' --> `bound(foo)' */
+		if (cmd == TOK_QMARK_QMARK) {
 			if unlikely(yield() < 0)
 				goto err_r;
-			merge = make_bound_expression(lhs, &loc);
-		} else {
+			/* Code like "a ?? b" gets compiled as "a !is none ? REUSE(a) : b",
+			 * where REUSE() means that the branch isn't evaluated a second time. */
 			rhs = ast_parse_cmp(LOOKUP_SYM_SECONDARY);
 			if unlikely(!rhs)
 				goto err_r;
-			if (cmd == TOK_EQUAL || cmd == TOK_NOT_EQUAL) {
-				merge = ast_operator2(cmd == TOK_EQUAL
-				                      ? OPERATOR_EQ
-				                      : OPERATOR_NE,
-				                      0, lhs, rhs);
-			} else {
-				merge = ast_action2(cmd == KWD_is
-				                    ? AST_FACTION_IS
-				                    : cmd == TOK_EQUAL3
-				                      ? AST_FACTION_SAMEOBJ
-				                      : cmd == TOK_NOT_EQUAL3
-				                        ? AST_FACTION_DIFFOBJ
-				                        : AST_FACTION_IN,
-				                    lhs, rhs);
-			}
-			ast_setddi(merge, &loc);
+			merge = ast_substitute_none(lhs, rhs, &loc);
+			ast_decref(lhs);
 			ast_decref(rhs);
-		}
-		ast_decref(lhs);
-		lhs = merge;
-		if unlikely(!lhs)
-			break;
-
-		/* Invert the result, if required. */
-		if (invert) {
-			merge = ast_bool(AST_FBOOL_NEGATE, lhs);
-			merge = ast_setddi(merge, &loc);
+			lhs = merge;
+			if unlikely(!lhs)
+				break;
+		} else {
+			bool invert;
+			invert = cmd == '!';
+yield_again:
+			if unlikely(yield() < 0)
+				goto err_r;
+			if (tok == '!') {
+				invert ^= 1;
+				goto yield_again;
+			}
+			if (cmd == '!') {
+				if (tok == KWD_is || tok == KWD_in) {
+					cmd = tok;
+					if unlikely(yield() < 0)
+						goto err_r;
+				} else {
+					/* TODO: Must rewind to start of '!'-sequence in this case and
+					 *       not try to parse any additional in/is expressions:
+					 * >> local foo = "value";
+					 * >> local bar = f"foo = {foo!r}"; // << we mustn't parse the '!' here!
+					 * 
+					 * iow: the `W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM' warning needs to go away
+					 */
+					if (WARN(W_EXPECTED_IS_OR_IN_AFTER_EXCLAIM))
+						goto err_r;
+					cmd = KWD_is;
+				}
+			}
+			if (tok == KWD_bound && cmd == KWD_is) {
+				/* Special cast: `foo is bound' --> `bound(foo)' */
+				if unlikely(yield() < 0)
+					goto err_r;
+				merge = make_bound_expression(lhs, &loc);
+			} else {
+				rhs = ast_parse_cmp(LOOKUP_SYM_SECONDARY);
+				if unlikely(!rhs)
+					goto err_r;
+				if (cmd == TOK_EQUAL || cmd == TOK_NOT_EQUAL) {
+					merge = ast_operator2(cmd == TOK_EQUAL
+					                      ? OPERATOR_EQ
+					                      : OPERATOR_NE,
+					                      0, lhs, rhs);
+				} else {
+					merge = ast_action2(cmd == KWD_is
+					                    ? AST_FACTION_IS
+					                    : cmd == TOK_EQUAL3
+					                      ? AST_FACTION_SAMEOBJ
+					                      : cmd == TOK_NOT_EQUAL3
+					                        ? AST_FACTION_DIFFOBJ
+					                        : AST_FACTION_IN,
+					                    lhs, rhs);
+				}
+				ast_setddi(merge, &loc);
+				ast_decref(rhs);
+			}
 			ast_decref(lhs);
 			lhs = merge;
 			if unlikely(!lhs)
 				break;
+
+			/* Invert the result, if required. */
+			if (invert) {
+				merge = ast_bool(AST_FBOOL_NEGATE, lhs);
+				merge = ast_setddi(merge, &loc);
+				ast_decref(lhs);
+				lhs = merge;
+				if unlikely(!lhs)
+					break;
+			}
 		}
 		cmd = tok;
 		if (!TOKEN_IS_CMPEQ(cmd))

@@ -578,7 +578,7 @@ DFUNDEF WUNUSED ATTR_CONST ATTR_RETNONNULL DeeThreadObject *DCALL DeeThread_Self
 DFUNDEF WUNUSED DeeThreadObject *DCALL DeeThread_Accede(void);
 
 /* Secede deemon's control over the calling thread by simulating said
- * thread's termination in the eyes of user-code. Following, this the
+ * thread's termination in the eyes of user-code. Following this, the
  * calling thread is no longer considered as being managed by deemon.
  *
  * However, the calling thread is allowed to accede to deemon once

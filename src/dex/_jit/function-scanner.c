@@ -875,6 +875,7 @@ do_scan_call_args:
 	case TOK_COLON_EQUAL:
 	case TOK_EQUAL3:
 	case TOK_NOT_EQUAL3:
+	case TOK_QMARK_QMARK:
 do_yield_again_docast:
 		JITLexer_Yield(self);
 do_again_docast:

@@ -1386,9 +1386,12 @@
 #define ASM_REDUCE_ANY        0xf097 /* [2][-1,+1]   `reduce top, any'                    - Push `true' if any element of a sequence `top' is true. */
 #define ASM_REDUCE_ALL        0xf098 /* [2][-1,+1]   `reduce top, all'                    - Push `true' if all elements of a sequence `top' are true. */
 /*      ASM_                  0xf099  *               --------                            - ------------------ */
-/*      ASM_                  0xf09a  *               --------                            - ------------------ */
-/*      ASM_                  0xf09b  *               --------                            - ------------------ */
-#define ASM_CMPXCH_UB_LOCK    0xf09c /* [2][-0,+1]   `push  cmpxch PREFIX, unbound, lock' - Atomically check if PREFIX is unbound, and replace its value with a special "lock" value.
+#define ASM_CMPXCH_UB_C       0xf09a /* [3][-1,+1]   `cmpxch top, none, const <imm8>'              - If FIRST === none, replace it with const <imm8>.
+                                      * [3][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm8>'  - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
+#define ASM16_CMPXCH_UB_C     0xf09b /* [4][-1,+1]   `cmpxch top, none, const <imm16>'             - If FIRST === none, replace it with const <imm16>.
+                                      * [4][-0,+1]   `push  cmpxch PREFIX, unbound, const <imm16>' - Atomically change PREFIX from "unbound" to "const <imm8>", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_UB_LOCK    0xf09c /* [2][-1,+1]   `cmpxch top, none, none'             - No-op (deletable)
+                                      * [2][-0,+1]   `push  cmpxch PREFIX, unbound, lock' - Atomically check if PREFIX is unbound, and replace its value with a special "lock" value.
                                       * NOTE: Unless otherwise documented, other instructions (except ASM_CMPXCH_UB_LOCK)
                                       *       will treat "lock" values the same as "unbound", whereas ASM_CMPXCH_UB_LOCK
                                       *       will block if the current value is "lock".
@@ -1406,9 +1409,12 @@
                                       * >>     PUSH(true);
                                       * >> }
                                       * >> UNLOCK(); */
-#define ASM_CMPXCH_UB_POP     0xf09d /* [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
-#define ASM_CMPXCH_POP_UB     0xf09e /* [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened. */
-#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_UB_POP     0xf09d /* [2][-2,+1]   `cmpxch top, none, pop'              - If SECOND === none, replace it with FIRST. FIRST is always popped.
+                                      * [2][-1,+1]   `push  cmpxch PREFIX, unbound, pop'  - Atomically change PREFIX from "unbound" to "FIRST", and push true/false indicative of a change having happened. */
+#define ASM_CMPXCH_POP_UB     0xf09e /* [2][-2,+1]   `cmpxch top, pop, none'              - If SECOND === FIRST, replace it with none. FIRST is always popped.
+                                      * [2][-1,+1]   `push  cmpxch PREFIX, pop, unbound'  - Atomically change PREFIX from "SECOND" to "FIRST", and push true/false indicative of a change having happened (compare is done using `==='). */
+#define ASM_CMPXCH_POP_POP    0xf09f /* [2][-3,+1]   `cmpxch top, pop, pop'               - If THIRD === SECOND, replace it with FIRST. FIRST AND SECOND are always popped.
+                                      * [2][-2,+1]   `push  cmpxch PREFIX, pop, pop'      - Atomically change PREFIX from "FIRST" to "unbound", and push true/false indicative of a change having happened (compare is done using `==='). */
 /*      ASM_                  0xf0a0  *               --------                            - ------------------ */
 #define ASM16_PRINT_C         0xf0a1 /* [4][-0,+0]   `print const <imm16>'                - Print a constant from `<imm16>' to stdout. */
 #define ASM16_PRINT_C_SP      0xf0a2 /* [4][-0,+0]   `print const <imm16>, sp'            - Same as `ASM_PRINT_C16', but follow up by printing a space character. */

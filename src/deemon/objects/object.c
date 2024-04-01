@@ -4935,13 +4935,29 @@ Dee_IncrefIfNotZero_traced(DeeObject *__restrict ob,
 PUBLIC NONNULL((1)) void DCALL
 Dee_Decref_traced(DeeObject *__restrict ob,
                   char const *file, int line) {
-	drefcnt_t newref;
-	newref = atomic_fetchdec(&ob->ob_refcnt);
+	drefcnt_t oldref;
+	oldref = atomic_fetchdec(&ob->ob_refcnt);
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-	if unlikely(newref == 0)
+	if unlikely(oldref == 0)
 		DeeFatal_BadDecref(ob, file, line);
 #endif /* !CONFIG_NO_BADREFCNT_CHECKS */
-	if unlikely(newref == 1) {
+	if unlikely(oldref == 1) {
+		DeeObject_Destroy_d(ob, file, line);
+	} else {
+		reftracker_addchange(ob, file, -line);
+	}
+}
+
+PUBLIC NONNULL((1)) void DCALL
+Dee_Decref_n_traced(DeeObject *__restrict ob, Dee_refcnt_t n,
+                    char const *file, int line) {
+	drefcnt_t oldref;
+	oldref = atomic_fetchsub(&ob->ob_refcnt, n);
+#ifndef CONFIG_NO_BADREFCNT_CHECKS
+	if unlikely(oldref < n)
+		DeeFatal_BadDecref(ob, file, line);
+#endif /* !CONFIG_NO_BADREFCNT_CHECKS */
+	if unlikely(oldref == n) {
 		DeeObject_Destroy_d(ob, file, line);
 	} else {
 		reftracker_addchange(ob, file, -line);

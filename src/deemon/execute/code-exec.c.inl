@@ -5199,6 +5199,64 @@ do_setattr_this_c:
 					DISPATCH();
 				}
 
+				TARGET(ASM_CMPXCH_UB_C, -1, +1) {
+					imm_val = READ_imm8();
+do_cmpxch_ub_c:
+					ASSERT_CONSTimm();
+					if (DeeNone_Check(TOP)) {
+						Dee_DecrefNokill(Dee_None);
+						TOP = CONSTimm;
+						Dee_Incref(TOP);
+					}
+					DISPATCH();
+				}
+
+				TARGET(ASM16_CMPXCH_UB_C, -1, +1) {
+					imm_val = READ_imm16();
+					goto do_cmpxch_ub_c;
+				}
+
+				TARGET(ASM_CMPXCH_UB_LOCK, -1, +1) {
+					/* No-op (would be: replace TOP with "none" if it's already "none") */
+					DISPATCH();
+				}
+
+				TARGET(ASM_CMPXCH_UB_POP, -2, +1) {
+					if (DeeNone_Check(SECOND)) {
+						Dee_DecrefNokill(Dee_None);
+						SECOND = TOP; /* Inherit reference */
+						(void)POP();
+					} else {
+						POPREF();
+					}
+					DISPATCH();
+				}
+
+				TARGET(ASM_CMPXCH_POP_UB, -2, +1) {
+					if (SECOND == FIRST) {
+						Dee_Decref_n(FIRST, 2);
+						(void)POP();
+						FIRST = DeeNone_NewRef();
+					} else {
+						POPREF();
+					}
+					DISPATCH();
+				}
+
+				TARGET(ASM_CMPXCH_POP_POP, -3, +1) {
+					Dee_Decref(SECOND);
+					if (THIRD == SECOND) {
+						Dee_Decref(THIRD);
+						THIRD = FIRST; /* Inherit reference */
+						(void)POP();
+						(void)POP();
+					} else {
+						(void)POP();
+						POPREF();
+					}
+					DISPATCH();
+				}
+
 				RAW_TARGET(ASM16_PRINT_C) {
 					imm_val = READ_imm16();
 					goto do_print_c;
@@ -6776,6 +6834,49 @@ prefix_do_unpack:
 							DISPATCH();
 						}
 
+						PREFIX_TARGET(ASM_CMPXCH_UB_C) {
+#ifdef EXEC_FAST
+							bool ok;
+#else /* EXEC_FAST */
+							int ok;
+#endif /* !EXEC_FAST */
+							imm_val = READ_imm8();
+do_prefix_cmpxch_ub_c:
+							ASSERT_CONSTimm();
+#ifdef EXEC_FAST
+							ok = cmpxch_prefix_object(NULL, CONSTimm);
+#else /* EXEC_FAST */
+							ok = cmpxch_prefix_object(NULL, CONSTimm);
+							if unlikely(ok < 0)
+								HANDLE_EXCEPT();
+#endif /* !EXEC_FAST */
+#ifndef __OPTIMIZE_SIZE__
+							if likely(*ip.ptr == ASM_POP) {
+								/* This is a likely case, as the compiler generates for:
+								 * >> static local x = 42;
+								 *
+								 * This assembly:
+								 * >> push cmpxch static @x, unbound, const @42
+								 * >> pop
+								 *
+								 * And prefixed ASM_CMPXCH_UB_C is used nowhere else, except
+								 * in custom user-assembly, so we merge the 2 instructions
+								 * here such that we never have to push the boolean. */
+								++ip.ptr;
+								DISPATCH();
+							}
+#endif /* !__OPTIMIZE_SIZE__ */
+							if (ok) {
+								goto target_ASM_PUSH_TRUE;
+							}
+							goto target_ASM_PUSH_FALSE;
+						}
+
+						PREFIX_TARGET(ASM16_CMPXCH_UB_C) {
+							imm_val = READ_imm16();
+							goto do_prefix_cmpxch_ub_c;
+						}
+
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 						PREFIX_TARGET(ASM_CMPXCH_UB_LOCK) {
 							/* Only allowed for static variables:
@@ -7553,10 +7654,6 @@ prefix_unknown_instruction:
 	default:
 #endif /* USE_SWITCH */
 #ifndef USE_SWITCH
-target_ASM_CMPXCH_UB_LOCK:
-target_ASM_CMPXCH_POP_POP:
-target_ASM_CMPXCH_POP_UB:
-target_ASM_CMPXCH_UB_POP:
 target_ASM_UD:
 target_ASM_RESERVED1:
 target_ASM_RESERVED2:

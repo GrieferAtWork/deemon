@@ -1,0 +1,96 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+import * from deemon;
+
+global _hidecalls = 0;
+function _hide(x) {
+	local result = x;
+	__asm__("" : "+X" (result));
+	++_hidecalls;
+	return result;
+}
+
+local a = _hide(none);
+local b = _hide("bar");
+#define c _hide("baz")
+
+function verifyExpr(value, expr: string) {
+	try {
+		local execValue = exec(expr, globals: {
+			"a": none,
+			"b": "bar",
+			"c": "baz",
+		});
+		assert value == execValue;
+	} catch (...) {
+		print File.stderr: ("While evaluating expression: ", expr);
+		throw;
+	}
+	return value;
+}
+#define ASSERT_EXPR(foo) verifyExpr(foo, #foo)
+
+assert "foo" == ASSERT_EXPR(a !is none ? a : "foo");
+assert "bar" == ASSERT_EXPR(a !is none ? a : b);
+assert "foo" == ASSERT_EXPR(a !is type(none) ? a : "foo");
+assert "bar" == ASSERT_EXPR(a !is type(none) ? a : b);
+assert "foo" == ASSERT_EXPR(a is none ? "foo" : a);
+assert "bar" == ASSERT_EXPR(a is none ? b : a);
+assert "foo" == ASSERT_EXPR(a is type(none) ? "foo" : a);
+assert "bar" == ASSERT_EXPR(a is type(none) ? b : a);
+assert "foo" == ASSERT_EXPR(a !== none ? a : "foo");
+assert "bar" == ASSERT_EXPR(a !== none ? a : b);
+assert "foo" == ASSERT_EXPR(none !== a ? a : "foo");
+assert "bar" == ASSERT_EXPR(none !== a ? a : b);
+assert "foo" == ASSERT_EXPR(a === none ? "foo" : a);
+assert "bar" == ASSERT_EXPR(a === none ? b : a);
+assert "foo" == ASSERT_EXPR(none === a ? "foo" : a);
+assert "bar" == ASSERT_EXPR(none === a ? b : a);
+
+assert _hidecalls == 2;
+assert "baz" == ASSERT_EXPR(a !is none ? a : c);
+assert "baz" == ASSERT_EXPR(a !is type(none) ? a : c);
+assert "baz" == ASSERT_EXPR(a !== none ? a : c);
+assert "baz" == ASSERT_EXPR(none !== a ? a : c);
+assert "baz" == ASSERT_EXPR(a === none ? c : a);
+assert "baz" == ASSERT_EXPR(none === a ? c : a);
+assert _hidecalls == 8;
+
+assert "foo" == ASSERT_EXPR(a ?? "foo");
+assert "bar" == ASSERT_EXPR(a ?? b);
+assert "baz" == ASSERT_EXPR(a ?? c);
+assert _hidecalls == 9;
+
+assert "bar" == ASSERT_EXPR(b);
+assert "bar" == ASSERT_EXPR(b ?? a);
+assert "bar" == ASSERT_EXPR(b ?? none);
+assert "bar" == ASSERT_EXPR(b ?? c);
+assert "bar" == ASSERT_EXPR(none ?? b);
+assert "bar" == ASSERT_EXPR(none ?? b ?? a);
+assert "bar" == ASSERT_EXPR(none ?? b ?? none);
+assert "bar" == ASSERT_EXPR(none ?? b ?? c);
+assert _hidecalls == 9;
+
+assert "foo" == ASSERT_EXPR(a ?? "foo" ?? c);
+assert "bar" == ASSERT_EXPR(a ?? b ?? c);
+assert "baz" == ASSERT_EXPR(a ?? c ?? c);
+assert _hidecalls == 10;

@@ -414,6 +414,13 @@ handle_decimal_power_suffix:
 		}
 		goto scan_keyword;
 
+	case '?':
+		if (*iter == '?') {
+			++iter;
+			self->jl_tok = TOK_QMARK_QMARK;
+			break;
+		}
+		goto do_single;
 
 	default:
 		if unlikely(ch > 0x7f) {
@@ -521,7 +528,6 @@ scan_keyword:
 	case ']':
 	case '{':
 	case '}':
-	case '?':
 	case '@':
 	case ',':
 	case ';':

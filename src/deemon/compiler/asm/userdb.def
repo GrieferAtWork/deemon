@@ -1185,19 +1185,31 @@ INSTR("mov", (
 	O2(ASM_POP_LOCAL,          FF0,                 (LOCAL)(PREFIX))            /* `mov local <imm8/16>, PREFIX' */
 ))
 
-/* CONSTRAINTS: `cmpxch <p>, unbound, lock'  (only when "<p>" is a static variable) */
-/* CONSTRAINTS: `cmpxch <p>, unbound, <s>' */
-/* CONSTRAINTS: `cmpxch <p>, <s>', unbound */
-/* CONSTRAINTS: `cmpxch <p>, <s>', <s> */
+/* CONSTRAINTS: `cmpxch <s>, none, <ncs>' */
+/* CONSTRAINTS: `cmpxch <s>, <s>', <ns> */
+/* CONSTRAINTS: `push cmpxch <p>, unbound, lock'  (only when "<p>" is a static variable) */
+/* CONSTRAINTS: `push cmpxch <p>, unbound, <cs>' */
+/* CONSTRAINTS: `push cmpxch <p>, <s>', unbound */
+/* CONSTRAINTS: `push cmpxch <p>, <s>', <s> */
 INSTR("cmpxch", (
-	O2(ASM_CMPXCH_UB_LOCK, FPREFIX | FPUSH,    (UNBOUND)(LOCK))         /* `PREFIX: push  cmpxch unbound, lock' */
-	O3(ASM_CMPXCH_UB_LOCK, FPUSH,              (PREFIX)(UNBOUND)(LOCK)) /* `push  cmpxch PREFIX, unbound, lock' */
-	O2(ASM_CMPXCH_UB_POP, FPREFIX | FPUSH,     (UNBOUND)(POP))          /* `PREFIX: push  cmpxch unbound, pop' */
-	O3(ASM_CMPXCH_UB_POP, FPUSH,               (PREFIX)(UNBOUND)(POP))  /* `push  cmpxch PREFIX, unbound, pop' */
-	O2(ASM_CMPXCH_POP_UB, FPREFIX | FPUSH,     (POP)(UNBOUND))          /* `PREFIX: push  cmpxch pop, unbound' */
-	O3(ASM_CMPXCH_POP_UB, FPUSH,               (PREFIX)(POP)(UNBOUND))  /* `push  cmpxch PREFIX, pop, unbound' */
-	O2(ASM_CMPXCH_POP_POP, FPREFIX | FPUSH,    (POP)(POP))              /* `PREFIX: push  cmpxch pop, pop' */
-	O3(ASM_CMPXCH_POP_POP, FPUSH,              (PREFIX)(POP)(POP))      /* `push  cmpxch PREFIX, pop, pop' */
+	O3(ASM_CMPXCH_UB_C,    FNORMAL,                  (TOP)(NONE)(CONST))       /* `cmpxch top, none, const <imm8>' */
+	O3(ASM16_CMPXCH_UB_C,  F16BIT,                   (TOP)(NONE)(CONST))       /* `cmpxch top, none, const <imm16>' */
+	O3(ASM_DELOP,          FNORMAL,                  (TOP)(NONE)(NONE))        /* `cmpxch top, none, none' */
+	O3(ASM_CMPXCH_UB_POP,  FNORMAL,                  (TOP)(NONE)(POP))         /* `cmpxch top, none, pop' */
+	O3(ASM_CMPXCH_POP_UB,  FNORMAL,                  (TOP)(POP)(NONE))         /* `cmpxch top, pop, none' */
+	O3(ASM_CMPXCH_POP_POP, FNORMAL,                  (TOP)(POP)(POP))          /* `cmpxch top, pop, pop' */
+	O3(ASM_CMPXCH_UB_C,    FPUSH,                    (PREFIX)(UNBOUND)(CONST)) /* `push  cmpxch PREFIX, unbound, const <imm8>' */
+	O3(ASM16_CMPXCH_UB_C,  FPUSH | F16BIT,           (PREFIX)(UNBOUND)(CONST)) /* `push  cmpxch PREFIX, unbound, const <imm16>' */
+	O3(ASM_CMPXCH_UB_LOCK, FPUSH,                    (PREFIX)(UNBOUND)(LOCK))  /* `push  cmpxch PREFIX, unbound, lock' */
+	O3(ASM_CMPXCH_UB_POP,  FPUSH,                    (PREFIX)(UNBOUND)(POP))   /* `push  cmpxch PREFIX, unbound, pop' */
+	O3(ASM_CMPXCH_POP_UB,  FPUSH,                    (PREFIX)(POP)(UNBOUND))   /* `push  cmpxch PREFIX, pop, unbound' */
+	O3(ASM_CMPXCH_POP_POP, FPUSH,                    (PREFIX)(POP)(POP))       /* `push  cmpxch PREFIX, pop, pop' */
+	O2(ASM_CMPXCH_UB_C,    FPREFIX | FPUSH,          (UNBOUND)(CONST))         /* `PREFIX: push  cmpxch unbound, const <imm8>' */
+	O2(ASM16_CMPXCH_UB_C,  FPREFIX | FPUSH | F16BIT, (UNBOUND)(CONST))         /* `PREFIX: push  cmpxch unbound, const <imm16>' */
+	O2(ASM_CMPXCH_UB_LOCK, FPREFIX | FPUSH,          (UNBOUND)(LOCK))          /* `PREFIX: push  cmpxch unbound, lock' */
+	O2(ASM_CMPXCH_UB_POP,  FPREFIX | FPUSH,          (UNBOUND)(POP))           /* `PREFIX: push  cmpxch unbound, pop' */
+	O2(ASM_CMPXCH_POP_UB,  FPREFIX | FPUSH,          (POP)(UNBOUND))           /* `PREFIX: push  cmpxch pop, unbound' */
+	O2(ASM_CMPXCH_POP_POP, FPREFIX | FPUSH,          (POP)(POP))               /* `PREFIX: push  cmpxch pop, pop' */
 ))
 
 /* clang-format on */

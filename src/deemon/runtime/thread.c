@@ -1886,7 +1886,7 @@ DeeThread_DecrefInOtherThread(DREF DeeThreadObject *self) {
 
 
 /* Secede deemon's control over the calling thread by simulating said
- * thread's termination in the eyes of user-code. Following, this the
+ * thread's termination in the eyes of user-code. Following this, the
  * calling thread is no longer considered as being managed by deemon.
  *
  * However, the calling thread is allowed to accede to deemon once

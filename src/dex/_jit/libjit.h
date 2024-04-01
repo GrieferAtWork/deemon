@@ -122,6 +122,7 @@ enum {
 /*	TOK_RANGLE3_EQUAL, /* ">>>=". */
 	TOK_EQUAL3,        /* "===". */
 	TOK_NOT_EQUAL3,    /* "!==". */
+	TOK_QMARK_QMARK,   /* "??". */
 	TOK_KEYWORD_BEGIN, /* KEEP THIS THE LAST TOKEN! */
 
 	TOK_TWOCHAR_END = TOK_KEYWORD_BEGIN,
@@ -183,7 +184,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 #define TOKEN_IS_CMPEQ(self)                                             \
 	((self)->jl_tok == TOK_EQUAL || (self)->jl_tok == TOK_NOT_EQUAL ||   \
 	 (self)->jl_tok == TOK_EQUAL3 || (self)->jl_tok == TOK_NOT_EQUAL3 || \
-	 (self)->jl_tok == '!' ||                                            \
+	 (self)->jl_tok == TOK_QMARK_QMARK || (self)->jl_tok == '!' ||       \
 	 ((self)->jl_tok == JIT_KEYWORD &&                                   \
 	  (JITLexer_ISTOK(self, "is") || JITLexer_ISTOK(self, "in"))))
 #define TOKEN_IS_AND(self) \
@@ -232,6 +233,7 @@ typedef struct jit_yield_function_iterator_object JITYieldFunctionIteratorObject
 	case TOK_NOT_EQUAL:     \
 	case TOK_EQUAL3:        \
 	case TOK_NOT_EQUAL3:    \
+	case TOK_QMARK_QMARK:   \
 	case '!'
 #define CASE_TOKEN_IS_AND \
 	case '&'

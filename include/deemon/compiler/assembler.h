@@ -1552,11 +1552,17 @@ INTDEF WUNUSED int DCALL asm_gunwind(void);
 #define asm_gincpost()                (asm_incsp(), asm_put16(ASM_INCPOST))
 #define asm_gdecpost()                (asm_incsp(), asm_put16(ASM_DECPOST))
 
+/* Instructions for compare-and-exchange of stack values. */
+#define asm_gcmpxch_top_none_c(cid) (asm_dicsp(), asm_put1616(ASM_CMPXCH_UB_C, ASM16_CMPXCH_UB_C, cid))
+#define asm_gcmpxch_top_none_pop()  (asm_ddicsp(), asm_put16(ASM_CMPXCH_UB_POP))
+#define asm_gcmpxch_top_pop_none()  (asm_ddicsp(), asm_put16(ASM_CMPXCH_POP_UB))
+#define asm_gcmpxch_top_pop_pop()   (asm_dddicsp(), asm_put16(ASM_CMPXCH_POP_POP))
+
 /* Instructions for atomic compare-and-exchange of prefixable symbols. */
-#define asm_gcmpxch_ub_lock()         (asm_incsp(), asm_put16(ASM_CMPXCH_UB_LOCK))
-#define asm_gcmpxch_ub_pop()          (asm_dicsp(), asm_put16(ASM_CMPXCH_UB_POP))
-#define asm_gcmpxch_pop_ub()          (asm_dicsp(), asm_put16(ASM_CMPXCH_POP_UB))
-#define asm_gcmpxch_pop_pop()         (asm_ddicsp(), asm_put16(ASM_CMPXCH_POP_POP))
+#define asm_gcmpxch_ub_lock_p()         (asm_incsp(), asm_put16(ASM_CMPXCH_UB_LOCK))
+#define asm_gcmpxch_ub_pop_p()          (asm_dicsp(), asm_put16(ASM_CMPXCH_UB_POP))
+#define asm_gcmpxch_pop_ub_p()          (asm_dicsp(), asm_put16(ASM_CMPXCH_POP_UB))
+#define asm_gcmpxch_pop_pop_p()         (asm_ddicsp(), asm_put16(ASM_CMPXCH_POP_POP))
 
 /* Push/pop the current top value into a location on the stack, given its absolute address.
  * HINT: These functions are useful because `asm_gdup_n()' / `asm_gpop_n()' use relative addresses. */

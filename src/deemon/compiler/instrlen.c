@@ -556,12 +556,12 @@ PRIVATE uint8_t const intr_len_f0[256] = {
 	/* 0x97 */ 2, /* `ASM_REDUCE_ANY':              `reduce top, any' */
 	/* 0x98 */ 2, /* `ASM_REDUCE_ALL':              `reduce top, all' */
 	/* 0x99 */ 2, /* --- */
-	/* 0x9a */ 2, /* --- */
-	/* 0x9b */ 2, /* --- */
-	/* 0x9c */ 2, /* `ASM_CMPXCH_UB_LOCK':          `push  cmpxch PREFIX, unbound, lock' */
-	/* 0x9d */ 2, /* `ASM_CMPXCH_UB_POP':           `push  cmpxch PREFIX, unbound, pop' */
-	/* 0x9e */ 2, /* `ASM_CMPXCH_POP_UB':           `push  cmpxch PREFIX, pop, unbound' */
-	/* 0x9f */ 2, /* `ASM_CMPXCH_POP_POP':          `push  cmpxch PREFIX, pop, pop' */
+	/* 0x9a */ 3, /* `ASM_CMPXCH_UB_C':             `cmpxch top, none, const <imm8>' */
+	/* 0x9b */ 4, /* `ASM16_CMPXCH_UB_C':           `cmpxch top, none, const <imm16>' */
+	/* 0x9c */ 2, /* `ASM_CMPXCH_UB_LOCK':          `cmpxch top, none, none' */
+	/* 0x9d */ 2, /* `ASM_CMPXCH_UB_POP':           `cmpxch top, none, pop' */
+	/* 0x9e */ 2, /* `ASM_CMPXCH_POP_UB':           `cmpxch top, pop, none' */
+	/* 0x9f */ 2, /* `ASM_CMPXCH_POP_POP':          `cmpxch top, pop, pop' */
 	/* 0xa0 */ 2, /* --- */
 	/* 0xa1 */ 4, /* `ASM16_PRINT_C':               `print const <imm16>' */
 	/* 0xa2 */ 4, /* `ASM16_PRINT_C_SP':            `print const <imm16>, sp' */
@@ -1074,12 +1074,12 @@ PRIVATE uint8_t const stack_effect_f0[256] = {
 	/* 0x97 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ANY':              `reduce top, any' */
 	/* 0x98 */ STACK_EFFECT(1, 1), /* `ASM_REDUCE_ALL':              `reduce top, all' */
 	/* 0x99 */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9a */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9b */ STACK_EFFECT_UNDEF, /* --- */
-	/* 0x9c */ STACK_EFFECT(0, 1), /* `ASM_CMPXCH_UB_LOCK':          `push  cmpxch PREFIX, unbound, lock' */
-	/* 0x9d */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_UB_POP':           `push  cmpxch PREFIX, unbound, pop' */
-	/* 0x9e */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_POP_UB':           `push  cmpxch PREFIX, pop, unbound' */
-	/* 0x9f */ STACK_EFFECT(2, 1), /* `ASM_CMPXCH_POP_POP':          `push  cmpxch PREFIX, pop, pop' */
+	/* 0x9a */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_UB_C':             `cmpxch top, none, const <imm8>' */
+	/* 0x9b */ STACK_EFFECT(1, 1), /* `ASM16_CMPXCH_UB_C':           `cmpxch top, none, const <imm16>' */
+	/* 0x9c */ STACK_EFFECT(1, 1), /* `ASM_CMPXCH_UB_LOCK':          `cmpxch top, none, none' */
+	/* 0x9d */ STACK_EFFECT(2, 1), /* `ASM_CMPXCH_UB_POP':           `cmpxch top, none, pop' */
+	/* 0x9e */ STACK_EFFECT(2, 1), /* `ASM_CMPXCH_POP_UB':           `cmpxch top, pop, none' */
+	/* 0x9f */ STACK_EFFECT(3, 1), /* `ASM_CMPXCH_POP_POP':          `cmpxch top, pop, pop' */
 	/* 0xa0 */ STACK_EFFECT_UNDEF, /* --- */
 	/* 0xa1 */ STACK_EFFECT(0, 0), /* `ASM16_PRINT_C':               `print const <imm16>' */
 	/* 0xa2 */ STACK_EFFECT(0, 0), /* `ASM16_PRINT_C_SP':            `print const <imm16>, sp' */
@@ -1234,8 +1234,8 @@ again:
 /* Skip over any prefix that may be found before an instruction (e.g. `ASM_LOCAL')
  * The returned pointer points to the first actual instruction byte.
  * When no prefix is present, simply re-return `pc' */
-PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) instruction_t *DCALL
-DeeAsm_SkipPrefix(instruction_t const *__restrict pc) {
+PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) Dee_instruction_t *DCALL
+DeeAsm_SkipPrefix(Dee_instruction_t const *__restrict pc) {
 	instruction_t inst;
 again:
 	inst = *pc;
@@ -1289,9 +1289,9 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
  * NOTE:    The affect of branch instructions is evaluated as the
  *          fall-through path (aka. when the branch isn't taken).
  * WARNING: This also goes for instructions that always take a branch! */
-PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) instruction_t *DCALL
-DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
-                   uint16_t *__restrict p_stacksz) {
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2)) Dee_instruction_t *DCALL
+DeeAsm_NextInstrSp(Dee_instruction_t const *__restrict pc,
+                   /*in|out*/ uint16_t *__restrict p_stacksz) {
 	uint16_t sp_add, sp_sub;
 	return DeeAsm_NextInstrEf(pc, p_stacksz, &sp_add, &sp_sub);
 }
@@ -1307,11 +1307,11 @@ DeeAsm_NextInstrSp(instruction_t const *__restrict pc,
  *     stack-effect of 0, which sub/add effect addends that maximize the potential
  *     influence (e.g.: `ASM_JMP_POP_POP': `*p_sp_sub = (*p_sp_sub = *p_stacksz)+2, *p_stacksz -= 2;')
  *   - Before returning, `*p_stacksz' will be adjusted to `(OLD(*p_stacksz) - *p_sp_sub) + *p_sp_add' */
-PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) instruction_t *DCALL
-DeeAsm_NextInstrEf(instruction_t const *__restrict pc,
-                   uint16_t *__restrict p_stacksz,
-                   uint16_t *__restrict p_sp_add,
-                   uint16_t *__restrict p_sp_sub) {
+PUBLIC ATTR_RETNONNULL NONNULL((1, 2, 3, 4)) Dee_instruction_t *DCALL
+DeeAsm_NextInstrEf(Dee_instruction_t const *__restrict pc,
+                   /*in|out*/ uint16_t *__restrict p_stacksz,
+                   /*out*/ uint16_t *__restrict p_sp_add,
+                   /*out*/ uint16_t *__restrict p_sp_sub) {
 	instruction_t op = *pc;
 	instruction_t const *prefix_ip;
 	uint16_t prefix_stack_sub;
@@ -1741,6 +1741,9 @@ do_prefix:
 
 			case ASM_INCPOST & 0xff:
 			case ASM_DECPOST & 0xff:
+			case ASM_CMPXCH_UB_LOCK & 0xff:
+			case ASM_CMPXCH_UB_C & 0xff:
+			case ASM16_CMPXCH_UB_C & 0xff:
 				*p_sp_add = 1;
 				*p_sp_sub = 0;
 				*p_stacksz += 1;
@@ -1762,6 +1765,18 @@ do_prefix:
 				*p_sp_add = UNALIGNED_GETLE16(prefix_ip + 2);
 				*p_sp_sub = 0;
 				*p_stacksz += *p_sp_add;
+				break;
+
+			case ASM_CMPXCH_UB_POP & 0xff:
+			case ASM_CMPXCH_POP_UB & 0xff:
+				*p_sp_add = 1;
+				*p_sp_sub = 1;
+				break;
+
+			case ASM_CMPXCH_POP_POP & 0xff:
+				*p_sp_add = 1;
+				*p_sp_sub = 2;
+				*p_stacksz -= 1;
 				break;
 
 			default:
@@ -1817,6 +1832,10 @@ prefix_symbol_usage(instruction_t const *__restrict pc) {
 	case ASM_DEC:
 	case ASM_OPERATOR:
 	case ASM_OPERATOR_TUPLE:
+	case ASM_CMPXCH_UB_LOCK:
+	case ASM_CMPXCH_UB_POP:
+	case ASM_CMPXCH_POP_UB:
+	case ASM_CMPXCH_POP_POP:
 		/* Inplace operations read & write. */
 		result = ASM_USING_READ | ASM_USING_WRITE;
 		break;

@@ -91,7 +91,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign_operand(/*i
 #define TOKEN_IS_SUM(tok)    ((tok) == '+' || (tok) == '-')
 #define TOKEN_IS_SHIFT(tok)  ((tok) == TOK_SHL || (tok) == TOK_SHR)
 #define TOKEN_IS_CMP(tok)    ((tok) == TOK_LOWER || (tok) == TOK_LOWER_EQUAL || (tok) == TOK_GREATER || (tok) == TOK_GREATER_EQUAL)
-#define TOKEN_IS_CMPEQ(tok)  ((tok) == TOK_EQUAL || (tok) == TOK_NOT_EQUAL || (tok) == TOK_EQUAL3 || (tok) == TOK_NOT_EQUAL3 || (tok) == KWD_is || (tok) == KWD_in || (tok) == '!')
+#define TOKEN_IS_CMPEQ(tok)  ((tok) == TOK_EQUAL || (tok) == TOK_NOT_EQUAL || (tok) == TOK_EQUAL3 || (tok) == TOK_NOT_EQUAL3 || (tok) == TOK_QMARK_QMARK || (tok) == KWD_is || (tok) == KWD_in || (tok) == '!')
 #define TOKEN_IS_AND(tok)    ((tok) == '&')
 #define TOKEN_IS_XOR(tok)    ((tok) == '^')
 #define TOKEN_IS_OR(tok)     ((tok) == '|')
@@ -105,7 +105,7 @@ INTDEF WUNUSED NONNULL((1)) DREF struct ast *DFCALL ast_parse_assign_operand(/*i
 #define CASE_TOKEN_IS_SUM    case '+': case '-'
 #define CASE_TOKEN_IS_SHIFT  case TOK_SHL: case TOK_SHR
 #define CASE_TOKEN_IS_CMP    case TOK_LOWER: case TOK_LOWER_EQUAL: case TOK_GREATER: case TOK_GREATER_EQUAL
-#define CASE_TOKEN_IS_CMPEQ  case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case KWD_is: case KWD_in: case '!'
+#define CASE_TOKEN_IS_CMPEQ  case TOK_EQUAL: case TOK_NOT_EQUAL: case TOK_EQUAL3: case TOK_NOT_EQUAL3: case TOK_QMARK_QMARK: case KWD_is: case KWD_in: case '!'
 #define CASE_TOKEN_IS_AND    case '&'
 #define CASE_TOKEN_IS_XOR    case '^'
 #define CASE_TOKEN_IS_OR     case '|'

@@ -1403,6 +1403,10 @@ ast_parse_cmpeq ::= (
 		 * `foo is bound' is equivalent to `bound(foo)' (see above) */
 		(DDI(['!'...] 'is' ['!'...] 'bound')) |
 
+		/* ast_substitute_none expression: `a ?? b'
+		 * Same as `a is none ? b : a', except that "a" is only evaluated once. */
+		(DDI('??') ast_parse_cmp) |
+
 		(
 			(	/* The result of `in' and `is' expression can
 				 * be inverted by surrounding '!' tokens.

@@ -45,6 +45,8 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 is_builtin_object(DeeObject *__restrict ob) {
 	if (Dec_BuiltinID(ob) != DEC_BUILTINID_UNKNOWN)
 		return true;
+	if (ob == Dee_None)
+		return true;
 	/* XXX: What about all the other builtin objects? */
 	return false;
 }

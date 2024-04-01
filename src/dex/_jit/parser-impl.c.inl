@@ -2934,8 +2934,10 @@ DEFINE_SECONDARY(CmpEQOperand) {
 					} else {
 						is_instance = DeeObject_Implements(lhs, (DeeTypeObject *)rhs);
 					}
-					merge = DeeBool_For(is_instance);
-					Dee_Incref(merge);
+					Dee_Decref(rhs);
+					Dee_Decref(lhs);
+					lhs = DeeBool_For(is_instance);
+					Dee_Incref(lhs);
 				}
 #endif /* JIT_EVAL */
 			}
@@ -2944,35 +2946,42 @@ DEFINE_SECONDARY(CmpEQOperand) {
 			JITLexer_Yield(self);
 		}
 		LOAD_LVALUE(lhs, err);
+#ifdef JIT_EVAL
+		if (cmd == TOK_QMARK_QMARK && !DeeNone_Check(lhs)) {
+			/* Skip operand expression. */
+			if unlikely(JITLexer_SkipCmp(self, flags | JITLEXER_EVAL_FALLOWISBOUND))
+				goto err_r;
+			goto continue_expr;
+		}
+#endif /* JIT_EVAL */
 		rhs = CALL_PRIMARYF(Cmp, flags | JITLEXER_EVAL_FALLOWISBOUND);
 		if (ISERR(rhs))
 			goto err_r;
 #ifdef JIT_EVAL
 		LOAD_LVALUE(rhs, err_r);
 		switch (cmd) {
-
 		case TOK_EQUAL:
 			merge = DeeObject_CompareEqObject(lhs, rhs);
 			break;
-
 		case TOK_NOT_EQUAL:
 			merge = DeeObject_CompareNeObject(lhs, rhs);
 			break;
-
 		case TOK_EQUAL3:
 			merge = DeeBool_For(lhs == rhs);
 			Dee_Incref(merge);
-
 			break;
 		case TOK_NOT_EQUAL3:
 			merge = DeeBool_For(lhs != rhs);
 			Dee_Incref(merge);
-
 			break;
+		case TOK_QMARK_QMARK:
+			ASSERT(DeeNone_Check(lhs));
+			Dee_DecrefNokill(Dee_None);
+			lhs = rhs; /* Inherit reference */
+			goto continue_expr;
 		case JIT_KEYWORD:
 			merge = DeeObject_ContainsObject(rhs, lhs);
 			break;
-
 		default: __builtin_unreachable();
 		}
 		if unlikely(!merge)

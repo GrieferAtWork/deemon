@@ -255,7 +255,7 @@ LOCAL int DCALL os_futex_wait64_timed(void *uaddr, uint64_t expected,
 
 
 /************************************************************************/
-/* MASTER CONTROL FOR HOW FUTEX ARE IMPLEMENTED                         */
+/* MASTER CONTROL FOR HOW FUTEXES ARE IMPLEMENTED                       */
 /************************************************************************/
 /* Figure out how we want to implement the deemon Futex API.
  *
@@ -621,7 +621,7 @@ PRIVATE void DCALL nt_futex_initialize_subsystem(void) {
  * This is needed because, while we're able to interrupt blocking threads through various
  * different OS-specific means, all of these means only work to interrupt a thread that is
  * already in kernel-space.
- * 
+ *
  * NOTE: The race condition where the thread in question may yet to have reached the point
  *       where it is actually able to receive `os_futex_wakeall()' signals (but is already
  *       apart of the wait-list) is solved because we simply keep on waking all threads on
@@ -751,7 +751,7 @@ PRIVATE NONNULL((1)) void DCALL
 futex_controller_destroy(struct futex_controller *__restrict self) {
 	fcont_lock_write();
 
-	/* Remove ourselves from the free (but only if that hasn't been done already) */
+	/* Remove ourselves from the tree (but only if that hasn't been done already) */
 	{
 		struct futex_controller *removed_node;
 		removed_node = futex_tree_remove(&fcont_tree, self->fc_addr);

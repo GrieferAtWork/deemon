@@ -111,6 +111,11 @@ get_token_from_str(char const *__restrict name, bool create_missing) {
 		}
 		break;
 
+	case '?':
+		if (name[1] == '?')
+			return TOK_QMARK_QMARK;
+		break;
+
 	case '.':
 		if (name[1] == '*') {
 			if (!name[2])
@@ -305,6 +310,7 @@ PRIVATE char const largetok_names[][4] = {
 	/* [TOK_RANGLE3_EQUAL - TOK_TWOCHAR_BEGIN] = */ { '>', '>', '>', '=' },
 	/* [TOK_EQUAL3        - TOK_TWOCHAR_BEGIN] = */ { '=', '=', '=' },
 	/* [TOK_NOT_EQUAL3    - TOK_TWOCHAR_BEGIN] = */ { '!', '=', '=' },
+	/* [TOK_QMARK_QMARK   - TOK_TWOCHAR_BEGIN] = */ { '?', '?' },
 };
 
 STATIC_ASSERT(COMPILER_LENOF(largetok_names) ==
