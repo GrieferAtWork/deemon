@@ -799,7 +799,7 @@ ill_instr:
 }
 
 
-/* NOTE: A reference to `newvalue' is only inherited upon success (return != NULL)
+/* NOTE: A reference to `newvalue' is only inherited upon success (return > 0)
  * @return: > 0:  Success
  * @return: == 0: Failure
  * @return: < 0:  Error (only in SAFE-mode)
@@ -6835,6 +6835,7 @@ prefix_do_unpack:
 						}
 
 						PREFIX_TARGET(ASM_CMPXCH_UB_C) {
+							DREF DeeObject *value;
 #ifdef EXEC_FAST
 							bool ok;
 #else /* EXEC_FAST */
@@ -6843,13 +6844,19 @@ prefix_do_unpack:
 							imm_val = READ_imm8();
 do_prefix_cmpxch_ub_c:
 							ASSERT_CONSTimm();
+							value = CONSTimm;
+							Dee_Incref(value);
 #ifdef EXEC_FAST
-							ok = cmpxch_prefix_object(NULL, CONSTimm);
+							ok = cmpxch_prefix_object(NULL, value);
 #else /* EXEC_FAST */
-							ok = cmpxch_prefix_object(NULL, CONSTimm);
-							if unlikely(ok < 0)
+							ok = cmpxch_prefix_object(NULL, value);
+							if unlikely(ok < 0) {
+								Dee_DecrefNokill(value);
 								HANDLE_EXCEPT();
+							}
 #endif /* !EXEC_FAST */
+							if (!ok)
+								Dee_DecrefNokill(value);
 #ifndef __OPTIMIZE_SIZE__
 							if likely(*ip.ptr == ASM_POP) {
 								/* This is a likely case, as the compiler generates for:
