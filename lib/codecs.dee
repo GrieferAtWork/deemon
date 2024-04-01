@@ -153,9 +153,11 @@ local function loadCodecModule(name: string): CpCodec | CustomCodec {
 local function getCodecByname(name: string): Object {
 	local result;
 	result = userCodecs.get(name);
-	if (result !is none) return result;
+	if (result !is none)
+		return result;
 	result = loadedCodecs.get(name);
-	if (result !is none) return result;
+	if (result !is none)
+		return result;
 	try {
 		result = loadCodecModule(name);
 	} catch (FileNotFound) {
