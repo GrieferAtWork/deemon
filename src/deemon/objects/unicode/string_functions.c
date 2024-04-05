@@ -5448,6 +5448,7 @@ err:
 }
 
 
+/* NOTE: Allowed to returns *OUTSIDE* of [-1,1] */
 PRIVATE int DCALL
 compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
                    String *__restrict rhs, size_t rhs_start, size_t rhs_end) {
@@ -5741,6 +5742,7 @@ compare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 	return 1;
 }
 
+/* NOTE: Always returns within [-1,1] */
 PRIVATE int DCALL
 casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
                        String *__restrict rhs, size_t rhs_start, size_t rhs_end) {
@@ -6007,14 +6009,6 @@ casecompare_strings_ex(String *__restrict lhs, size_t lhs_start, size_t lhs_end,
 			__builtin_unreachable();
 		}
 	}
-#if 0
-	/* If string contents are identical, leave off by comparing their lengths. */
-	if (lhs_len == rhs_len)
-		return 0;
-	if (lhs_len < rhs_len)
-		return -1;
-	return 1;
-#endif
 }
 #undef DO_COMPARE
 
@@ -6041,7 +6035,7 @@ string_casecompare(String *self, size_t argc, DeeObject *const *argv) {
 		goto err;
 	result = casecompare_strings_ex(self, args.my_start, args.my_end,
 	                                args.other, args.ot_start, args.ot_end);
-	return DeeInt_NewInt(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }
@@ -6049,9 +6043,9 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
+	int result;
 	union dcharptr my_str, ot_str;
 	size_t my_len, ot_len;
-	int32_t result;
 	struct compare_args args;
 	if (get_compare_args(&args, argc, argv, "vercompare"))
 		goto err;
@@ -6141,7 +6135,7 @@ string_vercompare(String *self, size_t argc, DeeObject *const *argv) {
 		                     ot_str.cp32, ot_len);
 		break;
 	}
-	return DeeInt_NewInt32(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }

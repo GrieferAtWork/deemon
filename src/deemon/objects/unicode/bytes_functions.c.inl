@@ -2617,12 +2617,12 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_vercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
 	struct bcompare_args args;
-	int8_t result;
+	int result;
 	if (get_bcompare_args(self, &args, argc, argv, "vercompare"))
 		goto err;
 	result = strverscmpb(args.lhs_ptr, args.lhs_len,
 	                     args.rhs_ptr, args.lhs_len);
-	return DeeInt_NewInt8(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }
@@ -2692,13 +2692,13 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bytes_casevercompare(Bytes *self, size_t argc, DeeObject *const *argv) {
+	int result;
 	struct bcompare_args args;
-	int8_t result;
 	if (get_bcompare_args(self, &args, argc, argv, "casevercompare"))
 		goto err;
 	result = strcaseverscmpb(args.lhs_ptr, args.lhs_len, /* TODO: ASCII variant */
 	                         args.rhs_ptr, args.lhs_len);
-	return DeeInt_NewInt8(result);
+	return_reference(DeeInt_FromSign(result));
 err:
 	return NULL;
 }

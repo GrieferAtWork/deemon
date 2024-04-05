@@ -899,8 +899,8 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparew, uint16_t)
 DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 #undef DEFINE_FUZZY_FOLDCOMPARE_FUNCTION
 
-#define DEFINE_VERSION_COMPARE_FUNCTION(name, T, Ts, transform, IF_TRANSFORM)           \
-	PRIVATE Ts DCALL                                                                    \
+#define DEFINE_VERSION_COMPARE_FUNCTION(name, T, transform, IF_TRANSFORM)               \
+	PRIVATE int DCALL                                                                   \
 	name(T *__restrict a, size_t a_size,                                                \
 	     T *__restrict b, size_t b_size) {                                              \
 		T ca, cb, *a_start = a;                                                         \
@@ -909,19 +909,20 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 			    IF_TRANSFORM(&&((ca = (T)transform(ca)) != (cb = (T)transform(cb))))) { \
 				struct unitraits *arec;                                                 \
 				struct unitraits *brec;                                                 \
-				unsigned int vala, valb;                                                \
+				uintptr_t vala, valb;                                                   \
 				/* Unwind common digits. */                                             \
-				while (a != a_start) {                                                  \
+				while (a > a_start) {                                                   \
 					if (!DeeUni_IsDigit(a[-1]))                                         \
 						break;                                                          \
 					cb = ca = *--a, --b;                                                \
+					++a_size, ++b_size;                                                 \
 				}                                                                       \
 				/* Check if both strings have digit sequences in the same places. */    \
 				arec = DeeUni_Descriptor(ca);                                           \
 				brec = DeeUni_Descriptor(cb);                                           \
 				if (!(arec->ut_flags & UNICODE_ISDIGIT) &&                              \
 				    !(brec->ut_flags & UNICODE_ISDIGIT))                                \
-					return (int)ca - (int)cb;                                           \
+					return ca < cb ? -1 : ca > cb ? 1 : 0;                              \
 				/* Deal with leading zeros. */                                          \
 				if ((arec->ut_flags & UNICODE_ISDIGIT) && arec->ut_digit_idx == 0)      \
 					return -1;                                                          \
@@ -930,30 +931,28 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 				/* Compare digits. */                                                   \
 				vala = arec->ut_digit_idx;                                              \
 				valb = brec->ut_digit_idx;                                              \
-				while (a_size) {                                                        \
-					ca = *a++;                                                          \
-					--a_size;                                                           \
+				while (--a_size) {                                                      \
+					ca = *++a;                                                          \
 					arec = DeeUni_Descriptor(ca);                                       \
 					if (!(arec->ut_flags & UNICODE_ISDIGIT))                            \
 						break;                                                          \
 					vala *= 10;                                                         \
 					vala += arec->ut_digit_idx;                                         \
 				}                                                                       \
-				while (b_size) {                                                        \
-					cb = *b++;                                                          \
-					--b_size;                                                           \
+				while (--b_size) {                                                      \
+					cb = *++b;                                                          \
 					brec = DeeUni_Descriptor(cb);                                       \
 					if (!(brec->ut_flags & UNICODE_ISDIGIT))                            \
 						break;                                                          \
 					valb *= 10;                                                         \
 					valb += brec->ut_digit_idx;                                         \
 				}                                                                       \
-				return (Ts)vala - (Ts)valb;                                             \
+				return vala < valb ? -1 : vala > valb ? 1 : 0;                          \
 			}                                                                           \
 			++a, --a_size;                                                              \
 			++b, --b_size;                                                              \
 		}                                                                               \
-		return (Ts)((dssize_t)a_size - (dssize_t)b_size);                               \
+		return a_size ? 1 : b_size ? -1 : 0;                                            \
 	}
 #define DEE_PRIVATE_IF_FALSE(x)
 #define DEE_PRIVATE_IF_TRUE(x) x
@@ -969,12 +968,12 @@ DEFINE_FUZZY_FOLDCOMPARE_FUNCTION(dee_fuzzy_casecomparel, uint32_t)
 #define strcaseverscmpb dee_strcaseverscmpb
 #define strcaseverscmpw dee_strcaseverscmpw
 #define strcaseverscmpl dee_strcaseverscmpl
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpb, uint8_t, int8_t, , DEE_PRIVATE_IF_FALSE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpw, uint16_t, int16_t, , DEE_PRIVATE_IF_FALSE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpl, uint32_t, int32_t, , DEE_PRIVATE_IF_FALSE)
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpb, uint8_t, int8_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE)   /* TODO: case-fold */
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpw, uint16_t, int16_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
-DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, int32_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpb, uint8_t, , DEE_PRIVATE_IF_FALSE)
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpw, uint16_t, , DEE_PRIVATE_IF_FALSE)
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strverscmpl, uint32_t, , DEE_PRIVATE_IF_FALSE)
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpb, uint8_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE)   /* TODO: case-fold */
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpw, uint16_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
+DEFINE_VERSION_COMPARE_FUNCTION(dee_strcaseverscmpl, uint32_t, DeeUni_ToLower, DEE_PRIVATE_IF_TRUE) /* TODO: case-fold */
 #undef DEE_PRIVATE_IF_TRUE
 #undef DEE_PRIVATE_IF_FALSE
 #undef DEFINE_VERSION_COMPARE_FUNCTION

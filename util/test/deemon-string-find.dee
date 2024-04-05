@@ -91,7 +91,7 @@ function t(x, w) {
 		assert x.count(needle) == n;
 		assert x.contains(needle) == (n != 0);
 		for (local xv: { x, x.lower(), x.upper() }) {
-			assert xv.casecount(needle) == n;
+			assert xv.casecount(needle) == n, f"{repr xv}.casecount({repr needle}) == {repr n}";
 			assert xv.casecount(needle.lower()) == n;
 			assert xv.casecount(needle.upper()) == n;
 			assert xv.casecontains(needle) == (n != 0);
