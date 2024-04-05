@@ -5377,20 +5377,21 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 	/* Try to make use of the fast-sequence API. */
 	fast_size = DeeFastSeq_GetSize(self);
 	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		if (objc != fast_size)
+		if (objc != fast_size) {
+			if (DeeNone_Check(self)) {
+				/* Special case: `none' can be unpacked into anything. */
+				memsetp(objv, Dee_None, objc);
+				Dee_Incref_n(Dee_None, objc);
+				return 0;
+			}
 			return err_invalid_unpack_size(self, objc, fast_size);
+		}
 		for (i = 0; i < objc; ++i) {
 			elem = DeeFastSeq_GetItem(self, i);
 			if unlikely(!elem)
 				goto err_objv;
 			objv[i] = elem; /* Inherit reference. */
 		}
-		return 0;
-	}
-	if (DeeNone_Check(self)) {
-		/* Special case: `none' can be unpacked into anything. */
-		memsetp(objv, Dee_None, objc);
-		Dee_Incref_n(Dee_None, objc);
 		return 0;
 	}
 

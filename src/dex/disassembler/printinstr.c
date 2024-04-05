@@ -42,6 +42,8 @@
 #include <hybrid/minmax.h>
 #include <hybrid/unaligned.h>
 
+/* TODO: Re-write this file to use <deemon/asm-table.h> */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp

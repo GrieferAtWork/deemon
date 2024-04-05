@@ -84,9 +84,27 @@ __pragma_GCC_diagnostic_ignored(MSconditional_expression_is_constant)
 #error "Invalid configuration. - Must either define `EXEC_SAFE' or `EXEC_FAST'"
 #endif
 
-#ifndef CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
-#define USE_SWITCH
-#endif /* !CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS */
+/* Figure out how we want to implement the big instruction jump tables. */
+#undef exec_dispatch_USE_switch
+#undef exec_dispatch_USE_goto
+#undef exec_dispatch_USE_switch_goto
+#ifdef CONFIG_COMPILER_HAVE_ADDRESSIBLE_LABELS
+#define exec_dispatch_USE_goto
+#elif defined(_MSC_VER) && defined(NDEBUG)
+/* This forced msvc to *always* generate a *full* 256-word jump-table.
+ * When using a regular switch with a default-case, msvc will also use
+ * a jump-table, but it won't be 256-word long. Instead, it will emit
+ * code like this (for the prefix case):
+ * >> if (opcode >= 0xf8)
+ * >>     goto unknown_instruction;
+ * >> goto *jump_table[opcode];
+ *
+ * Using this hack, we can prevent that unnecessary if-check, and force
+ * it to always produce the *full* table (that doesn't need any checks) */
+#define exec_dispatch_USE_switch_goto
+#else /* ... */
+#define exec_dispatch_USE_switch
+#endif /* !... */
 
 DECL_BEGIN
 
@@ -1028,11 +1046,24 @@ PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
 DeeCode_ExecFrameSafe(struct code_frame *__restrict frame)
 #endif /* !EXEC_FAST */
 {
-#ifndef USE_SWITCH
-#ifndef __INTELLISENSE__
-#include "code-exec-targets.c.inl"
-#endif /* !__INTELLISENSE__ */
-#endif /* !USE_SWITCH */
+#ifdef exec_dispatch_USE_goto
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix) static void const *tpconst targets_##table_prefix[] = {
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                              &&unknown_instruction,
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) &&target_ASM##name,
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name)                         &&target_ASM##name,
+#define DEE_ASM_PREFIX(table_prefix, opcode_byte, instr_len, name)                           &&target_ASM##name,
+#define DEE_ASM_END(table_prefix)   };
+#include <deemon/asm-table.h>
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix) static void const *tpconst prefix_targets_##table_prefix[] = {
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                                                                               &&unknown_instruction,
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) &&prefix_target_ASM##name,
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name)                                                                          &&prefix_target_ASM##name,
+#define DEE_ASM_END(table_prefix)   };
+#include <deemon/asm-table.h>
+#endif /* exec_dispatch_USE_goto */
+
 	register union {
 		instruction_t *ptr;
 		uint8_t       *u8;
@@ -1199,11 +1230,11 @@ inc_execsz_start:
 #define STACK_END             (frame->cf_stack + code->co_framesize)
 #define STACKUSED             (sp - frame->cf_stack)
 #define STACKPREALLOC         ((uint16_t)((code->co_framesize / sizeof(DeeObject *)) - code->co_localc))
-#ifdef USE_SWITCH
+#ifdef exec_dispatch_USE_switch
 #define RAW_TARGET2(op, _op) case op&0xff: target##_op:
-#else /* USE_SWITCH */
-#define RAW_TARGET2(op, _op)               target##_op:
-#endif /* !USE_SWITCH */
+#else /* exec_dispatch_USE_switch */
+#define RAW_TARGET2(op, _op) target##_op:
+#endif /* !exec_dispatch_USE_switch */
 #define RAW_TARGET(op)       RAW_TARGET2(op, _##op)
 #define EXCEPTION_CLEANUP    /* nothing */
 #ifdef EXEC_SAFE
@@ -1335,11 +1366,30 @@ next_instr:
 	}
 #endif
 	frame->cf_ip = ip.ptr;
-#ifdef USE_SWITCH
+
+
+#ifdef exec_dispatch_USE_switch
 	switch (*ip.ptr++)
-#else /* USE_SWITCH */
-	goto *basic_targets[*ip.ptr++];
-#endif /* !USE_SWITCH */
+#elif defined(exec_dispatch_USE_goto)
+	goto *targets_0x00[*ip.ptr++];
+#elif defined(exec_dispatch_USE_switch_goto)
+	switch (*ip.ptr++) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
+	case opcode_byte: goto unknown_instruction;
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) \
+	case opcode_byte: goto target_ASM##name;
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name) \
+	case opcode_byte: goto target_ASM##name;
+#define DEE_ASM_PREFIX(table_prefix, opcode_byte, instr_len, name) \
+	case opcode_byte: goto target_ASM##name;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+	default: __builtin_unreachable();
+	}
+	__builtin_unreachable();
+#endif /* ... */
 	{
 
 		TARGET(ASM_RET_NONE, -0, +0) {
@@ -4582,11 +4632,26 @@ do_setattr_this_c:
 		/* Opcodes for misc/rarely used operators (Prefixed by `ASM_EXTENDED1'). */
 		RAW_TARGET(ASM_EXTENDED1) {
 
-#ifdef USE_SWITCH
+#ifdef exec_dispatch_USE_switch
 			switch (*ip.ptr++)
-#else /* USE_SWITCH */
-			goto *f0_targets[*ip.ptr++];
-#endif /* !USE_SWITCH */
+#elif defined(exec_dispatch_USE_goto)
+			goto *targets_0xf0[*ip.ptr++];
+#elif defined(exec_dispatch_USE_switch_goto)
+			switch (*ip.ptr++) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0xf0)
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
+			case opcode_byte: goto unknown_instruction;
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) \
+			case opcode_byte: goto target_ASM##name;
+#define DEE_ASM_PREFIX(table_prefix, opcode_byte, instr_len, name) \
+			case opcode_byte: goto target_ASM##name;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+			default: __builtin_unreachable();
+			}
+			__builtin_unreachable();
+#endif /* ... */
 			{
 
 				TARGET(ASM_ENDCATCH_N, -0, +0) {
@@ -6046,10 +6111,9 @@ do_supercallattr_rc:
 					goto do_supercallattr_rc;
 				}
 
-#ifdef USE_SWITCH
-			default:
-				goto unknown_instruction;
-#endif /* USE_SWITCH */
+#ifdef exec_dispatch_USE_switch
+			default: goto unknown_instruction;
+#endif /* exec_dispatch_USE_switch */
 			}
 			__builtin_unreachable();
 		}
@@ -6065,16 +6129,48 @@ do_supercallattr_rc:
 		RAW_TARGET(ASM_LOCAL)
 			++ip.ptr;
 do_prefix_instr:
-			/* Execute a prefixed instruction. */
-			switch (*ip.ptr++) {
-#define PREFIX_TARGET(opcode) case (opcode)&0xff:
 
-				PREFIX_TARGET(ASM_JF16) {
+			/* Execute a prefixed instruction. */
+#ifdef exec_dispatch_USE_switch
+			switch (*ip.ptr++)
+#elif defined(exec_dispatch_USE_goto)
+			goto *prefix_targets_0x00[*ip.ptr++];
+#elif defined(exec_dispatch_USE_switch_goto)
+			switch (*ip.ptr++) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
+			case opcode_byte: goto unknown_instruction;
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) \
+			case opcode_byte: goto prefix_target_ASM##name;
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name) \
+			case opcode_byte: goto prefix_target_ASM##name;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+			default: __builtin_unreachable();
+			}
+			__builtin_unreachable();
+#endif /* ... */
+			{
+#ifdef exec_dispatch_USE_switch
+#define PREFIX_RAW_TARGET2(op, _op) case op&0xff: prefix_target##_op:
+#else /* exec_dispatch_USE_switch */
+#define PREFIX_RAW_TARGET2(op, _op) prefix_target##_op:
+#endif /* !exec_dispatch_USE_switch */
+#define PREFIX_RAW_TARGET(op)       PREFIX_RAW_TARGET2(op, _##op)
+#define PREFIX_TARGET(op, sp_sub, sp_add) PREFIX_RAW_TARGET2(op, _##op) ASSERT_USAGE(sp_sub, sp_add) __IF0; else
+#define PREFIX_TARGETSimm16(op, sp_sub, sp_add)                                        \
+	        PREFIX_RAW_TARGET(op##16)     imm_val = (uint16_t)READ_Simm16();           \
+	__IF0 { PREFIX_RAW_TARGET2(op, _##op) imm_val = (uint16_t)(int16_t)READ_Simm8(); } \
+	        ASSERT_USAGE(sp_sub, sp_add)                                               \
+	__IF0; else
+
+				PREFIX_RAW_TARGET(ASM_JF16) {
 					imm_val = (uint16_t)READ_Simm16();
 					goto prefix_jf_16;
 				}
 
-				PREFIX_TARGET(ASM_JF) {
+				PREFIX_RAW_TARGET(ASM_JF) {
 					/* Conditionally jump if true. */
 					USING_PREFIX_OBJECT
 					int temp;
@@ -6103,12 +6199,12 @@ prefix_jf_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_JT16) {
+				PREFIX_RAW_TARGET(ASM_JT16) {
 					imm_val = (uint16_t)READ_Simm16();
 					goto prefix_jt_16;
 				}
 
-				PREFIX_TARGET(ASM_JT) {
+				PREFIX_RAW_TARGET(ASM_JT) {
 					/* Conditionally jump if true. */
 					USING_PREFIX_OBJECT
 					int temp;
@@ -6137,12 +6233,12 @@ prefix_jt_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_FOREACH16) {
+				PREFIX_RAW_TARGET(ASM_FOREACH16) {
 					imm_val = (uint16_t)READ_Simm16();
 					goto prefix_foreach_16;
 				}
 
-				PREFIX_TARGET(ASM_FOREACH) {
+				PREFIX_RAW_TARGET(ASM_FOREACH) {
 					DREF DeeObject *elem;
 					USING_PREFIX_OBJECT
 					imm_val = (uint16_t)(int16_t)READ_Simm8();
@@ -6163,10 +6259,9 @@ prefix_foreach_16:
 				}
 
 #define DEFINE_INPLACE_MATH_OPERATOR(ADD, Add)                               \
-				PREFIX_TARGET(ASM_##ADD) {                                   \
+				PREFIX_TARGET(ASM_##ADD, -1, +0) {                           \
 					int error;                                               \
 					DREF DeeObject **prefix_pointer;                         \
-					ASSERT_USAGE(-1, +0);                                    \
 					prefix_pointer = get_prefix_object_ptr();                \
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {    \
 						if unlikely(!prefix_pointer)                         \
@@ -6203,7 +6298,7 @@ prefix_foreach_16:
 				DEFINE_INPLACE_MATH_OPERATOR(POW, Pow)
 #undef DEFINE_INPLACE_MATH_OPERATOR
 
-				PREFIX_TARGET(ASM_ADD_SIMM8) {
+				PREFIX_RAW_TARGET(ASM_ADD_SIMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6229,7 +6324,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_ADD_IMM32) {
+				PREFIX_RAW_TARGET(ASM_ADD_IMM32) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6255,7 +6350,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_SUB_SIMM8) {
+				PREFIX_RAW_TARGET(ASM_SUB_SIMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6281,7 +6376,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_SUB_IMM32) {
+				PREFIX_RAW_TARGET(ASM_SUB_IMM32) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6307,7 +6402,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_MUL_SIMM8) {
+				PREFIX_RAW_TARGET(ASM_MUL_SIMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6333,7 +6428,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_DIV_SIMM8) {
+				PREFIX_RAW_TARGET(ASM_DIV_SIMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6359,7 +6454,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_MOD_SIMM8) {
+				PREFIX_RAW_TARGET(ASM_MOD_SIMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6385,7 +6480,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_AND_IMM32) {
+				PREFIX_RAW_TARGET(ASM_AND_IMM32) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6411,7 +6506,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_OR_IMM32) {
+				PREFIX_RAW_TARGET(ASM_OR_IMM32) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6437,7 +6532,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_XOR_IMM32) {
+				PREFIX_RAW_TARGET(ASM_XOR_IMM32) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6463,7 +6558,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_SHL_IMM8) {
+				PREFIX_RAW_TARGET(ASM_SHL_IMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6489,7 +6584,7 @@ prefix_foreach_16:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_SHR_IMM8) {
+				PREFIX_RAW_TARGET(ASM_SHR_IMM8) {
 					int error;
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
@@ -6516,11 +6611,11 @@ prefix_foreach_16:
 				}
 
 
-				PREFIX_TARGET(ASM_FUNCTION_C_16)
+				PREFIX_RAW_TARGET(ASM_FUNCTION_C_16)
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm16();
 					goto prefix_do_function_c;
-				PREFIX_TARGET(ASM_FUNCTION_C) {
+				PREFIX_RAW_TARGET(ASM_FUNCTION_C) {
 					DREF DeeObject *function;
 					imm_val  = READ_imm8();
 					imm_val2 = READ_imm8();
@@ -6568,7 +6663,7 @@ prefix_do_function_c:
 				}
 
 
-				PREFIX_TARGET(ASM_INC) {
+				PREFIX_RAW_TARGET(ASM_INC) {
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
@@ -6591,7 +6686,7 @@ prefix_do_function_c:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_DEC) {
+				PREFIX_RAW_TARGET(ASM_DEC) {
 					DREF DeeObject **prefix_pointer;
 					prefix_pointer = get_prefix_object_ptr();
 					if (prefix_pointer != (DREF DeeObject **)ITER_DONE) {
@@ -6614,7 +6709,7 @@ prefix_do_function_c:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_OPERATOR) {
+				PREFIX_RAW_TARGET(ASM_OPERATOR) {
 					DREF DeeObject *call_result;
 					DREF DeeObject **prefix_pointer;
 					imm_val  = READ_imm8();
@@ -6652,7 +6747,7 @@ do_prefix_operator:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_OPERATOR_TUPLE) {
+				PREFIX_RAW_TARGET(ASM_OPERATOR_TUPLE) {
 					DREF DeeObject *call_result;
 					DREF DeeObject **prefix_pointer;
 					imm_val = READ_imm8();
@@ -6692,7 +6787,7 @@ do_prefix_operator_tuple:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_UNPACK) {
+				PREFIX_RAW_TARGET(ASM_UNPACK) {
 					int error;
 					DREF DeeObject *sequence;
 					imm_val = READ_imm8();
@@ -6709,43 +6804,520 @@ prefix_do_unpack:
 					DISPATCH();
 				}
 
-				PREFIX_TARGET(ASM_EXTENDED1) {
-					switch (*ip.ptr++) {
+				/* Always allow `noop' instructions to be used with a prefix. */
+				PREFIX_RAW_TARGET(ASM_DELOP)
+				PREFIX_RAW_TARGET(ASM_NOP)
+					DISPATCH();
 
-						PREFIX_TARGET(ASM16_NOP)
-						PREFIX_TARGET(ASM16_DELOP) {
+				PREFIX_TARGET(ASM_SWAP, -1, +1) {
+					/* >> local @foo: swap
+					 * Same as:
+					 * >> xch   top, local @foo */
+					DREF DeeObject *new_top;
+					new_top = xch_prefix_object(TOP);
+					if unlikely(!new_top)
+						HANDLE_EXCEPT();
+					TOP = new_top; /* Inherit reference. */
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_LROT) {
+					DREF DeeObject *drop_object;
+					DREF DeeObject *append_object;
+					uint16_t shift = (uint16_t)READ_imm8() + 2;
+					/* local @foo: lrot #3  (shift == 2)
+					 * >> temp   = PREFIX;
+					 * >> PREFIX = SECOND;
+					 * >> SECOND = FIRST;
+					 * >> FIRST  = temp;
+					 * Essentially, operate the same as (without the +1 stack usage):
+					 * >> push PREFIX
+					 * >> lrot #3
+					 * >> pop  PREFIX
+					 */
+					ASSERT_USAGE(-(int)shift, +(int)shift);
+					drop_object = *(sp - shift);
+					memmovedownc(sp - shift,
+					             sp - (shift - 1),
+					             shift - 1,
+					             sizeof(DREF DeeObject *));
+					append_object = xch_prefix_object(drop_object);
+					if unlikely(!append_object) {
+						TOP = drop_object;
+						HANDLE_EXCEPT();
+					}
+					TOP = append_object;
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_RROT) {
+					DREF DeeObject *drop_object;
+					DREF DeeObject *append_object;
+					uint16_t shift = (uint16_t)READ_imm8() + 2;
+					/* local @foo: rrot #3  (shift == 2)
+					 * >> temp   = PREFIX;
+					 * >> PREFIX = FIRST;
+					 * >> FIRST  = SECOND;
+					 * >> SECOND = temp;
+					 * Essentially, operate the same as (without the +1 stack usage):
+					 * >> push PREFIX
+					 * >> rrot #3
+					 * >> pop  PREFIX
+					 */
+					ASSERT_USAGE(-(int)shift, +(int)shift);
+					drop_object = TOP;
+					memmoveupc(sp - (shift - 1),
+					           sp - shift,
+					           shift - 1,
+					           sizeof(DREF DeeObject *));
+					append_object = xch_prefix_object(drop_object);
+					if unlikely(!append_object) {
+						*(sp - shift) = drop_object;
+						HANDLE_EXCEPT();
+					}
+					*(sp - shift) = append_object;
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_POP_STATIC) {
+					DeeObject **p_old_value;
+					DeeObject *old_value;
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_pop_static:
+					ASSERT_STATICimm();
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					p_old_value = &STATICimm;
+					STATIC_LOCKWRITE();
+					old_value = *p_old_value;
+					*p_old_value = value; /* Inherit reference. */
+					STATIC_LOCKENDWRITE();
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+					DeeFutex_WakeAll(p_old_value);
+					if (ITER_ISOK(old_value)) {
+						ASSERT_OBJECT(old_value);
+						Dee_Decref(old_value);
+					}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+					ASSERT_OBJECT(old_value);
+					Dee_Decref(old_value);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_POP_EXTERN) {
+					DeeObject *old_value, **p_extern;
+					DREF DeeObject *value;
+					imm_val  = READ_imm8();
+					imm_val2 = READ_imm8();
+do_prefix_pop_extern:
+					ASSERT_EXTERNimm();
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					EXTERN_LOCKWRITE();
+					p_extern  = &EXTERNimm;
+					old_value = *p_extern;
+					*p_extern = value; /* Inherit reference. */
+					EXTERN_LOCKENDWRITE();
+					Dee_XDecref(old_value);
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_POP_GLOBAL) {
+					DeeObject *old_value, **p_global;
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_pop_global:
+					ASSERT_GLOBALimm();
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					GLOBAL_LOCKWRITE();
+					p_global    = &GLOBALimm;
+					old_value = *p_global;
+					*p_global   = value; /* Inherit reference. */
+					GLOBAL_LOCKENDWRITE();
+					Dee_XDecref(old_value);
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_POP_LOCAL) {
+					DeeObject *old_value;
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_pop_local:
+					ASSERT_LOCALimm();
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					old_value = LOCALimm;
+					LOCALimm  = value; /* Inherit reference. */
+					Dee_XDecref(old_value);
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_MODULE) {
+					DeeModuleObject *mod;
+					imm_val = READ_imm8();
+do_prefix_push_module:
+					mod = code->co_module;
+					ASSERT_OBJECT(mod);
+#ifdef EXEC_SAFE
+					if (imm_val >= mod->mo_importc)
+						goto err_invalid_module;
+#else /* EXEC_SAFE */
+					ASSERT(imm_val < mod->mo_importc);
+#endif /* !EXEC_SAFE */
+					mod = mod->mo_importv[imm_val];
+					ASSERT_OBJECT(mod);
+					Dee_Incref(mod);
+					if (set_prefix_object((DeeObject *)mod))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_NONE) {
+					Dee_Incref(Dee_None);
+					if (set_prefix_object(Dee_None))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_REF) {
+					imm_val = READ_imm8();
+do_prefix_push_ref:
+					ASSERT_REFimm();
+					Dee_Incref(REFimm);
+					if (set_prefix_object(REFimm))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_ARG) {
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_push_arg:
+					ASSERT_ARGimm();
+					/* Simple case: Direct argument/default reference. */
+					if (imm_val < frame->cf_argc) {
+						value = frame->cf_argv[imm_val];
+					} else if (frame->cf_kw) {
+						value = frame->cf_kw->fk_kargv[imm_val - frame->cf_argc];
+						if (!value) {
+							value = code->co_defaultv[imm_val - code->co_argc_min];
+							if (!value)
+								goto err_unbound_arg;
+						}
+					} else {
+						value = code->co_defaultv[imm_val - code->co_argc_min];
+						if (!value)
+							goto err_unbound_arg;
+					}
+					Dee_Incref(value);
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_VARARGS) {
+					/* Special case: Varargs. */
+#ifdef EXEC_SAFE
+					if unlikely(!(code->co_flags & CODE_FVARARGS))
+						goto err_requires_varargs_code;
+#else /* EXEC_SAFE */
+					ASSERT(code->co_flags & CODE_FVARARGS);
+#endif /* !EXEC_SAFE */
+					if (!frame->cf_vargs) {
+						if (frame->cf_argc <= code->co_argc_max) {
+							frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
+							Dee_Incref(Dee_EmptyTuple);
+						} else {
+							frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
+							                                                            frame->cf_argv + code->co_argc_max);
+							if unlikely(!frame->cf_vargs)
+								HANDLE_EXCEPT();
+						}
+					}
+					Dee_Incref(frame->cf_vargs);
+					if (set_prefix_object((DeeObject *)frame->cf_vargs))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_VARKWDS) {
+					DREF DeeObject *varkwds;
+					/* Special case: Varargs. */
+#ifdef EXEC_SAFE
+					if unlikely(!(code->co_flags & CODE_FVARKWDS))
+						goto err_requires_varkwds_code;
+#else /* EXEC_SAFE */
+					ASSERT(code->co_flags & CODE_FVARKWDS);
+#endif /* !EXEC_SAFE */
+					if (frame->cf_kw) {
+						varkwds = frame->cf_kw->fk_varkwds;
+						if (!varkwds) {
+							DeeObject *oldval;
+							varkwds = DeeKwBlackList_New(code, frame->cf_argc,
+							                             frame->cf_argv,
+							                             frame->cf_kw->fk_kw);
+							if unlikely(!varkwds)
+								HANDLE_EXCEPT();
+							/* Must do an atomic store here because the keyword descriptor
+							 * might be shared between multiple threads when the same yield
+							 * function is enumerated multiple times by different threads. */
+							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
+							if unlikely(oldval) {
+								DeeKwBlackList_Decref(varkwds);
+								varkwds = oldval;
+							}
+						}
+					} else {
+						varkwds = Dee_EmptyRoDict;
+					}
+					Dee_Incref(varkwds);
+					if (set_prefix_object((DeeObject *)varkwds))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_CONST) {
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_push_const:
+					ASSERT_CONSTimm();
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+					value = CONSTimm;
+					Dee_Incref(value);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+					CONST_LOCKREAD();
+					value = CONSTimm;
+					Dee_Incref(value);
+					CONST_LOCKENDREAD();
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_STATIC) {
+					DREF DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_push_static:
+					ASSERT_STATICimm();
+					STATIC_LOCKREAD();
+					value = CONSTimm;
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+					if unlikely(!value) {
+						STATIC_LOCKENDREAD();
+						goto err_unbound_static;
+					}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+					Dee_Incref(value);
+					STATIC_LOCKENDREAD();
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_EXTERN) {
+					DeeObject *value;
+					imm_val  = READ_imm8();
+					imm_val2 = READ_imm8();
+do_prefix_push_extern:
+					ASSERT_EXTERNimm();
+					EXTERN_LOCKREAD();
+					value = EXTERNimm;
+					if unlikely(!value) {
+						EXTERN_LOCKENDREAD();
+						goto err_unbound_extern;
+					}
+					Dee_Incref(value);
+					EXTERN_LOCKENDREAD();
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_GLOBAL) {
+					DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_push_global:
+					ASSERT_GLOBALimm();
+					GLOBAL_LOCKREAD();
+					value = GLOBALimm;
+					if unlikely(!value) {
+						GLOBAL_LOCKENDREAD();
+						goto err_unbound_global;
+					}
+					Dee_Incref(value);
+					GLOBAL_LOCKENDREAD();
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_PUSH_LOCAL) {
+					DeeObject *value;
+					imm_val = READ_imm8();
+do_prefix_push_local:
+					ASSERT_LOCALimm();
+					value = LOCALimm;
+					if unlikely(!value)
+						goto err_unbound_local;
+					Dee_Incref(value);
+					if (set_prefix_object(value))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_TARGET(ASM_DUP, -1, +1) {
+					Dee_Incref(TOP);
+					if (set_prefix_object(TOP))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_DUP_N) {
+					uint8_t offset = READ_imm8();
+					DREF DeeObject *slot;
+					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
+					slot = *(sp - (offset + 2));
+					Dee_Incref(slot);
+					if (set_prefix_object(slot))
+						HANDLE_EXCEPT();
+					DISPATCH();
+				}
+
+				PREFIX_TARGET(ASM_POP, -1, +1) {
+					DREF DeeObject *value;
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					Dee_Decref(TOP);
+					TOP = value; /* Inherit reference. */
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_POP_N) {
+					DREF DeeObject *value, *old_value;
+					DREF DeeObject **p_slot;
+					uint8_t offset = READ_imm8();
+					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					p_slot    = sp - (offset + 2);
+					old_value = *p_slot;
+					*p_slot   = value; /* Inherit reference. */
+					Dee_Decref(old_value);
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_RET) {
+					DREF DeeObject *value;
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					/* Check if we're overwriting a previous return value
+					 * (which can happen when `return' appears in a finally-block) */
+					if (ITER_ISOK(frame->cf_result))
+						Dee_Decref(frame->cf_result);
+					frame->cf_result = value;
+					if (code->co_flags & CODE_FYIELDING)
+						goto end_without_finally;
+					goto end_return;
+				}
+
+				PREFIX_RAW_TARGET(ASM_YIELDALL) {
+					DREF DeeObject *value;
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					ASSERT_YIELDING();
+					if (ITER_ISOK(frame->cf_result))
+						Dee_Decref(frame->cf_result);
+					frame->cf_result = DeeObject_IterNext(value);
+					Dee_Decref(value);
+					if unlikely(!frame->cf_result)
+						HANDLE_EXCEPT();
+					if (frame->cf_result != ITER_DONE) {
+						/* Repeat this instruction and forward the value we've just read. */
+						REPEAT_INSTRUCTION();
+						YIELD_RESULT();
+					}
+					/* Pop the iterator that was enumerated. */
+					POPREF();
+					DISPATCH();
+				}
+
+				PREFIX_RAW_TARGET(ASM_THROW) {
+					DREF DeeObject *value;
+					value = get_prefix_object();
+					if unlikely(!value)
+						HANDLE_EXCEPT();
+					DeeError_Throw(value);
+					Dee_Decref(value);
+					HANDLE_EXCEPT();
+				}
+
+				PREFIX_RAW_TARGET(ASM_EXTENDED1) {
+#ifdef exec_dispatch_USE_switch
+					switch (*ip.ptr++)
+#elif defined(exec_dispatch_USE_goto)
+					goto *PP_CAT2(prefix_targets_, ASM_EXTENDED1)[*ip.ptr++];
+#elif defined(exec_dispatch_USE_switch_goto)
+					switch (*ip.ptr++) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == ASM_EXTENDED1)
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len) \
+					case opcode_byte: goto unknown_instruction;
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) \
+					case opcode_byte: goto prefix_target_ASM##name;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+					default: __builtin_unreachable();
+					}
+					__builtin_unreachable();
+#endif /* ... */
+					{
+
+						PREFIX_RAW_TARGET(ASM16_NOP)
+						PREFIX_RAW_TARGET(ASM16_DELOP) {
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM16_OPERATOR) {
+						PREFIX_RAW_TARGET(ASM16_OPERATOR) {
 							imm_val  = READ_imm16();
 							imm_val2 = READ_imm8();
 							goto do_prefix_operator;
 						}
 
-						PREFIX_TARGET(ASM16_OPERATOR_TUPLE) {
+						PREFIX_RAW_TARGET(ASM16_OPERATOR_TUPLE) {
 							imm_val = READ_imm16();
 							goto do_prefix_operator_tuple;
 						}
 
-						PREFIX_TARGET(ASM16_FUNCTION_C) {
+						PREFIX_RAW_TARGET(ASM16_FUNCTION_C) {
 							imm_val  = READ_imm16();
 							imm_val2 = READ_imm8();
 							goto prefix_do_function_c;
 						}
 
-						PREFIX_TARGET(ASM16_FUNCTION_C_16) {
+						PREFIX_RAW_TARGET(ASM16_FUNCTION_C_16) {
 							imm_val  = READ_imm16();
 							imm_val2 = READ_imm16();
 							goto prefix_do_function_c;
 						}
 
-						PREFIX_TARGET(ASM16_UNPACK) {
+						PREFIX_RAW_TARGET(ASM16_UNPACK) {
 							imm_val = READ_imm16();
 							goto prefix_do_unpack;
 						}
 
-						PREFIX_TARGET(ASM_INCPOST) { /* incpost */
+						PREFIX_RAW_TARGET(ASM_INCPOST) { /* incpost */
 							DREF DeeObject **prefix_pointer;
 							DREF DeeObject *obcopy;
 							ASSERT_USAGE(-0, +1);
@@ -6790,7 +7362,7 @@ prefix_do_unpack:
 						}
 
 
-						PREFIX_TARGET(ASM_DECPOST) { /* decpost */
+						PREFIX_RAW_TARGET(ASM_DECPOST) { /* decpost */
 							DREF DeeObject **prefix_pointer;
 							DREF DeeObject *obcopy;
 							ASSERT_USAGE(-0, +1);
@@ -6834,7 +7406,7 @@ prefix_do_unpack:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_CMPXCH_UB_C) {
+						PREFIX_RAW_TARGET(ASM_CMPXCH_UB_C) {
 							DREF DeeObject *value;
 #ifdef EXEC_FAST
 							bool ok;
@@ -6879,13 +7451,13 @@ do_prefix_cmpxch_ub_c:
 							goto target_ASM_PUSH_FALSE;
 						}
 
-						PREFIX_TARGET(ASM16_CMPXCH_UB_C) {
+						PREFIX_RAW_TARGET(ASM16_CMPXCH_UB_C) {
 							imm_val = READ_imm16();
 							goto do_prefix_cmpxch_ub_c;
 						}
 
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-						PREFIX_TARGET(ASM_CMPXCH_UB_LOCK) {
+						PREFIX_RAW_TARGET(ASM_CMPXCH_UB_LOCK) {
 							/* Only allowed for static variables:
 							 *    fd xx    f0 9c   // 8-bit static ID
 							 * f0 fd xx xx f0 9c   // 16-bit static ID
@@ -6931,7 +7503,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 						}
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
-						PREFIX_TARGET(ASM_CMPXCH_UB_POP) {
+						PREFIX_RAW_TARGET(ASM_CMPXCH_UB_POP) {
 #ifdef EXEC_FAST
 							bool ok = cmpxch_prefix_object(NULL, FIRST);
 #else /* EXEC_FAST */
@@ -6949,7 +7521,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_CMPXCH_POP_UB) {
+						PREFIX_RAW_TARGET(ASM_CMPXCH_POP_UB) {
 #ifdef EXEC_FAST
 							bool ok = cmpxch_prefix_object(FIRST, NULL);
 #else /* EXEC_FAST */
@@ -6967,7 +7539,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_CMPXCH_POP_POP) {
+						PREFIX_RAW_TARGET(ASM_CMPXCH_POP_POP) {
 #ifdef EXEC_FAST
 							bool ok = cmpxch_prefix_object(SECOND, FIRST);
 #else /* EXEC_FAST */
@@ -6987,20 +7559,20 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM16_LROT) {
+						PREFIX_RAW_TARGET(ASM16_LROT) {
 							DREF DeeObject *drop_object;
 							DREF DeeObject *append_object;
 							uint32_t shift = (uint32_t)READ_imm16() + 2;
 							/* local @foo: lrot #3  (shift == 2)
-							* >> temp   = PREFIX;
-							* >> PREFIX = SECOND;
-							* >> SECOND = FIRST;
-							* >> FIRST  = temp;
-							* Essentially, operate the same as (without the +1 stack usage):
-							* >> push PREFIX
-							* >> lrot #3
-							* >> pop  PREFIX
-							*/
+							 * >> temp   = PREFIX;
+							 * >> PREFIX = SECOND;
+							 * >> SECOND = FIRST;
+							 * >> FIRST  = temp;
+							 * Essentially, operate the same as (without the +1 stack usage):
+							 * >> push PREFIX
+							 * >> lrot #3
+							 * >> pop  PREFIX
+							 */
 							ASSERT_USAGE(-(int)shift, +(int)shift);
 							drop_object = *(sp - shift);
 							memmovedownc(sp - shift,
@@ -7016,7 +7588,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM16_RROT) {
+						PREFIX_RAW_TARGET(ASM16_RROT) {
 							DREF DeeObject *drop_object;
 							DREF DeeObject *append_object;
 							uint32_t shift = (uint32_t)READ_imm16() + 2;
@@ -7045,7 +7617,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_EXCEPT) {
+						PREFIX_RAW_TARGET(ASM_PUSH_EXCEPT) {
 							DREF DeeObject *temp;
 							/* Check if an exception has been set. */
 							if unlikely(!this_thread->t_except)
@@ -7057,7 +7629,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_THIS) {
+						PREFIX_RAW_TARGET(ASM_PUSH_THIS) {
 							ASSERT_THISCALL();
 							Dee_Incref(THIS);
 							if (set_prefix_object(THIS))
@@ -7065,97 +7637,97 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_THIS_MODULE) {
+						PREFIX_RAW_TARGET(ASM_PUSH_THIS_MODULE) {
 							Dee_Incref((DeeObject *)code->co_module);
 							if (set_prefix_object((DeeObject *)code->co_module))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_THIS_FUNCTION) {
+						PREFIX_RAW_TARGET(ASM_PUSH_THIS_FUNCTION) {
 							Dee_Incref((DeeObject *)frame->cf_func);
 							if (set_prefix_object((DeeObject *)frame->cf_func))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_TRUE) {
+						PREFIX_RAW_TARGET(ASM_PUSH_TRUE) {
 							Dee_Incref(Dee_True);
 							if (set_prefix_object(Dee_True))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM_PUSH_FALSE) {
+						PREFIX_RAW_TARGET(ASM_PUSH_FALSE) {
 							Dee_Incref(Dee_False);
 							if (set_prefix_object(Dee_False))
 								HANDLE_EXCEPT();
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM16_POP_STATIC) {
+						PREFIX_RAW_TARGET(ASM16_POP_STATIC) {
 							imm_val = READ_imm16();
 							goto do_prefix_pop_static;
 						}
 
-						PREFIX_TARGET(ASM16_POP_EXTERN) {
+						PREFIX_RAW_TARGET(ASM16_POP_EXTERN) {
 							imm_val  = READ_imm16();
 							imm_val2 = READ_imm16();
 							goto do_prefix_pop_extern;
 						}
 
-						PREFIX_TARGET(ASM16_POP_GLOBAL) {
+						PREFIX_RAW_TARGET(ASM16_POP_GLOBAL) {
 							imm_val = READ_imm16();
 							goto do_prefix_pop_global;
 						}
 
-						PREFIX_TARGET(ASM16_POP_LOCAL) {
+						PREFIX_RAW_TARGET(ASM16_POP_LOCAL) {
 							imm_val = READ_imm16();
 							goto do_prefix_pop_local;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_MODULE) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_MODULE) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_module;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_REF) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_REF) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_ref;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_ARG) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_ARG) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_arg;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_CONST) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_CONST) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_const;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_STATIC) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_STATIC) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_static;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_EXTERN) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_EXTERN) {
 							imm_val  = READ_imm16();
 							imm_val2 = READ_imm16();
 							goto do_prefix_push_extern;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_GLOBAL) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_GLOBAL) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_global;
 						}
 
-						PREFIX_TARGET(ASM16_PUSH_LOCAL) {
+						PREFIX_RAW_TARGET(ASM16_PUSH_LOCAL) {
 							imm_val = READ_imm16();
 							goto do_prefix_push_local;
 						}
 
-						PREFIX_TARGET(ASM16_DUP_N) {
+						PREFIX_RAW_TARGET(ASM16_DUP_N) {
 							uint16_t offset = READ_imm16();
 							DREF DeeObject *slot;
 							ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
@@ -7166,7 +7738,7 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-						PREFIX_TARGET(ASM16_POP_N) {
+						PREFIX_RAW_TARGET(ASM16_POP_N) {
 							DREF DeeObject *value, *old_value;
 							DREF DeeObject **p_slot;
 							uint16_t offset = READ_imm16();
@@ -7181,495 +7753,37 @@ again_check_staticimm_for_cmpxch_ub_lock:
 							DISPATCH();
 						}
 
-					default:
-						goto prefix_unknown_instruction;
+#ifdef exec_dispatch_USE_switch
+					default: goto unknown_instruction;
+#endif /* exec_dispatch_USE_switch */
 					}
 				}
 
-				/* Always allow `noop' instructions to be used with a prefix. */
-				PREFIX_TARGET(ASM_DELOP)
-				PREFIX_TARGET(ASM_NOP)
-					DISPATCH();
-
-				PREFIX_TARGET(ASM_SWAP) {
-					/* >> local @foo: swap
-					 * Same as:
-					 * >> xch   top, local @foo */
-					DREF DeeObject *new_top;
-					ASSERT_USAGE(-1, +1);
-					new_top = xch_prefix_object(TOP);
-					if unlikely(!new_top)
-						HANDLE_EXCEPT();
-					TOP = new_top; /* Inherit reference. */
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_LROT) {
-					DREF DeeObject *drop_object;
-					DREF DeeObject *append_object;
-					uint16_t shift = (uint16_t)READ_imm8() + 2;
-					/* local @foo: lrot #3  (shift == 2)
-					 * >> temp   = PREFIX;
-					 * >> PREFIX = SECOND;
-					 * >> SECOND = FIRST;
-					 * >> FIRST  = temp;
-					 * Essentially, operate the same as (without the +1 stack usage):
-					 * >> push PREFIX
-					 * >> lrot #3
-					 * >> pop  PREFIX
-					 */
-					ASSERT_USAGE(-(int)shift, +(int)shift);
-					drop_object = *(sp - shift);
-					memmovedownc(sp - shift,
-					             sp - (shift - 1),
-					             shift - 1,
-					             sizeof(DREF DeeObject *));
-					append_object = xch_prefix_object(drop_object);
-					if unlikely(!append_object) {
-						TOP = drop_object;
-						HANDLE_EXCEPT();
-					}
-					TOP = append_object;
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_RROT) {
-					DREF DeeObject *drop_object;
-					DREF DeeObject *append_object;
-					uint16_t shift = (uint16_t)READ_imm8() + 2;
-					/* local @foo: rrot #3  (shift == 2)
-					 * >> temp   = PREFIX;
-					 * >> PREFIX = FIRST;
-					 * >> FIRST  = SECOND;
-					 * >> SECOND = temp;
-					 * Essentially, operate the same as (without the +1 stack usage):
-					 * >> push PREFIX
-					 * >> rrot #3
-					 * >> pop  PREFIX
-					 */
-					ASSERT_USAGE(-(int)shift, +(int)shift);
-					drop_object = TOP;
-					memmoveupc(sp - (shift - 1),
-					           sp - shift,
-					           shift - 1,
-					           sizeof(DREF DeeObject *));
-					append_object = xch_prefix_object(drop_object);
-					if unlikely(!append_object) {
-						*(sp - shift) = drop_object;
-						HANDLE_EXCEPT();
-					}
-					*(sp - shift) = append_object;
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP_STATIC) {
-					DeeObject **p_old_value;
-					DeeObject *old_value;
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_pop_static:
-					ASSERT_STATICimm();
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					p_old_value = &STATICimm;
-					STATIC_LOCKWRITE();
-					old_value = *p_old_value;
-					*p_old_value = value; /* Inherit reference. */
-					STATIC_LOCKENDWRITE();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					DeeFutex_WakeAll(p_old_value);
-					if (ITER_ISOK(old_value)) {
-						ASSERT_OBJECT(old_value);
-						Dee_Decref(old_value);
-					}
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					ASSERT_OBJECT(old_value);
-					Dee_Decref(old_value);
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP_EXTERN) {
-					DeeObject *old_value, **p_extern;
-					DREF DeeObject *value;
-					imm_val  = READ_imm8();
-					imm_val2 = READ_imm8();
-do_prefix_pop_extern:
-					ASSERT_EXTERNimm();
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					EXTERN_LOCKWRITE();
-					p_extern  = &EXTERNimm;
-					old_value = *p_extern;
-					*p_extern = value; /* Inherit reference. */
-					EXTERN_LOCKENDWRITE();
-					Dee_XDecref(old_value);
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP_GLOBAL) {
-					DeeObject *old_value, **p_global;
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_pop_global:
-					ASSERT_GLOBALimm();
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					GLOBAL_LOCKWRITE();
-					p_global    = &GLOBALimm;
-					old_value = *p_global;
-					*p_global   = value; /* Inherit reference. */
-					GLOBAL_LOCKENDWRITE();
-					Dee_XDecref(old_value);
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP_LOCAL) {
-					DeeObject *old_value;
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_pop_local:
-					ASSERT_LOCALimm();
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					old_value = LOCALimm;
-					LOCALimm  = value; /* Inherit reference. */
-					Dee_XDecref(old_value);
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_MODULE) {
-					DeeModuleObject *mod;
-					imm_val = READ_imm8();
-do_prefix_push_module:
-					mod = code->co_module;
-					ASSERT_OBJECT(mod);
-#ifdef EXEC_SAFE
-					if (imm_val >= mod->mo_importc)
-						goto err_invalid_module;
-#else /* EXEC_SAFE */
-					ASSERT(imm_val < mod->mo_importc);
-#endif /* !EXEC_SAFE */
-					mod = mod->mo_importv[imm_val];
-					ASSERT_OBJECT(mod);
-					Dee_Incref(mod);
-					if (set_prefix_object((DeeObject *)mod))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_NONE) {
-					Dee_Incref(Dee_None);
-					if (set_prefix_object(Dee_None))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_REF) {
-					imm_val = READ_imm8();
-do_prefix_push_ref:
-					ASSERT_REFimm();
-					Dee_Incref(REFimm);
-					if (set_prefix_object(REFimm))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_ARG) {
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_push_arg:
-					ASSERT_ARGimm();
-					/* Simple case: Direct argument/default reference. */
-					if (imm_val < frame->cf_argc) {
-						value = frame->cf_argv[imm_val];
-					} else if (frame->cf_kw) {
-						value = frame->cf_kw->fk_kargv[imm_val - frame->cf_argc];
-						if (!value) {
-							value = code->co_defaultv[imm_val - code->co_argc_min];
-							if (!value)
-								goto err_unbound_arg;
-						}
-					} else {
-						value = code->co_defaultv[imm_val - code->co_argc_min];
-						if (!value)
-							goto err_unbound_arg;
-					}
-					Dee_Incref(value);
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_VARARGS) {
-					/* Special case: Varargs. */
-#ifdef EXEC_SAFE
-					if unlikely(!(code->co_flags & CODE_FVARARGS))
-						goto err_requires_varargs_code;
-#else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARARGS);
-#endif /* !EXEC_SAFE */
-					if (!frame->cf_vargs) {
-						if (frame->cf_argc <= code->co_argc_max) {
-							frame->cf_vargs = (DREF DeeTupleObject *)Dee_EmptyTuple;
-							Dee_Incref(Dee_EmptyTuple);
-						} else {
-							frame->cf_vargs = (DREF DeeTupleObject *)DeeTuple_NewVector((size_t)(frame->cf_argc - code->co_argc_max),
-							                                                            frame->cf_argv + code->co_argc_max);
-							if unlikely(!frame->cf_vargs)
-								HANDLE_EXCEPT();
-						}
-					}
-					Dee_Incref(frame->cf_vargs);
-					if (set_prefix_object((DeeObject *)frame->cf_vargs))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_VARKWDS) {
-					DREF DeeObject *varkwds;
-					/* Special case: Varargs. */
-#ifdef EXEC_SAFE
-					if unlikely(!(code->co_flags & CODE_FVARKWDS))
-						goto err_requires_varkwds_code;
-#else /* EXEC_SAFE */
-					ASSERT(code->co_flags & CODE_FVARKWDS);
-#endif /* !EXEC_SAFE */
-					if (frame->cf_kw) {
-						varkwds = frame->cf_kw->fk_varkwds;
-						if (!varkwds) {
-							DeeObject *oldval;
-							varkwds = DeeKwBlackList_New(code, frame->cf_argc,
-							                             frame->cf_argv,
-							                             frame->cf_kw->fk_kw);
-							if unlikely(!varkwds)
-								HANDLE_EXCEPT();
-							/* Must do an atomic store here because the keyword descriptor
-							 * might be shared between multiple threads when the same yield
-							 * function is enumerated multiple times by different threads. */
-							oldval = atomic_cmpxch_val(&frame->cf_kw->fk_varkwds, NULL, varkwds);
-							if unlikely(oldval) {
-								DeeKwBlackList_Decref(varkwds);
-								varkwds = oldval;
-							}
-						}
-					} else {
-						varkwds = Dee_EmptyRoDict;
-					}
-					Dee_Incref(varkwds);
-					if (set_prefix_object((DeeObject *)varkwds))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_CONST) {
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_push_const:
-					ASSERT_CONSTimm();
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					value = CONSTimm;
-					Dee_Incref(value);
-#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					CONST_LOCKREAD();
-					value = CONSTimm;
-					Dee_Incref(value);
-					CONST_LOCKENDREAD();
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_STATIC) {
-					DREF DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_push_static:
-					ASSERT_STATICimm();
-					STATIC_LOCKREAD();
-					value = CONSTimm;
-#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-					if unlikely(!value) {
-						STATIC_LOCKENDREAD();
-						goto err_unbound_static;
-					}
-#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-					Dee_Incref(value);
-					STATIC_LOCKENDREAD();
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_EXTERN) {
-					DeeObject *value;
-					imm_val  = READ_imm8();
-					imm_val2 = READ_imm8();
-do_prefix_push_extern:
-					ASSERT_EXTERNimm();
-					EXTERN_LOCKREAD();
-					value = EXTERNimm;
-					if unlikely(!value) {
-						EXTERN_LOCKENDREAD();
-						goto err_unbound_extern;
-					}
-					Dee_Incref(value);
-					EXTERN_LOCKENDREAD();
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_GLOBAL) {
-					DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_push_global:
-					ASSERT_GLOBALimm();
-					GLOBAL_LOCKREAD();
-					value = GLOBALimm;
-					if unlikely(!value) {
-						GLOBAL_LOCKENDREAD();
-						goto err_unbound_global;
-					}
-					Dee_Incref(value);
-					GLOBAL_LOCKENDREAD();
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_PUSH_LOCAL) {
-					DeeObject *value;
-					imm_val = READ_imm8();
-do_prefix_push_local:
-					ASSERT_LOCALimm();
-					value = LOCALimm;
-					if unlikely(!value)
-						goto err_unbound_local;
-					Dee_Incref(value);
-					if (set_prefix_object(value))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_DUP) {
-					Dee_Incref(TOP);
-					if (set_prefix_object(TOP))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_DUP_N) {
-					uint8_t offset = READ_imm8();
-					DREF DeeObject *slot;
-					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
-					slot = *(sp - (offset + 2));
-					Dee_Incref(slot);
-					if (set_prefix_object(slot))
-						HANDLE_EXCEPT();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP) {
-					DREF DeeObject *value;
-					ASSERT_USAGE(-1, +1);
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					Dee_Decref(TOP);
-					TOP = value; /* Inherit reference. */
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_POP_N) {
-					DREF DeeObject *value, *old_value;
-					DREF DeeObject **p_slot;
-					uint8_t offset = READ_imm8();
-					ASSERT_USAGE(-((int)offset + 2), +((int)offset + 2));
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					p_slot    = sp - (offset + 2);
-					old_value = *p_slot;
-					*p_slot   = value; /* Inherit reference. */
-					Dee_Decref(old_value);
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_RET) {
-					DREF DeeObject *value;
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					/* Check if we're overwriting a previous return value
-					 * (which can happen when `return' appears in a finally-block) */
-					if (ITER_ISOK(frame->cf_result))
-						Dee_Decref(frame->cf_result);
-					frame->cf_result = value;
-					if (code->co_flags & CODE_FYIELDING)
-						goto end_without_finally;
-					goto end_return;
-				}
-
-				PREFIX_TARGET(ASM_YIELDALL) {
-					DREF DeeObject *value;
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					ASSERT_YIELDING();
-					if (ITER_ISOK(frame->cf_result))
-						Dee_Decref(frame->cf_result);
-					frame->cf_result = DeeObject_IterNext(value);
-					Dee_Decref(value);
-					if unlikely(!frame->cf_result)
-						HANDLE_EXCEPT();
-					if (frame->cf_result != ITER_DONE) {
-						/* Repeat this instruction and forward the value we've just read. */
-						REPEAT_INSTRUCTION();
-						YIELD_RESULT();
-					}
-					/* Pop the iterator that was enumerated. */
-					POPREF();
-					DISPATCH();
-				}
-
-				PREFIX_TARGET(ASM_THROW) {
-					DREF DeeObject *value;
-					value = get_prefix_object();
-					if unlikely(!value)
-						HANDLE_EXCEPT();
-					DeeError_Throw(value);
-					Dee_Decref(value);
-					HANDLE_EXCEPT();
-				}
-
-			default:
-prefix_unknown_instruction:
-				err_illegal_instruction(code, frame->cf_ip);
-				HANDLE_EXCEPT();
+#ifdef exec_dispatch_USE_switch
+			default: goto unknown_instruction;
+#endif /* exec_dispatch_USE_switch */
 			}
 
 			/* Shouldn't get here. */
 			__builtin_unreachable();
-		} /* End of prefixed instruction handling. */
+#undef PREFIX_RAW_TARGET2
+#undef PREFIX_RAW_TARGET
+#undef PREFIX_TARGET
+#undef PREFIX_TARGETSimm16
+		}
+		/* End of prefixed instruction handling. */
+		__builtin_unreachable();
 
-#ifdef USE_SWITCH
+#ifdef exec_dispatch_USE_switch
 	default:
-#endif /* USE_SWITCH */
-#ifndef USE_SWITCH
+#endif /* exec_dispatch_USE_switch */
+#ifndef exec_dispatch_USE_switch
+target_ASM_INC:
+target_ASM_DEC:
+target_ASM_INCPOST:
+target_ASM_DECPOST:
 target_ASM_UD:
-target_ASM_RESERVED1:
-target_ASM_RESERVED2:
-target_ASM_RESERVED3:
-target_ASM_RESERVED4:
-target_ASM_RESERVED5:
-target_ASM_RESERVED6:
-target_ASM_RESERVED7:
-#endif /* !USE_SWITCH */
+#endif /* !exec_dispatch_USE_switch */
 unknown_instruction:
 		err_illegal_instruction(code, frame->cf_ip);
 		HANDLE_EXCEPT();
@@ -8016,6 +8130,10 @@ __pragma_GCC_diagnostic_pop
 #undef NEED_UNIVERSAL_PREFIX_OB_WORKAROUND
 #undef USING_PREFIX_OBJECT
 
+#undef exec_dispatch_USE_switch
+#undef exec_dispatch_USE_goto
+#undef exec_dispatch_USE_switch_goto
+
 #undef REFimm
 #undef LOCALimm
 #undef EXTERNimm
@@ -8084,7 +8202,6 @@ __pragma_GCC_diagnostic_pop
 #undef RETURN_RESULT
 #undef YIELD
 #undef RETURN
-#undef USE_SWITCH
 #undef cmpxch_prefix_object
 #undef xch_prefix_object
 #undef get_prefix_object_ptr

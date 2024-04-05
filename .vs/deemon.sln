@@ -347,6 +347,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{2360741E-F
 		..\util\test\compiler-lexer-corners.dee = ..\util\test\compiler-lexer-corners.dee
 		..\util\test\compiler-paren-brace-pasing.dee = ..\util\test\compiler-paren-brace-pasing.dee
 		..\util\test\compiler-print-in-statement-expressions.dee = ..\util\test\compiler-print-in-statement-expressions.dee
+		..\util\test\compiler-qmarkqmark-operator.dee = ..\util\test\compiler-qmarkqmark-operator.dee
 		..\util\test\compiler-range-expressions.dee = ..\util\test\compiler-range-expressions.dee
 		..\util\test\compiler-recursive-references.dee = ..\util\test\compiler-recursive-references.dee
 		..\util\test\compiler-self-recursion.dee = ..\util\test\compiler-self-recursion.dee

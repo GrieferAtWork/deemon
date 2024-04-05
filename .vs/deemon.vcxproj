@@ -43,6 +43,7 @@
 		<ClInclude Include="..\include\deemon\alloc.h" />
 		<ClInclude Include="..\include\deemon\api.h" />
 		<ClInclude Include="..\include\deemon\arg.h" />
+		<ClInclude Include="..\include\deemon\asm-table.h" />
 		<ClInclude Include="..\include\deemon\asm.h" />
 		<ClInclude Include="..\include\deemon\attribute.h" />
 		<ClInclude Include="..\include\deemon\bool.h" />
@@ -229,7 +230,6 @@
 		<ClInclude Include="..\src\deemon\compiler\asm\genasm-yield.c.inl" />
 		<ClInclude Include="..\src\deemon\compiler\asm\genstore-setup.c.inl" />
 		<ClInclude Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl" />
-		<ClInclude Include="..\src\deemon\execute\code-exec-targets.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke-kw.c.inl" />
 		<ClInclude Include="..\src\deemon\execute\code-invoke.c.inl" />

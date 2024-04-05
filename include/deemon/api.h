@@ -208,8 +208,6 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* !Dee_ASSUMED_VALUE */
 
 
-DECL_BEGIN
-
 /* #define CONFIG_NO_THREADS */
 
 /* CONFIG:  Enable tracing of all incref()s and decref()s that
@@ -489,7 +487,9 @@ DECL_BEGIN
 
 #ifndef Dee_BREAKPOINT
 #ifdef _MSC_VER
+DECL_BEGIN
 extern void (__debugbreak)(void);
+DECL_END
 #pragma intrinsic(__debugbreak)
 #define Dee_BREAKPOINT() __debugbreak()
 #elif defined(__COMPILER_HAVE_GCC_ASM) && !defined(__NO_XBLOCK) && (defined(__i386__) || defined(__x86_64__))
@@ -562,6 +562,7 @@ extern void (__debugbreak)(void);
 #define DWEAK /* Annotation for data that is thread-volatile. */
 #endif /* !DWEAK */
 
+DECL_BEGIN
 #if !defined(NDEBUG) && !defined(CONFIG_NO_CHECKMEMORY) && defined(_DEBUG)
 #ifdef CONFIG_HOST_WINDOWS
 #ifdef _MSC_VER
@@ -600,6 +601,7 @@ DFUNDEF void (DCALL _DeeAssert_Fail)(char const *expr, char const *file, int lin
 DFUNDEF void (_DeeAssert_Failf)(char const *expr, char const *file, int line, char const *format, ...);
 DFUNDEF ATTR_NORETURN void (DCALL _DeeAssert_XFail)(char const *expr, char const *file, int line);
 DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *file, int line, char const *format, ...);
+DECL_END
 
 #ifdef Dee_BREAKPOINT_IS_NOOP
 #define _Dee_Fatal(expr)       _DeeAssert_Fail(expr, __FILE__, __LINE__)
@@ -687,7 +689,5 @@ DFUNDEF ATTR_NORETURN void (_DeeAssert_XFailf)(char const *expr, char const *fil
 #define DOC_REF Dee_DOC_REF
 #define DOC_GET Dee_DOC_GET
 #endif /* DEE_SOURCE */
-
-DECL_END
 
 #endif /* !GUARD_DEEMON_API_H */

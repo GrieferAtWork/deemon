@@ -102,6 +102,9 @@
 		<ClInclude Include="..\include\deemon\arg.h">
 			<Filter>include</Filter>
 		</ClInclude>
+		<ClInclude Include="..\include\deemon\asm-table.h">
+			<Filter>include</Filter>
+		</ClInclude>
 		<ClInclude Include="..\include\deemon\asm.h">
 			<Filter>include</Filter>
 		</ClInclude>
@@ -659,9 +662,6 @@
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\compiler\lexer\decl-escape-text-impl.c.inl">
 			<Filter>src\compiler\lexer</Filter>
-		</ClInclude>
-		<ClInclude Include="..\src\deemon\execute\code-exec-targets.c.inl">
-			<Filter>src\execute</Filter>
 		</ClInclude>
 		<ClInclude Include="..\src\deemon\execute\code-exec.c.inl">
 			<Filter>src\execute</Filter>

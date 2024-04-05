@@ -437,7 +437,9 @@ DDATDEF struct _Dee_int_1digit_object DeeInt_MinusOne_Zero_One[3];
 #define DeeInt_One      ((DeeObject *)&DeeInt_MinusOne_Zero_One[2])
 
 /* Return an integer object for the values `-1', `0' and `1' */
-#define DeeInt_FromSign(sign) ((DeeObject *)&DeeInt_MinusOne_Zero_One[(unsigned int)((sign) + 1)])
+#define DeeInt_FromSign(sign)                                                         \
+	(Dee_ASSERTF((sign) >= -1 && (sign) <= 1, "Invalid sign value: %d", (int)(sign)), \
+	 (DeeObject *)&DeeInt_MinusOne_Zero_One[(unsigned int)((sign) + 1)])
 
 /* Return an integer object for small values */
 #define DeeInt_ForSmallInt(val) ((DeeObject *)&DeeInt_MinusOne_Zero_One[(unsigned int)((val) + 1)])
