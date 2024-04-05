@@ -3878,7 +3878,7 @@ string_count(String *self, size_t argc,
 	String *other;
 	size_t result = 0;
 	size_t start = 0, end = (size_t)-1;
-	union dcharptr lhs, rhs;
+	union dcharptr lhs, lep, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":count",
@@ -3894,8 +3894,9 @@ string_count(String *self, size_t argc,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp8 += start;
+		lep.cp8 = lhs.cp8 + mylen;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)other);
-		while ((lhs.cp8 = memmemb(lhs.cp8, mylen,
+		while ((lhs.cp8 = memmemb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
 		                          rhs.cp8, WSTR_LENGTH(rhs.cp8))) != NULL) {
 			lhs.cp8 += WSTR_LENGTH(rhs.cp8);
 			++result;
@@ -3909,10 +3910,11 @@ string_count(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp16);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp16 += start;
+		lep.cp16 = lhs.cp16 + mylen;
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)other);
 		if unlikely(!rhs.cp16)
 			goto err;
-		while ((lhs.cp16 = memmemw(lhs.cp16, mylen,
+		while ((lhs.cp16 = memmemw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
 		                           rhs.cp16, WSTR_LENGTH(rhs.cp16))) != NULL) {
 			lhs.cp16 += WSTR_LENGTH(rhs.cp16);
 			++result;
@@ -3926,10 +3928,11 @@ string_count(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp32);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp32 += start;
+		lep.cp32 = lhs.cp32 + mylen;
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)other);
 		if unlikely(!rhs.cp32)
 			goto err;
-		while ((lhs.cp32 = memmeml(lhs.cp32, mylen,
+		while ((lhs.cp32 = memmeml(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
 		                           rhs.cp32, WSTR_LENGTH(rhs.cp32))) != NULL) {
 			lhs.cp32 += WSTR_LENGTH(rhs.cp32);
 			++result;
@@ -3948,7 +3951,7 @@ string_casecount(String *self, size_t argc,
 	String *other;
 	size_t result = 0;
 	size_t start = 0, end = (size_t)-1, match_length;
-	union dcharptr lhs, rhs;
+	union dcharptr lhs, lep, rhs;
 	size_t mylen;
 	if (DeeArg_UnpackKw(argc, argv, kw, find_kwlist,
 	                    "o|" UNPdSIZ UNPdSIZ ":casecount",
@@ -3964,8 +3967,9 @@ string_casecount(String *self, size_t argc,
 		mylen   = DeeString_SIZE(self);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp8 += start;
+		lep.cp8 = lhs.cp8 + mylen;
 		rhs.cp8 = DeeString_As1Byte((DeeObject *)other);
-		while ((lhs.cp8 = memcasememb(lhs.cp8, mylen,
+		while ((lhs.cp8 = memcasememb(lhs.cp8, (size_t)(lep.cp8 - lhs.cp8),
 		                              rhs.cp8, WSTR_LENGTH(rhs.cp8),
 		                              &match_length)) != NULL) {
 			lhs.cp8 += match_length;
@@ -3980,10 +3984,11 @@ string_casecount(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp16);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp16 += start;
+		lep.cp16 = lhs.cp16 + mylen;
 		rhs.cp16 = DeeString_As2Byte((DeeObject *)other);
 		if unlikely(!rhs.cp16)
 			goto err;
-		while ((lhs.cp16 = memcasememw(lhs.cp16, mylen,
+		while ((lhs.cp16 = memcasememw(lhs.cp16, (size_t)(lep.cp16 - lhs.cp16),
 		                               rhs.cp16, WSTR_LENGTH(rhs.cp16),
 		                               &match_length)) != NULL) {
 			lhs.cp16 += match_length;
@@ -3998,10 +4003,11 @@ string_casecount(String *self, size_t argc,
 		mylen = WSTR_LENGTH(lhs.cp32);
 		CLAMP_SUBSTR(&start, &end, &mylen, not_found);
 		lhs.cp32 += start;
+		lep.cp32 = lhs.cp32 + mylen;
 		rhs.cp32 = DeeString_As4Byte((DeeObject *)other);
 		if unlikely(!rhs.cp32)
 			goto err;
-		while ((lhs.cp32 = memcasememl(lhs.cp32, mylen,
+		while ((lhs.cp32 = memcasememl(lhs.cp32, (size_t)(lep.cp32 - lhs.cp32),
 		                               rhs.cp32, WSTR_LENGTH(rhs.cp32),
 		                               &match_length)) != NULL) {
 			lhs.cp32 += match_length;
