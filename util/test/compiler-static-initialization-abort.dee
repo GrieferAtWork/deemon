@@ -81,11 +81,11 @@ assert abortStaticInitWithGoto() == "goto";
 assert abortStaticInitWithGoto.__statics__[0] !is bound;
 assert initCalls == 6;
 assert nonInitCalls == 4;
-abortStaticInitWithGoto.__statics__[0] = "bar";
-assert abortStaticInitWithGoto.__statics__[0] == "bar";
-assert abortStaticInitWithGoto() == "bar";
-assert abortStaticInitWithGoto() == "bar";
-assert abortStaticInitWithGoto.__statics__[0] == "bar";
+abortStaticInitWithGoto.__statics__[0] = "baz";
+assert abortStaticInitWithGoto.__statics__[0] == "baz";
+assert abortStaticInitWithGoto() == "baz";
+assert abortStaticInitWithGoto() == "baz";
+assert abortStaticInitWithGoto.__statics__[0] == "baz";
 assert initCalls == 6;
 assert nonInitCalls == 6;
 

@@ -28,7 +28,8 @@ function foo() {
 }
 function bar() {
 	return a -> {
-		return a;
+		local x = a;
+		return x;
 	};
 }
 

@@ -944,7 +944,7 @@ prefix_except_prefix:
 #endif
 
 		/* Skip DELOP opcodes if they aren't jump targets. */
-		if (!(flags & PCODE_FNOSKIPDELOP) && *iter == ASM_DELOP && 0) {
+		if (!(flags & PCODE_FNOSKIPDELOP) && *iter == ASM_DELOP) {
 			if (flags & PCODE_FNOJUMPARROW)
 				continue;
 			if (!textjumps_istarget(&jumps, code_ip))

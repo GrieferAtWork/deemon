@@ -694,7 +694,8 @@ done:
 }
 
 PRIVATE struct type_getset tpconst cati_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE, "->?AAttributeTable?Ert:ClassDescriptor"),
+	TYPE_GETTER_F(STR_seq, &cati_getseq, METHOD_FNOREFESCAPE,
+	              "->?AAttributeTable?Ert:ClassDescriptor"),
 	TYPE_GETSET_END
 };
 
@@ -838,10 +839,10 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	              "->?Dint\n"
 	              "Index into the class/instance object table, where @this attribute is stored\n"
 	              "When ?#isclassmem or ?#isclassns are ?t, this index and any index offset from it "
-	              "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
+	              /**/ "refer to the class object table. Otherwise, the instance object table is dereferenced\n"
 	              "This is done so-as to allow instance attributes such as member functions to be stored "
-	              "within the class itself, rather than having to be copied into each and every instance "
-	              "of the class\n"
+	              /**/ "within the class itself, rather than having to be copied into each and every instance "
+	              /**/ "of the class\n"
 	              "S.a. ?A__ctable__?DType and ?A__itable__?DType"),
 	TYPE_GETTER_F("isprivate", &ca_isprivate, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
@@ -853,38 +854,39 @@ PRIVATE struct type_getset tpconst ca_getsets[] = {
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this class attribute can only be read from\n"
 	              "When this is case, a property-like attribute can only ever have a getter "
-	              "associated with itself, while field- or method-like attribute can only be "
-	              "written once (aka. when not already bound)"),
+	              /**/ "associated with itself, while field- or method-like attribute can only be "
+	              /**/ "written once (aka. when not already bound)"),
 	TYPE_GETTER_F("ismethod", &ca_ismethod, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this class attribute refers to a method\n"
 	              "When set, reading from the attribute will return a an object "
-	              "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
+	              /**/ "${InstanceMethod(obj.MEMBER_TABLE[this.addr], obj)}\n"
 	              "Note however that this is rarely ever required to be done, as method attributes "
-	              "are usually called directly, in which case a callattr instruction can silently "
-	              "prepend the this-argument before the passed argument list"),
+	              /**/ "are usually called directly, in which case a callattr instruction can silently "
+	              /**/ "prepend the this-argument before the passed argument list"),
 	TYPE_GETTER_F("isproperty", &ca_isproperty, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Evaluates to ?t if @this class attribute was defined as a property\n"
 	              "When this is the case, a ?#readonly attribute only has a single callback "
-	              "that may be stored at ?#addr + 0, with that callback being the getter\n"
+	              /**/ "that may be stored at ?#addr + 0, with that callback being the getter\n"
 	              "Otherwise, up to " PP_STR(CLASS_GETSET_COUNT) " indices within the associated "
-	              "object table are used by @this attribute, each of which may be left unbound:\n"
+	              /**/ "object table are used by @this attribute, each of which may be left unbound:\n"
 	              "#T{Offset|Callback|Description~"
-	              "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
-	              "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
-	              "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback}"),
+	              /**/ "$" PP_STR(CLASS_GETSET_GET) "|$get|The getter callback&"
+	              /**/ "$" PP_STR(CLASS_GETSET_DEL) "|$del|The delete callback&"
+	              /**/ "$" PP_STR(CLASS_GETSET_SET) "|$set|The setter callback"
+	              "}"),
 	TYPE_GETTER_F("isclassmem", &ca_isclassmem, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
-	              "Set if ?#addr is an index into the class object table, rather than into the "
-	              "instance object table. Note however that when ?#isclassns"),
+	              "Set if ?#addr is an index into the class object table, rather than into "
+	              /**/ "the instance object table. Note however that when ?#isclassns"),
 	TYPE_GETTER_F("isclassns", &ca_getisclassns, METHOD_FNOREFESCAPE,
 	              "->?Dbool\n"
 	              "Returns ?t if @this class attribute is exclusive to the "
-	              "class-namespace (i.e. was declared as $static)\n"
+	              /**/ "class-namespace (i.e. was declared as $static)\n"
 	              "During enumeration of attributes, all attributes where this is ?t "
-	              "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
-	              "are enumated by ?Aiattr?Ert:ClassDescriptor"),
+	              /**/ "are enumated by ?Acattr?Ert:ClassDescriptor, while all for which it isn't "
+	              /**/ "are enumated by ?Aiattr?Ert:ClassDescriptor"),
 	TYPE_GETTER_F("flags", &ca_getflags, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
 	              "Returns a comma-separated string describing the flags of @this class attribute\n"
@@ -1343,8 +1345,9 @@ PRIVATE struct type_method tpconst cd_methods[] = {
 PRIVATE struct type_getset tpconst cd_getsets[] = {
 	TYPE_GETTER_F("flags", &cd_getflags, METHOD_FNOREFESCAPE,
 	              "->?Dstring\n"
-	              "Return a comma-separated string of flags used to describe the combination of properties described by "
-	              "?#isfinal, ?#isinterrupt, ?#hassuperconstructor, ?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
+	              "Return a comma-separated string of flags used to describe the combination of "
+	              /**/ "properties described by ?#isfinal, ?#isinterrupt, ?#hassuperconstructor, "
+	              /**/ "?#__hassuperkwds__, ?#__isinttruncated__, and ?#__hasmoveany__\n"
 	              "#T{Flag|Property~"
 	              /**/ "$\"final\"|?#isfinal&"
 	              /**/ "$\"interrupt\"|?#isinterrupt&"
@@ -1375,22 +1378,22 @@ PRIVATE struct type_member tpconst cd_members[] = {
 	TYPE_MEMBER_BITFIELD_DOC("isinterrupt", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINTERRUPT,
 	                         "Evaluates to ?t if @this class behaves as an interrupt exception when thrown\n"
 	                         "An interrupt exception (such as :Interrupt) is not caught by ${catch(...)} "
-	                         "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
+	                         /**/ "statements, but only by statements marked as ${@[interrupt] catch(...)}\n"
 	                         "Certain types exceptions require this in order to prevent catch-all blocks surrounding "
-	                         "optional function calls such as invocations of ?Efs:unlink from accidentally handling "
-	                         "unwanted types of exceptions such as :KeyboardInterrupt, as caused "
-	                         "by the user pressing CTRL+C to terminate the running script, and (normally) not "
-	                         "expecting it to continue running because the error was silently swallowed by an "
-	                         "unrelated catch-all block"),
+	                         /**/ "optional function calls such as invocations of ?Efs:unlink from accidentally handling "
+	                         /**/ "unwanted types of exceptions such as :KeyboardInterrupt, as caused "
+	                         /**/ "by the user pressing CTRL+C to terminate the running script, and (normally) not "
+	                         /**/ "expecting it to continue running because the error was silently swallowed by an "
+	                         /**/ "unrelated catch-all block"),
 	TYPE_MEMBER_BITFIELD_DOC("hassuperconstructor", STRUCT_CONST, ClassDescriptor, cd_flags, TP_FINHERITCTOR,
 	                         "Evaluates to ?t if @this class inherits its constructor from its base-type\n"
 	                         "In user-defined classes, this behavior is encoded as ${this = super;}"),
 #ifdef CLASS_TP_FSUPERKWDS
 	TYPE_MEMBER_BITFIELD_DOC("__hassuperkwds__", STRUCT_CONST, ClassDescriptor, cd_flags, CLASS_TP_FSUPERKWDS,
 	                         "Evaluates to ?t if the super-args operator of @this class returns a tuple (args, kwds) "
-	                         "that should be used to invoke the super-constructor as ${super(args..., **kwds)}\n"
+	                         /**/ "that should be used to invoke the super-constructor as ${super(args..., **kwds)}\n"
 	                         "Otherwise, the super-args operator simply returns args and the super-constructor "
-	                         "is called as ${super(args...)}"),
+	                         /**/ "is called as ${super(args...)}"),
 #endif /* CLASS_TP_FSUPERKWDS */
 #ifdef CLASS_TP_FAUTOINIT
 	TYPE_MEMBER_BITFIELD_DOC("__hasautoinit__", STRUCT_CONST, ClassDescriptor, cd_flags, CLASS_TP_FAUTOINIT,
@@ -1802,7 +1805,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			if (ent->ca_flag & CLASS_ATTRIBUTE_FCLASSMEM) {
 				if (cmemb_size != (uint16_t)-1 && maxid >= cmemb_size) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
+					                "Instance attribute %r uses out-of-bounds class "
+					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, cmemb_size);
 					goto err_iter_r;
 				}
@@ -1811,7 +1815,8 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 			} else {
 				if (imemb_size != (uint16_t)-1 && maxid >= imemb_size) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Instance attribute %r uses out-of-bounds object table index %" PRFu16 " (>= %" PRFu16 ")",
+					                "Instance attribute %r uses out-of-bounds object "
+					                "table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, imemb_size);
 					goto err_iter_r;
 				}
@@ -1933,7 +1938,9 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *class_cattr       = Dee_EmptyTuple;
 	uint16_t class_isize         = (uint16_t)-1;
 	uint16_t class_csize         = (uint16_t)-1;
-	PRIVATE DEFINE_KWLIST(kwlist, { K(name), K(doc), K(flags), K(operators), K(iattr), K(cattr), K(isize), K(csize), KEND });
+	PRIVATE DEFINE_KWLIST(kwlist, { K(name), K(doc), K(flags), K(operators),
+	                                K(iattr), K(cattr), K(isize), K(csize),
+	                                KEND });
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|ooooo" UNPu16 UNPu16 ":_ClassDescriptor",
 	                    &class_name, &class_doc,
 	                    &class_flags, &class_operators,
@@ -2044,7 +2051,8 @@ got_flag:
 					maxid += CLASS_GETSET_SET;
 				if (class_csize != (uint16_t)-1 && maxid >= class_csize) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Class attribute %r uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
+					                "Class attribute %r uses out-of-bounds class "
+					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                ent->ca_name, maxid, class_csize);
 					goto err_r_imemb_iter;
 				}
@@ -2090,11 +2098,13 @@ got_flag:
 				struct opinfo const *op = DeeTypeType_GetOperatorById(&DeeType_Type, name);
 				if (op) {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator %s uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
+					                "Operator %s uses out-of-bounds class object "
+					                "table index %" PRFu16 " (>= %" PRFu16 ")",
 					                op->oi_sname, index, class_csize);
 				} else {
 					DeeError_Throwf(&DeeError_ValueError,
-					                "Operator 0x%.4I16x uses out-of-bounds class object table index %" PRFu16 " (>= %" PRFu16 ")",
+					                "Operator 0x%.4I16x uses out-of-bounds class "
+					                "object table index %" PRFu16 " (>= %" PRFu16 ")",
 					                name, index, class_csize);
 				}
 				goto err_r_imemb_iter;
@@ -2476,10 +2486,22 @@ ot_isitable(ObjectTable *__restrict self) {
 }
 
 PRIVATE struct type_getset tpconst ot_getsets[] = {
-	TYPE_GETTER_F(STR___type__, &ot_gettype, METHOD_FNOREFESCAPE, "->?DType\nThe type describing @this object table"),
-	TYPE_GETTER_F("__class__", &ot_getclass, METHOD_FNOREFESCAPE, "->?Ert:ClassDescriptor\nSame as ${this.__type__.__class__}"),
-	TYPE_GETTER_F("__isctable__", &ot_isctable, METHOD_FNOREFESCAPE, "->?Dbool\nEvaluates to ?t if @this is a class object table"),
-	TYPE_GETTER_F("__isitable__", &ot_isitable, METHOD_FNOREFESCAPE, "->?Dbool\nEvaluates to ?t if @this is an instance object table"),
+	TYPE_GETTER_F(STR___type__, &ot_gettype,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "->?DType\n"
+	              "The type describing @this object table"),
+	TYPE_GETTER_F("__class__", &ot_getclass,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "->?Ert:ClassDescriptor\n\n"
+	              "Same as ${this.__type__.__class__}"),
+	TYPE_GETTER_F("__isctable__", &ot_isctable,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "->?Dbool\n\n"
+	              "Evaluates to ?t if @this is a class object table"),
+	TYPE_GETTER_F("__isitable__", &ot_isitable,
+	              METHOD_FNOREFESCAPE | METHOD_FCONSTCALL,
+	              "->?Dbool\n\n"
+	              "Evaluates to ?t if @this is an instance object table"),
 	TYPE_GETSET_END
 };
 

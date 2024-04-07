@@ -133,7 +133,7 @@ done_set_constexpr:
 		if (symval)
 			goto set_constant_expression;
 	}
-#endif
+#endif /* OPTIMIZE_FASSUME */
 done:
 	return 0;
 err:
