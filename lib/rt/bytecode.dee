@@ -366,6 +366,7 @@ final global ASM16_GETITEM_C = 0xf0b4;
 final global ASM_VARARGS_GETSIZE = 0xf0b5;
 final global ASM16_SETITEM_C = 0xf0b8;
 final global ASM_ITERNEXT = 0xf0b9;
+final global ASM_ENDFINALLY_EXCEPT = 0xf0ba;
 final global ASM_GETMEMBER = 0xf0be;
 final global ASM16_GETMEMBER = 0xf0bf;
 final global ASM_DELMEMBER = 0xf0c0;

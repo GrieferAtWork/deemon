@@ -838,7 +838,6 @@ cmpxch_prefix_object_safe(struct code_frame *__restrict frame,
                           DeeObject *oldvalue, DREF DeeObject *newvalue)
 #endif /* !EXEC_FAST */
 {
-	DREF DeeObject *real_result;
 	instruction_t *ip = frame->cf_ip;
 	DeeModuleObject *mod;
 	uint16_t imm_val;
@@ -858,12 +857,10 @@ do_get_stack:
 		ASSERT((frame->cf_stack + imm_val) < sp);
 		ASSERT(newvalue);
 #endif /* !EXEC_SAFE */
-		real_result = frame->cf_stack[imm_val]; /* Inherit reference. */
-		if (real_result != oldvalue)
+		if (frame->cf_stack[imm_val] != oldvalue)
 			goto nope;
-		frame->cf_stack[imm_val] = newvalue; /* Inherit reference. */
-		ASSERT_OBJECT(real_result);
-		Dee_Decref(real_result);
+		frame->cf_stack[imm_val] = newvalue; /* Inherit reference (x2). */
+		Dee_Decref(oldvalue);
 		break;
 
 	case ASM_STATIC:
@@ -881,12 +878,15 @@ do_get_static:
 		ASSERT(imm_val < code->co_refstaticc);
 #endif /* !EXEC_SAFE */
 		DeeFunction_RefLockWrite(frame->cf_func);
-		real_result = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
-		if (real_result != oldvalue && (real_result != ITER_DONE || oldvalue)) {
-			DeeFunction_RefLockEndWrite(frame->cf_func);
-			goto nope;
+		{
+			DREF DeeObject *real_oldvalue;
+			real_oldvalue = frame->cf_func->fo_refv[imm_val]; /* Inherit reference. */
+			if (real_oldvalue != oldvalue && (real_oldvalue != ITER_DONE || oldvalue)) {
+				DeeFunction_RefLockEndWrite(frame->cf_func);
+				goto nope;
+			}
+			frame->cf_func->fo_refv[imm_val] = newvalue; /* Inherit reference. */
 		}
-		frame->cf_func->fo_refv[imm_val] = newvalue; /* Inherit reference. */
 		DeeFunction_RefLockEndWrite(frame->cf_func);
 		DeeFutex_WakeAll(&frame->cf_func->fo_refv[imm_val]);
 		Dee_XDecref(oldvalue);
@@ -904,15 +904,13 @@ do_get_static:
 		ASSERT(newvalue);
 #endif /* !EXEC_SAFE */
 		DeeCode_ConstLockWrite(code);
-		real_result = code->co_constv[imm_val]; /* Inherit reference. */
-		if (real_result != oldvalue) {
+		if (code->co_constv[imm_val] != oldvalue) {
 			DeeCode_ConstLockEndWrite(code);
 			goto nope;
 		}
-		code->co_constv[imm_val] = newvalue;  /* Inherit reference. */
+		code->co_constv[imm_val] = newvalue;  /* Inherit reference (x2). */
 		DeeCode_ConstLockEndWrite(code);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		ASSERT_OBJECT(real_result);
 		break;
 
 	case ASM_EXTERN:
@@ -948,14 +946,13 @@ do_get_global:
 #endif /* !EXEC_SAFE */
 do_get_module_object:
 		DeeModule_LockWrite(mod);
-		real_result = mod->mo_globalv[imm_val]; /* Inherit reference. */
-		if (real_result != oldvalue) {
+		if (mod->mo_globalv[imm_val] != oldvalue) {
 			DeeModule_LockEndWrite(mod);
 			goto nope;
 		}
-		mod->mo_globalv[imm_val] = newvalue; /* Inherit reference. */
+		mod->mo_globalv[imm_val] = newvalue; /* Inherit reference (x2). */
 		DeeModule_LockEndWrite(mod);
-		Dee_XDecref(real_result);
+		Dee_XDecref(oldvalue);
 		break;
 
 	case ASM_LOCAL:
@@ -969,11 +966,10 @@ do_get_local:
 #else /* EXEC_SAFE */
 		ASSERT(imm_val < code->co_localc);
 #endif /* !EXEC_SAFE */
-		real_result = frame->cf_frame[imm_val]; /* Inherit reference. */
-		if (real_result != oldvalue)
+		if (frame->cf_frame[imm_val] != oldvalue)
 			goto nope;
-		frame->cf_frame[imm_val] = newvalue; /* Inherit reference. */
-		Dee_XDecref(real_result);
+		frame->cf_frame[imm_val] = newvalue; /* Inherit reference (x2). */
+		Dee_XDecref(oldvalue);
 		break;
 
 	case ASM_EXTENDED1:
@@ -5817,9 +5813,8 @@ do_pack_dict:
 					DISPATCH();
 				}
 
-				RAW_TARGET(ASM_ITERNEXT) {
+				TARGET(ASM_ITERNEXT, -1, +1) {
 					DREF DeeObject *iter_res;
-					ASSERT_USAGE(-1, +1);
 					iter_res = DeeObject_IterNext(TOP);
 					if unlikely(!iter_res)
 						HANDLE_EXCEPT();
@@ -5831,6 +5826,21 @@ do_pack_dict:
 					Dee_Decref(TOP);
 					TOP = iter_res; /* Inherit reference. */
 					DISPATCH();
+				}
+
+				RAW_TARGET(ASM_ENDFINALLY_EXCEPT) {
+					/* If a return value has been assigned, stop execution. */
+					if (frame->cf_result != NULL)
+						goto end_return;
+					ASSERT(except_recursion <= this_thread->t_exceptsz);
+#ifdef EXEC_SAFE
+					if (except_recursion == this_thread->t_exceptsz)
+						goto err_end_finally_except_no_exception_present;
+#else /* EXEC_SAFE */
+					ASSERTF(except_recursion != this_thread->t_exceptsz,
+					        "No active exception in `ASM_ENDFINALLY_EXCEPT'");
+#endif /* !EXEC_SAFE */
+					HANDLE_EXCEPT();
 				}
 
 				RAW_TARGET(ASM16_EXTERN)
@@ -8090,6 +8100,7 @@ err_requires_yield_code:
 err_requires_thiscall_code:
 err_invalid_argument_index:
 err_cannot_push_exception:
+err_end_finally_except_no_exception_present:
 	err_illegal_instruction(code, frame->cf_ip);
 	HANDLE_EXCEPT();
 #endif /* EXEC_SAFE */

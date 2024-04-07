@@ -164,6 +164,7 @@ DeeAsm_IsNoreturn(uint16_t instr, uint16_t code_flags) {
 	case ASM32_JMP:
 	case ASM_JMP_POP:
 	case ASM_JMP_POP_POP:
+	case ASM_ENDFINALLY_EXCEPT:
 		result = true;
 		break;
 

@@ -791,6 +791,16 @@ ast_doesnt_return(struct ast *__restrict self,
 		switch (self->a_flag & AST_FACTION_KINDMASK) {
 #define ACTION(x) case x &AST_FACTION_KINDMASK:
 
+		ACTION(AST_FACTION_STORE)
+			/* Always allowed to return when destination is a static variable initializer. */
+			if (self->a_action.a_act0->a_type == AST_SYM &&
+			    self->a_action.a_act0->a_sym->s_type == SYMBOL_TYPE_STATIC &&
+			    self->a_action.a_act0->a_sym->s_scope == self->a_action.a_act0->a_scope &&
+			    self->a_action.a_act0->a_sym->s_decl.l_file == self->a_action.a_act0->a_ddi.l_file &&
+			    self->a_action.a_act0->a_sym->s_decl.l_line == self->a_action.a_act0->a_ddi.l_line &&
+			    self->a_action.a_act0->a_sym->s_decl.l_col == self->a_action.a_act0->a_ddi.l_col)
+				return false;
+			ATTR_FALLTHROUGH
 		ACTION(AST_FACTION_CELL0)
 		ACTION(AST_FACTION_CELL1)
 		ACTION(AST_FACTION_TYPEOF)
@@ -809,7 +819,6 @@ ast_doesnt_return(struct ast *__restrict self,
 		ACTION(AST_FACTION_SUM)
 		ACTION(AST_FACTION_ANY)
 		ACTION(AST_FACTION_ALL)
-		ACTION(AST_FACTION_STORE) /* XXX: Should be fine for all cases, but technically doesn't follow normal rules, either... */
 		ACTION(AST_FACTION_ASSERT)
 		//ACTION(AST_FACTION_ASSERT_M) /* Assertion-with-message doesn't follow normal rules. */
 		ACTION(AST_FACTION_BOUNDATTR)

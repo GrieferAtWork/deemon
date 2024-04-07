@@ -41,16 +41,12 @@ PRIVATE WUNUSED NONNULL((1, 3, 4)) int
 		elem = DeeFastSeq_GetItem(seqexpr, i);
 		if (asm_allowconst(elem)) {
 			/* Use a constant prefix. */
-			int32_t cid;
-			cid = asm_newconst(elem);
-			Dee_Decref(elem);
-			if unlikely(cid < 0)
-				goto err;
 			if (asm_putddi(ddi))
-				goto err;
-			if (asm_pconst((uint16_t)cid))
-				goto err;
-			if (asm_gyield_p())
+				goto err_elem;
+			if (asm_gpush_constexpr(elem))
+				goto err_elem;
+			Dee_Decref(elem);
+			if (asm_gyield())
 				goto err;
 			continue;
 		}

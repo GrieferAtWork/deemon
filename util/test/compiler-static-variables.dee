@@ -22,14 +22,7 @@
 #if 1 /* #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 function foo() {
 	return a -> {
-		/* TODO: Once static-one-initialization is implemented, change this to:
-		 * >> static local x = a;
-		 * The compiler is supposed to ensure that the variable only
-		 * gets initialized the first time execution gets here!
-		 */
-		static local x;
-		if (x !is bound)
-			x = a;
+		static local x = a;
 		return x;
 	};
 }

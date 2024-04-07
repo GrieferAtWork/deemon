@@ -763,6 +763,7 @@ do_adjstack_optimization:
 				goto do_jmpf_unconditional;
 
 			case ASM_JMP_POP_POP & 0xff:
+			case ASM_ENDFINALLY_EXCEPT & 0xff:
 				goto do_noreturn_optimization;
 
 			case ASM16_ADJSTACK & 0xff: {
@@ -808,9 +809,18 @@ do_adjstack_optimization:
 do_basic_optimize_after_prefix:
 			if (IP_ISCJMP(after_prefix))
 				goto do_jmpf_conditional;
-			if (*after_prefix == ASM_FOREACH ||
-			    *after_prefix == ASM_FOREACH16) {
+			switch (*after_prefix) {
+			case ASM_FOREACH:
+			case ASM_FOREACH16:
 				goto do_jmpf_foreach;
+
+			case ASM_RET:
+				if (!(current_basescope->bs_flags & CODE_FYIELDING))
+					goto do_noreturn_optimization;
+				break;
+			case ASM_THROW:
+				goto do_noreturn_optimization;
+			default: break;
 			}
 			break;
 

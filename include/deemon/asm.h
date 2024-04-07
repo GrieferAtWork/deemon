@@ -1194,7 +1194,7 @@
 #define ASM_CALL_SEQ          0xf01b /* [3][-1-n,+1] `call top, [#<imm8>]'                - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific sequence type as a single argument. Used to implement sequence-initializers. */
 #define ASM_CALL_MAP          0xf01c /* [3][-1-n*2,+1] `call top, {#<imm8>*2}'            - Similar to `ASM_CALL', but pass arguments packaged in some implementation-specific Dict-style sequence type as a single argument. Used to implement mapping-initializers. */
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-#define ASM16_DEL_STATIC      0xf01d /* [2][-0,+0]   `del static <imm16>'                  - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
+#define ASM16_DEL_STATIC      0xf01d /* [4][-0,+0]   `del static <imm16>'                  - Unlink the static variable indexed by `<imm16>'. Throws an `UnboundLocal' error if the variable wasn't assigned to begin with. */
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 /*      ASM_                  0xf01d  *               --------                            - ------------------ */
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -1441,6 +1441,14 @@
 /*      ASM_                  0xf0b7  *               --------                            - ------------------ */
 #define ASM16_SETITEM_C       0xf0b8 /* [4][-2,+0]   `setitem pop, const <imm16>, pop'    - Pop a value and invoke the __setitem__ operator on stack-top, using constant slot `<imm16>' (little-endian) as key. */
 #define ASM_ITERNEXT          0xf0b9 /* [2][-1,+1]   `iternext top'                       - Replace stack-top with the result of `top.operator iter()' (Throws `Signal.StopIteration' if the iterator has been exhausted). */
+#define ASM_ENDFINALLY_EXCEPT 0xf0ba /* [2][-0,+0]   `end finally, except'                - Same as `end finally', but allowed to assume that the return register is bound, or an exception was thrown.
+                                      * >> IF IS_BOUND(REG_RESULT) THEN
+                                      * >>     RETURN();
+                                      * >> FI
+                                      * >> IF (THREAD->t_exceptsz - REG_EXCEPTION_START) > IMM8 + 1 THEN
+                                      * >>     EXCEPT();
+                                      * >> FI
+                                      * >> THROW_OR_UNDEFINED_BEHAVIOR(IllegalInstruction()); */
 /*      ASM_                  0xf0ba  *               --------                            - ------------------ */
 /*      ASM_                  0xf0bb  *               --------                            - ------------------ */
 /*      ASM_                  0xf0bc  *               --------                            - ------------------ */

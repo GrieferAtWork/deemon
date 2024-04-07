@@ -1545,10 +1545,6 @@ again:
 		struct symbol *dst_sym;
 		dst_sym = dst->a_sym;
 
-		/* Special instructions that allow a symbol prefix to specify the target. */
-		if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
-			return asm_gmov_sym_ast(dst_sym, src, dst);
-
 check_dst_sym_class:
 		switch (dst_sym->s_type) {
 
@@ -1559,77 +1555,291 @@ check_dst_sym_class:
 		case SYMBOL_TYPE_CATTR:
 			return asm_set_cattr_symbol(dst_sym, src, ddi_ast, gflags);
 
-		case SYMBOL_TYPE_STATIC:
-			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
+		case SYMBOL_TYPE_STATIC: {
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-				if (dst->a_scope != dst_sym->s_scope) {
-					/* TODO: Warn about initial store to static variable
-					 *       happening in different score than declaration. */
-				} else if (dst->a_ddi.l_file && dst_sym->s_decl.l_file &&
-				           (dst->a_ddi.l_file != dst_sym->s_decl.l_file ||
-				            dst->a_ddi.l_line != dst_sym->s_decl.l_line ||
-				            dst->a_ddi.l_col != dst_sym->s_decl.l_col)) {
-					/* TODO: Warn that only an assignment to the initial
-					 *       declaration is portable for the purpose of
-					 *       having the initializer only run once. */
+			int32_t sid;
+			bool src_contains_return;
+
+			/* Check if this is the initial declaration assignment, which gets treated special */
+			if (dst->a_scope != dst_sym->s_scope)
+				break;
+			if (dst->a_ddi.l_file != dst_sym->s_decl.l_file)
+				break;
+			if (dst->a_ddi.l_line != dst_sym->s_decl.l_line)
+				break;
+			if (dst->a_ddi.l_col != dst_sym->s_decl.l_col)
+				break;
+
+			/* In the new static variable model, the first assignment should
+			 * still only be executed *once*, however this definitely needs
+			 * a special instruction that store a value in a static *only* if
+			 * the static is currently unbound (use this to assign constants
+			 * to static variables, or expressions that can be executed many
+			 * times without side-effects)
+			 *
+			 * >> static local x = 42;
+			 * ASM:
+			 * >> push const @42                       # Value to store
+			 * >> push cmpxch static @x, unbound, pop  # Pushes true/false indicative of cmpxch success
+			 * >> pop                                  # Get rid of the true/false
+			 *
+			 * XXX: Why not have the caller assign the initial static value?
+			 *      >> push const @42
+			 *      >> push function const 1, #1  // Code has 0 refs, but allow caller to pre-assign statics
+			 *
+			 * In order to execute initializers with side-effects:
+			 * >> static local x = foo();
+			 *
+			 * ASM:
+			 * >>     push  cmpxch static @x, unbound, initializing # Pushes "true" if initialization started, "false" otherwise
+			 * >>     jf    pop, 1f
+			 * >> .Linit_except_start:
+			 * >>     call  @foo, #1
+			 * >> .Linit_except_end:
+			 * >>     pop   static @x
+			 * >> 1:
+			 * >>
+			 * >> .pushsection .cold    # Only needed if initializer can throw an exception
+			 * >> .except .Linit_except_start, .Linit_except_end, .Linit_except_entry, @finally
+			 * >> .Linit_except_entry:  # Clear "ITER_DONE" value on initialization exception
+			 * >>     del   static @x
+			 * >>     end   finally, except
+			 * >> .popsection
+			 *
+			 * NOTES:
+			 * - >> again:
+			 *   >> if (!ITER_ISOK(fo_refv[x])) {
+			 *   >>     if (!atomic_cmpxch(&fo_refv[x], NULL, ITER_DONE)) {
+			 *   >>         DeeFutex_WaitPtr(&fo_refv[x], ITER_DONE);
+			 *   >>         goto again;
+			 *   >>     }
+			 *   >>     DREF DeeObject *init = ...;
+			 *   >>     if (!init) { // For exception handler...
+			 *   >>         fo_refv[x] = NULL;              // ASM_DEL_STATIC
+			 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
+			 *   >>         HANDLE_EXCEPT();
+			 *   >>     } else { // When initializer doesn't throw an exception...
+			 *   >>         fo_refv[x] = init;              // ASM_POP_STATIC
+			 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
+			 *   >>     }
+			 *   >> }
+			 * - ASM_PUSH_STATIC and Function.__static__ implicitly handle ITER_DONE like NULL
+			 * - ASM_POP_STATIC and ASM_DEL_STATIC call `DeeFutex_WakeAll()'
+			 */
+			sid = asm_ssymid(dst_sym);
+			if unlikely(sid < 0)
+				goto err;
+
+			src_contains_return = ast_contains_return(src);
+			if (src_contains_return || ast_has_sideeffects(src)) {
+				struct asm_sym *Lalready_init;
+				/* Complicated case: must generate the full initializer. */
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_pstatic((uint16_t)sid))
+					goto err;
+				if (asm_gcmpxch_ub_lock_p())
+					goto err;
+				Lalready_init = asm_newsym();
+				if unlikely(!Lalready_init)
+					goto err;
+				if (asm_gjmp(ASM_JF, Lalready_init))
+					goto err;
+				asm_decsp();
+
+				/* Generate the initializer expression. */
+				if (!src_contains_return && ast_is_nothrow(src, true)) {
+					if (ast_genasm_one(src, ASM_G_FPUSHRES))
+						goto err;
+				} else {
+					struct asm_sym *Linit_try_except;
+					struct asm_sym *Lafter_except;
+					struct asm_sym *old_finally;
+					uint16_t i, old_finflag, guard_finflags;
+					code_addr_t guard_begin[SECTION_TEXTCOUNT];
+					code_addr_t guard_end[SECTION_TEXTCOUNT];
+					struct asm_sec *old_sect;
+					int temp;
+
+					Linit_try_except = asm_newsym();
+					if unlikely(!Linit_try_except)
+						goto err;
+
+					/* Setup code for the try-finally we're going to generate */
+					old_finflag = current_assembler.a_finflag;
+					old_finally = current_assembler.a_finsym;
+					current_assembler.a_finflag = ASM_FINFLAG_NORMAL;
+					current_assembler.a_finsym  = Linit_try_except;
+					for (i = 0; i < SECTION_TEXTCOUNT; ++i)
+						guard_begin[i] = asm_secip(i);
+
+					/* Do the actual push of the initializer. */
+					temp = ast_genasm_one(src, ASM_G_FPUSHRES);
+
+					/* Restore state. */
+					guard_finflags = current_assembler.a_finflag;
+					current_assembler.a_finsym  = old_finally;
+					current_assembler.a_finflag = old_finflag;
+					if (temp)
+						goto err;
+					for (i = 0; i < SECTION_TEXTCOUNT; ++i)
+						guard_end[i] = asm_secip(i);
+					for (i = 0; i < SECTION_TEXTCOUNT; ++i) {
+						ASSERT(guard_begin[i] <= guard_end[i]);
+						if (guard_begin[i] != guard_end[i]) {
+							struct asm_exc *hand;
+							struct asm_sym *except_begin;
+							struct asm_sym *except_end;
+							except_begin = asm_newsym();
+							if unlikely(!except_begin)
+								goto err;
+							except_end = asm_newsym();
+							if unlikely(!except_end)
+								goto err;
+							except_begin->as_sect = i;
+							except_end->as_sect   = i;
+							except_begin->as_stck = ASM_SYM_STCK_INVALID;
+							except_end->as_stck   = ASM_SYM_STCK_INVALID;
+							except_begin->as_hand = current_assembler.a_handlerc;
+							except_end->as_hand   = current_assembler.a_handlerc;
+							except_begin->as_addr = guard_begin[i];
+							except_end->as_addr   = guard_end[i];
+							hand = asm_newexc();
+							if unlikely(!hand)
+								goto err;
+							hand->ex_mask  = NULL;
+							hand->ex_start = except_begin;
+							hand->ex_end   = except_end;
+							hand->ex_addr  = Linit_try_except;
+							hand->ex_flags = EXCEPTION_HANDLER_FFINALLY;
+							++except_begin->as_used;
+							++except_end->as_used;
+							++Linit_try_except->as_used;
+							current_basescope->bs_flags |= CODE_FFINALLY;
+						}
+					}
+
+					/* Set-up context for the except case. */
+					old_sect = current_assembler.a_sect;
+					current_assembler.a_curr = &current_assembler.a_sect[SECTION_COLD];
+					Lafter_except = NULL;
+					if (old_sect == current_assembler.a_curr) {
+						Lafter_except = asm_newsym();
+						if unlikely(!Lafter_except)
+							goto err;
+						if unlikely(asm_gjmp(ASM_JMP, Lafter_except))
+							goto err;
+					}
+					asm_decsp();
+					if (guard_finflags & ASM_FINFLAG_USED) {
+						asm_incsp();
+						asm_incsp();
+					}
+					asm_defsym(Linit_try_except);
+					if (asm_putddi(ddi_ast))
+						goto err;
+					if unlikely(asm_gdel_static((uint16_t)sid))
+						goto err;
+					if (guard_finflags & ASM_FINFLAG_USED) {
+						if unlikely(asm_gendfinally())
+							goto err;
+						if (asm_gjmp_pop_pop())
+							goto err;
+					} else {
+						if unlikely(asm_gendfinally_except())
+							goto err;
+					}
+
+					/* Restore context for the non-except case. */
+					current_assembler.a_curr = old_sect;
+					asm_incsp();
+					if (Lafter_except)
+						asm_defsym(Lafter_except);
 				}
 
-				/* TODO: In the new static variable model, the first assignment should
-				 *       still only be executed *once*, however this definitely needs
-				 *       a special instruction that store a value in a static *only* if
-				 *       the static is currently unbound (use this to assign constants
-				 *       to static variables, or expressions that can be executed many
-				 *       times without side-effects)
-				 * >> static local x = 42;
-				 * ASM:
-				 * >> push const @42                       # Value to store
-				 * >> push cmpxch static @x, unbound, pop  # Pushes true/false indicative of cmpxch success
-				 * >> pop                                  # Get rid of the true/false
-				 * XXX: Why not have the caller assign the initial static value?
-				 *      >> push const @42
-				 *      >> push function const 1, #1  // Code has 0 refs, but allow caller to pre-assign statics
+				/* Store initializer result into the static variable. */
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_gpop_static((uint16_t)sid))
+					goto err;
+
+				/* This is where we jump when the static was already initialized. */
+				asm_defsym(Lalready_init);
+				if (PUSH_RESULT) {
+					if (asm_putddi(dst))
+						goto err;
+					if (asm_gpush_static((uint16_t)sid))
+						goto err;
+				}
+				return 0;
+			}
+
+			/* Simple case: can always construct the initializer and
+			 *              assign it if it hasn't been assigned already. */
+			if (!(current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) &&
+			    !ast_is_nothrow(src, true)) {
+				/* Source expression has no side-effects, but can throw.
 				 *
-				 * In order to execute initializers with side-effects:
-				 * >> static local x = foo();
+				 * This probably means that the initialize needs to construct
+				 * a new object (even though that constructor has no observable
+				 * side-effects). But for the sake of performance, we don't
+				 * want to create an object every time, only to throw it away
+				 * most of the time.
 				 *
-				 * ASM:
-				 * >>     push  cmpxch static @x, unbound, initializing # Pushes "true" if initialization started, "false" otherwise
-				 * >>     jf    pop, 1f
-				 * >> .Linit_except_start:
-				 * >>     call  @foo, #1
-				 * >> .Linit_except_end:
-				 * >>     pop   static @x
-				 * >> 1:
-				 * >>
-				 * >> .pushsection .cold    # Only needed if initializer can throw an exception
-				 * >> .except .Linit_except_start, .Linit_except_end, .Linit_except_entry, @finally
-				 * >> .Linit_except_entry:  # Clear "ITER_DONE" value on initialization exception
-				 * >>     del   static @x
-				 * >>     end   finally
-				 * >>     throw except      # Shouldn't get here, but satisfies peephole and code integrity checks
-				 * >> .popsection
-				 *
-				 * NOTES:
-				 * - >> again:
-				 *   >> if (!ITER_ISOK(fo_refv[x])) {
-				 *   >>     if (!atomic_cmpxch(&fo_refv[x], NULL, ITER_DONE)) {
-				 *   >>         DeeFutex_WaitPtr(&fo_refv[x], ITER_DONE);
-				 *   >>         goto again;
-				 *   >>     }
-				 *   >>     DREF DeeObject *init = ...;
-				 *   >>     if (!init) { // For exception handler...
-				 *   >>         fo_refv[x] = NULL;              // ASM_DEL_STATIC
-				 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
-				 *   >>         HANDLE_EXCEPT();
-				 *   >>     } else { // When initializer doesn't throw an exception...
-				 *   >>         fo_refv[x] = init;              // ASM_POP_STATIC
-				 *   >>         DeeFutex_WakeAll(&fo_refv[x]);
-				 *   >>     }
-				 *   >> }
-				 * - ASM_PUSH_STATIC and Function.__static__ must imply handle ITER_DONE like NULL
-				 * - ASM_POP_STATIC and ASM_DEL_STATIC must call `DeeFutex_WakeAll()'
-				 */
+				 * As such, generate code like this:
+				 * >>     push   bound static @x
+				 * >>     jt     pop, 1f
+				 * >>     push   @initializer
+				 * >>     push   cmpxch static @x, unbound, pop
+				 * >>     pop
+				 * >> 1: */
+				struct asm_sym *Lalready_init;
+				Lalready_init = asm_newsym();
+				if unlikely(!Lalready_init)
+					goto err;
+				if (asm_putddi(dst))
+					goto err;
+				if (asm_gpush_bnd_static((uint16_t)sid))
+					goto err;
+				if (asm_gjmp(ASM_JT, Lalready_init))
+					goto err;
+				asm_decsp();
+				if (ast_genasm_one(src, ASM_G_FPUSHRES))
+					goto err;
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_pstatic((uint16_t)sid))
+					goto err;
+				if (asm_gcmpxch_ub_pop_p())
+					goto err;
+				if (asm_gpop())
+					goto err;
+				asm_defsym(Lalready_init);
+				if (PUSH_RESULT) {
+					if (asm_putddi(dst))
+						goto err;
+					if (asm_gpush_static((uint16_t)sid))
+						goto err;
+				}
+				return 0;
+			}
+			if (ast_genasm_one(src, ASM_G_FPUSHRES))
+				goto err;
+			if (asm_putddi(ddi_ast))
+				goto err;
+			if (PUSH_RESULT) {
+				if (asm_gdup())
+					goto err;
+			}
+			if (asm_pstatic((uint16_t)sid))
+				goto err;
+			if (asm_gcmpxch_ub_pop_p())
+				goto err;
+			if (asm_gpop())
+				goto err;
+			return 0;
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
 				int32_t sid;
 				/* Special case: Unallocated static variable
 				 * > The first assignment is used as the static initializer */
@@ -1702,14 +1912,16 @@ check_dst_sym_class:
 				 * >>     throw except // Shouldn't get here, but satisfies peephole and code integrity checks
 				 */
 				/* TODO */
-#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
-			break;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+		}	break;
 
 		case SYMBOL_TYPE_GLOBAL:
 		case SYMBOL_TYPE_EXTERN:
 		case SYMBOL_TYPE_LOCAL:
 		case SYMBOL_TYPE_STACK:
+			if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
+				return asm_gmov_sym_ast(dst_sym, src, dst);
 			if (ast_genasm(src, ASM_G_FPUSHRES))
 				goto err;
 			if (PUSH_RESULT) {
@@ -1724,6 +1936,11 @@ check_dst_sym_class:
 
 		default: break;
 		}
+
+		/* Special instructions that allow a symbol prefix to specify the target. */
+		if (!PUSH_RESULT && asm_can_prefix_symbol(dst_sym))
+			return asm_gmov_sym_ast(dst_sym, src, dst);
+
 		if (src->a_type == AST_SYM && !PUSH_RESULT &&
 		    asm_can_prefix_symbol_for_read(src->a_sym)) {
 			int32_t symid;

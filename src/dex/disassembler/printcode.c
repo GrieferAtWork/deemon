@@ -113,6 +113,17 @@ struct textjumps {
 	size_t           tj_max; /* The max number of non-abstract overlapping jumps that are ever concurrently active. */
 };
 
+PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+textjumps_istarget(struct textjumps const *__restrict self,
+                   code_addr_t addr) {
+	size_t i;
+	for (i = 0; i < self->tj_cnt; ++i) {
+		if (self->tj_vec[i].tj_target == addr)
+			return true;
+	}
+	return false;
+}
+
 PRIVATE ATTR_NOINLINE int DCALL
 textjumps_add(struct textjumps *__restrict self,
               code_addr_t origin, code_addr_t target) {
@@ -129,7 +140,7 @@ textjumps_add(struct textjumps *__restrict self,
 		if unlikely(!newvec) {
 			newalloc = self->tj_cnt + 1;
 			newvec = (struct textjump *)Dee_Reallocc(self->tj_vec, newalloc,
-			                                           sizeof(struct textjump));
+			                                         sizeof(struct textjump));
 			if unlikely(!newvec)
 				goto err;
 		}
@@ -828,14 +839,6 @@ get_next_instruction_without_stack:
 			}
 			next = DeeAsm_NextInstrSp(iter, &new_stacksz);
 		}
-		if (!(flags & PCODE_FNOSKIPDELOP)) {
-			while (*iter == ASM_DELOP) {
-				if (next >= instr_end)
-					goto done;
-				iter = next;
-				next = DeeAsm_NextInstr(iter);
-			}
-		}
 		/* Print jump labels */
 		if (!(flags & PCODE_FNOLABELS) && code) {
 			size_t i;
@@ -939,6 +942,15 @@ prefix_except_prefix:
 			}
 		}
 #endif
+
+		/* Skip DELOP opcodes if they aren't jump targets. */
+		if (!(flags & PCODE_FNOSKIPDELOP) && *iter == ASM_DELOP && 0) {
+			if (flags & PCODE_FNOJUMPARROW)
+				continue;
+			if (!textjumps_istarget(&jumps, code_ip))
+				continue;
+		}
+
 		if (prefix_len)
 			print(line_prefix, prefix_len);
 

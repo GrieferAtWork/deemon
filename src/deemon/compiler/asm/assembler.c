@@ -2540,10 +2540,10 @@ INTERN WUNUSED NONNULL((2)) int
 	case ASM_JF: {
 		struct asm_sym *temp;
 		/* >>    jnc       1f
-			 * >>    adjstack #target.sp
-			 * >>    jmp       target.ip
-			 * >>1:
-			 */
+		 * >>    adjstack #target.sp
+		 * >>    jmp       target.ip
+		 * >>1:
+		 */
 		if unlikely((temp = asm_newsym()) == NULL)
 			goto err;
 		if unlikely(asm_do_gjmp(ASM_JX_NOT(instr), temp))
@@ -2562,12 +2562,12 @@ INTERN WUNUSED NONNULL((2)) int
 		struct asm_sym *temp1;
 		struct asm_sym *temp2;
 		/* >>    foreach   1f
-			 * >>    jmp       2f
-			 * >>1:  adjstack #target.sp
-			 * >>    jmp       target.ip
-			 * >>2:
-			 * NOTE: If the adjstack offset turns out to be
-			 *       zero, peephole can fully optimize this! */
+		 * >>    jmp       2f
+		 * >>1:  adjstack #target.sp
+		 * >>    jmp       target.ip
+		 * >>2:
+		 * NOTE: If the adjstack offset turns out to be
+		 *       zero, peephole can fully optimize this! */
 		if unlikely((temp1 = asm_newsym()) == NULL)
 			goto err;
 		if unlikely((temp2 = asm_newsym()) == NULL)
@@ -3489,6 +3489,10 @@ do_savearg:
 			asm_delunusedsyms();
 	}
 
+	/* Merge ref + static variables. */
+	if unlikely(asm_mergestatic())
+		goto err;
+
 	/* Keep shrinking `jmp', deleting DELOP instructions
 	 * and doing peephole optimizations while possible. */
 	for (;;) {
@@ -3531,10 +3535,6 @@ do_savearg:
 		if (DeeThread_CheckInterrupt())
 			goto err;
 	}
-
-	/* Merge ref + static variables. */
-	if unlikely(asm_mergestatic())
-		goto err;
 
 	/* Apply constant relocations. */
 	if unlikely(asm_applyconstrel())

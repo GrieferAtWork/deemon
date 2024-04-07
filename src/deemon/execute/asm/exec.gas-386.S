@@ -1557,6 +1557,20 @@ target_endfinally_n:
 	             *       goto .disp; */
 	jmp    .except
 
+target_endfinally_except:
+	/* Check if a return value has been assigned.
+	 * If one has been, stop execution. */
+	cmpl   $0, FRAME_RESULT
+	jne   .end_return
+
+	/* Otherwise, an exception *must* be present */
+#ifndef NDEBUG
+	movl   L_THIS_THREAD, %eax
+	movw   t_exceptsz(%eax), %ax
+	ASSERT_BELOW(%ax, L_EXCEPT_RECURSION)
+#endif /* !NDEBUG */
+	jmp    .except
+
 
 
 target_push_this_module:
@@ -10163,6 +10177,9 @@ prefix_target16_setitem_c = prefix_invop
 .ifndef prefix_target_iternext
 prefix_target_iternext = prefix_invop
 .endif
+.ifndef prefix_target_endfinally_except
+prefix_target_endfinally_except = prefix_invop
+.endif
 .ifndef prefix_target_getmember
 prefix_target_getmember = prefix_invop
 .endif
@@ -11388,7 +11405,7 @@ inst_table_f0:
 	.long invop
 	.long target16_setitem_c             /* 0xb8 : `setitem pop, const <imm16>, pop' */
 	.long target_iternext                /* 0xb9 : `iternext top' */
-	.long invop
+	.long target_endfinally_except       /* 0xba : `end finally, except' */
 	.long invop
 	.long invop
 	.long invop
@@ -11904,7 +11921,7 @@ prefix_inst_table_f0:
 	.long prefix_invop
 	.long prefix_target16_setitem_c             /* 0xb8 : `setitem pop, const <imm16>, pop' */
 	.long prefix_target_iternext                /* 0xb9 : `iternext top' */
-	.long prefix_invop
+	.long prefix_target_endfinally_except       /* 0xba : `end finally, except' */
 	.long prefix_invop
 	.long prefix_invop
 	.long prefix_invop
