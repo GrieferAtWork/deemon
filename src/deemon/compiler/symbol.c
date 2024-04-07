@@ -405,6 +405,12 @@ again:
 	case SYMBOL_TYPE_GETSET:
 		return true;
 
+	case SYMBOL_TYPE_STATIC:
+		/* Static variables are visible beyond the relevant function
+		 * call, meaning they *always* have side-effects and can't be
+		 * optimized away. */
+		return true;
+
 	default: break;
 	}
 	return false;

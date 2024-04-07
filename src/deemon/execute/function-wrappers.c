@@ -278,6 +278,7 @@ PRIVATE struct type_cmp funcstaticsiter_cmp = {
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_ge,
+	/* .tp_nii  = */ &funcstaticsiter_nii,
 };
 
 PRIVATE struct type_getset tpconst funcstaticsiter_getsets[] = {
