@@ -1637,6 +1637,32 @@ librt_get_ReBytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(a
 }
 
 
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionStatics_impl_f(void) {
+	DREF DeeObject *result;
+	DREF DeeObject *empty_function = DeeObject_NewDefault(&DeeFunction_Type);
+	if unlikely(!empty_function)
+		goto err;
+	result = DeeObject_GetAttrString(empty_function, "__statics__");
+	Dee_Decref(empty_function);
+	return get_type_of(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionStatics_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_FunctionStatics_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionStaticsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_FunctionStatics_impl_f());
+}
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+
+
 
 
 PRIVATE DEFINE_CMETHOD(librt_get_SeqCombinations, &librt_get_SeqCombinations_f, METHOD_FCONSTCALL);
@@ -1802,7 +1828,10 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReBytesLocateAll, &librt_get_ReBytesLocateAll_f
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesLocateAllIterator, &librt_get_ReBytesLocateAllIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplit, &librt_get_ReBytesSplit_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplitIterator, &librt_get_ReBytesSplitIterator_f, METHOD_FCONSTCALL);
-
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -2313,6 +2342,13 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },               /* `Attribute' */
 	{ "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },                 /* `enumattr' */
 	{ "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
+
+
+	/* Function wrapper types */
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
+	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
+#endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	{ NULL }
 };
