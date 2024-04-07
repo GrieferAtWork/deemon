@@ -3880,6 +3880,17 @@ target_extend:
 	decref %eax      /* Drop a reference from the old object in TOP. */
 	jmp    .disp
 .endm
+.macro define_unary_inherited_op target, function
+\target:
+	pushl  TOP
+	ADJUST_CFA_OFFSET(4)
+	call   \function
+	ADJUST_CFA_OFFSET(-4)
+	testl  %eax, %eax
+	jz     .except   /* Check for errors. */
+	movl   %eax, TOP /* Store EAX in TOP. */
+	jmp    .disp
+.endm
 .macro define_binary_op, target, function
 \target:
 	pushl  FIRST
@@ -3898,10 +3909,10 @@ target_extend:
 
 /* Object control operators. */
 define_unary_op target_cast_tuple, fSYM(DeeTuple_FromSequence,4)
-define_unary_op target_cast_list, fSYM(DeeList_FromSequence,4)
-define_unary_op target_cast_hashset, fSYM(DeeHashSet_FromSequence,4)
-define_unary_op target_cast_dict, fSYM(DeeDict_FromSequence,4)
-define_unary_op target_cast_varkwds, fSYM(DeeKw_Wrap,4)
+define_unary_inherited_op target_cast_list, fSYM(DeeList_FromSequenceInherited,4)
+define_unary_inherited_op target_cast_hashset, fSYM(DeeHashSet_FromSequenceInherited,4)
+define_unary_inherited_op target_cast_dict, fSYM(DeeDict_FromSequenceInherited,4)
+define_unary_inherited_op target_cast_varkwds, fSYM(DeeKw_WrapInherited,4)
 define_unary_op target_str, fSYM(DeeObject_Str,4)
 define_unary_op target_copy, fSYM(DeeObject_Copy,4)
 define_unary_op target_deepcopy, fSYM(DeeObject_DeepCopy,4)

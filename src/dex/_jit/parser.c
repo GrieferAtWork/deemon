@@ -1153,12 +1153,11 @@ do_with_paren:
 			module_name = DeeTuple_GET(args, 0);
 		} else if (kwds) {
 			PRIVATE struct keyword kwlist[] = { K(name), KEND };
-			DREF DeeObject *fixed_kwds;
-			fixed_kwds = DeeKw_Wrap(kwds);
-			if unlikely(!fixed_kwds)
+			DREF DeeObject *temp;
+			temp = DeeKw_WrapInherited(kwds);
+			if unlikely(!temp)
 				goto err_args_kwds;
-			Dee_Decref(kwds);
-			kwds = fixed_kwds;
+			kwds = temp;
 			if (DeeArg_UnpackKw(DeeTuple_SIZE(args),
 			                    DeeTuple_ELEM(args), kwds, kwlist,
 			                    "o:__import__", &module_name))

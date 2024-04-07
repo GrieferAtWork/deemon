@@ -85,7 +85,7 @@ function sum(items...) {
 	return items + ...;
 }
 
-@@Returns the sqare of @x, that is @(x * x)
+@@Returns the square of @x, that is @(x * x)
 function sqr(x) {
 	return x * x;
 }
@@ -140,9 +140,10 @@ function zip(seqs...: Sequence): {Sequence...} {
 	).frozen;
 	try {
 		for (;;) {
-			yield Tuple(
+			yield (
 				for (local it: iterators)
-					it.operator next());
+					it.operator next()
+			).frozen;
 		}
 	} catch (Signal.StopIteration) {
 	}

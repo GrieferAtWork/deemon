@@ -89,12 +89,12 @@
 #include <math.h>
 #else /* CONFIG_HAVE_MATH_H */
 #ifdef __PREPROCESSOR_HAVE_WARNING
-#warning "Unsupported feature: `CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#warning "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
 #else /* __PREPROCESSOR_HAVE_WARNING */
-#error "Unsupported feature: `CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
+#error "Unsupported feature: `!CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS' requires a working <math.h> header"
 #endif /* !__PREPROCESSOR_HAVE_WARNING */
 #undef CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS
-#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 0
+#define CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS 1
 #endif /* !CONFIG_HAVE_MATH_H */
 #endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
@@ -1520,10 +1520,10 @@ PRIVATE digit const convmultmax_base_[35] = {
 #endif /* CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
 
 LOCAL WUNUSED DREF DeeIntObject *DCALL
-int_from_nonbinary_string(char const *__restrict begin,
+int_from_nonbinary_string(char const *__restrict start,
                           char const *__restrict end,
                           unsigned int radix,
-                          uint32_t radix_and_flags) {
+                          uint32_t flags) {
 	/* !!!DISCLAIMER!!! This function was originally taken from python,
 	 *                  but has been heavily modified since. */
 	DREF DeeIntObject *result;
@@ -1550,27 +1550,27 @@ int_from_nonbinary_string(char const *__restrict begin,
 		convwidth_base[radix] = i;
 	}
 #endif /* !CONFIG_USE_PRECALCULATED_INT_FROM_STRING_CONSTANTS */
-	size_z = (size_t)((end - begin) * log_base_BASE[radix]) + 1;
+	size_z = (size_t)((end - start) * log_base_BASE[radix]) + 1;
 	result = DeeInt_Alloc(size_z);
 	if (result == NULL)
 		goto err;
 	result->ob_size = 0;
 	convwidth   = convwidth_base[radix];
 	convmultmax = convmultmax_base[radix];
-	while (begin < end) {
+	while (start < end) {
 		c = 0;
-		for (i = 0; i < convwidth && begin < end; ++i, ++begin) {
+		for (i = 0; i < convwidth && start < end; ++i, ++start) {
 			digit dig;
 			char ch;
 parse_ch:
-			ch = *begin;
+			ch = *start;
 			if (DeeUni_AsDigit(ch, 16, &dig)) {
 				/* ... */
 			} else if ((unsigned char)ch >= 0x80) {
 				/* Unicode character? */
 				uint32_t uni;
 				struct unitraits *traits;
-				uni    = unicode_readutf8_n(&begin, end);
+				uni    = unicode_readutf8_n(&start, end);
 				traits = DeeUni_Descriptor(uni);
 				if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 					dig = traits->ut_digit_idx;
@@ -1578,34 +1578,34 @@ parse_ch:
 						dig = DeeUni_GetNumericIdx8((uint8_t)dig);
 				} else {
 					if (uni != '\\') {
-						if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS))
+						if (ch == '_' && !(flags & DEEINT_STRING_FNOSEPS))
 							goto do_skip_char;
 						goto invalid_r;
 					}
 					goto handle_backslash_in_text;
 				}
-				--begin; /* Account for the additional `++begin' inside of for-advance */
+				--start; /* Account for the additional `++start' inside of for-advance */
 			} else if (ch != '\\') {
-				if (ch == '_' && !(radix_and_flags & DEEINT_STRING_FNOSEPS)) {
+				if (ch == '_' && !(flags & DEEINT_STRING_FNOSEPS)) {
 do_skip_char:
-					++begin;
+					++start;
 					goto parse_ch;
 				}
 				goto invalid_r;
 			} else {
 handle_backslash_in_text:
-				if (!(radix_and_flags & DEEINT_STRING_FESCAPED))
+				if (!(flags & DEEINT_STRING_FESCAPED))
 					goto invalid_r;
-				if (begin >= end - 2)
+				if (start >= end - 2)
 					goto invalid_r;
-				if (begin[1] == '\n') {
-					begin += 2;
+				if (start[1] == '\n') {
+					start += 2;
 					goto parse_ch;
 				}
-				if (begin[1] == '\r') {
-					begin += 2;
-					if (begin < end && *begin == '\n')
-						++begin;
+				if (start[1] == '\r') {
+					start += 2;
+					if (start < end && *start == '\n')
+						++start;
 					goto parse_ch;
 				}
 				goto invalid_r;
@@ -1668,7 +1668,7 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	bool negative      = false;
 	DREF DeeIntObject *result;
 	char const *iter;
-	char const *begin = str;
+	char const *start = str;
 	char const *end   = str + len;
 	digit *dst;
 	twodigits number;
@@ -1676,24 +1676,24 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	uint8_t bits_per_digit;
 
 	/* Parse a sign prefix. */
-	for (;; ++begin) {
-		if (begin == end)
+	for (;; ++start) {
+		if (start >= end)
 			goto invalid;
-		if (*begin == '+')
+		if (*start == '+')
 			continue;
-		if (*begin == '-') {
+		if (*start == '-') {
 			negative = !negative;
 			continue;
 		}
-		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
-			char const *new_begin = begin + 1;
+			char const *new_begin = start + 1;
 			begin_plus_one = unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
-				begin = new_begin;
+				start = new_begin;
 				if (begin_plus_one == '\r' &&
-				    *begin == '\n')
-					++begin;
+				    *start == '\n')
+					++start;
 				continue;
 			}
 		}
@@ -1701,42 +1701,44 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 	}
 	if (!radix) {
 		/* Automatically determine the radix. */
-		char const *old_begin = begin;
+		char const *old_begin = start;
 		uint32_t leading_zero;
-		leading_zero = unicode_readutf8_n(&begin, end);
+		leading_zero = unicode_readutf8_n(&start, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
-			if (begin == end) /* Special case: int(0) */
+			if (start >= end) /* Special case: int(0) */
 				return_reference_(DeeInt_Zero);
-			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
-				char const *new_begin = begin + 1;
+				char const *new_begin = start + 1;
 				begin_plus_one = unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
-					begin = new_begin;
+					start = new_begin;
 					if (begin_plus_one == '\r' &&
-					    *begin == '\n')
-						++begin;
+					    *start == '\n')
+						++start;
 					continue;
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X') {
-				radix = 16, ++begin;
-			} else if (*begin == 'b' || *begin == 'B') {
-				radix = 2, ++begin;
+			if (*start == 'x' || *start == 'X') {
+				radix = 16;
+				++start;
+			} else if (*start == 'b' || *start == 'B') {
+				radix = 2;
+				++start;
 			} else {
 				radix = 8;
 			}
 		} else {
-			begin = old_begin;
+			start = old_begin;
 			radix = 10;
 		}
 	}
-	if unlikely(begin == end)
+	if unlikely(start >= end)
 		goto invalid;
 	ASSERT(radix >= 2);
 	if ((radix & (radix - 1)) != 0) {
-		result = int_from_nonbinary_string(begin, end, radix, radix_and_flags);
+		result = int_from_nonbinary_string(start, end, radix, radix_and_flags);
 		/* Check for errors. */
 		if unlikely(!ITER_ISOK(result)) {
 			if unlikely(result == (DREF DeeIntObject *)ITER_DONE)
@@ -1762,25 +1764,25 @@ DeeInt_FromString(/*utf-8*/ char const *__restrict str,
 
 		/* Parse the integer starting with the least significant bits. */
 		iter = end;
-		while (iter > begin) {
+		while (iter > start) {
 			uint32_t ch;
 			digit dig;
 			struct unitraits *traits;
-			ch     = unicode_readutf8_rev_n(&iter, begin);
+			ch     = unicode_readutf8_rev_n(&iter, start);
 			traits = DeeUni_Descriptor(ch);
 			if (traits->ut_flags & (UNICODE_ISNUMERIC | Dee_UNICODE_ISHEX)) {
 				dig = traits->ut_digit_idx;
 				if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 					dig = DeeUni_GetNumericIdx8((uint8_t)dig);
 			} else if (DeeUni_IsLF(ch) && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
-				if (iter == begin)
+				if (iter == start)
 					goto invalid_r;
 				if (iter[-1] == '\\') {
 					--iter;
 					continue;
 				}
 				if (iter[-1] == '\r' && ch == '\n' &&
-				    iter - 1 != begin && iter[-2] == '\\') {
+				    iter - 1 != start && iter[-2] == '\\') {
 					iter -= 2;
 					continue;
 				}
@@ -1838,28 +1840,28 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 	bool negative      = false;
 	DREF DeeIntObject *result;
 	char const *iter;
-	char const *begin = str;
+	char const *start = str;
 	char const *end = str + len;
 	digit *dst;
 	twodigits number;
 	uint8_t num_bits;
 	uint8_t bits_per_digit;
 	/* Parse a sign prefix. */
-	for (;; ++begin) {
-		if (begin == end)
+	for (;; ++start) {
+		if (start >= end)
 			goto invalid;
-		if (*begin == '+')
+		if (*start == '+')
 			continue;
-		if (*begin == '-') {
+		if (*start == '-') {
 			negative = !negative;
 			continue;
 		}
-		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
-			char begin_plus_one = begin[1];
+		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			char begin_plus_one = start[1];
 			if (DeeUni_IsLF(begin_plus_one)) {
-				begin += 2;
-				if (begin_plus_one == '\r' && begin[0] == '\n')
-					++begin;
+				start += 2;
+				if (begin_plus_one == '\r' && start[0] == '\n')
+					++start;
 				continue;
 			}
 		}
@@ -1867,27 +1869,27 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 	}
 	if (!radix) {
 		/* Automatically determine the radix. */
-		char leading_zero = *begin;
+		char leading_zero = *start;
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
-			++begin;
-			if (begin == end) /* Special case: int(0) */
+			++start;
+			if (start >= end) /* Special case: int(0) */
 				return_reference_(DeeInt_Zero);
-			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
-				char begin_plus_one = begin[1];
+			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+				char begin_plus_one = start[1];
 				if (DeeUni_IsLF(begin_plus_one)) {
-					begin += 2;
-					if (begin_plus_one == '\r' && begin[0] == '\n')
-						++begin;
+					start += 2;
+					if (begin_plus_one == '\r' && start[0] == '\n')
+						++start;
 					continue;
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X') {
+			if (*start == 'x' || *start == 'X') {
 				radix = 16;
-				++begin;
-			} else if (*begin == 'b' || *begin == 'B') {
+				++start;
+			} else if (*start == 'b' || *start == 'B') {
 				radix = 2;
-				++begin;
+				++start;
 			} else {
 				radix = 8;
 			}
@@ -1895,11 +1897,11 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 			radix = 10;
 		}
 	}
-	if unlikely(begin == end)
+	if unlikely(start >= end)
 		goto invalid;
 	ASSERT(radix >= 2);
 	if ((radix & (radix - 1)) != 0) {
-		result = int_from_nonbinary_string(begin, end, radix, radix_and_flags);
+		result = int_from_nonbinary_string(start, end, radix, radix_and_flags);
 		/* Check for errors. */
 		if unlikely(!ITER_ISOK(result)) {
 			if unlikely(result == (DREF DeeIntObject *)ITER_DONE)
@@ -1923,7 +1925,7 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 		number = 0, num_bits = 0;
 		/* Parse the integer starting with the least significant bits. */
 		iter = end;
-		while (iter > begin) {
+		while (iter > start) {
 			char ch;
 			digit dig;
 			ch = *--iter;
@@ -1956,14 +1958,14 @@ DeeInt_FromAscii(/*ascii*/ char const *__restrict str,
 handle_linefeed_in_text:
 				if (!(radix_and_flags & DEEINT_STRING_FESCAPED))
 					goto invalid_r;
-				if (iter == begin)
+				if (iter == start)
 					goto invalid_r;
 				if (iter[-1] == '\\') {
 					--iter;
 					continue;
 				}
 				if (iter[-1] == '\r' && ch == '\n' &&
-				    iter - 1 != begin && iter[-2] == '\\') {
+				    iter - 1 != start && iter[-2] == '\\') {
 					iter -= 2;
 					continue;
 				}
@@ -2012,30 +2014,30 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
                    int64_t *__restrict value) {
 	unsigned int radix = radix_and_flags >> DEEINT_STRING_RSHIFT;
 	char const *iter;
-	char const *begin = str;
+	char const *start = str;
 	char const *end   = str + len;
 	bool negative = false;
 	uint64_t result;
 
 	/* Parse a sign prefix. */
-	for (;; ++begin) {
-		if (begin == end)
+	for (;; ++start) {
+		if (start >= end)
 			goto err_invalid;
-		if (*begin == '+')
+		if (*start == '+')
 			continue;
-		if (*begin == '-') {
+		if (*start == '-') {
 			negative = !negative;
 			continue;
 		}
-		if (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+		if (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 			uint32_t begin_plus_one;
-			char const *new_begin = begin + 1;
+			char const *new_begin = start + 1;
 			begin_plus_one = unicode_readutf8_n(&new_begin, end);
 			if (DeeUni_IsLF(begin_plus_one)) {
-				begin = new_begin;
+				start = new_begin;
 				if (begin_plus_one == '\r' &&
-				    *begin == '\n')
-					++begin;
+				    *start == '\n')
+					++start;
 				continue;
 			}
 		}
@@ -2050,67 +2052,67 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 	if (!radix) {
 		/* Automatically determine the radix. */
 		uint32_t leading_zero;
-		char const *old_begin = begin;
-		leading_zero = unicode_readutf8_n(&begin, end);
+		char const *old_begin = start;
+		leading_zero = unicode_readutf8_n(&start, end);
 		if (DeeUni_AsDigitVal(leading_zero) == 0) {
-			if (begin == end) {
+			if (start >= end) {
 				/* Special case: int(0) */
 				*value = 0;
 				return 0;
 			}
-			while (*begin == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
+			while (*start == '\\' && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
 				uint32_t begin_plus_one;
-				char const *new_begin = begin + 1;
+				char const *new_begin = start + 1;
 				begin_plus_one = unicode_readutf8_n(&new_begin, end);
 				if (DeeUni_IsLF(begin_plus_one)) {
-					begin = new_begin;
+					start = new_begin;
 					if (begin_plus_one == '\r' &&
-					    *begin == '\n')
-						++begin;
+					    *start == '\n')
+						++start;
 					continue;
 				}
 				break;
 			}
-			if (*begin == 'x' || *begin == 'X') {
+			if (*start == 'x' || *start == 'X') {
 				radix = 16;
-				++begin;
-			} else if (*begin == 'b' || *begin == 'B') {
+				++start;
+			} else if (*start == 'b' || *start == 'B') {
 				radix = 2;
-				++begin;
+				++start;
 			} else {
 				radix = 8;
 			}
 		} else {
-			begin = old_begin;
+			start = old_begin;
 			radix = 10;
 		}
 	}
-	if unlikely(begin == end)
+	if unlikely(start >= end)
 		goto err_invalid;
 	ASSERT(radix >= 2);
 
 	/* Parse the integer starting with the least significant bits. */
 	result = 0;
 	iter   = end;
-	while (iter > begin) {
+	while (iter > start) {
 		uint32_t ch;
 		uint8_t dig;
 		struct unitraits *traits;
-		ch  = unicode_readutf8_rev_n(&iter, begin);
+		ch  = unicode_readutf8_rev_n(&iter, start);
 		traits = DeeUni_Descriptor(ch);
 		if (traits->ut_flags & (UNICODE_ISNUMERIC | UNICODE_ISHEX)) {
 			dig = traits->ut_digit_idx;
 			if unlikely(dig >= Dee_UNICODE_DIGIT_IDENTITY_COUNT)
 				dig = DeeUni_GetNumericIdx8(dig);
 		} else if (DeeUni_IsLF(ch) && (radix_and_flags & DEEINT_STRING_FESCAPED)) {
-			if (iter == begin)
+			if (iter == start)
 				goto err_invalid;
 			if (iter[-1] == '\\') {
 				--iter;
 				continue;
 			}
 			if (iter[-1] == '\r' && ch == '\n' &&
-			    iter - 1 != begin && iter[-2] == '\\') {
+			    iter - 1 != start && iter[-2] == '\\') {
 				iter -= 2;
 				continue;
 			}
@@ -4432,7 +4434,7 @@ err_neg:
 INTERN WUNUSED NONNULL((1)) DREF DeeIntObject *DCALL
 int_get_ffs(DeeIntObject *__restrict self) {
 	size_t result, i;
-	if likely(self->ob_size == 0)
+	if (self->ob_size == 0)
 		return_reference_((DeeIntObject *)DeeInt_Zero);
 	result = 1;
 	for (i = 0;; ++i) {
@@ -4551,11 +4553,11 @@ int_get_nth(DeeIntObject *__restrict self) {
 	switch (self->ob_size) {
 	case -1:
 		if (self->ob_digit[0] >= 1 && self->ob_digit[0] <= 3)
-			return_reference_(str_mNTH[self->ob_digit[0] - 1]);
+			return_reference(str_mNTH[self->ob_digit[0] - 1]);
 		break;
 	case 1:
 		if (self->ob_digit[0] >= 1 && self->ob_digit[0] <= 3)
-			return_reference_(str_pNTH[self->ob_digit[0] - 1]);
+			return_reference(str_pNTH[self->ob_digit[0] - 1]);
 		break;
 	default:
 		break;
@@ -4668,14 +4670,14 @@ PRIVATE struct type_member tpconst int_members[] = {
 /* The max sequence size is the signed value of SIZE_MAX,
  * because negative values are reserved to indicate error
  * states. */
-#if SSIZE_MAX > UINT32_MAX
-INTERN DEFINE_UINT64(int_size_max, SSIZE_MAX);
+#if SSIZE_MAX <= UINT32_MAX
+INTERN DEFINE_UINT32(int_SIZE_MAX, SSIZE_MAX);
 #else /* SSIZE_MAX > UINT32_MAX */
-INTERN DEFINE_UINT32(int_size_max, SSIZE_MAX);
+INTERN DEFINE_UINT64(int_SIZE_MAX, SSIZE_MAX);
 #endif /* SSIZE_MAX < UINT32_MAX */
 
 PRIVATE struct type_member tpconst int_class_members[] = {
-	TYPE_MEMBER_CONST_DOC("SIZE_MAX", &int_size_max,
+	TYPE_MEMBER_CONST_DOC("SIZE_MAX", &int_SIZE_MAX,
 	                      "The max value acceptable for sequence sizes, or indices\n"
 	                      "Note that despite its name, this constant is not necessarily "
 	                      /**/ "equal to the well-known C-constant of the same name, accessible "
@@ -4798,12 +4800,12 @@ PUBLIC DeeTypeObject DeeInt_Type = {
 
 	                         "/->\n"
 	                         "#tDivideByZero{The given @other is $0}"
-	                         "Divide @this by @other and return the truncated result\n"
+	                         "Floor-Divide @this by @other and return the truncated result\n"
 	                         "\n"
 
 	                         "%->\n"
 	                         "#tDivideByZero{The given @other is $0}"
-	                         "Divide @this by @other and return the remainder\n"
+	                         "Floor-Divide @this by @other and return the remainder\n"
 	                         "\n"
 
 	                         "<<(count:?.)->\n"

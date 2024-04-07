@@ -274,10 +274,6 @@ DeeList_FreeUninitialized(DREF List *__restrict self) {
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_FromSequence(DeeObject *__restrict self) {
 	DREF List *result;
-	if (DeeList_CheckExact(self)) {
-		if (!DeeObject_IsShared(self))
-			return_reference_(self);
-	}
 	result = DeeGCObject_MALLOC(List);
 	if unlikely(!result)
 		goto err;
@@ -292,6 +288,20 @@ err_r:
 err:
 	return NULL;
 }
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeList_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result;
+	if (DeeList_CheckExact(self)) {
+		if (!DeeObject_IsShared(self))
+			return self; /* Can re-use existing List object. */
+	}
+	result = DeeList_FromSequence(self);
+	if likely(result)
+		Dee_Decref(self);
+	return result;
+}
+
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeList_FromTuple(DeeObject *__restrict self) {
@@ -1329,9 +1339,9 @@ DeeList_Clear(DeeObject *__restrict self) {
 	return elemc != 0;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) dssize_t DCALL
-DeeList_PrintRepr(DeeObject *__restrict self,
-                  dformatprinter printer, void *arg) {
+PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+list_printrepr(DeeObject *__restrict self,
+               dformatprinter printer, void *arg) {
 	List *me = (List *)self;
 	size_t i;
 	dssize_t temp, result = 0;
@@ -3785,7 +3795,7 @@ PUBLIC DeeTypeObject DeeList_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&list_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ &DeeList_PrintRepr
+		/* .tp_printrepr = */ &list_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&list_visit,

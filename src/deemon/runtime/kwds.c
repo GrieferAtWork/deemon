@@ -1795,6 +1795,13 @@ DeeKw_Wrap(DeeObject *__restrict kwds) {
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeKw_WrapInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict kwds) {
+	if (DeeObject_IsKw(kwds))
+		return kwds;
+	return DeeCachedDict_NewInherited(kwds);
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeKw_ForceWrap(DeeObject *__restrict kwds) {
 	return DeeCachedDict_New(kwds);
 }

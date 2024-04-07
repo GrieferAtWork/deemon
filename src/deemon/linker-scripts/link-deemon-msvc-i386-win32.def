@@ -34,6 +34,7 @@ EXPORTS
 	DeeBytes_TruncateBuffer@8=_DeeBytes_TruncateBuffer@8
 	DeeCMethod_New@8=_DeeCMethod_New@8
 	DeeCachedDict_New@4=_DeeCachedDict_New@4
+	DeeCachedDict_NewInherited@4=_DeeCachedDict_NewInherited@4
 	DeeCell_CmpXch@12=_DeeCell_CmpXch@12
 	DeeCell_Del@4=_DeeCell_Del@4
 	DeeCell_Get@4=_DeeCell_Get@4
@@ -152,6 +153,7 @@ EXPORTS
 	DeeDbg_UntrackAlloc@12=_DeeDbg_UntrackAlloc@12
 	DeeDict_FromRoDict@4=_DeeDict_FromRoDict@4
 	DeeDict_FromSequence@4=_DeeDict_FromSequence@4
+	DeeDict_FromSequenceInherited@4=_DeeDict_FromSequenceInherited@4
 	DeeDict_NewKeyItemsInherited@8=_DeeDict_NewKeyItemsInherited@8
 	DeeDict_NewWithHint@4=_DeeDict_NewWithHint@4
 	DeeError_Catch@4=_DeeError_Catch@4
@@ -311,6 +313,7 @@ EXPORTS
 	DeeHashSet_ContainsString@12=_DeeHashSet_ContainsString@12
 	DeeHashSet_FromRoSet@4=_DeeHashSet_FromRoSet@4
 	DeeHashSet_FromSequence@4=_DeeHashSet_FromSequence@4
+	DeeHashSet_FromSequenceInherited@4=_DeeHashSet_FromSequenceInherited@4
 	DeeHashSet_Insert@8=_DeeHashSet_Insert@8
 	DeeHashSet_InsertString@12=_DeeHashSet_InsertString@12
 	DeeHashSet_NewItemsInherited@8=_DeeHashSet_NewItemsInherited@8
@@ -412,6 +415,7 @@ EXPORTS
 	DeeKw_GetItemNRStringLenHash@16=_DeeKw_GetItemNRStringLenHash@16
 	DeeKw_GetItemNRStringLenHashDef@20=_DeeKw_GetItemNRStringLenHashDef@20
 	DeeKw_Wrap@4=_DeeKw_Wrap@4
+	DeeKw_WrapInherited@4=_DeeKw_WrapInherited@4
 	DeeKwdsMapping_Decref@4=_DeeKwdsMapping_Decref@4
 	DeeKwdsMapping_New@8=_DeeKwdsMapping_New@8
 	DeeKwds_IndexOf@8=_DeeKwds_IndexOf@8
@@ -427,6 +431,7 @@ EXPORTS
 	DeeList_ExtendInherited@12=_DeeList_ExtendInherited@12
 	DeeList_FreeUninitialized@4=_DeeList_FreeUninitialized@4
 	DeeList_FromSequence@4=_DeeList_FromSequence@4
+	DeeList_FromSequenceInherited@4=_DeeList_FromSequenceInherited@4
 	DeeList_FromTuple@4=_DeeList_FromTuple@4
 	DeeList_Insert@12=_DeeList_Insert@12
 	DeeList_InsertIterator@12=_DeeList_InsertIterator@12

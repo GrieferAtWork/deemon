@@ -100,6 +100,7 @@ DeeList_NewVectorInheritedHeap2(/*inherit(on_success)*/ DREF DeeObject **objv,
 #define DeeList_New() DeeObject_NewDefault(&DeeList_Type)
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_NewWithHint(size_t n_prealloc);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeList_FromTuple(DeeObject *__restrict self);
 
 /* WARNING: The caller must start gc-tracking the list once elements are initialized. */
@@ -172,15 +173,6 @@ DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_Insert(DeeObject *self, size_t
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertIterator(DeeObject *self, size_t index, DeeObject *iterator);
 DFUNDEF WUNUSED NONNULL((1, 3)) int DCALL DeeList_InsertSequence(DeeObject *self, size_t index, DeeObject *sequence);
 DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeList_InsertVector(DeeObject *self, size_t index, size_t objc, DeeObject *const *objv);
-
-#ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeList_PrintRepr(DeeObject *__restrict self,
-                  Dee_formatprinter_t printer, void *arg);
-#else /* CONFIG_BUILDING_DEEMON */
-#define DeeList_PrintRepr(self, printer, arg) \
-	DeeObject_PrintRepr(self, printer, arg)
-#endif /* !CONFIG_BUILDING_DEEMON */
 
 
 #ifndef __INTELLISENSE__

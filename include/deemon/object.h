@@ -831,17 +831,7 @@ DFUNDEF NONNULL((1)) void DCALL DeeFatal_BadDecref(DeeObject *ob, char const *fi
 #define Dee_DecrefIfNotOne_untraced(self)  Dee_DecrefIfNotOne_untraced((DeeObject *)(self))
 #define Dee_IncrefIfNotZero_untraced(self) Dee_IncrefIfNotZero_untraced((DeeObject *)(self))
 
-#ifndef __OPTIMIZE_SIZE__
-#define DeeObject_NewRef_untraced(self) \
-	DeeObject_NewRef_untraced_inline(self)
-LOCAL NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_NewRef_untraced_inline(DeeObject *__restrict self) {
-	Dee_Incref_untraced(self);
-	return self;
-}
-#endif /* !__OPTIMIZE_SIZE__ */
-
-LOCAL WUNUSED NONNULL((1)) bool
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfNotOne_untraced)(DeeObject *__restrict self) {
 	Dee_refcnt_t refcnt;
 	do {
@@ -853,7 +843,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 	return true;
 }
 
-LOCAL WUNUSED NONNULL((1)) bool
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_IncrefIfNotZero_untraced)(DeeObject *__restrict self) {
 	Dee_refcnt_t refcnt;
 	do {
@@ -867,7 +857,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 
 #ifndef __INTELLISENSE__
 #ifndef CONFIG_NO_BADREFCNT_CHECKS
-LOCAL WUNUSED NONNULL((1)) bool
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_untraced_d)(DeeObject *__restrict self,
                                    char const *file, int line) {
 	if (!__hybrid_atomic_cmpxch(&self->ob_refcnt, 1, 0,
@@ -878,7 +868,7 @@ LOCAL WUNUSED NONNULL((1)) bool
 	return true;
 }
 #else /* !CONFIG_NO_BADREFCNT_CHECKS */
-LOCAL WUNUSED NONNULL((1)) bool
+LOCAL ATTR_ARTIFICIAL WUNUSED NONNULL((1)) bool
 (DCALL Dee_DecrefIfOne_untraced)(DeeObject *__restrict self) {
 	if (!__hybrid_atomic_cmpxch(&self->ob_refcnt, 1, 0,
 	                            __ATOMIC_SEQ_CST,
@@ -1408,13 +1398,42 @@ LOCAL ATTR_RETNONNULL ATTR_OUTS(1, 3) ATTR_INS(2, 3) DREF DeeObject **
 
 /* incref() + return `self' (may be used in type operators,
  * and receives special optimizations in some situations) */
-DFUNDEF NONNULL((1)) DREF DeeObject *(DCALL DeeObject_NewRef)(DeeObject *__restrict self);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef)(DeeObject *__restrict self);
 #ifdef CONFIG_TRACE_REFCHANGES
-DFUNDEF NONNULL((1)) DREF DeeObject *(DCALL DeeObject_NewRef_traced)(DeeObject *__restrict self, char const *file, int line);
+DFUNDEF ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef_traced)(DeeObject *__restrict self, char const *file, int line);
 #define DeeObject_NewRef(self) DeeObject_NewRef_traced(self, __FILE__, __LINE__)
 #else /* CONFIG_TRACE_REFCHANGES */
 #define DeeObject_NewRef_traced(self, file, line) DeeObject_NewRef(self)
 #endif /* !CONFIG_TRACE_REFCHANGES */
+
+
+/* Inline version of `DeeObject_NewRef()' */
+#ifndef __OPTIMIZE_SIZE__
+#undef DeeObject_NewRef_traced
+#define DeeObject_NewRef(self) DeeObject_NewRef_inline(self)
+#define DeeObject_NewRef_traced(self, file, line) \
+	DeeObject_NewRef_inline_traced(self, file, line)
+LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef_inline)(DeeObject *__restrict self) {
+	Dee_Incref(self);
+	return self;
+}
+#ifdef CONFIG_TRACE_REFCHANGES
+#define DeeObject_NewRef_inline(self) \
+	DeeObject_NewRef_inline_traced(self, __FILE__, __LINE__)
+LOCAL ATTR_ARTIFICIAL ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
+(DCALL DeeObject_NewRef_inline_traced)(DeeObject *__restrict self,
+                                       char const *file, int line) {
+	Dee_Incref_traced(self, file, line);
+	return self;
+}
+#else /* CONFIG_TRACE_REFCHANGES */
+#define DeeObject_NewRef_inline_traced(self, file, line) \
+	DeeObject_NewRef_inline(self)
+#endif /* !CONFIG_TRACE_REFCHANGES */
+#endif /* !__OPTIMIZE_SIZE__ */
 
 
 /* Callback prototype for enumerating object attributes.

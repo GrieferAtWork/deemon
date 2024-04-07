@@ -371,6 +371,19 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeDict_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result;
+	if (DeeDict_CheckExact(self)) {
+		if (!DeeObject_IsShared(self))
+			return self; /* Can re-use existing Dict object. */
+	}
+	result = DeeDict_FromSequence(self);
+	if likely(result)
+		Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeDict_FromRoDict(DeeObject *__restrict self) {
 	DREF Dict *result;
 	struct dict_item *iter, *end;

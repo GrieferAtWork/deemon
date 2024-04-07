@@ -137,7 +137,8 @@ im_callkw(InstanceMethod *self, size_t argc,
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 im_hash(InstanceMethod *__restrict self) {
-	return DeeObject_Hash(self->im_func) ^ DeeObject_Hash(self->im_this);
+	return Dee_HashCombine(DeeObject_Hash(self->im_func),
+	                       DeeObject_Hash(self->im_this));
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -389,8 +390,8 @@ PUBLIC DeeTypeObject DeeInstanceMethod_Type = {
 	/* .tp_name     = */ DeeString_STR(&str_InstanceMethod),
 	/* .tp_doc      = */ DOC("(func:?DCallable,thisarg)\n"
 	                         "Construct an object-bound instance method that can be used to invoke @func\n"
-
 	                         "\n"
+
 	                         "call(args!)->\n"
 	                         "Invoke the $func used to construct @this "
 	                         /**/ "InstanceMethod as ${func(thisarg, args...)}"),

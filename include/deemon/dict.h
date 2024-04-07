@@ -101,6 +101,7 @@ DDATDEF struct Dee_dict_item const DeeDict_EmptyItems[1];
 #define DeeDict_New() DeeObject_NewDefault(&DeeDict_Type)
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeDict_NewWithHint(size_t num_keyitems);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeDict_FromRoDict(DeeObject *__restrict self);
 
 

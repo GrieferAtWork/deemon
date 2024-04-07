@@ -46,7 +46,7 @@
 
 DECL_BEGIN
 
-PRIVATE ATTR_COLD int DCALL
+PRIVATE ATTR_COLD NONNULL((1)) int DCALL
 err_not_bidirectional(DeeObject *__restrict self) {
 	return DeeError_Throwf(&DeeError_NotImplemented,
 	                       "Iterator instance of `%k' is not bi-directional",
@@ -63,10 +63,10 @@ get_generic_attribute(DeeTypeObject *__restrict tp_self,
                       DeeObject *__restrict name);
 
 
-PRIVATE int DCALL iterator_inc(DeeObject **__restrict p_self);
-PRIVATE int DCALL iterator_dec(DeeObject **__restrict p_self);
-PRIVATE int DCALL iterator_inplace_add(DeeObject **__restrict p_self, DeeObject *countob);
-PRIVATE int DCALL iterator_inplace_sub(DeeObject **__restrict p_self, DeeObject *countob);
+PRIVATE WUNUSED NONNULL((1)) int DCALL iterator_inc(DeeObject **__restrict p_self);
+PRIVATE WUNUSED NONNULL((1)) int DCALL iterator_dec(DeeObject **__restrict p_self);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_add(DeeObject **__restrict p_self, DeeObject *countob);
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL iterator_inplace_sub(DeeObject **__restrict p_self, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_add(DeeObject *self, DeeObject *countob);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL iterator_sub(DeeObject *self, DeeObject *countob);
 
@@ -186,7 +186,7 @@ err:
 
 
 #define DEFINE_ITERATOR_COMPARE(name, op, if_same)            \
-	PRIVATE WUNUSED DREF DeeObject *DCALL                     \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL     \
 	name(DeeObject *self, DeeObject *other) {                 \
 		dssize_t mylen, otlen;                                \
 		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self))) \
@@ -238,8 +238,9 @@ err:
 	return NULL;
 }
 
-LOCAL int DCALL
-iterator_do_hasprev(DeeObject *__restrict self, struct type_nii const *__restrict nii) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+iterator_do_hasprev(DeeObject *__restrict self,
+                    struct type_nii const *__restrict nii) {
 	DREF DeeObject *temp;
 	int error;
 	if (nii->nii_common.nii_hasprev)
@@ -267,14 +268,6 @@ err:
 	return NULL;
 }
 
-INTDEF DeeIntObject int_size_max;
-#if SSIZE_MIN < INT32_MIN
-INTERN DEFINE_INT64(int_size_min, SSIZE_MIN);
-#else /* SSIZE_MIN < INT32_MIN */
-INTERN DEFINE_INT32(int_size_min, SSIZE_MIN);
-#endif /* SSIZE_MIN >= INT32_MIN */
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iterator_rewind(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, ":rewind"))
@@ -286,10 +279,10 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_do_revert(DeeObject *__restrict self, size_t count,
-                   DeeObject *count_ob,
-                   DeeObject *minus_count_ob) {
+                   /*[0..1]*/ DeeObject *count_ob,
+                   /*[0..1]*/ DeeObject *minus_count_ob) {
 	DREF DeeObject *temp, *temp2;
 	DeeTypeObject *tp_self;
 	int error;
@@ -545,10 +538,10 @@ done:
 	return 0;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_do_advance(DeeObject *__restrict self, size_t count,
-                    DeeObject *count_ob,
-                    DeeObject *minus_count_ob) {
+                    /*[0..1]*/ DeeObject *count_ob,
+                    /*[0..1]*/ DeeObject *minus_count_ob) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *temp, *temp2;
 	int error;
@@ -855,7 +848,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            "#tStopIteration{@this Iterator has been exhausted, and no @defl was given}"
 	            "Same as ${this.operator next()}\n"
 	            "When given, @defl is returned when the Iterator has been "
-	            /**/ "exhaused, rather than throwing a :StopIteration error"),
+	            /**/ "exhausted, rather than throwing a :StopIteration error"),
 	TYPE_METHOD(STR_peek, &iterator_peek,
 	            "(defl?)->\n"
 	            "#tStopIteration{@this Iterator has been exhausted, and no @defl was given}"
@@ -871,7 +864,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "		throw;\n"
 	            /**/ "	}\n"
 	            /**/ "}"
-	            "}\n"),
+	            "}"),
 	TYPE_METHOD(STR_prev, &iterator_prev,
 	            "->?Dbool\n"
 	            "#tNotImplemented{@this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
@@ -1040,7 +1033,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "	throw NotImplemented(\"...\");\n"
 	            /**/ "}"
-	            "}\n"),
+	            "}"),
 	TYPE_METHOD(STR_revert, &iterator_revert,
 	            "(step:?Dint)\n"
 	            "#tNotImplemented{@step is positive, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
@@ -1096,7 +1089,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "	throw NotImplemented(\"...\");\n"
 	            /**/ "}"
-	            "}\n"),
+	            "}"),
 	TYPE_METHOD(STR_advance, &iterator_advance,
 	            "(step:?Dint)\n"
 	            "#tNotImplemented{@step is negative, and @this Iterator isn't bi-directional (s.a. ?#isbidirectional)}"
@@ -1157,7 +1150,7 @@ PRIVATE struct type_method tpconst iterator_methods[] = {
 	            /**/ "	}\n"
 	            /**/ "	return;\n"
 	            /**/ "}"
-	            "}\n"),
+	            "}"),
 	TYPE_METHOD_END
 };
 
@@ -1282,6 +1275,14 @@ err:
 	return -1;
 }
 
+
+INTDEF DeeIntObject int_SIZE_MAX;
+#if SSIZE_MIN >= INT32_MIN
+PRIVATE DEFINE_INT32(int_SIZE_MIN, SSIZE_MIN);
+#else /* SSIZE_MIN < INT32_MIN */
+PRIVATE DEFINE_INT64(int_SIZE_MIN, SSIZE_MIN);
+#endif /* SSIZE_MIN >= INT32_MIN */
+
 /* Rewind the iterator to its starting position
  * @return:  0: Success
  * @return: -1: Error */
@@ -1388,9 +1389,9 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Incref(temp);
 			for (;;) {
 				error = (m->tp_inplace_sub && m->tp_inplace_sub != &iterator_inplace_sub)
-				        ? (*m->tp_inplace_sub)(&temp, (DeeObject *)&int_size_max)
+				        ? (*m->tp_inplace_sub)(&temp, (DeeObject *)&int_SIZE_MAX)
 				        : (m->tp_inplace_add && m->tp_inplace_add != &iterator_inplace_add)
-				          ? (*m->tp_inplace_add)(&temp, (DeeObject *)&int_size_min)
+				          ? (*m->tp_inplace_add)(&temp, (DeeObject *)&int_SIZE_MIN)
 				          : (*m->tp_dec)(&temp);
 				if unlikely(error)
 					goto err_temp;
@@ -1418,7 +1419,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
-				temp3 = (DREF DeeObject *)&int_size_max;
+				temp3 = (DREF DeeObject *)&int_SIZE_MAX;
 				temp2 = DeeObject_Call(temp, 1, &temp3);
 				if unlikely(!temp2)
 					goto err_temp;
@@ -1444,7 +1445,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			for (;;) {
 				if (DeeThread_CheckInterrupt())
 					goto err_temp;
-				temp3 = (DREF DeeObject *)&int_size_min;
+				temp3 = (DREF DeeObject *)&int_SIZE_MIN;
 				temp2 = DeeObject_Call(temp, 1, &temp3);
 				if unlikely(!temp2)
 					goto err_temp;
@@ -1470,8 +1471,8 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 			Dee_Incref(temp);
 			for (;;) {
 				temp2 = (m->tp_sub && m->tp_sub != &iterator_sub)
-				        ? (*m->tp_sub)(temp, (DeeObject *)&int_size_max)
-				        : (*m->tp_add)(temp, (DeeObject *)&int_size_min);
+				        ? (*m->tp_sub)(temp, (DeeObject *)&int_SIZE_MAX)
+				        : (*m->tp_add)(temp, (DeeObject *)&int_SIZE_MIN);
 				if unlikely(error)
 					goto err_temp;
 				Dee_Decref(temp);
@@ -2257,19 +2258,19 @@ PRIVATE struct type_getset tpconst iterator_getsets[] = {
 	TYPE_GETSET_END
 };
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_inc(DeeObject **__restrict p_self) {
 	/* Simply advance the Iterator. */
 	return iterator_do_advance(*p_self, 1, DeeInt_One, DeeInt_MinusOne);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 iterator_dec(DeeObject **__restrict p_self) {
 	/* Simply revert the Iterator. */
 	return iterator_do_revert(*p_self, 1, DeeInt_One, DeeInt_MinusOne);
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_add(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	dssize_t count;
@@ -2286,7 +2287,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 iterator_inplace_sub(DeeObject **__restrict p_self,
                      DeeObject *countob) {
 	dssize_t count;
@@ -2493,14 +2494,12 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 	                         "Copies @this Iterator and enumerate all remaining elements, constructing "
 	                         /**/ "a representation of all of them using abstract sequence syntax\n"
 	                         "${"
-	                         /**/ "operator repr() {\n"
-	                         /**/ "	File.Writer tempfp;\n"
-	                         /**/ "	tempfp << \"{ [...]\";\n"
+	                         /**/ "operator repr(fp: File) {\n"
+	                         /**/ "	fp << \"{ [...]\";\n"
 	                         /**/ "	local c = copy this;\n"
 	                         /**/ "	foreach (local x: c)\n"
-	                         /**/ "		tempfp << \", \" << repr(x);\n"
-	                         /**/ "	tempfp << \" }\";\n"
-	                         /**/ "	return tempfp.string;\n"
+	                         /**/ "		fp << \", \" << repr(x);\n"
+	                         /**/ "	fp << \" }\";\n"
 	                         /**/ "}"
 	                         "}\n"
 	                         "\n"

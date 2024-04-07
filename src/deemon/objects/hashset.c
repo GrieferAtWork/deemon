@@ -341,6 +341,19 @@ err:
 }
 
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeHashSet_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self) {
+	DREF DeeObject *result;
+	if (DeeHashSet_CheckExact(self)) {
+		if (!DeeObject_IsShared(self))
+			return self; /* Can re-use existing HashSet object. */
+	}
+	result = DeeHashSet_FromSequence(self);
+	if likely(result)
+		Dee_Decref(self);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeHashSet_FromRoSet(DeeObject *__restrict self) {
 	struct hashset_item *iter, *end;
 	DeeRoSetObject *src = (DeeRoSetObject *)self;

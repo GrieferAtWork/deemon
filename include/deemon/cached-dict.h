@@ -78,6 +78,7 @@ DDATDEF DeeTypeObject DeeCachedDict_Type;
 
 /* Construct a cached dict wrapper around "mapping" */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_New(DeeObject *__restrict mapping);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_NewInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict mapping);
 
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_HasItemStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);

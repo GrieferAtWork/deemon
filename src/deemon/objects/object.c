@@ -5306,14 +5306,14 @@ PUBLIC WUNUSED NONNULL((1)) bool
 
 /* incref() + return `self' (may be used in type operators,
  * and receives special optimizations in some situations) */
-PUBLIC NONNULL((1)) DREF DeeObject *
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef)(DeeObject *__restrict self) {
 	ASSERT_OBJECT(self);
 	Dee_Incref(self);
 	return self;
 }
 
-PUBLIC NONNULL((1)) DREF DeeObject *
+PUBLIC ATTR_RETNONNULL NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_NewRef_traced)(DeeObject *__restrict self,
                                 char const *file, int line) {
 	(void)file;

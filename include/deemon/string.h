@@ -377,35 +377,28 @@ _Dee_string_width_common3(unsigned int x, unsigned int y, unsigned int z) {
 #endif /* DEE_SOURCE */
 
 struct Dee_string_utf {
-#if __SIZEOF_POINTER__ > 4
-	uint32_t   u_width; /* [const] The minimum encoding size (One of `STRING_WIDTH_*').
-	                     *         Also used as index into the encoding-data vector below.
-	                     *         NOTE: The data-representation indexed by this is _always_ allocated! */
-	uint32_t   u_flags; /* [const] UTF flags (Set of `STRING_UTF_F*') */
-#else /* __SIZEOF_POINTER__ > 4 */
-	uint16_t   u_width; /* [const] The minimum encoding size (One of `STRING_WIDTH_*').
-	                     *         Also used as index into the encoding-data vector below.
-	                     *         NOTE: The data-representation indexed by this is _always_ allocated! */
-	uint16_t   u_flags; /* [const] UTF flags (Set of `STRING_UTF_F*') */
-#endif /* __SIZEOF_POINTER__ <= 4 */
-	size_t    *u_data[Dee_STRING_WIDTH_COUNT]; /* [0..1][owned][lock(WRITE_ONCE)][*]
-	                                            * Multi-byte string variant.
-	                                            * Variants at indices `>= u_width' can always be accessed without
-	                                            * any problems, with the version at `u_width' even being guarantied
-	                                            * to be 1..1 (that version is returned by `DeeString_WSTR()').
-	                                            * Accessing lower-order variants requires the string to be cast into
-	                                            * that width-class, with the result being that characters which don't fit
-	                                            * into that class are replaced by `?', potentially causing a DecodeError.
-	                                            * >> Dee_ASSERT(u_data[u_width] != NULL);
-	                                            * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_1BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_1BYTE]));
-	                                            * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_2BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_2BYTE]));
-	                                            * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_4BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_4BYTE]));
-	                                            * >> if (u_width == Dee_STRING_WIDTH_1BYTE) {
-	                                            * >>     Dee_ASSERT(u_data[Dee_STRING_WIDTH_1BYTE] == :s_str);
-	                                            * >>     Dee_ASSERT(!u_utf16 || u_utf16 == u_data[Dee_STRING_WIDTH_2BYTE]);
-	                                            * >> }
-	                                            * >> if (u_flags & Dee_STRING_UTF_FASCII)
-	                                            * >>     Dee_ASSERT(u_utf8 == :s_str); */
+	__UINTPTR_HALF_TYPE__ u_width; /* [const] The minimum encoding size (One of `STRING_WIDTH_*').
+	                                *         Also used as index into the encoding-data vector below.
+	                                *         NOTE: The data-representation indexed by this is _always_ allocated! */
+	__UINTPTR_HALF_TYPE__ u_flags; /* [const] UTF flags (Set of `STRING_UTF_F*') */
+	size_t      *u_data[Dee_STRING_WIDTH_COUNT]; /* [0..1][owned][lock(WRITE_ONCE)][*]
+	                                              * Multi-byte string variant.
+	                                              * Variants at indices `>= u_width' can always be accessed without
+	                                              * any problems, with the version at `u_width' even being guarantied
+	                                              * to be 1..1 (that version is returned by `DeeString_WSTR()').
+	                                              * Accessing lower-order variants requires the string to be cast into
+	                                              * that width-class, with the result being that characters which don't fit
+	                                              * into that class are replaced by `?', potentially causing a DecodeError.
+	                                              * >> Dee_ASSERT(u_data[u_width] != NULL);
+	                                              * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_1BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_1BYTE]));
+	                                              * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_2BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_2BYTE]));
+	                                              * >> Dee_ASSERT(!u_data[Dee_STRING_WIDTH_4BYTE] || Dee_WSTR_LENGTH(u_data[u_width]) == Dee_WSTR_LENGTH(u_data[Dee_STRING_WIDTH_4BYTE]));
+	                                              * >> if (u_width == Dee_STRING_WIDTH_1BYTE) {
+	                                              * >>     Dee_ASSERT(u_data[Dee_STRING_WIDTH_1BYTE] == :s_str);
+	                                              * >>     Dee_ASSERT(!u_utf16 || u_utf16 == u_data[Dee_STRING_WIDTH_2BYTE]);
+	                                              * >> }
+	                                              * >> if (u_flags & Dee_STRING_UTF_FASCII)
+	                                              * >>     Dee_ASSERT(u_utf8 == :s_str); */
 	char        *u_utf8;  /* [0..1][lock(WRITE_ONCE)][owned_if(!= :s_str)]
 	                       * A lazily allocated width-string (meaning you can use `Dee_WSTR_LENGTH' to
 	                       * determine its length), representing the UTF-8 variant of this string. */

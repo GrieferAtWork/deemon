@@ -1211,6 +1211,22 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeCachedDict_NewInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict mapping) {
+	DREF CachedDict *result;
+	result = DeeGCObject_MALLOC(CachedDict);
+	if unlikely(!result)
+		goto done;
+	result->cd_mask = 0;
+	result->cd_size = 0;
+	result->cd_map  = mapping; /* Inherit reference */
+	result->cd_elem = empty_cdict_items;
+	Dee_atomic_rwlock_init(&result->cd_lock);
+	DeeObject_Init(result, &DeeCachedDict_Type);
+	result = (DREF CachedDict *)DeeGC_Track((DREF DeeObject *)result);
+done:
+	return (DREF DeeObject *)result;
+}
 
 
 DECL_END

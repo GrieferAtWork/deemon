@@ -68,6 +68,7 @@ DDATDEF DeeTypeObject DeeHashSet_Type;
 #define DeeHashSet_New() DeeObject_NewDefault(&DeeHashSet_Type)
 DFUNDEF WUNUSED DREF DeeObject *DCALL DeeHashSet_NewWithHint(size_t num_items);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequence(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromSequenceInherited(/*inherit(on_success)*/ DREF DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeHashSet_FromRoSet(DeeObject *__restrict self);
 
 
