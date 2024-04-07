@@ -109,10 +109,12 @@ function parseMnemonic(mnemonic: Bytes): string {
 	result = replaceAll(result, "global <imm16>", '" F_GLOBAL16 "');
 	result = replaceAll(result, "extern <imm8>:<imm8>", '" F_EXTERN8 "');
 	result = replaceAll(result, "extern <imm16>:<imm16>", '" F_EXTERN16 "');
-	result = replaceAll(result, "SP+/-<Simm8>", '" F_SP_PLUSS8 "');
-	result = replaceAll(result, "SP+/-<Simm16>", '" F_SP_PLUSS16 "');
-	result = replaceAll(result, "SP-<imm16>-2", '" F_SP_SUB16_SUB2 "');
-	result = replaceAll(result, "SP-<imm8>-2", '" F_SP_SUB8_SUB2 "');
+	result = replaceAll(result, "module <imm8>", '" F_MODULE8 "');
+	result = replaceAll(result, "module <imm16>", '" F_MODULE16 "');
+	result = replaceAll(result, "#SP+/-<Simm8>", '" F_SP_PLUSS8 "');
+	result = replaceAll(result, "#SP+/-<Simm16>", '" F_SP_PLUSS16 "');
+	result = replaceAll(result, "#SP-<imm16>-2", '" F_SP_SUB16_SUB2 "');
+	result = replaceAll(result, "#SP-<imm8>-2", '" F_SP_SUB8_SUB2 "');
 	result = replaceAll(result, "<imm8>+1", '" F_IMM8_PLUS1 "');
 	result = replaceAll(result, "<imm16>+1", '" F_IMM16_PLUS1 "');
 	result = replaceAll(result, "<imm8>+2", '" F_IMM8_PLUS2 "');
@@ -129,14 +131,20 @@ function parseMnemonic(mnemonic: Bytes): string {
 	result = replaceAll(result, "<Simm32>", '" F_SIMM32 "');
 	result = replaceAll(result, ' ""', " ");
 	result = replaceAll(result, "  ", " ");
-	local base, none, args = result.partition(" ")...;
-	if (!args)
-		return repr base;
-	result = f"\"{base}\" F_PAD \"{args}\"";
+	if (!result.startswith('"')) {
+		local base, none, args = result.partition(" ")...;
+		if (!args)
+			return repr base;
+		result = f'"{base}" F_PAD "{args}"';
+	} else {
+		result = f'"{result}"';
+	}
 	result = replaceAll(result, ' ""', " ");
+	result = replaceAll(result, '"" ', " ");
 	result = replaceAll(result, "  ", " ");
+	result = result.strip();
 	usedFFormats.insertall(result.relocateall(r"F_[^ ]+"));
-	return result.strip();
+	return result;
 }
 
 function formatSpEffect(x: string, mnemonic: string, operandsOffset: int, neg: bool = false): string {
@@ -425,9 +433,9 @@ for (local prefix: prefixBytes) {
 				print(f"DEE_ASM_PREFIX({prefix.hex(2)}, {opByte.hex(2)}, {c.length}, {c.name})");
 			} else {
 				print(f"DEE_ASM_OPCODE{c.prefixed is none ? "" : "_P"}({prefix.hex(2)}, {opByte.hex(2)}, "
-				      f"{c.length}, {c.name}, {c.sp_sub}, {c.sp_add}, {c.mnemonic}"),;
+				      f"{c.length}, {c.name}, {c.sp_sub}, {c.sp_add}, {c.mnemonic ?? '""'}"),;
 				if (c.prefixed !is none)
-					print(f", {c.prefixed.sp_sub}, {c.prefixed.sp_add}, {c.prefixed.mnemonic}"),;
+					print(f", {c.prefixed.sp_sub}, {c.prefixed.sp_add}, {c.prefixed.mnemonic ?? '""'}"),;
 				print(f")");
 			}
 		} else {
@@ -445,20 +453,13 @@ for (local prefix: prefixBytes) {
 	print(f"#endif /" f"* DEE_ASM_WANT_TABLE({prefix.hex(2)}) *" f"/");
 	print(f"");
 }
-
-for (local x: usedSpFormats.sorted().reversed()) {
-	print(f'#undef {x}');
-}
-for (local x: usedFFormats.sorted().reversed()) {
-	print(f'#undef {x}');
-}
 ]]]*/
 /* Define control codes for disassembly representation format strings. */
 #ifndef F_PAD
 #define F_PAD             "\t"
 #define F_PAD_C           '\t'
 #define F_MINCODE         0x80
-#define F_MAXCODE         0xa1
+#define F_MAXCODE         0xa3
 #define F_ARG8            "\x80"
 #define F_ARG8_C          0x80
 #define F_ARG16           "\x81"
@@ -499,34 +500,38 @@ for (local x: usedFFormats.sorted().reversed()) {
 #define F_LOCAL8_C        0x92
 #define F_LOCAL16         "\x93"
 #define F_LOCAL16_C       0x93
-#define F_PREFIX          "\x94"
-#define F_PREFIX_C        0x94
-#define F_REF8            "\x95"
-#define F_REF8_C          0x95
-#define F_REF16           "\x96"
-#define F_REF16_C         0x96
-#define F_SDISP8          "\x97"
-#define F_SDISP8_C        0x97
-#define F_SDISP16         "\x98"
-#define F_SDISP16_C       0x98
-#define F_SDISP32         "\x99"
-#define F_SDISP32_C       0x99
-#define F_SIMM8           "\x9a"
-#define F_SIMM8_C         0x9a
-#define F_SIMM16          "\x9b"
-#define F_SIMM16_C        0x9b
-#define F_SP_PLUSS8       "\x9c"
-#define F_SP_PLUSS8_C     0x9c
-#define F_SP_PLUSS16      "\x9d"
-#define F_SP_PLUSS16_C    0x9d
-#define F_SP_SUB8_SUB2    "\x9e"
-#define F_SP_SUB8_SUB2_C  0x9e
-#define F_SP_SUB16_SUB2   "\x9f"
-#define F_SP_SUB16_SUB2_C 0x9f
-#define F_STATIC8         "\xa0"
-#define F_STATIC8_C       0xa0
-#define F_STATIC16        "\xa1"
-#define F_STATIC16_C      0xa1
+#define F_MODULE8         "\x94"
+#define F_MODULE8_C       0x94
+#define F_MODULE16        "\x95"
+#define F_MODULE16_C      0x95
+#define F_PREFIX          "\x96"
+#define F_PREFIX_C        0x96
+#define F_REF8            "\x97"
+#define F_REF8_C          0x97
+#define F_REF16           "\x98"
+#define F_REF16_C         0x98
+#define F_SDISP8          "\x99"
+#define F_SDISP8_C        0x99
+#define F_SDISP16         "\x9a"
+#define F_SDISP16_C       0x9a
+#define F_SDISP32         "\x9b"
+#define F_SDISP32_C       0x9b
+#define F_SIMM8           "\x9c"
+#define F_SIMM8_C         0x9c
+#define F_SIMM16          "\x9d"
+#define F_SIMM16_C        0x9d
+#define F_SP_PLUSS8       "\x9e"
+#define F_SP_PLUSS8_C     0x9e
+#define F_SP_PLUSS16      "\x9f"
+#define F_SP_PLUSS16_C    0x9f
+#define F_SP_SUB8_SUB2    "\xa0"
+#define F_SP_SUB8_SUB2_C  0xa0
+#define F_SP_SUB16_SUB2   "\xa1"
+#define F_SP_SUB16_SUB2_C 0xa1
+#define F_STATIC8         "\xa2"
+#define F_STATIC8_C       0xa2
+#define F_STATIC16        "\xa3"
+#define F_STATIC16_C      0xa3
 #endif /* !F_PAD */
 /* Define control codes for negative/positive stack effects */
 #ifndef SP_ADD0
@@ -651,8 +656,8 @@ DEE_ASM_OPCODE(0x00, 0x15, 3, _JMP16, SP_SUB0, SP_ADD0, "jmp" F_PAD F_SDISP16)
 DEE_ASM_OPCODE_P(0x00, 0x16, 2, _FOREACH, SP_SUB1, SP_ADD2, "foreach" F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach" F_PAD F_PREFIX ", " F_SDISP8)
 DEE_ASM_OPCODE_P(0x00, 0x17, 3, _FOREACH16, SP_SUB1, SP_ADD2, "foreach" F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach" F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0x00, 0x18, 1, _JMP_POP, SP_SUB1, SP_ADD0, "jmp" F_PAD "pop")
-DEE_ASM_OPCODE_P(0x00, 0x19, 3, _OPERATOR, SP_SUBIMM1N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", #" F_IMM8, SP_SUBIMM1N8, SP_ADD1, """ F_PAD "F_PREFIX ": push op $" F_IMM8 ", #" F_IMM8)
-DEE_ASM_OPCODE_P(0x00, 0x1a, 2, _OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", pop...", SP_SUB1, SP_ADD1, """ F_PAD "F_PREFIX ": push op $" F_IMM8 ", pop...")
+DEE_ASM_OPCODE_P(0x00, 0x19, 3, _OPERATOR, SP_SUBIMM1N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", #" F_IMM8, SP_SUBIMM1N8, SP_ADD1, F_PREFIX ": push op $" F_IMM8 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0x00, 0x1a, 2, _OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM8 ", pop...")
 DEE_ASM_OPCODE(0x00, 0x1b, 2, _CALL, SP_SUBIMM1N8_MINUS1, SP_ADD1, "call" F_PAD "top, #" F_IMM8)
 DEE_ASM_OPCODE(0x00, 0x1c, 1, _CALL_TUPLE, SP_SUB2, SP_ADD1, "call" F_PAD "top, pop...")
 DEE_ASM_OPCODE(0x00, 0x1d, 2, _DEL_STATIC, SP_SUB0, SP_ADD0, "del" F_PAD F_STATIC8)
@@ -662,10 +667,10 @@ DEE_ASM_OPCODE_P(0x00, 0x20, 1, _SWAP, SP_SUB2, SP_ADD2, "swap", SP_SUB1, SP_ADD
 DEE_ASM_OPCODE_P(0x00, 0x21, 2, _LROT, SP_SUBIMM1N8_MINUS3, SP_ADDIMM1N8_PLUS3, "lrot" F_PAD "#" F_IMM8_PLUS3, SP_SUBIMM1N8_MINUS2, SP_ADDIMM1N8_PLUS2, "lrot" F_PAD "#" F_IMM8_PLUS2 ", " F_PREFIX)
 DEE_ASM_OPCODE_P(0x00, 0x22, 2, _RROT, SP_SUBIMM1N8, SP_ADDIMM1N8, "rrot" F_PAD "#" F_IMM8_PLUS3, SP_SUBIMM1N8, SP_ADDIMM1N8, "rrot" F_PAD "#" F_IMM8_PLUS2 ", " F_PREFIX)
 DEE_ASM_OPCODE_P(0x00, 0x23, 1, _DUP, SP_SUB1, SP_ADD2, "dup", SP_SUB1, SP_ADD1, "mov" F_PAD F_PREFIX ", top")
-DEE_ASM_OPCODE_P(0x00, 0x24, 2, _DUP_N, SP_SUBIMM1N8, SP_ADDIMM1N8_PLUS1, "dup" F_PAD "#" F_SP_SUB8_SUB2, SP_SUBIMM1N8, SP_ADDIMM1N8, "mov" F_PAD F_PREFIX ", #" F_SP_SUB8_SUB2)
+DEE_ASM_OPCODE_P(0x00, 0x24, 2, _DUP_N, SP_SUBIMM1N8, SP_ADDIMM1N8_PLUS1, "dup" F_PAD F_SP_SUB8_SUB2, SP_SUBIMM1N8, SP_ADDIMM1N8, "mov" F_PAD F_PREFIX ", " F_SP_SUB8_SUB2)
 DEE_ASM_OPCODE_P(0x00, 0x25, 1, _POP, SP_SUB1, SP_ADD0, "pop", SP_SUB0, SP_ADD0, "mov" F_PAD "top, " F_PREFIX)
-DEE_ASM_OPCODE_P(0x00, 0x26, 2, _POP_N, SP_SUBIMM1N8_MINUS1, SP_ADDIMM1N8, "pop" F_PAD "#" F_SP_SUB8_SUB2, SP_SUB0, SP_ADD0, "mov" F_PAD "#" F_SP_SUB8_SUB2 ", " F_PREFIX)
-DEE_ASM_OPCODE(0x00, 0x27, 2, _ADJSTACK, SP_SUBADJSTACK1N8, SP_ADDADJSTACK1N8, "adjstack" F_PAD "#" F_SP_PLUSS8)
+DEE_ASM_OPCODE_P(0x00, 0x26, 2, _POP_N, SP_SUBIMM1N8_MINUS1, SP_ADDIMM1N8, "pop" F_PAD F_SP_SUB8_SUB2, SP_SUB0, SP_ADD0, "mov" F_PAD F_SP_SUB8_SUB2 ", " F_PREFIX)
+DEE_ASM_OPCODE(0x00, 0x27, 2, _ADJSTACK, SP_SUBADJSTACK1N8, SP_ADDADJSTACK1N8, "adjstack" F_PAD F_SP_PLUSS8)
 DEE_ASM_OPCODE(0x00, 0x28, 1, _SUPER, SP_SUB2, SP_ADD1, "super" F_PAD "top, pop")
 DEE_ASM_OPCODE(0x00, 0x29, 2, _SUPER_THIS_R, SP_SUB0, SP_ADD1, "push" F_PAD "super this, " F_REF8)
 DEE_ASM_UNDEFINED(0x00, 0x2a, 1)
@@ -680,7 +685,7 @@ DEE_ASM_UNDEFINED(0x00, 0x32, 1)
 DEE_ASM_OPCODE_P(0x00, 0x33, 1, _PUSH_NONE, SP_SUB0, SP_ADD1, "push" F_PAD "none", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", none")
 DEE_ASM_OPCODE_P(0x00, 0x34, 1, _PUSH_VARARGS, SP_SUB0, SP_ADD1, "push" F_PAD "varargs", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", varargs")
 DEE_ASM_OPCODE_P(0x00, 0x35, 1, _PUSH_VARKWDS, SP_SUB0, SP_ADD1, "push" F_PAD "varkwds", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", varkwds")
-DEE_ASM_OPCODE_P(0x00, 0x36, 2, _PUSH_MODULE, SP_SUB0, SP_ADD1, "push" F_PAD "module " F_IMM8, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", module " F_IMM8)
+DEE_ASM_OPCODE_P(0x00, 0x36, 2, _PUSH_MODULE, SP_SUB0, SP_ADD1, "push" F_PAD F_MODULE8, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_MODULE8)
 DEE_ASM_OPCODE_P(0x00, 0x37, 2, _PUSH_ARG, SP_SUB0, SP_ADD1, "push" F_PAD F_ARG8, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_ARG8)
 DEE_ASM_OPCODE_P(0x00, 0x38, 2, _PUSH_CONST, SP_SUB0, SP_ADD1, "push" F_PAD F_CONST8, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_CONST8)
 DEE_ASM_OPCODE_P(0x00, 0x39, 2, _PUSH_REF, SP_SUB0, SP_ADD1, "push" F_PAD F_REF8, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_REF8)
@@ -736,8 +741,8 @@ DEE_ASM_OPCODE(0x00, 0x6a, 3, _GETCMEMBER_R, SP_SUB0, SP_ADD1, "push" F_PAD "get
 DEE_ASM_OPCODE(0x00, 0x6b, 4, _CALLCMEMBER_THIS_R, SP_SUBIMM2N8, SP_ADD1, "push" F_PAD "callcmember this, " F_REF8 ", $" F_IMM8 ", #" F_IMM8)
 DEE_ASM_UNDEFINED(0x00, 0x6c, 1)
 DEE_ASM_UNDEFINED(0x00, 0x6d, 1)
-DEE_ASM_OPCODE_P(0x00, 0x6e, 3, _FUNCTION_C, SP_SUBIMM2N8, SP_ADD1, "push" F_PAD "function " F_CONST8 ", #" F_IMM8, SP_SUBIMM2N8, SP_ADD0, """ F_PAD "F_PREFIX ": function " F_CONST8 ", #" F_IMM8)
-DEE_ASM_OPCODE_P(0x00, 0x6f, 4, _FUNCTION_C_16, SP_SUBIMM2N16, SP_ADD1, "push" F_PAD "function " F_CONST8 ", #" F_IMM16, SP_SUBIMM2N16, SP_ADD0, """ F_PAD "F_PREFIX ": function " F_CONST8 ", #" F_IMM16)
+DEE_ASM_OPCODE_P(0x00, 0x6e, 3, _FUNCTION_C, SP_SUBIMM2N8, SP_ADD1, "push" F_PAD "function " F_CONST8 ", #" F_IMM8, SP_SUBIMM2N8, SP_ADD0, F_PREFIX ": function " F_CONST8 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0x00, 0x6f, 4, _FUNCTION_C_16, SP_SUBIMM2N16, SP_ADD1, "push" F_PAD "function " F_CONST8 ", #" F_IMM16, SP_SUBIMM2N16, SP_ADD0, F_PREFIX ": function " F_CONST8 ", #" F_IMM16)
 DEE_ASM_OPCODE(0x00, 0x70, 1, _CAST_INT, SP_SUB1, SP_ADD1, "cast" F_PAD "top, int")
 DEE_ASM_OPCODE(0x00, 0x71, 1, _INV, SP_SUB1, SP_ADD1, "inv" F_PAD "top")
 DEE_ASM_OPCODE(0x00, 0x72, 1, _POS, SP_SUB1, SP_ADD1, "pos" F_PAD "top")
@@ -769,7 +774,7 @@ DEE_ASM_OPCODE_P(0x00, 0x8b, 5, _OR_IMM32, SP_SUB1, SP_ADD1, "or" F_PAD "top, $"
 DEE_ASM_OPCODE_P(0x00, 0x8c, 5, _XOR_IMM32, SP_SUB1, SP_ADD1, "xor" F_PAD "top, $" F_IMM32, SP_SUB0, SP_ADD0, "xor" F_PAD F_PREFIX ", $" F_IMM32)
 DEE_ASM_OPCODE(0x00, 0x8d, 1, _ISNONE, SP_SUB1, SP_ADD1, "instanceof" F_PAD "top, none")
 DEE_ASM_UNDEFINED(0x00, 0x8e, 1)
-DEE_ASM_OPCODE(0x00, 0x8f, 1, _DELOP, SP_SUB0, SP_ADD0, none)
+DEE_ASM_OPCODE(0x00, 0x8f, 1, _DELOP, SP_SUB0, SP_ADD0, "")
 DEE_ASM_OPCODE_P(0x00, 0x90, 1, _NOP, SP_SUB0, SP_ADD0, "nop", SP_SUB0, SP_ADD0, "nop" F_PAD F_PREFIX)
 DEE_ASM_OPCODE(0x00, 0x91, 1, _PRINT, SP_SUB1, SP_ADD0, "print" F_PAD "pop")
 DEE_ASM_OPCODE(0x00, 0x92, 1, _PRINT_SP, SP_SUB1, SP_ADD0, "print" F_PAD "pop, sp")
@@ -912,8 +917,8 @@ DEE_ASM_UNDEFINED(0xf0, 0x15, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x16, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x17, 2)
 DEE_ASM_OPCODE(0xf0, 0x18, 2, _JMP_POP_POP, SP_SUB2, SP_ADD0, "jmp" F_PAD "pop, #pop")
-DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM2N16_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM2N16, SP_ADD1, """ F_PAD "F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
-DEE_ASM_OPCODE_P(0xf0, 0x1a, 4, 16_OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", pop...", SP_SUB1, SP_ADD1, """ F_PAD "F_PREFIX ": push op $" F_IMM16 ", pop...")
+DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM2N16_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM2N16, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0xf0, 0x1a, 4, 16_OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", pop...")
 DEE_ASM_OPCODE(0xf0, 0x1b, 3, _CALL_SEQ, SP_SUBIMM2N8_MINUS1, SP_ADD1, "call" F_PAD "top, [#" F_IMM8 "]")
 DEE_ASM_OPCODE(0xf0, 0x1c, 3, _CALL_MAP, SP_SUBIMM2N8X2_MINUS1, SP_ADD1, "call" F_PAD "top, {#" F_IMM8_X2 "}")
 DEE_ASM_OPCODE(0xf0, 0x1d, 2, 16_DEL_STATIC, SP_SUB0, SP_ADD0, "del" F_PAD F_STATIC16)
@@ -923,10 +928,10 @@ DEE_ASM_OPCODE(0xf0, 0x20, 2, _CALL_TUPLE_KWDS, SP_SUB3, SP_ADD1, "call" F_PAD "
 DEE_ASM_OPCODE_P(0xf0, 0x21, 4, 16_LROT, SP_SUBIMM2N16_MINUS3, SP_ADDIMM2N16_PLUS3, "lrot" F_PAD "#" F_IMM16_PLUS3, SP_SUBIMM2N16_MINUS2, SP_ADDIMM2N16_PLUS2, "lrot" F_PAD "#" F_IMM16_PLUS2 ", " F_PREFIX)
 DEE_ASM_OPCODE_P(0xf0, 0x22, 4, 16_RROT, SP_SUBIMM2N16, SP_ADDIMM2N16, "rrot" F_PAD "#" F_IMM16_PLUS3, SP_SUBIMM2N16, SP_ADDIMM2N16, "rrot" F_PAD "#" F_IMM16_PLUS2 ", " F_PREFIX)
 DEE_ASM_OPCODE(0xf0, 0x23, 2, _THISCALL_TUPLE, SP_SUB3, SP_ADD1, "call" F_PAD "top, pop, pop...")
-DEE_ASM_OPCODE_P(0xf0, 0x24, 4, 16_DUP_N, SP_SUBIMM2N16, SP_ADDIMM2N16_PLUS1, "dup" F_PAD "#" F_SP_SUB16_SUB2, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16_PLUS1, "mov" F_PAD F_PREFIX ", #" F_SP_SUB16_SUB2)
+DEE_ASM_OPCODE_P(0xf0, 0x24, 4, 16_DUP_N, SP_SUBIMM2N16, SP_ADDIMM2N16_PLUS1, "dup" F_PAD F_SP_SUB16_SUB2, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16_PLUS1, "mov" F_PAD F_PREFIX ", " F_SP_SUB16_SUB2)
 DEE_ASM_UNDEFINED(0xf0, 0x25, 2)
-DEE_ASM_OPCODE_P(0xf0, 0x26, 4, 16_POP_N, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16, "pop" F_PAD "#" F_SP_SUB16_SUB2, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16_PLUS1, "mov" F_PAD "#" F_SP_SUB16_SUB2 ", " F_PREFIX)
-DEE_ASM_OPCODE(0xf0, 0x27, 4, 16_ADJSTACK, SP_SUBADJSTACK2N16, SP_ADDADJSTACK2N16, "adjstack" F_PAD "#" F_SP_PLUSS16)
+DEE_ASM_OPCODE_P(0xf0, 0x26, 4, 16_POP_N, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16, "pop" F_PAD F_SP_SUB16_SUB2, SP_SUBIMM2N16_MINUS1, SP_ADDIMM2N16_PLUS1, "mov" F_PAD F_SP_SUB16_SUB2 ", " F_PREFIX)
+DEE_ASM_OPCODE(0xf0, 0x27, 4, 16_ADJSTACK, SP_SUBADJSTACK2N16, SP_ADDADJSTACK2N16, "adjstack" F_PAD F_SP_PLUSS16)
 DEE_ASM_UNDEFINED(0xf0, 0x28, 2)
 DEE_ASM_OPCODE(0xf0, 0x29, 4, 16_SUPER_THIS_R, SP_SUB0, SP_ADD1, "push" F_PAD "super this, " F_REF16)
 DEE_ASM_UNDEFINED(0xf0, 0x2a, 2)
@@ -941,7 +946,7 @@ DEE_ASM_OPCODE_P(0xf0, 0x32, 2, _PUSH_EXCEPT, SP_SUB0, SP_ADD1, "push" F_PAD "ex
 DEE_ASM_OPCODE_P(0xf0, 0x33, 2, _PUSH_THIS, SP_SUB0, SP_ADD1, "push" F_PAD "this", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", this")
 DEE_ASM_OPCODE_P(0xf0, 0x34, 2, _PUSH_THIS_MODULE, SP_SUB0, SP_ADD1, "push" F_PAD "this_module", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", this_module")
 DEE_ASM_OPCODE_P(0xf0, 0x35, 2, _PUSH_THIS_FUNCTION, SP_SUB0, SP_ADD1, "push" F_PAD "this_function", SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", this_function")
-DEE_ASM_OPCODE_P(0xf0, 0x36, 4, 16_PUSH_MODULE, SP_SUB0, SP_ADD1, "push" F_PAD "module " F_IMM16, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", module " F_IMM16)
+DEE_ASM_OPCODE_P(0xf0, 0x36, 4, 16_PUSH_MODULE, SP_SUB0, SP_ADD1, "push" F_PAD F_MODULE16, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_MODULE16)
 DEE_ASM_OPCODE_P(0xf0, 0x37, 4, 16_PUSH_ARG, SP_SUB0, SP_ADD1, "push" F_PAD F_ARG16, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_ARG16)
 DEE_ASM_OPCODE_P(0xf0, 0x38, 4, 16_PUSH_CONST, SP_SUB0, SP_ADD1, "push" F_PAD F_CONST16, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_CONST16)
 DEE_ASM_OPCODE_P(0xf0, 0x39, 4, 16_PUSH_REF, SP_SUB0, SP_ADD1, "push" F_PAD F_REF16, SP_SUB0, SP_ADD0, "mov" F_PAD F_PREFIX ", " F_REF16)
@@ -997,8 +1002,8 @@ DEE_ASM_OPCODE(0xf0, 0x6a, 6, 16_GETCMEMBER_R, SP_SUB0, SP_ADD1, "push" F_PAD "g
 DEE_ASM_OPCODE(0xf0, 0x6b, 7, 16_CALLCMEMBER_THIS_R, SP_SUBIMM4N16, SP_ADD1, "push" F_PAD "callcmember this, " F_REF16 ", $" F_IMM16 ", #" F_IMM8)
 DEE_ASM_UNDEFINED(0xf0, 0x6c, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x6d, 2)
-DEE_ASM_OPCODE_P(0xf0, 0x6e, 5, 16_FUNCTION_C, SP_SUBIMM4N8, SP_ADD1, "push" F_PAD "function " F_CONST16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD0, """ F_PAD "F_PREFIX ": function " F_CONST16 ", #" F_IMM8)
-DEE_ASM_OPCODE_P(0xf0, 0x6f, 6, 16_FUNCTION_C_16, SP_SUBIMM4N16, SP_ADD1, "push" F_PAD "function " F_CONST16 ", #" F_IMM16, SP_SUBIMM4N16, SP_ADD0, """ F_PAD "F_PREFIX ": function " F_CONST16 ", #" F_IMM16)
+DEE_ASM_OPCODE_P(0xf0, 0x6e, 5, 16_FUNCTION_C, SP_SUBIMM4N8, SP_ADD1, "push" F_PAD "function " F_CONST16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD0, F_PREFIX ": function " F_CONST16 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0xf0, 0x6f, 6, 16_FUNCTION_C_16, SP_SUBIMM4N16, SP_ADD1, "push" F_PAD "function " F_CONST16 ", #" F_IMM16, SP_SUBIMM4N16, SP_ADD0, F_PREFIX ": function " F_CONST16 ", #" F_IMM16)
 DEE_ASM_OPCODE(0xf0, 0x70, 4, _SUPERGETATTR_THIS_RC, SP_SUB0, SP_ADD1, "push" F_PAD "getattr this, " F_REF8 ", " F_CONST8)
 DEE_ASM_OPCODE(0xf0, 0x71, 6, 16_SUPERGETATTR_THIS_RC, SP_SUB0, SP_ADD1, "push" F_PAD "getattr this, " F_REF16 ", " F_CONST16)
 DEE_ASM_OPCODE(0xf0, 0x72, 5, _SUPERCALLATTR_THIS_RC, SP_SUBIMM4N8, SP_ADD1, "push" F_PAD "callattr this, " F_REF8 ", " F_CONST8 ", #" F_IMM8)
@@ -1030,7 +1035,7 @@ DEE_ASM_UNDEFINED(0xf0, 0x8b, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x8c, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x8d, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x8e, 2)
-DEE_ASM_OPCODE(0xf0, 0x8f, 2, 16_DELOP, SP_SUB0, SP_ADD0, none)
+DEE_ASM_OPCODE(0xf0, 0x8f, 2, 16_DELOP, SP_SUB0, SP_ADD0, "")
 DEE_ASM_OPCODE_P(0xf0, 0x90, 2, 16_NOP, SP_SUB0, SP_ADD0, "nop16", SP_SUB0, SP_ADD0, "nop16" F_PAD F_PREFIX)
 DEE_ASM_UNDEFINED(0xf0, 0x91, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x92, 2)
@@ -1145,82 +1150,6 @@ DEE_ASM_PREFIX(0xf0, 0xfe, 4, 16_GLOBAL)
 DEE_ASM_PREFIX(0xf0, 0xff, 4, 16_LOCAL)
 DEE_ASM_END(0xf0)
 #endif /* DEE_ASM_WANT_TABLE(0xf0) */
-
-#undef SP_SUBIMM6N8
-#undef SP_SUBIMM4N8_MINUS1
-#undef SP_SUBIMM4N8X2_MINUS1
-#undef SP_SUBIMM4N8
-#undef SP_SUBIMM4N16
-#undef SP_SUBIMM3N8
-#undef SP_SUBIMM2N8_MINUS3
-#undef SP_SUBIMM2N8_MINUS1
-#undef SP_SUBIMM2N8X2_MINUS1
-#undef SP_SUBIMM2N8X2
-#undef SP_SUBIMM2N8
-#undef SP_SUBIMM2N16_MINUS3
-#undef SP_SUBIMM2N16_MINUS2
-#undef SP_SUBIMM2N16_MINUS1
-#undef SP_SUBIMM2N16X2
-#undef SP_SUBIMM2N16
-#undef SP_SUBIMM1N8_MINUS3
-#undef SP_SUBIMM1N8_MINUS2
-#undef SP_SUBIMM1N8_MINUS1
-#undef SP_SUBIMM1N8
-#undef SP_SUBADJSTACK2N16
-#undef SP_SUBADJSTACK1N8
-#undef SP_SUB4
-#undef SP_SUB3
-#undef SP_SUB2
-#undef SP_SUB1
-#undef SP_SUB0
-#undef SP_ADDIMM2N8
-#undef SP_ADDIMM2N16_PLUS3
-#undef SP_ADDIMM2N16_PLUS2
-#undef SP_ADDIMM2N16_PLUS1
-#undef SP_ADDIMM2N16
-#undef SP_ADDIMM1N8_PLUS3
-#undef SP_ADDIMM1N8_PLUS2
-#undef SP_ADDIMM1N8_PLUS1
-#undef SP_ADDIMM1N8
-#undef SP_ADDADJSTACK2N16
-#undef SP_ADDADJSTACK1N8
-#undef SP_ADD2
-#undef SP_ADD1
-#undef SP_ADD0
-#undef F_STATIC8
-#undef F_STATIC16
-#undef F_SP_SUB8_SUB2
-#undef F_SP_SUB16_SUB2
-#undef F_SP_PLUSS8
-#undef F_SP_PLUSS16
-#undef F_SIMM8
-#undef F_SIMM16
-#undef F_SDISP8
-#undef F_SDISP32
-#undef F_SDISP16
-#undef F_REF8
-#undef F_REF16
-#undef F_PREFIX
-#undef F_LOCAL8
-#undef F_LOCAL16
-#undef F_IMM8_X2
-#undef F_IMM8_PLUS3
-#undef F_IMM8_PLUS2
-#undef F_IMM8_PLUS1
-#undef F_IMM8
-#undef F_IMM32
-#undef F_IMM16_X2
-#undef F_IMM16_PLUS3
-#undef F_IMM16_PLUS2
-#undef F_IMM16
-#undef F_GLOBAL8
-#undef F_GLOBAL16
-#undef F_EXTERN8
-#undef F_EXTERN16
-#undef F_CONST8
-#undef F_CONST16
-#undef F_ARG8
-#undef F_ARG16
 /*[[[end]]]*/
 
 #undef DEE_SP_SUB

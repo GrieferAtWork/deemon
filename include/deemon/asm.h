@@ -25,12 +25,11 @@
 /* NOTE: Apply modifications using:
  * $ deemon -F include/deemon/asm-table.h
  * $ deemon -F src/deemon/execute/asm/exec.gas-386.S
- * $ deemon -F src/dex/disassembler/printinstr.c
  * $ deemon -F lib/rt/bytecode.dee
  * Or the 1-line variant (read: for copy-n-pasting into your terminal):
- * $ deemon -F include/deemon/asm-table.h src/deemon/execute/asm/exec.gas-386.S src/dex/disassembler/printinstr.c lib/rt/bytecode.dee
+ * $ deemon -F include/deemon/asm-table.h src/deemon/execute/asm/exec.gas-386.S lib/rt/bytecode.dee
  * Also: Don't forget to add new instructions to
- *      `/src/deemon/compiler/asm/userdb.def'
+ *       `/src/deemon/compiler/asm/userdb.def'
  */
 
 
