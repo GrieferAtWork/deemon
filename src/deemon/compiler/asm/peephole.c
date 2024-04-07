@@ -420,6 +420,150 @@ switch_on_opcode:
 }
 
 
+#if 0 /* Enable debug instruction logging */
+#define HAVE_get_mnemonic
+
+#define F_PAD             "\t"
+#define F_ARG8            "ARG8"
+#define F_ARG16           "ARG16"
+#define F_CONST8          "CONST8"
+#define F_CONST16         "CONST16"
+#define F_EXTERN8         "EXTERN8"
+#define F_EXTERN16        "EXTERN16"
+#define F_GLOBAL8         "GLOBAL8"
+#define F_GLOBAL16        "GLOBAL16"
+#define F_IMM8            "IMM8"
+#define F_IMM8_PLUS1      "IMM8_PLUS1"
+#define F_IMM8_PLUS2      "IMM8_PLUS2"
+#define F_IMM8_PLUS3      "IMM8_PLUS3"
+#define F_IMM8_X2         "IMM8_X2"
+#define F_IMM16           "IMM16"
+#define F_IMM16_PLUS2     "IMM16_PLUS2"
+#define F_IMM16_PLUS3     "IMM16_PLUS3"
+#define F_IMM16_X2        "IMM16_X2"
+#define F_IMM32           "IMM32"
+#define F_LOCAL8          "LOCAL8"
+#define F_LOCAL16         "LOCAL16"
+#define F_MODULE8         "MODULE8"
+#define F_MODULE16        "MODULE16"
+#define F_PREFIX          "PREFIX"
+#define F_REF8            "REF8"
+#define F_REF16           "REF16"
+#define F_SDISP8          "SDISP8"
+#define F_SDISP16         "SDISP16"
+#define F_SDISP32         "SDISP32"
+#define F_SIMM8           "SIMM8"
+#define F_SIMM16          "SIMM16"
+#define F_SP_PLUSS8       "SP_PLUSS8"
+#define F_SP_PLUSS16      "SP_PLUSS16"
+#define F_SP_SUB8_SUB2    "SP_SUB8_SUB2"
+#define F_SP_SUB16_SUB2   "SP_SUB16_SUB2"
+#define F_STATIC8         "STATIC8"
+#define F_STATIC16        "STATIC16"
+
+/* Define instruction format tables. */
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix)          union mnemonic_fmt_maxlen_##table_prefix {
+#define DEE_ASM_END(table_prefix)            };
+#if __SIZEOF_CHAR__ == 1
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) char l##name[sizeof(mnemonic)];
+#else /* __SIZEOF_CHAR__ == 1 */
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) char l##name[sizeof(mnemonic) / __SIZEOF_CHAR__];
+#endif /* __SIZEOF_CHAR__ != 1 */
+#include <deemon/asm-table.h>
+
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix)          union mnemonic_p_fmt_maxlen_##table_prefix {
+#define DEE_ASM_END(table_prefix)            };
+#if __SIZEOF_CHAR__ == 1
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) char l##name[sizeof(prefix_mnemonic)];
+#else /* __SIZEOF_CHAR__ == 1 */
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) char l##name[sizeof(prefix_mnemonic) / __SIZEOF_CHAR__];
+#endif /* __SIZEOF_CHAR__ != 1 */
+#include <deemon/asm-table.h>
+
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_##table_prefix[256][sizeof(union mnemonic_fmt_maxlen_##table_prefix)] {
+#define DEE_ASM_END(table_prefix)            };
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                              "",
+#define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) mnemonic,
+#include <deemon/asm-table.h>
+
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
+#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_p_##table_prefix[256][sizeof(union mnemonic_p_fmt_maxlen_##table_prefix)] {
+#define DEE_ASM_END(table_prefix)            };
+#define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                              "",
+#define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) prefix_mnemonic,
+#include <deemon/asm-table.h>
+
+PRIVATE char const *DCALL get_mnemonic(instruction_t const *ip) {
+	instruction_t opcode;
+	char const *format;
+	opcode = *ip++;
+	format = mnemonics_0x00[opcode];
+	if (*format)
+		return format;
+	if (ASM_ISEXTENDED(opcode)) {
+		instruction_t opcode2 = *ip++;
+		switch (opcode) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name) \
+		case opcode_byte:                                            \
+			format = mnemonics_##opcode_byte[opcode2];               \
+			break;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+		default: break;
+		}
+		if (*format)
+			return format;
+		if (ASM_ISPREFIX(opcode2))
+			goto do_handle_prefix;
+	} else if (ASM_ISPREFIX(opcode)) {
+do_handle_prefix:
+		ip = DeeAsm_SkipPrefix(ip - 1);
+		opcode = *ip++;
+		format = mnemonics_p_0x00[opcode];
+		if (*format)
+			return format;
+		if (ASM_ISEXTENDED(opcode)) {
+			instruction_t opcode2 = *ip++;
+			switch (opcode) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name) \
+			case opcode_byte:                                        \
+				format = mnemonics_p_##opcode_byte[opcode2];         \
+				break;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+			default: break;
+			}
+			if (*format)
+				return format;
+			switch (opcode) {
+#define DEE_ASM_WANT_TABLE(prefix_byte_or_0) (prefix_byte_or_0 == 0)
+#define DEE_ASM_EXTENDED(table_prefix, opcode_byte, instr_len, name) \
+			case opcode_byte:                                        \
+				format = mnemonics_##opcode_byte[opcode2];           \
+				break;
+#ifndef __INTELLISENSE__
+#include <deemon/asm-table.h>
+#endif /* !__INTELLISENSE__ */
+			default: break;
+			}
+		} else {
+			format = mnemonics_0x00[opcode];
+		}
+		if (*format)
+			return format;
+	}
+	return NULL;
+}
+#endif
+
+
 INTERN WUNUSED int DCALL asm_peephole(void) {
 #ifdef CONFIG_LOG_PEEPHOLE_OPTS
 #ifdef CONFIG_LOG_PEEPHOLE_SOURCE
@@ -488,11 +632,11 @@ continue_at_iter:
 	     validate_stack_depth((code_addr_t)(iter - sc_main.sec_begin), stacksz)) {
 		uint16_t opcode;
 		instruction_t *iiter = iter;
-#if 0
-		DeeFile_Printf(DeeFile_DefaultStddbg, "PC %.4I32X SP %" PRFu16 " (`%s')\n",
-		               (uint32_t)(iter - sc_main.sec_begin), stacksz,
-		               mnemonic_names[*iter]);
-#endif
+#ifdef HAVE_get_mnemonic
+		Dee_DPRINTF("PC %.4" PRFX32 " SP %" PRFu16 " (`%s')\n",
+		            (uint32_t)(iter - sc_main.sec_begin), stacksz,
+		            get_mnemonic(iter));
+#endif /* HAVE_get_mnemonic */
 		/* TODO: Eliminate-redundancy-optimization:
 		 * >> if (cond) {
 		 * >>     print "a";

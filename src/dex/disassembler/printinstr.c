@@ -80,14 +80,8 @@ miss:
 }
 #endif /* !CONFIG_HAVE_strstr */
 
-#define UNKNOWN_MNEMONIC    "?"
-#define PREFIX_ADDRESS      "" /* "+" */
-#define PREFIX_ADDRESS_SPC  "" /* " " */
-#define PREFIX_STACKEFFECT  "#" /* Prefix for operands that affect the stack-effect */
-#define PREFIX_INTEGERAL    "$" /* Prefix for operands that are integral immediate values. */
-#define PREFIX_VARNAME      "@" /* Prefix for variable names. */
-#define PREFIX_CONSTANT     "@" /* Prefix for constant expressions. */
-
+#define PREFIX_VARNAME  "@" /* Prefix for variable names. */
+#define PREFIX_CONSTANT "@" /* Prefix for constant expressions. */
 
 PRIVATE dssize_t DCALL
 libdisasm_printconst(dformatprinter printer, void *arg,
@@ -680,10 +674,8 @@ libdisasm_printlabel(dformatprinter printer, void *arg,
 	default: break;
 	}
 	return DeeFormat_Printf(printer, arg,
-	                        ".L%s%.4I32X_%.4I32X",
-	                        op_name,
-	                        source,
-	                        target);
+	                        ".L%s%.4" PRFX32 "_%.4" PRFX32,
+	                        op_name, source, target);
 }
 
 
@@ -736,14 +728,14 @@ typedef union {
 #include <deemon/asm-table.h>
 
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
-#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_##table_prefix[256][sizeof(union mnemonic_fmt_maxlen_##table_prefix)] {
+#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_##table_prefix[256][sizeof(union mnemonic_fmt_maxlen_##table_prefix)] = {
 #define DEE_ASM_END(table_prefix)            };
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                              "",
 #define DEE_ASM_OPCODE(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic) mnemonic,
 #include <deemon/asm-table.h>
 
 #define DEE_ASM_WANT_TABLE(prefix_byte_or_0) 1
-#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_p_##table_prefix[256][sizeof(union mnemonic_p_fmt_maxlen_##table_prefix)] {
+#define DEE_ASM_BEGIN(table_prefix)          PRIVATE char const mnemonics_p_##table_prefix[256][sizeof(union mnemonic_p_fmt_maxlen_##table_prefix)] = {
 #define DEE_ASM_END(table_prefix)            };
 #define DEE_ASM_UNDEFINED(table_prefix, opcode_byte, instr_len)                              "",
 #define DEE_ASM_OPCODE_P(table_prefix, opcode_byte, instr_len, name, sp_sub, sp_add, mnemonic, prefix_sp_sub, prefix_sp_add, prefix_mnemonic) prefix_mnemonic,
@@ -979,12 +971,12 @@ libdisasm_printinstr_f(dformatprinter printer, void *arg,
 					                             (code_addr_t)(instr_start - code->co_code),
 					                             target_ip));
 				} else {
-					printf(err, "%.4I32X", target_ip);
+					printf(err, "%.4" PRFX32, target_ip);
 					if (target_ip >= code->co_codebytes)
 						PRINT(err, " /* invalid ip */");
 				}
 			} else {
-				printf(err, "PC%+#I32X", disp);
+				printf(err, "PC%+#" PRFX32, disp);
 			}
 		}	break;
 #endif /* F_SDISP8_C || F_SDISP16_C || F_SDISP32_C */

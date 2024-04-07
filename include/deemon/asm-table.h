@@ -215,17 +215,19 @@ function formatSpEffect(x: string, mnemonic: string, operandsOffset: int, neg: b
 		local temp = temp.replace("F_PAD", "");
 		local immMatches = Tuple(temp.relocateall("F_[^ ]+"));
 		local offset = operandsOffset;
+		local result = none;
 		for (local x: immMatches) {
 			local width = int(x.relocate("([0-9]+)"));
 			if (x.startswith("F_IMM") || x.startswith("F_SP")) {
-				local result = n_result.replace("n", f"{offset}N{width}");
+				result = n_result.replace("n", f"{offset}N{width}");
 				usedSpFormats.insert(result);
-				return result;
 			}
 			if (x.startswith("F_EXTERN"))
 				width *= 2;
 			offset += width / 8;
 		}
+		if (result !is none)
+			return result;
 	}
 	throw Error(f"Unknown stack effect: {repr x}");
 }
@@ -442,7 +444,7 @@ for (local prefix: prefixBytes) {
 			local length = prefix ? 2 : 1;
 			if (ASM_ISPREFIX(opByte)) {
 				print(f"DEE_ASM_UNDEFINED_PREFIX({prefix.hex(2)}, {opByte.hex(2)}, {length})");
-			} else if (ASM_ISEXTENDED(opByte)) {
+			} else if (ASM_ISEXTENDED(opByte) && prefix == 0x00) {
 				print(f"DEE_ASM_EXTENDED({prefix.hex(2)}, {opByte.hex(2)}, {length}, _EXTENDED{opByte - ASM_EXTENDEDMIN + 1})");
 			} else {
 				print(f"DEE_ASM_UNDEFINED({prefix.hex(2)}, {opByte.hex(2)}, {length})");
@@ -656,7 +658,7 @@ DEE_ASM_OPCODE(0x00, 0x15, 3, _JMP16, SP_SUB0, SP_ADD0, "jmp" F_PAD F_SDISP16)
 DEE_ASM_OPCODE_P(0x00, 0x16, 2, _FOREACH, SP_SUB1, SP_ADD2, "foreach" F_PAD "top, " F_SDISP8, SP_SUB0, SP_ADD1, "foreach" F_PAD F_PREFIX ", " F_SDISP8)
 DEE_ASM_OPCODE_P(0x00, 0x17, 3, _FOREACH16, SP_SUB1, SP_ADD2, "foreach" F_PAD "top, " F_SDISP16, SP_SUB0, SP_ADD1, "foreach" F_PAD F_PREFIX ", " F_SDISP16)
 DEE_ASM_OPCODE(0x00, 0x18, 1, _JMP_POP, SP_SUB1, SP_ADD0, "jmp" F_PAD "pop")
-DEE_ASM_OPCODE_P(0x00, 0x19, 3, _OPERATOR, SP_SUBIMM1N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", #" F_IMM8, SP_SUBIMM1N8, SP_ADD1, F_PREFIX ": push op $" F_IMM8 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0x00, 0x19, 3, _OPERATOR, SP_SUBIMM2N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", #" F_IMM8, SP_SUBIMM2N8, SP_ADD1, F_PREFIX ": push op $" F_IMM8 ", #" F_IMM8)
 DEE_ASM_OPCODE_P(0x00, 0x1a, 2, _OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM8 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM8 ", pop...")
 DEE_ASM_OPCODE(0x00, 0x1b, 2, _CALL, SP_SUBIMM1N8_MINUS1, SP_ADD1, "call" F_PAD "top, #" F_IMM8)
 DEE_ASM_OPCODE(0x00, 0x1c, 1, _CALL_TUPLE, SP_SUB2, SP_ADD1, "call" F_PAD "top, pop...")
@@ -738,7 +740,7 @@ DEE_ASM_OPCODE(0x00, 0x67, 3, _CLASS_GC, SP_SUB0, SP_ADD1, "push" F_PAD "class "
 DEE_ASM_OPCODE(0x00, 0x68, 4, _CLASS_EC, SP_SUB0, SP_ADD1, "push" F_PAD "class " F_EXTERN8 ", " F_CONST8)
 DEE_ASM_OPCODE(0x00, 0x69, 2, _DEFCMEMBER, SP_SUB2, SP_ADD1, "defcmember" F_PAD "top, $" F_IMM8 ", pop")
 DEE_ASM_OPCODE(0x00, 0x6a, 3, _GETCMEMBER_R, SP_SUB0, SP_ADD1, "push" F_PAD "getcmember " F_REF8 ", $" F_IMM8)
-DEE_ASM_OPCODE(0x00, 0x6b, 4, _CALLCMEMBER_THIS_R, SP_SUBIMM2N8, SP_ADD1, "push" F_PAD "callcmember this, " F_REF8 ", $" F_IMM8 ", #" F_IMM8)
+DEE_ASM_OPCODE(0x00, 0x6b, 4, _CALLCMEMBER_THIS_R, SP_SUBIMM3N8, SP_ADD1, "push" F_PAD "callcmember this, " F_REF8 ", $" F_IMM8 ", #" F_IMM8)
 DEE_ASM_UNDEFINED(0x00, 0x6c, 1)
 DEE_ASM_UNDEFINED(0x00, 0x6d, 1)
 DEE_ASM_OPCODE_P(0x00, 0x6e, 3, _FUNCTION_C, SP_SUBIMM2N8, SP_ADD1, "push" F_PAD "function " F_CONST8 ", #" F_IMM8, SP_SUBIMM2N8, SP_ADD0, F_PREFIX ": function " F_CONST8 ", #" F_IMM8)
@@ -917,7 +919,7 @@ DEE_ASM_UNDEFINED(0xf0, 0x15, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x16, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x17, 2)
 DEE_ASM_OPCODE(0xf0, 0x18, 2, _JMP_POP_POP, SP_SUB2, SP_ADD0, "jmp" F_PAD "pop, #pop")
-DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM2N16_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM2N16, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
+DEE_ASM_OPCODE_P(0xf0, 0x19, 5, 16_OPERATOR, SP_SUBIMM4N8_MINUS1, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", #" F_IMM8)
 DEE_ASM_OPCODE_P(0xf0, 0x1a, 4, 16_OPERATOR_TUPLE, SP_SUB2, SP_ADD1, "op" F_PAD "top, $" F_IMM16 ", pop...", SP_SUB1, SP_ADD1, F_PREFIX ": push op $" F_IMM16 ", pop...")
 DEE_ASM_OPCODE(0xf0, 0x1b, 3, _CALL_SEQ, SP_SUBIMM2N8_MINUS1, SP_ADD1, "call" F_PAD "top, [#" F_IMM8 "]")
 DEE_ASM_OPCODE(0xf0, 0x1c, 3, _CALL_MAP, SP_SUBIMM2N8X2_MINUS1, SP_ADD1, "call" F_PAD "top, {#" F_IMM8_X2 "}")
@@ -999,7 +1001,7 @@ DEE_ASM_OPCODE(0xf0, 0x67, 6, 16_CLASS_GC, SP_SUB0, SP_ADD1, "push" F_PAD "class
 DEE_ASM_OPCODE(0xf0, 0x68, 8, 16_CLASS_EC, SP_SUB0, SP_ADD1, "push" F_PAD "class " F_EXTERN16 ", " F_CONST16)
 DEE_ASM_OPCODE(0xf0, 0x69, 4, 16_DEFCMEMBER, SP_SUB2, SP_ADD1, "defcmember" F_PAD "top, $" F_IMM16 ", pop")
 DEE_ASM_OPCODE(0xf0, 0x6a, 6, 16_GETCMEMBER_R, SP_SUB0, SP_ADD1, "push" F_PAD "getcmember " F_REF16 ", $" F_IMM16)
-DEE_ASM_OPCODE(0xf0, 0x6b, 7, 16_CALLCMEMBER_THIS_R, SP_SUBIMM4N16, SP_ADD1, "push" F_PAD "callcmember this, " F_REF16 ", $" F_IMM16 ", #" F_IMM8)
+DEE_ASM_OPCODE(0xf0, 0x6b, 7, 16_CALLCMEMBER_THIS_R, SP_SUBIMM6N8, SP_ADD1, "push" F_PAD "callcmember this, " F_REF16 ", $" F_IMM16 ", #" F_IMM8)
 DEE_ASM_UNDEFINED(0xf0, 0x6c, 2)
 DEE_ASM_UNDEFINED(0xf0, 0x6d, 2)
 DEE_ASM_OPCODE_P(0xf0, 0x6e, 5, 16_FUNCTION_C, SP_SUBIMM4N8, SP_ADD1, "push" F_PAD "function " F_CONST16 ", #" F_IMM8, SP_SUBIMM4N8, SP_ADD0, F_PREFIX ": function " F_CONST16 ", #" F_IMM8)
@@ -1132,7 +1134,7 @@ DEE_ASM_UNDEFINED(0xf0, 0xec, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xed, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xee, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xef, 2)
-DEE_ASM_EXTENDED(0xf0, 0xf0, 2, _EXTENDED1)
+DEE_ASM_UNDEFINED(0xf0, 0xf0, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xf1, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xf2, 2)
 DEE_ASM_UNDEFINED(0xf0, 0xf3, 2)
