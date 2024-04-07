@@ -757,6 +757,30 @@ typedef union {
 #define MNEMONIC_MINWIDTH 7
 PRIVATE char const mnemonic_namepad[MNEMONIC_MINWIDTH - 1] = { ' ', ' ', ' ', ' ', ' ', ' ' };
 
+/* GCC complains that the first "__IF0" within the format switch is unreachable.
+ * Yeah: no $hit, dude. That's why it literally a no-op statement.
+ *
+ * imo: that warning should not be emitted in code like:
+ * >> switch (foo) {
+ * >>
+ * >> {
+ * >>     // vvv GCC warnings that this "if (0)" is unreachable
+ * >>     if (0) { case 1: a(); }
+ * >>     if (0) { case 2: b(); }
+ * >>     c();
+ * >> }   break;
+ * >>
+ * >> {
+ * >>     // vvv But then it doesn't warn about this one...
+ * >>     if (0) { case 3: d(); }
+ * >>     if (0) { case 4: e(); }
+ * >>     f();
+ * >> }   break;
+ * >>
+ * >> }
+ */
+__pragma_GCC_diagnostic_push_ignored(Wswitch_unreachable)
+
 PRIVATE WUNUSED NONNULL((1, 3, 4, 6)) dssize_t DCALL
 libdisasm_printinstr_f(dformatprinter printer, void *arg,
                        /*[1..1]*/ instruction_t *instr_start,
@@ -1086,6 +1110,8 @@ done:
 err:
 	return temp;
 }
+
+__pragma_GCC_diagnostic_pop_ignored(Wswitch_unreachable)
 
 INTERN WUNUSED NONNULL((1, 3)) dssize_t DCALL
 libdisasm_printinstr(dformatprinter printer, void *arg,
