@@ -1765,13 +1765,7 @@ check_dst_sym_class:
 
 				/* This is where we jump when the static was already initialized. */
 				asm_defsym(Lalready_init);
-				if (PUSH_RESULT) {
-					if (asm_putddi(dst))
-						goto err;
-					if (asm_gpush_static((uint16_t)sid))
-						goto err;
-				}
-				return 0;
+				goto push_static_as_result;
 			}
 
 			/* Simple case: can always construct the initializer and
@@ -1815,28 +1809,38 @@ check_dst_sym_class:
 				if (asm_gpop())
 					goto err;
 				asm_defsym(Lalready_init);
-				if (PUSH_RESULT) {
-					if (asm_putddi(dst))
-						goto err;
-					if (asm_gpush_static((uint16_t)sid))
-						goto err;
-				}
-				return 0;
+				goto push_static_as_result;
 			}
-			if (ast_genasm_one(src, ASM_G_FPUSHRES))
-				goto err;
-			if (asm_putddi(ddi_ast))
-				goto err;
-			if (PUSH_RESULT) {
-				if (asm_gdup())
+			if (src->a_type == AST_CONSTEXPR) {
+				/* Special case: can use "push cmpxch PREFIX, unbound, const <imm8/16>" */
+				int32_t cid = asm_newconst(src->a_constexpr);
+				if unlikely(cid < 0)
+					goto err;
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_pstatic((uint16_t)sid))
+					goto err;
+				if (asm_gcmpxch_ub_c_p((uint16_t)cid))
+					goto err;
+			} else {
+				if (ast_genasm_one(src, ASM_G_FPUSHRES))
+					goto err;
+				if (asm_putddi(ddi_ast))
+					goto err;
+				if (asm_pstatic((uint16_t)sid))
+					goto err;
+				if (asm_gcmpxch_ub_pop_p())
 					goto err;
 			}
-			if (asm_pstatic((uint16_t)sid))
-				goto err;
-			if (asm_gcmpxch_ub_pop_p())
-				goto err;
 			if (asm_gpop())
 				goto err;
+push_static_as_result:
+			if (PUSH_RESULT) {
+				if (asm_putddi(dst))
+					goto err;
+				if (asm_gpush_static((uint16_t)sid))
+					goto err;
+			}
 			return 0;
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			if (!(dst_sym->s_flag & SYMBOL_FALLOC)) {
