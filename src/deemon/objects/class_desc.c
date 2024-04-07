@@ -1620,33 +1620,35 @@ class_attribute_init(struct class_attribute *__restrict self,
 	if (DeeString_Check(flags)) {
 		char *pos;
 		self->ca_flag = 0;
-		pos           = DeeString_STR(flags);
-		for (;;) {
-			char *next;
-			size_t flag_len;
-			next     = strchr(pos, ',');
-			flag_len = next ? (size_t)(next - pos) : strlen(pos);
-			if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name)) {
-				unsigned int i;
-				for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
-					if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
-						continue;
-					if (bcmpc(class_attribute_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
-						continue;
-					self->ca_flag |= class_attribute_flags_db[i].fe_flag;
-					goto got_flag;
+		pos = DeeString_STR(flags);
+		if (*pos) {
+			for (;;) {
+				char *next;
+				size_t flag_len;
+				next     = strchr(pos, ',');
+				flag_len = next ? (size_t)(next - pos) : strlen(pos);
+				if likely(flag_len < COMPILER_LENOF(class_attribute_flags_db[0].fe_name)) {
+					unsigned int i;
+					for (i = 0; i < COMPILER_LENOF(class_attribute_flags_db); ++i) {
+						if (class_attribute_flags_db[i].fe_name[flag_len] != '\0')
+							continue;
+						if (bcmpc(class_attribute_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
+							continue;
+						self->ca_flag |= class_attribute_flags_db[i].fe_flag;
+						goto got_flag;
+					}
 				}
-			}
-			DeeError_Throwf(&DeeError_ValueError,
-			                "Invalid flag %$q for %s-attribute %r",
-			                flag_len, pos,
-			                is_class_attribute ? STR_class : "instance",
-			                self->ca_name);
-			goto err_addr_flags_doc;
+				DeeError_Throwf(&DeeError_ValueError,
+				                "Invalid flag %$q for %s-attribute %r",
+				                flag_len, pos,
+				                is_class_attribute ? STR_class : "instance",
+				                self->ca_name);
+				goto err_addr_flags_doc;
 got_flag:
-			if (!next)
-				break;
-			pos = next + 1;
+				if (!next)
+					break;
+				pos = next + 1;
+			}
 		}
 	} else {
 		if (DeeObject_AsUInt16(addr, &self->ca_flag))
@@ -1952,30 +1954,32 @@ cd_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		if (DeeString_Check(class_flags)) {
 			char *pos;
 			pos = DeeString_STR(class_flags);
-			for (;;) {
-				char *next;
-				size_t flag_len;
-				next     = strchr(pos, ',');
-				flag_len = next ? (size_t)(next - pos) : strlen(pos);
-				if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name)) {
-					unsigned int i;
-					for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
-						if (class_flags_db[i].fe_name[flag_len] != '\0')
-							continue;
-						if (bcmpc(class_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
-							continue;
-						result->cd_flags |= class_flags_db[i].fe_flag;
-						goto got_flag;
+			if (*pos) {
+				for (;;) {
+					char *next;
+					size_t flag_len;
+					next     = strchr(pos, ',');
+					flag_len = next ? (size_t)(next - pos) : strlen(pos);
+					if likely(flag_len < COMPILER_LENOF(class_flags_db[0].fe_name)) {
+						unsigned int i;
+						for (i = 0; i < COMPILER_LENOF(class_flags_db); ++i) {
+							if (class_flags_db[i].fe_name[flag_len] != '\0')
+								continue;
+							if (bcmpc(class_flags_db[i].fe_name, pos, flag_len, sizeof(char)) != 0)
+								continue;
+							result->cd_flags |= class_flags_db[i].fe_flag;
+							goto got_flag;
+						}
 					}
-				}
-				DeeError_Throwf(&DeeError_ValueError,
-				                "Invalid class flag %$q",
-				                flag_len, pos);
-				goto err_r_imemb;
+					DeeError_Throwf(&DeeError_ValueError,
+					                "Invalid class flag %$q",
+					                flag_len, pos);
+					goto err_r_imemb;
 got_flag:
-				if (!next)
-					break;
-				pos = next + 1;
+					if (!next)
+						break;
+					pos = next + 1;
+				}
 			}
 		} else {
 			if (DeeObject_AsUInt16((DeeObject *)class_flags, &result->cd_flags))
