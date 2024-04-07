@@ -67,14 +67,10 @@ assert y2(none) == none;
 
 #if __DEEMON_VARIANT__ == "gatw"
 /* Explicitly assert the state of static variables. */
-try {
-	assert x1.__statics__ == {42};
-	assert y1.__statics__ == {43};
-	assert x2.__statics__ == {};
-	assert y2.__statics__ == {};
-} catch (NotImplemented from errors) {
-	// TODO: Remove this try-catch once `function_get_statics()' was been implemented
-}
+assert x1.__statics__ == {42};
+assert y1.__statics__ == {43};
+assert x2.__statics__ == {};
+assert y2.__statics__ == {};
 
 /* Explicitly assert that the compiler don't encode functions with static
  * variables as inlined constant expressions, but instead as Code objects

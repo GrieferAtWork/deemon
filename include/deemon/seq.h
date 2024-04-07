@@ -246,12 +246,12 @@ struct Dee_type_nii {
 		Dee_funptr_t       _nii_class_functions[10];
 
 		struct {
-			/* Return the sequence associated with the iterator, or NULL on error.
+			/* [0..1] Return the sequence associated with the iterator, or NULL on error.
 			 * NOTE: Alternatively, a getset/member `seq' may be defined for this. */
 			WUNUSED_T NONNULL_T((1))
 			DREF DeeObject *(DCALL *nii_getseq)(DeeObject *__restrict self);
 
-			/* Get the iterator's position
+			/* [0..1] Get the iterator's position
 			 * NOTE: Unbound sequence indices also count for this operation
 			 * @return: * :         The iterator's current position, where the a starting position is 0
 			 * @return: (size_t)-2: The position is indeterminate (the iterator may have become detached
@@ -261,7 +261,7 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			size_t          (DCALL *nii_getindex)(DeeObject *__restrict self);
 
-			/* Set the iterator's position
+			/* [0..1] Set the iterator's position
 			 * If the given `new_index' is greater than the max allowed index,
 			 * the iterator is set to an exhausted state (i.e. points at the
 			 * end of the associated sequence)
@@ -271,13 +271,13 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_setindex)(DeeObject *__restrict self, size_t new_index);
 
-			/* Rewind the iterator to its starting position
+			/* [0..1] Rewind the iterator to its starting position
 			 * @return:  0: Success
 			 * @return: -1: Error */
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_rewind)(DeeObject *__restrict self);
 
-			/* Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
+			/* [0..1] Revert the iterator by at most `step' (When `step' is too large, same as `rewind')
 			 * @return:  0: Success (new relative position couldn't be determined)
 			 * @return:  1: Success (the iterator has reached its starting position)
 			 * @return:  2: Success (the iterator hasn't reached its starting position)
@@ -285,7 +285,7 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_revert)(DeeObject *__restrict self, size_t step);
 
-			/* Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
+			/* [0..1] Advance the iterator by at most `step' (When `step' is too large, exhaust the iterator)
 			 * @return:  0: Success (new relative position couldn't be determined)
 			 * @return:  1: Success (the iterator has become exhausted)
 			 * @return:  2: Success (the iterator hasn't become exhausted)
@@ -293,7 +293,7 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_advance)(DeeObject *__restrict self, size_t step);
 
-			/* Decrement the iterator by 1.
+			/* [0..1] Decrement the iterator by 1.
 			 * @return:  0: Success
 			 * @return:  1: The iterator was already at its starting location,
 			 *              or the position couldn't be determined
@@ -301,7 +301,7 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_prev)(DeeObject *__restrict self);
 
-			/* Increment the iterator, but don't generate a value
+			/* [0..1] Increment the iterator, but don't generate a value
 			 * NOTE: Unlike `tp_iter_next()', this operator shouldn't skip unbound entries,
 			 *       meaning that (also unlike `tp_iter_next()'), the iterator's index should
 			 *       only ever be incremented by 1.
@@ -312,7 +312,7 @@ struct Dee_type_nii {
 			WUNUSED_T NONNULL_T((1))
 			int             (DCALL *nii_next)(DeeObject *__restrict self);
 
-			/* Check if the iterator has a predecessor
+			/* [0..1] Check if the iterator has a predecessor
 			 * @return:  0: No, it doesn't have one (index == 0)
 			 * @return:  1: Yes, it does have one (index != 0)
 			 * @return: -1: Error */
@@ -321,7 +321,7 @@ struct Dee_type_nii {
 
 			/* NOTE: `nii_hasnext' should be provided through `tp_bool' (`operator bool()') */
 
-			/* Peek the next iterator value, but don't actually advance the iterator.
+			/* [0..1] Peek the next iterator value, but don't actually advance the iterator.
 			 * @return: ITER_DONE: The iterator has already been exhausted. */
 			WUNUSED_T NONNULL_T((1))
 			DREF DeeObject *(DCALL *nii_peek)(DeeObject *__restrict self);

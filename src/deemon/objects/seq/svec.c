@@ -177,6 +177,49 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF RefVector *DCALL
+rveciter_nii_getseq(RefVectorIterator *__restrict self) {
+	return_reference_(self->rvi_vector);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+rveciter_nii_getindex(RefVectorIterator *__restrict self) {
+	return (size_t)(atomic_read(&self->rvi_pos) - self->rvi_vector->rv_vector);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rveciter_nii_setindex(RefVectorIterator *__restrict self, size_t new_index) {
+	if (new_index > self->rvi_vector->rv_length)
+		new_index = self->rvi_vector->rv_length;
+	atomic_write(&self->rvi_pos, self->rvi_vector->rv_vector + new_index);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+rveciter_nii_rewind(RefVectorIterator *__restrict self) {
+	atomic_write(&self->rvi_pos, self->rvi_vector->rv_vector);
+	return 0;
+}
+
+PRIVATE struct type_nii tpconst rveciter_nii = {
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	{
+		/* .nii_common = */ {
+			/* .nii_getseq   = */ (dfunptr_t)&rveciter_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&rveciter_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&rveciter_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&rveciter_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)NULL,
+			/* .nii_advance  = */ (dfunptr_t)NULL,
+			/* .nii_prev     = */ (dfunptr_t)NULL,
+			/* .nii_next     = */ (dfunptr_t)NULL,
+			/* .nii_hasprev  = */ (dfunptr_t)NULL,
+			/* .nii_peek     = */ (dfunptr_t)NULL,
+		}
+	}
+};
+
 PRIVATE struct type_cmp rveciter_cmp = {
 	/* .tp_hash = */ NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_eq,
@@ -185,6 +228,7 @@ PRIVATE struct type_cmp rveciter_cmp = {
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rveciter_ge,
+	/* .tp_nii  = */ &rveciter_nii
 };
 
 PRIVATE struct type_member tpconst rveciter_members[] = {
@@ -914,7 +958,7 @@ INTERN DeeTypeObject RefVector_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RefVector",
 	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL, /* TODO: This needs to become a GC object (since it can reference itself) */
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
 	/* .tp_base     = */ &DeeSeq_Type,
