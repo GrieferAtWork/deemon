@@ -3235,7 +3235,7 @@ class Doc: WeakRefAble {
 	}
 
 	@@The object represented by @this Doc node (May be unbound)
-	public final member object: Object;
+	public member object: Object;
 	public final property attr: Attribute | none = {
 		get(): Attribute | none {
 			if (m_attr !is bound) {
@@ -3263,7 +3263,7 @@ class Doc: WeakRefAble {
 
 	@@The raw documentation text associated with this node
 	@@If no documentation string could be located, this is an empty string
-	public final member docstring: string;
+	public member docstring: string;
 
 	@[optional.gatw.doc("(path:?Dstring)")]
 	@[optional.gatw.doc("Lookup a given @path in the form $\"/<module>/<x>/<y>/<z>\"")]
@@ -3555,7 +3555,7 @@ set_is_type:
 	}
 
 	@@Evaluates to @true if the object is a type
-	public final member istype: bool = false;
+	public member istype: bool = false;
 
 	@@Evaluates to @true if the object is a type, but was accessed via a singleton
 	@@An example of this is @gc or @none, which are both singleton objects
@@ -3565,10 +3565,10 @@ set_is_type:
 	@@Since such Doc nodes would otherwise be indistinguishable from nodes created
 	@@for the actual types, nodes create via a singleton instance have this field
 	@@set to @true
-	public final member issingleton: bool = false;
+	public member issingleton: bool = false;
 
 	@@Evaluates to @true if the object is an operator
-	public final member isoperator: bool = false;
+	public member isoperator: bool = false;
 
 	@@Returns the function from @import("operators") that can be called in
 	@@order to invoke the operator described by @this @Doc. Can only be used
