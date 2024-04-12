@@ -159,6 +159,7 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
 	size_t size      = name->k_size;
 	size_t label_number;
 	struct text_label *textlbl;
+
 	/* Check if the size is sufficient. */
 	if (size < COMPILER_STRLEN(USERLABEL_PREFIX) + 1)
 		goto not_a_label;
@@ -175,9 +176,11 @@ uasm_label_symbol(struct TPPKeyword *__restrict name) {
 		label_number += digit;
 		++text, --size;
 	}
+
 	/* Check if the given label index actually exists. */
 	if (label_number >= current_userasm.ua_labelc)
 		goto not_a_label;
+
 	/* Return the associated symbol. */
 	textlbl = current_userasm.ua_labelv[label_number].ao_label;
 	if (!textlbl->tl_asym)
@@ -198,6 +201,7 @@ uasm_symbol(struct TPPKeyword *__restrict name) {
 			if (result->as_uname == name)
 				goto done;
 	}
+
 	/* Add a new symbol. */
 	if (symtab.st_size >= symtab.st_alloc &&
 	    !symtab_rehash())
@@ -205,11 +209,11 @@ uasm_symbol(struct TPPKeyword *__restrict name) {
 	result = asm_newsym();
 	if unlikely(!result)
 		goto err;
-	p_result         = &symtab.st_map[name->k_id % symtab.st_alloc];
+	p_result = &symtab.st_map[name->k_id % symtab.st_alloc];
 	result->as_uname = name;
 	result->as_uhnxt = *p_result;
 	result->as_uprev = NULL;
-	*p_result        = result;
+	*p_result = result;
 done:
 	return result;
 err:
@@ -233,6 +237,7 @@ uasm_fbsymbol(struct TPPKeyword *__restrict name,
 						new_result = asm_newsym();
 						if unlikely(!new_result)
 							goto err;
+
 						/* Override the old symbol with the new one. */
 						new_result->as_uname = name;
 						new_result->as_uprev = result;
@@ -293,6 +298,7 @@ uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 					new_result = asm_newsym();
 					if unlikely(!new_result)
 						goto err;
+
 					/* Override the old symbol with the new one. */
 					new_result->as_uname = name;
 					new_result->as_uprev = result;
@@ -306,6 +312,7 @@ uasm_fbsymbol_def(struct TPPKeyword *__restrict name) {
 			p_result = &result->as_uhnxt;
 		}
 	}
+
 	/* Create a new symbol. */
 	if (symtab.st_size >= symtab.st_alloc &&
 	    !symtab_rehash())
@@ -342,13 +349,15 @@ INTERN WUNUSED struct TPPKeyword *DFCALL uasm_parse_symnam(void) {
 		strval = TPPLexer_ParseString();
 		if unlikely(!strval)
 			goto err;
-		/* Re-interprete the parsed string as a keyword that is then used as
+
+		/* Reinterpret the parsed string as a keyword that is then used as
 		 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
 		result = TPPLexer_LookupKeyword(strval->s_text,
 		                                strval->s_size, 1);
 		TPPString_Decref(strval);
 		goto done;
 	}
+
 	if (TPP_ISKEYWORD(tok) &&
 	    !TOK_IS_SYMBOL_NAME_CH(*token.t_end) &&
 	    !DeeUni_IsSymCont(*token.t_end)) {
@@ -367,6 +376,7 @@ continue_without_inc:
 			;
 		if (symbol_end == token.t_file->f_end) {
 			int chunk_state;
+
 			/* Load more input text. */
 			*(uintptr_t *)&symbol_start -= (uintptr_t)token.t_file->f_begin;
 			*(uintptr_t *)&symbol_end -= (uintptr_t)token.t_file->f_begin;
@@ -377,6 +387,7 @@ continue_without_inc:
 				break;
 			goto continue_without_inc;
 		}
+
 		/* We allow unicode symbol characters, as well as
 		 * some special characters, but no whitespace! */
 		if (TOK_IS_SYMBOL_NAME_CH(*symbol_end))
@@ -385,14 +396,17 @@ continue_without_inc:
 			continue;
 		break;
 	}
+
 	/* Lookup the keyword for the symbol's name. */
 	result = TPPLexer_LookupEscapedKeyword(symbol_start,
 	                                       (size_t)(symbol_end - symbol_start),
 	                                       1);
 	if unlikely(!result)
 		goto err;
+
 	/* Set the file point to continue parsing after the symbol name. */
 	token.t_file->f_pos = symbol_end;
+
 	/* Parse the next token following the symbol name. */
 	if unlikely(yield() < 0)
 		goto err;
@@ -446,6 +460,7 @@ uasm_parse_intexpr_unary_base(struct asm_intexpr *result, uint16_t features) {
 		 *       regardless of what may `EXT_CHARACTER_LITERALS' may be set to. */
 		if (!result)
 			goto yield_done;
+
 		/* Character constant. */
 		result->ie_sym = NULL;
 		result->ie_rel = (uint16_t)-1;
@@ -468,7 +483,8 @@ yield_done:
 			strval = TPPLexer_ParseString();
 			if unlikely(!strval)
 				goto err;
-			/* Re-interprete the parsed string as a keyword that is then used as
+
+			/* Reinterpret the parsed string as a keyword that is then used as
 			 * a symbol name (thus allowing _anything_ to appear in a symbol name). */
 			name = TPPLexer_LookupKeyword(strval->s_text,
 			                              strval->s_size, 1);
@@ -521,18 +537,21 @@ yield_done:
 				goto err;
 			if (!result)
 				goto done;
+
 			/* Check if the stack is currently undefined. */
 			if (current_userasm.ua_mode & USER_ASM_FSTKINV) {
 				DeeError_Throwf(&DeeError_CompilerError,
 				                "Cannot retrieve SP while the stack is in an undefined state");
 				goto err;
 			}
+
 			/* Fill in the current stack depth. */
 			result->ie_val = current_assembler.a_stackcur;
 			result->ie_sym = NULL;
 			result->ie_rel = ASM_OVERLOAD_FSTKABS;
 			goto done;
 		}
+
 		/* Lookup/defined user-symbols. */
 		if (TOK_IS_SYMBOL_NAME(tok)) {
 			struct TPPKeyword *name;
@@ -768,6 +787,7 @@ uasm_parse_imm16(uint16_t features) {
 	struct asm_intexpr result;
 	if unlikely(uasm_parse_intexpr(&result, features))
 		goto err;
+
 	/* Warn if the parsed value is out-of-bounds. */
 	if unlikely((result.ie_sym || result.ie_val < 0 ||
 	             result.ie_val > UINT16_MAX ||
@@ -785,6 +805,7 @@ err:
 PRIVATE WUNUSED int32_t DFCALL
 do_parse_module_operands(void) {
 	int32_t result;
+
 	/* Parse a module by name. */
 	if (tok == '@') {
 		DREF DeeModuleObject *mod;
@@ -793,6 +814,7 @@ do_parse_module_operands(void) {
 		mod = parse_module_byname(true);
 		if unlikely(!mod)
 			goto err;
+
 		/* Add the module to the assembler's import list. */
 		result = asm_newmodule(mod);
 		Dee_Decref(mod);
@@ -809,13 +831,15 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
                          uint16_t *__restrict pgid) {
 	DREF DeeModuleObject *module;
 	int32_t temp;
-	/* Parse a module by name. */
+	/* Parse a module b
+	 * y name. */
 	if (tok == '@') {
 		if unlikely(yield() < 0)
 			goto err;
 		module = parse_module_byname(true);
 		if unlikely(!module)
 			goto err;
+
 		/* Add the module to the assembler's import list. */
 		temp = asm_newmodule(module);
 		if unlikely(temp < 0)
@@ -824,6 +848,7 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		temp = uasm_parse_imm16(UASM_INTEXPR_FNORMAL);
 		if unlikely(temp < 0)
 			goto err;
+
 		/* Check if we can locate the module in our import list. */
 		module = NULL;
 		if ((uint16_t)temp < current_rootscope->rs_importc) {
@@ -832,9 +857,11 @@ do_parse_extern_operands(uint16_t *__restrict pmid,
 		}
 	}
 	*pmid = (uint16_t)temp;
+
 	/* Now parse the symbol that is imported from this module. */
 	if (skip(':', W_UASM_EXPECTED_COLON_AFTER_EXTERN_PREFIX))
 		goto err;
+
 	/* If the module name was given, allow the associated symbol to be addressed by name. */
 	if (tok == '@' && module) {
 		struct TPPKeyword *symbol_name;
@@ -885,6 +912,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
 			goto err;
+
 		/* Allow global variables to be addressed by name. */
 		sym = scope_lookup(&current_rootscope->rs_scope.bs_scope,
 		                   symbol_name);
@@ -899,6 +927,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_global_operands(void) {
 			                symbol_name->k_name);
 			goto err;
 		}
+
 		/* Bind the given symbol as a global item. */
 		result = asm_gsymid(sym);
 	} else {
@@ -928,8 +957,10 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
 			goto err;
+
 		/* Allow local variables to be addressed by name. */
 		scope_iter = current_scope;
+
 		/* Look for local variables in all active scopes of the current function. */
 		for (;;) {
 			sym = scope_lookup(scope_iter, symbol_name);
@@ -953,6 +984,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_local_operands(void) {
 			                symbol_name->k_name);
 			goto err;
 		}
+
 		/* Bind the given symbol as a local item. */
 		result = asm_lsymid(sym);
 	} else {
@@ -973,6 +1005,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_constexpr(void) {
 	scope_pop();
 	if unlikely(!imm_const)
 		goto err;
+
 	/* Optimize the constant branch to allow for constant propagation. */
 	if unlikely(ast_optimize_all(imm_const, true)) {
 err_imm_const:
@@ -1020,6 +1053,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
 			goto err;
+
 		/* Allow argument variables to be addressed by name. */
 		sym = scope_lookup(&current_basescope->bs_scope,
 		                   symbol_name);
@@ -1040,6 +1074,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_arg_operands(void) {
 			                symbol_name->k_name);
 			goto err;
 		}
+
 		/* Link the symbol's argument index. */
 		result = sym->s_symid;
 	} else {
@@ -1061,12 +1096,14 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
 			goto err;
+
 		/* Look for the variable outside the current function. */
 		sym        = NULL;
 		scope_iter = current_basescope->bs_scope.s_prev;
 		while (scope_iter) {
 			sym = scope_lookup(&current_basescope->bs_scope,
 			                   symbol_name);
+
 			/* Only consider symbols that may be referenced. */
 			if (sym && SYMBOL_MAY_REFERENCE(sym))
 				break;
@@ -1076,6 +1113,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_ref_operands(void) {
 			err_unknown_symbol(symbol_name);
 			goto err;
 		}
+
 		/* Link and lookup the symbol's reference index. */
 		result = asm_rsymid(sym);
 	} else {
@@ -1097,8 +1135,10 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 		symbol_name = uasm_parse_symnam();
 		if unlikely(!symbol_name)
 			goto err;
+
 		/* Allow static variables to be addressed by name. */
 		scope_iter = current_scope;
+
 		/* Look for static variables in all active scopes of the current function. */
 		for (;;) {
 			sym = scope_lookup(scope_iter, symbol_name);
@@ -1122,6 +1162,7 @@ PRIVATE WUNUSED int32_t DFCALL do_parse_static_operands(void) {
 			                symbol_name->k_name);
 			goto err;
 		}
+
 		/* Bind the given symbol as a static item. */
 		result = asm_ssymid(sym);
 	} else {
@@ -1360,6 +1401,7 @@ do_parse_atoperand(struct asm_invoke_operand *__restrict result) {
 	scope_pop();
 	if unlikely(!imm_expr)
 		goto err;
+
 	/* Optimize the constant branch to allow for constant propagation. */
 	if unlikely(ast_optimize_all(imm_expr, true))
 		goto err_imm_expr;
@@ -1391,6 +1433,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 			goto err;
 		if (skip('}', W_UASM_EXPECTED_RBRACE_AFTER_LBRACE_IN_OPERAND))
 			goto err;
+
 		/* Set the brace flag in the operand class. */
 		result->io_class |= OPERAND_CLASS_FBRACEFLAG;
 		break;
@@ -1403,6 +1446,7 @@ do_parse_operand(struct asm_invoke_operand *__restrict result,
 			goto err;
 		if (skip(']', W_UASM_EXPECTED_RBRACKET_AFTER_LBRACKET_IN_OPERAND))
 			goto err;
+
 		/* Set the brace flag in the operand class. */
 		result->io_class |= OPERAND_CLASS_FBRACKETFLAG;
 		break;
@@ -1422,6 +1466,7 @@ parse_stack_operand:
 parse_stack_operand_start:
 		if unlikely(do_parse_operand(result, false))
 			goto err;
+
 		/* Set the stack-prefix flag. */
 		if (result->io_class & OPERAND_CLASS_FSTACKFLAG) {
 			if (result->io_class & OPERAND_CLASS_FSTACKFLAG2 &&
@@ -1437,6 +1482,7 @@ parse_stack_operand_start:
 			goto err;
 		if unlikely(do_parse_operand(result, false))
 			goto err;
+
 		/* Set the immediate-prefix flag. */
 		if (result->io_class & OPERAND_CLASS_FIMMVAL &&
 		    WARN(W_UASM_DOLLAR_FLAG_ALREADY_SET_FOR_OPERAND))
@@ -1526,8 +1572,8 @@ parse_extern_operand:
 		if unlikely(yield() < 0)
 			goto err;
 		if unlikely(do_parse_extern_operands(&result->io_extern.io_modid,
-			                                  &result->io_extern.io_symid))
-		goto err;
+		                                     &result->io_extern.io_symid))
+			goto err;
 		result->io_class = OPERAND_CLASS_EXTERN;
 	}	break;
 
@@ -1724,6 +1770,7 @@ parse_local_operand:
 				goto done_yield_1;
 			}
 			if (IS_KWD_NOCASE("default")) {
+	case KWD_default:
 				result->io_class = OPERAND_CLASS_DEFAULT;
 				goto done_yield_1;
 			}
@@ -1744,11 +1791,13 @@ parse_local_operand:
 				goto done_yield_1;
 			}
 		}
+
 		/* Fallback: Parse an address expression. */
 		if unlikely(uasm_parse_intexpr(&result->io_intexpr,
 		                               recognize_sp ? UASM_INTEXPR_FNORMAL
 		                                            : UASM_INTEXPR_FHASSP))
 			goto err;
+
 		/* Determine the address width classification of the operand. */
 		asm_invoke_operand_determine_intclass(result);
 		break;
@@ -1765,9 +1814,11 @@ err:
 INTERN WUNUSED NONNULL((1)) int DFCALL
 uasm_parse_operand(struct asm_invoke_operand *__restrict result) {
 	ASSERT(!result->io_class);
+
 	/* Parse the actual operand. */
 	if unlikely(do_parse_operand(result, true))
 		goto err;
+
 	/* Check for a dots-suffix. */
 	if (tok == TOK_DOTS) {
 		/* Set the dots-flag. */
@@ -1790,6 +1841,7 @@ uasm_parse_instruction(void) {
 	struct asm_invocation invoc;
 	if (tok == TOK_INT) {
 		struct asm_sym *fbsym;
+
 		/* Integer symbol definition. */
 		name = TPPLexer_LookupEscapedKeyword(token.t_begin,
 		                                     (size_t)(token.t_end - token.t_begin), 1);
@@ -1802,10 +1854,12 @@ uasm_parse_instruction(void) {
 		fbsym = uasm_fbsymbol_def(name);
 		if unlikely(!fbsym)
 			goto err;
+
 		/* Define the symbol here. */
 		uasm_defsym(fbsym);
 		goto done_continue;
 	}
+
 	/* Clear out the invocation. */
 	bzero(&invoc, sizeof(struct asm_invocation));
 
@@ -1826,6 +1880,7 @@ read_mnemonic_name:
 			/* Define the symbol here. */
 			uasm_defsym(sym);
 		}
+
 		/* Yield the `:' token. */
 		if (yield() < 0)
 			goto err;
@@ -1934,6 +1989,7 @@ do_stack_prefix:
 			goto do_stack_prefix;
 		if (NAMEISKWD_S(6, STR_extern))
 			goto do_extern_prefix;
+
 		/* NOTE: Since we must remain case-insensitive, we must re-check all prefixes. */
 		if (NAMEISKWD_S(6, STR_static))
 			goto do_static_prefix;
@@ -1941,10 +1997,12 @@ do_stack_prefix:
 			goto do_global_prefix;
 		if (NAMEISKWD_S(5, STR_local))
 			goto do_local_prefix;
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		if (NAMEISKWD_S(5, STR_const)) {
 			invoc.ai_flags |= INVOKE_FPREFIX_RO;
 			goto do_static_prefix;
 		}
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		break;
 #undef NAMEISKWD_S
 #undef NAMEISKWD
@@ -1956,10 +2014,12 @@ do_stack_prefix:
 	if unlikely(!mnemonic) {
 		if (WARN(W_UASM_UNKNOWN_MNEMONIC, name))
 			goto err;
+
 		/* Unknown mnemonic... (Discard the remainder of the line) */
-		while (tok > 0 && tok != ';' && tok != '\n')
+		while (tok > 0 && tok != ';' && tok != '\n') {
 			if (yield() < 0)
 				goto err;
+		}
 		goto done;
 	}
 got_mnemonic:
@@ -1976,6 +2036,7 @@ got_mnemonic:
 		if unlikely(yield() < 0)
 			goto err;
 	}
+
 	/* All right! We've got everything we need. Now to do the actual invocation. */
 	if unlikely(uasm_invoke(mnemonic, &invoc))
 		goto err;
@@ -2013,6 +2074,7 @@ continue_line:
 			if (error > 0)
 				goto continue_line;
 		}
+
 		/* Discard any trailing tokens before a new-line or semicolon. */
 		while (tok > 0 && tok != ';' && tok != '\n') {
 			if (WARN(W_UASM_IGNORING_TRAILING_TOKENS))
@@ -2020,11 +2082,13 @@ continue_line:
 			if unlikely(yield() < 0)
 				goto err;
 		}
+
 		/* Consume the `;' or `\n' token. */
 		if likely(tok == ';' || tok == '\n') {
 			if unlikely(yield() < 0)
 				goto err;
 		}
+
 		/* Warn if this didn't go anywhere. */
 		if unlikely(old_num == token.t_num) {
 			if (WARN(W_UASM_PARSING_FAILED))
@@ -2065,10 +2129,12 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 		    result < (struct asm_mnemonic *)((uintptr_t)asm_mnemonics + asm_mnemonics_size))
 			goto done;
 	}
+
 	/* Do a string lookup. */
 	result = asm_mnemonic_lookup_str(name->k_name);
 	if unlikely(!result)
 		goto done;
+
 	/* Try to cache the mnemonic in the keyword. */
 #undef calloc
 #define calloc(n, s) Dee_Callocc(n, s)
@@ -2078,7 +2144,6 @@ asm_mnemonic_lookup(struct TPPKeyword *__restrict name) {
 done:
 	return result;
 }
-
 
 DECL_END
 #endif /* !CONFIG_LANGUAGE_NO_ASM */

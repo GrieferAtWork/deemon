@@ -458,7 +458,9 @@ struct asm_invocation {
 	                                   *       set, as otherwise that would mean that `push' was
 	                                   *       prefixed by another `push'. */
 #define INVOKE_FPREFIX    0x0020      /* The instruction is prefixed by a symbol. */
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define INVOKE_FPREFIX_RO 0x0040      /* For use with the `ASM_STATIC' prefix: Only allow instructions using the prefix as read-only. */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	uint16_t           ai_flags;      /* Invocation flags (Set of `INVOKE_F*') */
 	uint8_t            ai_opcount;    /* [<= ASM_MAX_INSTRUCTION_OPERANDS] The total number of operands. */
 	uint8_t            ai_prefix;     /* [valid_if(INVOKE_FPREFIX)] The type of prefix (One of `ASM_*'; aka. the prefixed instruction id without F0 prefix). */
@@ -500,9 +502,11 @@ struct ATTR_PACKED asm_overload {
 #define ASM_OVERLOAD_FREL_DSPBIT 0x0001      /* BIT: When set, the relocation is DiSPositional. */
 #define ASM_OVERLOAD_FREL_STKBIT 0x0002      /* BIT: When set, the relocation is STacK-dependent. */
 #define ASM_OVERLOAD_FNORMAL     0x0000      /* Normal overload flags. */
-#define ASM_OVERLOAD_FPUSH       0x0010      /* The instruction must be prefixed by `push'  */
+#define ASM_OVERLOAD_FPUSH       0x0010      /* The instruction must be prefixed by `push' */
 #define ASM_OVERLOAD_FPREFIX     0x0020      /* The overload must be used with a prefix. */
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 #define ASM_OVERLOAD_FPREFIX_RO  0x0040      /* The overload must be used with a prefix, which is allowed to be read-only. */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 #define ASM_OVERLOAD_F16BIT      0x0080      /* Same as `ASM_OVERLOAD_FF0', however no prefix is written. */
 #define ASM_OVERLOAD_FF0         0x0100      /* When set, `ao_instr' may be prefixed by `0xf0' to
 	                                          * double the bit-limits of io_symid-related operands. */

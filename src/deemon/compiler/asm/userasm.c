@@ -681,10 +681,12 @@ compatible_operand(struct asm_invoke_operand   const *__restrict iop,
 			/* Encoded as stack-top operand. */
 			break;
 
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		case OPERAND_CLASS_CONST:
 			if (!(ao_flags & ASM_OVERLOAD_FPREFIX_RO))
 				goto nope; /* The overload doesn't accept a read-only operand. */
 			ATTR_FALLTHROUGH
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		case OPERAND_CLASS_STATIC:
 		case OPERAND_CLASS_EXTERN:
 		case OPERAND_CLASS_GLOBAL:
@@ -806,11 +808,13 @@ retry:
 			continue;
 #endif /* (INVOKE_FPUSH != ASM_OVERLOAD_FPUSH) || (INVOKE_FPREFIX != ASM_OVERLOAD_FPREFIX) */
 
+#ifndef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 		/* Make sure that read-only prefix operands can only
 		 * be used with read-only prefix instructions. */
 		if (!(iter->ao_flags & ASM_OVERLOAD_FPREFIX_RO) &&
 		    (invoc->ai_flags & INVOKE_FPREFIX_RO))
 			continue;
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 		/* If the overload is only applicable to yielding/non-yielding
 		 * functions, validate that we match that requirement. */
@@ -1450,7 +1454,7 @@ abs_stack_any:
 			    !SYMBOL_MUST_REFERENCE_TYPEMAY(sym) &&
 			    (sym->s_flag & SYMBOL_FALLOC)) {
 				/* in/out stack-operand */
-				result = DeeString_Newf("stack #" PRFu16, SYMBOL_STACK_OFFSET(sym));
+				result = DeeString_Newf("stack #%" PRFu16, SYMBOL_STACK_OFFSET(sym));
 				break;
 			}
 		}
@@ -1475,9 +1479,7 @@ abs_stack_any:
 			/* Output-only stack-top operand (user-assembly must leave the value ontop of the stack) */
 			return_empty_string;
 		}
-		result = DeeString_Newf("stack #" PRFu16, current_assembler.a_stackcur - 1);
-		if unlikely(!result)
-			goto err;
+		result = DeeString_Newf("stack #%" PRFu16, current_assembler.a_stackcur - 1);
 		break;
 
 	case ASM_OP_EXCEPT:
@@ -1502,7 +1504,7 @@ abs_stack_any:
 		mid = asm_msymid(sym);
 		if unlikely(mid < 0)
 			goto err;
-		result = DeeString_Newf("module " PRFu16, (uint16_t)mid);
+		result = DeeString_Newf("module %" PRFu16, (uint16_t)mid);
 	}	break;
 
 	case ASM_OP_THIS:
@@ -1549,7 +1551,7 @@ abs_stack_any:
 		rid = asm_rsymid(sym);
 		if unlikely(rid < 0)
 			goto err;
-		result = DeeString_Newf("ref " PRFu16, (uint16_t)rid);
+		result = DeeString_Newf("ref %" PRFu16, (uint16_t)rid);
 	}	break;
 
 	case ASM_OP_REF_GEN: {
@@ -1574,7 +1576,7 @@ abs_stack_any:
 		rid = asm_rsymid(sym);
 		if unlikely(rid < 0)
 			goto err;
-		result = DeeString_Newf("ref " PRFu16, (uint16_t)rid);
+		result = DeeString_Newf("ref %" PRFu16, (uint16_t)rid);
 	}	break;
 
 	case ASM_OP_ARG:
@@ -1588,7 +1590,7 @@ abs_stack_any:
 		if (DeeBaseScope_IsVarargs(current_basescope, sym) ||
 		    DeeBaseScope_IsVarkwds(current_basescope, sym))
 			goto next_option;
-		result = DeeString_Newf("arg " PRFu16, sym->s_symid);
+		result = DeeString_Newf("arg %" PRFu16, sym->s_symid);
 		break;
 
 	case ASM_OP_VARG:
@@ -1626,7 +1628,7 @@ abs_stack_any:
 		cid = asm_newconst(self->a_constexpr);
 		if unlikely(cid < 0)
 			goto err;
-		result = DeeString_Newf("const " PRFu16, (uint16_t)cid);
+		result = DeeString_Newf("const %" PRFu16, (uint16_t)cid);
 	}	break;
 
 	case ASM_OP_STATIC: {
@@ -1645,7 +1647,7 @@ abs_stack_any:
 		}
 		if unlikely(sid < 0)
 			goto err;
-		result = DeeString_Newf("static " PRFu16, (uint16_t)sid);
+		result = DeeString_Newf("static %" PRFu16, (uint16_t)sid);
 	}	break;
 
 	case ASM_OP_EXTERN: {
@@ -1660,7 +1662,7 @@ abs_stack_any:
 		eid = asm_esymid(sym);
 		if unlikely(eid < 0)
 			goto err;
-		result = DeeString_Newf("extern " PRFu16 ":" PRFu16, (uint16_t)eid,
+		result = DeeString_Newf("extern %" PRFu16 ":%" PRFu16, (uint16_t)eid,
 		                        SYMBOL_EXTERN_SYMBOL(sym)->ss_index);
 	}	break;
 
@@ -1678,7 +1680,7 @@ abs_stack_any:
 		}
 		if unlikely(gid < 0)
 			goto err;
-		result = DeeString_Newf("global " PRFu16, (uint16_t)gid);
+		result = DeeString_Newf("global %" PRFu16, (uint16_t)gid);
 	}	break;
 
 	case ASM_OP_LOCAL: {
@@ -1698,7 +1700,7 @@ write_regular_local:
 		}
 		if unlikely(lid < 0)
 			goto err;
-		result = DeeString_Newf("local " PRFu16, (uint16_t)lid);
+		result = DeeString_Newf("local %" PRFu16, (uint16_t)lid);
 	}	break;
 
 	case ASM_OP_LOCAL_GEN: {
@@ -1722,7 +1724,7 @@ write_regular_local:
 		if (mode != OPTION_MODE_INPUT)
 			cleanup->cm_kind = CLEANUP_MODE_FLOCAL_POP;
 		cleanup->cm_value = (uint16_t)lid;
-		result            = DeeString_Newf("local " PRFu16, (uint16_t)lid);
+		result = DeeString_Newf("local %" PRFu16, (uint16_t)lid);
 	}	break;
 
 	case ASM_OP_TRUE:
@@ -1765,7 +1767,7 @@ write_regular_local:
 				if (ast_genasm_one(self->a_multiple.m_astv[i], ASM_G_FPUSHRES))
 					goto err;
 			}
-			result = DeeString_Newf("{#%u}", length);
+			result = DeeString_Newf("{#%" PRFuSIZ "}", length);
 			break;
 		}
 		if (self->a_type == AST_CONSTEXPR &&
@@ -1808,7 +1810,7 @@ write_regular_local:
 						goto err;
 				goto next_option;
 			}
-			result = DeeString_Newf("{#%u}", length * 2);
+			result = DeeString_Newf("{#%" PRFuSIZ "}", (size_t)(length * 2));
 			break;
 		}
 		goto next_option;
@@ -1822,7 +1824,7 @@ write_regular_local:
 				if (ast_genasm_one(self->a_multiple.m_astv[i], ASM_G_FPUSHRES))
 					goto err;
 			}
-			result = DeeString_Newf("[#%u]", length);
+			result = DeeString_Newf("[#%" PRFuSIZ "]", length);
 			break;
 		}
 		if (self->a_type == AST_CONSTEXPR) {
@@ -1867,33 +1869,17 @@ write_regular_local:
 						goto err;
 				goto next_option;
 			}
-			result = DeeString_Newf("{#%u}", length);
+			result = DeeString_Newf("{#%" PRFuSIZ "}", length);
 			break;
 		}
 		goto next_option;
 
 	{
 		int64_t intval, intmin, intmax;
-		__IF0 {
-	case ASM_OP_SIMM8:
-			intmin = INT8_MIN;
-			intmax = INT8_MAX;
-		}
-		__IF0 {
-	case ASM_OP_SIMM16:
-			intmin = INT16_MIN;
-			intmax = INT16_MAX;
-		}
-		__IF0 {
-	case ASM_OP_SIMM32:
-			intmin = INT32_MIN;
-			intmax = INT32_MAX;
-		}
-		__IF0 {
-	case ASM_OP_SIMM64:
-			intmin = INT64_MIN;
-			intmax = INT64_MAX;
-		}
+		__IF0 { case ASM_OP_SIMM8: intmin = INT8_MIN; intmax = INT8_MAX; }
+		__IF0 { case ASM_OP_SIMM16: intmin = INT16_MIN; intmax = INT16_MAX; }
+		__IF0 { case ASM_OP_SIMM32: intmin = INT32_MIN; intmax = INT32_MAX; }
+		__IF0 { case ASM_OP_SIMM64: intmin = INT64_MIN; intmax = INT64_MAX; }
 		if (self->a_type != AST_CONSTEXPR)
 			goto next_option;
 		if (!DeeInt_Check(self->a_constexpr))
@@ -1907,22 +1893,10 @@ write_regular_local:
 
 	{
 		uint64_t intval, intmax;
-		__IF0 {
-	case ASM_OP_IMM8:
-			intmax = UINT8_MAX;
-		}
-		__IF0 {
-	case ASM_OP_IMM16:
-			intmax = UINT16_MAX;
-		}
-		__IF0 {
-	case ASM_OP_IMM32:
-			intmax = UINT32_MAX;
-		}
-		__IF0 {
-	case ASM_OP_IMM64:
-			intmax = UINT64_MAX;
-		}
+		__IF0 { case ASM_OP_IMM8: intmax = UINT8_MAX; }
+		__IF0 { case ASM_OP_IMM16: intmax = UINT16_MAX; }
+		__IF0 { case ASM_OP_IMM32: intmax = UINT32_MAX; }
+		__IF0 { case ASM_OP_IMM64: intmax = UINT64_MAX; }
 		if (self->a_type != AST_CONSTEXPR)
 			goto next_option;
 		if (!DeeInt_Check(self->a_constexpr))
@@ -1939,44 +1913,28 @@ write_regular_local:
 			goto next_option;
 		if (self->a_constexpr == (DeeObject *)&DeeTuple_Type) {
 			result = (DeeObject *)&str_Tuple;
-			Dee_Incref(result);
-			break;
-		}
-		if (self->a_constexpr == (DeeObject *)&DeeList_Type) {
+		} else if (self->a_constexpr == (DeeObject *)&DeeList_Type) {
 			result = (DeeObject *)&str_List;
-			Dee_Incref(result);
-			break;
-		}
-		if (self->a_constexpr == (DeeObject *)&DeeDict_Type) {
+		} else if (self->a_constexpr == (DeeObject *)&DeeDict_Type) {
 			result = (DeeObject *)&str_Dict;
-			Dee_Incref(result);
-			break;
-		}
-		if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) {
+		} else if (self->a_constexpr == (DeeObject *)&DeeHashSet_Type) {
 			result = (DeeObject *)&str_HashSet;
-			Dee_Incref(result);
-			break;
-		}
-		if (self->a_constexpr == (DeeObject *)&DeeInt_Type) {
+		} else if (self->a_constexpr == (DeeObject *)&DeeInt_Type) {
 			result = (DeeObject *)&str_int;
-			Dee_Incref(result);
-			break;
-		}
-		if (self->a_constexpr == (DeeObject *)&DeeBool_Type) {
+		} else if (self->a_constexpr == (DeeObject *)&DeeBool_Type) {
 			result = (DeeObject *)&str_bool;
-			Dee_Incref(result);
-			break;
+		} else {
+			goto next_option;
 		}
-		goto next_option;
+		Dee_Incref(result);
+		break;
 
 	case ASM_OP_PREFIX:
-		if (mode == OPTION_MODE_INPUT) {
-			result = get_assembly_formatter_oprepr(self, "ceglCsS", mode | OPTION_MODE_TRY,
-			                                       cleanup, init_state);
-		} else {
-			result = get_assembly_formatter_oprepr(self, "eglCsS", mode | OPTION_MODE_TRY,
-			                                       cleanup, init_state);
-		}
+		result = get_assembly_formatter_oprepr(self,
+		                                       mode == OPTION_MODE_INPUT ? "ceglCsS"
+		                                                                 : "eglCsS",
+		                                       mode | OPTION_MODE_TRY,
+		                                       cleanup, init_state);
 		if (!result)
 			goto err;
 		if (result != ITER_DONE)
@@ -1984,7 +1942,8 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_INTEGER:
-		result = get_assembly_formatter_oprepr(self, "I32N32", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "I32N32",
+		                                       mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 		if (!result)
 			goto err;
@@ -1993,7 +1952,8 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_SYMBOL:
-		result = get_assembly_formatter_oprepr(self, "raAvAkcCseglRS", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "raAvAkcCseglRS",
+		                                       mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 		if (!result)
 			goto err;
@@ -2002,7 +1962,8 @@ write_regular_local:
 		goto next_option;
 
 	case ASM_OP_VARIABLE:
-		result = get_assembly_formatter_oprepr(self, "eglSCs", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "eglSCs",
+		                                       mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 		if (!result)
 			goto err;
@@ -2012,10 +1973,12 @@ write_regular_local:
 
 	case ASM_OP_BINDABLE:
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-		result = get_assembly_formatter_oprepr(self, "eglCs", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "eglCs",
+		                                       mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 #else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
-		result = get_assembly_formatter_oprepr(self, "egl", mode | OPTION_MODE_TRY,
+		result = get_assembly_formatter_oprepr(self, "egl",
+		                                       mode | OPTION_MODE_TRY,
 		                                       cleanup, init_state);
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		if (!result)
