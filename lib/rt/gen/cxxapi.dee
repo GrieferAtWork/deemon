@@ -340,9 +340,9 @@ function encodeTemplateParameters(
 			case "items":
 				if (narrowCxxReturnType == "Sequence<>") {
 					return f"Sequence<{
-						templateGt(f'_AbstractTuple<{
+						templateGt(f"_AbstractTuple<{
 							templateGt(", ".join(templateParameters))
-						}>')
+						}>")
 					}>";
 				}
 				break;

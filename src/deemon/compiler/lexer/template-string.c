@@ -109,7 +109,7 @@ parse_current_token_as_template_string:
 	ASSERT(tok == TOK_STRING || tok == TOK_CHAR);
 	ASSERT(token.t_begin < token.t_end);
 	ASSERT(token.t_begin[0] == '\"' || token.t_begin[0] == '\'');
-	ASSERT(token.t_begin[0] == token.t_end[-1]);
+	/*ASSERT(token.t_begin[0] == token.t_end[-1]);*/ /* Might not be the case if the user suppressed an EOF-in-string warning */
 	quote       = token.t_begin[0];
 	text_iter   = token.t_begin + 1;
 	text_end    = token.t_end - 1;

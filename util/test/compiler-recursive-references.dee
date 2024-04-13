@@ -18,13 +18,7 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-/*FIXME:
->> SyntaxError: /home/runner/work/deemon/deemon/util/test/compiler-recursive-references.dee:37:25: E2055("-Wsyntax"): Expected `;' after `__asm__', but got `'
-/home/runner/work/deemon/deemon/util/test/compiler-recursive-references.dee:21:56: In expansion of macro `PREVENT_OPTIMIZATIONS'
-/home/runner/work/deemon/deemon/util/test.dee(43,24) : runall+002E
-/home/runner/work/deemon/deemon/util/test.dee(49,7) : <anonymous>+000A
-*/
-#define PREVENT_OPTIMIZATIONS(x) __asm__("" : "+X" (x));
+#define PREVENT_OPTIMIZATIONS(x) __asm__("" : "+X" (x))
 
 /* With the introduction of the new symbol system, symbol references are
  * handled implicitly internally. Because of this, the assembler must be
