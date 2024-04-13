@@ -715,6 +715,7 @@ function_optimize(DeeFunctionObject *__restrict self, size_t argc,
 	bool for_tuple = false;
 	bool for_kwds = false;
 	bool allow_async = false;
+	(void)self;
 	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
@@ -752,6 +753,7 @@ code_optimize(DeeCodeObject *__restrict self, size_t argc,
 	bool for_tuple = false;
 	bool for_kwds = false;
 	bool allow_async = false;
+	(void)self;
 	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bbb:optimize",
 	                    &for_tuple, &for_kwds, &allow_async))
 		goto err;
@@ -788,6 +790,7 @@ function_optimized(DeeFunctionObject *__restrict self, size_t argc,
                    DeeObject *const *argv, DeeObject *kw) {
 	bool for_tuple = false;
 	bool for_kwds = false;
+	(void)self;
 	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
 		goto err;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
@@ -813,6 +816,7 @@ code_optimized(DeeCodeObject *__restrict self, size_t argc,
                DeeObject *const *argv, DeeObject *kw) {
 	bool for_tuple = false;
 	bool for_kwds = false;
+	(void)self;
 	if (DeeArg_UnpackKw(argc, argv, kw, code_optimize_kwlist, "|bb:optimized", &for_tuple, &for_kwds))
 		goto err;
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
