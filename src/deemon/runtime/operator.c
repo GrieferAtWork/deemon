@@ -1375,8 +1375,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	/* Handle string-repr recursion for GC objects. */
 	if unlikely(tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
-		DeeThreadObject *this_thread;
-		this_thread = DeeThread_Self();
+		DeeThreadObject *this_thread = DeeThread_Self();
 
 		/* Trace objects for which __str__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
@@ -1417,8 +1416,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	/* Handle string-repr recursion for GC objects. */
 	if (tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
-		DeeThreadObject *this_thread;
-		this_thread = DeeThread_Self();
+		DeeThreadObject *this_thread = DeeThread_Self();
 
 		/* Trace objects for which __repr__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
@@ -1460,8 +1458,7 @@ DEFINE_OPERATOR(dssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
 	/* Handle string-repr recursion for GC objects. */
 	if unlikely(tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
-		DeeThreadObject *this_thread;
-		this_thread = DeeThread_Self();
+		DeeThreadObject *this_thread = DeeThread_Self();
 
 		/* Trace objects for which __str__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_str_curr;
@@ -1501,8 +1498,7 @@ DEFINE_OPERATOR(dssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
 	/* Handle string-repr recursion for GC objects. */
 	if (tp_self->tp_flags & TP_FGC) {
 		struct Xrepr_frame opframe;
-		DeeThreadObject *this_thread;
-		this_thread = DeeThread_Self();
+		DeeThreadObject *this_thread = DeeThread_Self();
 
 		/* Trace objects for which __repr__ is being invoked. */
 		opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_repr_curr;
@@ -1975,24 +1971,51 @@ type_inherit_hash(DeeTypeObject *__restrict self) {
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
+#ifdef DEFINE_TYPED_OPERATORS
+#define Xrepr_frame trepr_frame
+#else /* DEFINE_TYPED_OPERATORS */
+#define Xrepr_frame repr_frame
+#endif /* !DEFINE_TYPED_OPERATORS */
+
 WUNUSED /*ATTR_PURE*/
 DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
-	/* TODO: Just like with `DeeObject_Str()', this function must guard against
-	 *       recursive objects, which are currently able to crash deemon:
-	 * >> class Foo {
-	 * >>     public member me;
-	 * >> }
-	 * >>
-	 * >> local x = Foo();
-	 * >> x.me = x;
-	 * >> print x.operator hash(); */
 	LOAD_TP_SELF;
 	do {
-		if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash)
-			return DeeType_INVOKE_HASH(tp_self, self);
+		if (tp_self->tp_cmp && tp_self->tp_cmp->tp_hash) {
+			if likely(!(tp_self->tp_flags & TP_FGC)) {
+				return DeeType_INVOKE_HASH(tp_self, self);
+			} else {
+				/* Handle hash recursion for GC objects. */
+				dhash_t result;
+				struct Xrepr_frame opframe;
+				DeeThreadObject *this_thread = DeeThread_Self();
+
+				/* Trace objects for which __hash__ is being invoked. */
+				opframe.rf_prev = (struct Xrepr_frame *)this_thread->t_hash_curr;
+#ifdef DEFINE_TYPED_OPERATORS
+				if unlikely(repr_contains(opframe.rf_prev, tp_self, self))
+					goto recursion;
+				opframe.rf_obj           = self;
+				opframe.rf_type          = tp_self;
+				this_thread->t_hash_curr = (struct repr_frame *)&opframe;
+#else /* DEFINE_TYPED_OPERATORS */
+				if unlikely(repr_contains(opframe.rf_prev, self))
+					goto recursion;
+				opframe.rf_obj = self;
+				this_thread->t_hash_curr = &opframe;
+#endif /* !DEFINE_TYPED_OPERATORS */
+				result = DeeType_INVOKE_HASH(tp_self, self);
+				this_thread->t_hash_curr = (struct repr_frame *)opframe.rf_prev;
+				return result;
+			}
+		}
 	} while (type_inherit_hash(tp_self));
 	return DeeObject_HashGeneric(self);
+recursion:
+	return DEE_HASHOF_RECURSIVE_ITEM;
 }
+
+#undef Xrepr_frame
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED /*ATTR_PURE*/ ATTR_INS(1, 2) dhash_t

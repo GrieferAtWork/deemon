@@ -238,7 +238,7 @@ struct Dee_thread_interrupt {
  * #1: Dee_THREAD_STATE_INITIAL:      The deemon thread object was created and can be configured
  * #2: Dee_THREAD_STATE_SETUP:        By holding this bit-lock, you can configure the thread
  * #3: Dee_THREAD_STATE_STARTING:     You're inside of `DeeThread_Start()'
- * #4: Dee_THREAD_STATE_STARTED:      The thread was created and has acknowledged that it not exists
+ * #4: Dee_THREAD_STATE_STARTED:      The thread was created and has acknowledged that it now exists
  * #5: Dee_THREAD_STATE_STARTING:     The flag by the parent thread `Dee_THREAD_STATE_STARTED' becomes set
  *
  * Running (interrupt):
@@ -315,10 +315,13 @@ struct Dee_thread_object {
 	Dee_OBJECT_HEAD /* GC object. */
 	struct Dee_repr_frame         *t_str_curr;   /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
-	                                              * Chain of objects currently invoking the `__str__' operator. */
+	                                              * Chain of GC objects currently invoking the `__str__' operator. */
 	struct Dee_repr_frame         *t_repr_curr;  /* [lock(PRIVATE(DeeThread_Self()))][0..1]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
-	                                              * Chain of objects currently invoking the `__repr__' operator. */
+	                                              * Chain of GC objects currently invoking the `__repr__' operator. */
+	struct Dee_repr_frame         *t_hash_curr;  /* [lock(PRIVATE(DeeThread_Self()))][0..1]
+	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
+	                                              * Chain of GC objects currently invoking the `__hash__' operator. */
 	struct Dee_deep_assoc          t_deepassoc;  /* [lock(PRIVATE(DeeThread_Self()))]
 	                                              * [valid_if(Dee_THREAD_STATE_STARTED && !Dee_THREAD_STATE_TERMINATED)]
 	                                              * Deepcopy association map. */

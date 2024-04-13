@@ -186,6 +186,7 @@ DFUNDEF ATTR_CONST WUNUSED Dee_hash_t
  * thinking about it, only zero *really* makes sense... */
 #define DEE_HASHOF_EMPTY_SEQUENCE 0
 #define DEE_HASHOF_UNBOUND_ITEM   0
+#define DEE_HASHOF_RECURSIVE_ITEM 0
 
 
 

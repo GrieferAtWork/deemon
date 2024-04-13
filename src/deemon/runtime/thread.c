@@ -1134,6 +1134,7 @@ INTERN DeeOSThreadObject DeeThread_Main = {
 		OBJECT_HEAD_INIT(&DeeThread_Type),
 		/* .t_str_curr   = */ NULL,
 		/* .t_repr_curr  = */ NULL,
+		/* .t_hash_curr  = */ NULL,
 		/* .t_deepassoc  = */ { 0, 0, empty_deep_assoc, 0 },
 		/* .t_exec       = */ NULL,
 		/* .t_except     = */ NULL,
@@ -1921,6 +1922,7 @@ DeeThread_Secede(DREF DeeObject *thread_result) {
 	ASSERTF(self->t_exec == NULL && self->t_execsz == 0, "Calling thread is still executing deemon code");
 	ASSERTF(self->t_str_curr == NULL, "Calling thread still has active calls to `DeeObject_Str'");
 	ASSERTF(self->t_repr_curr == NULL, "Calling thread still has active calls to `DeeObject_Repr'");
+	ASSERTF(self->t_hash_curr == NULL, "Calling thread still has active calls to `DeeObject_Hash'");
 	ASSERTF(self->t_deepassoc.da_used == 0, "Calling thread still has active calls to `DeeObject_DeepCopy'");
 	ASSERT((self->t_deepassoc.da_mask != 0) ==
 	       (self->t_deepassoc.da_list != empty_deep_assoc));
@@ -2470,29 +2472,31 @@ PRIVATE int DeeThread_Entry_func(void *arg)
 	_DeeThread_ReleaseSetup(&self->ot_thread);
 	thread_list_lock_release();
 
-	/* Tell our creator that we're now up-and-running */
+	/* Tell our creator that we're now up-and-running.
+	 * NOTE: We use `DeeFutex_WakeAll()' here instead of `_DeeThread_WakeWaiting()',
+	 *       because there should always be someone that is waiting at this point.
+	 *       (s.a. the impl of `DeeThread_Start()') */
 	DeeFutex_WakeAll(&self->ot_thread.t_state);
 
 	/* Before anything is actually executed, check for interrupts that
 	 * may have been scheduled before the thread was even started.
 	 * This way, the user can send interrupts before starting a thread
-	 * and is allowed to assume that they will dealt with (in order)
+	 * and is allowed to assume that they will be dealt with (in order)
 	 * before the thread's actual main method. */
 	if (DeeThread_CheckInterruptSelf(&self->ot_thread))
 		goto handle_thread_error_threadargs;
-	if (!thread_main) {
-		/* If no thread-main callback has been assigned, `run()' member function. */
-		thread_main = DeeObject_GetAttr((DeeObject *)&self->ot_thread, (DeeObject *)&str_run);
-		if unlikely(!thread_main)
-			goto handle_thread_error_threadargs;
-	}
-	
+
 	/* Invoke the thread's main() callback. */
-	result = DeeObject_Call(thread_main,
-	                        DeeTuple_SIZE(thread_args),
-	                        DeeTuple_ELEM(thread_args));
+	if likely(thread_main) {
+		result = DeeObject_CallTuple(thread_main, thread_args);
+		Dee_Decref(thread_main);
+	} else {
+		/* If no thread-main callback has been assigned, invoke the `run()' member function. */
+		result = DeeObject_CallAttrTuple((DeeObject *)&self->ot_thread,
+		                                 (DeeObject *)&str_run,
+		                                 thread_args);
+	}
 	Dee_Decref(thread_args);
-	Dee_Decref(thread_main);
 	if unlikely(!result)
 		goto handle_thread_error;
 
@@ -3503,6 +3507,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 	ASSERT(!self->t_execsz);
 	ASSERT(!self->t_str_curr);
 	ASSERT(!self->t_repr_curr);
+	ASSERT(!self->t_hash_curr);
 
 #ifdef DeeThread_USE_SINGLE_THREADED
 	/* Only unmanaged threads can get here */
@@ -3777,6 +3782,7 @@ thread_init(DeeThreadObject *__restrict self,
 		DeeOSThreadObject *me = DeeThread_AsOSThread(self);
 		me->ot_thread.t_str_curr               = NULL;
 		me->ot_thread.t_repr_curr              = NULL;
+		me->ot_thread.t_hash_curr              = NULL;
 		me->ot_thread.t_deepassoc.da_used      = 0;
 		me->ot_thread.t_deepassoc.da_mask      = 0;
 		me->ot_thread.t_deepassoc.da_list      = empty_deep_assoc;
@@ -3852,6 +3858,7 @@ thread_init(DeeThreadObject *__restrict self,
 	self->t_execsz            = 0;
 	self->t_str_curr          = NULL;
 	self->t_repr_curr         = NULL;
+	self->t_hash_curr         = NULL;
 	self->t_state             = Dee_THREAD_STATE_INITIAL;
 	self->t_int_vers          = 0;
 	self->t_interrupt.ti_next = NULL;
