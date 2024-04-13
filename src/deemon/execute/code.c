@@ -194,6 +194,238 @@
 
 DECL_BEGIN
 
+/************************************************************************/
+/* STACK ALLOCATOR FUNCTIONS                                            */
+/************************************************************************/
+#ifndef EXEC_ALTSTACK_ALLOC_USE_STUB
+
+/* Figure out the error return value for `[try]alloc_altstack()' */
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
+#define ALTSTACK_ALLOC_FAILED NULL
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_mmap)
+#ifdef MAP_FAILED
+#define ALTSTACK_ALLOC_FAILED MAP_FAILED
+#else /* MAP_FAILED */
+#define ALTSTACK_ALLOC_FAILED ((void *)(uintptr_t)-1)
+#endif /* !MAP_FAILED */
+#elif defined(EXEC_ALTSTACK_ALLOC_USE_malloc)
+#define ALTSTACK_ALLOC_FAILED NULL
+#else /* ... */
+#define ALTSTACK_ALLOC_FAILED NULL
+#endif /* !... */
+
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif /* !_PATH_DEVNULL */
+
+LOCAL void *DCALL tryalloc_altstack(void) {
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
+	return VirtualAlloc(NULL,
+	                    DEE_EXEC_ALTSTACK_SIZE,
+	                    MEM_COMMIT | MEM_RESERVE,
+	                    PAGE_READWRITE);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
+#ifdef MAP_ANONYMOUS
+	return mmap(NULL,
+	            DEE_EXEC_ALTSTACK_SIZE,
+	            PROT_READ | PROT_WRITE,
+	            MAP_ANONYMOUS | MAP_PRIVATE |
+	            MMAP_STACK_FLAGS | MAP_STACK |
+	            MAP_UNINITIALIZED,
+	            -1, 0);
+#else /* MAP_ANONYMOUS */
+	void *result;
+	int fd = open(_PATH_DEVNULL, O_RDONLY);
+	if unlikely(fd < 0)
+		return ALTSTACK_ALLOC_FAILED;
+	result = mmap(NULL,
+	              DEE_EXEC_ALTSTACK_SIZE,
+	              PROT_READ | PROT_WRITE,
+	              MAP_FILE | MAP_PRIVATE |
+	              MMAP_STACK_FLAGS | MAP_STACK,
+	              fd, 0);
+#ifdef CONFIG_HAVE_close
+	(void)close(fd);
+#endif /* CONFIG_HAVE_close */
+	return result;
+#endif /* !MAP_ANONYMOUS */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
+	return Dee_TryMalloc(DEE_EXEC_ALTSTACK_SIZE);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
+	return ALTSTACK_ALLOC_FAILED;
+#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
+}
+
+STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
+#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
+	(void)VirtualFree(stack, /*DEE_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
+#ifdef CONFIG_HAVE_munmap
+	(void)munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
+#else /* CONFIG_HAVE_munmap */
+	(void)stack;
+#endif /* !CONFIG_HAVE_munmap */
+#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
+	Dee_Free(stack);
+#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
+
+#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
+	(void)stack;
+#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
+}
+
+STACK_ALLOCATOR_DECL void *DCALL alloc_altstack(void) {
+	void *result;
+again:
+	result = tryalloc_altstack();
+	if unlikely(result == ALTSTACK_ALLOC_FAILED) {
+		if (DeeMem_ClearCaches((size_t)-1))
+			goto again;
+		Dee_BadAlloc(DEE_EXEC_ALTSTACK_SIZE);
+	}
+	return result;
+}
+#endif /* !EXEC_ALTSTACK_ALLOC_USE_STUB */
+
+
+
+
+
+
+/************************************************************************/
+/* ALT-STACK EXECUTION FUNCTIONS                                        */
+/************************************************************************/
+#ifndef EXEC_ALTSTACK_ASM_USE_EXTERNAL
+
+/* GCC */
+#ifdef EXEC_ALTSTACK_ASM_USE_GCC
+#ifdef __x86_64__
+#define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
+#define CALL_WITH_STACK(result, func, frame, new_stack)                     \
+	__asm__("push{q} {%%rbp|rbp}\n\t"                                       \
+	        "mov{q}  {%%rsp, %%rbp|rbp, rsp}\n\t"                           \
+	        "lea{q}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%rsp|"       \
+	                  "rsp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
+	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
+	        "mov{q}  {%%rbp, %%rsp|rsp, rbp}\n\t"                           \
+	        "pop{q}  {%%rbp|rbp}\n\t"                                       \
+	        : "=a" (result)                                                 \
+	        : "c" (frame)                                                   \
+	        , "r" (new_stack)                                               \
+	        : "memory", "cc")
+#elif defined(__i386__)
+#ifdef CONFIG_HOST_WINDOWS
+#define WRAP_SYMBOL(s) "@" #s "@4"
+#else /* CONFIG_HOST_WINDOWS */
+#define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
+#endif /* !CONFIG_HOST_WINDOWS */
+#define CALL_WITH_STACK(result, func, frame, new_stack)                     \
+	__asm__("push{l} {%%ebp|ebp}\n\t"                                       \
+	        "mov{l}  {%%esp, %%ebp|ebp, esp}\n\t"                           \
+	        "lea{l}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%esp|"       \
+	                  "esp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
+	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
+	        "mov{l}  {%%ebp, %%esp|esp, ebp}\n\t"                           \
+	        "pop{l}  {%%ebp|ebp}\n\t"                                       \
+	        : "=a" (result)                                                 \
+	        : "c" (frame)                                                   \
+	        , "r" (new_stack)                                               \
+	        : "memory", "cc")
+#else /* Arch... */
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_GCC 1' above)"
+#endif /* !Arch... */
+#endif /* EXEC_ALTSTACK_ASM_USE_GCC */
+
+/* MSVC */
+#ifdef EXEC_ALTSTACK_ASM_USE_MSVC
+#ifdef __x86_64__
+#define CALL_WITH_STACK(result, func, frame, new_stack) \
+	__asm {                                             \
+		__asm PUSH RBX                                  \
+		__asm MOV  RAX, new_stack                       \
+		__asm MOV  RCX, frame                           \
+		__asm MOV  RBX, RSP                             \
+		__asm LEA  RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE]  \
+		__asm CALL func                                 \
+		__asm MOV  RSP, RBX                             \
+		__asm POP  RBX                                  \
+		__asm MOV  result, RAX                          \
+	}
+#elif defined(__i386__)
+#define CALL_WITH_STACK(result, func, frame, new_stack) \
+	__asm {                                             \
+		__asm PUSH EBX                                  \
+		__asm MOV  EAX, new_stack                       \
+		__asm MOV  ECX, frame                           \
+		__asm MOV  EBX, ESP                             \
+		__asm LEA  ESP, [EAX + DEE_EXEC_ALTSTACK_SIZE]  \
+		__asm CALL func                                 \
+		__asm MOV  ESP, EBX                             \
+		__asm POP  EBX                                  \
+		__asm MOV  result, EAX                          \
+	}
+#else /* Arch... */
+#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_MSVC 1' above)"
+#endif /* !Arch... */
+#endif /* EXEC_ALTSTACK_ASM_USE_MSVC */
+
+
+
+
+
+/* Implement the actual altstack call functions. */
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
+#ifdef EXEC_ALTSTACK_ASM_USE_STUB
+	return DeeCode_ExecFrameFast(frame);
+#else /* EXEC_ALTSTACK_ASM_USE_STUB */
+	DREF DeeObject *result;
+	void *new_stack = alloc_altstack();
+	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
+		goto err;
+	CALL_WITH_STACK(result, DeeCode_ExecFrameFast, frame, new_stack);
+	free_altstack(new_stack);
+	return result;
+err:
+	return NULL;
+#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
+}
+
+PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
+DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
+#ifdef EXEC_ALTSTACK_ASM_USE_STUB
+	return DeeCode_ExecFrameSafe(frame);
+#else /* EXEC_ALTSTACK_ASM_USE_STUB */
+	DREF DeeObject *result;
+	void *new_stack = alloc_altstack();
+	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
+		goto err;
+	CALL_WITH_STACK(result, DeeCode_ExecFrameSafe, frame, new_stack);
+	free_altstack(new_stack);
+	return result;
+err:
+	return NULL;
+#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
+}
+#endif /* !EXEC_ALTSTACK_ASM_USE_EXTERNAL */
+
+DECL_END
+#endif /* CONFIG_HAVE_EXEC_ALTSTACK */
+
+DECL_BEGIN
+
+
+
 #ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
 
 /* Hidden C-API of _hostasm
@@ -628,237 +860,7 @@ DeeCode_SetOptimizeCallThreshold(size_t new_threshold) {
 }
 #endif /* !DEFINED_DeeCode_GetOptimizeCallThreshold */
 
-/************************************************************************/
-/* STACK ALLOCATOR FUNCTIONS                                            */
-/************************************************************************/
-#ifndef EXEC_ALTSTACK_ALLOC_USE_STUB
 
-/* Figure out the error return value for `[try]alloc_altstack()' */
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
-#define ALTSTACK_ALLOC_FAILED NULL
-#elif defined(EXEC_ALTSTACK_ALLOC_USE_mmap)
-#ifdef MAP_FAILED
-#define ALTSTACK_ALLOC_FAILED MAP_FAILED
-#else /* MAP_FAILED */
-#define ALTSTACK_ALLOC_FAILED ((void *)(uintptr_t)-1)
-#endif /* !MAP_FAILED */
-#elif defined(EXEC_ALTSTACK_ALLOC_USE_malloc)
-#define ALTSTACK_ALLOC_FAILED NULL
-#else /* ... */
-#define ALTSTACK_ALLOC_FAILED NULL
-#endif /* !... */
-
-#ifndef _PATH_DEVNULL
-#define _PATH_DEVNULL "/dev/null"
-#endif /* !_PATH_DEVNULL */
-
-LOCAL void *DCALL tryalloc_altstack(void) {
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
-	return VirtualAlloc(NULL,
-	                    DEE_EXEC_ALTSTACK_SIZE,
-	                    MEM_COMMIT | MEM_RESERVE,
-	                    PAGE_READWRITE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
-#ifdef MAP_ANONYMOUS
-	return mmap(NULL,
-	            DEE_EXEC_ALTSTACK_SIZE,
-	            PROT_READ | PROT_WRITE,
-	            MAP_ANONYMOUS | MAP_PRIVATE |
-	            MMAP_STACK_FLAGS | MAP_STACK |
-	            MAP_UNINITIALIZED,
-	            -1, 0);
-#else /* MAP_ANONYMOUS */
-	void *result;
-	int fd = open(_PATH_DEVNULL, O_RDONLY);
-	if unlikely(fd < 0)
-		return ALTSTACK_ALLOC_FAILED;
-	result = mmap(NULL,
-	              DEE_EXEC_ALTSTACK_SIZE,
-	              PROT_READ | PROT_WRITE,
-	              MAP_FILE | MAP_PRIVATE |
-	              MMAP_STACK_FLAGS | MAP_STACK,
-	              fd, 0);
-#ifdef CONFIG_HAVE_close
-	(void)close(fd);
-#endif /* CONFIG_HAVE_close */
-	return result;
-#endif /* !MAP_ANONYMOUS */
-#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
-	return Dee_TryMalloc(DEE_EXEC_ALTSTACK_SIZE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
-	return ALTSTACK_ALLOC_FAILED;
-#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
-}
-
-STACK_ALLOCATOR_DECL void DCALL free_altstack(void *stack) {
-#ifdef EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc
-	(void)VirtualFree(stack, /*DEE_EXEC_ALTSTACK_SIZE*/ 0, MEM_RELEASE);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_VirtualAlloc */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_mmap
-#ifdef CONFIG_HAVE_munmap
-	(void)munmap(stack, DEE_EXEC_ALTSTACK_SIZE);
-#else /* CONFIG_HAVE_munmap */
-	(void)stack;
-#endif /* !CONFIG_HAVE_munmap */
-#endif /* EXEC_ALTSTACK_ALLOC_USE_mmap */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_malloc
-	Dee_Free(stack);
-#endif /* EXEC_ALTSTACK_ALLOC_USE_malloc */
-
-#ifdef EXEC_ALTSTACK_ALLOC_USE_STUB
-	(void)stack;
-#endif /* EXEC_ALTSTACK_ALLOC_USE_STUB */
-}
-
-STACK_ALLOCATOR_DECL void *DCALL alloc_altstack(void) {
-	void *result;
-again:
-	result = tryalloc_altstack();
-	if unlikely(result == ALTSTACK_ALLOC_FAILED) {
-		if (DeeMem_ClearCaches((size_t)-1))
-			goto again;
-		Dee_BadAlloc(DEE_EXEC_ALTSTACK_SIZE);
-	}
-	return result;
-}
-#endif /* !EXEC_ALTSTACK_ALLOC_USE_STUB */
-
-
-
-
-
-
-/************************************************************************/
-/* ALT-STACK EXECUTION FUNCTIONS                                        */
-/************************************************************************/
-#ifndef EXEC_ALTSTACK_ASM_USE_EXTERNAL
-
-/* GCC */
-#ifdef EXEC_ALTSTACK_ASM_USE_GCC
-#ifdef __x86_64__
-#define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
-#define CALL_WITH_STACK(result, func, frame, new_stack)                     \
-	__asm__("push{q} {%%rbp|rbp}\n\t"                                       \
-	        "mov{q}  {%%rsp, %%rbp|rbp, rsp}\n\t"                           \
-	        "lea{q}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%rsp|"       \
-	                  "rsp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
-	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
-	        "mov{q}  {%%rbp, %%rsp|rsp, rbp}\n\t"                           \
-	        "pop{q}  {%%rbp|rbp}\n\t"                                       \
-	        : "=a" (result)                                                 \
-	        : "c" (frame)                                                   \
-	        , "r" (new_stack)                                               \
-	        : "memory", "cc")
-#elif defined(__i386__)
-#ifdef CONFIG_HOST_WINDOWS
-#define WRAP_SYMBOL(s) "@" #s "@4"
-#else /* CONFIG_HOST_WINDOWS */
-#define WRAP_SYMBOL(s) PP_STR(__USER_LABEL_PREFIX__) #s
-#endif /* !CONFIG_HOST_WINDOWS */
-#define CALL_WITH_STACK(result, func, frame, new_stack)                     \
-	__asm__("push{l} {%%ebp|ebp}\n\t"                                       \
-	        "mov{l}  {%%esp, %%ebp|ebp, esp}\n\t"                           \
-	        "lea{l}  {" PP_STR(DEE_EXEC_ALTSTACK_SIZE) "(%2), %%esp|"       \
-	                  "esp, [%2 + " PP_STR(DEE_EXEC_ALTSTACK_SIZE) "]}\n\t" \
-	        "call    " WRAP_SYMBOL(func) "\n\t"                             \
-	        "mov{l}  {%%ebp, %%esp|esp, ebp}\n\t"                           \
-	        "pop{l}  {%%ebp|ebp}\n\t"                                       \
-	        : "=a" (result)                                                 \
-	        : "c" (frame)                                                   \
-	        , "r" (new_stack)                                               \
-	        : "memory", "cc")
-#else /* Arch... */
-#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_GCC 1' above)"
-#endif /* !Arch... */
-#endif /* EXEC_ALTSTACK_ASM_USE_GCC */
-
-/* MSVC */
-#ifdef EXEC_ALTSTACK_ASM_USE_MSVC
-#ifdef __x86_64__
-#define CALL_WITH_STACK(result, func, frame, new_stack) \
-	__asm {                                             \
-		__asm PUSH RBX                                  \
-		__asm MOV  RAX, new_stack                       \
-		__asm MOV  RCX, frame                           \
-		__asm MOV  RBX, RSP                             \
-		__asm LEA  RSP, [RAX + DEE_EXEC_ALTSTACK_SIZE]  \
-		__asm CALL func                                 \
-		__asm MOV  RSP, RBX                             \
-		__asm POP  RBX                                  \
-		__asm MOV  result, RAX                          \
-	}
-#elif defined(__i386__)
-#define CALL_WITH_STACK(result, func, frame, new_stack) \
-	__asm {                                             \
-		__asm PUSH EBX                                  \
-		__asm MOV  EAX, new_stack                       \
-		__asm MOV  ECX, frame                           \
-		__asm MOV  EBX, ESP                             \
-		__asm LEA  ESP, [EAX + DEE_EXEC_ALTSTACK_SIZE]  \
-		__asm CALL func                                 \
-		__asm MOV  ESP, EBX                             \
-		__asm POP  EBX                                  \
-		__asm MOV  result, EAX                          \
-	}
-#else /* Arch... */
-#error "Unsupported Architecture (please check the `#define EXEC_ALTSTACK_ASM_USE_MSVC 1' above)"
-#endif /* !Arch... */
-#endif /* EXEC_ALTSTACK_ASM_USE_MSVC */
-
-
-
-
-
-/* Implement the actual altstack call functions. */
-PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameFastAltStack(struct code_frame *__restrict frame) {
-#ifdef EXEC_ALTSTACK_ASM_USE_STUB
-	return DeeCode_ExecFrameFast(frame);
-#else /* EXEC_ALTSTACK_ASM_USE_STUB */
-	DREF DeeObject *result;
-	void *new_stack = alloc_altstack();
-	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-		goto err;
-	CALL_WITH_STACK(result, DeeCode_ExecFrameFast, frame, new_stack);
-	free_altstack(new_stack);
-	return result;
-err:
-	return NULL;
-#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
-}
-
-PUBLIC NONNULL((1)) DREF DeeObject *ATTR_FASTCALL
-DeeCode_ExecFrameSafeAltStack(struct code_frame *__restrict frame) {
-#ifdef EXEC_ALTSTACK_ASM_USE_STUB
-	return DeeCode_ExecFrameSafe(frame);
-#else /* EXEC_ALTSTACK_ASM_USE_STUB */
-	DREF DeeObject *result;
-	void *new_stack = alloc_altstack();
-	if unlikely(new_stack == ALTSTACK_ALLOC_FAILED)
-		goto err;
-	CALL_WITH_STACK(result, DeeCode_ExecFrameSafe, frame, new_stack);
-	free_altstack(new_stack);
-	return result;
-err:
-	return NULL;
-#endif /* !EXEC_ALTSTACK_ASM_USE_STUB */
-}
-#endif /* !EXEC_ALTSTACK_ASM_USE_EXTERNAL */
-
-DECL_END
-#endif /* CONFIG_HAVE_EXEC_ALTSTACK */
-
-
-
-DECL_BEGIN
 
 /* Handle a breakpoint having been triggered in `frame'.
  * NOTE: This function is called to deal with an encounter
