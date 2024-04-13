@@ -152,6 +152,7 @@ DECL_BEGIN
 #define DDI_STATE_FNORMAL                   Dee_DDI_STATE_FNORMAL
 #define DDI_STATE_FNOTHROW                  Dee_DDI_STATE_FNOTHROW
 #define DDI_STATE_FNONAMES                  Dee_DDI_STATE_FNONAMES
+#define DDI_STATE_FNOEXCEPT                 Dee_DDI_STATE_FNOEXCEPT
 #define DDI_NEXT_DONE                       Dee_DDI_NEXT_DONE
 #define DDI_NEXT_ERR                        Dee_DDI_NEXT_ERR
 #define DDI_ISOK                            Dee_DDI_ISOK
@@ -304,10 +305,12 @@ struct Dee_ddi_state {
  * - Dee_ddi_state_init()
  * - Dee_ddi_next_state()
  * - DeeCode_FindDDI() */
-#define Dee_DDI_STATE_FNORMAL  0x0000 /* Normal DDI State iteration flags. */
-#define Dee_DDI_STATE_FNOTHROW 0x0001 /* Don't throw errors when something goes wrong, but rely on weak undefined behavior.
-                                       * This flag should be set when DDI is being enumerated to generate a traceback. */
-#define Dee_DDI_STATE_FNONAMES 0x0002 /* Don't keep track of bound symbol names */
+#define Dee_DDI_STATE_FNORMAL   0x0000 /* Normal DDI State iteration flags. */
+#define Dee_DDI_STATE_FNOTHROW  0x0001 /* Don't throw errors when something goes wrong, but rely on weak undefined behavior.
+                                        * This flag should be set when DDI is being enumerated to generate a traceback. */
+#define Dee_DDI_STATE_FNONAMES  0x0002 /* Don't keep track of bound symbol names */
+#define Dee_DDI_STATE_FNOEXCEPT 0x0004 /* Similar to `Dee_DDI_STATE_FNOTHROW', but simply prevents calls to `DeeError_Throw()',
+                                        * or anything else that might cause user-code to be invoked. */
 
 /* Special return values for:
  * - Dee_ddi_state_init()

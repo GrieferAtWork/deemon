@@ -77,7 +77,7 @@ err_readonly_frame(Frame *__restrict UNUSED(self)) {
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
 PUBLIC WUNUSED NONNULL((2)) DREF DeeObject *
-(DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
+(DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
                                       struct code_frame *__restrict frame,
                                       uint16_t flags, void *lock) {
 	DREF Frame *result;
@@ -835,7 +835,7 @@ frame_get_thisarg(Frame *__restrict self) {
 	return result;
 err_unlock_unbound:
 	DeeFrame_LockEndRead((DeeObject *)self);
-	err_unbound_attribute_string(&DeeFrame_Type, "__thisarg__");
+	err_unbound_attribute_string(&DeeFrame_Type, "__this__");
 err:
 	return NULL;
 }
@@ -862,6 +862,8 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 frame_get_return(Frame *__restrict self) {
 	DREF DeeObject *result;
 	struct code_frame const *frame;
+	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+		goto err_unbound;
 	frame = DeeFrame_LockRead((DeeObject *)self);
 	if unlikely(!frame)
 		goto err;
@@ -873,6 +875,7 @@ frame_get_return(Frame *__restrict self) {
 	return result;
 err_unlock_unbound:
 	DeeFrame_LockEndRead((DeeObject *)self);
+err_unbound:
 	err_unbound_attribute_string(&DeeFrame_Type, "__return__");
 err:
 	return NULL;
@@ -882,6 +885,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_bound_return(Frame *__restrict self) {
 	bool is_bound;
 	struct code_frame const *frame;
+	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+		return 0;
 	frame = DeeFrame_LockReadIfNotDead((DeeObject *)self);
 	if unlikely(!ITER_ISOK(frame)) {
 		if (frame == Dee_CODE_FRAME_DEAD)
@@ -899,6 +904,8 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 frame_del_return(Frame *__restrict self) {
 	DREF DeeObject *old_result;
 	struct code_frame *frame;
+	if unlikely(self->f_flags & DEEFRAME_FNORESULT)
+		return 0;
 	frame = DeeFrame_LockWrite((DeeObject *)self);
 	if unlikely(!frame)
 		goto err;
@@ -916,6 +923,10 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 frame_set_return(Frame *__restrict self, DeeObject *value) {
 	DREF DeeObject *old_result;
 	struct code_frame *frame;
+	if unlikely(self->f_flags & DEEFRAME_FNORESULT) {
+		return DeeError_Throwf(&DeeError_ValueError,
+		                       "No return value can be assigned to this frame");
+	}
 	frame = DeeFrame_LockWrite((DeeObject *)self);
 	if unlikely(!frame)
 		goto err;
@@ -1128,7 +1139,7 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	            "#tValueError{The stack depth was undefined and could not be determined}"
 	            "Get the current stack depth (same as ${##this.__stack__})\n"
 	            "To modify this value, use ?#__stack__ to append/pop objects"),
-	TYPE_GETTER_BOUND("__thisarg__", &frame_get_thisarg, &frame_bound_thisarg,
+	TYPE_GETTER_BOUND("__this__", &frame_get_thisarg, &frame_bound_thisarg,
 	                  "->?O\n"
 	                  DOC_ReferenceError
 	                  "#tUnboundAttribute{The associated code doesn't take a this-argument}"
@@ -1182,6 +1193,16 @@ PRIVATE struct type_getset tpconst frame_getsets[] = {
 	TYPE_GETTER("__argsbyname__", &DeeFrame_GetArgsByNameWrapper,
 	            "->?M?X2?Dstring?Dint?O\n"
 	            "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
+	TYPE_GETTER("__localsbyname__", &DeeFrame_GetLocalsByNameWrapper,
+	            "->?M?X2?Dstring?Dint?O\n"
+	            "Combine ?#__locals__ with debug information to form a writable "
+	            /**/ "mapping that can be used to manipulate the values of named locals. "
+	            /**/ "(requires debug information to be present)"),
+	TYPE_GETTER("__stackbyname__", &DeeFrame_GetStackByNameWrapper,
+	            "->?M?X2?Dstring?Dint?O\n"
+	            "Combine ?#__stack__ with debug information to form a writable "
+	            /**/ "mapping that can be used to manipulate the values of named stack "
+	            /**/ "locations. (requires debug information to be present)"),
 	TYPE_GETTER("__variablesbyname__", &DeeFrame_GetVariablesByNameWrapper,
 	            "->?M?X2?Dstring?Dint?O\n"
 	            "Combine ?#__locals__ and ?#__stack__ with debug information to form a writable "

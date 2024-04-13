@@ -139,6 +139,7 @@ struct frame_object {
 #endif /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */
 #define DEEFRAME_FREADONLY 0x0000 /* [const] Contents of the frame may not be modified. */
+#define DEEFRAME_FNORESULT 0x0010 /* [const] Ignore the value of `cf_result' -- the frame has no return value. */
 #define DEEFRAME_FWRITABLE 0x1000 /* [lock(READ(f_lock) && CLEAR_ONCE)] Contents of the frame may be modified. */
 #define DEEFRAME_FUNDEFSP  0x2000 /* [lock(READ(f_lock) && ATOMIC && CLEAR_ONCE)] The stack-pointer of the frame is undefined.
                                    * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack pointer may be
@@ -238,7 +239,7 @@ DDATDEF DeeTypeObject DeeFrame_Type;
  * The intended use of this is for tracebacks and yield_function-iterators.
  * @param: flags: Set of `DEEFRAME_F*' */
 DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
-(DCALL DeeFrame_NewReferenceWithLock)(DeeObject *owner,
+(DCALL DeeFrame_NewReferenceWithLock)(/*[0..1]*/ DeeObject *owner,
                                       struct Dee_code_frame *__restrict frame,
                                       uint16_t flags, void *lock);
 #ifdef CONFIG_NO_THREADS

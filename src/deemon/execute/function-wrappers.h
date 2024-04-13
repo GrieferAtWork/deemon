@@ -31,19 +31,21 @@ DECL_BEGIN
 /* Callbacks to create specialized function wrappers. */
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetStaticsWrapper(DeeFunctionObject *__restrict self);       /* ?S?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetRefsByNameWrapper(DeeFunctionObject *__restrict self);    /* ?M??X2Dstring?Dint?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetStaticsByNameWrapper(DeeFunctionObject *__restrict self); /* ?M??X2Dstring?Dint?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetSymbolsByNameWrapper(DeeFunctionObject *__restrict self); /* ?M??X2Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetRefsByNameWrapper(DeeFunctionObject *__restrict self);    /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetStaticsByNameWrapper(DeeFunctionObject *__restrict self); /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFunction_GetSymbolsByNameWrapper(DeeFunctionObject *__restrict self); /* ?M?X2?Dstring?Dint?O */
 
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeYieldFunction_GetArgsByNameWrapper(DeeYieldFunctionObject *__restrict self);    /* ?M??X2Dstring?Dint?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeYieldFunction_GetSymbolsByNameWrapper(DeeYieldFunctionObject *__restrict self); /* ?M??X2Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeYieldFunction_GetArgsByNameWrapper(DeeYieldFunctionObject *__restrict self);    /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeYieldFunction_GetSymbolsByNameWrapper(DeeYieldFunctionObject *__restrict self); /* ?M?X2?Dstring?Dint?O */
 
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetArgsWrapper(DeeFrameObject *__restrict self);            /* ?S?O */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self);          /* ?S?O */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetStackWrapper(DeeFrameObject *__restrict self);           /* ?S?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetArgsByNameWrapper(DeeFrameObject *__restrict self);      /* ?M??X2Dstring?Dint?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetVariablesByNameWrapper(DeeFrameObject *__restrict self); /* ?M??X2Dstring?Dint?O */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self);   /* ?M??X2Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetArgsByNameWrapper(DeeFrameObject *__restrict self);      /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetLocalsByNameWrapper(DeeFrameObject *__restrict self);    /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetStackByNameWrapper(DeeFrameObject *__restrict self);     /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetVariablesByNameWrapper(DeeFrameObject *__restrict self); /* ?M?X2?Dstring?Dint?O */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeFrame_GetSymbolsByNameWrapper(DeeFrameObject *__restrict self);   /* ?M?X2?Dstring?Dint?O */
 
 DECL_END
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */

@@ -831,15 +831,15 @@ PRIVATE struct type_getset tpconst function_getsets[] = {
 	              "->?S?O\n"
 	              "Returns a (writable) sequence of all of the static variables that appear in @this ?."),
 	TYPE_GETTER_F("__refsbyname__", &DeeFunction_GetRefsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Returns a read-only mapping to access ?#__refs__ by their name "
 	              /**/ "(requires debug information to be present)"),
 	TYPE_GETTER_F("__staticsbyname__", &DeeFunction_GetStaticsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Returns a writable mapping to access ?#__statics__ by their name "
 	              /**/ "(requires debug information to be present)"),
 	TYPE_GETTER_F("__symbols__", &DeeFunction_GetSymbolsByNameWrapper, METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "The combination of ?#__refsbyname__ and ?#__staticsbyname__, allowing "
 	              /**/ "access to all named symbol that need to maintain their value across "
 	              /**/ "different calls to ?. (requires debug information to be present)"),
@@ -1862,19 +1862,19 @@ PRIVATE struct type_getset tpconst yf_getsets[] = {
 	              "Alias for :Function.__statics__ though ?#__func__"),
 	TYPE_GETTER_F("__refsbyname__", &yf_get_refsbyname,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Alias for :Function.__refsbyname__ though ?#__func__"),
 	TYPE_GETTER_F("__staticsbyname__", &yf_get_staticsbyname,
 	              METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Alias for :Function.__staticsbyname__ though ?#__func__"),
 	TYPE_GETTER_F("__argsbyname__", &DeeYieldFunction_GetArgsByNameWrapper,
 	              METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Combine ?#__kwds__ with ?#__args__ to access the values of arguments"),
 	TYPE_GETTER_F("__symbols__", &DeeYieldFunction_GetSymbolsByNameWrapper,
 	              METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "The combination of ?#__refsbyname__, ?#__staticsbyname__ and ?#__argsbyname__, "
 	              /**/ "allowing access to all named symbol that need to maintain their value across "
 	              /**/ "different calls to ?. (requires debug information to be present in the case "
@@ -2472,12 +2472,27 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
 yfi_get_frame(YFIterator *__restrict self) {
-	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock((DeeObject *)self,
-	                                                            &self->yi_frame,
-	                                                            DEEFRAME_FWRITABLE |
-	                                                            DEEFRAME_FSHRLOCK |
-	                                                            DEEFRAME_FRECLOCK,
-	                                                            &self->yi_lock);
+	enum {
+		FLAGS = 0 |
+
+		        /* Yield-function-iterator frames are writable, but only while the user is
+		         * holding a lock to the respective iterator's lock. Since that lock is also
+		         * held while the frame is executing, it becomes impossible for the frame to
+		         * be read while executing.
+		         * FIXME: This doesn't work under `#define CONFIG_NO_THREADS' */
+		        DEEFRAME_FWRITABLE |
+		
+		        /* Yield-function-iterator use recursive, shared locks */
+		        DEEFRAME_FSHRLOCK | DEEFRAME_FRECLOCK |
+
+		        /* The "cf_result" field is undefined here (see `yfi_iter_next()' which
+		         * only assigns a proper value *before* yielding the next value). As such,
+		         * the frame needs some sort of flag to tell it that the frame's result
+		         * field should not be touched and be considered as unbound. */
+		        DEEFRAME_FNORESULT
+	};
+	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock((DeeObject *)self, &self->yi_frame,
+	                                                            FLAGS, &self->yi_lock);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Function *DCALL
@@ -2649,6 +2664,32 @@ yfi_get_frame_stack(YFIterator *__restrict self) {
 	if unlikely(!frame)
 		goto err;
 	result = DeeFrame_GetStackWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_localsbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetLocalsByNameWrapper(frame);
+	Dee_Decref_unlikely(frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+yfi_get_frame_stackbyname(YFIterator *__restrict self) {
+	DREF DeeObject *result;
+	DREF DeeFrameObject *frame = yfi_get_frame(self);
+	if unlikely(!frame)
+		goto err;
+	result = DeeFrame_GetStackByNameWrapper(frame);
 	Dee_Decref_unlikely(frame);
 	return result;
 err:
@@ -3012,15 +3053,15 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	                    "Returns a writable sequence of all of the static variables that appear in the function"),
 	TYPE_GETTER_BOUND_F("__refsbyname__", &yfi_get_refsbyname, &yfi_bound_refsbyname,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	                    "->?M??X2Dstring?Dint?O\n"
+	                    "->?M?X2?Dstring?Dint?O\n"
 	                    "Alias for ?A__refsbyname__?Ert:YieldFunction though ?#__yfunc__"),
 	TYPE_GETTER_BOUND_F("__staticsbyname__", &yfi_get_staticsbyname, &yfi_bound_staticsbyname,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	                    "->?M??X2Dstring?Dint?O\n"
+	                    "->?M?X2?Dstring?Dint?O\n"
 	                    "Alias for ?A__staticsbyname__?Ert:YieldFunction though ?#__yfunc__"),
 	TYPE_GETTER_BOUND_F("__argsbyname__", &yfi_get_argsbyname, &yfi_bound_argsbyname,
 	                    METHOD_FCONSTCALL | METHOD_FNOREFESCAPE,
-	                    "->?M??X2Dstring?Dint?O\n"
+	                    "->?M?X2?Dstring?Dint?O\n"
 	                    "Alias for ?A__argsbyname__?Ert:YieldFunction though ?#__yfunc__"),
 	TYPE_GETTER_F("__locals__", &yfi_get_frame_locals,
 	              METHOD_FCONSTCALL,
@@ -3030,13 +3071,21 @@ PRIVATE struct type_getset tpconst yfi_getsets[] = {
 	              METHOD_FCONSTCALL,
 	              "->?S?O\n"
 	              "Alias for ?A__stack__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_F("__localsbyname__", &yfi_get_frame_localsbyname,
+	              METHOD_FCONSTCALL,
+	              "->?M?X2?Dstring?Dint?O\n"
+	              "Alias for ?A__localsbyname__?Ert:Frame through ?#__frame__"),
+	TYPE_GETTER_F("__stackbyname__", &yfi_get_frame_stackbyname,
+	              METHOD_FCONSTCALL,
+	              "->?M?X2?Dstring?Dint?O\n"
+	              "Alias for ?A__stackbyname__?Ert:Frame through ?#__frame__"),
 	TYPE_GETTER_F("__variablesbyname__", &yfi_get_frame_variablesbyname,
 	              METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Alias for ?A__variablesbyname__?Ert:Frame through ?#__frame__"),
 	TYPE_GETTER_F("__symbols__", &yfi_get_frame_symbols,
 	              METHOD_FCONSTCALL,
-	              "->?M??X2Dstring?Dint?O\n"
+	              "->?M?X2?Dstring?Dint?O\n"
 	              "Alias for ?A__symbols__?Ert:Frame through ?#__frame__"),
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 	TYPE_GETTER_BOUND_F("__args__", &yfi_get_args, &yfi_bound_args,

@@ -82,6 +82,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 	result = (DREF DeeTracebackObject *)DeeGCObject_TryMalloc(offsetof(DeeTracebackObject, tb_frames) +
 	                                                          thread->t_execsz * sizeof(struct code_frame));
 	if likely(result) {
+		/* TODO: This somehow needs support for functions running under _hostasm. */
 		struct code_frame *dst, *src;
 		DeeObject_Init(result, &DeeTraceback_Type);
 		result->tb_numframes = thread->t_execsz;

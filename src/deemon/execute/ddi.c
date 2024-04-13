@@ -389,6 +389,8 @@ next_ip:
 				if unlikely(!save) {
 					if (flags & DDI_STATE_FNOTHROW)
 						goto next_ip;
+					if (flags & DDI_STATE_FNOEXCEPT)
+						goto err;
 					save = (struct ddi_saved *)Dee_Malloc(sizeof(struct ddi_saved));
 					if unlikely(!save)
 						goto err;
@@ -405,8 +407,10 @@ next_ip:
 					save->s_save.dx_lcnamv = (uint16_t *)Dee_TryMallocc(self->rs_xregs.dx_lcnamc,
 					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_lcnamv) {
-						if (flags & DDI_STATE_FNOTHROW) {
+						if (flags & (DDI_STATE_FNOTHROW | DDI_STATE_FNOEXCEPT)) {
 							Dee_Free(save);
+							if (flags & DDI_STATE_FNOEXCEPT)
+								goto err;
 							goto next_ip;
 						}
 						save->s_save.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
@@ -432,9 +436,11 @@ next_ip:
 					save->s_save.dx_spnamv = (uint16_t *)Dee_TryMallocc(save->s_save.dx_spnama,
 					                                                    sizeof(uint16_t));
 					if unlikely(!save->s_save.dx_spnamv) {
-						if (flags & DDI_STATE_FNOTHROW) {
+						if (flags & (DDI_STATE_FNOTHROW | DDI_STATE_FNOEXCEPT)) {
 							Dee_Free(save->s_save.dx_lcnamv);
 							Dee_Free(save);
+							if (flags & DDI_STATE_FNOEXCEPT)
+								goto err;
 							goto next_ip;
 						}
 						save->s_save.dx_spnamv = (uint16_t *)Dee_Mallocc(save->s_save.dx_spnama,
@@ -520,6 +526,8 @@ Dee_ddi_state_init(struct ddi_state *__restrict self,
 			if (flags & DDI_STATE_FNOTHROW) {
 				self->rs_xregs.dx_lcnamc = 0;
 			} else {
+				if (flags & DDI_STATE_FNOEXCEPT)
+					return DDI_NEXT_ERR;
 				self->rs_xregs.dx_lcnamv = (uint16_t *)Dee_Mallocc(self->rs_xregs.dx_lcnamc,
 				                                                   sizeof(uint16_t));
 				if unlikely(!self->rs_xregs.dx_lcnamv)
@@ -585,8 +593,8 @@ Dee_ddi_state_fini(struct ddi_state *__restrict self) {
  * @return: DDI_NEXT_DONE:  The DDI information stream has ended after `DDI_STOP' was read. */
 PUBLIC WUNUSED NONNULL((1, 2)) uint8_t *DCALL
 DeeCode_FindDDI(DeeObject *__restrict self,
-                struct ddi_state *__restrict start_state,
-                code_addr_t *opt_endip, code_addr_t uip,
+                struct Dee_ddi_state *__restrict start_state,
+                Dee_code_addr_t *opt_endip, Dee_code_addr_t uip,
                 unsigned int flags) {
 	uint8_t *ip, *end_ip;
 	ip = Dee_ddi_state_init(start_state, self, flags);
