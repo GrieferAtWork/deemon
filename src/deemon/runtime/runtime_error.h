@@ -53,6 +53,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_index_out_of_bounds(DeeObject *__res
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_index_out_of_bounds_ob(DeeObject *self, DeeObject *index);
 INTDEF ATTR_COLD int DCALL err_va_index_out_of_bounds(size_t index, size_t size);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unbound_index(DeeObject *__restrict self, size_t index);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unbound_key(DeeObject *self, DeeObject *key);
+INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_readonly_key(DeeObject *self, DeeObject *key);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_expected_single_character_string(DeeObject *__restrict str);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_integer_overflow(DeeObject *__restrict overflowing_object, size_t cutoff_bits, bool positive_overflow);
 INTDEF ATTR_COLD int DCALL err_integer_overflow_i(size_t cutoff_bits, bool positive_overflow);
@@ -170,6 +172,8 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_index_out_of_bounds_ob(self, index)                                                           Dee_ASSUMED_VALUE(err_index_out_of_bounds_ob(self, index), -1)
 #define err_va_index_out_of_bounds(index, size)                                                           Dee_ASSUMED_VALUE(err_va_index_out_of_bounds(index, size), -1)
 #define err_unbound_index(self, index)                                                                    Dee_ASSUMED_VALUE(err_unbound_index(self, index), -1)
+#define err_unbound_key(self, key)                                                                        Dee_ASSUMED_VALUE(err_unbound_key(self, key), -1)
+#define err_readonly_key(self, key)                                                                       Dee_ASSUMED_VALUE(err_readonly_key(self, key), -1)
 #define err_expected_single_character_string(str)                                                         Dee_ASSUMED_VALUE(err_expected_single_character_string(str), -1)
 #define err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow)                          Dee_ASSUMED_VALUE(err_integer_overflow(overflowing_object, cutoff_bits, positive_overflow), -1)
 #define err_integer_overflow_i(cutoff_bits, positive_overflow)                                            Dee_ASSUMED_VALUE(err_integer_overflow_i(cutoff_bits, positive_overflow), -1)

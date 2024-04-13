@@ -68,10 +68,14 @@ assert y2(none) == none;
 
 #if __DEEMON_VARIANT__ == "gatw"
 /* Explicitly assert the state of static variables. */
-assert x1.__statics__ == {42};
-assert y1.__statics__ == {43};
-assert x2.__statics__ == {};
-assert y2.__statics__ == {};
+assert x1.__statics__       == {42};
+assert x1.__staticsbyname__ in {{"x": 42}, {0: 42}};
+assert y1.__statics__       == {43};
+assert y1.__staticsbyname__ in {{"x": 43}, {0: 43}};
+assert x2.__statics__       == {};
+assert x2.__staticsbyname__ == {};
+assert y2.__statics__       == {};
+assert y2.__staticsbyname__ == {};
 
 /* Explicitly assert that the compiler don't encode functions with static
  * variables as inlined constant expressions, but instead as Code objects

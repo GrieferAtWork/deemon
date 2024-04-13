@@ -276,6 +276,24 @@ INTERN ATTR_COLD NONNULL((1)) int
 	                       index, Dee_TYPE(self), self);
 }
 
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_key)(DeeObject *self, DeeObject *key) {
+	ASSERT_OBJECT(self);
+	ASSERT_OBJECT(key);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Key `%r' of instance of `%k': %k has not been bound",
+	                       key, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_readonly_key)(DeeObject *self, DeeObject *key) {
+	ASSERT_OBJECT(self);
+	ASSERT_OBJECT(key);
+	return DeeError_Throwf(&DeeError_ValueError,
+	                       "Key `%r' of instance of `%k': %k is read-only and cannot be modified",
+	                       key, Dee_TYPE(self), self);
+}
+
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_expected_single_character_string)(DeeObject *__restrict str) {
 	size_t length;

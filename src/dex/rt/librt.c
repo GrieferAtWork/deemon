@@ -1651,6 +1651,19 @@ err:
 	return NULL;
 }
 
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionSymbolsByName_impl_f(void) {
+	DREF DeeObject *result;
+	DREF DeeObject *empty_function = DeeObject_NewDefault(&DeeFunction_Type);
+	if unlikely(!empty_function)
+		goto err;
+	result = DeeObject_GetAttrString(empty_function, "__symbols__");
+	Dee_Decref(empty_function);
+	return get_type_of(result);
+err:
+	return NULL;
+}
+
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionStatics_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_FunctionStatics_impl_f();
@@ -1659,6 +1672,16 @@ librt_get_FunctionStatics_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionStaticsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_FunctionStatics_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_FunctionSymbolsByName_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_FunctionSymbolsByName_impl_f());
 }
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
@@ -1831,6 +1854,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplitIterator, &librt_get_ReBytesSplitIt
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByName, &librt_get_FunctionSymbolsByName_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByNameIterator, &librt_get_FunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
@@ -2348,6 +2373,8 @@ PRIVATE struct dex_symbol symbols[] = {
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
 	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
+	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
+	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	{ NULL }
