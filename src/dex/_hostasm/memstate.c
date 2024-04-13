@@ -33,12 +33,12 @@
 #include <deemon/none.h>
 
 #include <hybrid/bitset.h>
-#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 #include <hybrid/typecore.h>
 #include <hybrid/unaligned.h>
 
 #ifndef UINT16_MAX
+#include <hybrid/limitcore.h>
 #define UINT16_MAX __UINT16_MAX__
 #endif /* !UINT16_MAX */
 

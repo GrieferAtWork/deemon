@@ -4237,10 +4237,10 @@ PRIVATE struct type_method tpconst thread_methods[] = {
 	              "Old, deprecated name for ?#timedjoin"),
 	TYPE_METHOD_F("crash_error", &thread_crash_error, METHOD_FNOREFESCAPE,
 	              "->?X2?O?N\n"
-	              "Deprecated function that does the same as ${this.crashinfo.first()[0]}"),
+	              "Deprecated function that does the same as ${this.crashinfo[0][0]}"),
 	TYPE_METHOD_F("crash_traceback", &thread_crash_traceback, METHOD_FNOREFESCAPE,
 	              "->?X2?DTraceback?N\n"
-	              "Deprecated function that does the same as ${this.crashinfo.first()[1]}"),
+	              "Deprecated function that does the same as ${this.crashinfo[0][1]}"),
 	TYPE_METHOD_END
 };
 

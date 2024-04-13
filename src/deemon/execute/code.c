@@ -1101,6 +1101,24 @@ frame_chain_contains_code(struct code_frame *iter, uint16_t count,
 	return 0;
 }
 
+/* Attempts to set the assembly flag of the given code object if it wasn't set already.
+ * Code objects with this flag set are robust to otherwise unexpected behavior, but
+ * safely setting this flag usually proves to be quite difficult as it involves ensuring
+ * that the code isn't already being executed by some other thread.
+ * For that reason, this helper function exists, which will do whatever is necessary to
+ * ensure that the code isn't running or is apart of any of the execution stacks of other
+ * threads, temporarily suspending the execution of all threads but the caller's.
+ * This however is just an implementation detail that the caller must not concern themselves with.
+ * What the caller should be concerned about however is the error-return case:
+ *     In the event that the given code object is actively being executed, either by
+ *     the calling, or by any other thread, a ValueError is thrown and -1 is returned.
+ *     Otherwise when 0 is returned, the caller may assume that `CODE_FASSEMBLY' has
+ *     been set, and that modifying `co_code' to their liking, while still subject
+ *     to potential code-tearing, as well as the resulting inconsistencies that may
+ *     cause running code to throw errors, but not cause the interpreter to crash.
+ * Note that this function may also fail because an interrupt was send to the calling thread!
+ * @return: 0 : Success
+ * @return: -1: Error */
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self) {
 	DeeCodeObject *me = (DeeCodeObject *)self;

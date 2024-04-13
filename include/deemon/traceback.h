@@ -119,18 +119,13 @@ typedef struct frame_object DeeFrameObject;
 struct frame_object {
 	Dee_OBJECT_HEAD /* More of a frame-reference object. */
 	DREF DeeObject        *f_owner; /* [0..1][const] Owner of the frame (Required to prevent the frame from being destroyed). */
-	struct Dee_code_frame *f_frame; /* [lock(*f_palock)][0..1][lock(f_lock)]
-	                                 * The actual frame that is being referenced. */
+	struct Dee_code_frame *f_frame; /* [lock(*f_palock)][0..1][lock(f_lock)] The actual frame that is being referenced. */
 #ifndef CONFIG_NO_THREADS
-	union {
-		Dee_atomic_rwlock_t    *f_palock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const]
-		                                    * Lock that must be acquired when accessing the frame. */
-		Dee_ratomic_rwlock_t   *f_pralock; /* [1..1][valid_if(DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const]
-		                                    * Lock that must be acquired when accessing the frame. */
-		Dee_shared_rwlock_t    *f_pslock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const]
-		                                    * Lock that must be acquired when accessing the frame. */
-		Dee_rshared_rwlock_t   *f_prslock; /* [1..1][valid_if(DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const]
-		                                    * Lock that must be acquired when accessing the frame. */
+	union { /* Lock that must be acquired when accessing the frame. */
+		Dee_atomic_rwlock_t  *f_palock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const] */
+		Dee_ratomic_rwlock_t *f_pralock; /* [0..1][valid_if(DEEFRAME_FRECLOCK && !DEEFRAME_FSHRLOCK)][const] */
+		Dee_shared_rwlock_t  *f_pslock;  /* [0..1][valid_if(!DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const] */
+		Dee_rshared_rwlock_t *f_prslock; /* [0..1][valid_if(DEEFRAME_FRECLOCK && DEEFRAME_FSHRLOCK)][const] */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -143,23 +138,17 @@ struct frame_object {
 	Dee_atomic_rwlock_t f_lock;  /* Lock for accessing fields of this frame object. */
 #endif /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FNORMAL   0x0000 /* Normal frame flags. */
-#define DEEFRAME_FREADONLY 0x0000 /* Contents of the frame may not be modified. */
-#define DEEFRAME_FWRITABLE 0x0001 /* Contents of the frame may be modified. */
-#define DEEFRAME_FUNDEFSP  0x0002 /* The stack-pointer of the frame is undefined.
-                                   * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack
-                                   * pointer may be obtainable from DDI information, as well
-                                   * as use of the current PC, alongside further validation. */
-#define DEEFRAME_FUNDEFSP2 0x0004 /* The stack-pointer of the frame is always undefined.
-                                   * This flag is set after `DEEFRAME_FUNDEFSP' was set and
-                                   * the actual stack pointer could still not be determined
-                                   * from meta-information.
-                                   * However, this should not happen for normal code, as a truly
-                                   * inconsistent stack can (should) only happen when the function
-                                   * contains custom user-assembly. */
-#define DEEFRAME_FREGENGSP 0x0008 /* The SP pointer was reverse engineered and stored in `f_revsp' */
+#define DEEFRAME_FREADONLY 0x0000 /* [const] Contents of the frame may not be modified. */
+#define DEEFRAME_FWRITABLE 0x1000 /* [lock(READ(f_lock) && CLEAR_ONCE)] Contents of the frame may be modified. */
+#define DEEFRAME_FUNDEFSP  0x2000 /* [lock(READ(f_lock) && ATOMIC && CLEAR_ONCE)] The stack-pointer of the frame is undefined.
+                                   * When `DEEFRAME_FUNDEFSP2' isn't set, the correct stack pointer may be
+                                   * obtainable from DDI information and the current PC.
+                                   * This flag may NOT be set when `DEEFRAME_FWRITABLE' is set. */
+#define DEEFRAME_FUNDEFSP2 0x4000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The stack-pointer of the frame could not be determined. */
+#define DEEFRAME_FREGENGSP 0x8000 /* [lock(READ(f_lock) && ATOMIC && WRITE_ONCE)] The SP pointer was reverse engineered and stored in `f_revsp' */
 #ifndef CONFIG_NO_THREADS
-#define DEEFRAME_FSHRLOCK  0x4000 /* The frame uses a shared lock. */
-#define DEEFRAME_FRECLOCK  0x8000 /* The frame uses a recursive lock. */
+#define DEEFRAME_FSHRLOCK  0x0001 /* The frame uses a shared lock. */
+#define DEEFRAME_FRECLOCK  0x0002 /* The frame uses a recursive lock. */
 #else /* !CONFIG_NO_THREADS */
 #define DEEFRAME_FSHRLOCK  0x0000 /* Ignored. */
 #define DEEFRAME_FRECLOCK  0x0000 /* Ignored. */
@@ -203,44 +192,45 @@ struct frame_object {
 
 #define DeeFrame_CanWrite(self) ((self)->f_flags & DEEFRAME_FWRITABLE)
 
-#define DeeFrame_PLockReading(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_reading, Dee_ratomic_rwlock_reading, Dee_shared_rwlock_reading, Dee_rshared_rwlock_reading)
-#define DeeFrame_PLockWriting(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_writing, Dee_ratomic_rwlock_writing, Dee_shared_rwlock_writing, Dee_rshared_rwlock_writing)
-#define DeeFrame_PLockTryRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_tryread, Dee_ratomic_rwlock_tryread, Dee_shared_rwlock_tryread, Dee_rshared_rwlock_tryread)
-#define DeeFrame_PLockTryWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_trywrite, Dee_ratomic_rwlock_trywrite, Dee_shared_rwlock_trywrite, Dee_rshared_rwlock_trywrite)
-#define DeeFrame_PLockCanRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_canread, Dee_ratomic_rwlock_canread, Dee_shared_rwlock_canread, Dee_rshared_rwlock_canread)
-#define DeeFrame_PLockCanWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_canwrite, Dee_ratomic_rwlock_canwrite, Dee_shared_rwlock_canwrite, Dee_rshared_rwlock_canwrite)
-#define DeeFrame_PLockWaitRead(self)       _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitread, Dee_ratomic_rwlock_waitread, Dee_shared_rwlock_waitread, Dee_rshared_rwlock_waitread)
-#define DeeFrame_PLockWaitReadNoInt(self)  _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitread, Dee_ratomic_rwlock_waitread, Dee_shared_rwlock_waitread_noint, Dee_rshared_rwlock_waitread_noint)
-#define DeeFrame_PLockWaitWrite(self)      _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitwrite, Dee_ratomic_rwlock_waitwrite, Dee_shared_rwlock_waitwrite, Dee_rshared_rwlock_waitwrite)
-#define DeeFrame_PLockWaitWriteNoInt(self) _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitwrite, Dee_ratomic_rwlock_waitwrite, Dee_shared_rwlock_waitwrite_noint, Dee_rshared_rwlock_waitwrite_noint)
-#define DeeFrame_PLockRead(self)           _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_read, Dee_ratomic_rwlock_read, Dee_shared_rwlock_read, Dee_rshared_rwlock_read)
-#define DeeFrame_PLockReadNoInt(self)      _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_read, Dee_ratomic_rwlock_read, Dee_shared_rwlock_read_noint, Dee_rshared_rwlock_read_noint)
-#define DeeFrame_PLockWrite(self)          _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_write, Dee_ratomic_rwlock_write, Dee_shared_rwlock_write, Dee_rshared_rwlock_write)
-#define DeeFrame_PLockWriteNoInt(self)     _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_write, Dee_ratomic_rwlock_write, Dee_shared_rwlock_write_noint, Dee_rshared_rwlock_write_noint)
-#define DeeFrame_PLockTryUpgrade(self)     _DeeFrame_PLockOp(self, Dee_atomic_rwlock_tryupgrade, Dee_ratomic_rwlock_tryupgrade, Dee_shared_rwlock_tryupgrade, Dee_rshared_rwlock_tryupgrade)
-#define DeeFrame_PLockUpgrade(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_upgrade, Dee_ratomic_rwlock_upgrade, Dee_shared_rwlock_upgrade, Dee_rshared_rwlock_upgrade)
-#define DeeFrame_PLockUpgradeNoInt(self)   _DeeFrame_PLockOp(self, Dee_atomic_rwlock_upgrade, Dee_ratomic_rwlock_upgrade, Dee_shared_rwlock_upgrade_noint, Dee_rshared_rwlock_upgrade_noint)
-#define DeeFrame_PLockDowngrade(self)      _DeeFrame_PLockOp(self, Dee_atomic_rwlock_downgrade, Dee_ratomic_rwlock_downgrade, Dee_shared_rwlock_downgrade, Dee_rshared_rwlock_downgrade)
-#define DeeFrame_PLockEndWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_endwrite, Dee_ratomic_rwlock_endwrite, Dee_shared_rwlock_endwrite, Dee_rshared_rwlock_endwrite)
-#define DeeFrame_PLockEndRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_endread, Dee_ratomic_rwlock_endread, Dee_shared_rwlock_endread, Dee_rshared_rwlock_endread)
-#define DeeFrame_PLockEnd(self)            _DeeFrame_PLockOp(self, Dee_atomic_rwlock_end, Dee_ratomic_rwlock_end, Dee_shared_rwlock_end, Dee_rshared_rwlock_end)
+#define _DeeFrame_PLockPresent(self)        ((self)->f_palock != NULL)
+#define _DeeFrame_PLockReading(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_reading, Dee_ratomic_rwlock_reading, Dee_shared_rwlock_reading, Dee_rshared_rwlock_reading)
+#define _DeeFrame_PLockWriting(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_writing, Dee_ratomic_rwlock_writing, Dee_shared_rwlock_writing, Dee_rshared_rwlock_writing)
+#define _DeeFrame_PLockTryRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_tryread, Dee_ratomic_rwlock_tryread, Dee_shared_rwlock_tryread, Dee_rshared_rwlock_tryread)
+#define _DeeFrame_PLockTryWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_trywrite, Dee_ratomic_rwlock_trywrite, Dee_shared_rwlock_trywrite, Dee_rshared_rwlock_trywrite)
+#define _DeeFrame_PLockCanRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_canread, Dee_ratomic_rwlock_canread, Dee_shared_rwlock_canread, Dee_rshared_rwlock_canread)
+#define _DeeFrame_PLockCanWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_canwrite, Dee_ratomic_rwlock_canwrite, Dee_shared_rwlock_canwrite, Dee_rshared_rwlock_canwrite)
+#define _DeeFrame_PLockWaitRead(self)       _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitread, Dee_ratomic_rwlock_waitread, Dee_shared_rwlock_waitread, Dee_rshared_rwlock_waitread)
+#define _DeeFrame_PLockWaitReadNoInt(self)  _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitread, Dee_ratomic_rwlock_waitread, Dee_shared_rwlock_waitread_noint, Dee_rshared_rwlock_waitread_noint)
+#define _DeeFrame_PLockWaitWrite(self)      _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitwrite, Dee_ratomic_rwlock_waitwrite, Dee_shared_rwlock_waitwrite, Dee_rshared_rwlock_waitwrite)
+#define _DeeFrame_PLockWaitWriteNoInt(self) _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_waitwrite, Dee_ratomic_rwlock_waitwrite, Dee_shared_rwlock_waitwrite_noint, Dee_rshared_rwlock_waitwrite_noint)
+#define _DeeFrame_PLockRead(self)           _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_read, Dee_ratomic_rwlock_read, Dee_shared_rwlock_read, Dee_rshared_rwlock_read)
+#define _DeeFrame_PLockReadNoInt(self)      _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_read, Dee_ratomic_rwlock_read, Dee_shared_rwlock_read_noint, Dee_rshared_rwlock_read_noint)
+#define _DeeFrame_PLockWrite(self)          _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_write, Dee_ratomic_rwlock_write, Dee_shared_rwlock_write, Dee_rshared_rwlock_write)
+#define _DeeFrame_PLockWriteNoInt(self)     _DeeFrame_PLockOp2(self, 0, Dee_atomic_rwlock_write, Dee_ratomic_rwlock_write, Dee_shared_rwlock_write_noint, Dee_rshared_rwlock_write_noint)
+#define _DeeFrame_PLockTryUpgrade(self)     _DeeFrame_PLockOp(self, Dee_atomic_rwlock_tryupgrade, Dee_ratomic_rwlock_tryupgrade, Dee_shared_rwlock_tryupgrade, Dee_rshared_rwlock_tryupgrade)
+#define _DeeFrame_PLockUpgrade(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_upgrade, Dee_ratomic_rwlock_upgrade, Dee_shared_rwlock_upgrade, Dee_rshared_rwlock_upgrade)
+#define _DeeFrame_PLockUpgradeNoInt(self)   _DeeFrame_PLockOp(self, Dee_atomic_rwlock_upgrade, Dee_ratomic_rwlock_upgrade, Dee_shared_rwlock_upgrade_noint, Dee_rshared_rwlock_upgrade_noint)
+#define _DeeFrame_PLockDowngrade(self)      _DeeFrame_PLockOp(self, Dee_atomic_rwlock_downgrade, Dee_ratomic_rwlock_downgrade, Dee_shared_rwlock_downgrade, Dee_rshared_rwlock_downgrade)
+#define _DeeFrame_PLockEndWrite(self)       _DeeFrame_PLockOp(self, Dee_atomic_rwlock_endwrite, Dee_ratomic_rwlock_endwrite, Dee_shared_rwlock_endwrite, Dee_rshared_rwlock_endwrite)
+#define _DeeFrame_PLockEndRead(self)        _DeeFrame_PLockOp(self, Dee_atomic_rwlock_endread, Dee_ratomic_rwlock_endread, Dee_shared_rwlock_endread, Dee_rshared_rwlock_endread)
+#define _DeeFrame_PLockEnd(self)            _DeeFrame_PLockOp(self, Dee_atomic_rwlock_end, Dee_ratomic_rwlock_end, Dee_shared_rwlock_end, Dee_rshared_rwlock_end)
 
-#define DeeFrame_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->f_lock)
-#define DeeFrame_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->f_lock)
-#define DeeFrame_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->f_lock)
-#define DeeFrame_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->f_lock)
-#define DeeFrame_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->f_lock)
-#define DeeFrame_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->f_lock)
-#define DeeFrame_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->f_lock)
-#define DeeFrame_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->f_lock)
-#define DeeFrame_LockRead(self)       Dee_atomic_rwlock_read(&(self)->f_lock)
-#define DeeFrame_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->f_lock)
-#define DeeFrame_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->f_lock)
-#define DeeFrame_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->f_lock)
-#define DeeFrame_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->f_lock)
-#define DeeFrame_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->f_lock)
-#define DeeFrame_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->f_lock)
-#define DeeFrame_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->f_lock)
+#define _DeeFrame_LockReading(self)    Dee_atomic_rwlock_reading(&(self)->f_lock)
+#define _DeeFrame_LockWriting(self)    Dee_atomic_rwlock_writing(&(self)->f_lock)
+#define _DeeFrame_LockTryRead(self)    Dee_atomic_rwlock_tryread(&(self)->f_lock)
+#define _DeeFrame_LockTryWrite(self)   Dee_atomic_rwlock_trywrite(&(self)->f_lock)
+#define _DeeFrame_LockCanRead(self)    Dee_atomic_rwlock_canread(&(self)->f_lock)
+#define _DeeFrame_LockCanWrite(self)   Dee_atomic_rwlock_canwrite(&(self)->f_lock)
+#define _DeeFrame_LockWaitRead(self)   Dee_atomic_rwlock_waitread(&(self)->f_lock)
+#define _DeeFrame_LockWaitWrite(self)  Dee_atomic_rwlock_waitwrite(&(self)->f_lock)
+#define _DeeFrame_LockRead(self)       Dee_atomic_rwlock_read(&(self)->f_lock)
+#define _DeeFrame_LockWrite(self)      Dee_atomic_rwlock_write(&(self)->f_lock)
+#define _DeeFrame_LockTryUpgrade(self) Dee_atomic_rwlock_tryupgrade(&(self)->f_lock)
+#define _DeeFrame_LockUpgrade(self)    Dee_atomic_rwlock_upgrade(&(self)->f_lock)
+#define _DeeFrame_LockDowngrade(self)  Dee_atomic_rwlock_downgrade(&(self)->f_lock)
+#define _DeeFrame_LockEndWrite(self)   Dee_atomic_rwlock_endwrite(&(self)->f_lock)
+#define _DeeFrame_LockEndRead(self)    Dee_atomic_rwlock_endread(&(self)->f_lock)
+#define _DeeFrame_LockEnd(self)        Dee_atomic_rwlock_end(&(self)->f_lock)
 
 DDATDEF DeeTypeObject DeeFrame_Type;
 
@@ -268,6 +258,37 @@ DFUNDEF WUNUSED NONNULL((2)) DREF DeeObject *
 	DeeFrame_NewReference(NULL, frame, flags)
 DFUNDEF NONNULL((1)) void DCALL
 DeeFrame_DecrefShared(DREF DeeObject *__restrict self);
+
+
+/* Acquire locks to the frame that is underlying to `self'
+ * NOTE: When aquiring for writing, these functions also check
+ *       `DeeFrame_CanWrite()' and will throw an error if writing
+ *       isn't allowed.
+ * @return: * :   The underlying code frame.
+ * @return: NULL: An error was thrown. */
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame const *DCALL DeeFrame_LockRead(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL DeeFrame_LockWrite(DeeObject *__restrict self);
+#ifdef CONFIG_NO_THREADS
+#define DeeFrame_LockEndRead(self)  (void)0
+#define DeeFrame_LockEndWrite(self) (void)0
+#else /* CONFIG_NO_THREADS */
+DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndRead(DeeObject *__restrict self);
+DFUNDEF NONNULL((1)) void DCALL DeeFrame_LockEndWrite(DeeObject *__restrict self);
+#endif /* !CONFIG_NO_THREADS */
+
+/* Same as `DeeFrame_LockWrite()', but also set the "CODE_FASSEMBLY"
+ * flag for the underlying code object (if not set already). */
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL
+DeeFrame_LockWriteAssembly(DeeObject *__restrict self);
+
+/* Same as above, but return `Dee_CODE_FRAME_DEAD' if the
+ * frame is dead, rather than throw a `ReferenceError'.
+ * @return: * :                  The underlying code frame.
+ * @return: NULL:                An error was thrown.
+ * @return: Dee_CODE_FRAME_DEAD: The underlying code frame is dead (no error was thrown). */
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame const *DCALL DeeFrame_LockReadIfNotDead(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) struct Dee_code_frame *DCALL DeeFrame_LockWriteIfNotDead(DeeObject *__restrict self);
+#define Dee_CODE_FRAME_DEAD ((struct Dee_code_frame *)ITER_DONE)
 
 
 DECL_END

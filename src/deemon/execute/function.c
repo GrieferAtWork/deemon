@@ -2474,8 +2474,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
 yfi_get_frame(YFIterator *__restrict self) {
 	return (DREF DeeFrameObject *)DeeFrame_NewReferenceWithLock((DeeObject *)self,
 	                                                            &self->yi_frame,
-	                                                            DEEFRAME_FWRITABLE | /* DEEFRAME_FREADONLY */
-	                                                            DEEFRAME_FUNDEFSP |
+	                                                            DEEFRAME_FWRITABLE |
 	                                                            DEEFRAME_FSHRLOCK |
 	                                                            DEEFRAME_FRECLOCK,
 	                                                            &self->yi_lock);

@@ -926,7 +926,9 @@ DDATDEF DeeTypeObject DeeCode_Type;
  *     been set, and that modifying `co_code' to their liking, while still subject
  *     to potential code-tearing, as well as the resulting inconsistencies that may
  *     cause running code to throw errors, but not cause the interpreter to crash.
- * Note that this function may also fail because an interrupt was send to the calling thread! */
+ * Note that this function may also fail because an interrupt was send to the calling thread!
+ * @return: 0 : Success
+ * @return: -1: Error */
 DFUNDEF WUNUSED NONNULL((1)) int DCALL
 DeeCode_SetAssembly(/*Code*/ DeeObject *__restrict self);
 
@@ -1018,6 +1020,10 @@ struct Dee_code_frame {
 #endif /* __SIZEOF_POINTER__ > 4 */
 };
 
+#define Dee_code_frame_getipaddr(self)       (Dee_code_addr_t)((self)->cf_ip - (self)->cf_func->fo_code->co_code)
+#define Dee_code_frame_setipaddr(self, addr) (void)((self)->cf_ip = (self)->cf_func->fo_code->co_code + (addr))
+#define Dee_code_frame_getspaddr(self)       (uint16_t)((self)->cf_sp - (self)->cf_stack)
+#define Dee_code_frame_setspaddr(self, addr) (void)((self)->cf_sp = (self)->cf_stack + (addr))
 
 
 /* Continue execution of the given code frame until it returns.
