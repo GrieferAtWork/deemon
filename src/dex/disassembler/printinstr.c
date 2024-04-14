@@ -1126,6 +1126,13 @@ libdisasm_printinstr(dformatprinter printer, void *arg,
 	opcode = *ip.ptr++;
 	format = mnemonics_0x00[opcode];
 	if (*format) {
+		switch (opcode) {
+		case ASM_YIELD:
+			if (code->co_flags & CODE_FYIELDING)
+				format = "yield" F_PAD "pop";
+			break;
+		default: break;
+		}
 		return libdisasm_printinstr_f(printer, arg, instr_start, ip.ptr, NULL,
 		                              format, stacksz, ddi, code, flags);
 	}
@@ -1156,6 +1163,13 @@ do_handle_prefix:
 		opcode = *ip.ptr++;
 		format = mnemonics_p_0x00[opcode];
 		if (*format) {
+			switch (opcode) {
+			case ASM_YIELD:
+				if (code->co_flags & CODE_FYIELDING)
+					format = "yield" F_PAD F_PREFIX;
+				break;
+			default: break;
+			}
 			return libdisasm_printinstr_f(printer, arg, after_prefix, ip.ptr, instr_start,
 			                              format, stacksz, ddi, code, flags);
 		}
