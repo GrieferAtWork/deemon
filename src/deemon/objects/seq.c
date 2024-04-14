@@ -749,7 +749,7 @@ seqiterator_nii_hasprev(SeqIterator *__restrict self) {
 		goto err;
 	return index != 0;
 err:
-	return (size_t)-1;
+	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
