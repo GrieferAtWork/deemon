@@ -1600,8 +1600,8 @@ done:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringHash(DeeObject *__restrict self,
-                          char const *__restrict attr, dhash_t hash,
-                          size_t argc, DeeObject *const *argv) {
+                              char const *__restrict attr, dhash_t hash,
+                              size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
@@ -1619,8 +1619,8 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenHash(DeeObject *__restrict self,
-                             char const *__restrict attr, size_t attrlen, dhash_t hash,
-                             size_t argc, DeeObject *const *argv) {
+                                 char const *__restrict attr, size_t attrlen, dhash_t hash,
+                                 size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
@@ -1638,8 +1638,8 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self,
-                            char const *__restrict attr, dhash_t hash,
-                            size_t argc, DeeObject *const *argv, DeeObject *kw) {
+                                char const *__restrict attr, dhash_t hash,
+                                size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewWithHash(attr, hash);
@@ -1658,8 +1658,8 @@ err:
 
 INTERN WUNUSED DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self,
-                               char const *__restrict attr, size_t attrlen, dhash_t hash,
-                               size_t argc, DeeObject *const *argv, DeeObject *kw) {
+                                   char const *__restrict attr, size_t attrlen, dhash_t hash,
+                                   size_t argc, DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *result;
 	DREF DeeStringObject *attr_ob;
 	attr_ob = (DREF DeeStringObject *)DeeString_NewSizedWithHash(attr, attrlen, hash);
