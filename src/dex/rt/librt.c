@@ -1707,6 +1707,11 @@ librt_get_FunctionSymbolsByName_impl_f(void) {
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_YieldFunctionSymbolsByName_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeYieldFunction_Empty, "__symbols__"));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameSymbolsByName_impl_f(void) {
 	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__symbols__"));
 }
@@ -1729,6 +1734,16 @@ librt_get_FunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_FunctionSymbolsByName_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_YieldFunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_YieldFunctionSymbolsByName_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_YieldFunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_YieldFunctionSymbolsByName_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1913,6 +1928,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByName, &librt_get_FunctionSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByNameIterator, &librt_get_FunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByName, &librt_get_YieldFunctionSymbolsByName_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByNameIterator, &librt_get_YieldFunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByName, &librt_get_FrameSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameIterator, &librt_get_FrameSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -2430,12 +2447,14 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Function wrapper types */
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
-	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
-	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
-	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
-	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
-	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FrameSymbolsByName_Type */
-	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FrameSymbolsByName_Type */
+	{ "FunctionStatics", (DeeObject *)&librt_get_FunctionStatics, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* FunctionStatics_Type */
+	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* FunctionStatics_Type */
+	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                           /* FunctionSymbolsByName_Type */
+	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },           /* FunctionSymbolsByName_Type */
+	{ "YieldFunctionSymbolsByName", (DeeObject *)&librt_get_YieldFunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* YieldFunctionSymbolsByName_Type */
+	{ "YieldFunctionSymbolsByNameIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByName_Type */
+	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
+	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	{ NULL }

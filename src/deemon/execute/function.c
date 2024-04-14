@@ -1687,7 +1687,9 @@ PRIVATE struct type_cmp yf_cmp = {
 
 PRIVATE struct type_member tpconst yf_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(YFunction, yf_func), "->?Dfunction"),
-	TYPE_MEMBER_FIELD("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this)),
+	TYPE_MEMBER_FIELD_DOC("__this__", STRUCT_OBJECT, offsetof(YFunction, yf_this),
+	                      "#tUnboundAttribute{The associated code doesn't take a this-argument}"
+	                      "Returns the special $this argument linked to @this yield-function"),
 	TYPE_MEMBER_END
 };
 
