@@ -4118,8 +4118,7 @@ set_is_type:
 
 	@@Convenience interface for printing documentation information
 	@@in a basic, but neat (and human-readable) format
-	operator str(): string {
-		File.Writer fp;
+	operator str(fp: File) {
 		print fp: ("-" * 80);
 		print fp: ("| Documentation for `", prettypath, "'");
 		for (local sec: docsections) {
@@ -4136,10 +4135,9 @@ set_is_type:
 			local children = List(this);
 			children.sort();
 			for (local child: children) {
-				fp << child;
+				print fp: child,;
 			}
 		}
-		return fp.string;
 	}
 
 }
