@@ -661,8 +661,16 @@ do_realloc:
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			}
 		}
-		((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
-		result->d_exdat                                   = (struct Dee_ddi_exdat *)bytewriter_flush(&writer);
+		if (writer.bw_size <= 4) {
+			/* No extended data. */
+			bytewriter_fini(&writer);
+			/*result->d_exdat = NULL;*/
+		} else {
+			if unlikely(bytewriter_putb(&writer, DDI_EXDAT_O_END))
+				goto err_xwriter;
+			((struct Dee_ddi_exdat *)writer.bw_base)->dx_size = (uint32_t)(writer.bw_size - 4);
+			result->d_exdat = (struct Dee_ddi_exdat *)bytewriter_flush(&writer);
+		}
 		__IF0 {
 err_xwriter:
 			bytewriter_fini(&writer);
