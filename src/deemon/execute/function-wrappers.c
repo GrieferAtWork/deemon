@@ -585,7 +585,7 @@ PRIVATE struct type_member tpconst funcstatics_members[] = {
 INTERN DeeTypeObject FunctionStatics_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionStatics",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("(func:?DFunction)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2618,15 +2618,244 @@ err:
 
 
 /************************************************************************/
-/* ...                                                                  */
+/* FrameArgs                                                            */
 /************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeFrameObject *fa_frame; /* [1..1][const] The frame in question */
+	DREF DeeCodeObject  *fa_code;  /* [1..1][const] The code running in `fa_frame' (cache) */
+} FrameArgs;
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+frameargs_nsi_getsize(FrameArgs *__restrict self) {
+	return self->fa_code->co_argc_max;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+frameargs_nsi_getitem(FrameArgs *__restrict self, size_t index) {
+	struct code_frame const *frame;
+	DREF DeeObject *result;
+	DeeCodeObject *code = self->fa_code;
+	if (index >= code->co_argc_max) {
+		err_index_out_of_bounds((DeeObject *)self, index, code->co_argc_max);
+		goto err;
+	}
+	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
+	if unlikely(!frame)
+		goto err;
+	if likely(index < frame->cf_argc) {
+		result = frame->cf_argv[index];
+	} else if (frame->cf_kw) {
+		result = frame->cf_kw->fk_kargv[index - frame->cf_argc];
+		if (!result)
+			goto use_default;
+	} else {
+use_default:
+		result = code->co_defaultv[index - code->co_argc_min];
+		if (!result) {
+			DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+			err_unbound_index((DeeObject *)self, index);
+			goto err;
+		}
+	}
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
+frameargs_get_func(FrameArgs *__restrict self) {
+	struct code_frame const *frame;
+	DREF DeeFunctionObject *result;
+	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
+	if unlikely(!frame)
+		goto err;
+	result = frame->cf_func;
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+frameargs_copy(FrameArgs *__restrict self,
+               FrameArgs *__restrict other) {
+	self->fa_frame = other->fa_frame;
+	self->fa_code  = other->fa_code;
+	Dee_Incref(self->fa_frame);
+	Dee_Incref(self->fa_code);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+frameargs_init(FrameArgs *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	struct code_frame const *frame;
+	if (DeeArg_Unpack(argc, argv, "o:FrameArgs", &self->fa_frame))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->fa_frame, &DeeFrame_Type))
+		goto err;
+	frame = DeeFrame_LockRead((DeeObject *)self->fa_frame);
+	if unlikely(!frame)
+		goto err;
+	self->fa_code = frame->cf_func->fo_code;
+	Dee_Incref(self->fa_code);
+	DeeFrame_LockEndRead((DeeObject *)self->fa_frame);
+	Dee_Incref(self->fa_frame);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+frameargs_fini(FrameArgs *__restrict self) {
+	Dee_Decref(self->fa_frame);
+	Dee_Decref(self->fa_code);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+frameargs_visit(FrameArgs *__restrict self,
+                dvisit_t proc, void *arg) {
+	Dee_Visit(self->fa_frame);
+	Dee_Visit(self->fa_code);
+}
+
+
+PRIVATE struct type_nsi tpconst frameargs_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&frameargs_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)&frameargs_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
+	}
+};
+
+
+PRIVATE struct type_seq frameargs_seq = {
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
+	/* .tp_contains  = */ NULL,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &frameargs_nsi
+};
+
+PRIVATE struct type_getset tpconst frameargs_getsets[] = {
+	TYPE_GETTER("__func__", &frameargs_get_func, "->?DFunction"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst frameargs_members[] = {
+	TYPE_MEMBER_FIELD("__code__", STRUCT_OBJECT, offsetof(FrameArgs, fa_code)),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject FrameArgs_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FrameArgs",
+	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&frameargs_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&frameargs_init,
+				TYPE_FIXED_ALLOCATOR(FrameArgs)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&frameargs_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&frameargs_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &frameargs_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ frameargs_getsets,
+	/* .tp_members       = */ frameargs_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetArgsWrapper(DeeFrameObject *__restrict self) {
-	(void)self;
-	DeeError_NOTIMPLEMENTED(); /* TODO */
+	struct code_frame const *frame;
+	DREF FrameArgs *result;
+	result = DeeObject_MALLOC(FrameArgs);
+	if unlikely(!result)
+		goto err;
+	frame = DeeFrame_LockRead((DeeObject *)self);
+	if unlikely(!frame)
+		goto err_r;
+	result->fa_code = frame->cf_func->fo_code;
+	Dee_Incref(result->fa_code);
+	DeeFrame_LockEndRead((DeeObject *)self);
+	result->fa_frame = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &FrameArgs_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
+
+
+
+
+/************************************************************************/
+/* ...                                                                  */
+/************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self) {

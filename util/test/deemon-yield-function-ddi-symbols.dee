@@ -37,3 +37,9 @@ assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer };
 foo...;
 assert foo.__symbols__ == { "arg1": 7, "arg2": 8, "outer": outer, "static1": 8 };
 assert (foo.__symbols__.keys as Set) == { "static1", "arg1", "arg2", "outer" };
+
+local x = foo.operator iter();
+assert x.__frame__.__args__ == {7,8};
+assert #x.__frame__.__args__ == 2;
+assert x.__frame__.__args__[0] == 7;
+assert x.__frame__.__args__[1] == 8;
