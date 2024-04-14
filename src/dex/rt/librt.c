@@ -319,24 +319,14 @@ librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 	return get_iterator_of(librt_get_ObjectTable_impl_f());
 }
 
+PRIVATE DeeObject DeeIterator_StubInstance = {
+	OBJECT_HEAD_INIT(&DeeIterator_Type)
+};
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 get_generic_iterator_member_type(char const *__restrict name) {
 	/* return type(iterator().operator . (name)); */
-	DREF DeeObject *result, *stub_iterator, *member;
-	stub_iterator = DeeObject_NewDefault(&DeeIterator_Type);
-	if unlikely(!stub_iterator)
-		goto err;
-	member = DeeObject_GetAttrString(stub_iterator, name);
-	Dee_Decref_likely(stub_iterator);
-	if unlikely(!member)
-		goto err;
-	result = (DREF DeeObject *)Dee_TYPE(member);
-	Dee_Incref(result);
-	Dee_Decref_likely(member);
-	return result;
-err:
-	return NULL;
+	return get_type_of(DeeObject_GetAttrString(&DeeIterator_StubInstance, name));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
