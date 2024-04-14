@@ -466,7 +466,11 @@ INTERN void DCALL assembler_fini(void) {
 #endif /* !CONFIG_LANGUAGE_NO_ASM */
 	for (i = 0; i < SECTION_COUNT; ++i) {
 		if (current_assembler.a_sect[i].sec_code) {
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+			DeeObject_Free(current_assembler.a_sect[i].sec_code);
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 			DeeGCObject_Free(current_assembler.a_sect[i].sec_code);
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 		} else {
 			Dee_Free(current_assembler.a_sect[i].sec_begin);
 		}

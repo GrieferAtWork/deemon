@@ -2895,7 +2895,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 framelocals_nsi_delitem(FrameLocals *__restrict self, size_t index) {
-	struct code_frame const *frame;
+	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
@@ -2915,7 +2915,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 framelocals_nsi_setitem(FrameLocals *self, size_t index, DeeObject *value) {
-	struct code_frame const *frame;
+	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
@@ -2936,7 +2936,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 framelocals_nsi_xchitem(FrameLocals *self, size_t index, DeeObject *value) {
-	struct code_frame const *frame;
+	struct code_frame *frame;
 	DREF DeeObject *oldvalue;
 	if unlikely(index >= self->fl_localc) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
@@ -3016,7 +3016,7 @@ framelocals_visit(FrameLocals *__restrict self,
 
 PRIVATE struct type_nsi tpconst framelocals_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
-	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
+	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&framelocals_nsi_getsize,
@@ -3143,13 +3143,354 @@ err:
 
 
 /************************************************************************/
-/* ...                                                                  */
+/* FrameStack                                                           */
 /************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeFrameObject *fs_frame;  /* [1..1][const] The frame in question */
+} FrameStack;
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+framestack_nsi_getsize(FrameStack *__restrict self) {
+	uint16_t result;
+	struct code_frame const *frame;
+	frame = DeeFrame_LockRead((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	result = Dee_code_frame_getspaddr(frame);
+	DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+	return result;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framestack_nsi_getitem(FrameStack *__restrict self, size_t index) {
+	uint16_t stackc;
+	struct code_frame const *frame;
+	DREF DeeObject *result;
+	frame = DeeFrame_LockRead((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	stackc = Dee_code_frame_getspaddr(frame);
+	if unlikely(index >= stackc) {
+		DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+		err_index_out_of_bounds((DeeObject *)self, index, stackc);
+		goto err;
+	}
+	result = frame->cf_stack[index];
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+framestack_nsi_xchitem(FrameStack *self, size_t index, DeeObject *value) {
+	uint16_t stackc;
+	struct code_frame *frame;
+	DREF DeeObject *oldvalue;
+	/* Lock in assembly-mode, since the stack may contain instruction pointers. */
+	frame = DeeFrame_LockWriteAssembly((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	stackc = Dee_code_frame_getspaddr(frame);
+	if unlikely(index >= stackc) {
+		DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+		err_index_out_of_bounds((DeeObject *)self, index, stackc);
+		goto err;
+	}
+	Dee_Incref(value);
+	oldvalue = frame->cf_stack[index];
+	frame->cf_stack[index] = value; /* Inherit (x2) */
+	DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+	return oldvalue;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+framestack_nsi_setitem(FrameStack *self, size_t index, DeeObject *value) {
+	DREF DeeObject *oldvalue;
+	oldvalue = framestack_nsi_xchitem(self, index, value);
+	if unlikely(!oldvalue)
+		goto err;
+	Dee_Decref(oldvalue);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
+framestack_get_func(FrameStack *__restrict self) {
+	struct code_frame const *frame;
+	DREF DeeFunctionObject *result;
+	frame = DeeFrame_LockRead((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	result = frame->cf_func;
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fs_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framestack_copy(FrameStack *__restrict self,
+                FrameStack *__restrict other) {
+	self->fs_frame = other->fs_frame;
+	Dee_Incref(self->fs_frame);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framestack_init(FrameStack *__restrict self,
+                size_t argc, DeeObject *const *argv) {
+	if (DeeArg_Unpack(argc, argv, "o:FrameStack", &self->fs_frame))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->fs_frame, &DeeFrame_Type))
+		goto err;
+	Dee_Incref(self->fs_frame);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+framestack_fini(FrameStack *__restrict self) {
+	Dee_Decref(self->fs_frame);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+framestack_visit(FrameStack *__restrict self,
+                  dvisit_t proc, void *arg) {
+	Dee_Visit(self->fs_frame);
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+framestack_nsi_insert(FrameStack *self, size_t index, DeeObject *value) {
+	uint16_t stackc, stacka;
+	struct code_frame *frame;
+	DREF DeeObject **stackv;
+	DeeCodeObject *code;
+
+	/* Lock in assembly-mode, since the stack may contain instruction pointers. */
+again:
+	frame = DeeFrame_LockWriteAssembly((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	stackc = Dee_code_frame_getspaddr(frame);
+	if (index > (size_t)stackc)
+		index = (size_t)stackc;
+	code   = frame->cf_func->fo_code;
+	stacka = frame->cf_stacksz;
+	if (stacka == 0)
+		stacka = (uint16_t)((code->co_framesize / sizeof(DeeObject *)) - code->co_localc);
+
+	/* Ensure that there is enough space on the stack. */
+	if (stackc >= stacka) {
+		DREF DeeObject **new_stackv;
+		uint16_t new_stacka;
+		/* Must allocate a larger stack (only allowed if the code has the "CODE_FLENIENT" flag) */
+		if (!(code->co_flags & CODE_FLENIENT))
+			goto err_stack_too_large_endwrite;
+		new_stacka = stacka * 2;
+		if unlikely(new_stacka < stackc)
+			new_stacka = stackc + 1;
+		if unlikely(new_stacka < stackc)
+			goto err_stack_too_large_endwrite;
+		new_stackv = (DREF DeeObject **)Dee_TryMallocc(new_stacka, sizeof(DREF DeeObject *));
+		if unlikely(!new_stackv) {
+			DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+			if (Dee_CollectMemoryc(new_stacka, sizeof(DREF DeeObject *)))
+				goto again;
+			goto err;
+		}
+
+		/* Transfer objects to the new stack. */
+		new_stackv = (DREF DeeObject **)memcpyc(new_stackv, frame->cf_stack, stackc,
+		                                        sizeof(DREF DeeObject *));
+
+		/* Store the new stack within the frame. */
+		if (frame->cf_stacksz)
+			Dee_Free(frame->cf_stack);
+		frame->cf_stack   = new_stackv;
+		frame->cf_stacksz = stacka = new_stacka;
+		frame->cf_sp      = new_stackv + stackc;
+	}
+
+	/* Inject the caller-given "value" into the stack at address=index */
+	stackv = frame->cf_stack;
+	memmoveupc(stackv + index + 1,
+	           stackv + index,
+	           stackc - index,
+	           sizeof(DREF DeeObject *));
+	stackv[index] = value;
+	Dee_Incref(value);
+
+	/* Increase the stack pointer to reflect the now-larger stack. */
+	++frame->cf_sp;
+	DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+	return 0;
+err_stack_too_large_endwrite:
+	DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+/*err_stack_too_large:*/
+	DeeError_Throwf(&DeeError_SegFault, "Stack segment overflow");
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framestack_nsi_pop(FrameStack *self, dssize_t index) {
+	uint16_t stackc, i;
+	struct code_frame *frame;
+	DREF DeeObject **stackv;
+	DREF DeeObject *result;
+
+	/* Lock in assembly-mode, since the stack may contain instruction pointers. */
+	frame = DeeFrame_LockWriteAssembly((DeeObject *)self->fs_frame);
+	if unlikely(!frame)
+		goto err;
+	stackc = Dee_code_frame_getspaddr(frame);
+	if unlikely(!stackc) {
+		DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+		err_empty_sequence((DeeObject *)self);
+		goto err;
+	}
+
+	/* Fix the caller-given "index" so it becomes a proper position within the stack. */
+	i = (uint16_t)DeeSeqRange_Clamp_n(index, stackc);
+	stackv = frame->cf_stack;
+	result = stackv[i]; /* Inherit reference */
+	memmovedownc(stackv + index,
+	             stackv + index + 1,
+	             (stackc - 1) - index,
+	             sizeof(DREF DeeObject *));
+
+	/* Decrease the stack pointer to reflect the now-smaller stack. */
+	--frame->cf_sp;
+	DeeFrame_LockEndWrite((DeeObject *)self->fs_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE struct type_nsi tpconst framestack_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&framestack_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&framestack_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&framestack_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)&framestack_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&framestack_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)&framestack_nsi_insert,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)&framestack_nsi_pop,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
+	}
+};
+
+
+PRIVATE struct type_seq framestack_seq = {
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
+	/* .tp_contains  = */ NULL,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &framestack_nsi
+};
+
+PRIVATE struct type_getset tpconst framestack_getsets[] = {
+	TYPE_GETTER("__func__", &framestack_get_func, "->?DFunction"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst framestack_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameStack, fs_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject FrameStack_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FrameStack",
+	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&framestack_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&framestack_init,
+				TYPE_FIXED_ALLOCATOR(FrameStack)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framestack_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framestack_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &framestack_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ framestack_getsets,
+	/* .tp_members       = */ framestack_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetStackWrapper(DeeFrameObject *__restrict self) {
-	(void)self;
-	DeeError_NOTIMPLEMENTED(); /* TODO */
+	DREF FrameStack *result;
+	result = DeeObject_MALLOC(FrameStack);
+	if unlikely(!result)
+		goto err;
+	result->fs_frame = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &FrameStack_Type);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 

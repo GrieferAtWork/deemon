@@ -1703,6 +1703,11 @@ librt_get_FrameLocals_impl_f(void) {
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_FrameStack_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__stack__"));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameSymbolsByName_impl_f(void) {
 	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__symbols__"));
 }
@@ -1745,6 +1750,11 @@ librt_get_FrameArgs_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FrameLocals_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_FrameLocals_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FrameStack_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_FrameStack_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1930,6 +1940,7 @@ PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByName, &librt_get_YieldFun
 PRIVATE DEFINE_CMETHOD(librt_get_YieldFunctionSymbolsByNameIterator, &librt_get_YieldFunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameArgs, &librt_get_FrameArgs_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameLocals, &librt_get_FrameLocals_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FrameStack, &librt_get_FrameStack_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByName, &librt_get_FrameSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameIterator, &librt_get_FrameSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
@@ -2451,6 +2462,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "YieldFunctionSymbolsByNameIterator", (DeeObject *)&librt_get_YieldFunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* YieldFunctionSymbolsByName_Type */
 	{ "FrameArgs", (DeeObject *)&librt_get_FrameArgs, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                   /* FrameArgs_Type */
 	{ "FrameLocals", (DeeObject *)&librt_get_FrameLocals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                               /* FrameLocals_Type */
+	{ "FrameStack", (DeeObject *)&librt_get_FrameStack, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                                 /* FrameStack_Type */
 	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* FrameSymbolsByName_Type */
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */

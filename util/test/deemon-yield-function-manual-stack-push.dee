@@ -1,0 +1,85 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+
+#if __DEEMON_VARIANT__ == "gatw"
+import * from errors;
+
+@[copyable]
+function foo() {
+	yield "first yield";
+	__asm__({
+		push  @"second yield"
+		yield pop
+
+		/* This is another "yield pop" instruction, but must
+		 * hide that from the assembler, or else it will refuse
+		 * to compile by throwing:
+		 * >> Negative stack effect during `yield' instruction */
+		.byte 0x01
+	});
+
+	yield "Can only get here when manually altering the stack";
+}
+
+local a = foo().operator iter();
+assert a.operator next() == "first yield";
+assert a.operator next() == "second yield";
+
+/* At this point, the next instruction is ASM_YIELD, but the stack
+ * is currently empty. Because user-assembly was used, the code is
+ * running in safe-mode, meaning that the runtime is able to deal
+ * with the illegal stack effect by throwing "SegFault" */
+assert (try a.operator next() catch (e...) e) is SegFault;
+assert (try a.operator next() catch (e...) e) is SegFault;
+assert (try a.operator next() catch (e...) e) is SegFault;
+
+/* Using debug utilities, we can manually push something onto the
+ * stack of the iterator's execution frame, which it will then be
+ * able to return and thus resume execution. */
+a.__frame__.__stack__.append("missing stack value");
+assert a.operator next() == "missing stack value";
+assert a.operator next() == "Can only get here when manually altering the stack";
+
+assert (try a.operator next() catch (e...) e) is StopIteration;
+assert (try a.operator next() catch (e...) e) is StopIteration;
+assert (try a.operator next() catch (e...) e) is StopIteration;
+
+
+
+
+/* Another way of "fixing" the problem with the faulty code is
+ * to handle it by manually increasing the program counter by
+ * 1 byte, thus skipping the faulty "ASM_YIELD". */
+local a = foo().operator iter();
+assert a.operator next() == "first yield";
+assert a.operator next() == "second yield";
+assert (try a.operator next() catch (e...) e) is SegFault;
+assert (try a.operator next() catch (e...) e) is SegFault;
+assert (try a.operator next() catch (e...) e) is SegFault;
+
+a.__frame__.__pc__ += 1;
+assert a.operator next() == "Can only get here when manually altering the stack";
+
+assert (try a.operator next() catch (e...) e) is StopIteration;
+assert (try a.operator next() catch (e...) e) is StopIteration;
+assert (try a.operator next() catch (e...) e) is StopIteration;
+
+#endif /* __DEEMON_VARIANT__ == "gatw" */

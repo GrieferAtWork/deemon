@@ -211,6 +211,7 @@ again:
 	code = result->cf_func->fo_code;
 	if (!(code->co_flags & CODE_FASSEMBLY)) {
 		int temp;
+		result->cf_stacksz = 0; /* Zero means that the stack isn't heap-allocated */
 		Dee_Incref(code);
 		DeeFrame_LockEndWrite(self);
 		temp = DeeCode_SetAssembly((DeeObject *)code);
