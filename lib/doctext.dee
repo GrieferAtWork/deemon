@@ -237,12 +237,6 @@ function createConsoleString(
 	return p.fp.string;
 }
 
-@@Print @obj to @out
-function printConsoleString(obj: string | Object, out: File) {
-	/* TODO: when `out' isatty, derive `maxWidth' from its dimensions! */
-	ConsolePrinter(fp: out).append(obj);
-}
-
 
 
 
@@ -262,7 +256,7 @@ class Header {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -304,7 +298,7 @@ class Code {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -322,7 +316,7 @@ class HyperLink {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -366,7 +360,7 @@ class List {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -406,7 +400,7 @@ class Emphasis {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -664,7 +658,7 @@ class Table {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -685,7 +679,7 @@ class ArgumentReference {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -728,7 +722,7 @@ class ExternalReference {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -765,7 +759,7 @@ class ParameterDescription {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -799,7 +793,7 @@ class ReturnDescription {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
@@ -846,7 +840,7 @@ class ThrowsDescription {
 	}
 
 	operator str(out: File) {
-		return printConsoleString(this, out);
+		ConsolePrinter(fp: out).append(this);
 	}
 }
 
