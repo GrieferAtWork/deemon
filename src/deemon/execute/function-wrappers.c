@@ -578,7 +578,7 @@ PRIVATE struct type_member tpconst funcstatics_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst funcstatics_members[] = {
-	TYPE_MEMBER_FIELD("__func__", STRUCT_OBJECT, offsetof(FunctionStatics, fs_func)),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionStatics, fs_func), "->?DFunction"),
 	TYPE_MEMBER_END
 };
 
@@ -1488,7 +1488,7 @@ PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD("__func__", STRUCT_OBJECT, offsetof(FunctionSymbolsByName, fsbn_func)),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FunctionSymbolsByName, fsbn_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByName, fsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FunctionSymbolsByName, fsbn_rid_end)),
 	TYPE_MEMBER_END
@@ -2520,7 +2520,7 @@ PRIVATE struct type_getset tpconst yfuncsymbolsbyname_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD("__yfunc__", STRUCT_OBJECT, offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc)),
+	TYPE_MEMBER_FIELD_DOC("__yfunc__", STRUCT_OBJECT, offsetof(YieldFunctionSymbolsByName, yfsbn_yfunc), "->?Ert:YieldFunction"),
 	TYPE_MEMBER_FIELD("__nargs__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_nargs)),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(YieldFunctionSymbolsByName, yfsbn_rid_end)),
@@ -2778,7 +2778,8 @@ PRIVATE struct type_getset tpconst frameargs_getsets[] = {
 };
 
 PRIVATE struct type_member tpconst frameargs_members[] = {
-	TYPE_MEMBER_FIELD("__code__", STRUCT_OBJECT, offsetof(FrameArgs, fa_code)),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameArgs, fa_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__code__", STRUCT_OBJECT, offsetof(FrameArgs, fa_code), "->?Ert:Code"),
 	TYPE_MEMBER_END
 };
 
@@ -2854,15 +2855,296 @@ err:
 
 
 /************************************************************************/
-/* ...                                                                  */
+/* FrameLocals                                                          */
 /************************************************************************/
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeFrameObject *fl_frame;  /* [1..1][const] The frame in question */
+	uint16_t             fl_localc; /* [const] The # of local variables there are (cache) */
+} FrameLocals;
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+framelocals_nsi_getsize(FrameLocals *__restrict self) {
+	return self->fl_localc;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+framelocals_nsi_getitem(FrameLocals *__restrict self, size_t index) {
+	struct code_frame const *frame;
+	DREF DeeObject *result;
+	if unlikely(index >= self->fl_localc) {
+		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		goto err;
+	}
+	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	result = frame->cf_frame[index];
+	if unlikely(!result) {
+		DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+		err_unbound_index((DeeObject *)self, index);
+		goto err;
+	}
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framelocals_nsi_delitem(FrameLocals *__restrict self, size_t index) {
+	struct code_frame const *frame;
+	DREF DeeObject *oldvalue;
+	if unlikely(index >= self->fl_localc) {
+		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		goto err;
+	}
+	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	oldvalue = frame->cf_frame[index];
+	frame->cf_frame[index] = NULL;
+	DeeFrame_LockEndWrite((DeeObject *)self->fl_frame);
+	Dee_XDecref(oldvalue);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+framelocals_nsi_setitem(FrameLocals *self, size_t index, DeeObject *value) {
+	struct code_frame const *frame;
+	DREF DeeObject *oldvalue;
+	if unlikely(index >= self->fl_localc) {
+		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		goto err;
+	}
+	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	Dee_Incref(value);
+	oldvalue = frame->cf_frame[index];
+	frame->cf_frame[index] = value;
+	DeeFrame_LockEndWrite((DeeObject *)self->fl_frame);
+	Dee_XDecref(oldvalue);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+framelocals_nsi_xchitem(FrameLocals *self, size_t index, DeeObject *value) {
+	struct code_frame const *frame;
+	DREF DeeObject *oldvalue;
+	if unlikely(index >= self->fl_localc) {
+		err_index_out_of_bounds((DeeObject *)self, index, self->fl_localc);
+		goto err;
+	}
+	frame = DeeFrame_LockWrite((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	oldvalue = frame->cf_frame[index];
+	if unlikely(!oldvalue) {
+		DeeFrame_LockEndWrite((DeeObject *)self->fl_frame);
+		err_unbound_index((DeeObject *)self, index);
+		goto err;
+	}
+	Dee_Incref(value);
+	frame->cf_frame[index] = value; /* Inherit reference (x2) */
+	DeeFrame_LockEndWrite((DeeObject *)self->fl_frame);
+	return oldvalue;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeFunctionObject *DCALL
+framelocals_get_func(FrameLocals *__restrict self) {
+	struct code_frame const *frame;
+	DREF DeeFunctionObject *result;
+	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	result = frame->cf_func;
+	Dee_Incref(result);
+	DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+framelocals_copy(FrameLocals *__restrict self,
+                 FrameLocals *__restrict other) {
+	self->fl_frame  = other->fl_frame;
+	self->fl_localc = other->fl_localc;
+	Dee_Incref(self->fl_frame);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+framelocals_init(FrameLocals *__restrict self,
+                 size_t argc, DeeObject *const *argv) {
+	struct code_frame const *frame;
+	if (DeeArg_Unpack(argc, argv, "o:FrameLocals", &self->fl_frame))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->fl_frame, &DeeFrame_Type))
+		goto err;
+	frame = DeeFrame_LockRead((DeeObject *)self->fl_frame);
+	if unlikely(!frame)
+		goto err;
+	self->fl_localc = frame->cf_func->fo_code->co_localc;
+	DeeFrame_LockEndRead((DeeObject *)self->fl_frame);
+	Dee_Incref(self->fl_frame);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+framelocals_fini(FrameLocals *__restrict self) {
+	Dee_Decref(self->fl_frame);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+framelocals_visit(FrameLocals *__restrict self,
+                  dvisit_t proc, void *arg) {
+	Dee_Visit(self->fl_frame);
+}
+
+
+PRIVATE struct type_nsi tpconst framelocals_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&framelocals_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&framelocals_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&framelocals_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&framelocals_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&framelocals_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&framelocals_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
+	}
+};
+
+
+PRIVATE struct type_seq framelocals_seq = {
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
+	/* .tp_contains  = */ NULL,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &framelocals_nsi
+};
+
+PRIVATE struct type_getset tpconst framelocals_getsets[] = {
+	TYPE_GETTER("__func__", &framelocals_get_func, "->?DFunction"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst framelocals_members[] = {
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameLocals, fl_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD("__localc__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameLocals, fl_localc)),
+	TYPE_MEMBER_END
+};
+
+INTERN DeeTypeObject FrameLocals_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FrameLocals",
+	/* .tp_doc      = */ DOC("(frame:?Ert:Frame)"),
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&framelocals_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&framelocals_init,
+				TYPE_FIXED_ALLOCATOR(FrameLocals)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framelocals_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&framelocals_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &framelocals_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ framelocals_getsets,
+	/* .tp_members       = */ framelocals_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetLocalsWrapper(DeeFrameObject *__restrict self) {
-	(void)self;
-	DeeError_NOTIMPLEMENTED(); /* TODO */
+	struct code_frame const *frame;
+	DREF FrameLocals *result;
+	result = DeeObject_MALLOC(FrameLocals);
+	if unlikely(!result)
+		goto err;
+	frame = DeeFrame_LockRead((DeeObject *)self);
+	if unlikely(!frame)
+		goto err_r;
+	result->fl_localc = frame->cf_func->fo_code->co_localc;
+	DeeFrame_LockEndRead((DeeObject *)self);
+	result->fl_frame = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &FrameLocals_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
+
+
+
+
+/************************************************************************/
+/* ...                                                                  */
+/************************************************************************/
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFrame_GetStackWrapper(DeeFrameObject *__restrict self) {
@@ -4185,8 +4467,8 @@ PRIVATE struct type_member tpconst framesymbolsbyname_class_members[] = {
 };
 
 PRIVATE struct type_member tpconst framesymbolsbyname_members[] = {
-	TYPE_MEMBER_FIELD("__frame__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_frame)),
-	TYPE_MEMBER_FIELD("__func__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_func)),
+	TYPE_MEMBER_FIELD_DOC("__frame__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_frame), "->?Ert:Frame"),
+	TYPE_MEMBER_FIELD_DOC("__func__", STRUCT_OBJECT, offsetof(FrameSymbolsByName, frsbn_func), "->?DFunction"),
 	TYPE_MEMBER_FIELD("__nargs__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_nargs)),
 	TYPE_MEMBER_FIELD("__ridstart__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_rid_start)),
 	TYPE_MEMBER_FIELD("__ridend__", STRUCT_CONST | STRUCT_UINT16_T, offsetof(FrameSymbolsByName, frsbn_rid_end)),
