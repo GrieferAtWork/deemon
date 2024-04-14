@@ -1026,12 +1026,12 @@ INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) uint16_t DCALL
 DDI_GetRefIdByName(DeeDDIObject const *self, char const *name) {
 	/* Reference symbol name */
-	uint8_t const *reader;
-	char const *str_base;
 	ASSERT_OBJECT_TYPE_EXACT(self, &DeeDDI_Type);
-	str_base = DeeString_STR(self->d_strtab);
 	if (self->d_exdat) {
-		reader = self->d_exdat->dx_data;
+		uint8_t const *reader;
+		char const *str_base;
+		str_base = DeeString_STR(self->d_strtab);
+		reader   = self->d_exdat->dx_data;
 		for (;;) {
 			uint8_t op = *reader++;
 			switch (op) {
@@ -1853,21 +1853,6 @@ framesymbolsbynameiter_get_func(FrameSymbolsByNameIterator *__restrict self) {
 	return_reference_(self->frsbni_seq->frsbn_func);
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-framesymbolsbynameiter_ctor(FrameSymbolsByNameIterator *__restrict self) {
-	self->frsbni_seq = (DREF FrameSymbolsByName *)DeeObject_NewDefault(&FrameSymbolsByName_Type);
-	if unlikely(!self->frsbni_seq)
-		goto err;
-	Dee_atomic_lock_init(&self->frsbni_lock);
-	self->frsbni_idx.frsbnii_aid = 0;
-	self->frsbni_idx.frsbnii_rid = 0;
-	self->frsbni_idx.frsbnii_lid = 0;
-	self->frsbni_idx.frsbnii_nsp = 0;
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 framesymbolsbynameiter_copy(FrameSymbolsByNameIterator *__restrict self,
                             FrameSymbolsByNameIterator *__restrict other) {
@@ -1927,8 +1912,6 @@ framesymbolsbynameiter_bool(FrameSymbolsByNameIterator *__restrict self) {
 
 
 /* === canonical location ID
- * TODO: Support for special location "return" (when `DEEFRAME_FNORESULT' isn't set)
- * TODO: Support for special location "this"   (when it's a thiscall-function)
  * - aid: aid
  * - rid: co_argc_max + rid                                  // Also for sid
  * - lid: co_argc_max + co_refstaticc + lid
@@ -2108,12 +2091,14 @@ FrameSymbolsByName_GetCLidValue(FrameSymbolsByName *self, canonical_lid_t clid) 
 				result = ITER_DONE; /* Not bound */
 			}
 			DeeFunction_RefLockEndRead(self->frsbn_func);
+			goto done;
 		} else if (*loc.cll_ptr) {
 			result = *loc.cll_ptr;
 			Dee_Incref(result);
 		}
 	}
 	DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
+done:
 	return result;
 err:
 	return NULL;
@@ -2418,7 +2403,7 @@ INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&framesymbolsbynameiter_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&framesymbolsbynameiter_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
 				/* .tp_any_ctor  = */ (dfunptr_t)&framesymbolsbynameiter_init,
@@ -2512,6 +2497,7 @@ again_lock_frame:
 				char const *local_name;
 				local_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_lcnamv[i]);
 				if (local_name && strcmp(local_name, name) == 0) {
+					DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
 					Dee_ddi_state_fini(&dds);
 					return result + i;
 				}
@@ -2520,6 +2506,7 @@ again_lock_frame:
 				char const *stack_name;
 				stack_name = DeeCode_GetDDIString((DeeObject *)code, iter->dx_spnamv[i]);
 				if (stack_name && strcmp(stack_name, name) == 0) {
+					DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
 					Dee_ddi_state_fini(&dds);
 					return result + code->co_localc + i;
 				}
@@ -2627,11 +2614,46 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 framesymbolsbyname_nsi_setdefault(FrameSymbolsByName *self,
                                   DeeObject *key, DeeObject *defl) {
-	(void)self;
-	(void)key;
-	(void)defl;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+	DREF DeeObject *result;
+	struct code_frame *frame;
+	struct canonical_lid_location loc;
+	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	frame = DeeFrame_LockWrite((DeeObject *)self->frsbn_frame);
+	if unlikely(!frame)
+		goto err;
+	if unlikely(!code_frame_get_clid_addr(frame, &loc, clid)) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		goto err_no_such_key;
+	}
+	if (loc.cll_isstatic) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		DeeFunction_RefLockWrite(self->frsbn_func);
+		result = *loc.cll_ptr;
+		if (ITER_ISOK(result)) {
+			Dee_Incref(result);
+			DeeFunction_RefLockEndWrite(self->frsbn_func);
+		} else {
+			Dee_Incref_n(defl, 2);
+			*loc.cll_ptr = result = defl;
+			DeeFunction_RefLockEndWrite(self->frsbn_func);
+			DeeFutex_WakeAll(loc.cll_ptr);
+		}
+		goto done;
+	} else if (*loc.cll_ptr) {
+		result = *loc.cll_ptr;
+		Dee_Incref(result);
+	} else {
+		Dee_Incref_n(defl, 2);
+		*loc.cll_ptr = result = defl;
+	}
+	DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+done:
+	return result;
+err_no_such_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
 	return NULL;
 }
 
@@ -2639,12 +2661,57 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 framesymbolsbyname_nsi_updateold(FrameSymbolsByName *self,
                                  DeeObject *key, DeeObject *value,
                                  DREF DeeObject **p_oldvalue) {
-	(void)self;
-	(void)key;
-	(void)value;
-	(void)p_oldvalue;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+	DREF DeeObject *oldvalue;
+	struct code_frame *frame;
+	struct canonical_lid_location loc;
+	canonical_lid_t clid = FrameSymbolsByName_TryKey2LocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-2)
+		goto err_no_such_key;
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	frame = DeeFrame_LockWrite((DeeObject *)self->frsbn_frame);
+	if unlikely(!frame)
+		goto err;
+	if unlikely(!code_frame_get_clid_addr(frame, &loc, clid)) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		goto err_no_such_key;
+	}
+	if (loc.cll_isstatic) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		DeeFunction_RefLockWrite(self->frsbn_func);
+		oldvalue = *loc.cll_ptr;
+		if (ITER_ISOK(oldvalue)) {
+			Dee_Incref(value);
+			*loc.cll_ptr = value;
+			DeeFunction_RefLockEndWrite(self->frsbn_func);
+			DeeFutex_WakeAll(loc.cll_ptr);
+			if (p_oldvalue) {
+				*p_oldvalue = oldvalue;
+			} else {
+				Dee_Decref(oldvalue);
+			}
+			return 1;
+		}
+		DeeFunction_RefLockEndWrite(self->frsbn_func);
+		return 0;
+	} else if ((oldvalue = *loc.cll_ptr) != NULL) {
+		Dee_Incref(value);
+		*loc.cll_ptr = value;
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		if (p_oldvalue) {
+			*p_oldvalue = oldvalue;
+		} else {
+			Dee_Decref(oldvalue);
+		}
+		return 1;
+	} else {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		return 0;
+	}
+	__builtin_unreachable();
+err_no_such_key:
+	return 0;
+err:
 	return -1;
 }
 
@@ -2652,12 +2719,54 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 framesymbolsbyname_nsi_insertnew(FrameSymbolsByName *self,
                                  DeeObject *key, DeeObject *value,
                                  DREF DeeObject **p_oldvalue) {
-	(void)self;
-	(void)key;
-	(void)value;
-	(void)p_oldvalue;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+	DREF DeeObject *oldvalue;
+	struct code_frame *frame;
+	struct canonical_lid_location loc;
+	canonical_lid_t clid = FrameSymbolsByName_Key2LocId(self, key);
+	if unlikely(clid == (canonical_lid_t)-1)
+		goto err;
+	frame = DeeFrame_LockWrite((DeeObject *)self->frsbn_frame);
+	if unlikely(!frame)
+		goto err;
+	if unlikely(!code_frame_get_clid_addr(frame, &loc, clid)) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		goto err_no_such_key;
+	}
+	if (loc.cll_isstatic) {
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		DeeFunction_RefLockWrite(self->frsbn_func);
+		oldvalue = *loc.cll_ptr;
+		if (ITER_ISOK(oldvalue)) {
+			if (p_oldvalue) {
+				*p_oldvalue = oldvalue;
+				Dee_Incref(oldvalue);
+			}
+			DeeFunction_RefLockEndWrite(self->frsbn_func);
+			return 1;
+		}
+		Dee_Incref(value);
+		*loc.cll_ptr = value;
+		DeeFunction_RefLockEndWrite(self->frsbn_func);
+		DeeFutex_WakeAll(loc.cll_ptr);
+		return 0;
+	} else if (*loc.cll_ptr) {
+		if (p_oldvalue) {
+			oldvalue = *loc.cll_ptr;
+			*p_oldvalue = oldvalue;
+			Dee_Incref(oldvalue);
+		}
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		return 1;
+	} else {
+		Dee_Incref(value);
+		*loc.cll_ptr = value;
+		DeeFrame_LockEndWrite((DeeObject *)self->frsbn_frame);
+		return 0;
+	}
+	__builtin_unreachable();
+err_no_such_key:
+	err_unknown_key((DeeObject *)self, key);
+err:
 	return -1;
 }
 
@@ -2727,14 +2836,6 @@ framesymbolsbyname_delitem(FrameSymbolsByName *self,
 }
 
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-framesymbolsbyname_ctor(FrameSymbolsByName *__restrict self) {
-	(void)self;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 framesymbolsbyname_copy(FrameSymbolsByName *__restrict self,
                         FrameSymbolsByName *__restrict other) {
@@ -2751,13 +2852,43 @@ framesymbolsbyname_copy(FrameSymbolsByName *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-framesymbolsbyname_init(FrameSymbolsByName *__restrict self,
-                        size_t argc, DeeObject *const *argv) {
-	(void)self;
-	(void)argc;
-	(void)argv;
-	/* TODO */
-	DeeError_NOTIMPLEMENTED();
+framesymbolsbyname_init_kw(FrameSymbolsByName *__restrict self,
+                           size_t argc, DeeObject *const *argv,
+                           DeeObject *kw) {
+	struct code_frame const *frame;
+	DeeCodeObject *code;
+	PRIVATE DEFINE_KWLIST(kwlist, { K(frame), K(argc), K(ridstart), K(ridend), K(localc), K(stackc), KEND });
+	self->frsbn_nargs     = (uint16_t)-1;
+	self->frsbn_rid_start = 0;
+	self->frsbn_rid_end   = (uint16_t)-1;
+	self->frsbn_localc    = (uint16_t)-1;
+	self->frsbn_stackc    = (uint16_t)-1;
+	if (DeeArg_UnpackKw(argc, argv, kw, kwlist, "o|" UNPu16 UNPu16 UNPu16 UNPu16 UNPu16,
+	                    &self->frsbn_frame, &self->frsbn_nargs,
+	                    &self->frsbn_rid_start, &self->frsbn_rid_end,
+	                    &self->frsbn_localc, &self->frsbn_stackc))
+		goto err;
+	if (DeeObject_AssertTypeExact(self->frsbn_frame, &DeeFrame_Type))
+		goto err;
+	frame = DeeFrame_LockRead((DeeObject *)self->frsbn_frame);
+	if unlikely(!frame)
+		goto err;
+	self->frsbn_func = frame->cf_func;
+	Dee_Incref(self->frsbn_func);
+	if (self->frsbn_stackc > Dee_code_frame_getspaddr(frame))
+		self->frsbn_stackc = Dee_code_frame_getspaddr(frame);
+	DeeFrame_LockEndRead((DeeObject *)self->frsbn_frame);
+	code = self->frsbn_func->fo_code;
+	if (self->frsbn_localc > code->co_localc)
+		self->frsbn_localc = code->co_localc;
+	if (self->frsbn_nargs > code->co_argc_max)
+		self->frsbn_nargs = code->co_argc_max;
+	if (self->frsbn_rid_end > code->co_refstaticc)
+		self->frsbn_rid_end = code->co_refstaticc;
+	if (self->frsbn_rid_start > self->frsbn_rid_end)
+		self->frsbn_rid_start = self->frsbn_rid_end;
+	return 0;
+err:
 	return -1;
 }
 
@@ -2835,11 +2966,12 @@ INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&framesymbolsbyname_ctor,
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
 				/* .tp_copy_ctor = */ (dfunptr_t)&framesymbolsbyname_copy,
 				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&framesymbolsbyname_init,
-				TYPE_FIXED_ALLOCATOR(FrameSymbolsByName)
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(FrameSymbolsByName),
+				/* .tp_any_ctor_kw = */ (dfunptr_t)&framesymbolsbyname_init_kw
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&framesymbolsbyname_fini,
