@@ -455,7 +455,7 @@ defineBinary("ge", nameTitle: "CompareGeObject");
 defineUnary("iter", nameTitle: "IterSelf");
 defineUnary("size", nameTitle: "SizeObject");
 defineBinary("contains", nameTitle: "ContainsObject");
-defineBinary("getitem", nameTitle: "ContainsObject");
+defineBinary("getitem", nameTitle: "GetItem");
 defineBinaryInt("delitem", nameTitle: "DelItem", returnNone: true);
 defineTrinaryInt("setitem", nameTitle: "SetItem", returnNone: true);
 defineTrinary("getrange", nameTitle: "GetRange");
@@ -951,7 +951,7 @@ DEFINE_OPERATOR_INVOKE(operator_getitem, &instance_getitem) {
 	(void)p_self;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("getitem"), &other))
 		goto err;
-	return DeeObject_TContainsObject(tp_self, self, other);
+	return DeeObject_TGetItem(tp_self, self, other);
 err:
 	return NULL;
 }
