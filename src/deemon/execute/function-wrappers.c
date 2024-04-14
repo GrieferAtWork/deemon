@@ -2955,8 +2955,8 @@ PRIVATE struct type_member tpconst framesymbolsbyname_members[] = {
 INTERN DeeTypeObject FrameSymbolsByName_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameSymbolsByName",
-	/* .tp_doc      = */ DOC("A ${{(int | string): Object}}-like mapping for named symbols that currently "
-	                         /**/ "relevant within a given code-frame.\n"
+	/* .tp_doc      = */ DOC("A ${{(int | string): Object}}-like mapping for currently relevant "
+	                         /**/ "named symbols within a given code-frame.\n"
 	                         "\n"
 	                         "(frame:?Ert:Frame,argc?:?Dint,ridstart=!0,ridend?:?Dint,localc?:?Dint,stackc?:?Dint)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,

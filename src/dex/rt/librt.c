@@ -1638,30 +1638,87 @@ librt_get_ReBytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(a
 
 
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+PRIVATE DEFINE_CODE(DeeCode_EmptyYielding,
+                    /* co_flags:      */ CODE_FCOPYABLE | CODE_FYIELDING,
+                    /* co_localc:     */ 0,
+                    /* co_constc:     */ 0,
+                    /* co_refc:       */ 0,
+                    /* co_refstaticc: */ 0,
+                    /* co_exceptc:    */ 0,
+                    /* co_argc_min:   */ 0,
+                    /* co_argc_max:   */ 0,
+                    /* co_framesize:  */ 0,
+                    /* co_codebytes:  */ sizeof(instruction_t),
+                    /* co_module:     */ &DeeModule_Deemon,
+                    /* co_keywords:   */ NULL,
+                    /* co_defaultv:   */ NULL,
+                    /* co_constv:     */ NULL,
+                    /* co_exceptv:    */ NULL,
+                    /* co_ddi:        */ &DeeDDI_Empty,
+                    /* co_code:       */ { ASM_RET_NONE });
+PRIVATE DEFINE_FUNCTION_NOREFS(DeeFunction_EmptyYielding,
+                               /* fo_code: */ (DeeCodeObject *)&DeeCode_EmptyYielding);
+PRIVATE DEFINE_YIELD_FUNCTION_NOARGS(DeeYieldFunction_Empty,
+                                     /* yf_func: */ (DeeFunctionObject *)&DeeFunction_EmptyYielding.ob,
+                                     /* yf_kw:   */ NULL,
+                                     /* yf_this: */ NULL);
+PRIVATE struct {
+	struct gc_head_link _gc_head_data;
+	DeeYieldFunctionIteratorObject ob;
+} DeeYieldFunctionIterator_Empty = {
+	{ NULL, NULL },
+	{
+		OBJECT_HEAD_INIT(&DeeYieldFunctionIterator_Type),
+		/* .yi_func = */ (DeeYieldFunctionObject *)&DeeYieldFunction_Empty,
+		/* .yi_frame = */ {
+			/* .cf_prev    = */ NULL,
+			/* .cf_func    = */ (DeeFunctionObject *)&DeeFunction_EmptyYielding.ob,
+			/* .cf_argc    = */ 0,
+			/* .cf_argv    = */ NULL,
+			/* .cf_kw      = */ NULL,
+			/* .cf_frame   = */ NULL,
+			/* .cf_stack   = */ NULL,
+			/* .cf_sp      = */ NULL,
+			/* .cf_ip      = */ DeeCode_EmptyYielding.co_code,
+			/* .cf_vargs   = */ NULL,
+			/* .cf_this    = */ NULL,
+			/* .cf_result  = */ NULL,
+			/* .cf_stacksz = */ 0,
+			/* .cf_flags   = */ CODE_FCOPYABLE | CODE_FYIELDING,
+		},
+#ifndef CONFIG_NO_THREADS
+		/* .yi_lock = */ DEE_RSHARED_RWLOCK_INIT,
+#endif /* !CONFIG_NO_THREADS */
+	}
+};
+
+PRIVATE DeeFrameObject DeeFrame_Empty = {
+	OBJECT_HEAD_INIT(&DeeFrame_Type),
+	/* .f_owner = */ (DeeObject *)&DeeYieldFunctionIterator_Empty.ob,
+	/* .f_frame = */ &DeeYieldFunctionIterator_Empty.ob.yi_frame,
+#ifndef CONFIG_NO_THREADS
+	{ (Dee_atomic_rwlock_t *)&DeeYieldFunctionIterator_Empty.ob.yi_lock },
+	/* .f_lock  = */ DEE_ATOMIC_RWLOCK_INIT,
+#endif /* !CONFIG_NO_THREADS */
+	/* .f_flags = */ DEEFRAME_FREADONLY | DEEFRAME_FSHRLOCK | DEEFRAME_FRECLOCK,
+	/* .f_revsp = */ 0,
+};
+
+
+
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionStatics_impl_f(void) {
-	DREF DeeObject *result;
-	DREF DeeObject *empty_function = DeeObject_NewDefault(&DeeFunction_Type);
-	if unlikely(!empty_function)
-		goto err;
-	result = DeeObject_GetAttrString(empty_function, "__statics__");
-	Dee_Decref(empty_function);
-	return get_type_of(result);
-err:
-	return NULL;
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFunction_EmptyYielding.ob, "__statics__"));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionSymbolsByName_impl_f(void) {
-	DREF DeeObject *result;
-	DREF DeeObject *empty_function = DeeObject_NewDefault(&DeeFunction_Type);
-	if unlikely(!empty_function)
-		goto err;
-	result = DeeObject_GetAttrString(empty_function, "__symbols__");
-	Dee_Decref(empty_function);
-	return get_type_of(result);
-err:
-	return NULL;
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFunction_EmptyYielding.ob, "__symbols__"));
+}
+
+LOCAL WUNUSED DREF DeeObject *DCALL
+librt_get_FrameSymbolsByName_impl_f(void) {
+	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__symbols__"));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1682,6 +1739,16 @@ librt_get_FunctionSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_FunctionSymbolsByName_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FrameSymbolsByName_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return librt_get_FrameSymbolsByName_impl_f();
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FrameSymbolsByNameIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_FrameSymbolsByName_impl_f());
 }
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
@@ -1856,6 +1923,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, 
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByName, &librt_get_FunctionSymbolsByName_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionSymbolsByNameIterator, &librt_get_FunctionSymbolsByNameIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByName, &librt_get_FrameSymbolsByName_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FrameSymbolsByNameIterator, &librt_get_FrameSymbolsByNameIterator_f, METHOD_FCONSTCALL);
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
@@ -2375,6 +2444,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FunctionStaticsIterator", (DeeObject *)&librt_get_FunctionStaticsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionStatics_Type */
 	{ "FunctionSymbolsByName", (DeeObject *)&librt_get_FunctionSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
 	{ "FunctionSymbolsByNameIterator", (DeeObject *)&librt_get_FunctionSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FunctionSymbolsByName_Type */
+	{ "FrameSymbolsByName", (DeeObject *)&librt_get_FrameSymbolsByName, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FrameSymbolsByName_Type */
+	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* FrameSymbolsByName_Type */
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 	{ NULL }

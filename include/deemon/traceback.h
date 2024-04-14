@@ -115,8 +115,8 @@ DeeTraceback_NewWithException(struct Dee_thread_object *__restrict thread);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
-typedef struct frame_object DeeFrameObject;
-struct frame_object {
+typedef struct Dee_frame_object DeeFrameObject;
+struct Dee_frame_object {
 	Dee_OBJECT_HEAD /* More of a frame-reference object. */
 	DREF DeeObject        *f_owner; /* [0..1][const] Owner of the frame (Required to prevent the frame from being destroyed). */
 	struct Dee_code_frame *f_frame; /* [lock(*f_palock)][0..1][lock(f_lock)] The actual frame that is being referenced. */

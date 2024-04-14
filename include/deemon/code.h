@@ -161,6 +161,10 @@ DECL_BEGIN
 #define Dee_function_info                   function_info
 #define function_info_fini                  Dee_function_info_fini
 #define DEFINE_CODE                         Dee_DEFINE_CODE
+#define DEFINE_FUNCTION                     Dee_DEFINE_FUNCTION
+#define DEFINE_FUNCTION_NOREFS              Dee_DEFINE_FUNCTION_NOREFS
+#define DEFINE_YIELD_FUNCTION               Dee_DEFINE_YIELD_FUNCTION
+#define DEFINE_YIELD_FUNCTION_NOARGS        Dee_DEFINE_YIELD_FUNCTION_NOARGS
 #endif /* DEE_SOURCE */
 
 struct Dee_code_frame;
@@ -790,7 +794,7 @@ struct Dee_code_object {
 		uint32_t                              co_framesize;        \
 		Dee_code_size_t                       co_codebytes;        \
 		_DEE_CODE_CO_STATIC_LOCK_FIELD                             \
-		DREF struct Dee_module_object        *_co_module;          \
+		DREF struct Dee_module_object        *co_module;           \
 		DREF struct Dee_string_object *const *co_keywords;         \
 		DREF DeeObject                *const *co_defaultv;         \
 		DREF DeeObject                      **co_constv;           \
@@ -844,7 +848,7 @@ struct Dee_code_object {
 			uint32_t                              co_framesize;    \
 			Dee_code_size_t                       co_codebytes;    \
 			_DEE_CODE_CO_STATIC_LOCK_FIELD                         \
-			DREF struct Dee_module_object        *_co_module;      \
+			DREF struct Dee_module_object        *co_module;       \
 			DREF struct Dee_string_object *const *co_keywords;     \
 			DREF DeeObject                *const *co_defaultv;     \
 			DREF DeeObject                      **co_constv;       \
@@ -1194,6 +1198,90 @@ struct Dee_function_object {
 #endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
+#ifdef CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE
+#define _DEE_FUNCTION_FO_HOSTASM_FIELD struct Dee_hostasm_function fo_hostasm;
+#define _DEE_FUNCTION_FO_HOSTASM_INIT  DEE_HOSTASM_FUNCTION_INIT,
+#else /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#define _DEE_FUNCTION_FO_HOSTASM_FIELD /* nothing */
+#define _DEE_FUNCTION_FO_HOSTASM_INIT  /* nothing */
+#endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
+#if defined(CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION) && !defined(CONFIG_NO_THREADS)
+#define _DEE_FUNCTION_FO_REFLOCK_FIELD Dee_atomic_rwlock_t fo_reflock;
+#define _DEE_FUNCTION_FO_REFLOCK_INIT  DEE_ATOMIC_RWLOCK_INIT,
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION && !CONFIG_NO_THREADS */
+#define _DEE_FUNCTION_FO_REFLOCK_FIELD /* nothing */
+#define _DEE_FUNCTION_FO_REFLOCK_INIT  /* nothing */
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION || CONFIG_NO_THREADS */
+
+#ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
+#define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
+	struct {                                               \
+		struct gc_head_link _gc_head_data;                 \
+		struct {                                           \
+			Dee_OBJECT_HEAD                                \
+			DREF DeeCodeObject *fo_code;                   \
+			_DEE_FUNCTION_FO_HOSTASM_FIELD                 \
+			_DEE_FUNCTION_FO_REFLOCK_FIELD                 \
+			DREF DeeObject *fo_refv[fo_refc_];             \
+		} ob;                                              \
+	} name = {                                             \
+		{ NULL, NULL },                                    \
+		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),         \
+		  fo_code_,                                        \
+		  _DEE_FUNCTION_FO_HOSTASM_INIT                    \
+		  _DEE_FUNCTION_FO_REFLOCK_INIT                    \
+		  __VA_ARGS__ }                                    \
+	}
+#define Dee_DEFINE_FUNCTION_NOREFS(name, fo_code_) \
+	struct {                                       \
+		struct gc_head_link _gc_head_data;         \
+		struct {                                   \
+			Dee_OBJECT_HEAD                        \
+			DREF DeeCodeObject *fo_code;           \
+			_DEE_FUNCTION_FO_HOSTASM_FIELD         \
+			_DEE_FUNCTION_FO_REFLOCK_FIELD         \
+		} ob;                                      \
+	} name = {                                     \
+		{ NULL, NULL },                            \
+		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type), \
+		  fo_code_,                                \
+		  _DEE_FUNCTION_FO_HOSTASM_INIT            \
+		  _DEE_FUNCTION_FO_REFLOCK_INIT }          \
+	}
+#else /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+#define Dee_DEFINE_FUNCTION(name, fo_code_, fo_refc_, ...) \
+	struct {                                               \
+		struct {                                           \
+			Dee_OBJECT_HEAD                                \
+			DREF DeeCodeObject *fo_code;                   \
+			_DEE_FUNCTION_FO_HOSTASM_FIELD                 \
+			_DEE_FUNCTION_FO_REFLOCK_FIELD                 \
+			DREF DeeObject *fo_refv[fo_refc_];             \
+		} ob;                                              \
+	} name = {                                             \
+		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type),         \
+		  fo_code_,                                        \
+		  _DEE_FUNCTION_FO_HOSTASM_INIT                    \
+		  _DEE_FUNCTION_FO_REFLOCK_INIT                    \
+		  __VA_ARGS__ }                                    \
+	}
+#define Dee_DEFINE_FUNCTION_NOREFS(name, fo_code_) \
+	struct {                                       \
+		struct {                                   \
+			Dee_OBJECT_HEAD                        \
+			DREF DeeCodeObject *fo_code;           \
+			_DEE_FUNCTION_FO_HOSTASM_FIELD         \
+			_DEE_FUNCTION_FO_REFLOCK_FIELD         \
+		} ob;                                      \
+	} name = {                                     \
+		{ Dee_OBJECT_HEAD_INIT(&DeeFunction_Type), \
+		  fo_code_,                                \
+		  _DEE_FUNCTION_FO_HOSTASM_INIT            \
+		  _DEE_FUNCTION_FO_REFLOCK_INIT }          \
+	}
+#endif /* !CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
+	
+
 
 
 struct Dee_yield_function_object {
@@ -1205,6 +1293,36 @@ struct Dee_yield_function_object {
 	size_t                                    yf_argc;  /* [const] Argument count (including keyword values when `DeeKwds_Check(yf_kw->fk_kw)') */
 	COMPILER_FLEXIBLE_ARRAY(DREF DeeObject *, yf_argv); /* [1..1][const][yf_argc] Argument vector*/
 };
+
+#define Dee_DEFINE_YIELD_FUNCTION(name, yf_func_, yf_kw_, \
+                                  yf_this_, yf_pargc_,    \
+                                  yf_argc_, ...)          \
+	struct {                                              \
+		Dee_OBJECT_HEAD                                   \
+		DREF DeeFunctionObject     *yf_func;              \
+		struct Dee_code_frame_kwds *yf_kw;                \
+		DREF DeeObject             *yf_this;              \
+		size_t                      yf_pargc;             \
+		size_t                      yf_argc;              \
+		DREF DeeObject             *yf_argv[yf_argc_];    \
+	} name = {                                            \
+		Dee_OBJECT_HEAD_INIT(&DeeYieldFunction_Type),     \
+		yf_func_, yf_kw_, yf_this_, yf_pargc_, yf_argc_,  \
+		__VA_ARGS__                                       \
+	}
+#define Dee_DEFINE_YIELD_FUNCTION_NOARGS(name, yf_func_, yf_kw_, yf_this_) \
+	struct {                                                               \
+		Dee_OBJECT_HEAD                                                    \
+		DREF DeeFunctionObject     *yf_func;                               \
+		struct Dee_code_frame_kwds *yf_kw;                                 \
+		DREF DeeObject             *yf_this;                               \
+		size_t                      yf_pargc;                              \
+		size_t                      yf_argc;                               \
+	} name = {                                                             \
+		Dee_OBJECT_HEAD_INIT(&DeeYieldFunction_Type),                      \
+		yf_func_, yf_kw_, yf_this_, 0, 0                                   \
+	}
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 #define DeeYieldFunction_Sizeof(argc) (offsetof(DeeYieldFunctionObject, yf_argv) + ((argc) * sizeof(DREF DeeObject *)))
