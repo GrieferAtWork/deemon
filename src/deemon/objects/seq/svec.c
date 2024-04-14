@@ -236,6 +236,9 @@ PRIVATE struct type_member tpconst rveciter_members[] = {
 	TYPE_MEMBER_END
 };
 
+/* This types isn't actually be needed (Sequence would emulate it using `FastNsiIterator'),
+ * but since ref-vectors are used in a couple of places, they get their own, dedicated
+ * iterator type (which is a tiny bit faster than `FastNsiIterator') */
 INTERN DeeTypeObject RefVectorIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_RefVectorIterator",
@@ -1210,10 +1213,14 @@ INTERN struct type_cmp sveciter_cmp = {
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sveciter_ge,
+	/* .tp_nii  = */ NULL /* TODO */
 };
 
 
 
+/* This types isn't actually be needed (Sequence would emulate it using `FastNsiIterator'),
+ * but since shared vectors are used by `ASM_CALL_SEQ' instructions, they get their own,
+ * dedicated iterator type (which is a tiny bit faster than `FastNsiIterator') */
 INTERN DeeTypeObject SharedVectorIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SharedVectorIterator",

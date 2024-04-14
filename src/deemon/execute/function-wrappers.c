@@ -975,7 +975,7 @@ PRIVATE struct type_member tpconst funcsymbolsbynameiter_members[] = {
 INTERN DeeTypeObject FunctionSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FunctionSymbolsByNameIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2040,7 +2040,7 @@ PRIVATE struct type_member tpconst yfuncsymbolsbynameiter_members[] = {
 INTERN DeeTypeObject YieldFunctionSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_YieldFunctionSymbolsByNameIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -2731,7 +2731,7 @@ PRIVATE struct type_nsi tpconst frameargs_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&frameargs_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&frameargs_nsi_getsize,
 			/* .nsi_getitem      = */ (dfunptr_t)&frameargs_nsi_getitem,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
@@ -3620,7 +3620,7 @@ PRIVATE struct type_member tpconst framesymbolsbynameiter_members[] = {
 INTERN DeeTypeObject FrameSymbolsByNameIterator_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_FrameSymbolsByNameIterator",
-	/* .tp_doc      = */ NULL,
+	/* .tp_doc      = */ DOC("next->?T2?X2?Dstring?Dint?O"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,

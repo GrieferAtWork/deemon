@@ -54,7 +54,6 @@ typedef struct {
 INTDEF DeeTypeObject ModuleExports_Type;
 INTDEF DeeTypeObject ModuleExportsIterator_Type;
 INTDEF DeeTypeObject ModuleGlobals_Type;
-INTDEF DeeTypeObject ModuleGlobalsIterator_Type;
 INTDEF WUNUSED NONNULL((1)) DREF ModuleExports *DCALL DeeModule_ViewExports(DeeModuleObject *__restrict self);
 #define READ_INDEX(x) atomic_read(&(x)->mei_index)
 
@@ -599,145 +598,12 @@ done:
 
 
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeModuleObject *mgi_module; /* [1..1] The module who's exports are being viewed. */
-	DWEAK uint16_t        mgi_index;  /* The current global variable index. */
-} ModuleGlobalsIterator;
-
-STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) ==
-              offsetof(ModuleGlobalsIterator, mgi_module));
-STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_index) ==
-              offsetof(ModuleGlobalsIterator, mgi_index));
-#define mgi_ctor  mei_ctor
-#define mgi_copy  mei_copy
-#define mgi_fini  mei_fini
-#define mgi_visit mei_visit
-#define mgi_cmp   mei_cmp
-
 #define READ_INDEX(x) atomic_read(&(x)->mgi_index)
 
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeModuleObject *mg_module; /* [1..1] The module who's exports are being viewed. */
 } ModuleGlobals;
-
-INTDEF WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
-DeeModule_ViewGlobals(DeeModuleObject *__restrict self);
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-mgi_init(ModuleGlobalsIterator *__restrict self,
-         size_t argc, DeeObject *const *argv) {
-	ModuleGlobals *globals;
-	if (DeeArg_Unpack(argc, argv, "o:_ModuleGlobalsIterator", &globals))
-		goto err;
-	if (DeeObject_AssertTypeExact(globals, &ModuleGlobals_Type))
-		goto err;
-	self->mgi_index  = 0;
-	self->mgi_module = globals->mg_module;
-	Dee_Incref(self->mgi_module);
-	return 0;
-err:
-	return -1;
-}
-
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mgi_next(ModuleGlobalsIterator *__restrict self) {
-	DeeModuleObject *mod = self->mgi_module;
-	DREF DeeObject *result;
-	uint16_t old_index, new_index;
-	if (DeeModule_LockSymbols(mod))
-		goto err;
-again:
-	for (;;) {
-		old_index = atomic_read(&self->mgi_index);
-		if (old_index >= mod->mo_globalc) {
-			DeeModule_UnlockSymbols(mod);
-			return ITER_DONE;
-		}
-		new_index = old_index;
-		DeeModule_LockRead(mod);
-		while ((result = mod->mo_globalv[new_index]) == NULL) {
-			++new_index;
-			if (new_index >= mod->mo_globalc) {
-				DeeModule_LockEndRead(mod);
-				if (!atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index))
-					goto again;
-				return ITER_DONE;
-			}
-		}
-		Dee_Incref(result);
-		DeeModule_LockEndRead(mod);
-		if (atomic_cmpxch_weak_or_write(&self->mgi_index, old_index, new_index + 1))
-			break;
-		Dee_Decref(result);
-	}
-	DeeModule_UnlockSymbols(mod);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobals *DCALL
-mgi_getseq(ModuleGlobalsIterator *__restrict self) {
-	return DeeModule_ViewGlobals(self->mgi_module);
-}
-
-PRIVATE struct type_getset tpconst mgi_getsets[] = {
-	TYPE_GETTER_F_NODOC(STR_seq, &mgi_getseq, METHOD_FNOREFESCAPE),
-	TYPE_GETSET_END
-};
-#undef READ_INDEX
-
-
-INTERN DeeTypeObject ModuleGlobalsIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_ModuleGlobalsIterator",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&mgi_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&mgi_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&mgi_init,
-				TYPE_FIXED_ALLOCATOR(ModuleGlobalsIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&mgi_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ NULL
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&mgi_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &mgi_cmp,
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mgi_next,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ mgi_getsets,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 mg_init(ModuleGlobals *__restrict self,
@@ -761,32 +627,15 @@ STATIC_ASSERT(offsetof(ModuleExportsIterator, mei_module) == offsetof(ModuleGlob
 #define mg_members me_members
 
 
-PRIVATE WUNUSED NONNULL((1)) DREF ModuleGlobalsIterator *DCALL
-mg_iter(ModuleGlobals *__restrict self) {
-	DREF ModuleGlobalsIterator *result;
-	result = DeeObject_MALLOC(ModuleGlobalsIterator);
-	if unlikely(!result)
-		goto done;
-	result->mgi_index  = 0;
-	result->mgi_module = self->mg_module;
-	Dee_Incref(self->mg_module);
-	DeeObject_Init(result, &ModuleGlobalsIterator_Type);
-done:
-	return result;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+mg_nsi_getsize(ModuleGlobals *__restrict self) {
+	return atomic_read(&self->mg_module->mo_globalc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-mg_size(ModuleGlobals *__restrict self) {
-	return DeeInt_NewUInt16(atomic_read(&self->mg_module->mo_globalc));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-mg_get(ModuleGlobals *self, DeeObject *index_ob) {
-	size_t index;
+mg_nsi_getitem(ModuleGlobals *self, size_t index) {
 	DREF DeeObject *result;
 	DeeModuleObject *mod = self->mg_module;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -811,13 +660,10 @@ err:
 	return NULL;
 }
 
-PRIVATE NONNULL((1, 2)) int DCALL
-mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
-	size_t index;
-	DREF DeeObject *result;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mg_nsi_setitem(ModuleGlobals *self, size_t index, DeeObject *value) {
+	DREF DeeObject *oldvalue;
 	DeeModuleObject *mod = self->mg_module;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
 	if (DeeModule_LockSymbols(mod))
 		goto err;
 	if (index >= mod->mo_globalc) {
@@ -828,33 +674,93 @@ mg_set(ModuleGlobals *self, DeeObject *index_ob, DeeObject *value) {
 	}
 	DeeModule_LockWrite(mod);
 	Dee_XIncref(value);
-	result = mod->mo_globalv[index];
+	oldvalue = mod->mo_globalv[index];
 	mod->mo_globalv[index] = value;
 	DeeModule_LockEndWrite(mod);
 	DeeModule_UnlockSymbols(mod);
-	Dee_XDecref(result);
+	Dee_XDecref(oldvalue);
 	return 0;
 err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-mg_del(ModuleGlobals *self, DeeObject *index_ob) {
-	return mg_set(self, index_ob, NULL);
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+mg_nsi_xchitem(ModuleGlobals *self, size_t index, DeeObject *value) {
+	DREF DeeObject *oldvalue;
+	DeeModuleObject *mod = self->mg_module;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
+	if (index >= mod->mo_globalc) {
+		size_t num_globals = mod->mo_globalc;
+		DeeModule_UnlockSymbols(mod);
+		err_index_out_of_bounds((DeeObject *)self, index, num_globals);
+		goto err;
+	}
+	DeeModule_LockWrite(mod);
+	oldvalue = mod->mo_globalv[index];
+	if unlikely(!oldvalue) {
+		DeeModule_UnlockSymbols(mod);
+		err_unbound_index((DeeObject *)self, index);
+		goto err;
+	}
+	Dee_Incref(value);
+	mod->mo_globalv[index] = value;
+	DeeModule_LockEndWrite(mod);
+	DeeModule_UnlockSymbols(mod);
+	return oldvalue;
+err:
+	return NULL;
 }
 
-PRIVATE struct type_seq mg_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mg_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&mg_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&mg_get,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&mg_del,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&mg_set
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+mg_nsi_delitem(ModuleGlobals *self, size_t index) {
+	return mg_nsi_setitem(self, index, NULL);
+}
+
+PRIVATE struct type_nsi tpconst mg_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&mg_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&mg_nsi_getsize,
+			/* .nsi_getitem      = */ (dfunptr_t)&mg_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)&mg_nsi_delitem,
+			/* .nsi_setitem      = */ (dfunptr_t)&mg_nsi_setitem,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)&mg_nsi_xchitem,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
+	}
 };
 
-PRIVATE struct type_member tpconst mg_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &ModuleGlobalsIterator_Type),
-	TYPE_MEMBER_END
+PRIVATE struct type_seq mg_seq = {
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
+	/* .tp_contains  = */ NULL,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &mg_nsi
 };
 
 INTERN DeeTypeObject ModuleGlobals_Type = {
@@ -899,7 +805,7 @@ INTERN DeeTypeObject ModuleGlobals_Type = {
 	/* .tp_members       = */ mg_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ mg_class_members
+	/* .tp_class_members = */ NULL
 };
 
 
