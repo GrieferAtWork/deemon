@@ -2274,11 +2274,6 @@ ot_nsi_getsize(ObjectTable *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ot_size(ObjectTable *__restrict self) {
-	return DeeInt_NewUInt16(self->ot_size);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->ot_size)
@@ -2366,40 +2361,6 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-ot_getitem(ObjectTable *self,
-           DeeObject *index) {
-	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	return ot_nsi_getitem(self, i);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-ot_delitem(ObjectTable *__restrict self,
-           DeeObject *__restrict index) {
-	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	return ot_nsi_delitem(self, i);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-ot_setitem(ObjectTable *__restrict self,
-           DeeObject *__restrict index,
-           DeeObject *__restrict value) {
-	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	return ot_nsi_setitem(self, i, value);
-err:
-	return -1;
-}
-
 
 
 PRIVATE struct type_nsi tpconst ot_nsi = {
@@ -2436,14 +2397,12 @@ PRIVATE struct type_nsi tpconst ot_nsi = {
 };
 
 PRIVATE struct type_seq ot_seq = {
-	/* .tp_iter_self = */ NULL, /* WARNING: If you assign a dedicated iterator here, `librt' will
-	                             * not longer be able to reverse-engineer `DeeGenericIterator_Type', as in
-	                             * order to do that, it does `DeeObject_GetAttr(&ObjectTable_Type, "Iterator")' */
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ot_size,
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ot_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&ot_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ot_setitem,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,

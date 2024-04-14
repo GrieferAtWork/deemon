@@ -265,6 +265,13 @@ EXPORTS
 	DeeFormat_RepeatUtf8@20=_DeeFormat_RepeatUtf8@20
 	DeeFormat_VPrintf@16=_DeeFormat_VPrintf@16
 	DeeFrame_DecrefShared@4=_DeeFrame_DecrefShared@4
+	DeeFrame_LockEndRead@4=_DeeFrame_LockEndRead@4
+	DeeFrame_LockEndWrite@4=_DeeFrame_LockEndWrite@4
+	DeeFrame_LockRead@4=_DeeFrame_LockRead@4
+	DeeFrame_LockReadIfNotDead@4=_DeeFrame_LockReadIfNotDead@4
+	DeeFrame_LockWrite@4=_DeeFrame_LockWrite@4
+	DeeFrame_LockWriteAssembly@4=_DeeFrame_LockWriteAssembly@4
+	DeeFrame_LockWriteIfNotDead@4=_DeeFrame_LockWriteIfNotDead@4
 	DeeFrame_NewReferenceWithLock@16=_DeeFrame_NewReferenceWithLock@16
 	DeeFunction_GetInfo@8=_DeeFunction_GetInfo@8
 	DeeFunction_New@12=_DeeFunction_New@12
@@ -1030,6 +1037,7 @@ EXPORTS
 	DeeType_GetOperatorFlags@8=_DeeType_GetOperatorFlags@8
 	DeeType_GetOperatorOrigin@8=_DeeType_GetOperatorOrigin@8
 	DeeType_HasOperator@8=_DeeType_HasOperator@8
+	DeeType_HasPrivateNSI@4=_DeeType_HasPrivateNSI@4
 	DeeType_HasPrivateOperator@8=_DeeType_HasPrivateOperator@8
 	DeeType_Implements@8=_DeeType_Implements@8
 	DeeType_InheritOperator@8=_DeeType_InheritOperator@8

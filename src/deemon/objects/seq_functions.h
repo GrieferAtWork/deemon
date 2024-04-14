@@ -25,6 +25,19 @@
 
 DECL_BEGIN
 
+/* TODO: All of this stuff here breaks when used on types with multiple bases.
+ *
+ * Solution:
+ * - Instead of implementing (e.g.) "Sequence.find()" to check how it should be
+ *   implemented every time it is used on a type, types should have a pointer to
+ *   a NSI implementation cache region that contains function pointers describing
+ *   how a specific NSI function should be used with a given type.
+ * - The first time a function is then called, it should figure out how to implement
+ *   itself, and then store a method pointer in the cache that will then simply be
+ *   called as-is the next time the function is called.
+ *
+ * For reference, see the way `Sequence.operator iter()' operates.
+ */
 #define has_noninherited_seqfield(tp, seq, field)       \
 	((seq)->field != NULL &&                            \
 	 (!DeeType_Base(tp) || !DeeType_Base(tp)->tp_seq || \

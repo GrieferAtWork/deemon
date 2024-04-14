@@ -832,7 +832,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		if (self->tp_cast.tp_str == NULL && self->tp_cast.tp_print == NULL)
 			return false;
 		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 			if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
 			    self->tp_cast.tp_print == base->tp_cast.tp_print)
 				return false;
@@ -844,7 +844,7 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		if (self->tp_cast.tp_repr == NULL && self->tp_cast.tp_printrepr == NULL)
 			return false;
 		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 			if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
 			    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr)
 				return false;
@@ -863,11 +863,29 @@ DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) 
 		return DeeType_GetPrivateCustomOperatorById(self, name) != NULL;
 	}
 	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (my_ptr == DeeType_GetOpPointer(base, info))
 			return false; /* Base has same impl -> operator was inherited */
 	}
 	return true; /* Operator is distinct from all bases. */
+}
+
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasPrivateNSI(DeeTypeObject const *__restrict self) {
+	struct type_nsi const *nsi;
+	DeeTypeObject *base;
+	DeeTypeMRO mro;
+	if unlikely(!self->tp_seq)
+		return false;
+	nsi = self->tp_seq->tp_nsi;
+	if unlikely(!nsi)
+		return false;
+	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		if (base->tp_seq && base->tp_seq->tp_nsi == nsi)
+			return false;
+	}
+	return true;
 }
 
 /* Return the type from `self' inherited its operator `name'.
@@ -882,7 +900,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
 	if (DeeType_IsClass(self)) {
 		if (!DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name)) {
 			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 				if (DeeType_HasPrivateOperator(base, name))
 					return base;
 			}
@@ -900,7 +918,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
 		result = (DeeTypeObject *)self;
 		if (self->tp_cast.tp_str || self->tp_cast.tp_print) {
 			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 				if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
 				    self->tp_cast.tp_print == base->tp_cast.tp_print) {
 					result = base;
@@ -916,7 +934,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
 		result = (DeeTypeObject *)self;
 		if (self->tp_cast.tp_repr || self->tp_cast.tp_printrepr) {
 			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 				if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
 				    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr) {
 					result = base;
@@ -937,7 +955,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
 		if (DeeType_GetPrivateCustomOperatorById(self, name) != NULL)
 			return (DeeTypeObject *)self;
 		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 			if (DeeType_GetPrivateCustomOperatorById(base, name) != NULL)
 				return base;
 		}
@@ -948,7 +966,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name) {
 		return NULL; /* Operator not implemented */
 	result = (DeeTypeObject *)self;
 	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (my_ptr == DeeType_GetOpPointer(base, info)) {
 			result = base;
 		} else {
@@ -967,7 +985,7 @@ DeeType_GetOperatorContainerOrigin(DeeTypeObject *__restrict self,
 	DeeTypeMRO mro;
 	ASSERT(info->oi_class != OPCLASS_TYPE);
 	base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		void *base_container = *(void **)((byte_t *)base + info->oi_class);
 		if (base_container == container_pointer)
 			return base;
@@ -984,7 +1002,7 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
 	base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		void const *base_ptr = DeeType_GetOpPointer(base, info);
 		if (base_ptr != NULL) {
 			/* Found a base that is implementing this operator!

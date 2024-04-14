@@ -3161,6 +3161,8 @@ DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name);
  * operator has been inherited implicitly from a base-type of `self'. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasPrivateNSI(DeeTypeObject const *__restrict self);
 
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */

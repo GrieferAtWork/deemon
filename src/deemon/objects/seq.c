@@ -36,7 +36,10 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/atomic.h>
 #include <deemon/util/lock.h>
+
+#include <hybrid/overflow.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -51,8 +54,18 @@
 
 DECL_BEGIN
 
+#ifndef NDEBUG
+#define DBG_memset (void)memset
+#else /* !NDEBUG */
+#define DBG_memset(dst, byte, n_bytes) (void)0
+#endif /* NDEBUG */
+
 #define do_fix_negative_range_index(index, size) \
 	((size) - ((size_t)(-(index)) % (size)))
+
+INTDEF DeeTypeObject DeeGenericIterator_Type;
+INTDEF DeeTypeObject DeeNsiIterator_Type;
+INTDEF DeeTypeObject DeeFastNsiIterator_Type;
 
 /* Clamp a range, as given to `operator [:]' & friends to the bounds
  * accepted by the associated sequence. This handles stuff like negative
@@ -314,8 +327,7 @@ seqiterator_ctor(SeqIterator *__restrict self) {
 	self->si_size    = DeeInt_Zero;
 	Dee_atomic_rwlock_init(&self->si_lock);
 	Dee_Incref(Dee_EmptySeq);
-	Dee_Incref(DeeInt_Zero);
-	Dee_Incref(DeeInt_Zero);
+	Dee_Incref_n(DeeInt_Zero, 2);
 	return 0;
 }
 
@@ -384,7 +396,7 @@ again:
 	if (error)
 		goto eof_old_index;
 	/* Check if the index has changed during the comparison. */
-	if (old_index != self->si_index)
+	if unlikely(old_index != atomic_read(&self->si_index))
 		goto old_index_again;
 	/* Lookup the item that's going to be returned. */
 	result = (*self->si_getitem)(self->si_seq, old_index);
@@ -403,7 +415,7 @@ again:
 			if (error)
 				goto eof_new_index;
 			/* Check if the index has changed during the comparison. */
-			if (old_index != self->si_index)
+			if unlikely(old_index != atomic_read(&self->si_index))
 				goto new_index_again;
 			result = (*self->si_getitem)(self->si_seq, new_index);
 			if likely(result)
@@ -459,7 +471,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeTypeObject *tp_iter;
 	self->si_index = DeeInt_Zero;
-	if (DeeArg_Unpack(argc, argv, "o|o:_GenericIterator", &self->si_seq, &self->si_index))
+	if (DeeArg_Unpack(argc, argv, "o|o:GenericIterator", &self->si_seq, &self->si_index))
 		goto err;
 	if (DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
 		goto err;
@@ -483,9 +495,6 @@ err_not_implemented:
 err:
 	return -1;
 }
-
-
-INTDEF DeeTypeObject DeeGenericIterator_Type;
 
 
 #define DEFINE_SEQITERATOR_COMPARE(name, cmp_name)                 \
@@ -517,7 +526,288 @@ DEFINE_SEQITERATOR_COMPARE(seqiterator_gr, DeeObject_CompareGrObject)
 DEFINE_SEQITERATOR_COMPARE(seqiterator_ge, DeeObject_CompareGeObject)
 #undef DEFINE_SEQITERATOR_COMPARE
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seqiterator_nii_getseq(SeqIterator *__restrict self) {
+	return_reference_(self->si_seq);
+}
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+seqiterator_nii_getindex(SeqIterator *__restrict self) {
+	size_t result;
+	DREF DeeObject *index;
+	SeqIterator_LockRead(self);
+	index = self->si_index;
+	Dee_Incref(index);
+	SeqIterator_LockEndRead(self);
+	if unlikely(DeeObject_AsSize(index, &result))
+		goto err_index;
+	if unlikely(result == (size_t)-1)
+		goto err_index_overflow;
+	Dee_Decref_unlikely(index);
+	return result;
+err_index_overflow:
+	err_integer_overflow(index, sizeof(size_t) * 8, true);
+err_index:
+	Dee_Decref_unlikely(index);
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_setindex(SeqIterator *__restrict self, size_t new_index) {
+	DREF DeeObject *old_index;
+	DREF DeeObject *index = DeeInt_NewSize(new_index);
+	if unlikely(!index)
+		goto err;
+	SeqIterator_LockWrite(self);
+	old_index = self->si_index;
+	self->si_index = index;
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_rewind(SeqIterator *__restrict self) {
+	DREF DeeObject *old_index;
+	Dee_Incref(DeeInt_Zero);
+	SeqIterator_LockWrite(self);
+	old_index = self->si_index;
+	self->si_index = DeeInt_Zero;
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_revert(SeqIterator *__restrict self, size_t step) {
+	int temp;
+	size_t old_index;
+	size_t new_index;
+	DREF DeeObject *new_index_ob;
+	DREF DeeObject *old_index_ob;
+again_read_index:
+	SeqIterator_LockRead(self);
+	old_index_ob = self->si_index;
+	Dee_Incref(old_index_ob);
+	SeqIterator_LockEndRead(self);
+	temp = DeeObject_AsSize(old_index_ob, &old_index);
+	Dee_Decref_unlikely(old_index_ob);
+	if unlikely(temp)
+		goto err;
+	if (OVERFLOW_USUB(old_index, step, &new_index)) {
+		new_index = 0;
+		new_index_ob = DeeInt_Zero;
+		Dee_Incref(DeeInt_Zero);
+	} else {
+		new_index_ob = DeeInt_NewSize(new_index);
+		if unlikely(!new_index_ob)
+			goto err;
+	}
+	SeqIterator_LockWrite(self);
+	if unlikely(old_index_ob != self->si_index) {
+		SeqIterator_LockEndWrite(self);
+		Dee_Decref(new_index_ob);
+		goto again_read_index;
+	}
+	self->si_index = new_index_ob; /* Inherit reference (x2) */
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index_ob);
+	return new_index == 0 ? 1 : 2;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_advance(SeqIterator *__restrict self, size_t step) {
+	int temp;
+	size_t old_index;
+	size_t new_index;
+	size_t size;
+	DREF DeeObject *new_index_ob;
+	DREF DeeObject *old_index_ob;
+again_read_index:
+	SeqIterator_LockRead(self);
+	old_index_ob = self->si_index;
+	Dee_Incref(old_index_ob);
+	SeqIterator_LockEndRead(self);
+	temp = DeeObject_AsSize(old_index_ob, &old_index);
+	Dee_Decref_unlikely(old_index_ob);
+	if unlikely(temp)
+		goto err;
+	if (OVERFLOW_UADD(old_index, step, &new_index))
+		goto err_overflow;
+	size = DeeObject_Size(self->si_size);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (new_index > size)
+		new_index = size;
+	new_index_ob = DeeInt_NewSize(new_index);
+	if unlikely(!new_index_ob)
+		goto err;
+	SeqIterator_LockWrite(self);
+	if unlikely(old_index_ob != self->si_index) {
+		SeqIterator_LockEndWrite(self);
+		Dee_Decref(new_index_ob);
+		goto again_read_index;
+	}
+	self->si_index = new_index_ob; /* Inherit reference (x2) */
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index_ob);
+	return new_index >= size ? 1 : 2;
+err_overflow:
+	err_integer_overflow_i(sizeof(size_t) * 8, true);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_prev(SeqIterator *__restrict self) {
+	int temp;
+	size_t old_index;
+	DREF DeeObject *new_index_ob;
+	DREF DeeObject *old_index_ob;
+again_read_index:
+	SeqIterator_LockRead(self);
+	old_index_ob = self->si_index;
+	Dee_Incref(old_index_ob);
+	SeqIterator_LockEndRead(self);
+	temp = DeeObject_AsSize(old_index_ob, &old_index);
+	Dee_Decref_unlikely(old_index_ob);
+	if unlikely(temp)
+		goto err;
+	if (old_index == 0)
+		return 1;
+	new_index_ob = DeeInt_NewSize(old_index - 1);
+	if unlikely(!new_index_ob)
+		goto err;
+	SeqIterator_LockWrite(self);
+	if unlikely(old_index_ob != self->si_index) {
+		SeqIterator_LockEndWrite(self);
+		Dee_Decref(new_index_ob);
+		goto again_read_index;
+	}
+	self->si_index = new_index_ob; /* Inherit reference (x2) */
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index_ob);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_next(SeqIterator *__restrict self) {
+	int temp;
+	size_t old_index;
+	size_t size;
+	DREF DeeObject *new_index_ob;
+	DREF DeeObject *old_index_ob;
+again_read_index:
+	SeqIterator_LockRead(self);
+	old_index_ob = self->si_index;
+	Dee_Incref(old_index_ob);
+	SeqIterator_LockEndRead(self);
+	temp = DeeObject_AsSize(old_index_ob, &old_index);
+	Dee_Decref_unlikely(old_index_ob);
+	if unlikely(temp)
+		goto err;
+	size = DeeObject_Size(self->si_size);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (old_index >= size)
+		return 1;
+	new_index_ob = DeeInt_NewSize(old_index + 1);
+	if unlikely(!new_index_ob)
+		goto err;
+	SeqIterator_LockWrite(self);
+	if unlikely(old_index_ob != self->si_index) {
+		SeqIterator_LockEndWrite(self);
+		Dee_Decref(new_index_ob);
+		goto again_read_index;
+	}
+	self->si_index = new_index_ob; /* Inherit reference (x2) */
+	SeqIterator_LockEndWrite(self);
+	Dee_Decref(old_index_ob);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+seqiterator_nii_hasprev(SeqIterator *__restrict self) {
+	int temp;
+	size_t index;
+	DREF DeeObject *index_ob;
+	SeqIterator_LockRead(self);
+	index_ob = self->si_index;
+	Dee_Incref(index_ob);
+	SeqIterator_LockEndRead(self);
+	temp = DeeObject_AsSize(index_ob, &index);
+	Dee_Decref_unlikely(index_ob);
+	if unlikely(temp)
+		goto err;
+	return index != 0;
+err:
+	return (size_t)-1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seqiterator_nii_peek(SeqIterator *__restrict self) {
+	int error;
+	DREF DeeObject *index;
+	DREF DeeObject *result;
+again:
+	SeqIterator_LockRead(self);
+	index = self->si_index;
+	Dee_Incref(index);
+	SeqIterator_LockEndRead(self);
+	/* Check if the Iterator has been exhausted. */
+	error = DeeObject_CompareGe(index, self->si_size);
+	if unlikely(error < 0)
+		goto err_index;
+	if (error)
+		goto eof_index;
+	/* Check if the index has changed during the comparison. */
+	if unlikely(index != atomic_read(&self->si_index))
+		goto decref_index_and_again;
+	/* Lookup the item that's going to be returned. */
+	result = (*self->si_getitem)(self->si_seq, index);
+	if unlikely(!result) {
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err_index;
+		/* Unbound item (just skip it!). */
+		for (;;) {
+			if (DeeObject_Inc(&index))
+				goto err_index;
+			error = DeeObject_CompareGe(index, self->si_size);
+			if unlikely(error < 0)
+				goto err_index;
+			if (error)
+				goto eof_index;
+			/* Check if the index has changed during the comparison. */
+			if unlikely(index != atomic_read(&self->si_index))
+				goto decref_index_and_again;
+			result = (*self->si_getitem)(self->si_seq, index);
+			if likely(result)
+				break;
+			if (!DeeError_Catch(&DeeError_UnboundItem))
+				goto err_index;
+		}
+	}
+	Dee_Decref(index);
+	return result;
+decref_index_and_again:
+	Dee_Decref(index);
+	goto again;
+eof_index:
+	Dee_Decref(index);
+	return ITER_DONE;
+err_index:
+	Dee_Decref(index);
+/*err:*/
+	return NULL;
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seqiterator_index_get(SeqIterator *__restrict self) {
@@ -573,6 +863,25 @@ PRIVATE struct type_member tpconst seqiterator_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_nii tpconst seqiterator_nii = {
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	{
+		/* .nii_common = */ {
+			/* .nii_getseq   = */ (dfunptr_t)&seqiterator_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&seqiterator_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&seqiterator_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&seqiterator_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&seqiterator_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&seqiterator_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&seqiterator_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&seqiterator_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&seqiterator_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&seqiterator_nii_peek,
+		}
+	}
+};
+
 PRIVATE struct type_cmp seqiterator_cmp = {
 	/* .tp_hash = */ NULL,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_eq,
@@ -580,7 +889,8 @@ PRIVATE struct type_cmp seqiterator_cmp = {
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_lo,
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ge
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seqiterator_ge,
+	/* .tp_nii  = */ &seqiterator_nii
 };
 
 INTERN DeeTypeObject DeeGenericIterator_Type = {
@@ -630,6 +940,513 @@ INTERN DeeTypeObject DeeGenericIterator_Type = {
 	/* .tp_class_members = */ NULL
 };
 
+
+typedef struct {
+	OBJECT_HEAD
+	/* [1..1][const] Either the `nsi_getitem' or `nsi_getitem_fast' callback of a sequence. */
+	DREF DeeObject *(DCALL *ni_getitem)(DeeObject *__restrict self, size_t index);
+	DREF DeeObject         *ni_seq;   /* [1..1][const] The Sequence being iterated. */
+	size_t                  ni_size;  /* [1..1][const] The size of the Sequence. */
+	size_t                  ni_index; /* [1..1][lock(ATOMIC)] Index of next item to enumerate. */
+} NsiIterator;
+
+PRIVATE /*WUNUSED*/ NONNULL((1)) int DCALL
+nsiiterator_ctor(NsiIterator *__restrict self) {
+	/* Don't assign `ni_getitem()' because "ni_size" is 0, meaning
+	 * there is no valid index with which to call the operator. */
+	/*self->ni_getitem = &DeeSeq_GetItem;*/
+	DBG_memset(&self->ni_getitem, 0xcc, sizeof(self->ni_getitem));
+	self->ni_seq     = Dee_EmptySeq;
+	self->ni_index   = 0;
+	self->ni_size    = 0;
+	Dee_Incref(Dee_EmptySeq);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+nsiiterator_copy(NsiIterator *__restrict self,
+                 NsiIterator *__restrict other) {
+	self->ni_getitem = other->ni_getitem;
+	self->ni_seq     = other->ni_seq;
+	self->ni_size    = other->ni_size;
+	self->ni_index   = atomic_read(&other->ni_index);
+	Dee_Incref(self->ni_seq);
+	return 0;
+}
+
+PRIVATE NONNULL((1)) void DCALL
+nsiiterator_fini(NsiIterator *__restrict self) {
+	Dee_Decref(self->ni_seq);
+}
+
+PRIVATE NONNULL((1, 2)) void DCALL
+nsiiterator_visit(NsiIterator *__restrict self, dvisit_t proc, void *arg) {
+	Dee_Visit(self->ni_seq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+nsiiterator_printrepr(NsiIterator *__restrict self,
+                      dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "rt.NsiIterator(%r, %" PRFuSIZ " /* of %" PRFuSIZ " */)",
+	                        self->ni_seq, atomic_read(&self->ni_index), self->ni_size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+fastnsiiterator_printrepr(NsiIterator *__restrict self,
+                          dformatprinter printer, void *arg) {
+	return DeeFormat_Printf(printer, arg,
+	                        "rt.FastNsiIterator(%r, %" PRFuSIZ " /* of %" PRFuSIZ " */)",
+	                        self->ni_seq, atomic_read(&self->ni_index), self->ni_size);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nsiiterator_next(NsiIterator *__restrict self) {
+	DREF DeeObject *result;
+	size_t old_index, new_index;
+again:
+	old_index = atomic_read(&self->ni_index);
+	new_index = old_index;
+	for (;;) {
+		if (new_index >= self->ni_size)
+			return ITER_DONE;
+		result = (*self->ni_getitem)(self->ni_seq, new_index);
+		++new_index;
+		if (result)
+			break;
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;
+	}
+	if (!atomic_cmpxch_or_write(&self->ni_index, old_index, new_index)) {
+		Dee_Decref(result);
+		goto again;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fastnsiiterator_next(NsiIterator *__restrict self) {
+	DREF DeeObject *result;
+	size_t old_index, new_index;
+again:
+	old_index = atomic_read(&self->ni_index);
+	new_index = old_index;
+	for (;;) {
+		if (new_index >= self->ni_size)
+			return ITER_DONE;
+		result = (*self->ni_getitem)(self->ni_seq, new_index);
+		++new_index;
+		if (result)
+			break;
+		/*if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;*/
+	}
+	if (!atomic_cmpxch_or_write(&self->ni_index, old_index, new_index)) {
+		Dee_Decref(result);
+		goto again;
+	}
+	return result;
+/*
+err:
+	return NULL;*/
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_init(NsiIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeTypeMRO mro;
+	DeeTypeObject *tp_iter;
+	self->ni_index = 0;
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":NsiIterator", &self->ni_seq, &self->ni_index))
+		goto err;
+	tp_iter = Dee_TYPE(self->ni_seq);
+	tp_iter = DeeTypeMRO_Init(&mro, tp_iter);
+	for (;;) {
+		if unlikely(tp_iter == &DeeSeq_Type || tp_iter == NULL)
+			goto err_not_implemented;
+		if (tp_iter->tp_seq &&
+		    tp_iter->tp_seq->tp_nsi &&
+		    tp_iter->tp_seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+		    tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getitem)
+			break;
+		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
+	}
+	self->ni_getitem = tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getitem;
+	self->ni_size    = (*tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getsize)(self->ni_seq);
+	if unlikely(self->ni_size == (size_t)-1)
+		goto err;
+	Dee_Incref(self->ni_seq);
+	return 0;
+err_not_implemented:
+	err_unimplemented_operator(tp_iter, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fastnsiiterator_init(NsiIterator *__restrict self, size_t argc, DeeObject *const *argv) {
+	DeeTypeMRO mro;
+	DeeTypeObject *tp_iter;
+	self->ni_index = 0;
+	if (DeeArg_Unpack(argc, argv, "o|" UNPuSIZ ":FastNsiIterator", &self->ni_seq, &self->ni_index))
+		goto err;
+	tp_iter = Dee_TYPE(self->ni_seq);
+	tp_iter = DeeTypeMRO_Init(&mro, tp_iter);
+	for (;;) {
+		if unlikely(tp_iter == &DeeSeq_Type || tp_iter == NULL)
+			goto err_not_implemented;
+		if (tp_iter->tp_seq &&
+		    tp_iter->tp_seq->tp_nsi &&
+		    tp_iter->tp_seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+		    tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getitem_fast)
+			break;
+		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
+	}
+	self->ni_getitem = tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getitem_fast;
+	self->ni_size    = (*tp_iter->tp_seq->tp_nsi->nsi_seqlike.nsi_getsize)(self->ni_seq);
+	if unlikely(self->ni_size == (size_t)-1)
+		goto err;
+	Dee_Incref(self->ni_seq);
+	return 0;
+err_not_implemented:
+	err_unimplemented_operator(tp_iter, OPERATOR_GETITEM);
+err:
+	return -1;
+}
+
+
+#define DEFINE_SEQITERATOR_COMPARE(name, cmp)             \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
+	name(NsiIterator *self, NsiIterator *other) {         \
+		if (DeeObject_AssertType(other, Dee_TYPE(self)))  \
+			goto err;                                     \
+		if (self->ni_seq != other->ni_seq)                \
+			return_bool(self->ni_seq cmp other->ni_seq);  \
+		return_bool(self->ni_index cmp other->ni_index);  \
+	err:                                                  \
+		return NULL;                                      \
+	}
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_eq, ==)
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_ne, !=)
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_lo, <)
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_le, <=)
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_gr, >)
+DEFINE_SEQITERATOR_COMPARE(nsiiterator_ge, >=)
+#undef DEFINE_SEQITERATOR_COMPARE
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nsiiterator_nii_getseq(NsiIterator *__restrict self) {
+	return_reference_(self->ni_seq);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+nsiiterator_nii_getindex(NsiIterator *__restrict self) {
+	return atomic_read(&self->ni_index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_setindex(NsiIterator *__restrict self, size_t new_index) {
+	atomic_write(&self->ni_index, new_index);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_rewind(NsiIterator *__restrict self) {
+	atomic_write(&self->ni_index, 0);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_revert(NsiIterator *__restrict self, size_t step) {
+	size_t old_index, new_index;
+	do {
+		old_index = atomic_read(&self->ni_index);
+		if (OVERFLOW_USUB(old_index, step, &new_index))
+			new_index = 0;
+	} while (!atomic_cmpxch_or_write(&self->ni_index, old_index, new_index));
+	return new_index == 0 ? 1 : 2;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_advance(NsiIterator *__restrict self, size_t step) {
+	size_t old_index, new_index;
+	do {
+		old_index = atomic_read(&self->ni_index);
+		if (OVERFLOW_UADD(old_index, step, &new_index))
+			new_index = (size_t)-1;
+		if (new_index > self->ni_size)
+			new_index = self->ni_size;
+	} while (!atomic_cmpxch_or_write(&self->ni_index, old_index, new_index));
+	return new_index >= self->ni_size ? 1 : 2;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_prev(NsiIterator *__restrict self) {
+	size_t old_index;
+	do {
+		old_index = atomic_read(&self->ni_index);
+		if (old_index == 0)
+			return 1;
+	} while (!atomic_cmpxch_or_write(&self->ni_index, old_index, old_index - 1));
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_next(NsiIterator *__restrict self) {
+	size_t old_index;
+	do {
+		old_index = atomic_read(&self->ni_index);
+		if (old_index >= self->ni_size)
+			return 1;
+	} while (!atomic_cmpxch_or_write(&self->ni_index, old_index, old_index + 1));
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_nii_hasprev(NsiIterator *__restrict self) {
+	return atomic_read(&self->ni_index) > 0 ? 1 : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nsiiterator_nii_peek(NsiIterator *__restrict self) {
+	DREF DeeObject *result;
+	size_t old_index, new_index;
+	old_index = atomic_read(&self->ni_index);
+	new_index = old_index;
+	for (;;) {
+		if (new_index >= self->ni_size)
+			return ITER_DONE;
+		result = (*self->ni_getitem)(self->ni_seq, new_index);
+		++new_index;
+		if (result)
+			break;
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fastnsiiterator_nii_peek(NsiIterator *__restrict self) {
+	DREF DeeObject *result;
+	size_t old_index, new_index;
+	old_index = atomic_read(&self->ni_index);
+	new_index = old_index;
+	for (;;) {
+		if (new_index >= self->ni_size)
+			return ITER_DONE;
+		result = (*self->ni_getitem)(self->ni_seq, new_index);
+		++new_index;
+		if (result)
+			break;
+		/*if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;*/
+	}
+	return result;
+/*
+err:
+	return NULL;*/
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+nsiiterator_index_get(NsiIterator *__restrict self) {
+	size_t index = atomic_read(&self->ni_index);
+	return DeeInt_NewSize(index);
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+nsiiterator_index_del(NsiIterator *__restrict self) {
+	atomic_write(&self->ni_index, 0);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+nsiiterator_index_set(NsiIterator *self, DeeObject *new_index) {
+	size_t index;
+	if (DeeObject_AsSize(new_index, &index))
+		goto err;
+	if (index > self->ni_size)
+		index = self->ni_size;
+	atomic_write(&self->ni_index, index);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE struct type_getset tpconst nsiiterator_getsets[] = {
+	TYPE_GETSET_F(STR_index,
+	              &nsiiterator_index_get,
+	              &nsiiterator_index_del,
+	              &nsiiterator_index_set,
+	              METHOD_FNOREFESCAPE,
+	              "->?Dint"),
+	TYPE_GETSET_END
+};
+
+PRIVATE struct type_member tpconst nsiiterator_members[] = {
+	TYPE_MEMBER_FIELD_DOC(STR_seq, STRUCT_OBJECT, offsetof(NsiIterator, ni_seq), "->?DSequence"),
+	TYPE_MEMBER_FIELD("__size__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(NsiIterator, ni_size)),
+	TYPE_MEMBER_END
+};
+
+PRIVATE struct type_nii tpconst nsiiterator_nii = {
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	{
+		/* .nii_common = */ {
+			/* .nii_getseq   = */ (dfunptr_t)&nsiiterator_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&nsiiterator_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&nsiiterator_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&nsiiterator_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&nsiiterator_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&nsiiterator_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&nsiiterator_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&nsiiterator_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&nsiiterator_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&nsiiterator_nii_peek,
+		}
+	}
+};
+
+PRIVATE struct type_nii tpconst fastnsiiterator_nii = {
+	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
+	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
+	{
+		/* .nii_common = */ {
+			/* .nii_getseq   = */ (dfunptr_t)&nsiiterator_nii_getseq,
+			/* .nii_getindex = */ (dfunptr_t)&nsiiterator_nii_getindex,
+			/* .nii_setindex = */ (dfunptr_t)&nsiiterator_nii_setindex,
+			/* .nii_rewind   = */ (dfunptr_t)&nsiiterator_nii_rewind,
+			/* .nii_revert   = */ (dfunptr_t)&nsiiterator_nii_revert,
+			/* .nii_advance  = */ (dfunptr_t)&nsiiterator_nii_advance,
+			/* .nii_prev     = */ (dfunptr_t)&nsiiterator_nii_prev,
+			/* .nii_next     = */ (dfunptr_t)&nsiiterator_nii_next,
+			/* .nii_hasprev  = */ (dfunptr_t)&nsiiterator_nii_hasprev,
+			/* .nii_peek     = */ (dfunptr_t)&fastnsiiterator_nii_peek,
+		}
+	}
+};
+
+PRIVATE struct type_cmp nsiiterator_cmp = {
+	/* .tp_hash = */ NULL,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ge,
+	/* .tp_nii  = */ &nsiiterator_nii
+};
+
+PRIVATE struct type_cmp fastnsiiterator_cmp = {
+	/* .tp_hash = */ NULL,
+	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_eq,
+	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ne,
+	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_lo,
+	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_le,
+	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_gr,
+	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&nsiiterator_ge,
+	/* .tp_nii  = */ &fastnsiiterator_nii
+};
+
+INTERN DeeTypeObject DeeNsiIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_NsiIterator",
+	/* .tp_doc      = */ DOC("(seq:?DSequence,index=!0)"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&nsiiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&nsiiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&nsiiterator_init,
+				TYPE_FIXED_ALLOCATOR(NsiIterator)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&nsiiterator_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&nsiiterator_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&nsiiterator_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &nsiiterator_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&nsiiterator_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ nsiiterator_getsets,
+	/* .tp_members       = */ nsiiterator_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DeeFastNsiIterator_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_FastNsiIterator",
+	/* .tp_doc      = */ DOC("(seq:?DSequence,index=!0)"),
+	/* .tp_flags    = */ TP_FNORMAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeNsiIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)&nsiiterator_ctor,
+				/* .tp_copy_ctor = */ (dfunptr_t)&nsiiterator_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)&fastnsiiterator_init,
+				TYPE_FIXED_ALLOCATOR(NsiIterator)
+			}
+		},
+		/* .tp_dtor        = */ NULL,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str       = */ NULL,
+		/* .tp_repr      = */ NULL,
+		/* .tp_bool      = */ NULL,
+		/* .tp_print     = */ NULL,
+		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&fastnsiiterator_printrepr
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ NULL,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &fastnsiiterator_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fastnsiiterator_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ NULL,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+
 INTERN WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void) {
 	DREF SeqIterator *result;
 	result = DeeObject_MALLOC(SeqIterator);
@@ -644,75 +1461,256 @@ done:
 	return (DREF DeeObject *)result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_Titerself_with_SeqIterator(DeeTypeObject *tp_self,
+                               DeeObject *__restrict self) {
+	DREF SeqIterator *result;
+	result = DeeObject_MALLOC(SeqIterator);
+	if unlikely(!result)
+		goto err;
+
+	/* Save the getitem operator. */
+	ASSERT(tp_self->tp_seq);
+	ASSERT(tp_self->tp_seq->tp_get);
+	ASSERT(tp_self->tp_seq->tp_size);
+	result->si_getitem = tp_self->tp_seq->tp_get;
+	result->si_size    = (*tp_self->tp_seq->tp_size)(self);
+	if unlikely(!result->si_size)
+		goto err_r;
+
+	/* Assign the initial Iterator index. */
+	result->si_index = DeeInt_Zero;
+	Dee_Incref(DeeInt_Zero);
+
+	/* Save a reference to the associated Sequence. */
+	result->si_seq = self;
+	Dee_Incref(self);
+	Dee_atomic_rwlock_init(&result->si_lock);
+	DeeObject_Init(result, &DeeGenericIterator_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_iterself_with_SeqIterator(DeeObject *__restrict self) {
+	return seq_Titerself_with_SeqIterator(Dee_TYPE(self), self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_Titerself_with_NsiIterator(DeeTypeObject *tp_self,
+                               DeeObject *__restrict self) {
+	DREF NsiIterator *result;
+	struct type_nsi const *nsi;
+	result = DeeObject_MALLOC(NsiIterator);
+	if unlikely(!result)
+		goto err;
+
+	/* Save the getitem operator. */
+	ASSERT(tp_self->tp_seq);
+	nsi = tp_self->tp_seq->tp_nsi;
+	ASSERT(nsi);
+	ASSERT(nsi->nsi_class == Dee_TYPE_SEQX_CLASS_SEQ);
+	ASSERT(nsi->nsi_seqlike.nsi_getitem);
+	result->ni_getitem = nsi->nsi_seqlike.nsi_getitem;
+	result->ni_size    = (*nsi->nsi_seqlike.nsi_getsize)(self);
+	if unlikely(result->ni_size == (size_t)-1)
+		goto err_r;
+
+	result->ni_index = 0;
+	result->ni_seq = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &DeeNsiIterator_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_iterself_with_NsiIterator(DeeObject *__restrict self) {
+	return seq_Titerself_with_NsiIterator(Dee_TYPE(self), self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seq_Titerself_with_FastNsiIterator(DeeTypeObject *tp_self,
+                                   DeeObject *__restrict self) {
+	DREF NsiIterator *result;
+	struct type_nsi const *nsi;
+	result = DeeObject_MALLOC(NsiIterator);
+	if unlikely(!result)
+		goto err;
+
+	/* Save the getitem operator. */
+	ASSERT(tp_self->tp_seq);
+	nsi = tp_self->tp_seq->tp_nsi;
+	ASSERT(nsi);
+	ASSERT(nsi->nsi_class == Dee_TYPE_SEQX_CLASS_SEQ);
+	ASSERT(nsi->nsi_seqlike.nsi_getitem_fast);
+	result->ni_getitem = nsi->nsi_seqlike.nsi_getitem_fast;
+	result->ni_size    = (*nsi->nsi_seqlike.nsi_getsize)(self);
+	if unlikely(result->ni_size == (size_t)-1)
+		goto err_r;
+
+	result->ni_index = 0;
+	result->ni_seq = self;
+	Dee_Incref(self);
+	DeeObject_Init(result, &DeeFastNsiIterator_Type);
+	return (DREF DeeObject *)result;
+err_r:
+	DeeObject_FREE(result);
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seq_iterself_with_FastNsiIterator(DeeObject *__restrict self) {
+	return seq_Titerself_with_FastNsiIterator(Dee_TYPE(self), self);
+}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seq_iterself(DeeObject *__restrict self) {
-	int found              = 0;
-	DeeTypeObject *tp_iter = Dee_TYPE(self);
-	DeeTypeMRO mro;
-	/* To prevent recursion, we must manually search for the proper
-	 * callback in order to check if it isn't `seq_getitem' / `seq_size'. */
-	DeeTypeMRO_Init(&mro, tp_iter);
-	while (tp_iter != &DeeSeq_Type) {
-		struct type_seq *seq;
-		if ((seq = tp_iter->tp_seq) != NULL) {
-			if (seq->tp_size && seq->tp_size != &seq_size)
-				found |= 1;
-			if (seq->tp_get && seq->tp_get != &seq_getitem)
-				found |= 2;
-			if (found == (1 | 2)) {
-				/* Yes, this one's OK! */
-				DREF SeqIterator *result;
-				result = DeeObject_MALLOC(SeqIterator);
-				if unlikely(!result)
-					goto err;
-				/* Save the getitem operator. */
-				result->si_getitem = tp_iter->tp_seq->tp_get;
-				if unlikely(!result->si_getitem) {
-					/* TODO: Make use of operator inheritance. */
-					tp_iter = Dee_TYPE(self);
-					DeeTypeMRO_Init(&mro, tp_iter);
-					while (!tp_iter->tp_seq &&
-					       (!tp_iter->tp_seq->tp_get ||
-					        tp_iter->tp_seq->tp_get == &seq_getitem))
-						tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-					result->si_getitem = tp_iter->tp_seq->tp_get;
-				}
-				if unlikely(!tp_iter->tp_seq->tp_size) {
-					/* TODO: Make use of operator inheritance. */
-					tp_iter = Dee_TYPE(self);
-					DeeTypeMRO_Init(&mro, tp_iter);
-					while (!tp_iter->tp_seq &&
-					       (!tp_iter->tp_seq->tp_size ||
-					        tp_iter->tp_seq->tp_size == &seq_size))
-						tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-				}
-				/* Figure out the size of the Sequence. */
-				result->si_size = (*tp_iter->tp_seq->tp_size)(self);
-				if unlikely(!result->si_size) {
-					DeeObject_FREE(result);
-					goto err;
-				}
-				/* Assign the initial Iterator index. */
-				result->si_index = DeeInt_Zero;
-				Dee_Incref(DeeInt_Zero);
-				/* Save a reference to the associated Sequence. */
-				result->si_seq = self;
-				Dee_Incref(self);
-				Dee_atomic_rwlock_init(&result->si_lock);
-				DeeObject_Init(result, &DeeGenericIterator_Type);
-				return (DREF DeeObject *)result;
-			}
-		}
-		tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
-	}
-	if unlikely(Dee_TYPE(self) == &DeeSeq_Type) {
+	int found = 0;
+	DeeTypeObject *tp_iter;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if unlikely(tp_self == &DeeSeq_Type) {
 		/* Special case: Create an empty Iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-Sequence object. */
 		return new_empty_sequence_iterator();
 	}
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
-err:
+
+	/* Check if we're able to implement "operator iter()" with the help of other operators. */
+	tp_iter = tp_self;
+	DeeType_mro_foreach_start(tp_iter) {
+		struct type_seq *seq = tp_iter->tp_seq;
+		if (seq) {
+			if unlikely(seq->tp_iter_self && seq->tp_iter_self != &seq_iterself)
+				return (*seq->tp_iter_self)(self);
+
+			/* Check if there are NSI operators with which we can implement an iterator. */
+			if (seq->tp_nsi &&
+			    seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+			    DeeType_HasPrivateNSI(tp_iter)) {
+				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_nsi)
+					type_inherit_nsi(tp_self);
+				ASSERT(tp_self->tp_seq);
+				ASSERT(tp_self->tp_seq->tp_nsi);
+				if likely(tp_self->tp_seq->tp_nsi == seq->tp_nsi) {
+					if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
+						if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
+							tp_self->tp_seq->tp_iter_self = &seq_iterself_with_FastNsiIterator;
+						return seq_Titerself_with_FastNsiIterator(tp_iter, self);
+					} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
+						if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
+							tp_self->tp_seq->tp_iter_self = &seq_iterself_with_NsiIterator;
+						return seq_Titerself_with_NsiIterator(tp_iter, self);
+					}
+				}
+			}
+
+			/* Check for deemon operators with which we can implement an iterator. */
+			if (seq->tp_size && DeeType_HasPrivateOperator(tp_iter, OPERATOR_SIZE))
+				found |= 1;
+			if (seq->tp_get && DeeType_HasPrivateOperator(tp_iter, OPERATOR_GETITEM))
+				found |= 2;
+			if (found == (1 | 2)) {
+				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_get)
+					type_inherit_getitem(tp_self);
+				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_size)
+					type_inherit_size(tp_self);
+				ASSERT(tp_self->tp_seq);
+				ASSERT(tp_self->tp_seq->tp_get);
+				ASSERT(tp_self->tp_seq->tp_size);
+				if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
+					tp_self->tp_seq->tp_iter_self = &seq_iterself_with_SeqIterator;
+				return seq_Titerself_with_SeqIterator(tp_iter, self);
+			}
+		}
+	}
+	DeeType_mro_foreach_end(tp_iter);
+/*not_a_seq:*/
+	err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+/*err:*/
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
+seqtype_get_Iterator(DeeTypeObject *__restrict self) {
+	int found = 0;
+	struct type_seq *seq;
+	DeeTypeObject *iter;
+	if unlikely(self == &DeeSeq_Type) {
+		/* Special case: Create an empty Iterator.
+		 * >> This can happen when someone tries to iterate a symbolic empty-Sequence object. */
+		return_reference_(&DeeGenericIterator_Type);
+	}
+
+	seq = self->tp_seq;
+	if (seq && seq->tp_iter_self) {
+		if (seq->tp_iter_self == &seq_iterself_with_FastNsiIterator)
+			return_reference_(&DeeFastNsiIterator_Type);
+		if (seq->tp_iter_self == &seq_iterself_with_NsiIterator)
+			return_reference_(&DeeNsiIterator_Type);
+		if (seq->tp_iter_self == &seq_iterself_with_SeqIterator)
+			return_reference_(&DeeGenericIterator_Type);
+		goto not_a_seq;
+	}
+
+	/* Check if we're able to implement "operator iter()" with the help of other operators. */
+	iter = self;
+	DeeType_mro_foreach_start(iter) {
+		seq = iter->tp_seq;
+		if (seq) {
+			if unlikely(seq->tp_iter_self && seq->tp_iter_self != &seq_iterself)
+				goto not_a_seq;
+
+			/* Check if there are NSI operators with which we can implement an iterator. */
+			if (seq->tp_nsi &&
+			    seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
+			    DeeType_HasPrivateNSI(iter)) {
+				if (!self->tp_seq || !self->tp_seq->tp_nsi)
+					type_inherit_nsi(self);
+				ASSERT(self->tp_seq);
+				ASSERT(self->tp_seq->tp_nsi);
+				if likely(self->tp_seq->tp_nsi == seq->tp_nsi) {
+					if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
+						if likely(DeeType_Implements(self, &DeeSeq_Type))
+							self->tp_seq->tp_iter_self = &seq_iterself_with_FastNsiIterator;
+						return_reference_(&DeeFastNsiIterator_Type);
+					} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
+						if likely(DeeType_Implements(self, &DeeSeq_Type))
+							self->tp_seq->tp_iter_self = &seq_iterself_with_NsiIterator;
+						return_reference_(&DeeNsiIterator_Type);
+					}
+				}
+			}
+
+			/* Check for deemon operators with which we can implement an iterator. */
+			if (seq->tp_size && DeeType_HasPrivateOperator(iter, OPERATOR_SIZE))
+				found |= 1;
+			if (seq->tp_get && DeeType_HasPrivateOperator(iter, OPERATOR_GETITEM))
+				found |= 2;
+			if (found == (1 | 2)) {
+				if (!self->tp_seq || !self->tp_seq->tp_get)
+					type_inherit_getitem(self);
+				if (!self->tp_seq || !self->tp_seq->tp_size)
+					type_inherit_size(self);
+				ASSERT(self->tp_seq);
+				ASSERT(self->tp_seq->tp_get);
+				ASSERT(self->tp_seq->tp_size);
+				if likely(DeeType_Implements(self, &DeeSeq_Type))
+					self->tp_seq->tp_iter_self = &seq_iterself_with_SeqIterator;
+				return_reference_(&DeeGenericIterator_Type);
+			}
+		}
+	}
+	DeeType_mro_foreach_end(iter);
+not_a_seq:
+	err_unimplemented_operator(self, OPERATOR_ITERSELF);
+/*err:*/
 	return NULL;
 }
 
@@ -1275,48 +2273,6 @@ err_m1:
 #undef DO
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-seq_iterator_get(DeeTypeObject *__restrict self) {
-	DeeTypeObject *iter, *base;
-	int found;
-	DeeTypeMRO mro;
-	/* Special case: Accessing the `Iterator' field of the raw `Sequence' type
-	 *               will yield the (intended) base-class for all iterators. */
-	if (self == &DeeSeq_Type)
-		return_reference_(&DeeIterator_Type);
-	iter  = self;
-	found = 0;
-	DeeTypeMRO_Init(&mro, iter);
-	do {
-		struct type_seq *seq;
-		base = DeeTypeMRO_Next(&mro, iter);
-		if ((seq = iter->tp_seq) != NULL) {
-			/* If sub-classes override both the get+size operators, then our stub-version is used. */
-			if (seq->tp_get && seq->tp_get != &seq_getitem &&
-			    (!base || !base->tp_seq || seq->tp_get != base->tp_seq->tp_get))
-				found |= 1;
-			if (seq->tp_size && seq->tp_size != &seq_size &&
-			    (!base || !base->tp_seq || seq->tp_size != base->tp_seq->tp_size))
-				found |= 2;
-			/* If any sub-class that isn't the Sequence type itself implements
-			 * the Iterator interface, then it should be responsible for providing
-			 * the `Iterator' class member.
-			 * With that in mind, us being here probably indicates that such a member is
-			 * missing, meaning that we should fail and act as though there's no such field. */
-			if (seq->tp_iter_self &&
-			    (!base || !base->tp_seq || seq->tp_iter_self != base->tp_seq->tp_iter_self))
-				goto fail;
-		}
-	} while (base && (iter = base) != &DeeSeq_Type);
-	/* If we've found everything that's need to implement
-	 * the `generic_iterator' type, then that's the one! */
-	if (found == (1 | 2))
-		return_reference_(&DeeGenericIterator_Type);
-fail:
-	err_unknown_attribute_string(self, STR_Iterator, ATTR_ACCESS_GET);
-	return NULL;
-}
-
 /*[[[deemon
 import define_Dee_HashStr from rt.gen.hash;
 print define_Dee_HashStr("Frozen");
@@ -1370,7 +2326,7 @@ err:
 }
 
 PRIVATE struct type_getset tpconst seq_class_getsets[] = {
-	TYPE_GETTER(STR_Iterator, &seq_iterator_get,
+	TYPE_GETTER(STR_Iterator, &seqtype_get_Iterator,
 	            "->?DType\n"
 	            "Returns the Iterator class used by instances of @this Sequence type\n"
 	            "Should a sub-class implement its own Iterator, this attribute should be overwritten"),

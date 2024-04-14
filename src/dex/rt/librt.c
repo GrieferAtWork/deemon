@@ -309,16 +309,6 @@ librt_get_KwdsMappingIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(ar
 	                         (DeeObject *)&str_Iterator);
 }
 
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	/* The internal `_ObjectTable' type doesn't implement its own iterator type,
-	 * but instead uses the generic iterator. - By requesting access to the iterator
-	 * that's being used, we can thereby gain backdoor access to the internal, generic
-	 * iterator implementation type. */
-	return get_iterator_of(librt_get_ObjectTable_impl_f());
-}
-
 PRIVATE DeeObject DeeIterator_StubInstance = {
 	OBJECT_HEAD_INIT(&DeeIterator_Type)
 };
@@ -1443,11 +1433,6 @@ librt_get_StringOrdinals_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) 
 	return librt_get_StringOrdinals_impl_f();
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_StringOrdinalsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_StringOrdinals_impl_f());
-}
-
 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1562,28 +1547,13 @@ librt_get_ReGroups_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReGroupsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_ReGroups_impl_f());
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ReSubStrings_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ReSubStrings_impl_f();
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReSubStringsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_ReSubStrings_impl_f());
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ReSubBytes_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return librt_get_ReSubBytes_impl_f();
-}
-
-PRIVATE WUNUSED DREF DeeObject *DCALL
-librt_get_ReSubBytesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_iterator_of(librt_get_ReSubBytes_impl_f());
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1624,6 +1594,24 @@ librt_get_ReBytesSplit_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_iterator_of(librt_get_ReBytesSplit_impl_f());
+}
+
+
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_GenericIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return DeeObject_GetAttr((DeeObject *)&DeeSeq_Type,
+	                         (DeeObject *)&str_Iterator);
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_NsiIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_StringOrdinals_impl_f());
+}
+
+PRIVATE WUNUSED DREF DeeObject *DCALL
+librt_get_FastNsiIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
+	return get_iterator_of(librt_get_ReSubStrings_impl_f());
 }
 
 
@@ -1826,7 +1814,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_RoDictIterator, &librt_get_RoDictIterator_f, ME
 PRIVATE DEFINE_CMETHOD(librt_get_RoSetIterator, &librt_get_RoSetIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_KwdsIterator, &librt_get_KwdsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_KwdsMappingIterator, &librt_get_KwdsMappingIterator_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_GenericIterator, &librt_get_GenericIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IteratorPending, &librt_get_IteratorPending_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_IteratorFuture, &librt_get_IteratorFuture_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_StringIterator, &librt_get_StringIterator_f, METHOD_FCONSTCALL);
@@ -1900,7 +1887,6 @@ PRIVATE DEFINE_CMETHOD(librt_get_StringLineSplitIterator, &librt_get_StringLineS
 PRIVATE DEFINE_CMETHOD(librt_get_StringScan, &librt_get_StringScan_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_StringScanIterator, &librt_get_StringScanIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_StringOrdinals, &librt_get_StringOrdinals_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_StringOrdinalsIterator, &librt_get_StringOrdinalsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReFindAll, &librt_get_ReFindAll_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReFindAllIterator, &librt_get_ReFindAllIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_RegFindAll, &librt_get_RegFindAll_f, METHOD_FCONSTCALL);
@@ -1910,11 +1896,8 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReLocateAllIterator, &librt_get_ReLocateAllIter
 PRIVATE DEFINE_CMETHOD(librt_get_ReSplit, &librt_get_ReSplit_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReSplitIterator, &librt_get_ReSplitIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReGroups, &librt_get_ReGroups_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_ReGroupsIterator, &librt_get_ReGroupsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReSubStrings, &librt_get_ReSubStrings_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_ReSubStringsIterator, &librt_get_ReSubStringsIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReSubBytes, &librt_get_ReSubBytes_f, METHOD_FCONSTCALL);
-PRIVATE DEFINE_CMETHOD(librt_get_ReSubBytesIterator, &librt_get_ReSubBytesIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesFindAll, &librt_get_ReBytesFindAll_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesFindAllIterator, &librt_get_ReBytesFindAllIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_RegBytesFindAll, &librt_get_RegBytesFindAll_f, METHOD_FCONSTCALL);
@@ -1923,6 +1906,9 @@ PRIVATE DEFINE_CMETHOD(librt_get_ReBytesLocateAll, &librt_get_ReBytesLocateAll_f
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesLocateAllIterator, &librt_get_ReBytesLocateAllIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplit, &librt_get_ReBytesSplit_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_ReBytesSplitIterator, &librt_get_ReBytesSplitIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_GenericIterator, &librt_get_GenericIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_NsiIterator, &librt_get_NsiIterator_f, METHOD_FCONSTCALL);
+PRIVATE DEFINE_CMETHOD(librt_get_FastNsiIterator, &librt_get_FastNsiIterator_f, METHOD_FCONSTCALL);
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStatics, &librt_get_FunctionStatics_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_FunctionStaticsIterator, &librt_get_FunctionStaticsIterator_f, METHOD_FCONSTCALL);
@@ -2166,7 +2152,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "StringCaseFind", (DeeObject *)&librt_get_StringCaseFind, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringCaseFind_Type */
 	{ "StringCaseFindIterator", (DeeObject *)&librt_get_StringCaseFindIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* StringCaseFindIterator_Type */
 	{ "StringOrdinals", (DeeObject *)&librt_get_StringOrdinals, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringOrdinals_Type */
-	{ "StringOrdinalsIterator", (DeeObject *)&librt_get_StringOrdinalsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* StringOrdinalsIterator_Type */
 	{ "StringSegments", (DeeObject *)&librt_get_StringSegments, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* StringSegments_Type */
 	{ "StringSegmentsIterator", (DeeObject *)&librt_get_StringSegmentsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* StringSegmentsIterator_Type */
 	{ "StringSplit", (DeeObject *)&librt_get_StringSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* StringSplit_Type */
@@ -2186,11 +2171,8 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "ReSplit", (DeeObject *)&librt_get_ReSplit, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* ReSplit_Type */
 	{ "ReSplitIterator", (DeeObject *)&librt_get_ReSplitIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* ReSplitIterator_Type */
 	{ "ReGroups", (DeeObject *)&librt_get_ReGroups, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                 /* ReGroups_Type */
-	{ "ReGroupsIterator", (DeeObject *)&librt_get_ReGroupsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* ReGroupsIterator_Type */
 	{ "ReSubStrings", (DeeObject *)&librt_get_ReSubStrings, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* ReSubStrings_Type */
-	{ "ReSubStringsIterator", (DeeObject *)&librt_get_ReSubStringsIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* ReSubStringsIterator_Type */
 	{ "ReSubBytes", (DeeObject *)&librt_get_ReSubBytes, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                             /* ReSubBytes_Type */
-	{ "ReSubBytesIterator", (DeeObject *)&librt_get_ReSubBytesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },             /* ReSubBytesIterator_Type */
 	{ "ReBytesFindAll", (DeeObject *)&librt_get_ReBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* ReFindAll_Type */
 	{ "ReBytesFindAllIterator", (DeeObject *)&librt_get_ReBytesFindAllIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },     /* ReFindAllIterator_Type */
 	{ "RegBytesFindAll", (DeeObject *)&librt_get_RegBytesFindAll, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                   /* RegFindAll_Type */
@@ -2336,6 +2318,8 @@ PRIVATE struct dex_symbol symbols[] = {
 
 	/* Types used to drive general purpose iterator support */
 	{ "GenericIterator", (DeeObject *)&librt_get_GenericIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeGenericIterator_Type */
+	{ "NsiIterator", (DeeObject *)&librt_get_NsiIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* DeeNsiIterator_Type */
+	{ "FastNsiIterator", (DeeObject *)&librt_get_FastNsiIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DeeFastNsiIterator_Type */
 	{ "IteratorPending", (DeeObject *)&librt_get_IteratorPending, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* IteratorPending_Type */
 	{ "IteratorFuture", (DeeObject *)&librt_get_IteratorFuture, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },   /* IteratorFuture_Type */
 
@@ -2443,7 +2427,6 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "Attribute", (DeeObject *)&DeeAttribute_Type, MODSYM_FREADONLY },               /* `Attribute' */
 	{ "EnumAttr", (DeeObject *)&DeeEnumAttr_Type, MODSYM_FREADONLY },                 /* `enumattr' */
 	{ "EnumAttrIterator", (DeeObject *)&DeeEnumAttrIterator_Type, MODSYM_FREADONLY }, /* `enumattr.Iterator' */
-
 
 	/* Function wrapper types */
 #ifdef CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION

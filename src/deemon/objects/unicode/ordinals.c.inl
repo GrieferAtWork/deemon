@@ -36,171 +36,12 @@ typedef struct {
 	/* A proxy object for viewing the characters of a string as an array of unsigned
 	 * integers representing the unicode character codes for each character. */
 	OBJECT_HEAD
-	DREF DeeStringObject *soi_str;   /* [1..1][const] The string who's character ordinals are being viewed. */
-	unsigned int          soi_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
-	DWEAK union dcharptr  soi_ptr;   /* Pointer to the next character. */
-	union dcharptr        soi_end;   /* [const][== DeeString_WEND(so_str)] The end of the string. */
-} StringOrdinalsIterator;
-#define READ_PTR(x) atomic_read(&(x)->soi_ptr.ptr)
-
-typedef struct {
-	/* A proxy object for viewing the characters of a string as an array of unsigned
-	 * integers representing the unicode character codes for each character. */
-	OBJECT_HEAD
 	DREF DeeStringObject *so_str;   /* [1..1][const] The string who's character ordinals are being viewed. */
 	unsigned int          so_width; /* [const][== DeeString_WIDTH(so_str)] The string's character width. */
 	union dcharptr        so_ptr;   /* [const][== DeeString_WSTR(so_str)] The effective character array. */
 } StringOrdinals;
 
 INTDEF DeeTypeObject StringOrdinals_Type;
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeString_Ordinals(DeeObject *__restrict self) {
-	DREF StringOrdinals *result;
-	result = DeeObject_MALLOC(StringOrdinals);
-	if unlikely(!result)
-		goto done;
-	result->so_str     = (DREF DeeStringObject *)self;
-	result->so_width   = DeeString_WIDTH(self);
-	result->so_ptr.ptr = DeeString_WSTR(self);
-	Dee_Incref(self);
-	DeeObject_Init(result, &StringOrdinals_Type);
-done:
-	return (DREF DeeObject *)result;
-}
-
-
-
-PRIVATE NONNULL((1)) void DCALL stringordinals_fini(StringOrdinals *__restrict self);
-PRIVATE NONNULL((1, 2)) void DCALL stringordinals_visit(StringOrdinals *__restrict self, dvisit_t proc, void *arg);
-STATIC_ASSERT(offsetof(StringOrdinals, so_str) == offsetof(StringOrdinalsIterator, soi_str));
-#define stringordinalsiter_fini  stringordinals_fini
-#define stringordinalsiter_visit stringordinals_visit
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-stringordinalsiter_ctor(StringOrdinalsIterator *__restrict self) {
-	self->soi_str     = (DREF DeeStringObject *)Dee_EmptyString;
-	self->soi_width   = STRING_WIDTH_1BYTE;
-	self->soi_ptr.ptr = DeeString_STR(Dee_EmptyString);
-	self->soi_end.ptr = DeeString_STR(Dee_EmptyString);
-	Dee_Incref(Dee_EmptyString);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-stringordinalsiter_copy(StringOrdinalsIterator *__restrict self,
-                        StringOrdinalsIterator *__restrict other) {
-	self->soi_str     = other->soi_str;
-	self->soi_width   = other->soi_width;
-	self->soi_ptr.ptr = READ_PTR(other);
-	self->soi_end.ptr = other->soi_end.ptr;
-	Dee_Incref(self->soi_str);
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-stringordinalsiter_init(StringOrdinalsIterator *__restrict self,
-                        size_t argc, DeeObject *const *argv) {
-	StringOrdinals *ords;
-	if (DeeArg_Unpack(argc, argv, "o:_StringOrdinalsIterator", &ords))
-		goto err;
-	if (DeeObject_AssertTypeExact(ords, &StringOrdinals_Type))
-		goto err;
-	self->soi_str     = ords->so_str;
-	self->soi_width   = ords->so_width;
-	self->soi_ptr.ptr = ords->so_ptr.ptr;
-	self->soi_end.ptr = DeeString_WEND(ords->so_str);
-	Dee_Incref(self->soi_str);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-stringordinalsiter_bool(StringOrdinalsIterator *__restrict self) {
-	return READ_PTR(self) < self->soi_end.ptr;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stringordinalsiter_next(StringOrdinalsIterator *__restrict self) {
-	union dcharptr pchar;
-	do {
-		pchar.ptr = READ_PTR(self);
-		if (pchar.ptr >= self->soi_end.ptr)
-			return ITER_DONE;
-	} while (!atomic_cmpxch_weak_or_write(&self->soi_ptr.cp8, pchar.cp8,
-	                                      pchar.cp8 + STRING_SIZEOF_WIDTH(self->soi_width)));
-	SWITCH_SIZEOF_WIDTH(self->soi_width) {
-
-	CASE_WIDTH_1BYTE:
-		return DeeInt_NewUInt8(*pchar.cp8);
-
-	CASE_WIDTH_2BYTE:
-		return DeeInt_NewUInt16(*pchar.cp16);
-
-	CASE_WIDTH_4BYTE:
-		return DeeInt_NewUInt32(*pchar.cp32);
-	}
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF StringOrdinals *DCALL
-stringordinalsiter_seq(StringOrdinalsIterator *__restrict self) {
-	return (DREF StringOrdinals *)DeeString_Ordinals((DeeObject *)self->soi_str);
-}
-
-PRIVATE struct type_getset tpconst stringordinalsiter_getsets[] = {
-	TYPE_GETTER_F(STR_seq, &stringordinalsiter_seq, METHOD_FNOREFESCAPE, "->?Ert:StringOrdinals"),
-	TYPE_GETSET_END
-};
-
-
-INTERN DeeTypeObject StringOrdinalsIterator_Type = {
-	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_StringOrdinalsIterator",
-	/* .tp_doc      = */ NULL,
-	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
-	/* .tp_weakrefs = */ 0,
-	/* .tp_features = */ TF_NONLOOPING,
-	/* .tp_base     = */ &DeeIterator_Type,
-	/* .tp_init = */ {
-		{
-			/* .tp_alloc = */ {
-				/* .tp_ctor      = */ (dfunptr_t)&stringordinalsiter_ctor,
-				/* .tp_copy_ctor = */ (dfunptr_t)&stringordinalsiter_copy,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
-				/* .tp_any_ctor  = */ (dfunptr_t)&stringordinalsiter_init,
-				TYPE_FIXED_ALLOCATOR(StringOrdinalsIterator)
-			}
-		},
-		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&stringordinalsiter_fini,
-		/* .tp_assign      = */ NULL,
-		/* .tp_move_assign = */ NULL
-	},
-	/* .tp_cast = */ {
-		/* .tp_str  = */ NULL,
-		/* .tp_repr = */ NULL,
-		/* .tp_bool = */ (int (DCALL *)(DeeObject *__restrict))&stringordinalsiter_bool
-	},
-	/* .tp_call          = */ NULL,
-	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&stringordinalsiter_visit,
-	/* .tp_gc            = */ NULL,
-	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* TODO */
-	/* .tp_seq           = */ NULL,
-	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinalsiter_next,
-	/* .tp_attr          = */ NULL,
-	/* .tp_with          = */ NULL,
-	/* .tp_buffer        = */ NULL,
-	/* .tp_methods       = */ NULL,
-	/* .tp_getsets       = */ stringordinalsiter_getsets,
-	/* .tp_members       = */ NULL,
-	/* .tp_class_methods = */ NULL,
-	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ NULL
-};
-
-
-
 
 PRIVATE NONNULL((1)) void DCALL
 stringordinals_fini(StringOrdinals *__restrict self) {
@@ -218,25 +59,28 @@ stringordinals_bool(StringOrdinals *__restrict self) {
 	return !DeeString_IsEmpty(self->so_str);
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF StringOrdinalsIterator *DCALL
-stringordinals_iter(StringOrdinals *__restrict self) {
-	DREF StringOrdinalsIterator *result;
-	result = DeeObject_MALLOC(StringOrdinalsIterator);
-	if unlikely(!result)
-		goto done;
-	result->soi_str     = self->so_str;
-	result->soi_width   = self->so_width;
-	result->soi_ptr     = self->so_ptr;
-	result->soi_end.ptr = DeeString_WEND(self->so_str);
-	Dee_Incref(self->so_str);
-	DeeObject_Init(result, &StringOrdinalsIterator_Type);
-done:
-	return result;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+stringordinals_nsi_getsize(StringOrdinals *__restrict self) {
+	return WSTR_LENGTH(self->so_ptr.ptr);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-stringordinals_size(StringOrdinals *__restrict self) {
-	return DeeInt_NewSize(WSTR_LENGTH(self->so_ptr.ptr));
+stringordinals_nsi_getitem(StringOrdinals *__restrict self, size_t index) {
+	if unlikely(index >= WSTR_LENGTH(self->so_ptr.ptr))
+		goto err_oob;
+	SWITCH_SIZEOF_WIDTH(self->so_width) {
+	CASE_WIDTH_1BYTE:
+		return DeeInt_NewUInt8(self->so_ptr.cp8[index]);
+	CASE_WIDTH_2BYTE:
+		return DeeInt_NewUInt16(self->so_ptr.cp16[index]);
+	CASE_WIDTH_4BYTE:
+		return DeeInt_NewUInt32(self->so_ptr.cp32[index]);
+	}
+	__builtin_unreachable();
+err_oob:
+	err_index_out_of_bounds((DeeObject *)self, index,
+	                        WSTR_LENGTH(self->so_ptr.ptr));
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -265,39 +109,56 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-stringordinals_get(StringOrdinals *self,
-                   DeeObject *index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	if (index >= WSTR_LENGTH(self->so_ptr.ptr)) {
-		err_index_out_of_bounds((DeeObject *)self, index,
-		                        WSTR_LENGTH(self->so_ptr.ptr));
-		goto err;
+
+PRIVATE struct type_nsi tpconst stringordinals_nsi = {
+	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
+	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
+	{
+		/* .nsi_seqlike = */ {
+			/* .nsi_getsize      = */ (dfunptr_t)&stringordinals_nsi_getsize,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getitem      = */ (dfunptr_t)&stringordinals_nsi_getitem,
+			/* .nsi_delitem      = */ (dfunptr_t)NULL,
+			/* .nsi_setitem      = */ (dfunptr_t)NULL,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
+			/* .nsi_getrange     = */ (dfunptr_t)NULL,
+			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_delrange     = */ (dfunptr_t)NULL,
+			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_setrange     = */ (dfunptr_t)NULL,
+			/* .nsi_setrange_n   = */ (dfunptr_t)NULL,
+			/* .nsi_find         = */ (dfunptr_t)NULL,
+			/* .nsi_rfind        = */ (dfunptr_t)NULL,
+			/* .nsi_xch          = */ (dfunptr_t)NULL,
+			/* .nsi_insert       = */ (dfunptr_t)NULL,
+			/* .nsi_insertall    = */ (dfunptr_t)NULL,
+			/* .nsi_insertvec    = */ (dfunptr_t)NULL,
+			/* .nsi_pop          = */ (dfunptr_t)NULL,
+			/* .nsi_erase        = */ (dfunptr_t)NULL,
+			/* .nsi_remove       = */ (dfunptr_t)NULL,
+			/* .nsi_rremove      = */ (dfunptr_t)NULL,
+			/* .nsi_removeall    = */ (dfunptr_t)NULL,
+			/* .nsi_removeif     = */ (dfunptr_t)NULL
+		}
 	}
-	return DeeInt_NewUInt32(STRING_WIDTH_GETCHAR(self->so_width,
-	                                             self->so_ptr.ptr,
-	                                             index));
-err:
-	return NULL;
-}
+};
 
 
 PRIVATE struct type_seq stringordinals_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinals_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&stringordinals_size,
+	/* .tp_iter_self = */ NULL,
+	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_get,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ &stringordinals_nsi,
 };
 
 PRIVATE struct type_member tpconst stringordinals_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__str__", STRUCT_OBJECT, offsetof(StringOrdinals, so_str), "->?Dstring"),
-	TYPE_MEMBER_END
-};
-
-PRIVATE struct type_member tpconst stringordinals_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &StringOrdinalsIterator_Type),
 	TYPE_MEMBER_END
 };
 
@@ -344,11 +205,23 @@ INTERN DeeTypeObject StringOrdinals_Type = {
 	/* .tp_members       = */ stringordinals_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
-	/* .tp_class_members = */ stringordinals_class_members
+	/* .tp_class_members = */ NULL
 };
 
-
-#undef READ_PTR
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+DeeString_Ordinals(DeeObject *__restrict self) {
+	DREF StringOrdinals *result;
+	result = DeeObject_MALLOC(StringOrdinals);
+	if unlikely(!result)
+		goto done;
+	result->so_str     = (DREF DeeStringObject *)self;
+	result->so_width   = DeeString_WIDTH(self);
+	result->so_ptr.ptr = DeeString_WSTR(self);
+	Dee_Incref(self);
+	DeeObject_Init(result, &StringOrdinals_Type);
+done:
+	return (DREF DeeObject *)result;
+}
 
 DECL_END
 

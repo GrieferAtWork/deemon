@@ -378,7 +378,10 @@ struct Dee_type_nsi {
 			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delitem)(DeeObject *__restrict self, size_t index);
 			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setitem)(DeeObject *self, size_t index, DeeObject *value);
 
-			/* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound. */
+			/* When `nsi_getitem_fast()' returns NULL, no error is thrown, and it means that the item is unbound.
+			 * @param: index: Always `< SOME_PAST_CALL((*nsi_getsize_fast)(self))'
+			 * @return: * :   A reference to the item at `index'
+			 * @return: NULL: The item at `index' isn't bound (NO ERROR IS THROWN IN THIS CASE) */
 			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getitem_fast)(DeeObject *__restrict self, size_t index);
 
 			WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *nsi_getrange)(DeeObject *__restrict self, Dee_ssize_t start, Dee_ssize_t end);

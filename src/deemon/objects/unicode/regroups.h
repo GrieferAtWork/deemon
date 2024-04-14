@@ -42,17 +42,7 @@ typedef struct {
 	                 (self)->rm_so,       \
 	                 (self)->rm_eo))
 
-typedef struct {
-	OBJECT_HEAD
-	DREF ReGroups *rgi_groups; /* [1..1][const] Linked groups object. */
-	size_t         rgi_index;  /* [lock(ATOMIC)] Index of next not-enumerated group. */
-} ReGroupsIterator;
-
-#define ReGroupsIterator_GetIndex(x) atomic_read(&(x)->rgi_index)
-
 INTDEF DeeTypeObject ReGroups_Type;
-INTDEF DeeTypeObject ReGroupsIterator_Type;
-
 #define ReGroups_Malloc(ngroups)                                  \
 	((ReGroups *)DeeObject_Malloc(offsetof(ReGroups, rg_groups) + \
 	                              (ngroups) * sizeof(struct DeeRegexMatch)))
@@ -84,18 +74,8 @@ typedef struct {
 	                       (void *)((baseptr) + (self)->rm_so), \
 	                       (self)->rm_eo - (self)->rm_so))
 
-typedef struct {
-	OBJECT_HEAD
-	DREF ReSubStrings *rssi_strings; /* [1..1][const] Linked groups object. */
-	size_t             rssi_index;   /* [lock(ATOMIC)] Index of next not-enumerated group. */
-} ReSubStringsIterator;
-
-#define ReSubStringsIterator_GetIndex(x) atomic_read(&(x)->rssi_index)
-
 INTDEF DeeTypeObject ReSubStrings_Type;
-INTDEF DeeTypeObject ReSubStringsIterator_Type;
 INTDEF DeeTypeObject ReSubBytes_Type;
-INTDEF DeeTypeObject ReSubBytesIterator_Type;
 
 #define ReSubStrings_Malloc(ngroups)                                       \
 	((ReSubStrings *)DeeObject_Malloc(offsetof(ReSubStrings, rss_groups) + \
@@ -109,11 +89,9 @@ INTDEF DeeTypeObject ReSubBytesIterator_Type;
 	       (self)->rss_baseptr = (__BYTE_TYPE__ const *)(baseptr))
 
 
-#define ReSubBytes                  ReSubStrings
-#define ReSubBytesIterator          ReSubStringsIterator
-#define ReSubBytesIterator_GetIndex ReSubStringsIterator_GetIndex
-#define ReSubBytes_Malloc           ReSubStrings_Malloc
-#define ReSubBytes_Free             ReSubStrings_Free
+#define ReSubBytes        ReSubStrings
+#define ReSubBytes_Malloc ReSubStrings_Malloc
+#define ReSubBytes_Free   ReSubStrings_Free
 #define ReSubBytes_Init(self, baseown, baseptr, ngroups) \
 	(void)(DeeObject_Init(self, &ReSubBytes_Type),       \
 	       (self)->rss_ngroups = (ngroups),              \
