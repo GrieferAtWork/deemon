@@ -35,6 +35,8 @@
 #include <deemon/system-features.h> /* atexit(), memcpy(), ... */
 #include <deemon/util/atomic.h>
 
+#include <hybrid/sequence/list.h>
+
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
@@ -44,10 +46,11 @@
 
 DECL_BEGIN
 
+LIST_HEAD(file_buffer_object_list, file_buffer_object);
 typedef DeeFileBufferObject Buffer;
 
 /* [0..1][lock(buffer_ttys_lock)] Chain of tty-buffers. */
-PRIVATE Buffer *buffer_ttys = NULL;
+PRIVATE struct file_buffer_object_list buffer_ttys = LIST_HEAD_INITIALIZER(buffer_ttys);
 #ifndef CONFIG_NO_THREADS
 PRIVATE Dee_atomic_lock_t buffer_ttys_lock = DEE_ATOMIC_LOCK_INIT;
 #endif /* CONFIG_NO_THREADS */
@@ -104,14 +107,13 @@ PRIVATE void atexit_flushall(void) {
 		 *      the first things to get executed during termination,
 		 *      but can we be certain that it will? */
 		buffer_ttys_lock_acquire();
-		buffer = buffer_ttys;
-		while (buffer && !Dee_IncrefIfNotZero(buffer))
-			buffer = buffer->fb_ttych.fbl_next;
+		LIST_FOREACH (buffer, &buffer_ttys, fb_ttych) {
+			if (Dee_IncrefIfNotZero(buffer))
+				break;
+		}
 		if (buffer) {
-			ASSERT(buffer->fb_ttych.fbl_pself);
-			if ((*buffer->fb_ttych.fbl_pself = buffer->fb_ttych.fbl_next) != NULL)
-				buffer->fb_ttych.fbl_next->fb_ttych.fbl_pself = buffer->fb_ttych.fbl_pself;
-			buffer->fb_ttych.fbl_pself = NULL;
+			ASSERT(LIST_ISBOUND(buffer, fb_ttych));
+			LIST_UNBIND(buffer, fb_ttych);
 		}
 		buffer_ttys_lock_release();
 		if (!buffer)
@@ -141,23 +143,16 @@ buffer_addtty(Buffer *__restrict self) {
 		atexit_registered = true;
 	}
 #endif /* CONFIG_HAVE_atexit */
-	if (!self->fb_ttych.fbl_pself) {
-		self->fb_ttych.fbl_pself = &buffer_ttys;
-		if ((self->fb_ttych.fbl_next = buffer_ttys) != NULL)
-			buffer_ttys->fb_ttych.fbl_pself = &self->fb_ttych.fbl_next;
-		buffer_ttys = self;
-	}
+	if (!LIST_ISBOUND(self, fb_ttych))
+		LIST_INSERT_HEAD(&buffer_ttys, self, fb_ttych);
 	buffer_ttys_lock_release();
 }
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_deltty(Buffer *__restrict self) {
 	buffer_ttys_lock_acquire();
-	if (self->fb_ttych.fbl_pself) {
-		if ((*self->fb_ttych.fbl_pself = self->fb_ttych.fbl_next) != NULL)
-			self->fb_ttych.fbl_next->fb_ttych.fbl_pself = self->fb_ttych.fbl_pself;
-		self->fb_ttych.fbl_pself = NULL;
-	}
+	if (LIST_ISBOUND(self, fb_ttych))
+		LIST_UNBIND(self, fb_ttych);
 	buffer_ttys_lock_release();
 }
 
@@ -201,15 +196,15 @@ buffer_init(Buffer *__restrict self,
 		Dee_Incref(file);
 	}
 	Dee_rshared_rwlock_init(&self->fb_lock);
-	self->fb_file            = file;
-	self->fb_ptr             = self->fb_base;
-	self->fb_cnt             = 0;
-	self->fb_chng            = self->fb_base;
-	self->fb_chsz            = 0;
-	self->fb_ttych.fbl_pself = NULL;
-	self->fb_fblk            = 0;
-	self->fb_fpos            = 0;
-	self->fb_flag            = mode;
+	self->fb_file = file;
+	self->fb_ptr  = self->fb_base;
+	self->fb_cnt  = 0;
+	self->fb_chng = self->fb_base;
+	self->fb_chsz = 0;
+	LIST_ENTRY_UNBOUND_INIT(&self->fb_ttych);
+	self->fb_fblk = 0;
+	self->fb_fpos = 0;
+	self->fb_flag = mode;
 	return 0;
 err:
 	return -1;
@@ -405,9 +400,10 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 	for (;;) {
 		DREF Buffer *buffer;
 		buffer_ttys_lock_acquire();
-		buffer = buffer_ttys;
-		while (buffer && !Dee_IncrefIfNotZero(buffer))
-			buffer = buffer->fb_ttych.fbl_next;
+		LIST_FOREACH (buffer, &buffer_ttys, fb_ttych) {
+			if (Dee_IncrefIfNotZero(buffer))
+				break;
+		}
 		buffer_ttys_lock_release();
 		if (!buffer)
 			break;
@@ -1599,15 +1595,14 @@ err:
 
 PRIVATE NONNULL((1)) void DCALL
 buffer_fini(Buffer *__restrict self) {
-	if (self->fb_ttych.fbl_pself) {
+	if (LIST_ISBOUND(self, fb_ttych)) {
 #ifndef CONFIG_NO_THREADS
 		COMPILER_READ_BARRIER();
 		buffer_ttys_lock_acquire();
-		if (self->fb_ttych.fbl_pself)
+		if (LIST_ISBOUND(self, fb_ttych))
 #endif /* !CONFIG_NO_THREADS */
 		{
-			if ((*self->fb_ttych.fbl_pself = self->fb_ttych.fbl_next) != NULL)
-				self->fb_ttych.fbl_next->fb_ttych.fbl_pself = self->fb_ttych.fbl_pself;
+			LIST_REMOVE(self, fb_ttych);
 		}
 		buffer_ttys_lock_release();
 	}
@@ -1890,8 +1885,8 @@ PRIVATE struct type_method tpconst buffer_class_methods[] = {
 	TYPE_METHOD("sync", &buffer_class_sync,
 	            "()\n"
 	            "Flush all buffers that are connected to TTY file descriptors\n"
-	            "This function is automatically called at the same time as :AppExit.atexit, "
-	            /**/ "as well as prior to any read operation on any other TTY buffer that might block"),
+	            "This function is automatically called at the same time as :AppExit.atexit, as "
+	            /**/ "well as prior to any read operation on any other TTY buffer that might block"),
 	TYPE_METHOD_END
 };
 
