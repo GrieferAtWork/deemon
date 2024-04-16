@@ -3266,7 +3266,7 @@ framestack_fini(FrameStack *__restrict self) {
 
 PRIVATE NONNULL((1, 2)) void DCALL
 framestack_visit(FrameStack *__restrict self,
-                  dvisit_t proc, void *arg) {
+                 dvisit_t proc, void *arg) {
 	Dee_Visit(self->fs_frame);
 }
 

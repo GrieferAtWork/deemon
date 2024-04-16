@@ -22,9 +22,10 @@
 import * from doc;
 import * from deemon;
 
-@@This is my test function
+@@This is my test function.
+@@
 @@This function takes 1 argument @x, which should be
-@@an :int or :float, allowing it to then return a :string
+@@an @int or @float, allowing it to then return a @string
 function foo(x: int | float): string {
 	return str x;
 }
