@@ -833,6 +833,17 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
 
+/* Convenience wrappers for `DeeObject_ThisCall(DeeClass_GetOperator())' */
+DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeClass_CallOperator(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                      uint16_t name, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
+DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                       uint16_t name, char const *format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                        uint16_t name, char const *format, va_list args);
+
 
 #ifdef CONFIG_BUILDING_DEEMON
 

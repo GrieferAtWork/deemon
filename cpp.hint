@@ -1405,6 +1405,7 @@
 #define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
 #define DEFINE_INTERNAL_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
+#define DEFINE_FILE_OPERATOR(return,n,args) return DeeFile_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeFile_##n args
 #define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**restrict p_self,intX_t val){}
 #define DEFINE_JSON_ITERATOR_COMPARE(n,...) DeeObject*n(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};

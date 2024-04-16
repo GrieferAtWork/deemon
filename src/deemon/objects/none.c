@@ -319,6 +319,19 @@ PRIVATE struct type_buffer none_buffer = {
 	/* .tp_buffer_flags = */ Dee_BUFFER_TYPE_FNORMAL
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+invoke_none_file_char_operator(DeeTypeObject *tp_self, DeeObject *self,
+                               /*0..1*/ DeeObject **p_self,
+                               size_t argc, DeeObject *const *argv) {
+	(void)tp_self;
+	(void)self;
+	(void)p_self;
+	(void)argc;
+	(void)argv;
+	return DeeInt_NewInt8(GETC_EOF);
+}
+
+
 /* All operators implemented by "none" can be constant propagated.
  * They also never throw any exceptions. */
 PRIVATE struct type_operator const none_operators[] = {
@@ -384,6 +397,15 @@ PRIVATE struct type_operator const none_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_003B_ENUMATTR, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_003C_ENTER, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 	TYPE_OPERATOR_FLAGS(OPERATOR_003D_LEAVE, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	/**/
+
+	/* Implement char-related file operators such that we always return `GETC_EOF'.
+	 * Without this, `DeeType_GetCustomOperatorById()' would pick noop_custom_operator_cb,
+	 * which would re-return "none", which would then evaluate to "0" (which isn't,
+	 * and can't be the value of `GETC_EOF') */
+	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0008_GETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_0009_UNGETC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
+	TYPE_OPERATOR_CUSTOM(OPERATOR_FILE_000A_PUTC, &invoke_none_file_char_operator, METHOD_FCONSTCALL | METHOD_FNOTHROW),
 };
 
 PUBLIC DeeTypeObject DeeNone_Type = {

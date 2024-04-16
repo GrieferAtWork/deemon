@@ -83,530 +83,6 @@ dee_memcaseeq(byte_t const *a, byte_t const *b, size_t s) {
 }
 #endif /* !CONFIG_HAVE_memcasecmp */
 
-#define UNPACK_ARGS_0()        /* nothing */
-#define UNPACK_ARGS_1(a)       , a
-#define UNPACK_ARGS_2(a, b)    , a, b
-#define UNPACK_ARGS_3(a, b, c) , a, b, c
-#define UNPACK_ARGS(n, args)   UNPACK_ARGS_##n args
-
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL file_read_with_getc(DeeFileObject *__restrict self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL file_write_with_putc(DeeFileObject *__restrict self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_getc_with_read(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_putc_with_write(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL file_pread_with_seek_and_read(DeeFileObject *__restrict self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL file_pwrite_with_seek_and_write(DeeFileObject *__restrict self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_ungetc_with_seek(DeeFileObject *__restrict self, int ch);
-
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-file_read_with_getc(DeeFileObject *__restrict self, void *buffer,
-                    size_t bufsize, Dee_ioflag_t flags) {
-	size_t result;
-	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-	ft_getc = Dee_TYPE(self)->ft_getc;
-	ASSERT(ft_getc != NULL);
-	ASSERT(ft_getc != &file_getc_with_read);
-	for (result = 0; result < bufsize; ++result) {
-		int status = (*ft_getc)(self, flags);
-		if unlikely(status == GETC_EOF)
-			break;
-		if unlikely(status == GETC_ERR)
-			goto err;
-		((byte_t *)buffer)[result] = (byte_t)(unsigned int)status;
-	}
-	return result;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-file_write_with_putc(DeeFileObject *__restrict self,
-                     void const *buffer,
-                     size_t bufsize, Dee_ioflag_t flags) {
-	size_t result;
-	int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-	ft_putc = Dee_TYPE(self)->ft_putc;
-	ASSERT(ft_putc != NULL);
-	ASSERT(ft_putc != &file_putc_with_write);
-	for (result = 0; result < bufsize; ++result) {
-		int status = (*ft_putc)(self, ((byte_t const *)buffer)[result], flags);
-		if unlikely(status == GETC_EOF)
-			break;
-		if unlikely(status == GETC_ERR)
-			goto err;
-	}
-	return result;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
-file_getc_with_read(DeeFileObject *__restrict self,
-                    Dee_ioflag_t flags) {
-	size_t status;
-	byte_t result;
-	size_t (DCALL *ft_read)(DeeFileObject *__restrict self,
-	                        void *buffer, size_t bufsize,
-	                        Dee_ioflag_t flags);
-	ft_read = Dee_TYPE(self)->ft_read;
-	ASSERT(ft_read != NULL);
-	ASSERT(ft_read != &file_read_with_getc);
-	status = (*ft_read)(self, &result, 1, flags);
-	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
-	if likely(status > 0)
-		return (unsigned int)result;
-	if (status == 0)
-		return GETC_EOF;
-	return GETC_ERR;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
-file_putc_with_write(DeeFileObject *__restrict self,
-                     int ch, Dee_ioflag_t flags) {
-	size_t status;
-	byte_t byte;
-	size_t (DCALL *ft_write)(DeeFileObject *__restrict self,
-	                         void const *buffer, size_t bufsize,
-	                         Dee_ioflag_t flags);
-	ft_write = Dee_TYPE(self)->ft_write;
-	ASSERT(ft_write != NULL);
-	ASSERT(ft_write != &file_write_with_putc);
-	byte   = (byte_t)(unsigned int)ch;
-	status = (*ft_write)(self, &byte, 1, flags);
-	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
-	if likely(status > 0)
-		return 0;
-	if (status == 0)
-		return GETC_EOF;
-	return GETC_ERR;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-file_pread_with_seek_and_read(DeeFileObject *__restrict self,
-                              void *buffer, size_t bufsize,
-                              Dee_pos_t pos, Dee_ioflag_t flags) {
-	size_t result;
-	size_t (DCALL *ft_read)(DeeFileObject *__restrict self,
-	                        void *buffer, size_t bufsize,
-	                        Dee_ioflag_t flags);
-	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	ft_seek = Dee_TYPE(self)->ft_seek;
-	ASSERT(ft_seek != NULL);
-	if unlikely((*ft_seek)(self, (Dee_off_t)pos, SEEK_SET) == (Dee_pos_t)-1)
-		goto err;
-	ft_read = Dee_TYPE(self)->ft_read;
-	ASSERT(ft_read != NULL);
-	result = (*ft_read)(self, buffer, bufsize, flags);
-	return result;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-file_pwrite_with_seek_and_write(DeeFileObject *__restrict self,
-                                void const *buffer, size_t bufsize,
-                                Dee_pos_t pos, Dee_ioflag_t flags) {
-	size_t result;
-	size_t (DCALL *ft_write)(DeeFileObject *__restrict self,
-	                         void const *buffer, size_t bufsize,
-	                         Dee_ioflag_t flags);
-	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	ft_seek = Dee_TYPE(self)->ft_seek;
-	ASSERT(ft_seek != NULL);
-	if unlikely((*ft_seek)(self, (Dee_off_t)pos, SEEK_SET) == (Dee_pos_t)-1)
-		goto err;
-	ft_write = Dee_TYPE(self)->ft_write;
-	ASSERT(ft_write != NULL);
-	result = (*ft_write)(self, buffer, bufsize, flags);
-	return result;
-err:
-	return (size_t)-1;
-}
-
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
-file_ungetc_with_seek(DeeFileObject *__restrict self, int ch) {
-	Dee_pos_t result;
-	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	ft_seek = Dee_TYPE(self)->ft_seek;
-	ASSERT(ft_seek != NULL);
-	result = (*ft_seek)(self, (Dee_off_t)-1, SEEK_CUR);
-	if unlikely(result == (Dee_pos_t)-1)
-		goto err;
-	return ch;
-err:
-	return -1;
-}
-
-
-/* Inherit file operators from bases, and auto-complete missing operators. */
-#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)                                                        \
-	INTERN ATTR_INOUT(1) bool DCALL                                                                              \
-	name(DeeFileTypeObject *__restrict self) {                                                                   \
-		DeeFileTypeObject *base;                                                                                 \
-		DeeTypeMRO mro;                                                                                          \
-		base = DeeType_AsFileType(DeeTypeMRO_Init(&mro, DeeFileType_AsType(self)));                              \
-		while ((base = DeeType_AsFileType(DeeTypeMRO_NextDirectBase(&mro, DeeFileType_AsType(base)))) != NULL) { \
-			if (!DeeFileType_Check(DeeFileType_AsType(base)))                                                    \
-				continue;                                                                                        \
-			if (base->field == NULL) {                                                                           \
-				if (!name(base))                                                                                 \
-					continue;                                                                                    \
-			}                                                                                                    \
-			LOG_INHERIT(DeeFileType_AsType(base), DeeFileType_AsType(self), opname);                             \
-			self->field = base->field;                                                                           \
-			return true;                                                                                         \
-		}                                                                                                        \
-		return false;                                                                                            \
-	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_seek, "operator seek", ft_seek)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_sync, "operator sync", ft_sync)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_trunc, "operator trunc", ft_trunc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_close, "operator close", ft_close)
-#undef DEFINE_TYPE_INHERIT_FUNCTION
-
-#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field, alt_condition, altfunc, ...)                           \
-	INTERN ATTR_INOUT(1) bool DCALL                                                                              \
-	name(DeeFileTypeObject *__restrict self) {                                                                   \
-		DeeFileTypeObject *base;                                                                                 \
-		DeeTypeMRO mro;                                                                                          \
-		if (alt_condition) {                                                                                     \
-			self->field = altfunc;                                                                               \
-			return true;                                                                                         \
-		}                                                                                                        \
-		base = DeeType_AsFileType(DeeTypeMRO_Init(&mro, DeeFileType_AsType(self)));                              \
-		while ((base = DeeType_AsFileType(DeeTypeMRO_NextDirectBase(&mro, DeeFileType_AsType(base)))) != NULL) { \
-			if (!DeeFileType_Check(DeeFileType_AsType(base)))                                                    \
-				continue;                                                                                        \
-			if (base->field == NULL) {                                                                           \
-				if (!name(base))                                                                                 \
-					continue;                                                                                    \
-			}                                                                                                    \
-			LOG_INHERIT(DeeFileType_AsType(base), DeeFileType_AsType(self), opname);                             \
-			self->field = base->field;                                                                           \
-			__VA_ARGS__;                                                                                         \
-			return true;                                                                                         \
-		}                                                                                                        \
-		return false;                                                                                            \
-	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_read, "operator read", ft_read,
-                             self->ft_getc != NULL, &file_read_with_getc,
-                             if (base->ft_getc) self->ft_getc = base->ft_getc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_write, "operator write", ft_write,
-                             self->ft_putc != NULL, &file_write_with_putc,
-                             if (base->ft_putc) self->ft_putc = base->ft_putc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_getc, "operator getc", ft_getc,
-                             self->ft_read != NULL, &file_getc_with_read,
-                             if (base->ft_read) self->ft_read = base->ft_read)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_putc, "operator putc", ft_putc,
-                             self->ft_write != NULL, &file_putc_with_write,
-                             if (base->ft_write) self->ft_write = base->ft_write)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_pread, "operator pread", ft_pread,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
-                             (self->ft_read != NULL || type_inherit_file_read(self)),
-                             &file_pread_with_seek_and_read,
-                             if (base->ft_seek) self->ft_seek = base->ft_seek;
-                             if (base->ft_read) self->ft_read = base->ft_read)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_pwrite, "operator pwrite", ft_pwrite,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
-                             (self->ft_write != NULL || type_inherit_file_write(self)),
-                             &file_pwrite_with_seek_and_write,
-                             if (base->ft_seek) self->ft_seek = base->ft_seek;
-                             if (base->ft_write) self->ft_write = base->ft_write)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_ungetc, "operator ungetc", ft_ungetc,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)),
-                             &file_ungetc_with_seek,
-                             if (base->ft_seek) self->ft_seek = base->ft_seek)
-#undef DEFINE_TYPE_INHERIT_FUNCTION
-
-
-
-/************************************************************************/
-/* File operator invocation helpers                                     */
-/************************************************************************/
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_Read(DeeObject *__restrict self, void *buffer, size_t bufsize) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *buffer,
-			                        size_t bufsize, Dee_ioflag_t flags);
-			ft_read = DeeType_AsFileType(tp_self)->ft_read;
-			if likely(ft_read != NULL)
-				return (*ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_READ);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_Readf(DeeObject *__restrict self, void *buffer,
-              size_t bufsize, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *buffer,
-			                        size_t bufsize, Dee_ioflag_t flags);
-			ft_read = DeeType_AsFileType(tp_self)->ft_read;
-			if likely(ft_read != NULL)
-				return (*ft_read)((DeeFileObject *)self, buffer, bufsize, flags);
-		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_READ);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-DeeFile_Write(DeeObject *__restrict self, void const *buffer, size_t bufsize) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_write)(DeeFileObject *__restrict self, void const *buffer,
-			                         size_t bufsize, Dee_ioflag_t flags);
-			ft_write = DeeType_AsFileType(tp_self)->ft_write;
-			if likely(ft_write != NULL)
-				return (*ft_write)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_write(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_WRITE);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-DeeFile_Writef(DeeObject *__restrict self, void const *buffer,
-               size_t bufsize, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_write)(DeeFileObject *__restrict self, void const *buffer,
-			                         size_t bufsize, Dee_ioflag_t flags);
-			ft_write = DeeType_AsFileType(tp_self)->ft_write;
-			if likely(ft_write != NULL)
-				return (*ft_write)((DeeFileObject *)self, buffer, bufsize, flags);
-		} while (type_inherit_file_write(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_WRITE);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL
-DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-			ft_seek = DeeType_AsFileType(tp_self)->ft_seek;
-			if likely(ft_seek != NULL)
-				return (*ft_seek)((DeeFileObject *)self, off, whence);
-		} while (type_inherit_file_seek(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (Dee_pos_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_SEEK);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Sync(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_sync)(DeeFileObject *__restrict self);
-			ft_sync = DeeType_AsFileType(tp_self)->ft_sync;
-			if likely(ft_sync != NULL)
-				return (*ft_sync)((DeeFileObject *)self);
-		} while (type_inherit_file_sync(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_SYNC);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-			ft_trunc = DeeType_AsFileType(tp_self)->ft_trunc;
-			if likely(ft_trunc != NULL)
-				return (*ft_trunc)((DeeFileObject *)self, size);
-		} while (type_inherit_file_trunc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_TRUNC);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Close(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_close)(DeeFileObject *__restrict self);
-			ft_close = DeeType_AsFileType(tp_self)->ft_close;
-			if likely(ft_close != NULL)
-				return (*ft_close)((DeeFileObject *)self);
-		} while (type_inherit_file_close(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_CLOSE);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Ungetc(DeeObject *__restrict self, int ch) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
-			ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
-			if likely(ft_ungetc != NULL)
-				return (*ft_ungetc)((DeeFileObject *)self, ch);
-		} while (type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Getc(DeeObject *__restrict self) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
-			if likely(ft_getc != NULL)
-				return (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
-			if likely(ft_getc != NULL)
-				return (*ft_getc)((DeeFileObject *)self, flags);
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
-}
-
 PRIVATE WUNUSED ATTR_INOUT(1) int
 (DCALL DeeFile_unicode_unget)(DeeFileObject *__restrict self, byte_t byte0,
                               byte_t const *bytev, size_t bytec) {
@@ -831,320 +307,111 @@ check_uni_char:
 
 PUBLIC WUNUSED ATTR_INOUT(1) uint32_t DCALL
 DeeFile_GetUtf8(DeeObject *__restrict self) {
+	int result;
+	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
 			if likely(ft_getc != NULL) {
-				int result = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-				if unlikely(result >= 0xc0) {
-					result = DeeFile_unicode_readutf8((DeeFileObject *)self, ft_getc,
-					                                  (byte_t)result, Dee_FILEIO_FNORMAL);
-				}
-				return (uint32_t)result;
+				if (ft_getc == &instance_getc && Dee_TYPE(self) != tp_self)
+					goto do_invoke_generic_ft_getc;
+				goto do_invoke_ft_getc;
 			}
 		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return (uint32_t)GETC_EOF;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-#if GETC_ERR == -1
-	return (uint32_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-	return (uint32_t)GETC_ERR;
-#endif /* GETC_ERR != -1 */
+do_invoke_generic_ft_getc:
+	ft_getc = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
+do_invoke_ft_getc:
+	result = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+	if likely(result < 0xc0)
+		return (uint32_t)result;
+	return DeeFile_unicode_readutf8((DeeFileObject *)self, ft_getc,
+	                                (byte_t)result, Dee_FILEIO_FNORMAL);
 }
 
 PUBLIC WUNUSED ATTR_INOUT(1) uint32_t DCALL
 DeeFile_GetUtf8f(DeeObject *__restrict self, Dee_ioflag_t flags) {
+	int result;
+	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
 			if likely(ft_getc != NULL) {
-				int result = (*ft_getc)((DeeFileObject *)self, flags);
-				if unlikely(result >= 0xc0) {
-					result = DeeFile_unicode_readutf8((DeeFileObject *)self, ft_getc,
-					                                  (byte_t)result, flags);
-				}
-				return (uint32_t)result;
+				if (ft_getc == &instance_getc && Dee_TYPE(self) != tp_self)
+					goto do_invoke_generic_ft_getc;
+				goto do_invoke_ft_getc;
 			}
 		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return (uint32_t)GETC_EOF;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-#if GETC_ERR == -1
-	return (uint32_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
-	return (uint32_t)GETC_ERR;
-#endif /* GETC_ERR != -1 */
+do_invoke_generic_ft_getc:
+	ft_getc = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
+do_invoke_ft_getc:
+	result = DeeFile_Getcf(self, flags);
+	if likely(result < 0xc0)
+		return (uint32_t)result;
+	return DeeFile_unicode_readutf8((DeeFileObject *)self, ft_getc,
+	                                (byte_t)result, flags);
 }
 
 /* @return: Dee_GETC_ERR: Error */
 PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
 DeeFile_UngetUtf8(DeeObject *__restrict self, uint32_t ch) {
+	int result;
+	char buf[UNICODE_UTF8_CURLEN], *endp;
+	int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 			ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
 			if likely(ft_ungetc != NULL) {
-				int result;
-				char buf[UNICODE_UTF8_CURLEN], *endp;
-				endp = unicode_writeutf8(buf, ch);
-				do {
-					--endp;
-					result = (*ft_ungetc)((DeeFileObject *)self, (int)(unsigned int)(unsigned char)*endp);
-					if unlikely(result != 0)
-						break;
-				} while (endp > buf);
-				return result;
+				if (ft_ungetc == &instance_ungetc && Dee_TYPE(self) != tp_self)
+					goto do_invoke_generic_ft_ungetc;
+				goto do_invoke_ft_ungetc;
 			}
 		} while (type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
+do_invoke_generic_ft_ungetc:
+	ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
+do_invoke_ft_ungetc:
+	endp = unicode_writeutf8(buf, ch);
+	do {
+		--endp;
+		result = (*ft_ungetc)((DeeFileObject *)self, (int)(unsigned int)(unsigned char)*endp);
+		if unlikely(result != 0)
+			break;
+	} while (endp > buf);
+	return result;
 }
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Putc(DeeObject *__restrict self, int ch) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-			ft_putc = DeeType_AsFileType(tp_self)->ft_putc;
-			if likely(ft_putc != NULL)
-				return (*ft_putc)((DeeFileObject *)self, ch, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_putc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_PUTC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_PUTC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-			ft_putc = DeeType_AsFileType(tp_self)->ft_putc;
-			if likely(ft_putc != NULL)
-				return (*ft_putc)((DeeFileObject *)self, ch, flags);
-		} while (type_inherit_file_putc(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return GETC_EOF;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-#if GETC_ERR == -1
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_PUTC);
-#else /* GETC_ERR == -1 */
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_PUTC);
-	return GETC_ERR;
-#endif /* GETC_ERR != -1 */
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_PRead(DeeObject *__restrict self, void *buffer,
-              size_t bufsize, Dee_pos_t pos) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
-			                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-			ft_pread = DeeType_AsFileType(tp_self)->ft_pread;
-			if likely(ft_pread != NULL)
-				return (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PREAD);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_PReadf(DeeObject *__restrict self, void *buffer,
-               size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
-			                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-			ft_pread = DeeType_AsFileType(tp_self)->ft_pread;
-			if likely(ft_pread != NULL)
-				return (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, flags);
-		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PREAD);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-DeeFile_PWrite(DeeObject *__restrict self, void const *buffer,
-               size_t bufsize, Dee_pos_t pos) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *buffer,
-			                          size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-			ft_pwrite = DeeType_AsFileType(tp_self)->ft_pwrite;
-			if likely(ft_pwrite != NULL)
-				return (*ft_pwrite)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_pwrite(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PWRITE);
-}
-
-PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-DeeFile_PWritef(DeeObject *__restrict self, void const *buffer,
-                size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			size_t (DCALL *ft_pwrite)(DeeFileObject *__restrict self, void const *buffer,
-			                          size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-			ft_pwrite = DeeType_AsFileType(tp_self)->ft_pwrite;
-			if likely(ft_pwrite != NULL)
-				return (*ft_pwrite)((DeeFileObject *)self, buffer, bufsize, pos, flags);
-		} while (type_inherit_file_pwrite(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return (size_t)err_unimplemented_operator(tp_self, FILE_OPERATOR_PWRITE);
-}
-
-
-PUBLIC WUNUSED ATTR_INOUT(1) int DCALL
-DeeFile_TruncHere(DeeObject *__restrict self, dpos_t *p_size) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-again:
-	if likely(DeeFileType_CheckExact(tp_self)) {
-do_handle_filetype:
-		do {
-			int (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-			Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-			ft_trunc = DeeType_AsFileType(tp_self)->ft_trunc;
-			ft_seek  = DeeType_AsFileType(tp_self)->ft_seek;
-			if likely(ft_trunc != NULL && ft_seek != NULL) {
-				int result;
-				dpos_t trunc_pos;
-				/* Determine the current position and truncate the file there. */
-				trunc_pos = (*ft_seek)((DeeFileObject *)self, 0, SEEK_CUR);
-				if unlikely(trunc_pos == (dpos_t)-1) {
-					result = -1;
-				} else {
-					result = (*ft_trunc)((DeeFileObject *)self, trunc_pos);
-				}
-				if (p_size != NULL)
-					*p_size = trunc_pos;
-				return result;
-			}
-		} while (type_inherit_file_trunc(DeeType_AsFileType(tp_self)) ||
-		         type_inherit_file_seek(DeeType_AsFileType(tp_self)));
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return 0;
-	} else if (DeeFileType_Check(tp_self)) {
-		goto do_handle_filetype;
-	}
-	return err_unimplemented_operator(tp_self, FILE_OPERATOR_TRUNC);
-}
-
 
 
 PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_ReadAll(DeeObject *__restrict self,
+DeeFile_ReadAll(DeeObject *self,
                 void *buffer, size_t bufsize) {
 	size_t result = 0, temp;
 	for (;;) {
@@ -1163,7 +430,7 @@ DeeFile_ReadAll(DeeObject *__restrict self,
 }
 
 PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DPRINTER_CC
-DeeFile_WriteAll(DeeObject *__restrict self,
+DeeFile_WriteAll(DeeObject *self,
                  void const *buffer,
                  size_t bufsize) {
 	size_t result = 0, temp;
@@ -1183,7 +450,7 @@ DeeFile_WriteAll(DeeObject *__restrict self,
 }
 
 PUBLIC WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
-DeeFile_PReadAll(DeeObject *__restrict self,
+DeeFile_PReadAll(DeeObject *self,
                  void *buffer,
                  size_t bufsize, dpos_t pos) {
 	size_t result = 0, temp;
@@ -1204,7 +471,7 @@ DeeFile_PReadAll(DeeObject *__restrict self,
 }
 
 PUBLIC WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
-DeeFile_PWriteAll(DeeObject *__restrict self,
+DeeFile_PWriteAll(DeeObject *self,
                   void const *buffer,
                   size_t bufsize, dpos_t pos) {
 	size_t result = 0, temp;
@@ -1343,67 +610,22 @@ DeeFile_Filename(DeeObject *__restrict self) {
 PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self,
                  size_t maxbytes, bool keep_lf) {
+	struct bytes_printer printer;
+	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+	int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-			int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 			ft_getc   = DeeType_AsFileType(tp_self)->ft_getc;
 			ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
 			if likely(ft_getc != NULL && ft_ungetc != NULL) {
-				struct bytes_printer printer = BYTES_PRINTER_INIT;
-
-				/* Keep on reading characters until a linefeed is encountered. */
-				while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
-					int ch;
-					ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-					if (ch == '\r') {
-						/* If the next character is '\n', then we must consume it as well. */
-						ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
-						if (ch >= 0 && ch != '\n')
-							ch = (*ft_ungetc)((DeeFileObject *)self, ch);
-						if (ch == GETC_ERR)
-							goto err_printer;
-
-						/* Found a \r\n or \r-linefeed. */
-						if (keep_lf) {
-							if (bytes_printer_putb(&printer, '\r'))
-								goto err_printer;
-							if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
-							    bytes_printer_putb(&printer, '\n'))
-								goto err_printer;
-						}
-						goto done_printer;
-					}
-					if (ch == GETC_ERR)
-						goto err_printer;
-					if (ch == '\n') {
-						/* Found a \n-linefeed */
-						if (keep_lf && bytes_printer_putb(&printer, '\n'))
-							goto err_printer;
-						goto done_printer;
-					}
-					if (ch == GETC_EOF) {
-						/* Stop on EOF */
-						if (!BYTES_PRINTER_SIZE(&printer)) {
-							/* Nothing was read -> return ITER_DONE */
-							bytes_printer_fini(&printer);
-							return ITER_DONE;
-						}
-						goto done_printer;
-					}
-
-					/* Print the character. */
-					if (bytes_printer_putb(&printer, (byte_t)ch))
-						goto err_printer;
-				}
-done_printer:
-				return bytes_printer_pack(&printer);
-err_printer:
-				bytes_printer_fini(&printer);
-				goto err;
+				if (ft_getc == &instance_getc && Dee_TYPE(self) != tp_self)
+					ft_getc = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
+				if (ft_ungetc == &instance_ungetc && Dee_TYPE(self) != tp_self)
+					ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
+				goto do_operate_using_ft_getc_and_ft_ungetc;
 			}
 		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)) ||
 		         type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
@@ -1416,12 +638,62 @@ err_printer:
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return ITER_DONE;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_GETC);
+	ft_getc   = (int (DCALL *)(DeeFileObject *__restrict, Dee_ioflag_t))&DeeFile_Getcf;
+	ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
+do_operate_using_ft_getc_and_ft_ungetc:
+	bytes_printer_init(&printer);
+
+	/* Keep on reading characters until a linefeed is encountered. */
+	while (BYTES_PRINTER_SIZE(&printer) < maxbytes) {
+		int ch;
+		ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+		if (ch == '\r') {
+			/* If the next character is '\n', then we must consume it as well. */
+			ch = (*ft_getc)((DeeFileObject *)self, Dee_FILEIO_FNORMAL);
+			if (ch >= 0 && ch != '\n')
+				ch = (*ft_ungetc)((DeeFileObject *)self, ch);
+			if (ch == GETC_ERR)
+				goto err_printer;
+
+			/* Found a \r\n or \r-linefeed. */
+			if (keep_lf) {
+				if (bytes_printer_putb(&printer, '\r'))
+					goto err_printer;
+				if (ch == '\n' && BYTES_PRINTER_SIZE(&printer) < maxbytes &&
+				    bytes_printer_putb(&printer, '\n'))
+					goto err_printer;
+			}
+			goto done_printer;
+		}
+		if (ch == GETC_ERR)
+			goto err_printer;
+		if (ch == '\n') {
+			/* Found a \n-linefeed */
+			if (keep_lf && bytes_printer_putb(&printer, '\n'))
+				goto err_printer;
+			goto done_printer;
+		}
+		if (ch == GETC_EOF) {
+			/* Stop on EOF */
+			if (!BYTES_PRINTER_SIZE(&printer)) {
+				/* Nothing was read -> return ITER_DONE */
+				bytes_printer_fini(&printer);
+				return ITER_DONE;
+			}
+			goto done_printer;
+		}
+
+		/* Print the character. */
+		if (bytes_printer_putb(&printer, (byte_t)ch))
+			goto err_printer;
+	}
+done_printer:
+	return bytes_printer_pack(&printer);
+err_printer:
+	bytes_printer_fini(&printer);
 err:
 	return NULL;
 }
@@ -1504,79 +776,80 @@ err_map:
 PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadBytes(DeeObject *__restrict self,
                   size_t maxbytes, bool readall) {
+	size_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *buffer,
+	                        size_t bufsize, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			size_t (DCALL *ft_read)(DeeFileObject *__restrict self, void *buffer,
-			                        size_t bufsize, Dee_ioflag_t flags);
 			ft_read = DeeType_AsFileType(tp_self)->ft_read;
 			if likely(ft_read != NULL) {
-#ifdef HAVE_file_read_trymap
-				/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
-				 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
-				 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
-				 * which can then be wrapped by a regular `Bytes' object.
-				 * -> That way, we can provide the user with O(1) reads from large files! */
-				if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-				    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dioflag_t flags))&sysfile_read)) {
-					DREF /*Bytes*/ DeeObject *result;
-					Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
-					if unlikely(os_fd == Dee_fd_INVALID)
-						goto err;
-					result = file_read_trymap(os_fd, maxbytes, (dpos_t)-1, readall);
-					if (result != ITER_DONE)
-						return result;
-				}
-				/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap!
-				 *       In this case we can also use the FileBuffer's position to (possibly) skip
-				 *       the initial seek done during file mapping! */
-#endif /* HAVE_file_read_trymap */
-			
-				{
-					struct bytes_printer printer = BYTES_PRINTER_INIT;
-					size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-					while (maxbytes) {
-						void *buffer;
-						size_t read_size;
-						size_t bufsize = MIN(maxbytes, readtext_bufsize);
-
-						/* Allocate more buffer memory. */
-						buffer = bytes_printer_alloc(&printer, bufsize);
-						if unlikely(!buffer)
-							goto err_printer;
-
-						/* Read more data. */
-						read_size = (*ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-						if unlikely(read_size == (size_t)-1)
-							goto err_printer;
-						ASSERT(read_size <= bufsize);
-						bytes_printer_release(&printer, bufsize - read_size);
-						if (!read_size ||
-						    (!readall && read_size < bufsize))
-							break; /* EOF */
-						maxbytes -= read_size;
-						readtext_bufsize *= 2;
-					}
-/*done_printer:*/
-					return bytes_printer_pack(&printer);
-err_printer:
-					bytes_printer_fini(&printer);
-				} /* Scope... */
-				goto err;
+				if (ft_read == &instance_read && Dee_TYPE(self) != tp_self)
+					goto do_invoke_generic_ft_read;
+				goto do_invoke_ft_read;
 			}
 		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return_empty_bytes;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_READ);
+do_invoke_generic_ft_read:
+	ft_read = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dioflag_t flags))&DeeFile_Readf;
+do_invoke_ft_read:
+#ifdef HAVE_file_read_trymap
+	/* if `ft_read' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
+	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes' object.
+	 * -> That way, we can provide the user with O(1) reads from large files! */
+	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
+	    (ft_read == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dioflag_t flags))&sysfile_read)) {
+		DREF /*Bytes*/ DeeObject *result;
+		Dee_fd_t os_fd = DeeSystemFile_Fileno(self);
+		if unlikely(os_fd == Dee_fd_INVALID)
+			goto err;
+		result = file_read_trymap(os_fd, maxbytes, (dpos_t)-1, readall);
+		if (result != ITER_DONE)
+			return result;
+	}
+	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap!
+	 *       In this case we can also use the FileBuffer's position to (possibly) skip
+	 *       the initial seek done during file mapping! */
+#endif /* HAVE_file_read_trymap */
+
+	{
+		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		while (maxbytes) {
+			void *buffer;
+			size_t read_size;
+			size_t bufsize = MIN(maxbytes, readtext_bufsize);
+
+			/* Allocate more buffer memory. */
+			buffer = bytes_printer_alloc(&printer, bufsize);
+			if unlikely(!buffer)
+				goto err_printer;
+
+			/* Read more data. */
+			read_size = (*ft_read)((DeeFileObject *)self, buffer, bufsize, Dee_FILEIO_FNORMAL);
+			if unlikely(read_size == (size_t)-1)
+				goto err_printer;
+			ASSERT(read_size <= bufsize);
+			bytes_printer_release(&printer, bufsize - read_size);
+			if (!read_size || (!readall && read_size < bufsize))
+				break; /* EOF */
+			maxbytes -= read_size;
+			readtext_bufsize *= 2;
+		}
+/*done_printer:*/
+		return bytes_printer_pack(&printer);
+err_printer:
+		bytes_printer_fini(&printer);
+	} /* Scope... */
 err:
 	return NULL;
 }
@@ -1585,76 +858,78 @@ PUBLIC WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytes(DeeObject *__restrict self,
                    size_t maxbytes, dpos_t pos,
                    bool readall) {
+	size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
+	                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 again:
 	if likely(DeeFileType_CheckExact(tp_self)) {
 do_handle_filetype:
 		do {
-			size_t (DCALL *ft_pread)(DeeFileObject *__restrict self, void *buffer,
-			                         size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 			ft_pread = DeeType_AsFileType(tp_self)->ft_pread;
 			if likely(ft_pread != NULL) {
-#ifdef HAVE_file_read_trymap
-				/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
-				 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
-				 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
-				 * which can then be wrapped by a regular `Bytes' object.
-				 * -> That way, we can provide the user with O(1) reads from large files! */
-				if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
-				    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dpos_t, dioflag_t flags))&sysfile_pread)) {
-					DREF /*Bytes*/ DeeObject *result;
-					result = file_read_trymap(DeeSystemFile_GetHandle(self),
-					                          maxbytes, pos, readall);
-					if (result != ITER_DONE)
-						return result;
-				}
-				/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap! */
-#endif /* HAVE_file_read_trymap */
-			
-				{
-					struct bytes_printer printer = BYTES_PRINTER_INIT;
-					size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
-					while (maxbytes) {
-						void *buffer;
-						size_t read_size;
-						size_t bufsize = MIN(maxbytes, readtext_bufsize);
-
-						/* Allocate more buffer memory. */
-						buffer = bytes_printer_alloc(&printer, bufsize);
-						if unlikely(!buffer)
-							goto err_printer;
-
-						/* Read more data. */
-						read_size = (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-						if unlikely(read_size == (size_t)-1)
-							goto err_printer;
-						ASSERT(read_size <= bufsize);
-						bytes_printer_release(&printer, bufsize - read_size);
-						if (!read_size || (!readall && read_size < bufsize))
-							break; /* EOF */
-						maxbytes -= read_size;
-						pos += read_size;
-						readtext_bufsize *= 2;
-					}
-/*done_printer:*/
-					return bytes_printer_pack(&printer);
-err_printer:
-					bytes_printer_fini(&printer);
-				} /* Scope... */
-				goto err;
+				if (ft_pread == &instance_pread && Dee_TYPE(self) != tp_self)
+					goto do_invoke_generic_ft_pread;
+				goto do_invoke_ft_pread;
 			}
 		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
 		goto again;
-	} else if (tp_self == &DeeNone_Type) {
-		return_empty_bytes;
 	} else if (DeeFileType_Check(tp_self)) {
 		goto do_handle_filetype;
 	}
-	err_unimplemented_operator(tp_self, FILE_OPERATOR_PREAD);
-err:
+do_invoke_generic_ft_pread:
+	ft_pread = (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dpos_t, dioflag_t flags))&DeeFile_PReadf;
+do_invoke_ft_pread:
+#ifdef HAVE_file_read_trymap
+	/* if `ft_pread' belongs to `DeeSystemFile_Type', and `maxbytes' is larger
+	 * than some threshold (>= 2*PAGESIZE), then try to create a file view using
+	 * `DeeMapFile_InitSysFd()', which is then wrapped by file view holder object,
+	 * which can then be wrapped by a regular `Bytes' object.
+	 * -> That way, we can provide the user with O(1) reads from large files! */
+	if ((maxbytes >= FILE_READ_MMAP_THRESHOLD) &&
+	    (ft_pread == (size_t (DCALL *)(DeeFileObject *__restrict self, void *__restrict, size_t, dpos_t, dioflag_t flags))&sysfile_pread)) {
+		DREF /*Bytes*/ DeeObject *result;
+		result = file_read_trymap(DeeSystemFile_GetHandle(self),
+		                          maxbytes, pos, readall);
+		if (result != ITER_DONE)
+			return result;
+	}
+	/* TODO: if `ft_read' is for a FileBuffer that is currently empty, also try to mmap! */
+#endif /* HAVE_file_read_trymap */
+
+	{
+		struct bytes_printer printer = BYTES_PRINTER_INIT;
+		size_t readtext_bufsize      = READTEXT_INITIAL_BUFSIZE;
+		while (maxbytes) {
+			void *buffer;
+			size_t read_size;
+			size_t bufsize = MIN(maxbytes, readtext_bufsize);
+
+			/* Allocate more buffer memory. */
+			buffer = bytes_printer_alloc(&printer, bufsize);
+			if unlikely(!buffer)
+				goto err_printer;
+
+			/* Read more data. */
+			read_size = (*ft_pread)((DeeFileObject *)self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
+			if unlikely(read_size == (size_t)-1)
+				goto err_printer;
+			ASSERT(read_size <= bufsize);
+			bytes_printer_release(&printer, bufsize - read_size);
+			if (!read_size || (!readall && read_size < bufsize))
+				break; /* EOF */
+			maxbytes -= read_size;
+			pos += read_size;
+			readtext_bufsize *= 2;
+		}
+/*done_printer:*/
+		return bytes_printer_pack(&printer);
+err_printer:
+		bytes_printer_fini(&printer);
+	} /* Scope... */
+/*err:*/
 	return NULL;
 }
 
@@ -3566,5 +2841,11 @@ PUBLIC DeeFileTypeObject DeeFile_Type = {
 };
 
 DECL_END
+
+#ifndef __INTELLISENSE__
+#include "file-operator.c.inl"
+#define DEFINE_TYPED_OPERATORS
+#include "file-operator.c.inl"
+#endif /* !__INTELLISENSE__ */
 
 #endif /* !GUARD_DEEMON_OBJECTS_FILE_C */

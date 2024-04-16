@@ -3245,6 +3245,16 @@ DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p
 #define DeeObject_PInvokeOperatorTuple(p_self, name, args)           DeeObject_PInvokeOperator(p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_PTInvokeOperatorTuple(tp_self, p_self, name, args) DeeObject_PTInvokeOperator(tp_self, p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_TInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, uint16_t name, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VTInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, uint16_t name, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_PTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, uint16_t name, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, uint16_t name, char const *__restrict format, va_list args);
+#define DeeObject_InvokeOperatorf(self, name, format, ...)      DeeObject_TInvokeOperatorf(Dee_TYPE(self), self, name, format, __VA_ARGS__)
+#define DeeObject_VInvokeOperatorf(self, name, format, args)    DeeObject_VTInvokeOperatorf(Dee_TYPE(self), self, name, format, args)
+#define DeeObject_PInvokeOperatorf(p_self, name, format, ...)   DeeObject_PTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, __VA_ARGS__)
+#define DeeObject_PVInvokeOperatorf(p_self, name, format, args) DeeObject_VPTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, args)
+
+
 struct Dee_attribute_info;
 struct Dee_attribute_lookup_rules;
 struct Dee_attrinfo;

@@ -110,16 +110,16 @@ struct Dee_file_buffer_object {
 #endif /* !CONFIG_NO_THREADS */
 	DREF DeeObject             *fb_file;  /* [0..1][lock(fb_lock)] The file referenced by this buffer.
 	                                       * NOTE: Set to `NULL' when the buffer is closed. */
-	uint8_t                    *fb_ptr;   /* [>= fb_base][+fb_cnt <= fb_base+fb_size][lock(fb_lock)]
+	__BYTE_TYPE__              *fb_ptr;   /* [>= fb_base][+fb_cnt <= fb_base+fb_size][lock(fb_lock)]
 	                                       * Pointer to the next character to-be read/written.
 	                                       * The absolute in-file position is then `fb_fblk+(fb_ptr-fb_base)' */
 	size_t                      fb_cnt;   /* [lock(fb_lock)] The amount of unread, buffered bytes located at `fb_ptr'. */
-	uint8_t                    *fb_chng;  /* [>= fb_base][+fb_chsz <= fb_base+fb_size]
+	__BYTE_TYPE__              *fb_chng;  /* [>= fb_base][+fb_chsz <= fb_base+fb_size]
 	                                       * [valid_if(fb_chsz != 0)][lock(fb_lock)]
 	                                       * Pointer to the first character that was
 	                                       * changed since the buffer had been loaded. */
 	size_t                      fb_chsz;  /* [lock(fb_lock)] Amount of bytes that were changed. */
-	uint8_t                    *fb_base;  /* [0..fb_size][owned_if(!FILE_BUFFER_FSTATICBUF)][lock(fb_lock)] Allocated buffer.
+	__BYTE_TYPE__              *fb_base;  /* [0..fb_size][owned_if(!FILE_BUFFER_FSTATICBUF)][lock(fb_lock)] Allocated buffer.
 	                                       * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */
 	size_t                      fb_size;  /* [lock(fb_lock)] Total allocated / available buffer size.
 	                                       * NOTE: This pointer must not be modified when `FILE_BUFFER_FREADING' is set. */

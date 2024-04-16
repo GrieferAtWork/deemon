@@ -50,6 +50,7 @@ EXPORTS
 	DeeClassDescriptor_QueryInstanceAttributeStringHash@12=_DeeClassDescriptor_QueryInstanceAttributeStringHash@12
 	DeeClassDescriptor_QueryInstanceAttributeStringLenHash@16=_DeeClassDescriptor_QueryInstanceAttributeStringLenHash@16
 	DeeClass_BoundMemberSafe@8=_DeeClass_BoundMemberSafe@8
+	DeeClass_CallOperator@20=_DeeClass_CallOperator@20
 	DeeClass_GetMember@8=_DeeClass_GetMember@8
 	DeeClass_GetMemberSafe@8=_DeeClass_GetMemberSafe@8
 	DeeClass_GetOperator@8=_DeeClass_GetOperator@8
@@ -58,6 +59,7 @@ EXPORTS
 	DeeClass_SetMemberSafe@12=_DeeClass_SetMemberSafe@12
 	DeeClass_TryGetOperator@8=_DeeClass_TryGetOperator@8
 	DeeClass_TryGetPrivateOperator@8=_DeeClass_TryGetPrivateOperator@8
+	DeeClass_VCallOperatorf@20=_DeeClass_VCallOperatorf@20
 	DeeClsMember_New@8=_DeeClsMember_New@8
 	DeeClsMethod_GetOrigin@8=_DeeClsMethod_GetOrigin@8
 	DeeClsMethod_New@8=_DeeClsMethod_New@8
@@ -866,7 +868,9 @@ EXPORTS
 	DeeObject_VCallf@12=_DeeObject_VCallf@12
 	DeeObject_VNewPack@12=_DeeObject_VNewPack@12
 	DeeObject_VNewf@12=_DeeObject_VNewf@12
+	DeeObject_VPTInvokeOperatorf@20=_DeeObject_VPTInvokeOperatorf@20
 	DeeObject_VTGenericCallAttrStringHashf@24=_DeeObject_VTGenericCallAttrStringHashf@24
+	DeeObject_VTInvokeOperatorf@20=_DeeObject_VTInvokeOperatorf@20
 	DeeObject_VThisCallf@16=_DeeObject_VThisCallf@16
 	DeeObject_Visit@12=_DeeObject_Visit@12
 	DeeObject_XInplaceDeepCopyWithLock@8=_DeeObject_XInplaceDeepCopyWithLock@8

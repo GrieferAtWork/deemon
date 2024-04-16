@@ -36,6 +36,7 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/sequence/list.h>
+#include <hybrid/typecore.h>
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
@@ -43,6 +44,9 @@
 #ifdef DEESYSTEM_FILE_USE_STDIO
 #include <stdio.h>
 #endif /* DEESYSTEM_FILE_USE_STDIO */
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
 
 DECL_BEGIN
 
@@ -78,8 +82,8 @@ PRIVATE ATTR_COLD int DCALL err_buffer_closed(void);
 #define BUFFER_IO_ERROR      (-1) /* Error (an exception was thrown) */
 #define BUFFER_IO_DID_UNLOCK (-2) /* The buffer had to be unlocked (try again) */
 #define GETC_DID_UNLOCK      (-3) /* The buffer had to be unlocked (try again) (for `buffer_getc_or_unlock') */
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, uint8_t *__restrict buffer, size_t bufsize, dioflag_t flags);
-PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, uint8_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_read_or_unlock(Buffer *__restrict self, byte_t *__restrict buffer, size_t bufsize, dioflag_t flags);
+PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL buffer_write_or_unlock(Buffer *__restrict self, byte_t const *__restrict buffer, size_t bufsize, dioflag_t flags);
 PRIVATE WUNUSED NONNULL((1)) dpos_t DCALL buffer_seek_or_unlock(Buffer *__restrict self, doff_t off, int whence);
 PRIVATE WUNUSED NONNULL((1)) int DCALL buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags);
 
@@ -170,7 +174,7 @@ buffer_init(Buffer *__restrict self,
 
 	if ((self->fb_size = size) != 0) {
 		/* Allocate the initial buffer. */
-		self->fb_base = (uint8_t *)Dee_Malloc(size);
+		self->fb_base = (byte_t *)Dee_Malloc(size);
 		if unlikely(!self->fb_base)
 			goto err;
 	} else {
@@ -211,41 +215,41 @@ err:
 }
 
 #ifdef NDEBUG
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_realloc_nolock(Buffer *__restrict self, size_t new_size) {
 	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
-		return (uint8_t *)Dee_Malloc(new_size);
+		return (byte_t *)Dee_Malloc(new_size);
 	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
-	return (uint8_t *)Dee_Realloc(self->fb_base, new_size);
+	return (byte_t *)Dee_Realloc(self->fb_base, new_size);
 }
 
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_tryrealloc_nolock(Buffer *__restrict self, size_t new_size) {
 	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
-		return (uint8_t *)Dee_TryMalloc(new_size);
+		return (byte_t *)Dee_TryMalloc(new_size);
 	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
-	return (uint8_t *)Dee_TryRealloc(self->fb_base, new_size);
+	return (byte_t *)Dee_TryRealloc(self->fb_base, new_size);
 }
 #else /* NDEBUG */
 #define buffer_realloc_nolock(self, new_size) \
 	buffer_realloc_nolock_d(self, new_size, __FILE__, __LINE__)
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_realloc_nolock_d(Buffer *__restrict self, size_t new_size,
                         char const *file, int line) {
 	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
-		return (uint8_t *)DeeDbg_Malloc(new_size, file, line);
+		return (byte_t *)DeeDbg_Malloc(new_size, file, line);
 	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
-	return (uint8_t *)DeeDbg_Realloc(self->fb_base, new_size, file, line);
+	return (byte_t *)DeeDbg_Realloc(self->fb_base, new_size, file, line);
 }
 #define buffer_tryrealloc_nolock(self, new_size) \
 	buffer_tryrealloc_nolock_d(self, new_size, __FILE__, __LINE__)
-PRIVATE uint8_t *DCALL
+PRIVATE WUNUSED NONNULL((1)) byte_t *DCALL
 buffer_tryrealloc_nolock_d(Buffer *__restrict self, size_t new_size,
                            char const *file, int line) {
 	if (self->fb_flag & FILE_BUFFER_FSTATICBUF)
-		return (uint8_t *)DeeDbg_TryMalloc(new_size, file, line);
+		return (byte_t *)DeeDbg_TryMalloc(new_size, file, line);
 	ASSERT(!(self->fb_flag & FILE_BUFFER_FREADING));
-	return (uint8_t *)DeeDbg_TryRealloc(self->fb_base, new_size, file, line);
+	return (byte_t *)DeeDbg_TryRealloc(self->fb_base, new_size, file, line);
 }
 #endif /* !NDEBUG */
 
@@ -316,7 +320,7 @@ PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeFileBuffer_SetMode(DeeObject *__restrict self,
                       uint16_t mode, size_t size) {
 	int result = 0;
-	uint8_t *new_buffer;
+	byte_t *new_buffer;
 	Buffer *me = (Buffer *)self;
 	ASSERT((mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_NONE ||
 	       (mode & ~(FILE_BUFFER_FSYNC)) == FILE_BUFFER_MODE_FULL ||
@@ -345,7 +349,7 @@ DeeFileBuffer_SetMode(DeeObject *__restrict self,
 			/* Resize-to-zero. */
 			if (!(me->fb_flag & FILE_BUFFER_FSTATICBUF))
 				Dee_Free(me->fb_base);
-			me->fb_ptr  = (uint8_t *)NULL + (me->fb_ptr - me->fb_base);
+			me->fb_ptr  = (byte_t *)NULL + (me->fb_ptr - me->fb_base);
 			me->fb_cnt  = 0;
 			me->fb_size = 0;
 			me->fb_base = NULL;
@@ -458,13 +462,13 @@ DeeFileBuffer_SyncTTYs(DeeFileBufferObject *or_unlock_me) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_read_or_unlock(Buffer *__restrict self,
-                      uint8_t *__restrict buffer,
+                      byte_t *__restrict buffer,
                       size_t bufsize, dioflag_t flags) {
 	size_t read_size, result = 0;
 	size_t bufavail;
 	uint16_t old_flags;
 	dpos_t next_data;
-	uint8_t *new_buffer;
+	byte_t *new_buffer;
 	DREF DeeObject *file;
 	bool did_read_data = false;
 	if unlikely(!self->fb_file)
@@ -475,7 +479,7 @@ again:
 read_from_buffer:
 		if (bufavail > bufsize)
 			bufavail = bufsize;
-		buffer = (uint8_t *)mempcpy(buffer, self->fb_ptr, bufavail);
+		buffer = (byte_t *)mempcpy(buffer, self->fb_ptr, bufavail);
 		/* Update buffer pointers. */
 		self->fb_cnt -= bufavail;
 		self->fb_ptr += bufavail;
@@ -644,12 +648,12 @@ did_unlock:
 
 PRIVATE WUNUSED NONNULL((1, 2)) size_t DCALL
 buffer_write_or_unlock(Buffer *__restrict self,
-                       uint8_t const *__restrict buffer,
+                       byte_t const *__restrict buffer,
                        size_t bufsize, dioflag_t flags) {
 	size_t result = 0;
 	size_t new_bufsize;
 	size_t bufavail;
-	uint8_t *new_buffer;
+	byte_t *new_buffer;
 	DREF DeeObject *file;
 	if (buffer_determine_isatty(self))
 		goto err;
@@ -822,7 +826,7 @@ buffer_seek_or_unlock(Buffer *__restrict self,
 	if (whence == SEEK_SET || whence == SEEK_CUR) {
 		dpos_t old_abspos;
 		dpos_t new_abspos;
-		uint8_t *new_pos;
+		byte_t *new_pos;
 		if unlikely(!self->fb_file)
 			goto err_closed;
 
@@ -998,7 +1002,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_getc_or_unlock(Buffer *__restrict self, dioflag_t flags) {
-	uint8_t *new_buffer;
+	byte_t *new_buffer;
 	size_t read_size;
 	DREF DeeObject *file;
 	uint16_t old_flags;
@@ -1153,7 +1157,7 @@ did_unlock:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_ungetc_nolock(Buffer *__restrict self, int ch) {
-	uint8_t *new_buffer;
+	byte_t *new_buffer;
 	size_t new_bufsize, inc_size;
 again:
 	/* Simple case: unget() the character. */
@@ -1200,7 +1204,7 @@ again:
 	ASSERT(self->fb_ptr != self->fb_base);
 	/* Finally, insert the character into the buffer. */
 unget_in_buffer:
-	*--self->fb_ptr = (uint8_t)(unsigned char)(unsigned int)ch;
+	*--self->fb_ptr = (byte_t)(unsigned int)ch;
 	++self->fb_cnt;
 	return 0;
 eof:
@@ -1252,7 +1256,7 @@ buffer_read(Buffer *__restrict self,
 	do {
 		if (DeeFileBuffer_LockWrite(self))
 			goto err;
-		result = buffer_read_or_unlock(self, (uint8_t *)buffer, bufsize, flags);
+		result = buffer_read_or_unlock(self, (byte_t *)buffer, bufsize, flags);
 	} while unlikely(result == (size_t)BUFFER_IO_DID_UNLOCK);
 	DeeFileBuffer_LockEndWrite(self);
 	return result;
@@ -1268,7 +1272,7 @@ buffer_write(Buffer *__restrict self,
 	do {
 		if (DeeFileBuffer_LockWrite(self))
 			goto err;
-		result = buffer_write_or_unlock(self, (uint8_t const *)buffer, bufsize, flags);
+		result = buffer_write_or_unlock(self, (byte_t const *)buffer, bufsize, flags);
 	} while unlikely(result == (size_t)BUFFER_IO_DID_UNLOCK);
 	DeeFileBuffer_LockEndWrite(self);
 	return result;
@@ -1349,7 +1353,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 buffer_close(Buffer *__restrict self) {
 	DREF DeeObject *file;
-	uint8_t *buffer;
+	byte_t *buffer;
 	uint16_t flags;
 	if (DeeFileBuffer_LockWrite(self))
 		goto err;

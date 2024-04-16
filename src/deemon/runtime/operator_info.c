@@ -637,6 +637,21 @@ PRIVATE struct type_operator const type_operator_flags[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002A_NE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST),
 };
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+noop_custom_operator_cb(DeeTypeObject *tp_self, DeeObject *self,
+                        /*0..1*/ DeeObject **p_self,
+                        size_t argc, DeeObject *const *argv) {
+	(void)tp_self;
+	(void)self;
+	(void)p_self;
+	(void)argc;
+	(void)argv;
+	return_none;
+}
+
+PRIVATE struct type_operator tpconst noop_custom_operator =
+TYPE_OPERATOR_CUSTOM(0, &noop_custom_operator_cb, METHOD_FNOTHROW | METHOD_FCONSTCALL);
+
 /* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id) {
@@ -660,6 +675,12 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id)
 		return type_operator_table_get_custom_operator_by_id(type_operator_flags,
 		                                                     COMPILER_LENOF(type_operator_flags),
 		                                                     id);
+	}
+
+	/* "none", being the ultimate no-op, provides custom overrides for *any* operator. */
+	if (self == &DeeNone_Type) {
+		(void)id; /* Ignored! */
+		return &noop_custom_operator;
 	}
 
 	return NULL;
@@ -1254,6 +1275,24 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
+invoke_voperatorf(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self,
+                  uint16_t name, char const *__restrict format, va_list args) {
+	DREF DeeObject *args_tuple, *result;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = invoke_operator(tp_self, self, p_self, name,
+	                         (uint16_t)DeeTuple_SIZE(args_tuple),
+	                         DeeTuple_ELEM(args_tuple));
+	Dee_Decref_likely(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+
+
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
  *       extension operators as well as some operators marked as
@@ -1293,6 +1332,41 @@ DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p
 	return invoke_operator(tp_self, *p_self, p_self, name, argc, argv);
 }
 
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeObject_VTInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self,
+                            uint16_t name, char const *__restrict format, va_list args) {
+	ASSERT_OBJECT_TYPE(self, tp_self);
+	return invoke_voperatorf(tp_self, self, NULL, name, format, args);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeObject_VPTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
+                             uint16_t name, char const *__restrict format, va_list args) {
+	ASSERT_OBJECT_TYPE(*p_self, tp_self);
+	return invoke_voperatorf(tp_self, *p_self, p_self, name, format, args);
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
+DeeObject_TInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self,
+                           uint16_t name, char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VTInvokeOperatorf(tp_self, self, name, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
+DeeObject_PTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
+                            uint16_t name, char const *__restrict format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeObject_VPTInvokeOperatorf(tp_self, p_self, name, format, args);
+	va_end(args);
+	return result;
+}
 
 
 

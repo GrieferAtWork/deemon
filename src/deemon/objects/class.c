@@ -579,6 +579,50 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 	return NULL;
 }
 
+
+PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
+DeeClass_CallOperator(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                      uint16_t name, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *func, *result;
+	func = DeeClass_GetOperator(tp_self, name);
+	if unlikely(!func)
+		goto err;
+	result = DeeObject_ThisCall(func, self, argc, argv);
+	Dee_Decref_unlikely(func);
+	return result;
+err:
+	return NULL;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
+DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                       uint16_t name, char const *format, ...) {
+	DREF DeeObject *result;
+	va_list args;
+	va_start(args, format);
+	result = DeeClass_VCallOperatorf(tp_self, self, name, format, args);
+	va_end(args);
+	return result;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
+                        uint16_t name, char const *format, va_list args) {
+	DREF DeeObject *args_tuple, *result;
+	args_tuple = DeeTuple_VNewf(format, args);
+	if unlikely(!args_tuple)
+		goto err;
+	result = DeeClass_CallOperator(tp_self, self, name,
+	                               DeeTuple_SIZE(args_tuple),
+	                               DeeTuple_ELEM(args_tuple));
+	Dee_Decref_likely(args_tuple);
+	return result;
+err:
+	return NULL;
+}
+
+
+
 /* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
 DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t name) {
@@ -4087,6 +4131,18 @@ instance_enumattr(DeeTypeObject *tp_self,
 	return -1;
 }
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED DREF DeeObject *DCALL                                        \
+	instance_txxx(DeeTypeObject *tp_self,                                       \
+	              DeeObject *__restrict self) {                                 \
+		return DeeClass_CallOperator(tp_self, self, op, 0, NULL);               \
+	}                                                                           \
+	INTERN WUNUSED DREF DeeObject *DCALL                                        \
+	instance_xxx(DeeObject *__restrict self) {                                  \
+		return instance_txxx(Dee_TYPE(self), self);                             \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED DREF DeeObject *DCALL                                        \
 	instance_txxx(DeeTypeObject *tp_self,                                       \
@@ -4105,6 +4161,7 @@ instance_enumattr(DeeTypeObject *tp_self,
 	instance_xxx(DeeObject *__restrict self) {                                  \
 		return instance_txxx(Dee_TYPE(self), self);                             \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tinv, instance_inv, OPERATOR_INV)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tpos, instance_pos, OPERATOR_POS)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tneg, instance_neg, OPERATOR_NEG)
@@ -4133,6 +4190,19 @@ instance_next(DeeObject *__restrict self) {
 }
 
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op)  \
+	INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL                       \
+	instance_txxx(DeeTypeObject *tp_self,                                         \
+	              DeeObject *self,                                                \
+	              DeeObject *other) {                                             \
+		return DeeClass_CallOperator(tp_self, self, op, 1, (DeeObject **)&other); \
+	}                                                                             \
+	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                          \
+	instance_xxx(DeeObject *self, DeeObject *other) {                             \
+		return instance_txxx(Dee_TYPE(self), self, other);                        \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL                      \
 	instance_txxx(DeeTypeObject *tp_self,                                        \
@@ -4152,6 +4222,7 @@ instance_next(DeeObject *__restrict self) {
 	instance_xxx(DeeObject *self, DeeObject *other) {                            \
 		return instance_txxx(Dee_TYPE(self), self, other);                       \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tadd, instance_add, OPERATOR_ADD)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tsub, instance_sub, OPERATOR_SUB)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tmul, instance_mul, OPERATOR_MUL)
@@ -4174,6 +4245,21 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetitem, instance_getitem, OPE
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr, instance_getattr, OPERATOR_GETATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL                    \
+	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                        \
+	              DeeObject *other, DeeObject *other2) {                          \
+		DeeObject *argv[2];                                                       \
+		argv[0] = other;                                                          \
+		argv[1] = other2;                                                         \
+		return DeeClass_CallOperator(tp_self, self, op, 2, argv);                 \
+	}                                                                             \
+	INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL                       \
+	instance_xxx(DeeObject *self, DeeObject *other, DeeObject *other2) {          \
+		return instance_txxx(Dee_TYPE(self), self, other, other2);                \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *DCALL                    \
 	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                        \
@@ -4195,14 +4281,34 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetattr, instance_getattr, OPE
 	instance_xxx(DeeObject *self, DeeObject *other, DeeObject *other2) {          \
 		return instance_txxx(Dee_TYPE(self), self, other, other2);                \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, OPERATOR_GETRANGE)
 #undef DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION
 
+#ifdef __OPTIMIZE_SIZE__
 #define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                        \
 	instance_txxx(DeeTypeObject *tp_self,                                           \
 	              DeeObject *__restrict self) {                                     \
-		DeeObject *func, *result;                                                   \
+		DREF DeeObject *result;                                                     \
+		result = DeeClass_CallOperator(tp_self, self, op, 0, NULL);                 \
+		if unlikely(!result)                                                        \
+			goto err;                                                               \
+		Dee_Decref(result);                                                         \
+		return 0;                                                                   \
+	err:                                                                            \
+		return -1;                                                                  \
+	}                                                                               \
+	INTERN WUNUSED NONNULL((1)) int DCALL                                           \
+	instance_xxx(DeeObject *__restrict self) {                                      \
+		return instance_txxx(Dee_TYPE(self), self);                                 \
+	}
+#else /* __OPTIMIZE_SIZE__ */
+#define DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                        \
+	instance_txxx(DeeTypeObject *tp_self,                                           \
+	              DeeObject *__restrict self) {                                     \
+		DREF DeeObject *func, *result;                                              \
 		func = DeeClass_GetOperator(tp_self, op);                                   \
 		if unlikely(!func)                                                          \
 			goto err;                                                               \
@@ -4219,10 +4325,29 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION(instance_tgetrange, instance_getrange, 
 	instance_xxx(DeeObject *__restrict self) {                                      \
 		return instance_txxx(Dee_TYPE(self), self);                                 \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tenter, instance_enter, OPERATOR_ENTER)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPERATOR_LEAVE)
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                      \
+	instance_txxx(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {       \
+		DeeObject *result;                                                           \
+		result = DeeClass_CallOperator(tp_self, self, op, 1, (DeeObject **)&other);  \
+		if unlikely(!result)                                                         \
+			goto err;                                                                \
+		Dee_Decref(result);                                                          \
+		return 0;                                                                    \
+	err:                                                                             \
+		return -1;                                                                   \
+	}                                                                                \
+	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                         \
+	instance_xxx(DeeObject *self, DeeObject *other) {                                \
+		return instance_txxx(Dee_TYPE(self), self, other);                           \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                      \
 	instance_txxx(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other) {       \
@@ -4243,12 +4368,35 @@ DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tleave, instance_leave, OPER
 	instance_xxx(DeeObject *self, DeeObject *other) {                                \
 		return instance_txxx(Dee_TYPE(self), self, other);                           \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tassign, instance_assign, OPERATOR_ASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tmoveassign, instance_moveassign, OPERATOR_MOVEASSIGN)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelitem, instance_delitem, OPERATOR_DELITEM)
 DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr, OPERATOR_DELATTR)
 #undef DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL                                    \
+	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                            \
+	              DeeObject *other, DeeObject *other2) {                              \
+		DREF DeeObject *result;                                                       \
+		DeeObject *argv[2];                                                           \
+		argv[0] = other;                                                              \
+		argv[1] = other2;                                                             \
+		result = DeeClass_CallOperator(tp_self, self, op, 2, argv);                   \
+		if unlikely(!result)                                                          \
+			goto err;                                                                 \
+		Dee_Decref(result);                                                           \
+		return 0;                                                                     \
+	err:                                                                              \
+		return -1;                                                                    \
+	}                                                                                 \
+	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                       \
+	instance_xxx(DeeObject *self, DeeObject *other, DeeObject *other2) {              \
+		return instance_txxx(Dee_TYPE(self), self, other, other2);                    \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL                                    \
 	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                            \
@@ -4273,11 +4421,36 @@ DEFINE_BINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelattr, instance_delattr,
 	instance_xxx(DeeObject *self, DeeObject *other, DeeObject *other2) {              \
 		return instance_txxx(Dee_TYPE(self), self, other, other2);                    \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetitem, instance_setitem, OPERATOR_SETITEM)
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tdelrange, instance_delrange, OPERATOR_DELRANGE)
 DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetattr, instance_setattr, OPERATOR_SETATTR)
 #undef DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL                                 \
+	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                            \
+	              DeeObject *other, DeeObject *other2, DeeObject *other3) {           \
+		DREF DeeObject *result;                                                       \
+		DeeObject *argv[3];                                                           \
+		argv[0] = other;                                                              \
+		argv[1] = other2;                                                             \
+		argv[2] = other3;                                                             \
+		result = DeeClass_CallOperator(tp_self, self, op, 3, argv);                   \
+		if unlikely(!result)                                                          \
+			goto err;                                                                 \
+		Dee_Decref(result);                                                           \
+		return 0;                                                                     \
+	err:                                                                              \
+		return -1;                                                                    \
+	}                                                                                 \
+	INTERN WUNUSED NONNULL((1, 2, 3, 4)) int DCALL                                    \
+	instance_xxx(DeeObject *self, DeeObject *other,                                   \
+	             DeeObject *other2, DeeObject *other3) {                              \
+		return instance_txxx(Dee_TYPE(self), self, other, other2, other3);            \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3, 4, 5)) int DCALL                                 \
 	instance_txxx(DeeTypeObject *tp_self, DeeObject *self,                            \
@@ -4304,9 +4477,30 @@ DEFINE_TRINARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetattr, instance_setattr
 	             DeeObject *other2, DeeObject *other3) {                              \
 		return instance_txxx(Dee_TYPE(self), self, other, other2, other3);            \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetrange, instance_setrange, OPERATOR_SETRANGE)
 #undef DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                            \
+	instance_txxx(DeeTypeObject *tp_self,                                               \
+	              DeeObject **__restrict p_self) {                                      \
+		DREF DeeObject *result;                                                         \
+		result = DeeClass_CallOperator(tp_self, *p_self, op, 0, NULL);                  \
+		if unlikely(!result)                                                            \
+			goto err;                                                                   \
+		Dee_Decref(*p_self);                                                            \
+		*p_self = result;                                                               \
+		return 0;                                                                       \
+	err:                                                                                \
+		return -1;                                                                      \
+	}                                                                                   \
+	INTERN WUNUSED NONNULL((1)) int DCALL                                               \
+	instance_xxx(DeeObject **__restrict p_self) {                                       \
+		return instance_txxx(Dee_TYPE(*p_self), p_self);                                \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                            \
 	instance_txxx(DeeTypeObject *tp_self,                                               \
@@ -4329,10 +4523,32 @@ DEFINE_QUADARY_INSTANCE_WRAPPER_FUNCTION_INT(instance_tsetrange, instance_setran
 	instance_xxx(DeeObject **__restrict p_self) {                                       \
 		return instance_txxx(Dee_TYPE(*p_self), p_self);                                \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tinc, instance_inc, OPERATOR_INC)
 DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tdec, instance_dec, OPERATOR_DEC)
 #undef DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION
 
+#ifdef __OPTIMIZE_SIZE__
+#define DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
+	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                          \
+	instance_txxx(DeeTypeObject *tp_self,                                                \
+	              DeeObject **__restrict p_self,                                         \
+	              DeeObject *other) {                                                    \
+		DREF DeeObject *result;                                                          \
+		result = DeeClass_CallOperator(tp_self, *p_self, op, 1, (DeeObject **)&other);   \
+		if unlikely(!result)                                                             \
+			goto err;                                                                    \
+		Dee_Decref(*p_self);                                                             \
+		*p_self = result;                                                                \
+		return 0;                                                                        \
+	err:                                                                                 \
+		return -1;                                                                       \
+	}                                                                                    \
+	INTERN WUNUSED NONNULL((1, 2)) int DCALL                                             \
+	instance_xxx(DeeObject **__restrict p_self, DeeObject *other) {                      \
+		return instance_txxx(Dee_TYPE(*p_self), p_self, other);                          \
+	}
+#else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_txxx, instance_xxx, op) \
 	INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL                                          \
 	instance_txxx(DeeTypeObject *tp_self,                                                \
@@ -4356,6 +4572,7 @@ DEFINE_UNARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tdec, instance_dec, OPER
 	instance_xxx(DeeObject **__restrict p_self, DeeObject *other) {                      \
 		return instance_txxx(Dee_TYPE(*p_self), p_self, other);                          \
 	}
+#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tiadd, instance_iadd, OPERATOR_ADD)
 DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tisub, instance_isub, OPERATOR_SUB)
 DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_timul, instance_imul, OPERATOR_MUL)
@@ -4372,12 +4589,17 @@ DEFINE_BINARY_INPLACE_INSTANCE_WRAPPER_FUNCTION(instance_tipow, instance_ipow, O
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_tstr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	DREF DeeObject *result;
+	result = DeeClass_CallOperator(tp_self, OPERATOR_STR, 0, NULL);
+#else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_STR);
 	if unlikely(!func)
 		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
+#endif /* !__OPTIMIZE_SIZE__ */
 	if (likely(result) &&
 	    DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
@@ -4395,12 +4617,17 @@ instance_str(DeeObject *__restrict self) {
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_trepr(DeeTypeObject *tp_self, DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	DREF DeeObject *result;
+	result = DeeClass_CallOperator(tp_self, OPERATOR_REPR, 0, NULL);
+#else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_REPR);
 	if unlikely(!func)
 		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
+#endif /* !__OPTIMIZE_SIZE__ */
 	if (likely(result) &&
 	    DeeObject_AssertTypeExact(result, &DeeString_Type))
 		goto err_r;
@@ -4601,12 +4828,17 @@ instance_printrepr_by_print(DeeObject *__restrict self,
 
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_tint(DeeTypeObject *tp_self, DeeObject *__restrict self) {
+#ifdef __OPTIMIZE_SIZE__
+	DREF DeeObject *result;
+	result = DeeClass_CallOperator(tp_self, OPERATOR_INT, 0, NULL);
+#else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, OPERATOR_INT);
 	if unlikely(!func)
 		goto err;
 	result = DeeObject_ThisCall(func, self, 0, NULL);
 	Dee_Decref(func);
+#endif /* !__OPTIMIZE_SIZE__ */
 	if (likely(result) && DeeObject_AssertTypeExact(result, &DeeInt_Type))
 		goto err_r;
 	return result;
@@ -5039,8 +5271,9 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].ow_wrapper;
 		target  = (CFUNC *)((uintptr_t)class_type->tp_with + with_wrappers[operator_name - OPERATOR_WITHMIN].ow_offset);
 	} else {
-		/* TODO: File operators. */
-
+		/* TODO: Support for custom user-overwritable operators (look for `Dee_type_operator_isdecl()' in `type_type->tp_operators'). */
+		/* TODO: All operators that can't be defined via C-wrappers must be added as `Dee_type_operator_iscustom()' to `class_type->tp_operators' */
+		/* TODO: Remove this throw -- it should always be possible for *any* type to define *any* operator. */
 		DeeError_Throwf(&DeeError_TypeError,
 		                "Type %q does not define an operator %#I16x",
 		                type_type->tp_name, operator_name);

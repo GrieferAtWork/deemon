@@ -675,6 +675,9 @@
 		<ClInclude Include="..\src\deemon\execute\function-wrappers.h">
 			<Filter>src\execute</Filter>
 		</ClInclude>
+		<ClInclude Include="..\src\deemon\objects\file-operator.c.inl">
+			<Filter>src\objects</Filter>
+		</ClInclude>
 		<ClInclude Include="..\src\deemon\objects\file-type-operators.h">
 			<Filter>src\objects</Filter>
 		</ClInclude>
