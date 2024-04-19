@@ -259,7 +259,7 @@ F(pointer_delitem)(DeePointerTypeObject *tp_self, union pointer *self,
 
 
 
-INTERN struct stype_math tpconst POINTER_MATH = {
+INTERN struct stype_math POINTER_MATH = {
 	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&pointer_int32,
 	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&pointer_int64,
 	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&pointer_double,
@@ -293,16 +293,16 @@ INTERN struct stype_math tpconst POINTER_MATH = {
 	/* .st_inplace_pow = */ NULL
 };
 
-INTERN struct stype_seq tpconst POINTER_SEQ = {
-	/* .stp_iter_self = */ NULL,
-	/* .stp_size      = */ NULL,
-	/* .stp_contains  = */ NULL,
-	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_getitem),
-	/* .stp_del       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_delitem),
-	/* .stp_set       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&F(pointer_setitem),
-	/* .stp_range_get = */ NULL,
-	/* .stp_range_del = */ NULL,
-	/* .stp_range_set = */ NULL,
+INTERN struct stype_seq POINTER_SEQ = {
+	/* .st_iter_self = */ NULL,
+	/* .st_size      = */ NULL,
+	/* .st_contains  = */ NULL,
+	/* .st_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_getitem),
+	/* .st_del       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(pointer_delitem),
+	/* .st_set       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&F(pointer_setitem),
+	/* .st_range_get = */ NULL,
+	/* .st_range_del = */ NULL,
+	/* .st_range_set = */ NULL,
 };
 
 #undef ITEM_SIZE

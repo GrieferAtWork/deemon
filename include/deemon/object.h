@@ -2832,10 +2832,11 @@ _Dee_RequiresOperatorInheritCb(void (DCALL *_meth)(_TSelf *self, _TTypeType *typ
 struct Dee_operator_invoke {
 	Dee_operator_invoke_cb_t  opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()' when this operator is
 	                                          * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL'). */
-	Dee_funptr_t              opi_classhook; /* [1..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)' when `DeeClass_New()'
+	Dee_funptr_t              opi_classhook; /* [0..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)' when `DeeClass_New()'
 	                                          * hooks this operator. The implementation of `opi_invoke' should check for this function and
 	                                          * manually invoke its t* variant, which should then use `DeeClass_GetOperator()' in order to
-	                                          * load the user-defined function object associated with this operator. */
+	                                          * load the user-defined function object associated with this operator.
+	                                          * When set to `NULL', the operator cannot be overwritten by user-code. */
 	Dee_operator_inherit_cb_t opi_inherit;   /* [0..1] Override for inheriting this operator. */
 };
 #define Dee_OPERATOR_INVOKE_INIT(opi_invoke_, opi_classhook_, opi_inherit)          \
@@ -2853,8 +2854,19 @@ struct Dee_opinfo {
 	struct Dee_operator_invoke Dee_tpconst *oi_invoke;    /* [1..1] Generic info on how to invoke/hook this operator. */
 };
 
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
+extern "C++" {
+namespace __intern {
+struct Dee_opinfo const &_Dee_OPINFO_INIT(Dee_operator_t id, uint16_t class_, uint16_t offset, uint16_t cc,
+                                          char const uname[12], char const sname[12], char const iname[16],
+                                          struct Dee_operator_invoke Dee_tpconst *invoke);
+} /* namespace __intern */
+} /* extern "C++" */
+#define Dee_OPINFO_INIT ::__intern::_Dee_OPINFO_INIT
+#else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_OPINFO_INIT(id, class, offset, cc, uname, sname, iname, invoke) \
 	{ id, class, offset, cc, uname, sname, iname, invoke }
+#endif /* !__INTELLISENSE__ || !__cplusplus */
 #define _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke)                                                           \
 	{ id, OPCLASS_CUSTOM, 0, OPCC_SPECIAL, { _DEE_UINTPTR_AS_CHAR_LIST((char)(unsigned char), flags) }, "", "", \
 	  (struct Dee_operator_invoke Dee_tpconst *)(void Dee_tpconst *)(void const *)Dee_REQUIRES_OPERATOR_INVOKE_CB(invoke) }
@@ -2907,8 +2919,12 @@ struct Dee_type_operator {
 #define Dee_type_operator_iscustom(x) ((x)->to_custom._s_class == OPCLASS_CUSTOM)
 #define Dee_type_operator_isdecl(x)   ((x)->to_custom._s_class != OPCLASS_CUSTOM)
 
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
+#define Dee_TYPE_OPERATOR_DECL (struct Dee_type_operator const &)Dee_OPINFO_INIT
+#else /* __INTELLISENSE__ && __cplusplus */
 #define Dee_TYPE_OPERATOR_DECL(id, class, offset, cc, uname, sname, iname, invoke) \
 	{ { Dee_OPINFO_INIT(id, class, offset, cc, uname, sname, iname, invoke) } }
+#endif /* !__INTELLISENSE__ || !__cplusplus */
 #define Dee_TYPE_OPERATOR_CUSTOM(id, invoke, flags) { { _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke) } }
 #define Dee_TYPE_OPERATOR_FLAGS(id, flags)          { { _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, NULL) } }
 #ifdef DEE_SOURCE

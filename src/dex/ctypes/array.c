@@ -617,15 +617,15 @@ PRIVATE struct stype_math array_math = {
 };
 
 PRIVATE struct stype_seq array_seq = {
-	/* .stp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_iter,
-	/* .stp_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_size,
-	/* .stp_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_contains,
-	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_get,
-	/* .stp_del       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_del,
-	/* .stp_set       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_set,
-	/* .stp_range_get = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_getrange,
-	/* .stp_range_del = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_delrange,
-	/* .stp_range_set = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *, DeeObject *))&array_setrange
+	/* .st_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_iter,
+	/* .st_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *__restrict, void *))&array_size,
+	/* .st_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_contains,
+	/* .st_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_get,
+	/* .st_del       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&array_del,
+	/* .st_set       = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_set,
+	/* .st_range_get = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_getrange,
+	/* .st_range_del = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&array_delrange,
+	/* .st_range_set = */ (int (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *, DeeObject *))&array_setrange
 };
 
 

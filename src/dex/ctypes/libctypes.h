@@ -151,15 +151,15 @@ struct stype_cmp {
 
 struct stype_seq {
 	/* Structured sequence operators. */
-	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *stp_iter_self)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *stp_size)(DeeSTypeObject *tp_self, void *self);
-	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *stp_contains)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *stp_get)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
-	WUNUSED_T NONNULL_T((1, 3))       int             (DCALL *stp_del)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
-	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *stp_set)(DeeSTypeObject *tp_self, void *self, DeeObject *index, DeeObject *value);
-	WUNUSED_T NONNULL_T((1, 3, 4))    DREF DeeObject *(DCALL *stp_range_get)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
-	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *stp_range_del)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
-	WUNUSED_T NONNULL_T((1, 3, 4, 5)) int             (DCALL *stp_range_set)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *st_iter_self)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *st_size)(DeeSTypeObject *tp_self, void *self);
+	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *st_contains)(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
+	WUNUSED_T NONNULL_T((1, 3))       DREF DeeObject *(DCALL *st_get)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 3))       int             (DCALL *st_del)(DeeSTypeObject *tp_self, void *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *st_set)(DeeSTypeObject *tp_self, void *self, DeeObject *index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 3, 4))    DREF DeeObject *(DCALL *st_range_get)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 3, 4))    int             (DCALL *st_range_del)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 3, 4, 5)) int             (DCALL *st_range_set)(DeeSTypeObject *tp_self, void *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 };
 
 struct stype_attr {
@@ -238,9 +238,9 @@ struct stype_object {
 	WUNUSED_T NONNULL_T((1))
 	DREF DeeObject *(DCALL *st_call)(DeeSTypeObject *tp_self, void *self,
 	                                 size_t argc, DeeObject *const *argv);
-	struct stype_math const *st_math;      /* [0..1] Math related operators. */
-	struct stype_cmp const  *st_cmp;       /* [0..1] Compare operators. */
-	struct stype_seq const  *st_seq;       /* [0..1] Sequence operators. */
+	struct stype_math       *st_math;      /* [0..1] Math related operators. */
+	struct stype_cmp        *st_cmp;       /* [0..1] Compare operators. */
+	struct stype_seq        *st_seq;       /* [0..1] Sequence operators. */
 	struct stype_attr const *st_attr;      /* [0..1] Attribute access operators. */
 };
 
@@ -270,6 +270,120 @@ struct lvalue_type_object {
 	DeeSTypeObject          lt_base;      /* The underlying type object. */
 	DREF DeeSTypeObject    *lt_orig;      /* [1..1][const] The dereferenced type of an l-value. */
 };
+
+/* Codes for new operators available to types implementing "DeeSType_Type" */
+#define STYPE_OPERATOR_INIT        OPERATOR_EXTENDED(0x0000)
+#define STYPE_OPERATOR_ASSIGN      OPERATOR_EXTENDED(0x0001)
+#define STYPE_OPERATOR_STR         OPERATOR_EXTENDED(0x0002)
+#define STYPE_OPERATOR_REPR        OPERATOR_EXTENDED(0x0003)
+#define STYPE_OPERATOR_BOOL        OPERATOR_EXTENDED(0x0004)
+#define STYPE_OPERATOR_CALL        OPERATOR_EXTENDED(0x0005)
+#define STYPE_OPERATOR_INT         OPERATOR_EXTENDED(0x0006)
+#define STYPE_OPERATOR_DOUBLE      OPERATOR_EXTENDED(0x0007)
+#define STYPE_OPERATOR_INV         OPERATOR_EXTENDED(0x0008)
+#define STYPE_OPERATOR_POS         OPERATOR_EXTENDED(0x0009)
+#define STYPE_OPERATOR_NEG         OPERATOR_EXTENDED(0x000a)
+#define STYPE_OPERATOR_ADD         OPERATOR_EXTENDED(0x000b)
+#define STYPE_OPERATOR_SUB         OPERATOR_EXTENDED(0x000c)
+#define STYPE_OPERATOR_MUL         OPERATOR_EXTENDED(0x000d)
+#define STYPE_OPERATOR_DIV         OPERATOR_EXTENDED(0x000e)
+#define STYPE_OPERATOR_MOD         OPERATOR_EXTENDED(0x000f)
+#define STYPE_OPERATOR_SHL         OPERATOR_EXTENDED(0x0010)
+#define STYPE_OPERATOR_SHR         OPERATOR_EXTENDED(0x0011)
+#define STYPE_OPERATOR_AND         OPERATOR_EXTENDED(0x0012)
+#define STYPE_OPERATOR_OR          OPERATOR_EXTENDED(0x0013)
+#define STYPE_OPERATOR_XOR         OPERATOR_EXTENDED(0x0014)
+#define STYPE_OPERATOR_POW         OPERATOR_EXTENDED(0x0015)
+#define STYPE_OPERATOR_INC         OPERATOR_EXTENDED(0x0016)
+#define STYPE_OPERATOR_DEC         OPERATOR_EXTENDED(0x0017)
+#define STYPE_OPERATOR_INPLACE_ADD OPERATOR_EXTENDED(0x0018)
+#define STYPE_OPERATOR_INPLACE_SUB OPERATOR_EXTENDED(0x0019)
+#define STYPE_OPERATOR_INPLACE_MUL OPERATOR_EXTENDED(0x001a)
+#define STYPE_OPERATOR_INPLACE_DIV OPERATOR_EXTENDED(0x001b)
+#define STYPE_OPERATOR_INPLACE_MOD OPERATOR_EXTENDED(0x001c)
+#define STYPE_OPERATOR_INPLACE_SHL OPERATOR_EXTENDED(0x001d)
+#define STYPE_OPERATOR_INPLACE_SHR OPERATOR_EXTENDED(0x001e)
+#define STYPE_OPERATOR_INPLACE_AND OPERATOR_EXTENDED(0x001f)
+#define STYPE_OPERATOR_INPLACE_OR  OPERATOR_EXTENDED(0x0020)
+#define STYPE_OPERATOR_INPLACE_XOR OPERATOR_EXTENDED(0x0021)
+#define STYPE_OPERATOR_INPLACE_POW OPERATOR_EXTENDED(0x0022)
+#define STYPE_OPERATOR_EQ          OPERATOR_EXTENDED(0x0023)
+#define STYPE_OPERATOR_NE          OPERATOR_EXTENDED(0x0024)
+#define STYPE_OPERATOR_LO          OPERATOR_EXTENDED(0x0025)
+#define STYPE_OPERATOR_LE          OPERATOR_EXTENDED(0x0026)
+#define STYPE_OPERATOR_GR          OPERATOR_EXTENDED(0x0027)
+#define STYPE_OPERATOR_GE          OPERATOR_EXTENDED(0x0028)
+#define STYPE_OPERATOR_ITER        OPERATOR_EXTENDED(0x0029)
+#define STYPE_OPERATOR_SIZE        OPERATOR_EXTENDED(0x002a)
+#define STYPE_OPERATOR_CONTAINS    OPERATOR_EXTENDED(0x002b)
+#define STYPE_OPERATOR_GETITEM     OPERATOR_EXTENDED(0x002c)
+#define STYPE_OPERATOR_DELITEM     OPERATOR_EXTENDED(0x002d)
+#define STYPE_OPERATOR_SETITEM     OPERATOR_EXTENDED(0x002e)
+#define STYPE_OPERATOR_GETRANGE    OPERATOR_EXTENDED(0x002f)
+#define STYPE_OPERATOR_DELRANGE    OPERATOR_EXTENDED(0x0030)
+#define STYPE_OPERATOR_SETRANGE    OPERATOR_EXTENDED(0x0031)
+#define STYPE_OPERATOR_GETATTR     OPERATOR_EXTENDED(0x0032)
+#define STYPE_OPERATOR_DELATTR     OPERATOR_EXTENDED(0x0033)
+#define STYPE_OPERATOR_SETATTR     OPERATOR_EXTENDED(0x0034)
+#define STYPE_OPERATOR_ENUMATTR    OPERATOR_EXTENDED(0x0035)
+
+#define OPERATOR_STYPE_0000_INIT        STYPE_OPERATOR_INIT
+#define OPERATOR_STYPE_0001_ASSIGN      STYPE_OPERATOR_ASSIGN
+#define OPERATOR_STYPE_0002_STR         STYPE_OPERATOR_STR
+#define OPERATOR_STYPE_0003_REPR        STYPE_OPERATOR_REPR
+#define OPERATOR_STYPE_0004_BOOL        STYPE_OPERATOR_BOOL
+#define OPERATOR_STYPE_0005_CALL        STYPE_OPERATOR_CALL
+#define OPERATOR_STYPE_0006_INT         STYPE_OPERATOR_INT
+#define OPERATOR_STYPE_0007_DOUBLE      STYPE_OPERATOR_DOUBLE
+#define OPERATOR_STYPE_0008_INV         STYPE_OPERATOR_INV
+#define OPERATOR_STYPE_0009_POS         STYPE_OPERATOR_POS
+#define OPERATOR_STYPE_000A_NEG         STYPE_OPERATOR_NEG
+#define OPERATOR_STYPE_000B_ADD         STYPE_OPERATOR_ADD
+#define OPERATOR_STYPE_000C_SUB         STYPE_OPERATOR_SUB
+#define OPERATOR_STYPE_000D_MUL         STYPE_OPERATOR_MUL
+#define OPERATOR_STYPE_000E_DIV         STYPE_OPERATOR_DIV
+#define OPERATOR_STYPE_000F_MOD         STYPE_OPERATOR_MOD
+#define OPERATOR_STYPE_0010_SHL         STYPE_OPERATOR_SHL
+#define OPERATOR_STYPE_0011_SHR         STYPE_OPERATOR_SHR
+#define OPERATOR_STYPE_0012_AND         STYPE_OPERATOR_AND
+#define OPERATOR_STYPE_0013_OR          STYPE_OPERATOR_OR
+#define OPERATOR_STYPE_0014_XOR         STYPE_OPERATOR_XOR
+#define OPERATOR_STYPE_0015_POW         STYPE_OPERATOR_POW
+#define OPERATOR_STYPE_0016_INC         STYPE_OPERATOR_INC
+#define OPERATOR_STYPE_0017_DEC         STYPE_OPERATOR_DEC
+#define OPERATOR_STYPE_0018_INPLACE_ADD STYPE_OPERATOR_INPLACE_ADD
+#define OPERATOR_STYPE_0019_INPLACE_SUB STYPE_OPERATOR_INPLACE_SUB
+#define OPERATOR_STYPE_001A_INPLACE_MUL STYPE_OPERATOR_INPLACE_MUL
+#define OPERATOR_STYPE_001B_INPLACE_DIV STYPE_OPERATOR_INPLACE_DIV
+#define OPERATOR_STYPE_001C_INPLACE_MOD STYPE_OPERATOR_INPLACE_MOD
+#define OPERATOR_STYPE_001D_INPLACE_SHL STYPE_OPERATOR_INPLACE_SHL
+#define OPERATOR_STYPE_001E_INPLACE_SHR STYPE_OPERATOR_INPLACE_SHR
+#define OPERATOR_STYPE_001F_INPLACE_AND STYPE_OPERATOR_INPLACE_AND
+#define OPERATOR_STYPE_0020_INPLACE_OR  STYPE_OPERATOR_INPLACE_OR
+#define OPERATOR_STYPE_0021_INPLACE_XOR STYPE_OPERATOR_INPLACE_XOR
+#define OPERATOR_STYPE_0022_INPLACE_POW STYPE_OPERATOR_INPLACE_POW
+#define OPERATOR_STYPE_0023_EQ          STYPE_OPERATOR_EQ
+#define OPERATOR_STYPE_0024_NE          STYPE_OPERATOR_NE
+#define OPERATOR_STYPE_0025_LO          STYPE_OPERATOR_LO
+#define OPERATOR_STYPE_0026_LE          STYPE_OPERATOR_LE
+#define OPERATOR_STYPE_0027_GR          STYPE_OPERATOR_GR
+#define OPERATOR_STYPE_0028_GE          STYPE_OPERATOR_GE
+#define OPERATOR_STYPE_0029_ITER        STYPE_OPERATOR_ITER
+#define OPERATOR_STYPE_002A_SIZE        STYPE_OPERATOR_SIZE
+#define OPERATOR_STYPE_002B_CONTAINS    STYPE_OPERATOR_CONTAINS
+#define OPERATOR_STYPE_002C_GETITEM     STYPE_OPERATOR_GETITEM
+#define OPERATOR_STYPE_002D_DELITEM     STYPE_OPERATOR_DELITEM
+#define OPERATOR_STYPE_002E_SETITEM     STYPE_OPERATOR_SETITEM
+#define OPERATOR_STYPE_002F_GETRANGE    STYPE_OPERATOR_GETRANGE
+#define OPERATOR_STYPE_0030_DELRANGE    STYPE_OPERATOR_DELRANGE
+#define OPERATOR_STYPE_0031_SETRANGE    STYPE_OPERATOR_SETRANGE
+#define OPERATOR_STYPE_0032_GETATTR     STYPE_OPERATOR_GETATTR
+#define OPERATOR_STYPE_0033_DELATTR     STYPE_OPERATOR_DELATTR
+#define OPERATOR_STYPE_0034_SETATTR     STYPE_OPERATOR_SETATTR
+#define OPERATOR_STYPE_0035_ENUMATTR    STYPE_OPERATOR_ENUMATTR
+
+#define OPERATOR_STYPE_MIN OPERATOR_STYPE_0000_INIT
+#define OPERATOR_STYPE_MAX OPERATOR_STYPE_0035_ENUMATTR
 
 
 /* The type for all structured types (aka. `DeeSTypeObject' objects)
@@ -321,7 +435,7 @@ INTDEF WUNUSED NONNULL((1)) DeeSTypeObject *DCALL DeeSType_Get(DeeObject *__rest
 /* Check of `ob' is a structured object. */
 #define DeeStruct_Check(ob)  DeeSType_Check(Dee_TYPE(ob))
 /* Return a pointer to the structured data-block of `ob' */
-#define DeeStruct_Data(ob)   (void *)((uintptr_t)(ob) + sizeof(DeeObject))
+#define DeeStruct_Data(ob)   (void *)((__BYTE_TYPE__ *)(ob) + sizeof(DeeObject))
 /* Return the size of the structured data-block of `ob' */
 #define DeeStruct_Size(ob)   DeeSType_Sizeof(Dee_TYPE(ob))
 #define DeeStruct_Align(ob)  DeeSType_Alignof(Dee_TYPE(ob))
@@ -437,10 +551,10 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Ref(DeeObject *__res
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_Deref(DeeObject *__restrict self);
 
 
-INTDEF struct stype_math tpconst pointer_math1; /* Math functions for pointer types with a base-size of `0' or `1' */
-INTDEF struct stype_math tpconst pointer_mathn; /* Math functions for pointer types with a base-size of anything else. */
-INTDEF struct stype_seq tpconst pointer_seq1;   /* Sequence functions for pointer types with a base-size of `0' or `1' */
-INTDEF struct stype_seq tpconst pointer_seqn;   /* Sequence functions for pointer types with a base-size of anything else. */
+INTDEF struct stype_math pointer_math1; /* Math functions for pointer types with a base-size of `0' or `1' */
+INTDEF struct stype_math pointer_mathn; /* Math functions for pointer types with a base-size of anything else. */
+INTDEF struct stype_seq pointer_seq1;   /* Sequence functions for pointer types with a base-size of `0' or `1' */
+INTDEF struct stype_seq pointer_seqn;   /* Sequence functions for pointer types with a base-size of anything else. */
 
 
 /* Structured operator invocation functions */

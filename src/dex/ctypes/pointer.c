@@ -543,15 +543,15 @@ PRIVATE struct stype_math lvalue_math = {
 };
 
 PRIVATE struct stype_seq lvalue_seq = {
-	/* .stp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_iter,
-	/* .stp_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_size,
-	/* .stp_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_contains,
-	/* .stp_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_getitem,
-	/* .stp_del       = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_delitem,
-	/* .stp_set       = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_setitem,
-	/* .stp_range_get = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_getrange,
-	/* .stp_range_del = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_delrange,
-	/* .stp_range_set = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *, DeeObject *))&lvalue_setrange
+	/* .st_iter_self = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_iter,
+	/* .st_size      = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *))&lvalue_size,
+	/* .st_contains  = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_contains,
+	/* .st_get       = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_getitem,
+	/* .st_del       = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *))&lvalue_delitem,
+	/* .st_set       = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_setitem,
+	/* .st_range_get = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_getrange,
+	/* .st_range_del = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *))&lvalue_delrange,
+	/* .st_range_set = */ (int             (DCALL *)(DeeSTypeObject *, void *, DeeObject *, DeeObject *, DeeObject *))&lvalue_setrange
 };
 
 PRIVATE struct stype_cmp lvalue_cmp = {

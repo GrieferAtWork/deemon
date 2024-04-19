@@ -342,7 +342,7 @@ F(float_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 }
 
 
-PRIVATE struct stype_math tpconst F(floatmath) = {
+PRIVATE struct stype_math F(floatmath) = {
 	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&F(float_int32),
 	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&F(float_int64),
 	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&F(float_double),
@@ -398,7 +398,7 @@ DEFINE_CTYPES_FLOAT_COMPARE(F(float_ge), >=)
 #undef DEFINE_CTYPES_FLOAT_COMPARE
 
 
-PRIVATE struct stype_cmp tpconst F(floatcmp) = {
+PRIVATE struct stype_cmp F(floatcmp) = {
      /* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_eq),
      /* .st_ne = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_ne),
      /* .st_lo = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(float_lo),

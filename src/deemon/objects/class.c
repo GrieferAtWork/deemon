@@ -5186,8 +5186,13 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		/* Dedicated operator with C-wrapper. */
 		void *class_table;
 		ASSERT(info->oi_invoke);
-		ASSERT(info->oi_invoke->opi_invoke);
-		ASSERT(info->oi_invoke->opi_classhook);
+		if unlikely(!info->oi_invoke->opi_classhook) {
+			/* Special case: operator cannot be overwritten by user-code. */
+			DeeError_Throwf(&DeeError_TypeError,
+			                "Operator `%s' of type-type %q cannot be implemented",
+			                info->oi_uname, type_type->tp_name);
+			goto err;
+		}
 		class_table = (void *)class_type;
 		if (info->oi_class != 0) {
 			void **p_class_table;

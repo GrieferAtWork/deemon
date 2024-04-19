@@ -1125,7 +1125,7 @@ F(int_inplace_pow)(DeeSTypeObject *__restrict UNUSED(tp_self), T *self,
 }
 
 
-PRIVATE struct stype_math tpconst F(intmath) = {
+PRIVATE struct stype_math F(intmath) = {
 	/* .st_int32       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int32_t *__restrict))&F(int_int32),
 	/* .st_int64       = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, int64_t *__restrict))&F(int_int64),
 	/* .st_double      = */ (int (DCALL *)(DeeSTypeObject *__restrict, void *, double *__restrict))&F(int_double),
@@ -1198,7 +1198,7 @@ DEFINE_COMPARE_OPERATOR(gr, >)
 DEFINE_COMPARE_OPERATOR(ge, >=)
 #undef DEFINE_COMPARE_OPERATOR
 
-PRIVATE struct stype_cmp tpconst F(intcmp) = {
+PRIVATE struct stype_cmp F(intcmp) = {
 	/* .st_eq = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(int_eq),
 	/* .st_ne = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(int_ne),
 	/* .st_lo = */ (DREF DeeObject *(DCALL *)(DeeSTypeObject *, void *, DeeObject *))&F(int_lo),

@@ -45,6 +45,7 @@
 		<ClCompile Include="..\..\src\dex\ctypes\c_malloc.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\c_string.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\cfunction.c" />
+		<ClCompile Include="..\..\src\dex\ctypes\core-operators.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\core.c" />
 		<ClCompile Include="..\..\src\dex\ctypes\ffi\libffi_msvc\closures.c">
 			<Filter>ffi\libffi_msvc</Filter>
