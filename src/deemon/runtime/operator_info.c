@@ -137,7 +137,7 @@ next_base:
  * originates from `DeeType_Type', so in that case, `*p_declaring_type_type' is set to
  * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
  * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here. */
-PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
+PUBLIC ATTR_PURE WUNUSED ATTR_OUT_OPT(3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
                               DeeTypeObject **p_declaring_type_type) {
 	if (p_declaring_type_type)
@@ -1125,6 +1125,16 @@ DeeType_InheritGenericOperator(DeeTypeObject *__restrict self,
 	return DeeType_GetOpPointer(self, info) != NULL;
 }
 
+/* For some reason, GCC things that "declaring_type_type" is uninitialized below, when it clearly isn't:
+ * Warning: src/deemon/runtime/operator_info.c:1262:32: warning: ‘declaring_type_type’ may be used uninitialized [-Wmaybe-uninitialized]
+ *  1262 |                         return DeeType_InheritGenericOperator(self, declaring_type_type, info);
+ *       |                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ * src/deemon/runtime/operator_info.c:1259:32: note: ‘declaring_type_type’ declared here
+ *  1259 |                 DeeTypeObject *declaring_type_type;
+ *       |                                ^~~~~~~~~~~~~~~~~~~
+ */
+__pragma_GCC_diagnostic_push_ignored(Wmaybe_uninitialized)
+
 /* Check if the callback slot for `name' in `self' is populated.
  * If it isn't, then search the MRO of `self' for the first type
  * that *does* implement said operator, and cache that base's
@@ -1272,6 +1282,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	return false;
 }
 
+__pragma_GCC_diagnostic_pop_ignored(Wmaybe_uninitialized)
 
 
 PRIVATE WUNUSED ATTR_INS(6, 5) NONNULL((1, 2)) DREF DeeObject *DCALL

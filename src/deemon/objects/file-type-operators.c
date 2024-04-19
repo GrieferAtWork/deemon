@@ -49,65 +49,65 @@ DECL_BEGIN
 /************************************************************************/
 /* Instance operator hooks                                              */
 /************************************************************************/
-INTERN WUNUSED ATTR_INOUT((1)) ATTR_OUTS(2, 3) size_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
 instance_read(DeeFileObject *self, void *buffer,
               size_t bufsize, Dee_ioflag_t flags) {
 	return instance_tread(Dee_TYPE(self), self, buffer, bufsize, flags);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) ATTR_INS(2, 3) size_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
 instance_write(DeeFileObject *self, void const *buffer,
                size_t bufsize, Dee_ioflag_t flags) {
 	return instance_twrite(Dee_TYPE(self), self, buffer, bufsize, flags);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) Dee_pos_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL
 instance_seek(DeeFileObject *__restrict self, Dee_off_t off, int whence) {
 	return instance_tseek(Dee_TYPE(self), self, off, whence);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_sync(DeeFileObject *__restrict self) {
 	return instance_tsync(Dee_TYPE(self), self);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_trunc(DeeFileObject *__restrict self, Dee_pos_t size) {
 	return instance_ttrunc(Dee_TYPE(self), self, size);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_close(DeeFileObject *__restrict self) {
 	return instance_tclose(Dee_TYPE(self), self);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) ATTR_OUTS(2, 3) size_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
 instance_pread(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
 	return instance_tpread(Dee_TYPE(self), self, buffer, bufsize, pos, flags);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) ATTR_INS(2, 3) size_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
 instance_pwrite(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
 	return instance_tpwrite(Dee_TYPE(self), self, buffer, bufsize, pos, flags);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_getc(DeeFileObject *__restrict self, Dee_ioflag_t flags) {
 	return instance_tgetc(Dee_TYPE(self), self, flags);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_ungetc(DeeFileObject *__restrict self, int ch) {
 	return instance_tungetc(Dee_TYPE(self), self, ch);
 }
 
-INTERN WUNUSED ATTR_INOUT((1)) int DCALL
+INTERN WUNUSED ATTR_INOUT(1) int DCALL
 instance_putc(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags) {
 	return instance_tputc(Dee_TYPE(self), self, ch, flags);
 }
 
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
 instance_tread(DeeFileTypeObject *tp_self, DeeFileObject *self,
                void *buffer, size_t bufsize, Dee_ioflag_t flags) {
 	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
@@ -122,7 +122,7 @@ instance_tread(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	return (size_t)-1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) ATTR_INS(3, 4) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL
 instance_twrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
                 void const *buffer, size_t bufsize, Dee_ioflag_t flags) {
 	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
@@ -137,7 +137,7 @@ instance_twrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	return (size_t)-1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) Dee_pos_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_pos_t DCALL
 instance_tseek(DeeFileTypeObject *tp_self, DeeFileObject *self,
                Dee_off_t off, int whence) {
 	Dee_pos_t result;
@@ -161,7 +161,7 @@ err:
 	return (Dee_pos_t)-1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tsync(DeeFileTypeObject *tp_self, DeeFileObject *self) {
 	DREF DeeObject *result_ob;
 	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, (DeeObject *)self,
@@ -174,7 +174,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_ttrunc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_pos_t size) {
 	DREF DeeObject *result_ob;
 	result_ob = DeeClass_CallOperatorf((DeeTypeObject *)tp_self, (DeeObject *)self,
@@ -187,7 +187,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tclose(DeeFileTypeObject *tp_self, DeeFileObject *self) {
 	DREF DeeObject *result_ob;
 	result_ob = DeeClass_CallOperator((DeeTypeObject *)tp_self, (DeeObject *)self,
@@ -200,7 +200,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL
 instance_tpread(DeeFileTypeObject *tp_self, DeeFileObject *self,
                 void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
 	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
@@ -216,7 +216,7 @@ instance_tpread(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	return (size_t)-1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) ATTR_INS(3, 4) size_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL
 instance_tpwrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
                  void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags) {
 	/* TODO: Need a way to construct temporary Bytes objects: `DeeBytes_NewTempView() + DeeBytes_ReleaseTempView()',
@@ -232,7 +232,7 @@ instance_tpwrite(DeeFileTypeObject *tp_self, DeeFileObject *self,
 	return (size_t)-1;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tgetc(DeeFileTypeObject *tp_self, DeeFileObject *self, Dee_ioflag_t flags) {
 	int temp;
 	DREF DeeObject *result_ob;
@@ -257,7 +257,7 @@ err:
 	return GETC_ERR;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch) {
 	int temp;
 	DREF DeeObject *result_ob;
@@ -279,7 +279,7 @@ err:
 	return GETC_ERR;
 }
 
-INTERN WUNUSED ATTR_INOUT((1, 2)) int DCALL
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
 instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self,
                int ch, Dee_ioflag_t flags) {
 	int temp;

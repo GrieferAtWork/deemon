@@ -723,11 +723,11 @@ err:
 #endif /* !... */
 #endif /* !FILE_READ_MMAP_THRESHOLD */
 
-INTDEF WUNUSED ATTR_INOUT((1)) ATTR_OUTS(2, 3) size_t DCALL
+INTDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
 sysfile_read(DeeSystemFileObject *__restrict self,
              void *buffer, size_t bufsize,
              dioflag_t flags);
-INTERN WUNUSED ATTR_INOUT((1)) ATTR_INS(2, 3) size_t DCALL
+INTERN WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
 sysfile_pread(DeeSystemFileObject *__restrict self,
               void *buffer, size_t bufsize,
               dpos_t pos, dioflag_t flags);
