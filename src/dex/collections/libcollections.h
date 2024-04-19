@@ -941,7 +941,7 @@ INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_changed_sequence)(DeeObject *__rest
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_key)(DeeObject *__restrict map, DeeObject *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int (DCALL err_unbound_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name);
 INTERN ATTR_COLD NONNULL((1, 2)) int (DCALL err_unknown_attribute_string)(DeeTypeObject *__restrict tp, char const *__restrict name, int access);
-INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name);
+INTDEF ATTR_COLD NONNULL((1)) int (DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);
 INTDEF ATTR_COLD int (DCALL err_invalid_argc)(char const *function_name, size_t argc_cur, size_t argc_min, size_t argc_max);
 
 #define ATTR_ACCESS_GET     0

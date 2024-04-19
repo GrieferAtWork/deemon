@@ -46,6 +46,9 @@ DECL_BEGIN
 #define OPNAME(opname) "operator " opname
 
 
+/************************************************************************/
+/* Instance operator hooks                                              */
+/************************************************************************/
 INTERN WUNUSED ATTR_INOUT((1)) ATTR_OUTS(2, 3) size_t DCALL
 instance_read(DeeFileObject *self, void *buffer,
               size_t bufsize, Dee_ioflag_t flags) {
@@ -301,17 +304,51 @@ err:
 
 
 
-#define DEFINE_OPERATOR_INVOKE(name, instance_name)                      \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,       \
-	              /*0..1*/ DREF DeeFileObject **p_self,                  \
-	              size_t argc, DeeObject *const *argv, uint16_t opname); \
-	PRIVATE struct Dee_operator_invoke tpconst name =                    \
-	Dee_OPERATOR_INVOKE_INIT(&invoke_##name, instance_name);             \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
-	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,       \
-	              /*0..1*/ DREF DeeFileObject **p_self,                  \
-	              size_t argc, DeeObject *const *argv, uint16_t opname)
+
+
+/************************************************************************/
+/* Operator inheritance overrides.                                      */
+/************************************************************************/
+#define DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_name, type_inherit_file_name) \
+	INTERN NONNULL((1, 2, 3)) void DCALL                                            \
+	filetype_inherit_name(DeeFileTypeObject *self, DeeTypeObject *type_type,        \
+	                      struct Dee_opinfo const *info) {                          \
+		ASSERT(type_type == &DeeFileType_Type);                                     \
+		(void)type_type;                                                            \
+		(void)info;                                                                 \
+		type_inherit_file_name(self);                                               \
+	}
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_read, type_inherit_file_read)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_write, type_inherit_file_write)
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_seek, type_inherit_file_seek)   /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_sync, type_inherit_file_sync)   /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_trunc, type_inherit_file_trunc) /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_close, type_inherit_file_close) /* Not needed; standard inheritance already does the job. */
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pread, type_inherit_file_pread)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pwrite, type_inherit_file_pwrite)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_getc, type_inherit_file_getc)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_ungetc, type_inherit_file_ungetc)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_putc, type_inherit_file_putc)
+#undef DEFINE_FILETYPE_INHERIT_HOOK
+
+
+
+
+
+/************************************************************************/
+/* Generic operator invocation                                          */
+/************************************************************************/
+#define DEFINE_OPERATOR_INVOKE(name, instance_name, inherit_name)              \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
+	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,             \
+	              /*0..1*/ DREF DeeFileObject **p_self,                        \
+	              size_t argc, DeeObject *const *argv, Dee_operator_t opname); \
+	PRIVATE struct Dee_operator_invoke tpconst name =                          \
+	Dee_OPERATOR_INVOKE_INIT(&invoke_##name, instance_name, inherit_name);     \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
+	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,             \
+	              /*0..1*/ DREF DeeFileObject **p_self,                        \
+	              size_t argc, DeeObject *const *argv, Dee_operator_t opname)
 
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileObject *self) {
@@ -331,7 +368,7 @@ make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileOb
  * >> operator read(buf: <Buffer>, start: int, end: int, flags: int): int;
  * >> operator read(max_bytes: int): Bytes; 
  * >> operator read(): Bytes; */
-DEFINE_OPERATOR_INVOKE(operator_read, &instance_read) {
+DEFINE_OPERATOR_INVOKE(operator_read, &instance_read, &filetype_inherit_read) {
 	DeeObject *data  = NULL;
 	DeeObject *begin = NULL;
 	DeeObject *end   = NULL;
@@ -394,7 +431,7 @@ err:
 /* >> operator write(buf: <Buffer>): int;
  * >> operator write(buf: <Buffer>, max_size: int): int;
  * >> operator write(buf: <Buffer>, start: int, end: int): int; */
-DEFINE_OPERATOR_INVOKE(operator_write, &instance_write) {
+DEFINE_OPERATOR_INVOKE(operator_write, &instance_write, &filetype_inherit_write) {
 	DeeObject *data  = NULL;
 	DeeObject *begin = NULL;
 	DeeObject *end   = NULL;
@@ -441,7 +478,7 @@ err:
 }
 
 /* >> operator seek(off: int, whence: int): int; */
-DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek) {
+DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek, NULL /*&filetype_inherit_seek*/) {
 	doff_t off;
 	dpos_t result;
 	int whence = SEEK_SET;
@@ -460,7 +497,7 @@ err:
 }
 
 /* >> operator sync(); */
-DEFINE_OPERATOR_INVOKE(operator_sync, &instance_sync) {
+DEFINE_OPERATOR_INVOKE(operator_sync, &instance_sync, NULL /*&filetype_inherit_sync*/) {
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_sync);
@@ -475,7 +512,7 @@ err:
 
 /* >> operator trunc(length: int);
  * >> operator trunc(): int; */
-DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc) {
+DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc, NULL /*&filetype_inherit_trunc*/) {
 	dpos_t length;
 	(void)p_self;
 	(void)opname;
@@ -500,7 +537,7 @@ err:
 }
 
 /* >> operator close() */
-DEFINE_OPERATOR_INVOKE(operator_close, &instance_close) {
+DEFINE_OPERATOR_INVOKE(operator_close, &instance_close, NULL /*&filetype_inherit_close*/) {
 	(void)p_self;
 	(void)opname;
 	ASSERT(tp_self->ft_close);
@@ -519,7 +556,7 @@ err:
  * >> operator pread(buf: <Buffer>, start: int, end: int, pos: int, flags: int): int;
  * >> operator pread(max_bytes: int, pos: int): Bytes; 
  * >> operator pread(pos: int): Bytes; */
-DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread) {
+DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread, &filetype_inherit_pread) {
 	DeeObject *a;
 	DeeObject *b = NULL;
 	DeeObject *c = NULL;
@@ -592,7 +629,7 @@ err:
  * >> operator pwrite(data: <Buffer>, max_size: int, pos: int): int;
  * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int): int;
  * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int, flags: int): int; */
-DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite) {
+DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite, &filetype_inherit_pwrite) {
 	DeeObject *a;
 	DeeObject *b;
 	DeeObject *c = NULL;
@@ -648,7 +685,7 @@ err:
 
 /* >> operator getc(): int;
  * >> operator getc(flags: int): int; */
-DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc) {
+DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc, &filetype_inherit_getc) {
 	int result;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;
@@ -665,7 +702,7 @@ err:
 }
 
 /* >> operator ungetc(ch: int): bool; */
-DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc) {
+DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc, &filetype_inherit_ungetc) {
 	int ch;
 	(void)p_self;
 	(void)opname;
@@ -681,7 +718,7 @@ err:
 }
 
 /* >> operator putc(ch: int): bool; */
-DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc) {
+DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc, &filetype_inherit_putc) {
 	int ch;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;

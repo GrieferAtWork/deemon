@@ -872,7 +872,7 @@ mkconst:
 
 
 	case KWD_str: {
-		uint16_t opid; /* Unary expressions. */
+		Dee_operator_t opid; /* Unary expressions. */
 		opid = OPERATOR_STR;
 		goto do_unary_operator_kwd;
 	case KWD_repr:
@@ -1433,7 +1433,7 @@ err_restore_pos:
 			goto err;
 		if (tok != '(') {
 			/* Bound-operator expression. */
-			merge = ast_operator_func((uint16_t)name, NULL);
+			merge = ast_operator_func((Dee_operator_t)name, NULL);
 		} else {
 			DREF struct ast *other;
 			old_flags = TPPLexer_Current->l_flags;
@@ -1452,7 +1452,7 @@ err_restore_pos:
 			TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 			if (skip(')', W_EXPECTED_RPAREN))
 				goto err;
-			merge = ast_build_operator((uint16_t)name,
+			merge = ast_build_operator((Dee_operator_t)name,
 			                           /* Set the MAYBEPFX flag to suppress errors that
 			                            * would normally cause the assembler to fail when
 			                            * attempting to use an inplace operator on a
@@ -1832,7 +1832,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 						goto err_r;
 					if (tok != '(') {
 						/* Bound-operator expression. */
-						merge = ast_operator_func((uint16_t)name, result);
+						merge = ast_operator_func((Dee_operator_t)name, result);
 					} else {
 						old_flags = TPPLexer_Current->l_flags;
 						TPPLexer_Current->l_flags &= ~TPPLEXER_FLAG_WANTLF;
@@ -1850,7 +1850,7 @@ ast_parse_unary_operand(/*inherit(always)*/ DREF struct ast *__restrict result) 
 						TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 						if (skip(')', W_EXPECTED_RPAREN))
 							goto err_r;
-						merge = ast_build_bound_operator((uint16_t)name,
+						merge = ast_build_bound_operator((Dee_operator_t)name,
 						                                 /* Set the MAYBEPFX flag to suppress errors that
 						                                  * would normally cause the assembler to fail when
 						                                  * attempting to use an inplace operator on a
@@ -2050,7 +2050,7 @@ do_normal_call_with_loc:
 		}	break;
 
 		case TOK_INC: {
-			uint16_t opid;
+			Dee_operator_t opid;
 			/* Inplace operators. */
 			opid = OPERATOR_INC;
 			goto do_inplace_op;
@@ -2656,7 +2656,7 @@ STATIC_ASSERT((TOK_AND_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_AND - OPERA
 STATIC_ASSERT((TOK_OR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_OR - OPERATOR_INPLACE_MIN));
 STATIC_ASSERT((TOK_XOR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_XOR - OPERATOR_INPLACE_MIN));
 STATIC_ASSERT((TOK_POW_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_POW - OPERATOR_INPLACE_MIN));
-PRIVATE uint16_t const inplace_fops[] = {
+PRIVATE Dee_operator_t const inplace_fops[] = {
 	/* [TOK_ADD_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_ADD,
 	/* [TOK_SUB_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SUB,
 	/* [TOK_MUL_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MUL,

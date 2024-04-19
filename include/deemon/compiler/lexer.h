@@ -295,13 +295,13 @@ ast_parse_operator_name(uint16_t features);
  * @param: flags: Set of `AST_OPERATOR_F*'
  *       WARNING: This flags set may not contain `AST_OPERATOR_FVARARGS'! */
 INTDEF WUNUSED NONNULL((3, 4)) DREF struct ast *DCALL
-ast_build_bound_operator(uint16_t name, uint16_t flags,
+ast_build_bound_operator(Dee_operator_t name, uint16_t flags,
                          struct ast *__restrict self,
                          struct ast *__restrict args);
 
 /* Same as `ast_build_bound_operator', but used to build free-standing operators. */
 INTDEF WUNUSED NONNULL((3)) DREF struct ast *DCALL
-ast_build_operator(uint16_t name, uint16_t flags,
+ast_build_operator(Dee_operator_t name, uint16_t flags,
                    struct ast *__restrict args);
 
 /* Parse a loop statement that appears in an expression:

@@ -1393,8 +1393,8 @@ struct Dee_function_info {
 	DREF DeeTypeObject            *fi_type;   /* [0..1] The type as part of which a function is implemented. */
 	DREF struct Dee_string_object *fi_name;   /* [0..1] The name of the function. */
 	DREF struct Dee_string_object *fi_doc;    /* [0..1] A documentation string for the function. */
-	uint16_t                       fi_opname; /* When the function is implementing an operator, the name of that operator.
-	                                           * Otherwise, this field is set to `(uint16_t)-1'
+	Dee_operator_t                 fi_opname; /* When the function is implementing an operator, the name of that operator.
+	                                           * Otherwise, this field is set to `(Dee_operator_t)-1'
 	                                           * NOTE: When this field is set, `fi_name' is usually set to `NULL' */
 	uint16_t                       fi_getset; /* When the function is a getset callback, one of `CLASS_GETSET_*'.
 	                                           * Otherwise, this field is set to `(uint16_t)-1' */

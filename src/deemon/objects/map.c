@@ -1699,7 +1699,7 @@ mapiter_next_key(DeeObject *self,
 				return (*nsi->nsi_maplike.nsi_nextkey)(iter);
 			break;
 		}
-	} while (type_inherit_nsi(tp_self));
+	} while (DeeType_InheritNSI(tp_self));
 	result = DeeObject_IterNext(iter);
 	if (!ITER_ISOK(result)) {
 		if unlikely(!result)

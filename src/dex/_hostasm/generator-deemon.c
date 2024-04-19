@@ -98,8 +98,8 @@ err:
 #define ASM_MATHBLOCK_MAX ASM_XOR_IMM32
 #define ASM_MATHBLOCK_CONTAINS(opcode) ((opcode) >= ASM_MATHBLOCK_MIN && (opcode) <= ASM_MATHBLOCK_MAX)
 struct opname_pair {
-	uint16_t op_normal;  /* Normal operator (or 0 if undefined) */
-	uint16_t op_inplace; /* Inplace operator (or 0 if undefined) */
+	Dee_operator_t op_normal;  /* Normal operator (or 0 if undefined) */
+	Dee_operator_t op_inplace; /* Inplace operator (or 0 if undefined) */
 };
 
 #define ASM_MATHBLOCK_OPCODE2OPERATOR(opcode)  asm_mathblock_opnames[(opcode) - ASM_MATHBLOCK_MIN].op_normal
@@ -363,13 +363,13 @@ err:
 /* File, value  ->  N/A */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 gen_print_to_file(struct fungen *__restrict self,
-                  void const *api_function, uint16_t value_operator) {
+                  void const *api_function, Dee_operator_t value_operator) {
 	if (!(self->fg_assembler->fa_flags & FUNCTION_ASSEMBLER_F_OSIZE)) {
 		bool repr = false;
 		char const *print_after = NULL; /* 1-character string to print *after* the object (or NULL) */
 		DeeTypeObject *value_type;
 		struct memval *value_mval;
-		uint16_t print_operator;
+		Dee_operator_t print_operator;
 		if (api_function == (void const *)&DeeFile_PrintObject) {
 			/* ... */
 		} else if (api_function == (void const *)&DeeFile_PrintObjectRepr) {
@@ -488,7 +488,7 @@ gen_print_with_stdout_in_vtop(struct fungen *__restrict self,
                               Dee_instruction_t const *instr, uint16_t opcode,
                               bool repr) {
 	void const *api_function;
-	uint16_t value_operators;
+	Dee_operator_t value_operators;
 	switch (opcode) {
 
 	TARGET(ASM_PRINTNL)
@@ -1028,7 +1028,7 @@ do_jcc:
 
 	TARGET(ASM_OPERATOR)
 	TARGET(ASM16_OPERATOR) {
-		uint16_t opname;
+		Dee_operator_t opname;
 		uint8_t argc;
 		if (opcode == ASM_OPERATOR) {
 			opname = instr[1];
@@ -1568,7 +1568,7 @@ do_jcc:
 	TARGET(ASM_MUL_SIMM8)
 	TARGET(ASM_DIV_SIMM8)
 	TARGET(ASM_MOD_SIMM8) {
-		uint16_t opname;
+		Dee_operator_t opname;
 		DREF DeeObject *intval;
 		intval = DeeInt_NewInt8((int8_t)instr[1]);
 		if unlikely(!intval)
@@ -1583,7 +1583,7 @@ do_jcc:
 
 	TARGET(ASM_SHL_IMM8)
 	TARGET(ASM_SHR_IMM8) {
-		uint16_t opname;
+		Dee_operator_t opname;
 		DREF DeeObject *intval;
 		intval = DeeInt_NewUInt8((uint8_t)instr[1]);
 		if unlikely(!intval)
@@ -1601,7 +1601,7 @@ do_jcc:
 	TARGET(ASM_AND_IMM32)
 	TARGET(ASM_OR_IMM32)
 	TARGET(ASM_XOR_IMM32) {
-		uint16_t opname;
+		Dee_operator_t opname;
 		DREF DeeObject *intval;
 		intval = DeeInt_NewUInt32((uint32_t)UNALIGNED_GETLE32(instr + 1));
 		if unlikely(!intval)
@@ -1627,7 +1627,7 @@ do_jcc:
 	TARGET(ASM_FPRINTALL_SP)   /* print top, pop..., sp */
 	TARGET(ASM_FPRINTALL_NL) { /* print top, pop..., nl */
 		void const *api_function;
-		uint16_t value_operators = OPERATOR_STR;
+		Dee_operator_t value_operators = OPERATOR_STR;
 		switch (opcode) {
 		case ASM_FPRINT: /* print top, pop */
 			api_function = (void const *)&DeeFile_PrintObject;
@@ -2669,7 +2669,7 @@ do_jcc:
 		TARGET(ASM_AND_IMM32)   /* and PREFIX, $<imm32> */
 		TARGET(ASM_OR_IMM32)    /* or  PREFIX, $<imm32> */
 		TARGET(ASM_XOR_IMM32) { /* xor PREFIX, $<imm32> */
-			uint16_t opname;
+			Dee_operator_t opname;
 			DREF DeeObject *const_operand;
 			unsigned int vop_flags = VOP_F_NORMAL;
 			DO(fg_vpush_prefix_noalias(self, instr, prefix_type, id1, id2));
@@ -2712,7 +2712,7 @@ do_push_const_operand:
 
 		TARGET(ASM_INCPOST)   /* push inc PREFIX' - `PREFIX: push inc */
 		TARGET(ASM_DECPOST) { /* push dec PREFIX' - `PREFIX: push dec */
-			uint16_t opname = opcode == ASM_INCPOST ? OPERATOR_INC : OPERATOR_DEC;
+			Dee_operator_t opname = opcode == ASM_INCPOST ? OPERATOR_INC : OPERATOR_DEC;
 			DO(fg_vpush_prefix_noalias(self, instr, prefix_type, id1, id2)); /* ref:this */
 			DO(fg_vdup(self));                                  /* ref:this, this */
 			DO(fg_vop(self, OPERATOR_COPY, 1, VOP_F_PUSHRES));  /* ref:this, ref:copy */
@@ -2728,7 +2728,7 @@ do_push_const_operand:
 			break;
 
 		TARGET(ASM_OPERATOR) { /* PREFIX: push op $<imm8>, #<imm8> */
-			uint16_t opname;
+			Dee_operator_t opname;
 			uint8_t argc;
 			opname = prefix_instr[1];
 			argc   = prefix_instr[2];
@@ -2745,7 +2745,7 @@ do_push_const_operand:
 		}	break;
 
 		TARGET(ASM_OPERATOR_TUPLE) { /* PREFIX: push op $<imm8>, pop... */
-			uint16_t opname;
+			Dee_operator_t opname;
 			opname = prefix_instr[1]; /* PREFIX: push op $<imm16>, pop... */
 			__IF0 {
 		TARGET(ASM16_OPERATOR_TUPLE)

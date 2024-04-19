@@ -144,7 +144,7 @@ DeeType_NSI(DeeTypeObject *__restrict tp) {
 	do {
 		if (tp->tp_seq)
 			return tp->tp_seq->tp_nsi;
-	} while (type_inherit_nsi(tp));
+	} while (DeeType_InheritNSI(tp));
 	return NULL;
 }
 
@@ -477,7 +477,7 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 		goto err;
 	tp_iter = Dee_TYPE(self->si_seq);
 	if (!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) {
-		if (!type_inherit_getitem(tp_iter))
+		if (!DeeType_InheritGetItem(tp_iter))
 			goto err_not_implemented;
 	}
 	ASSERT(tp_iter->tp_seq);
@@ -1595,7 +1595,7 @@ seq_iterself(DeeObject *__restrict self) {
 			    seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    DeeType_HasPrivateNSI(tp_iter)) {
 				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_nsi)
-					type_inherit_nsi(tp_self);
+					DeeType_InheritNSI(tp_self);
 				ASSERT(tp_self->tp_seq);
 				ASSERT(tp_self->tp_seq->tp_nsi);
 				if likely(tp_self->tp_seq->tp_nsi == seq->tp_nsi) {
@@ -1618,9 +1618,9 @@ seq_iterself(DeeObject *__restrict self) {
 				found |= 2;
 			if (found == (1 | 2)) {
 				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_get)
-					type_inherit_getitem(tp_self);
+					DeeType_InheritGetItem(tp_self);
 				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_size)
-					type_inherit_size(tp_self);
+					DeeType_InheritSize(tp_self);
 				ASSERT(tp_self->tp_seq);
 				ASSERT(tp_self->tp_seq->tp_get);
 				ASSERT(tp_self->tp_seq->tp_size);
@@ -1672,7 +1672,7 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 			    seq->tp_nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
 			    DeeType_HasPrivateNSI(iter)) {
 				if (!self->tp_seq || !self->tp_seq->tp_nsi)
-					type_inherit_nsi(self);
+					DeeType_InheritNSI(self);
 				ASSERT(self->tp_seq);
 				ASSERT(self->tp_seq->tp_nsi);
 				if likely(self->tp_seq->tp_nsi == seq->tp_nsi) {
@@ -1695,9 +1695,9 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 				found |= 2;
 			if (found == (1 | 2)) {
 				if (!self->tp_seq || !self->tp_seq->tp_get)
-					type_inherit_getitem(self);
+					DeeType_InheritGetItem(self);
 				if (!self->tp_seq || !self->tp_seq->tp_size)
-					type_inherit_size(self);
+					DeeType_InheritSize(self);
 				ASSERT(self->tp_seq);
 				ASSERT(self->tp_seq->tp_get);
 				ASSERT(self->tp_seq->tp_size);

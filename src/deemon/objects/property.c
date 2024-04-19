@@ -250,7 +250,7 @@ property_info(Property *__restrict self,
 	info->fi_type   = NULL;
 	info->fi_name   = NULL;
 	info->fi_doc    = NULL;
-	info->fi_opname = (uint16_t)-1;
+	info->fi_opname = (Dee_operator_t)-1;
 	info->fi_getset = (uint16_t)-1;
 	result = 1;
 done:

@@ -307,14 +307,14 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_constructors(DeeTypeObject *__restrict self) {
+DeeType_InheritConstructors(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
 	if (!(self->tp_flags & TP_FINHERITCTOR))
 		return false;
 	base = self->tp_base;
 	if (base == NULL)
 		return false;
-	type_inherit_constructors(base);
+	DeeType_InheritConstructors(base);
 	ASSERT((base->tp_flags & TP_FVARIABLE) ==
 	       (self->tp_flags & TP_FVARIABLE));
 	LOG_INHERIT(base, self, "operator constructor");
@@ -368,7 +368,7 @@ do_invoke_var_any_ctor:
 do_invoke_var_any_ctor_kw:
 			return (*object_type->tp_init.tp_var.tp_any_ctor_kw)(0, NULL, NULL);
 		}
-		if (type_inherit_constructors(object_type)) {
+		if (DeeType_InheritConstructors(object_type)) {
 			if (object_type->tp_init.tp_var.tp_ctor)
 				goto do_invoke_var_ctor;
 			if (object_type->tp_init.tp_var.tp_any_ctor)
@@ -395,7 +395,7 @@ do_invoke_alloc_any_ctor_kw:
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(object_type, result);
-			if (!type_inherit_constructors(object_type))
+			if (!DeeType_InheritConstructors(object_type))
 				goto err_not_implemented;
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
@@ -453,7 +453,7 @@ do_invoke_var_any_ctor_kw:
 do_invoke_var_copy:
 			return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
 		}
-		if (type_inherit_constructors(object_type)) {
+		if (DeeType_InheritConstructors(object_type)) {
 			if (object_type->tp_init.tp_var.tp_ctor && !argc)
 				goto do_invoke_var_ctor;
 			if (object_type->tp_init.tp_var.tp_any_ctor)
@@ -487,7 +487,7 @@ do_invoke_alloc_copy:
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(object_type, result);
-			if (!type_inherit_constructors(object_type))
+			if (!DeeType_InheritConstructors(object_type))
 				goto err_not_implemented;
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
@@ -589,7 +589,7 @@ do_invoke_var_copy:
 			}
 			return (*object_type->tp_init.tp_var.tp_copy_ctor)(argv[0]);
 		}
-		if (type_inherit_constructors(object_type)) {
+		if (DeeType_InheritConstructors(object_type)) {
 			if (object_type->tp_init.tp_var.tp_any_ctor_kw)
 				goto do_invoke_var_any_ctor_kw;
 			if (object_type->tp_init.tp_var.tp_any_ctor)
@@ -662,7 +662,7 @@ do_invoke_alloc_copy:
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(object_type, result);
-			if (!type_inherit_constructors(object_type))
+			if (!DeeType_InheritConstructors(object_type))
 				goto err_not_implemented;
 			result = DeeType_AllocInstance(object_type);
 			if unlikely(!result)
@@ -821,7 +821,7 @@ DEFINE_OPERATOR(DREF DeeObject *, DeepCopy, (DeeObject *RESTRICT_IF_NOTYPE self)
 	 * offset in the type structure, meaning that we only need to check one address. */
 	if unlikely(!tp_self->tp_init.tp_alloc.tp_deep_ctor) {
 		if (!tp_self->tp_init.tp_alloc.tp_copy_ctor) {
-			if (type_inherit_constructors(tp_self)) {
+			if (DeeType_InheritConstructors(tp_self)) {
 				if (tp_self->tp_init.tp_alloc.tp_deep_ctor)
 					goto got_deep_copy;
 				if (tp_self->tp_init.tp_alloc.tp_copy_ctor)
@@ -954,7 +954,7 @@ do_invoke_var_any_ctor:
 do_invoke_var_any_ctor_kw:
 			return (*tp_self->tp_init.tp_var.tp_any_ctor_kw)(1, (DeeObject **)&self, NULL);
 		}
-		if (type_inherit_constructors(tp_self)) {
+		if (DeeType_InheritConstructors(tp_self)) {
 			if (tp_self->tp_init.tp_var.tp_copy_ctor)
 				goto do_invoke_var_copy;
 			if (tp_self->tp_init.tp_var.tp_deep_ctor)
@@ -997,7 +997,7 @@ do_invoke_alloc_any_ctor_kw:
 		} else {
 			DeeObject_FreeTracker(result);
 			DeeType_FreeInstance(tp_self, result);
-			if (!type_inherit_constructors(tp_self))
+			if (!DeeType_InheritConstructors(tp_self))
 				goto err_not_implemented;
 			if (tp_self->tp_init.tp_alloc.tp_copy_ctor) {
 				Dee_DecrefNokill(tp_self);
@@ -1139,7 +1139,7 @@ DEFINE_OPERATOR(int, Assign, (DeeObject *self, DeeObject *some_object)) {
 do_assign:
 		return DeeType_INVOKE_ASSIGN(tp_self, self, some_object);
 	}
-	if (type_inherit_constructors(tp_self)) {
+	if (DeeType_InheritConstructors(tp_self)) {
 		if (tp_self->tp_init.tp_assign)
 			goto do_assign;
 	}
@@ -1161,7 +1161,7 @@ do_move_assign:
 do_assign:
 		return DeeType_INVOKE_ASSIGN(tp_self, self, other);
 	}
-	if (type_inherit_constructors(tp_self)) {
+	if (DeeType_InheritConstructors(tp_self)) {
 		if (tp_self->tp_init.tp_move_assign)
 			goto do_move_assign;
 		if (tp_self->tp_init.tp_assign)
@@ -1272,7 +1272,7 @@ err:
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_str(DeeTypeObject *__restrict self) {
+DeeType_InheritStr(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
 	if (self->tp_cast.tp_print) {
@@ -1287,7 +1287,7 @@ type_inherit_str(DeeTypeObject *__restrict self) {
 	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (!base->tp_cast.tp_str || !base->tp_cast.tp_print) {
-			if (!type_inherit_str(base))
+			if (!DeeType_InheritStr(base))
 				continue;
 		}
 		LOG_INHERIT(base, self, "operator str");
@@ -1299,7 +1299,7 @@ type_inherit_str(DeeTypeObject *__restrict self) {
 }
 
 INTERN NONNULL((1)) bool DCALL
-type_inherit_repr(DeeTypeObject *__restrict self) {
+DeeType_InheritRepr(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
 	DeeTypeMRO mro;
 	if (self->tp_cast.tp_printrepr) {
@@ -1314,7 +1314,7 @@ type_inherit_repr(DeeTypeObject *__restrict self) {
 	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (!base->tp_cast.tp_repr || !base->tp_cast.tp_printrepr) {
-			if (!type_inherit_repr(base))
+			if (!DeeType_InheritRepr(base))
 				continue;
 		}
 		LOG_INHERIT(base, self, "operator repr");
@@ -1358,8 +1358,8 @@ type_inherit_repr(DeeTypeObject *__restrict self) {
 		}                                                                \
 		return false;                                                    \
 	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_bool, "operator bool", tp_cast.tp_bool)
-DEFINE_TYPE_INHERIT_FUNCTION2(type_inherit_call, "operator call", tp_call, tp_call_kw)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritBool, "operator bool", tp_cast.tp_bool)
+DEFINE_TYPE_INHERIT_FUNCTION2(DeeType_InheritCall, "operator call", tp_call, tp_call_kw)
 #undef DEFINE_TYPE_INHERIT_FUNCTION2
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !DEFINE_TYPED_OPERATORS */
@@ -1369,7 +1369,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Str, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_str &&
-	            !type_inherit_str(tp_self))
+	            !DeeType_InheritStr(tp_self))
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
@@ -1410,7 +1410,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Repr, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_repr &&
-	            !type_inherit_repr(tp_self))
+	            !DeeType_InheritRepr(tp_self))
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
@@ -1452,7 +1452,7 @@ DEFINE_OPERATOR(dssize_t, Print, (DeeObject *RESTRICT_IF_NOTYPE self,
 	dssize_t result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_print &&
-	            !type_inherit_str(tp_self))
+	            !DeeType_InheritStr(tp_self))
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
@@ -1492,7 +1492,7 @@ DEFINE_OPERATOR(dssize_t, PrintRepr, (DeeObject *RESTRICT_IF_NOTYPE self,
 	dssize_t result;
 	LOAD_TP_SELF;
 	if unlikely(!tp_self->tp_cast.tp_printrepr &&
-	            !type_inherit_repr(tp_self))
+	            !DeeType_InheritRepr(tp_self))
 		goto missing;
 
 	/* Handle string-repr recursion for GC objects. */
@@ -1543,7 +1543,7 @@ DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	{
 		LOAD_TP_SELF;
 		if likely(tp_self->tp_cast.tp_bool ||
-		          type_inherit_bool(tp_self))
+		          DeeType_InheritBool(tp_self))
 			return DeeType_INVOKE_BOOL(tp_self, self);
 		return err_unimplemented_operator(tp_self, OPERATOR_BOOL);
 	}
@@ -1557,7 +1557,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Call,
 			return DeeType_INVOKE_CALL(tp_self, self, argc, argv);
 		if (tp_self->tp_call_kw)
 			return DeeType_INVOKE_CALLKW(tp_self, self, argc, argv, NULL);
-	} while (type_inherit_call(tp_self));
+	} while (DeeType_InheritCall(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 	return NULL;
 }
@@ -1588,7 +1588,7 @@ again:
 			                             DeeTuple_ELEM(args),
 			                             NULL);
 		}
-	} while (type_inherit_call(tp_self));
+	} while (DeeType_InheritCall(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 	return NULL;
 #else /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
@@ -1636,7 +1636,7 @@ again:
 			                           DeeTuple_SIZE(args),
 			                           DeeTuple_ELEM(args));
 		}
-	} while (type_inherit_call(tp_self));
+	} while (DeeType_InheritCall(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 err:
 	return NULL;
@@ -1674,7 +1674,7 @@ DEFINE_OPERATOR(DREF DeeObject *, CallKw,
 			}
 			return DeeType_INVOKE_CALL(tp_self, self, argc, argv);
 		}
-	} while (type_inherit_call(tp_self));
+	} while (DeeType_InheritCall(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CALL);
 err:
 	return NULL;
@@ -1946,7 +1946,7 @@ DeeObject_ThisCallf(DeeObject *self, DeeObject *this_arg,
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_hash(DeeTypeObject *__restrict self) {
+DeeType_InheritHash(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
 	DeeTypeObject *base;
 	struct type_cmp *base_cmp;
@@ -1954,7 +1954,7 @@ type_inherit_hash(DeeTypeObject *__restrict self) {
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		base_cmp = base->tp_cmp;
 		if (base_cmp == NULL || !base_cmp->tp_hash) {
-			if (!type_inherit_hash(base))
+			if (!DeeType_InheritHash(base))
 				continue;
 			base_cmp = base->tp_cmp;
 		}
@@ -2009,7 +2009,7 @@ DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				return result;
 			}
 		}
-	} while (type_inherit_hash(tp_self));
+	} while (DeeType_InheritHash(tp_self));
 	return DeeObject_HashGeneric(self);
 recursion:
 	return DEE_HASHOF_RECURSIVE_ITEM;
@@ -2108,7 +2108,7 @@ DEFINE_OPERATOR(void, PClear, (DeeObject *__restrict self, unsigned int gc_prior
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_int(DeeTypeObject *__restrict self) {
+DeeType_InheritInt(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
 	DeeTypeObject *base;
 	struct type_math *base_math;
@@ -2118,7 +2118,7 @@ type_inherit_int(DeeTypeObject *__restrict self) {
 		if (base_math == NULL ||
 		    (!base_math->tp_int && !base_math->tp_int32 &&
 		     !base_math->tp_int64 && !base_math->tp_double)) {
-			if (!type_inherit_int(base))
+			if (!DeeType_InheritInt(base))
 				continue;
 			base_math = base->tp_math;
 		}
@@ -2204,7 +2204,7 @@ DEFINE_OPERATOR(int, Get32Bit,
 				return INT_UNSIGNED;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2258,7 +2258,7 @@ DEFINE_OPERATOR(int, Get64Bit,
 				return INT_UNSIGNED;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2324,7 +2324,7 @@ DEFINE_OPERATOR(int, Get128Bit,
 				return INT_SIGNED;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2398,7 +2398,7 @@ return_trunc64:
 				return 0;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2475,7 +2475,7 @@ return_trunc64:
 				return 0;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2540,7 +2540,7 @@ neg_overflow:
 				return 0;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2601,7 +2601,7 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 				return 0;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return -1;
@@ -2696,7 +2696,7 @@ DEFINE_OPERATOR(int, AsDouble,
 				return error < 0 ? -1 : 0;
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_FLOAT);
 err:
 	return -1;
@@ -2891,7 +2891,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Int, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				return DeeInt_NewInt64((int64_t)resflt);
 			}
 		}
-	} while (type_inherit_int(tp_self));
+	} while (DeeType_InheritInt(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_INT);
 err:
 	return NULL;
@@ -2949,21 +2949,21 @@ err:
 		}                                                                \
 		return false;                                                    \
 	}
-DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_inv, "operator inv", inv)
-DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_pos, "operator pos", pos)
-DEFINE_TYPE_INHERIT_FUNCTION1(type_inherit_neg, "operator neg", neg)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_mul, "operator mul", mul)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_div, "operator div", div)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_mod, "operator mod", mod)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_shl, "operator shl", shl)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_shr, "operator shr", shr)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_and, "operator and", and)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_or, "operator or", or)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_xor, "operator xor", xor)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_pow, "operator pow", pow)
+DEFINE_TYPE_INHERIT_FUNCTION1(DeeType_InheritInv, "operator inv", inv)
+DEFINE_TYPE_INHERIT_FUNCTION1(DeeType_InheritPos, "operator pos", pos)
+DEFINE_TYPE_INHERIT_FUNCTION1(DeeType_InheritNeg, "operator neg", neg)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritMul, "operator mul", mul)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDiv, "operator div", div)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritMod, "operator mod", mod)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritShl, "operator shl", shl)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritShr, "operator shr", shr)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritAnd, "operator and", and)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritOr, "operator or", or)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritXor, "operator xor", xor)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritPow, "operator pow", pow)
 
 /* inc, dec, add, sub, iadd & isub are all apart of the same operator group. */
-INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) {
+INTERN NONNULL((1)) bool DCALL DeeType_InheritAdd(DeeTypeObject *__restrict self) {
 	struct type_math *base_math;
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
@@ -2973,7 +2973,7 @@ INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) 
 		    (!base_math->tp_add && !base_math->tp_inplace_add &&
 		     !base_math->tp_sub && !base_math->tp_inplace_sub &&
 		     !base_math->tp_inc && !base_math->tp_dec)) {
-			if (!type_inherit_add(base))
+			if (!DeeType_InheritAdd(base))
 				continue;
 			base_math = base->tp_math;
 		}
@@ -3009,7 +3009,7 @@ INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) 
 		do {                                                                        \
 			if (tp_self->tp_math && tp_self->tp_math->tp_##xxx)                     \
 				return invoke(tp_self, self);                                       \
-		} while (type_inherit_##xxx(tp_self));                                      \
+		} while (DeeType_Inherit##name(tp_self));                                   \
 		err_unimplemented_operator(tp_self, operator_name);                         \
 		return NULL;                                                                \
 	}
@@ -3033,7 +3033,7 @@ INTERN NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self) 
 					return self;                                                       \
 				}                                                                      \
 			}                                                                          \
-		} while (type_inherit_##xxx(tp_self));                                         \
+		} while (DeeType_Inherit##name(tp_self));                                      \
 		err_unimplemented_operator(tp_self, operator_name);                            \
 	err:                                                                               \
 		return NULL;                                                                   \
@@ -3076,7 +3076,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Add,
 			if (math->tp_dec)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_ADD);
 err:
 	return NULL;
@@ -3110,7 +3110,7 @@ DEFINE_OPERATOR(DREF DeeObject *, Sub,
 			if (math->tp_dec)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SUB);
 err:
 	return NULL;
@@ -3334,7 +3334,7 @@ DEFINE_OPERATOR(int, Inc, (DREF DeeObject **__restrict p_self)) {
 			if (math->tp_dec)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_INC);
 err:
 	return -1;
@@ -3372,46 +3372,45 @@ DEFINE_OPERATOR(int, Dec, (DREF DeeObject **__restrict p_self)) {
 			if (math->tp_inc)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_DEC);
 err:
 	return -1;
 }
 
-#define DEFINE_MATH_INPLACE_OPERATOR2(name, xxx, operator_name, invoke, invoke_inplace) \
-	DEFINE_OPERATOR(int, name, (DREF DeeObject **__restrict p_self,                     \
-	                            DeeObject *some_object)) {                              \
-		LOAD_TP_SELFP;                                                                  \
-		ASSERT_OBJECT(some_object);                                                     \
-		do {                                                                            \
-			if (tp_self->tp_math) {                                                     \
-				if (tp_self->tp_math->tp_inplace_##xxx) {                               \
-					return invoke_inplace(tp_self, p_self, some_object);                \
-				}                                                                       \
-				if (tp_self->tp_math->tp_##xxx) {                                       \
-					DREF DeeObject *temp;                                               \
-					temp = invoke(tp_self, *p_self, some_object);                       \
-					if unlikely(!temp)                                                  \
-						goto err;                                                       \
-					Dee_Decref(*p_self);                                                \
-					*p_self = temp;                                                     \
-					return 0;                                                           \
-				}                                                                       \
-			}                                                                           \
-		} while (type_inherit_##xxx(tp_self));                                          \
-		err_unimplemented_operator(tp_self, operator_name);                             \
-	err:                                                                                \
-		return -1;                                                                      \
+#define DEFINE_MATH_INPLACE_OPERATOR2(name, bname, xxx, operator_name, invoke, invoke_inplace) \
+	DEFINE_OPERATOR(int, name, (DREF DeeObject **__restrict p_self,                            \
+	                            DeeObject *some_object)) {                                     \
+		LOAD_TP_SELFP;                                                                         \
+		ASSERT_OBJECT(some_object);                                                            \
+		do {                                                                                   \
+			if (tp_self->tp_math) {                                                            \
+				if (tp_self->tp_math->tp_inplace_##xxx)                                        \
+					return invoke_inplace(tp_self, p_self, some_object);                       \
+				if (tp_self->tp_math->tp_##xxx) {                                              \
+					DREF DeeObject *temp;                                                      \
+					temp = invoke(tp_self, *p_self, some_object);                              \
+					if unlikely(!temp)                                                         \
+						goto err;                                                              \
+					Dee_Decref(*p_self);                                                       \
+					*p_self = temp;                                                            \
+					return 0;                                                                  \
+				}                                                                              \
+			}                                                                                  \
+		} while (DeeType_Inherit##bname(tp_self));                                             \
+		err_unimplemented_operator(tp_self, operator_name);                                    \
+	err:                                                                                       \
+		return -1;                                                                             \
 	}
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul, mul, OPERATOR_INPLACE_MUL, DeeType_INVOKE_MUL, DeeType_INVOKE_IMUL)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv, div, OPERATOR_INPLACE_DIV, DeeType_INVOKE_DIV, DeeType_INVOKE_IDIV)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceMod, mod, OPERATOR_INPLACE_MOD, DeeType_INVOKE_MOD, DeeType_INVOKE_IMOD)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceShl, shl, OPERATOR_INPLACE_SHL, DeeType_INVOKE_SHL, DeeType_INVOKE_ISHL)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceShr, shr, OPERATOR_INPLACE_SHR, DeeType_INVOKE_SHR, DeeType_INVOKE_ISHR)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceAnd, and, OPERATOR_INPLACE_AND, DeeType_INVOKE_AND, DeeType_INVOKE_IAND)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceOr, or, OPERATOR_INPLACE_OR, DeeType_INVOKE_OR, DeeType_INVOKE_IOR)
-DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, xor, OPERATOR_INPLACE_XOR, DeeType_INVOKE_XOR, DeeType_INVOKE_IXOR)
-DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceMul, Mul, mul, OPERATOR_INPLACE_MUL, DeeType_INVOKE_MUL, DeeType_INVOKE_IMUL)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceDiv, Div, div, OPERATOR_INPLACE_DIV, DeeType_INVOKE_DIV, DeeType_INVOKE_IDIV)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceMod, Mod, mod, OPERATOR_INPLACE_MOD, DeeType_INVOKE_MOD, DeeType_INVOKE_IMOD)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceShl, Shl, shl, OPERATOR_INPLACE_SHL, DeeType_INVOKE_SHL, DeeType_INVOKE_ISHL)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceShr, Shr, shr, OPERATOR_INPLACE_SHR, DeeType_INVOKE_SHR, DeeType_INVOKE_ISHR)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceAnd, And, and, OPERATOR_INPLACE_AND, DeeType_INVOKE_AND, DeeType_INVOKE_IAND)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceOr, Or, or, OPERATOR_INPLACE_OR, DeeType_INVOKE_OR, DeeType_INVOKE_IOR)
+DEFINE_MATH_INPLACE_OPERATOR2(InplaceXor, Xor, xor, OPERATOR_INPLACE_XOR, DeeType_INVOKE_XOR, DeeType_INVOKE_IXOR)
+DEFINE_MATH_INPLACE_OPERATOR2(InplacePow, Pow, pow, OPERATOR_INPLACE_POW, DeeType_INVOKE_POW, DeeType_INVOKE_IPOW)
 
 DEFINE_OPERATOR(int, InplaceAdd,
                 (DREF DeeObject **__restrict p_self, DeeObject *some_object)) {
@@ -3440,7 +3439,7 @@ DEFINE_OPERATOR(int, InplaceAdd,
 			if (math->tp_dec)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_INPLACE_ADD);
 err:
 	return -1;
@@ -3472,7 +3471,7 @@ DEFINE_OPERATOR(int, InplaceSub,
 			if (math->tp_dec)
 				break;
 		}
-	} while (type_inherit_add(tp_self));
+	} while (DeeType_InheritAdd(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_INPLACE_ADD);
 err:
 	return -1;
@@ -3531,7 +3530,7 @@ xinvoke_not(/*nullable*/ DREF DeeObject *ob) {
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_compare(DeeTypeObject *__restrict self) {
+DeeType_InheritCompare(DeeTypeObject *__restrict self) {
 	struct type_cmp *base_cmp;
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
@@ -3541,7 +3540,7 @@ type_inherit_compare(DeeTypeObject *__restrict self) {
 		    (!base_cmp->tp_eq && !base_cmp->tp_ne &&
 		     !base_cmp->tp_lo && !base_cmp->tp_le &&
 		     !base_cmp->tp_gr && !base_cmp->tp_ge)) {
-			if (!type_inherit_compare(base))
+			if (!DeeType_InheritCompare(base))
 				continue;
 			base_cmp = base->tp_cmp;
 		}
@@ -3574,7 +3573,7 @@ type_inherit_compare(DeeTypeObject *__restrict self) {
 				if (tp_self->tp_cmp->tp_##bck)                                                \
 					return xinvoke_not(invoke_bck(tp_self, self, some_object));               \
 			}                                                                                 \
-		} while (type_inherit_compare(tp_self));                                              \
+		} while (DeeType_InheritCompare(tp_self));                                              \
 		err_unimplemented_operator(tp_self, operator_name);                                   \
 		return NULL;                                                                          \
 	}
@@ -3734,7 +3733,7 @@ again:
 				opval = !opval;
 			return opval;
 		}
-	} while (type_inherit_compare(tp_lhs));
+	} while (DeeType_InheritCompare(tp_lhs));
 	err_unimplemented_operator(tp_lhs, OPERATOR_LO);
 	return -2;
 #else
@@ -3778,12 +3777,12 @@ again:
 	}
 
 INTERN NONNULL((1)) bool DCALL
-type_inherit_iternext(DeeTypeObject *__restrict self) {
+DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		if (!base->tp_iter_next) {
-			if (!type_inherit_iternext(base))
+			if (!DeeType_InheritIterNext(base))
 				continue;
 		}
 		LOG_INHERIT(base, self, "operator iternext");
@@ -3792,15 +3791,15 @@ type_inherit_iternext(DeeTypeObject *__restrict self) {
 	}
 	return false;
 }
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_iterself, "operator iterself", tp_iter_self)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_size, "operator size", tp_size)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_contains, "operator contains", tp_contains)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getitem, "operator getitem", tp_get)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delitem, "operator delitem", tp_del)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setitem, "operator setitem", tp_set)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_getrange, "operator getrange", tp_range_get)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_delrange, "operator delrange", tp_range_del)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_setrange, "operator setrange", tp_range_set)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritIterSelf, "operator iterself", tp_iter_self)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSize, "operator size", tp_size)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritContains, "operator contains", tp_contains)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetItem, "operator getitem", tp_get)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelItem, "operator delitem", tp_del)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetItem, "operator setitem", tp_set)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetRange, "operator getrange", tp_range_get)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelRange, "operator delrange", tp_range_del)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetRange, "operator setrange", tp_range_set)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !DEFINE_TYPED_OPERATORS */
 
@@ -3810,7 +3809,7 @@ DEFINE_OPERATOR(DREF DeeObject *, IterSelf, (DeeObject *RESTRICT_IF_NOTYPE self)
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq && seq->tp_iter_self)
 			return DeeType_INVOKE_ITER(tp_self, self);
-	} while (type_inherit_iterself(tp_self));
+	} while (DeeType_InheritIterSelf(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
 	return NULL;
 }
@@ -3820,7 +3819,7 @@ DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject *RESTRICT_IF_NOTYPE self)
 	do {
 		if (tp_self->tp_iter_next)
 			return DeeType_INVOKE_NEXT(tp_self, self);
-	} while (type_inherit_iternext(tp_self));
+	} while (DeeType_InheritIterNext(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_ITERNEXT);
 	return NULL;
 }
@@ -3854,7 +3853,7 @@ DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 				return err_integer_overflow_i(sizeof(size_t) * 8, true);
 			return result;
 		}
-	} while (type_inherit_size(tp_self));
+	} while (DeeType_InheritSize(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SIZE);
 	return (size_t)-1;
 err_ob:
@@ -3883,7 +3882,7 @@ DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject *RESTRICT_IF_NOTYPE sel
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_size)
 			return DeeType_INVOKE_SIZE(tp_self, self);
-	} while (type_inherit_size(tp_self));
+	} while (DeeType_InheritSize(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SIZE);
 	return NULL;
 }
@@ -3894,7 +3893,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ContainsObject,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_contains)
 			return DeeType_INVOKE_CONTAINS(tp_self, self, some_object);
-	} while (type_inherit_contains(tp_self));
+	} while (DeeType_InheritContains(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_CONTAINS);
 	return NULL;
 }
@@ -3905,7 +3904,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItem,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_get)
 			return DeeType_INVOKE_GETITEM(tp_self, self, index);
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 	return NULL;
 }
@@ -3916,7 +3915,7 @@ DEFINE_OPERATOR(int, DelItem,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_del)
 			return DeeType_INVOKE_DELITEM(tp_self, self, index);
-	} while (type_inherit_delitem(tp_self));
+	} while (DeeType_InheritDelItem(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 }
 
@@ -3926,7 +3925,7 @@ DEFINE_OPERATOR(int, SetItem,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_set)
 			return DeeType_INVOKE_SETITEM(tp_self, self, index, value);
-	} while (type_inherit_setitem(tp_self));
+	} while (DeeType_InheritSetItem(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
 }
 
@@ -3936,7 +3935,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRange,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_get)
 			return DeeType_INVOKE_GETRANGE(tp_self, self, begin, end);
-	} while (type_inherit_getrange(tp_self));
+	} while (DeeType_InheritGetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 	return NULL;
 }
@@ -4014,7 +4013,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_getrange(tp_self));
+	} while (DeeType_InheritGetRange(tp_self));
 	err_unimplemented_operator(GET_TP_SELF(), OPERATOR_GETRANGE);
 err:
 	return NULL;
@@ -4045,7 +4044,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 			Dee_Decref(end_ob);
 			return result;
 		}
-	} while (type_inherit_getrange(tp_self));
+	} while (DeeType_InheritGetRange(tp_self));
 	err_unimplemented_operator(GET_TP_SELF(), OPERATOR_GETRANGE);
 err:
 	return NULL;
@@ -4078,7 +4077,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_getrange(tp_self));
+	} while (DeeType_InheritGetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 err:
 	return NULL;
@@ -4114,7 +4113,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4147,7 +4146,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 			Dee_Decref(end_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4181,7 +4180,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4219,7 +4218,7 @@ PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4254,7 +4253,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 			Dee_Decref(end_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4290,7 +4289,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
 			Dee_Decref(begin_ob);
 			return result;
 		}
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 err:
 	return -1;
@@ -4305,7 +4304,7 @@ DEFINE_OPERATOR(int, DelRange,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_del)
 			return DeeType_INVOKE_DELRANGE(tp_self, self, begin, end);
-	} while (type_inherit_delrange(tp_self));
+	} while (DeeType_InheritDelRange(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
 }
 
@@ -4319,7 +4318,7 @@ DEFINE_OPERATOR(int, SetRange,
 	do {
 		if (tp_self->tp_seq && tp_self->tp_seq->tp_range_set)
 			return DeeType_INVOKE_SETRANGE(tp_self, self, begin, end, value);
-	} while (type_inherit_setrange(tp_self));
+	} while (DeeType_InheritSetRange(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
 }
 
@@ -4401,7 +4400,7 @@ check_result:
 			Dee_Decref(result);
 			return 1;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 err:
 	return -1;
@@ -4487,7 +4486,7 @@ check_result:
 			Dee_Decref(result);
 			return 1;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 err:
 	return -1;
@@ -4656,7 +4655,7 @@ check_result:
 			Dee_Decref(result);
 			return 1;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 err:
 	return -1;
@@ -4717,7 +4716,7 @@ check_result:
 			Dee_Decref(result);
 			return 1;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 err:
 	return -1;
@@ -4847,7 +4846,7 @@ DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 			}
 			return result;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 	return NULL;
 }
@@ -4875,7 +4874,7 @@ DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
 			Dee_Decref(index_ob);
 			return result;
 		}
-	} while (type_inherit_getitem(tp_self));
+	} while (DeeType_InheritGetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 err:
 	return NULL;
@@ -4905,7 +4904,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 			Dee_Decref(index_ob);
 			return result;
 		}
-	} while (type_inherit_delitem(tp_self));
+	} while (DeeType_InheritDelItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 err:
 	return -1;
@@ -4936,7 +4935,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 			Dee_Decref(index_ob);
 			return result;
 		}
-	} while (type_inherit_setitem(tp_self));
+	} while (DeeType_InheritSetItem(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
 err:
 	return -1;
@@ -5229,7 +5228,7 @@ err:
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_with(DeeTypeObject *__restrict self) {
+DeeType_InheritWith(DeeTypeObject *__restrict self) {
 	struct type_with *base_with;
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
@@ -5237,7 +5236,7 @@ type_inherit_with(DeeTypeObject *__restrict self) {
 		base_with = base->tp_with;
 		if (base_with == NULL || (base_with->tp_enter == NULL &&
 		                          base_with->tp_leave == NULL)) {
-			if (!type_inherit_with(base))
+			if (!DeeType_InheritWith(base))
 				continue;
 			base_with = base->tp_with;
 		}
@@ -5277,7 +5276,7 @@ DEFINE_OPERATOR(int, Enter,
 			if (tp_self->tp_with->tp_leave)
 				return 0;
 		}
-	} while (type_inherit_with(tp_self));
+	} while (DeeType_InheritWith(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_ENTER);
 }
 
@@ -5293,21 +5292,21 @@ DEFINE_OPERATOR(int, Leave,
 			if (tp_self->tp_with->tp_enter)
 				return 0;
 		}
-	} while (type_inherit_with(tp_self));
+	} while (DeeType_InheritWith(tp_self));
 	return err_unimplemented_operator(tp_self, OPERATOR_LEAVE);
 }
 
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_buffer(DeeTypeObject *__restrict self) {
+DeeType_InheritBuffer(DeeTypeObject *__restrict self) {
 	struct type_buffer *base_buffer;
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		base_buffer = base->tp_buffer;
 		if (base_buffer == NULL || !base_buffer->tp_getbuf) {
-			if (!type_inherit_buffer(base))
+			if (!DeeType_InheritBuffer(base))
 				continue;
 			base_buffer = base->tp_buffer;
 		}
@@ -5347,7 +5346,7 @@ DEFINE_OPERATOR(int, GetBuf,
 #endif /* !__INTELLISENSE__ */
 			return (*buf->tp_getbuf)(self, info, flags);
 		}
-	} while (type_inherit_buffer(tp_self));
+	} while (DeeType_InheritBuffer(tp_self));
 	err_unimplemented_operator(tp_self, OPERATOR_GETBUF);
 err:
 	return -1;
@@ -5375,7 +5374,7 @@ DEFINE_OPERATOR(void, PutBuf,
 				(*tp_self->tp_buffer->tp_putbuf)(self, info, flags);
 			break;
 		}
-	} while (type_inherit_buffer(tp_self));
+	} while (DeeType_InheritBuffer(tp_self));
 #endif /* DEFINE_TYPED_OPERATORS */
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
@@ -5685,20 +5684,40 @@ err:
 
 #ifndef DEFINE_TYPED_OPERATORS
 INTERN NONNULL((1)) bool DCALL
-type_inherit_nsi(DeeTypeObject *__restrict self) {
+DeeType_InheritNSI(DeeTypeObject *__restrict self) {
 	struct type_seq *base_seq;
 	DeeTypeMRO mro;
 	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		base_seq = base->tp_seq;
 		if (base_seq == NULL || !base_seq->tp_nsi) {
-			if (!type_inherit_nsi(base))
+			if (!DeeType_InheritNSI(base))
 				continue;
 		}
 		if (self->tp_seq != NULL) /* Some other sequence interface has already been implemented! */
 			return false;
 		LOG_INHERIT(base, self, "<NSI>");
 		self->tp_seq = base->tp_seq;
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritNII(DeeTypeObject *__restrict self) {
+	struct type_cmp *base_cmp;
+	DeeTypeMRO mro;
+	DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_cmp = base->tp_cmp;
+		if (base_cmp == NULL || !base_cmp->tp_nii) {
+			if (!DeeType_InheritNSI(base))
+				continue;
+		}
+		if (self->tp_cmp != NULL) /* Some other iterator-compare interface has already been implemented! */
+			return false;
+		LOG_INHERIT(base, self, "<NII>");
+		self->tp_cmp = base->tp_cmp;
 		return true;
 	}
 	return false;

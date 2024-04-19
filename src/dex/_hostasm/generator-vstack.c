@@ -1235,7 +1235,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vnotoneref_if_operator(struct fungen *__restrict self,
-                          uint16_t operator_name, vstackaddr_t n) {
+                          Dee_operator_t operator_name, vstackaddr_t n) {
 	vstackaddr_t i;
 	struct memstate *state = self->fg_state;
 	if unlikely(state->ms_stackc < n)
@@ -1270,7 +1270,7 @@ err:
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vnotoneref_if_operator_at(struct fungen *__restrict self,
-                             uint16_t operator_name, vstackaddr_t off) {
+                             Dee_operator_t operator_name, vstackaddr_t off) {
 	struct memval *mval;
 	struct memobj *mobj;
 	struct memstate *state = self->fg_state;

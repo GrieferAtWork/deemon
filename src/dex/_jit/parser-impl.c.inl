@@ -135,7 +135,7 @@ DECL_BEGIN
 #ifndef ERROR_CANNOT_TEST_BINDING_DEFINED
 #define ERROR_CANNOT_TEST_BINDING_DEFINED 1
 PRIVATE ATTR_COLD int DCALL
-err_cannot_invoke_inplace(DeeObject *base, uint16_t opname) {
+err_cannot_invoke_inplace(DeeObject *base, Dee_operator_t opname) {
 	DeeTypeObject *typetype = &DeeType_Type;
 	struct opinfo const *info;
 	if (base) {
@@ -1795,7 +1795,7 @@ err_oo_class_reinit_lvalue:
 				opno = JITLexer_ParseOperatorName(self, &DeeType_Type, P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err;
-				result = JIT_GetOperatorFunction(&DeeType_Type, (uint16_t)opno);
+				result = JIT_GetOperatorFunction(&DeeType_Type, (Dee_operator_t)opno);
 #else /* JIT_EVAL */
 				JITLexer_Yield(self);
 				if unlikely(JITLexer_SkipOperatorName(self))
@@ -2012,7 +2012,7 @@ err_result_copy:
 				opno = JITLexer_ParseOperatorName(self, typetype, P_OPERATOR_FNORMAL);
 				if unlikely(opno < 0)
 					goto err_r;
-				opfun = JIT_GetOperatorFunction(typetype, (uint16_t)opno);
+				opfun = JIT_GetOperatorFunction(typetype, (Dee_operator_t)opno);
 				if unlikely(!opfun)
 					goto err_r;
 				rhs = DeeInstanceMethod_New(opfun, lhs);
@@ -3430,7 +3430,7 @@ STATIC_ASSERT((TOK_AND_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_AND - OPERA
 STATIC_ASSERT((TOK_OR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_OR - OPERATOR_INPLACE_MIN));
 STATIC_ASSERT((TOK_XOR_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_XOR - OPERATOR_INPLACE_MIN));
 STATIC_ASSERT((TOK_POW_EQUAL - TOK_INPLACE_MIN) == (OPERATOR_INPLACE_POW - OPERATOR_INPLACE_MIN));
-PRIVATE uint16_t const inplace_fops[] = {
+PRIVATE Dee_operator_t const inplace_fops[] = {
 	/* [TOK_ADD_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_ADD,
 	/* [TOK_SUB_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_SUB,
 	/* [TOK_MUL_EQUAL - TOK_INPLACE_MIN] = */ OPERATOR_INPLACE_MUL,

@@ -329,7 +329,7 @@ DEFINE_AST_GENERATOR(NONNULL((1)), ast_bound,
 }
 
 DEFINE_AST_GENERATOR(, ast_operator_func,
-                     (uint16_t operator_name, struct ast *binding)) {
+                     (Dee_operator_t operator_name, struct ast *binding)) {
 	DREF struct ast *result;
 	ASSERT_AST_OPT(binding);
 	result = ast_new();
@@ -609,7 +609,7 @@ DEFINE_AST_GENERATOR(NONNULL((1, 2)), ast_function,
 }
 
 DEFINE_AST_GENERATOR(NONNULL((3)), ast_operator1,
-                     (uint16_t operator_name, uint16_t flags,
+                     (Dee_operator_t operator_name, uint16_t flags,
                       struct ast *__restrict opa)) {
 	DREF struct ast *result;
 	ASSERT_AST(opa);
@@ -631,7 +631,7 @@ DEFINE_AST_GENERATOR(NONNULL((3)), ast_operator1,
 }
 
 DEFINE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2,
-                     (uint16_t operator_name, uint16_t flags,
+                     (Dee_operator_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb)) {
 	DREF struct ast *result;
@@ -655,7 +655,7 @@ DEFINE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2,
 	return result;
 }
 DEFINE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3,
-                     (uint16_t operator_name, uint16_t flags,
+                     (Dee_operator_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb,
                       struct ast *__restrict opc)) {
@@ -683,7 +683,7 @@ DEFINE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3,
 }
 
 DEFINE_AST_GENERATOR(NONNULL((3, 4, 5, 6)), ast_operator4,
-                     (uint16_t operator_name, uint16_t flags,
+                     (Dee_operator_t operator_name, uint16_t flags,
                       struct ast *__restrict opa,
                       struct ast *__restrict opb,
                       struct ast *__restrict opc,

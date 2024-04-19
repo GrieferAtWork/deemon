@@ -54,7 +54,7 @@ ast_parse_del_single(unsigned int lookup_mode) {
 		break;
 
 	case AST_OPERATOR: {
-		uint16_t new_operator;
+		Dee_operator_t new_operator;
 		switch (result->a_flag) {
 
 		case OPERATOR_GETATTR:

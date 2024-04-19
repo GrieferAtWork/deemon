@@ -2883,7 +2883,7 @@ invoke_base_any_ctor_kw:
 			goto err_r;
 		goto done;
 	}
-	if (type_inherit_constructors(first_base)) {
+	if (DeeType_InheritConstructors(first_base)) {
 		if (first_base->tp_init.tp_alloc.tp_ctor)
 			goto invoke_base_ctor;
 		if (first_base->tp_init.tp_alloc.tp_any_ctor)
@@ -3600,13 +3600,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasoperator(DeeTypeObject *self, size_t argc,
                  DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	uint16_t opid;
+	Dee_operator_t opid;
+	size_t op_argc = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
-	                    "o:hasoperator", &name))
+	                    "o|" UNPuSIZ ":hasoperator",
+	                    &name, &op_argc))
 		goto err;
 	if (DeeString_Check(name)) {
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self), DeeString_STR(name), (uint16_t)-1);
+		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self),
+		                                     DeeString_STR(name),
+		                                     op_argc);
 		if (info == NULL)
 			goto nope;
 		opid = info->oi_id;
@@ -3626,13 +3630,17 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 type_hasprivateoperator(DeeTypeObject *self, size_t argc,
                         DeeObject *const *argv, DeeObject *kw) {
 	DeeObject *name;
-	uint16_t opid;
+	Dee_operator_t opid;
+	size_t op_argc = (size_t)-1;
 	if (DeeArg_UnpackKw(argc, argv, kw, getattr_kwdlist,
-	                    "o:hasprivateoperator", &name))
+	                    "o|" UNPuSIZ ":hasprivateoperator",
+	                    &name, &op_argc))
 		goto err;
 	if (DeeString_Check(name)) {
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self), DeeString_STR(name), (uint16_t)-1);
+		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self),
+		                                     DeeString_STR(name),
+		                                     op_argc);
 		if (info == NULL)
 			goto nope;
 		opid = info->oi_id;
@@ -3929,6 +3937,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD_F("hasoperator", &type_hasoperator, METHOD_FNOREFESCAPE,
 	                "(name:?Dint)->?Dbool\n"
 	                "(name:?Dstring)->?Dbool\n"
+	                "(name:?Dstring,argc:?Dint)->?Dbool\n"
 	                "Returns ?t if instances of @this ?. implement an operator @name, "
 	                /**/ "or ?f if not, or if @name is not recognized as an operator "
 	                /**/ "available for the Type-Type that is ${type this}\n"
@@ -4005,6 +4014,7 @@ PRIVATE struct type_method tpconst type_methods[] = {
 	TYPE_KWMETHOD_F("hasprivateoperator", &type_hasprivateoperator, METHOD_FNOREFESCAPE,
 	                "(name:?Dint)->?Dbool\n"
 	                "(name:?Dstring)->?Dbool\n"
+	                "(name:?Dstring,argc:?Dint)->?Dbool\n"
 	                "Returns ?t if instances of @this ?. implement an operator @name, "
 	                /**/ "or ?f if not, or if @name is not recognized as an operator provided "
 	                /**/ "available for the Type-Type that is ${type this}.\n"
@@ -4129,7 +4139,7 @@ DeeClass_GetModule(DeeTypeObject *__restrict self) {
 
 	/* Search through the operator bindings table. */
 	for (i = 0; i <= desc->cd_clsop_mask; ++i) {
-		if (desc->cd_clsop_list[i].co_name == (uint16_t)-1)
+		if (desc->cd_clsop_list[i].co_name == (Dee_operator_t)-1)
 			continue;
 		result = get_module_from_addr(my_class,
 		                              desc->cd_clsop_list[i].co_addr);

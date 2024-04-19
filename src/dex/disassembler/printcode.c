@@ -536,7 +536,7 @@ err:
 /* Return the S-name (e.g. `add') of an operator.
  * Returns `NULL' when the name cannot be determined. */
 INTERN WUNUSED char const *DCALL
-libdisasm_get_operator_sname(uint16_t operator_id) {
+libdisasm_get_operator_sname(Dee_operator_t operator_id) {
 	char const *result;
 	struct opinfo const *info;
 	info = DeeTypeType_GetOperatorById(&DeeType_Type, operator_id);
@@ -591,9 +591,9 @@ libdisasm_printclass(dformatprinter printer, void *arg,
 	{
 		bool has_operators = false;
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
-			uint16_t op_name = self->cd_clsop_list[i].co_name;
+			Dee_operator_t op_name = self->cd_clsop_list[i].co_name;
 			char const *op_name_str;
-			if (op_name == (uint16_t)-1)
+			if (op_name == (Dee_operator_t)-1)
 				continue;
 			if (!has_operators) {
 				INVOKE(DeeFormat_Printf(printer, arg, "%s    operators = {\n", line_prefix));

@@ -202,7 +202,8 @@ INTERN ATTR_COLD NONNULL((1)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
+(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp,
+                                   Dee_operator_t operator_name) {
 	struct opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);
@@ -213,8 +214,8 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator2)(DeeTypeObject const *__restrict tp,
-                                    uint16_t operator_name,
-                                    uint16_t operator_name2) {
+                                    Dee_operator_t operator_name,
+                                    Dee_operator_t operator_name2) {
 	struct opinfo const *info, *info2;
 	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);
@@ -227,9 +228,9 @@ INTERN ATTR_COLD NONNULL((1)) int
 
 INTERN ATTR_COLD NONNULL((1)) int
 (DCALL err_unimplemented_operator3)(DeeTypeObject const *__restrict tp,
-                                    uint16_t operator_name,
-                                    uint16_t operator_name2,
-                                    uint16_t operator_name3) {
+                                    Dee_operator_t operator_name,
+                                    Dee_operator_t operator_name2,
+                                    Dee_operator_t operator_name3) {
 	struct opinfo const *info, *info2, *info3;
 	info  = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	info2 = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name2);

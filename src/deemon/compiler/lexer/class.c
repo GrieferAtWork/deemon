@@ -71,7 +71,7 @@ struct class_maker {
 	DREF DeeClassDescriptorObject *cm_desc;    /* [1..1] The descriptor for the class. */
 	size_t                     cm_iattr_size;  /* Number of used slots in `cm_desc->cd_iattr_list' */
 	size_t                     cm_cattr_size;  /* Number of used slots in `cm_desc->cd_cattr_list' */
-	uint16_t                   cm_clsop_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
+	Dee_operator_t             cm_clsop_size;  /* Number of used slots in `cm_desc->cd_clsop_list' */
 	uint16_t                   cm_null_member; /* The address of a class member that is always unbound (used for
 	                                            * deleted operator), or `(uint16_t)-1' when no such address has
 	                                            * yet to be designated. */
@@ -274,14 +274,14 @@ rehash_operator_bindings(DeeClassDescriptorObject *__restrict self) {
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		struct class_operator *op, *new_op;
 		op = &self->cd_clsop_list[i];
-		if (op->co_name == (uint16_t)-1)
+		if (op->co_name == (Dee_operator_t)-1)
 			continue; /* Unused entry. */
 
 		/* Insert the entry into the new table. */
 		j = perturb = op->co_name & new_mask;
 		for (;; DeeClassDescriptor_CLSOPNEXT(j, perturb)) {
 			new_op = &new_table[j & new_mask];
-			if (new_op->co_name == (uint16_t)-1)
+			if (new_op->co_name == (Dee_operator_t)-1)
 				break;
 		}
 		memcpy(new_op, op, sizeof(struct class_operator));
@@ -405,9 +405,9 @@ err:
  * in the class member table under `addr' */
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
 class_maker_bindoperator(struct class_maker *__restrict self,
-                         uint16_t name, uint16_t addr,
+                         Dee_operator_t name, uint16_t addr,
                          struct ast_loc *__restrict loc) {
-	uint16_t i, perturb;
+	Dee_operator_t i, perturb;
 	struct class_operator *result;
 	DeeClassDescriptorObject *desc = self->cm_desc;
 	if ((desc->cd_clsop_mask == 0 ||
@@ -419,7 +419,7 @@ class_maker_bindoperator(struct class_maker *__restrict self,
 	/* Search for a pre-existing matching attribute, or create a new one. */
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		result = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
-		if (result->co_name == (uint16_t)-1)
+		if (result->co_name == (Dee_operator_t)-1)
 			break; /* Unused entry. */
 		if (result->co_name != name)
 			continue;
@@ -788,7 +788,7 @@ err:
 /* Add a new operator function to a given class. */
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_addoperator(struct class_maker *__restrict self,
-                        uint16_t operator_name,
+                        Dee_operator_t operator_name,
                         struct ast *__restrict callback) {
 	struct class_member *member;
 	uint16_t addr;
@@ -820,7 +820,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 class_maker_deloperator(struct class_maker *__restrict self,
-                        uint16_t operator_name,
+                        Dee_operator_t operator_name,
                         struct ast_loc *__restrict loc) {
 	/* Deleted operator (e.g. `operator str = del;') */
 	if (self->cm_null_member == (uint16_t)-1) {
@@ -1826,7 +1826,7 @@ set_visibility:
 			goto next_modifier;
 
 		case KWD_operator: {
-			uint16_t operator_name;
+			Dee_operator_t operator_name;
 			bool need_semi;
 			int error;
 			struct TPPKeyword *operator_name_kwd;
@@ -1841,7 +1841,7 @@ set_visibility:
 			temp = ast_parse_operator_name(P_OPERATOR_FCLASS);
 			if unlikely(temp < 0)
 				goto err;
-			operator_name = (uint16_t)temp;
+			operator_name = (Dee_operator_t)temp;
 
 			/* Special case: The constructor operator. */
 define_operator:

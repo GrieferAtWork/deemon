@@ -123,9 +123,9 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_srt_invalid_extern(struct code_frame
 
 
 /* @param: operator_name: One of `OPERATOR_*' */
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator(DeeTypeObject const *__restrict tp, uint16_t operator_name);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator2(DeeTypeObject const *__restrict tp, uint16_t operator_name, uint16_t operator_name2);
-INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObject const *__restrict tp, uint16_t operator_name, uint16_t operator_name2, uint16_t operator_name3);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator2(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name, Dee_operator_t operator_name2);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unimplemented_operator3(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name, Dee_operator_t operator_name2, Dee_operator_t operator_name3);
 
 #define ATTR_ACCESS_GET     0
 #define ATTR_ACCESS_DEL     1

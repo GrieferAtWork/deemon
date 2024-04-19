@@ -1730,13 +1730,13 @@ ast_gen_setrange(struct ast *__restrict sequence,
 INTDEF WUNUSED NONNULL((2)) int DCALL
 ast_gen_operator_func(struct ast *binding,
                       struct ast *ddi_ast,
-                      uint16_t operator_name);
+                      Dee_operator_t operator_name);
 
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL
 ast_gen_symbol_inplace(struct symbol *__restrict sym,
                        struct ast *operand,
                        struct ast *ddi_ast,
-                       uint16_t inplace_operator_name,
+                       Dee_operator_t inplace_operator_name,
                        bool is_post_operator,
                        unsigned int gflags);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL
@@ -1744,7 +1744,7 @@ ast_gen_setattr_inplace(struct ast *__restrict base,
                         struct ast *__restrict name,
                         struct ast *operand,
                         struct ast *ddi_ast,
-                        uint16_t inplace_operator_name,
+                        Dee_operator_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
 INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL
@@ -1752,7 +1752,7 @@ ast_gen_setitem_inplace(struct ast *__restrict base,
                         struct ast *__restrict index,
                         struct ast *operand,
                         struct ast *ddi_ast,
-                        uint16_t inplace_operator_name,
+                        Dee_operator_t inplace_operator_name,
                         bool is_post_operator,
                         unsigned int gflags);
 INTDEF WUNUSED NONNULL((1, 2, 3, 5)) int DCALL
@@ -1761,7 +1761,7 @@ ast_gen_setrange_inplace(struct ast *__restrict base,
                          struct ast *__restrict end,
                          struct ast *operand,
                          struct ast *ddi_ast,
-                         uint16_t inplace_operator_name,
+                         Dee_operator_t inplace_operator_name,
                          bool is_post_operator,
                          unsigned int gflags);
 

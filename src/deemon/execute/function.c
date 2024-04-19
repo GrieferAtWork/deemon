@@ -136,7 +136,7 @@ lookup_code_info_in_class(DeeTypeObject *type,
 			for (i = 0; i <= desc->cd_clsop_mask; ++i) {
 				struct class_operator *op;
 				op = &desc->cd_clsop_list[i];
-				if (op->co_name == (uint16_t)-1)
+				if (op->co_name == (Dee_operator_t)-1)
 					continue;
 				if (op->co_addr != addr)
 					continue;
@@ -584,7 +584,7 @@ function_get_operator(Function *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (uint16_t)-1)
+	if (info.fi_opname != (Dee_operator_t)-1)
 		return DeeInt_NewUInt16(info.fi_opname);
 	err_unbound_attribute_string(&DeeFunction_Type, "__operator__");
 err:
@@ -599,7 +599,7 @@ function_bound_operator(Function *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_opname != (uint16_t)-1 ? 1 : 0;
+	return info.fi_opname != (Dee_operator_t)-1 ? 1 : 0;
 err:
 	return -1;
 }
@@ -612,7 +612,7 @@ function_get_operatorname(Function *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (uint16_t)-1) {
+	if (info.fi_opname != (Dee_operator_t)-1) {
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
 		                                 info.fi_opname);

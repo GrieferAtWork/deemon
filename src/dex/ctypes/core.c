@@ -930,7 +930,7 @@ DeeSType_Get(DeeObject *__restrict self) {
 
 
 INTERN ATTR_COLD int DCALL
-err_unimplemented_operator(DeeSTypeObject *__restrict tp, uint16_t operator_name) {
+err_unimplemented_operator(DeeSTypeObject *__restrict tp, Dee_operator_t operator_name) {
 	struct opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(DeeSType_AsType(tp)), operator_name);
 	ASSERT_OBJECT(DeeSType_AsType(tp));

@@ -466,13 +466,13 @@ dec_putclassdesc(DeeClassDescriptorObject *__restrict self) {
 	struct dec_section *oldsec;
 	bool use_8bit = true;
 	size_t i;
-	uint16_t op_count  = 0;
+	Dee_operator_t op_count = 0;
 	size_t cattr_count = 0;
 	size_t iattr_count = 0;
 
 	/* Count the number of operators, class- and instance-attributes. */
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
-		if (self->cd_clsop_list[i].co_name == (uint16_t)-1)
+		if (self->cd_clsop_list[i].co_name == (Dee_operator_t)-1)
 			continue;
 		if (self->cd_clsop_list[i].co_name > UINT8_MAX)
 			use_8bit = false;
@@ -568,7 +568,7 @@ empty_doc:
 			goto err; /* Dec_ClassDescriptor::cd_cmemb_size */
 		if (dec_putw(self->cd_imemb_size))
 			goto err; /* Dec_ClassDescriptor::cd_imemb_size */
-		if (dec_putw(op_count))
+		if (dec_putw((uint16_t)op_count))
 			goto err; /* Dec_ClassDescriptor::cd_op_count */
 		if (dec_putptr((uint32_t)cattr_count))
 			goto err; /* Dec_ClassDescriptor::cd_cattr_count */

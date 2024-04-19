@@ -2562,6 +2562,8 @@ struct Dee_membercache {
 
 
 
+typedef uint16_t Dee_operator_t;
+
 #define Dee_OPERATOR_USERCOUNT    0x003e        /* Number of user-accessible operators. (Used by `class' types) */
 #define Dee_OPERATOR_EXTENDED(x) (0x1000 + (x)) /* Extended operator codes. (Type-specific; may be re-used) */
 #ifdef DEE_SOURCE
@@ -2776,7 +2778,34 @@ struct Dee_membercache {
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *
 (DCALL *Dee_operator_invoke_cb_t)(DeeTypeObject *tp_self, DeeObject *self,
                                   /*0..1*/ DREF DeeObject **p_self, size_t argc,
-                                  DeeObject *const *argv, uint16_t opname);
+                                  DeeObject *const *argv, Dee_operator_t opname);
+
+/* Generic operator inheritance function.
+ *
+ * This function may be overwritten in order to control how/when a
+ * specific operator "info->oi_id" (as declared by "type_type") can
+ * be inherited by "self" from one of its direct bases, and is used
+ * to implement `DeeType_InheritOperator()'.
+ *
+ * When not explicit operator inheritance callback is provided,
+ * operators are inherited automatically by recursively checking
+ * all direct bases of "self" that are able to provide operators
+ * from "type_type", then recursively trying to have those types
+ * inherit "info->oi_id" until one of them ends up implementing
+ * it (or was already implementing it from the get-go), then
+ * inheriting that base's callback into "self".
+ *
+ * This callback only gets invoked when the operator slot described
+ * by "info" leads to a NULL-function-pointer in "self".
+ *
+ * Using this override, it's possible to make it so only certain
+ * groups of operators can be inherited (e.g. "*" and "*=" can only
+ * ever be inherited as a pair, rather than individually, meaning
+ * that when a type defines one of them, the other can't be inherited
+ * from a base class). */
+typedef NONNULL_T((1, 2, 3)) void
+(DCALL *Dee_operator_inherit_cb_t)(DeeTypeObject *self, DeeTypeObject *type_type,
+                                   struct Dee_opinfo const *info);
 #if defined(__INTELLISENSE__) && defined(__cplusplus)
 /* Highlight usage errors in IDE */
 extern "C++" {
@@ -2784,27 +2813,35 @@ namespace __intern {
 Dee_operator_invoke_cb_t _Dee_RequiresOperatorInvokeCb(decltype(nullptr));
 template<class _TReturn, class _TTpSelf, class _TSelf> Dee_operator_invoke_cb_t
 _Dee_RequiresOperatorInvokeCb(_TReturn *(DCALL *_meth)(_TTpSelf *tp_self, _TSelf *self, /*0..1*/ _TSelf **p_self,
-                                                       size_t argc, DeeObject *const *argv, uint16_t opname));
+                                                       size_t argc, DeeObject *const *argv, Dee_operator_t opname));
+Dee_operator_inherit_cb_t _Dee_RequiresOperatorInheritCb(decltype(nullptr));
+template<class _TSelf, class _TTypeType> Dee_operator_inherit_cb_t
+_Dee_RequiresOperatorInheritCb(void (DCALL *_meth)(_TSelf *self, _TTypeType *type_type,
+                                                   struct Dee_opinfo const *info));
 } /* namespace __intern */
 } /* extern "C++" */
-#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth) ((decltype(::__intern::_Dee_RequiresOperatorInvokeCb(meth)))(meth))
+#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth)  ((decltype(::__intern::_Dee_RequiresOperatorInvokeCb(meth)))(meth))
+#define Dee_REQUIRES_OPERATOR_INHERIT_CB(meth) ((decltype(::__intern::_Dee_RequiresOperatorInheritCb(meth)))(meth))
 #else /* __INTELLISENSE__ && __cplusplus */
-#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth) ((Dee_operator_invoke_cb_t)(meth))
+#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth)  ((Dee_operator_invoke_cb_t)(meth))
+#define Dee_REQUIRES_OPERATOR_INHERIT_CB(meth) ((Dee_operator_inherit_cb_t)(meth))
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
 struct Dee_operator_invoke {
-	Dee_operator_invoke_cb_t opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()' when this operator is
-	                                         * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL'). */
-	Dee_funptr_t             opi_classhook; /* [1..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)' when `DeeClass_New()'
-	                                         * hooks this operator. The implementation of `opi_invoke' should check for this function and
-	                                         * manually invoke its t* variant, which should then use `DeeClass_GetOperator()' in order to
-	                                         * load the user-defined function object associated with this operator. */
+	Dee_operator_invoke_cb_t  opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()' when this operator is
+	                                          * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL'). */
+	Dee_funptr_t              opi_classhook; /* [1..1] Function pointer to store in `*(*(tp + oi_class) + oi_offset)' when `DeeClass_New()'
+	                                          * hooks this operator. The implementation of `opi_invoke' should check for this function and
+	                                          * manually invoke its t* variant, which should then use `DeeClass_GetOperator()' in order to
+	                                          * load the user-defined function object associated with this operator. */
+	Dee_operator_inherit_cb_t opi_inherit;   /* [0..1] Override for inheriting this operator. */
 };
-#define Dee_OPERATOR_INVOKE_INIT(opi_invoke_, opi_classhook_) \
-	{ Dee_REQUIRES_OPERATOR_INVOKE_CB(opi_invoke_), (Dee_funptr_t)(opi_classhook_) }
+#define Dee_OPERATOR_INVOKE_INIT(opi_invoke_, opi_classhook_, opi_inherit)          \
+	{ Dee_REQUIRES_OPERATOR_INVOKE_CB(opi_invoke_), (Dee_funptr_t)(opi_classhook_), \
+	  Dee_REQUIRES_OPERATOR_INHERIT_CB(opi_inherit) }
 
 struct Dee_opinfo {
-	uint16_t                                oi_id;        /* Operator ID */
+	Dee_operator_t                          oi_id;        /* Operator ID */
 	uint16_t                                oi_class;     /* Offset into the type for where to find a `0..1' struct that contains more  */
 	uint16_t                                oi_offset;    /* Offset from `oi_class' to where the c-function of this operator can be found. */
 	uint16_t                                oi_cc;        /* The operator calling convention (s.a. `OPCC_*'). */
@@ -2846,7 +2883,7 @@ struct Dee_type_operator {
 		struct Dee_opinfo            to_decl;     /* [valid_if(Dee_type_operator_isdecl(.))] Operator declaration
 		                                           * NOTE: Only allowed in `tp->tp_operators' if `DeeType_IsTypeType(tp)'! */
 		struct {
-			uint16_t                _s_pad_id;    /* ... */
+			Dee_operator_t          _s_pad_id;    /* ... */
 			uint16_t                _s_class;     /* Always `OPCLASS_CUSTOM' */
 			uint16_t                _s_offset;    /* ... */
 			uint16_t                _s_cc;        /* Always `OPCC_SPECIAL' */
@@ -2854,7 +2891,7 @@ struct Dee_type_operator {
 			char                    _s_Xname[40 - sizeof(uintptr_t)]; /* ... */
 			Dee_operator_invoke_cb_t s_invoke;    /* [0..1] Operator implementation (or `NULL' if only flags are declared) */
 		}                            to_custom;   /* [valid_if(Dee_type_operator_iscustom(.))] Custom operator, or operator flags */
-		uint16_t                     to_id;       /* Operator ID */
+		Dee_operator_t               to_id;       /* Operator ID */
 	}
 #ifndef __COMPILER_HAVE_TRANSPARENT_UNION
 	_dee_aunion
@@ -3136,23 +3173,35 @@ DeeTypeMRO_NextDirectBase(DeeTypeMRO *__restrict self,
  *       be the result of `Dee_TYPE(Dee_TYPE(ob))', in order to return
  *       information about generic operators that can be used on `ob' */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
-DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, uint16_t id);
+DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, Dee_operator_t id);
+
+/* Same as `DeeTypeType_GetOperatorById()', but also fill in `*p_declaring_type_type'
+ * as the type-type that is declaring the operator "id". This can differ from "typetype"
+ * in (e.g.) `DeeTypeType_GetOperatorByIdEx(&DeeFileType_Type, OPERATOR_BOOL)', where
+ * `&DeeFileType_Type' is still able to implement "OPERATOR_BOOL", but the declaration
+ * originates from `DeeType_Type', so in that case, `*p_declaring_type_type' is set to
+ * `DeeType_Type', whereas for `FILE_OPERATOR_READ', it would be `DeeFileType_Type'
+ * @param: p_declaring_type_type: [0..1] When non-null, store the declaring type here.
+ * @return: NULL: No such operator (`*p_declaring_type_type' is undefined) */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
+DeeTypeType_GetOperatorByIdEx(DeeTypeObject const *__restrict typetype, Dee_operator_t id,
+                              DeeTypeObject **p_declaring_type_type);
 
 /* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
  * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
  * @param: argc: The number of extra arguments taken by the operator (excluding
- *               the "this"-argument), or `(uint16_t)-1' if unknown. */
+ *               the "this"-argument), or `(size_t)-1' if unknown. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
-                              char const *__restrict name, uint16_t argc);
+                              char const *__restrict name, size_t argc);
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
                                  char const *__restrict name, size_t namelen,
-                                 uint16_t argc);
+                                 size_t argc);
 
 /* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL
-DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id);
+DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator_t id);
 
 /* Lookup per-type method flags that may be defined for "opname".
  * IMPORTANT: When querying the flags for `OPERATOR_ITERSELF', the `Dee_METHOD_FCONSTCALL',
@@ -3164,7 +3213,7 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, uint16_t id)
  * @return: * : Set of `Dee_METHOD_F*' describing special optimizations possible for "opname".
  * @return: Dee_METHOD_FNORMAL: No special flags are defined for "opname" (or "opname" doesn't have special flags) */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) uintptr_t DCALL
-DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, uint16_t opname);
+DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, Dee_operator_t opname);
 
 /* Helper for checking that every cast-like operators is
  * either not implemented, or marked as Dee_METHOD_FCONSTCALL:
@@ -3178,21 +3227,34 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, uint16_t opname);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_IsConstCastable(DeeTypeObject const *__restrict self);
 
-/* Check if `name' is being implemented by the given type, or has been inherited by a base-type. */
-DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasOperator(DeeTypeObject const *__restrict self, uint16_t name);
+/* Check if `name' is being implemented by the given type, or has been inherited by a base. */
+#define DeeType_HasOperator(self, name) \
+	DeeType_InheritOperator((DeeTypeObject *)Dee_REQUIRES_OBJECT(self), name)
+
+/* Check if the callback slot for `name' in `self' is populated.
+ * If it isn't, then search the MRO of `self' for the first type
+ * that *does* implement said operator, and cache that base's
+ * callback in `self'
+ * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
+ * @return: false: `self' doesn't implement the operator, and neither does one of its bases (or the
+ *                 operator could not be inherited by one of its bases). In this case, trying to
+ *                 invoke the operator will result in a NotImplemented error. */
+DFUNDEF NONNULL((1)) bool DCALL
+DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name);
 
 /* Same as `DeeType_HasOperator()', however don't return `true' if the
  * operator has been inherited implicitly from a base-type of `self'. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
-DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
+DeeType_HasPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name);
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateNSI(DeeTypeObject const *__restrict self);
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
+DeeType_HasPrivateNII(DeeTypeObject const *__restrict self);
 
 /* Return the type from `self' inherited its operator `name'.
  * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
 DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
-DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name);
+DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Inherit different groups of operators from base-classes, returning `true' if
@@ -3205,41 +3267,78 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, uint16_t name);
  * its intend of inheriting constructors)
  *
  * s.a. `DeeType_InheritOperator()' */
-INTDEF NONNULL((1)) bool DCALL type_inherit_constructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-INTDEF NONNULL((1)) bool DCALL type_inherit_str(DeeTypeObject *__restrict self);           /* tp_str, tp_print */
-INTDEF NONNULL((1)) bool DCALL type_inherit_repr(DeeTypeObject *__restrict self);          /* tp_repr, tp_printrepr */
-INTDEF NONNULL((1)) bool DCALL type_inherit_bool(DeeTypeObject *__restrict self);          /* tp_bool */
-INTDEF NONNULL((1)) bool DCALL type_inherit_call(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
-INTDEF NONNULL((1)) bool DCALL type_inherit_hash(DeeTypeObject *__restrict self);          /* tp_hash */
-INTDEF NONNULL((1)) bool DCALL type_inherit_int(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
-INTDEF NONNULL((1)) bool DCALL type_inherit_inv(DeeTypeObject *__restrict self);           /* tp_inv */
-INTDEF NONNULL((1)) bool DCALL type_inherit_pos(DeeTypeObject *__restrict self);           /* tp_pos */
-INTDEF NONNULL((1)) bool DCALL type_inherit_neg(DeeTypeObject *__restrict self);           /* tp_neg */
-INTDEF NONNULL((1)) bool DCALL type_inherit_add(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
-INTDEF NONNULL((1)) bool DCALL type_inherit_mul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
-INTDEF NONNULL((1)) bool DCALL type_inherit_div(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
-INTDEF NONNULL((1)) bool DCALL type_inherit_mod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
-INTDEF NONNULL((1)) bool DCALL type_inherit_shl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
-INTDEF NONNULL((1)) bool DCALL type_inherit_shr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
-INTDEF NONNULL((1)) bool DCALL type_inherit_and(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
-INTDEF NONNULL((1)) bool DCALL type_inherit_or(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
-INTDEF NONNULL((1)) bool DCALL type_inherit_xor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
-INTDEF NONNULL((1)) bool DCALL type_inherit_pow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
-INTDEF NONNULL((1)) bool DCALL type_inherit_compare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
-INTDEF NONNULL((1)) bool DCALL type_inherit_iternext(DeeTypeObject *__restrict self);      /* tp_iter_next */
-INTDEF NONNULL((1)) bool DCALL type_inherit_iterself(DeeTypeObject *__restrict self);      /* tp_iter_self */
-INTDEF NONNULL((1)) bool DCALL type_inherit_size(DeeTypeObject *__restrict self);          /* tp_size */
-INTDEF NONNULL((1)) bool DCALL type_inherit_contains(DeeTypeObject *__restrict self);      /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL type_inherit_getitem(DeeTypeObject *__restrict self);       /* tp_get */
-INTDEF NONNULL((1)) bool DCALL type_inherit_delitem(DeeTypeObject *__restrict self);       /* tp_del */
-INTDEF NONNULL((1)) bool DCALL type_inherit_setitem(DeeTypeObject *__restrict self);       /* tp_set */
-INTDEF NONNULL((1)) bool DCALL type_inherit_getrange(DeeTypeObject *__restrict self);      /* tp_range_get */
-INTDEF NONNULL((1)) bool DCALL type_inherit_delrange(DeeTypeObject *__restrict self);      /* tp_range_del */
-INTDEF NONNULL((1)) bool DCALL type_inherit_setrange(DeeTypeObject *__restrict self);      /* tp_range_set */
-INTDEF NONNULL((1)) bool DCALL type_inherit_nsi(DeeTypeObject *__restrict self);           /* tp_nsi (only succeeds if `self' has no `tp_seq' field) */
-INTDEF NONNULL((1)) bool DCALL type_inherit_with(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
-INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
-#endif /* CONFIG_BUILDING_DEEMON */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self);           /* tp_str, tp_print */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);          /* tp_repr, tp_printrepr */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);          /* tp_bool */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritCall(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritInt(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritInv(DeeTypeObject *__restrict self);           /* tp_inv */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritPos(DeeTypeObject *__restrict self);           /* tp_pos */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNeg(DeeTypeObject *__restrict self);           /* tp_neg */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritAdd(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritMul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDiv(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritMod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritShl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritShr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */ /* TODO: This should form a group with `tp_nii' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterSelf(DeeTypeObject *__restrict self);      /* tp_iter_self */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_size */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_get */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_del */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_set */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_range_get */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_range_del */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_range_set */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);           /* tp_nsi */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);           /* tp_nii */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
+#else /* CONFIG_BUILDING_DEEMON */
+#define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)
+#define DeeType_InheritStr(self)          DeeType_InheritOperator(self, OPERATOR_STR)
+#define DeeType_InheritRepr(self)         DeeType_InheritOperator(self, OPERATOR_REPR)
+#define DeeType_InheritBool(self)         DeeType_InheritOperator(self, OPERATOR_BOOL)
+#define DeeType_InheritCall(self)         DeeType_InheritOperator(self, OPERATOR_CALL)
+#define DeeType_InheritHash(self)         DeeType_InheritOperator(self, OPERATOR_HASH)
+#define DeeType_InheritInt(self)          DeeType_InheritOperator(self, OPERATOR_INT)
+#define DeeType_InheritInv(self)          DeeType_InheritOperator(self, OPERATOR_INV)
+#define DeeType_InheritPos(self)          DeeType_InheritOperator(self, OPERATOR_POS)
+#define DeeType_InheritNeg(self)          DeeType_InheritOperator(self, OPERATOR_NEG)
+#define DeeType_InheritAdd(self)          DeeType_InheritOperator(self, OPERATOR_ADD)
+#define DeeType_InheritMul(self)          DeeType_InheritOperator(self, OPERATOR_MUL)
+#define DeeType_InheritDiv(self)          DeeType_InheritOperator(self, OPERATOR_DIV)
+#define DeeType_InheritMod(self)          DeeType_InheritOperator(self, OPERATOR_MOD)
+#define DeeType_InheritShl(self)          DeeType_InheritOperator(self, OPERATOR_SHL)
+#define DeeType_InheritShr(self)          DeeType_InheritOperator(self, OPERATOR_SHR)
+#define DeeType_InheritAnd(self)          DeeType_InheritOperator(self, OPERATOR_AND)
+#define DeeType_InheritOr(self)           DeeType_InheritOperator(self, OPERATOR_OR)
+#define DeeType_InheritXor(self)          DeeType_InheritOperator(self, OPERATOR_XOR)
+#define DeeType_InheritPow(self)          DeeType_InheritOperator(self, OPERATOR_POW)
+#define DeeType_InheritCompare(self)      DeeType_InheritOperator(self, OPERATOR_EQ)
+#define DeeType_InheritIterNext(self)     DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
+#define DeeType_InheritIterSelf(self)     DeeType_InheritOperator(self, OPERATOR_ITERSELF)
+#define DeeType_InheritSize(self)         DeeType_InheritOperator(self, OPERATOR_SIZE)
+#define DeeType_InheritContains(self)     DeeType_InheritOperator(self, OPERATOR_CONTAINS)
+#define DeeType_InheritGetItem(self)      DeeType_InheritOperator(self, OPERATOR_GETITEM)
+#define DeeType_InheritDelItem(self)      DeeType_InheritOperator(self, OPERATOR_DELITEM)
+#define DeeType_InheritSetItem(self)      DeeType_InheritOperator(self, OPERATOR_SETITEM)
+#define DeeType_InheritGetRange(self)     DeeType_InheritOperator(self, OPERATOR_GETRANGE)
+#define DeeType_InheritDelRange(self)     DeeType_InheritOperator(self, OPERATOR_DELRANGE)
+#define DeeType_InheritSetRange(self)     DeeType_InheritOperator(self, OPERATOR_SETRANGE)
+#define DeeType_InheritNSI(self)          DeeType_InheritOperator(self, OPERATOR_ITERSELF)
+#define DeeType_InheritNII(self)          DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
+#define DeeType_InheritWith(self)         DeeType_InheritOperator(self, OPERATOR_ENTER)
+#define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
+#endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Invoke an operator on a given object, given its ID and arguments.
  * NOTE: Using these function, any operator can be invoked, including
@@ -3254,26 +3353,26 @@ INTDEF NONNULL((1)) bool DCALL type_inherit_buffer(DeeTypeObject *__restrict sel
  *        Attempting to execute an inplace operator using `DeeObject_InvokeOperator()'
  *        will cause an `Error.TypeError' to be thrown. */
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_InvokeOperator(DeeObject *self, uint16_t name,
+DeeObject_InvokeOperator(DeeObject *self, Dee_operator_t name,
                          size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_TInvokeOperator(DeeTypeObject *tp_self, DeeObject *self,
-                          uint16_t name, size_t argc, DeeObject *const *argv);
+                          Dee_operator_t name, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, uint16_t name,
+DeeObject_PInvokeOperator(DREF DeeObject **__restrict p_self, Dee_operator_t name,
                           size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeObject_PTInvokeOperator(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self,
-                           uint16_t name, size_t argc, DeeObject *const *argv);
+                           Dee_operator_t name, size_t argc, DeeObject *const *argv);
 #define DeeObject_InvokeOperatorTuple(self, name, args)              DeeObject_InvokeOperator(self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_TInvokeOperatorTuple(tp_self, self, name, args)    DeeObject_TInvokeOperator(tp_self, self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_PInvokeOperatorTuple(p_self, name, args)           DeeObject_PInvokeOperator(p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_PTInvokeOperatorTuple(tp_self, p_self, name, args) DeeObject_PTInvokeOperator(tp_self, p_self, name, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_TInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, uint16_t name, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VTInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, uint16_t name, char const *__restrict format, va_list args);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_PTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, uint16_t name, char const *__restrict format, ...);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, uint16_t name, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_TInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, Dee_operator_t name, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VTInvokeOperatorf(DeeTypeObject *tp_self, DeeObject *self, Dee_operator_t name, char const *__restrict format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DeeObject_PTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, Dee_operator_t name, char const *__restrict format, ...);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOperatorf(DeeTypeObject *tp_self, DREF DeeObject **__restrict p_self, Dee_operator_t name, char const *__restrict format, va_list args);
 #define DeeObject_InvokeOperatorf(self, name, format, ...)      DeeObject_TInvokeOperatorf(Dee_TYPE(self), self, name, format, __VA_ARGS__)
 #define DeeObject_VInvokeOperatorf(self, name, format, args)    DeeObject_VTInvokeOperatorf(Dee_TYPE(self), self, name, format, args)
 #define DeeObject_PInvokeOperatorf(p_self, name, format, ...)   DeeObject_PTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, __VA_ARGS__)
@@ -3483,16 +3582,6 @@ DeeType_Implements(DeeTypeObject const *test_type,
  * NOTE: When `NULL' is returned, _NO_ error is thrown! */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeType_GetModule(DeeTypeObject *__restrict self);
-
-/* Check if the callback slot for `name' in `self' is populated.
- * If it isn't, then search the MRO of `self' for the first type
- * that *does* implement said operator, and cache that base's
- * callback in `self'
- * @return: true:  Either `self' already implemented the operator, it it was successfully inherited.
- * @return: false: `self' doesn't implement the operator, and neither does one of its bases. In this
- *                 case, trying to invoke the operator will result in a NotImplemented error. */
-DFUNDEF NONNULL((1)) bool DCALL
-DeeType_InheritOperator(DeeTypeObject *__restrict self, uint16_t name);
 
 /* Object creation (constructor invocation). */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_NewDefault(DeeTypeObject *__restrict object_type);

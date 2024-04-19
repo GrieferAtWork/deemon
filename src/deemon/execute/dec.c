@@ -1468,7 +1468,7 @@ err_function_code:
 	case DTYPE_CLASSDESC: {
 		uint8_t flags, cmemb_size, imemb_size, i;
 		uint8_t op_count, cattr_count, iattr_count;
-		uint16_t opbind_mask;
+		Dee_operator_t opbind_mask;
 		size_t cattr_mask, iattr_mask;
 		char const *strtab, *fileend;
 		char const *name, *doc;
@@ -1539,7 +1539,7 @@ err_function_code:
 			for (i = 0; i < op_count; ++i) {
 				struct class_operator *entry;
 				uint8_t opname, opaddr;
-				uint16_t j, perturb;
+				Dee_operator_t j, perturb;
 				opname = UNALIGNED_GETLE8(reader), reader += 1;
 				opaddr = UNALIGNED_GETLE8(reader), reader += 1;
 				if (opaddr >= cmemb_size)
@@ -1547,7 +1547,7 @@ err_function_code:
 				j = perturb = opname & opbind_mask;
 				for (;; DeeClassDescriptor_CLSOPNEXT(j, perturb)) {
 					entry = &opbind_list[j & opbind_mask];
-					if (entry->co_name == (uint16_t)-1)
+					if (entry->co_name == (Dee_operator_t)-1)
 						break;
 				}
 				entry->co_name = opname;
@@ -1840,8 +1840,8 @@ err_function_code:
 		}	break;
 
 		case DTYPE16_CLASSDESC & 0xff: {
-			uint16_t flags, op_count, opbind_mask;
-			uint16_t cmemb_size, imemb_size;
+			Dee_operator_t op_count, opbind_mask;
+			uint16_t flags, cmemb_size, imemb_size;
 			uint32_t cattr_count, iattr_count, i;
 			size_t cattr_mask, iattr_mask;
 			char const *strtab, *fileend;
@@ -1916,8 +1916,8 @@ err_function_code:
 				descriptor->cd_clsop_list = opbind_list;
 				for (i = 0; i < op_count; ++i) {
 					struct class_operator *entry;
-					uint16_t opname, opaddr;
-					uint16_t j, perturb;
+					Dee_operator_t opname, j, perturb;
+					uint16_t opaddr;
 					opname = UNALIGNED_GETLE16(reader), reader += 2;
 					opaddr = UNALIGNED_GETLE16(reader), reader += 2;
 					if unlikely(opaddr == (uint16_t)-1)
@@ -1927,7 +1927,7 @@ err_function_code:
 					j = perturb = opname & opbind_mask;
 					for (;; DeeClassDescriptor_CLSOPNEXT(j, perturb)) {
 						entry = &opbind_list[j & opbind_mask];
-						if (entry->co_name == (uint16_t)-1)
+						if (entry->co_name == (Dee_operator_t)-1)
 							break;
 					}
 					entry->co_name = opname;

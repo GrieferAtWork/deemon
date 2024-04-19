@@ -572,7 +572,7 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1)) Dee_ssize_t
  * NOTE: This function also accepts "fake" operators (`FAKE_OPERATOR_*') for `name' */
 DFUNDEF WUNUSED ATTR_INS(6, 5) NONNULL((1, 3)) Dee_ssize_t DCALL
 DeeFormat_PrintOperatorRepr(Dee_formatprinter_t printer, void *arg,
-                            DeeObject *self, uint16_t name,
+                            DeeObject *self, Dee_operator_t name,
                             size_t argc, DeeObject *const *argv,
                             char const *self_prefix, size_t self_prefix_len,
                             char const *self_suffix, size_t self_suffix_len);

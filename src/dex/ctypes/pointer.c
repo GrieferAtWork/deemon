@@ -682,7 +682,7 @@ PRIVATE struct type_getset tpconst lvalue_getsets[] = {
 
 INTDEF ATTR_COLD int DCALL
 err_unimplemented_operator(DeeSTypeObject *__restrict tp,
-                           uint16_t operator_name);
+                           Dee_operator_t operator_name);
 
 PRIVATE WUNUSED DREF struct lvalue_object *DCALL lvalue_ctor(void) {
 	err_unimplemented_operator((DeeSTypeObject *)&DeeLValue_Type,

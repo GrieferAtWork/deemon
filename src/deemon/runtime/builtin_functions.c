@@ -346,7 +346,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-get_expression_repr(uint16_t operator_name,
+get_expression_repr(Dee_operator_t operator_name,
                     size_t argc, DeeObject *const *argv) {
 	Dee_ssize_t error;
 	struct unicode_printer printer = UNICODE_PRINTER_INIT;
@@ -386,7 +386,7 @@ f_rt_assert(size_t argc, DeeObject *const *argv) {
 	}
 	if (operator_name >= 0) {
 		DREF DeeObject *repr;
-		repr = get_expression_repr((uint16_t)operator_name, argc, argv);
+		repr = get_expression_repr((Dee_operator_t)operator_name, argc, argv);
 		if unlikely(!repr)
 			goto err;
 		if (DeeString_IsEmpty(message)) {

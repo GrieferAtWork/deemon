@@ -2568,7 +2568,7 @@ fg_vpackseq(struct fungen *__restrict self,
  * [args...]  ->  N/A    (flags == VOP_F_NORMAL) */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vop(struct fungen *__restrict self,
-       uint16_t operator_name, vstackaddr_t argc,
+       Dee_operator_t operator_name, vstackaddr_t argc,
        unsigned int flags);
 #define VOP_F_NORMAL      0x0000 /* Normal flags */
 #define VOP_F_PUSHRES     0x0001 /* Push the operator's result */
@@ -2581,7 +2581,7 @@ fg_vop(struct fungen *__restrict self,
  * NOTE: A tuple-type check is only generated if FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_voptuple(struct fungen *__restrict self,
-            uint16_t operator_name, unsigned int flags);
+            Dee_operator_t operator_name, unsigned int flags);
 
 /* [ref]:this, [args...]  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
  * [ref]:this, [args...]  ->  [ref]:this         (flags == VOP_F_NORMAL)
@@ -2590,7 +2590,7 @@ fg_voptuple(struct fungen *__restrict self,
  *       might inadvertently also receive the updated object. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vinplaceop(struct fungen *__restrict self,
-              uint16_t operator_name, vstackaddr_t argc,
+              Dee_operator_t operator_name, vstackaddr_t argc,
               unsigned int flags);
 
 /* [ref]:this, args  ->  [ref]:this, result (flags == VOP_F_PUSHRES)
@@ -2600,7 +2600,7 @@ fg_vinplaceop(struct fungen *__restrict self,
  *       might inadvertently also receive the updated object. */
 INTDEF WUNUSED NONNULL((1)) int DCALL
 fg_vinplaceoptuple(struct fungen *__restrict self,
-                   uint16_t operator_name, unsigned int flags);
+                   Dee_operator_t operator_name, unsigned int flags);
 
 
 INTDEF WUNUSED NONNULL((1)) int DCALL fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n); /* seq -> [elems...] */
@@ -2689,8 +2689,8 @@ INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_at(struct fungen *__restrict
 
 /* Same as `fg_vnotoneref()', but only clear when the
  * types aren't known, or the type's `operator_name' lets references escape. */
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator(struct fungen *__restrict self, uint16_t operator_name, vstackaddr_t n);
-INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator_at(struct fungen *__restrict self, uint16_t operator_name, vstackaddr_t off);
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator(struct fungen *__restrict self, Dee_operator_t operator_name, vstackaddr_t n);
+INTDEF WUNUSED NONNULL((1)) int DCALL fg_vnotoneref_if_operator_at(struct fungen *__restrict self, Dee_operator_t operator_name, vstackaddr_t off);
 
 /* Set the `MEMOBJ_F_ONEREF' flag for VTOP. */
 #define fg_voneref_noalias(self)                    \
@@ -3778,7 +3778,7 @@ ccall_find_attr_optimization(DeeTypeObject *__restrict type,
  *       on-stack as well! */
 INTDEF WUNUSED NONNULL((1)) struct ccall_optimization const *DCALL
 ccall_find_operator_optimization(DeeTypeObject *__restrict type,
-                                 uint16_t operator_name, vstackaddr_t argc);
+                                 Dee_operator_t operator_name, vstackaddr_t argc);
 
 
 

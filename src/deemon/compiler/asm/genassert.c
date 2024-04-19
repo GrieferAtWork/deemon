@@ -56,7 +56,7 @@ INTERN WUNUSED NONNULL((1, 3)) int
 	struct asm_sec *old_section;
 	uint8_t argc;
 	int32_t deemon_modid;
-	uint16_t operator_name;
+	Dee_operator_t operator_name;
 	if (current_assembler.a_flag & ASM_FNOASSERT) {
 		/* Discard the assert-expression and message and emit a constant true. */
 		if (gflags & ASM_G_FPUSHRES) {

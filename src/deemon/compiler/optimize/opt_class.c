@@ -36,14 +36,14 @@ DECL_BEGIN
 /* Returns the address of a given operator `name' */
 PRIVATE WUNUSED NONNULL((1)) struct class_operator *DCALL
 DeeClassDescriptorObject_GetOperatorAddr(DeeClassDescriptorObject *__restrict self,
-                                         uint16_t name) {
-	uint16_t i, perturb;
+                                         Dee_operator_t name) {
+	Dee_operator_t i, perturb;
 	i = perturb = name & self->cd_clsop_mask;
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		struct class_operator *entry;
 		entry = &self->cd_clsop_list[i & self->cd_clsop_mask];
 		if (entry->co_name != name) {
-			if (entry->co_name == (uint16_t)-1)
+			if (entry->co_name == (Dee_operator_t)-1)
 				break; /* Not implemented! */
 			continue;
 		}
@@ -60,8 +60,9 @@ INTDEF struct class_operator empty_class_operators[];
 /* Rename the name of `slot' to `new_name' */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
-                                 struct class_operator *slot, uint16_t new_name) {
-	uint16_t mask, i, j, perturb;
+                                 struct class_operator *slot,
+                                 Dee_operator_t new_name) {
+	Dee_operator_t mask, i, j, perturb;
 	struct class_operator *new_table;
 	ASSERT(slot >= self->cd_clsop_list &&
 	       slot <= self->cd_clsop_list + self->cd_clsop_mask);
@@ -81,14 +82,14 @@ class_descriptor_rename_operator(DeeClassDescriptorObject *__restrict self,
 	for (i = 0; i <= self->cd_clsop_mask; ++i) {
 		struct class_operator *op, *new_op;
 		op = &self->cd_clsop_list[i];
-		if (op->co_name == (uint16_t)-1)
+		if (op->co_name == (Dee_operator_t)-1)
 			continue; /* Unused entry. */
 
 		/* Insert the entry into the new table. */
 		j = perturb = op->co_name & mask;
 		for (;; DeeClassDescriptor_CLSOPNEXT(j, perturb)) {
 			new_op = &new_table[j & mask];
-			if (new_op->co_name == (uint16_t)-1)
+			if (new_op->co_name == (Dee_operator_t)-1)
 				break;
 		}
 		memcpy(new_op, op, sizeof(struct class_operator));
@@ -148,7 +149,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int
 (DCALL ast_try_optimize_class_operator_str2print)(struct ast *__restrict self,
                                                   struct class_operator *operator_str,
-                                                  uint16_t new_operator) {
+                                                  Dee_operator_t new_operator) {
 	size_t i;
 	struct class_member *str_member;
 	struct ast *str_func;

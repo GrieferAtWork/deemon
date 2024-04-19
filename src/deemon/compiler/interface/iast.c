@@ -2256,7 +2256,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-get_operator_name(uint16_t opid) {
+get_operator_name(Dee_operator_t opid) {
 	struct opinfo const *info;
 	switch (opid) {
 	case AST_OPERATOR_POS_OR_ADD:
@@ -4677,7 +4677,7 @@ class_member_in_class:
 			struct class_member *member;
 			struct opinfo const *info;
 			struct class_operator *op = &desc->cd_clsop_list[i];
-			if (op->co_name == (uint16_t)-1)
+			if (op->co_name == (Dee_operator_t)-1)
 				continue;
 			member = find_class_member(self, op->co_addr);
 			DO(DeeFormat_Repeat(printer, arg, '\t', indent));
@@ -4859,8 +4859,8 @@ err:
 	return temp;
 }
 
-PRIVATE dssize_t DCALL
-print_operator_name(uint16_t opid,
+PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+print_operator_name(Dee_operator_t opid,
                     dformatprinter printer, void *arg) {
 	struct opinfo const *info;
 	switch (opid) {

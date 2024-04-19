@@ -743,13 +743,13 @@ DECLARE_AST_GENERATOR(NONNULL((1)), ast_expand, (struct ast *__restrict expr));
 /* [AST_FUNCTION] */
 DECLARE_AST_GENERATOR(NONNULL((1, 2)), ast_function, (struct ast *__restrict function_code, DeeBaseScopeObject *__restrict scope));
 /* [AST_OPERATOR_FUNC] */
-DECLARE_AST_GENERATOR(, ast_operator_func, (uint16_t operator_name, struct ast *binding));
+DECLARE_AST_GENERATOR(, ast_operator_func, (Dee_operator_t operator_name, struct ast *binding));
 /* [AST_OPERATOR] @param: operator_name: One of `OPERATOR_*'.
  *                @param: flags: Set of `AST_OPERATOR_F*' */
-DECLARE_AST_GENERATOR(NONNULL((3)), ast_operator1, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa));
-DECLARE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
-DECLARE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
-DECLARE_AST_GENERATOR(NONNULL((3, 4, 5, 6)), ast_operator4, (uint16_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
+DECLARE_AST_GENERATOR(NONNULL((3)), ast_operator1, (Dee_operator_t operator_name, uint16_t flags, struct ast *__restrict opa));
+DECLARE_AST_GENERATOR(NONNULL((3, 4)), ast_operator2, (Dee_operator_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb));
+DECLARE_AST_GENERATOR(NONNULL((3, 4, 5)), ast_operator3, (Dee_operator_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc));
+DECLARE_AST_GENERATOR(NONNULL((3, 4, 5, 6)), ast_operator4, (Dee_operator_t operator_name, uint16_t flags, struct ast *__restrict opa, struct ast *__restrict opb, struct ast *__restrict opc, struct ast *__restrict opd));
 /* [AST_ACTION]  @param: action_flags: One of `AST_FACTION_*' (see above). */
 DECLARE_AST_GENERATOR(, ast_action0, (uint16_t action_flags));
 DECLARE_AST_GENERATOR(NONNULL((2)), ast_action1, (uint16_t action_flags, struct ast *__restrict act0));

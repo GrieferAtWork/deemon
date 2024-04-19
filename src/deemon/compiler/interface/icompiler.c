@@ -1383,11 +1383,11 @@ done:
 
 /* Parse the operator name and determine its ID. */
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
-get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict p_result) {
+get_operator_id(DeeObject *__restrict opid, Dee_operator_t *__restrict p_result) {
 	if (DeeString_Check(opid)) {
 		char const *name = DeeString_STR(opid);
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (uint16_t)-1);
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (size_t)-1);
 		if (info != NULL) {
 			*p_result = info->oi_id;
 			return 0;
@@ -1451,7 +1451,7 @@ ast_makeoperatorfunc(DeeCompilerObject *self, size_t argc,
 	 * "(name:?Dint,binding:?AAst?Ert:Compiler=!N,scope:?AScope?Ert:Compiler=!N)->?AAst?Ert:Compiler\n" */
 	DREF DeeObject *result = NULL;
 	DeeObject *name;
-	uint16_t id;
+	Dee_operator_t id;
 	DeeCompilerAstObject *binding = (DeeCompilerAstObject *)Dee_None;
 	DeeCompilerScopeObject *scope = (DeeCompilerScopeObject *)Dee_None;
 	DeeScopeObject *ast_scope;

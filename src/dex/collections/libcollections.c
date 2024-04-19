@@ -108,7 +108,7 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 }
 
 INTERN ATTR_COLD NONNULL((1)) int
-(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, uint16_t operator_name) {
+(DCALL err_unimplemented_operator)(DeeTypeObject const *__restrict tp, Dee_operator_t operator_name) {
 	struct opinfo const *info;
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(tp), operator_name);
 	ASSERT_OBJECT(tp);

@@ -935,7 +935,7 @@ INTDEF bool DFCALL JITLexer_MaybeExpressionBegin(JITLexer *__restrict self);
 
 /* Return the operator function for `opname', as exported from the `operators' module. */
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
-JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, uint16_t opname);
+JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opname);
 
 /* JIT-specific evaluation flags (may be optionally or'd with `LOOKUP_SYM_*'). */
 #define JITLEXER_EVAL_FNORMAL       0x0000 /* Normal evaluation flags. */

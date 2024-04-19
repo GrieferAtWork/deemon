@@ -1378,7 +1378,7 @@ do_check_encode_cmpxch_for_sameobj_condition:
 		break;
 
 	case AST_OPERATOR: {
-		uint16_t operator_name;
+		Dee_operator_t operator_name;
 
 		/* Probably one of the most important AST types: The operator AST. */
 		operator_name = self->a_flag;

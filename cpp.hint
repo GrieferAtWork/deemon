@@ -1397,16 +1397,16 @@
 
 
 // Misc. local macros
-#define DEFINE_OPERATOR_INVOKE(name,instance_name)struct Dee_operator_invoke name={};DeeObject *invoke_##name(DeeTypeObject*tp_self,DeeObject*self,DeeObject**p_self,size_t argc,DeeObject*const*argv)
-#define DEFINE_STRING_TRAIT(n,function,test_ch) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv);
-#define DEFINE_ANY_STRING_TRAIT(n,function) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
-#define DEFINE_BYTES_TRAIT(n,function,test_ch) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv);
-#define DEFINE_ANY_BYTES_TRAIT(n,function) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_OPERATOR_INVOKE(name,...)struct Dee_operator_invoke name={};DeeObject *invoke_##name(DeeTypeObject*tp_self,DeeObject*self,DeeObject**p_self,size_t argc,DeeObject*const*argv)
+#define DEFINE_STRING_TRAIT(n,...) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_STRING_TRAIT(n,...) DeeObject*string_##n(String*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
+#define DEFINE_BYTES_TRAIT(n,...) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv);
+#define DEFINE_ANY_BYTES_TRAIT(n,...) DeeObject*bytes_##n(Bytes*self,size_t argc,DeeObject*const*argv,DeeObject*kw);
 #define SUPER_PRIVATE_EXPANDARGS(...) (DeeTypeObject *tp_self, __VA_ARGS__)
 #define DEFINE_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
 #define DEFINE_INTERNAL_OPERATOR(return,n,args) return DeeObject_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeObject_##n args
 #define DEFINE_FILE_OPERATOR(return,n,args) return DeeFile_T##n SUPER_PRIVATE_EXPANDARGS args{} return DeeFile_##n args
-#define DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXXX,reg,DeeInt_NewXXX,intX_t,operator_name) int DeeObject_InplaceXXX(DeeObject**restrict p_self,intX_t val){}
+#define DEFINE_MATH_INPLACE_INT_OPERATOR(n,a,b,c,...) int n(DeeObject**restrict p_self,c val){}
 #define DEFINE_JSON_ITERATOR_COMPARE(n,...) DeeObject*n(DeeJsonIteratorObject*self,DeeJsonIteratorObject*other){}
 #define DEF_STRING(n,a,b,c) DeeStringObject n={};
 #define RESTRICT_IF_NOTYPE
@@ -1630,6 +1630,9 @@
 
 #define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct fungen*self,vstackaddr_t argc){}
 #define DEFINE_CCALL_OPERATOR(name,...) int name(struct fungen*self,vstackaddr_t argc){}
+
+#define DEFINE_FILETYPE_INHERIT_HOOK(x,...) bool x(DeeFileTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
+#define DEFINE_TYPE_INHERIT_HOOK(x,...) bool x(DeeTypeObject*self,DeeTypeObject*type_type,struct Dee_opinfo const*info){}
 
 #define memstate_foreach(...) for(;;)
 #define memstate_foreach_end

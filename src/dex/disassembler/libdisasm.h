@@ -94,7 +94,7 @@ libdisasm_printcode(dformatprinter printer, void *arg,
 /* Return the S-name (e.g. `add') of an operator.
  * Returns `NULL' when the name cannot be determined. */
 INTDEF WUNUSED char const *DCALL
-libdisasm_get_operator_sname(uint16_t operator_id);
+libdisasm_get_operator_sname(Dee_operator_t operator_id);
 
 DECL_END
 

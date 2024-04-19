@@ -377,9 +377,9 @@ again:
 
 PRIVATE NONNULL((1, 3)) void DCALL
 calls_desc_cache_operator(struct class_desc *__restrict self,
-                          uint16_t name, DeeObject *__restrict func) {
+                          Dee_operator_t name, DeeObject *__restrict func) {
 	struct class_optable *table;
-	uint16_t table_index;
+	Dee_operator_t table_index;
 	ASSERT(name < CLASS_OPERATOR_USERCOUNT);
 	table_index = name / CLASS_HEADER_OPC2;
 again:
@@ -409,10 +409,10 @@ done:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
                               struct class_desc *__restrict self,
-                              uint16_t name) {
+                              Dee_operator_t name) {
 	DREF DeeObject *result;
 	DeeClassDescriptorObject *desc;
-	uint16_t i, perturb;
+	Dee_operator_t i, perturb;
 	if (name < CLASS_OPERATOR_USERCOUNT) {
 		struct class_optable *table;
 		table = self->cd_ops[name / CLASS_HEADER_OPC2];
@@ -434,7 +434,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		struct class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
-		ASSERTF(entry->co_name != (uint16_t)-1, "Operator %#I16x not implemented", name);
+		ASSERTF(entry->co_name != (Dee_operator_t)-1, "Operator %#I16x not implemented", name);
 		if (entry->co_name != name)
 			continue;
 
@@ -463,7 +463,7 @@ class_desc_get_known_operator(DeeTypeObject *__restrict tp_self,
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DREF DeeObject *result;
 	DeeTypeObject const *iter = self;
 	DeeTypeMRO mro;
@@ -473,7 +473,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 		/* Search the descriptor cache of this type. */
 		struct class_desc *iter_class;
 		DeeClassDescriptorObject *desc;
-		uint16_t i, perturb;
+		Dee_operator_t i, perturb;
 		iter_class = DeeClass_DESC(iter);
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
@@ -500,7 +500,7 @@ DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 			struct class_operator *entry;
 			entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 			if (entry->co_name != name) {
-				if (entry->co_name == (uint16_t)-1)
+				if (entry->co_name == (Dee_operator_t)-1)
 					break; /* Not implemented! */
 				continue;
 			}
@@ -534,7 +534,7 @@ done:
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DREF DeeObject *result;
 	DeeTypeObject const *iter = self;
 	DeeTypeMRO mro;
@@ -544,7 +544,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 		/* Search the descriptor cache of this type. */
 		struct class_desc *iter_class;
 		DeeClassDescriptorObject *desc;
-		uint16_t i, perturb;
+		Dee_operator_t i, perturb;
 		iter_class = DeeClass_DESC(iter);
 		if (name < CLASS_OPERATOR_USERCOUNT) {
 			struct class_optable *table;
@@ -571,7 +571,7 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 			struct class_operator *entry;
 			entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 			if (entry->co_name != name) {
-				if (entry->co_name == (uint16_t)-1)
+				if (entry->co_name == (Dee_operator_t)-1)
 					break; /* Not implemented! */
 				continue;
 			}
@@ -602,9 +602,9 @@ DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name) {
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name) {
+DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
-	uint16_t i, perturb;
+	Dee_operator_t i, perturb;
 	struct class_desc *self_class;
 	self_class = DeeClass_DESC(self);
 
@@ -616,7 +616,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 		struct class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		if (entry->co_name != name) {
-			if (entry->co_name == (uint16_t)-1)
+			if (entry->co_name == (Dee_operator_t)-1)
 				break; /* Not implemented! */
 			continue;
 		}
@@ -639,7 +639,7 @@ DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t na
 
 PUBLIC WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallOperator(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                      uint16_t name, size_t argc, DeeObject *const *argv) {
+                      Dee_operator_t name, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *func, *result;
 	func = DeeClass_GetOperator(tp_self, name);
 	if unlikely(!func)
@@ -653,7 +653,7 @@ err:
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
 DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                       uint16_t name, char const *format, ...) {
+                       Dee_operator_t name, char const *format, ...) {
 	DREF DeeObject *result;
 	va_list args;
 	va_start(args, format);
@@ -664,7 +664,7 @@ DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
 
 PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                        uint16_t name, char const *format, va_list args) {
+                        Dee_operator_t name, char const *format, va_list args) {
 	DREF DeeObject *args_tuple, *result;
 	args_tuple = DeeTuple_VNewf(format, args);
 	if unlikely(!args_tuple)
@@ -682,9 +682,9 @@ err:
 
 /* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
 INTERN ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
-DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t name) {
+DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	DeeClassDescriptorObject *desc;
-	uint16_t i, perturb;
+	Dee_operator_t i, perturb;
 	struct class_desc *self_class;
 	self_class = DeeClass_DESC(self);
 
@@ -695,7 +695,7 @@ DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t
 		struct class_operator *entry;
 		entry = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
 		if (entry->co_name != name) {
-			if (entry->co_name == (uint16_t)-1)
+			if (entry->co_name == (Dee_operator_t)-1)
 				break; /* Not implemented! */
 			continue;
 		}
@@ -5123,7 +5123,7 @@ INTERN struct type_gc tpconst instance_gc = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 instance_generic_operator_invoke_cb(DeeTypeObject *tp_self, DeeObject *self,
                                     /*0..1*/ DREF DeeObject **p_self, size_t argc,
-                                    DeeObject *const *argv, uint16_t opname) {
+                                    DeeObject *const *argv, Dee_operator_t opname) {
 	DREF DeeObject *result;
 	result = DeeClass_CallOperator(tp_self, self, opname, argc, argv);
 	if (p_self && result) {
@@ -5179,7 +5179,7 @@ get_operator_class_table_size(DeeTypeObject *__restrict type_type, uint16_t oi_c
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bind_class_operator(DeeTypeObject *__restrict type_type,
                     DeeTypeObject *__restrict class_type,
-                    uint16_t operator_name) {
+                    Dee_operator_t operator_name) {
 	struct opinfo const *info;
 	info = DeeTypeType_GetOperatorById(type_type, operator_name);
 	if likely(info) {
@@ -5218,7 +5218,7 @@ bind_class_operator(DeeTypeObject *__restrict type_type,
 		hi = class_type->tp_operators_size;
 		while (lo < hi) {
 			size_t mid = (lo + hi) / 2;
-			uint16_t mid_name = class_type->tp_operators[mid].to_id;
+			Dee_operator_t mid_name = class_type->tp_operators[mid].to_id;
 			if (operator_name < mid_name) {
 				hi = mid;
 			} else if (operator_name > mid_name) {
@@ -5590,11 +5590,11 @@ err_custom_allocator:
 #define FEATURE_CONSTRUCTOR 0x0001 /* A constructor is provided */
 #define FEATURE_SUPERARGS   0x0002 /* A super-arguments generator is provided */
 		uint16_t constructor_features = 0;
-		uint16_t i                    = 0;
+		uint16_t i = 0;
 		do {
 			struct class_operator *op;
 			op = &desc->cd_clsop_list[i];
-			if (op->co_name == (uint16_t)-1)
+			if (op->co_name == (Dee_operator_t)-1)
 				continue;
 			switch (op->co_name) {
 

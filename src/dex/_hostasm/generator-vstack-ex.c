@@ -5427,7 +5427,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) int DCALL
 vtype_get_operator_api_function(struct fungen *__restrict self,
                                 DeeTypeObject const *__restrict type,
-                                uint16_t operator_name, vstackaddr_t *__restrict p_extra_argc,
+                                Dee_operator_t operator_name, vstackaddr_t *__restrict p_extra_argc,
                                 struct host_operator_specs *__restrict result, bool inplace) {
 	void const *api_function;
 	byte_t const *field_base;
@@ -5554,7 +5554,7 @@ nope:
  * [args...]  ->  N/A    (flags == VOP_F_NORMAL) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vop(struct fungen *__restrict self,
-       uint16_t operator_name, vstackaddr_t argc,
+       Dee_operator_t operator_name, vstackaddr_t argc,
        unsigned int flags) {
 	DeeTypeObject *return_type = NULL;
 	DO(fg_state_unshare(self));
@@ -5824,7 +5824,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vinplaceop_invoke_specs(struct fungen *__restrict self,
                         struct host_operator_specs const *__restrict specs,
-                        uint16_t operator_name) {
+                        Dee_operator_t operator_name) {
 	vstackaddr_t argc = specs->hos_argc - 1;
 	DO(fg_vnotoneref(self, argc));  /* [ref]:this, [args...] */
 	DO(fg_vlrot(self, argc + 1));   /* [args...], [ref]:this */
@@ -5847,7 +5847,7 @@ err:
  * [ref]:this, [args...]  ->  [ref]:this         (flags == VOP_F_NORMAL) */
 INTERN WUNUSED NONNULL((1)) int DCALL
 vinplaceop_with_vop(struct fungen *__restrict self,
-                    uint16_t operator_name, vstackaddr_t argc,
+                    Dee_operator_t operator_name, vstackaddr_t argc,
                     unsigned int flags) {
 	int result = fg_vop(self, operator_name, argc + 1, flags | VOP_F_PUSHRES);
 	if (likely(result == 0) && (flags & VOP_F_PUSHRES))
@@ -5862,7 +5862,7 @@ vinplaceop_with_vop(struct fungen *__restrict self,
  *       might inadvertently also receive the updated object. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vinplaceop(struct fungen *__restrict self,
-              uint16_t operator_name, vstackaddr_t argc,
+              Dee_operator_t operator_name, vstackaddr_t argc,
               unsigned int flags) {
 	struct memval *thisval;
 	DeeTypeObject *this_type;
@@ -5939,7 +5939,7 @@ not_all_args_are_constant:
 
 	this_type = memval_typeof(thisval);
 	if (this_type != NULL) {
-		uint16_t non_inplace_operator_name;
+		Dee_operator_t non_inplace_operator_name;
 
 		/* Try to determine the operator's return type from doc info. */
 		return_type = vget_operator_return_type(self, this_type, operator_name, argc);
@@ -5994,10 +5994,10 @@ not_all_args_are_constant:
 		case OPERATOR_INC:
 		case OPERATOR_DEC:
 			if (argc == 0) {
-				uint16_t operator_inplace_add = OPERATOR_INPLACE_ADD;
-				uint16_t operator_inplace_sub = OPERATOR_INPLACE_SUB;
-				uint16_t operator_add = OPERATOR_ADD;
-				uint16_t operator_sub = OPERATOR_SUB;
+				Dee_operator_t operator_inplace_add = OPERATOR_INPLACE_ADD;
+				Dee_operator_t operator_inplace_sub = OPERATOR_INPLACE_SUB;
+				Dee_operator_t operator_add = OPERATOR_ADD;
+				Dee_operator_t operator_sub = OPERATOR_SUB;
 				if (operator_name == OPERATOR_DEC) {
 					operator_inplace_add = OPERATOR_INPLACE_SUB;
 					operator_inplace_sub = OPERATOR_INPLACE_ADD;
@@ -6113,7 +6113,7 @@ err:
  * NOTE: A tuple-type check is only generated if FUNCTION_ASSEMBLER_F_SAFE is set. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_voptuple(struct fungen *__restrict self,
-            uint16_t operator_name, unsigned int flags) {
+            Dee_operator_t operator_name, unsigned int flags) {
 	struct memval *argsval;
 	if unlikely(self->fg_state->ms_stackc < 2)
 		return err_illegal_stack_effect();
@@ -6161,7 +6161,7 @@ err:
  *       might inadvertently also receive the updated object. */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vinplaceoptuple(struct fungen *__restrict self,
-                   uint16_t operator_name, unsigned int flags) {
+                   Dee_operator_t operator_name, unsigned int flags) {
 	struct memval *argsval;
 	if unlikely(self->fg_state->ms_stackc < 2)
 		return err_illegal_stack_effect();

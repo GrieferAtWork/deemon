@@ -1332,7 +1332,7 @@ no_dedicated_optimization:
  *       on-stack as well! */
 INTERN WUNUSED NONNULL((1)) struct ccall_optimization const *DCALL
 ccall_find_operator_optimization(DeeTypeObject *__restrict type,
-                                 uint16_t operator_name,
+                                 Dee_operator_t operator_name,
                                  vstackaddr_t argc) {
 	size_t i;
 	for (i = 0; i < COMPILER_LENOF(cco_optimizations); ++i) {
@@ -1346,7 +1346,7 @@ ccall_find_operator_optimization(DeeTypeObject *__restrict type,
 		while (lo < hi) {
 			size_t mid = (lo + hi) / 2;
 			struct ccall_optimization const *ent = &opts[mid];
-			uint16_t ent_opname = (uint16_t)ent->tcco_name.n_opname;
+			Dee_operator_t ent_opname = (Dee_operator_t)ent->tcco_name.n_opname;
 			if (operator_name < ent_opname) {
 				hi = mid;
 			} else if (operator_name > ent_opname) {
@@ -1354,7 +1354,7 @@ ccall_find_operator_optimization(DeeTypeObject *__restrict type,
 			} else {
 				if (ent->tcco_argc != CCALL_ARGC_ANY && ent->tcco_argc != argc) {
 					struct ccall_optimization const *end = opts + hi;
-					while (ent > opts && ((uint16_t)ent[-1].tcco_name.n_opname == operator_name))
+					while (ent > opts && ((Dee_operator_t)ent[-1].tcco_name.n_opname == operator_name))
 						--ent;
 					for (;;) {
 						if (ent >= end)
@@ -1364,7 +1364,7 @@ ccall_find_operator_optimization(DeeTypeObject *__restrict type,
 						if (ent->tcco_argc == argc)
 							break;
 						++ent;
-						if ((uint16_t)ent->tcco_name.n_opname != operator_name)
+						if ((Dee_operator_t)ent->tcco_name.n_opname != operator_name)
 							goto no_dedicated_optimization;
 					}
 				}

@@ -39,7 +39,7 @@
 DECL_BEGIN
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL
-seqeach_makeop0(DeeObject *__restrict seq, uint16_t opname) {
+seqeach_makeop0(DeeObject *__restrict seq, Dee_operator_t opname) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(0);
 	if unlikely(!result)
@@ -54,7 +54,7 @@ done:
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-seqeach_makeop1(DeeObject *__restrict seq, uint16_t opname,
+seqeach_makeop1(DeeObject *__restrict seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_0) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(1);
@@ -73,7 +73,7 @@ err:
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-seqeach_makeop2(DeeObject *__restrict seq, uint16_t opname,
+seqeach_makeop2(DeeObject *__restrict seq, Dee_operator_t opname,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_0,
                 /*inherit(always)*/ DREF DeeObject *__restrict arg_1) {
 	DREF SeqEachOperator *result;
@@ -691,7 +691,7 @@ seo_init(SeqEachOperator *__restrict self,
 	}
 	if (DeeString_Check(name)) {
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name), (uint16_t)-1);
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name), (size_t)-1);
 		if unlikely(info == NULL) {
 			/* TODO: In this case, remember the used "name" string,
 			 * and query the operator on a per-element basis */
@@ -836,10 +836,10 @@ DEFINE_SEW_BINARY(sew_gr, OPERATOR_GR)
 DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
 
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seo_getitem_for_inplace(SeqEachOperator *__restrict self,
                         DREF DeeObject **__restrict p_baseelem,
-                        size_t index, uint16_t operator_name) {
+                        size_t index, Dee_operator_t operator_name) {
 	DREF DeeObject *result, *baseelem;
 	baseelem = DeeObject_GetItemIndex(self->se_seq, index);
 	if unlikely(!baseelem)

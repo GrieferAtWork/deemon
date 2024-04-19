@@ -660,7 +660,7 @@ super_putbuf(Super *__restrict self,
 				(*tp_self->tp_buffer->tp_putbuf)(ob_self, info, flags);
 			break;
 		}
-	} while (type_inherit_buffer(tp_self));
+	} while (DeeType_InheritBuffer(tp_self));
 }
 
 PRIVATE struct type_buffer super_buffer = {

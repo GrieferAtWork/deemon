@@ -74,7 +74,7 @@ typedef struct {
 /* General purpose operator proxy. */
 typedef struct {
 	SEQ_EACH_HEAD
-	uint16_t        so_opname;    /* [const] Name of the operator that should be applied */
+	Dee_operator_t  so_opname;    /* [const] Name of the operator that should be applied */
 	uint16_t        so_opargc;    /* [const] Number of arguments to pass to the operator. */
 #if __SIZEOF_POINTER__ > 4
 	uint16_t        so_pad[(__SIZEOF_POINTER__ - 4) / 2]; /* ... */

@@ -68,6 +68,20 @@ INTDEF WUNUSED ATTR_INOUT((1, 2)) int DCALL instance_tgetc(DeeFileTypeObject *tp
 INTDEF WUNUSED ATTR_INOUT((1, 2)) int DCALL instance_tungetc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch);
 INTDEF WUNUSED ATTR_INOUT((1, 2)) int DCALL instance_tputc(DeeFileTypeObject *tp_self, DeeFileObject *self, int ch, Dee_ioflag_t flags);
 
+/* Callbacks for "struct Dee_operator_invoke::opi_inherit" in file operators. */
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_read(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_write(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+//INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_seek(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);  /* Not needed; standard inheritance already does the job. */
+//INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_sync(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);  /* Not needed; standard inheritance already does the job. */
+//INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_trunc(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info); /* Not needed; standard inheritance already does the job. */
+//INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_close(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info); /* Not needed; standard inheritance already does the job. */
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_pread(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_pwrite(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_getc(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_ungetc(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+INTDEF NONNULL((1, 2, 3)) void DCALL filetype_inherit_putc(DeeFileTypeObject *self, DeeTypeObject *type_type, struct Dee_opinfo const *info);
+
+
 
 /* Generic file operator invocation wrappers. */
 #define DeeFileType_invoke_ft_read(tp_self, ft_read, self, buffer, bufsize, flags)                     \

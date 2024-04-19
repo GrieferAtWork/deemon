@@ -212,7 +212,7 @@ print define_Dee_HashStr("operator");
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DFCALL
-JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, uint16_t opname) {
+JIT_GetOperatorFunction(DeeTypeObject *__restrict typetype, Dee_operator_t opname) {
 	DREF DeeObject *result;
 	DREF DeeModuleObject *operators_module;
 	char const *symbol_name = NULL;
@@ -645,7 +645,7 @@ err_rbrck_after_lbrck:
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
 			struct opinfo const *info;
-			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size, (uint16_t)-1);
+			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size, (size_t)-1);
 			if (info) {
 				result = info->oi_id;
 				goto done_y1;

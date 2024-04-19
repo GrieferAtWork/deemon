@@ -188,9 +188,9 @@ again:
 struct seqops {
 	/* Opcodes are encoded in big-endian.
 	 * When the mask 0xff00 is ZERO, the opcode is a single byte long. */
-	DeeTypeObject *so_typ; /* The deemon type for this sequence. */
-	uint16_t so_pck[2];    /* Pack - [0]: 8-bit; [1]: 16-bit; */
-	uint16_t so_cas;       /* Cast */
+	DeeTypeObject *so_typ;    /* The deemon type for this sequence. */
+	uint16_t       so_pck[2]; /* Pack - [0]: 8-bit; [1]: 16-bit; */
+	uint16_t       so_cas;    /* Cast */
 };
 
 INTDEF struct seqops seqops_info[4];

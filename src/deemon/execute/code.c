@@ -1441,7 +1441,7 @@ code_get_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (uint16_t)-1)
+	if (info.fi_opname != (Dee_operator_t)-1)
 		return DeeInt_NewUInt16(info.fi_opname);
 	err_unbound_attribute_string(&DeeCode_Type, "__operator__");
 err:
@@ -1456,7 +1456,7 @@ code_bound_operator(DeeCodeObject *__restrict self) {
 	Dee_XDecref(info.fi_type);
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	return info.fi_opname != (uint16_t)-1 ? 1 : 0;
+	return info.fi_opname != (Dee_operator_t)-1 ? 1 : 0;
 err:
 	return -1;
 }
@@ -1469,7 +1469,7 @@ code_get_operatorname(DeeCodeObject *__restrict self) {
 		goto err;
 	Dee_XDecref(info.fi_name);
 	Dee_XDecref(info.fi_doc);
-	if (info.fi_opname != (uint16_t)-1) {
+	if (info.fi_opname != (Dee_operator_t)-1) {
 		op = DeeTypeType_GetOperatorById(info.fi_type ? Dee_TYPE(info.fi_type)
 		                                              : &DeeType_Type,
 		                                 info.fi_opname);

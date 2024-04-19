@@ -748,7 +748,7 @@ err_args:
 				DeeObject_Init(result, &DeeBytes_Type);
 				return result;
 			}
-		} while (type_inherit_buffer(tp_iter));
+		} while (DeeType_InheritBuffer(tp_iter));
 		/* The object does not implement the buffer interface.
 		 * -> Instead, construct the Bytes object as a sequence. */
 		result = (DREF Bytes *)DeeBytes_FromSequence(ob);

@@ -324,20 +324,20 @@ class_attribute_mayaccess_impl(struct Dee_class_attribute *__restrict self,
 struct Dee_class_operator {
 	/* TODO: It must be possible to define operators by-name (as in: "string"), and have the
 	 *       `DeeClass_New()' resolve that name using `DeeTypeType_GetOperatorById(Dee_TYPE(base))' */
-	uint16_t co_name; /* [const] Operator name (`(uint16_t)-1' for end-of-chain) */
-	uint16_t co_addr; /* [const] Operator address (within the class member table `cd_members').
-	                   * Operators are invoked like attributes with the following flags:
-	                   * `Dee_CLASS_ATTRIBUTE_FMETHOD|Dee_CLASS_ATTRIBUTE_FCLASSMEM', meaning
-	                   * they are invoked as this-calls, with the callback itself stored
-	                   * in class memory.
-	                   * WARNING: When overwriting the value of a class operator after the previous
-	                   *          one has already been used may not actually function, as operators
-	                   *          get cached upon first use, such-as to allow for operators to be
-	                   *          inherited from base-classes in order to ensure O(1) execution time.
-	                   * HINT: When the pointed-to class member is `NULL' (unbound), operator
-	                   *       search won't continue, but rather cause a not-implemented error
-	                   *       to be thrown, thus allowing you to explicitly delete an operator
-	                   *       by simply declaring it, but not assigning a callback. */
+	Dee_operator_t co_name; /* [const] Operator name (`(Dee_operator_t)-1' for end-of-chain) */
+	uint16_t       co_addr; /* [const] Operator address (within the class member table `cd_members').
+	                         * Operators are invoked like attributes with the following flags:
+	                         * `Dee_CLASS_ATTRIBUTE_FMETHOD|Dee_CLASS_ATTRIBUTE_FCLASSMEM', meaning
+	                         * they are invoked as this-calls, with the callback itself stored
+	                         * in class memory.
+	                         * WARNING: When overwriting the value of a class operator after the previous
+	                         *          one has already been used may not actually function, as operators
+	                         *          get cached upon first use, such-as to allow for operators to be
+	                         *          inherited from base-classes in order to ensure O(1) execution time.
+	                         * HINT: When the pointed-to class member is `NULL' (unbound), operator
+	                         *       search won't continue, but rather cause a not-implemented error
+	                         *       to be thrown, thus allowing you to explicitly delete an operator
+	                         *       by simply declaring it, but not assigning a callback. */
 };
 
 
@@ -432,7 +432,7 @@ struct Dee_class_descriptor_object {
 	                                                                     *       place when no constructor has actually been defined). */
 	uint16_t                                            cd_cmemb_size;  /* [const] The allocation size of the class member table. */
 	uint16_t                                            cd_imemb_size;  /* [const] The allocation size of the instance member table. */
-	uint16_t                                            cd_clsop_mask;  /* [const] Mask for the `cd_clsop_list' hash-vector. */
+	Dee_operator_t                                      cd_clsop_mask;  /* [const] Mask for the `cd_clsop_list' hash-vector. */
 	size_t                                              cd_cattr_mask;  /* [const] Mask for the `cd_cattr_list' hash-vector. */
 	size_t                                              cd_iattr_mask;  /* [const] Mask for the `cd_cattr_list' hash-vector. */
 	struct Dee_class_operator                          *cd_clsop_list;  /* [1..cd_clsop_mask+1][owned_if(!= INTERNAL(empty-class-operator-table))]
@@ -820,36 +820,36 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
  * a NotImplemented error, or return NULL and don't throw
  * an error when `DeeClass_TryGetOperator()' was used. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_GetOperator(DeeTypeObject const *__restrict self, uint16_t name);
+DeeClass_GetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 /* Same as `DeeClass_GetOperator()', but don't simply return `NULL'
  * if the operator hasn't been implemented, and `ITER_DONE' when it
  * has been, but wasn't assigned anything. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, uint16_t name);
+DeeClass_TryGetOperator(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 /* Same as `DeeClass_TryGetOperator()', but don't return an operator
  * that has been inherited from a base-class, but return `NULL' instead. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, uint16_t name);
+DeeClass_TryGetPrivateOperator(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 /* Convenience wrappers for `DeeObject_ThisCall(DeeClass_GetOperator())' */
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeClass_CallOperator(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                      uint16_t name, size_t argc, DeeObject *const *argv);
+                      Dee_operator_t name, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *
 DeeClass_CallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                       uint16_t name, char const *format, ...);
+                       Dee_operator_t name, char const *format, ...);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeClass_VCallOperatorf(DeeTypeObject const *__restrict tp_self, DeeObject *self,
-                        uint16_t name, char const *format, va_list args);
+                        Dee_operator_t name, char const *format, va_list args);
 
 
 #ifdef CONFIG_BUILDING_DEEMON
 
 /* Same as `DeeClass_TryGetPrivateOperator()', but don't return a reference */
 INTDEF ATTR_PURE WUNUSED NONNULL((1)) DeeObject *DCALL
-DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, uint16_t name);
+DeeClass_TryGetPrivateOperatorPtr(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 /* The functions bound to the C-level type callbacks when a
  * user-defined class provides the associated operator.

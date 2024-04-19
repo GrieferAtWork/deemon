@@ -67,7 +67,7 @@ typedef DeeClassDescriptorObject ClassDescriptor;
 
 INTERN struct class_operator empty_class_operators[] = {
 	{
-		/* .co_name = */ (uint16_t)-1,
+		/* .co_name = */ (Dee_operator_t)-1,
 		/* .co_addr = */ 0
 	}
 };
@@ -112,7 +112,7 @@ coti_next_ent(ClassOperatorTableIterator *__restrict self) {
 		for (;; ++result) {
 			if (result >= self->co_end)
 				return NULL;
-			if (result->co_name != (uint16_t)-1)
+			if (result->co_name != (Dee_operator_t)-1)
 				break;
 		}
 		if (atomic_cmpxch_weak_or_write(&self->co_iter, start, result + 1))
@@ -309,11 +309,11 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 cot_nsi_getsize(ClassOperatorTable *__restrict self) {
-	uint16_t i;
-	size_t result         = 0;
+	Dee_operator_t i;
+	size_t result = 0;
 	ClassDescriptor *desc = self->co_desc;
 	for (i = 0; i <= desc->cd_clsop_mask; ++i) {
-		if (desc->cd_clsop_list[i].co_name != (uint16_t)-1)
+		if (desc->cd_clsop_list[i].co_name != (Dee_operator_t)-1)
 			++result;
 	}
 	return result;
@@ -328,12 +328,12 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 cot_getitemdef(ClassOperatorTable *__restrict self,
                DeeObject *__restrict key,
                DeeObject *__restrict defl) {
-	uint16_t opname, i, perturb;
+	Dee_operator_t opname, i, perturb;
 	ClassDescriptor *desc = self->co_desc;
 	if (DeeString_Check(key)) {
 		struct opinfo const *info;
 		/* TODO: Check if the table contains a string-operator "key" */
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key), (uint16_t)-1);
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key), (size_t)-1);
 		if (info == NULL)
 			goto nope;
 		opname = info->oi_id;
@@ -345,7 +345,7 @@ cot_getitemdef(ClassOperatorTable *__restrict self,
 	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
 		struct class_operator *op;
 		op = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
-		if (op->co_name == (uint16_t)-1)
+		if (op->co_name == (Dee_operator_t)-1)
 			break;
 		if (op->co_name != opname)
 			continue;
@@ -1504,13 +1504,13 @@ cd_printrepr(ClassDescriptor *__restrict self,
 		}
 	}
 	if (self->cd_clsop_list != empty_class_operators) {
-		uint16_t i;
+		Dee_operator_t i;
 		bool is_first = true;
 		DO(err, DeeFormat_PRINT(printer, arg, "operators: { "));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
 			struct opinfo const *info;
 			struct class_operator op = self->cd_clsop_list[i];
-			if (op.co_name == (uint16_t)-1)
+			if (op.co_name == (Dee_operator_t)-1)
 				continue;
 			if (!is_first)
 				DO(err, DeeFormat_PRINT(printer, arg, ", "));
@@ -1854,13 +1854,13 @@ err:
 	return NULL;
 }
 
-PRIVATE int DCALL
+PRIVATE NONNULL((1, 4)) int DCALL
 cd_add_operator(ClassDescriptor *__restrict self,
-                uint16_t name, uint16_t index,
-                uint16_t *__restrict operator_count) {
-	uint16_t i, perturb, mask;
+                Dee_operator_t name, uint16_t index,
+                Dee_operator_t *__restrict operator_count) {
+	Dee_operator_t i, perturb, mask;
 	struct class_operator *map, *ent;
-	if (name == (uint16_t)-1)
+	if (name == (Dee_operator_t)-1)
 		goto err_invalid_name;
 	if (*operator_count >= (self->cd_clsop_mask / 3) * 2) {
 		mask = (self->cd_clsop_mask << 1) | 1;
@@ -1871,14 +1871,14 @@ cd_add_operator(ClassDescriptor *__restrict self,
 			goto err;
 		memset(map, 0xff, (mask + 1) * sizeof(struct class_operator));
 		for (i = 0; i <= self->cd_clsop_mask; ++i) {
-			uint16_t dst_i, dst_perturb;
+			Dee_operator_t dst_i, dst_perturb;
 			ent = &self->cd_clsop_list[i];
-			if (ent->co_name == (uint16_t)-1)
+			if (ent->co_name == (Dee_operator_t)-1)
 				continue;
 			dst_i = dst_perturb = ent->co_name & mask;
 			for (;; DeeClassDescriptor_CLSOPNEXT(dst_i, dst_perturb)) {
 				struct class_operator *dst_ent = &map[dst_i & mask];
-				if (dst_ent->co_name != (uint16_t)-1)
+				if (dst_ent->co_name != (Dee_operator_t)-1)
 					continue;
 				*dst_ent = *ent;
 				break;
@@ -1896,7 +1896,7 @@ cd_add_operator(ClassDescriptor *__restrict self,
 		ent = &map[i & mask];
 		if (ent->co_name == name)
 			goto err_duplicate_name;
-		if (ent->co_name == (uint16_t)-1)
+		if (ent->co_name == (Dee_operator_t)-1)
 			break;
 	}
 	ent->co_name = name;
@@ -2065,12 +2065,12 @@ got_flag:
 		Dee_Decref(iterator);
 	}
 	if (class_operators != Dee_EmptyTuple) {
-		uint16_t operator_count = 0;
+		Dee_operator_t operator_count = 0;
 		iterator = DeeObject_IterSelf(class_operators);
 		if unlikely(!iterator)
 			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			uint16_t name, index;
+			Dee_operator_t name, index;
 			if (DeeObject_Unpack(elem, 2, data))
 				goto err_r_imemb_iter_elem;
 			Dee_Decref(elem);
@@ -2078,7 +2078,7 @@ got_flag:
 				goto err_r_imemb_iter_data;
 			if (DeeString_Check(data[0])) {
 				struct opinfo const *info;
-				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]), (uint16_t)-1);
+				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]), (size_t)-1);
 				if (info == NULL) {
 					/* TODO: In this case, must store the operator via its name
 					 *       (so the name-query can happen in `DeeClass_New()') */

@@ -53,7 +53,7 @@ INTERN_CONST DeeStringObject *tpconst rt_operator_names[1 + (AST_OPERATOR_MAX - 
 };
 
 PRIVATE WUNUSED NONNULL((1)) bool DCALL
-convert_operator_name(uint16_t *__restrict p_name, size_t argc) {
+convert_operator_name(Dee_operator_t *__restrict p_name, size_t argc) {
 	/* Convert an operator name based on the provided number of arguments. */
 	if (*p_name >= AST_OPERATOR_MIN &&
 	    *p_name <= AST_OPERATOR_MAX) {
@@ -124,7 +124,7 @@ ok:
 
 
 INTERN WUNUSED NONNULL((3)) DREF struct ast *DCALL
-ast_build_operator(uint16_t name, uint16_t flags,
+ast_build_operator(Dee_operator_t name, uint16_t flags,
                    struct ast *__restrict args) {
 	ASSERT(!(flags & AST_OPERATOR_FVARARGS));
 	if (args->a_type == AST_MULTIPLE &&
@@ -240,7 +240,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((3, 4)) DREF struct ast *DCALL
-ast_build_bound_operator(uint16_t name, uint16_t flags,
+ast_build_bound_operator(Dee_operator_t name, uint16_t flags,
                          struct ast *__restrict self,
                          struct ast *__restrict args) {
 	ASSERT(!(flags & AST_OPERATOR_FVARARGS));
@@ -770,7 +770,7 @@ default_case:
 			struct opinfo const *info;
 			/* TODO: Don't hard-code "DeeFileType_Type" here. Instead, hard-code "DeeType_Type"
 			 *       and query custom operators at runtime. */
-			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size, (uint16_t)-1);
+			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size, (size_t)-1);
 			if (info) {
 				result = info->oi_id;
 				goto done_y1;
