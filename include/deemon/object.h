@@ -3527,8 +3527,8 @@ DeeType_Print(DeeTypeObject *__restrict self, Dee_formatprinter_t printer, void 
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 
-DDATDEF DeeTypeObject DeeObject_Type; /* `object' */
-DDATDEF DeeTypeObject DeeType_Type;   /* `type(object)' */
+DDATDEF DeeTypeObject DeeObject_Type; /* `Object' */
+DDATDEF DeeTypeObject DeeType_Type;   /* `type(Object)' */
 #define DeeType_Check(ob)      DeeObject_InstanceOf(ob, &DeeType_Type)
 #define DeeType_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeType_Type)
 

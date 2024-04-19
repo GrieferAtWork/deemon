@@ -1,0 +1,147 @@
+#!/usr/bin/deemon
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+import * from deemon;
+import * from errors;
+
+{
+	class List1: List { function a() { return "a"; } };
+	class List2: List { function b() { return "b"; } };
+	class List3: List1, List2 {};
+	class List4: List2, List1 {};
+	assert List3.__base__ === List1,
+		"The primary base always needs to be the first base that "
+		"needs to be used as primary base. Even though `List2' could "
+		"also be used as primary base, `List1' was specified first.";
+	assert List4.__base__ === List2;
+	assert List3() is List;
+	assert List3() is List1;
+	assert List3() is List2;
+	assert List3() is List3;
+	assert List3() !is List4;
+	assert List3().a() == "a";
+	assert List3().b() == "b";
+	assert List4() is List;
+	assert List4() is List1;
+	assert List4() is List2;
+	assert List4() !is List3;
+	assert List4() is List4;
+	assert List4().a() == "a";
+	assert List4().b() == "b";
+}
+
+
+{
+	class List1 { function a() { return "a"; } };
+	class List2: List { function b() { return "b"; } };
+	class List3: List1, List2 {};
+	class List4: List2, List1 {};
+	assert List3.__base__ === List2;
+	assert List4.__base__ === List2;
+	assert List3() is List;
+	assert List3() is List1;
+	assert List3() is List2;
+	assert List3() is List3;
+	assert List3() !is List4;
+	assert List3().a() == "a";
+	assert List3().b() == "b";
+	assert List4() is List;
+	assert List4() is List1;
+	assert List4() is List2;
+	assert List4() !is List3;
+	assert List4() is List4;
+	assert List4().a() == "a";
+	assert List4().b() == "b";
+}
+
+
+{
+	class List1: List { member m1 = "m1"; function a() { return "a"; } };
+	class List2: List { function b() { return "b"; } };
+	class List3: List1, List2 {};
+	class List4: List2, List1 {};
+	assert List3.__base__ === List1;
+	assert List4.__base__ === List1;
+	assert List3() is List;
+	assert List3() is List1;
+	assert List3() is List2;
+	assert List3() is List3;
+	assert List3() !is List4;
+	assert List3().m1 == "m1";
+	assert List3().a() == "a";
+	assert List3().b() == "b";
+	assert List4() is List;
+	assert List4() is List1;
+	assert List4() is List2;
+	assert List4() !is List3;
+	assert List4() is List4;
+	assert List4().m1 == "m1";
+	assert List4().a() == "a";
+	assert List4().b() == "b";
+}
+
+{
+	class List1: List { function a() { return "a"; } };
+	class List2: List { member m2 = "m2"; function b() { return "b"; } };
+	class List3: List1, List2 {};
+	class List4: List2, List1 {};
+	assert List3.__base__ === List2;
+	assert List4.__base__ === List2;
+	assert List3() is List;
+	assert List3() is List1;
+	assert List3() is List2;
+	assert List3() is List3;
+	assert List3() !is List4;
+	assert List3().m2 == "m2";
+	assert List3().a() == "a";
+	assert List3().b() == "b";
+	assert List4() is List;
+	assert List4() is List1;
+	assert List4() is List2;
+	assert List4() !is List3;
+	assert List4() is List4;
+	assert List4().m2 == "m2";
+	assert List4().a() == "a";
+	assert List4().b() == "b";
+}
+
+
+try {
+	class List1 { member m1; function a() { print "a"; } };
+	class List2: List { function b() { print "b"; } };
+	class List3: List1, List2 {};
+	assert false, "List1 is non-abstract. List2 itself isn't, "
+		"but has a non-abstract base that isn't shared with "
+		"List1, so the 2 cannot be used together";
+} catch (TypeError) {
+}
+
+
+try {
+	class List1: List { member m1; function a() { print "a"; } };
+	class List2: List { member m2; function b() { print "b"; } };
+	class List3: List1, List2 {};
+	assert false, "List1 and List2 are both non-abstract, and even "
+		"though they have identical bases, the `m1' and `m2' members "
+		"would conflict with each other because they would need to go "
+		"at identical instance offsets.";
+} catch (TypeError) {
+}
+

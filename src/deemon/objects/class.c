@@ -5290,6 +5290,29 @@ err_cannot_use_final_type_as_base(DeeTypeObject *__restrict base) {
 	                       base->tp_name);
 }
 
+/* Return the first "relevant" base of `self' (or `self' itself if it is "relevant").
+ * A type is relevant if (at least one):
+ * - It isn't a user-defined class type
+ * - It has a non-inherited constructor
+ * - It has a destructor
+ * - It has instance members */
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+DeeType_GetFirstRelevantBase(DeeTypeObject *__restrict self) {
+	for (;;) {
+		if (!DeeType_IsClass(self))
+			break;
+		if (self->tp_class->cd_desc->cd_imemb_size > 0)
+			break;
+		if (DeeClass_TryGetPrivateOperatorPtr(self, OPERATOR_CONSTRUCTOR))
+			break;
+		if (DeeClass_TryGetPrivateOperatorPtr(self, OPERATOR_DESTRUCTOR))
+			break;
+		self = DeeType_Base(self);
+		ASSERT(self);
+	}
+	return self;
+}
+
 /* Load class bases from `bases'. */
 PRIVATE NONNULL((1, 2)) int DCALL
 class_bases_init(struct class_bases *__restrict self,
@@ -5360,18 +5383,40 @@ no_base:
 				/* Non-abstract types must appear as base, but
 				 * there can only be 1 such base per sub-class. */
 				if (self->cb_base != NULL) {
+					DeeTypeObject *old_relevant_base;
+					DeeTypeObject *new_relevant_base;
+					/* Special case: only check the relationship of "relevant" bases.
+					 *
+					 * >> class List1: List { function a() { print "a"; } };
+					 * >> class List2: List { function b() { print "b"; } };
+					 * >> class List3: List1, List2 {}; // This should be allowed
+					 */
+					old_relevant_base = DeeType_GetFirstRelevantBase(self->cb_base);
+					new_relevant_base = DeeType_GetFirstRelevantBase(base);
+
+					/* if "old_relevant_base.extends(new_relevant_base)"
+					 * -> ignore ("base" is already present in MRO) */
+					if (DeeType_Extends(old_relevant_base, new_relevant_base))
+						continue;
+
+					/* if "new_relevant_base.extends(old_relevant_base)"
+					 * -> Continue working with "self->cb_base = base" */
+					if (DeeType_Extends(new_relevant_base, old_relevant_base))
+						goto use_this_base_as_primary_base;
+
 					DeeError_Throwf(&DeeError_TypeError,
 					                "Cannot construct type with at least 2 non-abstract bases %r and %r",
 					                self->cb_base, base);
 					goto err_bases_list;
 				}
+use_this_base_as_primary_base:
 				self->cb_base = base;
 			}
 		}
-		if (self->cb_base == NULL) {
-			/* Fallback: just use the first abstract base as primary base. */
+
+		/* Fallback: just use the first abstract base as primary base. */
+		if (self->cb_base == NULL)
 			self->cb_base = (DeeTypeObject *)bases_list.ol_elemv[0];
-		}
 
 		/* Recursively scan for more bases. */
 		mro_i   = 0;
@@ -5397,7 +5442,7 @@ no_base:
 			mro_end = bases_list.ol_elemc;
 		}
 
-		/* Finalist the MRO vector. */
+		/* Finalize the MRO vector. */
 		if (objectlist_setallocated(&bases_list, bases_list.ol_elemc + 1))
 			goto err_bases_list;
 		bases_list.ol_elemv[bases_list.ol_elemc] = NULL;
