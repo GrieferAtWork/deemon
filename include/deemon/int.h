@@ -459,6 +459,7 @@ DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewUInt32(uint32_t val);
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewUInt64(uint64_t val);
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewInt128(Dee_int128_t val);
 DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewUInt128(Dee_uint128_t val);
+DFUNDEF WUNUSED DREF /*Int*/ DeeObject *DCALL DeeInt_NewDouble(double val); /* TODO: Rounding? */
 
 /* Create an integer from signed/unsigned LEB data. */
 DFUNDEF WUNUSED NONNULL((1)) DREF /*Int*/ DeeObject *DCALL
@@ -548,6 +549,7 @@ DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt16)(/*Int*/ Dee
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt32)(/*Int*/ DeeObject *__restrict self, uint32_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt64)(/*Int*/ DeeObject *__restrict self, uint64_t *__restrict value);
 DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsUInt128)(/*Int*/ DeeObject *__restrict self, Dee_uint128_t *__restrict value);
+DFUNDEF WUNUSED ATTR_OUT(2) NONNULL((1)) int (DCALL DeeInt_AsDouble)(/*Int*/ DeeObject *__restrict self, double *__restrict value);
 
 
 /* Convert an integer to a binary-encoded data array. */

@@ -1419,6 +1419,12 @@ DeeInt_NewInt128(Dee_int128_t val) {
 	return (DREF DeeObject *)result;
 }
 
+PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
+DeeInt_NewDouble(double val) {
+	/* TODO: This is wrong; doubles can approximate values larger than 64-bit! */
+	return DeeInt_NewInt64((int64_t)val);
+}
+
 
 #if DIGIT_BITS == 30
 #define DeeInt_DECIMAL_SHIFT 9                   /* max(e such that 10**e fits in a digit) */
@@ -3168,6 +3174,20 @@ PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
 	return 0;
 err_overflow:
 	return err_integer_overflow(self, 128, false);
+}
+
+PUBLIC WUNUSED ATTR_OUT(2) NONNULL((1)) int
+(DCALL DeeInt_AsDouble)(/*Int*/ DeeObject *__restrict self,
+                        double *__restrict value) {
+	/* TODO: This is wrong; doubles can approximate values larger than 64-bit! */
+	int64_t temp;
+	int error = DeeInt_Get64Bit(self, &temp);
+	if (error == INT_UNSIGNED) {
+		*value = (double)(uint64_t)temp;
+	} else {
+		*value = (double)temp;
+	}
+	return error < 0 ? -1 : 0;
 }
 
 

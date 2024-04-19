@@ -217,7 +217,7 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_int_with_int32(DeeSTypeObject *tp_self, void *self) {
 	int32_t value;
 	int status = (*tp_self->st_math->st_int32)(tp_self, self, &value);
@@ -254,7 +254,7 @@ stype_double_with_int32(DeeSTypeObject *tp_self, void *self, double *result) {
 	return status;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_int_with_int64(DeeSTypeObject *tp_self, void *self) {
 	int64_t value;
 	int status = (*tp_self->st_math->st_int64)(tp_self, self, &value);
@@ -299,7 +299,7 @@ stype_double_with_int64(DeeSTypeObject *tp_self, void *self, double *result) {
 	return status;
 }
 
-PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 stype_int_with_double(DeeSTypeObject *tp_self, void *self) {
 	double value;
 	int status = (*tp_self->st_math->st_double)(tp_self, self, &value);

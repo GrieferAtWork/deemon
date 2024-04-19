@@ -1148,6 +1148,8 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	switch (name) {
 	case OPERATOR_CONSTRUCTOR:
 		return self->tp_init.tp_var.tp_ctor ||
+		       self->tp_init.tp_var.tp_copy_ctor ||
+		       self->tp_init.tp_var.tp_deep_ctor ||
 		       self->tp_init.tp_var.tp_any_ctor ||
 		       self->tp_init.tp_var.tp_any_ctor_kw ||
 		       DeeType_InheritConstructors(self);
@@ -1161,9 +1163,8 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		return self->tp_cast.tp_bool || DeeType_InheritBool(self);
 	case OPERATOR_CALL:
 		return self->tp_call || self->tp_call_kw || DeeType_InheritCall(self);
-	case OPERATOR_HASH:
-		return (self->tp_cmp && (self->tp_cmp->tp_hash)) || DeeType_InheritHash(self);
 	case OPERATOR_INT:
+	case OPERATOR_FLOAT:
 		return (self->tp_math && (self->tp_math->tp_int || self->tp_math->tp_int32 ||
 		                          self->tp_math->tp_int64 || self->tp_math->tp_double)) ||
 		       DeeType_InheritInt(self);
@@ -1174,15 +1175,19 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_NEG:
 		return (self->tp_math && (self->tp_math->tp_neg)) || DeeType_InheritNeg(self);
 	case OPERATOR_ADD:
-	case OPERATOR_SUB:
-	case OPERATOR_INC:
-	case OPERATOR_DEC:
 	case OPERATOR_INPLACE_ADD:
+		return (self->tp_math && self->tp_math->tp_add) ||
+		       (DeeType_InheritAdd(self) && self->tp_math->tp_add);
+	case OPERATOR_SUB:
 	case OPERATOR_INPLACE_SUB:
-		return (self->tp_math && (self->tp_math->tp_add || self->tp_math->tp_sub ||
-		                          self->tp_math->tp_inc || self->tp_math->tp_dec ||
-		                          self->tp_math->tp_inplace_add || self->tp_math->tp_inplace_sub)) ||
-		       DeeType_InheritAdd(self);
+		return (self->tp_math && self->tp_math->tp_sub) ||
+		       (DeeType_InheritAdd(self) && self->tp_math->tp_sub);
+	case OPERATOR_INC:
+		return (self->tp_math && self->tp_math->tp_inc) ||
+		       (DeeType_InheritAdd(self) && self->tp_math->tp_inc);
+	case OPERATOR_DEC:
+		return (self->tp_math && self->tp_math->tp_dec) ||
+		       (DeeType_InheritAdd(self) && self->tp_math->tp_dec);
 	case OPERATOR_MUL:
 	case OPERATOR_INPLACE_MUL:
 		return (self->tp_math && (self->tp_math->tp_mul || self->tp_math->tp_inplace_mul)) || DeeType_InheritMul(self);
@@ -1210,16 +1215,20 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_POW:
 	case OPERATOR_INPLACE_POW:
 		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || DeeType_InheritPow(self);
+	case OPERATOR_HASH:
+		return (self->tp_cmp && self->tp_cmp->tp_hash) || DeeType_InheritHash(self);
 	case OPERATOR_EQ:
 	case OPERATOR_NE:
+		return (self->tp_cmp && self->tp_cmp->tp_eq) ||
+		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_eq);
 	case OPERATOR_LO:
+	case OPERATOR_GE:
+		return (self->tp_cmp && self->tp_cmp->tp_lo) ||
+		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_lo);
 	case OPERATOR_LE:
 	case OPERATOR_GR:
-	case OPERATOR_GE:
-		return (self->tp_cmp && (self->tp_cmp->tp_eq || self->tp_cmp->tp_ne ||
-		                         self->tp_cmp->tp_lo || self->tp_cmp->tp_le ||
-		                         self->tp_cmp->tp_gr || self->tp_cmp->tp_ge)) ||
-		       DeeType_InheritCompare(self);
+		return (self->tp_cmp && self->tp_cmp->tp_gr) ||
+		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_gr);
 	case OPERATOR_ITERNEXT:
 		return (self->tp_iter_next) || DeeType_InheritIterNext(self);
 	case OPERATOR_ITERSELF:
@@ -1257,7 +1266,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		__builtin_unreachable();
 	case OPERATOR_ENTER:
 	case OPERATOR_LEAVE:
-		return (self->tp_with && (self->tp_with->tp_enter || self->tp_with->tp_leave)) || DeeType_InheritWith(self);
+		return (self->tp_with && self->tp_with->tp_enter) || DeeType_InheritWith(self);
 	case OPERATOR_GETBUF:
 		return (self->tp_buffer && (self->tp_buffer->tp_getbuf || self->tp_buffer->tp_putbuf)) || DeeType_InheritBuffer(self);
 	default: break;

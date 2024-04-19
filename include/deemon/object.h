@@ -3290,7 +3290,6 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);          /* tp_repr, tp_printrepr */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);          /* tp_bool */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCall(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritInt(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritInv(DeeTypeObject *__restrict self);           /* tp_inv */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritPos(DeeTypeObject *__restrict self);           /* tp_pos */
@@ -3305,6 +3304,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */ /* TODO: This should form a group with `tp_nii' */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterSelf(DeeTypeObject *__restrict self);      /* tp_iter_self */ /* TODO: This should form a group with `tp_nsi' */
@@ -3326,7 +3326,6 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritRepr(self)         DeeType_InheritOperator(self, OPERATOR_REPR)
 #define DeeType_InheritBool(self)         DeeType_InheritOperator(self, OPERATOR_BOOL)
 #define DeeType_InheritCall(self)         DeeType_InheritOperator(self, OPERATOR_CALL)
-#define DeeType_InheritHash(self)         DeeType_InheritOperator(self, OPERATOR_HASH)
 #define DeeType_InheritInt(self)          DeeType_InheritOperator(self, OPERATOR_INT)
 #define DeeType_InheritInv(self)          DeeType_InheritOperator(self, OPERATOR_INV)
 #define DeeType_InheritPos(self)          DeeType_InheritOperator(self, OPERATOR_POS)
@@ -3341,6 +3340,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritOr(self)           DeeType_InheritOperator(self, OPERATOR_OR)
 #define DeeType_InheritXor(self)          DeeType_InheritOperator(self, OPERATOR_XOR)
 #define DeeType_InheritPow(self)          DeeType_InheritOperator(self, OPERATOR_POW)
+#define DeeType_InheritHash(self)         DeeType_InheritOperator(self, OPERATOR_HASH)
 #define DeeType_InheritCompare(self)      DeeType_InheritOperator(self, OPERATOR_EQ)
 #define DeeType_InheritIterNext(self)     DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
 #define DeeType_InheritIterSelf(self)     DeeType_InheritOperator(self, OPERATOR_ITERSELF)
