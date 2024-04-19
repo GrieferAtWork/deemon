@@ -271,7 +271,7 @@ DeeStructType_FromSequence(DeeObject *name,
 		Dee_Incref(name);
 	}
 	DeeObject_Init((DeeObject *)result, &DeeStructType_Type);
-	return (DREF DeeStructTypeObject *)DeeGC_Track((DeeObject *)result);
+	return DeeType_AsStructType((DeeTypeObject *)DeeGC_Track(DeeStructType_AsObject(result)));
 err_r:
 	for (i = 0; i <= result->st_fmsk; ++i) {
 		if (!result->st_fvec[i].sf_name)

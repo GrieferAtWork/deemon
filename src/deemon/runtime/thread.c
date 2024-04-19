@@ -3581,7 +3581,7 @@ thread_fini(DeeThreadObject *__restrict self) {
 #ifdef Dee_pid_t
 /* Construct a new wrapper for an external reference to `pid'
  * NOTE: The given `pid' is _NOT_ inherited! */
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
+PUBLIC WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	DREF DeeOSThreadObject *result;
 	result = DeeGCObject_CALLOC(DeeOSThreadObject);
 	if unlikely(!result)
@@ -3592,8 +3592,7 @@ DFUNDEF WUNUSED DREF DeeObject *DCALL DeeThread_FromTid(Dee_pid_t tid) {
 	result->ot_tid = tid;
 	result->ot_thread.t_deepassoc.da_list = empty_deep_assoc;
 	DeeObject_Init(&result->ot_thread, &DeeThread_Type);
-	DeeGC_Track((DeeObject *)&result->ot_thread);
-	return (DREF DeeObject *)&result->ot_thread;
+	return DeeGC_Track((DeeObject *)&result->ot_thread);
 err:
 	return NULL;
 }
@@ -5243,9 +5242,7 @@ done_traceback:
 			DeeObject_Init(result, &DeeTraceback_Type);
 
 			/* Tracebacks are GC objects, so we need to start tracking it here. */
-			DeeGC_Track((DeeObject *)result);
-			Dee_CHECKMEMORY();
-			return (DREF DeeObject *)result;
+			return DeeGC_Track((DeeObject *)result);
 err_free_result:
 			Dee_Free(heap.lh_base);
 			DeeObject_Free(result);

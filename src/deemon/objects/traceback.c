@@ -77,93 +77,95 @@ DeeTraceback_NewWithException(struct thread_object *__restrict thread) {
  * NOTE: The given `thread' must be the caller's. */
 INTERN WUNUSED NONNULL((1)) DREF DeeTracebackObject *DCALL
 DeeTraceback_New(struct thread_object *__restrict thread) {
+	struct code_frame *dst, *src;
 	DREF DeeTracebackObject *result;
 	ASSERTF(thread == DeeThread_Self(), "Traceback for other threads must be created using `DeeThread_Trace()'");
 	result = (DREF DeeTracebackObject *)DeeGCObject_TryMalloc(offsetof(DeeTracebackObject, tb_frames) +
 	                                                          thread->t_execsz * sizeof(struct code_frame));
-	if likely(result) {
-		/* TODO: This somehow needs support for functions running under _hostasm. */
-		struct code_frame *dst, *src;
-		DeeObject_Init(result, &DeeTraceback_Type);
-		result->tb_numframes = thread->t_execsz;
-		result->tb_thread    = thread;
-		Dee_Incref(thread);
-		Dee_atomic_lock_init(&result->tb_lock);
-		dst = result->tb_frames + thread->t_execsz;
-		src = thread->t_exec;
-		while (dst > result->tb_frames) {
-			DeeCodeObject *code;
-			DeeObject *dont_track_this = NULL;
-			--dst;
-			ASSERT(src != NULL);
-			ASSERT(src != CODE_FRAME_NOT_EXECUTING);
+	if unlikely(!result)
+		goto err;
 
-			/* Do a shallow memcpy of the execution frame. */
-			memcpy(dst, src, sizeof(struct code_frame));
+	/* TODO: This somehow needs support for functions running under _hostasm. */
+	DeeObject_Init(result, &DeeTraceback_Type);
+	result->tb_numframes = thread->t_execsz;
+	result->tb_thread    = thread;
+	Dee_Incref(thread);
+	Dee_atomic_lock_init(&result->tb_lock);
+	dst = result->tb_frames + thread->t_execsz;
+	src = thread->t_exec;
+	while (dst > result->tb_frames) {
+		DeeCodeObject *code;
+		DeeObject *dont_track_this = NULL;
+		--dst;
+		ASSERT(src != NULL);
+		ASSERT(src != CODE_FRAME_NOT_EXECUTING);
 
-			/* Create references and duplicate local variables. */
-			ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
-			ASSERT_OBJECT_TYPE(dst->cf_func->fo_code, &DeeCode_Type);
-			Dee_Incref(dst->cf_func);
-			code          = dst->cf_func->fo_code;
-			dst->cf_flags = code->co_flags;
-			if (code->co_flags & CODE_FTHISCALL) {
-				ASSERT_OBJECT(dst->cf_this);
-				if (!(code->co_flags & CODE_FCONSTRUCTOR)) {
-					Dee_Incref(dst->cf_this);
-				} else {
-					dont_track_this = dst->cf_this;
-					dst->cf_this    = NULL;
-				}
+		/* Do a shallow memcpy of the execution frame. */
+		memcpy(dst, src, sizeof(struct code_frame));
+
+		/* Create references and duplicate local variables. */
+		ASSERT_OBJECT_TYPE(dst->cf_func, &DeeFunction_Type);
+		ASSERT_OBJECT_TYPE(dst->cf_func->fo_code, &DeeCode_Type);
+		Dee_Incref(dst->cf_func);
+		code          = dst->cf_func->fo_code;
+		dst->cf_flags = code->co_flags;
+		if (code->co_flags & CODE_FTHISCALL) {
+			ASSERT_OBJECT(dst->cf_this);
+			if (!(code->co_flags & CODE_FCONSTRUCTOR)) {
+				Dee_Incref(dst->cf_this);
 			} else {
-				dst->cf_this = NULL;
+				dont_track_this = dst->cf_this;
+				dst->cf_this    = NULL;
 			}
-			if (!dst->cf_argc) {
-				dst->cf_argv = NULL;
-			} else {
-				dst->cf_argv = (DREF DeeObject **)Dee_TryMallocc(dst->cf_argc,
-				                                                 sizeof(DREF DeeObject *));
-				if (dst->cf_argv) {
-					size_t i;
-					for (i = 0; i < dst->cf_argc; ++i) {
-						DeeObject *ob = src->cf_argv[i];
-						if (ob == dont_track_this)
-							ob = Dee_None;
-						Dee_Incref(ob);
-						((DREF DeeObject **)dst->cf_argv)[i] = ob;
-					}
-				}
-			}
-			Dee_XIncref(dst->cf_vargs);
-			if (ITER_ISOK(dst->cf_result))
-				Dee_Incref(dst->cf_result);
-
-			/* Duplicate local variables. */
-			dst->cf_frame = (DREF DeeObject **)Dee_TryMallocc(code->co_localc,
-			                                                  sizeof(DREF DeeObject *));
-			if (dst->cf_frame) {
+		} else {
+			dst->cf_this = NULL;
+		}
+		if (!dst->cf_argc) {
+			dst->cf_argv = NULL;
+		} else {
+			dst->cf_argv = (DREF DeeObject **)Dee_TryMallocc(dst->cf_argc,
+			                                                 sizeof(DREF DeeObject *));
+			if (dst->cf_argv) {
 				size_t i;
-				for (i = 0; i < code->co_localc; ++i) {
-					DeeObject *ob = src->cf_frame[i];
+				for (i = 0; i < dst->cf_argc; ++i) {
+					DeeObject *ob = src->cf_argv[i];
 					if (ob == dont_track_this)
 						ob = Dee_None;
-					Dee_XIncref(ob);
-					dst->cf_frame[i] = ob;
+					Dee_Incref(ob);
+					((DREF DeeObject **)dst->cf_argv)[i] = ob;
 				}
 			}
-
-			/* At this point, the contents of the stack can't be trusted. */
-			dst->cf_stack   = (DREF DeeObject **)dont_track_this; /* Save this here so that `DeeTraceback_AddFrame()' sees it. */
-			dst->cf_sp      = NULL;
-			dst->cf_stacksz = 0;
-
-			/* Continue with the next frame. */
-			src = src->cf_prev;
 		}
-		ASSERT(src == NULL);
-		DeeGC_Track((DeeObject *)result);
+		Dee_XIncref(dst->cf_vargs);
+		if (ITER_ISOK(dst->cf_result))
+			Dee_Incref(dst->cf_result);
+
+		/* Duplicate local variables. */
+		dst->cf_frame = (DREF DeeObject **)Dee_TryMallocc(code->co_localc,
+		                                                  sizeof(DREF DeeObject *));
+		if (dst->cf_frame) {
+			size_t i;
+			for (i = 0; i < code->co_localc; ++i) {
+				DeeObject *ob = src->cf_frame[i];
+				if (ob == dont_track_this)
+					ob = Dee_None;
+				Dee_XIncref(ob);
+				dst->cf_frame[i] = ob;
+			}
+		}
+
+		/* At this point, the contents of the stack can't be trusted. */
+		dst->cf_stack   = (DREF DeeObject **)dont_track_this; /* Save this here so that `DeeTraceback_AddFrame()' sees it. */
+		dst->cf_sp      = NULL;
+		dst->cf_stacksz = 0;
+
+		/* Continue with the next frame. */
+		src = src->cf_prev;
 	}
-	return result;
+	ASSERT(src == NULL);
+	return (DREF DeeTracebackObject *)DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 /* Fill in stack information in the given traceback for `frame'. */

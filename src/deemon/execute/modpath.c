@@ -1235,16 +1235,16 @@ DeeModule_New(/*String*/ DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	result = DeeGCObject_CALLOC(DeeModuleObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	DeeObject_Init(result, &DeeModule_Type);
 	result->mo_name    = (DeeStringObject *)name;
 	result->mo_bucketv = empty_module_buckets;
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	Dee_Incref(name);
 	weakref_support_init(result);
-	DeeGC_Track((DREF DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DREF DeeObject *)result);
+err:
+	return NULL;
 }
 
 
@@ -2849,7 +2849,7 @@ DeeExec_CompileModuleStream(DeeObject *source_stream,
 	Dee_atomic_rwlock_cinit(&result->mo_lock);
 	DeeObject_Init(result, &DeeModule_Type);
 	weakref_support_init(result);
-	DeeGC_Track((DREF DeeObject *)result);
+	result = (DREF DeeModuleObject *)DeeGC_Track((DREF DeeObject *)result);
 	result->mo_flags = MODULE_FLOADING;
 #ifndef CONFIG_NO_THREADS
 	result->mo_loader = DeeThread_Self();

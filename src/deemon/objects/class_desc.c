@@ -2589,9 +2589,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 instance_get_itable(DeeObject *__restrict self) {
 	DREF ObjectTable *result;
 	struct class_desc *desc;
-	DeeTypeObject *type;
 	DeeObject *real_self = self;
-	type                 = Dee_TYPE(self);
+	DeeTypeObject *type  = Dee_TYPE(self);
 	if (type == &DeeSuper_Type) {
 		type      = DeeSuper_TYPE(self);
 		real_self = DeeSuper_SELF(self);

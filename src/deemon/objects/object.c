@@ -1282,7 +1282,7 @@ again:
 					        "GC-allocated objects as non-GC objects.");
 
 					/* Continue tracking the object. */
-					DeeGC_Track(self);
+					self = DeeGC_Track(self);
 
 					/* As part of the revival process, `tp_dtor' has us inherit a reference to `self'
 					 * in order to prevent a race condition that could otherwise occur when another
@@ -1407,9 +1407,6 @@ again:
 	Dee_Decref(orig_type);
 }
 
-
-INTDEF int DCALL none_i1(void *UNUSED(b));
-INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 object_any_ctor(DeeObject *__restrict UNUSED(self),
@@ -2254,7 +2251,7 @@ object_is(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:__is__", &tp))
 		goto err;
 	if (DeeNone_Check((DeeObject *)tp)) {
-		is_instance = DeeNone_Check(self);
+		is_instance = DeeNone_Check(self) ? 1 : 0;
 	} else if (DeeSuper_Check(self)) {
 		is_instance = DeeType_Extends(DeeSuper_TYPE(self), tp);
 	} else {
@@ -2396,54 +2393,153 @@ DEFINE_DEPRECATED_INPLACE_BINARY(ipow, DeeObject_InplacePow)
 
 PRIVATE struct type_method tpconst object_methods[] = {
 	/* Operator invocation functions. */
-	TYPE_METHOD(STR___copy__,       &object_copy, "->\n@return A copy of @this object"),
-	TYPE_METHOD(STR___deepcopy__,   &object_deepcopy, "->\n@return A deep copy of @this object"),
-	TYPE_METHOD(STR___assign__,     &object_assign, "(other)->\nAssigns @other to @this and"),
-	TYPE_METHOD(STR___moveassign__, &object_moveassign, "(other)->\nMove-assign @other to @this and"),
-	TYPE_METHOD(STR___str__,        &object_dostr, "->?Dstring\n@return @this converted to a ?Dstring"),
-	TYPE_METHOD(STR___repr__,       &object_dorepr, "->?Dstring\n@return The ?Dstring representation of @this"),
-	TYPE_METHOD(STR___bool__,       &object_bool, "->?Dbool\n@return The ?Dbool value of @this"),
-	TYPE_METHOD(STR___call__,       &object_call, "(args:?DTuple)->\nCall @this using the given @args ?DTuple"),
-	TYPE_METHOD(STR___thiscall__,   &object_thiscall, "(this_arg,args:?DTuple)->\nDo a this-call on @this using the given @this_arg and @args ?DTuple"),
-	TYPE_METHOD(STR___hash__,       &object_hash, "->?Dint\n@return The hash-value of @this"),
-	TYPE_METHOD(STR___int__,        &object_int, "->?Dint\n@return The integer-value of @this"),
-	TYPE_METHOD(STR___inv__,        &object_inv, "->\n@return The result of ${this.operator ~ ()}"),
-	TYPE_METHOD(STR___pos__,        &object_pos, "->\n@return The result of ${this.operator + ()}"),
-	TYPE_METHOD(STR___neg__,        &object_neg, "->\n@return The result of ${this.operator - ()}"),
-	TYPE_METHOD(STR___add__,        &object_add, "(other)->\n@return The result of ${this.operator + (other)}"),
-	TYPE_METHOD(STR___sub__,        &object_sub, "(other)->\n@return The result of ${this.operator - (other)}"),
-	TYPE_METHOD(STR___mul__,        &object_mul, "(other)->\n@return The result of ${this.operator * (other)}"),
-	TYPE_METHOD(STR___div__,        &object_div, "(other)->\n@return The result of ${this.operator / (other)}"),
-	TYPE_METHOD(STR___mod__,        &object_mod, "(other)->\n@return The result of ${this.operator % (other)}"),
-	TYPE_METHOD(STR___shl__,        &object_shl, "(other)->\n@return The result of ${this.operator << (other)}"),
-	TYPE_METHOD(STR___shr__,        &object_shr, "(other)->\n@return The result of ${this.operator >> (other)}"),
-	TYPE_METHOD(STR___and__,        &object_and, "(other)->\n@return The result of ${this.operator & (other)}"),
-	TYPE_METHOD(STR___or__,         &object_or, "(other)->\n@return The result of ${this.operator | (other)}"),
-	TYPE_METHOD(STR___xor__,        &object_xor, "(other)->\n@return The result of ${this.operator ^ (other)}"),
-	TYPE_METHOD(STR___pow__,        &object_pow, "(other)->\n@return The result of ${this.operator ** (other)}"),
-	TYPE_METHOD(STR___eq__,         &object_eq, "(other)->\n@return The result of ${this.operator == (other)}"),
-	TYPE_METHOD(STR___ne__,         &object_ne, "(other)->\n@return The result of ${this.operator != (other)}"),
-	TYPE_METHOD(STR___lo__,         &object_lo, "(other)->\n@return The result of ${this.operator < (other)}"),
-	TYPE_METHOD(STR___le__,         &object_le, "(other)->\n@return The result of ${this.operator <= (other)}"),
-	TYPE_METHOD(STR___gr__,         &object_gr, "(other)->\n@return The result of ${this.operator > (other)}"),
-	TYPE_METHOD(STR___ge__,         &object_ge, "(other)->\n@return The result of ${this.operator >= (other)}"),
-	TYPE_METHOD(STR___size__,       &object_size, "->\n@return The result of ${this.operator ## ()}"),
-	TYPE_METHOD(STR___contains__,   &object_contains, "(item)->\n@return The result of ${this.operator contains (item)}"),
-	TYPE_METHOD(STR___getitem__,    &object_getitem, "(index)->\n@return The result of ${this.operator [] (index)}"),
-	TYPE_METHOD(STR___delitem__,    &object_delitem, "(index)\nInvokes ${this.operator del[] (index)}"),
-	TYPE_METHOD(STR___setitem__,    &object_setitem, "(index,value)->\n@return Always re-returned @value\nInvokes ${this.operator []= (index, value)}"),
-	TYPE_METHOD(STR___getrange__,   &object_getrange, "(start,end)->\n@return The result of ${this.operator [:] (start, end)}"),
-	TYPE_METHOD(STR___delrange__,   &object_delrange, "(start,end)\nInvokes ${this.operator del[:] (start, end)}"),
-	TYPE_METHOD(STR___setrange__,   &object_setrange, "(start,end,value)->\n@return Always re-returned @value\nInvokes ${this.operator [:]= (start, end, value)}"),
-	TYPE_METHOD(STR___iterself__,   &object_iterself, "->\n@return The result of ${this.operator iter()}"),
-	TYPE_METHOD(STR___iternext__,   &object_iternext, "->\n@return The result of ${this.operator next()}"),
-	TYPE_METHOD(STR___getattr__,    &object_getattr, "(name:?Dstring)->\n@return The result of ${this.operator . (name)}"),
-	TYPE_METHOD(STR___callattr__,   &object_callattr, "(name:?Dstring,args!)->\n@return The result of ${this.operator . (name)(args!)}"),
-	TYPE_METHOD(STR___hasattr__,    &object_hasattr, "(name:?Dstring)->?Dbool\nCheck if @this object provides an attribute @name, returning ?t or ?f indicative of this"),
-	TYPE_METHOD(STR___delattr__,    &object_delattr, "(name:?Dstring)\nInvokes ${this.operator del . (name)}"),
-	TYPE_METHOD(STR___setattr__,    &object_setattr, "(name:?Dstring,value)\n@return Always re-returned @value\nInvokes ${this.operator .= (name, value)}"),
-	TYPE_METHOD(STR___enumattr__,   &object_enumattr, "()->?S?DAttribute\n@return Same as ${deemon.enumattr(this)}"),
-	TYPE_METHOD(STR___format__, &object_format_method, "(format:?Dstring)->?Dstring\nFormat @this object. (s.a. ?Aformat?Dstring)"),
+	TYPE_METHOD(STR___copy__, &object_copy,
+	            "->\n"
+	            "#r{A copy of @this object}"),
+	TYPE_METHOD(STR___deepcopy__, &object_deepcopy,
+	            "->\n"
+	            "#r{A deep copy of @this object}"),
+	TYPE_METHOD(STR___assign__, &object_assign,
+	            "(other)->\n"
+	            "Assigns @other to @this and"),
+	TYPE_METHOD(STR___moveassign__, &object_moveassign,
+	            "(other)->\n"
+	            "Move-assign @other to @this and"),
+	TYPE_METHOD(STR___str__, &object_dostr,
+	            "->?Dstring\n"
+	            "#r{@this converted to a ?Dstring}"),
+	TYPE_METHOD(STR___repr__, &object_dorepr,
+	            "->?Dstring\n"
+	            "#r{The ?Dstring representation of @this}"),
+	TYPE_METHOD(STR___bool__, &object_bool,
+	            "->?Dbool\n"
+	            "#r{The ?Dbool value of @this}"),
+	TYPE_METHOD(STR___call__, &object_call,
+	            "(args:?DTuple)->\n"
+	            "Call @this using the given @args ?DTuple"),
+	TYPE_METHOD(STR___thiscall__, &object_thiscall,
+	            "(this_arg,args:?DTuple)->\n"
+	            "Do a this-call on @this using the given @this_arg and @args ?DTuple"),
+	TYPE_METHOD(STR___hash__, &object_hash,
+	            "->?Dint\n"
+	            "#r{The hash-value of @this}"),
+	TYPE_METHOD(STR___int__, &object_int,
+	            "->?Dint\n"
+	            "#r{The integer-value of @this}"),
+	TYPE_METHOD(STR___inv__, &object_inv,
+	            "->\n"
+	            "#r{The result of ${this.operator ~ ()}}"),
+	TYPE_METHOD(STR___pos__, &object_pos,
+	            "->\n"
+	            "#r{The result of ${this.operator + ()}}"),
+	TYPE_METHOD(STR___neg__, &object_neg,
+	            "->\n"
+	            "#r{The result of ${this.operator - ()}}"),
+	TYPE_METHOD(STR___add__, &object_add,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator + (other)}}"),
+	TYPE_METHOD(STR___sub__, &object_sub,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator - (other)}}"),
+	TYPE_METHOD(STR___mul__, &object_mul,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator * (other)}}"),
+	TYPE_METHOD(STR___div__, &object_div,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator / (other)}}"),
+	TYPE_METHOD(STR___mod__, &object_mod,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator % (other)}}"),
+	TYPE_METHOD(STR___shl__, &object_shl,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator << (other)}}"),
+	TYPE_METHOD(STR___shr__, &object_shr,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator >> (other)}}"),
+	TYPE_METHOD(STR___and__, &object_and,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator & (other)}}"),
+	TYPE_METHOD(STR___or__, &object_or,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator | (other)}}"),
+	TYPE_METHOD(STR___xor__, &object_xor,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator ^ (other)}}"),
+	TYPE_METHOD(STR___pow__, &object_pow,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator ** (other)}}"),
+	TYPE_METHOD(STR___eq__, &object_eq,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator == (other)}}"),
+	TYPE_METHOD(STR___ne__, &object_ne,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator != (other)}}"),
+	TYPE_METHOD(STR___lo__, &object_lo,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator < (other)}}"),
+	TYPE_METHOD(STR___le__, &object_le,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator <= (other)}}"),
+	TYPE_METHOD(STR___gr__, &object_gr,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator > (other)}}"),
+	TYPE_METHOD(STR___ge__, &object_ge,
+	            "(other)->\n"
+	            "#r{The result of ${this.operator >= (other)}}"),
+	TYPE_METHOD(STR___size__, &object_size,
+	            "->\n"
+	            "#r{The result of ${this.operator ## ()}}"),
+	TYPE_METHOD(STR___contains__, &object_contains,
+	            "(item)->\n"
+	            "#r{The result of ${this.operator contains (item)}}"),
+	TYPE_METHOD(STR___getitem__, &object_getitem,
+	            "(index)->\n"
+	            "#r{The result of ${this.operator [] (index)}}"),
+	TYPE_METHOD(STR___delitem__, &object_delitem,
+	            "(index)\n"
+	            "Invokes ${this.operator del[] (index)}"),
+	TYPE_METHOD(STR___setitem__, &object_setitem,
+	            "(index,value)->\n"
+	            "#r{Always re-returned @value}\n"
+	            "Invokes ${this.operator []= (index, value)}"),
+	TYPE_METHOD(STR___getrange__, &object_getrange,
+	            "(start,end)->\n"
+	            "#r{The result of ${this.operator [:] (start, end)}}"),
+	TYPE_METHOD(STR___delrange__, &object_delrange,
+	            "(start,end)\n"
+	            "Invokes ${this.operator del[:] (start, end)}"),
+	TYPE_METHOD(STR___setrange__, &object_setrange,
+	            "(start,end,value)->\n"
+	            "#r{Always re-returned @value}\n"
+	            "Invokes ${this.operator [:]= (start, end, value)}"),
+	TYPE_METHOD(STR___iterself__, &object_iterself,
+	            "->\n"
+	            "#r{The result of ${this.operator iter()}}"),
+	TYPE_METHOD(STR___iternext__, &object_iternext,
+	            "->\n"
+	            "#r{The result of ${this.operator next()}}"),
+	TYPE_METHOD(STR___getattr__, &object_getattr,
+	            "(name:?Dstring)->\n"
+	            "#r{The result of ${this.operator . (name)}}"),
+	TYPE_METHOD(STR___callattr__, &object_callattr,
+	            "(name:?Dstring,args!)->\n"
+	            "#r{The result of ${this.operator . (name)(args!)}}"),
+	TYPE_METHOD(STR___hasattr__, &object_hasattr,
+	            "(name:?Dstring)->?Dbool\n"
+	            "Check if @this object provides an attribute @name, returning ?t or ?f indicative of this"),
+	TYPE_METHOD(STR___delattr__, &object_delattr,
+	            "(name:?Dstring)\n"
+	            "Invokes ${this.operator del . (name)}"),
+	TYPE_METHOD(STR___setattr__, &object_setattr,
+	            "(name:?Dstring,value)\n"
+	            "#r{Always re-returned @value}\n"
+	            "Invokes ${this.operator .= (name, value)}"),
+	TYPE_METHOD(STR___enumattr__, &object_enumattr,
+	            "()->?S?DAttribute\n"
+	            "#r{Same as ${deemon.enumattr(this)}}"),
+	TYPE_METHOD(STR___format__, &object_format_method,
+	            "(format:?Dstring)->?Dstring\n"
+	            "Format @this object. (s.a. ?Aformat?Dstring)"),
 #ifndef CONFIG_NO_DEEMON_100_COMPAT
 	/* Aliases for backwards compatibility with deemon < v200 */
 	TYPE_METHOD("__iterself__",    &object_iterself, "->\nDeprecated alias for ?#__iter__"),
@@ -2515,18 +2611,20 @@ PRIVATE struct type_getset tpconst object_getsets[] = {
 	              "Returns a view for the super-instance of @this object"),
 	TYPE_GETTER_F("__itable__", &instance_get_itable,
 	              METHOD_FCONSTCALL,
-	              "->?AObjectTable?Ert:ClassDescriptor\n"
+	              "->?X2?S?O?AObjectTable?Ert:ClassDescriptor\n"
 	              "Returns an indexable sequence describing the instance object "
 	              /**/ "table, as referenced by ?Aaddr?AAttribute?Ert:{ClassDescriptor}.\n"
-	              "For non-user-defined classes (aka. when ${this.class.__isclass__} "
-	              /**/ "is ?f), an empty sequence is returned.\n"
+	              "For non-user-defined classes (aka. when ${this.class.__isclass__} is ?f), "
+	              /**/ "an empty sequence is returned.\n"
 	              "The class-attribute table can be accessed through ?A__ctable__?DType."),
 
 	/* Helper function: `foo.id' returns a unique id for any object. */
 	TYPE_GETTER_F("id", &object_id_get,
 	              /* This one isn't CONSTCALL because IDs can change if a constant
 	               * is serialized and deserialized (as would be the case when building
-	               * and later re-loading a .dec file) */
+	               * and later re-loading a .dec file). Even IDs of built-in constants
+	               * like "none", "true", "false", ... can differ if ASLR causes deemon
+	               * to be loaded to different addresses between multiple runs. */
 	              METHOD_FNOREFESCAPE,
 	              "->?Dint\n"
 	              "Returns a unique id identifying @this specific object instance"),
@@ -2554,6 +2652,9 @@ PRIVATE struct type_operator const object_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_0006_STR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0007_REPR, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 };
+
+INTDEF int DCALL none_i1(void *UNUSED(b));
+INTDEF int DCALL none_i2(void *UNUSED(b), void *UNUSED(c));
 
 PUBLIC DeeTypeObject DeeObject_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
@@ -2630,7 +2731,7 @@ PUBLIC DeeTypeObject DeeObject_Type = {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 type_ctor(DeeTypeObject *__restrict self) {
-	/* Simply re-initialize everything to ZERO and set the HEAP flag. */
+	/* Simply initialize everything to ZERO and set the HEAP flag. */
 	bzero((void *)&self->tp_name,
 	      sizeof(DeeTypeObject) -
 	      offsetof(DeeTypeObject, tp_name));
@@ -2772,7 +2873,8 @@ type_clear(DeeTypeObject *__restrict self) {
 }
 
 PRIVATE NONNULL((1)) void DCALL
-type_pclear(DeeTypeObject *__restrict self, unsigned int gc_priority) {
+type_pclear(DeeTypeObject *__restrict self,
+            unsigned int gc_priority) {
 	if (DeeType_IsClass(self))
 		class_pclear(self, gc_priority);
 }
@@ -2786,7 +2888,7 @@ type_baseof(DeeTypeObject *self, size_t argc,
 		goto err;
 	if (!DeeType_Check((DeeObject *)other))
 		return_false;
-	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[DeeType_Extends(other, self)]);
+	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(other, self)]);
 err:
 	return NULL;
 }
@@ -2797,7 +2899,7 @@ type_derivedfrom(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:derivedfrom", &other))
 		goto err;
-	Dee_return_reference_((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
+	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Extends(self, other)]);
 err:
 	return NULL;
 }
@@ -2808,7 +2910,7 @@ type_implements(DeeTypeObject *self, size_t argc,
 	DeeTypeObject *other;
 	if (DeeArg_UnpackKw(argc, argv, kw, kwlist_other, "o:implements", &other))
 		goto err;
-	return_bool(DeeType_Implements(self, other));
+	Dee_return_reference((DeeObject *)&Dee_FalseTrue[DeeType_Implements(self, other)]);
 err:
 	return NULL;
 }
@@ -2860,8 +2962,12 @@ type_new_raw(DeeTypeObject *__restrict self) {
 	}
 
 	/* Instantiate non-base types. */
-	if (!first_base || first_base == &DeeObject_Type)
-		goto done;
+	if (!first_base || first_base == &DeeObject_Type) {
+done:
+		if (self->tp_flags & TP_FGC)
+			result = DeeGC_Track(result);
+		return result;
+	}
 	if (first_base->tp_init.tp_alloc.tp_ctor) {
 		/* Invoke the mandatory base-type constructor. */
 invoke_base_ctor:
@@ -2893,10 +2999,6 @@ invoke_base_any_ctor_kw:
 	}
 	err_missing_mandatory_init(first_base);
 	goto err_r;
-done:
-	if (self->tp_flags & TP_FGC)
-		DeeGC_Track(result);
-	return result;
 err_r:
 	if (!DeeObject_UndoConstruction(first_base, result)) {
 		DeeError_Print(str_shared_ctor_failed, ERROR_PRINT_DOHANDLE);
@@ -3287,9 +3389,8 @@ done_fields:
 		if unlikely(temp)
 			goto err_r_firstbase;
 	} while ((iter = DeeType_Base(iter)) != NULL);
-
 	if (self->tp_flags & TP_FGC)
-		DeeGC_Track(result);
+		result = DeeGC_Track(result);
 	return result;
 err_r_firstbase:
 	if (!DeeObject_UndoConstruction(first_base, result)) {
@@ -4472,7 +4573,7 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	                    /**/ "features such as operators, or class/instance member functions"),
 	TYPE_GETTER_F("__ctable__", &type_get_ctable,
 	              METHOD_FCONSTCALL,
-	              "->?AObjectTable?Ert:ClassDescriptor\n"
+	              "->?X2?S?O?AObjectTable?Ert:ClassDescriptor\n"
 	              "Returns an indexable sequence describing the class object table, "
 	              /**/ "as referenced by ?Aaddr?AAttribute?Ert:ClassDescriptor\n"
 	              "For non-user-defined classes (aka. ?#__isclass__ is ?f), an empty sequence is returned\n"

@@ -59,14 +59,14 @@ PRIVATE WUNUSED DREF FixedList *DCALL fl_ctor(void) {
 	DREF FixedList *result;
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem));
 	if unlikely(!result)
-		goto done;
+		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = 0;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return result;
+	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
@@ -75,7 +75,7 @@ fl_copy(FixedList *__restrict self) {
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
 	                                              (self->fl_size * sizeof(DREF DeeObject *)));
 	if unlikely(!result)
-		goto done;
+		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = self->fl_size;
 	FixedList_LockRead(self);
@@ -83,9 +83,9 @@ fl_copy(FixedList *__restrict self) {
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return result;
+	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF FixedList *DCALL
@@ -161,8 +161,7 @@ done:
 	result->fl_size = itemc;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
 err_r:
 	Dee_Decrefv(result->fl_elem, itemc);
 	DeeGCObject_Free(result);
@@ -197,8 +196,7 @@ fl_init_getitem(DREF DeeObject *(DCALL *getitem)(DeeObject *__restrict self,
 	result->fl_size = length;
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
 err_r:
 	Dee_Decrefv(result->fl_elem, i);
 	DeeGCObject_Free(result);
@@ -299,8 +297,7 @@ init_from_iterator:
 /*done:*/
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF FixedList *)DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_Free(result);
 err:
@@ -658,7 +655,7 @@ fl_nsi_getrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
 	                                              range_size * sizeof(DREF DeeObject *));
 	if unlikely(!result)
-		goto done;
+		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = range_size;
 	FixedList_LockRead(self);
@@ -668,9 +665,9 @@ fl_nsi_getrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -687,7 +684,7 @@ fl_nsi_getrange_n(FixedList *__restrict self, dssize_t i_begin) {
 	result = (DREF FixedList *)DeeGCObject_Malloc(offsetof(FixedList, fl_elem) +
 	                                              range_size * sizeof(DREF DeeObject *));
 	if unlikely(!result)
-		goto done;
+		goto err;
 	Dee_atomic_rwlock_init(&result->fl_lock);
 	result->fl_size = range_size;
 	FixedList_LockRead(self);
@@ -697,9 +694,9 @@ fl_nsi_getrange_n(FixedList *__restrict self, dssize_t i_begin) {
 	FixedList_LockEndRead(self);
 	weakref_support_init(result);
 	DeeObject_Init(result, &FixedList_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 

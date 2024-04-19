@@ -764,7 +764,7 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 	DREF DeeStringObject *name;
 	result = DeeGCObject_CALLOC(DeePointerTypeObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '*');
@@ -799,11 +799,10 @@ pointertype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the pointer type. */
 	DeeObject_Init(DeePointerType_AsType(result), &DeePointerType_Type);
-	DeeGC_Track(DeePointerType_AsObject(result));
-done:
-	return result;
+	return DeeType_AsPointerType((DeeTypeObject *)DeeGC_Track(DeePointerType_AsObject(result)));
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
@@ -813,7 +812,7 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 	DREF DeeStringObject *name;
 	result = DeeGCObject_CALLOC(DeeLValueTypeObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)make_structured_name(self, '&');
@@ -843,11 +842,10 @@ lvaluetype_new(DeeSTypeObject *__restrict self) {
 
 	/* Finish the lvalue type. */
 	DeeObject_Init(DeeLValueType_AsType(result), &DeeLValueType_Type);
-	DeeGC_Track(DeeLValueType_AsObject(result));
-done:
-	return result;
+	return DeeType_AsLValueType((DeeTypeObject *)DeeGC_Track(DeeLValueType_AsObject(result)));
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 

@@ -471,7 +471,7 @@ do_exec_code:
 		DeeGC_Untrack((DeeObject *)current_code);
 		is_reusing_code_object = (atomic_read(&current_code->ob_refcnt) == 2);
 		if unlikely(!is_reusing_code_object)
-			DeeGC_Track((DeeObject *)current_code);
+			current_code = (DeeCodeObject *)DeeGC_Track((DeeObject *)current_code);
 	}
 	ASSERT(current_code->co_refc == 0);
 	ASSERT(current_code->co_argc_min == 0);
@@ -1405,7 +1405,7 @@ err_compiler_basefile:
 		Dee_hostasm_code_init(&init_code->co_hostasm);
 #endif /* CONFIG_HAVE_HOSTASM_AUTO_RECOMPILE */
 		DeeObject_Init(init_code, &DeeCode_Type);
-		DeeGC_Track((DeeObject *)init_code);
+		init_code = (DREF DeeCodeObject *)DeeGC_Track((DREF DeeObject *)init_code);
 		self->im_module.mo_root = init_code; /* Inherit reference. */
 
 		/* Set the initial instruction pointer. */
@@ -1744,7 +1744,7 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	DREF InteractiveModule *result;
 	result = DeeGCObject_MALLOC(InteractiveModule);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	DeeObject_Init((DeeObject *)result, &DeeInteractiveModule_Type);
 	if (imod_init(result,
 	              source_stream,
@@ -1758,13 +1758,12 @@ DeeModule_OpenInteractive(DeeObject *source_stream,
 	              default_symbols))
 		goto err_r;
 	/* Start tracking the new module as a GC object. */
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DREF DeeObject *)result);
 err_r:
 	Dee_DecrefNokill(&DeeInteractiveModule_Type);
 	DeeObject_FreeTracker((DeeObject *)result);
 	DeeGCObject_FREE((DeeObject *)result);
+err:
 	return NULL;
 }
 

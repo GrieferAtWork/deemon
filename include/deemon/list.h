@@ -109,7 +109,8 @@ DFUNDEF NONNULL((1)) void DCALL DeeList_FreeUninitialized(DREF DeeListObject *__
 
 /* Finalize an List object originally created with `DeeList_NewUninitialized()' */
 #ifdef __INTELLISENSE__
-DFUNDEF WUNUSED DREF DeeObject *DCALL DeeList_FinalizeUninitialized(/*inherit(always)*/ DREF DeeListObject *__restrict self);
+DFUNDEF WUNUSED DREF DeeObject *DCALL
+DeeList_FinalizeUninitialized(/*inherit(always)*/ DREF DeeListObject *__restrict self);
 #else /* __INTELLISENSE__ */
 #define DeeList_FinalizeUninitialized(self) DeeGC_Track((DeeObject *)(self))
 #endif /* !__INTELLISENSE__ */

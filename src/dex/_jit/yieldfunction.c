@@ -99,8 +99,7 @@ jy_iter(JITYieldFunction *__restrict self) {
 	JITFunction *jf = self->jy_func;
 	result = DeeGCObject_MALLOC(JITYieldFunctionIterator);
 	if unlikely(!result)
-		goto done;
-
+		goto err;
 	ASSERT(jf->jf_args.ot_prev.otp_ind >= 2);
 	ASSERT(jf->jf_args.ot_prev.otp_tab == &jf->jf_refs);
 	memcpy(&result->ji_loc, &jf->jf_args, sizeof(JITObjectTable));
@@ -138,9 +137,9 @@ jy_iter(JITYieldFunction *__restrict self) {
 		size_t i;
 		/* Load arguments! */
 		if (self->jy_argc < jf->jf_argc_min)
-			goto err_argc;
+			goto err_r_loc_bad_argc;
 		if (self->jy_argc > jf->jf_argc_max && jf->jf_varargs == (size_t)-1)
-			goto err_argc;
+			goto err_r_loc_bad_argc;
 		/* Load positional arguments. */
 		for (i = 0; i < self->jy_argc; ++i)
 			result->ji_loc.ot_list[jf->jf_argv[i]].oe_value = self->jy_argv[i];
@@ -172,15 +171,8 @@ jy_iter(JITYieldFunction *__restrict self) {
 	               (unsigned char *)jf->jf_source_start,
 	               (unsigned char *)jf->jf_source_end);
 	DeeObject_Init(result, &JITYieldFunctionIterator_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return result;
-err_r_loc:
-	Dee_Free(result->ji_loc.ot_list);
-err_r:
-	DeeGCObject_FREE(result);
-	return NULL;
-err_argc:
+	return (DREF JITYieldFunctionIterator *)DeeGC_Track((DeeObject *)result);
+err_r_loc_bad_argc:
 	if (jf->jf_selfarg == (size_t)-1) {
 		err_invalid_argc_len(NULL,
 		                     0,
@@ -196,7 +188,11 @@ err_argc:
 		                     jf->jf_argc_min,
 		                     jf->jf_argc_max);
 	}
-	goto err_r_loc;
+	Dee_Free(result->ji_loc.ot_list);
+err_r:
+	DeeGCObject_FREE(result);
+err:
+	return NULL;
 }
 
 

@@ -557,7 +557,7 @@ do_invoke_alloc_any_ctor_kw:
 			goto err_r;
 		/* Begin tracking the returned object. */
 		if (object_type->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 		return result;
 	}
 err_not_implemented:
@@ -652,7 +652,7 @@ do_invoke_alloc_copy:
 			goto err_r;
 		/* Begin tracking the returned object. */
 		if (object_type->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 		return result;
 	}
 err_not_implemented:
@@ -1025,7 +1025,7 @@ got_deep_copy:
 
 		/* Begin tracking the returned object if this is a GC type. */
 		if (tp_self->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 	}
 
 	/* Now comes the interesting part concerning
@@ -1121,7 +1121,7 @@ do_invoke_alloc_copy:
 
 		/* Begin tracking the returned object. */
 		if (tp_self->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 		return result;
 	} else if (tp_self->tp_init.tp_alloc.tp_deep_ctor) {
 		goto do_invoke_var_deep;
@@ -1165,7 +1165,7 @@ do_invoke_alloc_any_ctor_kw:
 			goto err_r;
 		/* Begin tracking the returned object. */
 		if (tp_self->tp_flags & TP_FGC)
-			DeeGC_Track(result);
+			result = DeeGC_Track(result);
 		return result;
 	}
 err_not_implemented:

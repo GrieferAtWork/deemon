@@ -1595,8 +1595,7 @@ yf_iter_self(YFunction *__restrict self) {
 	if unlikely(yfi_init(result, self))
 		goto err_r;
 	DeeObject_Init(result, &DeeYieldFunctionIterator_Type);
-	DeeGC_Track((DeeObject *)result);
-	return result;
+	return (DREF YFIterator *)DeeGC_Track((DeeObject *)result);
 err_r:
 	DeeGCObject_FREE(result);
 err:

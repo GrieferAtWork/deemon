@@ -728,7 +728,7 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 
 	result = DeeGCObject_CALLOC(DeeArrayTypeObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 
 	/* Create the name of the resulting type. */
 	name = (DREF DeeStringObject *)DeeString_Newf("%k[%" PRFuSIZ "]", item_type, num_items);
@@ -741,14 +741,14 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 
 	/* Initialize fields. */
 	result->at_orig          = item_type;           /* Inherit reference. */
-	result->at_base.st_align = item_type->st_align; /* Re-use item alignment type. */
+	result->at_base.st_align = item_type->st_align; /* Re-use item alignment. */
 	if (OVERFLOW_UMUL(num_items, DeeSType_Sizeof(item_type),
 	                  &result->at_base.st_sizeof)) {
 		/* Overflow: Array is too large. */
 		DeeError_Throwf(&DeeError_IntegerOverflow,
 		                "Array `%k' is too large",
 		                name);
-		Dee_Decref(DeeArrayType_AsType(&DeeArray_Type));
+		Dee_DecrefNokill(DeeArrayType_AsType(&DeeArray_Type));
 		Dee_Decref(DeeSType_AsType(item_type));
 		Dee_Decref(name);
 		goto err_r;
@@ -762,11 +762,10 @@ arraytype_new(DeeSTypeObject *__restrict item_type,
 
 	/* Finalize the array type. */
 	DeeObject_Init(DeeArrayType_AsType(result), &DeeArrayType_Type);
-	DeeGC_Track(DeeArrayType_AsObject(result));
-done:
-	return result;
+	return DeeType_AsArrayType((DeeTypeObject *)DeeGC_Track(DeeArrayType_AsObject(result)));
 err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 

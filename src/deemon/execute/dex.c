@@ -330,15 +330,15 @@ DeeDex_New(DeeObject *__restrict name) {
 	ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 	result = DeeGCObject_CALLOC(DeeDexObject);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	DeeObject_Init(&result->d_module, &DeeDex_Type);
 	result->d_module.mo_name    = (DeeStringObject *)name;
 	result->d_module.mo_bucketv = empty_module_buckets;
 	Dee_Incref(name);
 	weakref_support_init(&result->d_module);
-	DeeGC_Track((DREF DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DREF DeeObject *)result);
+err:
+	return NULL;
 }
 
 #ifndef CONFIG_NO_THREADS

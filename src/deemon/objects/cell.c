@@ -47,15 +47,15 @@ DeeCell_New(DeeObject *__restrict item) {
 	ASSERT_OBJECT(item);
 	result = DeeGCObject_MALLOC(Cell);
 	if unlikely(!result)
-		goto done;
+		goto err;
 	/* Initialize and fill in the new Cell. */
 	DeeObject_Init(result, &DeeCell_Type);
 	Dee_Incref(item);
 	result->c_item = item;
 	Dee_atomic_rwlock_init(&result->c_lock);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return (DREF DeeObject *)result;
+	return DeeGC_Track((DeeObject *)result);
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

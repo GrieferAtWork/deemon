@@ -722,15 +722,14 @@ USet_FromSequence(DeeObject *__restrict sequence) {
 	DREF USet *result;
 	result = DeeGCObject_MALLOC(USet);
 	if unlikely(!result)
-		goto done;
-	if unlikely(USet_InitSequence(result, sequence))
 		goto err;
+	if unlikely(USet_InitSequence(result, sequence))
+		goto err_r;
 	DeeObject_Init(result, &USet_Type);
-	DeeGC_Track((DeeObject *)result);
-done:
-	return result;
-err:
+	return (DREF USet *)DeeGC_Track((DeeObject *)result);
+err_r:
 	DeeGCObject_FREE(result);
+err:
 	return NULL;
 }
 
