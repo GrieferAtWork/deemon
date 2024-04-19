@@ -1573,8 +1573,8 @@ DeeStruct_Assign(DeeSTypeObject *tp_self,
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_Str(DeeSTypeObject *tp_self, void *self) {
-	if (tp_self->st_cast.st_str ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_STR))
+	if likely(tp_self->st_cast.st_str ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_STR))
 		return (*tp_self->st_cast.st_str)(tp_self, self);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_STR);
 	return NULL;
@@ -1582,8 +1582,8 @@ DeeStruct_Str(DeeSTypeObject *tp_self, void *self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_Repr(DeeSTypeObject *tp_self, void *self) {
-	if (tp_self->st_cast.st_repr ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_REPR))
+	if likely(tp_self->st_cast.st_repr ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_REPR))
 		return (*tp_self->st_cast.st_repr)(tp_self, self);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_REPR);
 	return NULL;
@@ -1591,8 +1591,8 @@ DeeStruct_Repr(DeeSTypeObject *tp_self, void *self) {
 
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeStruct_Bool(DeeSTypeObject *tp_self, void *self) {
-	if (tp_self->st_cast.st_bool ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_BOOL))
+	if likely(tp_self->st_cast.st_bool ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_BOOL))
 		return (*tp_self->st_cast.st_bool)(tp_self, self);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_BOOL);
 }
@@ -1601,8 +1601,8 @@ INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_Call(DeeSTypeObject *tp_self,
                void *self, size_t argc,
                DeeObject *const *argv) {
-	if (tp_self->st_call ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_CALL))
+	if likely(tp_self->st_call ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_CALL))
 		return (*tp_self->st_call)(tp_self, self, argc, argv);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_CALL);
 	return NULL;
@@ -1610,32 +1610,32 @@ DeeStruct_Call(DeeSTypeObject *tp_self,
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeStruct_Int32(DeeSTypeObject *tp_self, void *self, int32_t *result) {
-	if ((tp_self->st_math && tp_self->st_math->st_int32) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
+	if likely((tp_self->st_math && tp_self->st_math->st_int32) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
 		return (*tp_self->st_math->st_int32)(tp_self, self, result);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_INT);
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeStruct_Int64(DeeSTypeObject *tp_self, void *self, int64_t *result) {
-	if ((tp_self->st_math && tp_self->st_math->st_int64) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
+	if likely((tp_self->st_math && tp_self->st_math->st_int64) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
 		return (*tp_self->st_math->st_int64)(tp_self, self, result);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_INT);
 }
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeStruct_Double(DeeSTypeObject *tp_self, void *self, double *result) {
-	if ((tp_self->st_math && tp_self->st_math->st_double) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
+	if likely((tp_self->st_math && tp_self->st_math->st_double) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
 		return (*tp_self->st_math->st_double)(tp_self, self, result);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_INT);
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_Int(DeeSTypeObject *tp_self, void *self) {
-	if ((tp_self->st_math && tp_self->st_math->st_int) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
+	if likely((tp_self->st_math && tp_self->st_math->st_int) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_INT))
 		return (*tp_self->st_math->st_int)(tp_self, self);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_INT);
 	return NULL;
@@ -1644,8 +1644,8 @@ DeeStruct_Int(DeeSTypeObject *tp_self, void *self) {
 #define DEFINE_UNARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, STYPE_OPERATOR_XXX) \
 	INTERN WUNUSED NONNULL((1)) Treturn DCALL                                                        \
 	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self) {                                             \
-		if ((tp_self->st_math && tp_self->st_math->st_xxx) ||                                        \
-		    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_XXX))                   \
+		if likely((tp_self->st_math && tp_self->st_math->st_xxx) ||                                  \
+		          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_XXX))             \
 			return (*tp_self->st_math->st_xxx)(tp_self, self);                                       \
 		err_unimplemented_operator(tp_self, STYPE_OPERATOR_XXX);                                     \
 		return error_result;                                                                         \
@@ -1653,39 +1653,39 @@ DeeStruct_Int(DeeSTypeObject *tp_self, void *self) {
 #define DEFINE_BINARY_MATH_OPERATOR(Treturn, error_result, DeeStruct_Xxx, st_xxx, STYPE_OPERATOR_XXX) \
 	INTERN WUNUSED NONNULL((1, 3)) Treturn DCALL                                                      \
 	DeeStruct_Xxx(DeeSTypeObject *tp_self, void *self, DeeObject *other) {                            \
-		if ((tp_self->st_math && tp_self->st_math->st_xxx) ||                                         \
-		    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_XXX))                    \
+		if likely((tp_self->st_math && tp_self->st_math->st_xxx) ||                                   \
+		          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_XXX))              \
 			return (*tp_self->st_math->st_xxx)(tp_self, self, other);                                 \
 		err_unimplemented_operator(tp_self, STYPE_OPERATOR_XXX);                                      \
 		return error_result;                                                                          \
 	}
-DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Inv, st_inv, OPERATOR_INV)
-DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Pos, st_pos, OPERATOR_POS)
-DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Neg, st_neg, OPERATOR_NEG)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Add, st_add, OPERATOR_ADD)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Sub, st_sub, OPERATOR_SUB)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Mul, st_mul, OPERATOR_MUL)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Div, st_div, OPERATOR_DIV)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Mod, st_mod, OPERATOR_MOD)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Shl, st_shl, OPERATOR_SHL)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Shr, st_shr, OPERATOR_SHR)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_And, st_and, OPERATOR_AND)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Or, st_or, OPERATOR_OR)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Xor, st_xor, OPERATOR_XOR)
-DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Pow, st_pow, OPERATOR_POW)
-DEFINE_UNARY_MATH_OPERATOR(int, -1, DeeStruct_Inc, st_inc, OPERATOR_INC)
-DEFINE_UNARY_MATH_OPERATOR(int, -1, DeeStruct_Dec, st_dec, OPERATOR_DEC)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceAdd, st_inplace_add, OPERATOR_INPLACE_ADD)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceSub, st_inplace_sub, OPERATOR_INPLACE_SUB)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceMul, st_inplace_mul, OPERATOR_INPLACE_MUL)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceDiv, st_inplace_div, OPERATOR_INPLACE_DIV)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceMod, st_inplace_mod, OPERATOR_INPLACE_MOD)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceShl, st_inplace_shl, OPERATOR_INPLACE_SHL)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceShr, st_inplace_shr, OPERATOR_INPLACE_SHR)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceAnd, st_inplace_and, OPERATOR_INPLACE_AND)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceOr, st_inplace_or, OPERATOR_INPLACE_OR)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceXor, st_inplace_xor, OPERATOR_INPLACE_XOR)
-DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplacePow, st_inplace_pow, OPERATOR_INPLACE_POW)
+DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Inv, st_inv, STYPE_OPERATOR_INV)
+DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Pos, st_pos, STYPE_OPERATOR_POS)
+DEFINE_UNARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Neg, st_neg, STYPE_OPERATOR_NEG)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Add, st_add, STYPE_OPERATOR_ADD)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Sub, st_sub, STYPE_OPERATOR_SUB)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Mul, st_mul, STYPE_OPERATOR_MUL)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Div, st_div, STYPE_OPERATOR_DIV)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Mod, st_mod, STYPE_OPERATOR_MOD)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Shl, st_shl, STYPE_OPERATOR_SHL)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Shr, st_shr, STYPE_OPERATOR_SHR)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_And, st_and, STYPE_OPERATOR_AND)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Or, st_or, STYPE_OPERATOR_OR)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Xor, st_xor, STYPE_OPERATOR_XOR)
+DEFINE_BINARY_MATH_OPERATOR(DREF DeeObject *, NULL, DeeStruct_Pow, st_pow, STYPE_OPERATOR_POW)
+DEFINE_UNARY_MATH_OPERATOR(int, -1, DeeStruct_Inc, st_inc, STYPE_OPERATOR_INC)
+DEFINE_UNARY_MATH_OPERATOR(int, -1, DeeStruct_Dec, st_dec, STYPE_OPERATOR_DEC)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceAdd, st_inplace_add, STYPE_OPERATOR_INPLACE_ADD)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceSub, st_inplace_sub, STYPE_OPERATOR_INPLACE_SUB)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceMul, st_inplace_mul, STYPE_OPERATOR_INPLACE_MUL)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceDiv, st_inplace_div, STYPE_OPERATOR_INPLACE_DIV)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceMod, st_inplace_mod, STYPE_OPERATOR_INPLACE_MOD)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceShl, st_inplace_shl, STYPE_OPERATOR_INPLACE_SHL)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceShr, st_inplace_shr, STYPE_OPERATOR_INPLACE_SHR)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceAnd, st_inplace_and, STYPE_OPERATOR_INPLACE_AND)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceOr, st_inplace_or, STYPE_OPERATOR_INPLACE_OR)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplaceXor, st_inplace_xor, STYPE_OPERATOR_INPLACE_XOR)
+DEFINE_BINARY_MATH_OPERATOR(int, -1, DeeStruct_InplacePow, st_inplace_pow, STYPE_OPERATOR_INPLACE_POW)
 #undef DEFINE_BINARY_MATH_OPERATOR
 #undef DEFINE_UNARY_MATH_OPERATOR
 
@@ -1775,8 +1775,8 @@ DeeStruct_Ge(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_iter_self) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ITER))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_iter_self) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ITER))
 		return (*tp_self->st_seq->st_iter_self)(tp_self, self);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_ITER);
 	return NULL;
@@ -1784,8 +1784,8 @@ DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self) {
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeStruct_GetSize(DeeSTypeObject *tp_self, void *self) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_size) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SIZE))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_size) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SIZE))
 		return (*tp_self->st_seq->st_size)(tp_self, self);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_SIZE);
 	return NULL;
@@ -1794,8 +1794,8 @@ DeeStruct_GetSize(DeeSTypeObject *tp_self, void *self) {
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeStruct_Contains(DeeSTypeObject *tp_self,
                    void *self, DeeObject *some_object) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_contains) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_CONTAINS))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_contains) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_CONTAINS))
 		return (*tp_self->st_seq->st_contains)(tp_self, self, some_object);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_CONTAINS);
 	return NULL;
@@ -1804,8 +1804,8 @@ DeeStruct_Contains(DeeSTypeObject *tp_self,
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
 	DREF DeeObject *result, *new_result;
-	if (tp_self->st_seq && tp_self->st_seq->st_get ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_GETITEM))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_get) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_GETITEM))
 		return (*tp_self->st_seq->st_get)(tp_self, self, index);
 
 	/* Fallback: Implement getitem as `ind(add)' --> `foo[2]' same as `*(foo + 2)' */
@@ -1821,8 +1821,8 @@ err:
 
 INTERN WUNUSED NONNULL((1, 3)) int DCALL
 DeeStruct_DelItem(DeeSTypeObject *tp_self, void *self, DeeObject *index) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_del) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_DELITEM))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_del) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_DELITEM))
 		return (*tp_self->st_seq->st_del)(tp_self, self, index);
 
 	/* Fallback: Do a setitem operation with `none' */
@@ -1834,8 +1834,8 @@ DeeStruct_SetItem(DeeSTypeObject *tp_self, void *self,
                   DeeObject *index, DeeObject *value) {
 	DREF DeeObject *temp, *temp2;
 	int result;
-	if ((tp_self->st_seq && tp_self->st_seq->st_set) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SETITEM))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_set) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SETITEM))
 		return (*tp_self->st_seq->st_set)(tp_self, self, index, value);
 
 	/* Fallback: Implement setitem as
@@ -1858,8 +1858,8 @@ err:
 INTERN WUNUSED NONNULL((1, 3, 4)) DREF DeeObject *DCALL
 DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self,
                    DeeObject *begin, DeeObject *end) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_range_get) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_GETRANGE))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_range_get) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_GETRANGE))
 		return (*tp_self->st_seq->st_range_get)(tp_self, self, begin, end);
 	err_unimplemented_operator(tp_self, STYPE_OPERATOR_GETRANGE);
 	return NULL;
@@ -1868,8 +1868,8 @@ DeeStruct_GetRange(DeeSTypeObject *tp_self, void *self,
 INTERN WUNUSED NONNULL((1, 3, 4)) int DCALL
 DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self,
                    DeeObject *begin, DeeObject *end) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_range_del) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_DELRANGE))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_range_del) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_DELRANGE))
 		return (*tp_self->st_seq->st_range_del)(tp_self, self, begin, end);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_DELRANGE);
 }
@@ -1877,8 +1877,8 @@ DeeStruct_DelRange(DeeSTypeObject *tp_self, void *self,
 INTERN WUNUSED NONNULL((1, 3, 4, 5)) int DCALL
 DeeStruct_SetRange(DeeSTypeObject *tp_self, void *self,
                    DeeObject *begin, DeeObject *end, DeeObject *value) {
-	if ((tp_self->st_seq && tp_self->st_seq->st_range_set) ||
-	    DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SETRANGE))
+	if likely((tp_self->st_seq && tp_self->st_seq->st_range_set) ||
+	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_SETRANGE))
 		return (*tp_self->st_seq->st_range_set)(tp_self, self, begin, end, value);
 	return err_unimplemented_operator(tp_self, STYPE_OPERATOR_SETRANGE);
 }
