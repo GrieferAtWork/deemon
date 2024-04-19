@@ -330,17 +330,21 @@ make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileOb
 /* >> operator read(buf: <Buffer>): int;
  * >> operator read(buf: <Buffer>, max_size: int): int;
  * >> operator read(buf: <Buffer>, start: int, end: int): int;
+ * >> operator read(buf: <Buffer>, start: int, end: int, flags: int): int;
  * >> operator read(max_bytes: int): Bytes; 
  * >> operator read(): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_read, &instance_read) {
 	DeeObject *data  = NULL;
 	DeeObject *begin = NULL;
 	DeeObject *end   = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	DeeBuffer buf;
 	size_t buf_begin, buf_end;
 	size_t result;
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, "|ooo:" OPNAME("read"), &data, &begin, &end))
+	ASSERT(tp_self->ft_read);
+	if (DeeArg_Unpack(argc, argv, "|ooou:" OPNAME("read"),
+	                  &data, &begin, &end, &flags))
 		goto err;
 	if (!data) {
 		DeeSuperObject super_buf;
@@ -377,9 +381,9 @@ DEFINE_OPERATOR_INVOKE(operator_read, &instance_read) {
 		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
 		return_reference_(DeeInt_Zero);
 	}
-	result = DeeFile_TRead((DeeTypeObject *)tp_self, (DeeObject *)self,
-	                       (byte_t *)buf.bb_base + buf_begin,
-	                       buf_end - buf_begin);
+	result = DeeFileType_invoke_ft_read(tp_self, tp_self->ft_read, self,
+	                                    (byte_t *)buf.bb_base + buf_begin,
+	                                    buf_end - buf_begin, flags);
 	DeeObject_PutBuf(data, &buf, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -395,11 +399,14 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write) {
 	DeeObject *data  = NULL;
 	DeeObject *begin = NULL;
 	DeeObject *end   = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	DeeBuffer buf;
 	size_t buf_begin, buf_end;
 	size_t result;
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, "o|oo:" OPNAME("write"), &data, &begin, &end))
+	ASSERT(tp_self->ft_write);
+	if (DeeArg_Unpack(argc, argv, "o|oou:" OPNAME("write"),
+	                  &data, &begin, &end, &flags))
 		goto err;
 	if (end) {
 		if (DeeObject_AsSSize(begin, (dssize_t *)&buf_begin))
@@ -422,9 +429,9 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write) {
 		DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
 		return_reference_(DeeInt_Zero);
 	}
-	result = DeeFile_TWrite((DeeTypeObject *)tp_self, (DeeObject *)self,
-	                        (byte_t const *)buf.bb_base + buf_begin,
-	                        buf_end - buf_begin);
+	result = DeeFileType_invoke_ft_write(tp_self, tp_self->ft_write, self,
+	                                     (byte_t const *)buf.bb_base + buf_begin,
+	                                     buf_end - buf_begin, flags);
 	DeeObject_PutBuf(data, &buf, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -439,9 +446,11 @@ DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek) {
 	dpos_t result;
 	int whence = SEEK_SET;
 	(void)p_self;
+	ASSERT(tp_self->ft_seek);
 	if (DeeArg_Unpack(argc, argv, UNPdN(DEE_SIZEOF_DEE_POS_T) "|d:" OPNAME("seek"), &off, &whence))
 		goto err;
-	result = DeeFile_TSeek((DeeTypeObject *)tp_self, (DeeObject *)self, off, whence);
+	result = DeeFileType_invoke_ft_seek(tp_self, tp_self->ft_seek,
+	                                    self, off, whence);
 	if unlikely(result == (dpos_t)-1)
 		goto err;
 	return DeeInt_NewUInt64(result);
@@ -452,9 +461,10 @@ err:
 /* >> operator sync(); */
 DEFINE_OPERATOR_INVOKE(operator_sync, &instance_sync) {
 	(void)p_self;
+	ASSERT(tp_self->ft_sync);
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("sync")))
 		goto err;
-	if (DeeFile_TSync((DeeTypeObject *)tp_self, (DeeObject *)self))
+	if (DeeFileType_invoke_ft_sync(tp_self, tp_self->ft_sync, self))
 		goto err;
 	return_none;
 err:
@@ -466,6 +476,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc) {
 	dpos_t length;
 	(void)p_self;
+	ASSERT(tp_self->ft_trunc);
 	if (argc) {
 		if unlikely(argc != 1) {
 			err_invalid_argc(OPNAME("turnc"), argc, 0, 1);
@@ -473,9 +484,10 @@ DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc) {
 		}
 		if (DeeObject_AsUInt64(argv[0], &length))
 			goto err;
-		if (DeeFile_TTrunc((DeeTypeObject *)tp_self, (DeeObject *)self, length))
+		if (DeeFileType_invoke_ft_trunc(tp_self, tp_self->ft_trunc, self, length))
 			goto err;
 	} else {
+		/* TODO: Directly invoke `ft_trunc' */
 		if (DeeFile_TTruncHere((DeeTypeObject *)tp_self, (DeeObject *)self, &length))
 			goto err;
 	}
@@ -487,9 +499,10 @@ err:
 /* >> operator close() */
 DEFINE_OPERATOR_INVOKE(operator_close, &instance_close) {
 	(void)p_self;
+	ASSERT(tp_self->ft_close);
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("close")))
 		goto err;
-	if (DeeFile_TClose((DeeTypeObject *)tp_self, (DeeObject *)self))
+	if (DeeFileType_invoke_ft_close(tp_self, tp_self->ft_close, self))
 		goto err;
 	return_none;
 err:
@@ -499,6 +512,7 @@ err:
 /* >> operator pread(buf: <Buffer>, pos: int): int;
  * >> operator pread(buf: <Buffer>, max_size: int, pos: int): int;
  * >> operator pread(buf: <Buffer>, start: int, end: int, pos: int): int;
+ * >> operator pread(buf: <Buffer>, start: int, end: int, pos: int, flags: int): int;
  * >> operator pread(max_bytes: int, pos: int): Bytes; 
  * >> operator pread(pos: int): Bytes; */
 DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread) {
@@ -506,12 +520,15 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread) {
 	DeeObject *b = NULL;
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	dpos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
+	ASSERT(tp_self->ft_pread);
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, "o|ooo:" OPNAME("pread"), &a, &b, &c, &d))
+	if (DeeArg_Unpack(argc, argv, "o|ooou:" OPNAME("pread"),
+	                  &a, &b, &c, &d, &flags))
 		goto err;
 	if (d) {
 		if (DeeObject_AsUInt64(d, &pos))
@@ -555,8 +572,9 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread) {
 		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
 		return_reference_(DeeInt_Zero);
 	}
-	result = DeeFile_TPRead((DeeTypeObject *)tp_self, (DeeObject *)self,
-	                        (byte_t *)buf.bb_base + start, end - start, pos);
+	result = DeeFileType_invoke_ft_pread(tp_self, tp_self->ft_pread, self,
+	                                     (byte_t *)buf.bb_base + start,
+	                                     end - start, pos, flags);
 	DeeObject_PutBuf(a, &buf, Dee_BUFFER_FWRITABLE);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -567,18 +585,22 @@ err:
 
 /* >> operator pwrite(data: <Buffer>, pos: int): int;
  * >> operator pwrite(data: <Buffer>, max_size: int, pos: int): int;
- * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int): int; */
+ * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int): int;
+ * >> operator pwrite(data: <Buffer>, start: int, end: int, pos: int, flags: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite) {
 	DeeObject *a;
 	DeeObject *b;
 	DeeObject *c = NULL;
 	DeeObject *d = NULL;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	dpos_t pos;
 	size_t start, end;
 	size_t result;
 	DeeBuffer buf;
+	ASSERT(tp_self->ft_pwrite);
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, "oo|oo:" OPNAME("pwrite"), &a, &b, &c, &d))
+	if (DeeArg_Unpack(argc, argv, "oo|oou:" OPNAME("pwrite"),
+	                  &a, &b, &c, &d, &flags))
 		goto err;
 	if (d) {
 		if (DeeObject_AsUInt64(d, &pos))
@@ -607,8 +629,9 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite) {
 		DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
 		return_reference_(DeeInt_Zero);
 	}
-	result = DeeFile_TPWrite((DeeTypeObject *)tp_self, (DeeObject *)self,
-	                         (byte_t *)buf.bb_base + start, end - start, pos);
+	result = DeeFileType_invoke_ft_pwrite(tp_self, tp_self->ft_pwrite, self,
+	                                      (byte_t *)buf.bb_base + start,
+	                                      end - start, pos, flags);
 	DeeObject_PutBuf(a, &buf, Dee_BUFFER_FREADONLY);
 	if unlikely(result == (size_t)-1)
 		goto err;
@@ -617,13 +640,16 @@ err:
 	return NULL;
 }
 
-/* >> operator getc(): int; */
+/* >> operator getc(): int;
+ * >> operator getc(flags: int): int; */
 DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc) {
 	int result;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, ":" OPNAME("getc")))
+	ASSERT(tp_self->ft_getc);
+	if (DeeArg_Unpack(argc, argv, "|u:" OPNAME("getc"), &flags))
 		goto err;
-	result = DeeFile_TGetc((DeeTypeObject *)tp_self, (DeeObject *)self);
+	result = DeeFileType_invoke_ft_getc(tp_self, tp_self->ft_getc, self, flags);
 	if unlikely(result == GETC_ERR)
 		goto err;
 	return DeeInt_NewInt(result);
@@ -635,9 +661,10 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc) {
 	int ch;
 	(void)p_self;
+	ASSERT(tp_self->ft_ungetc);
 	if (DeeArg_Unpack(argc, argv, "d:" OPNAME("ungetc"), &ch))
 		goto err;
-	ch = DeeFile_TUngetc((DeeTypeObject *)tp_self, (DeeObject *)self, ch);
+	ch = DeeFileType_invoke_ft_ungetc(tp_self, tp_self->ft_ungetc, self, ch);
 	if unlikely(ch == GETC_ERR)
 		goto err;
 	return_bool_(ch != GETC_EOF);
@@ -648,10 +675,12 @@ err:
 /* >> operator putc(ch: int): bool; */
 DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc) {
 	int ch;
+	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;
-	if (DeeArg_Unpack(argc, argv, "d:" OPNAME("putc"), &ch))
+	ASSERT(tp_self->ft_putc);
+	if (DeeArg_Unpack(argc, argv, "d|u:" OPNAME("putc"), &ch, &flags))
 		goto err;
-	ch = DeeFile_TPutc((DeeTypeObject *)tp_self, (DeeObject *)self, ch);
+	ch = DeeFileType_invoke_ft_putc(tp_self, tp_self->ft_putc, self, ch, flags);
 	if unlikely(ch == GETC_ERR)
 		goto err;
 	return_bool_(ch != GETC_EOF);

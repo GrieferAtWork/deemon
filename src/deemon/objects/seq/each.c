@@ -538,10 +538,7 @@ sew_enumattr(DeeTypeObject *UNUSED(tp_self),
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 se_enumattr(DeeTypeObject *UNUSED(tp_self),
             SeqEachBase *self, denum_t proc, void *arg) {
-	return sew_enumattr(&DeeSeq_Type,
-	                    self->se_seq,
-	                    proc,
-	                    arg);
+	return sew_enumattr(&DeeSeq_Type, self->se_seq, proc, arg);
 }
 
 PRIVATE struct type_attr tpconst se_attr = {
@@ -694,7 +691,7 @@ seo_init(SeqEachOperator *__restrict self,
 	}
 	if (DeeString_Check(name)) {
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name));
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(name), (uint16_t)-1);
 		if unlikely(info == NULL) {
 			/* TODO: In this case, remember the used "name" string,
 			 * and query the operator on a per-element basis */

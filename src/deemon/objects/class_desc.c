@@ -333,7 +333,7 @@ cot_getitemdef(ClassOperatorTable *__restrict self,
 	if (DeeString_Check(key)) {
 		struct opinfo const *info;
 		/* TODO: Check if the table contains a string-operator "key" */
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key));
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(key), (uint16_t)-1);
 		if (info == NULL)
 			goto nope;
 		opname = info->oi_id;
@@ -2078,7 +2078,7 @@ got_flag:
 				goto err_r_imemb_iter_data;
 			if (DeeString_Check(data[0])) {
 				struct opinfo const *info;
-				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]));
+				info = DeeTypeType_GetOperatorByName(&DeeType_Type, DeeString_STR(data[0]), (uint16_t)-1);
 				if (info == NULL) {
 					/* TODO: In this case, must store the operator via its name
 					 *       (so the name-query can happen in `DeeClass_New()') */

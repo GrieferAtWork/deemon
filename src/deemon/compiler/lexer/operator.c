@@ -770,7 +770,7 @@ default_case:
 			struct opinfo const *info;
 			/* TODO: Don't hard-code "DeeFileType_Type" here. Instead, hard-code "DeeType_Type"
 			 *       and query custom operators at runtime. */
-			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size);
+			info = DeeTypeType_GetOperatorByNameLen(&DeeFileType_Type, name_begin, name_size, (uint16_t)-1);
 			if (info) {
 				result = info->oi_id;
 				goto done_y1;

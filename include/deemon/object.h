@@ -2734,7 +2734,10 @@ struct Dee_membercache {
 
 
 #ifdef DEE_SOURCE
-/* Operator calling conventions (values for `oi_cc') */
+/* Operator calling conventions (values for `oi_cc')
+ * These are completely optional and only serve to aid certain sub-systems in making
+ * special optimizations (such as `_hostasm' having an easier time inlining operator
+ * calls) */
 #define OPCC_SPECIAL            0x0000 /* A special operator that cannot be invoked directly (e.g.: `OPERATOR_CONSTRUCTOR'). */
 #define OPCC_FINPLACE           0x8000 /* Flag: this operator must be invoked as inplace. */
 #define OPCC_UNARY_OBJECT       0x0010 /* DREF DeeObject *(DCALL *)(DeeObject *__restrict self); */
@@ -2754,6 +2757,7 @@ struct Dee_membercache {
 #define OPCC_QUATERNARY_VOID    0x0041 /* void (DCALL *)(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c); */
 #define OPCC_QUATERNARY_INT     0x0042 /* int (DCALL *)(DeeObject *self, DeeObject *a, DeeObject *b, DeeObject *c); */
 #define OPCC_QUATERNARY_INPLACE 0x8043 /* int (DCALL *)(DREF DeeObject **__restrict p_self, DeeObject *a, DeeObject *b, DeeObject *c); */
+#define OPCC_ARGC(x) (((x) & 0xf0) >> 4)
 
 /* Operator classes (values for `oi_class') */
 #define OPCLASS_TYPE    0x0      /* `oi_offset' points into `DeeTypeObject'. */
@@ -3117,13 +3121,16 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, uint16_t id);
 
 /* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
- * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous). */
+ * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
+ * @param: argc: The number of extra arguments taken by the operator (excluding
+ *               the "this"-argument), or `(uint16_t)-1' if unknown. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1, 2)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
-                              char const *__restrict name);
+                              char const *__restrict name, uint16_t argc);
 DFUNDEF ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct Dee_opinfo const *DCALL
 DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
-                                 char const *__restrict name, size_t namelen);
+                                 char const *__restrict name, size_t namelen,
+                                 uint16_t argc);
 
 /* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
 DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL

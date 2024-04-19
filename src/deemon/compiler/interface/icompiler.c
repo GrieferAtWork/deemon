@@ -1387,7 +1387,7 @@ get_operator_id(DeeObject *__restrict opid, uint16_t *__restrict p_result) {
 	if (DeeString_Check(opid)) {
 		char const *name = DeeString_STR(opid);
 		struct opinfo const *info;
-		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name);
+		info = DeeTypeType_GetOperatorByName(&DeeType_Type, name, (uint16_t)-1);
 		if (info != NULL) {
 			*p_result = info->oi_id;
 			return 0;

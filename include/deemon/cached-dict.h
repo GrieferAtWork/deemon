@@ -74,6 +74,8 @@ DDATDEF DeeTypeObject DeeCachedDict_Type;
 #define DeeCachedDict_Check(ob)      DeeObject_InstanceOf(ob, &DeeCachedDict_Type)
 #define DeeCachedDict_CheckExact(ob) DeeObject_InstanceOfExact(ob, &DeeCachedDict_Type)
 
+#define DeeCachedDict_MAP(ob) ((DeeCachedDictObject const *)Dee_REQUIRES_OBJECT(ob))->cd_map
+
 #define DeeCachedDict_EmptyItems ((struct Dee_cached_dict_item const *)DeeDict_EmptyItems)
 
 /* Construct a cached dict wrapper around "mapping" */

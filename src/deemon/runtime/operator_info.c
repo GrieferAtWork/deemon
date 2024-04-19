@@ -26,6 +26,7 @@
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
 #include <deemon/bytes.h>
+#include <deemon/cached-dict.h>
 #include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/file.h>
@@ -130,10 +131,12 @@ next_base:
 }
 
 /* Same as `DeeTypeType_GetOperatorById()', but lookup operators by `oi_sname'
- * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous). */
+ * or `oi_uname' (though `oi_uname' only when that name isn't ambiguous).
+ * @param: argc: The number of extra arguments taken by the operator (excluding
+ *               the "this"-argument), or `(uint16_t)-1' if unknown. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1, 2)) struct opinfo const *DCALL
 DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
-                              char const *__restrict name) {
+                              char const *__restrict name, uint16_t argc) {
 	size_t i;
 	struct opinfo const *result;
 #ifndef __OPTIMIZE_SIZE__
@@ -144,28 +147,52 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 	case '.':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_SETATTR);
-		return NULL; /* Ambiguous */
+		if (argc == 2)
+			RETURN(OPERATOR_SETATTR);
+		if (argc == 1)
+			RETURN(OPERATOR_GETATTR);
+		break; /* Ambiguous */
 
 	case '[':
-		if (name[1] == ']' && name[2] == '=' && !name[3])
-			RETURN(OPERATOR_SETITEM);
-		if (name[1] == ':' && name[2] == ']' && name[3] == '=' && !name[4])
-			RETURN(OPERATOR_SETITEM);
-		return NULL; /* Ambiguous */
+		if (name[1] == ']') {
+			if (name[2] == '=' && !name[3])
+				RETURN(OPERATOR_SETITEM);
+			if (!name[2])
+				RETURN(OPERATOR_GETITEM);
+		}
+		if (name[1] == ':' && name[2] == ']') {
+			if (name[3] == '=' && !name[4])
+				RETURN(OPERATOR_SETRANGE);
+			if (!name[3])
+				RETURN(OPERATOR_GETRANGE);
+		}
+		break; /* Ambiguous */
 
 	case '+':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_INPLACE_ADD);
 		if (name[1] == '+' && !name[2])
 			RETURN(OPERATOR_INC);
-		return NULL; /* Ambiguous */
+		if (!name[1]) {
+			if (argc == 1)
+				RETURN(OPERATOR_ADD);
+			if (argc == 0)
+				RETURN(OPERATOR_POS);
+		}
+		break; /* Ambiguous */
 
 	case '-':
 		if (name[1] == '=' && !name[2])
 			RETURN(OPERATOR_INPLACE_SUB);
 		if (name[1] == '-' && !name[2])
 			RETURN(OPERATOR_DEC);
-		return NULL; /* Ambiguous */
+		if (!name[1]) {
+			if (argc == 1)
+				RETURN(OPERATOR_SUB);
+			if (argc == 0)
+				RETURN(OPERATOR_NEG);
+		}
+		break; /* Ambiguous */
 
 	case '~':
 		if (!name[1])
@@ -540,7 +567,8 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 				if (strcmp(info->to_decl.oi_uname, name) == 0) {
 					if (result)
 						return NULL; /* Ambiguous name */
-					result = &info->to_decl;
+					if (argc == OPCC_ARGC(info->to_decl.oi_cc) || argc == (uint16_t)-1)
+						result = &info->to_decl;
 				}
 			}
 		}
@@ -561,7 +589,8 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 		if (strcmp(info->oi_uname, name) == 0) {
 			if (result)
 				return NULL; /* Ambiguous name */
-			result = info;
+			if (argc == OPCC_ARGC(info->oi_cc) || argc == (uint16_t)-1)
+				result = info;
 		}
 	}
 	return result;
@@ -569,7 +598,8 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 
 PUBLIC ATTR_PURE WUNUSED ATTR_INS(2, 3) NONNULL((1)) struct opinfo const *DCALL
 DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
-                                 char const *__restrict name, size_t namelen) {
+                                 char const *__restrict name, size_t namelen,
+                                 uint16_t argc) {
 #define LENGTHOF__opinfo__oi_sname COMPILER_LENOF(((struct opinfo *)0)->oi_sname)
 #define LENGTHOF__opinfo__oi_uname COMPILER_LENOF(((struct opinfo *)0)->oi_uname)
 	char buf[(LENGTHOF__opinfo__oi_sname > LENGTHOF__opinfo__oi_uname
@@ -579,7 +609,7 @@ DeeTypeType_GetOperatorByNameLen(DeeTypeObject const *__restrict typetype,
 	if (namelen >= COMPILER_LENOF(buf))
 		return NULL; /* No valid operator has that long of a name... */
 	*(char *)mempcpyc(buf, name, namelen, sizeof(char)) = '\0';
-	return DeeTypeType_GetOperatorByName(typetype, buf);
+	return DeeTypeType_GetOperatorByName(typetype, buf, argc);
 #undef LENGTHOF__opinfo__oi_sname
 #undef LENGTHOF__opinfo__oi_uname
 }
@@ -1403,6 +1433,8 @@ print_call_args_repr(Dee_formatprinter_t printer, void *arg,
 	}
 	if (kw && !DeeKwds_Check(kw)) {
 		/* Keywords are specified as per `foo(**{ "x": 10 })'. */
+		if (DeeCachedDict_Check(kw))
+			kw = DeeCachedDict_MAP(kw);
 		DO(err, DeeFormat_Printf(printer, arg, "**%r", kw));
 	}
 	DO(err, DeeFormat_PRINT(printer, arg, ")"));
@@ -1827,7 +1859,8 @@ to_contains(TypeOperators *self, DeeObject *name_or_id) {
 	if (DeeString_Check(name_or_id)) {
 		struct opinfo const *info;
 		info = DeeTypeType_GetOperatorByName(Dee_TYPE(self->to_type),
-		                                     DeeString_STR(name_or_id));
+		                                     DeeString_STR(name_or_id),
+		                                     (uint16_t)-1);
 		if (info == NULL)
 			return_false;
 		id = info->oi_id;

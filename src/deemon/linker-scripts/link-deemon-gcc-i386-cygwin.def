@@ -1033,8 +1033,8 @@ EXPORTS
 	_DeeTuple_VTryPack@8=DeeTuple_VTryPack@8
 	_DeeTuple_VTryPackSymbolic@8=DeeTuple_VTryPackSymbolic@8
 	_DeeTypeType_GetOperatorById@8=DeeTypeType_GetOperatorById@8
-	_DeeTypeType_GetOperatorByName@8=DeeTypeType_GetOperatorByName@8
-	_DeeTypeType_GetOperatorByNameLen@12=DeeTypeType_GetOperatorByNameLen@12
+	_DeeTypeType_GetOperatorByName@12=DeeTypeType_GetOperatorByName@12
+	_DeeTypeType_GetOperatorByNameLen@16=DeeTypeType_GetOperatorByNameLen@16
 	_DeeType_Extends@8=DeeType_Extends@8
 	_DeeType_GetCustomOperatorById@8=DeeType_GetCustomOperatorById@8
 	_DeeType_GetModule@4=DeeType_GetModule@4

@@ -645,7 +645,7 @@ err_rbrck_after_lbrck:
 		 *       the old deemon used to only accept e.g.: `operator __contains__'. */
 		{
 			struct opinfo const *info;
-			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size);
+			info = DeeTypeType_GetOperatorByNameLen(typetype, name_begin, name_size, (uint16_t)-1);
 			if (info) {
 				result = info->oi_id;
 				goto done_y1;
