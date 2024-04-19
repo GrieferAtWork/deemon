@@ -541,7 +541,7 @@ err:
 	return -1;
 }
 
-DEFINE_FILE_OPERATOR(int, TruncHere, (DeeObject *__restrict self, dpos_t *p_size)) {
+DEFINE_FILE_OPERATOR(int, TruncHere, (DeeObject *__restrict self, Dee_pos_t *p_size)) {
 	DREF DeeObject *result_ob;
 	LOAD_TP_SELF;
 IF_TYPED(again:)

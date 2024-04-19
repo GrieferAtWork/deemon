@@ -41,9 +41,33 @@
 #include <deemon/util/atomic.h>
 #include <deemon/util/objectlist.h>
 
+#include <hybrid/typecore.h>
+
 #include "../runtime/runtime_error.h"
 
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
+
+PRIVATE WUNUSED NONNULL((1)) bool DCALL
+is_operator_class_inherited(DeeTypeObject *__restrict type_type,
+                            DeeTypeObject *__restrict type,
+                            uint16_t oi_class, void *class_table) {
+	DeeTypeMRO mro;
+	DeeTypeObject *base = DeeTypeMRO_Init(&mro, type);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		/* In order to have a chance of implementing "oi_class", the base type
+		 * needs to be an instance of the type-type that provides "oi_class". */
+		if (DeeObject_InstanceOf(base, type_type)) {
+			void *base_class_table;
+			base_class_table = *(void **)((byte_t *)base + oi_class);
+			if (base_class_table == class_table)
+				return true; /* Yup: it's inherited! */
+		}
+	}
+	return false;
+}
 
 /* Class callbacks for inside of `type' */
 INTERN NONNULL((1)) void DCALL
@@ -132,8 +156,8 @@ again:
 #define BASE_INHERITED_WITH 0x0010
 		DeeTypeObject *base;
 		DeeTypeMRO mro;
-		base = DeeTypeMRO_Init(&mro, DeeType_Base(self));
-		do {
+		base = DeeTypeMRO_Init(&mro, self);
+		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 			if (self->tp_math == base->tp_math)
 				base_inherited |= BASE_INHERITED_MATH;
 			if (self->tp_cmp == base->tp_cmp)
@@ -144,7 +168,7 @@ again:
 				base_inherited |= BASE_INHERITED_ATTR;
 			if (self->tp_with == base->tp_with)
 				base_inherited |= BASE_INHERITED_WITH;
-		} while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL);
+		}
 		if (!(base_inherited & BASE_INHERITED_MATH))
 			Dee_Free(self->tp_math);
 		if (!(base_inherited & BASE_INHERITED_CMP) && (self->tp_cmp != &instance_builtin_cmp))
@@ -160,6 +184,39 @@ again:
 #undef BASE_INHERITED_SEQ
 #undef BASE_INHERITED_ATTR
 #undef BASE_INHERITED_WITH
+
+		/* Custom operators. */
+		Dee_Free((void *)self->tp_operators);
+
+		/* Free custom operator class tables that weren't inherited from bases. */
+		if (Dee_TYPE(self) != &DeeType_Type) {
+			DeeTypeObject *type_type = Dee_TYPE(self);
+			do {
+				size_t opi;
+				ASSERT(DeeType_IsTypeType(type_type));
+				for (opi = 0; opi < type_type->tp_operators_size; ++opi) {
+					struct type_operator const *op = &type_type->tp_operators[opi];
+					if likely(type_operator_isdecl(op)) {
+						void *class_table;
+						uint16_t class_offset = op->to_decl.oi_class;
+						if (class_offset == 0)
+							continue; /* Inline class (ignore) */
+						class_table = *(void **)((byte_t *)self + class_offset);
+						if (class_table == NULL)
+							continue; /* Class isn't allocated. */
+						/* Check if "class_table" has been inherited from a base class. */
+						if (!is_operator_class_inherited(type_type, self, class_offset, class_table)) {
+							/* Table isn't inherited, meaning it was allocated for use by `self' */
+							Dee_Free(class_table);
+						}
+
+						/* NULL the table pointer so we don't try to double-free it. */
+						*(void **)((byte_t *)self + class_offset) = NULL;
+					}
+				}
+				type_type = DeeType_Base(type_type);
+			} while (type_type != &DeeType_Type);
+		}
 	}
 }
 
@@ -4879,39 +4936,6 @@ instance_bool(DeeObject *__restrict self) {
 	return instance_tbool(Dee_TYPE(self), self);
 }
 
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tint32(DeeTypeObject *tp_self,
-                DeeObject *__restrict self,
-                int32_t *__restrict result) {
-	DREF DeeObject *intval;
-	int error;
-	intval = instance_tint(tp_self, self);
-	if unlikely(!intval)
-		goto err;
-	error = DeeInt_Get32Bit(intval, result);
-	Dee_Decref(intval);
-	return error;
-err:
-	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-instance_tint64(DeeTypeObject *tp_self,
-                DeeObject *__restrict self,
-                int64_t *__restrict result) {
-	DREF DeeObject *intval;
-	int error;
-	intval = instance_tint(tp_self, self);
-	if unlikely(!intval)
-		goto err;
-	error = DeeInt_Get64Bit(intval, result);
-	Dee_Decref(intval);
-	return error;
-err:
-	return -1;
-}
-
 INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
 instance_tdouble(DeeTypeObject *tp_self,
                  DeeObject *__restrict self,
@@ -4933,18 +4957,6 @@ err_r:
 	Dee_Decref(value);
 err:
 	return -1;
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_int32(DeeObject *__restrict self,
-               int32_t *__restrict result) {
-	return instance_tint32(Dee_TYPE(self), self, result);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-instance_int64(DeeObject *__restrict self,
-               int64_t *__restrict result) {
-	return instance_tint64(Dee_TYPE(self), self, result);
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
@@ -5108,119 +5120,59 @@ INTERN struct type_gc tpconst instance_gc = {
 };
 
 
-
-/* Binding descriptors for standard operators provided by DeeType_Type */
-typedef void (*CFUNC)(void);
-struct opwrapper {
-	uintptr_t ow_offset;  /* Offset from the containing operator table to where `wrapper' must be written. */
-	CFUNC     ow_wrapper; /* [0..1] The C wrapper function that should be assigned to
-	                       *         the operator to have it invoke user-callbacks.
-	                       *   NOTE: A value of NULL in this field acts as a sentinel. */
-};
-
-/* Operator wrapper descriptor tables. */
-PRIVATE struct opwrapper type_wrappers[] = {
-	/* [OPERATOR_COPY - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_copy_ctor), (CFUNC)&instance_copy },
-	/* [OPERATOR_DEEPCOPY - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_init.tp_alloc.tp_deep_ctor), (CFUNC)&instance_deepcopy },
-	/* [OPERATOR_DESTRUCTOR - OPERATOR_COPY]  = */ { offsetof(DeeTypeObject, tp_init.tp_dtor), (CFUNC)&instance_destructor },
-	/* [OPERATOR_ASSIGN - OPERATOR_COPY]      = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_assign), (CFUNC)&instance_assign*/ },
-	/* [OPERATOR_MOVEASSIGN - OPERATOR_COPY]  = */ { 0, NULL /*offsetof(DeeTypeObject, tp_init.tp_move_assign), (CFUNC)&instance_moveassign*/ },
-	/* [OPERATOR_STR - OPERATOR_COPY]         = */ { offsetof(DeeTypeObject, tp_cast.tp_str), (CFUNC)&instance_str },
-	/* [OPERATOR_REPR - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_repr), (CFUNC)&instance_repr },
-	/* [OPERATOR_BOOL - OPERATOR_COPY]        = */ { offsetof(DeeTypeObject, tp_cast.tp_bool), (CFUNC)&instance_bool },
-	/* [OPERATOR_ITERNEXT - OPERATOR_COPY]    = */ { offsetof(DeeTypeObject, tp_iter_next), (CFUNC)&instance_next }
-};
-
-PRIVATE struct opwrapper math_wrappers[] = {
-	/* [OPERATOR_FLOAT - OPERATOR_FLOAT]       = */ { offsetof(struct type_math, tp_double), (CFUNC)&instance_double },
-	/* [OPERATOR_INV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inv), (CFUNC)&instance_inv },
-	/* [OPERATOR_POS - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pos), (CFUNC)&instance_pos },
-	/* [OPERATOR_NEG - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_neg), (CFUNC)&instance_neg },
-	/* [OPERATOR_ADD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_add), (CFUNC)&instance_add },
-	/* [OPERATOR_SUB - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_sub), (CFUNC)&instance_sub },
-	/* [OPERATOR_MUL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mul), (CFUNC)&instance_mul },
-	/* [OPERATOR_DIV - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_div), (CFUNC)&instance_div },
-	/* [OPERATOR_MOD - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_mod), (CFUNC)&instance_mod },
-	/* [OPERATOR_SHL - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shl), (CFUNC)&instance_shl },
-	/* [OPERATOR_SHR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_shr), (CFUNC)&instance_shr },
-	/* [OPERATOR_AND - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_and), (CFUNC)&instance_and },
-	/* [OPERATOR_OR - OPERATOR_FLOAT]          = */ { offsetof(struct type_math, tp_or), (CFUNC)&instance_or },
-	/* [OPERATOR_XOR - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_xor), (CFUNC)&instance_xor },
-	/* [OPERATOR_POW - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_pow), (CFUNC)&instance_pow },
-	/* [OPERATOR_INC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_inc), (CFUNC)&instance_inc },
-	/* [OPERATOR_DEC - OPERATOR_FLOAT]         = */ { offsetof(struct type_math, tp_dec), (CFUNC)&instance_dec },
-	/* [OPERATOR_INPLACE_ADD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_add), (CFUNC)&instance_iadd },
-	/* [OPERATOR_INPLACE_SUB - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_sub), (CFUNC)&instance_isub },
-	/* [OPERATOR_INPLACE_MUL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mul), (CFUNC)&instance_imul },
-	/* [OPERATOR_INPLACE_DIV - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_div), (CFUNC)&instance_idiv },
-	/* [OPERATOR_INPLACE_MOD - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_mod), (CFUNC)&instance_imod },
-	/* [OPERATOR_INPLACE_SHL - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shl), (CFUNC)&instance_ishl },
-	/* [OPERATOR_INPLACE_SHR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_shr), (CFUNC)&instance_ishr },
-	/* [OPERATOR_INPLACE_AND - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_and), (CFUNC)&instance_iand },
-	/* [OPERATOR_INPLACE_OR - OPERATOR_FLOAT]  = */ { offsetof(struct type_math, tp_inplace_or), (CFUNC)&instance_ior },
-	/* [OPERATOR_INPLACE_XOR - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_xor), (CFUNC)&instance_ixor },
-	/* [OPERATOR_INPLACE_POW - OPERATOR_FLOAT] = */ { offsetof(struct type_math, tp_inplace_pow), (CFUNC)&instance_ipow }
-};
-
-PRIVATE struct opwrapper cmp_wrappers[] = {
-	/* [OPERATOR_HASH - OPERATOR_CMPMIN] = */ { offsetof(struct type_cmp, tp_hash), (CFUNC)&instance_hash },
-	/* [OPERATOR_EQ - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_eq), (CFUNC)&instance_eq },
-	/* [OPERATOR_NE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ne), (CFUNC)&instance_ne },
-	/* [OPERATOR_LO - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_lo), (CFUNC)&instance_lo },
-	/* [OPERATOR_LE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_le), (CFUNC)&instance_le },
-	/* [OPERATOR_GR - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_gr), (CFUNC)&instance_gr },
-	/* [OPERATOR_GE - OPERATOR_CMPMIN]   = */ { offsetof(struct type_cmp, tp_ge), (CFUNC)&instance_ge }
-};
-
-PRIVATE struct opwrapper seq_wrappers[] = {
-	/* [OPERATOR_ITERSELF - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_iter_self), (CFUNC)&instance_iter },
-	/* [OPERATOR_SIZE     - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_size), (CFUNC)&instance_size },
-	/* [OPERATOR_CONTAINS - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_contains), (CFUNC)&instance_contains },
-	/* [OPERATOR_GETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_get), (CFUNC)&instance_getitem },
-	/* [OPERATOR_DELITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_del), (CFUNC)&instance_delitem },
-	/* [OPERATOR_SETITEM  - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_set), (CFUNC)&instance_setitem },
-	/* [OPERATOR_GETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_get), (CFUNC)&instance_getrange },
-	/* [OPERATOR_DELRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_del), (CFUNC)&instance_delrange },
-	/* [OPERATOR_SETRANGE - OPERATOR_SEQMIN] = */ { offsetof(struct type_seq, tp_range_set), (CFUNC)&instance_setrange }
-};
-
-PRIVATE struct opwrapper attr_wrappers[] = {
-	/* [OPERATOR_GETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_getattr), (CFUNC)&instance_getattr },
-	/* [OPERATOR_DELATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_delattr), (CFUNC)&instance_delattr },
-	/* [OPERATOR_SETATTR  - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_setattr), (CFUNC)&instance_setattr },
-	/* [OPERATOR_ENUMATTR - OPERATOR_ATTRMIN] = */ { offsetof(struct type_attr, tp_enumattr), (CFUNC)&instance_enumattr }
-};
-
-PRIVATE struct opwrapper with_wrappers[] = {
-	/* [OPERATOR_ENTER - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_enter), (CFUNC)&instance_enter },
-	/* [OPERATOR_LEAVE - OPERATOR_WITHMIN] = */ { offsetof(struct type_with, tp_leave), (CFUNC)&instance_leave },
-};
-
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-lazy_allocate(void **__restrict ptable, size_t table_size) {
-	void *new_table;
-	if (*ptable)
-		return 0;
-	new_table = Dee_Calloc(table_size);
-	if unlikely(!new_table)
-		goto err;
-	if unlikely(!atomic_cmpxch(ptable, NULL, new_table))
-		Dee_Free(new_table);
-	return 0;
-err:
-	return -1;
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+instance_generic_operator_invoke_cb(DeeTypeObject *tp_self, DeeObject *self,
+                                    /*0..1*/ DREF DeeObject **p_self, size_t argc,
+                                    DeeObject *const *argv, uint16_t opname) {
+	DREF DeeObject *result;
+	result = DeeClass_CallOperator(tp_self, self, opname, argc, argv);
+	if (p_self && result) {
+		ASSERT(*p_self == self);
+		Dee_Incref(result);
+		Dee_Decref_unlikely(self);
+		*p_self = result;
+	}
+	return result;
 }
 
-#ifndef __INTELLISENSE__
-#ifndef __NO_builtin_expect
-#define lazy_allocate(ptable, table_size) \
-	__builtin_expect(lazy_allocate(ptable, table_size), 0)
-#endif /* !__NO_builtin_expect */
-#endif /* !__INTELLISENSE__ */
 
-#define LAZY_ALLOCATE(p) lazy_allocate((void **)&(p), sizeof(*(p)))
 
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+get_operator_class_table_size(DeeTypeObject *__restrict type_type, uint16_t oi_class) {
+	size_t result;
+	ASSERTF(oi_class != 0, "Not for inline operators!");
+#ifndef __OPTIMIZE_SIZE__
+	/* Fast-pass for known operator classes */
+	if (oi_class == offsetof(DeeTypeObject, tp_math))
+		return sizeof(struct type_math);
+	if (oi_class == offsetof(DeeTypeObject, tp_cmp))
+		return sizeof(struct type_cmp);
+	if (oi_class == offsetof(DeeTypeObject, tp_seq))
+		return sizeof(struct type_seq);
+	if (oi_class == offsetof(DeeTypeObject, tp_attr))
+		return sizeof(struct type_attr);
+	if (oi_class == offsetof(DeeTypeObject, tp_with))
+		return sizeof(struct type_with);
+#endif /* !__OPTIMIZE_SIZE__ */
+	result = sizeof(Dee_funptr_t);
+	while (type_type != &DeeType_Type) {
+		size_t i;
+		ASSERT(DeeType_IsTypeType(type_type));
+		for (i = 0; i < type_type->tp_operators_size; ++i) {
+			struct type_operator const *op = &type_type->tp_operators[i];
+			if likely(type_operator_isdecl(op)) {
+				if (op->to_decl.oi_class == oi_class) {
+					size_t class_size = op->to_decl.oi_offset + sizeof(Dee_funptr_t);
+					if (result < class_size)
+						result = class_size;
+				}
+			}
+		}
+		type_type = DeeType_Base(type_type);
+	}
+	return result;
+}
 
 /* Bind the C-wrapper function(s) for `operator_name' in `class_type',
  * with `type_type' being responsible for providing said operator. */
@@ -5228,60 +5180,80 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bind_class_operator(DeeTypeObject *__restrict type_type,
                     DeeTypeObject *__restrict class_type,
                     uint16_t operator_name) {
-	CFUNC wrapper, *target;
-	/* Assign operator wrapper. */
-	if (operator_name <= OPERATOR_TYPEMAX) {
-		/* type operator. */
-		ASSERT(operator_name >= OPERATOR_COPY);
-		wrapper = type_wrappers[operator_name - OPERATOR_COPY].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type + type_wrappers[operator_name - OPERATOR_COPY].ow_offset);
-	} else if (operator_name <= OPERATOR_MATHMAX) {
-		if unlikely(LAZY_ALLOCATE(class_type->tp_math))
-			goto err;
-		/* math operator. */
-		ASSERT(operator_name >= OPERATOR_FLOAT);
-		wrapper = math_wrappers[operator_name - OPERATOR_FLOAT].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type->tp_math + math_wrappers[operator_name - OPERATOR_FLOAT].ow_offset);
-	} else if (operator_name <= OPERATOR_CMPMAX) {
-		if unlikely(LAZY_ALLOCATE(class_type->tp_cmp))
-			goto err;
-		/* compare operator. */
-		ASSERT(operator_name >= OPERATOR_CMPMIN);
-		wrapper = cmp_wrappers[operator_name - OPERATOR_CMPMIN].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type->tp_cmp + cmp_wrappers[operator_name - OPERATOR_CMPMIN].ow_offset);
-	} else if (operator_name <= OPERATOR_SEQMAX) {
-		if unlikely(LAZY_ALLOCATE(class_type->tp_seq))
-			goto err;
-		/* compare operator. */
-		ASSERT(operator_name >= OPERATOR_SEQMIN);
-		wrapper = seq_wrappers[operator_name - OPERATOR_SEQMIN].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type->tp_seq + seq_wrappers[operator_name - OPERATOR_SEQMIN].ow_offset);
-	} else if (operator_name <= OPERATOR_ATTRMAX) {
-		if unlikely(LAZY_ALLOCATE(class_type->tp_attr))
-			goto err;
-		/* attribute operator. */
-		ASSERT(operator_name >= OPERATOR_ATTRMIN);
-		wrapper = attr_wrappers[operator_name - OPERATOR_ATTRMIN].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type->tp_attr + attr_wrappers[operator_name - OPERATOR_ATTRMIN].ow_offset);
-	} else if (operator_name <= OPERATOR_WITHMAX) {
-		if unlikely(LAZY_ALLOCATE(class_type->tp_with))
-			goto err;
-		/* with operators. */
-		ASSERT(operator_name >= OPERATOR_WITHMIN);
-		wrapper = with_wrappers[operator_name - OPERATOR_WITHMIN].ow_wrapper;
-		target  = (CFUNC *)((uintptr_t)class_type->tp_with + with_wrappers[operator_name - OPERATOR_WITHMIN].ow_offset);
-	} else {
-		/* TODO: Support for custom user-overwritable operators (look for `Dee_type_operator_isdecl()' in `type_type->tp_operators'). */
-		/* TODO: All operators that can't be defined via C-wrappers must be added as `Dee_type_operator_iscustom()' to `class_type->tp_operators' */
-		/* TODO: Remove this throw -- it should always be possible for *any* type to define *any* operator. */
-		DeeError_Throwf(&DeeError_TypeError,
-		                "Type %q does not define an operator %#I16x",
-		                type_type->tp_name, operator_name);
-		goto err;
-	}
+	struct opinfo const *info;
+	info = DeeTypeType_GetOperatorById(type_type, operator_name);
+	if likely(info) {
+		/* Dedicated operator with C-wrapper. */
+		void *class_table;
+		ASSERT(info->oi_invoke);
+		ASSERT(info->oi_invoke->opi_invoke);
+		ASSERT(info->oi_invoke->opi_classhook);
+		class_table = (void *)class_type;
+		if (info->oi_class != 0) {
+			void **p_class_table;
+			p_class_table = (void **)((byte_t *)class_table + info->oi_class);
+			class_table = *p_class_table;
+			if (!class_table) {
+				/* Must allocate class table. */
+				size_t tabsize = get_operator_class_table_size(type_type, info->oi_class);
+				class_table = Dee_Calloc(tabsize);
+				if unlikely(!class_table)
+					goto err;
+				*p_class_table = class_table;
+			}
+		}
 
-	/* Assign the proper wrapper to the target. */
-	*target = wrapper;
+		/* Store the C-wrapper for the operator in its designated location. */
+		*(void **)((byte_t *)class_table + info->oi_offset) = info->oi_invoke->opi_classhook;
+	} else {
+		/* Operator has nowhere to go natively
+		 * -> add a Dee_TYPE_OPERATOR_CUSTOM-entry for it in `class_type->tp_operators',
+		 *    using `instance_generic_operator_invoke_cb()'. */
+		struct type_operator *new_table;
+		size_t new_size;
+		size_t lo, hi;
+
+		/* Figure out where in the table "operator_name" needs to go. */
+		lo = 0;
+		hi = class_type->tp_operators_size;
+		while (lo < hi) {
+			size_t mid = (lo + hi) / 2;
+			uint16_t mid_name = class_type->tp_operators[mid].to_id;
+			if (operator_name < mid_name) {
+				hi = mid;
+			} else if (operator_name > mid_name) {
+				lo = mid + 1;
+			} else {
+				/* Operator had already been defined before? -> ignore */
+				return 0;
+			}
+		}
+
+		new_size  = class_type->tp_operators_size + 1;
+		new_table = (struct type_operator *)Dee_Realloc((void *)class_type->tp_operators,
+		                                                new_size * sizeof(struct type_operator));
+		if unlikely(!new_table)
+			goto err;
+		class_type->tp_operators = new_table;
+		ASSERT(lo == hi);
+		memmoveupc(&new_table[lo + 1], &new_table[lo],
+		           class_type->tp_operators_size - lo,
+		           sizeof(struct type_operator));
+		++class_type->tp_operators_size;
+
+		/* Fill in the operator slot. */
+		bzero(&new_table[lo], sizeof(struct type_operator));
+		new_table[lo].to_custom._s_pad_id = operator_name;
+		new_table[lo].to_custom._s_class  = OPCLASS_CUSTOM;
+		/*new_table[lo].to_custom._s_offset = 0;*/
+#if OPCC_SPECIAL != 0
+		new_table[lo].to_custom._s_cc = OPCC_SPECIAL;
+#endif /* OPCC_SPECIAL != 0 */
+#if Dee_METHOD_FNORMAL != 0
+		new_table[lo].to_custom.s_flags = Dee_METHOD_FNORMAL;
+#endif /* Dee_METHOD_FNORMAL != 0 */
+		new_table[lo].to_custom.s_invoke = &instance_generic_operator_invoke_cb;
+	}
 	return 0;
 err:
 	return -1;
@@ -5291,7 +5263,7 @@ err:
 
 struct class_bases {
 	DREF DeeTypeObject  *cb_base; /* [0..1] Primary class base. */
-	DREF DeeTypeObject **cb_mro;  /* [0..1][0..N][owned] Class MRO override (or NULL if not needed) */
+	DREF DeeTypeObject **cb_mro;  /* [0..1][0..n][owned] Class MRO override (or NULL if not needed) */
 };
 
 /* Finalize the given class-bases descriptor. */
@@ -5441,7 +5413,7 @@ err:
 
 /* Create a new class type derived from `bases',
  * featuring traits from `descriptor'.
- * @param: bases: The base of the resulting class.
+ * @param: bases: The base(s) of the resulting class.
  *                You may pass `Dee_None' to have the resulting
  *                class not be derived from anything (be base-less).
  *                You may also pass a sequence of types, in which
@@ -5475,6 +5447,9 @@ DeeClass_New(DeeObject *bases, DeeObject *descriptor,
 	} else {
 		/* Make sure that the given base-object is actually a type. */
 		result_type_type = Dee_TYPE(cbases.cb_base);
+		ASSERTF(DeeType_IsTypeType(result_type_type),
+		        "The type of type object '%r' isn't actually a type-type",
+		        cbases.cb_base);
 		ASSERTF(!(result_type_type->tp_flags & TP_FVARIABLE),
 		        "type-type objects must not have the variable-size flag, but %s has it set!",
 		        result_type_type->tp_name);
@@ -5648,14 +5623,6 @@ err_custom_allocator:
 			case OPERATOR_CALL:
 				result->tp_call    = &instance_call;
 				result->tp_call_kw = &instance_callkw;
-				break;
-
-			case OPERATOR_INT:
-				if unlikely(LAZY_ALLOCATE(result->tp_math))
-					goto err_r_base_cbases;
-				result->tp_math->tp_int32 = &instance_int32;
-				result->tp_math->tp_int64 = &instance_int64;
-				result->tp_math->tp_int   = &instance_int;
 				break;
 
 			case OPERATOR_STR:
@@ -5839,6 +5806,29 @@ err_r_base_cbases:
 	Dee_Free(result->tp_seq);
 	Dee_Free((void *)result->tp_attr);
 	Dee_Free(result->tp_with);
+	Dee_Free((void *)result->tp_operators);
+	if (result_type_type != &DeeType_Type) {
+		/* Free extra operator class tables. */
+		do {
+			size_t i;
+			ASSERT(DeeType_IsTypeType(result_type_type));
+			for (i = 0; i < result_type_type->tp_operators_size; ++i) {
+				struct type_operator const *op = &result_type_type->tp_operators[i];
+				if (Dee_type_operator_isdecl(op)) {
+					uint16_t oi_class = op->to_decl.oi_class;
+					if (oi_class != 0) {
+						void *class_table;
+						class_table = *(void **)((byte_t *)result + oi_class);
+						if (class_table) {
+							*(void **)((byte_t *)result + oi_class) = NULL;
+							Dee_Free(class_table);
+						}
+					}
+				}
+			}
+			result_type_type = DeeType_Base(result_type_type);
+		} while (result_type_type != &DeeType_Type);
+	}
 	Dee_XDecref_unlikely(result->tp_base);
 	Dee_XDecref_unlikely(desc->cd_name);
 	Dee_XDecref_unlikely(desc->cd_doc);

@@ -46,14 +46,15 @@ typedef DeeTypeObject Type;
 
 #define OPNAME(opname) "operator " opname
 
-#define DEFINE_OPERATOR_INVOKE(name, instance_name)                                                                 \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                                           \
-	invoke_##name(DeeTypeObject *tp_self, DeeObject *self, /*0..1*/ DREF DeeObject **p_self,                        \
-	              size_t argc, DeeObject *const *argv);                                                             \
-	PRIVATE struct Dee_operator_invoke tpconst name = { &invoke_##name, (dfunptr_t)(void const *)(instance_name) }; \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                                           \
-	invoke_##name(DeeTypeObject *tp_self, DeeObject *self, /*0..1*/ DREF DeeObject **p_self,                        \
-	              size_t argc, DeeObject *const *argv)
+#define DEFINE_OPERATOR_INVOKE(name, instance_name)                                          \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                    \
+	invoke_##name(DeeTypeObject *tp_self, DeeObject *self, /*0..1*/ DREF DeeObject **p_self, \
+	              size_t argc, DeeObject *const *argv, uint16_t opname);                     \
+	PRIVATE struct Dee_operator_invoke tpconst name =                                        \
+	Dee_OPERATOR_INVOKE_INIT(&invoke_##name, instance_name);                                 \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                                    \
+	invoke_##name(DeeTypeObject *tp_self, DeeObject *self, /*0..1*/ DREF DeeObject **p_self, \
+	              size_t argc, DeeObject *const *argv, uint16_t opname)
 PRIVATE ATTR_COLD NONNULL((1, 2)) int DCALL
 err_operator_cannot_invoke(DeeTypeObject *__restrict tp_self,
                            char const *__restrict name) {
@@ -75,12 +76,14 @@ DEFINE_OPERATOR_INVOKE(operator_constructor, &instance_ctor) {
 	(void)p_self;
 	(void)argc;
 	(void)argv;
+	(void)opname;
 	err_operator_cannot_invoke(tp_self, "constructor");
 	return NULL;
 }
 
 DEFINE_OPERATOR_INVOKE(operator_copy, &instance_copy) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("copy")))
 		goto err;
 	return DeeObject_TCopy(tp_self, self);
@@ -90,6 +93,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_deepcopy, &instance_deepcopy) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("deepcopy")))
 		goto err;
 	return DeeObject_TDeepCopy(tp_self, self);
@@ -102,6 +106,7 @@ DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor) {
 	(void)p_self;
 	(void)argc;
 	(void)argv;
+	(void)opname;
 	err_operator_cannot_invoke(tp_self, "destructor");
 	return NULL;
 }
@@ -109,6 +114,7 @@ DEFINE_OPERATOR_INVOKE(operator_destructor, &instance_destructor) {
 DEFINE_OPERATOR_INVOKE(operator_bool, &instance_bool) {
 	int result;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("bool")))
 		goto err;
 	result = DeeObject_TBool(tp_self, self);
@@ -122,6 +128,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_next, &instance_next) {
 	DREF DeeObject *result;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("next")))
 		goto err;
 	result = DeeObject_TIterNext(tp_self, self);
@@ -138,6 +145,7 @@ DEFINE_OPERATOR_INVOKE(operator_call, &instance_call) {
 	DeeObject *args, *kw = NULL;
 	DREF DeeObject *result;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o|o:" OPNAME("call"), &args, &kw))
 		goto err;
 	if (DeeObject_AssertTypeExact(args, &DeeTuple_Type))
@@ -159,6 +167,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_float, &instance_double) {
 	double result;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("float")))
 		goto err;
 	if (DeeObject_TAsDouble(tp_self, self, &result))
@@ -171,6 +180,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_hash, &instance_hash) {
 	dhash_t result;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("hash")))
 		goto err;
 	result = DeeObject_THash(tp_self, self);
@@ -182,6 +192,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_getattr, &instance_getattr) {
 	DeeStringObject *attr;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("getattr"), &attr))
 		goto err;
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
@@ -194,6 +205,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_delattr, &instance_delattr) {
 	DeeStringObject *attr;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("delattr"), &attr))
 		goto err;
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
@@ -209,6 +221,7 @@ DEFINE_OPERATOR_INVOKE(operator_setattr, &instance_setattr) {
 	DeeStringObject *attr;
 	DeeObject *value;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("setattr"), &attr, &value))
 		goto err;
 	if (DeeObject_AssertTypeExact(attr, &DeeString_Type))
@@ -223,6 +236,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_enumattr, &instance_enumattr) {
 	DeeObject *args[2];
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("enumattr")))
 		goto err;
 	args[0] = (DeeObject *)tp_self;
@@ -234,6 +248,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_visit, &instance_visit) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("visit")))
 		goto err;
 	return (DREF DeeObject *)DeeGC_TNewReferred(tp_self, self);
@@ -243,6 +258,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_clear, &instance_clear) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("clear")))
 		goto err;
 	DeeObject_TClear(tp_self, self);
@@ -254,6 +270,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_pclear, &instance_pclear) {
 	unsigned int gc_prio;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "u:" OPNAME("pclear"), &gc_prio))
 		goto err;
 	DeeObject_TPClear(tp_self, self, gc_prio);
@@ -266,6 +283,7 @@ DEFINE_OPERATOR_INVOKE(operator_getbuf, NULL) {
 	bool writable = false;
 	size_t start = 0, end = (size_t)-1;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "|b" UNPuSIZ UNPuSIZ ":" OPNAME("getbuf"),
 	                  &writable, &start, &end))
 		goto err;
@@ -284,6 +302,7 @@ function defineUnary(name: string, nameTitle: string = none) {
 		nameTitle = name.title();
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, ":" OPNAME("{name}")))');
 	print(f'		goto err;');
 	print(f'	return DeeObject_T{nameTitle}(tp_self, self);');
@@ -298,6 +317,7 @@ function defineUnaryInplace(name: string, nameTitle: string = none) {
 		nameTitle = name.title();
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	(void)self;');
+	print(f'	(void)opname;');
 	print(f'	if unlikely(!p_self)');
 	print(f'		goto err_requires_inplace;');
 	print(f'	if (DeeArg_Unpack(argc, argv, ":" OPNAME("{name}")))');
@@ -318,6 +338,7 @@ function defineUnaryInt(name: string, nameTitle: string = none, returnNone: bool
 		nameTitle = name.title();
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, ":" OPNAME("{name}")))');
 	print(f'		goto err;');
 	print(f'	if (DeeObject_T{nameTitle}(tp_self, self))');
@@ -335,6 +356,7 @@ function defineBinary(name: string, nameTitle: string = none) {
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("{name}"), &other))');
 	print(f'		goto err;');
 	print(f'	return DeeObject_T{nameTitle}(tp_self, self, other);');
@@ -350,6 +372,7 @@ function defineBinaryInt(name: string, nameTitle: string = none, returnNone: boo
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("{name}"), &other))');
 	print(f'		goto err;');
 	print(f'	if (DeeObject_T{nameTitle}(tp_self, self, other))');
@@ -367,6 +390,7 @@ function defineBinaryInplace(name: string, nameTitle: string = none) {
 	print(f'DEFINE_OPERATOR_INVOKE(operator_i{name}, &instance_i{name}) \{');
 	print(f'	DeeObject *other;');
 	print(f'	(void)self;');
+	print(f'	(void)opname;');
 	print(f'	if unlikely(!p_self)');
 	print(f'		goto err_requires_inplace;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("i{name}"), &other))');
@@ -388,6 +412,7 @@ function defineTrinary(name: string, nameTitle: string = none) {
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	DeeObject *a, *b;');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("{name}"), &a, &b))');
 	print(f'		goto err;');
 	print(f'	return DeeObject_T{nameTitle}(tp_self, self, a, b);');
@@ -403,6 +428,7 @@ function defineTrinaryInt(name: string, nameTitle: string = none, returnNone: bo
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	DeeObject *a, *b;');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("{name}"), &a, &b))');
 	print(f'		goto err;');
 	print(f'	if (DeeObject_T{nameTitle}(tp_self, self, a, b))');
@@ -420,6 +446,7 @@ function defineQuaternaryInt(name: string, nameTitle: string = none, returnNone:
 	print(f'DEFINE_OPERATOR_INVOKE(operator_{name}, &instance_{name}) \{');
 	print(f'	DeeObject *a, *b, *c;');
 	print(f'	(void)p_self;');
+	print(f'	(void)opname;');
 	print(f'	if (DeeArg_Unpack(argc, argv, "ooo:" OPNAME("{name}"), &a, &b, &c))');
 	print(f'		goto err;');
 	print(f'	if (DeeObject_T{nameTitle}(tp_self, self, a, b, c))');
@@ -466,6 +493,7 @@ defineUnaryInt("leave", returnNone: true);
 ]]]*/
 DEFINE_OPERATOR_INVOKE(operator_str, &instance_str) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("str")))
 		goto err;
 	return DeeObject_TStr(tp_self, self);
@@ -475,6 +503,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_repr, &instance_repr) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("repr")))
 		goto err;
 	return DeeObject_TRepr(tp_self, self);
@@ -485,6 +514,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_assign, &instance_assign) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("assign"), &other))
 		goto err;
 	if (DeeObject_TAssign(tp_self, self, other))
@@ -497,6 +527,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_moveassign, &instance_moveassign) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("moveassign"), &other))
 		goto err;
 	if (DeeObject_TMoveAssign(tp_self, self, other))
@@ -508,6 +539,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_int, &instance_int) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("int")))
 		goto err;
 	return DeeObject_TInt(tp_self, self);
@@ -517,6 +549,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_inv, &instance_inv) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("inv")))
 		goto err;
 	return DeeObject_TInv(tp_self, self);
@@ -526,6 +559,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_pos, &instance_pos) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("pos")))
 		goto err;
 	return DeeObject_TPos(tp_self, self);
@@ -535,6 +569,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_neg, &instance_neg) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("neg")))
 		goto err;
 	return DeeObject_TNeg(tp_self, self);
@@ -544,6 +579,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_inc, &instance_inc) {
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("inc")))
@@ -559,6 +595,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_dec, &instance_dec) {
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("dec")))
@@ -575,6 +612,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_add, &instance_add) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("add"), &other))
 		goto err;
 	return DeeObject_TAdd(tp_self, self, other);
@@ -585,6 +623,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_sub, &instance_sub) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("sub"), &other))
 		goto err;
 	return DeeObject_TSub(tp_self, self, other);
@@ -595,6 +634,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_mul, &instance_mul) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("mul"), &other))
 		goto err;
 	return DeeObject_TMul(tp_self, self, other);
@@ -605,6 +645,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_div, &instance_div) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("div"), &other))
 		goto err;
 	return DeeObject_TDiv(tp_self, self, other);
@@ -615,6 +656,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_mod, &instance_mod) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("mod"), &other))
 		goto err;
 	return DeeObject_TMod(tp_self, self, other);
@@ -625,6 +667,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_shl, &instance_shl) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("shl"), &other))
 		goto err;
 	return DeeObject_TShl(tp_self, self, other);
@@ -635,6 +678,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_shr, &instance_shr) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("shr"), &other))
 		goto err;
 	return DeeObject_TShr(tp_self, self, other);
@@ -645,6 +689,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_and, &instance_and) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("and"), &other))
 		goto err;
 	return DeeObject_TAnd(tp_self, self, other);
@@ -655,6 +700,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_or, &instance_or) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("or"), &other))
 		goto err;
 	return DeeObject_TOr(tp_self, self, other);
@@ -665,6 +711,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_xor, &instance_xor) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("xor"), &other))
 		goto err;
 	return DeeObject_TXor(tp_self, self, other);
@@ -675,6 +722,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_pow, &instance_pow) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("pow"), &other))
 		goto err;
 	return DeeObject_TPow(tp_self, self, other);
@@ -685,6 +733,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_iadd, &instance_iadd) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("iadd"), &other))
@@ -701,6 +750,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_isub, &instance_isub) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("isub"), &other))
@@ -717,6 +767,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_imul, &instance_imul) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("imul"), &other))
@@ -733,6 +784,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_idiv, &instance_idiv) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("idiv"), &other))
@@ -749,6 +801,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_imod, &instance_imod) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("imod"), &other))
@@ -765,6 +818,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ishl, &instance_ishl) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ishl"), &other))
@@ -781,6 +835,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ishr, &instance_ishr) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ishr"), &other))
@@ -797,6 +852,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_iand, &instance_iand) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("iand"), &other))
@@ -813,6 +869,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ior, &instance_ior) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ior"), &other))
@@ -829,6 +886,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ixor, &instance_ixor) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ixor"), &other))
@@ -845,6 +903,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ipow, &instance_ipow) {
 	DeeObject *other;
 	(void)self;
+	(void)opname;
 	if unlikely(!p_self)
 		goto err_requires_inplace;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ipow"), &other))
@@ -861,6 +920,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_eq, &instance_eq) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("eq"), &other))
 		goto err;
 	return DeeObject_TCompareEqObject(tp_self, self, other);
@@ -871,6 +931,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ne, &instance_ne) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ne"), &other))
 		goto err;
 	return DeeObject_TCompareNeObject(tp_self, self, other);
@@ -881,6 +942,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_lo, &instance_lo) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("lo"), &other))
 		goto err;
 	return DeeObject_TCompareLoObject(tp_self, self, other);
@@ -891,6 +953,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_le, &instance_le) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("le"), &other))
 		goto err;
 	return DeeObject_TCompareLeObject(tp_self, self, other);
@@ -901,6 +964,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_gr, &instance_gr) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("gr"), &other))
 		goto err;
 	return DeeObject_TCompareGrObject(tp_self, self, other);
@@ -911,6 +975,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ge, &instance_ge) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("ge"), &other))
 		goto err;
 	return DeeObject_TCompareGeObject(tp_self, self, other);
@@ -920,6 +985,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_iter, &instance_iter) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("iter")))
 		goto err;
 	return DeeObject_TIterSelf(tp_self, self);
@@ -929,6 +995,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_size, &instance_size) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("size")))
 		goto err;
 	return DeeObject_TSizeObject(tp_self, self);
@@ -939,6 +1006,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_contains, &instance_contains) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("contains"), &other))
 		goto err;
 	return DeeObject_TContainsObject(tp_self, self, other);
@@ -949,6 +1017,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_getitem, &instance_getitem) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("getitem"), &other))
 		goto err;
 	return DeeObject_TGetItem(tp_self, self, other);
@@ -959,6 +1028,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_delitem, &instance_delitem) {
 	DeeObject *other;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("delitem"), &other))
 		goto err;
 	if (DeeObject_TDelItem(tp_self, self, other))
@@ -971,6 +1041,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_setitem, &instance_setitem) {
 	DeeObject *a, *b;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("setitem"), &a, &b))
 		goto err;
 	if (DeeObject_TSetItem(tp_self, self, a, b))
@@ -983,6 +1054,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_getrange, &instance_getrange) {
 	DeeObject *a, *b;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("getrange"), &a, &b))
 		goto err;
 	return DeeObject_TGetRange(tp_self, self, a, b);
@@ -993,6 +1065,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_delrange, &instance_delrange) {
 	DeeObject *a, *b;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("delrange"), &a, &b))
 		goto err;
 	if (DeeObject_TDelRange(tp_self, self, a, b))
@@ -1005,6 +1078,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_setrange, &instance_setrange) {
 	DeeObject *a, *b, *c;
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "ooo:" OPNAME("setrange"), &a, &b, &c))
 		goto err;
 	if (DeeObject_TSetRange(tp_self, self, a, b, c))
@@ -1016,6 +1090,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_enter, &instance_enter) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("enter")))
 		goto err;
 	if (DeeObject_TEnter(tp_self, self))
@@ -1027,6 +1102,7 @@ err:
 
 DEFINE_OPERATOR_INVOKE(operator_leave, &instance_leave) {
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("leave")))
 		goto err;
 	if (DeeObject_TLeave(tp_self, self))

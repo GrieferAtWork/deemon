@@ -301,19 +301,17 @@ err:
 
 
 
-#define DEFINE_OPERATOR_INVOKE(name, instance_name)                \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self, \
-	              /*0..1*/ DREF DeeObject **p_self,                \
-	              size_t argc, DeeObject *const *argv);            \
-	PRIVATE struct Dee_operator_invoke tpconst name = {            \
-		(Dee_operator_invoke_cb_t)&invoke_##name,                  \
-		(dfunptr_t)(void const *)(instance_name)                   \
-	};                                                             \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL          \
-	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self, \
-	              /*0..1*/ DREF DeeObject **p_self,                \
-	              size_t argc, DeeObject *const *argv)
+#define DEFINE_OPERATOR_INVOKE(name, instance_name)                      \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
+	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,       \
+	              /*0..1*/ DREF DeeFileObject **p_self,                  \
+	              size_t argc, DeeObject *const *argv, uint16_t opname); \
+	PRIVATE struct Dee_operator_invoke tpconst name =                    \
+	Dee_OPERATOR_INVOKE_INIT(&invoke_##name, instance_name);             \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                \
+	invoke_##name(DeeFileTypeObject *tp_self, DeeFileObject *self,       \
+	              /*0..1*/ DREF DeeFileObject **p_self,                  \
+	              size_t argc, DeeObject *const *argv, uint16_t opname)
 
 LOCAL ATTR_RETNONNULL WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 make_super(DeeSuperObject *__restrict buf, DeeFileTypeObject *tp_self, DeeFileObject *self) {
@@ -342,6 +340,7 @@ DEFINE_OPERATOR_INVOKE(operator_read, &instance_read) {
 	size_t buf_begin, buf_end;
 	size_t result;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_read);
 	if (DeeArg_Unpack(argc, argv, "|ooou:" OPNAME("read"),
 	                  &data, &begin, &end, &flags))
@@ -404,6 +403,7 @@ DEFINE_OPERATOR_INVOKE(operator_write, &instance_write) {
 	size_t buf_begin, buf_end;
 	size_t result;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_write);
 	if (DeeArg_Unpack(argc, argv, "o|oou:" OPNAME("write"),
 	                  &data, &begin, &end, &flags))
@@ -446,6 +446,7 @@ DEFINE_OPERATOR_INVOKE(operator_seek, &instance_seek) {
 	dpos_t result;
 	int whence = SEEK_SET;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_seek);
 	if (DeeArg_Unpack(argc, argv, UNPdN(DEE_SIZEOF_DEE_POS_T) "|d:" OPNAME("seek"), &off, &whence))
 		goto err;
@@ -461,6 +462,7 @@ err:
 /* >> operator sync(); */
 DEFINE_OPERATOR_INVOKE(operator_sync, &instance_sync) {
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_sync);
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("sync")))
 		goto err;
@@ -476,6 +478,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_trunc, &instance_trunc) {
 	dpos_t length;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_trunc);
 	if (argc) {
 		if unlikely(argc != 1) {
@@ -499,6 +502,7 @@ err:
 /* >> operator close() */
 DEFINE_OPERATOR_INVOKE(operator_close, &instance_close) {
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_close);
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("close")))
 		goto err;
@@ -527,6 +531,7 @@ DEFINE_OPERATOR_INVOKE(operator_pread, &instance_pread) {
 	DeeBuffer buf;
 	ASSERT(tp_self->ft_pread);
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o|ooou:" OPNAME("pread"),
 	                  &a, &b, &c, &d, &flags))
 		goto err;
@@ -599,6 +604,7 @@ DEFINE_OPERATOR_INVOKE(operator_pwrite, &instance_pwrite) {
 	DeeBuffer buf;
 	ASSERT(tp_self->ft_pwrite);
 	(void)p_self;
+	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo|oou:" OPNAME("pwrite"),
 	                  &a, &b, &c, &d, &flags))
 		goto err;
@@ -646,6 +652,7 @@ DEFINE_OPERATOR_INVOKE(operator_getc, &instance_getc) {
 	int result;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_getc);
 	if (DeeArg_Unpack(argc, argv, "|u:" OPNAME("getc"), &flags))
 		goto err;
@@ -661,6 +668,7 @@ err:
 DEFINE_OPERATOR_INVOKE(operator_ungetc, &instance_ungetc) {
 	int ch;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_ungetc);
 	if (DeeArg_Unpack(argc, argv, "d:" OPNAME("ungetc"), &ch))
 		goto err;
@@ -677,6 +685,7 @@ DEFINE_OPERATOR_INVOKE(operator_putc, &instance_putc) {
 	int ch;
 	Dee_ioflag_t flags = Dee_FILEIO_FNORMAL;
 	(void)p_self;
+	(void)opname;
 	ASSERT(tp_self->ft_putc);
 	if (DeeArg_Unpack(argc, argv, "d|u:" OPNAME("putc"), &ch, &flags))
 		goto err;

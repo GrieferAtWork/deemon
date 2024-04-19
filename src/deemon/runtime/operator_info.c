@@ -125,7 +125,7 @@ DeeTypeType_GetOperatorById(DeeTypeObject const *__restrict typetype, uint16_t i
 			}
 		}
 next_base:
-		typetype = typetype->tp_base;
+		typetype = DeeType_Base(typetype);
 	}
 	return NULL;
 }
@@ -670,12 +670,14 @@ PRIVATE struct type_operator const type_operator_flags[] = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 noop_custom_operator_cb(DeeTypeObject *tp_self, DeeObject *self,
                         /*0..1*/ DeeObject **p_self,
-                        size_t argc, DeeObject *const *argv) {
+                        size_t argc, DeeObject *const *argv,
+                        uint16_t opname) {
 	(void)tp_self;
 	(void)self;
 	(void)p_self;
 	(void)argc;
 	(void)argv;
+	(void)opname;
 	return_none;
 }
 
@@ -1279,8 +1281,9 @@ invoke_operator(DeeTypeObject *tp_self, DeeObject *self, DREF DeeObject **p_self
 			if (DeeType_GetOpPointer(tp_self, info) == NULL) {
 				if unlikely(!DeeType_InheritOperator(tp_self, name))
 					goto err_not_implemented;
+				ASSERT(DeeType_GetOpPointer(tp_self, info) != NULL);
 			}
-			return (*info->oi_invoke->opi_invoke)(tp_self, self, p_self, argc, argv);
+			return (*info->oi_invoke->opi_invoke)(tp_self, self, p_self, argc, argv, name);
 err_not_implemented:
 			DeeError_Throwf(&DeeError_NotImplemented,
 			                "Operator `%r." OPNAME("%s") "' is not implemented",
@@ -1294,7 +1297,7 @@ err_not_implemented:
 		struct type_operator const *
 		info = DeeType_GetCustomOperatorById(tp_self, name);
 		if (info && info->to_custom.s_invoke)
-			return (*info->to_custom.s_invoke)(tp_self, self, p_self, argc, argv);
+			return (*info->to_custom.s_invoke)(tp_self, self, p_self, argc, argv, name);
 	}
 
 	/* Error: unknown operator (TODO: Invoke "operators.operator()" here). */

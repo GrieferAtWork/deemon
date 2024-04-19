@@ -2775,8 +2775,23 @@ struct Dee_membercache {
  * @return: NULL: An error was thrown. */
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *
 (DCALL *Dee_operator_invoke_cb_t)(DeeTypeObject *tp_self, DeeObject *self,
-                                  /*0..1*/ DeeObject **p_self,
-                                  size_t argc, DeeObject *const *argv);
+                                  /*0..1*/ DREF DeeObject **p_self, size_t argc,
+                                  DeeObject *const *argv, uint16_t opname);
+#if defined(__INTELLISENSE__) && defined(__cplusplus)
+/* Highlight usage errors in IDE */
+extern "C++" {
+namespace __intern {
+Dee_operator_invoke_cb_t _Dee_RequiresOperatorInvokeCb(decltype(nullptr));
+template<class _TReturn, class _TTpSelf, class _TSelf> Dee_operator_invoke_cb_t
+_Dee_RequiresOperatorInvokeCb(_TReturn *(DCALL *_meth)(_TTpSelf *tp_self, _TSelf *self, /*0..1*/ _TSelf **p_self,
+                                                       size_t argc, DeeObject *const *argv, uint16_t opname));
+} /* namespace __intern */
+} /* extern "C++" */
+#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth) ((decltype(::__intern::_Dee_RequiresOperatorInvokeCb(meth)))(meth))
+#else /* __INTELLISENSE__ && __cplusplus */
+#define Dee_REQUIRES_OPERATOR_INVOKE_CB(meth) ((Dee_operator_invoke_cb_t)(meth))
+#endif /* !__INTELLISENSE__ || !__cplusplus */
+
 struct Dee_operator_invoke {
 	Dee_operator_invoke_cb_t opi_invoke;    /* [1..1] Called by `DeeObject_InvokeOperator()' when this operator is
 	                                         * invoked. (Only called when `*(*(tp + oi_class) + oi_offset) != NULL'). */
@@ -2785,6 +2800,8 @@ struct Dee_operator_invoke {
 	                                         * manually invoke its t* variant, which should then use `DeeClass_GetOperator()' in order to
 	                                         * load the user-defined function object associated with this operator. */
 };
+#define Dee_OPERATOR_INVOKE_INIT(opi_invoke_, opi_classhook_) \
+	{ Dee_REQUIRES_OPERATOR_INVOKE_CB(opi_invoke_), (Dee_funptr_t)(opi_classhook_) }
 
 struct Dee_opinfo {
 	uint16_t                                oi_id;        /* Operator ID */
@@ -2801,7 +2818,7 @@ struct Dee_opinfo {
 	{ id, class, offset, cc, uname, sname, iname, invoke }
 #define _Dee_OPINFO_INIT_AS_CUSTOM(id, flags, invoke)                                                           \
 	{ id, OPCLASS_CUSTOM, 0, OPCC_SPECIAL, { _DEE_UINTPTR_AS_CHAR_LIST((char)(unsigned char), flags) }, "", "", \
-	  (struct Dee_operator_invoke Dee_tpconst *)(void Dee_tpconst *)(void const *)(invoke) }
+	  (struct Dee_operator_invoke Dee_tpconst *)(void Dee_tpconst *)(void const *)Dee_REQUIRES_OPERATOR_INVOKE_CB(invoke) }
 #ifdef DEE_SOURCE
 #define OPINFO_INIT Dee_OPINFO_INIT
 #endif /* DEE_SOURCE */
@@ -2980,12 +2997,12 @@ struct Dee_type_object {
 	struct Dee_type_method Dee_tpconst *tp_class_methods; /* [0..1] Class methods. */
 	struct Dee_type_getset Dee_tpconst *tp_class_getsets; /* [0..1] Class getsets. */
 	struct Dee_type_member Dee_tpconst *tp_class_members; /* [0..1] Class members (usually constants). */
-	/* [0..1] Same as `tp_call', but using keywords. */
+	/* [0..1] Same as `tp_call', but having support for keyword arguments. */
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject *(DCALL *tp_call_kw)(DeeObject *self, size_t argc,
 	                                    DeeObject *const *argv, DeeObject *kw);
 
-	/* [1..1][0..N][owned] NULL-terminated MRO override for this type.
+	/* [1..1][0..n][owned] NULL-terminated MRO override for this type.
 	 * - When NULL, MRO for this type is facilitated through `tp_base'
 	 * - When non-NULL, MRO for this type is [<the type itself>, tp_mro[0], tp_mro[1], ...]
 	 *   until the first NULL-element in `tp_mro' is reached. Note that for this purpose,
@@ -3002,13 +3019,14 @@ struct Dee_type_object {
 	 *    As such, these types essentially only act as interface definitions,
 	 *    with the ability to define fixed functions and operations,
 	 *    thought no actual instance members, and not as actual types
-	 *    when it comes to instancing.
+	 *    when it comes to instantiation.
 	 *  - Constructors/Destructors of MRO bases are NOT invoked by default.
 	 *    They are only invoked if sub-classed by a user-defined class type.
 	 */
 	DREF DeeTypeObject *Dee_tpconst *tp_mro;
 
-	/* [0..tp_operators_size][SORT(to_id)] Extra per-type operators, and operator info for type-types.
+	/* [0..tp_operators_size][SORT(to_id)][owned_if(tp_class != NULL)]
+	 * Extra per-type operators, and operator info for type-types.
 	 * IMPORTANT: This list must be `tp_operators_size' items long, and be sorted by `to_id'
 	 * - DeeType_IsTypeType types can define their type-specific operators (including offsets) here
 	 * - !DeeType_IsTypeType types can define per-type extra operators here (without offsets,
@@ -3035,7 +3053,7 @@ struct Dee_type_object {
 	Dee_WEAKREF_SUPPORT                  /* Weak reference support. */
 	struct Dee_weakref      tp_module;   /* [0..1] Weak reference to module that is declaring this type. */
 	/* ... Extended type fields go here (e.g.: `DeeFileTypeObject') */
-	/* ... `struct class_desc' of class types goes here */
+	/* ... `struct class_desc' of class types goes here (pointed-to by `tp_class' if present) */
 };
 #define DeeType_IsFinal(x)               (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FFINAL)
 #define DeeType_IsInterrupt(x)           (((DeeTypeObject const *)Dee_REQUIRES_OBJECT(x))->tp_flags & Dee_TP_FINTERRUPT)

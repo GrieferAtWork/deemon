@@ -797,7 +797,7 @@ struct Dee_module_object;
 
 /* Create a new class type derived from `bases',
  * featuring traits from `descriptor'.
- * @param: bases: The base of the resulting class.
+ * @param: bases: The base(s) of the resulting class.
  *                You may pass `Dee_None' to have the resulting
  *                class not be derived from anything (be base-less).
  *                You may also pass a sequence of types, in which
@@ -1049,10 +1049,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tcallkw(DeeTypeObj
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_callkw(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tnext(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_next(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tint32(DeeTypeObject *tp_self, DeeObject *__restrict self, int32_t *__restrict result);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_int32(DeeObject *__restrict self, int32_t *__restrict result);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tint64(DeeTypeObject *tp_self, DeeObject *__restrict self, int64_t *__restrict result);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL instance_int64(DeeObject *__restrict self, int64_t *__restrict result);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL instance_tint(DeeTypeObject *tp_self, DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL instance_int(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL instance_tdouble(DeeTypeObject *tp_self, DeeObject *__restrict self, double *__restrict result);
@@ -1235,14 +1231,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL DeeObject_TDefaultPrintReprWith
 	((tp_call_kw) == &instance_callkw                                        \
 	 ? instance_tcallkw(tp_self, self, argc, argv, kw)                       \
 	 : (*(tp_call_kw))(self, argc, argv, kw))
-#define DeeType_invoke_math_tp_int32(tp_self, tp_int32, self, result) \
-	((tp_int32) == &instance_int32                                    \
-	 ? instance_tint32(tp_self, self, result)                         \
-	 : (*(tp_int32))(self, result))
-#define DeeType_invoke_math_tp_int64(tp_self, tp_int64, self, result) \
-	((tp_int64) == &instance_int64                                    \
-	 ? instance_tint64(tp_self, self, result)                         \
-	 : (*(tp_int64))(self, result))
+#define DeeType_invoke_math_tp_int32(tp_self, tp_int32, self, result) (*(tp_int32))(self, result)
+#define DeeType_invoke_math_tp_int64(tp_self, tp_int64, self, result) (*(tp_int64))(self, result)
 #define DeeType_invoke_math_tp_double(tp_self, tp_double, self, result) \
 	((tp_double) == &instance_double                                    \
 	 ? instance_tdouble(tp_self, self, result)                          \
