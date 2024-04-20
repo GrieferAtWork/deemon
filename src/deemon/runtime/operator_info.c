@@ -749,18 +749,16 @@ TYPE_OPERATOR_CUSTOM(0, &noop_custom_operator_cb, METHOD_FNOTHROW | METHOD_FCONS
 /* Check if "self" is defining a custom descriptor for "id", and if so, return it. */
 PUBLIC ATTR_PURE WUNUSED NONNULL((1)) struct type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator_t id) {
-	DeeTypeMRO mro;
-	DeeTypeObject *base;
 	struct type_operator const *result;
+
+	/* Look at the type from which the given operator "id" originates,
+	 * since only *it* can specify the flags for said operator. */
+	self = DeeType_GetOperatorOrigin(self, id);
+	if (!self)
+		return NULL;
 	result = DeeType_GetPrivateCustomOperatorById(self, id);
 	if (result)
 		return result;
-	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-	while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
-		result = DeeType_GetPrivateCustomOperatorById(self, id);
-		if (result)
-			return result;
-	}
 
 	/* Special case when querying for "DeeType_Type" (which can't define method
 	 * flags for the operators it *itself* implements (e.g. `type_str'), since
@@ -798,10 +796,117 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
 	if (result)
 		return result->to_custom.s_flags;
 
+	/* Check for special "default" operators that use other operators for implementation. */
+	if (DeeType_InheritOperator((DeeTypeObject *)self, opname)) {
+		Dee_operator_t effective_opname;
+		switch (opname) {
+		case OPERATOR_EQ:
+			if (self->tp_cmp->tp_eq == &DeeObject_DefaultEqWithNe) {
+				effective_opname = OPERATOR_NE;
+check_effective_opname:
+				result = DeeType_GetCustomOperatorById(self, opname);
+				if (result)
+					return result->to_custom.s_flags;
+			}
+			break;
+		case OPERATOR_NE:
+			if (self->tp_cmp->tp_ne == &DeeObject_DefaultNeWithEq) {
+				effective_opname = OPERATOR_EQ;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_LO:
+			if (self->tp_cmp->tp_lo == &DeeObject_DefaultLoWithGe) {
+				effective_opname = OPERATOR_GE;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_LE:
+			if (self->tp_cmp->tp_le == &DeeObject_DefaultLeWithGr) {
+				effective_opname = OPERATOR_GR;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_GR:
+			if (self->tp_cmp->tp_gr == &DeeObject_DefaultGrWithLe) {
+				effective_opname = OPERATOR_LE;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_GE:
+			if (self->tp_cmp->tp_ge == &DeeObject_DefaultGeWithLo) {
+				effective_opname = OPERATOR_LO;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_INT:
+			if (self->tp_math->tp_int == &DeeObject_DefaultIntWithDouble) {
+				effective_opname = OPERATOR_FLOAT;
+				goto check_effective_opname;
+			}
+			break;
+		case OPERATOR_FLOAT:
+			if (self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt ||
+			    self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt32 ||
+			    self->tp_math->tp_double == &DeeObject_DefaultDoubleWithInt64) {
+				effective_opname = OPERATOR_INT;
+				goto check_effective_opname;
+			}
+			break;
+
+check_effective_opname_with_copy:
+			result = DeeType_GetCustomOperatorById(self, opname);
+			if (result) {
+				uintptr_t flags = result->to_custom.s_flags;
+				result = DeeType_GetCustomOperatorById(self, OPERATOR_COPY);
+				if (result) {
+					flags |= (result->to_custom.s_flags & Dee_METHOD_FNORETURN);
+					flags &= (result->to_custom.s_flags | Dee_METHOD_FNORETURN);
+					return flags;
+				}
+			}
+			break;
+
+#define HANDLE_MATH_FOO_WITH_INPLACE_FOO(NAME, Name, name)                                         \
+		case OPERATOR_##NAME:                                                                      \
+			if (self->tp_math->tp_##name == &DeeObject_Default##Name##WithInplace##Name) {         \
+				effective_opname = OPERATOR_INPLACE_##NAME;                                        \
+				goto check_effective_opname;                                                       \
+			}                                                                                      \
+			break;                                                                                 \
+		case OPERATOR_INPLACE_##NAME:                                                              \
+			if (self->tp_math->tp_inplace_##name == &DeeObject_DefaultInplace##Name##With##Name) { \
+				effective_opname = OPERATOR_##NAME;                                                \
+				goto check_effective_opname_with_copy;                                             \
+			}                                                                                      \
+			break
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(ADD, Add, add);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SUB, Sub, sub);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MUL, Mul, mul);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(DIV, Div, div);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(MOD, Mod, mod);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHL, Shl, shl);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(SHR, Shr, shr);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(AND, And, and);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(OR, Or, or);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(XOR, Xor, xor);
+		HANDLE_MATH_FOO_WITH_INPLACE_FOO(POW, Pow, pow);
+#undef HANDLE_MATH_FOO_WITH_INPLACE_FOO
+
+		default: break;
+		}
+	}
+
 	/* Default flags for certain operators. */
 	switch (opname) {
-	case OPERATOR_HASH:
+
+		/* TODO: Special handling when tp_ctor==&none_i1 -> CONSTEXPR */
+		/* TODO: Special handling when tp_copy==&none_i2 -> CONSTEXPR */
+		/* TODO: Special handling when tp_dtor==NULL -> CONSTEXPR */
+		/* TODO: Special handling when ... */
+
 	case OPERATOR_DESTRUCTOR:
+	case OPERATOR_HASH:
 	case OPERATOR_VISIT:
 	case OPERATOR_CLEAR:
 	case OPERATOR_PCLEAR:
@@ -960,65 +1065,37 @@ DeeType_HasPrivateNII(DeeTypeObject const *__restrict self) {
 }
 
 /* Return the type from `self' inherited its operator `name'.
- * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
-PUBLIC ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
+ * Returns `NULL' when the operator isn't being implemented. */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name) {
 	void const *my_ptr;
 	struct opinfo const *info;
 	DeeTypeObject *base, *result;
 	DeeTypeMRO mro;
+
+	/* Check if the type even has the operator in question (this
+	 * also causes it to be inherited if that wasn't done already) */
+	if (!DeeType_HasOperator(self, name))
+		return NULL;
+
+	/* Special case: the constructor operator (which cannot be inherited). */
+	if unlikely(name == OPERATOR_CONSTRUCTOR)
+		return (DeeTypeObject *)self;
+
 	/* Special case: must look at what's implemented by the class! */
 	if (DeeType_IsClass(self)) {
-		if (!DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name)) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-				if (DeeType_HasPrivateOperator(base, name))
-					return base;
-			}
+		if (DeeClass_TryGetPrivateOperatorPtr((DeeTypeObject *)self, name))
+			return (DeeTypeObject *)self;
+		base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
+		while ((base = DeeTypeMRO_Next(&mro, base)) != NULL) {
+			if (DeeType_HasPrivateOperator(base, name))
+				return base;
 		}
-		return (DeeTypeObject *)self;
+		/* Shouldn't get here... */
+		return NULL;
 	}
-	switch (name) {
 
-	case OPERATOR_CONSTRUCTOR:
-		/* Special case: the constructor operator (which cannot be inherited). */
-		return (DeeTypeObject *)self;
-
-	case OPERATOR_STR:
-		/* Special case: `operator str' can be implemented in 2 ways */
-		result = (DeeTypeObject *)self;
-		if (self->tp_cast.tp_str || self->tp_cast.tp_print) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-				if (self->tp_cast.tp_str == base->tp_cast.tp_str &&
-				    self->tp_cast.tp_print == base->tp_cast.tp_print) {
-					result = base;
-				} else {
-					break;
-				}
-			}
-		}
-		return result;
-
-	case OPERATOR_REPR:
-		/* Special case: `operator repr' can be implemented in 2 ways */
-		result = (DeeTypeObject *)self;
-		if (self->tp_cast.tp_repr || self->tp_cast.tp_printrepr) {
-			base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
-			while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-				if (self->tp_cast.tp_repr == base->tp_cast.tp_repr &&
-				    self->tp_cast.tp_printrepr == base->tp_cast.tp_printrepr) {
-					result = base;
-				} else {
-					break;
-				}
-			}
-		}
-		return result;
-
-	default:
-		break;
-	}
 	info = DeeTypeType_GetOperatorById(Dee_TYPE(self), name);
 	if (info == NULL) {
 		/* Not a standard operator. Check if it may be
@@ -1034,7 +1111,7 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
 	}
 	my_ptr = DeeType_GetOpPointer(self, info);
 	if (my_ptr == NULL)
-		return NULL; /* Operator not implemented */
+		return NULL; /* Operator not implemented (Shouldn't get here...) */
 	result = (DeeTypeObject *)self;
 	base = DeeTypeMRO_Init(&mro, (DeeTypeObject *)self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {

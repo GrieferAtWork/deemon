@@ -30,6 +30,11 @@
 #include <deemon/roset.h>
 #include <deemon/tuple.h>
 
+#include <hybrid/typecore.h>
+
+#undef byte_t
+#define byte_t __BYTE_TYPE__
+
 DECL_BEGIN
 
 PRIVATE ATTR_PURE WUNUSED ATTR_INS(2, 1) NONNULL((4)) bool DCALL
@@ -109,6 +114,68 @@ nope:
 	return false;
 }
 
+/* Enumerate the object-like "tp_members" fields of "ob" (excluding "ob_type") */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2)) bool DCALL
+check_foreach_field(DeeObject *ob, bool (DCALL *check)(DeeObject *ob)) {
+	DeeTypeObject *tp = Dee_TYPE(ob);
+	while (tp != &DeeObject_Type) {
+		struct type_member const *iter;
+		iter = tp->tp_members;
+		if (iter) {
+			for (; iter->m_name; ++iter) {
+				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
+					continue;
+				if (iter->m_field.m_type == Dee_STRUCT_OBJECT ||
+				    iter->m_field.m_type == Dee_STRUCT_OBJECT_OPT) {
+					DeeObject *value = *(DeeObject *const *)((byte_t *)ob + iter->m_field.m_offset);
+					if (value && !(*check)(value))
+						goto nope;
+				}
+			}
+		}
+		tp = DeeType_Base(tp);
+		if unlikely(!tp)
+			break;
+	}
+	return true;
+nope:
+	return false;
+}
+
+/* Enumerate the object-like "tp_members" fields of "ob" (excluding "ob_type") */
+PRIVATE ATTR_PURE WUNUSED NONNULL((1, 2, 3)) bool DCALL
+check_foreach_field2(DeeObject *a, DeeObject *b,
+                     bool (DCALL *check)(DeeObject *lhs, DeeObject *rhs)) {
+	DeeTypeObject *tp = Dee_TYPE(a);
+	if (tp != Dee_TYPE(b))
+		goto nope; /* Types must be identical */
+	while (tp != &DeeObject_Type) {
+		struct type_member const *iter;
+		iter = tp->tp_members;
+		if (iter) {
+			for (; iter->m_name; ++iter) {
+				if (!Dee_TYPE_MEMBER_ISFIELD(iter))
+					continue;
+				if (iter->m_field.m_type == Dee_STRUCT_OBJECT ||
+				    iter->m_field.m_type == Dee_STRUCT_OBJECT_OPT) {
+					DeeObject *lhs = *(DeeObject *const *)((byte_t *)a + iter->m_field.m_offset);
+					DeeObject *rhs = *(DeeObject *const *)((byte_t *)b + iter->m_field.m_offset);
+					if ((lhs != NULL) != (rhs != NULL))
+						goto nope;
+					if (lhs && !(*check)(lhs, rhs))
+						goto nope;
+				}
+			}
+		}
+		tp = DeeType_Base(tp);
+		if unlikely(!tp)
+			break;
+	}
+	return true;
+nope:
+	return false;
+}
+
 PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_const_castable(DeeObject *ob) {
 	return DeeType_IsConstCastable(Dee_TYPE(ob));
@@ -175,6 +242,111 @@ PRIVATE ATTR_PURE WUNUSED bool DCALL
 ob_is_elem_const_str(DeeObject *ob) {
 	return check_foreach_elem(ob, &ob_is_const_str);
 }
+
+PRIVATE ATTR_PURE WUNUSED bool DCALL
+ob_is_fields_const_str(DeeObject *ob) {
+	return check_foreach_field(ob, &ob_is_const_str);
+}
+
+PRIVATE ATTR_PURE WUNUSED bool DCALL
+ob_is_fields_const_repr(DeeObject *ob) {
+	return check_foreach_field(ob, &ob_is_const_repr);
+}
+
+PRIVATE ATTR_PURE WUNUSED bool DCALL
+ob_is_const_cmpeq(DeeObject *a, DeeObject *b) {
+	DeeTypeObject *tp = Dee_TYPE(a);
+	uintptr_t eq_flags, ne_flags;
+	bool has_eq, has_hash;
+	if (tp != Dee_TYPE(b))
+		return false;
+	has_eq   = DeeType_HasOperator(tp, OPERATOR_EQ);
+	has_hash = DeeType_HasOperator(tp, OPERATOR_NE);
+	if (!has_eq)
+		return !has_hash;
+	eq_flags = DeeType_GetOperatorFlags(tp, OPERATOR_EQ);
+	if (!(eq_flags & METHOD_FCONSTCALL) ||
+	    !(DeeMethodFlags_VerifyConstCallCondition(eq_flags, a, 1, &b, NULL)))
+		return false;
+	ne_flags = DeeType_GetOperatorFlags(tp, OPERATOR_NE);
+	if (!(ne_flags & METHOD_FCONSTCALL) ||
+	    !(DeeMethodFlags_VerifyConstCallCondition(ne_flags, a, 1, &b, NULL)))
+		return false;
+	if (has_hash) {
+		uintptr_t hash_flags;
+		hash_flags = DeeType_GetOperatorFlags(tp, OPERATOR_HASH);
+		if (!(hash_flags & METHOD_FCONSTCALL) ||
+		    !(DeeMethodFlags_VerifyConstCallCondition(hash_flags, a, 0, NULL, NULL)))
+			return false;
+		if (Dee_TYPE(b) != tp) {
+			hash_flags = DeeType_GetOperatorFlags(Dee_TYPE(b), OPERATOR_HASH);
+			if (!(hash_flags & METHOD_FCONSTCALL) ||
+			    !(DeeMethodFlags_VerifyConstCallCondition(hash_flags, b, 0, NULL, NULL)))
+				return false;
+		}
+	}
+	return true;
+}
+
+PRIVATE ATTR_CONST WUNUSED uintptr_t DCALL
+join_flags(uintptr_t a, uintptr_t b) {
+	uintptr_t result = a & b;
+	if (result & METHOD_FCONSTCALL) {
+		if ((a & METHOD_FCONSTCALL_IF_MASK) != (b & METHOD_FCONSTCALL_IF_MASK)) {
+			result &= ~METHOD_FCONSTCALL_IF_MASK;
+			if ((a & METHOD_FCONSTCALL_IF_MASK) == METHOD_FCONSTCALL_IF_TRUE) {
+				result |= b & METHOD_FCONSTCALL_IF_MASK;
+			} else if ((b & METHOD_FCONSTCALL_IF_MASK) == METHOD_FCONSTCALL_IF_TRUE) {
+				result |= a & METHOD_FCONSTCALL_IF_MASK;
+			} else {
+				result &= ~METHOD_FCONSTCALL;
+			}
+		}
+	}
+	return result;
+}
+
+PRIVATE ATTR_PURE WUNUSED bool DCALL
+ob_is_const_cmp(DeeObject *a, DeeObject *b) {
+	DeeTypeObject *tp = Dee_TYPE(a);
+	uintptr_t eq_flags, lo_flags;
+	bool has_eq, has_lo, has_le;
+	if (tp != Dee_TYPE(b))
+		return false;
+	/* NOTE: No need to check for NE, GR, GE -- those are always present when their
+	 *       logical inverse is present due to `DeeObject_DefaultNeWithEq', ... */
+	has_eq = DeeType_HasOperator(tp, OPERATOR_EQ);
+	has_lo = DeeType_HasOperator(tp, OPERATOR_LO);
+	has_le = DeeType_HasOperator(tp, OPERATOR_LE);
+	if (!has_eq || !has_lo || !has_le)
+		return !has_eq && !has_lo && !has_le;
+
+	/* EQ and NE must be present and constexpr */
+	eq_flags = DeeType_GetOperatorFlags(tp, OPERATOR_EQ);
+	if (!(eq_flags & METHOD_FCONSTCALL))
+		return false;
+	eq_flags = join_flags(eq_flags, DeeType_GetOperatorFlags(tp, OPERATOR_NE));
+	if (!(eq_flags & METHOD_FCONSTCALL) ||
+	    !(DeeMethodFlags_VerifyConstCallCondition(eq_flags, a, 1, &b, NULL)))
+		return false;
+
+	/* The other compare operators must also be present, but
+	 * are allowed to have a different constexpr condition. */
+	lo_flags = DeeType_GetOperatorFlags(tp, OPERATOR_LO);
+	if (!(lo_flags & METHOD_FCONSTCALL))
+		return false;
+	lo_flags = join_flags(lo_flags, DeeType_GetOperatorFlags(tp, OPERATOR_LE));
+	if (!(lo_flags & METHOD_FCONSTCALL))
+		return false;
+	lo_flags = join_flags(lo_flags, DeeType_GetOperatorFlags(tp, OPERATOR_GR));
+	if (!(lo_flags & METHOD_FCONSTCALL))
+		return false;
+	lo_flags = join_flags(lo_flags, DeeType_GetOperatorFlags(tp, OPERATOR_GE));
+	if (!(lo_flags & METHOD_FCONSTCALL))
+		return false;
+	return DeeMethodFlags_VerifyConstCallCondition(lo_flags, a, 1, &b, NULL);
+}
+
 
 PRIVATE ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 ob_is_func_constcall(DeeObject *ob, size_t argc,
@@ -260,7 +432,9 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 	case METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP:
 		return thisarg && check_foreach_elem(thisarg, &ob_is_const_deep);
 
-	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE:
+	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ:
+	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCMP:
+
 	// TODO: case METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS:
 	// TODO: case METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS:
 	// TODO: case METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS:
@@ -287,6 +461,17 @@ PUBLIC ATTR_PURE WUNUSED ATTR_INS(4, 3) bool
 
 	case METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL:
 		return thisarg && ob_is_func_constcall(thisarg, argc, argv, kw);
+
+	case METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR:
+		return (!thisarg || ob_is_fields_const_str(thisarg)) &&
+		       (check_foreach_args_kw(argc, argv, kw, &ob_is_fields_const_str));
+	case METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR:
+		return (!thisarg || ob_is_fields_const_repr(thisarg)) &&
+		       (check_foreach_args_kw(argc, argv, kw, &ob_is_fields_const_repr));
+	case METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ:
+		return thisarg && argc == 1 && check_foreach_field2(thisarg, argv[0], &ob_is_const_cmpeq);
+	case METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP:
+		return thisarg && argc == 1 && check_foreach_field2(thisarg, argv[0], &ob_is_const_cmp);
 
 	default: break;
 	}

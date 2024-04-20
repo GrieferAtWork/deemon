@@ -2093,25 +2093,30 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
  * - IS_CONSTEXPR(ob.operator foo) (where "foo" is a unary operators) means:
  *   >> !DeeType_HasOperator(Dee_TYPE(ob), OPERATOR_FOO) ||
  *   >> (DeeType_GetOperatorFlags(Dee_TYPE(ob), OPERATOR_FOO) & METHOD_FCONSTCALL);
- * - IS_CONSTEXPR(elem <=> arg) means:
- *   >> // TODO
  */
 #define Dee_METHOD_FCONSTCALL_IF_MASK                       0x0000ff00 /* Mask of possible CONSTCALL conditions. */
 #define Dee_METHOD_FCONSTCALL_IF_TRUE                       0x00000000 /* >> true; */
 #define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST             0x00000100 /* >> (for (local arg: ...) DeeType_IsConstCastable(Dee_TYPE(arg))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_CONSTELEM_ARGS_CONSTCAST   0x00000200 /* >> ((for (local arg: ...) DeeType_IsConstCastable(Dee_TYPE(arg))) && ...) && IS_CONSTEXPR(thisarg.operator iter); */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          0x00000200 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator str)) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         0x00000300 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator repr)) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         0x00000400 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator hash)) && ...; */
 #define Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         0x00000500 /* >> (for (local x: thisarg) IS_CONSTEXPR(x.operator deepcopy)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE           0x00000600 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a <=> b))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          0x00000700 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          0x00000800 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS          0x00000900 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator hash) && for (local key, _: thisarg.byhash(arg.operator hash())) IS_CONSTEXPR(key <=> arg)) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES 0x00000a00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) DeeType_IsConstCastable(Dee_TYPE(x)))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000b00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
-#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
-#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00000e00 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ             0x00000600 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMP               0x00000700 /* >> (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local a, b: zip(thisarg, arg)) IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          0x00000800 /* >> (for (local arg: ...) for (local elem: thisarg) IS_CONSTEXPR(elem == arg)) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ             0x00000900 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMP               0x00000a00 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          0x00000b00 /* TODO (for sets and maps) */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES 0x00000c00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) DeeType_IsConstCastable(Dee_TYPE(x)))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES  0x00000d00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && (for (local arg: ...) IS_CONSTEXPR(arg.operator iter) && (for (local x: arg) IS_CONSTEXPR(x.operator str))) && ...; */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES     0x00000e00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : DeeType_IsConstCastable(Dee_TYPE(arg))) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      0x00000f00 /* >> (!DeeBytes_Check(thisarg) || !DeeBytes_WRITABLE(thisarg)) && ((for (local arg: ...) DeeBytes_Check(arg) ? !DeeBytes_WRITABLE(arg) : IS_CONSTEXPR(arg.operator str)) && ...); */
+#define Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          0x00001000 /* Special casing for `OPERATOR_CALL' of `DeeInstanceMethod_Type', `DeeObjMethod_Type', `DeeKwObjMethod_Type', `DeeClsMethod_Type', `DeeKwClsMethod_Type', `DeeClsProperty_Type', `DeeClsMember_Type', `DeeCMethod_Type' and `DeeKwCMethod_Type' */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR            0x00001100 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator str)    (fields are STRUCT_OBJECT-like tp_members) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR           0x00001200 /* Foreach field in this,args...: IS_CONSTEXPR(f.operator repr)   (fields are STRUCT_OBJECT-like tp_members) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ          0x00001300 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, [a.operator hash(), b.operator hash()]) */
+#define Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP            0x00001400 /* Foreach field in pair(this,arg0): IS_CONSTEXPR(a == b, a != b, a < b, a > b, a <= b, a >= b) */
 
 #ifdef DEE_SOURCE
 #define METHOD_FMASK                                    Dee_METHOD_FMASK
@@ -2125,14 +2130,17 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define METHOD_FCONSTCALL_IF_MASK                       Dee_METHOD_FCONSTCALL_IF_MASK
 #define METHOD_FCONSTCALL_IF_TRUE                       Dee_METHOD_FCONSTCALL_IF_TRUE
 #define METHOD_FCONSTCALL_IF_ARGS_CONSTCAST             Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST
+#define METHOD_FCONSTCALL_IF_CONSTELEM_ARGS_CONSTCAST   Dee_METHOD_FCONSTCALL_IF_CONSTELEM_ARGS_CONSTCAST
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR          Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTSTR
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTREPR
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTHASH
 #define METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP         Dee_METHOD_FCONSTCALL_IF_THISELEM_CONSTDEEP
-#define METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE           Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCOMPARE
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ             Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMPEQ
+#define METHOD_FCONSTCALL_IF_SEQ_CONSTCMP               Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCMP
 #define METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS
+#define METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ             Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMPEQ
+#define METHOD_FCONSTCALL_IF_SET_CONSTCMP               Dee_METHOD_FCONSTCALL_IF_SET_CONSTCMP
 #define METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS
-#define METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS          Dee_METHOD_FCONSTCALL_IF_MAP_CONSTCONTAINS
 #define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST         Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES
 #define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTCAST_ROBYTES
 #define METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR          Dee_METHOD_FCONSTCALL_IF_ARGSELEM_CONSTSTR_ROBYTES
@@ -2141,6 +2149,10 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
 #define METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES      Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES
 #define METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL          Dee_METHOD_FCONSTCALL_IF_FUNC_IS_CONSTCALL
 #define METHOD_FCONSTCALL_IF_THISARG_ROBYTES            Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES
+#define METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR            Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTSTR
+#define METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR           Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTREPR
+#define METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ          Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMPEQ
+#define METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP            Dee_METHOD_FCONSTCALL_IF_FIELDS_CONSTCMP
 #endif /* DEE_SOURCE */
 
 /* Check if the condition from `flags & Dee_METHOD_FCONSTCALL_IF_MASK' is
@@ -3270,8 +3282,9 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 DeeType_HasPrivateNII(DeeTypeObject const *__restrict self);
 
 /* Return the type from `self' inherited its operator `name'.
- * If `name' wasn't inherited, or isn't defined, simply re-return `self'. */
-DFUNDEF ATTR_PURE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ * If `name' wasn't inherited, or isn't defined, simply re-return `self'.
+ * Returns `NULL' when the operator isn't being implemented. */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) DeeTypeObject *DCALL
 DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t name);
 
 #ifdef CONFIG_BUILDING_DEEMON

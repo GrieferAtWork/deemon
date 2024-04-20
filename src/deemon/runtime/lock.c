@@ -1407,7 +1407,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	return Dee_once_trybegin(self);
 #else /* CONFIG_NO_THREADS */
 	uint32_t state;
-	state = atomic_read(&self->oc_didrun);
+	state = __hybrid_atomic_load(&self->oc_didrun, Dee_ATOMIC_ACQUIRE);
 	if (state >= _DEE_ONCE_COMPLETED_THRESHOLD)
 		return 0; /* Already executed */
 
