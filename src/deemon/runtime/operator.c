@@ -5439,7 +5439,7 @@ DeeType_InheritWith(DeeTypeObject *__restrict self) {
 	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		base_with = base->tp_with;
-		if (base_with == NULL || (base_with->tp_enter == NULL &&
+		if (base_with == NULL || (base_with->tp_enter == NULL ||
 		                          base_with->tp_leave == NULL)) {
 			if (!DeeType_InheritWith(base))
 				continue;
