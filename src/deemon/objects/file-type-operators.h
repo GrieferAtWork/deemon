@@ -30,17 +30,17 @@ DECL_BEGIN
 INTDEF struct type_operator tpconst file_type_operators[LENGTHOF_file_type_operators];
 
 /* Inherit file operators from bases, and auto-complete missing operators. */
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_seek(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_sync(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_trunc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_close(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_read(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_write(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_getc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_putc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_pread(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_pwrite(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL type_inherit_file_ungetc(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritSeek(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritSync(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritTrunc(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritClose(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritRead(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritWrite(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritGetc(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPutc(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPRead(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPWrite(DeeFileTypeObject *__restrict self);
+INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritUngetc(DeeFileTypeObject *__restrict self);
 
 
 /* File operator callbacks for user-defined class types. */

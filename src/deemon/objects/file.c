@@ -320,7 +320,7 @@ do_handle_filetype:
 					goto do_invoke_generic_ft_getc;
 				goto do_invoke_ft_getc;
 			}
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -353,7 +353,7 @@ do_handle_filetype:
 					goto do_invoke_generic_ft_getc;
 				goto do_invoke_ft_getc;
 			}
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -388,7 +388,7 @@ do_handle_filetype:
 					goto do_invoke_generic_ft_ungetc;
 				goto do_invoke_ft_ungetc;
 			}
-		} while (type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritUngetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -627,8 +627,8 @@ do_handle_filetype:
 					ft_ungetc = (int (DCALL *)(DeeFileObject *__restrict, int))&DeeFile_Ungetc;
 				goto do_operate_using_ft_getc_and_ft_ungetc;
 			}
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)) ||
-		         type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)) ||
+		         DeeFileType_InheritUngetc(DeeType_AsFileType(tp_self)));
 		if (DeeType_AsFileType(tp_self)->ft_getc != NULL) {
 			/* If getc() is implemented, but ungetc() isn't, indicate the correct missing operator. */
 			err_unimplemented_operator(tp_self, FILE_OPERATOR_UNGETC);
@@ -789,7 +789,7 @@ do_handle_filetype:
 					goto do_invoke_generic_ft_read;
 				goto do_invoke_ft_read;
 			}
-		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -871,7 +871,7 @@ do_handle_filetype:
 					goto do_invoke_generic_ft_pread;
 				goto do_invoke_ft_pread;
 			}
-		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);

@@ -318,17 +318,17 @@ err:
 		(void)info;                                                                 \
 		type_inherit_file_name(self);                                               \
 	}
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_read, type_inherit_file_read)
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_write, type_inherit_file_write)
-//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_seek, type_inherit_file_seek)   /* Not needed; standard inheritance already does the job. */
-//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_sync, type_inherit_file_sync)   /* Not needed; standard inheritance already does the job. */
-//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_trunc, type_inherit_file_trunc) /* Not needed; standard inheritance already does the job. */
-//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_close, type_inherit_file_close) /* Not needed; standard inheritance already does the job. */
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pread, type_inherit_file_pread)
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pwrite, type_inherit_file_pwrite)
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_getc, type_inherit_file_getc)
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_ungetc, type_inherit_file_ungetc)
-DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_putc, type_inherit_file_putc)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_read, DeeFileType_InheritRead)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_write, DeeFileType_InheritWrite)
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_seek, DeeFileType_InheritSeek)   /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_sync, DeeFileType_InheritSync)   /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_trunc, DeeFileType_InheritTrunc) /* Not needed; standard inheritance already does the job. */
+//DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_close, DeeFileType_InheritClose) /* Not needed; standard inheritance already does the job. */
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pread, DeeFileType_InheritPRead)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_pwrite, DeeFileType_InheritPWrite)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_getc, DeeFileType_InheritGetc)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_ungetc, DeeFileType_InheritUngetc)
+DEFINE_FILETYPE_INHERIT_HOOK(filetype_inherit_putc, DeeFileType_InheritPutc)
 #undef DEFINE_FILETYPE_INHERIT_HOOK
 
 

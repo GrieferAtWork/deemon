@@ -3047,7 +3047,7 @@ struct Dee_type_object {
 	WUNUSED_T ATTR_INS_T(3, 2) NONNULL_T((1))
 	DREF DeeObject             *(DCALL *tp_call)(DeeObject *self, size_t argc, DeeObject *const *argv);
 	NONNULL_T((1, 2)) void      (DCALL *tp_visit)(DeeObject *__restrict self, Dee_visit_t proc, void *arg); /* Visit all reachable, referenced (DREF) objected. */
-	/* NOTE: Anything used by `type_inherit_*' can't be made `Dee_tpconst' here! */
+	/* NOTE: Anything used by `DeeType_Inherit*' can't be made `Dee_tpconst' here! */
 	struct Dee_type_gc Dee_tpconst     *tp_gc;       /* [0..1] GC related operators. */
 	struct Dee_type_math               *tp_math;     /* [0..1][owned_if(tp_class != NULL)] Math related operators. */
 	struct Dee_type_cmp                *tp_cmp;      /* [0..1][owned_if(tp_class != NULL)] Compare operators. */

@@ -223,10 +223,10 @@ err:
 		}                                                                                                        \
 		return false;                                                                                            \
 	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_seek, "operator seek", ft_seek)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_sync, "operator sync", ft_sync)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_trunc, "operator trunc", ft_trunc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_close, "operator close", ft_close)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritSeek, "operator seek", ft_seek)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritSync, "operator sync", ft_sync)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritTrunc, "operator trunc", ft_trunc)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritClose, "operator close", ft_close)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field, alt_condition, altfunc, ...)                           \
@@ -253,32 +253,32 @@ DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_close, "operator close", ft_close
 		}                                                                                                        \
 		return false;                                                                                            \
 	}
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_read, "operator read", ft_read,
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritRead, "operator read", ft_read,
                              self->ft_getc != NULL, &file_read_with_getc,
                              if (base->ft_getc) self->ft_getc = base->ft_getc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_write, "operator write", ft_write,
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritWrite, "operator write", ft_write,
                              self->ft_putc != NULL, &file_write_with_putc,
                              if (base->ft_putc) self->ft_putc = base->ft_putc)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_getc, "operator getc", ft_getc,
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritGetc, "operator getc", ft_getc,
                              self->ft_read != NULL, &file_getc_with_read,
                              if (base->ft_read) self->ft_read = base->ft_read)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_putc, "operator putc", ft_putc,
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPutc, "operator putc", ft_putc,
                              self->ft_write != NULL, &file_putc_with_write,
                              if (base->ft_write) self->ft_write = base->ft_write)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_pread, "operator pread", ft_pread,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
-                             (self->ft_read != NULL || type_inherit_file_read(self)),
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPRead, "operator pread", ft_pread,
+                             (self->ft_seek != NULL || DeeFileType_InheritSeek(self)) &&
+                             (self->ft_read != NULL || DeeFileType_InheritRead(self)),
                              &file_pread_with_seek_and_read,
                              if (base->ft_seek) self->ft_seek = base->ft_seek;
                              if (base->ft_read) self->ft_read = base->ft_read)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_pwrite, "operator pwrite", ft_pwrite,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)) &&
-                             (self->ft_write != NULL || type_inherit_file_write(self)),
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPWrite, "operator pwrite", ft_pwrite,
+                             (self->ft_seek != NULL || DeeFileType_InheritSeek(self)) &&
+                             (self->ft_write != NULL || DeeFileType_InheritWrite(self)),
                              &file_pwrite_with_seek_and_write,
                              if (base->ft_seek) self->ft_seek = base->ft_seek;
                              if (base->ft_write) self->ft_write = base->ft_write)
-DEFINE_TYPE_INHERIT_FUNCTION(type_inherit_file_ungetc, "operator ungetc", ft_ungetc,
-                             (self->ft_seek != NULL || type_inherit_file_seek(self)),
+DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritUngetc, "operator ungetc", ft_ungetc,
+                             (self->ft_seek != NULL || DeeFileType_InheritSeek(self)),
                              &file_ungetc_with_seek,
                              if (base->ft_seek) self->ft_seek = base->ft_seek)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
@@ -352,7 +352,7 @@ do_handle_filetype:
 			ft_read = DeeType_AsFileType(tp_self)->ft_read;
 			if likely(ft_read != NULL)
 				return LOCAL_DeeFileType_invoke_ft_read(tp_self, ft_read, self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -375,7 +375,7 @@ do_handle_filetype:
 			ft_write = DeeType_AsFileType(tp_self)->ft_write;
 			if likely(ft_write != NULL)
 				return LOCAL_DeeFileType_invoke_ft_write(tp_self, ft_write, self, buffer, bufsize, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_write(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritWrite(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -400,7 +400,7 @@ do_handle_filetype:
 			ft_read = DeeType_AsFileType(tp_self)->ft_read;
 			if likely(ft_read != NULL)
 				return LOCAL_DeeFileType_invoke_ft_read(tp_self, ft_read, self, buffer, bufsize, flags);
-		} while (type_inherit_file_read(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -429,7 +429,7 @@ do_handle_filetype:
 			ft_write = DeeType_AsFileType(tp_self)->ft_write;
 			if likely(ft_write != NULL)
 				return LOCAL_DeeFileType_invoke_ft_write(tp_self, ft_write, self, buffer, bufsize, flags);
-		} while (type_inherit_file_write(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritWrite(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -458,7 +458,7 @@ do_handle_filetype:
 			ft_seek = DeeType_AsFileType(tp_self)->ft_seek;
 			if likely(ft_seek != NULL)
 				return LOCAL_DeeFileType_invoke_ft_seek(tp_self, ft_seek, self, off, whence);
-		} while (type_inherit_file_seek(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritSeek(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -495,7 +495,7 @@ do_handle_filetype:
 			ft_sync = DeeType_AsFileType(tp_self)->ft_sync;
 			if likely(ft_sync != NULL)
 				return LOCAL_DeeFileType_invoke_ft_sync(tp_self, ft_sync, self);
-		} while (type_inherit_file_sync(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritSync(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -523,7 +523,7 @@ do_handle_filetype:
 			ft_trunc = DeeType_AsFileType(tp_self)->ft_trunc;
 			if likely(ft_trunc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_trunc(tp_self, ft_trunc, self, size);
-		} while (type_inherit_file_trunc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritTrunc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -566,8 +566,8 @@ do_handle_filetype:
 					*p_size = trunc_pos;
 				return result;
 			}
-		} while (type_inherit_file_trunc(DeeType_AsFileType(tp_self)) ||
-		         type_inherit_file_seek(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritTrunc(DeeType_AsFileType(tp_self)) ||
+		         DeeFileType_InheritSeek(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -595,7 +595,7 @@ do_handle_filetype:
 			ft_close = DeeType_AsFileType(tp_self)->ft_close;
 			if likely(ft_close != NULL)
 				return LOCAL_DeeFileType_invoke_ft_close(tp_self, ft_close, self);
-		} while (type_inherit_file_close(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritClose(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -624,7 +624,7 @@ do_handle_filetype:
 			ft_ungetc = DeeType_AsFileType(tp_self)->ft_ungetc;
 			if likely(ft_ungetc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_ungetc(tp_self, ft_ungetc, self, ch);
-		} while (type_inherit_file_ungetc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritUngetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -662,7 +662,7 @@ do_handle_filetype:
 			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
 			if likely(ft_getc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_getc(tp_self, ft_getc, self, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -702,7 +702,7 @@ do_handle_filetype:
 			ft_putc = DeeType_AsFileType(tp_self)->ft_putc;
 			if likely(ft_putc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_putc(tp_self, ft_putc, self, ch, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_putc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPutc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -740,7 +740,7 @@ do_handle_filetype:
 			ft_getc = DeeType_AsFileType(tp_self)->ft_getc;
 			if likely(ft_getc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_getc(tp_self, ft_getc, self, flags);
-		} while (type_inherit_file_getc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritGetc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -780,7 +780,7 @@ do_handle_filetype:
 			ft_putc = DeeType_AsFileType(tp_self)->ft_putc;
 			if likely(ft_putc != NULL)
 				return LOCAL_DeeFileType_invoke_ft_putc(tp_self, ft_putc, self, ch, flags);
-		} while (type_inherit_file_putc(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPutc(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -819,7 +819,7 @@ do_handle_filetype:
 			ft_pread = DeeType_AsFileType(tp_self)->ft_pread;
 			if likely(ft_pread != NULL)
 				return LOCAL_DeeFileType_invoke_ft_pread(tp_self, ft_pread, self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -845,7 +845,7 @@ do_handle_filetype:
 			ft_pwrite = DeeType_AsFileType(tp_self)->ft_pwrite;
 			if likely(ft_pwrite != NULL)
 				return LOCAL_DeeFileType_invoke_ft_pwrite(tp_self, ft_pwrite, self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL);
-		} while (type_inherit_file_pwrite(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPWrite(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -870,7 +870,7 @@ do_handle_filetype:
 			ft_pread = DeeType_AsFileType(tp_self)->ft_pread;
 			if likely(ft_pread != NULL)
 				return LOCAL_DeeFileType_invoke_ft_pread(tp_self, ft_pread, self, buffer, bufsize, pos, flags);
-		} while (type_inherit_file_pread(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPRead(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -899,7 +899,7 @@ do_handle_filetype:
 			ft_pwrite = DeeType_AsFileType(tp_self)->ft_pwrite;
 			if likely(ft_pwrite != NULL)
 				return LOCAL_DeeFileType_invoke_ft_pwrite(tp_self, ft_pwrite, self, buffer, bufsize, pos, flags);
-		} while (type_inherit_file_pwrite(DeeType_AsFileType(tp_self)));
+		} while (DeeFileType_InheritPWrite(DeeType_AsFileType(tp_self)));
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
