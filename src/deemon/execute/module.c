@@ -1154,26 +1154,26 @@ module_printrepr(DeeModuleObject *__restrict self,
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
 	return DeeModule_GetAttr(self, name);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name) {
 	return DeeModule_DelAttr(self, name);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 module_setattr(DeeModuleObject *__restrict self,
                /*String*/ DeeObject *__restrict name,
                DeeObject *__restrict value) {
 	return DeeModule_SetAttr(self, name, value);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 module_enumattr(DeeTypeObject *UNUSED(tp_self),
                 DeeModuleObject *self, denum_t proc, void *arg) {
 	struct module_symbol *iter, *end, *doc_iter;
@@ -1367,12 +1367,60 @@ DeeModule_FindAttrInfoStringLenHash(DeeModuleObject *self, char const *__restric
 	return DeeObject_GenericFindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+module_findattr(DeeTypeObject *UNUSED(tp_self), DeeModuleObject *self,
+                struct attribute_info *__restrict result,
+                struct attribute_lookup_rules const *__restrict rules) {
+	return DeeModule_FindAttr(self, result, rules);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_hasattr(DeeModuleObject *__restrict self,
+               /*String*/ DeeObject *__restrict name) {
+	return DeeModule_HasAttr(self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_boundattr(DeeModuleObject *__restrict self,
+                 /*String*/ DeeObject *__restrict name) {
+	return DeeModule_BoundAttr(self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
+module_findattr_info_string_len_hash(DeeTypeObject *tp_self, DeeModuleObject *self,
+                                     char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
+                                     struct Dee_attrinfo *__restrict retinfo) {
+	(void)tp_self;
+	return DeeModule_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
+}
 
 PRIVATE struct type_attr tpconst module_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
-	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&module_enumattr
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&module_delattr,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&module_setattr,
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&module_enumattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct attribute_info *__restrict, struct attribute_lookup_rules const *__restrict))&module_findattr,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_hasattr,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_boundattr,
+	/* .tp_callattr                      = */ NULL,
+	/* .tp_callattr_kw                   = */ NULL,
+	/* .tp_vcallattrf                    = */ NULL,
+	/* .tp_getattr_string_hash           = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeModule_GetAttrStringHash,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeModule_DelAttrStringHash,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&DeeModule_SetAttrStringHash,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeModule_HasAttrStringHash,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeModule_BoundAttrStringHash,
+	/* .tp_callattr_string_hash          = */ NULL,
+	/* .tp_callattr_string_hash_kw       = */ NULL,
+	/* .tp_vcallattr_string_hashf        = */ NULL,
+	/* .tp_getattr_string_len_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeModule_GetAttrStringLenHash,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeModule_DelAttrStringLenHash,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&DeeModule_SetAttrStringLenHash,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeModule_HasAttrStringLenHash,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeModule_BoundAttrStringLenHash,
+	/* .tp_callattr_string_len_hash      = */ NULL,
+	/* .tp_callattr_string_len_hash_kw   = */ NULL,
+	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&module_findattr_info_string_len_hash,
 };
 
 PRIVATE NONNULL((1)) int DCALL

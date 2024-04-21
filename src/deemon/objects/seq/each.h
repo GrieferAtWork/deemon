@@ -172,14 +172,6 @@ INTDEF WUNUSED DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHash(DeeObject 
 INTDEF WUNUSED DREF DeeObject *DCALL DeeSeqEach_CallAttrKw(DeeObject *__restrict self, DeeObject *__restrict attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED DREF DeeObject *DCALL DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self, char const *__restrict attr, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
 INTDEF WUNUSED DREF DeeObject *DCALL DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self, char const *__restrict attr, size_t attrlen, dhash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
-#define DeeSeqEach_CallAttrTuple(self, attr, args)                                   DeeSeqEach_CallAttr(self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeSeqEach_CallAttrStringHashTuple(self, attr, hash, args)                   DeeSeqEach_CallAttrStringHash(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeSeqEach_CallAttrStringLenHashTuple(self, attr, attrlen, hash, args)       DeeSeqEach_CallAttrStringLenHash(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
-#define DeeSeqEach_CallAttrTupleKw(self, attr, args, kw)                             DeeSeqEach_CallAttrKw(self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#define DeeSeqEach_CallAttrStringHashTupleKw(self, attr, hash, args, kw)             DeeSeqEach_CallAttrStringHashKw(self, attr, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-#define DeeSeqEach_CallAttrStringLenHashTupleKw(self, attr, attrlen, hash, args, kw) DeeSeqEach_CallAttrStringLenHashKw(self, attr, attrlen, hash, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
-INTDEF WUNUSED NONNULL((1, 2)) DREF SeqEachGetAttr *DCALL seqeach_getattr(SeqEachBase *__restrict self, struct string_object *__restrict attr);
-INTDEF WUNUSED NONNULL((1, 2)) DREF SeqEachGetAttr *DCALL seqeachw_getattr(DeeObject *__restrict self, struct string_object *__restrict attr);
 #endif /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 

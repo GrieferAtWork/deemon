@@ -54,8 +54,8 @@ done:
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-seqeach_makeop1(DeeObject *__restrict seq, Dee_operator_t opname,
-                /*inherit(always)*/ DREF DeeObject *__restrict arg_0) {
+seqeach_makeop1(DeeObject *seq, Dee_operator_t opname,
+                /*inherit(always)*/ DREF DeeObject *arg_0) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(1);
 	if unlikely(!result)
@@ -73,9 +73,9 @@ err:
 }
 
 PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-seqeach_makeop2(DeeObject *__restrict seq, Dee_operator_t opname,
-                /*inherit(always)*/ DREF DeeObject *__restrict arg_0,
-                /*inherit(always)*/ DREF DeeObject *__restrict arg_1) {
+seqeach_makeop2(DeeObject *seq, Dee_operator_t opname,
+                /*inherit(always)*/ DREF DeeObject *arg_0,
+                /*inherit(always)*/ DREF DeeObject *arg_1) {
 	DREF SeqEachOperator *result;
 	result = SeqEachOperator_MALLOC(2);
 	if unlikely(!result)
@@ -143,87 +143,413 @@ se_visit(SeqEachBase *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visit(self->se_seq);
 }
 
-#define SEQ_FOREACH_APPLY_EX(seq, size_seq, elem, func)      \
-	DREF DeeObject *iter, *elem;                             \
-	size_t i, fast_size;                                     \
-	fast_size = DeeFastSeq_GetSize(size_seq);                \
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {                  \
-		for (i = 0; i < fast_size; ++i) {                    \
-			elem = DeeFastSeq_GetItemUnbound(seq, i);        \
-			if (!ITER_ISOK(elem)) {                          \
-				if (elem == NULL)                            \
-					continue; /* Unbound item */             \
-				goto err;                                    \
-			}                                                \
-			if unlikely(func)                                \
-				goto err_elem_only;                          \
-			Dee_Decref(elem);                                \
-		}                                                    \
-	} else {                                                 \
-		iter = DeeObject_IterSelf(seq);                      \
-		if unlikely(!iter)                                   \
-			goto err;                                        \
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) { \
-			if unlikely(func)                                \
-				goto err_elem;                               \
-			Dee_Decref(elem);                                \
-		}                                                    \
-		if unlikely(!elem)                                   \
-			goto err_iter;                                   \
-		Dee_Decref(iter);                                    \
-	}                                                        \
-	return 0;                                                \
-err_elem_only:                                               \
-	Dee_Decref(elem);                                        \
-	goto err;                                                \
-err_elem:                                                    \
-	Dee_Decref(elem);                                        \
-err_iter:                                                    \
-	Dee_Decref(iter);                                        \
-err:                                                         \
-	return -1;
-#define SEQ_FOREACH_APPLY(seq, elem, func) \
-	SEQ_FOREACH_APPLY_EX(seq, seq, elem, func)
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_assign(SeqEachBase *__restrict self, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_Assign(elem, value));
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_assign_cb(void *arg, DeeObject *elem) {
+	return DeeObject_Assign(elem, (DeeObject *)arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_moveassign(SeqEachBase *__restrict self, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_MoveAssign(elem, value));
+se_assign(SeqEachBase *self, DeeObject *value) {
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_assign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_moveassign_cb(void *arg, DeeObject *elem) {
+	return DeeObject_MoveAssign(elem, (DeeObject *)arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_delitem(SeqEachBase *__restrict self, DeeObject *__restrict index) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_DelItem(elem, index));
+se_moveassign(SeqEachBase *self, DeeObject *value) {
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_moveassign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_delitem_cb(void *arg, DeeObject *elem) {
+	return DeeObject_DelItem(elem, (DeeObject *)arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_delitem(SeqEachBase *self, DeeObject *index) {
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_delitem_cb, index);
+}
+
+struct se_foreach_setitem_data {
+	DeeObject *sfesi_index; /* [1..1] Index to set */
+	DeeObject *sfesi_value; /* [1..1] Value to set index to */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_setitem_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_setitem_data *data;
+	data = (struct se_foreach_setitem_data *)arg;
+	return DeeObject_SetItem(elem, data->sfesi_index, data->sfesi_value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-se_setitem(SeqEachBase *__restrict self, DeeObject *__restrict index, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_SetItem(elem, index, value));
+se_setitem(SeqEachBase *self, DeeObject *index, DeeObject *value) {
+	struct se_foreach_setitem_data data;
+	data.sfesi_index = index;
+	data.sfesi_value = value;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setitem_cb, &data);
+}
+
+struct se_foreach_delrange_data {
+	DeeObject *sfedr_start; /* [1..1] Range start */
+	DeeObject *sfedr_end;   /* [1..1] Range end */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_delrange_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_delrange_data *data;
+	data = (struct se_foreach_delrange_data *)arg;
+	return DeeObject_DelRange(elem, data->sfedr_start, data->sfedr_end);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-se_delrange(SeqEachBase *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_DelRange(elem, start, end));
+se_delrange(SeqEachBase *self, DeeObject *start, DeeObject *end) {
+	struct se_foreach_delrange_data data;
+	data.sfedr_start = start;
+	data.sfedr_end   = end;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_delrange_cb, &data);
+}
+
+struct se_foreach_setrange_data {
+	DeeObject *sfesr_start; /* [1..1] Range start */
+	DeeObject *sfesr_end;   /* [1..1] Range end */
+	DeeObject *sfesr_value; /* [1..1] Range value */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_setrange_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_setrange_data *data;
+	data = (struct se_foreach_setrange_data *)arg;
+	return DeeObject_SetRange(elem, data->sfesr_start, data->sfesr_end, data->sfesr_value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-se_setrange(SeqEachBase *__restrict self, DeeObject *__restrict start, DeeObject *__restrict end, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_SetRange(elem, start, end, value));
+se_setrange(SeqEachBase *self, DeeObject *start,
+            DeeObject *end, DeeObject *value) {
+	struct se_foreach_setrange_data data;
+	data.sfesr_start = start;
+	data.sfesr_end   = end;
+	data.sfesr_value = value;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setrange_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_delattr_cb(void *arg, DeeObject *elem) {
+	return DeeObject_DelAttr(elem, (DeeObject *)arg);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-se_delattr(SeqEachBase *__restrict self, DeeObject *__restrict attr) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_DelAttr(elem, attr));
+se_delattr(SeqEachBase *self, DeeObject *attr) {
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_delattr_cb, attr);
+}
+
+struct se_foreach_delattr_string_hash_data {
+	char const *sfedsh_attr; /* [1..1] Attribute name */
+	Dee_hash_t  sfedsh_hash; /* Attribute name hash */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_delattr_string_hash_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_delattr_string_hash_data *data;
+	data = (struct se_foreach_delattr_string_hash_data *)arg;
+	return DeeObject_DelAttrStringHash(elem, data->sfedsh_attr, data->sfedsh_hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_delattr_string_hash(SeqEachBase *self, char const *attr, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_hash_data data;
+	data.sfedsh_attr = attr;
+	data.sfedsh_hash = hash;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_delattr_string_hash_cb, &data);
+}
+
+struct se_foreach_delattr_string_len_hash_data {
+	char const *sfedslh_attr;    /* [1..1] Attribute name */
+	size_t      sfedslh_attrlen; /* Attribute name length */
+	Dee_hash_t  sfedslh_hash;    /* Attribute name hash */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_delattr_string_len_hash_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_delattr_string_len_hash_data *data;
+	data = (struct se_foreach_delattr_string_len_hash_data *)arg;
+	return DeeObject_DelAttrStringLenHash(elem, data->sfedslh_attr,
+	                                      data->sfedslh_attrlen,
+	                                      data->sfedslh_hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_delattr_string_len_hash(SeqEachBase *self, char const *attr,
+                           size_t attrlen, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_len_hash_data data;
+	data.sfedslh_attr    = attr;
+	data.sfedslh_attrlen = attrlen;
+	data.sfedslh_hash    = hash;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_delattr_string_len_hash_cb, &data);
+}
+
+struct se_foreach_setattr_data {
+	DeeObject *sfes_attr;  /* [1..1] Attribute name */
+	DeeObject *sfes_value; /* [1..1] Value to assign  */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_setattr_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_setattr_data *data;
+	data = (struct se_foreach_setattr_data *)arg;
+	return DeeObject_SetAttr(elem, data->sfes_attr, data->sfes_value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-se_setattr(SeqEachBase *__restrict self, DeeObject *__restrict attr, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY(self->se_seq, elem, DeeObject_SetAttr(elem, attr, value));
+se_setattr(SeqEachBase *self, DeeObject *attr, DeeObject *value) {
+	struct se_foreach_setattr_data data;
+	data.sfes_attr  = attr;
+	data.sfes_value = value;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setattr_cb, &data);
 }
+
+struct se_foreach_setattr_string_hash_data {
+	char const *sfessh_attr;  /* [1..1] Attribute name */
+	Dee_hash_t  sfessh_hash;  /* Attribute name hash */
+	DeeObject  *sfessh_value; /* [1..1] Value to assign */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_setattr_string_hash_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_setattr_string_hash_data *data;
+	data = (struct se_foreach_setattr_string_hash_data *)arg;
+	return DeeObject_SetAttrStringHash(elem, data->sfessh_attr,
+	                                   data->sfessh_hash,
+	                                   data->sfessh_value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+se_setattr_string_hash(SeqEachBase *self, char const *attr,
+                       Dee_hash_t hash, DeeObject *value) {
+	struct se_foreach_setattr_string_hash_data data;
+	data.sfessh_attr  = attr;
+	data.sfessh_hash  = hash;
+	data.sfessh_value = value;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setattr_string_hash_cb, &data);
+}
+
+struct se_foreach_setattr_string_len_hash_data {
+	char const *sfesslh_attr;    /* [1..1] Attribute name */
+	size_t      sfesslh_attrlen; /* Attribute name length */
+	Dee_hash_t  sfesslh_hash;    /* Attribute name hash */
+	DeeObject  *sfesslh_value;   /* [1..1] Value to assign */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_setattr_string_len_hash_cb(void *arg, DeeObject *elem) {
+	struct se_foreach_setattr_string_len_hash_data *data;
+	data = (struct se_foreach_setattr_string_len_hash_data *)arg;
+	return DeeObject_SetAttrStringLenHash(elem, data->sfesslh_attr,
+	                                      data->sfesslh_attrlen,
+	                                      data->sfesslh_hash,
+	                                      data->sfesslh_value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+se_setattr_string_len_hash(SeqEachBase *self, char const *attr,
+                           size_t attrlen, Dee_hash_t hash,
+                           DeeObject *value) {
+	struct se_foreach_setattr_string_len_hash_data data;
+	data.sfesslh_attr    = attr;
+	data.sfesslh_attrlen = attrlen;
+	data.sfesslh_hash    = hash;
+	data.sfesslh_value   = value;
+	return (int)DeeObject_Foreach(self->se_seq, &se_foreach_setattr_string_len_hash_cb, &data);
+}
+
+struct se_hasattr_string_hash_data {
+	char const *shashd_attr;
+	dhash_t     shashd_hash;
+};
+
+struct se_hasattr_string_len_hash_data {
+	char const *shaslhd_attr;
+	size_t      shaslhd_attrlen;
+	dhash_t     shaslhd_hash;
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_hasattr_string_hash_cb(void *arg, DeeObject *elem) {
+	struct se_hasattr_string_hash_data *attr;
+	attr = (struct se_hasattr_string_hash_data *)arg;
+	int status = DeeObject_HasAttrStringHash(elem, attr->shashd_attr,
+	                                         attr->shashd_hash);
+	if unlikely(status <= 0)
+		return status < 0 ? -1 : -2;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_hasattr_string_len_hash_cb(void *arg, DeeObject *elem) {
+	struct se_hasattr_string_len_hash_data *attr;
+	attr = (struct se_hasattr_string_len_hash_data *)arg;
+	int status = DeeObject_HasAttrStringLenHash(elem, attr->shaslhd_attr,
+	                                            attr->shaslhd_attrlen,
+	                                            attr->shaslhd_hash);
+	if unlikely(status <= 0)
+		return status < 0 ? -1 : -2;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_boundattr_cb(void *arg, DeeObject *elem) {
+	DeeObject *attr = (DeeObject *)arg;
+	int status = DeeObject_BoundAttr(elem, attr);
+	if unlikely(status <= 0) {
+		if (status == 0)
+			status = -4;
+		return status;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_boundattr_string_hash_cb(void *arg, DeeObject *elem) {
+	struct se_hasattr_string_hash_data *attr;
+	attr = (struct se_hasattr_string_hash_data *)arg;
+	int status = DeeObject_BoundAttrStringHash(elem, attr->shashd_attr,
+	                                           attr->shashd_hash);
+	if unlikely(status <= 0) {
+		if (status == 0)
+			status = -4;
+		return status;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_boundattr_string_len_hash_cb(void *arg, DeeObject *elem) {
+	struct se_hasattr_string_len_hash_data *attr;
+	attr = (struct se_hasattr_string_len_hash_data *)arg;
+	int status = DeeObject_BoundAttrStringLenHash(elem, attr->shaslhd_attr,
+	                                              attr->shaslhd_attrlen,
+	                                              attr->shaslhd_hash);
+	if unlikely(status <= 0) {
+		if (status == 0)
+			status = -4;
+		return status;
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+se_foreach_hasattr_cb(void *arg, DeeObject *elem) {
+	DeeObject *attr = (DeeObject *)arg;
+	int status = DeeObject_HasAttr(elem, attr);
+	if unlikely(status <= 0)
+		return status < 0 ? -1 : -2;
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_hasattr(SeqEachBase *self, DeeObject *attr) {
+	Dee_ssize_t status = DeeObject_Foreach(self->se_seq, &se_foreach_hasattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_hasattr_string_hash(SeqEachBase *self,
+                       char const *attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status = DeeObject_Foreach(self->se_seq, &se_foreach_hasattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_hasattr_string_len_hash(SeqEachBase *self, char const *attr,
+                           size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status = DeeObject_Foreach(self->se_seq, &se_foreach_hasattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_boundattr(SeqEachBase *self, DeeObject *attr) {
+	Dee_ssize_t status = DeeObject_Foreach(self->se_seq, &se_foreach_boundattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_boundattr_string_hash(SeqEachBase *self,
+                         char const *attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status = DeeObject_Foreach(self->se_seq, &se_foreach_boundattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+se_boundattr_string_len_hash(SeqEachBase *self, char const *attr,
+                             size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status = DeeObject_Foreach(self->se_seq, &se_foreach_boundattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
 se_print(SeqEachBase *__restrict self, dformatprinter printer, void *arg) {
@@ -502,11 +828,27 @@ PRIVATE struct type_with se_with = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+se_enumattr_impl(DeeObject *seq, denum_t proc, void *arg) {
+	(void)seq;
+	(void)proc;
+	(void)arg;
+	/* TODO: Enumerate attributes available via the common
+	 *       base class of all elements of `seq'. */
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+se_enumattr(DeeTypeObject *UNUSED(tp_self),
+            SeqEachBase *self, denum_t proc, void *arg) {
+	return se_enumattr_impl(self->se_seq, proc, arg);
+}
+
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #define se_getattr seqeach_getattr
-INTERN WUNUSED NONNULL((1, 2)) DREF SeqEachGetAttr *DCALL
-seqeach_getattr(SeqEachBase *__restrict self,
-                struct string_object *__restrict attr) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF SeqEachGetAttr *DCALL
+seqeach_getattr(SeqEachBase *self,
+                DeeStringObject *attr) {
 	DREF SeqEachGetAttr *result;
 	result = DeeObject_MALLOC(SeqEachGetAttr);
 	if unlikely(!result)
@@ -519,33 +861,89 @@ seqeach_getattr(SeqEachBase *__restrict self,
 done:
 	return result;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr(SeqEachBase *self, /*String*/ DeeObject *attr,
+            size_t argc, DeeObject *const *argv) {
+	return DeeSeqEach_CallAttr(self->se_seq, attr, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr_kw(SeqEachBase *self, /*String*/ DeeObject *attr,
+               size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeSeqEach_CallAttrKw(self->se_seq, attr, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr_string_hash(SeqEachBase *self, char const *attr,
+                        Dee_hash_t hash, size_t argc, DeeObject *const *argv) {
+	return DeeSeqEach_CallAttrStringHash(self->se_seq, attr, hash, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr_string_hash_kw(SeqEachBase *self, char const *attr, Dee_hash_t hash,
+                           size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeSeqEach_CallAttrStringHashKw(self->se_seq, attr, hash, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr_string_len_hash(SeqEachBase *self, char const *attr, size_t attrlen,
+                            Dee_hash_t hash, size_t argc, DeeObject *const *argv) {
+	return DeeSeqEach_CallAttrStringLenHash(self->se_seq, attr, attrlen, hash, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+se_callattr_string_len_hash_kw(SeqEachBase *self, char const *attr, size_t attrlen,
+                               Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeSeqEach_CallAttrStringLenHashKw(self->se_seq, attr, attrlen, hash, argc, argv, kw);
+}
 #else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 DEFINE_SEQ_EACH_BINARY(se_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-sew_enumattr(DeeTypeObject *UNUSED(tp_self),
-             DeeObject *self, denum_t proc, void *arg) {
-	(void)self;
-	(void)proc;
-	(void)arg;
-	/* TODO: Enumerate attributes available via the common
-	 *       base class of all elements of `self'. */
-	return 0;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-se_enumattr(DeeTypeObject *UNUSED(tp_self),
-            SeqEachBase *self, denum_t proc, void *arg) {
-	return sew_enumattr(&DeeSeq_Type, self->se_seq, proc, arg);
-}
-
 PRIVATE struct type_attr tpconst se_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
-	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&se_delattr,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&se_setattr,
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&se_enumattr,
+	/* .tp_findattr                      = */ NULL,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_hasattr,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_boundattr,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&se_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&se_callattr_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr                      = */ NULL,
+	/* .tp_callattr_kw                   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattrf                    = */ NULL,
+	/* .tp_getattr_string_hash           = */ NULL,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&se_delattr_string_hash,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&se_setattr_string_hash,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&se_hasattr_string_hash,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&se_boundattr_string_hash,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&se_callattr_string_hash,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&se_callattr_string_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_hash          = */ NULL,
+	/* .tp_callattr_string_hash_kw       = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattr_string_hashf        = */ NULL,
+	/* .tp_getattr_string_len_hash       = */ NULL,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&se_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&se_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&se_hasattr_string_len_hash,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&se_boundattr_string_len_hash,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&se_callattr_string_len_hash,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&se_callattr_string_len_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_len_hash      = */ NULL,
+	/* .tp_callattr_string_len_hash_kw   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_findattr_info_string_len_hash = */ NULL
 };
 
 PRIVATE struct type_member tpconst se_members[] = {
@@ -741,31 +1139,6 @@ seo_visit(SeqEachOperator *__restrict self, dvisit_t proc, void *arg) {
 	Dee_Visitv(self->so_opargv, self->so_opargc);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_assign(DeeObject *__restrict self, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY_EX(self, ((SeqEachBase *)self)->se_seq, elem,
-	                     DeeObject_Assign(elem, value));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_moveassign(DeeObject *__restrict self, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY_EX(self, ((SeqEachBase *)self)->se_seq, elem,
-	                     DeeObject_MoveAssign(elem, value));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-sew_delattr(DeeObject *__restrict self, DeeObject *__restrict attr) {
-	SEQ_FOREACH_APPLY_EX(self, ((SeqEachBase *)self)->se_seq, elem,
-	                     DeeObject_DelAttr(elem, attr));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-sew_setattr(DeeObject *__restrict self, DeeObject *__restrict attr, DeeObject *__restrict value) {
-	SEQ_FOREACH_APPLY_EX(self, ((SeqEachBase *)self)->se_seq, elem,
-	                     DeeObject_SetAttr(elem, attr, value));
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 sew_call(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *tuple;
@@ -777,8 +1150,8 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED DREF SeqEachOperator *DCALL
-sew_call_kw(DeeObject *__restrict self, size_t argc,
+PRIVATE WUNUSED NONNULL((1)) DREF SeqEachOperator *DCALL
+sew_call_kw(DeeObject *self, size_t argc,
             DeeObject *const *argv, DeeObject *kw) {
 	DREF DeeObject *tuple;
 	tuple = DeeTuple_NewVector(argc, argv);
@@ -834,6 +1207,7 @@ DEFINE_SEW_BINARY(sew_lo, OPERATOR_LO)
 DEFINE_SEW_BINARY(sew_le, OPERATOR_LE)
 DEFINE_SEW_BINARY(sew_gr, OPERATOR_GR)
 DEFINE_SEW_BINARY(sew_ge, OPERATOR_GE)
+DEFINE_SEW_BINARY(sew_getrange, OPERATOR_GETRANGE)
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -1092,11 +1466,261 @@ PRIVATE struct type_with sew_with = {
 };
 
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+sew_enumattr(DeeTypeObject *UNUSED(tp_self),
+             SeqEachBase *self, denum_t proc, void *arg) {
+	return se_enumattr_impl((DeeObject *)self, proc, arg);
+}
+
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seo_transform(SeqEachOperator *self, DeeObject *elem) {
+	return DeeObject_InvokeOperator(elem,
+	                                self->so_opname,
+	                                self->so_opargc,
+	                                self->so_opargv);
+}
+
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+seo_transform_inherit(SeqEachOperator *self,
+                      /*inherit(always)*/ DREF DeeObject *elem) {
+	DREF DeeObject *result;
+	result = seo_transform(self, elem);
+	Dee_Decref(elem);
+	return result;
+}
+
+struct seo_foreach_data {
+	SeqEachOperator *seofd_me;   /* [1..1] The related seq-each operator */
+	Dee_foreach_t    seofd_proc; /* [1..1] User-defined callback */
+	void            *seofd_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seo_foreach_cb(void *arg, DeeObject *elem) {
+	Dee_ssize_t result;
+	struct seo_foreach_data *data;
+	data = (struct seo_foreach_data *)arg;
+	elem = seo_transform(data->seofd_me, elem);
+	if unlikely(!elem)
+		goto err;
+	result = (*data->seofd_proc)(data->seofd_arg, elem);
+	Dee_Decref(elem);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+seo_foreach(SeqEachOperator *self, Dee_foreach_t proc, void *arg) {
+	struct seo_foreach_data data;
+	data.seofd_me   = self;
+	data.seofd_proc = proc;
+	data.seofd_arg  = arg;
+	return DeeObject_Foreach(self->se_seq, &seo_foreach_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_assign(SeqEachOperator *self, DeeObject *value) {
+	return (int)seo_foreach(self, &se_foreach_assign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_moveassign(SeqEachOperator *self, DeeObject *value) {
+	return (int)seo_foreach(self, &se_foreach_moveassign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_delitem(SeqEachOperator *self, DeeObject *index) {
+	return (int)seo_foreach(self, &se_foreach_delitem_cb, index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+seo_setitem(SeqEachOperator *self, DeeObject *index, DeeObject *value) {
+	struct se_foreach_setitem_data data;
+	data.sfesi_index = index;
+	data.sfesi_value = value;
+	return (int)seo_foreach(self, &se_foreach_setitem_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+seo_delrange(SeqEachOperator *self, DeeObject *start, DeeObject *end) {
+	struct se_foreach_delrange_data data;
+	data.sfedr_start = start;
+	data.sfedr_end   = end;
+	return (int)seo_foreach(self, &se_foreach_delrange_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+seo_setrange(SeqEachOperator *self, DeeObject *start,
+             DeeObject *end, DeeObject *value) {
+	struct se_foreach_setrange_data data;
+	data.sfesr_start = start;
+	data.sfesr_end   = end;
+	data.sfesr_value = value;
+	return (int)seo_foreach(self, &se_foreach_setrange_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_delattr(SeqEachOperator *self, DeeObject *attr) {
+	return (int)seo_foreach(self, &se_foreach_delattr_cb, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_delattr_string_hash(SeqEachOperator *self, char const *attr, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_hash_data data;
+	data.sfedsh_attr = attr;
+	data.sfedsh_hash = hash;
+	return (int)seo_foreach(self, &se_foreach_delattr_string_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_delattr_string_len_hash(SeqEachOperator *self, char const *attr,
+                            size_t attrlen, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_len_hash_data data;
+	data.sfedslh_attr    = attr;
+	data.sfedslh_attrlen = attrlen;
+	data.sfedslh_hash    = hash;
+	return (int)seo_foreach(self, &se_foreach_delattr_string_len_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+seo_setattr(SeqEachOperator *self, DeeObject *attr, DeeObject *value) {
+	struct se_foreach_setattr_data data;
+	data.sfes_attr  = attr;
+	data.sfes_value = value;
+	return (int)seo_foreach(self, &se_foreach_setattr_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+seo_setattr_string_hash(SeqEachOperator *self, char const *attr,
+                        Dee_hash_t hash, DeeObject *value) {
+	struct se_foreach_setattr_string_hash_data data;
+	data.sfessh_attr  = attr;
+	data.sfessh_hash  = hash;
+	data.sfessh_value = value;
+	return (int)seo_foreach(self, &se_foreach_setattr_string_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+seo_setattr_string_len_hash(SeqEachOperator *self, char const *attr,
+                            size_t attrlen, Dee_hash_t hash,
+                            DeeObject *value) {
+	struct se_foreach_setattr_string_len_hash_data data;
+	data.sfesslh_attr    = attr;
+	data.sfesslh_attrlen = attrlen;
+	data.sfesslh_hash    = hash;
+	data.sfesslh_value   = value;
+	return (int)seo_foreach(self, &se_foreach_setattr_string_len_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_hasattr(SeqEachOperator *self, DeeObject *attr) {
+	Dee_ssize_t status = seo_foreach(self, &se_foreach_hasattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_hasattr_string_hash(SeqEachOperator *__restrict self,
+                        char const *__restrict attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status           = seo_foreach(self, &se_foreach_hasattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_hasattr_string_len_hash(SeqEachOperator *__restrict self,
+                            char const *__restrict attr,
+                            size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status               = seo_foreach(self, &se_foreach_hasattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_boundattr(SeqEachOperator *__restrict self, DeeObject *__restrict attr) {
+	Dee_ssize_t status = seo_foreach(self, &se_foreach_boundattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_boundattr_string_hash(SeqEachOperator *__restrict self,
+                          char const *__restrict attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status           = seo_foreach(self, &se_foreach_boundattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+seo_boundattr_string_len_hash(SeqEachOperator *__restrict self,
+                              char const *__restrict attr,
+                              size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status               = seo_foreach(self, &se_foreach_boundattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
 #define sew_getattr seqeachw_getattr
 INTERN WUNUSED NONNULL((1, 2)) DREF SeqEachGetAttr *DCALL
 seqeachw_getattr(DeeObject *__restrict self,
-                 struct string_object *__restrict attr) {
+                 DeeStringObject *__restrict attr) {
 	DREF SeqEachGetAttr *result;
 	result = DeeObject_MALLOC(SeqEachGetAttr);
 	if unlikely(!result)
@@ -1109,17 +1733,60 @@ seqeachw_getattr(DeeObject *__restrict self,
 done:
 	return result;
 }
+
+#define sew_callattr                    DeeSeqEach_CallAttr
+#define sew_callattr_kw                 DeeSeqEach_CallAttrKw
+#define sew_callattr_string_hash        DeeSeqEach_CallAttrStringHash
+#define sew_callattr_string_hash_kw     DeeSeqEach_CallAttrStringHashKw
+#define sew_callattr_string_len_hash    DeeSeqEach_CallAttrStringLenHash
+#define sew_callattr_string_len_hash_kw DeeSeqEach_CallAttrStringLenHashKw
 #else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 DEFINE_SEW_BINARY(sew_getattr, OPERATOR_GETATTR)
 #endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
 
-PRIVATE struct type_attr tpconst sew_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&sew_setattr,
-	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr
+PRIVATE struct type_attr tpconst seo_attr = {
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&seo_delattr,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&seo_setattr,
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
+	/* .tp_findattr                      = */ NULL,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_hasattr,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_boundattr,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&sew_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_callattr_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr                      = */ NULL,
+	/* .tp_callattr_kw                   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattrf                    = */ NULL,
+	/* .tp_getattr_string_hash           = */ NULL,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_delattr_string_hash,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&seo_setattr_string_hash,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_hasattr_string_hash,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_boundattr_string_hash,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&sew_callattr_string_hash,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&sew_callattr_string_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_hash          = */ NULL,
+	/* .tp_callattr_string_hash_kw       = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattr_string_hashf        = */ NULL,
+	/* .tp_getattr_string_len_hash       = */ NULL,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&seo_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_hasattr_string_len_hash,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&seo_boundattr_string_len_hash,
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&sew_callattr_string_len_hash,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&sew_callattr_string_len_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_len_hash      = */ NULL,
+	/* .tp_callattr_string_len_hash_kw   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_findattr_info_string_len_hash = */ NULL,
 };
-
 
 PRIVATE WUNUSED NONNULL((1)) DREF SeqEachIterator *DCALL
 seo_iter(SeqEachOperator *__restrict self) {
@@ -1155,24 +1822,12 @@ sew_size(SeqEachBase *__restrict self) {
 	return DeeObject_SizeObject(self->se_seq);
 }
 
-LOCAL WUNUSED DREF DeeObject *DCALL
-seo_transform(SeqEachOperator *__restrict self,
-              /*inherit(always)*/ DREF DeeObject *__restrict elem) {
-	DREF DeeObject *result;
-	result = DeeObject_InvokeOperator(elem,
-	                                  self->so_opname,
-	                                  self->so_opargc,
-	                                  self->so_opargv);
-	Dee_Decref(elem);
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 seo_nsi_getitem(SeqEachOperator *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
 	if likely(result)
-		result = seo_transform(self, result);
+		result = seo_transform_inherit(self, result);
 	return result;
 }
 
@@ -1182,10 +1837,9 @@ seo_getitem(SeqEachOperator *self,
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->se_seq, index);
 	if likely(result)
-		result = seo_transform(self, result);
+		result = seo_transform_inherit(self, result);
 	return result;
 }
-
 
 PRIVATE struct type_nsi tpconst seo_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1225,11 +1879,11 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_delitem,
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_setitem,
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
 	/* .tp_nsi       = */ &seo_nsi
 };
 
@@ -1262,8 +1916,8 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 			}
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&seo_fini,
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_moveassign
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_assign,
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_moveassign
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -1281,7 +1935,7 @@ INTERN DeeTypeObject SeqEachOperator_Type = {
 	/* .tp_cmp           = */ &sew_cmp,
 	/* .tp_seq           = */ &seo_seq,
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iter_next,
-	/* .tp_attr          = */ &sew_attr,
+	/* .tp_attr          = */ &seo_attr,
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
@@ -1493,7 +2147,7 @@ seoi_next(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);
 	if likely(ITER_ISOK(result))
-		result = seo_transform((SeqEachOperator *)self->ei_each, result);
+		result = seo_transform_inherit((SeqEachOperator *)self->ei_each, result);
 	return result;
 }
 
@@ -1558,7 +2212,7 @@ DeeSeqEach_CallAttr(DeeObject *__restrict self,
 	if unlikely(!result)
 		goto done;
 	result->se_seq  = self;
-	result->sg_attr = (DREF struct string_object *)attr;
+	result->sg_attr = (DREF DeeStringObject *)attr;
 	result->sg_argc = argc;
 	Dee_Movrefv(result->sg_argv, argv, argc);
 	Dee_Incref(self);
@@ -1582,7 +2236,7 @@ DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
 	if unlikely(!result)
 		goto done;
 	result->se_seq  = self;
-	result->sg_attr = (DREF struct string_object *)attr;
+	result->sg_attr = (DREF DeeStringObject *)attr;
 	result->sg_kw   = kw;
 	result->sg_argc = argc;
 	Dee_Movrefv(result->sg_argv, argv, argc);

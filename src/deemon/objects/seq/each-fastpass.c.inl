@@ -257,25 +257,30 @@ err_r:
 }
 
 LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-F(transform)(STRUCT_TYPE *self,
-             /*inherit(always)*/ DREF DeeObject *elem) {
-	DREF DeeObject *result;
+F(transform)(STRUCT_TYPE *self, DeeObject *elem) {
 #ifdef DEFINE_GETATTR
-	result = DeeObject_GetAttr(elem, (DeeObject *)self->sg_attr);
+	return DeeObject_GetAttr(elem, (DeeObject *)self->sg_attr);
 #elif defined(DEFINE_CALLATTR)
-	result = DeeObject_CallAttr(elem,
+	return DeeObject_CallAttr(elem,
+	                          (DeeObject *)self->sg_attr,
+	                          self->sg_argc,
+	                          self->sg_argv);
+#elif defined(DEFINE_CALLATTRKW)
+	return DeeObject_CallAttrKw(elem,
 	                            (DeeObject *)self->sg_attr,
 	                            self->sg_argc,
-	                            self->sg_argv);
-#elif defined(DEFINE_CALLATTRKW)
-	result = DeeObject_CallAttrKw(elem,
-	                              (DeeObject *)self->sg_attr,
-	                              self->sg_argc,
-	                              self->sg_argv,
-	                              self->sg_kw);
+	                            self->sg_argv,
+	                            self->sg_kw);
 #else /* ... */
 #error "Unsupported mode"
 #endif /* !... */
+}
+
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+F(transform_inherit)(STRUCT_TYPE *self,
+                     /*inherit(always)*/ DREF DeeObject *elem) {
+	DREF DeeObject *result;
+	result = F(transform)(self, elem);
 	Dee_Decref(elem);
 	return result;
 }
@@ -285,7 +290,7 @@ F(nsi_getitem)(STRUCT_TYPE *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemIndex(self->se_seq, index);
 	if likely(result)
-		result = F(transform)(self, result);
+		result = F(transform_inherit)(self, result);
 	return result;
 }
 
@@ -294,8 +299,235 @@ F(getitem)(STRUCT_TYPE *self, DeeObject *index) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->se_seq, index);
 	if likely(result)
-		result = F(transform)(self, result);
+		result = F(transform_inherit)(self, result);
 	return result;
+}
+
+
+struct F(foreach_data) {
+	STRUCT_TYPE   *seXfd_me;   /* [1..1] The related seq-each operator */
+	Dee_foreach_t  seXfd_proc; /* [1..1] User-defined callback */
+	void          *seXfd_arg;  /* [?..?] User-defined cookie */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+F(foreach_cb)(void *arg, DeeObject *elem) {
+	Dee_ssize_t result;
+	struct F(foreach_data) *data;
+	data = (struct F(foreach_data) *)arg;
+	elem = F(transform)(data->seXfd_me, elem);
+	if unlikely(!elem)
+		goto err;
+	result = (*data->seXfd_proc)(data->seXfd_arg, elem);
+	Dee_Decref(elem);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+F(foreach)(STRUCT_TYPE *self, Dee_foreach_t proc, void *arg) {
+	struct F(foreach_data) data;
+	data.seXfd_me   = self;
+	data.seXfd_proc = proc;
+	data.seXfd_arg  = arg;
+	return DeeObject_Foreach(self->se_seq, &F(foreach_cb), &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(assign)(STRUCT_TYPE *self, DeeObject *value) {
+	return (int)F(foreach)(self, &se_foreach_assign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(moveassign)(STRUCT_TYPE *self, DeeObject *value) {
+	return (int)F(foreach)(self, &se_foreach_moveassign_cb, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(delitem)(STRUCT_TYPE *self, DeeObject *index) {
+	return (int)F(foreach)(self, &se_foreach_delitem_cb, index);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+F(setitem)(STRUCT_TYPE *self, DeeObject *index, DeeObject *value) {
+	struct se_foreach_setitem_data data;
+	data.sfesi_index = index;
+	data.sfesi_value = value;
+	return (int)F(foreach)(self, &se_foreach_setitem_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+F(delrange)(STRUCT_TYPE *self, DeeObject *start, DeeObject *end) {
+	struct se_foreach_delrange_data data;
+	data.sfedr_start = start;
+	data.sfedr_end   = end;
+	return (int)F(foreach)(self, &se_foreach_delrange_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+F(setrange)(STRUCT_TYPE *self, DeeObject *start,
+             DeeObject *end, DeeObject *value) {
+	struct se_foreach_setrange_data data;
+	data.sfesr_start = start;
+	data.sfesr_end   = end;
+	data.sfesr_value = value;
+	return (int)F(foreach)(self, &se_foreach_setrange_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(delattr)(STRUCT_TYPE *self, DeeObject *attr) {
+	return (int)F(foreach)(self, &se_foreach_delattr_cb, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(delattr_string_hash)(STRUCT_TYPE *self, char const *attr, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_hash_data data;
+	data.sfedsh_attr = attr;
+	data.sfedsh_hash = hash;
+	return (int)F(foreach)(self, &se_foreach_delattr_string_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(delattr_string_len_hash)(STRUCT_TYPE *self, char const *attr,
+                           size_t attrlen, Dee_hash_t hash) {
+	struct se_foreach_delattr_string_len_hash_data data;
+	data.sfedslh_attr    = attr;
+	data.sfedslh_attrlen = attrlen;
+	data.sfedslh_hash    = hash;
+	return (int)F(foreach)(self, &se_foreach_delattr_string_len_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+F(setattr)(STRUCT_TYPE *self, DeeObject *attr, DeeObject *value) {
+	struct se_foreach_setattr_data data;
+	data.sfes_attr  = attr;
+	data.sfes_value = value;
+	return (int)F(foreach)(self, &se_foreach_setattr_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+F(setattr_string_hash)(STRUCT_TYPE *self, char const *attr,
+                       Dee_hash_t hash, DeeObject *value) {
+	struct se_foreach_setattr_string_hash_data data;
+	data.sfessh_attr  = attr;
+	data.sfessh_hash  = hash;
+	data.sfessh_value = value;
+	return (int)F(foreach)(self, &se_foreach_setattr_string_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+F(setattr_string_len_hash)(STRUCT_TYPE *self, char const *attr,
+                           size_t attrlen, Dee_hash_t hash,
+                           DeeObject *value) {
+	struct se_foreach_setattr_string_len_hash_data data;
+	data.sfesslh_attr    = attr;
+	data.sfesslh_attrlen = attrlen;
+	data.sfesslh_hash    = hash;
+	data.sfesslh_value   = value;
+	return (int)F(foreach)(self, &se_foreach_setattr_string_len_hash_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(hasattr)(STRUCT_TYPE *self, DeeObject *attr) {
+	Dee_ssize_t status = F(foreach)(self, &se_foreach_hasattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(hasattr_string_hash)(STRUCT_TYPE *self,
+                       char const *attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status           = F(foreach)(self, &se_foreach_hasattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(hasattr_string_len_hash)(STRUCT_TYPE *self,
+                           char const *attr,
+                           size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status               = F(foreach)(self, &se_foreach_hasattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -2)
+		return 0; /* Attribute doesn't exist for some element */
+	ASSERT(status == -1);
+	return (int)status; /* Error (-1) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(boundattr)(STRUCT_TYPE *self, DeeObject *attr) {
+	Dee_ssize_t status = F(foreach)(self, &se_foreach_boundattr_cb, attr);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(boundattr_string_hash)(STRUCT_TYPE *self,
+                         char const *attr, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_hash_data data;
+	data.shashd_attr = attr;
+	data.shashd_hash = hash;
+	status           = F(foreach)(self, &se_foreach_boundattr_string_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+F(boundattr_string_len_hash)(STRUCT_TYPE *self,
+                             char const *attr,
+                             size_t attrlen, dhash_t hash) {
+	Dee_ssize_t status;
+	struct se_hasattr_string_len_hash_data data;
+	data.shaslhd_attr    = attr;
+	data.shaslhd_attrlen = attrlen;
+	data.shaslhd_hash    = hash;
+	status = F(foreach)(self, &se_foreach_boundattr_string_len_hash_cb, &data);
+	ASSERT(status <= 0);
+	if (status == 0)
+		return 1; /* All elements have the attribute */
+	if (status == -4)
+		return 0; /* Attribute isn't bound for some element */
+	if (status == -3)
+		status = -2; /* A user-defined getattr operator threw an error indicating that the attribute doesn't exists. */
+	ASSERT(status == -1 || status == -2);
+	return (int)status; /* Error (-1), or attribute doesn't exist (-2) */
 }
 
 
@@ -337,11 +569,11 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
 	/* .tp_contains  = */ NULL,
 	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&F(getitem),
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
+	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(delitem),
+	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(setitem),
+	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
+	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(delrange),
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
 	/* .tp_nsi       = */ &F(nsi)
 };
 
@@ -633,6 +865,51 @@ F(call_kw)(STRUCT_TYPE *__restrict self, size_t argc,
 }
 #endif /* DEFINE_GETATTR */
 
+PRIVATE struct type_attr tpconst F(attr) = {
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&sew_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&F(delattr),
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&F(setattr),
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&sew_enumattr,
+	/* .tp_findattr                      = */ NULL,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(hasattr),
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(boundattr),
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&sew_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&sew_callattr_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr                      = */ NULL,
+	/* .tp_callattr_kw                   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattrf                    = */ NULL,
+	/* .tp_getattr_string_hash           = */ NULL,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(delattr_string_hash),
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&F(setattr_string_hash),
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(hasattr_string_hash),
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(boundattr_string_hash),
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&sew_callattr_string_hash,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&sew_callattr_string_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_hash          = */ NULL,
+	/* .tp_callattr_string_hash_kw       = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_vcallattr_string_hashf        = */ NULL,
+	/* .tp_getattr_string_len_hash       = */ NULL,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&F(delattr_string_len_hash),
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&F(setattr_string_len_hash),
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&F(hasattr_string_len_hash),
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&F(boundattr_string_len_hash),
+#ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&sew_callattr_string_len_hash,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&sew_callattr_string_len_hash_kw,
+#else /* CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_callattr_string_len_hash      = */ NULL,
+	/* .tp_callattr_string_len_hash_kw   = */ NULL,
+#endif /* !CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS */
+	/* .tp_findattr_info_string_len_hash = */ NULL,
+};
+
+
 INTERN DeeTypeObject TYPE_OBJECT = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 #ifdef DEFINE_GETATTR
@@ -680,8 +957,8 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 #endif /* TYPE_FLAGS & TP_FVARIABLE */
 		},
 		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&F(fini),
-		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_assign,
-		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&sew_moveassign
+		/* .tp_assign      = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(assign),
+		/* .tp_move_assign = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(moveassign),
 	},
 	/* .tp_cast = */ {
 		/* .tp_str       = */ NULL,
@@ -703,7 +980,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 	/* .tp_cmp           = */ &sew_cmp,
 	/* .tp_seq           = */ &F(seq),
 	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_iter_next,
-	/* .tp_attr          = */ &sew_attr,
+	/* .tp_attr          = */ &F(attr),
 	/* .tp_with          = */ &sew_with,
 	/* .tp_buffer        = */ NULL,
 	/* .tp_methods       = */ NULL,
@@ -724,7 +1001,7 @@ INTERN DeeTypeObject TYPE_OBJECT = {
 
 
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 Fi(ctor)(SeqEachIterator *__restrict self) {
 	self->ei_each = (DREF SeqEachBase *)DeeObject_NewDefault(&TYPE_OBJECT);
 	if unlikely(!self->ei_each)
@@ -739,7 +1016,7 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 Fi(init)(SeqEachIterator *__restrict self,
          size_t argc, DeeObject *const *argv) {
 #ifdef DEFINE_GETATTR
@@ -786,7 +1063,7 @@ Fi(next)(SeqEachIterator *__restrict self) {
 	DREF DeeObject *result;
 	result = DeeObject_IterNext(self->ei_iter);
 	if likely(ITER_ISOK(result))
-		result = F(transform)((STRUCT_TYPE *)self->ei_each, result);
+		result = F(transform_inherit)((STRUCT_TYPE *)self->ei_each, result);
 	return result;
 }
 

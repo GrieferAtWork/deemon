@@ -4634,28 +4634,6 @@ PRIVATE struct type_getset tpconst type_getsets[] = {
 	TYPE_GETSET_END
 };
 
-
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-type_getattr(DeeObject *self, DeeObject *name) {
-	return DeeType_GetAttr((DeeTypeObject *)self, name);
-}
-
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-type_delattr(DeeObject *self, DeeObject *name) {
-	return DeeType_DelAttr((DeeTypeObject *)self, name);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
-type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
-	return DeeType_SetAttr((DeeTypeObject *)self, name, value);
-}
-
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
-type_enumattr(DeeTypeObject *UNUSED(tp_self),
-              DeeObject *self, denum_t proc, void *arg) {
-	return DeeType_EnumAttr((DeeTypeObject *)self, proc, arg);
-}
-
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 type_hash(DeeObject *__restrict self) {
 	return Dee_HashPointer(self);
@@ -4679,18 +4657,121 @@ err:
 	return NULL;
 }
 
-
 PRIVATE struct type_cmp type_cmp_data = {
 	/* .tp_hash = */ &type_hash,
 	/* .tp_eq   = */ &type_eq,
 	/* .tp_ne   = */ &type_ne
 };
 
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+type_getattr(DeeObject *self, DeeObject *name) {
+	return DeeType_GetAttr((DeeTypeObject *)self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_delattr(DeeObject *self, DeeObject *name) {
+	return DeeType_DelAttr((DeeTypeObject *)self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+type_setattr(DeeObject *self, DeeObject *name, DeeObject *value) {
+	return DeeType_SetAttr((DeeTypeObject *)self, name, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+type_enumattr(DeeTypeObject *UNUSED(tp_self),
+              DeeObject *self, denum_t proc, void *arg) {
+	return DeeType_EnumAttr((DeeTypeObject *)self, proc, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+type_findattr(DeeTypeObject *UNUSED(tp_self), DeeTypeObject *self,
+              struct attribute_info *__restrict result,
+              struct attribute_lookup_rules const *__restrict rules) {
+	return DeeType_FindAttr(self, result, rules);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_hasattr(DeeTypeObject *self, DeeObject *name) {
+	return DeeType_HasAttr(self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+type_boundattr(DeeTypeObject *self, DeeObject *name) {
+	return DeeType_BoundAttr(self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+type_callattr(DeeTypeObject *self, DeeObject *name,
+              size_t argc, DeeObject *const *argv) {
+	return DeeType_CallAttr(self, name, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+type_callattr_kw(DeeTypeObject *self, DeeObject *name,
+                 size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeType_CallAttrKw(self, name, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_vcallattrf(DeeTypeObject *self, DeeObject *name,
+                char const *format, va_list args) {
+	return DeeType_VCallAttrf(self, name, format, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
+type_findattr_info_string_len_hash(DeeTypeObject *tp_self, DeeTypeObject *self,
+                                   char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
+                                   struct Dee_attrinfo *__restrict retinfo) {
+	(void)tp_self;
+	return DeeType_FindAttrInfoStringLenHash(self, attr, attrlen, hash, retinfo);
+}
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_callattr_tuple(DeeTypeObject *self, /*String*/ DeeObject *name, DeeObject *args) {
+	return DeeType_CallAttrTuple(self, name, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+type_callattr_tuple_kw(DeeTypeObject *self, /*String*/ DeeObject *name,
+                       DeeObject *args, DeeObject *kw) {
+	return DeeType_CallAttrTupleKw(self, name, args, kw);
+}
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
 PRIVATE struct type_attr tpconst type_attr_data = {
-	/* .tp_getattr  = */ &type_getattr,
-	/* .tp_delattr  = */ &type_delattr,
-	/* .tp_setattr  = */ &type_setattr,
-	/* .tp_enumattr = */ &type_enumattr
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&type_delattr,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&type_setattr,
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&type_enumattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct attribute_info *__restrict, struct attribute_lookup_rules const *__restrict))&type_findattr,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_hasattr,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&type_boundattr,
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&type_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&type_callattr_kw,
+	/* .tp_vcallattrf                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, char const *, va_list))&type_vcallattrf,
+	/* .tp_getattr_string_hash           = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeType_GetAttrStringHash,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeType_DelAttrStringHash,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&DeeType_SetAttrStringHash,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeType_HasAttrStringHash,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeType_BoundAttrStringHash,
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&DeeType_CallAttrStringHash,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&DeeType_CallAttrStringHashKw,
+	/* .tp_vcallattr_string_hashf        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, char const *, va_list))&DeeType_VCallAttrStringHashf,
+	/* .tp_getattr_string_len_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeType_GetAttrStringLenHash,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeType_DelAttrStringLenHash,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&DeeType_SetAttrStringLenHash,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeType_HasAttrStringLenHash,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeType_BoundAttrStringLenHash,
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&DeeType_CallAttrStringLenHash,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&DeeType_CallAttrStringLenHashKw,
+	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&type_findattr_info_string_len_hash,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_callattr_tuple                = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&type_callattr_tuple,
+	/* .tp_callattr_tuple_kw             = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&type_callattr_tuple_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PRIVATE struct type_gc tpconst type_gc_data = {

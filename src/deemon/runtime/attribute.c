@@ -20,6 +20,7 @@
 #ifndef GUARD_DEEMON_RUNTIME_ATTRIBUTE_C
 #define GUARD_DEEMON_RUNTIME_ATTRIBUTE_C 1
 
+#include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/attribute.h>
 #include <deemon/class.h>
@@ -30,8 +31,8 @@
 #include <deemon/object.h>
 #include <deemon/objmethod.h>
 #include <deemon/string.h>
-#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/super.h>
+#include <deemon/system-features.h> /* bzero(), ... */
 #include <deemon/tuple.h>
 
 #include <stdarg.h>
@@ -54,22 +55,6 @@ DECL_BEGIN
 #define CONFIG_TYPE_ATTRIBUTE_FORWARD_GENERIC
 //#define CONFIG_TYPE_ATTRIBUTE_SPECIALCASE_TYPETYPE /* Don't enable this again. - It's better if this is off. */
 //#define CONFIG_TYPE_ATTRIBUTE_FOLLOWUP_GENERIC
-
-/* Various attribute accessor functions which get special optimizations. */
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL type_getattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL type_delattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL type_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL type_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL module_getattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL module_delattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL module_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL module_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
-
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL super_getattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL super_delattr(DeeObject *self, DeeObject *attr);
-INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL super_setattr(DeeObject *self, DeeObject *attr, DeeObject *value);
-INTDEF WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL super_enumattr(DeeTypeObject *tp_self, DeeObject *self, denum_t proc, void *arg);
 
 #ifndef __INTELLISENSE__
 DECL_END
@@ -245,13 +230,51 @@ DECL_END
 #define DEFINE_DeeObject_TCallAttrTupleKw
 #include "attribute-access-object.c.inl"
 #endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+#define DEFINE_DeeObject_THasAttr
+#include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_TBoundAttr
 #include "attribute-access-object.c.inl"
+
+#define DEFINE_DeeObject_TGetAttrStringHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TDelAttrStringHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TSetAttrStringHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrStringHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrStringHashKw
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_THasAttrStringHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TBoundAttrStringHash
+#include "attribute-access-object.c.inl"
+
+#define DEFINE_DeeObject_TGetAttrStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TDelAttrStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TSetAttrStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TCallAttrStringLenHashKw
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_THasAttrStringLenHash
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TBoundAttrStringLenHash
+#include "attribute-access-object.c.inl"
+
+
 
 /* Special-case optimizations for `VCallAttrf' */
 #define DEFINE_DeeObject_VCallAttrf
 #include "attribute-access-object.c.inl"
 #define DEFINE_DeeObject_VCallAttrStringHashf
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TVCallAttrf
+#include "attribute-access-object.c.inl"
+#define DEFINE_DeeObject_TVCallAttrStringHashf
 #include "attribute-access-object.c.inl"
 
 DECL_BEGIN
@@ -261,14 +284,13 @@ PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
 DeeObject_VCallAttrStringLenHashf(DeeObject *self,
                                   char const *__restrict attr, size_t attrlen, dhash_t hash,
                                   char const *__restrict format, va_list args) {
-	DREF DeeObject *result, *args_tuple;
-	args_tuple = DeeTuple_VNewf(format, args);
-	if unlikely(!args_tuple)
+	DREF DeeObject *result;
+	char *attrcopy = (char *)Dee_Mallocac(attrlen + 1, sizeof(char));
+	if unlikely(!attrcopy)
 		goto err;
-	result = DeeObject_CallAttrStringLenHash(self, attr, attrlen, hash,
-	                                         DeeTuple_SIZE(args_tuple),
-	                                         DeeTuple_ELEM(args_tuple));
-	Dee_Decref(args_tuple);
+	*(char *)mempcpyc(attrcopy, attr, attrlen, sizeof(char)) = '\0';
+	result = DeeObject_VCallAttrStringHashf(self, attr, hash, format, args);
+	Dee_Freea(attrcopy);
 	return result;
 err:
 	return NULL;

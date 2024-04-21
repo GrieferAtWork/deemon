@@ -22,8 +22,8 @@
 
 #include <deemon/alloc.h>
 #include <deemon/api.h>
-#include <deemon/alloc.h>
 #include <deemon/arg.h>
+#include <deemon/attribute.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
 #include <deemon/super.h>
@@ -599,32 +599,196 @@ super_iternext(Super *__restrict self) {
 	return DeeObject_TIterNext(self->s_type, self->s_self);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_getattr(Super *self, /*String*/ DeeObject *name) {
 	return DeeObject_TGetAttr(self->s_type, self->s_self, name);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_delattr(Super *self, /*String*/ DeeObject *name) {
 	return DeeObject_TDelAttr(self->s_type, self->s_self, name);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
 super_setattr(Super *self, /*String*/ DeeObject *name, DeeObject *value) {
 	return DeeObject_TSetAttr(self->s_type, self->s_self, name, value);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
 super_enumattr(DeeTypeObject *UNUSED(tp_self),
                Super *self, denum_t proc, void *arg) {
 	return DeeObject_EnumAttr(self->s_type, self->s_self, proc, arg);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
+super_findattr(DeeTypeObject *UNUSED(tp_self), Super *self,
+               struct attribute_info *__restrict result,
+               struct attribute_lookup_rules const *__restrict rules) {
+	return DeeObject_FindAttr(self->s_type, self->s_self, result, rules);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_hasattr(Super *self, DeeObject *name) {
+	return DeeObject_THasAttr(self->s_type, self->s_self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_boundattr(Super *self, DeeObject *name) {
+	return DeeObject_TBoundAttr(self->s_type, self->s_self, name);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr(Super *self, DeeObject *name,
+               size_t argc, DeeObject *const *argv) {
+	return DeeObject_TCallAttr(self->s_type, self->s_self, name, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr_kw(Super *self, DeeObject *name,
+                  size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeObject_TCallAttrKw(self->s_type, self->s_self, name, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_vcallattrf(Super *self, DeeObject *name,
+                 char const *format, va_list args) {
+	return DeeObject_TVCallAttrf(self->s_type, self->s_self, name, format, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_getattr_string_hash(Super *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_TGetAttrStringHash(self->s_type, self->s_self, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_delattr_string_hash(Super *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_TDelAttrStringHash(self->s_type, self->s_self, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+super_setattr_string_hash(Super *self, char const *attr, Dee_hash_t hash, DeeObject *value) {
+	return DeeObject_TSetAttrStringHash(self->s_type, self->s_self, attr, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_hasattr_string_hash(Super *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_THasAttrStringHash(self->s_type, self->s_self, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_boundattr_string_hash(Super *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_TBoundAttrStringHash(self->s_type, self->s_self, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr_string_hash(Super *self, char const *attr, Dee_hash_t hash,
+                           size_t argc, DeeObject *const *argv) {
+	return DeeObject_TCallAttrStringHash(self->s_type, self->s_self, attr, hash, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr_string_hash_kw(Super *self, char const *attr, Dee_hash_t hash,
+                              size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeObject_TCallAttrStringHashKw(self->s_type, self->s_self, attr, hash, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
+super_vcallattr_string_hashf(Super *self, char const *attr, Dee_hash_t hash,
+                             char const *format, va_list args) {
+	return DeeObject_TVCallAttrStringHashf(self->s_type, self->s_self, attr, hash, format, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_getattr_string_len_hash(Super *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_TGetAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_delattr_string_len_hash(Super *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_TDelAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+super_setattr_string_len_hash(Super *self, char const *attr, size_t attrlen,
+                              Dee_hash_t hash, DeeObject *value) {
+	return DeeObject_TSetAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_hasattr_string_len_hash(Super *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_THasAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_boundattr_string_len_hash(Super *self, char const *attr, size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_TBoundAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr_string_len_hash(Super *self, char const *attr, size_t attrlen,
+                               Dee_hash_t hash, size_t argc, DeeObject *const *argv) {
+	return DeeObject_TCallAttrStringLenHash(self->s_type, self->s_self, attr, attrlen, hash, argc, argv);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+super_callattr_string_len_hash_kw(Super *self, char const *attr, size_t attrlen,
+                                  Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw) {
+	return DeeObject_TCallAttrStringLenHashKw(self->s_type, self->s_self, attr, attrlen, hash, argc, argv, kw);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3, 6)) bool DCALL
+super_findattr_info_string_len_hash(DeeTypeObject *tp_self, Super *self,
+                                    char const *__restrict attr, size_t attrlen, Dee_hash_t hash,
+                                    struct Dee_attrinfo *__restrict retinfo) {
+	(void)tp_self;
+	return DeeObject_TFindAttrInfoStringLenHash(self->s_type, self->s_self,
+	                                            attr, attrlen, hash, retinfo);
+}
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_callattr_tuple(Super *self, /*String*/ DeeObject *attr, DeeObject *args) {
+	return DeeObject_TCallAttrTuple(self->s_type, self->s_self, attr, args);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+super_callattr_tuple_kw(Super *self, /*String*/ DeeObject *attr, DeeObject *args, DeeObject *kw) {
+	return DeeObject_TCallAttrTupleKw(self->s_type, self->s_self, attr, args, kw);
+}
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
+
+
 PRIVATE struct type_attr tpconst super_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
-	/* .tp_enumattr = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&super_enumattr
+	/* .tp_getattr                       = */ (DREF DeeObject *(DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_getattr,
+	/* .tp_delattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *))&super_delattr,
+	/* .tp_setattr                       = */ (int (DCALL *)(DeeObject *, /*String*/ DeeObject *, DeeObject *))&super_setattr,
+	/* .tp_enumattr                      = */ (dssize_t (DCALL *)(DeeTypeObject *, DeeObject *, denum_t, void *))&super_enumattr,
+	/* .tp_findattr                      = */ (int (DCALL *)(DeeTypeObject *, DeeObject *, struct attribute_info *__restrict, struct attribute_lookup_rules const *__restrict))&super_findattr,
+	/* .tp_hasattr                       = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_hasattr,
+	/* .tp_boundattr                     = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_boundattr,
+	/* .tp_callattr                      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *))&super_callattr,
+	/* .tp_callattr_kw                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, size_t, DeeObject *const *, DeeObject *))&super_callattr_kw,
+	/* .tp_vcallattrf                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, char const *, va_list))&super_vcallattrf,
+	/* .tp_getattr_string_hash           = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_getattr_string_hash,
+	/* .tp_delattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_delattr_string_hash,
+	/* .tp_setattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&super_setattr_string_hash,
+	/* .tp_hasattr_string_hash           = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_hasattr_string_hash,
+	/* .tp_boundattr_string_hash         = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_boundattr_string_hash,
+	/* .tp_callattr_string_hash          = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *))&super_callattr_string_hash,
+	/* .tp_callattr_string_hash_kw       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&super_callattr_string_hash_kw,
+	/* .tp_vcallattr_string_hashf        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t, char const *, va_list))&super_vcallattr_string_hashf,
+	/* .tp_getattr_string_len_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&super_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash       = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_hasattr_string_len_hash,
+	/* .tp_boundattr_string_len_hash     = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&super_boundattr_string_len_hash,
+	/* .tp_callattr_string_len_hash      = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *))&super_callattr_string_len_hash,
+	/* .tp_callattr_string_len_hash_kw   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, size_t, DeeObject *const *, DeeObject *))&super_callattr_string_len_hash_kw,
+	/* .tp_findattr_info_string_len_hash = */ (bool (DCALL *)(DeeTypeObject *, DeeObject *, char const *__restrict, size_t, Dee_hash_t, struct Dee_attrinfo *__restrict))&super_findattr_info_string_len_hash,
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	/* .tp_callattr_tuple                = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_callattr_tuple,
+	/* .tp_callattr_tuple_kw             = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_callattr_tuple_kw,
+#endif /* CONFIG_CALLTUPLE_OPTIMIZATIONS */
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL super_enter(Super *__restrict self) {

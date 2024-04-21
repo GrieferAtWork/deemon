@@ -147,11 +147,30 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttr)(D
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrKw)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TCallAttrTuple)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TCallAttrTupleKw)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TVCallAttrf)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, char const *format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeObject_TSetAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrStringHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttrStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) DREF DeeObject *(DCALL DeeObject_TVCallAttrStringHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, Dee_hash_t hash, char const *format, va_list args);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeObject_TSetAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCallAttrStringLenHashKw)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttrStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+//DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) DREF DeeObject *(DCALL DeeObject_TVCallAttrStringLenHashf)(DeeTypeObject *tp_self, DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, char const *format, va_list args);
 #if !defined(CONFIG_CALLTUPLE_OPTIMIZATIONS) && !defined(__OPTIMIZE_SIZE__)
 #define DeeObject_TCallAttrTuple(tp_self, self, attr, args)       DeeObject_TCallAttr(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args))
 #define DeeObject_TCallAttrTupleKw(tp_self, self, attr, args, kw) DeeObject_TCallAttrKw(tp_self, self, attr, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 #endif /* !CONFIG_CALLTUPLE_OPTIMIZATIONS && !__OPTIMIZE_SIZE__ */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
+
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TEnter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TLeave)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *tp_self, DeeObject *self, DeeBuffer *__restrict info, unsigned int flags);

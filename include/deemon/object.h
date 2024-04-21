@@ -126,6 +126,10 @@ struct Dee_weakref;
 struct Dee_object;
 struct Dee_type_object;
 struct Dee_class_desc;
+struct Dee_attribute_info;
+struct Dee_attribute_lookup_rules;
+struct Dee_attrinfo;
+
 
 typedef struct Dee_type_object DeeTypeObject;
 typedef struct Dee_object      DeeObject;
@@ -1912,14 +1916,114 @@ struct Dee_type_seq {
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
 	struct Dee_type_nsi Dee_tpconst *tp_nsi;
+
+	/* TODO: foreach enumeration operator (for implementing an optimized `DeeObject_Foreach()' / `DeeObject_ForeachPair()') */
 };
 
 struct Dee_type_attr {
 	/* Basic attribute operators. */
-	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *name);
-	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *name);
-	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *name, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2))    DREF DeeObject *(DCALL *tp_getattr)(DeeObject *self, /*String*/ DeeObject *attr);
+	WUNUSED_T NONNULL_T((1, 2))    int             (DCALL *tp_delattr)(DeeObject *self, /*String*/ DeeObject *attr);
+	WUNUSED_T NONNULL_T((1, 2, 3)) int             (DCALL *tp_setattr)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
 	WUNUSED_T NONNULL_T((1, 2, 3)) Dee_ssize_t     (DCALL *tp_enumattr)(DeeTypeObject *tp_self, DeeObject *self, Dee_enum_t proc, void *arg);
+
+	/* Everything below is just an optional hook for the purpose of optimization.
+	 * If implemented, it *MUST* behave identical to the above operators.
+	 *
+	 * NOTE: Deemon will *NOT* substitute the above functions with those below!!!
+	 *       (As a matter of fact: it doesn't use DeeObject_Default* operators for
+	 *       any of this stuff since doing so would be slower due to the fact that
+	 *       it would add a whole ton of otherwise unnecessary DeeObject_T-checks)
+	 *       This means taht if you want to implement stuff below, you *MUST* also
+	 *       implement the operators above like follows:
+	 *   - tp_findattr:                      Must also implement `tp_enumattr'
+	 *   - tp_hasattr:                       Must also implement `tp_getattr'
+	 *   - tp_boundattr:                     Must also implement `tp_getattr'
+	 *   - tp_callattr:                      Must also implement `tp_getattr'
+	 *   - tp_callattr_kw:                   Must also implement `tp_getattr'
+	 *   - tp_vcallattrf:                    Must also implement `tp_getattr'
+	 *   - tp_getattr_string_hash:           Must also implement `tp_getattr'
+	 *   - tp_delattr_string_hash:           Must also implement `tp_delattr'
+	 *   - tp_setattr_string_hash:           Must also implement `tp_setattr'
+	 *   - tp_hasattr_string_hash:           Must also implement `tp_getattr'
+	 *   - tp_boundattr_string_hash:         Must also implement `tp_getattr'
+	 *   - tp_callattr_string_hash:          Must also implement `tp_getattr'
+	 *   - tp_callattr_string_hash_kw:       Must also implement `tp_getattr'
+	 *   - tp_vcallattr_string_hashf:        Must also implement `tp_getattr'
+	 *   - tp_getattr_string_len_hash:       Must also implement `tp_getattr'
+	 *   - tp_delattr_string_len_hash:       Must also implement `tp_delattr'
+	 *   - tp_setattr_string_len_hash:       Must also implement `tp_setattr'
+	 *   - tp_hasattr_string_len_hash:       Must also implement `tp_getattr'
+	 *   - tp_boundattr_string_len_hash:     Must also implement `tp_getattr'
+	 *   - tp_callattr_string_len_hash:      Must also implement `tp_getattr'
+	 *   - tp_callattr_string_len_hash_kw:   Must also implement `tp_getattr'
+	 *   - tp_findattr_info_string_len_hash: Don't implement unless your type uses standard attribute
+	 *                                       mechanisms (usually DeeObject_Generic*Attr) at some point,
+	 *                                       in which case you can implement this operator to tell deemon
+	 *                                       about attributes that *always* resolve to standard ones.
+	 */
+
+	/* [0..1] Like `tp_enumattr', but quickly find specific attribute */
+	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int (DCALL *tp_findattr)(DeeTypeObject *tp_self, DeeObject *self, struct Dee_attribute_info *__restrict result, struct Dee_attribute_lookup_rules const *__restrict rules);
+
+	/* [0..1] Like `tp_getattr', but handles attribute errors:
+	 * @return: 1 : Attribute exists.
+	 * @return: 0 : Attribute doesn't exist.
+	 * @return: -1: An error occurred. .*/
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr)(DeeObject *self, /*String*/ DeeObject *attr);
+
+	/* [0..1] Like `tp_getattr', but handles attribute errors:
+	 * @return: 1 : Attribute is bound.
+	 * @return: 0 : Attribute isn't bound.
+	 * @return: -1: An error occurred.
+	 * @return: -2: The attribute doesn't exist.
+	 * @return: -3: A user-defined getattr operator threw an error indicating
+	 *              that the attribute doesn't exists. - Should be handled the
+	 *              same way as `-2', however search for the attribute should
+	 *              not continue.*/
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_boundattr)(DeeObject *self, /*String*/ DeeObject *attr);
+
+	/* [0..1] Like `tp_getattr' + `DeeObject_Call()', but no need to create the intermediate object. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr)(DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_kw)(DeeObject *self, /*String*/ DeeObject *attr, size_t argc, DeeObject *const *argv, DeeObject *kw);
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_vcallattrf)(DeeObject *self, /*String*/ DeeObject *attr, char const *format, va_list args);
+
+	/* [0..1] Like the other operators above, but the attribute name is specified as a string. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 4)) int (DCALL *tp_setattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_boundattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_hash)(DeeObject *self, char const *attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_hash_kw)(DeeObject *self, char const *attr, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+	WUNUSED_T NONNULL_T((1, 2, 4)) DREF DeeObject *(DCALL *tp_vcallattr_string_hashf)(DeeObject *self, char const *attr, Dee_hash_t hash, char const *format, va_list args);
+
+	/* [0..1] Like the other operators above, but the attribute name is specified as a string (that's not necessarily NUL-terminated). */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *tp_setattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_boundattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_len_hash)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_callattr_string_len_hash_kw)(DeeObject *self, char const *attr, size_t attrlen, Dee_hash_t hash, size_t argc, DeeObject *const *argv, DeeObject *kw);
+
+	/* [0..1] For implementing `DeeObject_TFindAttrInfoStringLenHash()'.
+	 * This should ONLY be defined by proxy types (like `Super'), or types that always
+	 * make use of standard attribute access mechanisms for certain attributes (usually
+	 * `DeeObject_Generic*Attr'), and know what they're doing.
+	 * @return: true:   Attribute information was found, and `*retinfo' was filled.
+	 *                  Note that in case of `Dee_ATTRINFO_CUSTOM', accessing the
+	 *                  attribute can still fail for any number of reasons at runtime.
+	 * @return: false:  Attribute information could not be found, and `*retinfo' is undefined.
+	 *                  This has the same meaning as `DeeObject_HasAttr(...) == false'. */
+	WUNUSED_T NONNULL_T((1, 2, 3, 6)) bool (DCALL *tp_findattr_info_string_len_hash)(DeeTypeObject *tp_self, DeeObject *self, char const *__restrict attr, size_t attrlen, Dee_hash_t hash, struct Dee_attrinfo *__restrict retinfo);
+
+#ifdef CONFIG_CALLTUPLE_OPTIMIZATIONS
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_callattr_tuple)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args);
+	WUNUSED_T NONNULL_T((1, 2, 3)) DREF DeeObject *(DCALL *tp_callattr_tuple_kw)(DeeObject *self, /*String*/ DeeObject *attr, DeeObject *args, DeeObject *kw);
+#elif !defined(CONFIG_BUILDING_DEEMON)
+	Dee_funptr_t _tp_pad[2]; /* For binary compatibility */
+#endif /* ... */
 };
 
 struct Dee_type_with {
@@ -3057,7 +3161,7 @@ struct Dee_type_object {
 	struct Dee_type_attr Dee_tpconst   *tp_attr;     /* [0..1][owned_if(tp_class != NULL)] Attribute access operators. */
 	struct Dee_type_with               *tp_with;     /* [0..1][owned_if(tp_class != NULL)] __enter__ / __leave__ operators. */
 	struct Dee_type_buffer             *tp_buffer;   /* [0..1] Raw buffer interface. */
-	/* NOTE: All of the following as sentinel-terminated vectors. */
+	/* NOTE: All of the following are sentinel-terminated vectors. */
 	struct Dee_type_method Dee_tpconst *tp_methods;  /* [0..1] Instance methods. */
 	struct Dee_type_getset Dee_tpconst *tp_getsets;  /* [0..1] Instance getsets. */
 	struct Dee_type_member Dee_tpconst *tp_members;  /* [0..1] Instance member fields. */
@@ -3409,10 +3513,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL DeeObject_VPTInvokeOper
 #define DeeObject_PInvokeOperatorf(p_self, name, format, ...)   DeeObject_PTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, __VA_ARGS__)
 #define DeeObject_PVInvokeOperatorf(p_self, name, format, args) DeeObject_VPTInvokeOperatorf(Dee_TYPE(*(p_self)), p_self, name, format, args)
 
-
-struct Dee_attribute_info;
-struct Dee_attribute_lookup_rules;
-struct Dee_attrinfo;
 
 /* Generic attribute lookup through `tp_self[->tp_base...]->tp_methods, tp_getsets, tp_members'
  * @return: -1 / ---   / NULL:          Error.

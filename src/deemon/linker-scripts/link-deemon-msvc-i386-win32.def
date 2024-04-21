@@ -353,6 +353,7 @@ EXPORTS
 	DeeInstance_SetMemberSafe@16=_DeeInstance_SetMemberSafe@16
 	DeeInstance_VCallAttributef@24=_DeeInstance_VCallAttributef@24
 	DeeInt_AsBytes@20=_DeeInt_AsBytes@20
+	DeeInt_AsDouble@8=_DeeInt_AsDouble@8
 	DeeInt_AsInt128@8=_DeeInt_AsInt128@8
 	DeeInt_AsInt16@8=_DeeInt_AsInt16@8
 	DeeInt_AsInt32@8=_DeeInt_AsInt32@8
@@ -373,6 +374,7 @@ EXPORTS
 	DeeInt_Get8Bit@8=_DeeInt_Get8Bit@8
 	DeeInt_GetSleb@8=_DeeInt_GetSleb@8
 	DeeInt_GetUleb@8=_DeeInt_GetUleb@8
+	DeeInt_NewDouble@8=_DeeInt_NewDouble@8
 	DeeInt_NewInt128@16=_DeeInt_NewInt128@16
 	DeeInt_NewInt16@4=_DeeInt_NewInt16@4
 	DeeInt_NewInt32@4=_DeeInt_NewInt32@4
@@ -760,10 +762,16 @@ EXPORTS
 	DeeObject_TAssign@12=_DeeObject_TAssign@12
 	DeeObject_TBool@8=_DeeObject_TBool@8
 	DeeObject_TBoundAttr@12=_DeeObject_TBoundAttr@12
+	DeeObject_TBoundAttrStringHash@16=_DeeObject_TBoundAttrStringHash@16
+	DeeObject_TBoundAttrStringLenHash@20=_DeeObject_TBoundAttrStringLenHash@20
 	DeeObject_TBytes@20=_DeeObject_TBytes@20
 	DeeObject_TCall@16=_DeeObject_TCall@16
 	DeeObject_TCallAttr@20=_DeeObject_TCallAttr@20
 	DeeObject_TCallAttrKw@24=_DeeObject_TCallAttrKw@24
+	DeeObject_TCallAttrStringHash@24=_DeeObject_TCallAttrStringHash@24
+	DeeObject_TCallAttrStringHashKw@28=_DeeObject_TCallAttrStringHashKw@28
+	DeeObject_TCallAttrStringLenHash@28=_DeeObject_TCallAttrStringLenHash@28
+	DeeObject_TCallAttrStringLenHashKw@32=_DeeObject_TCallAttrStringLenHashKw@32
 	DeeObject_TCallAttrTuple@16=_DeeObject_TCallAttrTuple@16
 	DeeObject_TCallAttrTupleKw@20=_DeeObject_TCallAttrTupleKw@20
 	DeeObject_TCallKw@20=_DeeObject_TCallKw@20
@@ -779,6 +787,8 @@ EXPORTS
 	DeeObject_TDec@8=_DeeObject_TDec@8
 	DeeObject_TDeepCopy@8=_DeeObject_TDeepCopy@8
 	DeeObject_TDelAttr@12=_DeeObject_TDelAttr@12
+	DeeObject_TDelAttrStringHash@16=_DeeObject_TDelAttrStringHash@16
+	DeeObject_TDelAttrStringLenHash@20=_DeeObject_TDelAttrStringLenHash@20
 	DeeObject_TDelItem@12=_DeeObject_TDelItem@12
 	DeeObject_TDelRange@16=_DeeObject_TDelRange@16
 	DeeObject_TDiv@12=_DeeObject_TDiv@12
@@ -804,9 +814,14 @@ EXPORTS
 	DeeObject_TGet32Bit@12=_DeeObject_TGet32Bit@12
 	DeeObject_TGet64Bit@12=_DeeObject_TGet64Bit@12
 	DeeObject_TGetAttr@12=_DeeObject_TGetAttr@12
+	DeeObject_TGetAttrStringHash@16=_DeeObject_TGetAttrStringHash@16
+	DeeObject_TGetAttrStringLenHash@20=_DeeObject_TGetAttrStringLenHash@20
 	DeeObject_TGetBuf@16=_DeeObject_TGetBuf@16
 	DeeObject_TGetItem@12=_DeeObject_TGetItem@12
 	DeeObject_TGetRange@16=_DeeObject_TGetRange@16
+	DeeObject_THasAttr@12=_DeeObject_THasAttr@12
+	DeeObject_THasAttrStringHash@16=_DeeObject_THasAttrStringHash@16
+	DeeObject_THasAttrStringLenHash@20=_DeeObject_THasAttrStringLenHash@20
 	DeeObject_THash@8=_DeeObject_THash@8
 	DeeObject_TInc@8=_DeeObject_TInc@8
 	DeeObject_TInplaceAdd@12=_DeeObject_TInplaceAdd@12
@@ -838,6 +853,8 @@ EXPORTS
 	DeeObject_TPrintRepr@16=_DeeObject_TPrintRepr@16
 	DeeObject_TRepr@8=_DeeObject_TRepr@8
 	DeeObject_TSetAttr@16=_DeeObject_TSetAttr@16
+	DeeObject_TSetAttrStringHash@20=_DeeObject_TSetAttrStringHash@20
+	DeeObject_TSetAttrStringLenHash@24=_DeeObject_TSetAttrStringLenHash@24
 	DeeObject_TSetItem@16=_DeeObject_TSetItem@16
 	DeeObject_TSetRange@20=_DeeObject_TSetRange@20
 	DeeObject_TShl@12=_DeeObject_TShl@12
@@ -847,6 +864,8 @@ EXPORTS
 	DeeObject_TSub@12=_DeeObject_TSub@12
 	DeeObject_TThisCall@20=_DeeObject_TThisCall@20
 	DeeObject_TThisCallKw@24=_DeeObject_TThisCallKw@24
+	DeeObject_TVCallAttrStringHashf@24=_DeeObject_TVCallAttrStringHashf@24
+	DeeObject_TVCallAttrf@20=_DeeObject_TVCallAttrf@20
 	DeeObject_TVisit@16=_DeeObject_TVisit@16
 	DeeObject_TXor@12=_DeeObject_TXor@12
 	DeeObject_ThisCall@16=_DeeObject_ThisCall@16
