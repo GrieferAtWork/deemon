@@ -941,8 +941,8 @@ print_sp(DeeObject *__restrict self) {
 	return unlikely(result == (size_t)-1) ? -1 : 0;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int DCALL
-DeeFile_PrintNl(DeeObject *__restrict self) {
+PUBLIC WUNUSED NONNULL((1)) int
+(DCALL DeeFile_PrintNl)(DeeObject *__restrict self) {
 	size_t result = DeeFile_WriteAll(self, "\n", sizeof(char));
 	return unlikely(result == (size_t)-1) ? -1 : 0;
 }
@@ -953,9 +953,9 @@ DeeFile_PrintNl(DeeObject *__restrict self) {
 	DeeObject_PrintRepr(ob, (dformatprinter)&DeeFile_WriteAll, self)
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObject(DeeObject *self,
-                    DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObject)(DeeObject *self,
+                            DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob) < 0)
 		goto err;
 	return 0;
@@ -963,9 +963,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObjectSp(DeeObject *self,
-                      DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObjectSp)(DeeObject *self,
+                              DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob) < 0)
 		goto err;
 	return print_sp(self);
@@ -973,9 +973,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObjectNl(DeeObject *self,
-                      DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObjectNl)(DeeObject *self,
+                              DeeObject *ob) {
 	if unlikely(print_ob_str(self, ob) < 0)
 		goto err;
 	return DeeFile_PrintNl(self);
@@ -983,9 +983,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObjectRepr(DeeObject *self,
-                        DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObjectRepr)(DeeObject *self,
+                                DeeObject *ob) {
 	if unlikely(print_ob_repr(self, ob) < 0)
 		goto err;
 	return 0;
@@ -993,9 +993,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObjectReprSp(DeeObject *self,
-                          DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObjectReprSp)(DeeObject *self,
+                                  DeeObject *ob) {
 	if unlikely(print_ob_repr(self, ob) < 0)
 		goto err;
 	return print_sp(self);
@@ -1003,9 +1003,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintObjectReprNl(DeeObject *self,
-                          DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintObjectReprNl)(DeeObject *self,
+                                  DeeObject *ob) {
 	if unlikely(print_ob_repr(self, ob) < 0)
 		goto err;
 	return DeeFile_PrintNl(self);
@@ -1013,9 +1013,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintAll(DeeObject *self,
-                 DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintAll)(DeeObject *self,
+                         DeeObject *ob) {
 	int result;
 	DREF DeeObject *elem;
 	bool is_first    = true;
@@ -1070,9 +1070,9 @@ err_m1:
 	goto err;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintAllSp(DeeObject *self,
-                   DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintAllSp)(DeeObject *self,
+                           DeeObject *ob) {
 	int result;
 	DREF DeeObject *elem;
 	size_t fast_size = DeeFastSeq_GetSize(ob);
@@ -1112,9 +1112,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
-DeeFile_PrintAllNl(DeeObject *self,
-                   DeeObject *ob) {
+PUBLIC WUNUSED NONNULL((1, 2)) int
+(DCALL DeeFile_PrintAllNl)(DeeObject *self,
+                           DeeObject *ob) {
 	if unlikely(DeeFile_PrintAll(self, ob))
 		goto err;
 	return DeeFile_PrintNl(self);

@@ -408,16 +408,31 @@ DeeFile_VPrintf(DeeObject *__restrict self, char const *__restrict format, va_li
 
 
 /* Print text to a given file, implementing behavior of the print statement. */
-DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_PrintNl(DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObject(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectNl(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectRepr(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprNl(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAll(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllNl(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeFile_PrintNl)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObject)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObjectSp)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObjectNl)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObjectRepr)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObjectReprSp)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintObjectReprNl)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintAll)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintAllSp)(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeFile_PrintAllNl)(DeeObject *self, DeeObject *ob);
+
+#ifndef __INTELLISENSE__
+#ifndef __NO_builtin_expect
+#define DeeFile_PrintNl(self)               __builtin_expect(DeeFile_PrintNl(self), 0)
+#define DeeFile_PrintObject(self, ob)       __builtin_expect(DeeFile_PrintObject(self, ob), 0)
+#define DeeFile_PrintObjectSp(self, ob)     __builtin_expect(DeeFile_PrintObjectSp(self, ob), 0)
+#define DeeFile_PrintObjectNl(self, ob)     __builtin_expect(DeeFile_PrintObjectNl(self, ob), 0)
+#define DeeFile_PrintObjectRepr(self, ob)   __builtin_expect(DeeFile_PrintObjectRepr(self, ob), 0)
+#define DeeFile_PrintObjectReprSp(self, ob) __builtin_expect(DeeFile_PrintObjectReprSp(self, ob), 0)
+#define DeeFile_PrintObjectReprNl(self, ob) __builtin_expect(DeeFile_PrintObjectReprNl(self, ob), 0)
+#define DeeFile_PrintAll(self, ob)          __builtin_expect(DeeFile_PrintAll(self, ob), 0)
+#define DeeFile_PrintAllSp(self, ob)        __builtin_expect(DeeFile_PrintAllSp(self, ob), 0)
+#define DeeFile_PrintAllNl(self, ob)        __builtin_expect(DeeFile_PrintAllNl(self, ob), 0)
+#endif /* !__NO_builtin_expect */
+#endif /* !__INTELLISENSE__ */
 
 
 /* Open a new system file.
