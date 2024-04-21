@@ -1526,18 +1526,40 @@ bs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
 		goto done;
 	is_first = true;
 	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
-		DO(err, DeeFormat_Printf(printer, arg,
-		                         "%s%" PRFuSIZ,
-		                         is_first ? " " : ", ",
-		                         bitno));
+		DO(err_temp, DeeFormat_Printf(printer, arg,
+		                              "%s%" PRFuSIZ,
+		                              is_first ? " " : ", ",
+		                              bitno));
 		is_first = false;
 	}
-	DO(err, is_first ? DeeFormat_PRINT(printer, arg, "})")
-	                 : DeeFormat_PRINT(printer, arg, " })"));
+	DO(err_temp, is_first ? DeeFormat_PRINT(printer, arg, "})")
+	                      : DeeFormat_PRINT(printer, arg, " })"));
 done:
 	return result;
-err:
+err_temp:
 	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+bs_foreach(Bitset *self, Dee_foreach_t proc, void *arg) {
+	dssize_t temp, result = 0;
+	size_t bitno;
+	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
+		DREF DeeObject *id;
+		id = DeeInt_NewSize(bitno);
+		if unlikely(!id)
+			goto err;
+		temp = (*proc)(arg, id);
+		Dee_Decref(id);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 
@@ -1608,7 +1630,8 @@ PRIVATE struct type_seq bs_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bs_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bs_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bs_setrange,
-	/* .tp_nsi       = */ &bs_nsi
+	/* .tp_nsi       = */ &bs_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bs_foreach,
 };
 
 PRIVATE struct type_buffer bs_buffer = {
@@ -2019,6 +2042,7 @@ err:
 #define robs_iter     bs_iter
 #define robs_size     bs_size
 #define robs_contains bs_contains
+#define robs_foreach  bs_foreach
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
 robs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
@@ -2201,7 +2225,8 @@ PRIVATE struct type_seq robs_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&robs_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &robs_nsi
+	/* .tp_nsi       = */ &robs_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&robs_foreach,
 };
 
 PRIVATE struct type_buffer robs_buffer = {
@@ -3749,6 +3774,29 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+bsv_foreach(BitsetView *self, Dee_foreach_t proc, void *arg) {
+	dssize_t temp, result = 0;
+	size_t bitno;
+	bitset_nforeach (bitno, BitsetView_GetBitset(self),
+	                 self->bsv_startbit, self->bsv_endbit) {
+		DREF DeeObject *id;
+		id = DeeInt_NewSize(bitno - self->bsv_startbit);
+		if unlikely(!id)
+			goto err;
+		temp = (*proc)(arg, id);
+		Dee_Decref(id);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
 PRIVATE struct type_nsi tpconst bsv_nsi = {
 	/* .nsi_class = */ TYPE_SEQX_CLASS_SET,
 	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
@@ -3816,7 +3864,8 @@ PRIVATE struct type_seq bsv_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bsv_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bsv_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bsv_setrange,
-	/* .tp_nsi       = */ &bsv_nsi
+	/* .tp_nsi       = */ &bsv_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bsv_foreach,
 };
 
 PRIVATE struct type_buffer bsv_buffer = {

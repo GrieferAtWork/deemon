@@ -1210,8 +1210,29 @@ err:
 	return NULL;
 }
 
-
-
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+uset_foreach(USet *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	USet_LockRead(self);
+	for (i = 0; i <= self->us_mask; ++i) {
+		DeeObject *key = self->us_elem[i].usi_key;
+		if (!key || key == dummy)
+			continue;
+		Dee_Incref(key);
+		USet_LockEndRead(self);
+		temp = (*proc)(arg, key);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		USet_LockRead(self);
+	}
+	USet_LockEndRead(self);
+	return result;
+err_temp:
+	return temp;
+}
 
 
 PRIVATE struct type_nsi tpconst uset_nsi = {
@@ -1236,7 +1257,8 @@ PRIVATE struct type_seq uset_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &uset_nsi
+	/* .tp_nsi       = */ &uset_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uset_foreach,
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
@@ -1574,6 +1596,24 @@ uroset_contains(URoSet *self, DeeObject *elem) {
 	return_bool(URoSet_Contains(self, elem));
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+uroset_foreach(URoSet *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i <= self->urs_mask; ++i) {
+		DeeObject *key = self->urs_elem[i].usi_key;
+		if (!key)
+			continue;
+		temp = (*proc)(arg, key);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 PRIVATE struct type_seq uroset_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_size,
@@ -1584,7 +1624,8 @@ PRIVATE struct type_seq uroset_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &uroset_nsi
+	/* .tp_nsi       = */ &uroset_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uroset_foreach,
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL

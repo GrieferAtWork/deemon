@@ -512,16 +512,18 @@ err:
 }
 
 PRIVATE struct type_seq modexports_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_get,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_del,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&modexports_set,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ NULL, /* TODO */
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_get,
+	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_del,
+	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&modexports_set,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ NULL, /* TODO */
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ NULL, /* TODO */
 };
 
 DOC_REF(map_get_doc);
@@ -764,7 +766,8 @@ PRIVATE struct type_seq modglobals_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &modglobals_nsi
+	/* .tp_nsi       = */ &modglobals_nsi,
+	/* .tp_foreach   = */ NULL, /* TODO */
 };
 
 INTERN DeeTypeObject ModuleGlobals_Type = {

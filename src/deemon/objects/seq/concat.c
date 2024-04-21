@@ -728,6 +728,20 @@ err:
 	return (size_t)-2;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cat_foreach(Cat *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i < self->t_size; ++i) {
+		temp = DeeObject_Foreach(self->t_elem[i], proc, arg);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -772,7 +786,8 @@ PRIVATE struct type_seq cat_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &cat_nsi
+	/* .tp_nsi       = */ &cat_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
 };
 
 

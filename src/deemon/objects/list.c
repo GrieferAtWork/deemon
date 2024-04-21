@@ -1401,7 +1401,7 @@ again:
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
 		error = DeeObject_CompareEq(elem, list_elem);
-		Dee_Decref(list_elem);
+		Dee_Decref_unlikely(list_elem);
 		if unlikely(error < 0)
 			goto err;
 		if (error)
@@ -2225,7 +2225,7 @@ list_nsi_find(List *me,
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, list_elem, key);
-		Dee_Decref(list_elem);
+		Dee_Decref_unlikely(list_elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
@@ -2258,7 +2258,7 @@ list_nsi_rfind(List *me, size_t start, size_t end,
 		Dee_Incref(list_elem);
 		DeeList_LockEndRead(me);
 		temp = DeeObject_CompareKeyEq(keyed_search_item, list_elem, key);
-		Dee_Decref(list_elem);
+		Dee_Decref_unlikely(list_elem);
 		if (temp != 0) {
 			if unlikely(temp < 0)
 				goto err;
@@ -2287,6 +2287,29 @@ list_nsi_xch(List *me, size_t index, DeeObject *value) {
 	DeeList_SET(me, index, value);   /* Inherit reference. */
 	DeeList_LockEndWrite(me);
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+list_foreach(List *self, Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	DeeList_LockRead(self);
+	for (i = 0; i < self->l_list.ol_elemc; ++i) {
+		DREF DeeObject *list_elem;
+		list_elem = self->l_list.ol_elemv[i];
+		Dee_Incref(list_elem);
+		DeeList_LockEndRead(self);
+		temp = (*proc)(arg, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeList_LockRead(self);
+	}
+	DeeList_LockEndRead(self);
+	return result;
+err:
+	return temp;
 }
 
 
@@ -2333,7 +2356,8 @@ PRIVATE struct type_seq list_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
-	/* .tp_nsi       = */ &list_nsi
+	/* .tp_nsi       = */ &list_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
 };
 
 

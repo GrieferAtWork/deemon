@@ -1323,8 +1323,7 @@ string_size(String *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_get(String *self,
-           DeeObject *index) {
+string_get(String *self, DeeObject *index) {
 	int width = DeeString_WIDTH(self);
 	union dcharptr str;
 	size_t i, len;
@@ -1431,6 +1430,74 @@ err_index:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+string_foreach(String *self, Dee_foreach_t proc, void *arg) {
+	union dcharptr ptr, end;
+	Dee_ssize_t temp, result = 0;
+	SWITCH_SIZEOF_WIDTH(DeeString_WIDTH(self)) {
+
+	CASE_WIDTH_1BYTE:
+		ptr.cp8 = DeeString_Get1Byte((DeeObject *)self);
+		end.cp8 = ptr.cp8 + WSTR_LENGTH(ptr.cp8);
+		while (ptr.cp8 < end.cp8) {
+#ifdef CONFIG_STRING_LATIN1_STATIC
+			temp = (*proc)(arg, (DeeObject *)&DeeString_Latin1[*ptr.cp8]);
+#else /* CONFIG_STRING_LATIN1_STATIC */
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(*ptr.cp8);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+#endif /* !CONFIG_STRING_LATIN1_STATIC */
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+			++ptr.cp8;
+		}
+		break;
+
+	CASE_WIDTH_2BYTE:
+		ptr.cp16 = DeeString_Get2Byte((DeeObject *)self);
+		end.cp16 = ptr.cp16 + WSTR_LENGTH(ptr.cp16);
+		while (ptr.cp16 < end.cp16) {
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(*ptr.cp16);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+			++ptr.cp16;
+		}
+		break;
+
+	CASE_WIDTH_4BYTE:
+		ptr.cp32 = DeeString_Get4Byte((DeeObject *)self);
+		end.cp32 = ptr.cp32 + WSTR_LENGTH(ptr.cp32);
+		while (ptr.cp32 < end.cp32) {
+			DREF DeeObject *elem;
+			elem = DeeString_Chr(*ptr.cp32);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+			++ptr.cp32;
+		}
+		break;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
 PRIVATE struct type_nsi tpconst string_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1474,7 +1541,8 @@ PRIVATE struct type_seq string_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&string_range_get,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &string_nsi
+	/* .tp_nsi       = */ &string_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {

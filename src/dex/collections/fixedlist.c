@@ -1109,6 +1109,33 @@ err:
 	return (size_t)-1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+fl_foreach(FixedList *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i < self->fl_size; ++i) {
+		DREF DeeObject *elem;
+		FixedList_LockRead(self);
+		while ((elem = self->fl_elem[i]) == NULL) {
+			++i;
+			if (i >= self->fl_size) {
+				FixedList_LockEndRead(self);
+				goto done;
+			}
+		}
+		Dee_Incref(elem);
+		FixedList_LockEndRead(self);
+		temp = (*proc)(arg, elem);
+		Dee_Decref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+done:
+	return result;
+err_temp:
+	return temp;
+}
 
 
 PRIVATE struct type_nsi tpconst fl_nsi = {
@@ -1154,7 +1181,8 @@ PRIVATE struct type_seq fl_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&fl_setrange,
-	/* .tp_nsi       = */ &fl_nsi
+	/* .tp_nsi       = */ &fl_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

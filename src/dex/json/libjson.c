@@ -1120,6 +1120,81 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+jseq_foreach(DeeJsonSequenceObject *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	DeeJsonParser parser;
+	parser.djp_owner = self->js_owner;
+	DeeJsonSequence_LockRead(self);
+	parser.djp_parser = self->js_parser;
+	DeeJsonSequence_LockEndRead(self);
+	if unlikely(libjson_parser_rewind(&parser.djp_parser) != JSON_PARSER_ARRAY)
+		goto err_syntax;
+	for (;;) {
+		DREF DeeObject *elem;
+		if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDARRAY)
+			break;
+		elem = DeeJson_ParseObject(&parser, true);
+		if unlikely(!elem)
+			goto err;
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err_syntax:
+	err_json_syntax();
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+jmap_foreach(DeeJsonMappingObject *__restrict self, Dee_foreach_pair_t proc, void *arg) {
+	DREF DeeObject *key, *value;
+	Dee_ssize_t temp, result = 0;
+	DeeJsonParser parser;
+	parser.djp_owner = self->jm_owner;
+	DeeJsonMapping_LockRead(self);
+	parser.djp_parser = self->jm_parser;
+	DeeJsonMapping_LockEndRead(self);
+	if unlikely(libjson_parser_rewind(&parser.djp_parser) != JSON_PARSER_OBJECT)
+		goto err_syntax;
+	for (;;) {
+		if (libjson_parser_peeknext(&parser.djp_parser) == JSON_PARSER_ENDOBJECT)
+			break;
+		key = DeeJson_ParseString(&parser.djp_parser);
+		if unlikely(!key)
+			goto err;
+		if (libjson_parser_yield(&parser.djp_parser) != JSON_PARSER_COLON)
+			goto err_key_syntax;
+		value = DeeJson_ParseObject(&parser, true);
+		if unlikely(!value)
+			goto err_key;
+		temp = (*proc)(arg, key, value);
+		Dee_Decref(value);
+		Dee_Decref(key);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err_key:
+	Dee_Decref_likely(key);
+	return -1;
+err_key_syntax:
+	Dee_Decref_likely(key);
+err_syntax:
+	err_json_syntax();
+err:
+	return -1;
+}
+
 PRIVATE struct type_seq jseq_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jseq_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jseq_size,
@@ -1130,20 +1205,23 @@ PRIVATE struct type_seq jseq_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &jseq_nsi
+	/* .tp_nsi       = */ &jseq_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&jseq_foreach,
 };
 
 PRIVATE struct type_seq jmap_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmap_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmap_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jmap_get,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &jmap_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmap_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&jmap_size,
+	/* .tp_contains     = */ NULL,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&jmap_get,
+	/* .tp_del          = */ NULL,
+	/* .tp_set          = */ NULL,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ &jmap_nsi,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&jmap_foreach,
 };
 
 PRIVATE NONNULL((1)) void DCALL

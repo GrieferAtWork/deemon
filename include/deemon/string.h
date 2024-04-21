@@ -2197,6 +2197,18 @@ DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr16)(uint16_t ch);
 DFUNDEF WUNUSED DREF DeeObject *(DCALL DeeString_Chr32)(uint32_t ch);
 #endif /* !__INTELLISENSE__ || !__cplusplus */
 
+#if defined(CONFIG_BUILDING_DEEMON) && defined(CONFIG_STRING_LATIN1_STATIC)
+typedef struct {
+	Dee_OBJECT_HEAD
+	struct Dee_string_utf *s_data;
+	Dee_hash_t             s_hash;
+	size_t                 s_len;
+	unsigned char          s_str[2];
+} DeeStringObject1Char;
+
+INTDEF DeeStringObject1Char DeeString_Latin1[256];
+#endif /* CONFIG_BUILDING_DEEMON && CONFIG_STRING_LATIN1_STATIC */
+
 
 
 #ifdef CONFIG_HAVE_UNICODE_H

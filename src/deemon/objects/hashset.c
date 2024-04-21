@@ -1321,6 +1321,31 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+hashset_foreach(HashSet *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	DeeHashSet_LockRead(self);
+	for (i = 0; i <= self->hs_mask; ++i) {
+		DREF DeeObject *key;
+		key = self->hs_elem[i].hsi_key;
+		if (!key || key == dummy)
+			continue;
+		Dee_Incref(key);
+		DeeHashSet_LockEndRead(self);
+		temp = (*proc)(arg, key);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeHashSet_LockRead(self);
+	}
+	DeeHashSet_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
 
 typedef struct {
 	OBJECT_HEAD
@@ -1891,7 +1916,8 @@ PRIVATE struct type_seq hashset_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &hashset_nsi
+	/* .tp_nsi       = */ &hashset_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&hashset_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

@@ -1899,6 +1899,8 @@ struct Dee_type_cmp {
 	struct Dee_type_nii Dee_tpconst *tp_nii;
 };
 
+typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
+typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
 
 struct Dee_type_nsi;
 struct Dee_type_seq {
@@ -1915,9 +1917,19 @@ struct Dee_type_seq {
 
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
+
+	/* TODO: Get rid of this -- doesn't work with the unified operator inheritance system.
+	 *       Instead, everything related to NSI operators must go into `Dee_type_seq', and
+	 *       the operator inheritance system must provide defaults for linking NSI variants
+	 *       of operators with the primary operators above. */
 	struct Dee_type_nsi Dee_tpconst *tp_nsi;
 
-	/* TODO: foreach enumeration operator (for implementing an optimized `DeeObject_Foreach()' / `DeeObject_ForeachPair()') */
+	/* Alternate forms for `tp_iter_self' (these are inherited by `DeeType_InheritIterSelf()').
+	 * Instead of defining `tp_iter_self', you can just define one of these and have the runtime
+	 * use these for enumerating the object. Note however that this is less efficient, and that
+	 * the type should still provide a proper `tp_iter_self' callback. */
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 };
 
 struct Dee_type_attr {
@@ -3423,16 +3435,16 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */ /* TODO: This should form a group with `tp_nii' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterSelf(DeeTypeObject *__restrict self);      /* tp_iter_self */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_size */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_get */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_del */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_set */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_range_get */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_range_del */ /* TODO: This should form a group with `tp_nsi' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_range_set */ /* TODO: This should form a group with `tp_nsi' */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterSelf(DeeTypeObject *__restrict self);      /* tp_iter_self */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_size */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_get */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_del */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_set */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_range_get */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_range_del */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_range_set */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);           /* tp_nsi */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);           /* tp_nii */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
@@ -4132,9 +4144,6 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
  * @return: Dee_ITER_DONE: [DeeObject_IterNext] The iterator has been exhausted. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
-
-typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
-typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void *arg, DeeObject *key, DeeObject *value);
 
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.

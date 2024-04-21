@@ -106,8 +106,8 @@ DDATDEF DeeObject          DeeMapping_EmptyInstance;
 #undef si_key
 #undef si_value
 typedef struct {
-	DREF DeeObject  *si_key;    /* [1..1][const] The key of this shared item. */
-	DREF DeeObject  *si_value;  /* [1..1][const] The value of this shared item. */
+	DREF DeeObject *si_key;   /* [1..1][const] The key of this shared item. */
+	DREF DeeObject *si_value; /* [1..1][const] The value of this shared item. */
 } DeeSharedItem;
 
 /* Type of object returned by `DeeSharedMap_NewShared()' */

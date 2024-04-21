@@ -274,6 +274,41 @@ err_r:
 	return NULL;
 }
 
+struct filter_foreach_data {
+	DeeObject    *ffd_fun;  /* [1..1] Function used for filtering. */
+	Dee_foreach_t ffd_proc; /* [1..1] Underlying callback. */
+	void         *ffd_arg;  /* [?..?] Cookie for `pfd_proc' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+filter_foreach_cb(void *arg, DeeObject *elem) {
+	int pred_bool;
+	DREF DeeObject *pred_result;
+	struct filter_foreach_data *data;
+	data = (struct filter_foreach_data *)arg;
+	pred_result = DeeObject_Call(data->ffd_fun, 1, &elem);
+	if unlikely(!pred_result)
+		goto err;
+	pred_bool = DeeObject_Bool(pred_result);
+	Dee_Decref_unlikely(pred_result);
+	if unlikely(pred_bool < 0)
+		goto err;
+	if (!pred_bool)
+		return 0; /* Don't enumerate this one. */
+	return (*data->ffd_proc)(data->ffd_arg, elem);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+filter_foreach(Filter *self, Dee_foreach_t proc, void *arg) {
+	struct filter_foreach_data data;
+	data.ffd_fun  = self->f_fun;
+	data.ffd_proc = proc;
+	data.ffd_arg  = arg;
+	return DeeObject_Foreach(self->f_seq, &filter_foreach_cb, &data);
+}
+
 PRIVATE struct type_seq filter_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
 	/* .tp_size      = */ NULL,
@@ -283,7 +318,9 @@ PRIVATE struct type_seq filter_seq = {
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&filter_foreach,
 };
 
 PRIVATE struct type_member tpconst filter_members[] = {

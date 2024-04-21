@@ -1292,6 +1292,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultLeWith
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGrWithLe(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGeWithLo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 
+/* Default wrappers for implementing OPERATOR_ITER via `tp_iter_self <===> tp_foreach <===> tp_foreach_pair' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterSelfWithForeach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterSelfWithForeachPair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIterSelf(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithForeachPair(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithForeach(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithIterSelf(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterSelfWithForeach(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterSelfWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIterSelf(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithForeachPair(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithForeach(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithIterSelf(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 
 #define DeeType_invoke_init_tp_assign(tp_self, tp_assign, self, other) \
 	((tp_assign) == &instance_assign                                   \
@@ -1759,10 +1772,32 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGeWith
 	 : DeeType_invoke_cmp_tp_ge_NODEFAULT(tp_self, tp_ge, self, other))
 
 
-#define DeeType_invoke_seq_tp_iter_self(tp_self, tp_iter_self, self) \
-	((tp_iter_self) == &instance_iter                                \
-	 ? instance_titer(tp_self, self)                                 \
+#define DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter_self, self) \
+	((tp_iter_self) == &instance_iter                                          \
+	 ? instance_titer(tp_self, self)                                           \
 	 : (*(tp_iter_self))(self))
+#define DeeType_invoke_seq_tp_iter_self(tp_self, tp_iter_self, self) \
+	((tp_iter_self) == &DeeObject_DefaultIterSelfWithForeach         \
+	 ? DeeObject_TDefaultIterSelfWithForeach(tp_self, self)          \
+	 : (tp_iter_self) == &DeeObject_DefaultIterSelfWithForeachPair   \
+	   ? DeeObject_TDefaultIterSelfWithForeachPair(tp_self, self)    \
+	   : DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter_self, self))
+#define DeeType_invoke_seq_tp_foreach_NODEFAULT(tp_self, tp_foreach, self, proc, arg) \
+	(*tp_foreach)(self, proc, arg)
+#define DeeType_invoke_seq_tp_foreach(tp_self, tp_foreach, self, proc, arg) \
+	((tp_foreach) == &DeeObject_DefaultForeachWithIterSelf                  \
+	 ? DeeObject_TDefaultForeachWithIterSelf(tp_self, self, proc, arg)      \
+	 : (tp_foreach) == &DeeObject_DefaultForeachWithForeachPair             \
+	   ? DeeObject_TDefaultForeachWithForeachPair(tp_self, self, proc, arg) \
+	   : DeeType_invoke_seq_tp_foreach_NODEFAULT(tp_self, tp_foreach, self, proc, arg))
+#define DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, tp_foreach_pair, self, proc, arg) \
+	(*tp_foreach_pair)(self, proc, arg)
+#define DeeType_invoke_seq_tp_foreach_pair(tp_self, tp_foreach_pair, self, proc, arg) \
+	((tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIterSelf                   \
+	 ? DeeObject_TDefaultForeachPairWithIterSelf(tp_self, self, proc, arg)            \
+	 : (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithForeach                  \
+	   ? DeeObject_TDefaultForeachPairWithForeach(tp_self, self, proc, arg)           \
+	   : DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, tp_foreach_pair, self, proc, arg))
 #define DeeType_invoke_seq_tp_size(tp_self, tp_size, self) \
 	((tp_size) == &instance_size                           \
 	 ? instance_tsize(tp_self, self)                       \
@@ -1905,6 +1940,8 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGeWith
 #define DeeType_InvokeCmpGe(tp_self, self, other)                          DeeType_invoke_cmp_tp_ge(tp_self, (tp_self)->tp_cmp->tp_ge, self, other)
 #define DeeType_InvokeCmpGe_NODEFAULT(tp_self, self, other)                DeeType_invoke_cmp_tp_ge_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_ge, self, other)
 #define DeeType_InvokeSeqIterSelf(tp_self, self)                           DeeType_invoke_seq_tp_iter_self(tp_self, (tp_self)->tp_seq->tp_iter_self, self)
+#define DeeType_InvokeSeqForeach(tp_self, self, proc, arg)                 DeeType_invoke_seq_tp_foreach(tp_self, (tp_self)->tp_seq->tp_foreach, self, proc, arg)
+#define DeeType_InvokeSeqForeachPair(tp_self, self, proc, arg)             DeeType_invoke_seq_tp_foreach_pair(tp_self, (tp_self)->tp_seq->tp_foreach_pair, self, proc, arg)
 #define DeeType_InvokeSeqSize(tp_self, self)                               DeeType_invoke_seq_tp_size(tp_self, (tp_self)->tp_seq->tp_size, self)
 #define DeeType_InvokeSeqContains(tp_self, self, other)                    DeeType_invoke_seq_tp_contains(tp_self, (tp_self)->tp_seq->tp_contains, self, other)
 #define DeeType_InvokeSeqGet(tp_self, self, index)                         DeeType_invoke_seq_tp_get(tp_self, (tp_self)->tp_seq->tp_get, self, index)

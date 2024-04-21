@@ -86,6 +86,7 @@ DeeTraceback_New(struct thread_object *__restrict thread) {
 		goto err;
 
 	/* TODO: This somehow needs support for functions running under _hostasm. */
+	/* TODO: This somehow needs support for functions running under _jit. */
 	DeeObject_Init(result, &DeeTraceback_Type);
 	result->tb_numframes = thread->t_execsz;
 	result->tb_thread    = thread;

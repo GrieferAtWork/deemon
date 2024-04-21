@@ -859,6 +859,33 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rvec_foreach(RefVector *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i < self->rv_length; ++i) {
+		DREF DeeObject *elem;
+		RefVector_XLockRead(self);
+		while ((elem = self->rv_vector[i]) == NULL) {
+			++i;
+			if (i >= self->rv_length) {
+				RefVector_XLockEndRead(self);
+				goto done;
+			}
+		}
+		Dee_Incref(elem);
+		RefVector_XLockEndRead(self);
+		temp = (*proc)(arg, elem);
+		Dee_Decref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+done:
+	return result;
+err_temp:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst rvec_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -904,7 +931,8 @@ PRIVATE struct type_seq rvec_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rvec_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rvec_setrange,
-	/* .tp_nsi       = */ &rvec_nsi
+	/* .tp_nsi       = */ &rvec_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
 };
 
 PRIVATE struct type_member tpconst rvec_class_members[] = {
@@ -1382,7 +1410,7 @@ svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
 	return result;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 svec_nsi_find(SharedVector *__restrict self,
               size_t start, size_t end,
               DeeObject *__restrict keyed_search_item,
@@ -1410,7 +1438,7 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 svec_nsi_rfind(SharedVector *__restrict self,
                size_t start, size_t end,
                DeeObject *__restrict keyed_search_item,
@@ -1441,6 +1469,29 @@ svec_nsi_rfind(SharedVector *__restrict self,
 	return (size_t)-1;
 err:
 	return (size_t)-2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+svec_foreach(SharedVector *self, Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	SharedVector_LockRead(self);
+	for (i = 0; i < self->sv_length; ++i) {
+		DREF DeeObject *list_elem;
+		list_elem = self->sv_vector[i];
+		Dee_Incref(list_elem);
+		SharedVector_LockEndRead(self);
+		temp = (*proc)(arg, list_elem);
+		Dee_Decref_unlikely(list_elem);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		SharedVector_LockRead(self);
+	}
+	SharedVector_LockEndRead(self);
+	return result;
+err:
+	return temp;
 }
 
 
@@ -1488,6 +1539,7 @@ PRIVATE struct type_seq svec_seq = {
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
 	/* .tp_nsi       = */ &svec_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {

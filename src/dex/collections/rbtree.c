@@ -3457,6 +3457,55 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rbtree_foreach(RBTree *self, Dee_foreach_pair_t proc, void *arg) {
+	DREF DeeObject *range, *start, *end, *value;
+	dssize_t temp, result = 0;
+	struct rbtree_node *node;
+	uintptr_t version;
+	RBTree_LockRead(self);
+	node = self->rbt_root;
+	if unlikely(!node)
+		goto unlock_and_stop;
+	while (node->rbtn_lhs)
+		node = node->rbtn_lhs;
+	version = self->rbt_version;
+	do {
+		start = rbtree_node_get_minkey(node);
+		end   = rbtree_node_get_maxkey(node);
+		value = rbtree_node_get_value(node);
+		Dee_Incref(start);
+		Dee_Incref(end);
+		Dee_Incref(value);
+		RBTree_LockEndRead(self);
+		range = DeeRange_New(start, end, NULL);
+		Dee_Decref_unlikely(end);
+		Dee_Decref_unlikely(start);
+		if unlikely(!range)
+			goto err_value;
+		temp = (*proc)(arg, range, value);
+		Dee_Decref_unlikely(value);
+		Dee_Decref(range);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		RBTree_LockRead(self);
+		if unlikely(version != self->rbt_version) {
+			RBTree_LockEndRead(self);
+			goto stop_after_changed;
+		}
+	} while ((node = rbtree_abi_nextnode(node)) != NULL);
+unlock_and_stop:
+	RBTree_LockEndRead(self);
+stop_after_changed:
+	return result;
+err_temp:
+	return temp;
+err_value:
+	Dee_Decref_unlikely(value);
+	return -1;
+}
+
 
 
 PRIVATE struct type_nsi tpconst rbtree_nsi = {
@@ -3476,16 +3525,18 @@ PRIVATE struct type_nsi tpconst rbtree_nsi = {
 };
 
 PRIVATE struct type_seq rbtree_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
-	/* .tp_nsi       = */ &rbtree_nsi,
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
+	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
+	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
+	/* .tp_range_set    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
+	/* .tp_nsi          = */ &rbtree_nsi,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach,
 };
 
 PRIVATE struct type_gc tpconst rbtree_gc = {

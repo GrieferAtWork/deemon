@@ -765,7 +765,7 @@ PRIVATE struct type_seq se_seq = {
 	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_setitem,
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&se_setrange
+	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&se_setrange,
 };
 
 PRIVATE char const s_unhandled_leave_message[] = "Unhandled exception in `operator leave'";
@@ -1884,7 +1884,8 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
-	/* .tp_nsi       = */ &seo_nsi
+	/* .tp_nsi       = */ &seo_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 };
 
 
@@ -2201,7 +2202,7 @@ INTERN DeeTypeObject SeqEachOperatorIterator_Type = {
 
 
 #ifdef CONFIG_HAVE_SEQEACH_ATTRIBUTE_OPTIMIZATIONS
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttr(DeeObject *__restrict self,
                     DeeObject *__restrict attr,
                     size_t argc,
@@ -2222,7 +2223,7 @@ done:
 	return (DREF DeeObject *)result;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttrKw(DeeObject *__restrict self,
                       DeeObject *__restrict attr,
                       size_t argc,
@@ -2249,7 +2250,7 @@ done:
 }
 
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringHash(DeeObject *__restrict self,
                               char const *__restrict attr, dhash_t hash,
                               size_t argc, DeeObject *const *argv) {
@@ -2268,7 +2269,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenHash(DeeObject *__restrict self,
                                  char const *__restrict attr, size_t attrlen, dhash_t hash,
                                  size_t argc, DeeObject *const *argv) {
@@ -2287,7 +2288,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringHashKw(DeeObject *__restrict self,
                                 char const *__restrict attr, dhash_t hash,
                                 size_t argc, DeeObject *const *argv, DeeObject *kw) {
@@ -2307,7 +2308,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 DeeSeqEach_CallAttrStringLenHashKw(DeeObject *__restrict self,
                                    char const *__restrict attr, size_t attrlen, dhash_t hash,
                                    size_t argc, DeeObject *const *argv, DeeObject *kw) {

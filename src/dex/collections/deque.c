@@ -1180,7 +1180,28 @@ err:
 	return NULL;
 }
 
-
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+deq_foreach(Deque *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	Deque_LockRead(self);
+	for (i = 0; i < self->d_size; ++i) {
+		DREF DeeObject *elem;
+		elem = DEQUE_ITEM(self, i);
+		Dee_Incref(elem);
+		Deque_LockEndRead(self);
+		temp = (*proc)(arg, elem);
+		Dee_Decref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		Deque_LockRead(self);
+	}
+	Deque_LockEndRead(self);
+	return result;
+err_temp:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst deq_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1228,7 +1249,8 @@ PRIVATE struct type_seq deq_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_nsi       = */ &deq_nsi
+	/* .tp_nsi       = */ &deq_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&deq_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

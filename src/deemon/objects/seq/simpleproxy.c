@@ -435,6 +435,64 @@ err:
 	return NULL;
 }
 
+struct proxy_foreach_data {
+	Dee_foreach_t pfd_proc; /* [1..1] Underlying callback. */
+	void         *pfd_arg;  /* [?..?] Cookie for `pfd_proc' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ids_foreach_cb(void *arg, DeeObject *elem) {
+	Dee_ssize_t result;
+	struct proxy_foreach_data *data;
+	data = (struct proxy_foreach_data *)arg;
+	elem = DeeInt_NewUIntptr(DeeObject_Id(elem));
+	if unlikely(!elem)
+		goto err;
+	result = (*data->pfd_proc)(data->pfd_arg, elem);
+	Dee_Decref(elem);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ids_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
+	struct proxy_foreach_data data;
+	data.pfd_proc = proc;
+	data.pfd_arg  = arg;
+	return DeeObject_Foreach(self->sp_seq, &ids_foreach_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+types_foreach_cb(void *arg, DeeObject *elem) {
+	struct proxy_foreach_data *data;
+	data = (struct proxy_foreach_data *)arg;
+	return (*data->pfd_proc)(data->pfd_arg, (DeeObject *)Dee_TYPE(elem));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+types_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
+	struct proxy_foreach_data data;
+	data.pfd_proc = proc;
+	data.pfd_arg  = arg;
+	return DeeObject_Foreach(self->sp_seq, &types_foreach_cb, &data);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+classes_foreach_cb(void *arg, DeeObject *elem) {
+	struct proxy_foreach_data *data;
+	data = (struct proxy_foreach_data *)arg;
+	return (*data->pfd_proc)(data->pfd_arg, (DeeObject *)DeeObject_Class(elem));
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+classes_foreach(SeqSimpleProxy *self, Dee_foreach_t proc, void *arg) {
+	struct proxy_foreach_data data;
+	data.pfd_proc = proc;
+	data.pfd_arg  = arg;
+	return DeeObject_Foreach(self->sp_seq, &classes_foreach_cb, &data);
+}
+
 
 PRIVATE struct type_nsi tpconst ids_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -545,7 +603,8 @@ PRIVATE struct type_seq ids_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ids_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &ids_nsi
+	/* .tp_nsi       = */ &ids_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ids_foreach,
 };
 
 PRIVATE struct type_seq types_seq = {
@@ -558,7 +617,8 @@ PRIVATE struct type_seq types_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&types_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &types_nsi
+	/* .tp_nsi       = */ &types_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&types_foreach,
 };
 
 PRIVATE struct type_seq classes_seq = {
@@ -571,7 +631,8 @@ PRIVATE struct type_seq classes_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&classes_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &classes_nsi
+	/* .tp_nsi       = */ &classes_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&classes_foreach,
 };
 
 

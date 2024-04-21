@@ -1535,7 +1535,7 @@ tuple_nsi_getitem_fast(Tuple *__restrict self, size_t index) {
 	return_reference(self->t_elem[index]);
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 tuple_nsi_find(Tuple *__restrict self, size_t start, size_t end,
                DeeObject *__restrict keyed_search_item,
                DeeObject *key) {
@@ -1556,7 +1556,7 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 tuple_nsi_rfind(Tuple *__restrict self, size_t start, size_t end,
                 DeeObject *__restrict keyed_search_item,
                 DeeObject *key) {
@@ -1579,6 +1579,20 @@ err:
 	return (size_t)-2;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+tuple_foreach(Tuple *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i < self->t_size; ++i) {
+		temp = (*proc)(arg, self->t_elem[i]);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+	}
+	return result;
+err:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -1623,7 +1637,8 @@ PRIVATE struct type_seq tuple_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &tuple_nsi
+	/* .tp_nsi       = */ &tuple_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL

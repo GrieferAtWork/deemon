@@ -141,7 +141,8 @@ PRIVATE struct type_attr tpconst byattr_attr = {
 	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
 	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
 	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
-	/* .tp_enumattr = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr
+	/* .tp_enumattr = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
+	/* TODO: All of the other operators */
 };
 
 PRIVATE struct type_member tpconst byattr_members[] = {

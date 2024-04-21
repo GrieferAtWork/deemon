@@ -785,6 +785,38 @@ typebases_nsi_getitem_fast(TypeMRO *__restrict self, size_t index) {
 	}
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+typemro_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	DeeTypeMRO mro;
+	DeeTypeObject *iter = DeeTypeMRO_Init(&mro, self->tm_type);
+	do {
+		temp = (*proc)(arg, (DeeObject *)iter);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	} while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL);
+	return result;
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+typebases_foreach(TypeMRO *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	DeeTypeMRO mro;
+	DeeTypeObject *iter = DeeTypeMRO_Init(&mro, self->tm_type);
+	while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL) {
+		temp = (*proc)(arg, (DeeObject *)iter);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 
 PRIVATE struct type_nsi tpconst typemro_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -863,6 +895,7 @@ PRIVATE struct type_seq typemro_seq = {
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
 	/* .tp_nsi       = */ &typemro_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typemro_foreach,
 };
 
 PRIVATE struct type_seq typebases_seq = {
@@ -876,6 +909,7 @@ PRIVATE struct type_seq typebases_seq = {
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
 	/* .tp_nsi       = */ &typebases_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typebases_foreach,
 };
 
 #define typebases_members typemro_members

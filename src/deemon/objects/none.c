@@ -91,9 +91,14 @@ none_i4(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
 
 #if __SIZEOF_SIZE_T__ == __SIZEOF_INT__
 #define none_s1 none_i1
+#define none_s3 none_i3
 #else /* __SIZEOF_SIZE_T__ == __SIZEOF_INT__ */
 PRIVATE size_t DCALL
 none_s1(void *UNUSED(a)) {
+	return 0;
+}
+PRIVATE size_t DCALL
+none_s3(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
 	return 0;
 }
 #endif /* __SIZEOF_SIZE_T__ != __SIZEOF_INT__ */
@@ -280,16 +285,18 @@ PRIVATE struct type_nsi tpconst none_nsi = {
 };
 
 PRIVATE struct type_seq none_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
-	/* .tp_nsi       = */ &none_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
+	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2,
+	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
+	/* .tp_range_get    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
+	/* .tp_range_del    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
+	/* .tp_range_set    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
+	/* .tp_nsi          = */ &none_nsi,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&none_s3,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3,
 };
 
 PRIVATE struct type_attr tpconst none_attr = {
@@ -322,12 +329,14 @@ PRIVATE struct type_buffer none_buffer = {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invoke_none_file_char_operator(DeeTypeObject *tp_self, DeeObject *self,
                                /*0..1*/ DeeObject **p_self,
-                               size_t argc, DeeObject *const *argv) {
+                               size_t argc, DeeObject *const *argv,
+                               Dee_operator_t opname) {
 	(void)tp_self;
 	(void)self;
 	(void)p_self;
 	(void)argc;
 	(void)argv;
+	(void)opname;
 	return DeeInt_NewInt8(GETC_EOF);
 }
 

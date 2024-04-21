@@ -574,7 +574,8 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
 	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(delrange),
 	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
-	/* .tp_nsi       = */ &F(nsi)
+	/* .tp_nsi       = */ &F(nsi),
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
 };
 
 PRIVATE struct type_member tpconst F(members)[] = {

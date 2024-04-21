@@ -282,6 +282,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_GE                  DeeType_InvokeCmpGe
 #define DeeType_INVOKE_GE_NODEFAULT        DeeType_InvokeCmpGe_NODEFAULT
 #define DeeType_INVOKE_ITER                DeeType_InvokeSeqIterSelf
+#define DeeType_INVOKE_FOREACH             DeeType_InvokeSeqForeach
+#define DeeType_INVOKE_FOREACH_PAIR        DeeType_InvokeSeqForeachPair
 #define DeeType_INVOKE_SIZE                DeeType_InvokeSeqSize
 #define DeeType_INVOKE_CONTAINS            DeeType_InvokeSeqContains
 #define DeeType_INVOKE_GETITEM             DeeType_InvokeSeqGet
@@ -345,6 +347,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_GR(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_gr)(self, other)
 #define DeeType_INVOKE_GE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_ge)(self, other)
 #define DeeType_INVOKE_ITER(tp_self, self)                         (*(tp_self)->tp_seq->tp_iter_self)(self)
+#define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)           (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
+#define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)      (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
 #define DeeType_INVOKE_SIZE(tp_self, self)                         (*(tp_self)->tp_seq->tp_size)(self)
 #define DeeType_INVOKE_CONTAINS(tp_self, self, other)              (*(tp_self)->tp_seq->tp_contains)(self, other)
 #define DeeType_INVOKE_GETITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_get)(self, index)
@@ -3140,6 +3144,178 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithLo,
 }
 
 
+/* Default wrappers for implementing OPERATOR_ITER via `tp_iter_self <===> tp_foreach <===> tp_foreach_pair' */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeach, (DeeObject *__restrict self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_foreach" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeachPair,
+                         (DeeObject *__restrict self)) {
+	LOAD_TP_SELF;
+	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterSelf,
+                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result;
+	DREF DeeObject *iter, *elem;
+	LOAD_TP_SELF;
+	iter = DeeType_INVOKE_ITER(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	result = 0;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_temp_iter;
+		result += temp;
+		/* Must check for interrupts because iterator may produce infinite results. */
+		if (DeeThread_CheckInterrupt())
+			goto err_temp_iter_m1;
+	}
+	Dee_Decref_likely(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err_temp_iter_m1:
+	temp = -1;
+err_temp_iter:
+	Dee_Decref_likely(iter);
+	return temp;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithIterSelf,
+                         (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg)) {
+	Dee_ssize_t temp, result;
+	DREF DeeObject *iter, *elem;
+	LOAD_TP_SELF;
+	iter = DeeType_INVOKE_ITER(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	result = 0;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		DREF DeeObject *pair[2];
+		if unlikely(DeeObject_Unpack(elem, 2, pair))
+			goto err_temp_iter_elem_m1;
+		Dee_Decref(elem);
+		temp = (*proc)(arg, pair[0], pair[1]);
+		Dee_Decref(pair[1]);
+		Dee_Decref(pair[0]);
+		if unlikely(temp < 0)
+			goto err_temp_iter;
+		result += temp;
+		/* Must check for interrupts because iterator may produce infinite results. */
+		if (DeeThread_CheckInterrupt())
+			goto err_temp_iter_m1;
+	}
+	Dee_Decref_likely(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err_temp_iter_m1:
+	temp = -1;
+	goto err_temp_iter;
+err_temp_iter_elem_m1:
+	temp = -1;
+	Dee_Decref(elem);
+err_temp_iter:
+	Dee_Decref_likely(iter);
+	return temp;
+err:
+	return -1;
+}
+
+struct default_foreach_with_foreach_pair_data {
+	Dee_foreach_t dfwfp_proc; /* [1..1] Underlying callback. */
+	void         *dfwfp_arg;  /* Cookie for `dfwfp_proc' */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_foreach_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_foreach_with_foreach_pair_data *data;
+	Dee_ssize_t result;
+	DREF DeeObject *pair;
+	data = (struct default_foreach_with_foreach_pair_data *)arg;
+	pair = DeeTuple_PackSymbolic(2, key, value);
+	if unlikely(!pair)
+		goto err;
+	result = (*data->dfwfp_proc)(data->dfwfp_arg, pair);
+	DeeTuple_DecrefSymbolic(pair);
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithForeachPair,
+                         (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
+	struct default_foreach_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.dfwfp_proc = proc;
+	data.dfwfp_arg  = arg;
+	return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_foreach_with_foreach_pair_cb, &data);
+}
+
+struct default_foreach_pair_with_foreach_data {
+	Dee_foreach_pair_t dfpwf_proc; /* [1..1] Underlying callback. */
+	void              *dfpwf_arg;  /* Cookie for `dfpwf_proc' */
+};
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_foreach_pair_with_foreach_data *data;
+	Dee_ssize_t result;
+	data = (struct default_foreach_pair_with_foreach_data *)arg;
+	if likely(DeeTuple_Check(elem) && DeeTuple_SIZE(elem) == 2) {
+		result = (*data->dfpwf_proc)(data->dfpwf_arg,
+		                             DeeTuple_GET(elem, 0),
+		                             DeeTuple_GET(elem, 1));
+	} else {
+		DREF DeeObject *pair[2];
+		if unlikely(DeeObject_Unpack(elem, 2, pair))
+			goto err;
+		result = (*data->dfpwf_proc)(data->dfpwf_arg, pair[0], pair[1]);
+		Dee_Decref_unlikely(pair[1]);
+		Dee_Decref_unlikely(pair[0]);
+	}
+	return result;
+err:
+	return -1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithForeach,
+                         (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg)) {
+	struct default_foreach_pair_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.dfpwf_proc = proc;
+	data.dfpwf_arg  = arg;
+	return DeeType_INVOKE_FOREACH(tp_self, self, &default_foreach_pair_with_foreach_cb, &data);
+}
+
+
+
+
 
 
 #ifndef DEFINE_TYPED_OPERATORS
@@ -3986,6 +4162,9 @@ err:
 			base_seq = base->tp_seq;                                     \
 			LOG_INHERIT(base, self, opname);                             \
 			if (self->tp_seq) {                                          \
+				DeeTypeObject *origin = DeeType_GetSeqOrigin(self);      \
+				if unlikely(origin)                                      \
+					return name(origin);                                 \
 				self->tp_seq->field = base_seq->field;                   \
 			} else {                                                     \
 				self->tp_seq = base_seq;                                 \
@@ -4010,7 +4189,57 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	}
 	return false;
 }
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritIterSelf, "operator iterself", tp_iter_self)
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritIterSelf(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_iter_self) {
+			if (base_seq->tp_foreach == NULL)
+				base_seq->tp_foreach = &DeeObject_DefaultForeachWithIterSelf;
+			if (base_seq->tp_foreach_pair == NULL)
+				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIterSelf;
+			return true;
+		} else if (base_seq->tp_foreach) {
+			base_seq->tp_iter_self = &DeeObject_DefaultIterSelfWithForeach;
+			if (base_seq->tp_foreach_pair == NULL)
+				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
+			return true;
+		} else if (base_seq->tp_foreach_pair) {
+			base_seq->tp_iter_self = &DeeObject_DefaultIterSelfWithForeachPair;
+			base_seq->tp_foreach   = &DeeObject_DefaultForeachWithForeachPair;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_iter_self ||
+		                         !base_seq->tp_foreach ||
+		                         !base_seq->tp_foreach_pair)) {
+			if (!DeeType_InheritIterSelf(base))
+				continue;
+		}
+		base_seq = base->tp_seq;
+		LOG_INHERIT(base, self, "operator iterself");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritIterSelf(origin);
+			self->tp_seq->tp_iter_self    = base_seq->tp_iter_self;
+			self->tp_seq->tp_foreach      = base_seq->tp_foreach;
+			self->tp_seq->tp_foreach_pair = base_seq->tp_foreach_pair;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
 DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSize, "operator size", tp_size)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritContains, "operator contains", tp_contains)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetItem, "operator getitem", tp_get)
@@ -5631,188 +5860,21 @@ err:
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_Foreach(DeeObject *__restrict self,
                   Dee_foreach_t proc, void *arg) {
-	dssize_t temp, result = 0;
-	DREF DeeObject *elem;
-	size_t fast_size;
-	fast_size = DeeFastSeq_GetSize(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		/* Optimization for fast-sequence object. */
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err;
-			temp = (*proc)(arg, elem);
-			Dee_Decref(elem);
-			if unlikely(temp < 0) {
-				result = temp;
-				break;
-			}
-			result += temp;
-		}
-		return result;
-	}
-
-	/* Fallback: Use an iterator. */
-	self = DeeObject_IterSelf(self);
-	if unlikely(self == NULL)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		temp = (*proc)(arg, elem);
-		Dee_Decref(elem);
-		if unlikely(temp < 0) {
-			result = temp;
-			break;
-		}
-		result += temp; /* Propagate return values by summarizing them. */
-		if (DeeThread_CheckInterrupt())
-			goto err_self;
-	}
-	if unlikely(!elem)
-		goto err_self;
-	Dee_Decref(self);
-	return result;
-err_self:
-	Dee_Decref(self);
-err:
-	return -1;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	          DeeType_InheritIterSelf(tp_self))
+		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
 DeeObject_ForeachPair(DeeObject *__restrict self,
                       Dee_foreach_pair_t proc, void *arg) {
-	DREF DeeObject *key_and_value[2];
-	dssize_t temp, result = 0;
-	DREF DeeObject *elem;
-	size_t fast_size;
-	DeeTypeObject *self_type;
-
-	/* Special optimizations for some well-known mapping types */
-again_self:
-	self_type = Dee_TYPE(self);
-	if (self_type == &DeeDict_Type) {
-		DeeDictObject *me = (DeeDictObject *)self;
-		dhash_t i;
-		DeeDict_LockRead(me);
-		for (i = 0; i <= me->d_mask; ++i) {
-			DREF DeeObject *key, *value;
-			key = me->d_elem[i].di_key;
-			if (key == NULL || key == &DeeDict_Dummy)
-				continue;
-			value = me->d_elem[i].di_value;
-			Dee_Incref(key);
-			Dee_Incref(value);
-			DeeDict_LockEndRead(me);
-			temp = (*proc)(arg, key, value);
-			Dee_Decref_unlikely(value);
-			Dee_Decref_unlikely(key);
-			if unlikely(temp < 0)
-				return temp;
-			result += temp;
-			DeeDict_LockRead(me);
-		}
-		DeeDict_LockEndRead(me);
-		return result;
-	}
-	if (self_type == &DeeRoDict_Type) {
-		DeeRoDictObject *me = (DeeRoDictObject *)self;
-		dhash_t i;
-		for (i = 0; i <= me->rd_mask; ++i) {
-			if (me->rd_elem[i].rdi_key == NULL)
-				continue;
-			temp = (*proc)(arg,
-			               me->rd_elem[i].rdi_key,
-			               me->rd_elem[i].rdi_value);
-			if unlikely(temp < 0)
-				return temp;
-			result += temp;
-		}
-		return result;
-	}
-	if (self_type == &DeeKwdsMapping_Type) {
-		DeeKwdsMappingObject *me = (DeeKwdsMappingObject *)self;
-		DeeKwdsObject *kwds      = me->kmo_kwds;
-		dhash_t i;
-		for (i = 0; i <= kwds->kw_mask; ++i) {
-			DREF DeeObject *value;
-			struct kwds_entry *kwd = &kwds->kw_map[i];
-			if (kwd->ke_name == NULL)
-				continue;
-			DeeKwdsMapping_LockRead(me);
-			value = me->kmo_argv[kwd->ke_index];
-			DeeKwdsMapping_LockEndRead(me);
-			temp = (*proc)(arg, (DeeObject *)kwds->kw_map[i].ke_name, value);
-			if unlikely(temp < 0)
-				return temp;
-			result += temp;
-		}
-		return result;
-	}
-	if (self_type == &DeeCachedDict_Type) {
-		DeeCachedDictObject *me;
-		me = (DeeCachedDictObject *)self;
-		self = me->cd_map;
-		goto again_self;
-	}
-
-	/* TODO: DeeBlackListKwds_Type */
-
-	/* TODO: DeeBlackListKw_Type */
-
-	/* Generic fast-sequence support. */
-	fast_size = DeeFastSeq_GetSize(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		size_t i;
-		/* Optimization for fast-sequence object. */
-		for (i = 0; i < fast_size; ++i) {
-			int error;
-			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err;
-			error = DeeObject_Unpack(elem, 2, key_and_value);
-			Dee_Decref(elem);
-			if unlikely(error)
-				goto err;
-			temp = (*proc)(arg, key_and_value[0], key_and_value[1]);
-			Dee_Decref(key_and_value[1]);
-			Dee_Decref(key_and_value[0]);
-			if unlikely(temp < 0) {
-				result = temp;
-				break;
-			}
-			result += temp;
-		}
-		return result;
-	}
-
-	/* Fallback: Use an iterator. */
-	self = DeeObject_IterSelf(self);
-	if unlikely(self == NULL)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(self))) {
-		int error = DeeObject_Unpack(elem, 2, key_and_value);
-		Dee_Decref(elem);
-		if unlikely(error)
-			goto err_self;
-		temp = (*proc)(arg, key_and_value[0], key_and_value[1]);
-		Dee_Decref(key_and_value[1]);
-		Dee_Decref(key_and_value[0]);
-		if unlikely(temp < 0) {
-			result = temp;
-			break;
-		}
-		result += temp; /* Propagate return values by summarizing them. */
-		if (DeeThread_CheckInterrupt())
-			goto err_self;
-	}
-	if unlikely(!elem)
-		goto err_self;
-	Dee_Decref(self);
-	return result;
-err_self:
-	Dee_Decref(self);
-err:
-	return -1;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
+	          DeeType_InheritIterSelf(tp_self))
+		return (*tp_self->tp_seq->tp_foreach_pair)(self, proc, arg);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
 }
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function

@@ -184,17 +184,10 @@ done:
 
 
 #if defined(CONFIG_STRING_LATIN1_STATIC) || defined(__DEEMON__)
-typedef struct {
-	Dee_OBJECT_HEAD
-	struct Dee_string_utf *s_data;
-	Dee_hash_t             s_hash;
-	size_t                 s_len;
-	unsigned char          s_str[2];
-} DeeStringObject1Char;
 /*[[[deemon
 import * from deemon;
 import _Dee_HashSelect from rt.gen.hash;
-print("PRIVATE DeeStringObject1Char latin1[256] = {");
+print("INTERN DeeStringObject1Char DeeString_Latin1[256] = {");
 for (local ord: [:256]) {
 	local s = string.chr(ord);
 	print("	{ Dee_OBJECT_HEAD_INIT(&DeeString_Type), NULL, ",
@@ -203,7 +196,7 @@ for (local ord: [:256]) {
 }
 print("};");
 ]]]*/
-PRIVATE DeeStringObject1Char latin1[256] = {
+INTERN DeeStringObject1Char DeeString_Latin1[256] = {
 	{ Dee_OBJECT_HEAD_INIT(&DeeString_Type), NULL, _Dee_HashSelectC(0x514e28b7, 0x0), 1, { 0, 0 } }, /* "\0" */
 	{ Dee_OBJECT_HEAD_INIT(&DeeString_Type), NULL, _Dee_HashSelectC(0xe45ad1ab, 0x1ab11ea5a7b2c56e), 1, { 1, 0 } }, /* "\1" */
 	{ Dee_OBJECT_HEAD_INIT(&DeeString_Type), NULL, _Dee_HashSelectC(0x6c27d09f, 0x8488f4ef228ee909), 1, { 2, 0 } }, /* "\2" */
@@ -511,7 +504,8 @@ err:
 #endif /* CONFIG_STRING_LATIN1_NORMAL */
 
 #ifdef CONFIG_STRING_LATIN1_STATIC
-	String *result = (String *)&latin1[ch];
+	String *result;
+	result = (String *)&DeeString_Latin1[ch];
 	Dee_Incref(result);
 	return (DREF DeeObject *)result;
 #endif /* CONFIG_STRING_LATIN1_STATIC */

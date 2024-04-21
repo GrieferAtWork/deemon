@@ -1322,6 +1322,34 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+udict_foreach(UDict *self, Dee_foreach_pair_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	UDict_LockRead(self);
+	for (i = 0; i <= self->ud_mask; ++i) {
+		DREF DeeObject *key, *value;
+		key = self->ud_elem[i].di_key;
+		if (!key || key == dummy)
+			continue;
+		value = self->ud_elem[i].di_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		UDict_LockEndRead(self);
+		temp = (*proc)(arg, key, value);
+		Dee_Decref_unlikely(value);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		UDict_LockRead(self);
+	}
+	UDict_LockEndRead(self);
+	return result;
+err_temp:
+	return temp;
+}
+
 
 
 PRIVATE struct type_getset tpconst udict_getsets[] = {
@@ -1408,16 +1436,18 @@ PRIVATE struct type_nsi tpconst udict_nsi = {
 };
 
 PRIVATE struct type_seq udict_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &udict_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
+	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
+	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ &udict_nsi,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
 };
 
 
@@ -2017,6 +2047,23 @@ urodict_getitem(URoDict *self, DeeObject *key) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+urodict_foreach(URoDict *self, Dee_foreach_pair_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	for (i = 0; i <= self->urd_mask; ++i) {
+		DeeObject *key = self->urd_elem[i].di_key;
+		if (!key)
+			continue;
+		temp = (*proc)(arg, key, self->urd_elem[i].di_value);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
 
 
 PRIVATE struct type_nsi tpconst urodict_nsi = {
@@ -2034,16 +2081,18 @@ PRIVATE struct type_nsi tpconst urodict_nsi = {
 
 
 PRIVATE struct type_seq urodict_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &urodict_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
+	/* .tp_del          = */ NULL,
+	/* .tp_set          = */ NULL,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ &urodict_nsi,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

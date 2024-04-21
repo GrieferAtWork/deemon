@@ -626,6 +626,31 @@ smap_nsi_getsize(SharedMap *__restrict self) {
 	return atomic_read(&self->sm_length);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+smap_foreach(SharedMap *self, Dee_foreach_pair_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	SharedMap_LockRead(self);
+	for (i = 0; i < self->sm_length; ++i) {
+		DREF DeeObject *key, *value;
+		key   = self->sm_vector[i].si_key;
+		value = self->sm_vector[i].si_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		SharedMap_LockEndRead(self);
+		temp = (*proc)(arg, key, value);
+		Dee_Decref_unlikely(value);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		SharedMap_LockRead(self);
+	}
+	SharedMap_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst smap_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
@@ -641,16 +666,18 @@ PRIVATE struct type_nsi tpconst smap_nsi = {
 };
 
 PRIVATE struct type_seq smap_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &smap_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_getitem,
+	/* .tp_del          = */ NULL,
+	/* .tp_set          = */ NULL,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ &smap_nsi,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
 };
 
 PRIVATE struct type_getset tpconst smap_getsets[] = {

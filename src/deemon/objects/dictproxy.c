@@ -704,6 +704,68 @@ dict_values_iter(DictProxy *__restrict self) {
 	return dict_newproxy_iterator(self, &DictValuesIterator_Type);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_keys_foreach(DictProxy *__restrict me, Dee_foreach_t proc, void *arg) {
+	DeeDictObject *self = me->dp_dict;
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	DeeDict_LockRead(self);
+	for (i = 0; i <= self->d_mask; ++i) {
+		DREF DeeObject *key;
+		key = self->d_elem[i].di_key;
+		if (!key || key == dummy)
+			continue;
+		Dee_Incref(key);
+		DeeDict_LockEndRead(self);
+		temp = (*proc)(arg, key);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeDict_LockRead(self);
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_foreach(DeeDictObject *self, Dee_foreach_pair_t proc, void *arg);
+
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_items_foreach(DictProxy *self, Dee_foreach_pair_t proc, void *arg) {
+	return dict_foreach(self->dp_dict, proc, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_values_foreach(DictProxy *__restrict me, Dee_foreach_t proc, void *arg) {
+	DeeDictObject *self = me->dp_dict;
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	DeeDict_LockRead(self);
+	for (i = 0; i <= self->d_mask; ++i) {
+		DeeObject *key;
+		DREF DeeObject *value;
+		key = self->d_elem[i].di_key;
+		if (!key || key == dummy)
+			continue;
+		value = self->d_elem[i].di_value;
+		Dee_Incref(value);
+		DeeDict_LockEndRead(self);
+		temp = (*proc)(arg, value);
+		Dee_Decref_unlikely(value);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeDict_LockRead(self);
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
 PRIVATE struct type_seq dict_keys_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_keys_iter,
 	/* .tp_size      = */ NULL,
@@ -713,19 +775,24 @@ PRIVATE struct type_seq dict_keys_seq = {
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_keys_foreach,
 };
 
 PRIVATE struct type_seq dict_items_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_items_iter,
+	/* .tp_size         = */ NULL,
+	/* .tp_contains     = */ NULL,
+	/* .tp_get          = */ NULL,
+	/* .tp_del          = */ NULL,
+	/* .tp_set          = */ NULL,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_foreach      = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_items_foreach,
 };
 
 PRIVATE struct type_seq dict_values_seq = {
@@ -737,7 +804,9 @@ PRIVATE struct type_seq dict_values_seq = {
 	/* .tp_set       = */ NULL,
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&dict_values_foreach,
 };
 
 

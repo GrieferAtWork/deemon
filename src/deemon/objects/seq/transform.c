@@ -341,6 +341,35 @@ err:
 	return NULL;
 }
 
+struct trans_foreach_data {
+	DeeObject    *tfd_fun;  /* [1..1] Function to call in order to apply transformation */
+	Dee_foreach_t tfd_proc; /* [1..1] Inner callback. */
+	void         *tfd_arg;  /* [?..?] Cookie for `tfd_proc'. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+trans_foreach_cb(void *arg, DeeObject *elem) {
+	Dee_ssize_t result;
+	struct trans_foreach_data *data;
+	data = (struct trans_foreach_data *)arg;
+	elem = DeeObject_Call(data->tfd_fun, 1, &elem);
+	if unlikely(!elem)
+		goto err;
+	result = (*data->tfd_proc)(data->tfd_arg, elem);
+	Dee_Decref(elem);
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+trans_foreach(Transformation *self, Dee_foreach_t proc, void *arg) {
+	struct trans_foreach_data data;
+	data.tfd_fun  = self->t_fun;
+	data.tfd_proc = proc;
+	data.tfd_arg  = arg;
+	return DeeObject_Foreach(self->t_seq, &trans_foreach_cb, &data);
+}
 
 PRIVATE struct type_nsi tpconst trans_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -385,7 +414,8 @@ PRIVATE struct type_seq trans_seq = {
 	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&trans_getrange,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &trans_nsi
+	/* .tp_nsi       = */ &trans_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&trans_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

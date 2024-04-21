@@ -1065,6 +1065,17 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cdict_foreach(CachedDict *self, Dee_foreach_t proc, void *arg) {
+	return DeeObject_Foreach(self->cd_map, proc, arg);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cdict_foreach_pair(CachedDict *self, Dee_foreach_pair_t proc, void *arg) {
+	return DeeObject_ForeachPair(self->cd_map, proc, arg);
+}
+
+
 PRIVATE struct type_cmp cdict_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&cdict_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_eq,
@@ -1076,16 +1087,18 @@ PRIVATE struct type_cmp cdict_cmp = {
 };
 
 PRIVATE struct type_seq cdict_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &cdict_nsi
+	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
+	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_size,
+	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_contains,
+	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
+	/* .tp_del          = */ NULL,
+	/* .tp_set          = */ NULL,
+	/* .tp_range_get    = */ NULL,
+	/* .tp_range_del    = */ NULL,
+	/* .tp_range_set    = */ NULL,
+	/* .tp_nsi          = */ &cdict_nsi,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
