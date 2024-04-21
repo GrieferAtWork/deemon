@@ -192,6 +192,47 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 }
 
 
+struct foreach_seq_as_heap_vector_data {
+	size_t           sahvd_size;   /* Used vector size */
+	size_t           sahvd_alloc;  /* Allocated vector size */
+	DREF DeeObject **sahvd_vector; /* [1..1][0..sahvd_size|ALLOC(sahvd_alloc)][owned] Sequence vector. */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+foreach_seq_as_heap_vector_cb(void *arg, DeeObject *__restrict elem) {
+	struct foreach_seq_as_heap_vector_data *data;
+	data = (struct foreach_seq_as_heap_vector_data *)arg;
+	ASSERT(data->sahvd_size <= data->sahvd_alloc);
+	if unlikely(data->sahvd_size >= data->sahvd_alloc) {
+		/* Must allocate more memory. */
+		size_t new_alloc;
+		DREF DeeObject **new_vector;
+		new_alloc = data->sahvd_alloc * 2;
+		if unlikely(new_alloc <= data->sahvd_size) {
+			new_alloc = 16;
+			if unlikely(new_alloc <= data->sahvd_size)
+				new_alloc = data->sahvd_size + 1;
+		}
+		new_vector = (DREF DeeObject **)Dee_TryReallocc(data->sahvd_vector, new_alloc,
+		                                                sizeof(DREF DeeObject *));
+		if unlikely(!new_vector) {
+			new_alloc  = data->sahvd_size + 1;
+			new_vector = (DREF DeeObject **)Dee_Reallocc(data->sahvd_vector, new_alloc,
+			                                             sizeof(DREF DeeObject *));
+			if unlikely(!new_vector)
+				goto err;
+		}
+		data->sahvd_vector = new_vector;
+		data->sahvd_alloc  = new_alloc;
+	}
+	data->sahvd_vector[data->sahvd_size++] = elem;
+	Dee_Incref(elem);
+	return 0;
+err:
+	return -1;
+}
+
+
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
  * before returning that vector (then populated by [1..1] references), which
  * the caller must inherit upon success.
@@ -202,88 +243,62 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict p_length) {
-	size_t i, fastsize, alloc_size;
-	DREF DeeObject **result, *iter, *elem, **new_result;
-	fastsize = DeeFastSeq_GetSize(self);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+	struct foreach_seq_as_heap_vector_data data;
+	data.sahvd_size = DeeFastSeq_GetSize(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
 		/* Optimization for fast-sequence-compatible objects. */
-		*p_length = fastsize;
-		result    = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
-		if unlikely(!result)
+		*p_length = data.sahvd_size;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(data.sahvd_size, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
 			goto err;
 		if (DeeTuple_Check(self)) {
 			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(fastsize == DeeTuple_SIZE(self));
-			return Dee_Movrefv(result, DeeTuple_ELEM(self), fastsize);
+			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
+			return Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
 		}
-		for (i = 0; i < fastsize; ++i) {
+		for (i = 0; i < data.sahvd_size; ++i) {
+			DREF DeeObject *elem;
 			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err_r_i;
-			result[i] = elem;
-		}
-		goto done;
-	}
-
-	/* Must use iterators. */
-	iter = DeeObject_IterSelf(self);
-	if unlikely(!iter)
-		goto err;
-	alloc_size = 16, i = 0;
-	result = (DREF DeeObject **)Dee_TryMallocc(alloc_size, sizeof(DREF DeeObject *));
-	if unlikely(!result) {
-		alloc_size = 1;
-		result = (DREF DeeObject **)Dee_Mallocc(alloc_size, sizeof(DREF DeeObject *));
-		goto err_r_iter;
-	}
-
-	/* Iterate items. */
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		ASSERT(i <= alloc_size);
-		if unlikely(i >= alloc_size) {
-			/* Must allocate more memory. */
-			size_t new_alloc_size;
-			new_alloc_size = alloc_size * 2;
-			new_result = (DREF DeeObject **)Dee_TryReallocc(result, new_alloc_size,
-			                                                sizeof(DREF DeeObject *));
-			if unlikely(!new_result) {
-				new_alloc_size = i + 1;
-				new_result = (DREF DeeObject **)Dee_Reallocc(result, new_alloc_size,
-				                                             sizeof(DREF DeeObject *));
-				if unlikely(!new_result)
-					goto err_r_iter_elem;
+			if unlikely(!elem) {
+				data.sahvd_size = i;
+				goto err_data;
 			}
-			result     = new_result;
-			alloc_size = new_alloc_size;
+			data.sahvd_vector[i] = elem;
 		}
-		result[i++] = elem; /* Inherit reference. */
-		if (DeeThread_CheckInterrupt())
-			goto err_r_iter;
+		return data.sahvd_vector;
 	}
-	if unlikely(!elem)
-		goto err_r_iter;
-	Dee_Decref(iter);
-	ASSERT(i <= alloc_size);
+
+	/* Use `DeeObject_Foreach()' */
+	data.sahvd_size   = 0;
+	data.sahvd_alloc  = 16;
+	data.sahvd_vector = (DREF DeeObject **)Dee_TryMallocc(16, sizeof(DREF DeeObject *));
+	if unlikely(!data.sahvd_vector) {
+		data.sahvd_alloc  = 1;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(1, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
+			goto err;
+	}
+	if unlikely(DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 
 	/* Free unused memory. */
-	if (i < alloc_size) {
-		new_result = (DREF DeeObject **)Dee_TryReallocc(result, i,
+	if (data.sahvd_size < data.sahvd_alloc) {
+		DREF DeeObject **new_vector;
+		new_vector = (DREF DeeObject **)Dee_TryReallocc(data.sahvd_vector,
+		                                                data.sahvd_size,
 		                                                sizeof(DREF DeeObject *));
-		if likely(new_result)
-			result = new_result;
+		if likely(new_vector)
+			data.sahvd_vector = new_vector;
 	}
 
 	/* Save the resulting length. */
-	*p_length = i;
-done:
-	return result;
-err_r_iter_elem:
-	Dee_Decref(elem);
-err_r_iter:
-	Dee_Decref(iter);
-err_r_i:
-	Dee_Decrefv(result, i);
-	Dee_Free(result);
+	*p_length = data.sahvd_size;
+	return data.sahvd_vector;
+err_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
+	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
 }
@@ -314,84 +329,58 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
                              /*[out]*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
-	size_t i, fastsize, alloc_size;
-	DREF DeeObject **result, *iter, *elem, **new_result;
-	fastsize = DeeFastSeq_GetSize(self);
-	if (fastsize != DEE_FASTSEQ_NOTFAST) {
+	struct foreach_seq_as_heap_vector_data data;
+	data.sahvd_size = DeeFastSeq_GetSize(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+		size_t i;
 		/* Optimization for fast-sequence-compatible objects. */
 #ifndef Dee_MallocUsableSize
-		*p_allocated = fastsize;
+		*p_allocated = data.sahvd_size;
 #endif /* !Dee_MallocUsableSize */
-		*p_length = fastsize;
-		result = (DREF DeeObject **)Dee_Mallocc(fastsize, sizeof(DREF DeeObject *));
-		if unlikely(!result)
+		*p_length = data.sahvd_size;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(data.sahvd_size, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
 			goto err;
 		if (DeeTuple_Check(self)) {
 			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(fastsize == DeeTuple_SIZE(self));
-			return Dee_Movrefv(result, DeeTuple_ELEM(self), fastsize);
+			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
+			return Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
 		}
-		for (i = 0; i < fastsize; ++i) {
+		for (i = 0; i < data.sahvd_size; ++i) {
+			DREF DeeObject *elem;
 			elem = DeeFastSeq_GetItem(self, i);
-			if unlikely(!elem)
-				goto err_r_i;
-			result[i] = elem;
-		}
-		goto done;
-	}
-
-	/* Must use iterators. */
-	iter = DeeObject_IterSelf(self);
-	if unlikely(!iter)
-		goto err;
-	alloc_size = 16;
-	i          = 0;
-	result = (DREF DeeObject **)Dee_TryMallocc(alloc_size, sizeof(DREF DeeObject *));
-	if unlikely(!result) {
-		alloc_size = 1;
-		result     = (DREF DeeObject **)Dee_Mallocc(alloc_size, sizeof(DREF DeeObject *));
-		goto err_r_iter;
-	}
-
-	/* Iterate items. */
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		ASSERT(i <= alloc_size);
-		if unlikely(i >= alloc_size) {
-			/* Must allocate more memory. */
-			size_t new_alloc_size = alloc_size * 2;
-			new_result = (DREF DeeObject **)Dee_TryReallocc(result, new_alloc_size, sizeof(DREF DeeObject *));
-			if unlikely(!new_result) {
-				new_alloc_size = i + 1;
-				new_result = (DREF DeeObject **)Dee_Reallocc(result, new_alloc_size, sizeof(DREF DeeObject *));
-				if unlikely(!new_result)
-					goto err_r_iter_elem;
+			if unlikely(!elem) {
+				data.sahvd_size = i;
+				goto err_data;
 			}
-			result     = new_result;
-			alloc_size = new_alloc_size;
+			data.sahvd_vector[i] = elem;
 		}
-		result[i++] = elem; /* Inherit reference. */
-		if (DeeThread_CheckInterrupt())
-			goto err_r_iter;
+		return data.sahvd_vector;
 	}
-	if unlikely(!elem)
-		goto err_r_iter;
-	Dee_Decref(iter);
-	ASSERT(i <= alloc_size);
+
+	/* Use `DeeObject_Foreach()' */
+	data.sahvd_size   = 0;
+	data.sahvd_alloc  = 16;
+	data.sahvd_vector = (DREF DeeObject **)Dee_TryMallocc(16, sizeof(DREF DeeObject *));
+	if unlikely(!data.sahvd_vector) {
+		data.sahvd_alloc  = 1;
+		data.sahvd_vector = (DREF DeeObject **)Dee_Mallocc(1, sizeof(DREF DeeObject *));
+		if unlikely(!data.sahvd_vector)
+			goto err;
+	}
+	if unlikely(DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data))
+		goto err_data;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
 
 	/* Save the resulting length, and allocation. */
 #ifndef Dee_MallocUsableSize
-	*p_allocated = alloc_size;
+	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
-	*p_length = i;
-done:
-	return result;
-err_r_iter_elem:
-	Dee_Decref(elem);
-err_r_iter:
-	Dee_Decref(iter);
-err_r_i:
-	Dee_Decrefv(result, i);
-	Dee_Free(result);
+	*p_length = data.sahvd_size;
+	return data.sahvd_vector;
+err_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
+	Dee_Free(data.sahvd_vector);
 err:
 	return NULL;
 }
@@ -443,86 +432,64 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
                                   /*in-out*/ size_t *__restrict p_allocated)
 #endif /* !Dee_MallocUsableSize */
 {
-	DeeObject **new_elemv, **elemv = *p_vector;
-	DREF DeeObject *iterator, *elem;
+	Dee_ssize_t error;
+	struct foreach_seq_as_heap_vector_data data;
+	data.sahvd_vector = *p_vector;
 #ifdef Dee_MallocUsableSize
-	size_t elema = Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject *);
+	data.sahvd_alloc = Dee_MallocUsableSize(data.sahvd_vector) / sizeof(DREF DeeObject *);
 #else /* Dee_MallocUsableSize */
-	size_t elema = *p_allocated;
+	data.sahvd_alloc = *p_allocated;
 #endif /* !Dee_MallocUsableSize */
-	size_t elemc, i;
-	ASSERT(!elema || elemv);
-	elemc = DeeFastSeq_GetSize(self);
-	if (elemc != DEE_FASTSEQ_NOTFAST) {
+	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
+
+	data.sahvd_size = DeeFastSeq_GetSize(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
 		/* Fast sequence optimizations. */
-		if (elemc > elema) {
-			new_elemv = (DeeObject **)Dee_Reallocc(elemv, elemc, sizeof(DREF DeeObject *));
-			if unlikely(!new_elemv)
+		if (data.sahvd_size > data.sahvd_alloc) {
+			DeeObject **new_vector;
+			new_vector = (DeeObject **)Dee_Reallocc(data.sahvd_vector,
+			                                        data.sahvd_size,
+			                                        sizeof(DREF DeeObject *));
+			if unlikely(!new_vector)
 				goto err;
-			elemv     = new_elemv;
-			*p_vector = new_elemv;
+			data.sahvd_vector = new_vector;
+			*p_vector         = new_vector;
 #ifndef Dee_MallocUsableSize
-			*p_allocated = elemc;
+			*p_allocated = data.sahvd_size;
 #endif /* !Dee_MallocUsableSize */
 		}
 		if (DeeTuple_Check(self)) {
 			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(elemc == DeeTuple_SIZE(self));
-			Dee_Movrefv(elemv, DeeTuple_ELEM(self), elemc);
+			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
+			Dee_Movrefv(data.sahvd_vector, DeeTuple_ELEM(self), data.sahvd_size);
 		} else {
-			for (i = 0; i < elemc; ++i) {
+			size_t i;
+			for (i = 0; i < data.sahvd_size; ++i) {
+				DREF DeeObject *elem;
 				elem = DeeFastSeq_GetItem(self, i);
-				if unlikely(!elem)
-					goto err_i;
-				elemv[i] = elem; /* Inherit reference. */
-			}
-		}
-	} else {
-		/* Use iterators. */
-		iterator = DeeObject_IterSelf(self);
-		if unlikely(!iterator)
-			goto err;
-		elemc = 0;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			ASSERT(elemc <= elema);
-			if (elemc >= elema) {
-				/* Allocate more memory. */
-				size_t new_elema = elema * 2;
-				if unlikely(new_elema < 16)
-					new_elema = 16;
-				new_elemv = (DeeObject **)Dee_TryReallocc(elemv, new_elema, sizeof(DeeObject *));
-				if unlikely(!new_elemv) {
-					new_elema = elemc + 1;
-					new_elemv = (DeeObject **)Dee_Reallocc(elemv, new_elema, sizeof(DeeObject *));
-					if unlikely(!new_elemv)
-						goto err_iterator_elemc;
+				if unlikely(!elem) {
+					data.sahvd_size = i;
+					goto err_data;
 				}
-				elemv = new_elemv;
-				elema = new_elema;
+				data.sahvd_vector[i] = elem; /* Inherit reference. */
 			}
-			elemv[elemc] = elem; /* Inherit reference. */
-			++elemc;
 		}
-		*p_vector = elemv;
-#ifndef Dee_MallocUsableSize
-		*p_allocated = elema;
-#endif /* !Dee_MallocUsableSize */
-		if unlikely(!elem)
-			goto err_iterator;
-		Dee_Decref(iterator);
+		return data.sahvd_size;
 	}
-	return elemc;
-err_iterator_elemc:
-	Dee_Decrefv(elemv, elemc);
-	*p_vector = elemv;
+
+	/* Use `DeeObject_Foreach()' */
+	data.sahvd_size = 0;
+	error = DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data);
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+	*p_vector = data.sahvd_vector;
 #ifndef Dee_MallocUsableSize
-	*p_allocated = elema;
+	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
-err_iterator:
-	Dee_Decref(iterator);
-	goto err;
-err_i:
-	Dee_Decrefv(elemv, i);
+	if unlikely(error)
+		goto err_data;
+	return data.sahvd_size;
+err_data:
+	Dee_Decrefv(data.sahvd_vector, data.sahvd_size);
 err:
 	return (size_t)-1;
 }
@@ -566,91 +533,69 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
                                         /*in*/ size_t offset)
 #endif /* !Dee_MallocUsableSize */
 {
-	DeeObject **new_elemv, **elemv = *p_vector;
-	DREF DeeObject *iterator, *elem;
+	Dee_ssize_t error;
+	struct foreach_seq_as_heap_vector_data data;
+	data.sahvd_vector = *p_vector;
 #ifdef Dee_MallocUsableSize
-	size_t elema = Dee_MallocUsableSize(elemv) / sizeof(DREF DeeObject **);
+	data.sahvd_alloc = Dee_MallocUsableSize(data.sahvd_vector) / sizeof(DREF DeeObject *);
 #else /* Dee_MallocUsableSize */
-	size_t elema = *p_allocated;
+	data.sahvd_alloc = *p_allocated;
 #endif /* !Dee_MallocUsableSize */
-	size_t elemc, i;
-	ASSERT(elema >= offset);
-	ASSERT(!elema || elemv);
-	elemc = DeeFastSeq_GetSize(self);
-	if (elemc != DEE_FASTSEQ_NOTFAST) {
+	ASSERT(data.sahvd_alloc >= offset);
+	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
+
+	data.sahvd_size = DeeFastSeq_GetSize(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
 		/* Fast sequence optimizations. */
-		if (elemc > (elema - offset)) {
-			new_elemv = (DeeObject **)Dee_Reallocc(elemv,
-			                                       offset + elemc,
-			                                       sizeof(DeeObject *));
-			if unlikely(!new_elemv)
+		if (data.sahvd_size > (data.sahvd_alloc - offset)) {
+			DeeObject **new_vector;
+			data.sahvd_alloc = offset + data.sahvd_size;
+			new_vector = (DeeObject **)Dee_Reallocc(data.sahvd_vector,
+			                                        data.sahvd_alloc,
+			                                        sizeof(DeeObject *));
+			if unlikely(!new_vector)
 				goto err;
-			elemv     = new_elemv;
-			*p_vector = new_elemv;
+			data.sahvd_vector = new_vector;
+			*p_vector         = new_vector;
 #ifndef Dee_MallocUsableSize
-			*p_allocated = offset + elemc;
+			*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
 		}
 		if (DeeTuple_Check(self)) {
 			/* Further optimization: tuple can be memcpy'd */
-			ASSERT(elemc == DeeTuple_SIZE(self));
-			Dee_Movrefv(elemv + offset, DeeTuple_ELEM(self), elemc);
+			ASSERT(data.sahvd_size == DeeTuple_SIZE(self));
+			Dee_Movrefv(data.sahvd_vector + offset, DeeTuple_ELEM(self), data.sahvd_size);
 		} else {
-			for (i = 0; i < elemc; ++i) {
+			size_t i;
+			for (i = 0; i < data.sahvd_size; ++i) {
+				DREF DeeObject *elem;
 				elem = DeeFastSeq_GetItem(self, i);
-				if unlikely(!elem)
-					goto err_i;
-				elemv[offset + i] = elem; /* Inherit reference. */
-			}
-		}
-	} else {
-		/* Use iterators. */
-		iterator = DeeObject_IterSelf(self);
-		if unlikely(!iterator)
-			goto err;
-		elemc = 0;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
-			ASSERT(elemc <= (elema - offset));
-			if (elemc >= (elema - offset)) {
-				/* Allocate more memory. */
-				size_t new_elema = elema * 2;
-				if unlikely(new_elema < 16)
-					new_elema = 16;
-				new_elemv = (DeeObject **)Dee_TryReallocc(elemv, new_elema,
-				                                          sizeof(DeeObject *));
-				if unlikely(!new_elemv) {
-					new_elema = offset + elemc + 1;
-					new_elemv = (DeeObject **)Dee_Reallocc(elemv, new_elema,
-					                                       sizeof(DeeObject *));
-					if unlikely(!new_elemv)
-						goto err_iterator_elemc;
+				if unlikely(!elem) {
+					data.sahvd_size = offset + i;
+					goto err_data;
 				}
-				elemv = new_elemv;
-				elema = new_elema;
+				data.sahvd_vector[offset + i] = elem; /* Inherit reference. */
 			}
-			elemv[offset + elemc] = elem; /* Inherit reference. */
-			++elemc;
 		}
-		*p_vector = elemv;
-#ifndef Dee_MallocUsableSize
-		*p_allocated = elema;
-#endif /* !Dee_MallocUsableSize */
-		if unlikely(!elem)
-			goto err_iterator;
-		Dee_Decref(iterator);
+		return data.sahvd_size;
 	}
-	return elemc;
-err_iterator_elemc:
-	Dee_Decrefv(elemv + offset, elemc);
-	*p_vector = elemv;
+
+	/* Use `DeeObject_Foreach()' */
+	data.sahvd_size = offset;
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+	error = DeeObject_Foreach(self, &foreach_seq_as_heap_vector_cb, &data);
+	ASSERT(data.sahvd_size <= data.sahvd_alloc);
+	ASSERT(data.sahvd_size >= offset);
+	*p_vector = data.sahvd_vector;
 #ifndef Dee_MallocUsableSize
-	*p_allocated = elema;
+	*p_allocated = data.sahvd_alloc;
 #endif /* !Dee_MallocUsableSize */
-err_iterator:
-	Dee_Decref(iterator);
-	goto err;
-err_i:
-	Dee_Decrefv(elemv + offset, i);
+	if unlikely(error)
+		goto err_data;
+	return data.sahvd_size - offset;
+err_data:
+	Dee_Decrefv(data.sahvd_vector + offset,
+	            data.sahvd_size - offset);
 err:
 	return (size_t)-1;
 }

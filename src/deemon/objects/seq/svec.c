@@ -789,15 +789,14 @@ rvec_nsi_setrange(RefVector *self, dssize_t i_begin,
 		}
 	} else {
 		DREF DeeObject *iterator;
-		iterator = DeeObject_IterSelf(values);
+		iterator = DeeObject_IterSelf(values); /* TODO: Use DeeObject_Foreach() */
 		if unlikely(!iterator)
 			goto err;
 		for (i = range.sr_start; i < range.sr_end; ++i) {
 			elem = DeeObject_IterNext(iterator);
 			if unlikely(!ITER_ISOK(elem)) {
 				if unlikely(elem == ITER_DONE) {
-					err_invalid_unpack_size(values,
-					                        range_size,
+					err_invalid_unpack_size(values, range_size,
 					                        i - range.sr_start);
 				}
 err_iterator:
