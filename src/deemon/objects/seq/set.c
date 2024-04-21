@@ -626,10 +626,72 @@ err_r:
 	goto done;
 }
 
+struct su_foreach_if_contained_in_data {
+	DeeObject    *feicid_seq;  /* [1..1] Sequence that mustn't contain elements. */
+	Dee_foreach_t feicid_proc; /* [1..1] Wrapper callback. */
+	void         *feicid_arg;  /* [?..?] Cookie for `feicid_proc' */
+};
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+su_foreach_if_not_contained_in_cb(void *arg, DeeObject *elem) {
+	struct su_foreach_if_contained_in_data *data;
+	int contains;
+	data = (struct su_foreach_if_contained_in_data *)arg;
+	contains = DeeObject_Contains(data->feicid_seq, elem);
+	if unlikely(contains < 0)
+		goto err;
+	if (contains)
+		return 0; /* Don't enumerate if contained in caller-set object. */
+	return (*data->feicid_proc)(data->feicid_arg, elem);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+su_foreach_if_contained_in_cb(void *arg, DeeObject *elem) {
+	struct su_foreach_if_contained_in_data *data;
+	int contains;
+	data = (struct su_foreach_if_contained_in_data *)arg;
+	contains = DeeObject_Contains(data->feicid_seq, elem);
+	if unlikely(contains < 0)
+		goto err;
+	if (!contains)
+		return 0; /* Don't enumerate if not contained in caller-set object. */
+	return (*data->feicid_proc)(data->feicid_arg, elem);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t result;
+	result = DeeObject_Foreach(self->su_a, proc, arg);
+	if likely(result >= 0) {
+		Dee_ssize_t temp;
+		struct su_foreach_if_contained_in_data data;
+		data.feicid_seq  = self->su_a;
+		data.feicid_proc = proc;
+		data.feicid_arg  = arg;
+		temp = DeeObject_Foreach(self->su_b, &su_foreach_if_not_contained_in_cb, &data);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
 PRIVATE struct type_seq su_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_size      = */ NULL,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach
 };
 
 PRIVATE struct type_member tpconst su_class_members[] = {
@@ -884,10 +946,35 @@ err:
 	goto done;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t r1, r2;
+	struct su_foreach_if_contained_in_data data;
+	data.feicid_seq  = self->ssd_b;
+	data.feicid_proc = proc;
+	data.feicid_arg  = arg;
+	r1 = DeeObject_Foreach(self->ssd_a, &su_foreach_if_not_contained_in_cb, &data);
+	if unlikely(r1 < 0)
+		return r1;
+	data.feicid_seq = self->ssd_a;
+	r2 = DeeObject_Foreach(self->ssd_b, &su_foreach_if_not_contained_in_cb, &data);
+	if unlikely(r2 < 0)
+		return r2;
+	return r1 + r2;
+}
+
 PRIVATE struct type_seq ssd_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach
 };
 
 PRIVATE struct type_member tpconst ssd_class_members[] = {
@@ -1196,10 +1283,27 @@ err_r:
 	goto done;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+si_foreach(SetIntersection *__restrict self, Dee_foreach_t proc, void *arg) {
+	struct su_foreach_if_contained_in_data data;
+	data.feicid_seq  = self->si_b;
+	data.feicid_proc = proc;
+	data.feicid_arg  = arg;
+	return DeeObject_Foreach(self->si_a, &su_foreach_if_contained_in_cb, &data);
+}
+
 PRIVATE struct type_seq si_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach
 };
 
 PRIVATE struct type_member tpconst si_class_members[] = {
@@ -1402,10 +1506,27 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL 
+sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
+	struct su_foreach_if_contained_in_data data;
+	data.feicid_seq  = self->sd_b;
+	data.feicid_proc = proc;
+	data.feicid_arg  = arg;
+	return DeeObject_Foreach(self->sd_a, &su_foreach_if_not_contained_in_cb, &data);
+}
+
 PRIVATE struct type_seq sd_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
 	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
+	/* .tp_get       = */ NULL,
+	/* .tp_del       = */ NULL,
+	/* .tp_set       = */ NULL,
+	/* .tp_range_get = */ NULL,
+	/* .tp_range_del = */ NULL,
+	/* .tp_range_set = */ NULL,
+	/* .tp_nsi       = */ NULL,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach
 };
 
 PRIVATE struct type_member tpconst sd_class_members[] = {
