@@ -4131,7 +4131,7 @@ set_is_type:
 			}
 		}
 		print fp: "-" * 80;
-		if (ismodule) {
+		if (ismodule || istype) {
 			local children = List(this);
 			children.sort();
 			for (local child: children) {

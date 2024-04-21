@@ -206,25 +206,25 @@ struct Dee_filetype_object {
 	DeeTypeObject ft_base; /* Underlying type. */
 
 	/* File operators. */
-	WUNUSED_T ATTR_INOUT_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_read)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-	WUNUSED_T ATTR_INOUT_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_write)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_read)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_write)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
 	/* @param: whence: One of `SEEK_*' from `<stdio.h>' */
-	WUNUSED_T ATTR_INOUT_T((1))                   Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-	WUNUSED_T ATTR_INOUT_T((1))                   int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
-	WUNUSED_T ATTR_INOUT_T((1))                   int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
-	WUNUSED_T ATTR_INOUT_T((1))                   int       (DCALL *ft_close)(DeeFileObject *__restrict self);
-	WUNUSED_T ATTR_INOUT_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_pread)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-	WUNUSED_T ATTR_INOUT_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_pwrite)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1))                   Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_sync)(DeeFileObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_trunc)(DeeFileObject *__restrict self, Dee_pos_t size);
+	WUNUSED_T NONNULL_T((1))                   int       (DCALL *ft_close)(DeeFileObject *__restrict self);
+	WUNUSED_T NONNULL_T((1)) ATTR_OUTS_T(2, 3) size_t    (DCALL *ft_pread)(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1)) ATTR_INS_T(2, 3)  size_t    (DCALL *ft_pwrite)(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 #define Dee_GETC_EOF (-1)
 #define Dee_GETC_ERR (-2)
 	/* Read and return one byte, or `Dee_GETC_EOF' for EOF and `Dee_GETC_ERR' if an error occurred. */
-	WUNUSED_T ATTR_INOUT_T((1)) int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	/* Return a previous read byte. (Required for implementing scanf())
 	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
-	WUNUSED_T ATTR_INOUT_T((1)) int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_ungetc)(DeeFileObject *__restrict self, int ch);
 	/* Write a single byte to the file.
 	 * NOTE: The return value of this function is `Dee_GETC_EOF' for EOF, `Dee_GETC_ERR' for errors, and `0' for success. */
-	WUNUSED_T ATTR_INOUT_T((1)) int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+	WUNUSED_T NONNULL_T((1)) int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 };
 
 #define DeeType_AsFileType(self) COMPILER_CONTAINER_OF(self, DeeFileTypeObject, ft_base)
@@ -276,57 +276,57 @@ DDATDEF DeeFileTypeObject DeeFileBuffer_Type;
 
 /* File operator invocation.
  * @return: (size_t)-1: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_Read(DeeObject *self, void *buffer, size_t bufsize);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_Readf(DeeObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL DeeFile_Write(DeeObject *self, void const *buffer, size_t bufsize);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL DeeFile_Writef(DeeObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PRead(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PReadf(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL DeeFile_PWrite(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL DeeFile_PWritef(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_Read(DeeObject *self, void *buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_Readf(DeeObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_Write(DeeObject *self, void const *buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_Writef(DeeObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PRead(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PReadf(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_PWrite(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_PWritef(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 
 /* Similar to functions above, but re-attempt to read/write until an error, or EOF.
  * >> Useful for unbuffered input/output streams that can only process data at a specific rate. */
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_ReadAll(DeeObject *self, void *buffer, size_t bufsize);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DPRINTER_CC DeeFile_WriteAll(DeeObject *self, void const *buffer, size_t bufsize);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PReadAll(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL DeeFile_PWriteAll(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_ReadAll(DeeObject *self, void *buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DPRINTER_CC DeeFile_WriteAll(DeeObject *self, void const *buffer, size_t bufsize);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_PReadAll(DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos);
+DFUNDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_PWriteAll(DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos);
 /* @throw NotImplemented: The file does not support seeking.
  * @return: (Dee_pos_t)-1: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
+DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_Seek(DeeObject *__restrict self, Dee_off_t off, int whence);
 #define DeeFile_Tell(self)        DeeFile_Seek(self, 0, SEEK_CUR)
 #define DeeFile_Rewind(self)      DeeFile_Seek(self, 0, SEEK_SET)
 #define DeeFile_SetPos(self, pos) DeeFile_Seek(self, (Dee_pos_t)(pos), SEEK_SET)
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Sync(DeeObject *__restrict self);
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *p_size);
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Close(DeeObject *__restrict self);
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) uint32_t DCALL DeeFile_GetUtf8(DeeObject *__restrict self); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) uint32_t DCALL DeeFile_GetUtf8f(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_UngetUtf8(DeeObject *__restrict self, uint32_t ch); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Sync(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Trunc(DeeObject *__restrict self, Dee_pos_t size);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_TruncHere(DeeObject *__restrict self, Dee_pos_t *p_size);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Close(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getc(DeeObject *__restrict self); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Getcf(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Ungetc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putc(DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_Putcf(DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) uint32_t DCALL DeeFile_GetUtf8(DeeObject *__restrict self); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) uint32_t DCALL DeeFile_GetUtf8f(DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_UngetUtf8(DeeObject *__restrict self, uint32_t ch); /* @return: Dee_GETC_ERR: Error */
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) ATTR_OUTS(3, 4) size_t DCALL DeeFile_TReadf(DeeTypeObject *tp_self, DeeObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) ATTR_INS(3, 4) size_t DCALL DeeFile_TWritef(DeeTypeObject *tp_self, DeeObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) ATTR_OUTS(3, 4) size_t DCALL DeeFile_TPReadf(DeeTypeObject *tp_self, DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) ATTR_INS(3, 4) size_t DCALL DeeFile_TPWritef(DeeTypeObject *tp_self, DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL DeeFile_TReadf(DeeTypeObject *tp_self, DeeObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL DeeFile_TWritef(DeeTypeObject *tp_self, DeeObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL DeeFile_TPReadf(DeeTypeObject *tp_self, DeeObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL DeeFile_TPWritef(DeeTypeObject *tp_self, DeeObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
 #define DeeFile_TRead(tp_self, self, buffer, bufsize)        DeeFile_TReadf(tp_self, self, buffer, bufsize, Dee_FILEIO_FNORMAL)
 #define DeeFile_TWrite(tp_self, self, buffer, bufsize)       DeeFile_TWritef(tp_self, self, buffer, bufsize, Dee_FILEIO_FNORMAL)
 #define DeeFile_TPRead(tp_self, self, buffer, bufsize, pos)  DeeFile_TPReadf(tp_self, self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL)
 #define DeeFile_TPWrite(tp_self, self, buffer, bufsize, pos) DeeFile_TPWritef(tp_self, self, buffer, bufsize, pos, Dee_FILEIO_FNORMAL)
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) Dee_pos_t DCALL DeeFile_TSeek(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_off_t off, int whence);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TSync(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TTrunc(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_pos_t size);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TTruncHere(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_pos_t *p_size);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TClose(DeeTypeObject *tp_self, DeeObject *__restrict self);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TGetcf(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TUngetc(DeeTypeObject *tp_self, DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TPutcf(DeeTypeObject *tp_self, DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2)) Dee_pos_t DCALL DeeFile_TSeek(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_off_t off, int whence);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TSync(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TTrunc(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_pos_t size);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TTruncHere(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_pos_t *p_size);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TClose(DeeTypeObject *tp_self, DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TGetcf(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TUngetc(DeeTypeObject *tp_self, DeeObject *__restrict self, int ch); /* @return: Dee_GETC_ERR: Error */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_TPutcf(DeeTypeObject *tp_self, DeeObject *__restrict self, int ch, Dee_ioflag_t flags); /* @return: Dee_GETC_ERR: Error */
 #define DeeFile_TGetc(tp_self, self)     DeeFile_TGetcf(tp_self, self, Dee_FILEIO_FNORMAL)
 #define DeeFile_TPutc(tp_self, self, ch) DeeFile_TPutcf(tp_self, self, ch, Dee_FILEIO_FNORMAL)
 #endif /* CONFIG_BUILDING_DEEMON */
@@ -340,7 +340,7 @@ INTDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_TPutcf(DeeTypeObjec
  *       end of the file and determining where that position is located at.
  * @return: * : The size of the given file `self' in bytes.
  * @return: (Dee_pos_t)-1: An error occurred. */
-DFUNDEF WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restrict self);
 
 /* Check if the given file is an interactive device.
  * HINT: In actuality, this function checks for a sub-class of `DeeFileType_Type' and
@@ -349,7 +349,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL DeeFile_GetSize(DeeObject *__restr
  * @return: > 0 : The file is a TTY
  * @return:   0 : The file isn't a TTY
  * @return: < 0 : An error occurred. */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_IsAtty(DeeObject *__restrict self);
 
 /* Return the system file descriptor of the given file, or throw
  * an error and return `Dee_fd_INVALID' if the file was closed,
@@ -361,7 +361,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_IsAtty(DeeObject *__restrict sel
  *       derived from a `deemon.File'!
  * @return: * :               The used system fD. (either a `HANDLE', `fd_t' or `FILE *')
  * @return: Dee_fd_INVALID: An error occurred. */
-DFUNDEF WUNUSED ATTR_INOUT(1) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restrict self);
 
 /* Retrieve and return the filename used to open the given file.
  * NOTE: This function automatically asserts that `self'
@@ -382,7 +382,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) Dee_fd_t DCALL DeeFile_GetSysFD(DeeObject *__restr
  * >> }
  * >> ... // Operate on a filename string `arg'
  * >> Dee_Decref(arg); */
-DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*String*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*String*/ DeeObject *DCALL
 DeeFile_Filename(DeeObject *__restrict self);
 
 /* Read text from a file, a line or block at a time.
@@ -390,34 +390,34 @@ DeeFile_Filename(DeeObject *__restrict self);
  *                  actually returns ZERO(0), rather than stopping once it returns
  *                  something other than the then effective read buffer size.
  * @return: ITER_DONE: [DeeFile_ReadLine] The file has ended. */
-DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadLine(DeeObject *__restrict self, size_t max_length, bool keep_lf);
-DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_ReadBytes(DeeObject *__restrict self, size_t max_length, bool readall);
-DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*Bytes*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*Bytes*/ DeeObject *DCALL
 DeeFile_PReadBytes(DeeObject *__restrict self, size_t max_length, Dee_pos_t pos, bool readall);
 
 
 /* HINT: `DeeFile_Printf' is literally implemented as
  *       `DeeFormat_Printf(&DeeFile_WriteAll, self, format, ...)'
  * @return: -1: Error */
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_IN(2) Dee_ssize_t
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t
 DeeFile_Printf(DeeObject *__restrict self, char const *__restrict format, ...);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_IN(2) Dee_ssize_t DCALL
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 DeeFile_VPrintf(DeeObject *__restrict self, char const *__restrict format, va_list args);
 
 
 /* Print text to a given file, implementing behavior of the print statement. */
-DFUNDEF WUNUSED ATTR_INOUT(1) int DCALL DeeFile_PrintNl(DeeObject *__restrict self);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObject(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObjectSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObjectNl(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObjectRepr(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObjectReprSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintObjectReprNl(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAll(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAllSp(DeeObject *self, DeeObject *ob);
-DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAllNl(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeFile_PrintNl(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObject(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectSp(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectNl(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectRepr(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprSp(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintObjectReprNl(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAll(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllSp(DeeObject *self, DeeObject *ob);
+DFUNDEF WUNUSED NONNULL((1, 2)) int DCALL DeeFile_PrintAllNl(DeeObject *self, DeeObject *ob);
 
 
 /* Open a new system file.
@@ -431,7 +431,7 @@ DFUNDEF WUNUSED ATTR_INOUT(1) ATTR_INOUT(2) int DCALL DeeFile_PrintAllNl(DeeObje
  * @return: ITER_DONE: The specified file does not exist.
  * @return: ITER_DONE: `Dee_OPEN_FCREAT' has not been given and file could not be found (no error was thrown)
  * @return: ITER_DONE: `Dee_OPEN_FEXCL' has been given and the file already exists (no error was thrown) */
-DFUNDEF WUNUSED ATTR_INOUT(1) DREF /*File*/ DeeObject *DCALL
+DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode);
 DFUNDEF WUNUSED NONNULL((1)) DREF /*File*/ DeeObject *DCALL
 DeeFile_OpenString(/*utf-8*/ char const *__restrict filename, int oflags, int mode);
@@ -532,8 +532,8 @@ extern DREF DeeObject *const DeeFile_DefaultStddbg;
 /* Return the underlying file descriptor for `self', that must be
  * an instance of `DeeSystemFile_Type' (or one of its sub-classes)
  * WARNING: The caller is required not to pass objects nothing matching `DeeSystemFile_Check' */
-INTDEF WUNUSED ATTR_INOUT(1) Dee_fd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self);
-INTDEF WUNUSED ATTR_INOUT(1) DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) Dee_fd_t DCALL DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Open a new filesystem file using the given system file-descriptor.

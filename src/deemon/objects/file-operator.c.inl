@@ -52,15 +52,15 @@ DECL_BEGIN
 
 #ifndef FILE_READ_WRITE_WITH_GETC_PUTC_WRAPPERS_DEFINED
 #define FILE_READ_WRITE_WITH_GETC_PUTC_WRAPPERS_DEFINED
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL file_read_with_getc(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL file_write_with_putc(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_getc_with_read(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_putc_with_write(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL file_pread_with_seek_and_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL file_pwrite_with_seek_and_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL file_ungetc_with_seek(DeeFileObject *__restrict self, int ch);
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL file_read_with_getc(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL file_write_with_putc(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) int DCALL file_getc_with_read(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) int DCALL file_putc_with_write(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL file_pread_with_seek_and_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL file_pwrite_with_seek_and_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+PRIVATE WUNUSED NONNULL((1)) int DCALL file_ungetc_with_seek(DeeFileObject *__restrict self, int ch);
 
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
 file_read_with_getc(DeeFileObject *__restrict self, void *buffer,
                     size_t bufsize, Dee_ioflag_t flags) {
 	size_t result;
@@ -81,7 +81,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 file_write_with_putc(DeeFileObject *__restrict self,
                      void const *buffer,
                      size_t bufsize, Dee_ioflag_t flags) {
@@ -102,7 +102,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_getc_with_read(DeeFileObject *__restrict self,
                     Dee_ioflag_t flags) {
 	size_t status;
@@ -122,7 +122,7 @@ file_getc_with_read(DeeFileObject *__restrict self,
 	return GETC_ERR;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_putc_with_write(DeeFileObject *__restrict self,
                      int ch, Dee_ioflag_t flags) {
 	size_t status;
@@ -143,7 +143,7 @@ file_putc_with_write(DeeFileObject *__restrict self,
 	return GETC_ERR;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
 file_pread_with_seek_and_read(DeeFileObject *__restrict self,
                               void *buffer, size_t bufsize,
                               Dee_pos_t pos, Dee_ioflag_t flags) {
@@ -164,7 +164,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL
+PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
 file_pwrite_with_seek_and_write(DeeFileObject *__restrict self,
                                 void const *buffer, size_t bufsize,
                                 Dee_pos_t pos, Dee_ioflag_t flags) {
@@ -185,7 +185,7 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED ATTR_INOUT(1) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 file_ungetc_with_seek(DeeFileObject *__restrict self, int ch) {
 	Dee_pos_t result;
 	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
@@ -198,6 +198,7 @@ file_ungetc_with_seek(DeeFileObject *__restrict self, int ch) {
 err:
 	return -1;
 }
+
 #endif /* !FILE_READ_WRITE_WITH_GETC_PUTC_WRAPPERS_DEFINED */
 
 
@@ -205,7 +206,7 @@ err:
 #ifndef FILE_TYPE_INHERIT_OPERATOR_DEFINED
 #define FILE_TYPE_INHERIT_OPERATOR_DEFINED
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)                                                        \
-	INTERN ATTR_INOUT(1) bool DCALL                                                                              \
+	INTERN NONNULL((1)) bool DCALL                                                                               \
 	name(DeeFileTypeObject *__restrict self) {                                                                   \
 		DeeFileTypeObject *base;                                                                                 \
 		DeeTypeMRO mro;                                                                                          \
@@ -230,7 +231,7 @@ DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritClose, "operator close", ft_clos
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 
 #define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field, alt_condition, altfunc, ...)                           \
-	INTERN ATTR_INOUT(1) bool DCALL                                                                              \
+	INTERN NONNULL((1)) bool DCALL                                                                               \
 	name(DeeFileTypeObject *__restrict self) {                                                                   \
 		DeeFileTypeObject *base;                                                                                 \
 		DeeTypeMRO mro;                                                                                          \

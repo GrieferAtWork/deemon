@@ -379,7 +379,7 @@ done:
 }
 
 
-INTERN WUNUSED ATTR_INOUT(1) Dee_fd_t DCALL
+INTERN WUNUSED NONNULL((1)) Dee_fd_t DCALL
 DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #ifdef DEESYSTEM_FILE_USE_STUB
 	(void)self;
@@ -403,7 +403,7 @@ DeeSystemFile_Fileno(/*SystemFile*/ DeeObject *__restrict self) {
 #endif /* !... */
 }
 
-INTERN WUNUSED ATTR_INOUT(1) DREF DeeObject *DCALL
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSystemFile_Filename(/*SystemFile*/ DeeObject *__restrict self) {
 #ifdef DEESYSTEM_FILE_USE_STUB
 	ASSERT_OBJECT_TYPE(self, (DeeTypeObject *)&DeeSystemFile_Type);
@@ -618,7 +618,7 @@ done:
 
 
 
-PUBLIC WUNUSED ATTR_INOUT(1) DREF DeeObject *DCALL
+PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeFile_Open(/*String*/ DeeObject *__restrict filename, int oflags, int mode) {
 
 	/* Windows implementation */

@@ -30,31 +30,31 @@ DECL_BEGIN
 INTDEF struct type_operator tpconst file_type_operators[LENGTHOF_file_type_operators];
 
 /* Inherit file operators from bases, and auto-complete missing operators. */
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritSeek(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritSync(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritTrunc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritClose(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritRead(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritWrite(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritGetc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPutc(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPRead(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritPWrite(DeeFileTypeObject *__restrict self);
-INTDEF ATTR_INOUT(1) bool DCALL DeeFileType_InheritUngetc(DeeFileTypeObject *__restrict self);
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritSync(DeeFileTypeObject *__restrict self);
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritTrunc(DeeFileTypeObject *__restrict self);
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritClose(DeeFileTypeObject *__restrict self);
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritSeek(DeeFileTypeObject *__restrict self);
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritRead(DeeFileTypeObject *__restrict self);  /* ft_read, ft_getc, ft_ungetc, ft_pread [ft_seek] */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritWrite(DeeFileTypeObject *__restrict self); /* ft_write, ft_putc, ft_trunc, ft_pwrite [ft_seek] */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritPRead(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritPWrite(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritUngetc(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritGetc(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
+INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritPutc(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
 
 
 /* File operator callbacks for user-defined class types. */
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL instance_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL instance_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) Dee_pos_t DCALL instance_seek(DeeFileObject *__restrict self, Dee_off_t off, int whence);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_sync(DeeFileObject *__restrict self);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_trunc(DeeFileObject *__restrict self, Dee_pos_t size);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_close(DeeFileObject *__restrict self);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_OUTS(2, 3) size_t DCALL instance_pread(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) ATTR_INS(2, 3) size_t DCALL instance_pwrite(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_getc(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_ungetc(DeeFileObject *__restrict self, int ch);
-INTDEF WUNUSED ATTR_INOUT(1) int DCALL instance_putc(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL instance_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL instance_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) Dee_pos_t DCALL instance_seek(DeeFileObject *__restrict self, Dee_off_t off, int whence);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_sync(DeeFileObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_trunc(DeeFileObject *__restrict self, Dee_pos_t size);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_close(DeeFileObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL instance_pread(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL instance_pwrite(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_getc(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_ungetc(DeeFileObject *__restrict self, int ch);
+INTDEF WUNUSED NONNULL((1)) int DCALL instance_putc(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 
 INTDEF WUNUSED NONNULL((1, 2)) ATTR_OUTS(3, 4) size_t DCALL instance_tread(DeeFileTypeObject *tp_self, DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
 INTDEF WUNUSED NONNULL((1, 2)) ATTR_INS(3, 4) size_t DCALL instance_twrite(DeeFileTypeObject *tp_self, DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
