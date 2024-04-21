@@ -1375,6 +1375,15 @@ struct cleanup_mode {
 	 (sym)->s_flag    = SYMBOL_FALLOC,                       \
 	 (sym)->s_symid   = (lid))
 
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+foreach_asm_gpush_constexpr_cb(void *arg, DeeObject *elem) {
+	int result;
+	(void)arg;
+	result = asm_gpush_constexpr(elem);
+	if likely(result == 0)
+		result = 1;
+	return result;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2, 4, 5)) DREF DeeObject *DCALL
 get_assembly_formatter_oprepr(struct ast *__restrict self,
@@ -1828,7 +1837,6 @@ write_regular_local:
 			break;
 		}
 		if (self->a_type == AST_CONSTEXPR) {
-			DREF DeeObject *iter, *elem;
 			size_t length;
 			/* Check the length of the sequence. */
 			length = DeeObject_Size(self->a_constexpr);
@@ -1839,34 +1847,17 @@ write_regular_local:
 			}
 			if (length > UINT8_MAX)
 				goto next_option;
-			iter = DeeObject_IterSelf(self->a_constexpr);
-			if unlikely(!iter) {
-				if (DeeError_Catch(&DeeError_NotImplemented))
-					goto next_option;
-				goto err;
-			}
-
 			/* Push all the elements of the sequence. */
-			length = 0;
-			while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-				int error;
-				error = asm_gpush_constexpr(elem);
-				Dee_Decref(elem);
-				if unlikely(!error) {
-					elem = NULL;
-					break;
-				}
-				++length;
-			}
-			Dee_Decref(iter);
-			if unlikely(!elem)
+			length = (size_t)DeeObject_Foreach(self->a_constexpr, &foreach_asm_gpush_constexpr_cb, NULL);
+			if unlikely(length == (size_t)-1)
 				goto err;
 			if unlikely(length > UINT8_MAX) {
 				/* Shouldn't really happen, but is required due to race conditions.
 				 * Peephole optimization should be able to get rid of this later... */
-				while (length--)
+				while (length--) {
 					if (asm_gpop())
 						goto err;
+				}
 				goto next_option;
 			}
 			result = DeeString_Newf("{#%" PRFuSIZ "}", length);
