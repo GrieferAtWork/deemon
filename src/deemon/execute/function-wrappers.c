@@ -524,6 +524,33 @@ funcstatics_visit(FunctionStatics *__restrict self,
 	Dee_Visit(self->fs_func);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+funcstatics_foreach(FunctionStatics *self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	DeeFunctionObject *func = self->fs_func;
+	DeeCodeObject *code = func->fo_code;
+	size_t i;
+	for (i = code->co_refc; i < code->co_refstaticc; ++i) {
+		DREF DeeObject *value;
+		DeeFunction_RefLockRead(func);
+		value = func->fo_refv[i];
+		if unlikely(!value) {
+			DeeFunction_RefLockEndRead(func);
+			continue;
+		}
+		Dee_Incref(value);
+		DeeFunction_RefLockEndRead(func);
+		temp = (*proc)(arg, value);
+		Dee_Decref_unlikely(value);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 
 PRIVATE struct type_nsi tpconst funcstatics_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
@@ -558,7 +585,6 @@ PRIVATE struct type_nsi tpconst funcstatics_nsi = {
 	}
 };
 
-
 PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcstatics_iter,
 	/* .tp_size      = */ NULL,
@@ -569,7 +595,8 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_range_get = */ NULL,
 	/* .tp_range_del = */ NULL,
 	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &funcstatics_nsi
+	/* .tp_nsi       = */ &funcstatics_nsi,
+	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&funcstatics_foreach
 };
 
 PRIVATE struct type_member tpconst funcstatics_class_members[] = {
