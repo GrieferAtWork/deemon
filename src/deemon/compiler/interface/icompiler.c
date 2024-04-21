@@ -822,7 +822,7 @@ err_fast:
 	/* Use an iterator. */
 	catch_v = NULL;
 	catch_c = catch_a = 0;
-	iterator          = DeeObject_IterSelf(handlers);
+	iterator = DeeObject_IterSelf(handlers);
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {

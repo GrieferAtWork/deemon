@@ -74,23 +74,3 @@ for (local name: symbols) {
 		continue;
 	print out: "\t"+name+"="+name[1:];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
