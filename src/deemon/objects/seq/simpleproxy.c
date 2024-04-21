@@ -305,132 +305,59 @@ classes_getrange(SeqSimpleProxy *__restrict self,
 	return result;
 }
 
-
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+ids_contains_foreach_cb(void *arg, DeeObject *elem) {
+	return DeeObject_Id(elem) == (uintptr_t)arg ? -2 : 0;
+}
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-ids_contains(SeqSimpleProxy *self,
-             DeeObject *id_obj) {
+ids_contains(SeqSimpleProxy *self, DeeObject *id_obj) {
+	Dee_ssize_t status;
 	uintptr_t id_value;
-	size_t i, fast_size;
-	DREF DeeObject *iter, *elem;
 	if (DeeObject_AsUIntptr(id_obj, &id_value))
 		goto err;
-	fast_size = DeeFastSeq_GetSize(self->sp_seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if unlikely(!elem)
-				goto err;
-			Dee_Decref(elem);
-			if (DeeObject_Id(elem) == id_value)
-				goto yes;
-		}
-	} else {
-		iter = DeeObject_IterSelf(self->sp_seq);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			Dee_Decref(elem);
-			if (DeeObject_Id(elem) == id_value)
-				goto yes_iter;
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-	return_false;
-yes_iter:
-	Dee_Decref(iter);
-yes:
-	return_true;
-err_iter:
-	Dee_Decref(iter);
+	status = DeeObject_Foreach(self->sp_seq, &ids_contains_foreach_cb, (void *)id_value);
+	if unlikely(status == -1)
+		goto err;
+	return_bool_(status == 0);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+types_contains_foreach_cb(void *arg, DeeObject *elem) {
+	return Dee_TYPE(elem) == (DeeTypeObject *)arg ? -2 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 types_contains(SeqSimpleProxy *self,
                DeeTypeObject *typ) {
-	size_t i, fast_size;
-	DREF DeeObject *iter, *elem;
+	Dee_ssize_t status;
 	if unlikely(!DeeType_Check(typ))
-		goto nope;
-	fast_size = DeeFastSeq_GetSize(self->sp_seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if unlikely(!elem)
-				goto err;
-			if (Dee_TYPE(elem) == typ)
-				goto yes_elem;
-			Dee_Decref(elem);
-		}
-	} else {
-		iter = DeeObject_IterSelf(self->sp_seq);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if (Dee_TYPE(elem) == typ)
-				goto yes_elem_iter;
-			Dee_Decref(elem);
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-nope:
-	return_false;
-yes_elem_iter:
-	Dee_Decref(iter);
-yes_elem:
-	Dee_Decref(elem);
-	return_true;
-err_iter:
-	Dee_Decref(iter);
+		return_false;
+	status = DeeObject_Foreach(self->sp_seq, &types_contains_foreach_cb, typ);
+	if unlikely(status == -1)
+		goto err;
+	return_bool_(status == 0);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+classes_contains_foreach_cb(void *arg, DeeObject *elem) {
+	return DeeObject_Class(elem) == (DeeTypeObject *)arg ? -2 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 classes_contains(SeqSimpleProxy *self,
                  DeeTypeObject *typ) {
-	size_t i, fast_size;
-	DREF DeeObject *iter, *elem;
+	Dee_ssize_t status;
 	if unlikely(!DeeType_Check(typ))
-		goto nope;
-	fast_size = DeeFastSeq_GetSize(self->sp_seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
-		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(self->sp_seq, i);
-			if unlikely(!elem)
-				goto err;
-			if (DeeObject_Class(elem) == typ)
-				goto yes_elem;
-			Dee_Decref(elem);
-		}
-	} else {
-		iter = DeeObject_IterSelf(self->sp_seq);
-		if unlikely(!iter)
-			goto err;
-		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-			if (DeeObject_Class(elem) == typ)
-				goto yes_elem_iter;
-			Dee_Decref(elem);
-		}
-		if unlikely(!elem)
-			goto err_iter;
-		Dee_Decref(iter);
-	}
-nope:
-	return_false;
-yes_elem_iter:
-	Dee_Decref(iter);
-yes_elem:
-	Dee_Decref(elem);
-	return_true;
-err_iter:
-	Dee_Decref(iter);
+		return_false;
+	status = DeeObject_Foreach(self->sp_seq, &classes_contains_foreach_cb, typ);
+	if unlikely(status == -1)
+		goto err;
+	return_bool_(status == 0);
 err:
 	return NULL;
 }
