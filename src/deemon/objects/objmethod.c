@@ -1785,7 +1785,7 @@ PUBLIC DeeTypeObject DeeClsProperty_Type = {
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
@@ -2050,7 +2050,7 @@ PUBLIC DeeTypeObject DeeClsMember_Type = {
 	/* .tp_flags    = */ TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
-	/* .tp_base     = */ &DeeCallable_Type,
+	/* .tp_base     = */ &DeeObject_Type,
 	/* .tp_init = */ {
 		{
 			/* .tp_alloc = */ {
