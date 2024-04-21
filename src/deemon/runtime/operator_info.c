@@ -804,7 +804,7 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self,
 			if (self->tp_cmp->tp_eq == &DeeObject_DefaultEqWithNe) {
 				effective_opname = OPERATOR_NE;
 check_effective_opname:
-				result = DeeType_GetCustomOperatorById(self, opname);
+				result = DeeType_GetCustomOperatorById(self, effective_opname);
 				if (result)
 					return result->to_custom.s_flags;
 			}
