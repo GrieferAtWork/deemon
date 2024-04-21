@@ -468,11 +468,11 @@ err_bad_index_expression:
 					++after_dots;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 				if (after_dots[0] == ',') {
-					int error;
+					size_t error;
 					/* There are more arguments after this first one. */
 					error = objectlist_extendseq(&args, arg);
 					Dee_Decref(arg);
-					if unlikely(error)
+					if unlikely(error == (size_t)-1)
 						goto err_r;
 					fmt_start = after_dots + 1; /* Skip `,' */
 					goto parse_second_argument;
@@ -530,11 +530,11 @@ parse_second_argument:
 			if (fmt_start[0] == '.' &&
 			    fmt_start[1] == '.' &&
 			    fmt_start[2] == '.') {
-				int extend_error;
+				size_t extend_error;
 				/* Expand argument list. */
 				extend_error = objectlist_extendseq(&args, arg);
 				Dee_Decref(arg);
-				if unlikely(extend_error)
+				if unlikely(extend_error == (size_t)-1)
 					goto err_call_argv;
 				fmt_start += 3;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
