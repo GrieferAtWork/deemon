@@ -32,6 +32,7 @@
 #include <deemon/string.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
+#include <deemon/util/objectlist.h>
 
 #include <stdbool.h>
 
@@ -298,66 +299,6 @@ Formatter_GetExpr(struct formatter *__restrict self,
 	       : Formatter_GetUnaryIndex(p_fmt_start);
 }
 
-struct object_vector {
-	size_t           ov_cnt; /* Number of vector elements in use. */
-	size_t           ov_siz; /* Allocated vector size. */
-	DREF DeeObject **ov_vec; /* [1..1][0..ov_cnt|alloc(ov_siz)][owned] Object vector. */
-};
-#define OBJECT_VECTOR_INIT \
-	{ 0, 0, NULL }
-
-/* NOTE: A reference to `ob' is inherited in all cases! */
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-object_vector_append(struct object_vector *__restrict self,
-                     DREF DeeObject *__restrict ob) {
-	if (self->ov_cnt == self->ov_siz) {
-		DREF DeeObject **new_vector;
-		size_t new_count = self->ov_siz * 2;
-		if (!new_count)
-			new_count = 4;
-		new_vector = (DREF DeeObject **)Dee_Reallocc(self->ov_vec, new_count,
-		                                             sizeof(DREF DeeObject *));
-		if unlikely(!new_vector) {
-			/* Always inherit a reference. */
-			Dee_Decref(ob);
-			return -1;
-		}
-		self->ov_vec = new_vector;
-		self->ov_siz = new_count;
-	}
-	self->ov_vec[self->ov_cnt++] = ob; /* Inherit reference. */
-	return 0;
-}
-
-LOCAL WUNUSED NONNULL((1, 2)) int DCALL
-object_vector_extend(struct object_vector *__restrict self,
-                     DeeObject *__restrict ob) {
-	int result = 0;
-	DREF DeeObject *elem, *iter;
-	iter = DeeObject_IterSelf(ob);
-	if unlikely(!iter)
-		goto err;
-	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
-		result = object_vector_append(self, elem);
-		if (result)
-			break; /* Error */
-		if (DeeThread_CheckInterrupt())
-			goto err_iter;
-	}
-	Dee_Decref(iter);
-	return result;
-err_iter:
-	Dee_Decref(iter);
-err:
-	return -1;
-}
-
-LOCAL NONNULL((1)) void DCALL
-object_vector_fini(struct object_vector *__restrict self) {
-	Dee_Decrefv(self->ov_vec, self->ov_cnt);
-	Dee_Free(self->ov_vec);
-}
-
 #undef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 #ifndef CONFIG_NO_ALLOW_SPACE_IN_FORMAT_EXPRESSION
 #define CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
@@ -490,7 +431,7 @@ err_bad_index_expression:
 
 	case '(': {
 		DREF DeeObject *arg;
-		struct object_vector args = OBJECT_VECTOR_INIT;
+		struct objectlist args;
 		/* Call the currently set result expression. */
 		++fmt_start;
 #ifdef CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION
@@ -513,6 +454,7 @@ err_bad_index_expression:
 		while (DeeUni_IsSpace(*fmt_start))
 			++fmt_start;
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
+		objectlist_init(&args);
 		if (*fmt_start != ',') {
 			/* Another simple case: 1-argument call */
 			if (fmt_start[0] == '.' &&
@@ -528,7 +470,7 @@ err_bad_index_expression:
 				if (after_dots[0] == ',') {
 					int error;
 					/* There are more arguments after this first one. */
-					error = object_vector_extend(&args, arg);
+					error = objectlist_extendseq(&args, arg);
 					Dee_Decref(arg);
 					if unlikely(error)
 						goto err_r;
@@ -556,7 +498,7 @@ err_expected_rparen:
 				                "Expected `)' after `(' to complete call expression, but got %:1q",
 				                fmt_start);
 err_call_argv:
-				object_vector_fini(&args);
+				objectlist_fini(&args);
 				goto err_r;
 			} else {
 				new_result = DeeObject_Call(result, 1, &arg);
@@ -568,7 +510,7 @@ err_call_argv:
 			result = new_result;
 			goto next_suffix;
 		}
-		if (object_vector_append(&args, arg))
+		if (objectlist_append(&args, arg))
 			goto err_call_argv;
 		++fmt_start; /* Skip `,' */
 parse_second_argument:
@@ -590,7 +532,7 @@ parse_second_argument:
 			    fmt_start[2] == '.') {
 				int extend_error;
 				/* Expand argument list. */
-				extend_error = object_vector_extend(&args, arg);
+				extend_error = objectlist_extendseq(&args, arg);
 				Dee_Decref(arg);
 				if unlikely(extend_error)
 					goto err_call_argv;
@@ -601,7 +543,7 @@ parse_second_argument:
 #endif /* CONFIG_ALLOW_SPACE_IN_FORMAT_EXPRESSION */
 			} else {
 				/* Append to the argument list. */
-				if (object_vector_append(&args, arg))
+				if (objectlist_append(&args, arg))
 					goto err_call_argv;
 			}
 			if (*fmt_start != ',')
@@ -612,8 +554,8 @@ parse_second_argument:
 			goto err_expected_rparen;
 		++fmt_start; /* Skip `)' */
 		/* Actually do the call. */
-		new_result = DeeObject_Call(result, args.ov_cnt, args.ov_vec);
-		object_vector_fini(&args);
+		new_result = DeeObject_Call(result, args.ol_elemc, args.ol_elemv);
+		objectlist_fini(&args);
 		/* Set the returned value as new result. */
 		if unlikely(!new_result)
 			goto err_r;
