@@ -4124,9 +4124,8 @@ set_is_type:
 		for (local sec: docsections) {
 			print fp: "-" * 80;
 			for (local seg: sec.segments) {
-				if (seg is Declaration) {
-					print fp: ">>", kind, "",;
-				}
+				if (seg is Declaration)
+					print fp: (">> ", kind, " "),;
 				print fp: seg;
 			}
 		}
@@ -4135,7 +4134,13 @@ set_is_type:
 			local children = List(this);
 			children.sort();
 			for (local child: children) {
-				print fp: child,;
+				for (local sec: child.docsections) {
+					for (local seg: sec.segments) {
+						if (seg is Declaration) {
+							print fp: (">> ", child.kind, " ", seg);
+						}
+					}
+				}
 			}
 		}
 	}
