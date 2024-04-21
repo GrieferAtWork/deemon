@@ -52,22 +52,15 @@ DECL_BEGIN
 
 #ifndef FILE_READ_WRITE_WITH_GETC_PUTC_WRAPPERS_DEFINED
 #define FILE_READ_WRITE_WITH_GETC_PUTC_WRAPPERS_DEFINED
-PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL file_read_with_getc(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL file_write_with_putc(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) int DCALL file_getc_with_read(DeeFileObject *__restrict self, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) int DCALL file_putc_with_write(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL file_pread_with_seek_and_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL file_pwrite_with_seek_and_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
-PRIVATE WUNUSED NONNULL((1)) int DCALL file_ungetc_with_seek(DeeFileObject *__restrict self, int ch);
 
-PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
-file_read_with_getc(DeeFileObject *__restrict self, void *buffer,
-                    size_t bufsize, Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
+DeeFile_DefaultReadWithGetc(DeeFileObject *__restrict self, void *buffer,
+                            size_t bufsize, Dee_ioflag_t flags) {
 	size_t result;
 	int (DCALL *ft_getc)(DeeFileObject *__restrict self, Dee_ioflag_t flags);
 	ft_getc = Dee_TYPE(self)->ft_getc;
 	ASSERT(ft_getc != NULL);
-	ASSERT(ft_getc != &file_getc_with_read);
+	ASSERT(ft_getc != &DeeFile_DefaultGetcWithRead);
 	for (result = 0; result < bufsize; ++result) {
 		int status = (*ft_getc)(self, flags);
 		if unlikely(status == GETC_EOF)
@@ -81,15 +74,15 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
-file_write_with_putc(DeeFileObject *__restrict self,
-                     void const *buffer,
-                     size_t bufsize, Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
+DeeFile_DefaultWriteWithPutc(DeeFileObject *__restrict self,
+                             void const *buffer,
+                             size_t bufsize, Dee_ioflag_t flags) {
 	size_t result;
 	int (DCALL *ft_putc)(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
 	ft_putc = Dee_TYPE(self)->ft_putc;
 	ASSERT(ft_putc != NULL);
-	ASSERT(ft_putc != &file_putc_with_write);
+	ASSERT(ft_putc != &DeeFile_DefaultPutcWithWrite);
 	for (result = 0; result < bufsize; ++result) {
 		int status = (*ft_putc)(self, ((byte_t const *)buffer)[result], flags);
 		if unlikely(status == GETC_EOF)
@@ -102,9 +95,9 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-file_getc_with_read(DeeFileObject *__restrict self,
-                    Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeFile_DefaultGetcWithRead(DeeFileObject *__restrict self,
+                            Dee_ioflag_t flags) {
 	size_t status;
 	byte_t result;
 	size_t (DCALL *ft_read)(DeeFileObject *__restrict self,
@@ -112,7 +105,7 @@ file_getc_with_read(DeeFileObject *__restrict self,
 	                        Dee_ioflag_t flags);
 	ft_read = Dee_TYPE(self)->ft_read;
 	ASSERT(ft_read != NULL);
-	ASSERT(ft_read != &file_read_with_getc);
+	ASSERT(ft_read != &DeeFile_DefaultReadWithGetc);
 	status = (*ft_read)(self, &result, 1, flags);
 	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
 	if likely(status > 0)
@@ -122,9 +115,9 @@ file_getc_with_read(DeeFileObject *__restrict self,
 	return GETC_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-file_putc_with_write(DeeFileObject *__restrict self,
-                     int ch, Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeFile_DefaultPutcWithWrite(DeeFileObject *__restrict self,
+                             int ch, Dee_ioflag_t flags) {
 	size_t status;
 	byte_t byte;
 	size_t (DCALL *ft_write)(DeeFileObject *__restrict self,
@@ -132,7 +125,7 @@ file_putc_with_write(DeeFileObject *__restrict self,
 	                         Dee_ioflag_t flags);
 	ft_write = Dee_TYPE(self)->ft_write;
 	ASSERT(ft_write != NULL);
-	ASSERT(ft_write != &file_write_with_putc);
+	ASSERT(ft_write != &DeeFile_DefaultWriteWithPutc);
 	byte   = (byte_t)(unsigned int)ch;
 	status = (*ft_write)(self, &byte, 1, flags);
 	ASSERT(status == 0 || status == 1 || status == (size_t)-1);
@@ -143,10 +136,10 @@ file_putc_with_write(DeeFileObject *__restrict self,
 	return GETC_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
-file_pread_with_seek_and_read(DeeFileObject *__restrict self,
-                              void *buffer, size_t bufsize,
-                              Dee_pos_t pos, Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL
+DeeFile_DefaultPreadWithSeekAndRead(DeeFileObject *__restrict self,
+                                    void *buffer, size_t bufsize,
+                                    Dee_pos_t pos, Dee_ioflag_t flags) {
 	size_t result;
 	size_t (DCALL *ft_read)(DeeFileObject *__restrict self,
 	                        void *buffer, size_t bufsize,
@@ -164,10 +157,10 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
-file_pwrite_with_seek_and_write(DeeFileObject *__restrict self,
-                                void const *buffer, size_t bufsize,
-                                Dee_pos_t pos, Dee_ioflag_t flags) {
+INTERN WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL
+DeeFile_DefaultPwriteWithSeekAndWrite(DeeFileObject *__restrict self,
+                                      void const *buffer, size_t bufsize,
+                                      Dee_pos_t pos, Dee_ioflag_t flags) {
 	size_t result;
 	size_t (DCALL *ft_write)(DeeFileObject *__restrict self,
 	                         void const *buffer, size_t bufsize,
@@ -185,8 +178,8 @@ err:
 	return (size_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-file_ungetc_with_seek(DeeFileObject *__restrict self, int ch) {
+INTERN WUNUSED NONNULL((1)) int DCALL
+DeeFile_DefaultUngetcWithSeek(DeeFileObject *__restrict self, int ch) {
 	Dee_pos_t result;
 	Dee_pos_t (DCALL *ft_seek)(DeeFileObject *__restrict self, Dee_off_t off, int whence);
 	ft_seek = Dee_TYPE(self)->ft_seek;
@@ -255,32 +248,32 @@ DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritClose, "operator close", ft_clos
 		return false;                                                                                            \
 	}
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritRead, "operator read", ft_read,
-                             self->ft_getc != NULL, &file_read_with_getc,
+                             self->ft_getc != NULL, &DeeFile_DefaultReadWithGetc,
                              if (base->ft_getc) self->ft_getc = base->ft_getc)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritWrite, "operator write", ft_write,
-                             self->ft_putc != NULL, &file_write_with_putc,
+                             self->ft_putc != NULL, &DeeFile_DefaultWriteWithPutc,
                              if (base->ft_putc) self->ft_putc = base->ft_putc)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritGetc, "operator getc", ft_getc,
-                             self->ft_read != NULL, &file_getc_with_read,
+                             self->ft_read != NULL, &DeeFile_DefaultGetcWithRead,
                              if (base->ft_read) self->ft_read = base->ft_read)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPutc, "operator putc", ft_putc,
-                             self->ft_write != NULL, &file_putc_with_write,
+                             self->ft_write != NULL, &DeeFile_DefaultPutcWithWrite,
                              if (base->ft_write) self->ft_write = base->ft_write)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPRead, "operator pread", ft_pread,
                              (self->ft_seek != NULL || DeeFileType_InheritSeek(self)) &&
                              (self->ft_read != NULL || DeeFileType_InheritRead(self)),
-                             &file_pread_with_seek_and_read,
+                             &DeeFile_DefaultPreadWithSeekAndRead,
                              if (base->ft_seek) self->ft_seek = base->ft_seek;
                              if (base->ft_read) self->ft_read = base->ft_read)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritPWrite, "operator pwrite", ft_pwrite,
                              (self->ft_seek != NULL || DeeFileType_InheritSeek(self)) &&
                              (self->ft_write != NULL || DeeFileType_InheritWrite(self)),
-                             &file_pwrite_with_seek_and_write,
+                             &DeeFile_DefaultPwriteWithSeekAndWrite,
                              if (base->ft_seek) self->ft_seek = base->ft_seek;
                              if (base->ft_write) self->ft_write = base->ft_write)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeFileType_InheritUngetc, "operator ungetc", ft_ungetc,
                              (self->ft_seek != NULL || DeeFileType_InheritSeek(self)),
-                             &file_ungetc_with_seek,
+                             &DeeFile_DefaultUngetcWithSeek,
                              if (base->ft_seek) self->ft_seek = base->ft_seek)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !FILE_TYPE_INHERIT_OPERATOR_DEFINED */

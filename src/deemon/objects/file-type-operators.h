@@ -43,6 +43,16 @@ INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritGetc(DeeFileTypeObject *__rest
 INTDEF NONNULL((1)) bool DCALL DeeFileType_InheritPutc(DeeFileTypeObject *__restrict self); /* TODO: Remove this */
 
 
+/* Default substitution of file operators. */
+INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_DefaultReadWithGetc(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_DefaultWriteWithPutc(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeFile_DefaultGetcWithRead(DeeFileObject *__restrict self, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeFile_DefaultPutcWithWrite(DeeFileObject *__restrict self, int ch, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL DeeFile_DefaultPreadWithSeekAndRead(DeeFileObject *self, void *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL DeeFile_DefaultPwriteWithSeekAndWrite(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_pos_t pos, Dee_ioflag_t flags);
+INTDEF WUNUSED NONNULL((1)) int DCALL DeeFile_DefaultUngetcWithSeek(DeeFileObject *__restrict self, int ch);
+
+
 /* File operator callbacks for user-defined class types. */
 INTDEF WUNUSED NONNULL((1)) ATTR_OUTS(2, 3) size_t DCALL instance_read(DeeFileObject *self, void *buffer, size_t bufsize, Dee_ioflag_t flags);
 INTDEF WUNUSED NONNULL((1)) ATTR_INS(2, 3) size_t DCALL instance_write(DeeFileObject *self, void const *buffer, size_t bufsize, Dee_ioflag_t flags);
