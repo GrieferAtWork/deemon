@@ -6464,6 +6464,50 @@ PUBLIC DeeObject DeeSeq_EmptyInstance = {
 	OBJECT_HEAD_INIT(&DeeSeq_Type)
 };
 
+
+PRIVATE ATTR_NOINLINE ATTR_PURE WUNUSED NONNULL((1)) unsigned int DCALL
+DeeType_GetSeqClass_uncached(DeeTypeObject const *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	DeeTypeMRO mro;
+	DeeTypeObject *iter;
+	/* Check which of the 3 built-in sequence base-classes appears first in the MRO. */
+	iter = DeeTypeMRO_Init(&mro, self);
+	while ((iter = DeeTypeMRO_Next(&mro, iter)) != NULL) {
+		if (iter == &DeeSeq_Type)
+			return Dee_SEQCLASS_SEQ;
+		if (iter == &DeeSet_Type)
+			return Dee_SEQCLASS_SET;
+		if (iter == &DeeMapping_Type)
+			return Dee_SEQCLASS_MAP;
+	}
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	/* So-long as this function doesn't return `Dee_SEQCLASS_SEQ',
+	 * the new sequence operator system doesn't do anything, and
+	 * operators are inherited like normal from "Sequence". */
+	(void)self;
+	COMPILER_IMPURE();
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	return Dee_SEQCLASS_NONE;
+}
+
+/* Sequence type classification
+ * @return: * : One of `Dee_SEQCLASS_*' */
+PUBLIC ATTR_PURE WUNUSED NONNULL((1)) unsigned int DCALL
+DeeType_GetSeqClass(DeeTypeObject const *__restrict self) {
+	unsigned int result;
+	result = (self->tp_features & Dee_TF_SEQCLASS_MASK) >> Dee_TF_SEQCLASS_SHFT;
+	ASSERT(result < Dee_SEQCLASS_COUNT);
+	if (result == Dee_SEQCLASS_UNKNOWN) {
+		result = DeeType_GetSeqClass_uncached(self);
+		ASSERT(result != Dee_SEQCLASS_UNKNOWN);
+		ASSERT(result < Dee_SEQCLASS_COUNT);
+		atomic_or(&((DeeTypeObject *)self)->tp_features,
+		          (uint32_t)result << Dee_TF_SEQCLASS_SHFT);
+	}
+	return result;
+}
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_C */

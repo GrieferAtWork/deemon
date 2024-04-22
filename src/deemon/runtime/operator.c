@@ -115,6 +115,8 @@ DECL_BEGIN
 DeeSystem_DEFINE_memsetp(dee_memsetp)
 #endif /* !CONFIG_HAVE_memsetp */
 
+#define do_fix_negative_range_index(index, size) \
+	((size) - ((size_t)(-(index)) % (size)))
 
 #ifndef DEFINE_OPERATOR
 #define DEFINE_OPERATOR(return, name, args) \
@@ -124,6 +126,10 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) \
 	INTERN return (DCALL DeeObject_##name)args
 #endif /* !DEFINE_INTERNAL_OPERATOR */
+#ifndef DEFINE_INTERNAL_SEQ_OPERATOR
+#define DEFINE_INTERNAL_SEQ_OPERATOR(return, name, args) \
+	INTERN return (DCALL DeeSeq_##name)args
+#endif /* !DEFINE_INTERNAL_SEQ_OPERATOR */
 
 #ifdef DEFINE_TYPED_OPERATORS
 #define RESTRICT_IF_NOTYPE /* nothing */
@@ -193,216 +199,320 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
  * So because of this, we only need to check for class operator callbacks in
  * a super-context, or in other words: when `DEFINE_TYPED_OPERATORS' is defined! */
 #ifdef DEFINE_TYPED_OPERATORS
-#define DeeType_INVOKE_ASSIGN              DeeType_InvokeInitAssign
-#define DeeType_INVOKE_MOVEASSIGN          DeeType_InvokeInitMoveAssign
-#define DeeType_INVOKE_STR                 DeeType_InvokeCastStr
-#define DeeType_INVOKE_STR_NODEFAULT       DeeType_InvokeCastStr_NODEFAULT
-#define DeeType_INVOKE_PRINT               DeeType_InvokeCastPrint
-#define DeeType_INVOKE_PRINT_NODEFAULT     DeeType_InvokeCastPrint_NODEFAULT
-#define DeeType_INVOKE_REPR                DeeType_InvokeCastRepr
-#define DeeType_INVOKE_REPR_NODEFAULT      DeeType_InvokeCastRepr_NODEFAULT
-#define DeeType_INVOKE_PRINTREPR           DeeType_InvokeCastPrintRepr
-#define DeeType_INVOKE_PRINTREPR_NODEFAULT DeeType_InvokeCastPrintRepr_NODEFAULT
-#define DeeType_INVOKE_BOOL                DeeType_InvokeCastBool
-#define DeeType_INVOKE_NEXT                DeeType_InvokeIterNext
-#define DeeType_INVOKE_CALL                DeeType_InvokeCall
-#define DeeType_INVOKE_CALL_NODEFAULT      DeeType_InvokeCall_NODEFAULT
-#define DeeType_INVOKE_CALLKW              DeeType_InvokeCallKw
-#define DeeType_INVOKE_CALLKW_NODEFAULT    DeeType_InvokeCallKw_NODEFAULT
-#define DeeType_INVOKE_INT32               DeeType_InvokeMathInt32
-#define DeeType_INVOKE_INT32_NODEFAULT     DeeType_InvokeMathInt32_NODEFAULT
-#define DeeType_INVOKE_INT64               DeeType_InvokeMathInt64
-#define DeeType_INVOKE_INT64_NODEFAULT     DeeType_InvokeMathInt64_NODEFAULT
-#define DeeType_INVOKE_DOUBLE              DeeType_InvokeMathDouble
-#define DeeType_INVOKE_DOUBLE_NODEFAULT    DeeType_InvokeMathDouble_NODEFAULT
-#define DeeType_INVOKE_INT                 DeeType_InvokeMathInt
-#define DeeType_INVOKE_INT_NODEFAULT       DeeType_InvokeMathInt_NODEFAULT
-#define DeeType_INVOKE_INV                 DeeType_InvokeMathInv
-#define DeeType_INVOKE_POS                 DeeType_InvokeMathPos
-#define DeeType_INVOKE_NEG                 DeeType_InvokeMathNeg
-#define DeeType_INVOKE_ADD                 DeeType_InvokeMathAdd
-#define DeeType_INVOKE_ADD_NODEFAULT       DeeType_InvokeMathAdd_NODEFAULT
-#define DeeType_INVOKE_SUB                 DeeType_InvokeMathSub
-#define DeeType_INVOKE_SUB_NODEFAULT       DeeType_InvokeMathSub_NODEFAULT
-#define DeeType_INVOKE_MUL                 DeeType_InvokeMathMul
-#define DeeType_INVOKE_MUL_NODEFAULT       DeeType_InvokeMathMul_NODEFAULT
-#define DeeType_INVOKE_DIV                 DeeType_InvokeMathDiv
-#define DeeType_INVOKE_DIV_NODEFAULT       DeeType_InvokeMathDiv_NODEFAULT
-#define DeeType_INVOKE_MOD                 DeeType_InvokeMathMod
-#define DeeType_INVOKE_MOD_NODEFAULT       DeeType_InvokeMathMod_NODEFAULT
-#define DeeType_INVOKE_SHL                 DeeType_InvokeMathShl
-#define DeeType_INVOKE_SHL_NODEFAULT       DeeType_InvokeMathShl_NODEFAULT
-#define DeeType_INVOKE_SHR                 DeeType_InvokeMathShr
-#define DeeType_INVOKE_SHR_NODEFAULT       DeeType_InvokeMathShr_NODEFAULT
-#define DeeType_INVOKE_AND                 DeeType_InvokeMathAnd
-#define DeeType_INVOKE_AND_NODEFAULT       DeeType_InvokeMathAnd_NODEFAULT
-#define DeeType_INVOKE_OR                  DeeType_InvokeMathOr
-#define DeeType_INVOKE_OR_NODEFAULT        DeeType_InvokeMathOr_NODEFAULT
-#define DeeType_INVOKE_XOR                 DeeType_InvokeMathXor
-#define DeeType_INVOKE_XOR_NODEFAULT       DeeType_InvokeMathXor_NODEFAULT
-#define DeeType_INVOKE_POW                 DeeType_InvokeMathPow
-#define DeeType_INVOKE_POW_NODEFAULT       DeeType_InvokeMathPow_NODEFAULT
-#define DeeType_INVOKE_INC                 DeeType_InvokeMathInc
-#define DeeType_INVOKE_INC_NODEFAULT       DeeType_InvokeMathInc_NODEFAULT
-#define DeeType_INVOKE_DEC                 DeeType_InvokeMathDec
-#define DeeType_INVOKE_DEC_NODEFAULT       DeeType_InvokeMathDec_NODEFAULT
-#define DeeType_INVOKE_IADD                DeeType_InvokeMathInplaceAdd
-#define DeeType_INVOKE_IADD_NODEFAULT      DeeType_InvokeMathInplaceAdd_NODEFAULT
-#define DeeType_INVOKE_ISUB                DeeType_InvokeMathInplaceSub
-#define DeeType_INVOKE_ISUB_NODEFAULT      DeeType_InvokeMathInplaceSub_NODEFAULT
-#define DeeType_INVOKE_IMUL                DeeType_InvokeMathInplaceMul
-#define DeeType_INVOKE_IMUL_NODEFAULT      DeeType_InvokeMathInplaceMul_NODEFAULT
-#define DeeType_INVOKE_IDIV                DeeType_InvokeMathInplaceDiv
-#define DeeType_INVOKE_IDIV_NODEFAULT      DeeType_InvokeMathInplaceDiv_NODEFAULT
-#define DeeType_INVOKE_IMOD                DeeType_InvokeMathInplaceMod
-#define DeeType_INVOKE_IMOD_NODEFAULT      DeeType_InvokeMathInplaceMod_NODEFAULT
-#define DeeType_INVOKE_ISHL                DeeType_InvokeMathInplaceShl
-#define DeeType_INVOKE_ISHL_NODEFAULT      DeeType_InvokeMathInplaceShl_NODEFAULT
-#define DeeType_INVOKE_ISHR                DeeType_InvokeMathInplaceShr
-#define DeeType_INVOKE_ISHR_NODEFAULT      DeeType_InvokeMathInplaceShr_NODEFAULT
-#define DeeType_INVOKE_IAND                DeeType_InvokeMathInplaceAnd
-#define DeeType_INVOKE_IAND_NODEFAULT      DeeType_InvokeMathInplaceAnd_NODEFAULT
-#define DeeType_INVOKE_IOR                 DeeType_InvokeMathInplaceOr
-#define DeeType_INVOKE_IOR_NODEFAULT       DeeType_InvokeMathInplaceOr_NODEFAULT
-#define DeeType_INVOKE_IXOR                DeeType_InvokeMathInplaceXor
-#define DeeType_INVOKE_IXOR_NODEFAULT      DeeType_InvokeMathInplaceXor_NODEFAULT
-#define DeeType_INVOKE_IPOW                DeeType_InvokeMathInplacePow
-#define DeeType_INVOKE_IPOW_NODEFAULT      DeeType_InvokeMathInplacePow_NODEFAULT
-#define DeeType_INVOKE_HASH                DeeType_InvokeCmpHash
-#define DeeType_INVOKE_EQ                  DeeType_InvokeCmpEq
-#define DeeType_INVOKE_EQ_NODEFAULT        DeeType_InvokeCmpEq_NODEFAULT
-#define DeeType_INVOKE_NE                  DeeType_InvokeCmpNe
-#define DeeType_INVOKE_NE_NODEFAULT        DeeType_InvokeCmpNe_NODEFAULT
-#define DeeType_INVOKE_LO                  DeeType_InvokeCmpLo
-#define DeeType_INVOKE_LO_NODEFAULT        DeeType_InvokeCmpLo_NODEFAULT
-#define DeeType_INVOKE_LE                  DeeType_InvokeCmpLe
-#define DeeType_INVOKE_LE_NODEFAULT        DeeType_InvokeCmpLe_NODEFAULT
-#define DeeType_INVOKE_GR                  DeeType_InvokeCmpGr
-#define DeeType_INVOKE_GR_NODEFAULT        DeeType_InvokeCmpGr_NODEFAULT
-#define DeeType_INVOKE_GE                  DeeType_InvokeCmpGe
-#define DeeType_INVOKE_GE_NODEFAULT        DeeType_InvokeCmpGe_NODEFAULT
-#define DeeType_INVOKE_ITER                DeeType_InvokeSeqIter
-#define DeeType_INVOKE_FOREACH             DeeType_InvokeSeqForeach
-#define DeeType_INVOKE_FOREACH_PAIR        DeeType_InvokeSeqForeachPair
-#define DeeType_INVOKE_SIZEOB              DeeType_InvokeSeqSizeOb
-#define DeeType_INVOKE_CONTAINS            DeeType_InvokeSeqContains
-#define DeeType_INVOKE_GETITEM             DeeType_InvokeSeqGetItem
-#define DeeType_INVOKE_DELITEM             DeeType_InvokeSeqDelItem
-#define DeeType_INVOKE_SETITEM             DeeType_InvokeSeqSetItem
-#define DeeType_INVOKE_GETRANGE            DeeType_InvokeSeqGetRange
-#define DeeType_INVOKE_DELRANGE            DeeType_InvokeSeqDelRange
-#define DeeType_INVOKE_SETRANGE            DeeType_InvokeSeqSetRange
-#define DeeType_INVOKE_GETATTR             DeeType_InvokeAttrGetAttr
-#define DeeType_INVOKE_DELATTR             DeeType_InvokeAttrDelAttr
-#define DeeType_INVOKE_SETATTR             DeeType_InvokeAttrSetAttr
-#define DeeType_INVOKE_ENTER               DeeType_InvokeWithEnter
-#define DeeType_INVOKE_LEAVE               DeeType_InvokeWithLeave
+#define DeeType_INVOKE_ASSIGN                   DeeType_InvokeInitAssign
+#define DeeType_INVOKE_ASSIGN_NODEFAULT         DeeType_InvokeInitAssign_NODEFAULT
+#define DeeType_INVOKE_MOVEASSIGN               DeeType_InvokeInitMoveAssign
+#define DeeType_INVOKE_MOVEASSIGN_NODEFAULT     DeeType_InvokeInitMoveAssign_NODEFAULT
+#define DeeType_INVOKE_STR                      DeeType_InvokeCastStr
+#define DeeType_INVOKE_STR_NODEFAULT            DeeType_InvokeCastStr_NODEFAULT
+#define DeeType_INVOKE_PRINT                    DeeType_InvokeCastPrint
+#define DeeType_INVOKE_PRINT_NODEFAULT          DeeType_InvokeCastPrint_NODEFAULT
+#define DeeType_INVOKE_REPR                     DeeType_InvokeCastRepr
+#define DeeType_INVOKE_REPR_NODEFAULT           DeeType_InvokeCastRepr_NODEFAULT
+#define DeeType_INVOKE_PRINTREPR                DeeType_InvokeCastPrintRepr
+#define DeeType_INVOKE_PRINTREPR_NODEFAULT      DeeType_InvokeCastPrintRepr_NODEFAULT
+#define DeeType_INVOKE_BOOL                     DeeType_InvokeCastBool
+#define DeeType_INVOKE_BOOL_NODEFAULT           DeeType_InvokeCastBool_NODEFAULT
+#define DeeType_INVOKE_NEXT                     DeeType_InvokeIterNext
+#define DeeType_INVOKE_NEXT_NODEFAULT           DeeType_InvokeIterNext_NODEFAULT
+#define DeeType_INVOKE_CALL                     DeeType_InvokeCall
+#define DeeType_INVOKE_CALL_NODEFAULT           DeeType_InvokeCall_NODEFAULT
+#define DeeType_INVOKE_CALLKW                   DeeType_InvokeCallKw
+#define DeeType_INVOKE_CALLKW_NODEFAULT         DeeType_InvokeCallKw_NODEFAULT
+#define DeeType_INVOKE_INT32                    DeeType_InvokeMathInt32
+#define DeeType_INVOKE_INT32_NODEFAULT          DeeType_InvokeMathInt32_NODEFAULT
+#define DeeType_INVOKE_INT64                    DeeType_InvokeMathInt64
+#define DeeType_INVOKE_INT64_NODEFAULT          DeeType_InvokeMathInt64_NODEFAULT
+#define DeeType_INVOKE_DOUBLE                   DeeType_InvokeMathDouble
+#define DeeType_INVOKE_DOUBLE_NODEFAULT         DeeType_InvokeMathDouble_NODEFAULT
+#define DeeType_INVOKE_INT                      DeeType_InvokeMathInt
+#define DeeType_INVOKE_INT_NODEFAULT            DeeType_InvokeMathInt_NODEFAULT
+#define DeeType_INVOKE_INV                      DeeType_InvokeMathInv
+#define DeeType_INVOKE_INV_NODEFAULT            DeeType_InvokeMathInv_NODEFAULT
+#define DeeType_INVOKE_POS                      DeeType_InvokeMathPos
+#define DeeType_INVOKE_POS_NODEFAULT            DeeType_InvokeMathPos_NODEFAULT
+#define DeeType_INVOKE_NEG                      DeeType_InvokeMathNeg
+#define DeeType_INVOKE_NEG_NODEFAULT            DeeType_InvokeMathNeg_NODEFAULT
+#define DeeType_INVOKE_ADD                      DeeType_InvokeMathAdd
+#define DeeType_INVOKE_ADD_NODEFAULT            DeeType_InvokeMathAdd_NODEFAULT
+#define DeeType_INVOKE_SUB                      DeeType_InvokeMathSub
+#define DeeType_INVOKE_SUB_NODEFAULT            DeeType_InvokeMathSub_NODEFAULT
+#define DeeType_INVOKE_MUL                      DeeType_InvokeMathMul
+#define DeeType_INVOKE_MUL_NODEFAULT            DeeType_InvokeMathMul_NODEFAULT
+#define DeeType_INVOKE_DIV                      DeeType_InvokeMathDiv
+#define DeeType_INVOKE_DIV_NODEFAULT            DeeType_InvokeMathDiv_NODEFAULT
+#define DeeType_INVOKE_MOD                      DeeType_InvokeMathMod
+#define DeeType_INVOKE_MOD_NODEFAULT            DeeType_InvokeMathMod_NODEFAULT
+#define DeeType_INVOKE_SHL                      DeeType_InvokeMathShl
+#define DeeType_INVOKE_SHL_NODEFAULT            DeeType_InvokeMathShl_NODEFAULT
+#define DeeType_INVOKE_SHR                      DeeType_InvokeMathShr
+#define DeeType_INVOKE_SHR_NODEFAULT            DeeType_InvokeMathShr_NODEFAULT
+#define DeeType_INVOKE_AND                      DeeType_InvokeMathAnd
+#define DeeType_INVOKE_AND_NODEFAULT            DeeType_InvokeMathAnd_NODEFAULT
+#define DeeType_INVOKE_OR                       DeeType_InvokeMathOr
+#define DeeType_INVOKE_OR_NODEFAULT             DeeType_InvokeMathOr_NODEFAULT
+#define DeeType_INVOKE_XOR                      DeeType_InvokeMathXor
+#define DeeType_INVOKE_XOR_NODEFAULT            DeeType_InvokeMathXor_NODEFAULT
+#define DeeType_INVOKE_POW                      DeeType_InvokeMathPow
+#define DeeType_INVOKE_POW_NODEFAULT            DeeType_InvokeMathPow_NODEFAULT
+#define DeeType_INVOKE_INC                      DeeType_InvokeMathInc
+#define DeeType_INVOKE_INC_NODEFAULT            DeeType_InvokeMathInc_NODEFAULT
+#define DeeType_INVOKE_DEC                      DeeType_InvokeMathDec
+#define DeeType_INVOKE_DEC_NODEFAULT            DeeType_InvokeMathDec_NODEFAULT
+#define DeeType_INVOKE_IADD                     DeeType_InvokeMathInplaceAdd
+#define DeeType_INVOKE_IADD_NODEFAULT           DeeType_InvokeMathInplaceAdd_NODEFAULT
+#define DeeType_INVOKE_ISUB                     DeeType_InvokeMathInplaceSub
+#define DeeType_INVOKE_ISUB_NODEFAULT           DeeType_InvokeMathInplaceSub_NODEFAULT
+#define DeeType_INVOKE_IMUL                     DeeType_InvokeMathInplaceMul
+#define DeeType_INVOKE_IMUL_NODEFAULT           DeeType_InvokeMathInplaceMul_NODEFAULT
+#define DeeType_INVOKE_IDIV                     DeeType_InvokeMathInplaceDiv
+#define DeeType_INVOKE_IDIV_NODEFAULT           DeeType_InvokeMathInplaceDiv_NODEFAULT
+#define DeeType_INVOKE_IMOD                     DeeType_InvokeMathInplaceMod
+#define DeeType_INVOKE_IMOD_NODEFAULT           DeeType_InvokeMathInplaceMod_NODEFAULT
+#define DeeType_INVOKE_ISHL                     DeeType_InvokeMathInplaceShl
+#define DeeType_INVOKE_ISHL_NODEFAULT           DeeType_InvokeMathInplaceShl_NODEFAULT
+#define DeeType_INVOKE_ISHR                     DeeType_InvokeMathInplaceShr
+#define DeeType_INVOKE_ISHR_NODEFAULT           DeeType_InvokeMathInplaceShr_NODEFAULT
+#define DeeType_INVOKE_IAND                     DeeType_InvokeMathInplaceAnd
+#define DeeType_INVOKE_IAND_NODEFAULT           DeeType_InvokeMathInplaceAnd_NODEFAULT
+#define DeeType_INVOKE_IOR                      DeeType_InvokeMathInplaceOr
+#define DeeType_INVOKE_IOR_NODEFAULT            DeeType_InvokeMathInplaceOr_NODEFAULT
+#define DeeType_INVOKE_IXOR                     DeeType_InvokeMathInplaceXor
+#define DeeType_INVOKE_IXOR_NODEFAULT           DeeType_InvokeMathInplaceXor_NODEFAULT
+#define DeeType_INVOKE_IPOW                     DeeType_InvokeMathInplacePow
+#define DeeType_INVOKE_IPOW_NODEFAULT           DeeType_InvokeMathInplacePow_NODEFAULT
+#define DeeType_INVOKE_HASH                     DeeType_InvokeCmpHash
+#define DeeType_INVOKE_HASH_NODEFAULT           DeeType_InvokeCmpHash_NODEFAULT
+#define DeeType_INVOKE_EQ                       DeeType_InvokeCmpEq
+#define DeeType_INVOKE_EQ_NODEFAULT             DeeType_InvokeCmpEq_NODEFAULT
+#define DeeType_INVOKE_NE                       DeeType_InvokeCmpNe
+#define DeeType_INVOKE_NE_NODEFAULT             DeeType_InvokeCmpNe_NODEFAULT
+#define DeeType_INVOKE_LO                       DeeType_InvokeCmpLo
+#define DeeType_INVOKE_LO_NODEFAULT             DeeType_InvokeCmpLo_NODEFAULT
+#define DeeType_INVOKE_LE                       DeeType_InvokeCmpLe
+#define DeeType_INVOKE_LE_NODEFAULT             DeeType_InvokeCmpLe_NODEFAULT
+#define DeeType_INVOKE_GR                       DeeType_InvokeCmpGr
+#define DeeType_INVOKE_GR_NODEFAULT             DeeType_InvokeCmpGr_NODEFAULT
+#define DeeType_INVOKE_GE                       DeeType_InvokeCmpGe
+#define DeeType_INVOKE_GE_NODEFAULT             DeeType_InvokeCmpGe_NODEFAULT
+#define DeeType_INVOKE_ITER                     DeeType_InvokeSeqIter
+#define DeeType_INVOKE_ITER_NODEFAULT           DeeType_InvokeSeqIter_NODEFAULT
+#define DeeType_INVOKE_SIZEOB                   DeeType_InvokeSeqSizeOb
+#define DeeType_INVOKE_SIZEOB_NODEFAULT         DeeType_InvokeSeqSizeOb_NODEFAULT
+#define DeeType_INVOKE_CONTAINS                 DeeType_InvokeSeqContains
+#define DeeType_INVOKE_CONTAINS_NODEFAULT       DeeType_InvokeSeqContains_NODEFAULT
+#define DeeType_INVOKE_GETITEM                  DeeType_InvokeSeqGetItem
+#define DeeType_INVOKE_GETITEM_NODEFAULT        DeeType_InvokeSeqGetItem_NODEFAULT
+#define DeeType_INVOKE_DELITEM                  DeeType_InvokeSeqDelItem
+#define DeeType_INVOKE_DELITEM_NODEFAULT        DeeType_InvokeSeqDelItem_NODEFAULT
+#define DeeType_INVOKE_SETITEM                  DeeType_InvokeSeqSetItem
+#define DeeType_INVOKE_SETITEM_NODEFAULT        DeeType_InvokeSeqSetItem_NODEFAULT
+#define DeeType_INVOKE_GETRANGE                 DeeType_InvokeSeqGetRange
+#define DeeType_INVOKE_GETRANGE_NODEFAULT       DeeType_InvokeSeqGetRange_NODEFAULT
+#define DeeType_INVOKE_DELRANGE                 DeeType_InvokeSeqDelRange
+#define DeeType_INVOKE_DELRANGE_NODEFAULT       DeeType_InvokeSeqDelRange_NODEFAULT
+#define DeeType_INVOKE_SETRANGE                 DeeType_InvokeSeqSetRange
+#define DeeType_INVOKE_SETRANGE_NODEFAULT       DeeType_InvokeSeqSetRange_NODEFAULT
+#define DeeType_INVOKE_FOREACH                  DeeType_InvokeSeqForeach
+#define DeeType_INVOKE_FOREACH_NODEFAULT        DeeType_InvokeSeqForeach_NODEFAULT
+#define DeeType_INVOKE_FOREACH_PAIR             DeeType_InvokeSeqForeachPair
+#define DeeType_INVOKE_FOREACH_PAIR_NODEFAULT   DeeType_InvokeSeqForeachPair_NODEFAULT
+#define DeeType_INVOKE_BOUNDITEM                DeeType_InvokeSeqBoundItem
+#define DeeType_INVOKE_BOUNDITEM_NODEFAULT      DeeType_InvokeSeqBoundItem_NODEFAULT
+#define DeeType_INVOKE_HASITEM                  DeeType_InvokeSeqHasItem
+#define DeeType_INVOKE_HASITEM_NODEFAULT        DeeType_InvokeSeqHasItem_NODEFAULT
+#define DeeType_INVOKE_SIZE                     DeeType_InvokeSeqSize
+#define DeeType_INVOKE_SIZE_NODEFAULT           DeeType_InvokeSeqSize_NODEFAULT
+#define DeeType_INVOKE_GETITEMINDEX             DeeType_InvokeSeqGetItemIndex
+#define DeeType_INVOKE_GETITEMINDEX_NODEFAULT   DeeType_InvokeSeqGetItemIndex_NODEFAULT
+#define DeeType_INVOKE_DELITEMINDEX             DeeType_InvokeSeqDelItemIndex
+#define DeeType_INVOKE_DELITEMINDEX_NODEFAULT   DeeType_InvokeSeqDelItemIndex_NODEFAULT
+#define DeeType_INVOKE_SETITEMINDEX             DeeType_InvokeSeqSetItemIndex
+#define DeeType_INVOKE_SETITEMINDEX_NODEFAULT   DeeType_InvokeSeqSetItemIndex_NODEFAULT
+#define DeeType_INVOKE_BOUNDITEMINDEX           DeeType_InvokeSeqBoundItemIndex
+#define DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT DeeType_InvokeSeqBoundItemIndex_NODEFAULT
+#define DeeType_INVOKE_HASITEMINDEX             DeeType_InvokeSeqHasItemIndex
+#define DeeType_INVOKE_HASITEMINDEX_NODEFAULT   DeeType_InvokeSeqHasItemIndex_NODEFAULT
+#define DeeType_INVOKE_GETRANGEINDEX            DeeType_InvokeSeqGetRangeIndex
+#define DeeType_INVOKE_GETRANGEINDEX_NODEFAULT  DeeType_InvokeSeqGetRangeIndex_NODEFAULT
+#define DeeType_INVOKE_DELRANGEINDEX            DeeType_InvokeSeqDelRangeIndex
+#define DeeType_INVOKE_DELRANGEINDEX_NODEFAULT  DeeType_InvokeSeqDelRangeIndex_NODEFAULT
+#define DeeType_INVOKE_SETRANGEINDEX            DeeType_InvokeSeqSetRangeIndex
+#define DeeType_INVOKE_SETRANGEINDEX_NODEFAULT  DeeType_InvokeSeqSetRangeIndex_NODEFAULT
+#define DeeType_INVOKE_GETRANGEINDEXN           DeeType_InvokeSeqGetRangeIndexN
+#define DeeType_INVOKE_GETRANGEINDEXN_NODEFAULT DeeType_InvokeSeqGetRangeIndexN_NODEFAULT
+#define DeeType_INVOKE_DELRANGEINDEXN           DeeType_InvokeSeqDelRangeIndexN
+#define DeeType_INVOKE_DELRANGEINDEXN_NODEFAULT DeeType_InvokeSeqDelRangeIndexN_NODEFAULT
+#define DeeType_INVOKE_SETRANGEINDEXN           DeeType_InvokeSeqSetRangeIndexN
+#define DeeType_INVOKE_SETRANGEINDEXN_NODEFAULT DeeType_InvokeSeqSetRangeIndexN_NODEFAULT
+#define DeeType_INVOKE_GETATTR                  DeeType_InvokeAttrGetAttr
+#define DeeType_INVOKE_GETATTR_NODEFAULT        DeeType_InvokeAttrGetAttr_NODEFAULT
+#define DeeType_INVOKE_DELATTR                  DeeType_InvokeAttrDelAttr
+#define DeeType_INVOKE_DELATTR_NODEFAULT        DeeType_InvokeAttrDelAttr_NODEFAULT
+#define DeeType_INVOKE_SETATTR                  DeeType_InvokeAttrSetAttr
+#define DeeType_INVOKE_SETATTR_NODEFAULT        DeeType_InvokeAttrSetAttr_NODEFAULT
+#define DeeType_INVOKE_ENTER                    DeeType_InvokeWithEnter
+#define DeeType_INVOKE_ENTER_NODEFAULT          DeeType_InvokeWithEnter_NODEFAULT
+#define DeeType_INVOKE_LEAVE                    DeeType_InvokeWithLeave
+#define DeeType_INVOKE_LEAVE_NODEFAULT          DeeType_InvokeWithLeave_NODEFAULT
 #else /* DEFINE_TYPED_OPERATORS */
-#define DeeType_INVOKE_ASSIGN(tp_self, self, other)                (*(tp_self)->tp_init.tp_assign)(self, other)
-#define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)            (*(tp_self)->tp_init.tp_move_assign)(self, other)
-#define DeeType_INVOKE_STR(tp_self, self)                          (*(tp_self)->tp_cast.tp_str)(self)
-#define DeeType_INVOKE_REPR(tp_self, self)                         (*(tp_self)->tp_cast.tp_repr)(self)
-#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)          (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
-#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)      (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
-#define DeeType_INVOKE_BOOL(tp_self, self)                         (*(tp_self)->tp_cast.tp_bool)(self)
-#define DeeType_INVOKE_NEXT(tp_self, self)                         (*(tp_self)->tp_iter_next)(self)
-#define DeeType_INVOKE_CALL(tp_self, self, argc,  argv)            (*(tp_self)->tp_call)(self, argc,  argv)
-#define DeeType_INVOKE_CALLKW(tp_self, self, argc,  argv,  kw)     (*(tp_self)->tp_call_kw)(self, argc,  argv,  kw)
-#define DeeType_INVOKE_INT32(tp_self, self, result)                (*(tp_self)->tp_math->tp_int32)(self, result)
-#define DeeType_INVOKE_INT64(tp_self, self, result)                (*(tp_self)->tp_math->tp_int64)(self, result)
-#define DeeType_INVOKE_DOUBLE(tp_self, self, result)               (*(tp_self)->tp_math->tp_double)(self, result)
-#define DeeType_INVOKE_INT(tp_self, self)                          (*(tp_self)->tp_math->tp_int)(self)
-#define DeeType_INVOKE_INV(tp_self, self)                          (*(tp_self)->tp_math->tp_inv)(self)
-#define DeeType_INVOKE_POS(tp_self, self)                          (*(tp_self)->tp_math->tp_pos)(self)
-#define DeeType_INVOKE_NEG(tp_self, self)                          (*(tp_self)->tp_math->tp_neg)(self)
-#define DeeType_INVOKE_ADD(tp_self, self, other)                   (*(tp_self)->tp_math->tp_add)(self, other)
-#define DeeType_INVOKE_SUB(tp_self, self, other)                   (*(tp_self)->tp_math->tp_sub)(self, other)
-#define DeeType_INVOKE_MUL(tp_self, self, other)                   (*(tp_self)->tp_math->tp_mul)(self, other)
-#define DeeType_INVOKE_DIV(tp_self, self, other)                   (*(tp_self)->tp_math->tp_div)(self, other)
-#define DeeType_INVOKE_MOD(tp_self, self, other)                   (*(tp_self)->tp_math->tp_mod)(self, other)
-#define DeeType_INVOKE_SHL(tp_self, self, other)                   (*(tp_self)->tp_math->tp_shl)(self, other)
-#define DeeType_INVOKE_SHR(tp_self, self, other)                   (*(tp_self)->tp_math->tp_shr)(self, other)
-#define DeeType_INVOKE_AND(tp_self, self, other)                   (*(tp_self)->tp_math->tp_and)(self, other)
-#define DeeType_INVOKE_OR(tp_self, self, other)                    (*(tp_self)->tp_math->tp_or)(self, other)
-#define DeeType_INVOKE_XOR(tp_self, self, other)                   (*(tp_self)->tp_math->tp_xor)(self, other)
-#define DeeType_INVOKE_POW(tp_self, self, other)                   (*(tp_self)->tp_math->tp_pow)(self, other)
-#define DeeType_INVOKE_INC(tp_self, p_self)                        (*(tp_self)->tp_math->tp_inc)(p_self)
-#define DeeType_INVOKE_DEC(tp_self, p_self)                        (*(tp_self)->tp_math->tp_dec)(p_self)
-#define DeeType_INVOKE_IADD(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_add)(p_self, other)
-#define DeeType_INVOKE_ISUB(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_sub)(p_self, other)
-#define DeeType_INVOKE_IMUL(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_mul)(p_self, other)
-#define DeeType_INVOKE_IDIV(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_div)(p_self, other)
-#define DeeType_INVOKE_IMOD(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_mod)(p_self, other)
-#define DeeType_INVOKE_ISHL(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_shl)(p_self, other)
-#define DeeType_INVOKE_ISHR(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_shr)(p_self, other)
-#define DeeType_INVOKE_IAND(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_and)(p_self, other)
-#define DeeType_INVOKE_IOR(tp_self, p_self, other)                 (*(tp_self)->tp_math->tp_inplace_or)(p_self, other)
-#define DeeType_INVOKE_IXOR(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_xor)(p_self, other)
-#define DeeType_INVOKE_IPOW(tp_self, p_self, other)                (*(tp_self)->tp_math->tp_inplace_pow)(p_self, other)
-#define DeeType_INVOKE_HASH(tp_self, self)                         (*(tp_self)->tp_cmp->tp_hash)(self)
-#define DeeType_INVOKE_EQ(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_eq)(self, other)
-#define DeeType_INVOKE_NE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_ne)(self, other)
-#define DeeType_INVOKE_LO(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_lo)(self, other)
-#define DeeType_INVOKE_LE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_le)(self, other)
-#define DeeType_INVOKE_GR(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_gr)(self, other)
-#define DeeType_INVOKE_GE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_ge)(self, other)
-#define DeeType_INVOKE_ITER(tp_self, self)                         (*(tp_self)->tp_seq->tp_iter)(self)
-#define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)           (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
-#define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)      (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
-#define DeeType_INVOKE_SIZEOB(tp_self, self)                       (*(tp_self)->tp_seq->tp_sizeob)(self)
-#define DeeType_INVOKE_CONTAINS(tp_self, self, other)              (*(tp_self)->tp_seq->tp_contains)(self, other)
-#define DeeType_INVOKE_GETITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_getitem)(self, index)
-#define DeeType_INVOKE_DELITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_delitem)(self, index)
-#define DeeType_INVOKE_SETITEM(tp_self, self, index, value)        (*(tp_self)->tp_seq->tp_setitem)(self, index, value)
-#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_getrange)(self, start, end)
-#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_delrange)(self, start, end)
-#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) (*(tp_self)->tp_seq->tp_setrange)(self, start, end, values)
-#define DeeType_INVOKE_GETATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_getattr)(self, name)
-#define DeeType_INVOKE_DELATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_delattr)(self, name)
-#define DeeType_INVOKE_SETATTR(tp_self, self, name, value)         (*(tp_self)->tp_attr->tp_setattr)(self, name, value)
-#define DeeType_INVOKE_ENTER(tp_self, self)                        (*(tp_self)->tp_with->tp_enter)(self)
-#define DeeType_INVOKE_LEAVE(tp_self, self)                        (*(tp_self)->tp_with->tp_leave)(self)
+#define DeeType_INVOKE_ASSIGN(tp_self, self, other)                    (*(tp_self)->tp_init.tp_assign)(self, other)
+#define DeeType_INVOKE_MOVEASSIGN(tp_self, self, other)                (*(tp_self)->tp_init.tp_move_assign)(self, other)
+#define DeeType_INVOKE_STR(tp_self, self)                              (*(tp_self)->tp_cast.tp_str)(self)
+#define DeeType_INVOKE_REPR(tp_self, self)                             (*(tp_self)->tp_cast.tp_repr)(self)
+#define DeeType_INVOKE_PRINT(tp_self, self, printer, arg)              (*(tp_self)->tp_cast.tp_print)(self, printer, arg)
+#define DeeType_INVOKE_PRINTREPR(tp_self, self, printer, arg)          (*(tp_self)->tp_cast.tp_printrepr)(self, printer, arg)
+#define DeeType_INVOKE_BOOL(tp_self, self)                             (*(tp_self)->tp_cast.tp_bool)(self)
+#define DeeType_INVOKE_NEXT(tp_self, self)                             (*(tp_self)->tp_iter_next)(self)
+#define DeeType_INVOKE_CALL(tp_self, self, argc, argv)                 (*(tp_self)->tp_call)(self, argc, argv)
+#define DeeType_INVOKE_CALLKW(tp_self, self, argc, argv, kw)           (*(tp_self)->tp_call_kw)(self, argc, argv, kw)
+#define DeeType_INVOKE_INT32(tp_self, self, result)                    (*(tp_self)->tp_math->tp_int32)(self, result)
+#define DeeType_INVOKE_INT64(tp_self, self, result)                    (*(tp_self)->tp_math->tp_int64)(self, result)
+#define DeeType_INVOKE_DOUBLE(tp_self, self, result)                   (*(tp_self)->tp_math->tp_double)(self, result)
+#define DeeType_INVOKE_INT(tp_self, self)                              (*(tp_self)->tp_math->tp_int)(self)
+#define DeeType_INVOKE_INV(tp_self, self)                              (*(tp_self)->tp_math->tp_inv)(self)
+#define DeeType_INVOKE_POS(tp_self, self)                              (*(tp_self)->tp_math->tp_pos)(self)
+#define DeeType_INVOKE_NEG(tp_self, self)                              (*(tp_self)->tp_math->tp_neg)(self)
+#define DeeType_INVOKE_ADD(tp_self, self, other)                       (*(tp_self)->tp_math->tp_add)(self, other)
+#define DeeType_INVOKE_SUB(tp_self, self, other)                       (*(tp_self)->tp_math->tp_sub)(self, other)
+#define DeeType_INVOKE_MUL(tp_self, self, other)                       (*(tp_self)->tp_math->tp_mul)(self, other)
+#define DeeType_INVOKE_DIV(tp_self, self, other)                       (*(tp_self)->tp_math->tp_div)(self, other)
+#define DeeType_INVOKE_MOD(tp_self, self, other)                       (*(tp_self)->tp_math->tp_mod)(self, other)
+#define DeeType_INVOKE_SHL(tp_self, self, other)                       (*(tp_self)->tp_math->tp_shl)(self, other)
+#define DeeType_INVOKE_SHR(tp_self, self, other)                       (*(tp_self)->tp_math->tp_shr)(self, other)
+#define DeeType_INVOKE_AND(tp_self, self, other)                       (*(tp_self)->tp_math->tp_and)(self, other)
+#define DeeType_INVOKE_OR(tp_self, self, other)                        (*(tp_self)->tp_math->tp_or)(self, other)
+#define DeeType_INVOKE_XOR(tp_self, self, other)                       (*(tp_self)->tp_math->tp_xor)(self, other)
+#define DeeType_INVOKE_POW(tp_self, self, other)                       (*(tp_self)->tp_math->tp_pow)(self, other)
+#define DeeType_INVOKE_INC(tp_self, p_self)                            (*(tp_self)->tp_math->tp_inc)(p_self)
+#define DeeType_INVOKE_DEC(tp_self, p_self)                            (*(tp_self)->tp_math->tp_dec)(p_self)
+#define DeeType_INVOKE_IADD(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_add)(p_self, other)
+#define DeeType_INVOKE_ISUB(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_sub)(p_self, other)
+#define DeeType_INVOKE_IMUL(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_mul)(p_self, other)
+#define DeeType_INVOKE_IDIV(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_div)(p_self, other)
+#define DeeType_INVOKE_IMOD(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_mod)(p_self, other)
+#define DeeType_INVOKE_ISHL(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_shl)(p_self, other)
+#define DeeType_INVOKE_ISHR(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_shr)(p_self, other)
+#define DeeType_INVOKE_IAND(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_and)(p_self, other)
+#define DeeType_INVOKE_IOR(tp_self, p_self, other)                     (*(tp_self)->tp_math->tp_inplace_or)(p_self, other)
+#define DeeType_INVOKE_IXOR(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_xor)(p_self, other)
+#define DeeType_INVOKE_IPOW(tp_self, p_self, other)                    (*(tp_self)->tp_math->tp_inplace_pow)(p_self, other)
+#define DeeType_INVOKE_HASH(tp_self, self)                             (*(tp_self)->tp_cmp->tp_hash)(self)
+#define DeeType_INVOKE_EQ(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_eq)(self, other)
+#define DeeType_INVOKE_NE(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_ne)(self, other)
+#define DeeType_INVOKE_LO(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_lo)(self, other)
+#define DeeType_INVOKE_LE(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_le)(self, other)
+#define DeeType_INVOKE_GR(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_gr)(self, other)
+#define DeeType_INVOKE_GE(tp_self, self, other)                        (*(tp_self)->tp_cmp->tp_ge)(self, other)
+#define DeeType_INVOKE_ITER(tp_self, self)                             (*(tp_self)->tp_seq->tp_iter)(self)
+#define DeeType_INVOKE_SIZEOB(tp_self, self)                           (*(tp_self)->tp_seq->tp_sizeob)(self)
+#define DeeType_INVOKE_CONTAINS(tp_self, self, other)                  (*(tp_self)->tp_seq->tp_contains)(self, other)
+#define DeeType_INVOKE_GETITEM(tp_self, self, index)                   (*(tp_self)->tp_seq->tp_getitem)(self, index)
+#define DeeType_INVOKE_DELITEM(tp_self, self, index)                   (*(tp_self)->tp_seq->tp_delitem)(self, index)
+#define DeeType_INVOKE_SETITEM(tp_self, self, index, value)            (*(tp_self)->tp_seq->tp_setitem)(self, index, value)
+#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)             (*(tp_self)->tp_seq->tp_getrange)(self, start, end)
+#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)             (*(tp_self)->tp_seq->tp_delrange)(self, start, end)
+#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values)     (*(tp_self)->tp_seq->tp_setrange)(self, start, end, values)
+#define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)               (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
+#define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)          (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
+#define DeeType_INVOKE_BOUNDITEM(tp_self, self, index)                 (*(tp_self)->tp_seq->tp_bounditem)(self, index)
+#define DeeType_INVOKE_HASITEM(tp_self, self, index)                   (*(tp_self)->tp_seq->tp_hasitem)(self, index)
+#define DeeType_INVOKE_SIZE(tp_self, self)                             (*(tp_self)->tp_seq->tp_size)(self)
+#define DeeType_INVOKE_GETITEMINDEX(tp_self, self, index)              (*(tp_self)->tp_seq->tp_getitem_index)(self, index)
+#define DeeType_INVOKE_DELITEMINDEX(tp_self, self, index)              (*(tp_self)->tp_seq->tp_delitem_index)(self, index)
+#define DeeType_INVOKE_SETITEMINDEX(tp_self, self, index, value)       (*(tp_self)->tp_seq->tp_setitem_index)(self, index, value)
+#define DeeType_INVOKE_BOUNDITEMINDEX(tp_self, self, index)            (*(tp_self)->tp_seq->tp_bounditem_index)(self, index)
+#define DeeType_INVOKE_HASITEMINDEX(tp_self, self, index)              (*(tp_self)->tp_seq->tp_hasitem_index)(self, index)
+#define DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end)        (*(tp_self)->tp_seq->tp_getrange_index)(self, start, end)
+#define DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end)        (*(tp_self)->tp_seq->tp_delrange_index)(self, start, end)
+#define DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end, value) (*(tp_self)->tp_seq->tp_setrange_index)(self, start, end, value)
+#define DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start)            (*(tp_self)->tp_seq->tp_getrange_index_n)(self, start)
+#define DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start)            (*(tp_self)->tp_seq->tp_delrange_index_n)(self, start)
+#define DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, value)     (*(tp_self)->tp_seq->tp_setrange_index_n)(self, start, value)
+#define DeeType_INVOKE_GETATTR(tp_self, self, name)                    (*(tp_self)->tp_attr->tp_getattr)(self, name)
+#define DeeType_INVOKE_DELATTR(tp_self, self, name)                    (*(tp_self)->tp_attr->tp_delattr)(self, name)
+#define DeeType_INVOKE_SETATTR(tp_self, self, name, value)             (*(tp_self)->tp_attr->tp_setattr)(self, name, value)
+#define DeeType_INVOKE_ENTER(tp_self, self)                            (*(tp_self)->tp_with->tp_enter)(self)
+#define DeeType_INVOKE_LEAVE(tp_self, self)                            (*(tp_self)->tp_with->tp_leave)(self)
 
-#define DeeType_INVOKE_STR_NODEFAULT       DeeType_INVOKE_STR
-#define DeeType_INVOKE_PRINT_NODEFAULT     DeeType_INVOKE_PRINT
-#define DeeType_INVOKE_REPR_NODEFAULT      DeeType_INVOKE_REPR
-#define DeeType_INVOKE_PRINTREPR_NODEFAULT DeeType_INVOKE_PRINTREPR
-#define DeeType_INVOKE_CALL_NODEFAULT      DeeType_INVOKE_CALL
-#define DeeType_INVOKE_CALLKW_NODEFAULT    DeeType_INVOKE_CALLKW
-#define DeeType_INVOKE_INT32_NODEFAULT     DeeType_INVOKE_INT32
-#define DeeType_INVOKE_INT64_NODEFAULT     DeeType_INVOKE_INT64
-#define DeeType_INVOKE_DOUBLE_NODEFAULT    DeeType_INVOKE_DOUBLE
-#define DeeType_INVOKE_INT_NODEFAULT       DeeType_INVOKE_INT
-#define DeeType_INVOKE_ADD_NODEFAULT       DeeType_INVOKE_ADD
-#define DeeType_INVOKE_SUB_NODEFAULT       DeeType_INVOKE_SUB
-#define DeeType_INVOKE_MUL_NODEFAULT       DeeType_INVOKE_MUL
-#define DeeType_INVOKE_DIV_NODEFAULT       DeeType_INVOKE_DIV
-#define DeeType_INVOKE_MOD_NODEFAULT       DeeType_INVOKE_MOD
-#define DeeType_INVOKE_SHL_NODEFAULT       DeeType_INVOKE_SHL
-#define DeeType_INVOKE_SHR_NODEFAULT       DeeType_INVOKE_SHR
-#define DeeType_INVOKE_AND_NODEFAULT       DeeType_INVOKE_AND
-#define DeeType_INVOKE_OR_NODEFAULT        DeeType_INVOKE_OR
-#define DeeType_INVOKE_XOR_NODEFAULT       DeeType_INVOKE_XOR
-#define DeeType_INVOKE_POW_NODEFAULT       DeeType_INVOKE_POW
-#define DeeType_INVOKE_INC_NODEFAULT       DeeType_INVOKE_INC
-#define DeeType_INVOKE_DEC_NODEFAULT       DeeType_INVOKE_DEC
-#define DeeType_INVOKE_IADD_NODEFAULT      DeeType_INVOKE_IADD
-#define DeeType_INVOKE_ISUB_NODEFAULT      DeeType_INVOKE_ISUB
-#define DeeType_INVOKE_IMUL_NODEFAULT      DeeType_INVOKE_IMUL
-#define DeeType_INVOKE_IDIV_NODEFAULT      DeeType_INVOKE_IDIV
-#define DeeType_INVOKE_IMOD_NODEFAULT      DeeType_INVOKE_IMOD
-#define DeeType_INVOKE_ISHL_NODEFAULT      DeeType_INVOKE_ISHL
-#define DeeType_INVOKE_ISHR_NODEFAULT      DeeType_INVOKE_ISHR
-#define DeeType_INVOKE_IAND_NODEFAULT      DeeType_INVOKE_IAND
-#define DeeType_INVOKE_IOR_NODEFAULT       DeeType_INVOKE_IOR
-#define DeeType_INVOKE_IXOR_NODEFAULT      DeeType_INVOKE_IXOR
-#define DeeType_INVOKE_IPOW_NODEFAULT      DeeType_INVOKE_IPOW
-#define DeeType_INVOKE_EQ_NODEFAULT        DeeType_INVOKE_EQ
-#define DeeType_INVOKE_NE_NODEFAULT        DeeType_INVOKE_NE
-#define DeeType_INVOKE_LO_NODEFAULT        DeeType_INVOKE_LO
-#define DeeType_INVOKE_LE_NODEFAULT        DeeType_INVOKE_LE
-#define DeeType_INVOKE_GR_NODEFAULT        DeeType_INVOKE_GR
-#define DeeType_INVOKE_GE_NODEFAULT        DeeType_INVOKE_GE
+#define DeeType_INVOKE_ASSIGN_NODEFAULT         DeeType_INVOKE_ASSIGN
+#define DeeType_INVOKE_MOVEASSIGN_NODEFAULT     DeeType_INVOKE_MOVEASSIGN
+#define DeeType_INVOKE_STR_NODEFAULT            DeeType_INVOKE_STR
+#define DeeType_INVOKE_REPR_NODEFAULT           DeeType_INVOKE_REPR
+#define DeeType_INVOKE_PRINT_NODEFAULT          DeeType_INVOKE_PRINT
+#define DeeType_INVOKE_PRINTREPR_NODEFAULT      DeeType_INVOKE_PRINTREPR
+#define DeeType_INVOKE_BOOL_NODEFAULT           DeeType_INVOKE_BOOL
+#define DeeType_INVOKE_NEXT_NODEFAULT           DeeType_INVOKE_NEXT
+#define DeeType_INVOKE_CALL_NODEFAULT           DeeType_INVOKE_CALL
+#define DeeType_INVOKE_CALLKW_NODEFAULT         DeeType_INVOKE_CALLKW
+#define DeeType_INVOKE_INT32_NODEFAULT          DeeType_INVOKE_INT32
+#define DeeType_INVOKE_INT64_NODEFAULT          DeeType_INVOKE_INT64
+#define DeeType_INVOKE_DOUBLE_NODEFAULT         DeeType_INVOKE_DOUBLE
+#define DeeType_INVOKE_INT_NODEFAULT            DeeType_INVOKE_INT
+#define DeeType_INVOKE_INV_NODEFAULT            DeeType_INVOKE_INV
+#define DeeType_INVOKE_POS_NODEFAULT            DeeType_INVOKE_POS
+#define DeeType_INVOKE_NEG_NODEFAULT            DeeType_INVOKE_NEG
+#define DeeType_INVOKE_ADD_NODEFAULT            DeeType_INVOKE_ADD
+#define DeeType_INVOKE_SUB_NODEFAULT            DeeType_INVOKE_SUB
+#define DeeType_INVOKE_MUL_NODEFAULT            DeeType_INVOKE_MUL
+#define DeeType_INVOKE_DIV_NODEFAULT            DeeType_INVOKE_DIV
+#define DeeType_INVOKE_MOD_NODEFAULT            DeeType_INVOKE_MOD
+#define DeeType_INVOKE_SHL_NODEFAULT            DeeType_INVOKE_SHL
+#define DeeType_INVOKE_SHR_NODEFAULT            DeeType_INVOKE_SHR
+#define DeeType_INVOKE_AND_NODEFAULT            DeeType_INVOKE_AND
+#define DeeType_INVOKE_OR_NODEFAULT             DeeType_INVOKE_OR
+#define DeeType_INVOKE_XOR_NODEFAULT            DeeType_INVOKE_XOR
+#define DeeType_INVOKE_POW_NODEFAULT            DeeType_INVOKE_POW
+#define DeeType_INVOKE_INC_NODEFAULT            DeeType_INVOKE_INC
+#define DeeType_INVOKE_DEC_NODEFAULT            DeeType_INVOKE_DEC
+#define DeeType_INVOKE_IADD_NODEFAULT           DeeType_INVOKE_IADD
+#define DeeType_INVOKE_ISUB_NODEFAULT           DeeType_INVOKE_ISUB
+#define DeeType_INVOKE_IMUL_NODEFAULT           DeeType_INVOKE_IMUL
+#define DeeType_INVOKE_IDIV_NODEFAULT           DeeType_INVOKE_IDIV
+#define DeeType_INVOKE_IMOD_NODEFAULT           DeeType_INVOKE_IMOD
+#define DeeType_INVOKE_ISHL_NODEFAULT           DeeType_INVOKE_ISHL
+#define DeeType_INVOKE_ISHR_NODEFAULT           DeeType_INVOKE_ISHR
+#define DeeType_INVOKE_IAND_NODEFAULT           DeeType_INVOKE_IAND
+#define DeeType_INVOKE_IOR_NODEFAULT            DeeType_INVOKE_IOR
+#define DeeType_INVOKE_IXOR_NODEFAULT           DeeType_INVOKE_IXOR
+#define DeeType_INVOKE_IPOW_NODEFAULT           DeeType_INVOKE_IPOW
+#define DeeType_INVOKE_HASH_NODEFAULT           DeeType_INVOKE_HASH
+#define DeeType_INVOKE_EQ_NODEFAULT             DeeType_INVOKE_EQ
+#define DeeType_INVOKE_NE_NODEFAULT             DeeType_INVOKE_NE
+#define DeeType_INVOKE_LO_NODEFAULT             DeeType_INVOKE_LO
+#define DeeType_INVOKE_LE_NODEFAULT             DeeType_INVOKE_LE
+#define DeeType_INVOKE_GR_NODEFAULT             DeeType_INVOKE_GR
+#define DeeType_INVOKE_GE_NODEFAULT             DeeType_INVOKE_GE
+#define DeeType_INVOKE_ITER_NODEFAULT           DeeType_INVOKE_ITER
+#define DeeType_INVOKE_SIZEOB_NODEFAULT         DeeType_INVOKE_SIZEOB
+#define DeeType_INVOKE_CONTAINS_NODEFAULT       DeeType_INVOKE_CONTAINS
+#define DeeType_INVOKE_GETITEM_NODEFAULT        DeeType_INVOKE_GETITEM
+#define DeeType_INVOKE_DELITEM_NODEFAULT        DeeType_INVOKE_DELITEM
+#define DeeType_INVOKE_SETITEM_NODEFAULT        DeeType_INVOKE_SETITEM
+#define DeeType_INVOKE_GETRANGE_NODEFAULT       DeeType_INVOKE_GETRANGE
+#define DeeType_INVOKE_DELRANGE_NODEFAULT       DeeType_INVOKE_DELRANGE
+#define DeeType_INVOKE_SETRANGE_NODEFAULT       DeeType_INVOKE_SETRANGE
+#define DeeType_INVOKE_FOREACH_NODEFAULT        DeeType_INVOKE_FOREACH
+#define DeeType_INVOKE_FOREACH_PAIR_NODEFAULT   DeeType_INVOKE_FOREACH_PAIR
+#define DeeType_INVOKE_BOUNDITEM_NODEFAULT      DeeType_INVOKE_BOUNDITEM
+#define DeeType_INVOKE_HASITEM_NODEFAULT        DeeType_INVOKE_HASITEM
+#define DeeType_INVOKE_SIZE_NODEFAULT           DeeType_INVOKE_SIZE
+#define DeeType_INVOKE_GETITEMINDEX_NODEFAULT   DeeType_INVOKE_GETITEMINDEX
+#define DeeType_INVOKE_DELITEMINDEX_NODEFAULT   DeeType_INVOKE_DELITEMINDEX
+#define DeeType_INVOKE_SETITEMINDEX_NODEFAULT   DeeType_INVOKE_SETITEMINDEX
+#define DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT DeeType_INVOKE_BOUNDITEMINDEX
+#define DeeType_INVOKE_HASITEMINDEX_NODEFAULT   DeeType_INVOKE_HASITEMINDEX
+#define DeeType_INVOKE_GETRANGEINDEX_NODEFAULT  DeeType_INVOKE_GETRANGEINDEX
+#define DeeType_INVOKE_DELRANGEINDEX_NODEFAULT  DeeType_INVOKE_DELRANGEINDEX
+#define DeeType_INVOKE_SETRANGEINDEX_NODEFAULT  DeeType_INVOKE_SETRANGEINDEX
+#define DeeType_INVOKE_GETRANGEINDEXN_NODEFAULT DeeType_INVOKE_GETRANGEINDEXN
+#define DeeType_INVOKE_DELRANGEINDEXN_NODEFAULT DeeType_INVOKE_DELRANGEINDEXN
+#define DeeType_INVOKE_SETRANGEINDEXN_NODEFAULT DeeType_INVOKE_SETRANGEINDEXN
+#define DeeType_INVOKE_GETATTR_NODEFAULT        DeeType_INVOKE_GETATTR
+#define DeeType_INVOKE_DELATTR_NODEFAULT        DeeType_INVOKE_DELATTR
+#define DeeType_INVOKE_SETATTR_NODEFAULT        DeeType_INVOKE_SETATTR
+#define DeeType_INVOKE_ENTER_NODEFAULT          DeeType_INVOKE_ENTER
+#define DeeType_INVOKE_LEAVE_NODEFAULT          DeeType_INVOKE_LEAVE
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 /* CONFIG: Allow types that are inheriting their constructors to
@@ -3269,7 +3379,7 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithForeachPair,
 	LOAD_TP_SELF;
 	data.dfwfp_proc = proc;
 	data.dfwfp_arg  = arg;
-	return DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_foreach_with_foreach_pair_cb, &data);
+	return DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_foreach_with_foreach_pair_cb, &data);
 }
 
 struct default_foreach_pair_with_foreach_data {
@@ -3305,7 +3415,7 @@ err:
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithForeach,
-                         (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg)) {
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
 	struct default_foreach_pair_with_foreach_data data;
 	LOAD_TP_SELF;
 	data.dfpwf_proc = proc;
@@ -3313,6 +3423,1021 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithForeach,
 	return DeeType_INVOKE_FOREACH(tp_self, self, &default_foreach_pair_with_foreach_cb, &data);
 }
 
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndGetItemIndex,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndGetItemIndexFast,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeObDefaultAndGetItemDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndex,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndexFast,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeObDefaultAndGetItemDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeAndGetItemIndex,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeAndGetItemIndexFast,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeObDefaultAndGetItemDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)proc;
+	(void)arg;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultSizeObWithSize,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultSizeObWithSizeDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(result == (size_t)-1)
+		goto err;
+	return DeeInt_NewSize(result);
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultSizeWithSizeOb,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	return (size_t)DeeError_NOTIMPLEMENTED();
+}
+
+INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_size_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	(void)arg;
+	(void)key;
+	(void)value;
+	return 1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_SEQ_OPERATOR(size_t, DefaultSizeWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	return (size_t)DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_size_with_foreach_pair_cb, NULL);
+}
+
+INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_size_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((2)) Dee_ssize_t DCALL
+default_size_with_foreach_cb(void *arg, DeeObject *elem) {
+	(void)arg;
+	(void)elem;
+	return 1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_SEQ_OPERATOR(size_t, DefaultSizeWithForeach,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	return (size_t)DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_size_with_foreach_cb, NULL);
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(size_t, DefaultSizeWithIter,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	return (size_t)DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
+                             (DeeObject *self, DeeObject *elem)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)elem;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachDefault,
+                             (DeeObject *self, DeeObject *elem)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)elem;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemWithGetItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
+	LOAD_TP_SELF;
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index_value);
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemWithGetItemIndexDefault,
+                         (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
+	LOAD_TP_SELF;
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_GETITEMINDEX(tp_self, self, index_value);
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithSizeAndGetItemIndexFast,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+struct default_getitem_index_with_foreach_data {
+	DREF DeeObject *dgiiwfd_result; /* [?..1][out] Item lookup result */
+	size_t          dgiiwfd_nskip;  /* Number of indices left to skip. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_getitem_index_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_getitem_index_with_foreach_data *data;
+	data = (struct default_getitem_index_with_foreach_data *)arg;
+	if (data->dgiiwfd_nskip == 0) {
+		data->dgiiwfd_result = elem;
+		Dee_Incref(elem);
+		return -2; /* Stop enumeration */
+	}
+	--data->dgiiwfd_nskip;
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithForeachDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	struct default_getitem_index_with_foreach_data data;
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	data.dgiiwfd_nskip = index;
+	status = DeeType_INVOKE_FOREACH(tp_self, self, &default_getitem_index_with_foreach_cb, &data);
+	if unlikely(status != -2) {
+		if (status == 0)
+			goto err_bad_bounds;
+		ASSERT(status == -1);
+		goto err;
+	}
+	return data.dgiiwfd_result;
+err_bad_bounds:
+	err_index_out_of_bounds((DeeObject *)self, index, index - data.dgiiwfd_nskip);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemWithDelItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemWithDelItemIndexDefault,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemIndexWithDelItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelItemIndexWithDelRangeIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemWithSetItemIndex,
+                         (DeeObject *self, DeeObject *index, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemWithSetItemIndexDefault,
+                         (DeeObject *self, DeeObject *index, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemIndexWithSetItem,
+                         (DeeObject *self, size_t index, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetItemIndexWithSetRangeIndexDefault,
+                             (DeeObject *self, size_t index, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItem,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemIndexDefault,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithBoundItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithSizeAndGetItemIndexFast,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndex,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndexDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithHasItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithBoundItem,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithBoundItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithGetItem,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithGetItemIndex,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithHasItemIndexDefault,
+                         (DeeObject *self, DeeObject *index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithHasItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithBoundItemIndex,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithBoundItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithGetItemIndex,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithGetItem,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithSize,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithSizeDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)index;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithGetRangeIndexDefaultAndGetRangeIndexNDefault,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	Dee_ssize_t start_index, end_index;
+	LOAD_TP_SELF;
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start_index);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start_index, end_index);
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithGetRange,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeAndGetItemIndexFast,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndIterDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithGetRange,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeAndGetItemIndexFast,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	if (start < 0) {
+		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
+		if unlikely(seq_len == (size_t)-1)
+			goto err;
+		if (start < 0) {
+			start += seq_len;
+			if unlikely(start < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+			}
+		}
+	}
+	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
+	/* TODO: The returned sequence proxy needs to use "tp_getitem_index_fast" */
+	return DeeSeq_GetRangeN(self, (size_t)start);
+empty_range:
+	return_empty_seq;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	if (start < 0) {
+		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
+		if unlikely(seq_len == (size_t)-1)
+			goto err;
+		if (start < 0) {
+			start += seq_len;
+			if unlikely(start < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+			}
+		}
+	}
+	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
+	/* TODO: The returned sequence proxy needs to use "tp_getitem_index" */
+	return DeeSeq_GetRangeN(self, (size_t)start);
+empty_range:
+	return_empty_seq;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndIterDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	if (start < 0) {
+		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
+		if unlikely(seq_len == (size_t)-1)
+			goto err;
+		if (start < 0) {
+			start += seq_len;
+			if unlikely(start < 0) {
+				if unlikely(seq_len == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+			}
+		}
+	}
+	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
+	/* TODO: The returned sequence proxy needs to use "tp_iter" */
+	return DeeSeq_GetRangeN(self, (size_t)start);
+empty_range:
+	return_empty_seq;
+err:
+	return NULL;
+}
+
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeWithDelRangeIndexAndDelRangeIndexN,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeWithDelRangeIndexDefaultAndDelRangeIndexNDefault,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeWithSetRangeNone,
+                             (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeWithSetRangeNoneDefault,
+                             (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexWithDelRange,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSetRangeIndexNone,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSetRangeIndexNoneDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexNWithDelRange,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNone,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN,
+                         (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault,
+                         (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexWithSetRange,
+                         (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex,
+                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault,
+                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeAndSetItemIndex,
+                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault,
+                             (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)end;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexNWithSetRange,
+                         (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex,
+                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault,
+                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeAndSetItemIndex,
+                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault,
+                             (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	LOAD_TP_SELF;
+	/* TODO */
+	(void)tp_self;
+	(void)self;
+	(void)start;
+	(void)value;
+	return DeeError_NOTIMPLEMENTED();
+}
 
 
 
@@ -4147,33 +5272,6 @@ err:
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 #ifndef DEFINE_TYPED_OPERATORS
-#define DEFINE_TYPE_INHERIT_FUNCTION(name, opname, field)                \
-	INTERN NONNULL((1)) bool DCALL                                       \
-	name(DeeTypeObject *__restrict self) {                               \
-		struct type_seq *base_seq;                                       \
-		DeeTypeMRO mro;                                                  \
-		DeeTypeObject *base = DeeTypeMRO_Init(&mro, self);               \
-		while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) { \
-			base_seq = base->tp_seq;                                     \
-			if (base_seq == NULL || !base_seq->field) {                  \
-				if (!name(base))                                         \
-					continue;                                            \
-			}                                                            \
-			base_seq = base->tp_seq;                                     \
-			LOG_INHERIT(base, self, opname);                             \
-			if (self->tp_seq) {                                          \
-				DeeTypeObject *origin = DeeType_GetSeqOrigin(self);      \
-				if unlikely(origin)                                      \
-					return name(origin);                                 \
-				self->tp_seq->field = base_seq->field;                   \
-			} else {                                                     \
-				self->tp_seq = base_seq;                                 \
-			}                                                            \
-			return true;                                                 \
-		}                                                                \
-		return false;                                                    \
-	}
-
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
@@ -4190,11 +5288,457 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	return false;
 }
 
+
+/* Inherit OPERATOR_ITER, OPERATOR_SIZE and OPERTOR_GETITEM for
+ * a type with `DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ' */
+PRIVATE NONNULL((1)) bool DCALL
+DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		unsigned int features = 0;
+#define FEAT_tp_iter             0x00000001
+#define FEAT_tp_sizeob           0x00000002
+#define FEAT_tp_getitem          0x00000004
+#define FEAT_tp_delitem          0x00000008
+#define FEAT_tp_setitem          0x00000010
+#define FEAT_tp_getrange         0x00000020
+#define FEAT_tp_delrange         0x00000040
+#define FEAT_tp_setrange         0x00000080
+#define FEAT_tp_foreach          0x00000100
+#define FEAT_tp_foreach_pair     0x00000200
+#define FEAT_tp_bounditem        0x00000400
+#define FEAT_tp_hasitem          0x00000800
+#define FEAT_tp_size             0x00001000
+#define FEAT_tp_getitem_index    0x00002000
+#define FEAT_tp_delitem_index    0x00004000
+#define FEAT_tp_setitem_index    0x00008000
+#define FEAT_tp_bounditem_index  0x00010000
+#define FEAT_tp_hasitem_index    0x00020000
+#define FEAT_tp_getrange_index   0x00040000
+#define FEAT_tp_delrange_index   0x00080000
+#define FEAT_tp_setrange_index   0x00100000
+#define FEAT_tp_getrange_index_n 0x00200000
+#define FEAT_tp_delrange_index_n 0x00400000
+#define FEAT_tp_setrange_index_n 0x00800000
+
+		/* Figure out what the type can do natively. */
+		if (base_seq->tp_iter && !DeeType_IsDefaultIter(base_seq->tp_iter))
+			features |= FEAT_tp_iter;
+		if (base_seq->tp_sizeob && !DeeType_IsDefaultSizeOb(base_seq->tp_sizeob))
+			features |= FEAT_tp_sizeob;
+		if (base_seq->tp_getitem && !DeeType_IsDefaultGetItem(base_seq->tp_getitem))
+			features |= FEAT_tp_getitem;
+		if (base_seq->tp_delitem && !DeeType_IsDefaultDelItem(base_seq->tp_delitem))
+			features |= FEAT_tp_delitem;
+		if (base_seq->tp_setitem && !DeeType_IsDefaultSetItem(base_seq->tp_setitem))
+			features |= FEAT_tp_setitem;
+		if (base_seq->tp_getrange && !DeeType_IsDefaultGetRange(base_seq->tp_getrange))
+			features |= FEAT_tp_getrange;
+		if (base_seq->tp_delrange && !DeeType_IsDefaultDelRange(base_seq->tp_delrange))
+			features |= FEAT_tp_delrange;
+		if (base_seq->tp_setrange && !DeeType_IsDefaultSetRange(base_seq->tp_setrange))
+			features |= FEAT_tp_setrange;
+		if (base_seq->tp_foreach && !DeeType_IsDefaultForeach(base_seq->tp_foreach))
+			features |= FEAT_tp_foreach;
+		if (base_seq->tp_foreach_pair && !DeeType_IsDefaultForeachPair(base_seq->tp_foreach_pair))
+			features |= FEAT_tp_foreach_pair;
+		if (base_seq->tp_bounditem && !DeeType_IsDefaultBoundItem(base_seq->tp_bounditem))
+			features |= FEAT_tp_bounditem;
+		if (base_seq->tp_hasitem && !DeeType_IsDefaultHasItem(base_seq->tp_hasitem))
+			features |= FEAT_tp_hasitem;
+		if (base_seq->tp_size && !DeeType_IsDefaultSize(base_seq->tp_size))
+			features |= FEAT_tp_size;
+		if (base_seq->tp_getitem_index && !DeeType_IsDefaultGetItemIndex(base_seq->tp_getitem_index))
+			features |= FEAT_tp_getitem_index;
+		if (base_seq->tp_delitem_index && !DeeType_IsDefaultDelItemIndex(base_seq->tp_delitem_index))
+			features |= FEAT_tp_delitem_index;
+		if (base_seq->tp_setitem_index && !DeeType_IsDefaultSetItemIndex(base_seq->tp_setitem_index))
+			features |= FEAT_tp_setitem_index;
+		if (base_seq->tp_bounditem_index && !DeeType_IsDefaultBoundItemIndex(base_seq->tp_bounditem_index))
+			features |= FEAT_tp_bounditem_index;
+		if (base_seq->tp_hasitem_index && !DeeType_IsDefaultHasItemIndex(base_seq->tp_hasitem_index))
+			features |= FEAT_tp_hasitem_index;
+		if (base_seq->tp_getrange_index && !DeeType_IsDefaultGetRangeIndex(base_seq->tp_getrange_index))
+			features |= FEAT_tp_getrange_index;
+		if (base_seq->tp_delrange_index && !DeeType_IsDefaultDelRangeIndex(base_seq->tp_delrange_index))
+			features |= FEAT_tp_delrange_index;
+		if (base_seq->tp_setrange_index && !DeeType_IsDefaultSetRangeIndex(base_seq->tp_setrange_index))
+			features |= FEAT_tp_setrange_index;
+		if (base_seq->tp_getrange_index_n && !DeeType_IsDefaultGetRangeIndexN(base_seq->tp_getrange_index_n))
+			features |= FEAT_tp_getrange_index_n;
+		if (base_seq->tp_delrange_index_n && !DeeType_IsDefaultDelRangeIndexN(base_seq->tp_delrange_index_n))
+			features |= FEAT_tp_delrange_index_n;
+		if (base_seq->tp_setrange_index_n && !DeeType_IsDefaultSetRangeIndexN(base_seq->tp_setrange_index_n))
+			features |= FEAT_tp_setrange_index_n;
+
+		/* If the type is implementing sequence features, auto-complete those
+		 * features and don't try to import operators from base classes (when
+		 * extending sequence types, sequence operators must be inherited all-
+		 * at-once) */
+		if (features || base_seq->tp_getitem_index_fast) {
+			if (!base_seq->tp_iter) {
+				if (features & FEAT_tp_foreach) {
+					base_seq->tp_iter = &DeeObject_DefaultIterWithForeach;
+				} else if (features & FEAT_tp_foreach_pair) {
+					base_seq->tp_iter = &DeeObject_DefaultIterWithForeachPair;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_getitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_getitem_index)) {
+					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndex;
+				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
+				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
+					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeObDefaultAndGetItemDefault;
+				}
+			}
+			if (!base_seq->tp_foreach) {
+				if (features & FEAT_tp_foreach_pair) {
+					base_seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPair;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_getitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_getitem_index)) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndex;
+				} else if (features & FEAT_tp_iter) {
+					base_seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
+				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
+				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeObDefaultAndGetItemDefault;
+				}
+			}
+			if (!base_seq->tp_foreach_pair) {
+				if (features & FEAT_tp_foreach) {
+					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeAndGetItemIndexFast;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_getitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_getitem_index)) {
+					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeAndGetItemIndex;
+				} else if (features & FEAT_tp_iter) {
+					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIter;
+				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
+				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
+					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeObDefaultAndGetItemDefault;
+				}
+			}
+
+			if (!base_seq->tp_size) {
+				if (features & FEAT_tp_sizeob) {
+					base_seq->tp_size = &DeeObject_DefaultSizeWithSizeOb;
+				} else if (features & FEAT_tp_foreach) {
+					base_seq->tp_size = &DeeSeq_DefaultSizeWithForeach;
+				} else if (features & FEAT_tp_foreach_pair) {
+					base_seq->tp_size = &DeeSeq_DefaultSizeWithForeachPair;
+				} else if (features & FEAT_tp_iter) {
+					base_seq->tp_size = &DeeSeq_DefaultSizeWithIter;
+				}
+			}
+			if (!base_seq->tp_sizeob) {
+				if (features & FEAT_tp_size) {
+					base_seq->tp_sizeob = &DeeObject_DefaultSizeObWithSize;
+				} else if (base_seq->tp_size) {
+					base_seq->tp_sizeob = &DeeObject_DefaultSizeObWithSizeDefault;
+				}
+			}
+			if (!base_seq->tp_contains) {
+				if (features & FEAT_tp_foreach_pair) {
+					base_seq->tp_contains = &DeeSeq_DefaultContainsWithForeachPair;
+				} else if (base_seq->tp_foreach) {
+					base_seq->tp_contains = &DeeSeq_DefaultContainsWithForeachDefault;
+				}
+			}
+			if (!base_seq->tp_getitem_index) {
+				if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithSizeAndGetItemIndexFast;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithGetItem;
+				} else if (base_seq->tp_foreach) {
+					base_seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithForeachDefault;
+				}
+			}
+			if (!base_seq->tp_getitem) {
+				if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndex;
+				} else if (base_seq->tp_getitem_index) {
+					base_seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_delitem_index && (features & FEAT_tp_delitem))
+				base_seq->tp_delitem_index = &DeeObject_DefaultDelItemIndexWithDelItem;
+			if (!base_seq->tp_setitem_index && (features & FEAT_tp_setitem))
+				base_seq->tp_setitem_index = &DeeObject_DefaultSetItemIndexWithSetItem;
+
+			if (!base_seq->tp_setrange_index) {
+				if (features & FEAT_tp_setrange) {
+					base_seq->tp_setrange_index = &DeeObject_DefaultSetRangeIndexWithSetRange;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_delitem_index | FEAT_tp_setitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_delitem_index | FEAT_tp_setitem_index)) {
+					base_seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex;
+				} else if (base_seq->tp_size && base_seq->tp_setitem_index && base_seq->tp_delitem_index) {
+					base_seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_setitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_setitem_index)) {
+					base_seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeAndSetItemIndex;
+				} else if (base_seq->tp_size && base_seq->tp_setitem_index) {
+					base_seq->tp_setrange_index = &DeeSeq_DefaultSetRangeIndexWithSizeDefaultAndSetItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_setrange_index_n) {
+				if (features & FEAT_tp_setrange) {
+					base_seq->tp_setrange_index_n = &DeeObject_DefaultSetRangeIndexNWithSetRange;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_delitem_index | FEAT_tp_setitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_delitem_index | FEAT_tp_setitem_index)) {
+					base_seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeAndDelItemIndexAndSetItemIndex;
+				} else if (base_seq->tp_size && base_seq->tp_setitem_index && base_seq->tp_delitem_index) {
+					base_seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndDelItemIndexDefaultAndSetItemIndexDefault;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_setitem_index)) ==
+				           /*       */ (FEAT_tp_size | FEAT_tp_setitem_index)) {
+					base_seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeAndSetItemIndex;
+				} else if (base_seq->tp_size && base_seq->tp_setitem_index) {
+					base_seq->tp_setrange_index_n = &DeeSeq_DefaultSetRangeIndexNWithSizeDefaultAndSetItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_setrange) {
+				if ((features & (FEAT_tp_setrange_index | FEAT_tp_setrange_index_n)) ==
+				    /*       */ (FEAT_tp_setrange_index | FEAT_tp_setrange_index_n)) {
+					base_seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN;
+				} else if (base_seq->tp_setrange_index || base_seq->tp_setrange_index_n) {
+					base_seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault;
+				}
+			}
+			if (!base_seq->tp_delrange_index) {
+				if (features & FEAT_tp_delrange) {
+					base_seq->tp_delrange_index = &DeeObject_DefaultDelRangeIndexWithDelRange;
+				} else if (features & FEAT_tp_setrange_index) {
+					base_seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNone;
+				} else if (base_seq->tp_setrange_index) {
+					base_seq->tp_delrange_index = &DeeSeq_DefaultDelRangeIndexWithSetRangeIndexNoneDefault;
+				}
+			}
+			if (!base_seq->tp_delrange_index_n) {
+				if (features & FEAT_tp_delrange) {
+					base_seq->tp_delrange_index_n = &DeeObject_DefaultDelRangeIndexNWithDelRange;
+				} else if (features & FEAT_tp_setrange_index_n) {
+					base_seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNone;
+				} else if (base_seq->tp_setrange_index_n) {
+					base_seq->tp_delrange_index_n = &DeeSeq_DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault;
+				}
+			}
+			if (!base_seq->tp_delrange) {
+				if ((features & (FEAT_tp_delrange_index | FEAT_tp_delrange_index_n)) ==
+				    /*       */ (FEAT_tp_delrange_index | FEAT_tp_delrange_index_n)) {
+					base_seq->tp_delrange = &DeeObject_DefaultDelRangeWithDelRangeIndexAndDelRangeIndexN;
+				} else if (base_seq->tp_delrange_index || base_seq->tp_delrange_index_n) {
+					base_seq->tp_delrange = &DeeObject_DefaultDelRangeWithDelRangeIndexDefaultAndDelRangeIndexNDefault;
+				} else if (features & FEAT_tp_setrange) {
+					base_seq->tp_delrange = &DeeSeq_DefaultDelRangeWithSetRangeNone;
+				} else if (base_seq->tp_setrange) {
+					base_seq->tp_delrange = &DeeSeq_DefaultDelRangeWithSetRangeNoneDefault;
+				}
+			}
+			if (!base_seq->tp_delitem_index) {
+				if (base_seq->tp_delrange_index)
+					base_seq->tp_delitem_index = &DeeSeq_DefaultDelItemIndexWithDelRangeIndexDefault;
+			}
+			if (!base_seq->tp_setitem_index) {
+				if (base_seq->tp_setrange_index)
+					base_seq->tp_setitem_index = &DeeSeq_DefaultSetItemIndexWithSetRangeIndexDefault;
+			}
+			if (!base_seq->tp_delitem) {
+				if (features & FEAT_tp_delitem_index) {
+					base_seq->tp_delitem = &DeeObject_DefaultDelItemWithDelItemIndex;
+				} else if (base_seq->tp_delitem_index) {
+					base_seq->tp_delitem = &DeeObject_DefaultDelItemWithDelItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_setitem) {
+				if (features & FEAT_tp_setitem_index) {
+					base_seq->tp_setitem = &DeeObject_DefaultSetItemWithSetItemIndex;
+				} else if (base_seq->tp_setitem_index) {
+					base_seq->tp_setitem = &DeeObject_DefaultSetItemWithSetItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_getrange_index) {
+				if (features & FEAT_tp_getrange) {
+					base_seq->tp_getrange_index = &DeeObject_DefaultGetRangeIndexWithGetRange;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeAndGetItemIndexFast;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) &&
+				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && (features & FEAT_tp_iter)) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIterDefault;
+				} else if (base_seq->tp_size && base_seq->tp_getitem_index) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && base_seq->tp_iter) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIterDefault;
+				}
+			}
+			if (!base_seq->tp_getrange_index_n) {
+				if (features & FEAT_tp_getrange) {
+					base_seq->tp_getrange_index_n = &DeeObject_DefaultGetRangeIndexNWithGetRange;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeAndGetItemIndexFast;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) &&
+				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && (features & FEAT_tp_iter)) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndIterDefault;
+				} else if (base_seq->tp_size && base_seq->tp_getitem_index) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && base_seq->tp_iter) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndIterDefault;
+				}
+			}
+			if (!base_seq->tp_getrange) {
+				if ((features & (FEAT_tp_getrange_index | FEAT_tp_getrange_index_n)) ==
+				    /*       */ (FEAT_tp_getrange_index | FEAT_tp_getrange_index_n)) {
+					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN;
+				} else if (base_seq->tp_getrange_index && base_seq->tp_getrange_index_n) {
+					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithGetRangeIndexDefaultAndGetRangeIndexNDefault;
+				}
+			}
+			if (!base_seq->tp_delrange) {
+				if ((features & (FEAT_tp_delrange_index | FEAT_tp_delrange_index_n)) ==
+				    /*       */ (FEAT_tp_delrange_index | FEAT_tp_delrange_index_n)) {
+					base_seq->tp_delrange = &DeeObject_DefaultDelRangeWithDelRangeIndexAndDelRangeIndexN;
+				} else if (features & FEAT_tp_setrange) {
+					base_seq->tp_delrange = &DeeSeq_DefaultDelRangeWithSetRangeNone;
+				} else if (base_seq->tp_setrange) {
+					base_seq->tp_delrange = &DeeSeq_DefaultDelRangeWithSetRangeNoneDefault;
+				} else if (base_seq->tp_delrange_index && base_seq->tp_delrange_index_n) {
+					base_seq->tp_delrange = &DeeObject_DefaultDelRangeWithDelRangeIndexDefaultAndDelRangeIndexNDefault;
+				}
+			}
+			if (!base_seq->tp_setrange) {
+				if ((features & (FEAT_tp_setrange_index | FEAT_tp_setrange_index_n)) ==
+				    /*       */ (FEAT_tp_setrange_index | FEAT_tp_setrange_index_n)) {
+					base_seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN;
+				} else if (base_seq->tp_setrange_index && base_seq->tp_setrange_index_n) {
+					base_seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault;
+				}
+			}
+
+			if (!base_seq->tp_bounditem_index) {
+				if (features & FEAT_tp_bounditem) {
+					base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithBoundItem;
+				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+					base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithSizeAndGetItemIndexFast;
+				} else if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItemIndex;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItem;
+				} else if (base_seq->tp_getitem_index) {
+					base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItemIndexDefault;
+				}
+			}
+
+			if (!base_seq->tp_bounditem) {
+				if (features & FEAT_tp_bounditem_index) {
+					base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithBoundItemIndex;
+				} else if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItemIndex;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItem;
+				} else if (base_seq->tp_bounditem_index) {
+					base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithBoundItemIndexDefault;
+				}
+			}
+
+			if (!base_seq->tp_hasitem_index) {
+				if (features & FEAT_tp_hasitem) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithHasItem;
+				} else if (features & FEAT_tp_bounditem_index) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItemIndex;
+				} else if (features & FEAT_tp_bounditem) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItem;
+				} else if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItemIndex;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItem;
+				} else if (features & FEAT_tp_size) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithSize;
+				} else if (base_seq->tp_size) {
+					base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithSizeDefault;
+				}
+			}
+
+			if (!base_seq->tp_hasitem) {
+				if (features & FEAT_tp_hasitem_index) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndex;
+				} else if (features & FEAT_tp_bounditem_index) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItemIndex;
+				} else if (features & FEAT_tp_bounditem) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItem;
+				} else if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItemIndex;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItem;
+				} else if (base_seq->tp_size) {
+					base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndexDefault;
+				}
+			}
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		if (!DeeType_InheritSeqOperators(base))
+			continue;
+		base_seq = base->tp_seq;
+		ASSERT(base_seq);
+		LOG_INHERIT(base, self, "operator <sequence>");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritSeqOperators(origin);
+			self->tp_seq->tp_iter               = base_seq->tp_iter;
+			self->tp_seq->tp_sizeob             = base_seq->tp_sizeob;
+			self->tp_seq->tp_contains           = base_seq->tp_contains;
+			self->tp_seq->tp_getitem            = base_seq->tp_getitem;
+			self->tp_seq->tp_delitem            = base_seq->tp_delitem;
+			self->tp_seq->tp_setitem            = base_seq->tp_setitem;
+			self->tp_seq->tp_getrange           = base_seq->tp_getrange;
+			self->tp_seq->tp_delrange           = base_seq->tp_delrange;
+			self->tp_seq->tp_setrange           = base_seq->tp_setrange;
+			self->tp_seq->tp_nsi                = base_seq->tp_nsi;
+			self->tp_seq->tp_foreach            = base_seq->tp_foreach;
+			self->tp_seq->tp_foreach_pair       = base_seq->tp_foreach_pair;
+			self->tp_seq->tp_bounditem          = base_seq->tp_bounditem;
+			self->tp_seq->tp_hasitem            = base_seq->tp_hasitem;
+			self->tp_seq->tp_size               = base_seq->tp_size;
+			self->tp_seq->tp_getitem_index      = base_seq->tp_getitem_index;
+			self->tp_seq->tp_delitem_index      = base_seq->tp_delitem_index;
+			self->tp_seq->tp_setitem_index      = base_seq->tp_setitem_index;
+			self->tp_seq->tp_bounditem_index    = base_seq->tp_bounditem_index;
+			self->tp_seq->tp_hasitem_index      = base_seq->tp_hasitem_index;
+			self->tp_seq->tp_getrange_index     = base_seq->tp_getrange_index;
+			self->tp_seq->tp_delrange_index     = base_seq->tp_delrange_index;
+			self->tp_seq->tp_setrange_index     = base_seq->tp_setrange_index;
+			self->tp_seq->tp_getrange_index_n   = base_seq->tp_getrange_index_n;
+			self->tp_seq->tp_delrange_index_n   = base_seq->tp_delrange_index_n;
+			self->tp_seq->tp_setrange_index_n   = base_seq->tp_setrange_index_n;
+			self->tp_seq->tp_size_fast          = base_seq->tp_size_fast;
+			self->tp_seq->tp_getitem_index_fast = base_seq->tp_getitem_index_fast;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritIter(DeeTypeObject *__restrict self) {
 	struct type_seq *base_seq;
 	DeeTypeMRO mro;
 	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_iter != NULL;
 	base_seq = self->tp_seq;
 	if (base_seq) {
 		if (base_seq->tp_iter) {
@@ -4224,7 +5768,7 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 				continue;
 		}
 		base_seq = base->tp_seq;
-		LOG_INHERIT(base, self, "operator iterself");
+		LOG_INHERIT(base, self, "operator iter");
 		if (self->tp_seq) {
 			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
 			if unlikely(origin)
@@ -4240,15 +5784,422 @@ DeeType_InheritIter(DeeTypeObject *__restrict self) {
 	return false;
 }
 
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSize, "operator size", tp_sizeob)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritContains, "operator contains", tp_contains)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetItem, "operator getitem", tp_getitem)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelItem, "operator delitem", tp_delitem)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetItem, "operator setitem", tp_setitem)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetRange, "operator getrange", tp_getrange)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelRange, "operator delrange", tp_delrange)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetRange, "operator setrange", tp_setrange)
-#undef DEFINE_TYPE_INHERIT_FUNCTION
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritSize(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_sizeob != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_size) {
+			if (base_seq->tp_sizeob == NULL)
+				base_seq->tp_sizeob = &DeeObject_DefaultSizeObWithSize;
+			return true;
+		} else if (base_seq->tp_sizeob) {
+			if (base_seq->tp_size == NULL)
+				base_seq->tp_size = &DeeObject_DefaultSizeWithSizeOb;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_size ||
+		                         !base_seq->tp_sizeob ||
+		                         !base_seq->tp_size_fast)) {
+			if (!DeeType_InheritSize(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator size");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritSize(origin);
+			self->tp_seq->tp_size      = base_seq->tp_size;
+			self->tp_seq->tp_sizeob    = base_seq->tp_sizeob;
+			self->tp_seq->tp_size_fast = base_seq->tp_size_fast;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritContains(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_contains != NULL;
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		if (!DeeType_InheritContains(base))
+			continue;
+		base_seq = base->tp_seq;
+		LOG_INHERIT(base, self, "operator contains");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritContains(origin);
+			self->tp_seq->tp_contains = base_seq->tp_contains;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritGetItem(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_getitem != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_hasitem_index) {
+			if (base_seq->tp_hasitem == NULL)
+				base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndex;
+		} else if (base_seq->tp_hasitem) {
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithHasItem;
+		}
+		if (base_seq->tp_bounditem_index) {
+			if (base_seq->tp_hasitem == NULL) {
+				base_seq->tp_hasitem = (base_seq->tp_bounditem &&
+				                        base_seq->tp_bounditem != &DeeObject_DefaultBoundItemWithBoundItemIndex)
+				                       ? &DeeObject_DefaultHasItemWithBoundItem
+				                       : &DeeObject_DefaultHasItemWithBoundItemIndex;
+			}
+			if (base_seq->tp_bounditem == NULL)
+				base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithBoundItemIndex;
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItemIndex;
+		} else if (base_seq->tp_bounditem) {
+			if (base_seq->tp_bounditem_index == NULL)
+				base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithBoundItem;
+			if (base_seq->tp_hasitem == NULL)
+				base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithBoundItem;
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItem;
+		}
+		if (base_seq->tp_getitem_index_fast && base_seq->tp_size && !DeeType_IsDefaultSize(base_seq->tp_size)) {
+			if (base_seq->tp_getitem_index == NULL)
+				base_seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithSizeAndGetItemIndexFast;
+			if (base_seq->tp_getitem == NULL) {
+				base_seq->tp_getitem = base_seq->tp_getitem_index == &DeeObject_DefaultGetItemIndexWithSizeAndGetItemIndexFast
+				                       ? &DeeObject_DefaultGetItemWithGetItemIndexDefault
+				                       : &DeeObject_DefaultGetItemWithGetItemIndex;
+			}
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithSize;
+			if (base_seq->tp_hasitem == NULL)
+				base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndexDefault;
+			if (base_seq->tp_bounditem_index == NULL)
+				base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithSizeAndGetItemIndexFast;
+			if (base_seq->tp_bounditem == NULL)
+				base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithBoundItemIndexDefault;
+			return true;
+		} else if (base_seq->tp_getitem_index) {
+			if (base_seq->tp_getitem == NULL)
+				base_seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndex;
+			if (base_seq->tp_hasitem == NULL)
+				base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItemIndex;
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItemIndex;
+			if (base_seq->tp_bounditem == NULL)
+				base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItemIndex;
+			if (base_seq->tp_bounditem_index == NULL)
+				base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItemIndex;
+			return true;
+		} else if (base_seq->tp_getitem) {
+			if (base_seq->tp_getitem_index == NULL)
+				base_seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithGetItem;
+			if (base_seq->tp_hasitem == NULL)
+				base_seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItem;
+			if (base_seq->tp_hasitem_index == NULL)
+				base_seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItem;
+			if (base_seq->tp_bounditem == NULL)
+				base_seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItem;
+			if (base_seq->tp_bounditem_index == NULL)
+				base_seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItem;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		if (!DeeType_InheritGetItem(base))
+			continue;
+		base_seq = base->tp_seq;
+		LOG_INHERIT(base, self, "operator getitem");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritGetItem(origin);
+			self->tp_seq->tp_getitem         = base_seq->tp_getitem;
+			self->tp_seq->tp_getitem_index   = base_seq->tp_getitem_index;
+			self->tp_seq->tp_bounditem       = base_seq->tp_bounditem;
+			self->tp_seq->tp_bounditem_index = base_seq->tp_bounditem_index;
+			self->tp_seq->tp_hasitem         = base_seq->tp_hasitem;
+			self->tp_seq->tp_hasitem_index   = base_seq->tp_hasitem_index;
+			if ((base_seq->tp_getitem_index_fast != NULL) &&
+			    (self->tp_seq->tp_size || DeeType_InheritSize(self)) &&
+			    (self->tp_seq->tp_size == base_seq->tp_size)) {
+				/* Can only inherit "tp_getitem_index_fast" if "tp_size" is also being inherited. */
+				self->tp_seq->tp_getitem_index_fast = base_seq->tp_getitem_index_fast;
+			} else {
+				/* Else: use of "tp_getitem_index_fast" would be illegal. */
+				self->tp_seq->tp_getitem_index_fast = NULL;
+			}
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritDelItem(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_delitem != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_delitem_index) {
+			if (base_seq->tp_delitem == NULL)
+				base_seq->tp_delitem = &DeeObject_DefaultDelItemWithDelItemIndex;
+			return true;
+		} else if (base_seq->tp_delitem) {
+			if (base_seq->tp_delitem_index == NULL)
+				base_seq->tp_delitem_index = &DeeObject_DefaultDelItemIndexWithDelItem;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_delitem ||
+		                         !base_seq->tp_delitem_index)) {
+			if (!DeeType_InheritDelItem(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator delitem");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritDelItem(origin);
+			self->tp_seq->tp_delitem       = base_seq->tp_delitem;
+			self->tp_seq->tp_delitem_index = base_seq->tp_delitem_index;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritSetItem(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_setitem != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_setitem_index) {
+			if (base_seq->tp_setitem == NULL)
+				base_seq->tp_setitem = &DeeObject_DefaultSetItemWithSetItemIndex;
+			return true;
+		} else if (base_seq->tp_setitem) {
+			if (base_seq->tp_setitem_index == NULL)
+				base_seq->tp_setitem_index = &DeeObject_DefaultSetItemIndexWithSetItem;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_setitem ||
+		                         !base_seq->tp_setitem_index)) {
+			if (!DeeType_InheritSetItem(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator setitem");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritSetItem(origin);
+			self->tp_seq->tp_setitem       = base_seq->tp_setitem;
+			self->tp_seq->tp_setitem_index = base_seq->tp_setitem_index;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritGetRange(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_getrange != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_getrange_index && base_seq->tp_getrange_index_n) {
+			if (base_seq->tp_getrange == NULL)
+				base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN;
+			return true;
+		} else if (base_seq->tp_getrange) {
+			if (base_seq->tp_getrange_index == NULL)
+				base_seq->tp_getrange_index = &DeeObject_DefaultGetRangeIndexWithGetRange;
+			if (base_seq->tp_getrange_index_n == NULL)
+				base_seq->tp_getrange_index_n = &DeeObject_DefaultGetRangeIndexNWithGetRange;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_getrange ||
+		                         !base_seq->tp_getrange_index ||
+		                         !base_seq->tp_getrange_index_n)) {
+			if (!DeeType_InheritGetRange(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator getrange");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritGetRange(origin);
+			self->tp_seq->tp_getrange         = base_seq->tp_getrange;
+			self->tp_seq->tp_getrange_index   = base_seq->tp_getrange_index;
+			self->tp_seq->tp_getrange_index_n = base_seq->tp_getrange_index_n;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritDelRange(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_delrange != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_delrange_index && base_seq->tp_delrange_index_n) {
+			if (base_seq->tp_delrange == NULL)
+				base_seq->tp_delrange = &DeeObject_DefaultDelRangeWithDelRangeIndexAndDelRangeIndexN;
+			return true;
+		} else if (base_seq->tp_delrange) {
+			if (base_seq->tp_delrange_index == NULL)
+				base_seq->tp_delrange_index = &DeeObject_DefaultDelRangeIndexWithDelRange;
+			if (base_seq->tp_delrange_index_n == NULL)
+				base_seq->tp_delrange_index_n = &DeeObject_DefaultDelRangeIndexNWithDelRange;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_delrange ||
+		                         !base_seq->tp_delrange_index ||
+		                         !base_seq->tp_delrange_index_n)) {
+			if (!DeeType_InheritDelRange(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator delrange");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritDelRange(origin);
+			self->tp_seq->tp_delrange         = base_seq->tp_delrange;
+			self->tp_seq->tp_delrange_index   = base_seq->tp_delrange_index;
+			self->tp_seq->tp_delrange_index_n = base_seq->tp_delrange_index_n;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritSetRange(DeeTypeObject *__restrict self) {
+	struct type_seq *base_seq;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+	/* Special case when it's a sequence type. */
+	if (DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ)
+		return DeeType_InheritSeqOperators(self) && self->tp_seq->tp_setrange != NULL;
+	base_seq = self->tp_seq;
+	if (base_seq) {
+		if (base_seq->tp_setrange_index && base_seq->tp_setrange_index_n) {
+			if (base_seq->tp_setrange == NULL)
+				base_seq->tp_setrange = &DeeObject_DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN;
+			return true;
+		} else if (base_seq->tp_setrange) {
+			if (base_seq->tp_setrange_index == NULL)
+				base_seq->tp_setrange_index = &DeeObject_DefaultSetRangeIndexWithSetRange;
+			if (base_seq->tp_setrange_index_n == NULL)
+				base_seq->tp_setrange_index_n = &DeeObject_DefaultSetRangeIndexNWithSetRange;
+			return true;
+		}
+	}
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_seq = base->tp_seq;
+		if (base_seq == NULL || (!base_seq->tp_setrange ||
+		                         !base_seq->tp_setrange_index ||
+		                         !base_seq->tp_setrange_index_n)) {
+			if (!DeeType_InheritSetRange(base))
+				continue;
+			base_seq = base->tp_seq;
+		}
+		LOG_INHERIT(base, self, "operator setrange");
+		if (self->tp_seq) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritSetRange(origin);
+			self->tp_seq->tp_setrange         = base_seq->tp_setrange;
+			self->tp_seq->tp_setrange_index   = base_seq->tp_setrange_index;
+			self->tp_seq->tp_setrange_index_n = base_seq->tp_setrange_index_n;
+		} else {
+			self->tp_seq = base_seq;
+		}
+		return true;
+	}
+	return false;
+}
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, Iter, (DeeObject *RESTRICT_IF_NOTYPE self)) {
@@ -5795,6 +7746,7 @@ DEFINE_OPERATOR(void, PutBuf,
 #undef LOAD_ITERP
 #undef LOAD_TP_SELF
 #undef DEFINE_INTERNAL_OPERATOR
+#undef DEFINE_INTERNAL_SEQ_OPERATOR
 #undef DEFINE_OPERATOR
 
 

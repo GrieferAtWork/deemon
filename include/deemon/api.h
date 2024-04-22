@@ -405,6 +405,17 @@ __pragma_GCC_diagnostic_ignored(Wstringop_overread)
 #endif /* !CONFIG_[NO_]EXPERIMENTAL_STATIC_IN_FUNCTION */
 
 
+/* Use the new sequence operator inheritance system (currently incomplete). */
+#if (!defined(CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS) && \
+     !defined(CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS))
+#if 0
+#define CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#else
+#define CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#endif
+#endif /* !CONFIG_[NO_]EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+
 
 #ifdef CONFIG_HOST_WINDOWS
 #ifndef _WIN32_WINNT

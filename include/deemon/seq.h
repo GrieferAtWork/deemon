@@ -852,6 +852,20 @@ DeeIterator_Peek(DeeObject *__restrict self);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 
+/* Possible return values for `DeeType_GetSeqClass()' */
+#define Dee_SEQCLASS_UNKNOWN 0 /* Never returned by `DeeType_GetSeqClass()' (used internally) */
+#define Dee_SEQCLASS_NONE    1 /* Type does not inherit from "Sequence" */
+#define Dee_SEQCLASS_SEQ     2 /* Type inherits from "Sequence" */
+#define Dee_SEQCLASS_SET     3 /* Type inherits from "Sequence" and "Set" */
+#define Dee_SEQCLASS_MAP     4 /* Type inherits from "Sequence" and "Mapping" */
+#define Dee_SEQCLASS_COUNT   5
+
+/* Sequence type classification
+ * @return: * : One of `Dee_SEQCLASS_*' */
+DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) unsigned int DCALL
+DeeType_GetSeqClass(DeeTypeObject const *__restrict self);
+
+
 /* Construct a new reference-vector object that can be iterated
  * and used to potentially modify the elements of a given `vector'.
  * NOTE: When write-access is granted, `vector' should be `[0..1][0..length]',

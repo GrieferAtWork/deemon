@@ -705,8 +705,8 @@ EXPORTS
 	DeeObject_Int@4=_DeeObject_Int@4
 	DeeObject_Inv@4=_DeeObject_Inv@4
 	DeeObject_InvokeOperator@16=_DeeObject_InvokeOperator@16
-	DeeObject_IterNext@4=_DeeObject_IterNext@4
 	DeeObject_Iter@4=_DeeObject_Iter@4
+	DeeObject_IterNext@4=_DeeObject_IterNext@4
 	DeeObject_Leave@4=_DeeObject_Leave@4
 	DeeObject_Mod@8=_DeeObject_Mod@8
 	DeeObject_ModInt8@8=_DeeObject_ModInt8@8
@@ -838,8 +838,8 @@ EXPORTS
 	DeeObject_TInt@8=_DeeObject_TInt@8
 	DeeObject_TInv@8=_DeeObject_TInv@8
 	DeeObject_TInvokeOperator@20=_DeeObject_TInvokeOperator@20
-	DeeObject_TIterNext@8=_DeeObject_TIterNext@8
 	DeeObject_TIter@8=_DeeObject_TIter@8
+	DeeObject_TIterNext@8=_DeeObject_TIterNext@8
 	DeeObject_TLeave@8=_DeeObject_TLeave@8
 	DeeObject_TMod@12=_DeeObject_TMod@12
 	DeeObject_TMoveAssign@12=_DeeObject_TMoveAssign@12
@@ -1060,6 +1060,7 @@ EXPORTS
 	DeeType_GetModule@4=_DeeType_GetModule@4
 	DeeType_GetOperatorFlags@8=_DeeType_GetOperatorFlags@8
 	DeeType_GetOperatorOrigin@8=_DeeType_GetOperatorOrigin@8
+	DeeType_GetSeqClass@4=_DeeType_GetSeqClass@4
 	DeeType_HasPrivateNII@4=_DeeType_HasPrivateNII@4
 	DeeType_HasPrivateNSI@4=_DeeType_HasPrivateNSI@4
 	DeeType_HasPrivateOperator@8=_DeeType_HasPrivateOperator@8

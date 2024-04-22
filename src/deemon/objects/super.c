@@ -37,6 +37,8 @@
 	PUBLIC return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
 #define DEFINE_INTERNAL_OPERATOR(return, name, args) \
 	INTERN return DCALL DeeObject_T##name SUPER_PRIVATE_EXPANDARGS args
+#define DEFINE_INTERNAL_SEQ_OPERATOR(return, name, args) \
+	INTERN return DCALL DeeSeq_T##name SUPER_PRIVATE_EXPANDARGS args
 #include "../runtime/operator.c"
 #undef DEFINE_TYPED_OPERATORS
 

@@ -1930,7 +1930,83 @@ struct Dee_type_seq {
 	 * the type should still provide a proper `tp_iter' callback. */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+
+	/* Optional function to check if a specific item index/key is bound. (inherited alongside `tp_getitem')
+	 * Check if a given item is bound (`self[index] is bound' / `deemon.bounditem(self, index)')
+	 * @return: 1 : Item is bound.
+	 * @return: 0 : Item isn't bound. (in `tp_getitem': `UnboundItem')
+	 * @return: -1: An error occurred.
+	 * @return: -2: Item doesn't exist (in `tp_getitem': `KeyError' or `IndexError'). */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem)(DeeObject *self, DeeObject *index);
+
+	/* Check if a given item exists (`deemon.hasitem(self, index)') (inherited alongside `tp_getitem')
+	 * @return: 1:  Does exists.   (in `tp_getitem': `UnboundItem' or <no error>)
+	 * @return: 0:  Doesn't exist. (in `tp_getitem': `KeyError' or `IndexError')
+	 * @return: -1: Error. */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
+
+	/* Aliases of the non-*_index variants above. Behavior of these matches behavior above. */
+	WUNUSED_T NONNULL_T((1))    size_t (DCALL *tp_size)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_delitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *tp_setitem_index)(DeeObject *self, size_t index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_bounditem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_hasitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+	WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *tp_setrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index_n)(DeeObject *self, Dee_ssize_t start);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index_n)(DeeObject *self, Dee_ssize_t start);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *tp_setrange_index_n)(DeeObject *self, Dee_ssize_t start, DeeObject *value);
+
+	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions:
+	 * NOTE: This operator can NOT be used to substitute `tp_size'!
+	 * @return: * : A snapshot of the object's current size.
+	 * @return: (size_t)-1: Size cannot be determined fast. */
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size_fast)(DeeObject *__restrict self);
+
+	/* Same as `tp_getitem_index', but never throws an exception:
+	 * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
+	 * @param: index: Index of item to access. Guarantied to be `<' some preceding
+	 *                call to `tp_size_fast', `tp_size', or `tp_sizeob' (from the
+	 *                same type; i.e. the size operator will not be from a sub-class).
+	 * @return: * :   A reference to the index.
+	 * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
+	 * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
 };
+#if 0
+PRIVATE struct type_seq my_seq = {
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_setitem            = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_getrange           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_delrange           = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_setrange           = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_nsi                = */ NULL,
+	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL,
+	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))NULL,
+	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))NULL,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_getrange_index     = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_delrange_index     = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_setrange_index     = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_delrange_index_n   = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_setrange_index_n   = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+};
+#endif
 
 struct Dee_type_attr {
 	/* Basic attribute operators. */
@@ -3118,6 +3194,8 @@ struct Dee_type_operator {
                                             * or any sort of container object capable of holding instances of the same type. */
 #define Dee_TF_KW               0x00000002 /* Instances of this type can be used as keyword argument objects (s.a. `DeeType_IsKw()')
                                             * WARNING: If you set this flag, you must also implement support in `DeeKw_Get*' */
+#define Dee_TF_SEQCLASS_SHFT    26         /* [INTERNAL] Shift for `Dee_TF_SEQCLASS_MASK' */
+#define Dee_TF_SEQCLASS_MASK    0x1c000000 /* [INTERNAL] Mask for cached `Dee_SEQCLASS_*' */
 #define Dee_TF_NOTCONSTCASTABLE 0x20000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': false */
 #define Dee_TF_ISCONSTCASTABLE  0x40000000 /* [INTERNAL] Cached result for `DeeType_IsConstCastable': true */
 #define Dee_TF_SINGLETON        0x80000000 /* This type is a singleton. */
@@ -3436,15 +3514,15 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);          /* tp_iter */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_sizeob */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);          /* tp_iter, tp_foreach, tp_foreach_pair */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_sizeob, tp_size */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_getitem */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_delitem */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_setitem */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_getrange */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_delrange */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_setrange */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_delitem, tp_delitem_index */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_setitem, tp_setitem_index */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);           /* tp_nsi */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);           /* tp_nii */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
