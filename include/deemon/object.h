@@ -4223,6 +4223,12 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Iter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
+/* Advance an iterator by "step" items.
+ * @return: 1 : Success, but advancing was stopped prematurely because ITER_DONE was encountered.
+ * @return: 0 : Success.
+ * @return: -1: Error. */
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step);
+
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.
  * Otherwise, return the sum of all calls to it.

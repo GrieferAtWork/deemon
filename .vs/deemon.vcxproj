@@ -243,6 +243,8 @@
 		<ClInclude Include="..\src\deemon\objects\seq\bsearch-impl.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\bsearch.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\byattr.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-iterators.h" />
+		<ClInclude Include="..\src\deemon\objects\seq\default-sequences.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\each-fastpass.c.inl" />
 		<ClInclude Include="..\src\deemon\objects\seq\each.h" />
 		<ClInclude Include="..\src\deemon\objects\seq\filter.h" />
@@ -416,6 +418,8 @@
 		<ClCompile Include="..\src\deemon\objects\seq\byattr.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\combinations.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\concat.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-iterators.c" />
+		<ClCompile Include="..\src\deemon\objects\seq\default-sequences.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\each.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\fastseq.c" />
 		<ClCompile Include="..\src\deemon\objects\seq\filter.c" />

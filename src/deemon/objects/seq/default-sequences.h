@@ -1,0 +1,72 @@
+/* Copyright (c) 2018-2024 Griefer@Work                                       *
+ *                                                                            *
+ * This software is provided 'as-is', without any express or implied          *
+ * warranty. In no event will the authors be held liable for any damages      *
+ * arising from the use of this software.                                     *
+ *                                                                            *
+ * Permission is granted to anyone to use this software for any purpose,      *
+ * including commercial applications, and to alter it and redistribute it     *
+ * freely, subject to the following restrictions:                             *
+ *                                                                            *
+ * 1. The origin of this software must not be misrepresented; you must not    *
+ *    claim that you wrote the original software. If you use this software    *
+ *    in a product, an acknowledgement (see the following) in the product     *
+ *    documentation is required:                                              *
+ *    Portions Copyright (c) 2018-2024 Griefer@Work                           *
+ * 2. Altered source versions must be plainly marked as such, and must not be *
+ *    misrepresented as being the original software.                          *
+ * 3. This notice may not be removed or altered from any source distribution. *
+ */
+#ifndef GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCE_H
+#define GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCE_H 1
+
+#include <deemon/api.h>
+#include <deemon/object.h>
+
+DECL_BEGIN
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *dssgi_seq;   /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to load the `index'th element of `dssgi_seq'.
+	 * This is either a `tp_getitem_index' or `tp_getitem_index_fast' operator. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dssgi_tp_getitem_index)(DeeObject *self, size_t index);
+	size_t          dssgi_start; /* [const] Starting index for enumeration. */
+	size_t          dssgi_size;  /* [const] Enumeration stop index. */
+} DefaultSequence_WithSizeAndGetItemIndex;
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *dssg_seq;   /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to load the `index'th element of `dssg_seq'. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dssg_tp_getitem)(DeeObject *self, DeeObject *index);
+	DREF DeeObject *dssg_start; /* [const] Starting index for enumeration. */
+	DREF DeeObject *dssg_size;  /* [const] Enumeration stop index. */
+} DefaultSequence_WithSizeAndGetItem;
+
+typedef struct {
+	OBJECT_HEAD
+	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
+	DREF DeeObject *dstsg_seq;    /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to load the `index'th element of `dstsg_seq'. */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dstsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+	DREF DeeObject *dstsg_start;  /* [const] Starting index for enumeration. */
+	DREF DeeObject *dstsg_size;   /* [const] Enumeration stop index. */
+} DefaultSequence_TWithSizeAndGetItem;
+
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *dssi_iter; /* [1..1][const] Iterator pointing to the start of the range. */
+	size_t          dssi_size; /* [const] Max # of items to enumerate starting with `dssi_iter'. */
+} DefaultSequence_WithSizeAndIterator;
+
+
+INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type;          /* DefaultSequence_WithSizeAndGetItem */
+INTDEF DeeTypeObject DefaultSequence_TWithSizeAndGetItem_Type;         /* DefaultSequence_TWithSizeAndGetItem */
+INTDEF DeeTypeObject DefaultSequence_WithSizeAndIterator_Type;         /* DefaultSequence_WithSizeAndIterator */
+
+DECL_END
+
+#endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_SEQUENCE_H */

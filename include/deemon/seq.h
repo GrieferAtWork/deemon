@@ -356,6 +356,20 @@ struct Dee_type_nsi {
 		}                   nsi_common;
 
 		struct { /* TYPE_SEQX_CLASS_SEQ */
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+			Dee_funptr_t _unused_nsi_getsize;
+			Dee_funptr_t _unused_nsi_getsize_fast;
+			Dee_funptr_t _unused_nsi_getitem;
+			Dee_funptr_t _unused_nsi_delitem;
+			Dee_funptr_t _unused_nsi_setitem;
+			Dee_funptr_t _unused_nsi_getitem_fast;
+			Dee_funptr_t _unused_nsi_getrange;
+			Dee_funptr_t _unused_nsi_getrange_n;
+			Dee_funptr_t _unused_nsi_delrange;
+			Dee_funptr_t _unused_nsi_delrange_n;
+			Dee_funptr_t _unused_nsi_setrange;
+			Dee_funptr_t _unused_nsi_setrange_n;
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 			/* NOTE: If provided, these functions are only ever called as extensions to the
 			 *       regular sequence operators, meaning that if you implement `nsi_getsize',
 			 *       you are also _required_ to implement `tp_sizeob'
@@ -390,6 +404,7 @@ struct Dee_type_nsi {
 			WUNUSED_T NONNULL_T((1))    int             (DCALL *nsi_delrange_n)(DeeObject *self, Dee_ssize_t start); /* end: Dee_None */
 			WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *nsi_setrange)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *values);
 			WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *nsi_setrange_n)(DeeObject *self, Dee_ssize_t start, DeeObject *values); /* end: Dee_None */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 			/* NOTE: start/end in here operate differently (and simpler) than in ranges:
 			 *       If either value is `>= nsi_getsize()', truncate it to that length.

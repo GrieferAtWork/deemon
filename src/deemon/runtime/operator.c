@@ -37,6 +37,7 @@
 #include <deemon/int.h>
 #include <deemon/kwds.h>
 #include <deemon/list.h>
+#include <deemon/module.h>
 #include <deemon/mro.h>
 #include <deemon/none.h>
 #include <deemon/object.h>
@@ -54,6 +55,8 @@
 #include <stdarg.h>
 
 #include "../objects/int_logic.h"
+#include "../objects/seq/default-iterators.h"
+#include "../objects/seq/default-sequences.h"
 #include "../objects/seq/each.h"
 #include "../objects/seq/svec.h"
 #include "runtime_error.h"
@@ -3420,105 +3423,295 @@ DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithForeach,
 	LOAD_TP_SELF;
 	data.dfpwf_proc = proc;
 	data.dfpwf_arg  = arg;
+	return DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_foreach_pair_with_foreach_cb, &data);
+}
+
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithForeachDefault,
+                         (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	struct default_foreach_pair_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.dfpwf_proc = proc;
+	data.dfpwf_arg  = arg;
 	return DeeType_INVOKE_FOREACH(tp_self, self, &default_foreach_pair_with_foreach_cb, &data);
 }
 
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t size;
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	ASSERT(!DeeType_IsDefaultGetItemIndex(tp_self->tp_seq->tp_getitem_index));
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->disgi_seq              = self;
+	result->disgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	result->disgi_index            = 0;
+	result->disgi_start            = 0;
+	result->disgi_size             = size;
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndGetItemIndexFast,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t size;
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->disgi_seq              = self;
+	result->disgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index_fast;
+	result->disgi_index            = 0;
+	result->disgi_start            = 0;
+	result->disgi_size             = size;
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
+	return (DREF DeeObject *)result;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithGetItemIndex,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	DREF DefaultIterator_WithGetItemIndex *result;
+	LOAD_TP_SELF;
+	ASSERT(!DeeType_IsDefaultGetItemIndex(tp_self->tp_seq->tp_getitem_index));
+	result = DeeObject_MALLOC(DefaultIterator_WithGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->digi_seq              = self;
+	result->digi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	result->digi_index            = 0;
+	DeeObject_Init(result, &DefaultIterator_WithGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeObDefaultAndGetItemDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	DREF DeeObject *sizeob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	DeeError_NOTIMPLEMENTED();
+	sizeob = DeeType_INVOKE_SIZEOB(tp_self, self);
+	if unlikely(!sizeob)
+		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem
+		              ? &instance_tgetitem
+		              : DeeType_MapDefaultGetItem(tp_self->tp_seq->tp_getitem, &, NULL);
+		if (tp_tgetitem) {
+			DREF DefaultIterator_TWithSizeAndGetItem *result;
+			result = DeeObject_MALLOC(DefaultIterator_TWithSizeAndGetItem);
+			if unlikely(!result)
+				goto err_size_ob;
+			result->ditsg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
+			if unlikely(!result->ditsg_index) {
+				DeeObject_FREE(result);
+				goto err_size_ob;
+			}
+			Dee_Incref(self);
+			result->ditsg_seq         = self; /* Inherit reference */
+			result->ditsg_tp_tgetitem = tp_tgetitem;
+			result->ditsg_size        = sizeob; /* Inherit reference */
+			Dee_atomic_lock_init(&result->ditsg_lock);
+			DeeObject_Init(result, &DefaultIterator_TWithSizeAndGetItem_Type);
+			return (DREF DeeObject *)result;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
+	{
+		DREF DefaultIterator_WithSizeAndGetItem *result;
+		result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItem);
+		if unlikely(!result)
+			goto err_size_ob;
+		result->disg_index = DeeObject_NewDefault(Dee_TYPE(sizeob));
+		if unlikely(!result->disg_index) {
+			DeeObject_FREE(result);
+			goto err_size_ob;
+		}
+		Dee_Incref(self);
+		result->disg_seq        = self; /* Inherit reference */
+		result->disg_tp_getitem = tp_self->tp_seq->tp_getitem;
+		result->disg_size       = sizeob; /* Inherit reference */
+		Dee_atomic_lock_init(&result->disg_lock);
+		DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItem_Type);
+		return (DREF DeeObject *)result;
+	}
+	__builtin_unreachable();
+err_size_ob:
+	Dee_Decref(sizeob);
+err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndex,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithGetItemDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem
+		              ? &instance_tgetitem
+		              : DeeType_MapDefaultGetItem(tp_self->tp_seq->tp_getitem, &, NULL);
+		if (tp_tgetitem) {
+			DREF DefaultIterator_TWithGetItem *result;
+			result = DeeObject_MALLOC(DefaultIterator_TWithGetItem);
+			if unlikely(!result)
+				goto err;
+			result->ditg_tp_seq = tp_self;
+			Dee_Incref(DeeInt_Zero);
+			result->ditg_index = DeeInt_Zero;
+			Dee_Incref(self);
+			result->ditg_seq         = self; /* Inherit reference */
+			result->ditg_tp_tgetitem = tp_tgetitem;
+			Dee_atomic_lock_init(&result->ditg_lock);
+			DeeObject_Init(result, &DefaultIterator_TWithSizeAndGetItem_Type);
+			return (DREF DeeObject *)result;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
+	{
+		DREF DefaultIterator_WithGetItem *result;
+		result = DeeObject_MALLOC(DefaultIterator_WithGetItem);
+		if unlikely(!result)
+			goto err;
+		Dee_Incref(DeeInt_Zero);
+		result->dig_index = DeeInt_Zero;
+		Dee_Incref(self);
+		result->dig_seq        = self; /* Inherit reference */
+		result->dig_tp_getitem = tp_self->tp_seq->tp_getitem;
+		Dee_atomic_lock_init(&result->dig_lock);
+		DeeObject_Init(result, &DefaultIterator_WithGetItem_Type);
+		return (DREF DeeObject *)result;
+	}
+	__builtin_unreachable();
+err:
+	return NULL;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndexFast,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = (*tp_self->tp_seq->tp_getitem_index_fast)(self, i);
+		if unlikely(!elem)
+			continue;
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeObDefaultAndGetItemDefault,
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err;
+		}
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
 }
 
-
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeAndGetItemIndex,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeDefaultAndGetItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	for (i = 0; i < size; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err;
+		}
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeAndGetItemIndexFast,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithGetItemIndexDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
-}
-
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachPairWithSizeObDefaultAndGetItemDefault,
-                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
-	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)proc;
-	(void)arg;
-	return DeeError_NOTIMPLEMENTED();
+	for (i = 0;; ++i) {
+		DREF DeeObject *elem;
+		elem = DeeType_INVOKE_GETITEMINDEX(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break;
+			goto err;
+		}
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+err:
+	return -1;
 }
 
 
@@ -3550,11 +3743,24 @@ err:
 
 DEFINE_INTERNAL_OPERATOR(size_t, DefaultSizeWithSizeOb,
                          (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	int temp;
+	size_t result;
+	DREF DeeObject *sizeob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+	sizeob = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
+	if unlikely(!sizeob)
+		goto err;
+	temp = DeeObject_AsSize(sizeob, &result);
+	Dee_Decref(sizeob);
+	if unlikely(temp)
+		goto err;
+	if unlikely(result == (size_t)-1)
+		goto err_overflow;
+	return result;
+err_overflow:
+	err_integer_overflow_i(sizeof(size_t) * 8, true);
+err:
+	return (size_t)-1;
 }
 
 INTDEF WUNUSED NONNULL((2)) Dee_ssize_t DCALL
@@ -3596,11 +3802,26 @@ DEFINE_INTERNAL_SEQ_OPERATOR(size_t, DefaultSizeWithForeach,
 
 DEFINE_INTERNAL_SEQ_OPERATOR(size_t, DefaultSizeWithIter,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	size_t result = 0;
+	DREF DeeObject *iter, *elem;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	return (size_t)DeeError_NOTIMPLEMENTED();
+	iter = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
+		Dee_Decref(elem);
+		if (DeeThread_CheckInterrupt())
+			goto err_iter;
+		++result;
+	}
+	Dee_Decref(iter);
+	if unlikely(!elem)
+		goto err;
+	return result;
+err_iter:
+	Dee_Decref(iter);
+err:
+	return (size_t)-1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultContainsWithForeachPair,
@@ -3651,24 +3872,37 @@ err:
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithSizeAndGetItemIndexFast,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *result;
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index >= size)
+		goto err_oob;
+	result = (*tp_self->tp_seq->tp_getitem_index_fast)(self, index);
+	if unlikely(!result)
+		err_unbound_index(self, index);
+	return result;
+err_oob:
+	err_index_out_of_bounds(self, index, size);
+err:
 	return NULL;
 }
 
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithGetItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	return result;
+err:
 	return NULL;
 }
 
@@ -3718,321 +3952,469 @@ err:
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemWithDelItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_DELITEMINDEX_NODEFAULT(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemWithDelItemIndexDefault,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_DELITEMINDEX(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelItemIndexWithDelItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	int result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_DELITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelItemIndexWithDelRangeIndexDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, index, index + 1);
 }
 
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemWithSetItemIndex,
                          (DeeObject *self, DeeObject *index, DeeObject *value)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_SETITEMINDEX_NODEFAULT(tp_self, self, index_value, value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemWithSetItemIndexDefault,
                          (DeeObject *self, DeeObject *index, DeeObject *value)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_SETITEMINDEX(tp_self, self, index_value, value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetItemIndexWithSetItem,
                          (DeeObject *self, size_t index, DeeObject *value)) {
+	int result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_SETITEM_NODEFAULT(tp_self, self, indexob, value);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetItemIndexWithSetRangeIndexDefault,
                              (DeeObject *self, size_t index, DeeObject *value)) {
+	int result;
+	DREF DeeObject *seq1;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	seq1 = DeeTuple_NewVectorSymbolic(1, &value);
+	if unlikely(!seq1)
+		goto err;
+	result = DeeType_INVOKE_SETRANGEINDEX(tp_self, self, index, index + 1, seq1);
+	DeeTuple_DecrefSymbolic(seq1);
+	return result;
+err:
+	return -1;
 }
 
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItem,
                          (DeeObject *self, DeeObject *index)) {
+	DREF DeeObject *item_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	item_value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, index);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 0;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return -2;
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithGetItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	DREF DeeObject *item_value;
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index_value);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 0;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return -2;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemWithBoundItemIndexDefault,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_BOUNDITEMINDEX(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithBoundItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	int result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_BOUNDITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithSizeAndGetItemIndexFast,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *result;
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if unlikely(index >= size)
+		return -2; /* Index does not exist. */
+	result = (*tp_self->tp_seq->tp_getitem_index_fast)(self, index);
+	if (!result)
+		return 0; /* Index isn't bound */
+	Dee_Decref(result);
+	return 1;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndex,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *item_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 0;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return -2;
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *item_value;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	item_value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 0;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return -2;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithGetItemIndexDefault,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *item_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	item_value = DeeType_INVOKE_GETITEMINDEX(tp_self, self, index);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 0;
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return -2;
+	return -1;
 }
 
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithHasItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_HASITEMINDEX_NODEFAULT(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithBoundItem,
                          (DeeObject *self, DeeObject *index)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	result = DeeType_INVOKE_BOUNDITEM_NODEFAULT(tp_self, self, index);
+	if (result == 0)
+		return 1; /* Unbound, but exists */
+	if (result == -2)
+		return 0; /* Not bound */
+	ASSERT(result == 1 || result == -1);
+	return result; /* Bound or error */
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithBoundItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	int result;
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	result = DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT(tp_self, self, index_value);
+	if (result == 0)
+		return 1; /* Unbound, but exists */
+	if (result == -2)
+		return 0; /* Not bound */
+	ASSERT(result == 1 || result == -1);
+	return result; /* Bound or error */
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithGetItem,
                          (DeeObject *self, DeeObject *index)) {
+	DREF DeeObject *item_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	item_value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, index);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 1; /* Unbound, but present */
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return 0; /* Item does not exist */
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithGetItemIndex,
                          (DeeObject *self, DeeObject *index)) {
+	DREF DeeObject *item_value;
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index_value);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 1; /* Unbound, but present */
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return 0; /* Item does not exist */
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemWithHasItemIndexDefault,
                          (DeeObject *self, DeeObject *index)) {
+	size_t index_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSize(index, &index_value))
+		goto err;
+	return DeeType_INVOKE_HASITEMINDEX(tp_self, self, index_value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithHasItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	int result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_HASITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	return result;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithBoundItemIndex,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	int result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	result = DeeType_INVOKE_BOUNDITEMINDEX_NODEFAULT(tp_self, self, index);
+	if (result == 0)
+		return 1; /* Unbound, but exists */
+	if (result == -2)
+		return 0; /* Not bound */
+	ASSERT(result == 1 || result == -1);
+	return result; /* Bound or error */
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithBoundItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	int result;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_BOUNDITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	if (result == 0)
+		return 1; /* Unbound, but exists */
+	if (result == -2)
+		return 0; /* Not bound */
+	ASSERT(result == 1 || result == -1);
+	return result; /* Bound or error */
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithGetItemIndex,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *item_value;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	item_value = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, index);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 1; /* Unbound, but present */
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return 0; /* Item does not exist */
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithGetItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	DREF DeeObject *item_value;
+	DREF DeeObject *indexob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	item_value = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	if (item_value) {
+		Dee_Decref(item_value);
+		return 1;
+	}
+	if (DeeError_Catch(&DeeError_UnboundItem))
+		return 1; /* Unbound, but present */
+	if (DeeError_Catch(&DeeError_KeyError) ||
+	    DeeError_Catch(&DeeError_IndexError))
+		return 0; /* Item does not exist */
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithSize,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	return index < size ? 1 : 0;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithSizeDefault,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	size_t size;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)index;
-	return DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	return index < size ? 1 : 0;
+err:
+	return -1;
 }
 
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN,
                          (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	Dee_ssize_t start_index, end_index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_GETRANGEINDEXN_NODEFAULT(tp_self, self, start_index);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_GETRANGEINDEX_NODEFAULT(tp_self, self, start_index, end_index);
+err:
 	return NULL;
 }
 
@@ -4052,64 +4434,287 @@ err:
 	return NULL;
 }
 
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithSizeDefaultAndGetItemIndex,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	size_t size;
+	Dee_ssize_t start_index;
+	struct Dee_seq_range range;
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end)) {
+		range.sr_start = DeeSeqRange_Clamp_n(start_index, size);
+		range.sr_end   = size;
+	} else {
+		Dee_ssize_t end_index;
+		if (DeeObject_AsSSize(end, &end_index))
+			goto err;
+		DeeSeqRange_Clamp(&range, start_index, end_index, size);
+	}
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->dssgi_seq              = self;
+	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	result->dssgi_start            = range.sr_start;
+	result->dssgi_size             = range.sr_end;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithSizeObAndGetItem,
+                         (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	int temp;
+	DREF DeeObject *startob_and_endob[2];
+	DREF DeeObject *startob_and_endob_tuple;
+	DREF DeeObject *sizeob;
+	LOAD_TP_SELF;
+	sizeob = DeeType_INVOKE_SIZEOB(tp_self, self);
+	if unlikely(!sizeob)
+		goto err;
+	/* Make a call to "util.clamprange()" to do the range-fixup. */
+	startob_and_endob_tuple = DeeModule_CallExternStringf("util", "clamprange", "ooo", start, end, sizeob);
+	Dee_Decref(sizeob);
+	if unlikely(!startob_and_endob_tuple)
+		goto err;
+	temp = DeeObject_Unpack(startob_and_endob_tuple, 2, startob_and_endob);
+	Dee_Decref(startob_and_endob_tuple);
+	if unlikely(temp)
+		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem
+		              ? &instance_tgetitem
+		              : NULL/*DeeType_MapDefaultGetItem(tp_self->tp_seq->tp_getitem, &, NULL)*/;
+		if (tp_tgetitem) {
+			DREF DefaultSequence_TWithSizeAndGetItem *result;
+			result = DeeObject_MALLOC(DefaultSequence_TWithSizeAndGetItem);
+			if unlikely(!result)
+				goto err;
+			result->dstsg_start = startob_and_endob[0]; /* Inherit reference */
+			result->dstsg_size  = startob_and_endob[1]; /* Inherit reference */
+			result->dstsg_tp_seq = tp_self;
+			Dee_Incref(self);
+			result->dstsg_seq         = self;
+			result->dstsg_tp_tgetitem = tp_tgetitem;
+			DeeObject_Init(result, &DefaultSequence_TWithSizeAndGetItem_Type);
+			return (DREF DeeObject *)result;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
+	{
+		DREF DefaultSequence_WithSizeAndGetItem *result;
+		result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+		if unlikely(!result)
+			goto err;
+		result->dssg_start = startob_and_endob[0]; /* Inherit reference */
+		result->dssg_size  = startob_and_endob[1]; /* Inherit reference */
+		Dee_Incref(self);
+		result->dssg_seq        = self;
+		result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
+		DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+		return (DREF DeeObject *)result;
+	}
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithGetRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	DREF DeeObject *result;
+	DREF DeeObject *startob, *endob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	endob = DeeInt_NewSSize(end);
+	if unlikely(!endob)
+		goto err_startob;
+	result = DeeType_INVOKE_GETRANGE_NODEFAULT(tp_self, self, startob, endob);
+	Dee_Decref(endob);
+	Dee_Decref(startob);
+	return result;
+err_startob:
+	Dee_Decref(startob);
+err:
 	return NULL;
 }
 
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeAndGetItemIndexFast,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	size_t size;
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	struct Dee_seq_range range;
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->dssgi_seq              = self;
+	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index_fast;
+	result->dssgi_start            = range.sr_start;
+	result->dssgi_size             = range.sr_end;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	return (DREF DeeObject *)result;
+err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	size_t size;
+	struct Dee_seq_range range;
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->dssgi_seq              = self;
+	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	result->dssgi_start            = range.sr_start;
+	result->dssgi_size             = range.sr_end;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	return (DREF DeeObject *)result;
+	__builtin_unreachable();
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndGetItem,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	size_t size;
+	struct Dee_seq_range range;
+	DREF DefaultSequence_WithSizeAndGetItem *result;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem
+		              ? &instance_tgetitem
+		              : NULL/*DeeType_MapDefaultGetItem(tp_self->tp_seq->tp_getitem, &, NULL)*/;
+		if (tp_tgetitem) {
+			DREF DefaultSequence_TWithSizeAndGetItem *tresult;
+			tresult = DeeObject_MALLOC(DefaultSequence_TWithSizeAndGetItem);
+			if unlikely(!tresult)
+				goto err;
+			tresult->dstsg_start = DeeInt_NewSize(range.sr_start);
+			if unlikely(!tresult->dstsg_start) {
+err_tr:
+				DeeObject_FREE(tresult);
+				goto err;
+			}
+			tresult->dstsg_size = DeeInt_NewSize(range.sr_end);
+			if unlikely(!tresult->dstsg_size) {
+				Dee_Decref(tresult->dstsg_start);
+				goto err_tr;
+			}
+			tresult->dstsg_tp_seq = tp_self;
+			Dee_Incref(self);
+			tresult->dstsg_seq         = self;
+			tresult->dstsg_tp_tgetitem = tp_tgetitem;
+			DeeObject_Init(tresult, &DefaultSequence_TWithSizeAndGetItem_Type);
+			return (DREF DeeObject *)tresult;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->dssg_start = DeeInt_NewSize(range.sr_start);
+	if unlikely(!result->dssg_start)
+		goto err_r;
+	result->dssg_size = DeeInt_NewSize(range.sr_end);
+	if unlikely(!result->dssg_size)
+		goto err_r_start;
+	Dee_Incref(self);
+	result->dssg_seq        = self;
+	result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	return (DREF DeeObject *)result;
+err_r_start:
+	Dee_Decref(result->dssg_start);
+err_r:
+	DeeObject_FREE(result);
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexWithSizeDefaultAndIterDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	DREF DefaultSequence_WithSizeAndIterator *result;
+	DREF DeeObject *iter;
+	size_t size;
+	struct Dee_seq_range range;
+	int iter_status;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	DeeError_NOTIMPLEMENTED();
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	if (range.sr_start >= range.sr_end)
+		return_empty_seq;
+	iter = DeeType_INVOKE_ITER(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	iter_status = DeeObject_IterAdvance(iter, range.sr_start);
+	if unlikely(iter_status < 0)
+		goto err_iter;
+	if unlikely(iter_status > 0) {
+		Dee_Decref_likely(iter);
+		return_empty_seq;
+	}
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndIterator);
+	if unlikely(!result)
+		goto err_iter;
+	result->dssi_iter = iter; /* Inherit reference */
+	result->dssi_size = range.sr_end - range.sr_start;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndIterator_Type);
+	return (DREF DeeObject *)result;
+err_iter:
+	Dee_Decref_likely(iter);
+err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithGetRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	DREF DeeObject *result;
+	DREF DeeObject *startob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	result = DeeType_INVOKE_GETRANGE_NODEFAULT(tp_self, self, startob, Dee_None);
+	Dee_Decref(startob);
+	return result;
+err:
 	return NULL;
 }
 
@@ -4117,75 +4722,187 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithGetRange,
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeAndGetItemIndexFast,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	size_t size;
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
 	if (start < 0) {
-		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
-		if unlikely(seq_len == (size_t)-1)
-			goto err;
 		if (start < 0) {
-			start += seq_len;
+			start += size;
 			if unlikely(start < 0) {
-				if unlikely(seq_len == 0)
+				if unlikely(size == 0)
 					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 			}
 		}
 	}
-	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
-	/* TODO: The returned sequence proxy needs to use "tp_getitem_index_fast" */
-	return DeeSeq_GetRangeN(self, (size_t)start);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->dssgi_seq              = self;
+	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index_fast;
+	result->dssgi_start            = (size_t)start;
+	result->dssgi_size             = size;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndexFast_Type);
+	return (DREF DeeObject *)result;
 empty_range:
 	return_empty_seq;
 err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	size_t size;
 	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
 	if (start < 0) {
-		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
-		if unlikely(seq_len == (size_t)-1)
-			goto err;
 		if (start < 0) {
-			start += seq_len;
+			start += size;
 			if unlikely(start < 0) {
-				if unlikely(seq_len == 0)
+				if unlikely(size == 0)
 					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 			}
 		}
 	}
-	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
-	/* TODO: The returned sequence proxy needs to use "tp_getitem_index" */
-	return DeeSeq_GetRangeN(self, (size_t)start);
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self);
+	result->dssgi_seq              = self;
+	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	result->dssgi_start            = (size_t)start;
+	result->dssgi_size             = size;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItemIndex_Type);
+	return (DREF DeeObject *)result;
 empty_range:
 	return_empty_seq;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndGetItem,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	DREF DefaultSequence_WithSizeAndGetItem *result;
+	size_t size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (start < 0) {
+		if (start < 0) {
+			start += size;
+			if unlikely(start < 0) {
+				if unlikely(size == 0)
+					goto empty_range;
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
+			}
+		}
+	}
+#ifdef DEFINE_TYPED_OPERATORS
+	if (!Dee_TYPE(self)->tp_seq ||
+	    (Dee_TYPE(self)->tp_seq->tp_getitem != tp_self->tp_seq->tp_getitem)) {
+		DREF DeeObject *(DCALL *tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+		tp_tgetitem = tp_self->tp_seq->tp_getitem == &instance_getitem
+		              ? &instance_tgetitem
+		              : NULL/*DeeType_MapDefaultGetItem(tp_self->tp_seq->tp_getitem, &, NULL)*/;
+		if (tp_tgetitem) {
+			DREF DefaultSequence_TWithSizeAndGetItem *tresult;
+			tresult = DeeObject_MALLOC(DefaultSequence_TWithSizeAndGetItem);
+			if unlikely(!tresult)
+				goto err;
+			tresult->dstsg_start = DeeInt_NewSize((size_t)start);
+			if unlikely(!tresult->dstsg_start) {
+err_tr:
+				DeeObject_FREE(tresult);
+				goto err;
+			}
+			tresult->dstsg_size = DeeInt_NewSize(size);
+			if unlikely(!tresult->dstsg_size) {
+				Dee_Decref(tresult->dstsg_start);
+				goto err_tr;
+			}
+			tresult->dstsg_tp_seq = tp_self;
+			Dee_Incref(self);
+			tresult->dstsg_seq         = self;
+			tresult->dstsg_tp_tgetitem = tp_tgetitem;
+			DeeObject_Init(tresult, &DefaultSequence_TWithSizeAndGetItem_Type);
+			return (DREF DeeObject *)tresult;
+		}
+	}
+#endif /* DEFINE_TYPED_OPERATORS */
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItem);
+	if unlikely(!result)
+		goto err;
+	result->dssg_start = DeeInt_NewSize((size_t)start);
+	if unlikely(!result->dssg_start)
+		goto err_r;
+	result->dssg_size = DeeInt_NewSize(size);
+	if unlikely(!result->dssg_size)
+		goto err_r_start;
+	Dee_Incref(self);
+	result->dssg_seq        = self;
+	result->dssg_tp_getitem = tp_self->tp_seq->tp_getitem;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndGetItem_Type);
+	return (DREF DeeObject *)result;
+empty_range:
+	return_empty_seq;
+err_r_start:
+	Dee_Decref(result->dssg_start);
+err_r:
+	DeeObject_FREE(result);
 err:
 	return NULL;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeIndexNWithSizeDefaultAndIterDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	DREF DefaultSequence_WithSizeAndIterator *result;
+	DREF DeeObject *iter;
+	size_t size;
+	int iter_status;
 	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
 	if (start < 0) {
-		size_t seq_len = DeeType_INVOKE_SIZE(tp_self, self);
-		if unlikely(seq_len == (size_t)-1)
-			goto err;
 		if (start < 0) {
-			start += seq_len;
+			start += size;
 			if unlikely(start < 0) {
-				if unlikely(seq_len == 0)
+				if unlikely(size == 0)
 					goto empty_range;
-				start = (Dee_ssize_t)do_fix_negative_range_index(start, seq_len);
+				start = (Dee_ssize_t)do_fix_negative_range_index(start, size);
 			}
 		}
 	}
-	/* TODO: The returned sequence proxy needs to look at "tp_self"! */
-	/* TODO: The returned sequence proxy needs to use "tp_iter" */
-	return DeeSeq_GetRangeN(self, (size_t)start);
+	iter = DeeType_INVOKE_ITER(tp_self, self);
+	if unlikely(!iter)
+		goto err;
+	iter_status = DeeObject_IterAdvance(iter, (size_t)start);
+	if unlikely(iter_status < 0)
+		goto err_iter;
+	if unlikely(iter_status > 0) {
+		Dee_Decref_likely(iter);
+		return_empty_seq;
+	}
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndIterator);
+	if unlikely(!result)
+		goto err_iter;
+	result->dssi_iter = iter; /* Inherit reference */
+	result->dssi_size = size - (size_t)start;
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndIterator_Type);
+	return (DREF DeeObject *)result;
 empty_range:
 	return_empty_seq;
+err_iter:
+	Dee_Decref_likely(iter);
 err:
 	return NULL;
 }
@@ -4193,146 +4910,156 @@ err:
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeWithDelRangeIndexAndDelRangeIndexN,
                          (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	Dee_ssize_t start_index, end_index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_DELRANGEINDEXN_NODEFAULT(tp_self, self, start_index);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_DELRANGEINDEX_NODEFAULT(tp_self, self, start_index, end_index);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeWithDelRangeIndexDefaultAndDelRangeIndexNDefault,
                          (DeeObject *self, DeeObject *start, DeeObject *end)) {
+	Dee_ssize_t start_index, end_index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start_index);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start_index, end_index);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeWithSetRangeNone,
                              (DeeObject *self, DeeObject *start, DeeObject *end)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGE_NODEFAULT(tp_self, self, start, end, Dee_None);
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeWithSetRangeNoneDefault,
                              (DeeObject *self, DeeObject *start, DeeObject *end)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGE(tp_self, self, start, end, Dee_None);
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexWithDelRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
+	int result;
+	DREF DeeObject *startob, *endob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	endob = DeeInt_NewSSize(end);
+	if unlikely(!endob)
+		goto err_startob;
+	result = DeeType_INVOKE_DELRANGE_NODEFAULT(tp_self, self, startob, endob);
+	Dee_Decref(endob);
+	Dee_Decref(startob);
+	return result;
+err_startob:
+	Dee_Decref(startob);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSetRangeIndexNone,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGEINDEX_NODEFAULT(tp_self, self, start, end, Dee_None);
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexWithSetRangeIndexNoneDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start, end, Dee_None);
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultDelRangeIndexNWithDelRange,
                          (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
+	int result;
+	DREF DeeObject *startob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	return DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	result = DeeType_INVOKE_DELRANGE_NODEFAULT(tp_self, self, startob, Dee_None);
+	Dee_Decref(startob);
+	return result;
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNone,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGEINDEXN_NODEFAULT(tp_self, self, start, Dee_None);
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultDelRangeIndexNWithSetRangeIndexNNoneDefault,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	return DeeError_NOTIMPLEMENTED();
+	return DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, Dee_None);
 }
 
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeWithSetRangeIndexAndSetRangeIndexN,
                          (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value)) {
+	Dee_ssize_t start_index, end_index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_SETRANGEINDEXN_NODEFAULT(tp_self, self, start_index, value);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_SETRANGEINDEX_NODEFAULT(tp_self, self, start_index, end_index, value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeWithSetRangeIndexDefaultAndSetRangeIndexNDefault,
                          (DeeObject *self, DeeObject *start, DeeObject *end, DeeObject *value)) {
+	Dee_ssize_t start_index, end_index;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	if (DeeObject_AsSSize(start, &start_index))
+		goto err;
+	if (DeeNone_Check(end))
+		return DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start_index, value);
+	if (DeeObject_AsSSize(end, &end_index))
+		goto err;
+	return DeeType_INVOKE_SETRANGEINDEX(tp_self, self, start_index, end_index, value);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexWithSetRange,
                          (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value)) {
+	int result;
+	DREF DeeObject *startob, *endob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)end;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	endob = DeeInt_NewSSize(end);
+	if unlikely(!endob)
+		goto err_startob;
+	result = DeeType_INVOKE_SETRANGE_NODEFAULT(tp_self, self, startob, endob, value);
+	Dee_Decref(endob);
+	Dee_Decref(startob);
+	return result;
+err_startob:
+	Dee_Decref(startob);
+err:
+	return -1;
 }
 
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeAndDelItemIndexAndSetItemIndex,
@@ -4385,13 +5112,17 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultSetRangeIndexWithSizeDefaultAndSetItemI
 
 DEFINE_INTERNAL_OPERATOR(int, DefaultSetRangeIndexNWithSetRange,
                          (DeeObject *self, Dee_ssize_t start, DeeObject *value)) {
+	int result;
+	DREF DeeObject *startob;
 	LOAD_TP_SELF;
-	/* TODO */
-	(void)tp_self;
-	(void)self;
-	(void)start;
-	(void)value;
-	return DeeError_NOTIMPLEMENTED();
+	startob = DeeInt_NewSSize(start);
+	if unlikely(!startob)
+		goto err;
+	result = DeeType_INVOKE_SETRANGE_NODEFAULT(tp_self, self, startob, Dee_None, value);
+	Dee_Decref(startob);
+	return result;
+err:
+	return -1;
 }
 
 
@@ -5380,18 +6111,22 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 		 * at-once) */
 		if (features || base_seq->tp_getitem_index_fast) {
 			if (!base_seq->tp_iter) {
-				if (features & FEAT_tp_foreach) {
-					base_seq->tp_iter = &DeeObject_DefaultIterWithForeach;
-				} else if (features & FEAT_tp_foreach_pair) {
-					base_seq->tp_iter = &DeeObject_DefaultIterWithForeachPair;
-				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
+				if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
 					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast;
 				} else if ((features & (FEAT_tp_size | FEAT_tp_getitem_index)) ==
 				           /*       */ (FEAT_tp_size | FEAT_tp_getitem_index)) {
 					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndex;
+				} else if (features & FEAT_tp_getitem_index) {
+					base_seq->tp_iter = &DeeSeq_DefaultIterWithGetItemIndex;
 				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
 				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
 					base_seq->tp_iter = &DeeSeq_DefaultIterWithSizeObDefaultAndGetItemDefault;
+				} else if (features & FEAT_tp_getitem) {
+					base_seq->tp_iter = &DeeSeq_DefaultIterWithGetItemDefault;
+				} else if (features & FEAT_tp_foreach) {
+					base_seq->tp_iter = &DeeObject_DefaultIterWithForeach;
+				} else if (features & FEAT_tp_foreach_pair) {
+					base_seq->tp_iter = &DeeObject_DefaultIterWithForeachPair;
 				}
 			}
 			if (!base_seq->tp_foreach) {
@@ -5406,25 +6141,10 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 					base_seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
 				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
 				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
-					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeObDefaultAndGetItemDefault;
+				} else if (features & (FEAT_tp_getitem | FEAT_tp_getitem_index)) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithGetItemIndexDefault;
 				}
 			}
-			if (!base_seq->tp_foreach_pair) {
-				if (features & FEAT_tp_foreach) {
-					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
-				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
-					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeAndGetItemIndexFast;
-				} else if ((features & (FEAT_tp_size | FEAT_tp_getitem_index)) ==
-				           /*       */ (FEAT_tp_size | FEAT_tp_getitem_index)) {
-					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeAndGetItemIndex;
-				} else if (features & FEAT_tp_iter) {
-					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIter;
-				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_size)) &&
-				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
-					base_seq->tp_foreach_pair = &DeeSeq_DefaultForeachPairWithSizeObDefaultAndGetItemDefault;
-				}
-			}
-
 			if (!base_seq->tp_size) {
 				if (features & FEAT_tp_sizeob) {
 					base_seq->tp_size = &DeeObject_DefaultSizeWithSizeOb;
@@ -5466,6 +6186,23 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 					base_seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndexDefault;
 				}
 			}
+			if (!base_seq->tp_foreach) {
+				if (base_seq->tp_size && base_seq->tp_getitem_index) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_getitem) {
+					base_seq->tp_foreach = &DeeSeq_DefaultForeachWithGetItemIndexDefault;
+				}
+			}
+			if (!base_seq->tp_foreach_pair) {
+				if (features & FEAT_tp_foreach) {
+					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
+				} else if (features & FEAT_tp_iter) {
+					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIter;
+				} else if (base_seq->tp_foreach) {
+					base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeachDefault;
+				}
+			}
+
 			if (!base_seq->tp_delitem_index && (features & FEAT_tp_delitem))
 				base_seq->tp_delitem_index = &DeeObject_DefaultDelItemIndexWithDelItem;
 			if (!base_seq->tp_setitem_index && (features & FEAT_tp_setitem))
@@ -5566,13 +6303,14 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 					base_seq->tp_getrange_index = &DeeObject_DefaultGetRangeIndexWithGetRange;
 				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
 					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeAndGetItemIndexFast;
-				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) &&
-				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
-					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) && (features & FEAT_tp_getitem_index)) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndex;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) && (features & FEAT_tp_getitem)) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItem;
 				} else if (base_seq->tp_size && (features & FEAT_tp_iter)) {
 					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIterDefault;
-				} else if (base_seq->tp_size && base_seq->tp_getitem_index) {
-					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && (features & FEAT_tp_getitem_index)) {
+					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndGetItemIndex;
 				} else if (base_seq->tp_size && base_seq->tp_iter) {
 					base_seq->tp_getrange_index = &DeeSeq_DefaultGetRangeIndexWithSizeDefaultAndIterDefault;
 				}
@@ -5582,13 +6320,14 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 					base_seq->tp_getrange_index_n = &DeeObject_DefaultGetRangeIndexNWithGetRange;
 				} else if ((features & FEAT_tp_size) && base_seq->tp_getitem_index_fast) {
 					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeAndGetItemIndexFast;
-				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) &&
-				           (features & (FEAT_tp_getitem | FEAT_tp_getitem_index))) {
-					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) && (features & FEAT_tp_getitem_index)) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndex;
+				} else if ((features & (FEAT_tp_size | FEAT_tp_sizeob)) && (features & FEAT_tp_getitem)) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItem;
 				} else if (base_seq->tp_size && (features & FEAT_tp_iter)) {
 					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndIterDefault;
-				} else if (base_seq->tp_size && base_seq->tp_getitem_index) {
-					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndexDefault;
+				} else if (base_seq->tp_size && (features & FEAT_tp_getitem_index)) {
+					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndGetItemIndex;
 				} else if (base_seq->tp_size && base_seq->tp_iter) {
 					base_seq->tp_getrange_index_n = &DeeSeq_DefaultGetRangeIndexNWithSizeDefaultAndIterDefault;
 				}
@@ -5597,6 +6336,11 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self) {
 				if ((features & (FEAT_tp_getrange_index | FEAT_tp_getrange_index_n)) ==
 				    /*       */ (FEAT_tp_getrange_index | FEAT_tp_getrange_index_n)) {
 					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN;
+				} else if (base_seq->tp_size && (features & FEAT_tp_getitem_index)) {
+					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithSizeDefaultAndGetItemIndex;
+				} else if ((features & (FEAT_tp_sizeob | FEAT_tp_getitem)) ==
+				           /*       */ (FEAT_tp_sizeob | FEAT_tp_getitem)) {
+					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithSizeObAndGetItem;
 				} else if (base_seq->tp_getrange_index && base_seq->tp_getrange_index_n) {
 					base_seq->tp_getrange = &DeeObject_DefaultGetRangeWithGetRangeIndexDefaultAndGetRangeIndexNDefault;
 				}
@@ -6219,6 +6963,27 @@ DEFINE_OPERATOR(DREF DeeObject *, IterNext, (DeeObject *RESTRICT_IF_NOTYPE self)
 	return NULL;
 }
 
+#ifndef DEFINE_TYPED_OPERATORS
+/* Advance an iterator by "step" items.
+ * @return: 1 : Success, but advancing was stopped prematurely because ITER_DONE was encountered.
+ * @return: 0 : Success.
+ * @return: -1: Error. */
+DEFINE_OPERATOR(int, IterAdvance, (DeeObject *__restrict self, size_t step)) {
+	/* TODO: Type-specific optimizations */
+	for (; step; --step) {
+		DREF DeeObject *elem = DeeObject_IterNext(self);
+		if unlikely(!ITER_ISOK(elem)) {
+			if unlikely(!elem)
+				goto err;
+			return 1; /* Premature stop. */
+		}
+		Dee_Decref(elem);
+	}
+	return 0;
+err:
+	return -1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 #ifndef DEFINE_TYPED_OPERATORS
