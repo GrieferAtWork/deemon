@@ -512,15 +512,15 @@ err:
 }
 
 PRIVATE struct type_seq modexports_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_iter,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_iter,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&modexports_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_get,
-	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_del,
-	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&modexports_set,
-	/* .tp_range_get    = */ NULL,
-	/* .tp_range_del    = */ NULL,
-	/* .tp_range_set    = */ NULL,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexports_get,
+	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexports_del,
+	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&modexports_set,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
 	/* .tp_nsi          = */ NULL, /* TODO */
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ NULL, /* TODO */
@@ -757,17 +757,17 @@ PRIVATE struct type_nsi tpconst modglobals_nsi = {
 };
 
 PRIVATE struct type_seq modglobals_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &modglobals_nsi,
-	/* .tp_foreach   = */ NULL, /* TODO */
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &modglobals_nsi,
+	/* .tp_foreach  = */ NULL, /* TODO */
 };
 
 INTERN DeeTypeObject ModuleGlobals_Type = {

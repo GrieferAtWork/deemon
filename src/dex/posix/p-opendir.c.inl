@@ -2180,15 +2180,15 @@ done:
 }
 
 PRIVATE struct type_seq dir_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dir_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dir_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
 };
 
 

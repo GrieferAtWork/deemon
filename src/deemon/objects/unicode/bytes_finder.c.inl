@@ -440,15 +440,15 @@ err_r:
 
 
 PRIVATE struct type_seq bf_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bf_iter,
-	/* .tp_size      = */ NULL, /* TODO: Bytes.count() */
-	/* .tp_contains  = */ NULL, /* TODO: Bytes.substr() == needle */
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bf_iter,
+	/* .tp_sizeob   = */ NULL, /* TODO: Bytes.count() */
+	/* .tp_contains = */ NULL, /* TODO: Bytes.substr() == needle */
 };
 
 PRIVATE struct type_seq bcf_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bcf_iter,
-	/* .tp_size      = */ NULL, /* TODO: Bytes.casecount() */
-	/* .tp_contains  = */ NULL, /* TODO: Bytes.substr(...).casecompare(needle) == 0 */
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bcf_iter,
+	/* .tp_sizeob   = */ NULL, /* TODO: Bytes.casecount() */
+	/* .tp_contains = */ NULL, /* TODO: Bytes.substr(...).casecompare(needle) == 0 */
 };
 
 

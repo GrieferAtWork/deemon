@@ -161,7 +161,7 @@ rangemap_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg
 	result = DeeFormat_PRINT(printer, arg, "{ ");
 	if unlikely(result < 0)
 		goto done;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err_m1;
 	is_first = true;
@@ -341,7 +341,7 @@ rangemap_clear(DeeObject *__restrict self, size_t argc, DeeObject *const *argv) 
 		int temp;
 		DREF DeeObject *elem, *iter;
 		DREF DeeObject *item[3];
-		iter = DeeObject_IterSelf(self);
+		iter = DeeObject_Iter(self);
 		if unlikely(!iter)
 			goto err;
 		elem = nsi ? (*nsi->nsi_maplike.nsi_nextkey)(iter)
@@ -447,9 +447,9 @@ rangemap_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
-		return DeeObject_IterSelf(Dee_EmptySeq);
+		return DeeObject_Iter(Dee_EmptySeq);
 	}
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
 
@@ -461,11 +461,11 @@ rangemap_nsi_getsize(DeeObject *__restrict self) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &rangemap_iterself)
+	if (tp_self->tp_seq->tp_iter == &rangemap_iterself)
 		goto done;
 
 	/* Very inefficient: iterate the mapping and count items. */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -503,13 +503,13 @@ rangemap_getitem(DeeObject *self, DeeObject *key) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &rangemap_iterself) {
+	if (tp_self->tp_seq->tp_iter == &rangemap_iterself) {
 		err_unknown_key(self, key);
 		goto err;
 	}
 
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -553,11 +553,11 @@ rangemap_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &rangemap_iterself)
+	if (tp_self->tp_seq->tp_iter == &rangemap_iterself)
 		goto return_defl;
 
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -642,16 +642,16 @@ PRIVATE struct type_cmp rangemap_cmp = {
 };
 
 PRIVATE struct type_seq rangemap_seq = {
-	/* .tp_iter_self = */ &rangemap_iterself,
-	/* .tp_size      = */ &rangemap_size,
-	/* .tp_contains  = */ &rangemap_contains,
-	/* .tp_get       = */ &rangemap_getitem,
-	/* .tp_del       = */ &rangemap_delitem,
-	/* .tp_set       = */ &rangemap_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &rangemap_nsi
+	/* .tp_iter     = */ &rangemap_iterself,
+	/* .tp_sizeob   = */ &rangemap_size,
+	/* .tp_contains = */ &rangemap_contains,
+	/* .tp_getitem  = */ &rangemap_getitem,
+	/* .tp_delitem  = */ &rangemap_delitem,
+	/* .tp_setitem  = */ &rangemap_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &rangemap_nsi
 };
 
 PRIVATE struct type_method tpconst rangemap_methods[] = {
@@ -932,7 +932,7 @@ proxy_iterself(RangeMapProxy *__restrict self, DeeTypeObject *__restrict result_
 	result = DeeObject_MALLOC(RangeMapProxyItemsIterator);
 	if unlikely(!result)
 		goto done;
-	result->rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmp_rmap);
+	result->rmpii_base.rmpi_iter = DeeObject_Iter(self->rmp_rmap);
 	if unlikely(!result->rmpii_base.rmpi_iter)
 		goto err_r;
 	result->rmpii_nsi = DeeType_NSI(Dee_TYPE(self->rmp_rmap));
@@ -954,7 +954,7 @@ proxy_iterself_keys(RangeMapProxy *__restrict self) {
 	result = DeeObject_MALLOC(RangeMapProxyKeysIterator);
 	if unlikely(!result)
 		goto done;
-	result->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmp_rmap);
+	result->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmp_rmap);
 	if unlikely(!result->rmpki_base.rmpii_base.rmpi_iter)
 		goto err_r;
 	result->rmpki_base.rmpii_nsi = DeeType_NSI(Dee_TYPE(self->rmp_rmap));
@@ -991,7 +991,7 @@ proxy_iterself_nodes(RangeMapProxy *__restrict self) {
 	result = DeeObject_MALLOC(RangeMapProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->rmpi_iter = DeeObject_IterSelf(self->rmp_rmap);
+	result->rmpi_iter = DeeObject_Iter(self->rmp_rmap);
 	if unlikely(!result->rmpi_iter)
 		goto err_r;
 	result->rmpi_rmap = self->rmp_rmap;
@@ -1015,7 +1015,7 @@ make_RangeMapProxyMapItemsIterator(RangeMapProxy *self, DeeTypeObject *type) {
 	result = DeeObject_MALLOC(RangeMapProxyKeysIterator);
 	if unlikely(!result)
 		goto done;
-	result->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmp_rmap);
+	result->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmp_rmap);
 	if unlikely(!result->rmpki_base.rmpii_base.rmpi_iter)
 		goto err_r;
 	result->rmpki_base.rmpii_nsi = DeeType_NSI(Dee_TYPE(self->rmp_rmap));
@@ -1099,7 +1099,7 @@ rangemap_keys_getsize(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *elem;
 	struct type_nsi const *nsi = DeeType_NSI(Dee_TYPE(self));
 	if (nsi && nsi->nsi_class == Dee_TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_nextkey) {
-		iter = DeeObject_IterSelf(self);
+		iter = DeeObject_Iter(self);
 		if unlikely(!iter)
 			goto err;
 		while (ITER_ISOK(elem = (*nsi->nsi_maplike.nsi_nextkey)(iter))) {
@@ -1274,94 +1274,94 @@ PRIVATE struct type_nsi tpconst proxy_asmap_nsi = {
 };
 
 PRIVATE struct type_seq proxy_keys_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_keys_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_keys_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_keys_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_keys_nsi
 };
 
 PRIVATE struct type_seq proxy_values_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_nsi
 };
 
 PRIVATE struct type_seq proxy_items_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_nsi
 };
 
 PRIVATE struct type_seq proxy_nodes_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_nodes,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_nodes,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_nsi
 };
 
 PRIVATE struct type_seq proxy_ranges_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_ranges,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_ranges,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_nsi
 };
 
 PRIVATE struct type_seq proxy_mapitems_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_mapitems,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_mapitems_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_mapitems,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_mapitems_nsi
 };
 
 PRIVATE struct type_seq proxy_asmap_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_asmap,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_keys_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_asmap_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_asmap_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&proxy_asmap_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &proxy_asmap_nsi,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_asmap,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_keys_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_keys_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_asmap_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&proxy_asmap_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&proxy_asmap_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &proxy_asmap_nsi,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF RangeMapProxy *DCALL
@@ -2145,7 +2145,7 @@ proxy_iterator_get_asmap(RangeMapProxyKeysIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_ctor(RangeMapProxyIterator *__restrict self) {
-	self->rmpi_iter = DeeObject_IterSelf(Dee_EmptyRangeMap);
+	self->rmpi_iter = DeeObject_Iter(Dee_EmptyRangeMap);
 	if unlikely(!self->rmpi_iter)
 		goto err;
 	self->rmpi_rmap = Dee_EmptyRangeMap;
@@ -2160,7 +2160,7 @@ proxy_iterator_init(RangeMapProxyIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RangeMapProxyIterator", &self->rmpi_rmap))
 		goto err;
-	self->rmpi_iter = DeeObject_IterSelf(self->rmpi_rmap);
+	self->rmpi_iter = DeeObject_Iter(self->rmpi_rmap);
 	if unlikely(!self->rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpi_rmap);
@@ -2218,7 +2218,7 @@ proxy_iterator_bool(RangeMapProxyIterator *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_items_iterator_ctor(RangeMapProxyItemsIterator *__restrict self) {
-	self->rmpii_base.rmpi_iter = DeeObject_IterSelf(Dee_EmptyRangeMap);
+	self->rmpii_base.rmpi_iter = DeeObject_Iter(Dee_EmptyRangeMap);
 	if unlikely(!self->rmpii_base.rmpi_iter)
 		goto err;
 	self->rmpii_base.rmpi_rmap = Dee_EmptyRangeMap;
@@ -2234,7 +2234,7 @@ proxy_items_iterator_init(RangeMapProxyItemsIterator *__restrict self,
                           size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_RangeMapItemsIterator", &self->rmpii_base.rmpi_rmap))
 		goto err;
-	self->rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmpii_base.rmpi_rmap);
+	self->rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpii_base.rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpii_base.rmpi_rmap);
@@ -2619,7 +2619,7 @@ INTERN DeeTypeObject RangeMapNodesIterator_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_keys_iterator_ctor(RangeMapProxyKeysIterator *__restrict self) {
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(Dee_EmptyRangeMap);
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(Dee_EmptyRangeMap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	self->rmpki_base.rmpii_base.rmpi_rmap = Dee_EmptyRangeMap;
@@ -2641,7 +2641,7 @@ proxy_keys_iterator_init(RangeMapProxyKeysIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:_RangeMapKeysIterator",
 	                  &self->rmpki_base.rmpii_base.rmpi_rmap))
 		goto err;
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmpki_base.rmpii_base.rmpi_rmap);
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);
@@ -2729,7 +2729,7 @@ proxy_keys_iterator_visit(RangeMapProxyKeysIterator *__restrict self, dvisit_t p
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_mapitems_iterator_ctor(RangeMapProxyKeysIterator *__restrict self) {
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(Dee_EmptyRangeMap);
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(Dee_EmptyRangeMap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	self->rmpki_base.rmpii_base.rmpi_rmap = Dee_EmptyRangeMap;
@@ -2751,7 +2751,7 @@ proxy_mapitems_iterator_init(RangeMapProxyKeysIterator *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o:_RangeMapMapItemsIterator",
 	                  &self->rmpki_base.rmpii_base.rmpi_rmap))
 		goto err;
-	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_IterSelf(self->rmpki_base.rmpii_base.rmpi_rmap);
+	self->rmpki_base.rmpii_base.rmpi_iter = DeeObject_Iter(self->rmpki_base.rmpii_base.rmpi_rmap);
 	if unlikely(!self->rmpki_base.rmpii_base.rmpi_iter)
 		goto err;
 	Dee_Incref(self->rmpki_base.rmpii_base.rmpi_rmap);

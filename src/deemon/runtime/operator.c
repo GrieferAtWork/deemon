@@ -281,17 +281,17 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_GR_NODEFAULT        DeeType_InvokeCmpGr_NODEFAULT
 #define DeeType_INVOKE_GE                  DeeType_InvokeCmpGe
 #define DeeType_INVOKE_GE_NODEFAULT        DeeType_InvokeCmpGe_NODEFAULT
-#define DeeType_INVOKE_ITER                DeeType_InvokeSeqIterSelf
+#define DeeType_INVOKE_ITER                DeeType_InvokeSeqIter
 #define DeeType_INVOKE_FOREACH             DeeType_InvokeSeqForeach
 #define DeeType_INVOKE_FOREACH_PAIR        DeeType_InvokeSeqForeachPair
-#define DeeType_INVOKE_SIZE                DeeType_InvokeSeqSize
+#define DeeType_INVOKE_SIZEOB              DeeType_InvokeSeqSizeOb
 #define DeeType_INVOKE_CONTAINS            DeeType_InvokeSeqContains
-#define DeeType_INVOKE_GETITEM             DeeType_InvokeSeqGet
-#define DeeType_INVOKE_DELITEM             DeeType_InvokeSeqDel
-#define DeeType_INVOKE_SETITEM             DeeType_InvokeSeqSet
-#define DeeType_INVOKE_GETRANGE            DeeType_InvokeSeqRangeGet
-#define DeeType_INVOKE_DELRANGE            DeeType_InvokeSeqRangeDel
-#define DeeType_INVOKE_SETRANGE            DeeType_InvokeSeqRangeSet
+#define DeeType_INVOKE_GETITEM             DeeType_InvokeSeqGetItem
+#define DeeType_INVOKE_DELITEM             DeeType_InvokeSeqDelItem
+#define DeeType_INVOKE_SETITEM             DeeType_InvokeSeqSetItem
+#define DeeType_INVOKE_GETRANGE            DeeType_InvokeSeqGetRange
+#define DeeType_INVOKE_DELRANGE            DeeType_InvokeSeqDelRange
+#define DeeType_INVOKE_SETRANGE            DeeType_InvokeSeqSetRange
 #define DeeType_INVOKE_GETATTR             DeeType_InvokeAttrGetAttr
 #define DeeType_INVOKE_DELATTR             DeeType_InvokeAttrDelAttr
 #define DeeType_INVOKE_SETATTR             DeeType_InvokeAttrSetAttr
@@ -346,17 +346,17 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_LE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_le)(self, other)
 #define DeeType_INVOKE_GR(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_gr)(self, other)
 #define DeeType_INVOKE_GE(tp_self, self, other)                    (*(tp_self)->tp_cmp->tp_ge)(self, other)
-#define DeeType_INVOKE_ITER(tp_self, self)                         (*(tp_self)->tp_seq->tp_iter_self)(self)
+#define DeeType_INVOKE_ITER(tp_self, self)                         (*(tp_self)->tp_seq->tp_iter)(self)
 #define DeeType_INVOKE_FOREACH(tp_self, self, proc, arg)           (*(tp_self)->tp_seq->tp_foreach)(self, proc, arg)
 #define DeeType_INVOKE_FOREACH_PAIR(tp_self, self, proc, arg)      (*(tp_self)->tp_seq->tp_foreach_pair)(self, proc, arg)
-#define DeeType_INVOKE_SIZE(tp_self, self)                         (*(tp_self)->tp_seq->tp_size)(self)
+#define DeeType_INVOKE_SIZEOB(tp_self, self)                       (*(tp_self)->tp_seq->tp_sizeob)(self)
 #define DeeType_INVOKE_CONTAINS(tp_self, self, other)              (*(tp_self)->tp_seq->tp_contains)(self, other)
-#define DeeType_INVOKE_GETITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_get)(self, index)
-#define DeeType_INVOKE_DELITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_del)(self, index)
-#define DeeType_INVOKE_SETITEM(tp_self, self, index, value)        (*(tp_self)->tp_seq->tp_set)(self, index, value)
-#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_range_get)(self, start, end)
-#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_range_del)(self, start, end)
-#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) (*(tp_self)->tp_seq->tp_range_set)(self, start, end, values)
+#define DeeType_INVOKE_GETITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_getitem)(self, index)
+#define DeeType_INVOKE_DELITEM(tp_self, self, index)               (*(tp_self)->tp_seq->tp_delitem)(self, index)
+#define DeeType_INVOKE_SETITEM(tp_self, self, index, value)        (*(tp_self)->tp_seq->tp_setitem)(self, index, value)
+#define DeeType_INVOKE_GETRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_getrange)(self, start, end)
+#define DeeType_INVOKE_DELRANGE(tp_self, self, start, end)         (*(tp_self)->tp_seq->tp_delrange)(self, start, end)
+#define DeeType_INVOKE_SETRANGE(tp_self, self, start, end, values) (*(tp_self)->tp_seq->tp_setrange)(self, start, end, values)
 #define DeeType_INVOKE_GETATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_getattr)(self, name)
 #define DeeType_INVOKE_DELATTR(tp_self, self, name)                (*(tp_self)->tp_attr->tp_delattr)(self, name)
 #define DeeType_INVOKE_SETATTR(tp_self, self, name, value)         (*(tp_self)->tp_attr->tp_setattr)(self, name, value)
@@ -3144,8 +3144,8 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithLo,
 }
 
 
-/* Default wrappers for implementing OPERATOR_ITER via `tp_iter_self <===> tp_foreach <===> tp_foreach_pair' */
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeach, (DeeObject *__restrict self)) {
+/* Default wrappers for implementing OPERATOR_ITER via `tp_iter <===> tp_foreach <===> tp_foreach_pair' */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeach, (DeeObject *__restrict self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_foreach" */
 	(void)tp_self;
@@ -3154,7 +3154,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeach, (DeeObjec
 	return NULL;
 }
 
-DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeachPair,
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterWithForeachPair,
                          (DeeObject *__restrict self)) {
 	LOAD_TP_SELF;
 	/* TODO: Custom iterator type that uses "tp_foreach_pair" */
@@ -3164,7 +3164,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultIterSelfWithForeachPair,
 	return NULL;
 }
 
-DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIterSelf,
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachWithIter,
                          (DeeObject *__restrict self, Dee_foreach_t proc, void *arg)) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *iter, *elem;
@@ -3196,7 +3196,7 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithIterSelf,
+DEFINE_INTERNAL_OPERATOR(Dee_ssize_t, DefaultForeachPairWithIter,
                          (DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg)) {
 	Dee_ssize_t temp, result;
 	DREF DeeObject *iter, *elem;
@@ -4191,36 +4191,36 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 }
 
 INTERN NONNULL((1)) bool DCALL
-DeeType_InheritIterSelf(DeeTypeObject *__restrict self) {
+DeeType_InheritIter(DeeTypeObject *__restrict self) {
 	struct type_seq *base_seq;
 	DeeTypeMRO mro;
 	DeeTypeObject *base;
 	base_seq = self->tp_seq;
 	if (base_seq) {
-		if (base_seq->tp_iter_self) {
+		if (base_seq->tp_iter) {
 			if (base_seq->tp_foreach == NULL)
-				base_seq->tp_foreach = &DeeObject_DefaultForeachWithIterSelf;
+				base_seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
 			if (base_seq->tp_foreach_pair == NULL)
-				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIterSelf;
+				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithIter;
 			return true;
 		} else if (base_seq->tp_foreach) {
-			base_seq->tp_iter_self = &DeeObject_DefaultIterSelfWithForeach;
+			base_seq->tp_iter = &DeeObject_DefaultIterWithForeach;
 			if (base_seq->tp_foreach_pair == NULL)
 				base_seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeach;
 			return true;
 		} else if (base_seq->tp_foreach_pair) {
-			base_seq->tp_iter_self = &DeeObject_DefaultIterSelfWithForeachPair;
-			base_seq->tp_foreach   = &DeeObject_DefaultForeachWithForeachPair;
+			base_seq->tp_iter    = &DeeObject_DefaultIterWithForeachPair;
+			base_seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPair;
 			return true;
 		}
 	}
 	base = DeeTypeMRO_Init(&mro, self);
 	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
 		base_seq = base->tp_seq;
-		if (base_seq == NULL || (!base_seq->tp_iter_self ||
+		if (base_seq == NULL || (!base_seq->tp_iter ||
 		                         !base_seq->tp_foreach ||
 		                         !base_seq->tp_foreach_pair)) {
-			if (!DeeType_InheritIterSelf(base))
+			if (!DeeType_InheritIter(base))
 				continue;
 		}
 		base_seq = base->tp_seq;
@@ -4228,8 +4228,8 @@ DeeType_InheritIterSelf(DeeTypeObject *__restrict self) {
 		if (self->tp_seq) {
 			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
 			if unlikely(origin)
-				return DeeType_InheritIterSelf(origin);
-			self->tp_seq->tp_iter_self    = base_seq->tp_iter_self;
+				return DeeType_InheritIter(origin);
+			self->tp_seq->tp_iter         = base_seq->tp_iter;
 			self->tp_seq->tp_foreach      = base_seq->tp_foreach;
 			self->tp_seq->tp_foreach_pair = base_seq->tp_foreach_pair;
 		} else {
@@ -4240,23 +4240,23 @@ DeeType_InheritIterSelf(DeeTypeObject *__restrict self) {
 	return false;
 }
 
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSize, "operator size", tp_size)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSize, "operator size", tp_sizeob)
 DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritContains, "operator contains", tp_contains)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetItem, "operator getitem", tp_get)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelItem, "operator delitem", tp_del)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetItem, "operator setitem", tp_set)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetRange, "operator getrange", tp_range_get)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelRange, "operator delrange", tp_range_del)
-DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetRange, "operator setrange", tp_range_set)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetItem, "operator getitem", tp_getitem)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelItem, "operator delitem", tp_delitem)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetItem, "operator setitem", tp_setitem)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritGetRange, "operator getrange", tp_getrange)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritDelRange, "operator delrange", tp_delrange)
+DEFINE_TYPE_INHERIT_FUNCTION(DeeType_InheritSetRange, "operator setrange", tp_setrange)
 #undef DEFINE_TYPE_INHERIT_FUNCTION
 #endif /* !DEFINE_TYPED_OPERATORS */
 
-DEFINE_OPERATOR(DREF DeeObject *, IterSelf, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+DEFINE_OPERATOR(DREF DeeObject *, Iter, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_iter_self) ||
-	          DeeType_InheritIterSelf(tp_self))
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_iter) ||
+	          DeeType_InheritIter(tp_self))
 		return DeeType_INVOKE_ITER(tp_self, self);
-	err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	err_unimplemented_operator(tp_self, OPERATOR_ITER);
 	return NULL;
 }
 
@@ -4275,7 +4275,7 @@ DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	DREF DeeObject *sizeob;
 	size_t result;
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_sizeob) ||
 	          DeeType_InheritSize(tp_self)) {
 		struct type_nsi const *nsi;
 		/* NSI optimizations. */
@@ -4284,7 +4284,7 @@ DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 			ASSERT(nsi->nsi_common.nsi_getsize);
 			return (*nsi->nsi_common.nsi_getsize)(self);
 		}
-		sizeob = DeeType_INVOKE_SIZE(tp_self, self);
+		sizeob = DeeType_INVOKE_SIZEOB(tp_self, self);
 		if unlikely(!sizeob)
 			goto err;
 		if (DeeObject_AsSize(sizeob, &result))
@@ -4320,9 +4320,9 @@ err:
 
 DEFINE_OPERATOR(DREF DeeObject *, SizeObject, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_sizeob) ||
 	          DeeType_InheritSize(tp_self))
-		return DeeType_INVOKE_SIZE(tp_self, self);
+		return DeeType_INVOKE_SIZEOB(tp_self, self);
 	err_unimplemented_operator(tp_self, OPERATOR_SIZE);
 	return NULL;
 }
@@ -4340,7 +4340,7 @@ DEFINE_OPERATOR(DREF DeeObject *, ContainsObject,
 DEFINE_OPERATOR(DREF DeeObject *, GetItem,
                 (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self))
 		return DeeType_INVOKE_GETITEM(tp_self, self, index);
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
@@ -4350,7 +4350,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItem,
 DEFINE_OPERATOR(int, DelItem,
                 (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delitem) ||
 	          DeeType_InheritDelItem(tp_self))
 		return DeeType_INVOKE_DELITEM(tp_self, self, index);
 	return err_unimplemented_operator(tp_self, OPERATOR_DELITEM);
@@ -4359,7 +4359,7 @@ DEFINE_OPERATOR(int, DelItem,
 DEFINE_OPERATOR(int, SetItem,
                 (DeeObject *self, DeeObject *index, DeeObject *value)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setitem) ||
 	          DeeType_InheritSetItem(tp_self))
 		return DeeType_INVOKE_SETITEM(tp_self, self, index, value);
 	return err_unimplemented_operator(tp_self, OPERATOR_SETITEM);
@@ -4368,7 +4368,7 @@ DEFINE_OPERATOR(int, SetItem,
 DEFINE_OPERATOR(DREF DeeObject *, GetRange,
                 (DeeObject *self, DeeObject *begin, DeeObject *end)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self))
 		return DeeType_INVOKE_GETRANGE(tp_self, self, begin, end);
 	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
@@ -4423,7 +4423,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
 (DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, dssize_t begin, DeeObject *end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
 		dssize_t end_index;
 		struct type_nsi const *nsi;
@@ -4456,7 +4456,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 (DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, dssize_t end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
 		dssize_t begin_index;
 		DREF DeeObject *end_ob, *result;
@@ -4486,7 +4486,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
 (DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
                                 dssize_t begin, dssize_t end) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
 		DREF DeeObject *begin_ob, *end_ob, *result;
 		struct type_nsi const *nsi;
@@ -4519,7 +4519,7 @@ PUBLIC WUNUSED NONNULL((1)) int
                                      dssize_t begin, DeeObject *end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		int result;
 		DREF DeeObject *begin_ob;
@@ -4554,7 +4554,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                                    DeeObject *begin, dssize_t end) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		int result;
 		DREF DeeObject *end_ob;
@@ -4585,7 +4585,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 (DCALL DeeObject_DelRangeIndex)(DeeObject *self,
                                 dssize_t begin, dssize_t end) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		DREF DeeObject *begin_ob, *end_ob;
 		int result;
@@ -4621,7 +4621,7 @@ PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	ASSERT_OBJECT(values);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		int result;
 		DREF DeeObject *begin_ob;
@@ -4658,7 +4658,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(values);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		int result;
 		DREF DeeObject *end_ob;
@@ -4691,7 +4691,7 @@ PUBLIC WUNUSED NONNULL((1, 4)) int
                                 DeeObject *values) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(values);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
 		DREF DeeObject *begin_ob, *end_ob;
 		int result;
@@ -4726,7 +4726,7 @@ DEFINE_OPERATOR(int, DelRange,
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(end);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 	          DeeType_InheritDelRange(tp_self))
 		return DeeType_INVOKE_DELRANGE(tp_self, self, begin, end);
 	return err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
@@ -4739,7 +4739,7 @@ DEFINE_OPERATOR(int, SetRange,
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(end);
 	ASSERT_OBJECT(value);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_range_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
 	          DeeType_InheritSetRange(tp_self))
 		return DeeType_INVOKE_SETRANGE(tp_self, self, begin, end, value);
 	return err_unimplemented_operator(tp_self, OPERATOR_SETRANGE);
@@ -4757,7 +4757,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	size_t i;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -4835,7 +4835,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5033,7 +5033,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	size_t i;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5087,7 +5087,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5246,7 +5246,7 @@ DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5275,7 +5275,7 @@ DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_get) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5304,7 +5304,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_del) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delitem) ||
 	          DeeType_InheritDelItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5334,7 +5334,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_set) ||
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setitem) ||
 	          DeeType_InheritSetItem(tp_self)) {
 		struct type_nsi const *nsi;
 		nsi = tp_self->tp_seq->tp_nsi;
@@ -5827,7 +5827,7 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 	}
 
 	/* Fallback: Use an iterator. */
-	if ((iterator = DeeObject_IterSelf(self)) == NULL)
+	if ((iterator = DeeObject_Iter(self)) == NULL)
 		goto err;
 	for (i = 0; i < objc; ++i) {
 		elem = DeeObject_IterNext(iterator);
@@ -5862,9 +5862,9 @@ DeeObject_Foreach(DeeObject *__restrict self,
                   Dee_foreach_t proc, void *arg) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	          DeeType_InheritIterSelf(tp_self))
+	          DeeType_InheritIter(tp_self))
 		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
-	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -5872,9 +5872,9 @@ DeeObject_ForeachPair(DeeObject *__restrict self,
                       Dee_foreach_pair_t proc, void *arg) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
-	          DeeType_InheritIterSelf(tp_self))
+	          DeeType_InheritIter(tp_self))
 		return (*tp_self->tp_seq->tp_foreach_pair)(self, proc, arg);
-	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function

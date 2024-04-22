@@ -46,7 +46,7 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 set_hash(DeeObject *__restrict self) {
 	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	DREF DeeObject *iter, *elem;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -195,7 +195,7 @@ invset_printrepr(DeeSetInversionObject *__restrict self,
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 invset_iterself(DeeSetInversionObject *__restrict self) {
 	/* Sorry, but it's impossible to enumerate a set containing (almost) everything */
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
 
@@ -210,15 +210,15 @@ err:
 }
 
 PRIVATE struct type_seq invset_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterself,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_tpcontains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterself,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_tpcontains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
@@ -346,7 +346,7 @@ set_issubset_impl(DeeObject *lhs, DeeObject *rhs) {
 	dssize_t result = 0;
 	int temp;
 	DREF DeeObject *lhs_iter, *lhs_item;
-	lhs_iter = DeeObject_IterSelf(lhs);
+	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
 		goto err;
 	while (ITER_ISOK(lhs_item = DeeObject_IterNext(lhs_iter))) {
@@ -465,7 +465,7 @@ DeeSet_IsDisjoint(DeeObject *lhs, DeeObject *rhs) {
 		return DeeSet_IsSubSet(rhs, DeeSetInversion_GetSet(lhs));
 	}
 	/* Verify that no items from `lhs' appear in `rhs' */
-	iter = DeeObject_IterSelf(lhs);
+	iter = DeeObject_Iter(lhs);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -597,7 +597,7 @@ set_inplace_sub(DeeObject **__restrict p_self,
 			Dee_Decref(callback_result);
 		}
 	} else {
-		items = DeeObject_IterSelf(items);
+		items = DeeObject_Iter(items);
 		if unlikely(!items)
 			goto err_func;
 		while (ITER_ISOK(remove_args[0] = DeeObject_IterNext(items))) {
@@ -855,7 +855,7 @@ set_iterself(DeeObject *__restrict self) {
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
 		return new_empty_sequence_iterator();
 	}
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
 
@@ -880,15 +880,15 @@ set_tpcontains(DeeObject *self, DeeObject *UNUSED(key)) {
 }
 
 PRIVATE struct type_seq set_seq = {
-	/* .tp_iter_self = */ &set_iterself,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ &set_tpcontains,
-	/* .tp_get       = */ &set_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ &set_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter     = */ &set_iterself,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ &set_tpcontains,
+	/* .tp_getitem  = */ &set_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ &set_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
 };
 
 

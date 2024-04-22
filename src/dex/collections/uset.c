@@ -699,7 +699,7 @@ again_hashset:
 		/* Fallback: Use iterators. */
 		int result;
 		DREF DeeObject *iterator;
-		iterator = DeeObject_IterSelf(sequence);
+		iterator = DeeObject_Iter(sequence);
 		if unlikely(!iterator)
 			goto err;
 		result = USet_InitIterator(self, iterator);
@@ -1248,17 +1248,17 @@ PRIVATE struct type_nsi tpconst uset_nsi = {
 };
 
 PRIVATE struct type_seq uset_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&uset_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &uset_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uset_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uset_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&uset_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &uset_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uset_foreach,
 };
 
 PRIVATE struct type_method tpconst uset_methods[] = {
@@ -1615,17 +1615,17 @@ err_temp:
 }
 
 PRIVATE struct type_seq uroset_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&uroset_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &uroset_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uroset_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&uroset_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&uroset_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &uroset_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&uroset_foreach,
 };
 
 PRIVATE NONNULL((1, 2)) void DCALL
@@ -1936,7 +1936,7 @@ return_result:
 	{
 		/* Fallback: Use iterators. */
 		DREF DeeObject *iterator;
-		iterator = DeeObject_IterSelf(sequence);
+		iterator = DeeObject_Iter(sequence);
 		if unlikely(!iterator)
 			goto err;
 		result = URoSet_FromIterator(iterator);

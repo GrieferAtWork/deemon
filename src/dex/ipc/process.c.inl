@@ -454,7 +454,7 @@ ipc_nt_cmdline_add_args(struct unicode_printer *__restrict printer,
                         DeeObject *__restrict args) {
 	DREF DeeObject *iter, *elem;
 	int result = 0;
-	iter = DeeObject_IterSelf(args);
+	iter = DeeObject_Iter(args);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {

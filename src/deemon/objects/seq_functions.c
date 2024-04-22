@@ -54,7 +54,7 @@ INTERN WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self)
 	DREF DeeObject *iter, *elem;
 	size_t result = 0;
 	/* Count the number of elements, given an iterator. */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter) {
 		if (DeeError_Catch(&DeeError_NotImplemented))
 			err_unimplemented_operator(Dee_TYPE(self), OPERATOR_SIZE);
@@ -145,7 +145,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 				index_ob = DeeInt_NewSize(index);
 				if unlikely(!index_ob)
 					goto err;
-				result = (*seq->tp_get)(self, index_ob);
+				result = (*seq->tp_getitem)(self, index_ob);
 				Dee_Decref(index_ob);
 				return result;
 			}
@@ -160,7 +160,7 @@ DeeSeq_GetItem(DeeObject *__restrict self, size_t index) {
 					Dee_Decref(index_ob);
 					goto err;
 				}
-				result = (*seq->tp_range_get)(self, index_ob, index_plus1_ob);
+				result = (*seq->tp_getrange)(self, index_ob, index_plus1_ob);
 				Dee_Decref(index_plus1_ob);
 				Dee_Decref(index_ob);
 				if unlikely(!result)
@@ -179,9 +179,9 @@ return_result_first:
 				}
 				return real_result;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				DREF DeeObject *iterator;
-				iterator = (*seq->tp_iter_self)(self);
+				iterator = (*seq->tp_iter)(self);
 				if unlikely(!iterator)
 					goto err;
 				result = iterator_get_nth(iterator, self, index);
@@ -197,7 +197,7 @@ return_result_first:
 	err_unimplemented_operator3(Dee_TYPE(self),
 	                            OPERATOR_GETITEM,
 	                            OPERATOR_GETRANGE,
-	                            OPERATOR_ITERSELF);
+	                            OPERATOR_ITER);
 err:
 	return NULL;
 }
@@ -237,7 +237,7 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 			if (has_noninherited_size(tp_self, seq)) {
 				if (has_noninherited_bool(tp_self))
 					return (*tp_self->tp_cast.tp_bool)(self);
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err;
 				result = DeeObject_Bool(temp);
@@ -246,9 +246,9 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 					goto err;
 				return result;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				DREF DeeObject *elem;
-				temp = (*seq->tp_iter_self)(self);
+				temp = (*seq->tp_iter)(self);
 				if unlikely(!temp)
 					goto err;
 				elem = DeeObject_IterNext(temp);
@@ -268,7 +268,7 @@ DeeSeq_NonEmpty(DeeObject *__restrict self) {
 	}
 	err_unimplemented_operator2(Dee_TYPE(self),
 	                            OPERATOR_SIZE,
-	                            OPERATOR_ITERSELF);
+	                            OPERATOR_ITER);
 err:
 	return -1;
 }
@@ -298,15 +298,15 @@ DeeSeq_Front(DeeObject *__restrict self) {
 				return result;
 			}
 			if (has_noninherited_getitem(tp_self, seq)) {
-				result = (*seq->tp_get)(self, DeeInt_Zero);
+				result = (*seq->tp_getitem)(self, DeeInt_Zero);
 				if unlikely(!result) {
 					if (DeeError_Catch(&DeeError_IndexError))
 						goto err_empty;
 				}
 				return result;
 			}
-			if (seq->tp_iter_self) {
-				temp = (*seq->tp_iter_self)(self);
+			if (seq->tp_iter) {
+				temp = (*seq->tp_iter)(self);
 				if unlikely(!temp)
 					goto err;
 				result = DeeObject_IterNext(temp);
@@ -321,7 +321,7 @@ DeeSeq_Front(DeeObject *__restrict self) {
 	}
 	err_unimplemented_operator2(Dee_TYPE(self),
 	                            OPERATOR_GETITEM,
-	                            OPERATOR_ITERSELF);
+	                            OPERATOR_ITER);
 err:
 	return NULL;
 err_empty:
@@ -364,7 +364,7 @@ DeeSeq_Back(DeeObject *__restrict self) {
 					temp = DeeInt_NewSize(seq_length - 1);
 					if unlikely(!temp)
 						goto err;
-					result = (*seq->tp_get)(self, temp);
+					result = (*seq->tp_getitem)(self, temp);
 					Dee_Decref(temp);
 					return result;
 				}
@@ -372,7 +372,7 @@ DeeSeq_Back(DeeObject *__restrict self) {
 			if (has_noninherited_getitem(tp_self, seq) &&
 			    has_noninherited_size(tp_self, seq)) {
 				int size_is_nonzero;
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err;
 				size_is_nonzero = DeeObject_Bool(temp);
@@ -384,13 +384,13 @@ DeeSeq_Back(DeeObject *__restrict self) {
 				}
 				if (DeeObject_Dec(&temp))
 					goto err_temp;
-				result = (*seq->tp_get)(self, temp);
+				result = (*seq->tp_getitem)(self, temp);
 				Dee_Decref(temp);
 				return result;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				DREF DeeObject *next;
-				temp = (*seq->tp_iter_self)(self);
+				temp = (*seq->tp_iter)(self);
 				if unlikely(!temp)
 					goto err;
 				result = NULL;
@@ -429,7 +429,7 @@ INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeSeq_Reduce(DeeObject *self, DeeObject *combine, DeeObject *init) {
 	DREF DeeObject *iterator, *elem, *merge;
 	DREF DeeObject *result = init;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	Dee_XIncref(result);
@@ -473,7 +473,7 @@ PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_Sum(DeeObject *__restrict self) {
 	DREF DeeObject *iterator, *elem, *merge;
 	DREF DeeObject *result = NULL;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	/* Yield the first item to perform type-specific optimizations. */
@@ -590,7 +590,7 @@ err:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSeq_Any(DeeObject *__restrict self) {
 	DREF DeeObject *iterator, *elem;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -619,7 +619,7 @@ err_iter:
 PUBLIC WUNUSED NONNULL((1)) int DCALL
 DeeSeq_All(DeeObject *__restrict self) {
 	DREF DeeObject *iterator, *elem;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -647,7 +647,7 @@ INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_Parity(DeeObject *__restrict self) {
 	DREF DeeObject *iterator, *elem;
 	int result = 0;
-	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
+	if unlikely((iterator = DeeObject_Iter(self)) == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		int temp = DeeObject_Bool(elem);
@@ -676,7 +676,7 @@ DeeSeq_Min_k(DeeObject *self,
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	DREF DeeObject *key_result = NULL;
 	int temp;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -738,7 +738,7 @@ DeeSeq_Max_k(DeeObject *self,
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	DREF DeeObject *key_result = NULL;
 	int temp;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -802,7 +802,7 @@ DeeSeq_Min(DeeObject *self, DeeObject *key) {
 	int temp;
 	if (key)
 		return DeeSeq_Min_k(self, key);
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -850,7 +850,7 @@ DeeSeq_Max(DeeObject *self, DeeObject *key) {
 	int temp;
 	if (key)
 		return DeeSeq_Max_k(self, key);
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto done;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -899,7 +899,7 @@ DeeSeq_Count(DeeObject *self,
 	int temp;
 	DREF DeeObject *elem, *iterator;
 	/* TODO: NSI Variant + index-based sequence optimizations */
-	if unlikely((iterator = DeeObject_IterSelf(self)) == NULL)
+	if unlikely((iterator = DeeObject_Iter(self)) == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
 		temp = DeeObject_CompareKeyEq(keyed_search_item, elem, key);
@@ -930,7 +930,7 @@ DeeSeq_Locate(DeeObject *self,
               DeeObject *key) {
 	DREF DeeObject *elem, *iterator;
 	int temp;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -964,7 +964,7 @@ DeeSeq_RLocate(DeeObject *self,
                DeeObject *key) {
 	DREF DeeObject *elem, *iterator, *result = NULL;
 	int temp;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1003,7 +1003,7 @@ DeeSeq_Contains(DeeObject *self,
                 DeeObject *key) {
 	DREF DeeObject *iter, *elem;
 	int temp;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -1055,7 +1055,7 @@ check:
 				return error;
 			}
 			if (has_noninherited_getitem(tp_self, seq)) {
-				result = (*seq->tp_get)(self, DeeInt_Zero);
+				result = (*seq->tp_getitem)(self, DeeInt_Zero);
 				if unlikely(!result) {
 					if (DeeError_Catch(&DeeError_IndexError))
 						goto err_empty;
@@ -1063,8 +1063,8 @@ check:
 				}
 				goto check;
 			}
-			if (seq->tp_iter_self) {
-				temp = (*seq->tp_iter_self)(self);
+			if (seq->tp_iter) {
+				temp = (*seq->tp_iter)(self);
 				if unlikely(!temp)
 					goto err;
 				result = DeeObject_IterNext(temp);
@@ -1081,7 +1081,7 @@ check:
 	}
 	err_unimplemented_operator2(Dee_TYPE(self),
 	                            OPERATOR_GETITEM,
-	                            OPERATOR_ITERSELF);
+	                            OPERATOR_ITER);
 err:
 	return -1;
 err_empty:
@@ -1134,7 +1134,7 @@ check:
 					temp = DeeInt_NewSize(seq_length - 1);
 					if unlikely(!temp)
 						goto err;
-					result = (*seq->tp_get)(self, temp);
+					result = (*seq->tp_getitem)(self, temp);
 					Dee_Decref(temp);
 					if unlikely(!result)
 						goto err;
@@ -1144,7 +1144,7 @@ check:
 			if (has_noninherited_getitem(tp_self, seq) &&
 			    has_noninherited_size(tp_self, seq)) {
 				int size_is_nonzero;
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err;
 				size_is_nonzero = DeeObject_Bool(temp);
@@ -1156,15 +1156,15 @@ check:
 				}
 				if (DeeObject_Dec(&temp))
 					goto err_temp;
-				result = (*seq->tp_get)(self, temp);
+				result = (*seq->tp_getitem)(self, temp);
 				Dee_Decref(temp);
 				if unlikely(!result)
 					goto err;
 				goto check;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				DREF DeeObject *next;
-				temp = (*seq->tp_iter_self)(self);
+				temp = (*seq->tp_iter)(self);
 				if unlikely(!temp)
 					goto err;
 				result = NULL;
@@ -1391,7 +1391,7 @@ do_lookup_tpget:
 						index_ob = DeeInt_NewSize(i);
 						if unlikely(!index_ob)
 							goto err;
-						temp = (*seq->tp_get)(self, index_ob);
+						temp = (*seq->tp_getitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(!temp) {
 							if (DeeError_Catch(&DeeError_UnboundItem))
@@ -1415,7 +1415,7 @@ do_lookup_tpget:
 			}
 			if (has_noninherited_getitem(tp_self, seq) &&
 			    has_noninherited_size(tp_self, seq)) {
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err;
 				if (DeeObject_AsSize(temp, &seq_length))
@@ -1423,9 +1423,9 @@ do_lookup_tpget:
 				Dee_Decref(temp);
 				goto do_lookup_tpget;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				/* Use iterators */
-				if unlikely((iterator = (*seq->tp_iter_self)(self)) == NULL)
+				if unlikely((iterator = (*seq->tp_iter)(self)) == NULL)
 					goto err;
 				result = iterator_find(iterator, keyed_search_item, start, end, key);
 				Dee_Decref(iterator);
@@ -1542,7 +1542,7 @@ do_lookup_tpget:
 						index_ob = DeeInt_NewSize(i);
 						if unlikely(!index_ob)
 							goto err;
-						temp = (*seq->tp_get)(self, index_ob);
+						temp = (*seq->tp_getitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(!temp) {
 							if (DeeError_Catch(&DeeError_UnboundItem))
@@ -1566,7 +1566,7 @@ do_lookup_tpget:
 			}
 			if (has_noninherited_getitem(tp_self, seq) &&
 			    has_noninherited_size(tp_self, seq)) {
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err;
 				if (DeeObject_AsSize(temp, &seq_length))
@@ -1574,9 +1574,9 @@ do_lookup_tpget:
 				Dee_Decref(temp);
 				goto do_lookup_tpget;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				/* Use iterators */
-				if unlikely((iterator = (*seq->tp_iter_self)(self)) == NULL)
+				if unlikely((iterator = (*seq->tp_iter)(self)) == NULL)
 					goto err;
 				result = iterator_rfind(iterator, keyed_search_item, start, end, key);
 				Dee_Decref(iterator);
@@ -1783,7 +1783,7 @@ DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc,
 		result = DeeSeq_CompareVF(lhsv, lhsc, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -2;
 		result = DeeSeq_CompareVI(lhsv, lhsc, rhs_iter);
@@ -1877,7 +1877,7 @@ DeeSeq_CompareFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 		result = DeeSeq_CompareFF(lhs, lhsc, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -2;
 		result = DeeSeq_CompareFI(lhs, lhsc, rhs_iter);
@@ -1996,7 +1996,7 @@ DeeSeq_CompareIS(DeeObject *lhs,
 		result = DeeSeq_CompareIF(lhs, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -2;
 		result = DeeSeq_CompareII(lhs, rhs_iter);
@@ -2084,7 +2084,7 @@ DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc,
 		result = DeeSeq_EqVF(lhsv, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -1;
 		result = DeeSeq_EqVI(lhsv, lhsc, rhs_iter);
@@ -2182,7 +2182,7 @@ DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 		result = DeeSeq_EqFF(lhs, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -1;
 		result = DeeSeq_EqFI(lhs, lhsc, rhs_iter);
@@ -2299,7 +2299,7 @@ DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs) {
 		result = DeeSeq_EqIF(lhs, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
-		rhs_iter = DeeObject_IterSelf(rhs);
+		rhs_iter = DeeObject_Iter(rhs);
 		if unlikely(!rhs_iter)
 			return -1;
 		result = DeeSeq_EqII(lhs, rhs_iter);

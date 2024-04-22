@@ -508,7 +508,7 @@ H_FUNC(For)(JITLexer *__restrict self, JIT_ARGS) {
 				syn_for_expected_rparen_after_foreach(self);
 				goto err_seq;
 			}
-			iterator = DeeObject_IterSelf(seq);
+			iterator = DeeObject_Iter(seq);
 			if unlikely(!iterator) {
 				goto err_seq;
 err_iter:

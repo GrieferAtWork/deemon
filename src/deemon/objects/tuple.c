@@ -590,7 +590,7 @@ list_size_changed:
 	}
 
 	/* Use general-purpose iterators to create a new tuple. */
-	self = DeeObject_IterSelf(self);
+	self = DeeObject_Iter(self);
 	if unlikely(!self)
 		goto err;
 	result = (DREF Tuple *)DeeTuple_FromIterator(self);
@@ -1061,7 +1061,7 @@ handle_list_size2:
 		if unlikely(!result)
 			goto err;
 	}
-	sequence = DeeObject_IterSelf(sequence);
+	sequence = DeeObject_Iter(sequence);
 	if unlikely(!sequence)
 		goto err_result;
 	{
@@ -1628,17 +1628,17 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 
 
 PRIVATE struct type_seq tuple_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &tuple_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &tuple_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL
@@ -1975,7 +1975,7 @@ tuple_concat(Tuple *self, DeeObject *other) {
 	dst = Dee_Movprefv(DeeTuple_ELEM(result),
 	                   DeeTuple_ELEM(self),
 	                   my_length);
-	iterator = DeeObject_IterSelf(other);
+	iterator = DeeObject_Iter(other);
 	if unlikely(!iterator)
 		goto err_r;
 	ot_length = 0;
@@ -2101,7 +2101,7 @@ PRIVATE struct type_operator const tuple_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCMP | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCMP | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCMP | METHOD_FNOREFESCAPE),
-	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITER, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SEQ_CONSTCONTAINS | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST | METHOD_FNOREFESCAPE),

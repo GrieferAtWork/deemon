@@ -161,7 +161,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 transiter_ctor(TransformationIterator *__restrict self) {
-	self->ti_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->ti_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->ti_iter)
 		goto err;
 	self->ti_func = Dee_None;
@@ -179,7 +179,7 @@ transiter_init(TransformationIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(trans, &SeqTransformation_Type))
 		goto err;
-	self->ti_iter = DeeObject_IterSelf(trans->t_seq);
+	self->ti_iter = DeeObject_Iter(trans->t_seq);
 	if unlikely(!self->ti_iter)
 		goto err;
 	self->ti_func = trans->t_fun;
@@ -258,7 +258,7 @@ trans_iter(Transformation *__restrict self) {
 	if unlikely(!result)
 		goto err;
 	/* Create the underlying iterator. */
-	result->ti_iter = DeeObject_IterSelf(self->t_seq);
+	result->ti_iter = DeeObject_Iter(self->t_seq);
 	if unlikely(!result->ti_iter)
 		goto err_r;
 	/* Assign the transformation functions. */
@@ -405,17 +405,17 @@ PRIVATE struct type_nsi tpconst trans_nsi = {
 };
 
 PRIVATE struct type_seq trans_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&trans_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&trans_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &trans_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&trans_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&trans_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&trans_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&trans_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &trans_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&trans_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

@@ -1193,7 +1193,7 @@ DeeIterator_GetIndex(DeeObject *__restrict self) {
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			copy = DeeObject_IterSelf(temp);
+			copy = DeeObject_Iter(temp);
 			Dee_Decref(temp);
 			if unlikely(!copy)
 				goto err;
@@ -1349,7 +1349,7 @@ DeeIterator_Rewind(DeeObject *__restrict self) {
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			temp2 = DeeObject_IterSelf(temp);
+			temp2 = DeeObject_Iter(temp);
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
@@ -1784,7 +1784,7 @@ do_prev_with_rewind_iterator:
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			new_self = DeeObject_IterSelf(temp);
+			new_self = DeeObject_Iter(temp);
 			Dee_Decref(temp);
 			if unlikely(!new_self)
 				goto err;
@@ -1879,7 +1879,7 @@ DeeIterator_HasPrev(DeeObject *__restrict self) {
 		if (temp != ITER_DONE) {
 			if unlikely(!temp)
 				goto err;
-			temp2 = DeeObject_IterSelf(temp);
+			temp2 = DeeObject_Iter(temp);
 			Dee_Decref(temp);
 			if unlikely(!temp2)
 				goto err;
@@ -2655,7 +2655,7 @@ done:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 if_ctor(IteratorFuture *__restrict self) {
-	self->if_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->if_iter = DeeObject_Iter(Dee_EmptySeq);
 	return likely(self->if_iter) ? 0 : -1;
 }
 
@@ -2713,7 +2713,7 @@ if_iter(IteratorFuture *__restrict self) {
 }
 
 PRIVATE struct type_seq if_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&if_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&if_iter
 };
 
 PRIVATE struct type_member tpconst if_members[] = {
@@ -2831,7 +2831,7 @@ ip_iter(IteratorPending *__restrict self) {
 }
 
 PRIVATE struct type_seq ip_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ip_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ip_iter
 };
 
 #define ip_members        if_members

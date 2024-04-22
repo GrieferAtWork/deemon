@@ -2099,7 +2099,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 object_iterself(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, meth_iterself))
 		goto err;
-	return DeeObject_IterSelf(self);
+	return DeeObject_Iter(self);
 err:
 	return NULL;
 }
@@ -3195,7 +3195,7 @@ unpack_init_info(DeeObject *__restrict info,
 			return err_invalid_unpack_size_minmax(info, 1, 3, fast_size);
 		}
 		/* Fallback: use iteartors. */
-		iterator = DeeObject_IterSelf(info);
+		iterator = DeeObject_Iter(info);
 		if unlikely(!iterator)
 			goto err;
 		*p_init_fields = DeeObject_IterNext(iterator);

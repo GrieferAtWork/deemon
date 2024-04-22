@@ -1916,7 +1916,7 @@ define_operator:
 						operator_name = OPERATOR_GETATTR;
 						break;
 					case AST_OPERATOR_FOR:
-						operator_name = OPERATOR_ITERSELF;
+						operator_name = OPERATOR_ITER;
 						break;
 					case AST_OPERATOR_STR_OR_PRINT:
 						operator_name = OPERATOR_STR;
@@ -1948,7 +1948,7 @@ define_operator:
 			if (operator_name == AST_OPERATOR_FOR) {
 				/* Special case: `operator for()' is a wrapper around `operator iter()' */
 				DREF struct ast *yield_function, *tempast, **argv;
-				/* Not actually an operator (shares a slot with `OPERATOR_ITERSELF')
+				/* Not actually an operator (shares a slot with `OPERATOR_ITER')
 				 * This operator can be used by `DeeClass_SetOperator()' to wrap the
 				 * given callback using an internal wrapper type that behaves as follows:
 				 * >> class MyClass {
@@ -1975,10 +1975,10 @@ define_operator:
 
 				/* Parse a new function in its own member-method scope. */
 				current_basescope->bs_name = operator_name_kwd;
-				operator_name              = OPERATOR_ITERSELF;
+				operator_name              = OPERATOR_ITER;
 
 				/* Inner function scope (yes: `operator for' is a function within a function....)
-				 * WRAP: `AST_FUNCTION(AST_RETURN(AST_OPERATOR(OPERATOR_ITERSELF,
+				 * WRAP: `AST_FUNCTION(AST_RETURN(AST_OPERATOR(OPERATOR_ITER,
 				 *                                AST_OPERATOR(OPERATOR_CALL,
 				 *                                             ...,  // The inner function
 				 *                                             AST_MULTIPLE(AST_FMULTIPLE_TUPLE, [
@@ -2027,7 +2027,7 @@ err_yield_function_temp:
 				ast_decref(yield_function);
 				if unlikely(!tempast)
 					goto err_operator_ast_ddi;
-				operator_ast = ast_setddi(ast_operator1(OPERATOR_ITERSELF,
+				operator_ast = ast_setddi(ast_operator1(OPERATOR_ITER,
 				                                        AST_OPERATOR_FNORMAL,
 				                                        tempast),
 				                          &loc);

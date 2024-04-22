@@ -1292,19 +1292,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultLeWith
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGrWithLe(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TDefaultGeWithLo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 
-/* Default wrappers for implementing OPERATOR_ITER via `tp_iter_self <===> tp_foreach <===> tp_foreach_pair' */
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterSelfWithForeach(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterSelfWithForeachPair(DeeObject *__restrict self);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIterSelf(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+/* Default wrappers for implementing OPERATOR_ITER via `tp_iter <===> tp_foreach <===> tp_foreach_pair' */
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithForeach(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeObject_DefaultIterWithForeachPair(DeeObject *__restrict self);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithIter(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachWithForeachPair(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithForeach(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithIterSelf(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterSelfWithForeach(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterSelfWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIterSelf(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL DeeObject_DefaultForeachPairWithIter(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithForeach(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_TDefaultIterWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithIter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachWithForeachPair(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithForeach(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithIterSelf(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPairWithIter(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 
 #define DeeType_invoke_init_tp_assign(tp_self, tp_assign, self, other) \
 	((tp_assign) == &instance_assign                                   \
@@ -1771,65 +1771,64 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPai
 	 ? DeeObject_TDefaultGeWithLo(tp_self, self, other)       \
 	 : DeeType_invoke_cmp_tp_ge_NODEFAULT(tp_self, tp_ge, self, other))
 
-
-#define DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter_self, self) \
-	((tp_iter_self) == &instance_iter                                          \
-	 ? instance_titer(tp_self, self)                                           \
-	 : (*(tp_iter_self))(self))
-#define DeeType_invoke_seq_tp_iter_self(tp_self, tp_iter_self, self) \
-	((tp_iter_self) == &DeeObject_DefaultIterSelfWithForeach         \
-	 ? DeeObject_TDefaultIterSelfWithForeach(tp_self, self)          \
-	 : (tp_iter_self) == &DeeObject_DefaultIterSelfWithForeachPair   \
-	   ? DeeObject_TDefaultIterSelfWithForeachPair(tp_self, self)    \
-	   : DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter_self, self))
+#define DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter, self) \
+	((tp_iter) == &instance_iter                                          \
+	 ? instance_titer(tp_self, self)                                      \
+	 : (*(tp_iter))(self))
+#define DeeType_invoke_seq_tp_iter(tp_self, tp_iter, self)        \
+	((tp_iter) == &DeeObject_DefaultIterWithForeach           \
+	 ? DeeObject_TDefaultIterWithForeach(tp_self, self)       \
+	 : (tp_iter) == &DeeObject_DefaultIterWithForeachPair     \
+	   ? DeeObject_TDefaultIterWithForeachPair(tp_self, self) \
+	   : DeeType_invoke_seq_tp_iter_self_NODEFAULT(tp_self, tp_iter, self))
 #define DeeType_invoke_seq_tp_foreach_NODEFAULT(tp_self, tp_foreach, self, proc, arg) \
 	(*tp_foreach)(self, proc, arg)
 #define DeeType_invoke_seq_tp_foreach(tp_self, tp_foreach, self, proc, arg) \
-	((tp_foreach) == &DeeObject_DefaultForeachWithIterSelf                  \
-	 ? DeeObject_TDefaultForeachWithIterSelf(tp_self, self, proc, arg)      \
+	((tp_foreach) == &DeeObject_DefaultForeachWithIter                  \
+	 ? DeeObject_TDefaultForeachWithIter(tp_self, self, proc, arg)      \
 	 : (tp_foreach) == &DeeObject_DefaultForeachWithForeachPair             \
 	   ? DeeObject_TDefaultForeachWithForeachPair(tp_self, self, proc, arg) \
 	   : DeeType_invoke_seq_tp_foreach_NODEFAULT(tp_self, tp_foreach, self, proc, arg))
 #define DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, tp_foreach_pair, self, proc, arg) \
 	(*tp_foreach_pair)(self, proc, arg)
 #define DeeType_invoke_seq_tp_foreach_pair(tp_self, tp_foreach_pair, self, proc, arg) \
-	((tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIterSelf                   \
-	 ? DeeObject_TDefaultForeachPairWithIterSelf(tp_self, self, proc, arg)            \
+	((tp_foreach_pair) == &DeeObject_DefaultForeachPairWithIter                   \
+	 ? DeeObject_TDefaultForeachPairWithIter(tp_self, self, proc, arg)            \
 	 : (tp_foreach_pair) == &DeeObject_DefaultForeachPairWithForeach                  \
 	   ? DeeObject_TDefaultForeachPairWithForeach(tp_self, self, proc, arg)           \
 	   : DeeType_invoke_seq_tp_foreach_pair_NODEFAULT(tp_self, tp_foreach_pair, self, proc, arg))
-#define DeeType_invoke_seq_tp_size(tp_self, tp_size, self) \
-	((tp_size) == &instance_size                           \
-	 ? instance_tsize(tp_self, self)                       \
-	 : (*(tp_size))(self))
+#define DeeType_invoke_seq_tp_sizeob(tp_self, tp_sizeob, self) \
+	((tp_sizeob) == &instance_size                             \
+	 ? instance_tsize(tp_self, self)                           \
+	 : (*(tp_sizeob))(self))
 #define DeeType_invoke_seq_tp_contains(tp_self, tp_contains, self, other) \
 	((tp_contains) == &instance_contains                                  \
 	 ? instance_tcontains(tp_self, self, other)                           \
 	 : (*(tp_contains))(self, other))
-#define DeeType_invoke_seq_tp_get(tp_self, tp_get, self, index) \
-	((tp_get) == &instance_getitem                              \
-	 ? instance_tgetitem(tp_self, self, index)                  \
-	 : (*(tp_get))(self, index))
-#define DeeType_invoke_seq_tp_del(tp_self, tp_del, self, index) \
-	((tp_del) == &instance_delitem                              \
-	 ? instance_tdelitem(tp_self, self, index)                  \
-	 : (*(tp_del))(self, index))
-#define DeeType_invoke_seq_tp_set(tp_self, tp_set, self, index, value) \
-	((tp_set) == &instance_setitem                                     \
-	 ? instance_tsetitem(tp_self, self, index, value)                  \
-	 : (*(tp_set))(self, index, value))
-#define DeeType_invoke_seq_tp_range_get(tp_self, tp_range_get, self, start, end) \
-	((tp_range_get) == &instance_getrange                                        \
-	 ? instance_tgetrange(tp_self, self, start, end)                             \
-	 : (*(tp_range_get))(self, start, end))
-#define DeeType_invoke_seq_tp_range_del(tp_self, tp_range_del, self, start, end) \
-	((tp_range_del) == &instance_delrange                                        \
-	 ? instance_tdelrange(tp_self, self, start, end)                             \
-	 : (*(tp_range_del))(self, start, end))
-#define DeeType_invoke_seq_tp_range_set(tp_self, tp_range_set, self, start, end, values) \
-	((tp_range_set) == &instance_setrange                                                \
-	 ? instance_tsetrange(tp_self, self, start, end, values)                             \
-	 : (*(tp_range_set))(self, start, end, values))
+#define DeeType_invoke_seq_tp_getitem(tp_self, tp_getitem, self, index) \
+	((tp_getitem) == &instance_getitem                                  \
+	 ? instance_tgetitem(tp_self, self, index)                          \
+	 : (*(tp_getitem))(self, index))
+#define DeeType_invoke_seq_tp_delitem(tp_self, tp_delitem, self, index) \
+	((tp_delitem) == &instance_delitem                                  \
+	 ? instance_tdelitem(tp_self, self, index)                          \
+	 : (*(tp_delitem))(self, index))
+#define DeeType_invoke_seq_tp_setitem(tp_self, tp_setitem, self, index, value) \
+	((tp_setitem) == &instance_setitem                                         \
+	 ? instance_tsetitem(tp_self, self, index, value)                          \
+	 : (*(tp_setitem))(self, index, value))
+#define DeeType_invoke_seq_tp_getrange(tp_self, tp_getrange, self, start, end) \
+	((tp_getrange) == &instance_getrange                                       \
+	 ? instance_tgetrange(tp_self, self, start, end)                           \
+	 : (*(tp_getrange))(self, start, end))
+#define DeeType_invoke_seq_tp_delrange(tp_self, tp_delrange, self, start, end) \
+	((tp_delrange) == &instance_delrange                                       \
+	 ? instance_tdelrange(tp_self, self, start, end)                           \
+	 : (*(tp_delrange))(self, start, end))
+#define DeeType_invoke_seq_tp_setrange(tp_self, tp_setrange, self, start, end, values) \
+	((tp_setrange) == &instance_setrange                                               \
+	 ? instance_tsetrange(tp_self, self, start, end, values)                           \
+	 : (*(tp_setrange))(self, start, end, values))
 #define DeeType_invoke_attr_tp_getattr(tp_self, tp_getattr, self, name) \
 	((tp_getattr) == &instance_getattr                                  \
 	 ? instance_tgetattr(tp_self, self, name)                           \
@@ -1939,17 +1938,17 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL DeeObject_TDefaultForeachPai
 #define DeeType_InvokeCmpGr_NODEFAULT(tp_self, self, other)                DeeType_invoke_cmp_tp_gr_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_gr, self, other)
 #define DeeType_InvokeCmpGe(tp_self, self, other)                          DeeType_invoke_cmp_tp_ge(tp_self, (tp_self)->tp_cmp->tp_ge, self, other)
 #define DeeType_InvokeCmpGe_NODEFAULT(tp_self, self, other)                DeeType_invoke_cmp_tp_ge_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_ge, self, other)
-#define DeeType_InvokeSeqIterSelf(tp_self, self)                           DeeType_invoke_seq_tp_iter_self(tp_self, (tp_self)->tp_seq->tp_iter_self, self)
+#define DeeType_InvokeSeqIter(tp_self, self)                               DeeType_invoke_seq_tp_iter(tp_self, (tp_self)->tp_seq->tp_iter, self)
 #define DeeType_InvokeSeqForeach(tp_self, self, proc, arg)                 DeeType_invoke_seq_tp_foreach(tp_self, (tp_self)->tp_seq->tp_foreach, self, proc, arg)
 #define DeeType_InvokeSeqForeachPair(tp_self, self, proc, arg)             DeeType_invoke_seq_tp_foreach_pair(tp_self, (tp_self)->tp_seq->tp_foreach_pair, self, proc, arg)
-#define DeeType_InvokeSeqSize(tp_self, self)                               DeeType_invoke_seq_tp_size(tp_self, (tp_self)->tp_seq->tp_size, self)
+#define DeeType_InvokeSeqSizeOb(tp_self, self)                             DeeType_invoke_seq_tp_sizeob(tp_self, (tp_self)->tp_seq->tp_sizeob, self)
 #define DeeType_InvokeSeqContains(tp_self, self, other)                    DeeType_invoke_seq_tp_contains(tp_self, (tp_self)->tp_seq->tp_contains, self, other)
-#define DeeType_InvokeSeqGet(tp_self, self, index)                         DeeType_invoke_seq_tp_get(tp_self, (tp_self)->tp_seq->tp_get, self, index)
-#define DeeType_InvokeSeqDel(tp_self, self, index)                         DeeType_invoke_seq_tp_del(tp_self, (tp_self)->tp_seq->tp_del, self, index)
-#define DeeType_InvokeSeqSet(tp_self, self, index, value)                  DeeType_invoke_seq_tp_set(tp_self, (tp_self)->tp_seq->tp_set, self, index, value)
-#define DeeType_InvokeSeqRangeGet(tp_self, self, start, end)               DeeType_invoke_seq_tp_range_get(tp_self, (tp_self)->tp_seq->tp_range_get, self, start, end)
-#define DeeType_InvokeSeqRangeDel(tp_self, self, start, end)               DeeType_invoke_seq_tp_range_del(tp_self, (tp_self)->tp_seq->tp_range_del, self, start, end)
-#define DeeType_InvokeSeqRangeSet(tp_self, self, start, end, values)       DeeType_invoke_seq_tp_range_set(tp_self, (tp_self)->tp_seq->tp_range_set, self, start, end, values)
+#define DeeType_InvokeSeqGetItem(tp_self, self, index)                     DeeType_invoke_seq_tp_getitem(tp_self, (tp_self)->tp_seq->tp_getitem, self, index)
+#define DeeType_InvokeSeqDelItem(tp_self, self, index)                     DeeType_invoke_seq_tp_delitem(tp_self, (tp_self)->tp_seq->tp_delitem, self, index)
+#define DeeType_InvokeSeqSetItem(tp_self, self, index, value)              DeeType_invoke_seq_tp_setitem(tp_self, (tp_self)->tp_seq->tp_setitem, self, index, value)
+#define DeeType_InvokeSeqGetRange(tp_self, self, start, end)               DeeType_invoke_seq_tp_getrange(tp_self, (tp_self)->tp_seq->tp_getrange, self, start, end)
+#define DeeType_InvokeSeqDelRange(tp_self, self, start, end)               DeeType_invoke_seq_tp_delrange(tp_self, (tp_self)->tp_seq->tp_delrange, self, start, end)
+#define DeeType_InvokeSeqSetRange(tp_self, self, start, end, values)       DeeType_invoke_seq_tp_setrange(tp_self, (tp_self)->tp_seq->tp_setrange, self, start, end, values)
 #define DeeType_InvokeAttrGetAttr(tp_self, self, name)                     DeeType_invoke_attr_tp_getattr(tp_self, (tp_self)->tp_attr->tp_getattr, self, name)
 #define DeeType_InvokeAttrDelAttr(tp_self, self, name)                     DeeType_invoke_attr_tp_delattr(tp_self, (tp_self)->tp_attr->tp_delattr, self, name)
 #define DeeType_InvokeAttrSetAttr(tp_self, self, name, value)              DeeType_invoke_attr_tp_setattr(tp_self, (tp_self)->tp_attr->tp_setattr, self, name, value)

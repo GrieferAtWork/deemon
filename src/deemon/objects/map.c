@@ -129,7 +129,7 @@ map_popitem(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DREF DeeObject *result, *iter, *key;
 	if (DeeArg_Unpack(argc, argv, ":popitem"))
 		goto err;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeObject_IterNext(iter);
@@ -162,7 +162,7 @@ map_clear(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	for (;;) {
 		int temp;
 		DREF DeeObject *item, *iter, *key;
-		iter = DeeObject_IterSelf(self);
+		iter = DeeObject_Iter(self);
 		if unlikely(!iter)
 			goto err;
 		item = DeeObject_IterNext(iter);
@@ -443,7 +443,7 @@ typedef struct {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 proxy_iterator_ctor(MapProxyIterator *__restrict self) {
-	self->mpi_iter = DeeObject_IterSelf(Dee_EmptyMapping);
+	self->mpi_iter = DeeObject_Iter(Dee_EmptyMapping);
 	if unlikely(!self->mpi_iter)
 		goto err;
 	self->mpi_map = Dee_EmptyMapping;
@@ -459,7 +459,7 @@ proxy_iterator_init(MapProxyIterator *__restrict self,
                     size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o:_mappingproxy.Iterator", &self->mpi_map))
 		goto err;
-	self->mpi_iter = DeeObject_IterSelf(self->mpi_map);
+	self->mpi_iter = DeeObject_Iter(self->mpi_map);
 	if unlikely(!self->mpi_iter)
 		goto err;
 	Dee_Incref(self->mpi_map);
@@ -831,7 +831,7 @@ proxy_iterself(MapProxy *__restrict self, DeeTypeObject *__restrict result_type)
 	result = DeeObject_MALLOC(MapProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->mpi_iter = DeeObject_IterSelf(self->mp_map);
+	result->mpi_iter = DeeObject_Iter(self->mp_map);
 	if unlikely(!result->mpi_iter)
 		goto err_r;
 	result->mpi_nsi = DeeType_NSI(Dee_TYPE(self->mp_map));
@@ -864,19 +864,19 @@ proxy_iterself_items(MapProxy *__restrict self) {
 
 
 PRIVATE struct type_seq proxykeys_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key
 };
 
 PRIVATE struct type_seq proxyvalues_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
 };
 
 PRIVATE struct type_seq proxyitems_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
 };
 
 PRIVATE struct type_member tpconst proxykeys_class_members[] = {
@@ -1222,7 +1222,7 @@ map_iterself(DeeObject *__restrict self) {
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
 		return new_empty_sequence_iterator();
 	}
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
 
@@ -1247,11 +1247,11 @@ map_nsi_getsize(DeeObject *__restrict self) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &map_iterself)
+	if (tp_self->tp_seq->tp_iter == &map_iterself)
 		goto done;
 
 	/* Very inefficient: iterate the mapping and count items. */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -1290,14 +1290,14 @@ map_getitem(DeeObject *self, DeeObject *key) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &map_iterself) {
+	if (tp_self->tp_seq->tp_iter == &map_iterself) {
 		err_unknown_key(self, key);
 		goto err;
 	}
 
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
 	key_hash = DeeObject_Hash(key);
-	iter     = DeeObject_IterSelf(self);
+	iter     = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -1343,12 +1343,12 @@ map_getitem_def(DeeObject *self, DeeObject *key, DeeObject *defl) {
 
 	/* Check if a sub-class is overriding `operator iter'. If
 	 * not, then the mapping is empty for all we're concerned */
-	if (tp_self->tp_seq->tp_iter_self == &map_iterself)
+	if (tp_self->tp_seq->tp_iter == &map_iterself)
 		goto return_defl;
 
 	/* Very inefficient: iterate the mapping to search for a matching key-item pair. */
 	key_hash = DeeObject_Hash(key);
-	iter     = DeeObject_IterSelf(self);
+	iter     = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(item = DeeObject_IterNext(iter))) {
@@ -1435,16 +1435,16 @@ PRIVATE struct type_math map_math = {
 };
 
 PRIVATE struct type_seq map_seq = {
-	/* .tp_iter_self = */ &map_iterself,
-	/* .tp_size      = */ &map_size,
-	/* .tp_contains  = */ &map_contains,
-	/* .tp_get       = */ &map_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ &map_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &map_nsi
+	/* .tp_iter     = */ &map_iterself,
+	/* .tp_sizeob   = */ &map_size,
+	/* .tp_contains = */ &map_contains,
+	/* .tp_getitem  = */ &map_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ &map_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &map_nsi
 };
 
 
@@ -1456,7 +1456,7 @@ map_eq_impl(DeeObject *__restrict self,
 	DREF DeeObject *iter, *elem, *pair[2];
 	DREF DeeObject *other_value;
 	/* Check of all keys from `self' have the same value within `other' */
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -1503,7 +1503,7 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 map_hash(DeeObject *__restrict self) {
 	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	DREF DeeObject *iter, *elem;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {
@@ -1563,7 +1563,7 @@ map_printrepr(DeeObject *__restrict self,
 	result = DeeFormat_PRINT(printer, arg, "{ ");
 	if unlikely(result < 0)
 		goto done;
-	iterator = DeeObject_IterSelf(self);
+	iterator = DeeObject_Iter(self);
 	if unlikely(!iterator)
 		goto err_m1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1632,7 +1632,7 @@ map_new_proxyiter(DeeObject *__restrict self, DeeTypeObject *__restrict result_t
 	result = DeeObject_MALLOC(MapProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->mpi_iter = DeeObject_IterSelf(self);
+	result->mpi_iter = DeeObject_Iter(self);
 	if unlikely(!result->mpi_iter)
 		goto err_r;
 	result->mpi_map = self;
@@ -1719,7 +1719,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMap_GetFirst(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *result;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeObject_IterNext(iter);
@@ -1737,7 +1737,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeMap_DelFirst(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *key;
 	int result;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	key = mapiter_next_key(self, iter);
@@ -1759,7 +1759,7 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeMap_GetLast(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *result, *next;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	result = DeeObject_IterNext(iter);
@@ -1795,7 +1795,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 DeeMap_DelLast(DeeObject *__restrict self) {
 	DREF DeeObject *iter, *key, *next;
 	int result;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	key = mapiter_next_key(self, iter);
@@ -1977,7 +1977,7 @@ PRIVATE struct type_operator const map_operators[] = {
 	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
 	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
 	//TODO:TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCMP | METHOD_FNOREFESCAPE),
-	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FCONSTCALL),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITER, METHOD_FCONSTCALL),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_SET_CONSTCONTAINS),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0035_GETRANGE, METHOD_FCONSTCALL),

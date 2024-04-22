@@ -248,7 +248,7 @@ DeeStructType_FromSequence(DeeObject *name,
 		result->st_base.st_base.tp_init.tp_alloc.tp_instance_size = sizeof(DeeObject) + instance_size;
 	} else {
 		/* Use iterators to construct the struct-type. */
-		fields = DeeObject_IterSelf(fields);
+		fields = DeeObject_Iter(fields);
 		if unlikely(!fields)
 			goto err;
 		result = struct_type_alloc_iterator(fields, flags);
@@ -673,7 +673,7 @@ struct_assign(DeeStructTypeObject *tp_self,
 	}
 
 	/* Use iterators. */
-	value = DeeObject_IterSelf(value);
+	value = DeeObject_Iter(value);
 	if unlikely(!value)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(value))) {

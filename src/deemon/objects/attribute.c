@@ -939,7 +939,7 @@ PRIVATE struct type_cmp enumattr_cmp = {
 };
 
 PRIVATE struct type_seq enumattr_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&enumattr_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&enumattr_iter
 };
 
 PRIVATE struct type_member tpconst enumattr_class_members[] = {

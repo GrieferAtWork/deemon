@@ -138,7 +138,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TDelRange)(DeeTypeObj
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int (DCALL DeeObject_TSetRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrint)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrintRepr)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterSelf)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterNext)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);

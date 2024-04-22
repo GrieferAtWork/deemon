@@ -518,15 +518,15 @@ gen_print_with_stdout_in_vtop(struct fungen *__restrict self,
 			break;
 		case ASM_PRINTALL:
 			api_function = (void const *)&DeeFile_PrintAll;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		case ASM_PRINTALL_SP:
 			api_function = (void const *)&DeeFile_PrintAllSp;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		case ASM_PRINTALL_NL:
 			api_function = (void const *)&DeeFile_PrintAllNl;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		default: __builtin_unreachable();
 		}
@@ -1640,15 +1640,15 @@ do_jcc:
 			break;
 		case ASM_FPRINTALL: /* print top, pop... */
 			api_function = (void const *)&DeeFile_PrintAll;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		case ASM_FPRINTALL_SP: /* print top, pop..., sp */
 			api_function = (void const *)&DeeFile_PrintAllSp;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		case ASM_FPRINTALL_NL: /* print top, pop..., nl */
 			api_function = (void const *)&DeeFile_PrintAllNl;
-			value_operators = OPERATOR_ITERSELF;
+			value_operators = OPERATOR_ITER;
 			break;
 		default: __builtin_unreachable();
 		}
@@ -1819,7 +1819,7 @@ do_jcc:
 	}	break;
 
 	TARGET(ASM_ITERSELF)
-		return fg_vop(self, OPERATOR_ITERSELF, 1, VOP_F_PUSHRES);
+		return fg_vop(self, OPERATOR_ITER, 1, VOP_F_PUSHRES);
 
 	TARGET(ASM_DELITEM)
 		return fg_vop(self, OPERATOR_DELITEM, 2, VOP_F_NORMAL);
@@ -2227,22 +2227,22 @@ do_jcc:
 	}	break;
 
 	TARGET(ASM_REDUCE_MIN)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 		DO(fg_vpush_addr(self, NULL));
 		return fg_vcallapi(self, &DeeSeq_Min, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_MAX)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 		DO(fg_vpush_addr(self, NULL));
 		return fg_vcallapi(self, &DeeSeq_Max, VCALL_CC_OBJECT, 2);
 
 	TARGET(ASM_REDUCE_SUM)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 		return fg_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1);
 
 	TARGET(ASM_REDUCE_ANY)
 	TARGET(ASM_REDUCE_ALL)
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 		DO(fg_vcallapi(self,
 		               opcode == ASM_REDUCE_ANY ? (void const *)&DeeSeq_Any
 		                                        : (void const *)&DeeSeq_All,

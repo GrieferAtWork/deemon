@@ -439,15 +439,15 @@ err:
 }
 
 PRIVATE struct type_seq stype_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *index))&stype_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *index))&stype_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
 };
 
 
@@ -1081,7 +1081,7 @@ DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_lo, DeeStruct_Lo)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_le, DeeStruct_Le)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_gr, DeeStruct_Gr)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_ge, DeeStruct_Ge)
-DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_iter, DeeStruct_IterSelf)
+DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_iter, DeeStruct_Iter)
 DEFINE_UNARY_STRUCT_OPERATOR(DREF DeeObject *, struct_size, DeeStruct_GetSize)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_contains, DeeStruct_Contains)
 DEFINE_BINARY_STRUCT_OPERATOR(DREF DeeObject *, struct_getitem, DeeStruct_GetItem)
@@ -1195,15 +1195,15 @@ PRIVATE struct type_cmp struct_cmp = {
 };
 
 PRIVATE struct type_seq struct_seq = {
-	/* .tp_iter_self = */ &struct_iter,
-	/* .tp_size      = */ &struct_size,
-	/* .tp_contains  = */ &struct_contains,
-	/* .tp_get       = */ &struct_getitem,
-	/* .tp_del       = */ &struct_delitem,
-	/* .tp_set       = */ &struct_setitem,
-	/* .tp_range_get = */ &struct_getrange,
-	/* .tp_range_del = */ &struct_delrange,
-	/* .tp_range_set = */ &struct_setrange
+	/* .tp_iter     = */ &struct_iter,
+	/* .tp_sizeob   = */ &struct_size,
+	/* .tp_contains = */ &struct_contains,
+	/* .tp_getitem  = */ &struct_getitem,
+	/* .tp_delitem  = */ &struct_delitem,
+	/* .tp_setitem  = */ &struct_setitem,
+	/* .tp_getrange = */ &struct_getrange,
+	/* .tp_delrange = */ &struct_delrange,
+	/* .tp_setrange = */ &struct_setrange
 };
 
 PRIVATE struct type_attr tpconst struct_attr = {
@@ -1772,7 +1772,7 @@ DeeStruct_Ge(DeeSTypeObject *tp_self, void *self, DeeObject *some_object) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self) {
+DeeStruct_Iter(DeeSTypeObject *tp_self, void *self) {
 	if likely((tp_self->st_seq && tp_self->st_seq->st_iter_self) ||
 	          DeeType_InheritOperator(DeeSType_AsType(tp_self), STYPE_OPERATOR_ITER))
 		return (*tp_self->st_seq->st_iter_self)(tp_self, self);

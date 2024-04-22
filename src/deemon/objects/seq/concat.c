@@ -85,7 +85,7 @@ catiterator_ctor(CatIterator *__restrict self) {
 	self->cti_cat = (DREF Cat *)DeeSeq_Concat(Dee_EmptySeq, Dee_EmptySeq);
 	if unlikely(!self->cti_cat)
 		goto err;
-	self->cti_curr = DeeObject_IterSelf(Dee_EmptySeq);
+	self->cti_curr = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->cti_curr)
 		goto err_cat;
 	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
@@ -152,7 +152,7 @@ catiterator_init(CatIterator *__restrict self,
 	if (DeeObject_AssertTypeExact(self->cti_cat, &SeqConcat_Type))
 		goto err;
 	self->cti_pseq = DeeTuple_ELEM(self->cti_cat);
-	self->cti_curr = DeeObject_IterSelf(self->cti_pseq[0]);
+	self->cti_curr = DeeObject_Iter(self->cti_pseq[0]);
 	if unlikely(!self->cti_curr)
 		goto err;
 	Dee_Incref(self->cti_cat);
@@ -292,7 +292,7 @@ do_iter:
 		CatIterator_LockEndWrite(self);
 
 		/* Create an iterator for this sequence. */
-		iter = DeeObject_IterSelf(*p_next);
+		iter = DeeObject_Iter(*p_next);
 		if unlikely(!iter)
 			goto err;
 		CatIterator_LockWrite(self);
@@ -428,7 +428,7 @@ cat_iter(Cat *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	ASSERT(DeeTuple_SIZE(self) != 0);
-	result->cti_curr = DeeObject_IterSelf(DeeTuple_GET(self, 0));
+	result->cti_curr = DeeObject_Iter(DeeTuple_GET(self, 0));
 	if unlikely(!result->cti_curr)
 		goto err_r;
 	result->cti_pseq = DeeTuple_ELEM(self);
@@ -777,17 +777,17 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 };
 
 PRIVATE struct type_seq cat_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &cat_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &cat_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
 };
 
 

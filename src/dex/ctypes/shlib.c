@@ -299,10 +299,10 @@ err:
 }
 
 PRIVATE struct type_seq shlib_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO */
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL, /* TODO */
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&shlib_getitem
 };
 
 PRIVATE struct type_attr tpconst shlib_attr = {

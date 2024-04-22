@@ -385,7 +385,7 @@ udict_init_sequence(UDict *__restrict self,
 	/* TODO: Optimizations for `URoDict_Type' */
 
 	/* TODO: Use DeeObject_ForeachPair() */
-	iterator = DeeObject_IterSelf(sequence);
+	iterator = DeeObject_Iter(sequence);
 	if unlikely(!iterator)
 		goto err;
 	error = udict_init_iterator(self, iterator);
@@ -1185,7 +1185,7 @@ udict_update(UDict *self, size_t argc, DeeObject *const *argv) {
 	int error;
 	if (DeeArg_Unpack(argc, argv, "o:update", &items))
 		goto err;
-	iterator = DeeObject_IterSelf(items);
+	iterator = DeeObject_Iter(items);
 	if unlikely(!iterator)
 		goto err;
 	error = udict_insert_iterator(self, iterator);
@@ -1436,15 +1436,15 @@ PRIVATE struct type_nsi tpconst udict_nsi = {
 };
 
 PRIVATE struct type_seq udict_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
-	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
-	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
-	/* .tp_range_get    = */ NULL,
-	/* .tp_range_del    = */ NULL,
-	/* .tp_range_set    = */ NULL,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
+	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
+	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
 	/* .tp_nsi          = */ &udict_nsi,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
@@ -1857,7 +1857,7 @@ URoDict_FromSequence(DeeObject *__restrict sequence) {
 	/* TODO: Optimizations for `UDict_Type' */
 
 	/* TODO: Use DeeObject_ForeachPair() */
-	iterator = DeeObject_IterSelf(sequence);
+	iterator = DeeObject_Iter(sequence);
 	if unlikely(!iterator)
 		goto err;
 	result = URoDict_FromIterator(iterator);
@@ -2081,15 +2081,15 @@ PRIVATE struct type_nsi tpconst urodict_nsi = {
 
 
 PRIVATE struct type_seq urodict_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
-	/* .tp_del          = */ NULL,
-	/* .tp_set          = */ NULL,
-	/* .tp_range_get    = */ NULL,
-	/* .tp_range_del    = */ NULL,
-	/* .tp_range_set    = */ NULL,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
 	/* .tp_nsi          = */ &urodict_nsi,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,

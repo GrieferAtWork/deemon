@@ -604,7 +604,7 @@ INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Lo(DeeSTypeObject
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Le(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Gr(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Ge(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
-INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_IterSelf(DeeSTypeObject *tp_self, void *self);
+INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_Iter(DeeSTypeObject *tp_self, void *self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeStruct_GetSize(DeeSTypeObject *tp_self, void *self);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_Contains(DeeSTypeObject *tp_self, void *self, DeeObject *some_object);
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeStruct_GetItem(DeeSTypeObject *tp_self, void *self, DeeObject *index);

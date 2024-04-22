@@ -476,13 +476,13 @@ seqiterator_init(SeqIterator *__restrict self, size_t argc, DeeObject *const *ar
 	if (DeeObject_AssertTypeExact(self->si_index, &DeeInt_Type))
 		goto err;
 	tp_iter = Dee_TYPE(self->si_seq);
-	if (!tp_iter->tp_seq || !tp_iter->tp_seq->tp_get) {
+	if (!tp_iter->tp_seq || !tp_iter->tp_seq->tp_getitem) {
 		if (!DeeType_InheritGetItem(tp_iter))
 			goto err_not_implemented;
 	}
 	ASSERT(tp_iter->tp_seq);
-	ASSERT(tp_iter->tp_seq->tp_get);
-	self->si_getitem = tp_iter->tp_seq->tp_get;
+	ASSERT(tp_iter->tp_seq->tp_getitem);
+	self->si_getitem = tp_iter->tp_seq->tp_getitem;
 	self->si_size    = DeeObject_SizeObject(self->si_seq);
 	if unlikely(!self->si_size)
 		goto err;
@@ -1471,10 +1471,10 @@ seq_Titerself_with_SeqIterator(DeeTypeObject *tp_self,
 
 	/* Save the getitem operator. */
 	ASSERT(tp_self->tp_seq);
-	ASSERT(tp_self->tp_seq->tp_get);
-	ASSERT(tp_self->tp_seq->tp_size);
-	result->si_getitem = tp_self->tp_seq->tp_get;
-	result->si_size    = (*tp_self->tp_seq->tp_size)(self);
+	ASSERT(tp_self->tp_seq->tp_getitem);
+	ASSERT(tp_self->tp_seq->tp_sizeob);
+	result->si_getitem = tp_self->tp_seq->tp_getitem;
+	result->si_size    = (*tp_self->tp_seq->tp_sizeob)(self);
 	if unlikely(!result->si_size)
 		goto err_r;
 
@@ -1587,8 +1587,8 @@ seq_iterself(DeeObject *__restrict self) {
 	DeeType_mro_foreach_start(tp_iter) {
 		struct type_seq *seq = tp_iter->tp_seq;
 		if (seq) {
-			if unlikely(seq->tp_iter_self && seq->tp_iter_self != &seq_iterself)
-				return (*seq->tp_iter_self)(self);
+			if unlikely(seq->tp_iter && seq->tp_iter != &seq_iterself)
+				return (*seq->tp_iter)(self);
 
 			/* Check if there are NSI operators with which we can implement an iterator. */
 			if (seq->tp_nsi &&
@@ -1601,38 +1601,38 @@ seq_iterself(DeeObject *__restrict self) {
 				if likely(tp_self->tp_seq->tp_nsi == seq->tp_nsi) {
 					if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
 						if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
-							tp_self->tp_seq->tp_iter_self = &seq_iterself_with_FastNsiIterator;
+							tp_self->tp_seq->tp_iter = &seq_iterself_with_FastNsiIterator;
 						return seq_Titerself_with_FastNsiIterator(tp_iter, self);
 					} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
 						if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
-							tp_self->tp_seq->tp_iter_self = &seq_iterself_with_NsiIterator;
+							tp_self->tp_seq->tp_iter = &seq_iterself_with_NsiIterator;
 						return seq_Titerself_with_NsiIterator(tp_iter, self);
 					}
 				}
 			}
 
 			/* Check for deemon operators with which we can implement an iterator. */
-			if (seq->tp_size && DeeType_HasPrivateOperator(tp_iter, OPERATOR_SIZE))
+			if (seq->tp_sizeob && DeeType_HasPrivateOperator(tp_iter, OPERATOR_SIZE))
 				found |= 1;
-			if (seq->tp_get && DeeType_HasPrivateOperator(tp_iter, OPERATOR_GETITEM))
+			if (seq->tp_getitem && DeeType_HasPrivateOperator(tp_iter, OPERATOR_GETITEM))
 				found |= 2;
 			if (found == (1 | 2)) {
-				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_get)
+				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_getitem)
 					DeeType_InheritGetItem(tp_self);
-				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_size)
+				if (!tp_self->tp_seq || !tp_self->tp_seq->tp_sizeob)
 					DeeType_InheritSize(tp_self);
 				ASSERT(tp_self->tp_seq);
-				ASSERT(tp_self->tp_seq->tp_get);
-				ASSERT(tp_self->tp_seq->tp_size);
+				ASSERT(tp_self->tp_seq->tp_getitem);
+				ASSERT(tp_self->tp_seq->tp_sizeob);
 				if likely(DeeType_Implements(tp_self, &DeeSeq_Type))
-					tp_self->tp_seq->tp_iter_self = &seq_iterself_with_SeqIterator;
+					tp_self->tp_seq->tp_iter = &seq_iterself_with_SeqIterator;
 				return seq_Titerself_with_SeqIterator(tp_iter, self);
 			}
 		}
 	}
 	DeeType_mro_foreach_end(tp_iter);
 /*not_a_seq:*/
-	err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	err_unimplemented_operator(tp_self, OPERATOR_ITER);
 /*err:*/
 	return NULL;
 }
@@ -1649,12 +1649,12 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 	}
 
 	seq = self->tp_seq;
-	if (seq && seq->tp_iter_self) {
-		if (seq->tp_iter_self == &seq_iterself_with_FastNsiIterator)
+	if (seq && seq->tp_iter) {
+		if (seq->tp_iter == &seq_iterself_with_FastNsiIterator)
 			return_reference_(&DeeFastNsiIterator_Type);
-		if (seq->tp_iter_self == &seq_iterself_with_NsiIterator)
+		if (seq->tp_iter == &seq_iterself_with_NsiIterator)
 			return_reference_(&DeeNsiIterator_Type);
-		if (seq->tp_iter_self == &seq_iterself_with_SeqIterator)
+		if (seq->tp_iter == &seq_iterself_with_SeqIterator)
 			return_reference_(&DeeGenericIterator_Type);
 		goto not_a_seq;
 	}
@@ -1664,7 +1664,7 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 	DeeType_mro_foreach_start(iter) {
 		seq = iter->tp_seq;
 		if (seq) {
-			if unlikely(seq->tp_iter_self && seq->tp_iter_self != &seq_iterself)
+			if unlikely(seq->tp_iter && seq->tp_iter != &seq_iterself)
 				goto not_a_seq;
 
 			/* Check if there are NSI operators with which we can implement an iterator. */
@@ -1678,38 +1678,38 @@ seqtype_get_Iterator(DeeTypeObject *__restrict self) {
 				if likely(self->tp_seq->tp_nsi == seq->tp_nsi) {
 					if (seq->tp_nsi->nsi_seqlike.nsi_getitem_fast) {
 						if likely(DeeType_Implements(self, &DeeSeq_Type))
-							self->tp_seq->tp_iter_self = &seq_iterself_with_FastNsiIterator;
+							self->tp_seq->tp_iter = &seq_iterself_with_FastNsiIterator;
 						return_reference_(&DeeFastNsiIterator_Type);
 					} else if (seq->tp_nsi->nsi_seqlike.nsi_getitem) {
 						if likely(DeeType_Implements(self, &DeeSeq_Type))
-							self->tp_seq->tp_iter_self = &seq_iterself_with_NsiIterator;
+							self->tp_seq->tp_iter = &seq_iterself_with_NsiIterator;
 						return_reference_(&DeeNsiIterator_Type);
 					}
 				}
 			}
 
 			/* Check for deemon operators with which we can implement an iterator. */
-			if (seq->tp_size && DeeType_HasPrivateOperator(iter, OPERATOR_SIZE))
+			if (seq->tp_sizeob && DeeType_HasPrivateOperator(iter, OPERATOR_SIZE))
 				found |= 1;
-			if (seq->tp_get && DeeType_HasPrivateOperator(iter, OPERATOR_GETITEM))
+			if (seq->tp_getitem && DeeType_HasPrivateOperator(iter, OPERATOR_GETITEM))
 				found |= 2;
 			if (found == (1 | 2)) {
-				if (!self->tp_seq || !self->tp_seq->tp_get)
+				if (!self->tp_seq || !self->tp_seq->tp_getitem)
 					DeeType_InheritGetItem(self);
-				if (!self->tp_seq || !self->tp_seq->tp_size)
+				if (!self->tp_seq || !self->tp_seq->tp_sizeob)
 					DeeType_InheritSize(self);
 				ASSERT(self->tp_seq);
-				ASSERT(self->tp_seq->tp_get);
-				ASSERT(self->tp_seq->tp_size);
+				ASSERT(self->tp_seq->tp_getitem);
+				ASSERT(self->tp_seq->tp_sizeob);
 				if likely(DeeType_Implements(self, &DeeSeq_Type))
-					self->tp_seq->tp_iter_self = &seq_iterself_with_SeqIterator;
+					self->tp_seq->tp_iter = &seq_iterself_with_SeqIterator;
 				return_reference_(&DeeGenericIterator_Type);
 			}
 		}
 	}
 	DeeType_mro_foreach_end(iter);
 not_a_seq:
-	err_unimplemented_operator(self, OPERATOR_ITERSELF);
+	err_unimplemented_operator(self, OPERATOR_ITER);
 /*err:*/
 	return NULL;
 }
@@ -1963,16 +1963,16 @@ err:
 }
 
 PRIVATE struct type_seq seq_seq = {
-	/* .tp_iter_self = */ &seq_iterself,
-	/* .tp_size      = */ &seq_size,
-	/* .tp_contains  = */ &seq_tpcontains,
-	/* .tp_get       = */ &seq_getitem,
-	/* .tp_del       = */ &seq_delitem,
-	/* .tp_set       = */ &seq_setitem,
-	/* .tp_range_get = */ &seq_getrange,
-	/* .tp_range_del = */ &seq_delrange,
-	/* .tp_range_set = */ &seq_setrange,
-	/* .tp_nsi       = */ &seq_nsi,
+	/* .tp_iter     = */ &seq_iterself,
+	/* .tp_sizeob   = */ &seq_size,
+	/* .tp_contains = */ &seq_tpcontains,
+	/* .tp_getitem  = */ &seq_getitem,
+	/* .tp_delitem  = */ &seq_delitem,
+	/* .tp_setitem  = */ &seq_setitem,
+	/* .tp_getrange = */ &seq_getrange,
+	/* .tp_delrange = */ &seq_delrange,
+	/* .tp_setrange = */ &seq_setrange,
+	/* .tp_nsi      = */ &seq_nsi,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1982,7 +1982,7 @@ DeeSeq_Eq(DeeObject *lhs, DeeObject *rhs) {
 	size_t lhs_size;
 	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
 		return DeeSeq_EqFS(lhs, lhs_size, rhs);
-	lhs_iter = DeeObject_IterSelf(lhs);
+	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
 		return -1;
 	result = DeeSeq_EqIS(lhs_iter, rhs);
@@ -1997,7 +1997,7 @@ DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	size_t lhs_size;
 	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
 		return DeeSeq_CompareFS(lhs, lhs_size, rhs);
-	lhs_iter = DeeObject_IterSelf(lhs);
+	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
 		return -2;
 	result = DeeSeq_CompareIS(lhs_iter, rhs);
@@ -2009,7 +2009,7 @@ PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 seq_hash(DeeObject *__restrict self) {
 	dhash_t result;
 	DREF DeeObject *iter, *elem;
-	iter = DeeObject_IterSelf(self);
+	iter = DeeObject_Iter(self);
 	if unlikely(!iter)
 		goto err;
 	elem = DeeObject_IterNext(iter);
@@ -2166,16 +2166,16 @@ sequence_should_use_getitem(DeeTypeObject *__restrict self) {
 		struct type_seq *seq;
 		base = DeeTypeMRO_Next(&mro, iter);
 		if ((seq = iter->tp_seq) != NULL) {
-			if (seq->tp_get && seq->tp_get != &seq_getitem &&
-			    (!base || !base->tp_seq || seq->tp_get != base->tp_seq->tp_get))
+			if (seq->tp_getitem && seq->tp_getitem != &seq_getitem &&
+			    (!base || !base->tp_seq || seq->tp_getitem != base->tp_seq->tp_getitem))
 				found |= 1;
-			if (seq->tp_size && seq->tp_size != &seq_size &&
-			    (!base || !base->tp_seq || seq->tp_size != base->tp_seq->tp_size))
+			if (seq->tp_sizeob && seq->tp_sizeob != &seq_size &&
+			    (!base || !base->tp_seq || seq->tp_sizeob != base->tp_seq->tp_sizeob))
 				found |= 2;
 			if (found == (1 | 2))
 				return true;
-			if (seq->tp_iter_self &&
-			    (!base || !base->tp_seq || seq->tp_iter_self != base->tp_seq->tp_iter_self))
+			if (seq->tp_iter &&
+			    (!base || !base->tp_seq || seq->tp_iter != base->tp_seq->tp_iter))
 				break;
 		}
 	} while (base && (iter = base) != &DeeSeq_Type);
@@ -2230,7 +2230,7 @@ seq_printrepr(DeeObject *__restrict self, dformatprinter printer, void *arg) {
 		}
 	} else {
 do_try_iterators:
-		iterator = DeeObject_IterSelf(self);
+		iterator = DeeObject_Iter(self);
 		if unlikely(!iterator)
 			goto err_m1;
 		DO(err_iterator, DeeFormat_PRINT(printer, arg, "{ "));

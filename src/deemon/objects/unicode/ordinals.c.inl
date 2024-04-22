@@ -145,16 +145,16 @@ PRIVATE struct type_nsi tpconst stringordinals_nsi = {
 
 
 PRIVATE struct type_seq stringordinals_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &stringordinals_nsi,
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringordinals_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &stringordinals_nsi,
 };
 
 PRIVATE struct type_member tpconst stringordinals_members[] = {

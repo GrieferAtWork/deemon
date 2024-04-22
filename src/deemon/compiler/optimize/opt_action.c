@@ -69,7 +69,7 @@ PRIVATE WUNUSED NONNULL((1)) bool DCALL
 ast_iterator_is_nonempty(struct ast *__restrict self) {
 	/* Simple (and most likely) case: Check if `self' invokes `operator iter'. */
 	if (self->a_type == AST_OPERATOR &&
-	    self->a_flag == OPERATOR_ITERSELF &&
+	    self->a_flag == OPERATOR_ITER &&
 	    !(self->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS)) &&
 	    self->a_operator.o_op0)
 		return ast_sequence_is_nonempty(self->a_operator.o_op0);

@@ -2486,10 +2486,10 @@ class ItemProxyAccessor {
 public:
 	typedef CxxIterator<GetItemType> iterator;
 	Ref<Iterator<GetItemType> > iter() DEE_CXX_NOTHROW {
-		return inherit(DeeObject_IterSelf(((ProxyType *)this)->ptr()));
+		return inherit(DeeObject_Iter(((ProxyType *)this)->ptr()));
 	}
 	WUNUSED CxxIterator<GetItemType> begin() const {
-		return inherit(DeeObject_IterSelf(((ProxyType *)this)->ptr()));
+		return inherit(DeeObject_Iter(((ProxyType *)this)->ptr()));
 	}
 	WUNUSED CxxIterator<GetItemType> end() const {
 		return CxxIterator<GetItemType>();

@@ -452,9 +452,9 @@ DeeTypeType_GetOperatorByName(DeeTypeObject const *__restrict typetype,
 	case 'i':
 		if (name[1] == 't' && name[2] == 'e' && name[3] == 'r') {
 			if (!name[4])
-				RETURN(OPERATOR_ITERSELF);
+				RETURN(OPERATOR_ITER);
 			if (EQAT(name + 4, "self"))
-				RETURN(OPERATOR_ITERSELF);
+				RETURN(OPERATOR_ITER);
 			if (EQAT(name + 4, "next"))
 				RETURN(OPERATOR_ITERNEXT);
 		} else {
@@ -780,7 +780,7 @@ DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator
 
 
 /* Lookup per-type method flags that may be defined for "opname".
- * IMPORTANT: When querying the flags for `OPERATOR_ITERSELF', the `Dee_METHOD_FCONSTCALL',
+ * IMPORTANT: When querying the flags for `OPERATOR_ITER', the `Dee_METHOD_FCONSTCALL',
  *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
  *            you can call `operator iter()' at compile-time. Instead, it means that
  *            *enumerating* the object can be done at compile-time (so-long as the associated
@@ -922,7 +922,7 @@ check_effective_opname_with_copy:
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
- * >> (!DeeType_HasOperator(self, OPERATOR_ITERSELF) || (DeeType_GetOperatorFlags(self, OPERATOR_ITERSELF) & Dee_METHOD_FCONSTCALL));
+ * >> (!DeeType_HasOperator(self, OPERATOR_ITER) || (DeeType_GetOperatorFlags(self, OPERATOR_ITER) & Dee_METHOD_FCONSTCALL));
  * This is the condition that must be fulfilled by all arguments other than "this" when
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
  * conditional. */
@@ -933,7 +933,7 @@ DeeType_IsConstCastable(DeeTypeObject const *__restrict self) {
 		OPERATOR_BOOL,
 		OPERATOR_INT,
 		OPERATOR_FLOAT,
-		OPERATOR_ITERSELF,
+		OPERATOR_ITER,
 	};
 	if (self->tp_features & (Dee_TF_NOTCONSTCASTABLE | Dee_TF_ISCONSTCASTABLE))
 		return (self->tp_features & Dee_TF_ISCONSTCASTABLE) != 0;
@@ -1308,7 +1308,7 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_gr);
 	case OPERATOR_ITERNEXT:
 		return (self->tp_iter_next) || DeeType_InheritIterNext(self);
-	case OPERATOR_ITERSELF:
+	case OPERATOR_ITER:
 	case OPERATOR_SIZE:
 	case OPERATOR_CONTAINS:
 	case OPERATOR_GETITEM:
@@ -1320,24 +1320,24 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 		if (!self->tp_seq)
 			DeeType_InheritNSI(self);
 		switch (name) {
-		case OPERATOR_ITERSELF:
-			return (self->tp_seq && (self->tp_seq->tp_iter_self)) || DeeType_InheritIterSelf(self);
+		case OPERATOR_ITER:
+			return (self->tp_seq && (self->tp_seq->tp_iter)) || DeeType_InheritIter(self);
 		case OPERATOR_SIZE:
-			return (self->tp_seq && (self->tp_seq->tp_size)) || DeeType_InheritSize(self);
+			return (self->tp_seq && (self->tp_seq->tp_sizeob)) || DeeType_InheritSize(self);
 		case OPERATOR_CONTAINS:
 			return (self->tp_seq && (self->tp_seq->tp_contains)) || DeeType_InheritContains(self);
 		case OPERATOR_GETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_get)) || DeeType_InheritGetItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_getitem)) || DeeType_InheritGetItem(self);
 		case OPERATOR_DELITEM:
-			return (self->tp_seq && (self->tp_seq->tp_del)) || DeeType_InheritDelItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_delitem)) || DeeType_InheritDelItem(self);
 		case OPERATOR_SETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_set)) || DeeType_InheritSetItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_setitem)) || DeeType_InheritSetItem(self);
 		case OPERATOR_GETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_range_get)) || DeeType_InheritGetRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_getrange)) || DeeType_InheritGetRange(self);
 		case OPERATOR_DELRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_range_del)) || DeeType_InheritDelRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_delrange)) || DeeType_InheritDelRange(self);
 		case OPERATOR_SETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_range_set)) || DeeType_InheritSetRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_setrange)) || DeeType_InheritSetRange(self);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();
@@ -2007,9 +2007,9 @@ err:
 
 
 PRIVATE struct type_seq to_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains
 };
 
 PRIVATE struct type_member tpconst to_class_members[] = {

@@ -114,7 +114,7 @@ INTERN_CONST instruction_t const operator_instr_table[] = {
 	/* [OPERATOR_LE]          = */ ASM_CMP_LE,
 	/* [OPERATOR_GR]          = */ ASM_CMP_GR,
 	/* [OPERATOR_GE]          = */ ASM_CMP_GE,
-	/* [OPERATOR_ITERSELF]    = */ ASM_ITERSELF,
+	/* [OPERATOR_ITER]        = */ ASM_ITERSELF,
 	/* [OPERATOR_SIZE]        = */ ASM_GETSIZE,
 	/* [OPERATOR_CONTAINS]    = */ ASM_CONTAINS,
 	/* [OPERATOR_GETITEM]     = */ ASM_GETITEM,
@@ -189,7 +189,7 @@ INTERN_CONST uint8_t const operator_opcount_table[OPERATOR_USERCOUNT] = {
 	/* [OPERATOR_LE]          = */ ENTRY(OPCOUNT_INSTRIN, 2),
 	/* [OPERATOR_GR]          = */ ENTRY(OPCOUNT_INSTRIN, 2),
 	/* [OPERATOR_GE]          = */ ENTRY(OPCOUNT_INSTRIN, 2),
-	/* [OPERATOR_ITERSELF]    = */ ENTRY(OPCOUNT_INSTRIN, 1),
+	/* [OPERATOR_ITER]        = */ ENTRY(OPCOUNT_INSTRIN, 1),
 	/* [OPERATOR_SIZE]        = */ ENTRY(OPCOUNT_INSTRIN, 1),
 	/* [OPERATOR_CONTAINS]    = */ ENTRY(OPCOUNT_INSTRIN, 2),
 	/* [OPERATOR_GETITEM]     = */ ENTRY(OPCOUNT_INSTRIN, 2),
@@ -2062,7 +2062,7 @@ push_a_if_used:
 		case OPERATOR_INV:
 		case OPERATOR_POS:
 		case OPERATOR_NEG:
-		case OPERATOR_ITERSELF:
+		case OPERATOR_ITER:
 		case OPERATOR_SIZE:
 			if (ast_genasm(self->a_operator.o_op0, ASM_G_FPUSHRES))
 				goto err;

@@ -244,7 +244,7 @@ F(iter)(STRUCT_TYPE *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	result->ei_each = (DREF SeqEachBase *)self;
-	result->ei_iter = DeeObject_IterSelf(((DREF SeqEachBase *)self)->se_seq);
+	result->ei_iter = DeeObject_Iter(((DREF SeqEachBase *)self)->se_seq);
 	if unlikely(!result->ei_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -565,17 +565,17 @@ PRIVATE struct type_nsi tpconst F(nsi) = {
 };
 
 PRIVATE struct type_seq F(seq) = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&F(iter),
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&F(getitem),
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(delitem),
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(setitem),
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(delrange),
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
-	/* .tp_nsi       = */ &F(nsi),
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&F(iter),
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&F(getitem),
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&F(delitem),
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(setitem),
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&F(delrange),
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&F(setrange),
+	/* .tp_nsi      = */ &F(nsi),
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&F(foreach),
 };
 
 PRIVATE struct type_member tpconst F(members)[] = {
@@ -1007,7 +1007,7 @@ Fi(ctor)(SeqEachIterator *__restrict self) {
 	self->ei_each = (DREF SeqEachBase *)DeeObject_NewDefault(&TYPE_OBJECT);
 	if unlikely(!self->ei_each)
 		goto err;
-	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
+	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err_each;
 	return 0;
@@ -1034,7 +1034,7 @@ Fi(init)(SeqEachIterator *__restrict self,
 #endif /* !... */
 	if (DeeObject_AssertTypeExact(self->ei_each, &TYPE_OBJECT))
 		goto err;
-	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
+	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err;
 	Dee_Incref(self->ei_each);

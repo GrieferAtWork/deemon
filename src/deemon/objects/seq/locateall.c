@@ -59,7 +59,7 @@ INTDEF DeeTypeObject SeqLocatorIterator_Type;
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 locatoriter_ctor(LocatorIterator *__restrict self) {
-	self->li_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->li_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->li_iter)
 		goto err;
 	self->li_elem = Dee_None;
@@ -117,7 +117,7 @@ locatoriter_init(LocatorIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(loc, &SeqLocator_Type))
 		goto err;
-	self->li_iter = DeeObject_IterSelf(loc->l_seq);
+	self->li_iter = DeeObject_Iter(loc->l_seq);
 	if unlikely(!self->li_iter)
 		goto err;
 	self->li_elem = loc->l_elem;
@@ -357,7 +357,7 @@ locator_iter(Locator *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	/* Create the underlying iterator. */
-	result->li_iter = DeeObject_IterSelf(self->l_seq);
+	result->li_iter = DeeObject_Iter(self->l_seq);
 	if unlikely(!result->li_iter)
 		goto err_r;
 	/* Assign the locator element & key function. */
@@ -386,15 +386,15 @@ PRIVATE struct type_member tpconst locator_class_members[] = {
 };
 
 PRIVATE struct type_seq locator_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locator_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&locator_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
 };
 
 INTERN DeeTypeObject SeqLocator_Type = {

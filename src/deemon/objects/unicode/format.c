@@ -164,7 +164,7 @@ do_variable_length_index:
 		} else {
 			/* Fallback: No key or index -> Yield the next iterator-item. */
 			if (!self->f_seqiter &&
-			    (self->f_seqiter = DeeObject_IterSelf(self->f_args)) == NULL)
+			    (self->f_seqiter = DeeObject_Iter(self->f_args)) == NULL)
 				goto err;
 			result = DeeObject_IterNext(self->f_seqiter);
 			/* Check for iter-done */

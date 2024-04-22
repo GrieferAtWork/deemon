@@ -3750,7 +3750,7 @@ do_setitem_c:
 		/* Sequence iterator creation. */
 		TARGET(ASM_ITERSELF, -1, +1) {
 			DREF DeeObject *iterator;
-			iterator = DeeObject_IterSelf(TOP);
+			iterator = DeeObject_Iter(TOP);
 			if unlikely(!iterator)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);

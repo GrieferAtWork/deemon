@@ -388,16 +388,16 @@ PRIVATE struct type_nsi tpconst cot_nsi = {
 };
 
 PRIVATE struct type_seq cot_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &cot_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &cot_nsi
 };
 
 PRIVATE struct type_member tpconst cot_class_members[] = {
@@ -921,16 +921,16 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 };
 
 PRIVATE struct type_seq cat_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &cat_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &cat_nsi
 };
 
 INTERN DeeTypeObject ClassAttribute_Type = {
@@ -1583,7 +1583,7 @@ class_attribute_init(struct class_attribute *__restrict self,
 				goto err_addr_flags;
 		}
 	} else {
-		iter = DeeObject_IterSelf(data);
+		iter = DeeObject_Iter(data);
 		if unlikely(!iter)
 			goto err;
 		addr = DeeObject_IterNext(iter);
@@ -1733,7 +1733,7 @@ cd_alloc_from_iattr(DeeObject *__restrict iattr,
 	DREF DeeObject *iterator, *elem;
 	DREF DeeObject *data[2];
 	ClassDescriptor *result;
-	iterator = DeeObject_IterSelf(iattr);
+	iterator = DeeObject_Iter(iattr);
 	if unlikely(!iterator)
 		goto err;
 	result = (ClassDescriptor *)DeeObject_Calloc(offsetof(ClassDescriptor, cd_iattr_list) +
@@ -2007,7 +2007,7 @@ got_flag:
 	result->cd_cattr_mask = 0;
 	if (class_cattr != Dee_EmptyTuple) {
 		size_t used_attr = 0;
-		iterator         = DeeObject_IterSelf(class_cattr);
+		iterator         = DeeObject_Iter(class_cattr);
 		if unlikely(!iterator)
 			goto err_r_imemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2066,7 +2066,7 @@ got_flag:
 	}
 	if (class_operators != Dee_EmptyTuple) {
 		Dee_operator_t operator_count = 0;
-		iterator = DeeObject_IterSelf(class_operators);
+		iterator = DeeObject_Iter(class_operators);
 		if unlikely(!iterator)
 			goto err_r_imemb_cmemb;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2397,16 +2397,16 @@ PRIVATE struct type_nsi tpconst ot_nsi = {
 };
 
 PRIVATE struct type_seq ot_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &ot_nsi
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &ot_nsi
 };
 
 

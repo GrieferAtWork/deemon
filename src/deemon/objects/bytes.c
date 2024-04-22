@@ -274,7 +274,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	/* TODO: Use DeeObject_Foreach() */
 
 	/* Fallback: use an iterator. */
-	iter = DeeObject_IterSelf(seq);
+	iter = DeeObject_Iter(seq);
 	if unlikely(!iter)
 		goto err;
 	i = 0;
@@ -346,7 +346,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		if unlikely(!result)
 			goto err;
 	}
-	iter = DeeObject_IterSelf(seq);
+	iter = DeeObject_Iter(seq);
 	if unlikely(!iter)
 		goto err_r;
 	i = 0;
@@ -1480,16 +1480,16 @@ PRIVATE struct type_nsi tpconst bytes_nsi = {
 };
 
 PRIVATE struct type_seq bytes_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bytes_setrange,
-	/* .tp_nsi       = */ &bytes_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_setitem,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_delrange,
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bytes_setrange,
+	/* .tp_nsi      = */ &bytes_nsi
 };
 
 
@@ -1848,7 +1848,7 @@ PRIVATE struct type_operator const bytes_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTSTR_ROBYTES | METHOD_FNOREFESCAPE),
-	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITER, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_THISARG_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FCONSTCALL | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FCONSTCALL | METHOD_FCONSTCALL_IF_ARGS_CONSTCAST_ROBYTES | METHOD_FNOREFESCAPE),

@@ -1928,7 +1928,7 @@ imod_iter(InteractiveModule *__restrict self) {
 }
 
 PRIVATE struct type_seq imod_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&imod_iter
 };
 
 PRIVATE struct type_gc tpconst imod_gc = {

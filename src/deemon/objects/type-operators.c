@@ -112,7 +112,7 @@ DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritPow, DeeType_InheritPow);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritHash, DeeType_InheritHash);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritCompare, DeeType_InheritCompare);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIterNext, DeeType_InheritIterNext);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIterSelf, DeeType_InheritIterSelf);
+DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIter, DeeType_InheritIter);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritSize, DeeType_InheritSize);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritContains, DeeType_InheritContains);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritGetItem, DeeType_InheritGetItem);
@@ -428,7 +428,7 @@ global operatorGroup: {string: string} = {
 	"Le" : "Cmp",
 	"Gr" : "Cmp",
 	"Ge" : "Cmp",
-	"IterSelf" : "Seq",
+	"Iter" : "Seq",
 	"Size" : "Seq",
 	"Contains" : "Seq",
 	"Get" : "Seq",
@@ -624,7 +624,7 @@ defineBinary("lo");
 defineBinary("le");
 defineBinary("gr");
 defineBinary("ge");
-defineUnary("iter", nameTitle: "IterSelf");
+defineUnary("iter", nameTitle: "Iter");
 defineUnary("size", nameTitle: "Size");
 defineBinary("contains", nameTitle: "Contains");
 defineBinary("getitem", nameTitle: "Get");
@@ -1108,12 +1108,12 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_iter, &instance_iter, &do_DeeType_InheritIterSelf) {
+DEFINE_OPERATOR_INVOKE(operator_iter, &instance_iter, &do_DeeType_InheritIter) {
 	(void)p_self;
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("iter")))
 		goto err;
-	return DeeType_InvokeSeqIterSelf(tp_self, self);
+	return DeeType_InvokeSeqIter(tp_self, self);
 err:
 	return NULL;
 }
@@ -1123,7 +1123,7 @@ DEFINE_OPERATOR_INVOKE(operator_size, &instance_size, &do_DeeType_InheritSize) {
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, ":" OPNAME("size")))
 		goto err;
-	return DeeType_InvokeSeqSize(tp_self, self);
+	return DeeType_InvokeSeqSizeOb(tp_self, self);
 err:
 	return NULL;
 }
@@ -1145,7 +1145,7 @@ DEFINE_OPERATOR_INVOKE(operator_getitem, &instance_getitem, &do_DeeType_InheritG
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("getitem"), &other))
 		goto err;
-	return DeeType_InvokeSeqGet(tp_self, self, other);
+	return DeeType_InvokeSeqGetItem(tp_self, self, other);
 err:
 	return NULL;
 }
@@ -1156,7 +1156,7 @@ DEFINE_OPERATOR_INVOKE(operator_delitem, &instance_delitem, &do_DeeType_InheritD
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "o:" OPNAME("delitem"), &other))
 		goto err;
-	if (DeeType_InvokeSeqDel(tp_self, self, other))
+	if (DeeType_InvokeSeqDelItem(tp_self, self, other))
 		goto err;
 	return_none;
 err:
@@ -1169,7 +1169,7 @@ DEFINE_OPERATOR_INVOKE(operator_setitem, &instance_setitem, &do_DeeType_InheritS
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("setitem"), &a, &b))
 		goto err;
-	if (DeeType_InvokeSeqSet(tp_self, self, a, b))
+	if (DeeType_InvokeSeqSetItem(tp_self, self, a, b))
 		goto err;
 	return_none;
 err:
@@ -1182,7 +1182,7 @@ DEFINE_OPERATOR_INVOKE(operator_getrange, &instance_getrange, &do_DeeType_Inheri
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("getrange"), &a, &b))
 		goto err;
-	return DeeType_InvokeSeqRangeGet(tp_self, self, a, b);
+	return DeeType_InvokeSeqGetRange(tp_self, self, a, b);
 err:
 	return NULL;
 }
@@ -1193,7 +1193,7 @@ DEFINE_OPERATOR_INVOKE(operator_delrange, &instance_delrange, &do_DeeType_Inheri
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "oo:" OPNAME("delrange"), &a, &b))
 		goto err;
-	if (DeeType_InvokeSeqRangeDel(tp_self, self, a, b))
+	if (DeeType_InvokeSeqDelRange(tp_self, self, a, b))
 		goto err;
 	return_none;
 err:
@@ -1206,7 +1206,7 @@ DEFINE_OPERATOR_INVOKE(operator_setrange, &instance_setrange, &do_DeeType_Inheri
 	(void)opname;
 	if (DeeArg_Unpack(argc, argv, "ooo:" OPNAME("setrange"), &a, &b, &c))
 		goto err;
-	if (DeeType_InvokeSeqRangeSet(tp_self, self, a, b, c))
+	if (DeeType_InvokeSeqSetRange(tp_self, self, a, b, c))
 		goto err;
 	return_none;
 err:
@@ -1293,15 +1293,15 @@ INTERN_CONST struct type_operator tpconst type_operators[LENGTHOF_type_operators
 	TYPE_OPERATOR_DECL(OPERATOR_002C_LE, /*         */ offsetof(Type, tp_cmp), /*   */ offsetof(struct type_cmp, tp_le), /*             */ OPCC_BINARY_OBJECT, /*   */ "<=", /*      */ "le", /*         */ "tp_le", &operator_le),
 	TYPE_OPERATOR_DECL(OPERATOR_002D_GR, /*         */ offsetof(Type, tp_cmp), /*   */ offsetof(struct type_cmp, tp_gr), /*             */ OPCC_BINARY_OBJECT, /*   */ ">", /*       */ "gr", /*         */ "tp_gr", &operator_gr),
 	TYPE_OPERATOR_DECL(OPERATOR_002E_GE, /*         */ offsetof(Type, tp_cmp), /*   */ offsetof(struct type_cmp, tp_ge), /*             */ OPCC_BINARY_OBJECT, /*   */ ">=", /*      */ "ge", /*         */ "tp_ge", &operator_ge),
-	TYPE_OPERATOR_DECL(OPERATOR_002F_ITERSELF, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_iter_self), /*      */ OPCC_UNARY_OBJECT, /*    */ "iter", /*    */ "iter", /*       */ "tp_iter_self", &operator_iter),
-	TYPE_OPERATOR_DECL(OPERATOR_0030_SIZE, /*       */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_size), /*           */ OPCC_UNARY_OBJECT, /*    */ "#", /*       */ "size", /*       */ "tp_size", &operator_size),
+	TYPE_OPERATOR_DECL(OPERATOR_002F_ITER, /*       */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_iter), /*           */ OPCC_UNARY_OBJECT, /*    */ "iter", /*    */ "iter", /*       */ "tp_iter", &operator_iter),
+	TYPE_OPERATOR_DECL(OPERATOR_0030_SIZE, /*       */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_sizeob), /*         */ OPCC_UNARY_OBJECT, /*    */ "#", /*       */ "size", /*       */ "tp_sizeob", &operator_size),
 	TYPE_OPERATOR_DECL(OPERATOR_0031_CONTAINS, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_contains), /*       */ OPCC_BINARY_OBJECT, /*   */ "contains", /**/ "contains", /*   */ "tp_contains", &operator_contains),
-	TYPE_OPERATOR_DECL(OPERATOR_0032_GETITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_get), /*            */ OPCC_BINARY_OBJECT, /*   */ "[]", /*      */ "getitem", /*    */ "tp_get", &operator_getitem),
-	TYPE_OPERATOR_DECL(OPERATOR_0033_DELITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_del), /*            */ OPCC_BINARY_INT, /*      */ "del[]", /*   */ "delitem", /*    */ "tp_del", &operator_delitem),
-	TYPE_OPERATOR_DECL(OPERATOR_0034_SETITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_set), /*            */ OPCC_TRINARY_INT, /*     */ "[]=", /*     */ "setitem", /*    */ "tp_set", &operator_setitem),
-	TYPE_OPERATOR_DECL(OPERATOR_0035_GETRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_range_get), /*      */ OPCC_TRINARY_OBJECT, /*  */ "[:]", /*     */ "getrange", /*   */ "tp_range_get", &operator_getrange),
-	TYPE_OPERATOR_DECL(OPERATOR_0036_DELRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_range_del), /*      */ OPCC_TRINARY_INT, /*     */ "del[:]", /*  */ "delrange", /*   */ "tp_range_del", &operator_delrange),
-	TYPE_OPERATOR_DECL(OPERATOR_0037_SETRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_range_set), /*      */ OPCC_QUATERNARY_INT, /*  */ "[:]=", /*    */ "setrange", /*   */ "tp_range_set", &operator_setrange),
+	TYPE_OPERATOR_DECL(OPERATOR_0032_GETITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_getitem), /*        */ OPCC_BINARY_OBJECT, /*   */ "[]", /*      */ "getitem", /*    */ "tp_getitem", &operator_getitem),
+	TYPE_OPERATOR_DECL(OPERATOR_0033_DELITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_delitem), /*        */ OPCC_BINARY_INT, /*      */ "del[]", /*   */ "delitem", /*    */ "tp_delitem", &operator_delitem),
+	TYPE_OPERATOR_DECL(OPERATOR_0034_SETITEM, /*    */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_setitem), /*        */ OPCC_TRINARY_INT, /*     */ "[]=", /*     */ "setitem", /*    */ "tp_setitem", &operator_setitem),
+	TYPE_OPERATOR_DECL(OPERATOR_0035_GETRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_getrange), /*       */ OPCC_TRINARY_OBJECT, /*  */ "[:]", /*     */ "getrange", /*   */ "tp_getrange", &operator_getrange),
+	TYPE_OPERATOR_DECL(OPERATOR_0036_DELRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_delrange), /*       */ OPCC_TRINARY_INT, /*     */ "del[:]", /*  */ "delrange", /*   */ "tp_delrange", &operator_delrange),
+	TYPE_OPERATOR_DECL(OPERATOR_0037_SETRANGE, /*   */ offsetof(Type, tp_seq), /*   */ offsetof(struct type_seq, tp_setrange), /*       */ OPCC_QUATERNARY_INT, /*  */ "[:]=", /*    */ "setrange", /*   */ "tp_setrange", &operator_setrange),
 	TYPE_OPERATOR_DECL(OPERATOR_0038_GETATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_getattr), /*       */ OPCC_SPECIAL, /*         */ ".", /*       */ "getattr", /*    */ "tp_getattr", &operator_getattr),
 	TYPE_OPERATOR_DECL(OPERATOR_0039_DELATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_delattr), /*       */ OPCC_SPECIAL, /*         */ "del.", /*    */ "delattr", /*    */ "tp_delattr", &operator_delattr),
 	TYPE_OPERATOR_DECL(OPERATOR_003A_SETATTR, /*    */ offsetof(Type, tp_attr), /*  */ offsetof(struct type_attr, tp_setattr), /*       */ OPCC_SPECIAL, /*         */ ".=", /*      */ "setattr", /*    */ "tp_setattr", &operator_setattr),

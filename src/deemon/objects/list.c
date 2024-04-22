@@ -1115,7 +1115,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	}
 
 	/* Fallback: Append elements from a general-purpose iterator. */
-	sequence = DeeObject_IterSelf(sequence);
+	sequence = DeeObject_Iter(sequence);
 	if unlikely(!sequence)
 		goto err;
 	error = DeeList_AppendIterator(self, sequence);
@@ -1265,7 +1265,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	if (fast_seqlen != DEE_FASTSEQ_NOTFAST) {
 		/* TODO: Special optimization. */
 	}
-	iterator = DeeObject_IterSelf(sequence);
+	iterator = DeeObject_Iter(sequence);
 	if unlikely(!iterator)
 		goto err;
 	result = DeeList_InsertIterator(self, index, iterator);
@@ -2347,17 +2347,17 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 };
 
 PRIVATE struct type_seq list_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
-	/* .tp_nsi       = */ &list_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_setitem,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
+	/* .tp_nsi      = */ &list_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
 };
 
 
@@ -3419,7 +3419,7 @@ DeeList_EqS(List *lhs, DeeObject *seq) {
 	fast_size = DeeFastSeq_GetSize(seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST)
 		return DeeList_EqF(lhs, seq, fast_size);
-	seq = DeeObject_IterSelf(seq);
+	seq = DeeObject_Iter(seq);
 	if unlikely(!seq)
 		goto err;
 	result = DeeList_EqI(lhs, seq);
@@ -3539,7 +3539,7 @@ DeeList_CompareS(List *lhs, DeeObject *rhs) {
 		return DeeList_CompareV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
 	if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST)
 		return DeeList_LoF(lhs, rhs, rhs_size);
-	rhs = DeeObject_IterSelf(rhs);
+	rhs = DeeObject_Iter(rhs);
 	if unlikely(!rhs)
 		return -2;
 	result = DeeList_LoI(lhs, rhs);
@@ -3665,7 +3665,7 @@ PRIVATE struct type_operator const list_operators[] = {
 	TYPE_OPERATOR_FLAGS(OPERATOR_002C_LE, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002D_GR, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_002E_GE, METHOD_FNOREFESCAPE),
-	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITERSELF, METHOD_FNOREFESCAPE),
+	TYPE_OPERATOR_FLAGS(OPERATOR_002F_ITER, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0030_SIZE, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0031_CONTAINS, METHOD_FNOREFESCAPE),
 	TYPE_OPERATOR_FLAGS(OPERATOR_0032_GETITEM, METHOD_FNOREFESCAPE),

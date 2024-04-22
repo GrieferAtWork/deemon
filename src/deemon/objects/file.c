@@ -1039,7 +1039,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		}
 		return 0;
 	}
-	if unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
+	if unlikely((ob = DeeObject_Iter(ob)) == NULL)
 		goto err_m1;
 	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
 		if (!is_first) {
@@ -1090,7 +1090,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		}
 		return 0;
 	}
-	if unlikely((ob = DeeObject_IterSelf(ob)) == NULL)
+	if unlikely((ob = DeeObject_Iter(ob)) == NULL)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(ob))) {
 		result = DeeFile_PrintObjectSp(self, elem);
@@ -2605,7 +2605,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 
 
 PRIVATE struct type_seq file_seq = {
-	/* .tp_iter_self = */ &DeeObject_NewRef
+	/* .tp_iter     = */ &DeeObject_NewRef
 };
 
 

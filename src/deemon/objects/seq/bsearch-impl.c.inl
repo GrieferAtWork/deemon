@@ -85,7 +85,7 @@ LOCAL_bfind_with_xxx(
 			index_ob = DeeInt_NewSize(mid);
 			if unlikely(!index_ob)
 				goto err;
-			seq_elem = (*seq->tp_get)(self, index_ob);
+			seq_elem = (*seq->tp_getitem)(self, index_ob);
 			Dee_Decref(index_ob);
 			if unlikely(!seq_elem)
 				goto err;
@@ -131,7 +131,7 @@ LOCAL_bfind_with_xxx(
 					index_ob = DeeInt_NewSize(mid);
 					if unlikely(!index_ob)
 						goto err;
-					seq_elem = (*seq->tp_get)(self, index_ob);
+					seq_elem = (*seq->tp_getitem)(self, index_ob);
 					Dee_Decref(index_ob);
 					if unlikely(!seq_elem)
 						goto err;
@@ -167,7 +167,7 @@ LOCAL_bfind_with_xxx(
 					index_ob = DeeInt_NewSize(mid);
 					if unlikely(!index_ob)
 						goto err;
-					seq_elem = (*seq->tp_get)(self, index_ob);
+					seq_elem = (*seq->tp_getitem)(self, index_ob);
 					Dee_Decref(index_ob);
 					if unlikely(!seq_elem)
 						goto err;

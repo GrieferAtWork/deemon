@@ -73,7 +73,7 @@ INTDEF DeeTypeObject CachedDictIterator_Type;
 PRIVATE NONNULL((1)) int DCALL
 cdictiterator_ctor(CachedDictIterator *__restrict self) {
 	self->cdi_map  = Dee_EmptyMapping;
-	self->cdi_iter = DeeObject_IterSelf(self->cdi_map);
+	self->cdi_iter = DeeObject_Iter(self->cdi_map);
 	if unlikely(!self->cdi_iter)
 		goto err;
 	Dee_Incref(self->cdi_map);
@@ -128,7 +128,7 @@ cdictiterator_init(CachedDictIterator *__restrict self,
                    size_t argc, DeeObject *const *argv) {
 	if (DeeArg_Unpack(argc, argv, "o|o:CachedDict.Iterator", &self->cdi_map))
 		goto err;
-	self->cdi_iter = DeeObject_IterSelf(self->cdi_map);
+	self->cdi_iter = DeeObject_Iter(self->cdi_map);
 	if unlikely(!self->cdi_iter)
 		goto err;
 	Dee_Incref(self->cdi_map);
@@ -1051,7 +1051,7 @@ cdict_iter(CachedDict *__restrict self) {
 	result = DeeObject_MALLOC(CachedDictIterator);
 	if unlikely(!result)
 		goto err;
-	map_iter = DeeObject_IterSelf(self->cd_map);
+	map_iter = DeeObject_Iter(self->cd_map);
 	if unlikely(!map_iter)
 		goto err_r;
 	result->cdi_iter = map_iter; /* Inherit */
@@ -1087,15 +1087,15 @@ PRIVATE struct type_cmp cdict_cmp = {
 };
 
 PRIVATE struct type_seq cdict_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
-	/* .tp_del          = */ NULL,
-	/* .tp_set          = */ NULL,
-	/* .tp_range_get    = */ NULL,
-	/* .tp_range_del    = */ NULL,
-	/* .tp_range_set    = */ NULL,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
+	/* .tp_delitem      = */ NULL,
+	/* .tp_setitem      = */ NULL,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ NULL,
+	/* .tp_setrange     = */ NULL,
 	/* .tp_nsi          = */ &cdict_nsi,
 	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,

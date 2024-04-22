@@ -1905,15 +1905,15 @@ typedef WUNUSED_T NONNULL_T((2, 3)) Dee_ssize_t (DCALL *Dee_foreach_pair_t)(void
 struct Dee_type_nsi;
 struct Dee_type_seq {
 	/* Sequence operators. */
-	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter_self)(DeeObject *__restrict self);
-	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_size)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_iter)(DeeObject *__restrict self);
+	WUNUSED_T NONNULL_T((1))          DREF DeeObject *(DCALL *tp_sizeob)(DeeObject *__restrict self);
 	WUNUSED_T NONNULL_T((1, 2))       DREF DeeObject *(DCALL *tp_contains)(DeeObject *self, DeeObject *some_object);
-	WUNUSED_T NONNULL_T((1, 2))       DREF DeeObject *(DCALL *tp_get)(DeeObject *self, DeeObject *index);
-	WUNUSED_T NONNULL_T((1, 2))       int             (DCALL *tp_del)(DeeObject *self, DeeObject *index);
-	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_set)(DeeObject *self, DeeObject *index, DeeObject *value);
-	WUNUSED_T NONNULL_T((1, 2, 3))    DREF DeeObject *(DCALL *tp_range_get)(DeeObject *self, DeeObject *begin, DeeObject *end);
-	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_range_del)(DeeObject *self, DeeObject *begin, DeeObject *end);
-	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int             (DCALL *tp_range_set)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2))       DREF DeeObject *(DCALL *tp_getitem)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 2))       int             (DCALL *tp_delitem)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_setitem)(DeeObject *self, DeeObject *index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2, 3))    DREF DeeObject *(DCALL *tp_getrange)(DeeObject *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 2, 3))    int             (DCALL *tp_delrange)(DeeObject *self, DeeObject *begin, DeeObject *end);
+	WUNUSED_T NONNULL_T((1, 2, 3, 4)) int             (DCALL *tp_setrange)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *value);
 
 	/* Optional sequence-extensions for providing optimized (but
 	 * less generic) variants for various sequence operations. */
@@ -1924,10 +1924,10 @@ struct Dee_type_seq {
 	 *       of operators with the primary operators above. */
 	struct Dee_type_nsi Dee_tpconst *tp_nsi;
 
-	/* Alternate forms for `tp_iter_self' (these are inherited by `DeeType_InheritIterSelf()').
-	 * Instead of defining `tp_iter_self', you can just define one of these and have the runtime
+	/* Alternate forms for `tp_iter' (these are inherited by `DeeType_InheritIter()').
+	 * Instead of defining `tp_iter', you can just define one of these and have the runtime
 	 * use these for enumerating the object. Note however that this is less efficient, and that
-	 * the type should still provide a proper `tp_iter_self' callback. */
+	 * the type should still provide a proper `tp_iter' callback. */
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 	WUNUSED_T NONNULL_T((1, 2)) Dee_ssize_t (DCALL *tp_foreach_pair)(DeeObject *__restrict self, Dee_foreach_pair_t proc, void *arg);
 };
@@ -2185,7 +2185,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
                                             * the global state (except for reference counts or memory usage).
                                             * Also means that the function doesn't invoke user-overwritable operators (except OOM hooks).
                                             * Implies `Dee_METHOD_FPURECALL'. Function can be used in constant propagation.
-                                            * IMPORTANT: when attached to `OPERATOR_ITERSELF', the meaning isn't that `operator iter()'
+                                            * IMPORTANT: when attached to `OPERATOR_ITER', the meaning isn't that `operator iter()'
                                             *            can be called at compile-time (it never can, since the whole point of an iterator
                                             *            is that it holds a small state usable for enumeration of a sequence).
                                             *            Instead, here the meaning is that `DeeObject_Foreach()' can be called at compile-
@@ -2199,7 +2199,7 @@ template<class _TSelf> Dee_boundmethod_t _Dee_RequiresBoundMethod(WUNUSED_T NONN
                                             * entry must match refcnt on exit (except as listed above))
                                             *
                                             * !!! IMPORTANT !!! If you're uncertain about this flag, don't set it!
-                                            * IMPORTANT: when attached to `OPERATOR_ITERSELF', same special case as `Dee_METHOD_FCONSTCALL' */
+                                            * IMPORTANT: when attached to `OPERATOR_ITER', same special case as `Dee_METHOD_FCONSTCALL' */
 
 /* Extra conditions that may be used to restrict when `Dee_METHOD_FPURECALL'
  * and `Dee_METHOD_FCONSTCALL' should be considered enabled (must be combined
@@ -2743,15 +2743,15 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_LE           0x002c /* `operator <= (other: Object): Object'                       - `__le__'          - `tp_le'. */
 #define OPERATOR_GR           0x002d /* `operator > (other: Object): Object'                        - `__gr__'          - `tp_gr'. */
 #define OPERATOR_GE           0x002e /* `operator >= (other: Object): Object'                       - `__ge__'          - `tp_ge'. */
-#define OPERATOR_ITERSELF     0x002f /* `operator iter(): Object'                                   - `__iter__'        - `tp_iter_self'. */
-#define OPERATOR_SIZE         0x0030 /* `operator # (): Object'                                     - `__size__'        - `tp_size'. */
+#define OPERATOR_ITER         0x002f /* `operator iter(): Object'                                   - `__iter__'        - `tp_iter'. */
+#define OPERATOR_SIZE         0x0030 /* `operator # (): Object'                                     - `__size__'        - `tp_sizeob'. */
 #define OPERATOR_CONTAINS     0x0031 /* `operator contains(other: Object): Object'                  - `__contains__'    - `tp_contains'. */
-#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object'                       - `__getitem__'     - `tp_get'. */
-#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object)'                            - `__delitem__'     - `tp_del'. */
-#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object)'               - `__setitem__'     - `tp_set'. */
-#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object'         - `__getrange__'    - `tp_range_get'. */
-#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)'              - `__delrange__'    - `tp_range_del'. */
-#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)' - `__setrange__'    - `tp_range_set'. */
+#define OPERATOR_GETITEM      0x0032 /* `operator [] (index: Object): Object'                       - `__getitem__'     - `tp_getitem'. */
+#define OPERATOR_DELITEM      0x0033 /* `operator del[] (index: Object)'                            - `__delitem__'     - `tp_delitem'. */
+#define OPERATOR_SETITEM      0x0034 /* `operator []= (index: Object, value: Object)'               - `__setitem__'     - `tp_setitem'. */
+#define OPERATOR_GETRANGE     0x0035 /* `operator [:] (begin: Object, end: Object): Object'         - `__getrange__'    - `tp_getrange'. */
+#define OPERATOR_DELRANGE     0x0036 /* `operator del[:] (begin: Object, end: Object)'              - `__delrange__'    - `tp_delrange'. */
+#define OPERATOR_SETRANGE     0x0037 /* `operator [:]= (begin: Object, end: Object, value: Object)' - `__setrange__'    - `tp_setrange'. */
 #define OPERATOR_GETATTR      0x0038 /* `operator . (string attr): Object'                          - `__getattr__'     - `tp_getattr'. */
 #define OPERATOR_DELATTR      0x0039 /* `operator del . (string attr)'                              - `__delattr__'     - `tp_delattr'. */
 #define OPERATOR_SETATTR      0x003a /* `operator .= (string attr, value: Object)'                  - `__setattr__'     - `tp_setattr'. */
@@ -2780,7 +2780,7 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_MATHMAX    OPERATOR_INPLACE_POW
 #define OPERATOR_CMPMIN     OPERATOR_HASH
 #define OPERATOR_CMPMAX     OPERATOR_GE
-#define OPERATOR_SEQMIN     OPERATOR_ITERSELF
+#define OPERATOR_SEQMIN     OPERATOR_ITER
 #define OPERATOR_SEQMAX     OPERATOR_SETRANGE
 #define OPERATOR_ATTRMIN    OPERATOR_GETATTR
 #define OPERATOR_ATTRMAX    OPERATOR_ENUMATTR
@@ -2840,7 +2840,7 @@ typedef uint16_t Dee_operator_t;
 #define OPERATOR_002C_LE           OPERATOR_LE
 #define OPERATOR_002D_GR           OPERATOR_GR
 #define OPERATOR_002E_GE           OPERATOR_GE
-#define OPERATOR_002F_ITERSELF     OPERATOR_ITERSELF
+#define OPERATOR_002F_ITER         OPERATOR_ITER
 #define OPERATOR_0030_SIZE         OPERATOR_SIZE
 #define OPERATOR_0031_CONTAINS     OPERATOR_CONTAINS
 #define OPERATOR_0032_GETITEM      OPERATOR_GETITEM
@@ -3350,7 +3350,7 @@ DFUNDEF ATTR_PURE WUNUSED NONNULL((1)) struct Dee_type_operator const *DCALL
 DeeType_GetCustomOperatorById(DeeTypeObject const *__restrict self, Dee_operator_t id);
 
 /* Lookup per-type method flags that may be defined for "opname".
- * IMPORTANT: When querying the flags for `OPERATOR_ITERSELF', the `Dee_METHOD_FCONSTCALL',
+ * IMPORTANT: When querying the flags for `OPERATOR_ITER', the `Dee_METHOD_FCONSTCALL',
  *            `Dee_METHOD_FPURECALL', and `Dee_METHOD_FNOREFESCAPE' flags doesn't mean that
  *            you can call `operator iter()' at compile-time. Instead, it means that
  *            *enumerating* the object can be done at compile-time (so-long as the associated
@@ -3366,7 +3366,7 @@ DeeType_GetOperatorFlags(DeeTypeObject const *__restrict self, Dee_operator_t op
  * >> (!DeeType_HasOperator(self, OPERATOR_BOOL) || (DeeType_GetOperatorFlags(self, OPERATOR_BOOL) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_INT) || (DeeType_GetOperatorFlags(self, OPERATOR_INT) & Dee_METHOD_FCONSTCALL)) &&
  * >> (!DeeType_HasOperator(self, OPERATOR_FLOAT) || (DeeType_GetOperatorFlags(self, OPERATOR_FLOAT) & Dee_METHOD_FCONSTCALL));
- * >> (!DeeType_HasOperator(self, OPERATOR_ITERSELF) || (DeeType_GetOperatorFlags(self, OPERATOR_ITERSELF) & Dee_METHOD_FCONSTCALL));
+ * >> (!DeeType_HasOperator(self, OPERATOR_ITER) || (DeeType_GetOperatorFlags(self, OPERATOR_ITER) & Dee_METHOD_FCONSTCALL));
  * This is the condition that must be fulfilled by all arguments other than "this" when
  * a function uses "Dee_METHOD_FCONSTCALL_IF_ARGS_CONSTCAST" to make its CONSTCALL flag
  * conditional. */
@@ -3436,15 +3436,15 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterSelf(DeeTypeObject *__restrict self);      /* tp_iter_self */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_size */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);          /* tp_iter */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_sizeob */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_get */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_del */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_set */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_range_get */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_range_del */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_range_set */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_getitem */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_delitem */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_setitem */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_getrange */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_delrange */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_setrange */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);           /* tp_nsi */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);           /* tp_nii */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
@@ -3472,7 +3472,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritHash(self)         DeeType_InheritOperator(self, OPERATOR_HASH)
 #define DeeType_InheritCompare(self)      DeeType_InheritOperator(self, OPERATOR_EQ)
 #define DeeType_InheritIterNext(self)     DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
-#define DeeType_InheritIterSelf(self)     DeeType_InheritOperator(self, OPERATOR_ITERSELF)
+#define DeeType_InheritIter(self)         DeeType_InheritOperator(self, OPERATOR_ITER)
 #define DeeType_InheritSize(self)         DeeType_InheritOperator(self, OPERATOR_SIZE)
 #define DeeType_InheritContains(self)     DeeType_InheritOperator(self, OPERATOR_CONTAINS)
 #define DeeType_InheritGetItem(self)      DeeType_InheritOperator(self, OPERATOR_GETITEM)
@@ -3481,7 +3481,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritGetRange(self)     DeeType_InheritOperator(self, OPERATOR_GETRANGE)
 #define DeeType_InheritDelRange(self)     DeeType_InheritOperator(self, OPERATOR_DELRANGE)
 #define DeeType_InheritSetRange(self)     DeeType_InheritOperator(self, OPERATOR_SETRANGE)
-#define DeeType_InheritNSI(self)          DeeType_InheritOperator(self, OPERATOR_ITERSELF)
+#define DeeType_InheritNSI(self)          DeeType_InheritOperator(self, OPERATOR_ITER)
 #define DeeType_InheritNII(self)          DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
 #define DeeType_InheritWith(self)         DeeType_InheritOperator(self, OPERATOR_ENTER)
 #define DeeType_InheritBuffer(self)       DeeType_InheritOperator(self, OPERATOR_GETBUF)
@@ -4142,7 +4142,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 4)) Dee_ssize_t
 
 /* Create a/Yield from an iterator.
  * @return: Dee_ITER_DONE: [DeeObject_IterNext] The iterator has been exhausted. */
-DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterSelf)(DeeObject *__restrict self);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Iter)(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
 /* Invoke `proc' for each element of a general-purpose sequence.
@@ -4150,7 +4150,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObjec
  * Otherwise, return the sum of all calls to it.
  * NOTE: This function does some special optimizations for known sequence types.
  * @return: -1: An error occurred during iteration (or potentially inside of `*proc') */
-DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_IterSelf()' */
+DFUNDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t /* TODO: Refactor more code to use this instead of `DeeObject_Iter()' */
 (DCALL DeeObject_Foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 
 /* Same as `DeeObject_Foreach()', but meant for enumeration of mapping key/value pairs. */

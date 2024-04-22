@@ -3161,7 +3161,7 @@ instance_autoload_members_kw(DeeTypeObject *tp_self,
 			if unlikely(DeeInstance_SetBasicAttribute(desc, instance, at, argv[i]))
 				goto err;
 		}
-		iterator = DeeObject_IterSelf((DeeObject *)kw);
+		iterator = DeeObject_Iter((DeeObject *)kw);
 		if unlikely(!iterator)
 			goto err;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -4222,7 +4222,7 @@ instance_enumattr(DeeTypeObject *tp_self,
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tinv, instance_inv, OPERATOR_INV)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tpos, instance_pos, OPERATOR_POS)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tneg, instance_neg, OPERATOR_NEG)
-DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_titer, instance_iter, OPERATOR_ITERSELF)
+DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_titer, instance_iter, OPERATOR_ITER)
 DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION(instance_tsize, instance_size, OPERATOR_SIZE)
 #undef DEFINE_UNARY_INSTANCE_WRAPPER_FUNCTION
 

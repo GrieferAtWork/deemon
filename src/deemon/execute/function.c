@@ -1603,7 +1603,7 @@ err:
 }
 
 PRIVATE struct type_seq yf_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter_self
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter_self
 };
 
 PRIVATE struct type_member tpconst yf_class_members[] = {

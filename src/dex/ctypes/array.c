@@ -410,7 +410,7 @@ array_setrange(DeeArrayTypeObject *tp_self, void *base,
 	}
 	DeeSeqRange_Clamp(&range, i_begin, i_end, tp_self->at_count);
 	range_size = range.sr_end - range.sr_start;
-	iter = DeeObject_IterSelf(value);
+	iter = DeeObject_Iter(value);
 	if unlikely(!iter)
 		goto err;
 	if unlikely(range_size <= 0) {

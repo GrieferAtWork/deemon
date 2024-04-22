@@ -1789,7 +1789,7 @@ err_function_code:
 					goto done;
 				}
 				/* Insert the key and item into the Dict. */
-				error = (*DeeDict_Type.tp_seq->tp_set)(result, key, value);
+				error = (*DeeDict_Type.tp_seq->tp_setitem)(result, key, value);
 				Dee_Decref(value);
 				Dee_Decref(key);
 				if unlikely(error)

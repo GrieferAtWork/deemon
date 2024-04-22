@@ -586,17 +586,17 @@ PRIVATE struct type_nsi tpconst funcstatics_nsi = {
 };
 
 PRIVATE struct type_seq funcstatics_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcstatics_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &funcstatics_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&funcstatics_foreach
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcstatics_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &funcstatics_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&funcstatics_foreach
 };
 
 PRIVATE struct type_member tpconst funcstatics_class_members[] = {
@@ -1497,16 +1497,16 @@ PRIVATE struct type_nsi tpconst funcsymbolsbyname_nsi = {
 
 
 PRIVATE struct type_seq funcsymbolsbyname_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&funcsymbolsbyname_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &funcsymbolsbyname_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&funcsymbolsbyname_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbyname_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&funcsymbolsbyname_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &funcsymbolsbyname_nsi
 };
 
 PRIVATE struct type_member tpconst funcsymbolsbyname_class_members[] = {
@@ -2524,16 +2524,16 @@ PRIVATE struct type_nsi tpconst yfuncsymbolsbyname_nsi = {
 };
 
 PRIVATE struct type_seq yfuncsymbolsbyname_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&yfuncsymbolsbyname_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &yfuncsymbolsbyname_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yfuncsymbolsbyname_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbyname_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&yfuncsymbolsbyname_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &yfuncsymbolsbyname_nsi
 };
 
 PRIVATE struct type_member tpconst yfuncsymbolsbyname_class_members[] = {
@@ -2787,16 +2787,16 @@ PRIVATE struct type_nsi tpconst frameargs_nsi = {
 
 
 PRIVATE struct type_seq frameargs_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &frameargs_nsi
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &frameargs_nsi
 };
 
 PRIVATE struct type_getset tpconst frameargs_getsets[] = {
@@ -3076,16 +3076,16 @@ PRIVATE struct type_nsi tpconst framelocals_nsi = {
 
 
 PRIVATE struct type_seq framelocals_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &framelocals_nsi
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &framelocals_nsi
 };
 
 PRIVATE struct type_getset tpconst framelocals_getsets[] = {
@@ -3440,16 +3440,16 @@ PRIVATE struct type_nsi tpconst framestack_nsi = {
 
 
 PRIVATE struct type_seq framestack_seq = {
-	/* .tp_iter_self = */ NULL,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &framestack_nsi
+	/* .tp_iter     = */ NULL,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &framestack_nsi
 };
 
 PRIVATE struct type_getset tpconst framestack_getsets[] = {
@@ -4817,16 +4817,16 @@ PRIVATE struct type_nsi tpconst framesymbolsbyname_nsi = {
 };
 
 PRIVATE struct type_seq framesymbolsbyname_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&framesymbolsbyname_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &framesymbolsbyname_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&framesymbolsbyname_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbyname_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&framesymbolsbyname_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &framesymbolsbyname_nsi
 };
 
 PRIVATE struct type_member tpconst framesymbolsbyname_class_members[] = {

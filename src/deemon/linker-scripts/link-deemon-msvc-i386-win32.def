@@ -706,7 +706,7 @@ EXPORTS
 	DeeObject_Inv@4=_DeeObject_Inv@4
 	DeeObject_InvokeOperator@16=_DeeObject_InvokeOperator@16
 	DeeObject_IterNext@4=_DeeObject_IterNext@4
-	DeeObject_IterSelf@4=_DeeObject_IterSelf@4
+	DeeObject_Iter@4=_DeeObject_Iter@4
 	DeeObject_Leave@4=_DeeObject_Leave@4
 	DeeObject_Mod@8=_DeeObject_Mod@8
 	DeeObject_ModInt8@8=_DeeObject_ModInt8@8
@@ -839,7 +839,7 @@ EXPORTS
 	DeeObject_TInv@8=_DeeObject_TInv@8
 	DeeObject_TInvokeOperator@20=_DeeObject_TInvokeOperator@20
 	DeeObject_TIterNext@8=_DeeObject_TIterNext@8
-	DeeObject_TIterSelf@8=_DeeObject_TIterSelf@8
+	DeeObject_TIter@8=_DeeObject_TIter@8
 	DeeObject_TLeave@8=_DeeObject_TLeave@8
 	DeeObject_TMod@12=_DeeObject_TMod@12
 	DeeObject_TMoveAssign@12=_DeeObject_TMoveAssign@12

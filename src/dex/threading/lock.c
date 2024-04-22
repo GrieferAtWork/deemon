@@ -2301,7 +2301,7 @@ LockUnion_FromSequence(DeeObject *__restrict seq) {
 	fast_size = DeeFastSeq_GetSize(seq);
 	if (fast_size != DEE_FASTSEQ_NOTFAST)
 		return LockUnion_FromFastSequence(seq, fast_size);
-	iter = DeeObject_IterSelf(seq);
+	iter = DeeObject_Iter(seq);
 	if unlikely(!iter)
 		goto err;
 	result = LockUnion_FromIterator(iter);

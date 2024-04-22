@@ -260,7 +260,7 @@ subrange_iter(SubRange *__restrict self) {
 	DREF SubRangeIterator *result;
 	DREF DeeObject *iterator;
 	size_t begin_index;
-	iterator = DeeObject_IterSelf(self->sr_seq);
+	iterator = DeeObject_Iter(self->sr_seq);
 	if unlikely(!iterator)
 		goto err;
 	result = DeeObject_MALLOC(SubRangeIterator);
@@ -445,16 +445,16 @@ PRIVATE struct type_nsi tpconst subrange_nsi = {
 };
 
 PRIVATE struct type_seq subrange_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrange_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrange_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrange_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &subrange_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrange_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrange_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrange_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &subrange_nsi
 };
 
 
@@ -634,7 +634,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 subrangen_iter(SubRangeN *__restrict self) {
 	DREF DeeObject *result, *elem;
 	size_t offset;
-	result = DeeObject_IterSelf(self->sr_seq);
+	result = DeeObject_Iter(self->sr_seq);
 	if unlikely(!result)
 		goto done;
 	offset = self->sr_start;
@@ -766,16 +766,16 @@ PRIVATE struct type_nsi tpconst subrangen_nsi = {
 };
 
 PRIVATE struct type_seq subrangen_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangen_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangen_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangen_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &subrangen_nsi
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangen_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&subrangen_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&subrangen_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &subrangen_nsi
 };
 
 PRIVATE struct type_member tpconst subrangen_members[] = {

@@ -577,15 +577,15 @@ err_r:
 
 
 PRIVATE struct type_seq sf_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
-	/* .tp_size      = */ NULL, /* TODO: string.count() */
-	/* .tp_contains  = */ NULL, /* TODO: string.substr() == needle */
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sf_iter,
+	/* .tp_sizeob   = */ NULL, /* TODO: string.count() */
+	/* .tp_contains = */ NULL, /* TODO: string.substr() == needle */
 };
 
 PRIVATE struct type_seq scf_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scf_iter,
-	/* .tp_size      = */ NULL, /* TODO: string.casecount() */
-	/* .tp_contains  = */ NULL, /* TODO: string.substr(...).casecompare(needle) == 0 */
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&scf_iter,
+	/* .tp_sizeob   = */ NULL, /* TODO: string.casecount() */
+	/* .tp_contains = */ NULL, /* TODO: string.substr(...).casecompare(needle) == 0 */
 };
 
 

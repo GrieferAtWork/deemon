@@ -1278,7 +1278,7 @@ fg_vnotoneref_if_operator_at(struct fungen *__restrict self,
 		return err_illegal_stack_effect();
 again_foreach_mobj:
 	mval = &state->ms_stackv[state->ms_stackc - off];
-	if (operator_name != OPERATOR_ITERSELF) {
+	if (operator_name != OPERATOR_ITER) {
 	}
 	DeeTypeObject *loctype = memval_typeof(mval);
 	if (loctype != NULL && DeeType_IsOperatorNoRefEscape(loctype, operator_name))

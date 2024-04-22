@@ -148,7 +148,7 @@ ids_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_IterSelf(self->sp_seq);
+	result->si_iter = DeeObject_Iter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqIdsIterator_Type);
@@ -165,7 +165,7 @@ types_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_IterSelf(self->sp_seq);
+	result->si_iter = DeeObject_Iter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqTypesIterator_Type);
@@ -182,7 +182,7 @@ classes_iter(SeqSimpleProxy *__restrict self) {
 	result = DeeObject_MALLOC(SeqSimpleProxyIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_IterSelf(self->sp_seq);
+	result->si_iter = DeeObject_Iter(self->sp_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	DeeObject_Init(result, &SeqClassesIterator_Type);
@@ -521,45 +521,45 @@ PRIVATE struct type_nsi tpconst classes_nsi = {
 };
 
 PRIVATE struct type_seq ids_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ids_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ids_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &ids_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ids_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ids_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ids_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&ids_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &ids_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ids_foreach,
 };
 
 PRIVATE struct type_seq types_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&types_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&types_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &types_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&types_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&types_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&types_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&types_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &types_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&types_foreach,
 };
 
 PRIVATE struct type_seq classes_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&classes_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&classes_getrange,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &classes_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&classes_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&classes_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&classes_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&classes_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &classes_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&classes_foreach,
 };
 
 
@@ -720,7 +720,7 @@ INTERN DeeTypeObject SeqClasses_Type = {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iter_ctor(SeqSimpleProxyIterator *__restrict self) {
-	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->si_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->si_iter)
 		goto err;
 	return 0;
@@ -759,7 +759,7 @@ iter_init(SeqSimpleProxyIterator *__restrict self,
 	       : &SeqClasses_Type;
 	if (DeeObject_AssertTypeExact(seq, tp))
 		goto err;
-	self->si_iter = DeeObject_IterSelf(seq->sp_seq);
+	self->si_iter = DeeObject_Iter(seq->sp_seq);
 	if unlikely(!self->si_iter)
 		goto err;
 	return 0;

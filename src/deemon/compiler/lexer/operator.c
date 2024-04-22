@@ -678,7 +678,7 @@ default_case:
 				goto done_y1;
 			}
 			if (name == ENCODE_INT32('i', 't', 'e', 'r')) {
-				result = OPERATOR_ITERSELF;
+				result = OPERATOR_ITER;
 				goto done_y1;
 			}
 			if (name == ENCODE_INT32('m', 'o', 'v', 'e')) {

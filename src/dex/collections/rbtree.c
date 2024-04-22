@@ -2888,7 +2888,7 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t
 	}
 
 	/* Fallback: Use an iterator. */
-	if ((iterator = DeeObject_IterSelf(self)) == NULL)
+	if ((iterator = DeeObject_Iter(self)) == NULL)
 		goto err;
 	for (i = 0; i < 2; ++i) {
 		elem = DeeObject_IterNext(iterator);
@@ -3000,7 +3000,7 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 rbtree_insert_sequence(RBTree *self, DeeObject *seq) {
 	int result;
 	DREF DeeObject *iter;
-	iter = DeeObject_IterSelf(seq);
+	iter = DeeObject_Iter(seq);
 	if unlikely(!iter)
 		goto err;
 	result = rbtree_insert_iterator(self, iter);
@@ -3525,15 +3525,15 @@ PRIVATE struct type_nsi tpconst rbtree_nsi = {
 };
 
 PRIVATE struct type_seq rbtree_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_iter,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *))&rbtree_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
-	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
-	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
-	/* .tp_range_get    = */ NULL,
-	/* .tp_range_del    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
-	/* .tp_range_set    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtree_getitem,
+	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&rbtree_delitem,
+	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_setitem,
+	/* .tp_getrange     = */ NULL,
+	/* .tp_delrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
+	/* .tp_setrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
 	/* .tp_nsi          = */ &rbtree_nsi,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach,

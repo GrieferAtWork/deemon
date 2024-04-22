@@ -58,14 +58,14 @@ DECL_BEGIN
  * Instead, a sequence object `ob' should be
  * detected using `DeeType_IsSequence(Dee_TYPE(ob))'.
  * The following things are required from sub-class of `Sequence':
- *     - Must either implement `tp_iter_self' or `tp_size' + `tp_get'
+ *     - Must either implement `tp_iter' or `tp_sizeob' + `tp_getitem'
  * The following things are implemented by `Sequence':
  *     - Abstraction that automatically defines the following operators:
- *        - tp_iter_self
- *        - tp_size
+ *        - tp_iter
+ *        - tp_sizeob
  *        - tp_contains
- *        - tp_get  (for integer-index argument only)
- *        - tp_range_get  (for integer-index argument only)
+ *        - tp_getitem  (for integer-index argument only)
+ *        - tp_getrange  (for integer-index argument only)
  *        - tp_eq  (Lexicographic element-wise compare with other iterables)
  *        - tp_ne  (...)
  *        - tp_lo
@@ -81,9 +81,9 @@ DECL_BEGIN
  *     - Abstraction that automatically defines the following getsets:
  *        - `isempty: bool'       (Read-only; same as `tp_bool', but negated)
  *        - `isnonempty: bool'    (Read-only; same as `tp_bool')
- *        - `length: int'         (Read-only; same as `tp_size')
- *        - `first: Object'       (Read-write; same as `tp_get(0)' / `tp_set(0)')
- *        - `last: Object'        (Read-write; same as `tp_get(length - 1)' / `tp_set(length - 1)')
+ *        - `length: int'         (Read-only; same as `tp_sizeob')
+ *        - `first: Object'       (Read-write; same as `tp_getitem(0)' / `tp_setitem(0)')
+ *        - `last: Object'        (Read-write; same as `tp_getitem(length - 1)' / `tp_setitem(length - 1)')
  *        - `ismutable: bool'     (Read-only; s.a. `DeeSeq_IsMutable()')
  *        - `isresizable: bool'   (Read-only; s.a. `DeeSeq_IsResizable()')
  *        - `each: Sequence'      (Read-only; Proxy sequence for construction expressions to-be applied to each element)
@@ -94,7 +94,7 @@ DECL_BEGIN
  *        - `frozen: Sequence'    (Read-only; returns a frozen copy of the sequence)
  *     - Abstraction that automatically defines the following class getsets:
  *        - `Iterator: Type'
- *          Evaluates to the internally used iterator type when `DeeObject_IterSelf()' would
+ *          Evaluates to the internally used iterator type when `DeeObject_Iter()' would
  *          return it. Otherwise, accessing this field raises an `Error.AttributeError'.
  *          The intention here is that a sub-class defining its own iterator should override
  *          this field in order to return its own type.
@@ -358,7 +358,7 @@ struct Dee_type_nsi {
 		struct { /* TYPE_SEQX_CLASS_SEQ */
 			/* NOTE: If provided, these functions are only ever called as extensions to the
 			 *       regular sequence operators, meaning that if you implement `nsi_getsize',
-			 *       you are also _required_ to implement `tp_size'
+			 *       you are also _required_ to implement `tp_sizeob'
 			 * NOTE: Any object implementing sequence extensions _must_ at
 			 *       the very least provide the operators for `nsi_getsize'!
 			 * NOTE: The `*_fast' variants are allowed to assume:

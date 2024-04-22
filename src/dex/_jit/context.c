@@ -946,7 +946,7 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 		goto done;
 	}
 	/* Fallback: Use an iterator. */
-	if ((iterator = DeeObject_IterSelf(values)) == NULL)
+	if ((iterator = DeeObject_Iter(values)) == NULL)
 		goto err;
 	for (; i < self->ll_size; ++i) {
 		elem = DeeObject_IterNext(iterator);

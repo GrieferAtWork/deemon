@@ -1907,7 +1907,7 @@ target_iterself:
 	 * falling through if the next op is foreach. */
 	pushl  TOP
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_IterSelf,4)
+	call   fSYM(DeeObject_Iter,4)
 	ADJUST_CFA_OFFSET(-4)
 	testl  %eax, %eax
 	jz     .except /* Check for errors. */

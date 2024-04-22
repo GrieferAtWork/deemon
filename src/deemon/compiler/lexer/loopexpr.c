@@ -195,7 +195,7 @@ parse_generator_loop(struct ast_loc *__restrict ddi_loc) {
 		TPPLexer_Current->l_flags |= old_flags & TPPLEXER_FLAG_WANTLF;
 		if ((type & AST_FLOOP_FOREACH) && iter_or_next) {
 			/* Wrap the iterator of a foreach-loop with an __iterself__ operator. */
-			merge = ast_operator1(OPERATOR_ITERSELF, AST_OPERATOR_FNORMAL, iter_or_next);
+			merge = ast_operator1(OPERATOR_ITER, AST_OPERATOR_FNORMAL, iter_or_next);
 			merge = ast_setddi(merge, &loc);
 			if unlikely(!merge)
 				goto err_for_loop;

@@ -55,12 +55,6 @@ INTDEF DeeTypeObject SeqRepeatCombinationsIterator_Type;
 INTDEF DeeTypeObject SeqPermutations_Type;
 INTDEF DeeTypeObject SeqPermutationsIterator_Type;
 
-
-#define DeeType_INVOKE_GETITEM(tp_self, self, index) \
-	((tp_self)->tp_seq->tp_get == &instance_getitem  \
-	 ? instance_tgetitem(tp_self, self, index)       \
-	 : (*(tp_self)->tp_seq->tp_get)(self, index))
-
 typedef struct {
 	OBJECT_HEAD
 	DREF DeeObject  *c_seq;        /* [1..1][const] The underlying sequence that is being combined. */
@@ -83,7 +77,7 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	if (self->c_elem)
 		return_reference_(self->c_elem[index]);
 	ASSERT(self->c_getitem != NULL);
-	ASSERT(self->c_getitem->tp_get != NULL);
+	ASSERT(self->c_getitem->tp_getitem != NULL);
 	nsi = self->c_getitem->tp_nsi;
 	if (nsi &&
 	    nsi->nsi_class == TYPE_SEQX_CLASS_SEQ &&
@@ -92,11 +86,9 @@ Combinations_GetSeqItem(Combinations *__restrict self, size_t index) {
 	temp = DeeInt_NewSize(index);
 	if unlikely(!temp)
 		goto err;
-	if (self->c_getitem->tp_get == &instance_getitem) {
-		result = instance_tgetitem(self->c_getitem_tp, self->c_seq, temp);
-	} else {
-		result = (*self->c_getitem->tp_get)(self->c_seq, temp);
-	}
+	result = DeeType_invoke_seq_tp_getitem(self->c_getitem_tp,
+	                                       self->c_getitem->tp_getitem,
+	                                       self->c_seq, temp);
 	Dee_Decref(temp);
 	return result;
 err:
@@ -548,7 +540,7 @@ com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE struct type_seq com_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
 };
 
 PRIVATE struct type_member tpconst com_class_members[] = {
@@ -805,7 +797,7 @@ err_r:
 }
 
 PRIVATE struct type_seq rcom_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
 };
 
 PRIVATE struct type_member tpconst rcom_class_members[] = {
@@ -1049,7 +1041,7 @@ err_r:
 }
 
 PRIVATE struct type_seq pmut_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
 };
 
 PRIVATE struct type_member tpconst pmut_class_members[] = {
@@ -1141,12 +1133,12 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 		struct type_seq *seq;
 		if ((seq = tp_iter->tp_seq) == NULL)
 			continue;
-		if (seq->tp_get) {
+		if (seq->tp_getitem) {
 			/* Use the getitem/size variant. */
 			result->c_getitem    = seq;
 			result->c_getitem_tp = tp_iter;
 			result->c_elem       = NULL;
-			if (!seq->tp_size) {
+			if (!seq->tp_sizeob) {
 				for (;;) {
 					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 					if (!tp_iter) {
@@ -1154,13 +1146,13 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 						goto err_r;
 					}
 					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_size)
+					if (seq && seq->tp_sizeob)
 						break;
 				}
 			}
 			goto load_tp_size;
 		}
-		if (seq->tp_size) {
+		if (seq->tp_sizeob) {
 			/* Use the getitem/size variant. */
 			for (;;) {
 				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
@@ -1169,7 +1161,7 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 					goto err_r;
 				}
 				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_get)
+				    tp_iter->tp_seq->tp_getitem)
 					break;
 			}
 			result->c_getitem    = tp_iter->tp_seq;
@@ -1183,7 +1175,7 @@ load_tp_size:
 			} else {
 				DREF DeeObject *temp;
 				int error;
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
@@ -1193,12 +1185,12 @@ load_tp_size:
 			}
 			goto fill_in_result;
 		}
-		if (seq->tp_iter_self) {
+		if (seq->tp_iter) {
 			DREF DeeObject *iterator, *elem;
 			DREF DeeObject **elem_v, **new_elem_v;
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
-			iterator = (*seq->tp_iter_self)(self);
+			iterator = (*seq->tp_iter)(self);
 			if unlikely(!iterator)
 				goto err_r;
 			elem_c = elem_a = 0;
@@ -1253,7 +1245,7 @@ err_elem_v:
 			goto fill_in_result_2;
 		}
 	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	goto err_r;
 fill_in_result:
 	if (r >= result->c_seqlen) {
@@ -1313,12 +1305,12 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 		struct type_seq *seq;
 		if ((seq = tp_iter->tp_seq) == NULL)
 			continue;
-		if (seq->tp_get) {
+		if (seq->tp_getitem) {
 			/* Use the getitem/size variant. */
 			result->c_getitem    = seq;
 			result->c_getitem_tp = tp_iter;
 			result->c_elem       = NULL;
-			if (!seq->tp_size) {
+			if (!seq->tp_sizeob) {
 				for (;;) {
 					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 					if (!tp_iter) {
@@ -1326,15 +1318,15 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 						goto err_r;
 					}
 					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_size)
+					if (seq && seq->tp_sizeob)
 						break;
 				}
 			}
 			goto load_tp_size;
 		}
-		if (seq->tp_size) {
+		if (seq->tp_sizeob) {
 			/* Use the getitem/size variant. */
-			tp_iter = tp_iter;
+			tp_iter     = tp_iter;
 			for (;;) {
 				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 				if (!tp_iter) {
@@ -1342,7 +1334,7 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 					goto err_r;
 				}
 				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_get)
+				    tp_iter->tp_seq->tp_getitem)
 					break;
 			}
 			result->c_getitem    = tp_iter->tp_seq;
@@ -1356,7 +1348,7 @@ load_tp_size:
 			} else {
 				DREF DeeObject *temp;
 				int error;
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
@@ -1366,12 +1358,12 @@ load_tp_size:
 			}
 			goto fill_in_result;
 		}
-		if (seq->tp_iter_self) {
+		if (seq->tp_iter) {
 			DREF DeeObject *iterator, *elem;
 			DREF DeeObject **elem_v, **new_elem_v;
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
-			iterator = (*seq->tp_iter_self)(self);
+			iterator = (*seq->tp_iter)(self);
 			if unlikely(!iterator)
 				goto err_r;
 			elem_c = elem_a = 0;
@@ -1423,7 +1415,7 @@ err_elem_v:
 			goto fill_in_result_2;
 		}
 	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	goto err_r;
 fill_in_result:
 	if (!result->c_seqlen) {
@@ -1478,12 +1470,12 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 		struct type_seq *seq;
 		if ((seq = tp_iter->tp_seq) == NULL)
 			continue;
-		if (seq->tp_get) {
+		if (seq->tp_getitem) {
 			/* Use the getitem/size variant. */
 			result->c_getitem    = seq;
 			result->c_getitem_tp = tp_iter;
 			result->c_elem       = NULL;
-			if (!seq->tp_size) {
+			if (!seq->tp_sizeob) {
 				for (;;) {
 					tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
 					if (!tp_iter) {
@@ -1491,13 +1483,13 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 						goto err_r;
 					}
 					seq = tp_iter->tp_seq;
-					if (seq && seq->tp_size)
+					if (seq && seq->tp_sizeob)
 						break;
 				}
 			}
 			goto load_tp_size;
 		}
-		if (seq->tp_size) {
+		if (seq->tp_sizeob) {
 			/* Use the getitem/size variant. */
 			for (;;) {
 				tp_iter = DeeTypeMRO_Next(&mro, tp_iter);
@@ -1506,7 +1498,7 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 					goto err_r;
 				}
 				if (tp_iter->tp_seq &&
-				    tp_iter->tp_seq->tp_get)
+				    tp_iter->tp_seq->tp_getitem)
 					break;
 			}
 			result->c_getitem    = tp_iter->tp_seq;
@@ -1520,7 +1512,7 @@ load_tp_size:
 			} else {
 				DREF DeeObject *temp;
 				int error;
-				temp = (*seq->tp_size)(self);
+				temp = (*seq->tp_sizeob)(self);
 				if unlikely(!temp)
 					goto err_r;
 				error = DeeObject_AsSize(temp, &result->c_seqlen);
@@ -1530,12 +1522,12 @@ load_tp_size:
 			}
 			goto fill_in_result;
 		}
-		if (seq->tp_iter_self) {
+		if (seq->tp_iter) {
 			DREF DeeObject *iterator, *elem;
 			DREF DeeObject **elem_v, **new_elem_v;
 			size_t elem_c, elem_a;
 			/* Use the iterator variant */
-			iterator = (*seq->tp_iter_self)(self);
+			iterator = (*seq->tp_iter)(self);
 			if unlikely(!iterator)
 				goto err_r;
 			elem_a = 0;
@@ -1588,7 +1580,7 @@ err_elem_v:
 			goto fill_in_result_2;
 		}
 	} while ((tp_iter = DeeTypeMRO_Next(&mro, tp_iter)) != NULL);
-	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITERSELF);
+	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	goto err_r;
 fill_in_result:
 	if (!result->c_seqlen) {

@@ -53,7 +53,7 @@ repeatiter_ctor(RepeatIterator *__restrict self) {
 	self->rpi_rep = (DREF Repeat *)DeeSeq_Repeat(Dee_EmptySeq, 1);
 	if unlikely(!self->rpi_rep)
 		goto err;
-	self->rpi_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->rpi_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->rpi_iter) { Dee_Decref(self->rpi_rep); }
 	Dee_atomic_rwlock_init(&self->rpi_lock);
 	self->rpi_num = 0;
@@ -116,7 +116,7 @@ repeatiter_init(RepeatIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->rpi_rep, &SeqRepeat_Type))
 		goto err;
-	self->rpi_iter = DeeObject_IterSelf(self->rpi_rep->rp_seq);
+	self->rpi_iter = DeeObject_Iter(self->rpi_rep->rp_seq);
 	if unlikely(!self->rpi_iter)
 		goto err;
 	Dee_Incref(self->rpi_rep);
@@ -236,7 +236,7 @@ done:
 	if (!REPEATITER_READ_NUM(self))
 		goto done;
 	/* Create a new iterator for the next loop. */
-	iter = DeeObject_IterSelf(self->rpi_rep->rp_seq);
+	iter = DeeObject_Iter(self->rpi_rep->rp_seq);
 	if unlikely(!iter)
 		goto err;
 	COMPILER_READ_BARRIER();
@@ -431,7 +431,7 @@ repeat_iter(Repeat *__restrict self) {
 	result = DeeObject_MALLOC(RepeatIterator);
 	if unlikely(!result)
 		goto done;
-	result->rpi_iter = DeeObject_IterSelf(self->rp_seq);
+	result->rpi_iter = DeeObject_Iter(self->rp_seq);
 	if unlikely(!result->rpi_iter)
 		goto err_r;
 	result->rpi_rep = self;
@@ -597,16 +597,16 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 
 
 PRIVATE struct type_seq repeat_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_get,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_get,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
 	/* .tp_getrange  = */ NULL,
 	/* .tp_delrange  = */ NULL,
 	/* .tp_setrange  = */ NULL,
-	/* .tp_nsi       = */ &repeat_nsi
+	/* .tp_nsi      = */ &repeat_nsi
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
@@ -1158,16 +1158,16 @@ PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 };
 
 PRIVATE struct type_seq repeatitem_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_get,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_get,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
 	/* .tp_getrange  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&repeatitem_getrange,
 	/* .tp_delrange  = */ NULL,
 	/* .tp_setrange  = */ NULL,
-	/* .tp_nsi       = */ &repeatitem_nsi
+	/* .tp_nsi      = */ &repeatitem_nsi
 };
 
 PRIVATE struct type_member tpconst repeatitem_members[] = {

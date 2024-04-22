@@ -1535,7 +1535,7 @@ pst_iter_self(DeeObject *__restrict UNUSED(self)) {
 	                               "split", 1, argv);
 	if unlikely(!seq)
 		goto err;
-	iter = DeeObject_IterSelf(seq);
+	iter = DeeObject_Iter(seq);
 	Dee_Decref(seq);
 	return iter;
 err:
@@ -1564,9 +1564,9 @@ pst_contains(DeeObject *__restrict UNUSED(self),
 }
 
 PRIVATE struct type_seq pst_seq = {
-	/* .tp_iter_self = */ &pst_iter_self,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ &pst_contains
+	/* .tp_iter     = */ &pst_iter_self,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ &pst_contains
 };
 
 PRIVATE struct type_getset tpconst pst_class_getsets[] = {

@@ -249,16 +249,16 @@ fl_init(size_t argc, DeeObject *const *argv) {
 				base = DeeTypeMRO_Next(&mro, iter);
 				if (iter->tp_seq &&
 				    (!base || iter->tp_seq != base->tp_seq)) {
-					if (iter->tp_seq->tp_get &&
-					    (!base || !base->tp_seq || base->tp_seq->tp_get != iter->tp_seq->tp_get)) {
+					if (iter->tp_seq->tp_getitem &&
+					    (!base || !base->tp_seq || base->tp_seq->tp_getitem != iter->tp_seq->tp_getitem)) {
 						size = DeeObject_Size(size_ob);
 						if unlikely(size == (size_t)-1)
 							goto err;
-						return fl_init_getitem(iter->tp_seq->tp_get, size_ob, size);
+						return fl_init_getitem(iter->tp_seq->tp_getitem, size_ob, size);
 					}
-					if (iter->tp_seq->tp_iter_self &&
-					    (!base || !base->tp_seq || base->tp_seq->tp_iter_self != iter->tp_seq->tp_iter_self)) {
-						iterator = (*iter->tp_seq->tp_iter_self)(size_ob);
+					if (iter->tp_seq->tp_iter &&
+					    (!base || !base->tp_seq || base->tp_seq->tp_iter != iter->tp_seq->tp_iter)) {
+						iterator = (*iter->tp_seq->tp_iter)(size_ob);
 						if unlikely(!iterator)
 							goto err;
 						result = fl_init_iterator(iterator);
@@ -272,7 +272,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 			}
 init_from_iterator:
 			/* Initialize from iterators. */
-			iterator = DeeObject_IterSelf(size_ob);
+			iterator = DeeObject_Iter(size_ob);
 			if unlikely(!iterator)
 				goto err;
 			result = fl_init_iterator(iterator);
@@ -1172,17 +1172,17 @@ PRIVATE struct type_nsi tpconst fl_nsi = {
 };
 
 PRIVATE struct type_seq fl_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&fl_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&fl_setrange,
-	/* .tp_nsi       = */ &fl_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&fl_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_setitem,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_delrange,
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&fl_setrange,
+	/* .tp_nsi      = */ &fl_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

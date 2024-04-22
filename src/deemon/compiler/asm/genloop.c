@@ -72,7 +72,7 @@ INTERN WUNUSED NONNULL((5)) struct asm_sym *
 		/* Start out by evaluating the loop iterator. */
 		ASSERT_AST(iter_or_next);
 		if (iter_or_next->a_type == AST_OPERATOR &&
-		    iter_or_next->a_flag == OPERATOR_ITERSELF &&
+		    iter_or_next->a_flag == OPERATOR_ITER &&
 		    !(iter_or_next->a_operator.o_exflag & (AST_OPERATOR_FPOSTOP | AST_OPERATOR_FVARARGS)) &&
 		    iter_or_next->a_operator.o_op0) {
 			/* Generate a sequence as an ASP, thus optimizing away unnecessary casts. */

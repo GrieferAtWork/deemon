@@ -48,7 +48,7 @@ filter_visit(HashFilterIterator *__restrict self, dvisit_t proc, void *arg) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 filteriterator_ctor(HashFilterIterator *__restrict self) {
-	self->fi_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->fi_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->fi_iter)
 		goto err;
 	self->fi_hash = 0;
@@ -65,7 +65,7 @@ seq_filteriterator_init(HashFilterIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(filter, &SeqHashFilter_Type))
 		goto err;
-	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
+	self->fi_iter = DeeObject_Iter(filter->f_seq);
 	if unlikely(!self->fi_iter)
 		goto err;
 	self->fi_hash = filter->f_hash;
@@ -82,7 +82,7 @@ map_filteriterator_init(HashFilterIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(filter, &MapHashFilter_Type))
 		goto err;
-	self->fi_iter = DeeObject_IterSelf(filter->f_seq);
+	self->fi_iter = DeeObject_Iter(filter->f_seq);
 	if unlikely(!self->fi_iter)
 		goto err;
 	self->fi_hash = filter->f_hash;
@@ -338,7 +338,7 @@ filter_iter(HashFilter *__restrict self) {
 	result = DeeObject_MALLOC(HashFilterIterator);
 	if unlikely(!result)
 		goto done;
-	result->fi_iter = DeeObject_IterSelf(self->f_seq);
+	result->fi_iter = DeeObject_Iter(self->f_seq);
 	if unlikely(!result->fi_iter)
 		goto err_r;
 	result->fi_hash = self->f_hash;
@@ -354,15 +354,15 @@ err_r:
 }
 
 PRIVATE struct type_seq filter_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&filter_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL
 };
 
 PRIVATE struct type_member tpconst seq_filter_members[] = {

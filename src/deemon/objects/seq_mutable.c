@@ -332,7 +332,7 @@ DeeSeq_DelItem(DeeObject *__restrict self, size_t index) {
 				index_ob = DeeInt_NewSize(index);
 				if unlikely(!index_ob)
 					goto err;
-				result = (*seq->tp_del)(self, index_ob);
+				result = (*seq->tp_delitem)(self, index_ob);
 				Dee_Decref(index_ob);
 				return result;
 			}
@@ -396,9 +396,9 @@ did_find_attributes:
 				goto err;
 			}
 			if (has_noninherited_delrange(tp_self, seq)) {
-				result = (*seq->tp_range_del)(self, start_index, end_index);
+				result = (*seq->tp_delrange)(self, start_index, end_index);
 			} else {
-				result = (*seq->tp_range_set)(self, start_index, end_index, Dee_None);
+				result = (*seq->tp_setrange)(self, start_index, end_index, Dee_None);
 			}
 			Dee_Decref(end_index);
 			Dee_Decref(start_index);
@@ -466,7 +466,7 @@ DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value) {
 				index_ob = DeeInt_NewSize(index);
 				if unlikely(!index_ob)
 					goto err;
-				result = (*seq->tp_set)(self, index_ob, value);
+				result = (*seq->tp_setitem)(self, index_ob, value);
 				Dee_Decref(index_ob);
 				return result;
 			}
@@ -492,7 +492,7 @@ err_start_index:
 					Dee_Decref(end_index);
 					goto err_start_index;
 				}
-				result = (*seq->tp_range_set)(self, start_index, end_index, value_seq);
+				result = (*seq->tp_setrange)(self, start_index, end_index, value_seq);
 				Dee_Decref(value_seq);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
@@ -617,7 +617,7 @@ return_result_first:
 					Dee_Decref(index_ob);
 					goto err;
 				}
-				error = (*seq->tp_set)(self, index_ob, value);
+				error = (*seq->tp_setitem)(self, index_ob, value);
 				Dee_Decref(index_ob);
 				if unlikely(error)
 					goto err_r;
@@ -638,7 +638,7 @@ return_result_first:
 					Dee_Decref(index_ob);
 					goto err_r;
 				}
-				error = (*seq->tp_range_set)(self, index_ob, index_plus1_ob, value);
+				error = (*seq->tp_setrange)(self, index_ob, index_plus1_ob, value);
 				Dee_Decref(index_plus1_ob);
 				Dee_Decref(index_ob);
 				if unlikely(error)
@@ -729,7 +729,7 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 					Dee_Decref(start_index);
 					goto err;
 				}
-				result = (*seq->tp_range_del)(self, start_index, end_index);
+				result = (*seq->tp_delrange)(self, start_index, end_index);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
 				return result;
@@ -765,7 +765,7 @@ DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 						index_ob = DeeInt_NewSize(start + end);
 						if unlikely(!index_ob)
 							goto err;
-						result = (*seq->tp_del)(self, index_ob);
+						result = (*seq->tp_delitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(result)
 							goto err;
@@ -862,7 +862,7 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 				start_index = DeeInt_NewSize(start);
 				if unlikely(!start_index)
 					goto err;
-				result = (*seq->tp_range_del)(self, start_index, Dee_None);
+				result = (*seq->tp_delrange)(self, start_index, Dee_None);
 				Dee_Decref(start_index);
 				return result;
 			}
@@ -895,7 +895,7 @@ DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start) {
 						index_ob = DeeInt_NewSize(start + mylen);
 						if unlikely(!index_ob)
 							goto err;
-						result = (*seq->tp_del)(self, index_ob);
+						result = (*seq->tp_delitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(result)
 							goto err;
@@ -998,7 +998,7 @@ nsi_insert_sequence_as_single(struct type_nsi const *__restrict nsi,
 		}
 		return 0;
 	}
-	iterator = DeeObject_IterSelf(values);
+	iterator = DeeObject_Iter(values);
 	if unlikely(!iterator)
 		goto err;
 	while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1081,7 +1081,7 @@ DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
 						start = mylen;
 					if (end < start)
 						end = start;
-					values_iterator = DeeObject_IterSelf(values);
+					values_iterator = DeeObject_Iter(values);
 					if unlikely(!values_iterator)
 						goto err;
 					while (start < end) {
@@ -1125,7 +1125,7 @@ DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
 					Dee_Decref(start_index);
 					goto err;
 				}
-				result = (*seq->tp_range_set)(self, start_index, end_index, values);
+				result = (*seq->tp_setrange)(self, start_index, end_index, values);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
 				return result;
@@ -1140,7 +1140,7 @@ DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
 					start = mylen;
 				if (end < start)
 					end = start;
-				values_iterator = DeeObject_IterSelf(values);
+				values_iterator = DeeObject_Iter(values);
 				if unlikely(!values_iterator)
 					goto err;
 				/* Override existing / Delete trailing */
@@ -1172,7 +1172,7 @@ erase_remainder:
 						Dee_Decref(elem);
 						goto err_valiter;
 					}
-					result = (*seq->tp_set)(self, index_ob, elem);
+					result = (*seq->tp_setitem)(self, index_ob, elem);
 					Dee_Decref(index_ob);
 					Dee_Decref(elem);
 					if unlikely(result)
@@ -1247,7 +1247,7 @@ erase_remainder:
 						Dee_Decref(start_ob);
 						goto err;
 					}
-					result = (*seq->tp_range_del)(self, start_ob, end_ob);
+					result = (*seq->tp_delrange)(self, start_ob, end_ob);
 					Dee_Decref(end_ob);
 					Dee_Decref(start_ob);
 					return result;
@@ -1259,7 +1259,7 @@ erase_remainder:
 						index_ob = DeeInt_NewSize(end);
 						if unlikely(!index_ob)
 							goto err;
-						result = (*seq->tp_del)(self, index_ob);
+						result = (*seq->tp_delitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(result)
 							break;
@@ -1336,7 +1336,7 @@ DeeSeq_SetRangeN(DeeObject *self, size_t start,
 					return (*nsi->nsi_seqlike.nsi_setrange)(self, start, mylen, values);
 				if (nsi->nsi_seqlike.nsi_setitem) {
 					DREF DeeObject *elem;
-					values_iterator = DeeObject_IterSelf(values);
+					values_iterator = DeeObject_Iter(values);
 					if unlikely(!values_iterator)
 						goto err;
 					while (start < mylen) {
@@ -1375,13 +1375,13 @@ DeeSeq_SetRangeN(DeeObject *self, size_t start,
 				start_index = DeeInt_NewSize(start);
 				if unlikely(!start_index)
 					goto err;
-				result = (*seq->tp_range_set)(self, start_index, Dee_None, values);
+				result = (*seq->tp_setrange)(self, start_index, Dee_None, values);
 				Dee_Decref(start_index);
 				return result;
 			}
 			if (has_noninherited_setitem(tp_self, seq)) {
 				DREF DeeObject *future;
-				values_iterator = DeeObject_IterSelf(values);
+				values_iterator = DeeObject_Iter(values);
 				if unlikely(!values_iterator)
 					goto err;
 				/* Override existing / Delete trailing */
@@ -1413,7 +1413,7 @@ erase_remainder:
 						Dee_Decref(elem);
 						goto err_valiter;
 					}
-					result = (*seq->tp_set)(self, index_ob, elem);
+					result = (*seq->tp_setitem)(self, index_ob, elem);
 					Dee_Decref(index_ob);
 					Dee_Decref(elem);
 					if unlikely(result)
@@ -1552,7 +1552,7 @@ DeeSeq_Insert(DeeObject *self, size_t index,
 				Dee_Decref(index_ob);
 				goto err;
 			}
-			result = (*seq->tp_range_set)(self, index_ob, index_ob, (DeeObject *)value_seq);
+			result = (*seq->tp_setrange)(self, index_ob, index_ob, (DeeObject *)value_seq);
 			Dee_Decref(value_seq);
 			Dee_Decref(index_ob);
 			return result;
@@ -1645,7 +1645,7 @@ do_insert_as_single:
 			index_ob = DeeInt_NewSize(index);
 			if unlikely(!index_ob)
 				goto err;
-			result = (*seq->tp_range_set)(self, index_ob, index_ob, values);
+			result = (*seq->tp_setrange)(self, index_ob, index_ob, values);
 			Dee_Decref(index_ob);
 			return result;
 		}
@@ -1676,7 +1676,7 @@ do_insert_as_single:
 					Dee_Decref(append_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_append_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1732,7 +1732,7 @@ err_append_function:
 					Dee_Decref(insert_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_insert_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -1850,7 +1850,7 @@ DeeSeq_Append(DeeObject *self, DeeObject *value) {
 				Dee_Decref(index_ob);
 				goto err;
 			}
-			result = (*seq->tp_range_set)(self, index_ob, index_ob, (DeeObject *)value_seq);
+			result = (*seq->tp_setrange)(self, index_ob, index_ob, (DeeObject *)value_seq);
 			Dee_Decref(value_seq);
 			Dee_Decref(index_ob);
 			return result;
@@ -1937,7 +1937,7 @@ do_insert_as_single:
 			index_ob = DeeInt_NewSize(SSIZE_MAX);
 			if unlikely(!index_ob)
 				goto err;
-			result = (*seq->tp_range_set)(self, index_ob, index_ob, values);
+			result = (*seq->tp_setrange)(self, index_ob, index_ob, values);
 			Dee_Decref(index_ob);
 			return result;
 		}
@@ -1968,7 +1968,7 @@ do_insert_as_single:
 					Dee_Decref(append_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_append_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2020,7 +2020,7 @@ err_append_function:
 					Dee_Decref(insert_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_insert_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2133,7 +2133,7 @@ do_insert_as_single:
 			index_ob = DeeInt_NewSize(SSIZE_MAX);
 			if unlikely(!index_ob)
 				goto err;
-			result = (*seq->tp_range_set)(self, index_ob, index_ob, values);
+			result = (*seq->tp_setrange)(self, index_ob, index_ob, values);
 			Dee_Decref(index_ob);
 			return result;
 		}
@@ -2164,7 +2164,7 @@ do_insert_as_single:
 					Dee_Decref(append_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_append_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2216,7 +2216,7 @@ err_append_function:
 					Dee_Decref(insert_function);
 					return 0;
 				}
-				iterator = DeeObject_IterSelf(values);
+				iterator = DeeObject_Iter(values);
 				if unlikely(!iterator)
 					goto err_insert_function;
 				while (ITER_ISOK(elem = DeeObject_IterNext(iterator))) {
@@ -2312,7 +2312,7 @@ DeeSeq_InplaceRepeat(DREF DeeObject **__restrict p_self,
 			new_self = DeeSeq_Repeat(self, integer_count);
 			if unlikely(!new_self)
 				goto err;
-			result = (*tp_self->tp_seq->tp_range_set)(self, Dee_None, Dee_None, new_self);
+			result = (*tp_self->tp_seq->tp_setrange)(self, Dee_None, Dee_None, new_self);
 			Dee_Decref(new_self);
 			return result;
 		}
@@ -2411,7 +2411,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 					Dee_Decref(start_index);
 					goto err;
 				}
-				error = (*seq->tp_range_del)(self, start_index, end_index);
+				error = (*seq->tp_delrange)(self, start_index, end_index);
 				Dee_Decref(end_index);
 				Dee_Decref(start_index);
 				if unlikely(error)
@@ -2436,7 +2436,7 @@ DeeSeq_Erase(DeeObject *__restrict self,
 						index_ob = DeeInt_NewSize(i);
 						if unlikely(!index_ob)
 							goto err;
-						error = (*seq->tp_del)(self, index_ob);
+						error = (*seq->tp_delitem)(self, index_ob);
 						Dee_Decref(index_ob);
 						if unlikely(error)
 							goto err;
@@ -2591,7 +2591,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 					Dee_Decref(index_ob);
 					goto err;
 				}
-				error = (*seq->tp_del)(self, index_ob);
+				error = (*seq->tp_delitem)(self, index_ob);
 				Dee_Decref(index_ob);
 				if unlikely(error)
 					goto err_r;
@@ -2618,7 +2618,7 @@ DeeSeq_PopItem(DeeObject *__restrict self, dssize_t index) {
 					Dee_Decref(index_ob);
 					goto err_r;
 				}
-				error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+				error = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 				Dee_Decref(index_plus1_ob);
 				Dee_Decref(index_ob);
 				if unlikely(error)
@@ -2761,7 +2761,7 @@ err_index_ob_del:
 do_tp_del_i:
 							if unlikely(result < 0)
 								goto err_index_ob_del;
-							result = (*seq->tp_del)(self, index_ob);
+							result = (*seq->tp_delitem)(self, index_ob);
 							if unlikely(result < 0)
 								goto err_index_ob_del;
 							Dee_Decref(index_ob);
@@ -2889,7 +2889,7 @@ do_tp_range_del_i:
 						index_plus1_ob = DeeInt_NewSize(i + 1);
 						if unlikely(!index_plus1_ob)
 							goto err_index_ob_delrange;
-						result = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+						result = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 						Dee_Decref(index_plus1_ob);
 						if unlikely(result < 0)
 							goto err_index_ob_delrange;
@@ -3054,7 +3054,7 @@ err_index_ob_del:
 do_tp_del_i:
 								if unlikely(result < 0)
 									goto err_index_ob_del;
-								result = (*seq->tp_del)(self, index_ob);
+								result = (*seq->tp_delitem)(self, index_ob);
 								if unlikely(result < 0)
 									goto err_index_ob_del;
 								Dee_Decref(index_ob);
@@ -3190,7 +3190,7 @@ do_tp_range_del_i:
 							index_plus1_ob = DeeInt_NewSize(i + 1);
 							if unlikely(!index_plus1_ob)
 								goto err_index_ob_delrange;
-							result = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+							result = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 							Dee_Decref(index_plus1_ob);
 							if unlikely(result < 0)
 								goto err_index_ob_delrange;
@@ -3623,7 +3623,7 @@ err_index_ob_del_key:
 						if (error != 0) {
 							if unlikely(error < 0)
 								goto err_index_ob_del_key;
-							error = (*seq->tp_del)(self, index_ob);
+							error = (*seq->tp_delitem)(self, index_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_del_key;
 							if unlikely(count == (size_t)-2) {
@@ -3652,7 +3652,7 @@ err_index_ob_del:
 						if (error != 0) {
 							if unlikely(error < 0)
 								goto err_index_ob_del;
-							error = (*seq->tp_del)(self, index_ob);
+							error = (*seq->tp_delitem)(self, index_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_del;
 							if unlikely(count == (size_t)-2) {
@@ -3780,7 +3780,7 @@ err_index_ob_delrange_key:
 							index_plus1_ob = DeeInt_NewSize(i + 1);
 							if unlikely(!index_plus1_ob)
 								goto err_index_ob_delrange_key;
-							error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+							error = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 							Dee_Decref(index_plus1_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_delrange_key;
@@ -3814,7 +3814,7 @@ err_index_ob_delrange:
 							index_plus1_ob = DeeInt_NewSize(i + 1);
 							if unlikely(!index_plus1_ob)
 								goto err_index_ob_delrange;
-							error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+							error = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 							Dee_Decref(index_plus1_ob);
 							if unlikely(error < 0)
 								goto err_index_ob_delrange;
@@ -4037,7 +4037,7 @@ err_index_ob_del:
 					if (error != 0) {
 						if unlikely(error < 0)
 							goto err_index_ob_del;
-						error = (*seq->tp_del)(self, index_ob);
+						error = (*seq->tp_delitem)(self, index_ob);
 						if unlikely(error < 0)
 							goto err_index_ob_del;
 						if unlikely(count == (size_t)-2) {
@@ -4138,7 +4138,7 @@ err_index_ob_delrange:
 						index_plus1_ob = DeeInt_NewSize(i + 1);
 						if unlikely(!index_plus1_ob)
 							goto err_index_ob_delrange;
-						error = (*seq->tp_range_del)(self, index_ob, index_plus1_ob);
+						error = (*seq->tp_delrange)(self, index_ob, index_plus1_ob);
 						Dee_Decref(index_plus1_ob);
 						if unlikely(error < 0) {
 							Dee_Decref(index_ob);
@@ -4204,7 +4204,7 @@ DeeSeq_Fill(DeeObject *self, size_t start, size_t end,
 		struct type_seq *seq = tp_self->tp_seq;
 		if (seq) {
 			struct type_nsi const *nsi = seq->tp_nsi;
-			if (seq->tp_range_set) {
+			if (seq->tp_setrange) {
 				/* >> this[start:end] = sequence.repeat(value, end - start); */
 				DREF DeeObject *repeated_value;
 				repeated_value = DeeSeq_RepeatItem(value, result);
@@ -4227,7 +4227,7 @@ err_repeated_value:
 						Dee_Decref(start_ob);
 						goto err_repeated_value;
 					}
-					error = (*seq->tp_range_set)(self, start_ob, end_ob, repeated_value);
+					error = (*seq->tp_setrange)(self, start_ob, end_ob, repeated_value);
 					Dee_Decref(end_ob);
 					Dee_Decref(start_ob);
 				}
@@ -4236,7 +4236,7 @@ err_repeated_value:
 					goto err;
 				return result;
 			}
-			if (seq->tp_set) {
+			if (seq->tp_setitem) {
 				/* >> for (local i = start; i < end; ++i)
 				 * >>     this[i] = value; */
 				size_t i;
@@ -4252,7 +4252,7 @@ err_repeated_value:
 						temp = DeeInt_NewSize(i);
 						if unlikely(!temp)
 							goto err;
-						error = (*seq->tp_set)(self, temp, value);
+						error = (*seq->tp_setitem)(self, temp, value);
 						Dee_Decref(temp);
 						if unlikely(error)
 							goto err;
@@ -4351,8 +4351,8 @@ DeeSeq_IsMutable(DeeObject *__restrict self) {
 		if ((seq = tp_self->tp_seq) != NULL) {
 			if (seq->tp_nsi)
 				return (seq->tp_nsi->nsi_flags & TYPE_SEQX_FMUTABLE) ? 1 : 0;
-			if (seq->tp_del || seq->tp_set ||
-			    seq->tp_range_del || seq->tp_range_set)
+			if (seq->tp_delitem || seq->tp_setitem ||
+			    seq->tp_delrange || seq->tp_setrange)
 				return 1;
 		}
 		for (i = 0; i < COMPILER_LENOF(mutable_sequence_attributes); ++i) {

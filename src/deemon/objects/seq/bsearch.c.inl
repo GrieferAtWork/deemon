@@ -154,7 +154,7 @@ do_lookup_tpget:
 			    has_noninherited_size(tp_self, seq)) {
 				DREF DeeObject *size_ob;
 				int error;
-				size_ob = (*seq->tp_size)(self);
+				size_ob = (*seq->tp_sizeob)(self);
 				if unlikely(!size_ob)
 					goto err;
 				error = DeeObject_AsSize(size_ob, &seq_length);
@@ -163,12 +163,12 @@ do_lookup_tpget:
 					goto err;
 				goto do_lookup_tpget;
 			}
-			if (seq->tp_iter_self) {
+			if (seq->tp_iter) {
 				/* Use iterators to convert to a tuple, then do the lookup on said tuple. */
 				LOCAL_return_t result;
 				DREF DeeObject *tuple;
 				DREF DeeObject *iterator;
-				if unlikely((iterator = (*seq->tp_iter_self)(self)) == NULL)
+				if unlikely((iterator = (*seq->tp_iter)(self)) == NULL)
 					goto err;
 				tuple = DeeTuple_FromIterator(iterator);
 				Dee_Decref(iterator);

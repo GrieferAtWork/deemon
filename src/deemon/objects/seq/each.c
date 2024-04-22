@@ -633,7 +633,7 @@ DEFINE_SEQ_EACH_BINARY(se_lo, OPERATOR_LO)
 DEFINE_SEQ_EACH_BINARY(se_le, OPERATOR_LE)
 DEFINE_SEQ_EACH_BINARY(se_gr, OPERATOR_GR)
 DEFINE_SEQ_EACH_BINARY(se_ge, OPERATOR_GE)
-DEFINE_SEQ_EACH_UNARY(se_iter, OPERATOR_ITERSELF)
+DEFINE_SEQ_EACH_UNARY(se_iter, OPERATOR_ITER)
 DEFINE_SEQ_EACH_UNARY(se_size, OPERATOR_SIZE)
 DEFINE_SEQ_EACH_BINARY(se_contains, OPERATOR_CONTAINS)
 DEFINE_SEQ_EACH_BINARY(se_getitem, OPERATOR_GETITEM)
@@ -757,15 +757,15 @@ PRIVATE struct type_cmp se_cmp = {
 };
 
 PRIVATE struct type_seq se_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_size,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_contains,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&se_setrange,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&se_size,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_contains,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&se_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&se_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_setitem,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&se_delrange,
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&se_setrange,
 };
 
 PRIVATE char const s_unhandled_leave_message[] = "Unhandled exception in `operator leave'";
@@ -1795,7 +1795,7 @@ seo_iter(SeqEachOperator *__restrict self) {
 	if unlikely(!result)
 		goto done;
 	result->ei_each = (DREF SeqEachBase *)self;
-	result->ei_iter = DeeObject_IterSelf(((DREF SeqEachBase *)self)->se_seq);
+	result->ei_iter = DeeObject_Iter(((DREF SeqEachBase *)self)->se_seq);
 	if unlikely(!result->ei_iter)
 		goto err_r;
 	Dee_Incref(self);
@@ -1875,17 +1875,17 @@ PRIVATE struct type_nsi tpconst seo_nsi = {
 };
 
 PRIVATE struct type_seq seo_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
-	/* .tp_contains  = */ NULL,
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
-	/* .tp_del       = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_delitem,
-	/* .tp_set       = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_setitem,
-	/* .tp_range_get = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
-	/* .tp_range_del = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
-	/* .tp_range_set = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
-	/* .tp_nsi       = */ &seo_nsi,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seo_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sew_size,
+	/* .tp_contains = */ NULL,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_getitem,
+	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&seo_delitem,
+	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_setitem,
+	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&sew_getrange,
+	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&seo_delrange,
+	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&seo_setrange,
+	/* .tp_nsi      = */ &seo_nsi,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&seo_foreach,
 };
 
 
@@ -1956,7 +1956,7 @@ seoi_ctor(SeqEachIterator *__restrict self) {
 	self->ei_each = (DREF SeqEachBase *)DeeObject_NewDefault(&SeqEachOperator_Type);
 	if unlikely(!self->ei_each)
 		goto err;
-	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
+	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err_each;
 	return 0;
@@ -1973,7 +1973,7 @@ seoi_init(SeqEachIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->ei_each, &SeqEachOperator_Type))
 		goto err;
-	self->ei_iter = DeeObject_IterSelf(self->ei_each->se_seq);
+	self->ei_iter = DeeObject_Iter(self->ei_each->se_seq);
 	if unlikely(!self->ei_iter)
 		goto err;
 	Dee_Incref(self->ei_each);

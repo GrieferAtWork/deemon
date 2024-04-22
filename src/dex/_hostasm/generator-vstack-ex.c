@@ -1054,8 +1054,8 @@ vcall_getmethod(struct fungen *__restrict self,
 		return 0;
 	} else if (func == &DeeObject_SizeObject) {
 		return fg_vopsize(self);
-	} else if (func == &DeeObject_IterSelf) {
-		return fg_vop(self, OPERATOR_ITERSELF, 1, VOP_F_PUSHRES);
+	} else if (func == &DeeObject_Iter) {
+		return fg_vop(self, OPERATOR_ITER, 1, VOP_F_PUSHRES);
 	} else if (func == &DeeTuple_FromSequence) {
 		return fg_vopcast(self, &DeeTuple_Type);
 	} else if (func == &DeeList_FromSequence) {
@@ -3473,7 +3473,7 @@ vopcallseqmap_impl(struct fungen *__restrict self,
 		 *      set on a per-function basis.
 		 * NOPE: not that easy. Technically, `string.format' can let its argument escape, because it
 		 *       calls `operator iter' on its argument. What we need to know here is: "can references
-		 *       escape, assuming that OPERATOR_ITERSELF doesn't let references escape?" */
+		 *       escape, assuming that OPERATOR_ITER doesn't let references escape?" */
 #ifndef CONFIG_TRACE_REFCHANGES
 		if (func_type == &DeeString_Type && hasattr && !asmap &&
 		    memval_isconst(&funcval[1]) &&
@@ -4038,7 +4038,7 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 
 		/* Optimizations when typeof(seq) is known */
 		if (DeeType_InheritOperator(seq_type, OPERATOR_GETITEM) &&
-		    seq_type->tp_seq && seq_type->tp_seq->tp_get) {
+		    seq_type->tp_seq && seq_type->tp_seq->tp_getitem) {
 			struct type_nsi const *nsi = seq_type->tp_seq->tp_nsi;
 			if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_MAP && nsi->nsi_maplike.nsi_getdefault != NULL) {
 				DO(fg_vnotoneref(self, 2));                                  /* seq, key_or_index, def */
@@ -4422,13 +4422,13 @@ fg_vopsize(struct fungen *__restrict self) {
 			/* See if we can prematurely load the type's size operator to inline it. */
 			if (DeeType_InheritOperator(vtop_type, OPERATOR_SIZE)) {
 				ASSERT(vtop_type->tp_seq != NULL);
-				ASSERT(vtop_type->tp_seq->tp_size != NULL);
+				ASSERT(vtop_type->tp_seq->tp_sizeob != NULL);
 
 				/* TODO: Check if there is an NSI size operator. */
 
 				/* Invoke the inlined operator */
 				DO(fg_vnotoneref_if_operator(self, OPERATOR_SIZE, 1));
-				DO(fg_vcallapi(self, vtop_type->tp_seq->tp_size, VCALL_CC_OBJECT, 1)); /* result */
+				DO(fg_vcallapi(self, vtop_type->tp_seq->tp_sizeob, VCALL_CC_OBJECT, 1)); /* result */
 				goto do_set_return_type;
 			}
 		}
@@ -5401,7 +5401,7 @@ PRIVATE struct host_operator_specs const operator_apis[] = {
 	/* [OPERATOR_LE]           = */ { (void const *)&DeeObject_CompareLeObject, (void const *)&DeeObject_TCompareLeObject, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_GR]           = */ { (void const *)&DeeObject_CompareGrObject, (void const *)&DeeObject_TCompareGrObject, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_GE]           = */ { (void const *)&DeeObject_CompareGeObject, (void const *)&DeeObject_TCompareGeObject, 2, VCALL_CC_OBJECT, false },
-	/* [OPERATOR_ITERSELF]     = */ { (void const *)&DeeObject_IterSelf, (void const *)&DeeObject_TIterSelf, 1, VCALL_CC_OBJECT, false },
+	/* [OPERATOR_ITER]         = */ { (void const *)&DeeObject_Iter, (void const *)&DeeObject_TIter, 1, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_SIZE]         = */ { (void const *)NULL }, /* Special handling */
 	/* [OPERATOR_CONTAINS]     = */ { (void const *)&DeeObject_ContainsObject, (void const *)&DeeObject_TContainsObject, 2, VCALL_CC_OBJECT, false },
 	/* [OPERATOR_GETITEM]      = */ { (void const *)&DeeObject_GetItem, (void const *)&DeeObject_TGetItem, 2, VCALL_CC_OBJECT, false },
@@ -5800,8 +5800,8 @@ done_without_result:
 	DO(fg_vnotoneref(self, argc));           /* this, [args...] */
 	DO(fg_vlinear(self, argc, true));        /* this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, this */
-	/* Special case: for `OPERATOR_ITERSELF', the ONEREF flag has special meaning. */
-	DO(operator_name == OPERATOR_ITERSELF ? fg_vnotoneref_at(self, 1) /* [args...], argv, this */
+	/* Special case: for `OPERATOR_ITER', the ONEREF flag has special meaning. */
+	DO(operator_name == OPERATOR_ITER ? fg_vnotoneref_at(self, 1) /* [args...], argv, this */
 	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vpush_imm16(self, operator_name)); /* [args...], argv, this, opname */
 	DO(fg_vpush_immSIZ(self, argc));         /* [args...], argv, this, opname, argc */
@@ -6079,8 +6079,8 @@ done_without_result:
 	DO(fg_vlinear(self, argc, true));        /* [ref]:this, [args...], argv */
 	DO(fg_vlrot(self, argc + 2));            /* [args...], argv, [ref]:this */
 	DO(fg_vref_noalias(self));               /* [args...], argv, ref:this */
-	/* Special case: for `OPERATOR_ITERSELF', the ONEREF flag has special meaning. */
-	DO(operator_name == OPERATOR_ITERSELF ? fg_vnotoneref_at(self, 1) /* [args...], argv, ref:this */
+	/* Special case: for `OPERATOR_ITER', the ONEREF flag has special meaning. */
+	DO(operator_name == OPERATOR_ITER ? fg_vnotoneref_at(self, 1) /* [args...], argv, ref:this */
 	                                      : fg_vnotoneref_if_operator_at(self, operator_name, 1));
 	DO(fg_vlinear(self, 1, false));          /* [args...], argv, ref:this, p_this */
 	DO(fg_vswap(self));                      /* [args...], argv, p_this, ref:this */
@@ -6280,7 +6280,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			return 0;
 		}
 		if (memval_isconst(seqval) &&
-		    (DeeType_GetOperatorFlags(seqtype, OPERATOR_ITERSELF) & METHOD_FCONSTCALL)) {
+		    (DeeType_GetOperatorFlags(seqtype, OPERATOR_ITER) & METHOD_FCONSTCALL)) {
 			/* Optimizations to inline-expand a constant expression */
 			DREF DeeObject **elemv;
 			DeeObject *seqobj = memval_const_getobj(seqval);
@@ -6419,7 +6419,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 		ASSERT(!fg_vtop_direct_isref(self));
 	}                                                                  /* seq, [elems...] */
 	DO(fg_vlrot(self, n + 1));                                         /* [elems...], seq */
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* [elems...], seq */
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1)); /* [elems...], seq */
 	DO(fg_vpush_immSIZ(self, n));                                      /* [elems...], seq, objc */
 	DO(fg_vpush_hstack(self, cfa_offset));                             /* [elems...], seq, objc, objv */
 	DO(fg_vcallapi(self, &DeeObject_Unpack, VCALL_CC_INT, 3));         /* [elems...] */
@@ -6854,10 +6854,10 @@ is_constexpr_empty_sequence(struct fungen *__restrict gen,
 		return ((DeeRoDictObject *)self)->rd_size == 0;
 	if (tp_self == &DeeRoSet_Type)
 		return ((DeeRoSetObject *)self)->rs_size == 0;
-	if (DeeType_GetOperatorFlags(tp_self, OPERATOR_ITERSELF) & METHOD_FCONSTCALL) {
+	if (DeeType_GetOperatorFlags(tp_self, OPERATOR_ITER) & METHOD_FCONSTCALL) {
 		/* Construct an iterator to see if the sequence is empty. */
 		DREF DeeObject *elem = NULL;
-		DREF DeeObject *iter = DeeObject_IterSelf(self);
+		DREF DeeObject *iter = DeeObject_Iter(self);
 		if likely(iter) {
 			elem = DeeObject_IterNext(iter);
 			Dee_Decref(iter);
@@ -6986,7 +6986,7 @@ fg_vopcast_nofallback(struct fungen *__restrict self,
 				}
 			}
 		}
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 		DO(fg_vcallapi(self, cast_api_function, VCALL_CC_OBJECT, 1));
 		if (cast_api_function != (void const *)&DeeTuple_FromSequence && /* These casters may re-return the given argument */
 		    cast_api_function != (void const *)&DeeRoDict_FromSequence &&

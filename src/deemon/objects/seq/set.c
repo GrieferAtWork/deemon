@@ -192,7 +192,7 @@ suiter_ctor(SetUnionIterator *__restrict self) {
 	                                                        : &SetSymmetricDifference_Type);
 	if unlikely(!self->sui_union)
 		goto err;
-	self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a);
+	self->sui_iter = DeeObject_Iter(self->sui_union->su_a);
 	if unlikely(!self->sui_iter)
 		goto err_union;
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -211,7 +211,7 @@ suiter_init(SetUnionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sui_union, &SetUnion_Type))
 		goto err;
-	if ((self->sui_iter = DeeObject_IterSelf(self->sui_union->su_a)) == NULL)
+	if ((self->sui_iter = DeeObject_Iter(self->sui_union->su_a)) == NULL)
 		goto err;
 	Dee_Incref(self->sui_union);
 	Dee_atomic_rwlock_init(&self->sui_lock);
@@ -271,7 +271,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeObject_IterSelf(self->sui_union->su_b);
+	result = DeeObject_Iter(self->sui_union->su_b);
 	if unlikely(!result)
 		goto done;
 	SetUnionIterator_LockWrite(self);
@@ -588,7 +588,7 @@ su_iter(SetUnion *__restrict self) {
 	result = DeeObject_MALLOC(SetUnionIterator);
 	if unlikely(!result)
 		goto done;
-	result->sui_iter = DeeObject_IterSelf(self->su_a);
+	result->sui_iter = DeeObject_Iter(self->su_a);
 	if unlikely(!result->sui_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->sui_lock);
@@ -681,17 +681,17 @@ su_foreach(SetUnion *__restrict self, Dee_foreach_t proc, void *arg) {
 }
 
 PRIVATE struct type_seq su_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ NULL,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&su_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&su_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ NULL,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&su_foreach
 };
 
 PRIVATE struct type_member tpconst su_class_members[] = {
@@ -809,7 +809,7 @@ read_from_iter:
 #endif /* !CONFIG_NO_THREADS */
 
 	/* Create the level #2 iterator. */
-	result = DeeObject_IterSelf(self->ssd_set->ssd_b);
+	result = DeeObject_Iter(self->ssd_set->ssd_b);
 	if unlikely(!result)
 		goto done;
 	SetSymmetricDifferenceIterator_LockWrite(self);
@@ -912,7 +912,7 @@ ssd_iter(SetSymmetricDifference *__restrict self) {
 	result = DeeObject_MALLOC(SetSymmetricDifferenceIterator);
 	if unlikely(!result)
 		goto done;
-	result->ssd_iter = DeeObject_IterSelf(self->ssd_a);
+	result->ssd_iter = DeeObject_Iter(self->ssd_a);
 	if unlikely(!result->ssd_iter)
 		goto err_r;
 	Dee_atomic_rwlock_init(&result->ssd_lock);
@@ -964,17 +964,17 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 }
 
 PRIVATE struct type_seq ssd_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ NULL,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ NULL,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ssd_foreach
 };
 
 PRIVATE struct type_member tpconst ssd_class_members[] = {
@@ -1050,7 +1050,7 @@ siiter_ctor(SetIntersectionIterator *__restrict self) {
 	                                                                   : &SetDifference_Type);
 	if unlikely(!self->sii_intersect)
 		goto err;
-	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
+	self->sii_iter = DeeObject_Iter(self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err_isec;
 	self->sii_other = self->sii_intersect->si_b;
@@ -1102,7 +1102,7 @@ siiter_init(SetIntersectionIterator *__restrict self,
 		goto err;
 	if (DeeObject_AssertTypeExact(self->sii_intersect, &SetIntersection_Type))
 		goto err;
-	self->sii_iter = DeeObject_IterSelf(self->sii_intersect->si_a);
+	self->sii_iter = DeeObject_Iter(self->sii_intersect->si_a);
 	if unlikely(!self->sii_iter)
 		goto err;
 	Dee_Incref(self->sii_intersect);
@@ -1245,7 +1245,7 @@ si_iter(SetIntersection *__restrict self) {
 	result = DeeObject_MALLOC(SetIntersectionIterator);
 	if unlikely(!result)
 		goto done;
-	result->sii_iter = DeeObject_IterSelf(self->si_a);
+	result->sii_iter = DeeObject_Iter(self->si_a);
 	if unlikely(!result->sii_iter)
 		goto err_r;
 	result->sii_intersect = self;
@@ -1293,17 +1293,17 @@ si_foreach(SetIntersection *__restrict self, Dee_foreach_t proc, void *arg) {
 }
 
 PRIVATE struct type_seq si_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ NULL,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ NULL,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&si_foreach
 };
 
 PRIVATE struct type_member tpconst si_class_members[] = {
@@ -1468,7 +1468,7 @@ sd_iter(SetDifference *__restrict self) {
 	result = DeeObject_MALLOC(SetDifferenceIterator);
 	if unlikely(!result)
 		goto done;
-	result->sdi_iter = DeeObject_IterSelf(self->sd_a);
+	result->sdi_iter = DeeObject_Iter(self->sd_a);
 	if unlikely(!result->sdi_iter)
 		goto err_r;
 	result->sdi_diff  = self;
@@ -1516,17 +1516,17 @@ sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 }
 
 PRIVATE struct type_seq sd_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
-	/* .tp_get       = */ NULL,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ NULL,
-	/* .tp_foreach   = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
+	/* .tp_getitem  = */ NULL,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ NULL,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&sd_foreach
 };
 
 PRIVATE struct type_member tpconst sd_class_members[] = {

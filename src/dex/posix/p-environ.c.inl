@@ -2215,16 +2215,16 @@ PRIVATE struct type_nsi tpconst environ_nsi = {
 };
 
 PRIVATE struct type_seq environ_seq = {
-	/* .tp_iter_self = */ &environ_iter,
-	/* .tp_size      = */ NULL,
-	/* .tp_contains  = */ &environ_contains,
-	/* .tp_get       = */ &environ_getitem,
-	/* .tp_del       = */ &environ_delitem,
-	/* .tp_set       = */ &environ_setitem,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &environ_nsi
+	/* .tp_iter     = */ &environ_iter,
+	/* .tp_sizeob   = */ NULL,
+	/* .tp_contains = */ &environ_contains,
+	/* .tp_getitem  = */ &environ_getitem,
+	/* .tp_delitem  = */ &environ_delitem,
+	/* .tp_setitem  = */ &environ_setitem,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &environ_nsi
 };
 
 PRIVATE struct type_member tpconst environ_class_members[] = {

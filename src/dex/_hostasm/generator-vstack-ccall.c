@@ -147,7 +147,7 @@ DEFINE_CCALL_OPERATOR(cca_Object___setitem__, OPERATOR_SETITEM, 3)
 DEFINE_CCALL_OPERATOR(cca_Object___getrange__, OPERATOR_GETRANGE, 3)
 DEFINE_CCALL_OPERATOR(cca_Object___delrange__, OPERATOR_DELRANGE, 3)
 DEFINE_CCALL_OPERATOR(cca_Object___setrange__, OPERATOR_SETRANGE, 4)
-DEFINE_CCALL_OPERATOR(cca_Object___iterself__, OPERATOR_ITERSELF, 1)
+DEFINE_CCALL_OPERATOR(cca_Object___iterself__, OPERATOR_ITER, 1)
 DEFINE_CCALL_OPERATOR(cca_Object___iternext__, OPERATOR_ITERNEXT, 1)
 DEFINE_CCALL_OPTIMIZATION(cca_Object___getattr__, fg_vopgetattr(self)) /* 2 */
 DEFINE_CCALL_OPTIMIZATION(cca_Object___callattr__,
@@ -218,7 +218,7 @@ PRIVATE struct ccall_optimization tpconst cca_Object[] = {
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cca_Sequence_sum(struct fungen *__restrict self, vstackaddr_t argc) {
 	(void)argc;
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 	return fg_vcallapi(self, &DeeSeq_Sum, VCALL_CC_OBJECT, 1); /* result */
 err:
 	return -1;
@@ -228,7 +228,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 impl_cca_Sequence_anyall(struct fungen *__restrict self,
                          void const *api_function) {
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1));
 	DO(fg_vcallapi(self, api_function, VCALL_CC_NEGINT, 1));
 	DO(fg_vdirect1(self));
 	ASSERT(fg_vtop_isdirect(self));
@@ -263,7 +263,7 @@ impl_cca_Sequence_minmax(struct fungen *__restrict self,
 		DO(fg_vpush_NULL(self)); /* seq, key */
 	}
 	DO(fg_vnotoneref_at(self, 1));
-	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 2));
+	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 2));
 	return fg_vcallapi(self, api_function, VCALL_CC_OBJECT, 2);
 err:
 	return -1;
@@ -433,7 +433,7 @@ cca_List_extend(struct fungen *__restrict self, vstackaddr_t argc) {
 		DO(fg_vcallapi(self, &DeeList_AppendVector, VCALL_CC_INT, 3)); /* seq */
 		DO(fg_vpop(self));                                     /* N/A */
 	} else {
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* this, seq */
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1)); /* this, seq */
 		DO(fg_vcallapi(self, &DeeList_AppendSequence, VCALL_CC_INT, 2)); /* N/A */
 	}
 	return fg_vpush_none(self); /* none */
@@ -473,7 +473,7 @@ cca_List_insertall(struct fungen *__restrict self, vstackaddr_t argc) {
 		DO(fg_vcallapi(self, &DeeList_InsertVector, VCALL_CC_INT, 4)); /* seq */
 		DO(fg_vpop(self));                                     /* N/A */
 	} else {
-		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITERSELF, 1)); /* this, uint:index, seq */
+		DO(fg_vnotoneref_if_operator_at(self, OPERATOR_ITER, 1)); /* this, uint:index, seq */
 		DO(fg_vcallapi(self, &DeeList_InsertSequence, VCALL_CC_INT, 3)); /* N/A */
 	}
 	return fg_vpush_none(self); /* none */
@@ -1171,7 +1171,7 @@ PRIVATE struct ccall_optimization tpconst cco_None[] = {
 	CCO_OPTIMIZATION(OPERATOR_002C_LE, &cco_None_cmp_eq, 1),
 	CCO_OPTIMIZATION(OPERATOR_002D_GR, &cco_None_cmp_ne, 1),
 	CCO_OPTIMIZATION(OPERATOR_002E_GE, &cco_None_cmp_eq, 1),
-	CCO_OPTIMIZATION(OPERATOR_002F_ITERSELF, &cco_None_return_none, CCALL_ARGC_ANY),
+	CCO_OPTIMIZATION(OPERATOR_002F_ITER, &cco_None_return_none, CCALL_ARGC_ANY),
 	CCO_OPTIMIZATION(OPERATOR_0030_SIZE, &cco_None_return_none, CCALL_ARGC_ANY),
 	CCO_OPTIMIZATION(OPERATOR_0031_CONTAINS, &cco_None_return_none, CCALL_ARGC_ANY),
 	CCO_OPTIMIZATION(OPERATOR_0032_GETITEM, &cco_None_return_none, CCALL_ARGC_ANY),

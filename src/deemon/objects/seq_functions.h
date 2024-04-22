@@ -50,13 +50,13 @@ DECL_BEGIN
 #define is_noninherited_nsi(tp, seq, nsi) \
 	(!DeeType_Base(tp) || DeeType_Base(tp)->tp_seq != (seq))
 
-#define has_noninherited_getrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_range_get)
-#define has_noninherited_delrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_range_del)
-#define has_noninherited_setrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_range_set)
-#define has_noninherited_getitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_get)
-#define has_noninherited_delitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_del)
-#define has_noninherited_setitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_set)
-#define has_noninherited_size(tp, seq)     has_noninherited_seqfield(tp, seq, tp_size)
+#define has_noninherited_getrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_getrange)
+#define has_noninherited_delrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_delrange)
+#define has_noninherited_setrange(tp, seq) has_noninherited_seqfield(tp, seq, tp_setrange)
+#define has_noninherited_getitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_getitem)
+#define has_noninherited_delitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_delitem)
+#define has_noninherited_setitem(tp, seq)  has_noninherited_seqfield(tp, seq, tp_setitem)
+#define has_noninherited_size(tp, seq)     has_noninherited_seqfield(tp, seq, tp_sizeob)
 #define has_noninherited_bool(tp)          has_noninherited_field(tp, tp_cast.tp_bool)
 
 DECL_END

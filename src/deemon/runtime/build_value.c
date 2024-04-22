@@ -597,7 +597,7 @@ again:
 		char const *fmt_start;
 		int temp;
 		/* Unpack a sequence. */
-		iterator = DeeObject_IterSelf(self);
+		iterator = DeeObject_Iter(self);
 		if unlikely(!iterator)
 			goto err;
 		is_optional = false, fmt_start = format, argc = 0;

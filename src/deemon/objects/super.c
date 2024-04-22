@@ -538,7 +538,7 @@ PRIVATE struct type_cmp super_cmp = {
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 super_iter_self(Super *__restrict self) {
-	return DeeObject_TIterSelf(self->s_type, self->s_self);
+	return DeeObject_TIter(self->s_type, self->s_self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -585,37 +585,37 @@ PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 super_foreach(Super *me, Dee_foreach_t proc, void *arg) {
 	DeeTypeObject *tp_self = me->s_type;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	          DeeType_InheritIterSelf(tp_self)) {
+	          DeeType_InheritIter(tp_self)) {
 		return DeeType_invoke_seq_tp_foreach(tp_self,
 		                                     tp_self->tp_seq->tp_foreach,
 		                                     me->s_self, proc, arg);
 	}
-	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 super_foreach_pair(Super *me, Dee_foreach_pair_t proc, void *arg) {
 	DeeTypeObject *tp_self = me->s_type;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
-	          DeeType_InheritIterSelf(tp_self)) {
+	          DeeType_InheritIter(tp_self)) {
 		return DeeType_invoke_seq_tp_foreach_pair(tp_self,
 		                                          tp_self->tp_seq->tp_foreach_pair,
 		                                          me->s_self, proc, arg);
 	}
-	return err_unimplemented_operator(tp_self, OPERATOR_ITERSELF);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
 }
 
 
 PRIVATE struct type_seq super_seq = {
-	/* .tp_iter_self    = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iter_self,
-	/* .tp_size         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_size,
+	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_iter_self,
+	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&super_size,
 	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_contains,
-	/* .tp_get          = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_get,
-	/* .tp_del          = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_del,
-	/* .tp_set          = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_set,
-	/* .tp_range_get    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_get,
-	/* .tp_range_del    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_del,
-	/* .tp_range_set    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_range_set,
+	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_get,
+	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_del,
+	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_set,
+	/* .tp_getrange     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_get,
+	/* .tp_delrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&super_range_del,
+	/* .tp_setrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&super_range_set,
 	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&super_foreach,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&super_foreach_pair,

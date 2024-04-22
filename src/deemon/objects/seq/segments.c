@@ -70,7 +70,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 segiter_ctor(SegmentsIterator *__restrict self) {
-	self->si_iter = DeeObject_IterSelf(Dee_EmptySeq);
+	self->si_iter = DeeObject_Iter(Dee_EmptySeq);
 	if unlikely(!self->si_iter)
 		goto err;
 	self->si_len = 1;
@@ -295,7 +295,7 @@ seg_iter(Segments *__restrict self) {
 	result = DeeObject_MALLOC(SegmentsIterator);
 	if unlikely(!result)
 		goto done;
-	result->si_iter = DeeObject_IterSelf(self->s_seq);
+	result->si_iter = DeeObject_Iter(self->s_seq);
 	if unlikely(!result->si_iter)
 		goto err_r;
 	result->si_len = self->s_len;
@@ -419,16 +419,16 @@ PRIVATE struct type_nsi tpconst seg_nsi = {
 };
 
 PRIVATE struct type_seq seg_seq = {
-	/* .tp_iter_self = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
-	/* .tp_size      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_getsize,
-	/* .tp_contains  = */ NULL, /* TODO */
-	/* .tp_get       = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seg_getitem,
-	/* .tp_del       = */ NULL,
-	/* .tp_set       = */ NULL,
-	/* .tp_range_get = */ NULL,
-	/* .tp_range_del = */ NULL,
-	/* .tp_range_set = */ NULL,
-	/* .tp_nsi       = */ &seg_nsi,
+	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
+	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_getsize,
+	/* .tp_contains = */ NULL, /* TODO */
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seg_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ NULL,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &seg_nsi,
 };
 
 PRIVATE struct type_member tpconst seg_members[] = {

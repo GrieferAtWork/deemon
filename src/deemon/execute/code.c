@@ -2344,7 +2344,7 @@ code_init_kw(size_t argc, DeeObject *const *argv, DeeObject *kw) {
 		struct except_handler *except_v = NULL;
 		struct except_handler *new_except_v;
 		DREF DeeObject *iter, *elem;
-		iter = DeeObject_IterSelf(except);
+		iter = DeeObject_Iter(except);
 		if unlikely(!iter)
 			goto err_r_constv;
 		while (ITER_ISOK(elem = DeeObject_IterNext(iter))) {

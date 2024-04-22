@@ -1261,7 +1261,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			/* Construct an iterator for the interactive module. */
-			interactive_iterator = DeeObject_IterSelf(interactive_module);
+			interactive_iterator = DeeObject_Iter(interactive_module);
 			if unlikely(!interactive_iterator) {
 				Dee_Decref(interactive_module);
 				Dee_Decref(interactive_output);
