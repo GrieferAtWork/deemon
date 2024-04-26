@@ -136,19 +136,104 @@ byattr_enumattr(DeeTypeObject *tp_self, MapByAttr *self,
 	                             &cookie);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_hasattr(MapByAttr *self, /*String*/ DeeObject *attr) {
+	return DeeObject_HasItem(self->mba_map, attr);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_boundattr(MapByAttr *self, /*String*/ DeeObject *attr) {
+	return DeeObject_BoundItem(self->mba_map, attr, true);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+byattr_getattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_GetItemStringHash(self->mba_map, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_delattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_DelItemStringHash(self->mba_map, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
+byattr_setattr_string_hash(MapByAttr *self, char const *attr,
+                           Dee_hash_t hash, DeeObject *value) {
+	return DeeObject_SetItemStringHash(self->mba_map, attr, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_hasattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_HasItemStringHash(self->mba_map, attr, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_boundattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
+	return DeeObject_BoundItemStringHash(self->mba_map, attr, hash, true);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+byattr_getattr_string_len_hash(MapByAttr *self, char const *attr,
+                               size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_GetItemStringLenHash(self->mba_map, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_delattr_string_len_hash(MapByAttr *self, char const *attr,
+                               size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_DelItemStringLenHash(self->mba_map, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 5)) int DCALL
+byattr_setattr_string_len_hash(MapByAttr *self, char const *attr,
+                               size_t attrlen, Dee_hash_t hash, DeeObject *value) {
+	return DeeObject_SetItemStringLenHash(self->mba_map, attr, attrlen, hash, value);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_hasattr_string_len_hash(MapByAttr *self, char const *attr,
+                               size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_HasItemStringLenHash(self->mba_map, attr, attrlen, hash);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_boundattr_string_len_hash(MapByAttr *self, char const *attr,
+                                 size_t attrlen, Dee_hash_t hash) {
+	return DeeObject_BoundItemStringLenHash(self->mba_map, attr, attrlen, hash, true);
+}
+
+
 
 PRIVATE struct type_attr tpconst byattr_attr = {
-	/* .tp_getattr  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
-	/* .tp_delattr  = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
-	/* .tp_setattr  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
-	/* .tp_enumattr = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
-	/* TODO: All of the other operators */
+	/* .tp_getattr                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&byattr_getattr,
+	/* .tp_delattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_delattr,
+	/* .tp_setattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&byattr_setattr,
+	/* .tp_enumattr                  = */ (Dee_ssize_t (DCALL *)(DeeTypeObject *, DeeObject *, Dee_enum_t, void *))&byattr_enumattr,
+	/* .tp_findattr                  = */ NULL,
+	/* .tp_hasattr                   = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_hasattr,
+	/* .tp_boundattr                 = */ (int (DCALL *)(DeeObject *, DeeObject *))&byattr_boundattr,
+	/* .tp_callattr                  = */ NULL,
+	/* .tp_callattr_kw               = */ NULL,
+	/* .tp_vcallattrf                = */ NULL,
+	/* .tp_getattr_string_hash       = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&byattr_getattr_string_hash,
+	/* .tp_delattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&byattr_delattr_string_hash,
+	/* .tp_setattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&byattr_setattr_string_hash,
+	/* .tp_hasattr_string_hash       = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&byattr_hasattr_string_hash,
+	/* .tp_boundattr_string_hash     = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&byattr_boundattr_string_hash,
+	/* .tp_callattr_string_hash      = */ NULL,
+	/* .tp_callattr_string_hash_kw   = */ NULL,
+	/* .tp_vcallattr_string_hashf    = */ NULL,
+	/* .tp_getattr_string_len_hash   = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_getattr_string_len_hash,
+	/* .tp_delattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_delattr_string_len_hash,
+	/* .tp_setattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&byattr_setattr_string_len_hash,
+	/* .tp_hasattr_string_len_hash   = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_hasattr_string_len_hash,
+	/* .tp_boundattr_string_len_hash = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&byattr_boundattr_string_len_hash,
 };
 
 PRIVATE struct type_member tpconst byattr_members[] = {
-	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT,
-	                      offsetof(MapByAttr, mba_map),
-	                      "->?DMapping\nUnderlying mapping"),
+	TYPE_MEMBER_FIELD_DOC("__map__", STRUCT_OBJECT, offsetof(MapByAttr, mba_map),
+	                      "->?DMapping\n"
+	                      "Underlying mapping"),
 	TYPE_MEMBER_END
 };
 

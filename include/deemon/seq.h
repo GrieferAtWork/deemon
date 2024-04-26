@@ -219,7 +219,10 @@ DDATDEF DeeTypeObject DeeSeq_Type; /* `Sequence from deemon' */
  * noted that implementation of the copy-constructor is _NOT_ mandatory,
  * as in some cases it is even impossible to pull off (such as for yield-
  * functions not marked as copyable or using non-copyable local variables).
- */
+ *
+ * TODO: The "seq" field of iterators is deprecated (for the sake of performance in order to
+ *       allow forwarding of iterators objects from underlying sequences, without needing to
+ *       wrap them just so that "seq" returns the correct object type). */
 DDATDEF DeeTypeObject DeeIterator_Type; /* `Iterator from deemon' */
 
 /* An empty instance of a generic sequence object.

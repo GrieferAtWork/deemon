@@ -2467,6 +2467,23 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "FrameSymbolsByNameIterator", (DeeObject *)&librt_get_FrameSymbolsByNameIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* FrameSymbolsByName_Type */
 #endif /* CONFIG_EXPERIMENTAL_STATIC_IN_FUNCTION */
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* TODO: IterWithGetItemIndex            = DefaultIterator_WithGetItemIndex_Type */
+	/* TODO: IterWithSizeAndGetItemIndex     = DefaultIterator_WithSizeAndGetItemIndex_Type */
+	/* TODO: IterWithSizeAndGetItemIndexFast = DefaultIterator_WithSizeAndGetItemIndexFast_Type */
+	/* TODO: IterWithGetItem                 = DefaultIterator_WithGetItem_Type */
+	/* TODO: IterWithTGetItem                = DefaultIterator_WithTGetItem_Type */
+	/* TODO: IterWithSizeAndGetItem          = DefaultIterator_WithSizeAndGetItem_Type */
+	/* TODO: IterWithTSizeAndGetItem         = DefaultIterator_WithTSizeAndGetItem_Type */
+	/* TODO: IterWithNextAndLimit            = DefaultIterator_WithNextAndLimit_Type */
+	/* TODO: SeqWithSizeAndGetItemIndex      = DefaultSequence_WithSizeAndGetItemIndex_Type */
+	/* TODO: SeqWithSizeAndGetItemIndexFast  = DefaultSequence_WithSizeAndGetItemIndexFast_Type */
+	/* TODO: SeqWithSizeAndGetItem           = DefaultSequence_WithSizeAndGetItem_Type */
+	/* TODO: SeqWithTSizeAndGetItem          = DefaultSequence_WithTSizeAndGetItem_Type */
+	/* TODO: SeqWithIter                     = DefaultSequence_WithIter_Type */
+	/* TODO: SeqWithTIter                    = DefaultSequence_WithTIter_Type */
+#endif /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
 	{ NULL }
 };
 

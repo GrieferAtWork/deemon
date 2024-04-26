@@ -226,6 +226,11 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
+/* Helper macros for implementing compare operators. */
+#define Dee_CompareNe(a, b) ((a) < (b) ? -1 : 1)
+#define Dee_Compare(a, b)   ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+
+
 typedef __hybrid_uint128_t Dee_uint128_t;
 typedef __hybrid_int128_t Dee_int128_t;
 
@@ -1896,7 +1901,15 @@ struct Dee_type_cmp {
 	 * NOTE: The compare sub-structure was chosen for this, as native
 	 *       iterators usually implement compare operators to allow
 	 *       them to be ordered with other operators. */
-	struct Dee_type_nii Dee_tpconst *tp_nii;
+	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
+
+	/* Rich-compare operator that can be defined instead
+	 * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
+	 * @return: -2: An error occurred.
+	 * @return: -1: `lhs < rhs'
+	 * @return: 0:  `lhs == rhs'
+	 * @return: 1:  `lhs > rhs' */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
 };
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
@@ -4224,10 +4237,12 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_Iter)(DeeObject *_
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_IterNext)(DeeObject *__restrict self);
 
 /* Advance an iterator by "step" items.
- * @return: 1 : Success, but advancing was stopped prematurely because ITER_DONE was encountered.
- * @return: 0 : Success.
- * @return: -1: Error. */
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step);
+ * @return: step:       Success.
+ * @return: < step:     Success, but advancing was stopped prematurely because ITER_DONE
+ *                      was encountered. Return value is the # of successfully skipped
+ *                      entries before "ITER_DONE" was encountered.
+ * @return: (size_t)-1: Error. */
+DFUNDEF WUNUSED NONNULL((1)) size_t (DCALL DeeObject_IterAdvance)(DeeObject *__restrict self, size_t step);
 
 /* Invoke `proc' for each element of a general-purpose sequence.
  * When `*proc' returns < 0, that value is propagated.

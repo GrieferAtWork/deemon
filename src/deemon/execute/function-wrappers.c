@@ -614,7 +614,6 @@ PRIVATE struct type_seq funcstatics_seq = {
 	/* .tp_setrange_index_n   = */ NULL,
 	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&funcstatics_nsi_getsize,
 	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&funcstatics_nsi_getitem_fast,
-
 };
 
 PRIVATE struct type_member tpconst funcstatics_class_members[] = {

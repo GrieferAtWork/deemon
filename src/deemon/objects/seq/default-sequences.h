@@ -32,7 +32,7 @@ typedef struct {
 	 * This is either a `tp_getitem_index' or `tp_getitem_index_fast' operator. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dssgi_tp_getitem_index)(DeeObject *self, size_t index);
 	size_t          dssgi_start; /* [const] Starting index for enumeration. */
-	size_t          dssgi_size;  /* [const] Enumeration stop index. */
+	size_t          dssgi_end;   /* [const] Enumeration stop index. */
 } DefaultSequence_WithSizeAndGetItemIndex;
 
 typedef struct {
@@ -41,31 +41,44 @@ typedef struct {
 	/* [1..1][const] Callback to load the `index'th element of `dssg_seq'. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dssg_tp_getitem)(DeeObject *self, DeeObject *index);
 	DREF DeeObject *dssg_start; /* [const] Starting index for enumeration. */
-	DREF DeeObject *dssg_size;  /* [const] Enumeration stop index. */
+	DREF DeeObject *dssg_end;   /* [const] Enumeration stop index. */
 } DefaultSequence_WithSizeAndGetItem;
 
 typedef struct {
 	OBJECT_HEAD
-	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
 	DREF DeeObject *dstsg_seq;    /* [1..1][const] The sequence being iterated. */
 	/* [1..1][const] Callback to load the `index'th element of `dstsg_seq'. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *dstsg_tp_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
 	DREF DeeObject *dstsg_start;  /* [const] Starting index for enumeration. */
-	DREF DeeObject *dstsg_size;   /* [const] Enumeration stop index. */
-} DefaultSequence_TWithSizeAndGetItem;
+	DREF DeeObject *dstsg_end;    /* [const] Enumeration stop index. */
+	DeeTypeObject  *dstsg_tp_seq; /* [1..1][const] The type to pass to `dstsg_tp_tgetitem'. */
+} DefaultSequence_WithTSizeAndGetItem;
 
 typedef struct {
 	OBJECT_HEAD
-	DREF DeeObject *dssi_iter; /* [1..1][const] Iterator pointing to the start of the range. */
-	size_t          dssi_size; /* [const] Max # of items to enumerate starting with `dssi_iter'. */
-} DefaultSequence_WithSizeAndIterator;
+	DREF DeeObject *dsi_seq;   /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to construct an iterator for `dsi_seq'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dsi_tp_iter)(DeeObject *self);
+	size_t          dsi_start; /* [const] # of items to skip in constructed iterators. */
+	size_t          dsi_limit; /* [const] Max # of items to enumerate starting with `dsi_start' */
+} DefaultSequence_WithIter;
 
+typedef struct {
+	OBJECT_HEAD
+	DREF DeeObject *dsti_seq;    /* [1..1][const] The sequence being iterated. */
+	/* [1..1][const] Callback to construct an iterator for `dsti_seq'. */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *dsti_tp_titer)(DeeTypeObject *tp_self, DeeObject *self);
+	size_t          dsti_start;  /* [const] # of items to skip in constructed iterators. */
+	size_t          dsti_limit;  /* [const] Max # of items to enumerate starting with `dsi_start' (but enumeration may stop earlier than that) */
+	DeeTypeObject  *dsti_tp_seq; /* [1..1][const] The type to pass to `dsti_tp_titer'. */
+} DefaultSequence_WithTIter;
 
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type;          /* DefaultSequence_WithSizeAndGetItem */
-INTDEF DeeTypeObject DefaultSequence_TWithSizeAndGetItem_Type;         /* DefaultSequence_TWithSizeAndGetItem */
-INTDEF DeeTypeObject DefaultSequence_WithSizeAndIterator_Type;         /* DefaultSequence_WithSizeAndIterator */
+INTDEF DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type;         /* DefaultSequence_WithTSizeAndGetItem */
+INTDEF DeeTypeObject DefaultSequence_WithIter_Type;                    /* DefaultSequence_WithIter */
+INTDEF DeeTypeObject DefaultSequence_WithTIter_Type;                   /* DefaultSequence_WithTIter */
 
 DECL_END
 
