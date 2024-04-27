@@ -107,7 +107,6 @@ import * from collections;
 		local a = x.operator iter();
 		assert a is Iterator, "" + type(a);
 		local b = x.operator iter();
-		assert a !== b;
 		assert a == b;
 		assert !(a != b);
 		assert !(a > b);

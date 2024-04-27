@@ -1551,6 +1551,22 @@ blkw_getdefault(DeeBlackListKwObject *__restrict self,
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+blkw_getitem(DeeBlackListKwObject *__restrict self,
+             /*string*/ DeeObject *__restrict key) {
+	DeeObject *result;
+	if unlikely(!DeeString_Check(key))
+		goto err_no_key;
+	result = DeeBlackListKw_GetItemNR(self, key);
+	if likely(result)
+		Dee_Incref(result);
+	return result;
+err_no_key:
+	err_unknown_key((DeeObject *)self, key);
+	return NULL;
+}
+
+
 PRIVATE struct type_nsi tpconst blkw_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
@@ -1568,7 +1584,7 @@ PRIVATE struct type_seq blkw_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blkw_iter,
 	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&blkw_size,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&DeeBlackListKw_GetItemNR,
+	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&blkw_getitem,
 	/* .tp_delitem  = */ NULL,
 	/* .tp_setitem  = */ NULL,
 	/* .tp_getrange = */ NULL,

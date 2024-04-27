@@ -4282,7 +4282,7 @@ err:
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithErrorRequiresString,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *indexob;
-	LOAD_TP_SELF;
+	(void)self;
 	indexob = DeeInt_NewSize(index);
 	if unlikely(!indexob)
 		goto err;
@@ -6435,7 +6435,7 @@ err:
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemStringHashWithErrorRequiresInt,
                          (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
 	DREF DeeObject *keyob;
-	LOAD_TP_SELF;
+	(void)self;
 	keyob = DeeString_NewAutoWithHash(key, hash);
 	if unlikely(!keyob)
 		goto err;
@@ -6647,7 +6647,7 @@ err:
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemStringLenHashWithErrorRequiresInt,
                          (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
 	DREF DeeObject *keyob;
-	LOAD_TP_SELF;
+	(void)self;
 	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!keyob)
 		goto err;
@@ -8601,7 +8601,8 @@ enum seq_feature {
 	FEAT_TP_COUNT
 };
 
-typedef uintptr_t seq_featureset_t[CEILDIV(FEAT_TP_COUNT, sizeof(uintptr_t) * CHAR_BIT)];
+#define _SEQ_FEATURESET_NWORDS (CEILDIV(FEAT_TP_COUNT, sizeof(uintptr_t) * CHAR_BIT))
+typedef uintptr_t seq_featureset_t[_SEQ_FEATURESET_NWORDS];
 #define _seq_featureset_test_slot(i) ((i) / (sizeof(uintptr_t) * CHAR_BIT))
 #define _seq_featureset_test_mask(i) ((uintptr_t)1 << ((i) % (sizeof(uintptr_t) * CHAR_BIT)))
 #define seq_featureset_set(self, feat)  (void)((self)[_seq_featureset_test_slot(feat)] |= _seq_featureset_test_mask(feat))
@@ -8610,14 +8611,14 @@ typedef uintptr_t seq_featureset_t[CEILDIV(FEAT_TP_COUNT, sizeof(uintptr_t) * CH
 LOCAL NONNULL((1)) void DCALL
 seq_featureset_clear(seq_featureset_t self) {
 	size_t i;
-	for (i = 0; i < COMPILER_LENOF(self); ++i)
+	for (i = 0; i < _SEQ_FEATURESET_NWORDS; ++i)
 		self[i] = 0;
 }
 
 LOCAL ATTR_PURE WUNUSED NONNULL((1)) bool DCALL
 seq_featureset_any(seq_featureset_t self) {
 	size_t i;
-	for (i = 0; i < COMPILER_LENOF(self); ++i) {
+	for (i = 0; i < _SEQ_FEATURESET_NWORDS; ++i) {
 		if (self[i])
 			return true;
 	}
@@ -9439,6 +9440,50 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithErrorRequiresInt;
 		} else {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithHasItemDefault;
+		}
+	}
+
+	/* tp_delitem_string_hash */
+	if (!seq->tp_delitem_string_hash) {
+		if (seq_featureset_test(features, FEAT_tp_delitem_string_len_hash)) {
+			seq->tp_delitem_string_hash = &DeeObject_DefaultDelItemStringHashWithDelItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_delitem)) {
+			seq->tp_delitem_string_hash = &DeeObject_DefaultDelItemStringHashWithDelItem;
+		} else if (seq->tp_delitem) {
+			seq->tp_delitem_string_hash = &DeeObject_DefaultDelItemStringHashWithErrorRequiresInt;
+		}
+	}
+
+	/* tp_delitem_string_len_hash */
+	if (!seq->tp_delitem_string_len_hash) {
+		if (seq_featureset_test(features, FEAT_tp_delitem_string_hash)) {
+			seq->tp_delitem_string_len_hash = &DeeObject_DefaultDelItemStringLenHashWithDelItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_delitem)) {
+			seq->tp_delitem_string_len_hash = &DeeObject_DefaultDelItemStringLenHashWithDelItem;
+		} else if (seq->tp_delitem) {
+			seq->tp_delitem_string_len_hash = &DeeObject_DefaultDelItemStringLenHashWithErrorRequiresInt;
+		}
+	}
+
+	/* tp_setitem_string_hash */
+	if (!seq->tp_setitem_string_hash) {
+		if (seq_featureset_test(features, FEAT_tp_setitem_string_len_hash)) {
+			seq->tp_setitem_string_hash = &DeeObject_DefaultSetItemStringHashWithSetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_setitem)) {
+			seq->tp_setitem_string_hash = &DeeObject_DefaultSetItemStringHashWithSetItem;
+		} else if (seq->tp_setitem) {
+			seq->tp_setitem_string_hash = &DeeObject_DefaultSetItemStringHashWithErrorRequiresInt;
+		}
+	}
+
+	/* tp_setitem_string_len_hash */
+	if (!seq->tp_setitem_string_len_hash) {
+		if (seq_featureset_test(features, FEAT_tp_setitem_string_hash)) {
+			seq->tp_setitem_string_len_hash = &DeeObject_DefaultSetItemStringLenHashWithSetItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_setitem)) {
+			seq->tp_setitem_string_len_hash = &DeeObject_DefaultSetItemStringLenHashWithSetItem;
+		} else if (seq->tp_setitem) {
+			seq->tp_setitem_string_len_hash = &DeeObject_DefaultSetItemStringLenHashWithErrorRequiresInt;
 		}
 	}
 }

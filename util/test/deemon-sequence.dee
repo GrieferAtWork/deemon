@@ -125,20 +125,20 @@ function testSequenceType(typ: Type, cls: string) {
 				str(obj);
 				repr(obj);
 				/* Interactions between `operator bool' and `operator #' */
-				assert (!!obj) == (#obj != 0);
-				assert (!!(obj as Sequence)) == (#obj != 0);
-				assert (!!obj) == (#(obj as Sequence) != 0);
-				assert (!!(obj as Sequence)) == (#(obj as Sequence) != 0);
-				assert (obj.isnonempty) == (#obj != 0);
-				assert (obj.isnonempty) == (#(obj as Sequence) != 0);
-				assert (!obj.isempty) == (#obj != 0);
-				assert (!obj.isempty) == (#(obj as Sequence) != 0);
-				assert obj.isempty != obj.isnonempty;
-				assert obj.length == #obj;
-				assert obj.length == #(obj as Sequence);
-				assert (obj as Sequence).length == #obj;
-				assert (obj as Sequence).length == #(obj as Sequence);
-				assert obj.__sizeof__ != 0;
+				assert (!!obj) == (#obj != 0), repr obj;
+				assert (!!(obj as Sequence)) == (#obj != 0), repr obj;
+				assert (!!obj) == (#(obj as Sequence) != 0), repr obj;
+				assert (!!(obj as Sequence)) == (#(obj as Sequence) != 0), repr obj;
+				assert (obj.isnonempty) == (#obj != 0), repr obj;
+				assert (obj.isnonempty) == (#(obj as Sequence) != 0), repr obj;
+				assert (!obj.isempty) == (#obj != 0), repr obj;
+				assert (!obj.isempty) == (#(obj as Sequence) != 0), repr obj;
+				assert obj.isempty != obj.isnonempty, repr obj;
+				assert obj.length == #obj, repr obj;
+				assert obj.length == #(obj as Sequence), repr obj;
+				assert (obj as Sequence).length == #obj, repr obj;
+				assert (obj as Sequence).length == #(obj as Sequence), repr obj;
+				assert obj.__sizeof__ != 0, repr obj;
 				if (obj) {
 					assert obj.first in rawTestInput;
 					assert obj.last in rawTestInput;

@@ -1958,25 +1958,17 @@ struct Dee_type_seq {
 	 * @return: -1: Error. */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem)(DeeObject *self, DeeObject *index);
 
-	/* Aliases of the non-*_index variants above. Behavior of these matches behavior above. */
-	WUNUSED_T NONNULL_T((1))    size_t (DCALL *tp_size)(DeeObject *__restrict self);
-	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getitem_index)(DeeObject *self, size_t index);
-	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_delitem_index)(DeeObject *self, size_t index);
-	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *tp_setitem_index)(DeeObject *self, size_t index, DeeObject *value);
-	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_bounditem_index)(DeeObject *self, size_t index);
-	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_hasitem_index)(DeeObject *self, size_t index);
-	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
-	WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *tp_setrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
-	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index_n)(DeeObject *self, Dee_ssize_t start);
-	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index_n)(DeeObject *self, Dee_ssize_t start);
-	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *tp_setrange_index_n)(DeeObject *self, Dee_ssize_t start, DeeObject *value);
+	/* Aliases for `tp_sizeob' */
+	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size)(DeeObject *__restrict self);
 
 	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions:
 	 * NOTE: This operator can NOT be used to substitute `tp_size'!
 	 * @return: * : A snapshot of the object's current size.
 	 * @return: (size_t)-1: Size cannot be determined fast. */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size_fast)(DeeObject *__restrict self);
+
+	/* Aliases for `tp_getitem' */
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index)(DeeObject *self, size_t index);
 
 	/* Same as `tp_getitem_index', but never throws an exception:
 	 * NOTE: This operator can NOT be used to substitute `tp_getitem_index'!
@@ -1987,6 +1979,18 @@ struct Dee_type_seq {
 	 * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
 	 * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
+
+	/* Aliases of the non-*_index variants above. Behavior of these matches behavior above. */
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_delitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1, 3)) int (DCALL *tp_setitem_index)(DeeObject *self, size_t index, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_bounditem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1))    int (DCALL *tp_hasitem_index)(DeeObject *self, size_t index);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end);
+	WUNUSED_T NONNULL_T((1, 4)) int             (DCALL *tp_setrange_index)(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value);
+	WUNUSED_T NONNULL_T((1))    DREF DeeObject *(DCALL *tp_getrange_index_n)(DeeObject *self, Dee_ssize_t start);
+	WUNUSED_T NONNULL_T((1))    int             (DCALL *tp_delrange_index_n)(DeeObject *self, Dee_ssize_t start);
+	WUNUSED_T NONNULL_T((1, 3)) int             (DCALL *tp_setrange_index_n)(DeeObject *self, Dee_ssize_t start, DeeObject *value);
 
 	/* Operators meant to speed up map operators. */
 
@@ -2025,7 +2029,9 @@ PRIVATE struct type_seq my_seq = {
 	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
 	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
 	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))NULL,
 	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))NULL,
 	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))NULL,
@@ -2036,8 +2042,6 @@ PRIVATE struct type_seq my_seq = {
 	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,
-	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,

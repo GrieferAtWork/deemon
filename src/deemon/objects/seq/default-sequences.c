@@ -390,7 +390,9 @@ PRIVATE struct type_seq ds_sgi_seq = {
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgi_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgi_setitem_index,
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_bounditem_index,
@@ -401,8 +403,6 @@ PRIVATE struct type_seq ds_sgi_seq = {
 	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgi_getrange_index_n,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
-	/* .tp_getitem_index_fast = */ NULL,
 };
 
 PRIVATE struct type_seq ds_sgif_seq = {
@@ -421,7 +421,9 @@ PRIVATE struct type_seq ds_sgif_seq = {
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,
 	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_delitem_index,
 	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgif_setitem_index,
 	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_bounditem_index,
@@ -432,8 +434,6 @@ PRIVATE struct type_seq ds_sgif_seq = {
 	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgif_getrange_index_n,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
-	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,
 };
 
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
@@ -1018,7 +1018,9 @@ PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_sg_hasitem,
 	/* .tp_size               = */ NULL,
+	/* .tp_size_fast          = */ NULL,
 	/* .tp_getitem_index      = */ NULL,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
 	/* .tp_bounditem_index    = */ NULL,
@@ -1029,8 +1031,6 @@ PRIVATE struct type_seq ds_sg_seq = {
 	/* .tp_getrange_index_n   = */ NULL,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
 };
 
 PRIVATE struct type_seq ds_tsg_seq = {
@@ -1049,7 +1049,9 @@ PRIVATE struct type_seq ds_tsg_seq = {
 	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_tsg_bounditem,
 	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))&ds_tsg_hasitem,
 	/* .tp_size               = */ NULL,
+	/* .tp_size_fast          = */ NULL,
 	/* .tp_getitem_index      = */ NULL,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
 	/* .tp_bounditem_index    = */ NULL,
@@ -1060,8 +1062,6 @@ PRIVATE struct type_seq ds_tsg_seq = {
 	/* .tp_getrange_index_n   = */ NULL,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
 };
 
 PRIVATE struct type_member tpconst ds_tsg_members[] = {
@@ -1556,7 +1556,9 @@ PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_i_size,
+	/* .tp_size_fast          = */ NULL,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t))&ds_i_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
 	/* .tp_bounditem_index    = */ NULL,
@@ -1567,8 +1569,6 @@ PRIVATE struct type_seq ds_i_seq = {
 	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_i_getrange_index_n,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL
 };
 
 PRIVATE struct type_seq ds_ti_seq = {
@@ -1587,7 +1587,9 @@ PRIVATE struct type_seq ds_ti_seq = {
 	/* .tp_bounditem          = */ NULL,
 	/* .tp_hasitem            = */ NULL,
 	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_ti_size,
+	/* .tp_size_fast          = */ NULL,
 	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict, size_t))&ds_ti_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
 	/* .tp_delitem_index      = */ NULL,
 	/* .tp_setitem_index      = */ NULL,
 	/* .tp_bounditem_index    = */ NULL,
@@ -1598,8 +1600,6 @@ PRIVATE struct type_seq ds_ti_seq = {
 	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_ti_getrange_index_n,
 	/* .tp_delrange_index_n   = */ NULL,
 	/* .tp_setrange_index_n   = */ NULL,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL
 };
 
 PRIVATE struct type_member tpconst ds_ti_members[] = {
