@@ -914,19 +914,15 @@ DeeCachedDict_HasItemStringLenHash(DeeCachedDictObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCachedDict_BoundItemStringHash(DeeCachedDictObject *__restrict self,
                                   char const *__restrict key,
-                                  Dee_hash_t hash, bool allow_missing) {
+                                  Dee_hash_t hash) {
 	DeeObject *value = DeeCachedDict_GetItemNRStringHashDef(self, key, hash, ITER_DONE);
-	if (value == ITER_DONE) {
-		if (allow_missing)
-			return -2;
-		return err_unknown_key_str((DeeObject *)self, key);
-	}
+	if (value == ITER_DONE)
+		return -2;
 	if (!value) {
 		if (DeeError_Catch(&DeeError_UnboundItem))
 			return 0;
-		if (allow_missing &&
-		    (DeeError_Catch(&DeeError_IndexError) ||
-		     DeeError_Catch(&DeeError_KeyError)))
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_KeyError))
 			return -2;
 		return -1;
 	}
@@ -936,19 +932,15 @@ DeeCachedDict_BoundItemStringHash(DeeCachedDictObject *__restrict self,
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 DeeCachedDict_BoundItemStringLenHash(DeeCachedDictObject *__restrict self,
                                      char const *__restrict key, size_t keylen,
-                                     Dee_hash_t hash, bool allow_missing) {
+                                     Dee_hash_t hash) {
 	DeeObject *value = DeeCachedDict_GetItemNRStringLenHashDef(self, key, keylen, hash, ITER_DONE);
-	if (value == ITER_DONE) {
-		if (allow_missing)
-			return -2;
-		return err_unknown_key_str_len((DeeObject *)self, key, keylen);
-	}
+	if (value == ITER_DONE)
+		return -2;
 	if (!value) {
 		if (DeeError_Catch(&DeeError_UnboundItem))
 			return 0;
-		if (allow_missing &&
-		    (DeeError_Catch(&DeeError_IndexError) ||
-		     DeeError_Catch(&DeeError_KeyError)))
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_KeyError))
 			return -2;
 		return -1;
 	}

@@ -136,6 +136,10 @@ INTDEF DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type; /* DefaultIterato
 
 INTDEF DeeTypeObject DefaultIterator_WithNextAndLimit_Type; /* DefaultIterator_WithNextAndLimit */
 
+/* TODO: Foreach iterators */
+INTDEF DeeTypeObject DefaultIterator_WithForeach_Type;     /* DefaultIterator_WithForeach */
+INTDEF DeeTypeObject DefaultIterator_WithForeachPair_Type; /* DefaultIterator_WithForeachPair */
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ITERATORS_H */

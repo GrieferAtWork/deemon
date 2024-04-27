@@ -143,7 +143,7 @@ byattr_hasattr(MapByAttr *self, /*String*/ DeeObject *attr) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 byattr_boundattr(MapByAttr *self, /*String*/ DeeObject *attr) {
-	return DeeObject_BoundItem(self->mba_map, attr, true);
+	return DeeObject_BoundItem(self->mba_map, attr);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -169,7 +169,7 @@ byattr_hasattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 byattr_boundattr_string_hash(MapByAttr *self, char const *attr, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringHash(self->mba_map, attr, hash, true);
+	return DeeObject_BoundItemStringHash(self->mba_map, attr, hash);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -199,7 +199,7 @@ byattr_hasattr_string_len_hash(MapByAttr *self, char const *attr,
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 byattr_boundattr_string_len_hash(MapByAttr *self, char const *attr,
                                  size_t attrlen, Dee_hash_t hash) {
-	return DeeObject_BoundItemStringLenHash(self->mba_map, attr, attrlen, hash, true);
+	return DeeObject_BoundItemStringLenHash(self->mba_map, attr, attrlen, hash);
 }
 
 

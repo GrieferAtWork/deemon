@@ -85,8 +85,8 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeCachedDict_NewInherited(/*
 #ifdef CONFIG_BUILDING_DEEMON
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_HasItemStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_HasItemStringLenHash(DeeCachedDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_BoundItemStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash, bool allow_missing);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_BoundItemStringLenHash(DeeCachedDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, bool allow_missing);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_BoundItemStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeCachedDict_BoundItemStringLenHash(DeeCachedDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNR(DeeCachedDictObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNRStringHash(DeeCachedDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNRStringLenHash(DeeCachedDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);

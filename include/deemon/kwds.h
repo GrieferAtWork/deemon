@@ -728,8 +728,8 @@ DDATDEF DeeTypeObject DeeBlackListKw_Type;
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKw_IsBlackListed(DeeBlackListKwObject *__restrict self, /*string*/ DeeObject *__restrict name);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKw_IsBlackListedStringHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeBlackListKw_IsBlackListedStringLenHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_BoundItemStringHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, Dee_hash_t hash, bool allow_missing);
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_BoundItemStringLenHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash, bool allow_missing);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_BoundItemStringHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_BoundItemStringLenHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_HasItemStringHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeBlackListKw_HasItemStringLenHash(DeeBlackListKwObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeBlackListKw_GetItemNR(DeeBlackListKwObject *__restrict self, /*string*/ DeeObject *__restrict name);
@@ -738,14 +738,14 @@ INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeBlackListKw_GetItemNRStringLe
 INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL DeeBlackListKw_GetItemNRDef(DeeBlackListKwObject *__restrict self, /*string*/ DeeObject *__restrict name, DeeObject *__restrict def);
 INTDEF WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL DeeBlackListKw_GetItemNRStringHashDef(DeeBlackListKwObject *__restrict self, char const *__restrict name, Dee_hash_t hash, DeeObject *__restrict def);
 INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeBlackListKw_GetItemNRStringLenHashDef(DeeBlackListKwObject *__restrict self, char const *__restrict name, size_t namelen, Dee_hash_t hash, DeeObject *__restrict def);
-#define DeeBlackListKw_IsBlackListedString(self, name)                        DeeBlackListKw_IsBlackListedStringHash(self, name, Dee_HashStr(name))
-#define DeeBlackListKw_IsBlackListedStringLen(self, name, namelen)            DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
-#define DeeBlackListKw_BoundItemString(self, name, allow_missing)             DeeBlackListKw_BoundItemStringHash(self, name, Dee_HashStr(name), allow_missing)
-#define DeeBlackListKw_BoundItemStringLen(self, name, namelen, allow_missing) DeeBlackListKw_BoundItemStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen), allow_missing)
-#define DeeBlackListKw_GetItemNRString(self, name)                            DeeBlackListKw_GetItemNRStringHash(self, name, Dee_HashStr(name))
-#define DeeBlackListKw_GetItemNRStringLen(self, name, namelen)                DeeBlackListKw_GetItemNRStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
-#define DeeBlackListKw_GetItemNRStringDef(self, name, def)                    DeeBlackListKw_GetItemNRStringHashDef(self, name, Dee_HashStr(name), def)
-#define DeeBlackListKw_GetItemNRStringLenDef(self, name, namelen, def)        DeeBlackListKw_GetItemNRStringLenHashDef(self, name, namelen, Dee_HashPtr(name, namelen), def)
+#define DeeBlackListKw_IsBlackListedString(self, name)                 DeeBlackListKw_IsBlackListedStringHash(self, name, Dee_HashStr(name))
+#define DeeBlackListKw_IsBlackListedStringLen(self, name, namelen)     DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeBlackListKw_BoundItemString(self, name)                     DeeBlackListKw_BoundItemStringHash(self, name, Dee_HashStr(name))
+#define DeeBlackListKw_BoundItemStringLen(self, name, namelen)         DeeBlackListKw_BoundItemStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeBlackListKw_GetItemNRString(self, name)                     DeeBlackListKw_GetItemNRStringHash(self, name, Dee_HashStr(name))
+#define DeeBlackListKw_GetItemNRStringLen(self, name, namelen)         DeeBlackListKw_GetItemNRStringLenHash(self, name, namelen, Dee_HashPtr(name, namelen))
+#define DeeBlackListKw_GetItemNRStringDef(self, name, def)             DeeBlackListKw_GetItemNRStringHashDef(self, name, Dee_HashStr(name), def)
+#define DeeBlackListKw_GetItemNRStringLenDef(self, name, namelen, def) DeeBlackListKw_GetItemNRStringLenHashDef(self, name, namelen, Dee_HashPtr(name, namelen), def)
 #endif /* CONFIG_BUILDING_DEEMON */
 
 

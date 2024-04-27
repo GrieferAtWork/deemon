@@ -5565,14 +5565,12 @@ target_setrange:
 	jmp    .disp
 
 target_bounditem:
-	pushl  $1     /* DeeObject_BoundItem:allow_missing */
-	ADJUST_CFA_OFFSET(4)
 	pushl  FIRST  /* DeeObject_BoundItem:key */
 	ADJUST_CFA_OFFSET(4)
 	pushl  SECOND /* DeeObject_BoundItem:self */
 	ADJUST_CFA_OFFSET(4)
-	call   fSYM(DeeObject_BoundItem,12)
-	ADJUST_CFA_OFFSET(-12)
+	call   fSYM(DeeObject_BoundItem,8)
+	ADJUST_CFA_OFFSET(-8)
 	xorl   %ecx, %ecx /* Clear out ECX */
 	cmpl   $-1, %eax
 	je     .except /* Check for errors. */

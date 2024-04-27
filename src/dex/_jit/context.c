@@ -394,8 +394,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		if unlikely(!context->jc_globals)
 			return 0;
 		result = DeeObject_BoundItem(context->jc_globals,
-		                             (DeeObject *)self->lv_global,
-		                             true);
+		                             (DeeObject *)self->lv_global);
 		if (result < -1)
 			result = 0; /* Attribute doesn't exist */
 		break;
@@ -406,8 +405,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 		result = DeeObject_BoundItemStringLenHash(context->jc_globals,
 		                                          self->lv_globalstr.lg_namestr,
 		                                          self->lv_globalstr.lg_namelen,
-		                                          self->lv_globalstr.lg_namehsh,
-		                                          true);
+		                                          self->lv_globalstr.lg_namehsh);
 		if (result < -1)
 			result = 0; /* Attribute doesn't exist */
 		break;
@@ -436,8 +434,7 @@ JITLValue_IsBound(JITLValue *__restrict self,
 
 	case JIT_LVALUE_ITEM:
 		result = DeeObject_BoundItem(self->lv_item.li_base,
-		                             self->lv_item.li_index,
-		                             true);
+		                             self->lv_item.li_index);
 		if (result < -1)
 			result = 0; /* Item doesn't exist. */
 		break;

@@ -76,8 +76,8 @@ public:
 	bool has() const {
 		return throw_if_negative(DeeObject_HasItemIndex(m_self, Index)) != 0;
 	}
-	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemIndex(m_self, Index, allow_missing)) > 0;
+	bool bound() const {
+		return throw_if_minusone(DeeObject_BoundItemIndex(m_self, Index)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemIndex(m_self, Index));

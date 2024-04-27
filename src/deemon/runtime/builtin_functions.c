@@ -104,10 +104,19 @@ f_builtin_bounditem(size_t argc, DeeObject *const *argv) {
 	bool allow_missing = true;
 	if (DeeArg_Unpack(argc, argv, "oo|b:bounditem", &self, &key, &allow_missing))
 		goto err;
-	switch (DeeObject_BoundItem(self, key, allow_missing)) {
-	default: return_false;
-	case 1: return_true;
-	case -1: break; /* Error */
+	switch (DeeObject_BoundItem(self, key)) {
+	case -2:
+		if unlikely(!allow_missing) {
+			err_unbound_key(self, key);
+			goto err;
+		}
+		ATTR_FALLTHROUGH
+	default:
+		return_false;
+	case 1:
+		return_true;
+	case -1:
+		break; /* Error */
 	}
 err:
 	return NULL;

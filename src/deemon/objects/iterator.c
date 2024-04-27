@@ -2632,6 +2632,10 @@ PUBLIC DeeTypeObject DeeIterator_Type = {
 };
 
 
+PUBLIC DeeObject DeeIterator_EmptyInstance = {
+	OBJECT_HEAD_INIT(&DeeIterator_Type)
+};
+
 
 
 typedef struct {

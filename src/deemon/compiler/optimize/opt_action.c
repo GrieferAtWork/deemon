@@ -563,8 +563,7 @@ action_set_expr_result:
 		    self->a_action.a_act1->a_type == AST_CONSTEXPR &&
 		    DeeString_Check(self->a_action.a_act1->a_constexpr)) {
 			int temp = DeeObject_BoundItem(self->a_action.a_act0->a_constexpr,
-			                               self->a_action.a_act1->a_constexpr,
-			                               true);
+			                               self->a_action.a_act1->a_constexpr);
 			if (temp == -1) {
 				expr_result = NULL;
 			} else {

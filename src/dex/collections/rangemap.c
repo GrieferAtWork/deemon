@@ -441,13 +441,12 @@ rangemap_iterator_get(DeeTypeObject *__restrict self) {
 
 
 
-INTDEF WUNUSED DREF DeeObject *DCALL new_empty_sequence_iterator(void);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 rangemap_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
 		/* Special case: Create an empty iterator.
 		 * >> This can happen when someone tries to iterate a symbolic empty-mapping object. */
-		return DeeObject_Iter(Dee_EmptySeq);
+		return_empty_iterator;
 	}
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;

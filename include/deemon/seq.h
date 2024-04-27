@@ -34,6 +34,7 @@ DECL_BEGIN
 
 #ifdef DEE_SOURCE
 #define return_empty_seq                Dee_return_empty_seq
+#define return_empty_iterator           Dee_return_empty_iterator
 #define Dee_type_nii                    type_nii
 #define Dee_type_nsi                    type_nsi
 #define TYPE_ITERX_CLASS_UNIDIRECTIONAL Dee_TYPE_ITERX_CLASS_UNIDIRECTIONAL
@@ -236,6 +237,10 @@ DDATDEF DeeObject      DeeSeq_EmptyInstance;
 #define Dee_EmptySeq (&DeeSeq_EmptyInstance)
 #define Dee_return_empty_seq  Dee_return_reference_(Dee_EmptySeq)
 
+DDATDEF DeeObject           DeeIterator_EmptyInstance;
+#define Dee_EmptyIterator (&DeeIterator_EmptyInstance)
+#define Dee_return_empty_iterator Dee_return_reference_(Dee_EmptyIterator)
+
 
 /* ==== NATIVE ITERATOR INTERFACE EXTENSIONS FOR TYPES ==== */
 struct Dee_type_nii {
@@ -359,7 +364,7 @@ struct Dee_type_nsi {
 		}                   nsi_common;
 
 		struct { /* TYPE_SEQX_CLASS_SEQ */
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+#if 0 // def CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS // TODO
 			Dee_funptr_t _unused_nsi_getsize;
 			Dee_funptr_t _unused_nsi_getsize_fast;
 			Dee_funptr_t _unused_nsi_getitem;

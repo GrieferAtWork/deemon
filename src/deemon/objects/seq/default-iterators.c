@@ -1022,6 +1022,41 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 };
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/************************************************************************/
+/* DefaultIterator_WithForeach_Type                                     */
+/* DefaultIterator_WithForeachPair_Type                                 */
+/************************************************************************/
+
+INTERN DeeTypeObject DefaultIterator_WithForeach_Type = {
+	/* TODO */
+};
+INTERN DeeTypeObject DefaultIterator_WithForeachPair_Type = {
+	/* TODO */
+};
+
+
 DECL_END
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_DEFAULT_ITERATORS_C */

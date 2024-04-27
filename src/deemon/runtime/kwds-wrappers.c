@@ -1362,24 +1362,18 @@ again:
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeBlackListKw_BoundItemStringHash(DeeBlackListKwObject *__restrict self,
-                                   char const *__restrict name,
-                                   dhash_t hash, bool allow_missing) {
+                                   char const *__restrict name, dhash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringHash(self, name, hash))
-		return DeeObject_BoundItemStringHash(DeeBlackListKw_KW(self), name, hash, allow_missing);
-	if (!allow_missing)
-		return err_unknown_key_str((DeeObject *)self, name);
+		return DeeObject_BoundItemStringHash(DeeBlackListKw_KW(self), name, hash);
 	return -2;
 }
 
 INTERN WUNUSED NONNULL((1, 2)) int DCALL
 DeeBlackListKw_BoundItemStringLenHash(DeeBlackListKwObject *__restrict self,
                                       char const *__restrict name,
-                                      size_t namelen, dhash_t hash,
-                                      bool allow_missing) {
+                                      size_t namelen, dhash_t hash) {
 	if likely(!DeeBlackListKw_IsBlackListedStringLenHash(self, name, namelen, hash))
-		return DeeObject_BoundItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash, allow_missing);
-	if (!allow_missing)
-		return err_unknown_key_str_len((DeeObject *)self, name, namelen);
+		return DeeObject_BoundItemStringLenHash(DeeBlackListKw_KW(self), name, namelen, hash);
 	return -2;
 }
 

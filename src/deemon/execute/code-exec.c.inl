@@ -3529,7 +3529,7 @@ do_setitem_c:
 
 		TARGET(ASM_GETRANGE_IN, -1, +1) {
 			DREF DeeObject *range_value;
-			range_value = DeeObject_GetRangeBeginIndex(TOP, READ_Simm16(), Dee_None);
+			range_value = DeeObject_GetRangeIndexN(TOP, READ_Simm16());
 			if unlikely(!range_value)
 				HANDLE_EXCEPT();
 			Dee_Decref(TOP);
@@ -3612,7 +3612,7 @@ do_setitem_c:
 		}
 
 		TARGET(ASM_SETRANGE_IN, -2, +0) {
-			if unlikely(DeeObject_SetRangeBeginIndex(SECOND, READ_Simm16(), Dee_None, FIRST))
+			if unlikely(DeeObject_SetRangeIndexN(SECOND, READ_Simm16(), FIRST))
 				HANDLE_EXCEPT();
 			POPREF();
 			POPREF();
@@ -5720,7 +5720,7 @@ do_setmember_this:
 
 				TARGET(ASM_BOUNDITEM, -2, +1) {
 					int error;
-					error = DeeObject_BoundItem(SECOND, FIRST, true);
+					error = DeeObject_BoundItem(SECOND, FIRST);
 					if unlikely(error == -1)
 						HANDLE_EXCEPT();
 					POPREF();

@@ -6225,8 +6225,9 @@ err:
 	return -1;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 /* self, index -> CHECKED(elem) */
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 vcall_DeeFastSeq_GetItem(struct fungen *__restrict self,
                          struct Dee_type_nsi const *__restrict nsi) {
 	struct fg_branch branch;
@@ -6255,6 +6256,7 @@ err_branch:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 /* seq -> [elems...] */
@@ -6353,6 +6355,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 				/* TODO: Release the lock from the list (if the list isn't ONEREF) */
 			}
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 			/* If "seqtype" implements "nsi_getsize_fast" (DeeFastSeq_GetSize),
 			 * inline the relevant code from `DeeObject_Unpack()' */
 			if (seqtype->tp_seq &&
@@ -6396,6 +6399,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 					return fg_vpop(self);
 				return 0;
 			}
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 		}
 	}
 

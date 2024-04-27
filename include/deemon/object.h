@@ -1987,37 +1987,69 @@ struct Dee_type_seq {
 	 * @return: NULL: The sequence is resizable and `index >= CURRENT_SIZE'
 	 * @return: NULL: Sequence indices can be unbound, and nothing is bound to `index' right now. */
 	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_getitem_index_fast)(DeeObject *self, size_t index);
+
+	/* Operators meant to speed up map operators. */
+
+	/* Same as `tp_getitem', but returns `ITER_DONE' instead of throwing
+	 * `KeyError' or `IndexError' (or `UnboundItem', which is a given
+	 * since that one's a sub-class of `IndexError') */
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 4)) int (DCALL *tp_setitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2, 5)) int (DCALL *tp_setitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_bounditem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_hasitem_string_len_hash)(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 };
+
 #if 0
 PRIVATE struct type_seq my_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_delitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_setitem            = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_getrange           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_delrange           = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_setrange           = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_nsi                = */ NULL,
-	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL,
-	/* .tp_foreach_pair       = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))NULL,
-	/* .tp_bounditem          = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_hasitem            = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))NULL,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))NULL,
-	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))NULL,
-	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))NULL,
-	/* .tp_getrange_index     = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
-	/* .tp_delrange_index     = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
-	/* .tp_setrange_index     = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL,
-	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,
-	/* .tp_delrange_index_n   = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,
-	/* .tp_setrange_index_n   = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
-	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))NULL,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))NULL,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))NULL,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,
+	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))NULL,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))NULL,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL,
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))NULL,
 };
 #endif
 
@@ -3505,41 +3537,41 @@ DeeType_GetOperatorOrigin(DeeTypeObject const *__restrict self, Dee_operator_t n
  * its intend of inheriting constructors)
  *
  * s.a. `DeeType_InheritOperator()' */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self);  /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self);           /* tp_str, tp_print */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);          /* tp_repr, tp_printrepr */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);          /* tp_bool */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritCall(DeeTypeObject *__restrict self);          /* tp_call, tp_call_kw */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritInt(DeeTypeObject *__restrict self);           /* tp_int, tp_int32, tp_int64, tp_double */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritInv(DeeTypeObject *__restrict self);           /* tp_inv */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritPos(DeeTypeObject *__restrict self);           /* tp_pos */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNeg(DeeTypeObject *__restrict self);           /* tp_neg */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritAdd(DeeTypeObject *__restrict self);           /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritMul(DeeTypeObject *__restrict self);           /* tp_mul, tp_inplace_mul */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDiv(DeeTypeObject *__restrict self);           /* tp_div, tp_inplace_div */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritMod(DeeTypeObject *__restrict self);           /* tp_mod, tp_inplace_mod */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritShl(DeeTypeObject *__restrict self);           /* tp_shl, tp_inplace_shl */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritShr(DeeTypeObject *__restrict self);           /* tp_shr, tp_inplace_shr */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self);           /* tp_and, tp_inplace_and */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);            /* tp_or, tp_inplace_or */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);           /* tp_xor, tp_inplace_xor */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);           /* tp_pow, tp_inplace_pow */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);          /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);       /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);      /* tp_iter_next */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);          /* tp_iter, tp_foreach, tp_foreach_pair */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);          /* tp_sizeob, tp_size */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);      /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);       /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);       /* tp_delitem, tp_delitem_index */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);       /* tp_setitem, tp_setitem_index */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);      /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);      /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);      /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);           /* tp_nsi */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);           /* tp_nii */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);          /* tp_enter, tp_leave */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);        /* tp_getbuf, tp_putbuf, tp_buffer_flags */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritConstructors(DeeTypeObject *__restrict self); /* tp_ctor, tp_copy_ctor, tp_deep_ctor, tp_any_ctor, tp_any_ctor_kw, tp_assign, tp_move_assign, tp_deepload */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritStr(DeeTypeObject *__restrict self);          /* tp_str, tp_print */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritRepr(DeeTypeObject *__restrict self);         /* tp_repr, tp_printrepr */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritBool(DeeTypeObject *__restrict self);         /* tp_bool */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritCall(DeeTypeObject *__restrict self);         /* tp_call, tp_call_kw */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritInt(DeeTypeObject *__restrict self);          /* tp_int, tp_int32, tp_int64, tp_double */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritInv(DeeTypeObject *__restrict self);          /* tp_inv */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritPos(DeeTypeObject *__restrict self);          /* tp_pos */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNeg(DeeTypeObject *__restrict self);          /* tp_neg */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritAdd(DeeTypeObject *__restrict self);          /* tp_add, tp_sub, tp_inplace_add, tp_inplace_sub, tp_inc, tp_dec */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritMul(DeeTypeObject *__restrict self);          /* tp_mul, tp_inplace_mul */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDiv(DeeTypeObject *__restrict self);          /* tp_div, tp_inplace_div */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritMod(DeeTypeObject *__restrict self);          /* tp_mod, tp_inplace_mod */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritShl(DeeTypeObject *__restrict self);          /* tp_shl, tp_inplace_shl */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritShr(DeeTypeObject *__restrict self);          /* tp_shr, tp_inplace_shr */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self);          /* tp_and, tp_inplace_and */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);           /* tp_or, tp_inplace_or */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);          /* tp_xor, tp_inplace_xor */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);          /* tp_pow, tp_inplace_pow */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);         /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);      /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);     /* tp_iter_next */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);         /* tp_sizeob, tp_size */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);     /* tp_contains */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);      /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast, tp_trygetitem, tp_getitem_string_hash, tp_bounditem_string_hash, tp_hasitem_string_hash, tp_trygetitem_string_len_hash, tp_getitem_string_len_hash, tp_bounditem_string_len_hash, tp_hasitem_string_len_hash */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);      /* tp_delitem, tp_delitem_index, tp_delitem_string_hash, tp_delitem_string_len_hash */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);      /* tp_setitem, tp_setitem_index, tp_setitem_string_hash, tp_setitem_string_len_hash */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);     /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelRange(DeeTypeObject *__restrict self);     /* tp_delrange, tp_delrange_index, tp_delrange_index_n */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetRange(DeeTypeObject *__restrict self);     /* tp_setrange, tp_setrange_index, tp_setrange_index_n */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNSI(DeeTypeObject *__restrict self);          /* tp_nsi */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritNII(DeeTypeObject *__restrict self);          /* tp_nii */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritWith(DeeTypeObject *__restrict self);         /* tp_enter, tp_leave */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict self);       /* tp_getbuf, tp_putbuf, tp_buffer_flags */
 #else /* CONFIG_BUILDING_DEEMON */
 #define DeeType_InheritConstructors(self) DeeType_InheritOperator(self, OPERATOR_CONSTRUCTOR)
 #define DeeType_InheritStr(self)          DeeType_InheritOperator(self, OPERATOR_STR)
@@ -4128,10 +4160,13 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_SizeObject)(DeeObj
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_Contains)(DeeObject *self, DeeObject *some_object); /* @return: 1: found */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ContainsObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItem)(DeeObject *self, DeeObject *index);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *self, DeeObject *key, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeObject *__restrict self, size_t index);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItem)(DeeObject *self, DeeObject *key); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItemStringHash)(DeeObject *self, char const *__restrict key, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItemStringLenHash)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *self, DeeObject *key, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeObject_GetItemStringHashDef)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHashDef)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItem)(DeeObject *self, DeeObject *index);
@@ -4146,14 +4181,17 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetRange)(De
 DFUNDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetRangeIndexN)(DeeObject *__restrict self, Dee_ssize_t begin);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_DelRange)(DeeObject *self, DeeObject *begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end);
 DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_DelRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_DelRangeIndexN)(DeeObject *self, Dee_ssize_t begin);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_SetRange)(DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 3, 4)) int (DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_SetRangeEndIndex)(DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *values);
 DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *self, Dee_ssize_t begin, DeeObject *values);
 #define DeeObject_GetItemString(self, key)                    DeeObject_GetItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_GetItemStringLen(self, key, keylen)         DeeObject_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeObject_GetItemStringDef(self, key, def)            DeeObject_GetItemStringHashDef(self, key, Dee_HashStr(key), def)
@@ -4178,13 +4216,13 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_HasItemStringLenHash)(DeeOb
  * @return: 1 : Item is bound.
  * @return: 0 : Item isn't bound. (`UnboundItem' was caught internally)
  * @return: -1: An error occurred.
- * @return: -2: Item doesn't exist (Only when `allow_missing' is `true': `KeyError' or `IndexError' were caught). */
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index, bool allow_missing);
-DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index, bool allow_missing);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash, bool allow_missing);
-DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash, bool allow_missing);
-#define DeeObject_BoundItemString(self, key, allow_missing)            DeeObject_BoundItemStringHash(self, key, Dee_HashStr(key), allow_missing)
-#define DeeObject_BoundItemStringLen(self, key, keylen, allow_missing) DeeObject_BoundItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), allow_missing)
+ * @return: -2: Item doesn't exist (`KeyError' or `IndexError' were caught). */
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItem)(DeeObject *self, DeeObject *index);
+DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+#define DeeObject_BoundItemString(self, key)            DeeObject_BoundItemStringHash(self, key, Dee_HashStr(key))
+#define DeeObject_BoundItemStringLen(self, key, keylen) DeeObject_BoundItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 
 /* NOTE: The `argv' vector itself isn't inherited; only its elements are! */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_ConcatInherited)(/*inherit(on_success)*/ DREF DeeObject *self, DeeObject *other);

@@ -1936,8 +1936,8 @@ public:
 	bool has() const {
 		return throw_if_negative(DeeObject_HasItem(m_ptr, m_idx)) != 0;
 	}
-	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItem(m_ptr, m_idx, allow_missing)) > 0;
+	bool bound() const {
+		return throw_if_minusone(DeeObject_BoundItem(m_ptr, m_idx)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItem(m_ptr, m_idx));
@@ -1973,8 +1973,8 @@ public:
 	bool has() const {
 		return throw_if_negative(DeeObject_HasItemIndex(m_ptr, m_idx)) != 0;
 	}
-	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemIndex(m_ptr, m_idx, allow_missing)) > 0;
+	bool bound() const {
+		return throw_if_minusone(DeeObject_BoundItemIndex(m_ptr, m_idx)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemIndex(m_ptr, m_idx));
@@ -2007,8 +2007,8 @@ public:
 	bool has() const {
 		return throw_if_negative(DeeObject_HasItemStringHash(m_ptr, m_key, m_hsh)) != 0;
 	}
-	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemStringHash(m_ptr, m_key, m_hsh, allow_missing)) > 0;
+	bool bound() const {
+		return throw_if_minusone(DeeObject_BoundItemStringHash(m_ptr, m_key, m_hsh)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemStringHash(m_ptr, m_key, m_hsh));
@@ -2044,8 +2044,8 @@ public:
 	bool has() const {
 		return throw_if_negative(DeeObject_HasItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) != 0;
 	}
-	bool bound(bool allow_missing = true) const {
-		return throw_if_minusone(DeeObject_BoundItemStringLenHash(m_ptr, m_key, m_len, m_hsh, allow_missing)) > 0;
+	bool bound() const {
+		return throw_if_minusone(DeeObject_BoundItemStringLenHash(m_ptr, m_key, m_len, m_hsh)) > 0;
 	}
 	void del() const {
 		throw_if_nonzero(DeeObject_DelItemStringLenHash(m_ptr, m_key, m_len, m_hsh));
@@ -2556,20 +2556,20 @@ public:
 		return inherit(DeeObject_GetItemStringLenHashDef(((ProxyType *)this)->ptr(), key, keylen, hash, def));
 	}
 
-	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key, allow_missing)) > 0;
+	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key) {
+		return throw_if_minusone(DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key)) > 0;
 	}
-	bool bounditem(size_t index, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index, allow_missing)) > 0;
+	bool bounditem(size_t index) {
+		return throw_if_minusone(DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index)) > 0;
 	}
-	NONNULL_CXX((1)) bool bounditem(char const *key, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key, allow_missing)) > 0;
+	NONNULL_CXX((1)) bool bounditem(char const *key) {
+		return throw_if_minusone(DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key)) > 0;
 	}
-	NONNULL_CXX((1)) bool bounditem(char const *key, Dee_hash_t hash, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash, allow_missing)) > 0;
+	NONNULL_CXX((1)) bool bounditem(char const *key, Dee_hash_t hash) {
+		return throw_if_minusone(DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash)) > 0;
 	}
-	NONNULL_CXX((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash, bool allow_missing = true) {
-		return throw_if_minusone(DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash, allow_missing)) > 0;
+	NONNULL_CXX((1)) bool bounditem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return throw_if_minusone(DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash)) > 0;
 	}
 
 	NONNULL_CXX((1)) bool hasitem(DeeObject *index_or_key) {
