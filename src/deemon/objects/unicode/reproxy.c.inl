@@ -1233,9 +1233,9 @@ done:
 	return result;
 }
 
-#define rebfa_nsi_getsize refa_nsi_getsize
+#define rebfa_size refa_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-refa_nsi_getsize(ReSequence *__restrict self) {
+refa_size(ReSequence *__restrict self) {
 	size_t count = 0;
 	size_t match_size;
 	Dee_ssize_t result;
@@ -1258,25 +1258,13 @@ err:
 	return (size_t)-1;
 }
 
-#define rebfa_size refa_size
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-refa_size(ReSequence *__restrict self) {
-	size_t result = refa_nsi_getsize(self);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
-
 #define rebfa_nsi refa_nsi
 PRIVATE struct type_nsi tpconst refa_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&refa_nsi_getsize,
+			/* .nsi_getsize      = */ (dfunptr_t)&refa_size,
 			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)NULL,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
@@ -1304,29 +1292,91 @@ PRIVATE struct type_nsi tpconst refa_nsi = {
 };
 
 PRIVATE struct type_seq refa_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refa_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refa_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &refa_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&refa_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &refa_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&refa_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq rebfa_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebfa_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebfa_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rebfa_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebfa_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rebfa_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rebfa_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 #define rebfa_members refa_members
@@ -1490,29 +1540,91 @@ done:
 }
 
 PRIVATE struct type_seq regfa_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regfa_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regfa_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &regfa_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regfa_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &regfa_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&regfa_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq regbfa_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regbfa_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regbfa_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &regbfa_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&regbfa_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &regbfa_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&regbfa_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst regfa_class_members[] = {
@@ -1665,29 +1777,91 @@ done:
 }
 
 PRIVATE struct type_seq rela_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rela_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rela_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rela_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rela_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rela_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rela_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq rebla_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebla_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebla_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rebla_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebla_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rebla_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rebla_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst rela_class_members[] = {
@@ -1859,29 +2033,17 @@ done:
 	return result;
 }
 
-#define rebsp_nsi_getsize resp_nsi_getsize
+#define rebsp_size resp_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-resp_nsi_getsize(ReSequence *__restrict self) {
+resp_size(ReSequence *__restrict self) {
 	size_t result;
 	if (!self->rs_exec.rx_inbase)
 		return 0;
-	result = refa_nsi_getsize(self);
+	result = refa_size(self);
 	if (result != (size_t)-1)
 		++result;
 	return result;
 }
-
-#define rebsp_size resp_size
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-resp_size(ReSequence *__restrict self) {
-	size_t result = resp_nsi_getsize(self);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
 
 #define rebsp_nsi resp_nsi
 PRIVATE struct type_nsi tpconst resp_nsi = {
@@ -1889,7 +2051,7 @@ PRIVATE struct type_nsi tpconst resp_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&resp_nsi_getsize,
+			/* .nsi_getsize      = */ (dfunptr_t)&resp_size,
 			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)NULL,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
@@ -1917,65 +2079,91 @@ PRIVATE struct type_nsi tpconst resp_nsi = {
 };
 
 PRIVATE struct type_seq resp_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&resp_iter,
-	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&resp_size,
-	/* .tp_contains           = */ NULL,
-	/* .tp_getitem            = */ NULL,
-	/* .tp_delitem            = */ NULL,
-	/* .tp_setitem            = */ NULL,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &resp_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&resp_nsi_getsize,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index      = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&resp_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &resp_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&resp_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq rebsp_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebsp_iter,
-	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebsp_size,
-	/* .tp_contains           = */ NULL,
-	/* .tp_getitem            = */ NULL,
-	/* .tp_delitem            = */ NULL,
-	/* .tp_setitem            = */ NULL,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &rebsp_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&rebsp_nsi_getsize,
-	/* .tp_size_fast          = */ NULL,
-	/* .tp_getitem_index      = */ NULL,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rebsp_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rebsp_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rebsp_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst resp_class_members[] = {

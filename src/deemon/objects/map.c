@@ -816,8 +816,18 @@ proxy_visit(MapProxy *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-proxy_size(MapProxy *__restrict self) {
+proxy_sizeob(MapProxy *__restrict self) {
 	return DeeObject_SizeObject(self->mp_map);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+proxy_size(MapProxy *__restrict self) {
+	return DeeObject_Size(self->mp_map);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+proxy_size_fast(MapProxy *__restrict self) {
+	return DeeObject_SizeFast(self->mp_map);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -864,19 +874,135 @@ proxy_iterself_items(MapProxy *__restrict self) {
 
 
 PRIVATE struct type_seq proxykeys_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_keys,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&proxy_contains_key,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq proxyvalues_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_values,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq proxyitems_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_size
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_iterself_items,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&proxy_sizeob,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&proxy_size_fast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst proxykeys_class_members[] = {
@@ -1213,7 +1339,60 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 
 
 
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 
+/* Generic map operators: treat "self" as a map that enumerates to yield (key, value) pairs.
+ * When "self" doesn't override any sequence operators, treat as an empty map.
+ *
+ * For this purpose, trust the return value of `DeeType_GetSeqClass()',
+ * and wrap/modify operator invocation such that the object behaves as
+ * though it was an indexable sequence. */
+
+
+PRIVATE struct type_seq map_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_map_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_map_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&generic_map_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&generic_map_setitem,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&generic_map_getrange,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&generic_map_delrange,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&generic_map_setrange,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&generic_map_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&generic_map_foreach_pair,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&generic_map_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&generic_map_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_map_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_map_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_map_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_map_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&generic_map_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&generic_map_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&generic_map_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&generic_map_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&generic_map_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&generic_map_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&generic_map_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&generic_map_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&generic_map_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&generic_map_setrange_index_n,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_delitem_string_hash,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&generic_map_setitem_string_hash,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_hasitem_string_hash,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_delitem_string_len_hash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&generic_map_setitem_string_len_hash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_hasitem_string_len_hash,
+};
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeMapping_Type) {
@@ -1411,6 +1590,20 @@ PRIVATE struct type_nsi tpconst map_nsi = {
 	}
 };
 
+PRIVATE struct type_seq map_seq = {
+	/* .tp_iter     = */ &map_iterself,
+	/* .tp_sizeob   = */ &map_size,
+	/* .tp_contains = */ &map_contains,
+	/* .tp_getitem  = */ &map_getitem,
+	/* .tp_delitem  = */ NULL,
+	/* .tp_setitem  = */ NULL,
+	/* .tp_getrange = */ &map_getrange,
+	/* .tp_delrange = */ NULL,
+	/* .tp_setrange = */ NULL,
+	/* .tp_nsi      = */ &map_nsi
+};
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
 
 PRIVATE struct type_math map_math = {
 	/* .tp_int32  = */ NULL,
@@ -1432,20 +1625,6 @@ PRIVATE struct type_math map_math = {
 	/* .tp_xor    = */ NULL, /* TODO: &DeeMap_SymmetricDifference */
 	/* .tp_pow    = */ NULL
 };
-
-PRIVATE struct type_seq map_seq = {
-	/* .tp_iter     = */ &map_iterself,
-	/* .tp_sizeob   = */ &map_size,
-	/* .tp_contains = */ &map_contains,
-	/* .tp_getitem  = */ &map_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ &map_getrange,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &map_nsi
-};
-
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 map_eq_impl(DeeObject *__restrict self,

@@ -28,6 +28,8 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/align.h>
+
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
@@ -282,17 +284,16 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 sseg_size(StringSegments *__restrict self) {
-	size_t result = DeeString_WLEN(self->s_str);
-	result += (self->s_siz - 1);
-	result /= self->s_siz;
-	return DeeInt_NewSize(result);
+	size_t length;
+	length = DeeString_WLEN(self->s_str);
+	length = CEILDIV(length, self->s_siz);
+	return length;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-sseg_contains(StringSegments *self,
-              DeeStringObject *other) {
+sseg_contains(StringSegments *self, DeeStringObject *other) {
 	DeeStringObject *str;
 	union dcharptr my_str, my_end, ot_str;
 	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
@@ -384,31 +385,63 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
-sseg_get(StringSegments *__restrict self,
-         DeeObject *__restrict index_ob) {
-	size_t index, length;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
+sseg_getitem_index(StringSegments *__restrict self, size_t index) {
+	size_t length;
 	length = DeeString_WLEN(self->s_str);
-	length += (self->s_siz - 1);
-	length /= self->s_siz;
-	if unlikely(index > length)
+	length = CEILDIV(length, self->s_siz);
+	if unlikely(index >= length)
 		goto err_index;
 	index *= self->s_siz;
 	return string_getsubstr(self->s_str, index, index + self->s_siz);
 err_index:
 	err_index_out_of_bounds((DeeObject *)self, index, length);
-err:
 	return NULL;
 }
 
 
 
 PRIVATE struct type_seq sseg_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sseg_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sseg_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sseg_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sseg_get
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sseg_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sseg_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&sseg_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&sseg_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 

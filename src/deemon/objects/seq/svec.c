@@ -41,6 +41,12 @@
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
 
+#ifdef __OPTIMIZE_SIZE__
+#define NULL_IF_Os(v) NULL
+#else /* __OPTIMIZE_SIZE__ */
+#define NULL_IF_Os(v) v
+#endif /* !__OPTIMIZE_SIZE__ */
+
 DECL_BEGIN
 
 #define RVI_GETPOS(x) atomic_read(&(x)->rvi_pos)
@@ -314,14 +320,9 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rvec_size(RefVector *__restrict self) {
-	return DeeInt_NewSize(self->rv_length);
-}
-
+#ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rvec_contains(RefVector *self,
-              DeeObject *other) {
+rvec_contains(RefVector *self, DeeObject *other) {
 	size_t index;
 	int temp;
 	for (index = 0; index < self->rv_length; ++index) {
@@ -344,32 +345,7 @@ rvec_contains(RefVector *self,
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-rvec_getitem(RefVector *self, DeeObject *index_ob) {
-	size_t index;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	if unlikely(index >= self->rv_length) {
-		err_index_out_of_bounds((DeeObject *)self,
-		                        index,
-		                        self->rv_length);
-		goto err;
-	}
-	RefVector_XLockRead(self);
-	result = self->rv_vector[index];
-	if unlikely(!result) {
-		RefVector_XLockEndRead(self);
-		err_unbound_index((DeeObject *)self, index);
-		goto err;
-	}
-	Dee_Incref(result);
-	RefVector_XLockEndRead(self);
-	return result;
-err:
-	return NULL;
-}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE ATTR_COLD int DCALL err_readonly_rvec(void) {
 	return DeeError_Throwf(&DeeError_ValueError,
@@ -377,49 +353,14 @@ PRIVATE ATTR_COLD int DCALL err_readonly_rvec(void) {
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rvec_setitem(RefVector *self,
-             DeeObject *index_ob,
-             DeeObject *value) {
-	size_t index;
-	DREF DeeObject *old_item;
-	if (!RefVector_IsWritable(self)) {
-		err_readonly_rvec();
-		goto err;
-	}
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	if unlikely(index >= self->rv_length) {
-		err_index_out_of_bounds((DeeObject *)self,
-		                        index,
-		                        self->rv_length);
-		goto err;
-	}
-	Dee_XIncref(value); /* Value may be NULL for the delitem callback. */
-	RefVector_LockWrite(self);
-	old_item = self->rv_vector[index];
-	self->rv_vector[index] = value;
-	RefVector_LockEndWrite(self);
-	Dee_XDecref(old_item);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-rvec_delitem(RefVector *self, DeeObject *index_ob) {
-	return rvec_setitem(self, index_ob, NULL);
-}
-
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-rvec_nsi_getsize(RefVector *__restrict self) {
+rvec_size(RefVector *__restrict self) {
 	ASSERT(self->rv_length != (size_t)-1);
 	return self->rv_length;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
+rvec_getitem_index(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -438,7 +379,7 @@ rvec_nsi_getitem(RefVector *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
+rvec_delitem_index(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
 		return err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -452,33 +393,8 @@ rvec_nsi_delitem(RefVector *__restrict self, size_t index) {
 	return 0;
 }
 
-PRIVATE NONNULL((1)) void DCALL
-rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
-	DREF DeeObject *oldobj;
-	ASSERT(index < self->rv_length);
-	ASSERT(RefVector_IsWritable(self));
-	RefVector_LockWrite(self);
-	oldobj = self->rv_vector[index];
-	self->rv_vector[index] = NULL;
-	RefVector_LockEndWrite(self);
-	Dee_XDecref(oldobj);
-}
-
-PRIVATE NONNULL((1, 3)) void DCALL
-rvec_nsi_setitem_fast(RefVector *self, size_t index,
-                      /*inherit(always)*/ DREF DeeObject *value) {
-	DREF DeeObject *oldobj;
-	ASSERT(index < self->rv_length);
-	ASSERT(RefVector_IsWritable(self));
-	RefVector_LockWrite(self);
-	oldobj = self->rv_vector[index];
-	self->rv_vector[index] = value;
-	RefVector_LockEndWrite(self);
-	Dee_XDecref(oldobj);
-}
-
 PRIVATE NONNULL((1, 3)) int DCALL
-rvec_nsi_setitem(RefVector *self, size_t index,
+rvec_setitem_index(RefVector *self, size_t index,
                  DeeObject *value) {
 	DREF DeeObject *oldobj;
 	if unlikely(index >= self->rv_length)
@@ -494,8 +410,15 @@ rvec_nsi_setitem(RefVector *self, size_t index,
 	return 0;
 }
 
+PRIVATE NONNULL((1)) int DCALL
+rvec_bounditem_index(RefVector *self, size_t index) {
+	if unlikely(index >= self->rv_length)
+		return -2;
+	return atomic_read(&self->rv_vector[index]) ? 1 : 0;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
+rvec_getitem_index_fast(RefVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->rv_length);
 	RefVector_XLockRead(self);
@@ -506,8 +429,7 @@ rvec_nsi_getitem_fast(RefVector *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
-rvec_nsi_xchitem(RefVector *self, size_t index,
-                 DeeObject *value) {
+rvec_nsi_xchitem(RefVector *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->rv_length) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->rv_length);
@@ -557,7 +479,7 @@ rvec_nsi_find(RefVector *self, size_t start, size_t end,
 	if (start > self->rv_length)
 		start = self->rv_length;
 	for (i = start; i < end; ++i) {
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
@@ -584,7 +506,7 @@ rvec_nsi_rfind(RefVector *self, size_t start, size_t end,
 	i = end;
 	while (i > start) {
 		--i;
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
@@ -613,7 +535,7 @@ rvec_nsi_remove(RefVector *self, size_t start, size_t end,
 		start = self->rv_length;
 again:
 	for (i = start; i < end; ++i) {
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
@@ -646,7 +568,7 @@ again:
 	i = end;
 	while (i > start) {
 		--i;
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
@@ -678,7 +600,7 @@ rvec_nsi_removeall(RefVector *self, size_t start, size_t end,
 		start = self->rv_length;
 again:
 	for (i = start; i < end; ++i) {
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		temp = DeeObject_CompareKeyEq(keyed_search_item, item, key);
@@ -712,7 +634,7 @@ rvec_nsi_removeif(RefVector *self, size_t start, size_t end,
 		start = self->rv_length;
 again:
 	for (i = start; i < end; ++i) {
-		item = rvec_nsi_getitem_fast(self, i);
+		item = rvec_getitem_index_fast(self, i);
 		if (!item)
 			continue; /* Unbound index */
 		callback_result = DeeObject_Call(should_remove, 1, &item);
@@ -737,9 +659,21 @@ err:
 	return (size_t)-1;
 }
 
+PRIVATE NONNULL((1)) void DCALL
+rvec_nsi_delitem_fast(RefVector *__restrict self, size_t index) {
+	DREF DeeObject *oldobj;
+	ASSERT(index < self->rv_length);
+	ASSERT(RefVector_IsWritable(self));
+	RefVector_LockWrite(self);
+	oldobj = self->rv_vector[index];
+	self->rv_vector[index] = NULL;
+	RefVector_LockEndWrite(self);
+	Dee_XDecref(oldobj);
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rvec_nsi_delrange(RefVector *__restrict self,
-                  dssize_t i_begin, dssize_t i_end) {
+rvec_delrange_index(RefVector *__restrict self,
+                    Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t i;
 	if (!RefVector_IsWritable(self))
@@ -751,10 +685,9 @@ rvec_nsi_delrange(RefVector *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-rvec_nsi_delrange_n(RefVector *__restrict self,
-                    dssize_t i_begin) {
+rvec_delrange_index_n(RefVector *__restrict self, Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return rvec_nsi_delrange(self, i_begin, SSIZE_MAX);
+	return rvec_delrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t i, start;
 	if (!RefVector_IsWritable(self))
@@ -766,9 +699,22 @@ rvec_nsi_delrange_n(RefVector *__restrict self,
 #endif /* !__OPTIMIZE_SIZE__ */
 }
 
+PRIVATE NONNULL((1, 3)) void DCALL
+rvec_nsi_setitem_fast(RefVector *self, size_t index,
+                      /*inherit(always)*/ DREF DeeObject *value) {
+	DREF DeeObject *oldobj;
+	ASSERT(index < self->rv_length);
+	ASSERT(RefVector_IsWritable(self));
+	RefVector_LockWrite(self);
+	oldobj = self->rv_vector[index];
+	self->rv_vector[index] = value;
+	RefVector_LockEndWrite(self);
+	Dee_XDecref(oldobj);
+}
+
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-rvec_nsi_setrange(RefVector *self, dssize_t i_begin,
-                  dssize_t i_end, DeeObject *values) {
+rvec_setrange_index(RefVector *self, Dee_ssize_t i_begin,
+                    Dee_ssize_t i_end, DeeObject *values) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	size_t i, fast_length;
@@ -822,40 +768,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-rvec_nsi_setrange_n(RefVector *self, dssize_t start,
-                    DeeObject *values) {
-	return rvec_nsi_setrange(self, start, SSIZE_MAX, values);
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-rvec_delrange(RefVector *self, DeeObject *begin, DeeObject *end) {
-	dssize_t i_begin;
-	dssize_t i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return rvec_nsi_delrange_n(self, i_begin);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return rvec_nsi_delrange(self, i_begin, i_end);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-rvec_setrange(RefVector *self, DeeObject *begin,
-              DeeObject *end, DeeObject *values) {
-	dssize_t start_index;
-	dssize_t end_index;
-	if (DeeObject_AsSSize(begin, &start_index))
-		goto err;
-	if (DeeNone_Check(end))
-		return rvec_nsi_setrange_n(self, start_index, values);
-	if (DeeObject_AsSSize(end, &end_index))
-		goto err;
-	return rvec_nsi_setrange(self, start_index, end_index, values);
-err:
-	return -1;
+rvec_setrange_index_n(RefVector *self, Dee_ssize_t start,
+                      DeeObject *values) {
+	return rvec_setrange_index(self, start, SSIZE_MAX, values);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -891,18 +806,18 @@ PRIVATE struct type_nsi tpconst rvec_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rvec_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rvec_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&rvec_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&rvec_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&rvec_nsi_setitem,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&rvec_nsi_getitem_fast,
+			/* .nsi_getsize      = */ (dfunptr_t)&rvec_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&rvec_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&rvec_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&rvec_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&rvec_setitem_index,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&rvec_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
-			/* .nsi_delrange     = */ (dfunptr_t)&rvec_nsi_delrange,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&rvec_nsi_delrange_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&rvec_nsi_setrange,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_nsi_setrange_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&rvec_delrange_index,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&rvec_delrange_index_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&rvec_setrange_index,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&rvec_setrange_index_n,
 			/* .nsi_find         = */ (dfunptr_t)&rvec_nsi_find,
 			/* .nsi_rfind        = */ (dfunptr_t)&rvec_nsi_rfind,
 			/* .nsi_xch          = */ (dfunptr_t)&rvec_nsi_xchitem,
@@ -921,17 +836,47 @@ PRIVATE struct type_nsi tpconst rvec_nsi = {
 
 
 PRIVATE struct type_seq rvec_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rvec_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rvec_getitem,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&rvec_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rvec_setitem,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rvec_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rvec_setrange,
-	/* .tp_nsi      = */ &rvec_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rvec_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rvec_contains),
+	/* .tp_getitem                    = */ NULL, /* default */
+	/* .tp_delitem                    = */ NULL, /* default */
+	/* .tp_setitem                    = */ NULL, /* default */
+	/* .tp_getrange                   = */ NULL, /* default */
+	/* .tp_delrange                   = */ NULL, /* default */
+	/* .tp_setrange                   = */ NULL, /* default */
+	/* .tp_nsi                        = */ &rvec_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rvec_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rvec_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rvec_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rvec_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&rvec_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&rvec_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&rvec_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL, /* default */
+	/* .tp_getrange_index             = */ NULL, /* default */
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&rvec_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&rvec_setrange_index,
+	/* .tp_getrange_index_n           = */ NULL, /* default */
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&rvec_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&rvec_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst rvec_class_members[] = {
@@ -1318,15 +1263,9 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_size(SharedVector *__restrict self) {
-	size_t result = atomic_read(&self->sv_length);
-	return DeeInt_NewSize(result);
-}
-
+#ifndef __OPTIMIZE_SIZE__
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-svec_contains(SharedVector *self,
-              DeeObject *other) {
+svec_contains(SharedVector *self, DeeObject *other) {
 	size_t index;
 	int temp;
 	SharedVector_LockRead(self);
@@ -1349,38 +1288,16 @@ svec_contains(SharedVector *self,
 err:
 	return NULL;
 }
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-svec_getitem(SharedVector *self,
-             DeeObject *index_ob) {
-	size_t index;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	SharedVector_LockRead(self);
-	if unlikely(index >= self->sv_length) {
-		size_t my_length = self->sv_length;
-		SharedVector_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, my_length);
-		goto err;
-	}
-	result = self->sv_vector[index];
-	Dee_Incref(result);
-	SharedVector_LockEndRead(self);
-	return result;
-err:
-	return NULL;
-}
-
+#endif /* !__OPTIMIZE_SIZE__ */
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-svec_nsi_getsize(SharedVector *__restrict self) {
+svec_size(SharedVector *__restrict self) {
 	ASSERT(self->sv_length != (size_t)-1);
 	return atomic_read(&self->sv_length);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
+svec_getitem_index(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	SharedVector_LockRead(self);
 	if unlikely(index >= self->sv_length) {
@@ -1396,13 +1313,15 @@ svec_nsi_getitem(SharedVector *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-svec_nsi_getitem_fast(SharedVector *__restrict self, size_t index) {
+svec_getitem_index_fast(SharedVector *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	SharedVector_LockRead(self);
-	if unlikely(index >= self->sv_length) {
+	/* Still to check for length==0 in case the vector got unshared. */
+	if unlikely(!self->sv_length) {
 		SharedVector_LockEndRead(self);
 		return NULL;
 	}
+	ASSERT(index < self->sv_length);
 	result = self->sv_vector[index];
 	Dee_Incref(result);
 	SharedVector_LockEndRead(self);
@@ -1499,12 +1418,12 @@ PRIVATE struct type_nsi tpconst svec_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&svec_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&svec_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&svec_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&svec_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&svec_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&svec_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_nsi_getitem_fast,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&svec_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -1528,17 +1447,47 @@ PRIVATE struct type_nsi tpconst svec_nsi = {
 };
 
 PRIVATE struct type_seq svec_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&svec_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&svec_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &svec_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&svec_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL_IF_Os((DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&svec_contains),
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &svec_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&svec_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&svec_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&svec_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_getset tpconst svec_getsets[] = {

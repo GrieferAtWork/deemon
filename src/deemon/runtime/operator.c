@@ -1881,8 +1881,38 @@ DEFINE_OPERATOR(int, Bool, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	}
 }
 
+#ifndef DEFINE_TYPED_OPERATORS
+DEFINE_OPERATOR(int, BoolInherited, (/*inherit(always)*/ DREF DeeObject *RESTRICT_IF_NOTYPE self)) {
+	/* _very_ likely case: `self' is one of the boolean constants
+	 *  -> In this case, we return the result immediately! */
+#ifndef __OPTIMIZE_SIZE__
+	if (self == Dee_True) {
+		Dee_DecrefNokill(Dee_True);
+		return 1;
+	}
+	if (self == Dee_False) {
+		Dee_DecrefNokill(Dee_False);
+		return 0;
+	}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+	/* General case: invoke the "bool" operator. */
+	{
+		int result;
+		LOAD_TP_SELF;
+		if likely(tp_self->tp_cast.tp_bool || DeeType_InheritBool(tp_self)) {
+			result = DeeType_INVOKE_BOOL(tp_self, self);
+		} else {
+			result = err_unimplemented_operator(tp_self, OPERATOR_BOOL);
+		}
+		Dee_Decref(self);
+		return result;
+	}
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
 DEFINE_OPERATOR(DREF DeeObject *, Call,
-               (DeeObject *self, size_t argc, DeeObject *const *argv)) {
+                (DeeObject *self, size_t argc, DeeObject *const *argv)) {
 	LOAD_TP_SELF;
 	if (tp_self->tp_call || DeeType_InheritCall(tp_self))
 		return DeeType_INVOKE_CALL(tp_self, self, argc, argv);
@@ -3274,8 +3304,7 @@ err:
 PRIVATE WUNUSED DREF DeeObject *DCALL
 xinvoke_not(/*[0..1],inherit(always)*/ DREF DeeObject *ob) {
 	if (ob) {
-		int temp = DeeObject_Bool(ob);
-		Dee_Decref(ob);
+		int temp = DeeObject_BoolInherited(ob);
 		if likely(temp >= 0) {
 			ob = DeeBool_For(!temp);
 			Dee_Incref(ob);
@@ -3460,7 +3489,7 @@ INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem);
 
 #ifndef DEFINE_TYPED_OPERATORS
-INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_foreach_pair_with_foreach_cb(void *arg, DeeObject *elem) {
 	struct default_foreach_pair_with_foreach_data *data;
 	Dee_ssize_t result;
@@ -4173,7 +4202,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_getitem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
 
 #ifndef DEFINE_TYPED_OPERATORS
-INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+INTERN  WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_getitem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
 	int temp;
 	struct default_map_getitem_with_foreach_pair_data *data;
@@ -4352,6 +4381,84 @@ err:
 	return NULL;
 }
 
+struct default_map_getitem_index_with_foreach_pair_data {
+	size_t          mgiifpd_key;    /* The index we're looking for. */
+	DREF DeeObject *mgiifpd_result; /* [?..1][out] Result value. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+PRIVATE WUNUSED NONNULL((2)) int DCALL
+size_t_equals_object(size_t lhs, DeeObject *rhs) {
+	int result;
+	DREF DeeObject *lhs_value;
+	if (DeeInt_Check(rhs)) {
+		size_t rhs_value;
+		return (DeeInt_TryAsSize(rhs, &rhs_value) && lhs == rhs_value) ? 1 : 0;
+	}
+	lhs_value = DeeInt_NewSize(lhs);
+	if unlikely(!lhs_value)
+		goto err;
+	result = DeeObject_CompareEq(lhs_value, rhs);
+	Dee_Decref(lhs_value);
+	return result;
+err:
+	return -1;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	struct default_map_getitem_index_with_foreach_pair_data *data;
+	data = (struct default_map_getitem_index_with_foreach_pair_data *)arg;
+	temp = size_t_equals_object(data->mgiifpd_key, key);
+	if (temp > 0) {
+		Dee_Incref(value);
+		data->mgiifpd_result = value;
+		temp = -2;
+	}
+	return temp;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_index_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgiifpd_key = index;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_index_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgiifpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_int(self, index);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_index_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgiifpd_key = index;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_getitem_index_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgiifpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_int(self, index);
+err:
+	return NULL;
+}
+
+
+
 
 /* tp_getitem_string_hash */
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemStringHashWithGetItemStringLenHash,
@@ -4441,6 +4548,75 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemStringHashWithGetItemDe
 	result = DeeType_INVOKE_GETITEM(tp_self, self, keyob);
 	Dee_Decref(keyob);
 	return result;
+err:
+	return NULL;
+}
+
+struct default_map_getitem_string_hash_with_foreach_pair_data {
+	char const     *mgishfpd_key;    /* [1..1] The key we're looking for. */
+	Dee_hash_t      mgishfpd_hash;   /* Hash for `mgishfpd_key'. */
+	DREF DeeObject *mgishfpd_result; /* [?..1][out] Result value. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_string_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+PRIVATE WUNUSED NONNULL((2)) bool DCALL
+string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
+	if (DeeBytes_Check(rhs))
+		return (strlen(lhs) == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs)) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_string_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_hash_with_foreach_pair_data *data;
+	data = (struct default_map_getitem_string_hash_with_foreach_pair_data *)arg;
+	if (string_hash_equals_object(data->mgishfpd_key, data->mgishfpd_hash, key)) {
+		Dee_Incref(value);
+		data->mgishfpd_result = value;
+		return -2;
+	}
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgishfpd_key  = key;
+	data.mgishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgishfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str(self, key);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgishfpd_key  = key;
+	data.mgishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_getitem_string_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgishfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str(self, key);
 err:
 	return NULL;
 }
@@ -4579,6 +4755,79 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetItemStringLenHashWithGetIte
 err:
 	return NULL;
 }
+
+struct default_map_getitem_string_len_hash_with_foreach_pair_data {
+	char const     *mgislhfpd_key;    /* [1..1] The key we're looking for. */
+	size_t          mgislhfpd_keylen; /* Length of `mgislhfpd_key'. */
+	Dee_hash_t      mgislhfpd_hash;   /* Hash for `mgislhfpd_key'. */
+	DREF DeeObject *mgislhfpd_result; /* [?..1][out] Result value. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_string_len_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+PRIVATE WUNUSED NONNULL((2)) bool DCALL
+string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_hash, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
+	if (DeeBytes_Check(rhs))
+		return (lhs_len == DeeBytes_SIZE(rhs) && bcmp(lhs, DeeBytes_DATA(rhs), lhs_len) == 0);
+	/* `string.operator ==' isn't implemented for any other types. */
+	return false;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_getitem_string_len_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_getitem_string_len_hash_with_foreach_pair_data *data;
+	data = (struct default_map_getitem_string_len_hash_with_foreach_pair_data *)arg;
+	if (string_len_hash_equals_object(data->mgislhfpd_key, data->mgislhfpd_keylen, data->mgislhfpd_hash, key)) {
+		Dee_Incref(value);
+		data->mgislhfpd_result = value;
+		return -2;
+	}
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgislhfpd_key    = key;
+	data.mgislhfpd_keylen = keylen;
+	data.mgislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_len_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgislhfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str_len(self, key, keylen);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGetItemStringLenHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgislhfpd_key    = key;
+	data.mgislhfpd_keylen = keylen;
+	data.mgislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_getitem_string_len_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgislhfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	err_unknown_key_str_len(self, key, keylen);
+err:
+	return NULL;
+}
+
 
 
 /* tp_trygetitem */
@@ -4839,6 +5088,42 @@ err:
 	return NULL;
 }
 
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgishfpd_key  = key;
+	data.mgishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgishfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgishfpd_key  = key;
+	data.mgishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_getitem_string_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgishfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
 
 /* tp_trygetitem_string_len_hash */
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringLenHashWithTryGetItemStringHash,
@@ -4945,6 +5230,43 @@ err:
 	return NULL;
 }
 
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgislhfpd_key    = key;
+	data.mgislhfpd_keylen = keylen;
+	data.mgislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_getitem_string_len_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgislhfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultTryGetItemStringLenHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_getitem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mgislhfpd_key    = key;
+	data.mgislhfpd_keylen = keylen;
+	data.mgislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_getitem_string_len_hash_with_foreach_pair_cb, &data);
+	if likely(status == -2)
+		return data.mgislhfpd_result;
+	ASSERT(status == -1 || status == 0);
+	if (status < 0)
+		goto err;
+	return ITER_DONE;
+err:
+	return NULL;
+}
 
 
 
@@ -5475,6 +5797,68 @@ err:
 	return -1;
 }
 
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	(void)value;
+	temp = DeeObject_CompareEq((DeeObject *)arg, key);
+	if (temp > 0)
+		temp = -2; /* Stop iteration */
+	return temp;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithContains,
+                             (DeeObject *self, DeeObject *index)) {
+	int result_status;
+	DREF DeeObject *result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, index);
+	if unlikely(!result)
+		goto err;
+	result_status = DeeObject_BoolInherited(result);
+	if (result_status == 0)
+		result_status = -2;
+	return result_status;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithForeachPair,
+                             (DeeObject *self, DeeObject *index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_with_foreach_pair_cb, index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_with_foreach_pair_cb, index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+
+
+
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemIndexWithBoundItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	int result;
@@ -5580,6 +5964,69 @@ err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithContains,
+                             (DeeObject *self, size_t index)) {
+	int result_status;
+	DREF DeeObject *result;
+	DREF DeeObject *indexob;
+	LOAD_TP_SELF;
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	result_status = DeeObject_BoolInherited(result);
+	if (result_status == 0)
+		result_status = -2;
+	return result_status;
+err:
+	return -1;
+}
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_index_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	int temp;
+	(void)value;
+	temp = size_t_equals_object((size_t)(uintptr_t)arg, key);
+	if (temp > 0)
+		temp = -2;
+	return temp;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithForeachPair,
+                             (DeeObject *self, size_t index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_foreach_pair_cb, (void *)(uintptr_t)index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemIndexWithForeachPairDefault,
+                             (DeeObject *self, size_t index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_index_with_foreach_pair_cb, (void *)(uintptr_t)index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
 
 /* tp_bounditem_string_hash */
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringHashWithBoundItemStringLenHash,
@@ -5732,6 +6179,81 @@ err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+struct default_map_bounditem_string_hash_with_foreach_pair_data {
+	char const *mbishfpd_key;    /* [1..1] The key we're looking for. */
+	Dee_hash_t  mbishfpd_hash;   /* Hash for `mbishfpd_key'. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_string_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_string_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_bounditem_string_hash_with_foreach_pair_data *data;
+	(void)value;
+	data = (struct default_map_bounditem_string_hash_with_foreach_pair_data *)arg;
+	if (string_hash_equals_object(data->mbishfpd_key, data->mbishfpd_hash, key))
+		return -2;
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithContains,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	int result_status;
+	DREF DeeObject *result;
+	DREF DeeObject *keyob;
+	LOAD_TP_SELF;
+	keyob = DeeString_NewAutoWithHash(key, hash);
+	if unlikely(!keyob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
+	Dee_Decref(keyob);
+	result_status = DeeObject_BoolInherited(result);
+	if (result_status == 0)
+		result_status = -2;
+	return result_status;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbishfpd_key  = key;
+	data.mbishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbishfpd_key  = key;
+	data.mbishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_string_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+
 
 /* tp_bounditem_string_len_hash */
 DEFINE_INTERNAL_OPERATOR(int, DefaultBoundItemStringLenHashWithBoundItemStringHash,
@@ -5896,6 +6418,82 @@ err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+struct default_map_bounditem_string_len_hash_with_foreach_pair_data {
+	char const *mbislhfpd_key;    /* [1..1] The key we're looking for. */
+	size_t      mbislhfpd_keylen; /* Length of `mbislhfpd_key'. */
+	Dee_hash_t  mbislhfpd_hash;   /* Hash for `mbislhfpd_key'. */
+};
+
+INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_string_len_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
+default_map_bounditem_string_len_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value) {
+	struct default_map_bounditem_string_len_hash_with_foreach_pair_data *data;
+	(void)value;
+	data = (struct default_map_bounditem_string_len_hash_with_foreach_pair_data *)arg;
+	if (string_len_hash_equals_object(data->mbislhfpd_key, data->mbislhfpd_keylen, data->mbislhfpd_hash, key))
+		return -2;
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithContains,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	int result_status;
+	DREF DeeObject *result;
+	DREF DeeObject *keyob;
+	LOAD_TP_SELF;
+	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
+	if unlikely(!keyob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
+	Dee_Decref(keyob);
+	result_status = DeeObject_BoolInherited(result);
+	if (result_status == 0)
+		result_status = -2;
+	return result_status;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbislhfpd_key    = key;
+	data.mbislhfpd_keylen = keylen;
+	data.mbislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultBoundItemStringLenHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbislhfpd_key    = key;
+	data.mbislhfpd_keylen = keylen;
+	data.mbislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_string_len_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2) {
+		status = 1;
+	} else if (status == 0) {
+		status = -2;
+	}
+	return (int)status;
+}
 
 
 
@@ -6133,6 +6731,45 @@ err:
 	return -1;
 }
 
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemWithContains,
+                             (DeeObject *self, DeeObject *index)) {
+	int result_status;
+	DREF DeeObject *result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_CONTAINS(tp_self, self, index);
+	if unlikely(!result)
+		goto err;
+	result_status = DeeObject_BoolInherited(result);
+	if (result_status == 0)
+		result_status = -2;
+	return result_status;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemWithForeachPair,
+                             (DeeObject *self, DeeObject *index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_with_foreach_pair_cb, index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_with_foreach_pair_cb, index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
+
+
 DEFINE_INTERNAL_OPERATOR(int, DefaultHasItemIndexWithHasItem,
                          (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	int result;
@@ -6248,6 +6885,43 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultHasItemIndexWithSizeDefault,
 	return index < size ? 1 : 0;
 err:
 	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemIndexWithContains,
+                             (DeeObject *self, size_t index)) {
+	DREF DeeObject *result;
+	DREF DeeObject *indexob;
+	LOAD_TP_SELF;
+	indexob = DeeInt_NewSize(index);
+	if unlikely(!indexob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, indexob);
+	Dee_Decref(indexob);
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemIndexWithForeachPair,
+                             (DeeObject *self, size_t index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_index_with_foreach_pair_cb, (void *)(uintptr_t)index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemIndexWithForeachPairDefault,
+                             (DeeObject *self, size_t index)) {
+	Dee_ssize_t status;
+	LOAD_TP_SELF;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_index_with_foreach_pair_cb, (void *)(uintptr_t)index);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
 }
 
 
@@ -6445,6 +7119,49 @@ err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringHashWithContains,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	DREF DeeObject *result;
+	DREF DeeObject *keyob;
+	LOAD_TP_SELF;
+	keyob = DeeString_NewAutoWithHash(key, hash);
+	if unlikely(!keyob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
+	Dee_Decref(keyob);
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbishfpd_key  = key;
+	data.mbishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbishfpd_key  = key;
+	data.mbishfpd_hash = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_string_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
 
 
 /* tp_hasitem_string_len_hash */
@@ -6657,6 +7374,51 @@ err:
 	return -1;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringLenHashWithContains,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	DREF DeeObject *result;
+	DREF DeeObject *keyob;
+	LOAD_TP_SELF;
+	keyob = DeeString_NewSizedWithHash(key, keylen, hash);
+	if unlikely(!keyob)
+		goto err;
+	result = DeeType_INVOKE_CONTAINS_NODEFAULT(tp_self, self, keyob);
+	Dee_Decref(keyob);
+	return DeeObject_BoolInherited(result);
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringLenHashWithForeachPair,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbislhfpd_key    = key;
+	data.mbislhfpd_keylen = keylen;
+	data.mbislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR_NODEFAULT(tp_self, self, &default_map_bounditem_string_len_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultHasItemStringLenHashWithForeachPairDefault,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	Dee_ssize_t status;
+	struct default_map_bounditem_string_len_hash_with_foreach_pair_data data;
+	LOAD_TP_SELF;
+	data.mbislhfpd_key    = key;
+	data.mbislhfpd_keylen = keylen;
+	data.mbislhfpd_hash   = hash;
+	status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_bounditem_string_len_hash_with_foreach_pair_cb, &data);
+	ASSERT(status == -2 || status == -1 || status == 0);
+	if (status == -2)
+		status = 1;
+	return (int)status;
+}
 
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGetRangeWithGetRangeIndexAndGetRangeIndexN,
@@ -8381,13 +9143,10 @@ DEFINE_OBJECT_COMPARE_OPERATOR(CompareGeObject, ge, OPERATOR_GE, DeeType_INVOKE_
 	PUBLIC WUNUSED NONNULL((1, 2)) int DCALL           \
 	name(DeeObject *self, DeeObject *some_object) {    \
 		DeeObject *val;                                \
-		int result;                                    \
 		val = name##Object(self, some_object);         \
 		if unlikely(!val)                              \
 			goto err;                                  \
-		result = DeeObject_Bool(val);                  \
-		Dee_Decref(val);                               \
-		return result;                                 \
+		return DeeObject_BoolInherited(val);           \
 	err:                                               \
 		return -1;                                     \
 	}
@@ -8400,7 +9159,6 @@ DEFINE_COMPARE_OPERATOR(DeeObject_CompareGe, ge, le, OPERATOR_GE)
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_CompareEq(DeeObject *self, DeeObject *some_object) {
 	DeeObject *val;
-	int result;
 	val = DeeObject_CompareEqObject(self, some_object);
 	if unlikely(!val) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
@@ -8409,15 +9167,12 @@ DeeObject_CompareEq(DeeObject *self, DeeObject *some_object) {
 			return self == some_object;
 		return -1;
 	}
-	result = DeeObject_Bool(val);
-	Dee_Decref(val);
-	return result;
+	return DeeObject_BoolInherited(val);
 }
 
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_CompareNe(DeeObject *self, DeeObject *some_object) {
 	DeeObject *val;
-	int result;
 	val = DeeObject_CompareNeObject(self, some_object);
 	if unlikely(!val) {
 		if (DeeError_Catch(&DeeError_NotImplemented) ||
@@ -8426,9 +9181,7 @@ DeeObject_CompareNe(DeeObject *self, DeeObject *some_object) {
 			return self != some_object;
 		return -1;
 	}
-	result = DeeObject_Bool(val);
-	Dee_Decref(val);
-	return result;
+	return DeeObject_BoolInherited(val);
 }
 
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL /* From "../objects/seq.c" */
@@ -8499,8 +9252,7 @@ again:
 		}
 		if unlikely(!opres)
 			goto err;
-		opval = DeeObject_Bool(opres);
-		Dee_Decref(opres);
+		opval = DeeObject_BoolInherited(opres);
 		if (opval != 0)
 			return unlikely(opval < 0) ? -2 : -1;
 
@@ -8515,8 +9267,7 @@ again:
 		}
 		if unlikely(!opres)
 			goto err;
-		opval = DeeObject_Bool(opres);
-		Dee_Decref(opres);
+		opval = DeeObject_BoolInherited(opres);
 		if likely(opval >= 0)
 			opval = !opval;
 		return opval;
@@ -8561,6 +9312,7 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 enum seq_feature {
 	FEAT_tp_iter,
 	FEAT_tp_sizeob,
+	FEAT_tp_contains,
 	FEAT_tp_getitem,
 	FEAT_tp_delitem,
 	FEAT_tp_setitem,
@@ -8634,6 +9386,8 @@ seq_featureset_init(seq_featureset_t self, struct type_seq const *__restrict seq
 		seq_featureset_set(self, FEAT_tp_iter);
 	if (seq->tp_sizeob && !DeeType_IsDefaultSizeOb(seq->tp_sizeob))
 		seq_featureset_set(self, FEAT_tp_sizeob);
+	if (seq->tp_contains && !DeeType_IsDefaultContains(seq->tp_contains))
+		seq_featureset_set(self, FEAT_tp_contains);
 	if (seq->tp_getitem && !DeeType_IsDefaultGetItem(seq->tp_getitem))
 		seq_featureset_set(self, FEAT_tp_getitem);
 	if (seq->tp_delitem && !DeeType_IsDefaultDelItem(seq->tp_delitem))
@@ -8781,40 +9535,34 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		}
 	}
 
-	/* tp_contains */
-	if (!seq->tp_contains) {
-		if (seqclass == Dee_SEQCLASS_MAP) {
-			if (seq_featureset_test(features, FEAT_tp_hasitem)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithHasItem;
-			} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithBoundItem;
-			} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItem;
-			} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithGetItem;
-			} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithHasItemStringHash;
-			} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithHasItemStringLenHash;
-			} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithBoundItemStringHash;
-			} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithBoundItemStringLenHash;
-			} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItemStringHash;
-			} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItemStringLenHash;
-			} else if (seq_featureset_test(features, FEAT_tp_getitem_string_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithGetItemStringHash;
-			} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithGetItemStringLenHash;
-			} else if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithForeachPair;
-			} else if (seq->tp_foreach) {
-				seq->tp_contains = &DeeMap_DefaultContainsWithForeachDefault;
-			}
-		} else if (seq->tp_foreach && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_contains = &DeeSeq_DefaultContainsWithForeachDefault;
+	/* tp_contains (for maps) */
+	if (!seq->tp_contains && seqclass == Dee_SEQCLASS_MAP) {
+		if (seq_featureset_test(features, FEAT_tp_hasitem)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithHasItem;
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithBoundItem;
+		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithHasItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithHasItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithBoundItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithBoundItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithTryGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithGetItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithForeachPair;
 		}
 	}
 
@@ -8828,6 +9576,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithTryGetItem;
 		} else if (seq->tp_foreach) {
 			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithForeachDefault;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem_index = &DeeMap_DefaultGetItemIndexWithForeachPair;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash) ||
 		           seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_string_hash) ||
@@ -8850,6 +9600,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem = &DeeObject_DefaultGetItemWithTryGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
 			seq->tp_getitem = &DeeObject_DefaultGetItemWithTryGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem = &DeeMap_DefaultGetItemWithForeachPair;
 		} else if (seq->tp_getitem_index) {
 			seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndexDefault;
 		}
@@ -8874,6 +9626,23 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_foreach_pair = &DeeObject_DefaultForeachPairWithForeachDefault;
 		}
 	}
+
+	/* tp_contains */
+	if (!seq->tp_contains && seq->tp_foreach) {
+		if (seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_contains = &DeeMap_DefaultContainsWithForeachDefault;
+		} else {
+			seq->tp_contains = &DeeSeq_DefaultContainsWithForeachDefault;
+		}
+	}
+
+	/* tp_getitem */
+	if (!seq->tp_getitem && seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP)
+		seq->tp_getitem = &DeeMap_DefaultGetItemWithForeachPairDefault;
+
+	/* tp_getitem_index */
+	if (!seq->tp_getitem_index && seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP)
+		seq->tp_getitem_index = &DeeMap_DefaultGetItemIndexWithForeachPairDefault;
 
 	/* tp_delitem_index  */
 	if (!seq->tp_delitem_index && seq_featureset_test(features, FEAT_tp_delitem))
@@ -9126,6 +9895,12 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_index = &DeeMap_DefaultBoundItemIndexWithContains;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_index = &DeeMap_DefaultBoundItemIndexWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_index = &DeeMap_DefaultBoundItemIndexWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_string_hash) ||
 		           seq_featureset_test(features, FEAT_tp_bounditem_string_len_hash) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_string_hash) ||
@@ -9154,12 +9929,18 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithGetItemIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem = &DeeMap_DefaultBoundItemWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithTryGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithTryGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem = &DeeMap_DefaultBoundItemWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem = &DeeMap_DefaultBoundItemWithForeachPairDefault;
 		} else if (seq->tp_bounditem_index) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithBoundItemIndexDefault;
 		}
@@ -9169,6 +9950,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	if (!seq->tp_hasitem_index) {
 		if (seq_featureset_test(features, FEAT_tp_hasitem)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithHasItem;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_index = &DeeMap_DefaultHasItemIndexWithContains;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_hasitem_index = &DeeSeq_DefaultHasItemIndexWithSize;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithBoundItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem)) {
@@ -9177,8 +9962,6 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithGetItem;
-		} else if (seq_featureset_test(features, FEAT_tp_size)) {
-			seq->tp_hasitem_index = &DeeSeq_DefaultHasItemIndexWithSize;
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_hash) ||
 		           seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash) ||
 		           seq_featureset_test(features, FEAT_tp_bounditem_string_hash) ||
@@ -9188,15 +9971,24 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		           seq_featureset_test(features, FEAT_tp_getitem_string_hash) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
 			seq->tp_hasitem_index = &DeeObject_DefaultHasItemIndexWithErrorRequiresString;
-		} else if (seq->tp_size) {
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_index = &DeeMap_DefaultHasItemIndexWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_index = &DeeMap_DefaultHasItemIndexWithForeachPairDefault;
+		} else if (seq->tp_size && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_hasitem_index = &DeeSeq_DefaultHasItemIndexWithSizeDefault;
 		}
 	}
 
 	/* tp_hasitem */
 	if (!seq->tp_hasitem) {
-		if (seq_featureset_test(features, FEAT_tp_hasitem_index)) {
+		if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem = &DeeMap_DefaultHasItemWithContains;
+		} else if (seq_featureset_test(features, FEAT_tp_hasitem_index)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndex;
+		} else if (seq->tp_hasitem_index == &DeeSeq_DefaultHasItemIndexWithSize ||
+		           seq->tp_hasitem_index == &DeeSeq_DefaultHasItemIndexWithSizeDefault) {
+			seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndexDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_hash)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem_string_len_hash)) {
@@ -9223,7 +10015,11 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithGetItemStringLenHash;
-		} else if (seq->tp_size && seqclass == Dee_SEQCLASS_SEQ) { /* Yes: check for tp_size here! */
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem = &DeeMap_DefaultHasItemWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem = &DeeMap_DefaultHasItemWithForeachPairDefault;
+		} else if (seq->tp_hasitem_index) {
 			seq->tp_hasitem = &DeeObject_DefaultHasItemWithHasItemIndexDefault;
 		}
 	}
@@ -9244,6 +10040,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_trygetitem = &DeeObject_DefaultTryGetItemWithGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
 			seq->tp_trygetitem = &DeeObject_DefaultTryGetItemWithGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem = &DeeMap_DefaultTryGetItemWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem = &DeeMap_DefaultTryGetItemWithForeachPairDefault;
 		} else if (seq->tp_getitem) {
 			seq->tp_trygetitem = &DeeObject_DefaultTryGetItemWithGetItemDefault;
 		}
@@ -9261,6 +10061,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_trygetitem_string_hash = &DeeObject_DefaultTryGetItemStringHashWithGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_trygetitem_string_hash = &DeeObject_DefaultTryGetItemStringHashWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem_string_hash = &DeeMap_DefaultTryGetItemStringHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem_string_hash = &DeeMap_DefaultTryGetItemStringHashWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index) || seq->tp_getitem_index_fast) {
 			seq->tp_trygetitem_string_hash = &DeeObject_DefaultTryGetItemStringHashWithErrorRequiresInt;
 		} else if (seq->tp_trygetitem) {
@@ -9280,6 +10084,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_trygetitem_string_len_hash = &DeeObject_DefaultTryGetItemStringLenHashWithGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_trygetitem_string_len_hash = &DeeObject_DefaultTryGetItemStringLenHashWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem_string_len_hash = &DeeMap_DefaultTryGetItemStringLenHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_trygetitem_string_len_hash = &DeeMap_DefaultTryGetItemStringLenHashWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index) || seq->tp_getitem_index_fast) {
 			seq->tp_trygetitem_string_len_hash = &DeeObject_DefaultTryGetItemStringLenHashWithErrorRequiresInt;
 		} else if (seq->tp_trygetitem) {
@@ -9301,6 +10109,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem_string_hash = &DeeObject_DefaultGetItemStringHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_getitem_string_hash = &DeeObject_DefaultGetItemStringHashWithErrorRequiresInt;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem_string_hash = &DeeMap_DefaultGetItemStringHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem_string_hash = &DeeMap_DefaultGetItemStringHashWithForeachPairDefault;
 		} else if (seq->tp_getitem) {
 			seq->tp_getitem_string_hash = &DeeObject_DefaultGetItemStringHashWithGetItemDefault;
 		}
@@ -9320,6 +10132,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem_string_len_hash = &DeeObject_DefaultGetItemStringLenHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_getitem_string_len_hash = &DeeObject_DefaultGetItemStringLenHashWithErrorRequiresInt;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem_string_len_hash = &DeeMap_DefaultGetItemStringLenHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_getitem_string_len_hash = &DeeMap_DefaultGetItemStringLenHashWithForeachPairDefault;
 		} else if (seq->tp_getitem) {
 			seq->tp_getitem_string_len_hash = &DeeObject_DefaultGetItemStringLenHashWithGetItemDefault;
 		}
@@ -9341,8 +10157,14 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_bounditem_string_hash = &DeeObject_DefaultBoundItemStringHashWithTryGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
 			seq->tp_bounditem_string_hash = &DeeObject_DefaultBoundItemStringHashWithTryGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_hash = &DeeMap_DefaultBoundItemStringHashWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_bounditem_string_hash = &DeeObject_DefaultBoundItemStringHashWithTryGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_hash = &DeeMap_DefaultBoundItemStringHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_hash = &DeeMap_DefaultBoundItemStringHashWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_bounditem_string_hash = &DeeObject_DefaultBoundItemStringHashWithErrorRequiresInt;
@@ -9367,11 +10189,17 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_bounditem_string_len_hash = &DeeObject_DefaultBoundItemStringLenHashWithTryGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
 			seq->tp_bounditem_string_len_hash = &DeeObject_DefaultBoundItemStringLenHashWithTryGetItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_len_hash = &DeeMap_DefaultBoundItemStringLenHashWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_bounditem_string_len_hash = &DeeObject_DefaultBoundItemStringLenHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_bounditem_index) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_bounditem_string_len_hash = &DeeObject_DefaultBoundItemStringLenHashWithErrorRequiresInt;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_len_hash = &DeeMap_DefaultBoundItemStringLenHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_bounditem_string_len_hash = &DeeMap_DefaultBoundItemStringLenHashWithForeachPairDefault;
 		} else if (seq->tp_bounditem) {
 			seq->tp_bounditem_string_len_hash = &DeeObject_DefaultBoundItemStringLenHashWithBoundItemDefault;
 		}
@@ -9389,6 +10217,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_len_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItemStringLenHash;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_hash = &DeeMap_DefaultHasItemStringHashWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_hash)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithGetItemStringHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
@@ -9401,6 +10231,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_hasitem_string_hash = &DeeObject_DefaultHasItemStringHashWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_hash = &DeeMap_DefaultHasItemStringHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_hash = &DeeMap_DefaultHasItemStringHashWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem_index) ||
 		           seq_featureset_test(features, FEAT_tp_bounditem_index) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_index)) {
@@ -9422,6 +10256,8 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_string_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItemStringHash;
+		} else if (seq_featureset_test(features, FEAT_tp_contains) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_len_hash = &DeeMap_DefaultHasItemStringLenHashWithContains;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_len_hash)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithGetItemStringLenHash;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_hash)) {
@@ -9434,6 +10270,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem)) {
 			seq->tp_hasitem_string_len_hash = &DeeObject_DefaultHasItemStringLenHashWithGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_len_hash = &DeeMap_DefaultHasItemStringLenHashWithForeachPair;
+		} else if (seq->tp_foreach_pair && seqclass == Dee_SEQCLASS_MAP) {
+			seq->tp_hasitem_string_len_hash = &DeeMap_DefaultHasItemStringLenHashWithForeachPairDefault;
 		} else if (seq_featureset_test(features, FEAT_tp_hasitem_index) ||
 		           seq_featureset_test(features, FEAT_tp_bounditem_index) ||
 		           seq_featureset_test(features, FEAT_tp_getitem_index)) {
@@ -10646,9 +11486,23 @@ err:
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+/* @return: (size_t)-1: Fast size cannot be determined */
+DEFINE_OPERATOR(size_t, SizeFast, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	LOAD_TP_SELF;
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) ||
+	          (!tp_self->tp_seq->tp_size && DeeType_InheritSize(tp_self) && tp_self->tp_seq->tp_size_fast))
+		return (*tp_self->tp_seq->tp_size_fast)(self);
+	return (size_t)-1;
+}
 
-#ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(size_t, Size, (DeeObject *RESTRICT_IF_NOTYPE self)) {
+#ifdef CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	LOAD_TP_SELF;
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size) ||
+	          (DeeType_InheritSize(tp_self) && tp_self->tp_seq->tp_size))
+		return DeeType_INVOKE_SIZE(tp_self, self);
+	return (size_t)err_unimplemented_operator(tp_self, OPERATOR_SIZE);
+#else /* CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	DREF DeeObject *sizeob;
 	size_t result;
 	LOAD_TP_SELF;
@@ -10678,18 +11532,18 @@ err_ob:
 	Dee_Decref(sizeob);
 err:
 	return (size_t)-1;
+#endif /* !CONFIG_NO_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
+
+#ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(int, Contains,
                 (DeeObject *self, DeeObject *some_object)) {
 	DREF DeeObject *resultob;
-	int result;
 	resultob = DeeObject_ContainsObject(self, some_object);
 	if unlikely(!resultob)
 		goto err;
-	result = DeeObject_Bool(resultob);
-	Dee_Decref(resultob);
-	return result;
+	return DeeObject_BoolInherited(resultob);
 err:
 	return -1;
 }
@@ -10794,10 +11648,12 @@ DeeObject_ExtendInherited(/*inherit(on_success)*/ DREF DeeObject *self, size_t a
 err:
 	return NULL;
 }
+#endif /* !DEFINE_TYPED_OPERATORS */
+
 
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
-(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, Dee_ssize_t start, DeeObject *end) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeBeginIndex,
+                (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	if (DeeNone_Check(end)) {
@@ -10826,8 +11682,8 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *start, Dee_ssize_t end) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeEndIndex,
+                (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(start);
 	if (DeeInt_Check(start)) {
@@ -10853,8 +11709,8 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndex, (DeeObject *__restrict self,
-                                                  Dee_ssize_t start, Dee_ssize_t end)) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndex,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index) || DeeType_InheritGetRange(tp_self))
 		return DeeType_INVOKE_GETRANGEINDEX(tp_self, self, start, end);
@@ -10862,8 +11718,8 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndex, (DeeObject *__restrict self,
 	return NULL;
 }
 
-DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN, (DeeObject *__restrict self,
-                                                   Dee_ssize_t start)) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t start)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange_index_n) || DeeType_InheritGetRange(tp_self))
 		return DeeType_INVOKE_GETRANGEINDEXN(tp_self, self, start);
@@ -10871,11 +11727,9 @@ DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN, (DeeObject *__restrict self,
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self,
-                                     Dee_ssize_t start, DeeObject *end) {
+DEFINE_OPERATOR(int, DelRangeBeginIndex,
+                (DeeObject *self, Dee_ssize_t start, DeeObject *end)) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(end);
 	if (DeeNone_Check(end)) {
 		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index_n) || DeeType_InheritDelRange(tp_self))
 			return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start);
@@ -10902,11 +11756,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelRangeEndIndex)(DeeObject *self,
-                                   DeeObject *start, Dee_ssize_t end) {
+DEFINE_OPERATOR(int, DelRangeEndIndex,
+                (DeeObject *self, DeeObject *start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(start);
 	if (DeeInt_Check(start)) {
 		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) || DeeType_InheritDelRange(tp_self)) {
 			Dee_ssize_t start_index;
@@ -10930,27 +11782,25 @@ err:
 	return -1;
 }
 
-DEFINE_OPERATOR(int, DelRangeIndex, (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end)) {
+DEFINE_OPERATOR(int, DelRangeIndex,
+                (DeeObject *self, Dee_ssize_t start, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index) || DeeType_InheritDelRange(tp_self))
 		return DeeType_INVOKE_DELRANGEINDEX(tp_self, self, start, end);
 	return err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
 }
 
-DEFINE_OPERATOR(int, DelRangeIndexN, (DeeObject *self, Dee_ssize_t start)) {
+DEFINE_OPERATOR(int, DelRangeIndexN,
+                (DeeObject *self, Dee_ssize_t start)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange_index_n) || DeeType_InheritDelRange(tp_self))
 		return DeeType_INVOKE_DELRANGEINDEXN(tp_self, self, start);
 	return err_unimplemented_operator(tp_self, OPERATOR_DELRANGE);
 }
 
-PUBLIC WUNUSED NONNULL((1, 3, 4)) int
-(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self,
-                                     Dee_ssize_t start, DeeObject *end,
-                                     DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeBeginIndex,
+                (DeeObject *self, Dee_ssize_t start, DeeObject *end, DeeObject *values)) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(end);
-	ASSERT_OBJECT(values);
 	if (DeeNone_Check(end)) {
 		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index_n) || DeeType_InheritSetRange(tp_self))
 			return DeeType_INVOKE_SETRANGEINDEXN(tp_self, self, start, values);
@@ -10977,13 +11827,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) int
-(DCALL DeeObject_SetRangeEndIndex)(DeeObject *self,
-                                   DeeObject *start, Dee_ssize_t end,
-                                   DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeEndIndex,
+                (DeeObject *self, DeeObject *start, Dee_ssize_t end, DeeObject *values)) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(start);
-	ASSERT_OBJECT(values);
 	if (DeeInt_Check(start)) {
 		if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange_index) || DeeType_InheritSetRange(tp_self)) {
 			Dee_ssize_t start_index;
@@ -11022,13 +11868,12 @@ DEFINE_OPERATOR(int, SetRangeIndexN, (DeeObject *self, Dee_ssize_t start, DeeObj
 }
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
-(DCALL DeeObject_GetRangeBeginIndex)(DeeObject *self, dssize_t begin, DeeObject *end) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeBeginIndex, (DeeObject *self, Dee_ssize_t begin, DeeObject *end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
-		dssize_t end_index;
+		Dee_ssize_t end_index;
 		struct type_nsi const *nsi;
 		DREF DeeObject *begin_ob, *result;
 		/* NSI optimizations. */
@@ -11050,18 +11895,16 @@ PUBLIC WUNUSED NONNULL((1, 3)) DREF DeeObject *
 		Dee_Decref(begin_ob);
 		return result;
 	}
-	err_unimplemented_operator(GET_TP_SELF(), OPERATOR_GETRANGE);
+	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
-(DCALL DeeObject_GetRangeEndIndex)(DeeObject *self, DeeObject *begin, dssize_t end) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeEndIndex, (DeeObject *self, DeeObject *begin, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
-	ASSERT_OBJECT(begin);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
-		dssize_t begin_index;
+		Dee_ssize_t begin_index;
 		DREF DeeObject *end_ob, *result;
 		struct type_nsi const *nsi;
 		/* NSI optimizations. */
@@ -11080,14 +11923,13 @@ PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *
 		Dee_Decref(end_ob);
 		return result;
 	}
-	err_unimplemented_operator(GET_TP_SELF(), OPERATOR_GETRANGE);
+	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_GetRangeIndex)(DeeObject *__restrict self,
-                                dssize_t begin, dssize_t end) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndex,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t begin, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getrange) ||
 	          DeeType_InheritGetRange(tp_self)) {
@@ -11117,9 +11959,8 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_DelRangeBeginIndex)(DeeObject *self,
-                                     dssize_t begin, DeeObject *end) {
+DEFINE_OPERATOR(int, DelRangeBeginIndex,
+                (DeeObject *self, Dee_ssize_t begin, DeeObject *end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
@@ -11134,7 +11975,7 @@ PUBLIC WUNUSED NONNULL((1)) int
 				if (nsi->nsi_seqlike.nsi_delrange_n)
 					return (*nsi->nsi_seqlike.nsi_delrange_n)(self, begin);
 			} else if (nsi->nsi_seqlike.nsi_delrange) {
-				dssize_t end_index;
+				Dee_ssize_t end_index;
 				if (DeeObject_AsSSize(end, &end_index))
 					goto err;
 				return (*nsi->nsi_seqlike.nsi_delrange)(self, begin, end_index);
@@ -11152,9 +11993,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelRangeEndIndex)(DeeObject *self,
-                                   DeeObject *begin, dssize_t end) {
+DEFINE_OPERATOR(int, DelRangeEndIndex,
+                (DeeObject *self, DeeObject *begin, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
@@ -11166,7 +12006,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 		nsi = tp_self->tp_seq->tp_nsi;
 		if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 			if (nsi->nsi_seqlike.nsi_delrange) {
-				dssize_t start_index;
+				Dee_ssize_t start_index;
 				if (DeeObject_AsSSize(begin, &start_index))
 					goto err;
 				return (*nsi->nsi_seqlike.nsi_delrange)(self, start_index, end);
@@ -11184,9 +12024,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_DelRangeIndex)(DeeObject *self,
-                                dssize_t begin, dssize_t end) {
+DEFINE_OPERATOR(int, DelRangeIndex,
+                (DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delrange) ||
 	          DeeType_InheritSetRange(tp_self)) {
@@ -11217,10 +12056,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3, 4)) int
-(DCALL DeeObject_SetRangeBeginIndex)(DeeObject *self,
-                                     dssize_t begin, DeeObject *end,
-                                     DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeBeginIndex,
+                (DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *values)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(end);
 	ASSERT_OBJECT(values);
@@ -11236,7 +12073,7 @@ PUBLIC WUNUSED NONNULL((1, 3, 4)) int
 				if (nsi->nsi_seqlike.nsi_setrange_n)
 					return (*nsi->nsi_seqlike.nsi_setrange_n)(self, begin, values);
 			} else if (nsi->nsi_seqlike.nsi_setrange) {
-				dssize_t end_index;
+				Dee_ssize_t end_index;
 				if (DeeObject_AsSSize(end, &end_index))
 					goto err;
 				return (*nsi->nsi_seqlike.nsi_setrange)(self, begin, end_index, values);
@@ -11254,10 +12091,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) int
-(DCALL DeeObject_SetRangeEndIndex)(DeeObject *self,
-                                   DeeObject *begin, dssize_t end,
-                                   DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeEndIndex,
+                (DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *values)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(begin);
 	ASSERT_OBJECT(values);
@@ -11270,7 +12105,7 @@ PUBLIC WUNUSED NONNULL((1, 2, 4)) int
 		nsi = tp_self->tp_seq->tp_nsi;
 		if (nsi && nsi->nsi_class == TYPE_SEQX_CLASS_SEQ) {
 			if (nsi->nsi_seqlike.nsi_setrange) {
-				dssize_t start_index;
+				Dee_ssize_t start_index;
 				if (DeeObject_AsSSize(begin, &start_index))
 					goto err;
 				return (*nsi->nsi_seqlike.nsi_setrange)(self, start_index, end, values);
@@ -11288,10 +12123,8 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 4)) int
-(DCALL DeeObject_SetRangeIndex)(DeeObject *self,
-                                dssize_t begin, dssize_t end,
-                                DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeIndex,
+                (DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *values)) {
 	LOAD_TP_SELF;
 	ASSERT_OBJECT(values);
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setrange) ||
@@ -11324,25 +12157,32 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *
-(DCALL DeeObject_GetRangeIndexN)(DeeObject *__restrict self,
-                                 dssize_t begin) {
+DEFINE_OPERATOR(DREF DeeObject *, GetRangeIndexN,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t begin)) {
+#ifdef DEFINE_TYPED_OPERATORS
+	return DeeObject_TGetRangeBeginIndex(tp_self, self, begin, Dee_None);
+#else /* DEFINE_TYPED_OPERATORS */
 	return DeeObject_GetRangeBeginIndex(self, begin, Dee_None);
+#endif /* !DEFINE_TYPED_OPERATORS */
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_DelRangeIndexN)(DeeObject *__restrict self,
-                                 dssize_t begin) {
+DEFINE_OPERATOR(int, DelRangeIndexN, (DeeObject *RESTRICT_IF_NOTYPE self, Dee_ssize_t begin)) {
+#ifdef DEFINE_TYPED_OPERATORS
+	return DeeObject_TDelRangeBeginIndex(tp_self, self, begin, Dee_None);
+#else /* DEFINE_TYPED_OPERATORS */
 	return DeeObject_DelRangeBeginIndex(self, begin, Dee_None);
+#endif /* !DEFINE_TYPED_OPERATORS */
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) int
-(DCALL DeeObject_SetRangeIndexN)(DeeObject *self,
-                                 dssize_t begin, DeeObject *values) {
+DEFINE_OPERATOR(int, SetRangeIndexN, (DeeObject *self, Dee_ssize_t begin, DeeObject *values)) {
+#ifdef DEFINE_TYPED_OPERATORS
+	return DeeObject_TSetRangeBeginIndex(tp_self, self, begin, Dee_None, values);
+#else /* DEFINE_TYPED_OPERATORS */
 	return DeeObject_SetRangeBeginIndex(self, begin, Dee_None, values);
+#endif /* !DEFINE_TYPED_OPERATORS */
 }
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#endif /* !DEFINE_TYPED_OPERATORS */
+
 
 DEFINE_OPERATOR(int, DelRange,
                 (DeeObject *self, DeeObject *start, DeeObject *end)) {
@@ -11370,7 +12210,6 @@ DEFINE_OPERATOR(int, SetRange,
 
 
 
-#ifndef DEFINE_TYPED_OPERATORS
 #ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 DEFINE_OPERATOR(int, BoundItem, (DeeObject *self, DeeObject *index)) {
 	LOAD_TP_SELF;
@@ -11590,14 +12429,10 @@ DEFINE_OPERATOR(int, SetItemStringLenHash, (DeeObject *self, char const *__restr
 }
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_BoundItem)(DeeObject *self,
-                            DeeObject *index) {
+DEFINE_OPERATOR(int, BoundItem, (DeeObject *self, DeeObject *index)) {
 	DREF DeeObject *result;
-	DeeTypeObject *tp_self;
 	size_t i;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -11662,12 +12497,10 @@ check_result:
 err:
 	return -1;
 }
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_BoundItemIndex)(DeeObject *__restrict self, size_t index) {
+
+DEFINE_OPERATOR(int, BoundItemIndex, (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *result, *index_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -11737,18 +12570,13 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_BoundItemStringHash)(DeeObject *__restrict self,
-                                      char const *__restrict key,
-                                      dhash_t hash) {
+DEFINE_OPERATOR(int, BoundItemStringHash, (DeeObject *self, char const *key, dhash_t hash)) {
 	int result;
 	DeeObject *orig_self = self;
 	DREF DeeObject *key_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		result = DeeDict_HasItemStringHash(self, key, hash);
@@ -11764,8 +12592,6 @@ again:
 		goto handle_bool;
 	} else if (tp_self == &DeeBlackListKw_Type) {
 		return DeeBlackListKw_BoundItemStringHash((DeeBlackListKwObject *)self, key, hash);
-	} else if (tp_self == &DeeCachedDict_Type) {
-		return DeeCachedDict_BoundItemStringHash((DeeCachedDictObject *)self, key, hash);
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -11787,18 +12613,14 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_BoundItemStringLenHash)(DeeObject *__restrict self,
-                                         char const *__restrict key,
-                                         size_t keylen, dhash_t hash) {
+DEFINE_OPERATOR(int, BoundItemStringLenHash,
+                (DeeObject *self, char const *key, size_t keylen, dhash_t hash)) {
 	int result;
 	DeeObject *orig_self = self;
 	DREF DeeObject *key_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		result = DeeDict_HasItemStringLenHash(self, key, keylen, hash);
@@ -11814,8 +12636,6 @@ again:
 		goto handle_bool;
 	} else if (tp_self == &DeeBlackListKw_Type) {
 		return DeeBlackListKw_BoundItemStringLenHash((DeeBlackListKwObject *)self, key, keylen, hash);
-	} else if (tp_self == &DeeCachedDict_Type) {
-		return DeeCachedDict_BoundItemStringLenHash((DeeCachedDictObject *)self, key, keylen, hash);
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -11838,13 +12658,10 @@ err:
 }
 
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_HasItem)(DeeObject *self, DeeObject *index) {
+DEFINE_OPERATOR(int, HasItem, (DeeObject *self, DeeObject *index)) {
 	DREF DeeObject *result;
-	DeeTypeObject *tp_self;
 	size_t i;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -11893,12 +12710,9 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_HasItemIndex)(DeeObject *__restrict self, size_t index) {
+DEFINE_OPERATOR(int, HasItemIndex, (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *result, *index_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -11953,19 +12767,14 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_HasItemStringHash)(DeeObject *__restrict self,
-                                    char const *__restrict key,
-                                    dhash_t hash) {
+DEFINE_OPERATOR(int, HasItemStringHash, (DeeObject *self, char const *key, dhash_t hash)) {
 	bool b_result;
 	int result;
 	DeeObject *orig_self = self;
 	DREF DeeObject *key_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		b_result = DeeDict_HasItemStringHash(self, key, hash);
@@ -11981,8 +12790,6 @@ again:
 		goto handle_bool;
 	} else if (tp_self == &DeeBlackListKw_Type) {
 		return DeeBlackListKw_HasItemStringHash((DeeBlackListKwObject *)self, key, hash);
-	} else if (tp_self == &DeeCachedDict_Type) {
-		return DeeCachedDict_HasItemStringHash((DeeCachedDictObject *)self, key, hash);
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -12002,19 +12809,14 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_HasItemStringLenHash)(DeeObject *__restrict self,
-                                       char const *__restrict key,
-                                       size_t keylen, dhash_t hash) {
+DEFINE_OPERATOR(int, HasItemStringLenHash, (DeeObject *self, char const *key, size_t keylen, dhash_t hash)) {
 	bool b_result;
 	int result;
 	DeeObject *orig_self = self;
 	DREF DeeObject *key_ob;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		b_result = DeeDict_HasItemStringLenHash(self, key, keylen, hash);
@@ -12030,8 +12832,6 @@ again:
 		goto handle_bool;
 	} else if (tp_self == &DeeBlackListKw_Type) {
 		return DeeBlackListKw_HasItemStringLenHash((DeeBlackListKwObject *)self, key, keylen, hash);
-	} else if (tp_self == &DeeCachedDict_Type) {
-		return DeeCachedDict_HasItemStringLenHash((DeeCachedDictObject *)self, key, keylen, hash);
 	} else if (tp_self == &DeeSuper_Type) {
 		tp_self = DeeSuper_TYPE(self);
 		self    = DeeSuper_SELF(self);
@@ -12051,27 +12851,28 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_TryGetItem(DeeObject *self, DeeObject *key) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItem, (DeeObject *self, DeeObject *key)) {
+	LOAD_TP_SELF;
+	(void)tp_self;
 	return DeeObject_GetItemDef(self, key, ITER_DONE);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_TryGetItemStringHash(DeeObject *self, char const *__restrict key, Dee_hash_t hash) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringHash, (DeeObject *self, char const *key, Dee_hash_t hash)) {
+	LOAD_TP_SELF;
+	(void)tp_self;
 	return DeeObject_GetItemStringHashDef(self, key, hash, ITER_DONE);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_TryGetItemStringLenHash(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash) {
+DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringLenHash, (DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash)) {
+	LOAD_TP_SELF;
+	(void)tp_self;
 	return DeeObject_GetItemStringLenHashDef(self, key, keylen, hash, ITER_DONE);
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
+#ifndef DEFINE_TYPED_OPERATORS
+DEFINE_OPERATOR(DREF DeeObject *, GetItemDef, (DeeObject *self, DeeObject *key, DeeObject *def)) {
 	DREF DeeObject *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -12095,12 +12896,94 @@ DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeObject_GetItemIndex(DeeObject *__restrict self, size_t index) {
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHashDef,
+                (DeeObject *self, char const *key, dhash_t hash, DeeObject *def)) {
+	DeeObject *orig_self = self;
+	DREF DeeObject *key_ob, *result;
+	LOAD_TP_SELF;
+
+	/* Optimization for specific types. */
+again:
+	if (tp_self == &DeeDict_Type) {
+		return DeeDict_GetItemStringHashDef(self, key, hash, def);
+	} else if (tp_self == &DeeRoDict_Type) {
+		result = DeeRoDict_GetItemNRStringHashDef((DeeRoDictObject *)self, key, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeKwdsMapping_Type) {
+		result = DeeKwdsMapping_GetItemNRStringHashDef((DeeKwdsMappingObject *)self, key, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeBlackListKwds_Type) {
+		result = DeeBlackListKwds_GetItemNRStringHashDef((DeeBlackListKwdsObject *)self, key, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeBlackListKw_Type) {
+		result = DeeBlackListKw_GetItemNRStringHashDef((DeeBlackListKwObject *)self, key, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeSuper_Type) {
+		tp_self = DeeSuper_TYPE(self);
+		self    = DeeSuper_SELF(self);
+		goto again;
+	}
+
+	/* Fallback: create a temporary string object and use it for indexing. */
+	key_ob = DeeString_NewWithHash(key, hash);
+	if unlikely(!key_ob)
+		goto err;
+	result = DeeObject_GetItemDef(orig_self, key_ob, def);
+	Dee_Decref(key_ob);
+	return result;
+xincref_result_and_return:
+	Dee_XIncref(result);
+	return result;
+err:
+	return NULL;
+}
+
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHashDef,
+                (DeeObject *self, char const *key, size_t keylen, dhash_t hash, DeeObject *def)) {
+	DeeObject *orig_self = self;
+	DREF DeeObject *key_ob, *result;
+	LOAD_TP_SELF;
+
+	/* Optimization for specific types. */
+again:
+	if (tp_self == &DeeDict_Type) {
+		return DeeDict_GetItemStringLenHashDef(self, key, keylen, hash, def);
+	} else if (tp_self == &DeeRoDict_Type) {
+		result = DeeRoDict_GetItemNRStringLenHashDef((DeeRoDictObject *)self, key, keylen, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeKwdsMapping_Type) {
+		result = DeeKwdsMapping_GetItemNRStringLenHashDef((DeeKwdsMappingObject *)self, key, keylen, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeBlackListKwds_Type) {
+		result = DeeBlackListKwds_GetItemNRStringLenHashDef((DeeBlackListKwdsObject *)self, key, keylen, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeBlackListKw_Type) {
+		result = DeeBlackListKw_GetItemNRStringLenHashDef((DeeBlackListKwObject *)self, key, keylen, hash, def);
+		goto xincref_result_and_return;
+	} else if (tp_self == &DeeSuper_Type) {
+		tp_self = DeeSuper_TYPE(self);
+		self    = DeeSuper_SELF(self);
+		goto again;
+	}
+
+	/* Fallback: create a temporary string object and use it for indexing. */
+	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
+	if unlikely(!key_ob)
+		goto err;
+	result = DeeObject_GetItemDef(orig_self, key_ob, def);
+	Dee_Decref(key_ob);
+	return result;
+xincref_result_and_return:
+	Dee_XIncref(result);
+	return result;
+err:
+	return NULL;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_OPERATOR(DREF DeeObject *, GetItemIndex, (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *index_ob, *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_getitem) ||
 	          DeeType_InheritGetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -12123,13 +13006,10 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1)) int
-(DCALL DeeObject_DelItemIndex)(DeeObject *__restrict self, size_t index) {
+DEFINE_OPERATOR(int, DelItemIndex, (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *index_ob;
 	int result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_delitem) ||
 	          DeeType_InheritDelItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -12152,14 +13032,10 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 3)) int
-(DCALL DeeObject_SetItemIndex)(DeeObject *self, size_t index,
-                               DeeObject *value) {
+DEFINE_OPERATOR(int, SetItemIndex, (DeeObject *self, size_t index, DeeObject *value)) {
 	DREF DeeObject *index_ob;
 	int result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-	tp_self = Dee_TYPE(self);
+	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_setitem) ||
 	          DeeType_InheritSetItem(tp_self)) {
 		struct type_nsi const *nsi;
@@ -12182,16 +13058,11 @@ err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_GetItemStringHash(DeeObject *__restrict self,
-                            char const *__restrict key,
-                            dhash_t hash) {
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringHash, (DeeObject *self, char const *key, dhash_t hash)) {
 	DREF DeeObject *key_ob, *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		return DeeDict_GetItemStringHash(self, key, hash);
@@ -12230,16 +13101,12 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-DeeObject_GetItemStringLenHash(DeeObject *__restrict self,
-                               char const *__restrict key,
-                               size_t keylen, dhash_t hash) {
+DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHash,
+                (DeeObject *self, char const *key, size_t keylen, dhash_t hash)) {
 	DREF DeeObject *key_ob, *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
+	LOAD_TP_SELF;
 
 	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
 again:
 	if (tp_self == &DeeDict_Type) {
 		return DeeDict_GetItemStringLenHash(self, key, keylen, hash);
@@ -12278,193 +13145,97 @@ err:
 	return NULL;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
-DeeObject_GetItemStringHashDef(DeeObject *self,
-                               char const *__restrict key,
-                               dhash_t hash, DeeObject *def) {
-	DeeObject *orig_self = self;
-	DREF DeeObject *key_ob, *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-
-	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
-again:
-	if (tp_self == &DeeDict_Type) {
-		return DeeDict_GetItemStringHashDef(self, key, hash, def);
-	} else if (tp_self == &DeeRoDict_Type) {
-		result = DeeRoDict_GetItemNRStringHashDef((DeeRoDictObject *)self, key, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeKwdsMapping_Type) {
-		result = DeeKwdsMapping_GetItemNRStringHashDef((DeeKwdsMappingObject *)self, key, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKwds_Type) {
-		result = DeeBlackListKwds_GetItemNRStringHashDef((DeeBlackListKwdsObject *)self, key, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKw_Type) {
-		result = DeeBlackListKw_GetItemNRStringHashDef((DeeBlackListKwObject *)self, key, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeCachedDict_Type) {
-		result = DeeCachedDict_GetItemNRStringHashDef((DeeCachedDictObject *)self, key, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	}
-
-	/* Fallback: create a temporary string object and use it for indexing. */
-	key_ob = DeeString_NewWithHash(key, hash);
-	if unlikely(!key_ob)
-		goto err;
-	result = DeeObject_GetItemDef(orig_self, key_ob, def);
-	Dee_Decref(key_ob);
-	return result;
-xincref_result_and_return:
-	Dee_XIncref(result);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *DCALL
-DeeObject_GetItemStringLenHashDef(DeeObject *self,
-                                  char const *__restrict key,
-                                  size_t keylen, dhash_t hash,
-                                  DeeObject *def) {
-	DeeObject *orig_self = self;
-	DREF DeeObject *key_ob, *result;
-	DeeTypeObject *tp_self;
-	ASSERT_OBJECT(self);
-
-	/* Optimization for specific types. */
-	tp_self = Dee_TYPE(self);
-again:
-	if (tp_self == &DeeDict_Type) {
-		return DeeDict_GetItemStringLenHashDef(self, key, keylen, hash, def);
-	} else if (tp_self == &DeeRoDict_Type) {
-		result = DeeRoDict_GetItemNRStringLenHashDef((DeeRoDictObject *)self, key, keylen, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeKwdsMapping_Type) {
-		result = DeeKwdsMapping_GetItemNRStringLenHashDef((DeeKwdsMappingObject *)self, key, keylen, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKwds_Type) {
-		result = DeeBlackListKwds_GetItemNRStringLenHashDef((DeeBlackListKwdsObject *)self, key, keylen, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeBlackListKw_Type) {
-		result = DeeBlackListKw_GetItemNRStringLenHashDef((DeeBlackListKwObject *)self, key, keylen, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeCachedDict_Type) {
-		result = DeeCachedDict_GetItemNRStringLenHashDef((DeeCachedDictObject *)self, key, keylen, hash, def);
-		goto xincref_result_and_return;
-	} else if (tp_self == &DeeSuper_Type) {
-		tp_self = DeeSuper_TYPE(self);
-		self    = DeeSuper_SELF(self);
-		goto again;
-	}
-
-	/* Fallback: create a temporary string object and use it for indexing. */
-	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
-	if unlikely(!key_ob)
-		goto err;
-	result = DeeObject_GetItemDef(orig_self, key_ob, def);
-	Dee_Decref(key_ob);
-	return result;
-xincref_result_and_return:
-	Dee_XIncref(result);
-	return result;
-err:
-	return NULL;
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelItemStringHash)(DeeObject *__restrict self,
-                                    char const *__restrict key,
-                                    dhash_t hash) {
+DEFINE_OPERATOR(int, DelItemStringHash, (DeeObject *self, char const *key, dhash_t hash)) {
 	DREF DeeObject *key_ob;
 	int result;
-	ASSERT_OBJECT(self);
-	if (DeeDict_CheckExact(self))
+	LOAD_TP_SELF;
+	if (tp_self == &DeeDict_Type)
 		return DeeDict_DelItemStringHash(self, key, hash);
 
 	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	result = DeeObject_TDelItem(tp_self, self, key_ob);
+#else /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_DelItem(self, key_ob);
+#endif /* !DEFINE_TYPED_OPERATORS */
 	Dee_Decref(key_ob);
 	return result;
 err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2)) int
-(DCALL DeeObject_DelItemStringLenHash)(DeeObject *__restrict self,
-                                       char const *__restrict key,
-                                       size_t keylen, dhash_t hash) {
+DEFINE_OPERATOR(int, DelItemStringLenHash,
+                (DeeObject *self, char const *key, size_t keylen, dhash_t hash)) {
 	DREF DeeObject *key_ob;
 	int result;
-	ASSERT_OBJECT(self);
-	if (DeeDict_CheckExact(self))
+	LOAD_TP_SELF;
+	if (tp_self == &DeeDict_Type)
 		return DeeDict_DelItemStringLenHash(self, key, keylen, hash);
 
 	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	result = DeeObject_TDelItem(tp_self, self, key_ob);
+#else /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_DelItem(self, key_ob);
+#endif /* !DEFINE_TYPED_OPERATORS */
 	Dee_Decref(key_ob);
 	return result;
 err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 4)) int
-(DCALL DeeObject_SetItemStringHash)(DeeObject *self,
-                                    char const *__restrict key,
-                                    dhash_t hash, DeeObject *value) {
+DEFINE_OPERATOR(int, SetItemStringHash,
+                (DeeObject *self, char const *key, dhash_t hash, DeeObject *value)) {
 	DREF DeeObject *key_ob;
 	int result;
-	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(value);
-	if (DeeDict_CheckExact(self))
+	LOAD_TP_SELF;
+	if (tp_self == &DeeDict_Type)
 		return DeeDict_SetItemStringHash(self, key, hash, value);
 
 	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewWithHash(key, hash);
 	if unlikely(!key_ob)
 		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	result = DeeObject_TSetItem(tp_self, self, key_ob, value);
+#else /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_SetItem(self, key_ob, value);
+#endif /* !DEFINE_TYPED_OPERATORS */
 	Dee_Decref(key_ob);
 	return result;
 err:
 	return -1;
 }
 
-PUBLIC WUNUSED NONNULL((1, 2, 5)) int
-(DCALL DeeObject_SetItemStringLenHash)(DeeObject *self,
-                                       char const *__restrict key,
-                                       size_t keylen, dhash_t hash,
-                                       DeeObject *value) {
+DEFINE_OPERATOR(int, SetItemStringLenHash,
+                (DeeObject *self, char const *key, size_t keylen, dhash_t hash, DeeObject *value)) {
 	DREF DeeObject *key_ob;
 	int result;
-	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(value);
-	if (DeeDict_CheckExact(self))
+	LOAD_TP_SELF;
+	if (tp_self == &DeeDict_Type)
 		return DeeDict_SetItemStringLenHash(self, key, keylen, hash, value);
 
 	/* Fallback: create a temporary string object and use it for indexing. */
 	key_ob = DeeString_NewSizedWithHash(key, keylen, hash);
 	if unlikely(!key_ob)
 		goto err;
+#ifdef DEFINE_TYPED_OPERATORS
+	result = DeeObject_TSetItem(tp_self, self, key_ob, value);
+#else /* DEFINE_TYPED_OPERATORS */
 	result = DeeObject_SetItem(self, key_ob, value);
+#endif /* !DEFINE_TYPED_OPERATORS */
 	Dee_Decref(key_ob);
 	return result;
 err:
 	return -1;
 }
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#endif /* !DEFINE_TYPED_OPERATORS */
 
 
 
@@ -12616,15 +13387,23 @@ DEFINE_OPERATOR(void, PutBuf,
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
-#undef GET_TP_SELF
-#undef GET_TP_PSELF
-#undef LOAD_ITER
-#undef LOAD_ITERP
-#undef LOAD_TP_SELF
-#undef DEFINE_INTERNAL_OPERATOR
-#undef DEFINE_INTERNAL_SEQ_OPERATOR
-#undef DEFINE_OPERATOR
+DEFINE_OPERATOR(Dee_ssize_t, Foreach,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
+	          DeeType_InheritIter(tp_self))
+		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+}
 
+DEFINE_OPERATOR(Dee_ssize_t, ForeachPair,
+                (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_pair_t proc, void *arg)) {
+	LOAD_TP_SELF;
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
+	          DeeType_InheritIter(tp_self))
+		return (*tp_self->tp_seq->tp_foreach_pair)(self, proc, arg);
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+}
 
 #ifndef DEFINE_TYPED_OPERATORS
 PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
@@ -12632,6 +13411,8 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
                          /*out*/ DREF DeeObject **__restrict objv) {
 	DREF DeeObject *iterator, *elem;
 	size_t fast_size, i;
+
+	/* TODO: Use DeeObject_Foreach() */
 
 	/* Try to make use of the fast-sequence API. */
 	fast_size = DeeFastSeq_GetSize(self);
@@ -12684,26 +13465,6 @@ err:
 	return -1;
 }
 
-
-PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeObject_Foreach(DeeObject *__restrict self,
-                  Dee_foreach_t proc, void *arg) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach) ||
-	          DeeType_InheritIter(tp_self))
-		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
-	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
-}
-
-PUBLIC WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-DeeObject_ForeachPair(DeeObject *__restrict self,
-                      Dee_foreach_pair_t proc, void *arg) {
-	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_foreach_pair) ||
-	          DeeType_InheritIter(tp_self))
-		return (*tp_self->tp_seq->tp_foreach_pair)(self, proc, arg);
-	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
-}
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -2: An error occurred.
@@ -12793,6 +13554,15 @@ DeeType_InheritNII(DeeTypeObject *__restrict self) {
 	return false;
 }
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+#undef GET_TP_SELF
+#undef GET_TP_PSELF
+#undef LOAD_ITER
+#undef LOAD_ITERP
+#undef LOAD_TP_SELF
+#undef DEFINE_INTERNAL_OPERATOR
+#undef DEFINE_INTERNAL_SEQ_OPERATOR
+#undef DEFINE_OPERATOR
 
 #undef RESTRICT_IF_NOTYPE
 #undef LOG_INHERIT

@@ -933,8 +933,6 @@ err:
 	return NULL;
 }
 
-
-
 PRIVATE struct type_seq range_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_iter,
 	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&range_size,
@@ -945,7 +943,8 @@ PRIVATE struct type_seq range_seq = {
 	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&range_getrange,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ NULL /* TODO */
+	/* .tp_nsi      = */ NULL,
+	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL, /* TODO */
 };
 
 PRIVATE struct type_member tpconst range_members[] = {
@@ -967,7 +966,7 @@ PRIVATE struct type_member tpconst range_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 range_printrepr(Range *__restrict self,
                 dformatprinter printer, void *arg) {
 	return self->r_step
@@ -1058,7 +1057,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
 	/* .tp_name     = */ "_SeqRange",
 	/* .tp_doc      = */ DOC("()\n"
-	                         "(start, end, step?)"),
+	                         "(start,end,step?)"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
 	/* .tp_features = */ TF_NONE,
@@ -1082,7 +1081,7 @@ INTERN DeeTypeObject SeqRange_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&range_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&range_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&range_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&range_visit,
@@ -1152,8 +1151,8 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 iri_bool(IntRangeIterator *__restrict self) {
-	dssize_t new_index;
-	dssize_t index = READ_INDEX(self);
+	Dee_ssize_t new_index;
+	Dee_ssize_t index = READ_INDEX(self);
 	return !(OVERFLOW_SADD(index, self->iri_step, &new_index) ||
 	         (likely(self->iri_step >= 0) ? index >= self->iri_end
 	                                      : index <= self->iri_end));
@@ -1172,7 +1171,7 @@ iri_visit(IntRangeIterator *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 iri_next(IntRangeIterator *__restrict self) {
-	dssize_t result_index, new_index;
+	Dee_ssize_t result_index, new_index;
 	do {
 		result_index = READ_INDEX(self);
 		/* Test for overflow/iteration done. */
@@ -1302,7 +1301,7 @@ done:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 intrange_contains(IntRange *self,
                   DeeObject *other) {
-	dssize_t index;
+	Dee_ssize_t index;
 	if (DeeObject_AsSSize(other, &index))
 		goto err;
 	if (self->ir_step >= 0) {
@@ -1319,8 +1318,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-intrange_size(IntRange *__restrict self) {
-	dssize_t result;
+intrange_sizeob(IntRange *__restrict self) {
+	Dee_ssize_t result;
 	ASSERT(self->ir_step != 0);
 	result = (self->ir_end - self->ir_start) + self->ir_step;
 	if (self->ir_step >= 0) {
@@ -1335,8 +1334,8 @@ intrange_size(IntRange *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-intrange_nsi_getsize(IntRange *__restrict self) {
-	dssize_t result;
+intrange_size(IntRange *__restrict self) {
+	Dee_ssize_t result;
 	ASSERT(self->ir_step != 0);
 	result = (self->ir_end - self->ir_start) + self->ir_step;
 	if (self->ir_step >= 0) {
@@ -1351,8 +1350,8 @@ intrange_nsi_getsize(IntRange *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-intrange_nsi_getitem(IntRange *__restrict self, size_t index) {
-	dssize_t result;
+intrange_getitem_index(IntRange *__restrict self, size_t index) {
+	Dee_ssize_t result;
 	/* Check for overflows in this arithmetic */
 	if (OVERFLOW_SMUL(self->ir_step, index, &result) ||
 	    OVERFLOW_SADD(self->ir_start, result, &result))
@@ -1364,7 +1363,7 @@ intrange_nsi_getitem(IntRange *__restrict self, size_t index) {
 	return DeeInt_NewSSize(result);
 oob:
 	err_index_out_of_bounds((DeeObject *)self, index,
-	                        intrange_nsi_getsize(self));
+	                        intrange_size(self));
 	return NULL;
 }
 
@@ -1374,16 +1373,16 @@ intrange_getitem(IntRange *self,
 	size_t index;
 	if (DeeObject_AsSize(index_ob, &index))
 		goto err;
-	return intrange_nsi_getitem(self, index);
+	return intrange_getitem_index(self, index);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-intrange_nsi_getrange(IntRange *__restrict self,
-                      dssize_t begin, dssize_t end) {
+intrange_getrange_index(IntRange *__restrict self,
+                      Dee_ssize_t begin, Dee_ssize_t end) {
 	struct Dee_seq_range range;
-	size_t mylen = intrange_nsi_getsize(self);
+	size_t mylen = intrange_size(self);
 	DeeSeqRange_Clamp(&range, begin, end, mylen);
 	if (range.sr_end <= range.sr_start)
 		return_reference_(Dee_EmptySeq);
@@ -1393,10 +1392,9 @@ intrange_nsi_getrange(IntRange *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-intrange_nsi_getrange_n(IntRange *__restrict self,
-                        dssize_t begin) {
+intrange_getrange_index_n(IntRange *__restrict self, Dee_ssize_t begin) {
 	size_t start;
-	size_t mylen = intrange_nsi_getsize(self);
+	size_t mylen = intrange_size(self);
 	start = DeeSeqRange_Clamp_n(begin, mylen);
 	if (start >= mylen)
 		return_reference_(Dee_EmptySeq);
@@ -1409,16 +1407,54 @@ PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 intrange_getrange(IntRange *__restrict self,
                   DeeObject *__restrict start_ob,
                   DeeObject *__restrict end_ob) {
-	dssize_t start_index, end_index;
+	Dee_ssize_t start_index, end_index;
 	if (DeeObject_AsSSize(start_ob, &start_index))
 		goto err;
 	if (DeeNone_Check(end_ob))
-		return intrange_nsi_getrange_n(self, start_index);
+		return intrange_getrange_index_n(self, start_index);
 	if (DeeObject_AsSSize(end_ob, &end_index))
 		goto err;
-	return intrange_nsi_getrange(self, start_index, end_index);
+	return intrange_getrange_index(self, start_index, end_index);
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+intrange_foreach(IntRange *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	Dee_ssize_t i = self->ir_start;
+	if (self->ir_step >= 0) {
+		while (i < self->ir_end) {
+			DREF DeeObject *elem;
+			elem = DeeInt_NewSSize(i);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+			i += self->ir_step;
+		}
+	} else {
+		while (i > self->ir_end) {
+			DREF DeeObject *elem;
+			elem = DeeInt_NewSSize(i);
+			if unlikely(!elem)
+				goto err;
+			temp = (*proc)(arg, elem);
+			Dee_Decref(elem);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+			i += self->ir_step;
+		}
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 
@@ -1429,14 +1465,14 @@ PRIVATE struct type_nsi tpconst intrange_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&intrange_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&intrange_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&intrange_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&intrange_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&intrange_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&intrange_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&intrange_nsi_getrange,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&intrange_nsi_getrange_n,
+			/* .nsi_getrange     = */ (dfunptr_t)&intrange_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&intrange_getrange_index_n,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
@@ -1458,16 +1494,35 @@ PRIVATE struct type_nsi tpconst intrange_nsi = {
 };
 
 PRIVATE struct type_seq intrange_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&intrange_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&intrange_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&intrange_getrange,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &intrange_nsi
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_iter,
+	/* .tp_sizeob             = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&intrange_sizeob,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&intrange_contains,
+	/* .tp_getitem            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&intrange_getitem,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&intrange_getrange,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_nsi                = */ &intrange_nsi,
+	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&intrange_foreach,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&intrange_size,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&intrange_size,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&intrange_getitem_index,
+	/* .tp_getitem_index_fast = */ NULL,
+	/* .tp_delitem_index      = */ NULL,
+	/* .tp_setitem_index      = */ NULL,
+	/* .tp_bounditem_index    = */ NULL,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&intrange_getrange_index,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&intrange_getrange_index_n,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_trygetitem         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&intrange_getitem,
 };
 
 
@@ -1488,7 +1543,7 @@ PRIVATE struct type_member tpconst intrange_class_members[] = {
 	TYPE_MEMBER_END
 };
 
-PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 intrange_printrepr(IntRange *__restrict self,
                    dformatprinter printer, void *arg) {
 	if (self->ir_step != 1) {
@@ -1573,7 +1628,7 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&intrange_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&intrange_printrepr
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, dformatprinter, void *))&intrange_printrepr
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1613,9 +1668,9 @@ INTERN DeeTypeObject SeqIntRange_Type = {
 
 /* Create new range sequence objects. */
 PUBLIC WUNUSED DREF DeeObject *DCALL
-DeeRange_NewInt(dssize_t begin,
-                dssize_t end,
-                dssize_t step) {
+DeeRange_NewInt(Dee_ssize_t begin,
+                Dee_ssize_t end,
+                Dee_ssize_t step) {
 #ifdef ALWAYS_USE_OBJECT_RANGES
 	DREF DeeObject *begin_ob, *end_ob, *step_ob, *result;
 	ASSERT(step != 0);
@@ -1671,13 +1726,13 @@ DeeRange_New(DeeObject *begin,
 	/* Check for special optimizations for the likely case of int-only arguments. */
 #ifndef ALWAYS_USE_OBJECT_RANGES
 	{
-		dssize_t i_begin, i_end, i_step;
+		Dee_ssize_t i_begin, i_end, i_step;
 		if (DeeInt_Check(begin) && DeeInt_Check(end) &&
-		    DeeInt_TryAsIntSize(begin, &i_begin) &&
-		    DeeInt_TryAsIntSize(end, &i_end)) {
+		    DeeInt_TryAsSSize(begin, &i_begin) &&
+		    DeeInt_TryAsSSize(end, &i_end)) {
 			i_step = 1;
 			if (step) {
-				if (!DeeInt_Check(step) || !DeeInt_TryAsIntSize(step, &i_step))
+				if (!DeeInt_Check(step) || !DeeInt_TryAsSSize(step, &i_step))
 					goto do_object_range;
 				if unlikely(!step) {
 					if (i_begin >= i_end)

@@ -446,31 +446,13 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeat_size(Repeat *__restrict self) {
-	size_t base_size;
-	size_t result;
-	base_size = DeeObject_Size(self->rp_seq);
-	if unlikely(base_size == (size_t)-1)
-		goto err;
-	if (OVERFLOW_UMUL(base_size, self->rp_num, &result))
-		goto err_overflow;
-	return DeeInt_NewSize(result);
-err_overflow:
-	err_integer_overflow_i(sizeof(size_t) * 8, true);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeat_contains(Repeat *self,
-                DeeObject *item) {
+repeat_contains(Repeat *self, DeeObject *item) {
 	return DeeObject_ContainsObject(self->rp_seq, item);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeat_get(Repeat *self,
-           DeeObject *index_ob) {
+repeat_getitem(Repeat *self, DeeObject *index_ob) {
 	size_t index;
 	size_t seq_size;
 	if (DeeObject_AsSize(index_ob, &index))
@@ -490,7 +472,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-repeat_nsi_getsize(Repeat *__restrict self) {
+repeat_size(Repeat *__restrict self) {
 	size_t base_size;
 	size_t result;
 	base_size = DeeObject_Size(self->rp_seq);
@@ -504,7 +486,7 @@ repeat_nsi_getsize(Repeat *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-repeat_nsi_getsize_fast(Repeat *__restrict self) {
+repeat_size_fast(Repeat *__restrict self) {
 	size_t base_size;
 	size_t result;
 	base_size = DeeFastSeq_GetSize(self->rp_seq);
@@ -516,7 +498,7 @@ repeat_nsi_getsize_fast(Repeat *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeat_nsi_getitem(Repeat *__restrict self, size_t index) {
+repeat_getitem_index(Repeat *__restrict self, size_t index) {
 	size_t seq_size;
 	seq_size = DeeObject_Size(self->rp_seq);
 	if unlikely(seq_size == (size_t)-1)
@@ -560,6 +542,50 @@ repeat_nsi_rfind(Repeat *__restrict self, size_t start, size_t end,
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_foreach(Repeat *__restrict self, Dee_foreach_t proc, void *arg) {
+	DeeTypeObject *tp_seq;
+	Dee_ssize_t temp, result;
+	tp_seq = Dee_TYPE(self->rp_seq);
+	if likely((tp_seq->tp_seq && tp_seq->tp_seq->tp_foreach) ||
+	          DeeType_InheritIter(tp_seq)) {
+		size_t i = 0;
+		result = 0;
+		do {
+			temp = (*tp_seq->tp_seq->tp_foreach)(self->rp_seq, proc, arg);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		} while (++i < self->rp_num);
+		return result;
+	}
+	return err_unimplemented_operator(tp_seq, OPERATOR_ITER);
+err_temp:
+	return temp;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeat_foreach_pair(Repeat *__restrict self, Dee_foreach_pair_t proc, void *arg) {
+	DeeTypeObject *tp_seq;
+	Dee_ssize_t temp, result;
+	tp_seq = Dee_TYPE(self->rp_seq);
+	if likely((tp_seq->tp_seq && tp_seq->tp_seq->tp_foreach_pair) ||
+	          DeeType_InheritIter(tp_seq)) {
+		size_t i = 0;
+		result = 0;
+		do {
+			temp = (*tp_seq->tp_seq->tp_foreach_pair)(self->rp_seq, proc, arg);
+			if unlikely(temp < 0)
+				goto err_temp;
+			result += temp;
+		} while (++i < self->rp_num);
+		return result;
+	}
+	return err_unimplemented_operator(tp_seq, OPERATOR_ITER);
+err_temp:
+	return temp;
+}
+
 
 
 PRIVATE struct type_nsi tpconst repeat_nsi = {
@@ -567,9 +593,9 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&repeat_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&repeat_nsi_getsize_fast,
-			/* .nsi_getitem      = */ (dfunptr_t)&repeat_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&repeat_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&repeat_size_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&repeat_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
@@ -597,16 +623,47 @@ PRIVATE struct type_nsi tpconst repeat_nsi = {
 
 
 PRIVATE struct type_seq repeat_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_get,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange  = */ NULL,
-	/* .tp_delrange  = */ NULL,
-	/* .tp_setrange  = */ NULL,
-	/* .tp_nsi      = */ &repeat_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeat_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeat_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &repeat_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeat_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeat_foreach_pair,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&repeat_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&repeat_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&repeat_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Repeat *DCALL
@@ -958,8 +1015,6 @@ repeatitem_init(RepeatItem *__restrict self,
 	if (DeeArg_Unpack(argc, argv, "o" UNPuSIZ ":_SeqItemRepeat",
 	                  &self->rpit_obj, &self->rpit_num))
 		goto err;
-	if unlikely(!self->rpit_num)
-		self->rpit_obj = Dee_None;
 	Dee_Incref(self->rpit_obj);
 	return 0;
 err:
@@ -972,7 +1027,7 @@ STATIC_ASSERT(offsetof(Repeat, rp_seq) == offsetof(RepeatItem, rpit_obj));
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 repeatitem_bool(RepeatItem *__restrict self) {
-	return self->rpit_num ? 1 : 0;
+	return likely(self->rpit_num) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF RepeatItemIterator *DCALL
@@ -990,49 +1045,26 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_size(RepeatItem *__restrict self) {
-	return DeeInt_NewSize(self->rpit_num);
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 repeatitem_contains(RepeatItem *self,
                     DeeObject *item) {
 	return DeeObject_CompareEqObject(self->rpit_obj, item);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-repeatitem_get(RepeatItem *self,
-               DeeObject *index_ob) {
-	dssize_t index;
-	if (DeeObject_AsSSize(index_ob, &index))
-		goto err;
-	if (index < 0)
-		index += self->rpit_num;
-	if unlikely((size_t)index >= self->rpit_num) {
-		err_index_out_of_bounds((DeeObject *)self,
-		                        (size_t)index,
-		                        self->rpit_num);
-	}
-	return_reference_(self->rpit_obj);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-repeatitem_nsi_getsize(RepeatItem *__restrict self) {
+repeatitem_size(RepeatItem *__restrict self) {
 	if unlikely(self->rpit_num == (size_t)-1)
 		err_integer_overflow_i(sizeof(size_t) * 8, true);
 	return self->rpit_num;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-repeatitem_nsi_getsize_fast(RepeatItem *__restrict self) {
+repeatitem_size_fast(RepeatItem *__restrict self) {
 	return self->rpit_num;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_nsi_getitem(RepeatItem *__restrict self, size_t index) {
+repeatitem_getitem_index(RepeatItem *__restrict self, size_t index) {
 	if unlikely(index >= self->rpit_num)
 		goto err_bounds;
 	return_reference_(self->rpit_obj);
@@ -1043,52 +1075,25 @@ err_bounds:
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
-repeatitem_nsi_getitem_fast(RepeatItem *__restrict self, size_t UNUSED(index)) {
+repeatitem_getitem_index_fast(RepeatItem *__restrict self, size_t index) {
+	(void)index;
 	return_reference_(self->rpit_obj);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_nsi_getrange_i(RepeatItem *__restrict self,
-                          dssize_t i_begin,
-                          dssize_t i_end) {
+repeatitem_getrange_index(RepeatItem *__restrict self,
+                          Dee_ssize_t i_begin,
+                          Dee_ssize_t i_end) {
 	struct Dee_seq_range range;
-	size_t range_size;
 	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rpit_num);
-	range_size = range.sr_end - range.sr_start;
-	if unlikely(range_size <= 0)
-		return_reference_(Dee_EmptySeq);
-	return DeeSeq_RepeatItem(self->rpit_obj, range_size);
+	return DeeSeq_RepeatItem(self->rpit_obj, range.sr_end - range.sr_start);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-repeatitem_nsi_getrange_in(RepeatItem *__restrict self,
-                           dssize_t i_begin) {
-#ifdef __OPTIMIZE_SIZE__
-	return repeatitem_nsi_getrange_i(self, i_begin, SSIZE_MAX);
-#else /* __OPTIMIZE_SIZE__ */
-	size_t start, range_size;
-	start = DeeSeqRange_Clamp_n(i_begin, self->rpit_num);
-	range_size = self->rpit_num - start;
-	if unlikely(range_size <= 0)
-		return_reference_(Dee_EmptySeq);
-	return DeeSeq_RepeatItem(self->rpit_obj, range_size);
-#endif /* !__OPTIMIZE_SIZE__ */
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-repeatitem_getrange(RepeatItem *self,
-                    DeeObject *begin,
-                    DeeObject *end) {
-	dssize_t i_begin, i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return repeatitem_nsi_getrange_in(self, i_begin);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return repeatitem_nsi_getrange_i(self, i_begin, i_end);
-err:
-	return NULL;
+repeatitem_getrange_index_n(RepeatItem *__restrict self,
+                            Dee_ssize_t i_begin) {
+	size_t start = DeeSeqRange_Clamp_n(i_begin, self->rpit_num);
+	return DeeSeq_RepeatItem(self->rpit_obj, self->rpit_num - start);
 }
 
 
@@ -1123,20 +1128,57 @@ repeatitem_nsi_rfind(RepeatItem *self,
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitem_foreach(RepeatItem *self, Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	for (i = 0; i < self->rpit_num; ++i) {
+		temp = (*proc)(arg, self->rpit_obj);
+		if unlikely(temp < 0)
+			return temp;
+		result += temp;
+	}
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+repeatitem_foreach_pair(RepeatItem *self, Dee_foreach_pair_t proc, void *arg) {
+	DREF DeeObject *pair[2];
+	Dee_ssize_t temp, result = 0;
+	if likely(self->rpit_num) {
+		size_t i = 0;
+		if (DeeObject_Unpack(self->rpit_obj, 2, pair))
+			goto err;
+		do {
+			temp = (*proc)(arg, pair[0], pair[1]);
+			if unlikely(temp < 0)
+				goto err_pair_temp;
+			result += temp;
+		} while (++i < self->rpit_num);
+		Dee_Decrefv(pair, 2);
+	}
+	return result;
+err_pair_temp:
+	Dee_Decrefv(pair, 2);
+	return temp;
+err:
+	return -1;
+}
+
 
 PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&repeatitem_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&repeatitem_nsi_getsize_fast,
-			/* .nsi_getitem      = */ (dfunptr_t)&repeatitem_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&repeatitem_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&repeatitem_size_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&repeatitem_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_nsi_getrange_i,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_nsi_getrange_in,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&repeatitem_getitem_index_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&repeatitem_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&repeatitem_getrange_index_n,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
@@ -1158,16 +1200,47 @@ PRIVATE struct type_nsi tpconst repeatitem_nsi = {
 };
 
 PRIVATE struct type_seq repeatitem_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_get,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&repeatitem_getrange,
-	/* .tp_delrange  = */ NULL,
-	/* .tp_setrange  = */ NULL,
-	/* .tp_nsi      = */ &repeatitem_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&repeatitem_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&repeatitem_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &repeatitem_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&repeatitem_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&repeatitem_foreach_pair,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&repeatitem_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&repeatitem_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&repeatitem_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&repeatitem_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&repeatitem_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&repeatitem_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst repeatitem_members[] = {
@@ -1255,8 +1328,8 @@ done:
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 DeeSeq_RepeatItem(DeeObject *__restrict item, size_t count) {
 	DREF RepeatItem *result;
-	if (!count)
-		return_reference_(Dee_EmptySeq);
+	if unlikely(!count)
+		return_empty_seq;
 	result = DeeObject_MALLOC(RepeatItem);
 	if unlikely(!result)
 		goto done;

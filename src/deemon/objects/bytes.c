@@ -45,6 +45,9 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+/**/
+
+#include "int-8bit.h"
 
 #undef SSIZE_MAX
 #define SSIZE_MAX __SSIZE_MAX__
@@ -863,140 +866,8 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_size(Bytes *__restrict self) {
-	return DeeInt_NewSize(DeeBytes_SIZE(self));
-}
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_contains(Bytes *self,
-               DeeObject *needle);
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_getitem(Bytes *self, DeeObject *index) {
-	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	if unlikely(i >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
-		goto err;
-	}
-	return DeeInt_NEWU(DeeBytes_DATA(self)[i]);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bytes_delitem(Bytes *self, DeeObject *index) {
-	size_t i;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	if unlikely(i >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
-		goto err;
-	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		goto err_readonly;
-	DeeBytes_DATA(self)[i] = 0;
-	return 0;
-err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-bytes_setitem(Bytes *self, DeeObject *index, DeeObject *value) {
-	size_t i;
-	byte_t val;
-	if (DeeObject_AsSize(index, &i))
-		goto err;
-	if (DeeObject_AsUIntX(value, &val))
-		goto err;
-	if unlikely(i >= DeeBytes_SIZE(self)) {
-		err_index_out_of_bounds((DeeObject *)self, i, DeeBytes_SIZE(self));
-		goto err;
-	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		goto err_readonly;
-	DeeBytes_DATA(self)[i] = val;
-	return 0;
-err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF Bytes *DCALL
-bytes_getrange(Bytes *self, DeeObject *begin, DeeObject *end) {
-	dssize_t start_index, end_index;
-	if (DeeObject_AsSSize(begin, &start_index))
-		goto err;
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if (DeeNone_Check(end)) {
-		end_index = (dssize_t)DeeBytes_SIZE(self);
-	} else {
-		if (DeeObject_AsSSize(end, &end_index))
-			goto err;
-		if unlikely(end_index < 0)
-			end_index += DeeBytes_SIZE(self);
-		if ((size_t)end_index > DeeBytes_SIZE(self))
-			end_index = (dssize_t)DeeBytes_SIZE(self);
-	}
-	if ((size_t)start_index >= (size_t)end_index)
-		return_reference_((Bytes *)Dee_EmptyBytes);
-	if ((size_t)start_index == 0 &&
-	    (size_t)end_index == DeeBytes_SIZE(self))
-		return_reference_(self);
-	return (DREF Bytes *)DeeBytes_NewView(self->b_orig,
-	                                      self->b_base + (size_t)start_index,
-	                                      (size_t)(end_index - start_index),
-	                                      self->b_flags);
-err:
-	return NULL;
-}
-
-
-
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-bytes_setrange(Bytes *self, DeeObject *begin,
-               DeeObject *end, DeeObject *value) {
-	dssize_t start_index;
-	dssize_t end_index = (dssize_t)DeeBytes_SIZE(self);
-	byte_t *dst;
-	size_t size;
-	if (DeeObject_AsSSize(begin, &start_index))
-		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_index))
-			goto err;
-	}
-	if unlikely(!DeeBytes_WRITABLE(self))
-		goto err_readonly;
-	if unlikely(start_index < 0)
-		start_index += DeeBytes_SIZE(self);
-	if unlikely(end_index < 0)
-		end_index += DeeBytes_SIZE(self);
-	if unlikely((size_t)start_index >= DeeBytes_SIZE(self) ||
-	            (size_t)start_index >= (size_t)end_index) {
-		start_index = 0;
-		end_index   = 0;
-	} else if unlikely((size_t)end_index > DeeBytes_SIZE(self)) {
-		end_index = (dssize_t)DeeBytes_SIZE(self);
-	}
-	size = (size_t)(end_index - start_index);
-	dst  = DeeBytes_DATA(self) + (size_t)start_index;
-	return DeeSeq_ItemsToBytes(dst, size, value);
-err_readonly:
-	err_bytes_not_writable((DeeObject *)self);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-bytes_delrange(Bytes *self, DeeObject *begin, DeeObject *end) {
-	return bytes_setrange(self, begin, end, Dee_None);
-}
-
+bytes_contains(Bytes *self, DeeObject *needle);
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
 bytes_hash(Bytes *__restrict self) {
@@ -1262,23 +1133,39 @@ PRIVATE struct type_cmp bytes_cmp = {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-bytes_nsi_getsize(Bytes *__restrict self) {
+bytes_size(Bytes *__restrict self) {
 	ASSERT(DeeBytes_SIZE(self) != (size_t)-1);
 	return DeeBytes_SIZE(self);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bytes_nsi_getitem(Bytes *__restrict self, size_t index) {
+bytes_getitem_index(Bytes *__restrict self, size_t index) {
+	byte_t value;
 	if unlikely(index >= DeeBytes_SIZE(self))
 		goto err_bounds;
-	return DeeInt_NEWU(DeeBytes_DATA(self)[index]);
+	value = DeeBytes_DATA(self)[index];
+#ifdef DeeInt_8bit
+	return_reference(DeeInt_8bit + value);
+#else /* DeeInt_8bit */
+	return DeeInt_NewUInt8(value);
+#endif /* !DeeInt_8bit */
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 	return NULL;
 }
 
+#ifdef DeeInt_8bit
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bytes_getitem_index_fast(Bytes *__restrict self, size_t index) {
+	byte_t value;
+	ASSERT(index < DeeBytes_SIZE(self));
+	value = DeeBytes_DATA(self)[index];
+	return_reference(DeeInt_8bit + value);
+}
+#endif /* DeeInt_8bit */
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bytes_nsi_delitem(Bytes *__restrict self, size_t index) {
+bytes_delitem_index(Bytes *__restrict self, size_t index) {
 	if unlikely(index >= DeeBytes_SIZE(self)) {
 		err_index_out_of_bounds((DeeObject *)self, index, DeeBytes_SIZE(self));
 		goto err;
@@ -1294,7 +1181,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-bytes_nsi_setitem(Bytes *self, size_t index, DeeObject *value) {
+bytes_setitem_index(Bytes *self, size_t index, DeeObject *value) {
 	byte_t val;
 	if (DeeObject_AsUIntX(value, &val))
 		goto err;
@@ -1313,7 +1200,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
-bytes_nsi_getrange(Bytes *__restrict self,
+bytes_getrange_index(Bytes *__restrict self,
                    dssize_t i_begin,
                    dssize_t i_end) {
 	struct Dee_seq_range range;
@@ -1331,10 +1218,10 @@ bytes_nsi_getrange(Bytes *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bytes *DCALL
-bytes_nsi_getrange_n(Bytes *__restrict self,
+bytes_getrange_index_n(Bytes *__restrict self,
                      dssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return bytes_nsi_getrange(self, i_begin, SSIZE_MAX);
+	return bytes_getrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t start, range_size;
 	start = DeeSeqRange_Clamp_n(i_begin, DeeBytes_SIZE(self));
@@ -1351,7 +1238,7 @@ bytes_nsi_getrange_n(Bytes *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-bytes_nsi_setrange(Bytes *self,
+bytes_setrange_index(Bytes *self,
                    dssize_t i_begin,
                    dssize_t i_end,
                    DeeObject *value) {
@@ -1369,10 +1256,10 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-bytes_nsi_setrange_n(Bytes *self, dssize_t i_begin,
+bytes_setrange_index_n(Bytes *self, dssize_t i_begin,
                      DeeObject *value) {
 #ifdef __OPTIMIZE_SIZE__
-	return bytes_nsi_setrange(self, i_begin, SSIZE_MAX, value);
+	return bytes_setrange_index(self, i_begin, SSIZE_MAX, value);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t start, range_size;
 	byte_t *dst;
@@ -1388,9 +1275,9 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bytes_nsi_delrange(Bytes *self, dssize_t i_begin, dssize_t i_end) {
+bytes_delrange_index(Bytes *self, dssize_t i_begin, dssize_t i_end) {
 #ifdef __OPTIMIZE_SIZE__
-	return bytes_nsi_setrange(self, i_begin, i_end, Dee_None);
+	return bytes_setrange_index(self, i_begin, i_end, Dee_None);
 #else /* __OPTIMIZE_SIZE__ */
 	struct Dee_seq_range range;
 	size_t range_size;
@@ -1408,9 +1295,9 @@ err_readonly:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bytes_nsi_delrange_n(Bytes *self, dssize_t i_begin) {
+bytes_delrange_index_n(Bytes *self, dssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return bytes_nsi_delrange(self, i_begin, SSIZE_MAX);
+	return bytes_delrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t start, range_size;
 	byte_t *dst;
@@ -1445,24 +1332,52 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+bytes_foreach(Bytes *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, size = DeeBytes_SIZE(self);
+	for (i = 0; i < size; ++i) {
+		byte_t value = DeeBytes_DATA(self)[i];
+#ifdef DeeInt_8bit
+		temp = (*proc)(arg, (DeeObject *)(DeeInt_8bit + value));
+#else /* DeeInt_8bit */
+		DREF DeeObject *int_value = DeeInt_NewUInt8(value);
+		if unlikely(!int_value)
+			return -1;
+		temp = (*proc)(arg, (DeeObject *)(DeeInt_8bit + value));
+		Dee_Decref(int_value);
+#endif /* !DeeInt_8bit */
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
+
 
 PRIVATE struct type_nsi tpconst bytes_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&bytes_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&bytes_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&bytes_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&bytes_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&bytes_nsi_setitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&bytes_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&bytes_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&bytes_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&bytes_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&bytes_setitem_index,
+#ifdef DeeInt_8bit
+			/* .nsi_getitem_fast = */ (dfunptr_t)&bytes_getitem_index_fast,
+#else /* DeeInt_8bit */
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&bytes_nsi_getrange,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_nsi_getrange_n,
-			/* .nsi_delrange     = */ (dfunptr_t)&bytes_nsi_delrange,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&bytes_nsi_delrange_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&bytes_nsi_setrange,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_nsi_setrange_n,
+#endif /* !DeeInt_8bit */
+			/* .nsi_getrange     = */ (dfunptr_t)&bytes_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&bytes_getrange_index_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&bytes_delrange_index,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&bytes_delrange_index_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&bytes_setrange_index,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&bytes_setrange_index_n,
 			/* .nsi_find         = */ (dfunptr_t)NULL,
 			/* .nsi_rfind        = */ (dfunptr_t)NULL,
 			/* .nsi_xch          = */ (dfunptr_t)&bytes_nsi_xch,
@@ -1480,16 +1395,51 @@ PRIVATE struct type_nsi tpconst bytes_nsi = {
 };
 
 PRIVATE struct type_seq bytes_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_getitem,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_setitem,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_getrange,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bytes_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bytes_setrange,
-	/* .tp_nsi      = */ &bytes_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bytes_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &bytes_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bytes_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bytes_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&bytes_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bytes_getitem_index,
+#ifdef DeeInt_8bit
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bytes_getitem_index_fast,
+#else /* DeeInt_8bit */
+	/* .tp_getitem_index_fast         = */ NULL,
+#endif /* !DeeInt_8bit */
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&bytes_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&bytes_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bytes_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bytes_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&bytes_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&bytes_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&bytes_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&bytes_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 

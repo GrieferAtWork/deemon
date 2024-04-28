@@ -99,6 +99,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_class_addr(DeeTypeObject *__
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_invalid_instance_addr(DeeTypeObject *tp_self, DeeObject *self, uint16_t addr);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_invalid_refs_size(DeeObject *__restrict code, size_t num_refs);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key(DeeObject *map, DeeObject *key);
+INTDEF ATTR_COLD NONNULL((1)) int DCALL err_unknown_key_int(DeeObject *__restrict map, size_t key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str(DeeObject *__restrict map, char const *__restrict key);
 INTDEF ATTR_COLD NONNULL((1, 2)) int DCALL err_unknown_key_str_len(DeeObject *__restrict map, char const *__restrict key, size_t keylen);
 INTDEF ATTR_COLD NONNULL((1)) int DCALL err_empty_sequence(DeeObject *__restrict seq);
@@ -215,6 +216,7 @@ INTDEF ATTR_COLD NONNULL((1)) int DCALL err_file_not_found(DeeObject *__restrict
 #define err_invalid_instance_addr(tp_self, self, addr)                                                    Dee_ASSUMED_VALUE(err_invalid_instance_addr(tp_self, self, addr), -1)
 #define err_invalid_refs_size(code, num_refs)                                                             Dee_ASSUMED_VALUE(err_invalid_refs_size(code, num_refs), -1)
 #define err_unknown_key(map, key)                                                                         Dee_ASSUMED_VALUE(err_unknown_key(map, key), -1)
+#define err_unknown_key_int(map, key)                                                                     Dee_ASSUMED_VALUE(err_unknown_key_int(map, key), -1)
 #define err_unknown_key_str(map, key)                                                                     Dee_ASSUMED_VALUE(err_unknown_key_str(map, key), -1)
 #define err_unknown_key_str_len(map, key, keylen)                                                         Dee_ASSUMED_VALUE(err_unknown_key_str_len(map, key, keylen), -1)
 #define err_empty_sequence(seq)                                                                           Dee_ASSUMED_VALUE(err_empty_sequence(seq), -1)

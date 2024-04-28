@@ -57,6 +57,7 @@
 
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
+#include "int-8bit.h"
 #include "int_logic.h"
 
 #undef SSIZE_MAX
@@ -126,17 +127,6 @@
 #else /* DIGIT_BITS <= ... */
 #define __hybrid_uint128_least_significant_DIGIT_BITS(var) (digit)(__hybrid_uint128_vec64_significand(var, 0) & DIGIT_MASK)
 #endif /* DIGIT_BITS > ... */
-
-/* Config option to statically pre-allocate all 8-bit integer constants (that is: [-128,255]). */
-#if (!defined(CONFIG_STRING_8BIT_STATIC) && \
-     !defined(CONFIG_STRING_8BIT_NORMAL))
-#ifdef __OPTIMIZE_SIZE__
-#define CONFIG_STRING_8BIT_NORMAL
-#else /* __OPTIMIZE_SIZE__ */
-#define CONFIG_STRING_8BIT_STATIC
-#endif /* !__OPTIMIZE_SIZE__ */
-#endif /* ... */
-
 
 DECL_BEGIN
 
@@ -343,13 +333,8 @@ DeeInt_Alloc_dbg(size_t n_digits, char const *file, int line)
 #endif /* CONFIG_INT_CACHE_MAXCOUNT == 0 */
 
 #if defined(CONFIG_STRING_8BIT_STATIC) || defined(__DEEMON__)
-typedef struct {
-	Dee_OBJECT_HEAD
-	Dee_ssize_t ob_size;
-	Dee_digit_t ob_digit[1];
-} DeeIntObject1Digit;
 /*[[[deemon
-print("PRIVATE DeeIntObject1Digit eightbit_blob[128 + 256] = {");
+print("INTERN struct _Dee_int_1digit_object DeeInt_8bit_blob[128 + 256] = {");
 for (local i: [-128:256]) {
 	print("	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), ",
 		i < 0 ? -1 : i > 0 ? 1 : 0, ", { ",
@@ -357,7 +342,7 @@ for (local i: [-128:256]) {
 }
 print("};");
 ]]]*/
-PRIVATE DeeIntObject1Digit eightbit_blob[128 + 256] = {
+INTERN struct _Dee_int_1digit_object DeeInt_8bit_blob[128 + 256] = {
 	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 128 } }, /* -128 */
 	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 127 } }, /* -127 */
 	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), -1, { 126 } }, /* -126 */
@@ -744,7 +729,6 @@ PRIVATE DeeIntObject1Digit eightbit_blob[128 + 256] = {
 	{ Dee_OBJECT_HEAD_INIT(&DeeInt_Type), 1, { 255 } }, /* 255 */
 };
 /*[[[end]]]*/
-#define eightbit (eightbit_blob + 128)
 #endif /* CONFIG_STRING_8BIT_STATIC || __DEEMON__ */
 
 /* Helpful singletons for some often used integers. */
@@ -1051,9 +1035,9 @@ DeeInt_GetUleb(/*Int*/ DeeObject *__restrict self,
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
 DeeInt_NewInt8(int8_t val) {
-#ifdef CONFIG_STRING_8BIT_STATIC
-	return_reference(eightbit + val);
-#else /* CONFIG_STRING_8BIT_STATIC */
+#ifdef DeeInt_8bit
+	return_reference(DeeInt_8bit + val);
+#else /* DeeInt_8bit */
 	DREF DeeIntObject *result;
 	int sign        = 1;
 	uint8_t abs_val = (uint8_t)val;
@@ -1069,14 +1053,14 @@ DeeInt_NewInt8(int8_t val) {
 		result->ob_digit[0] = (digit)abs_val;
 	}
 	return (DREF DeeObject *)result;
-#endif /* !CONFIG_STRING_8BIT_STATIC */
+#endif /* !DeeInt_8bit */
 }
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
 DeeInt_NewUInt8(uint8_t val) {
-#ifdef CONFIG_STRING_8BIT_STATIC
-	return_reference(eightbit + val);
-#else /* CONFIG_STRING_8BIT_STATIC */
+#ifdef DeeInt_8bit
+	return_reference(DeeInt_8bit + val);
+#else /* DeeInt_8bit */
 	DREF DeeIntObject *result;
 	if (!val)
 		return_reference_(DeeInt_Zero);
@@ -1086,17 +1070,17 @@ DeeInt_NewUInt8(uint8_t val) {
 		result->ob_digit[0] = (digit)val;
 	}
 	return (DREF DeeObject *)result;
-#endif /* !CONFIG_STRING_8BIT_STATIC */
+#endif /* !DeeInt_8bit */
 }
 
 
 PUBLIC WUNUSED DREF /*Int*/ DeeObject *DCALL
 DeeInt_NewUInt16(uint16_t val) {
 	DREF DeeIntObject *result;
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val <= 0xff)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 #if DIGIT_BITS >= 16
 	if (!val)
 		return_reference_(DeeInt_Zero);
@@ -1134,10 +1118,10 @@ DeeInt_NewUInt32(uint32_t val) {
 	DREF DeeIntObject *result;
 	size_t req_digits;
 	uint32_t iter;
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val <= 0xff)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 	if (!(val >> DIGIT_BITS)) {
 		if (!val)
 			return_reference_(DeeInt_Zero);
@@ -1175,10 +1159,10 @@ DeeInt_NewUInt64(uint64_t val) {
 	if (val <= UINT32_MAX)
 		return DeeInt_NewUInt32((uint32_t)val);
 #else /* __SIZEOF_POINTER__ < 8 */
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val <= 0xff)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 #endif /* __SIZEOF_POINTER__ >= 8 */
 
 		/* NOTE: 32 == Bits required to display everything in the range 0..UINT32_MAX */
@@ -1215,10 +1199,10 @@ DeeInt_NewInt16(int16_t val) {
 	DREF DeeIntObject *result;
 	int sign         = 1;
 	uint16_t abs_val = (uint16_t)val;
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val >= -128 && val <= 255)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 #if DIGIT_BITS >= 16
 	if (val <= 0) {
 		if (!val)
@@ -1265,10 +1249,10 @@ DeeInt_NewInt32(int32_t val) {
 	int sign;
 	size_t req_digits;
 	uint32_t iter, abs_val;
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val >= -128 && val <= 255)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 	sign = 1;
 	abs_val = (uint32_t)val;
 	if (val < 0) {
@@ -1312,10 +1296,10 @@ DeeInt_NewInt64(int64_t val) {
 	if (val >= INT32_MIN && val <= INT32_MAX)
 		return DeeInt_NewInt32((int32_t)val);
 #else /* __SIZEOF_POINTER__ < 8 */
-#ifdef CONFIG_STRING_8BIT_STATIC
+#ifdef DeeInt_8bit
 	if (val >= -128 && val <= 255)
-		return_reference(eightbit + val);
-#endif /* CONFIG_STRING_8BIT_STATIC */
+		return_reference(DeeInt_8bit + val);
+#endif /* DeeInt_8bit */
 #endif /* __SIZEOF_POINTER__ >= 8 */
 
 	sign = 1;

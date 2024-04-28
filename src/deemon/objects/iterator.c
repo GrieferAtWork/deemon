@@ -2717,7 +2717,7 @@ if_iter(IteratorFuture *__restrict self) {
 }
 
 PRIVATE struct type_seq if_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&if_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&if_iter
 };
 
 PRIVATE struct type_member tpconst if_members[] = {
@@ -2835,7 +2835,7 @@ ip_iter(IteratorPending *__restrict self) {
 }
 
 PRIVATE struct type_seq ip_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ip_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ip_iter
 };
 
 #define ip_members        if_members

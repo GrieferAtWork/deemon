@@ -965,7 +965,7 @@ ssd_foreach(SetSymmetricDifference *__restrict self, Dee_foreach_t proc, void *a
 
 PRIVATE struct type_seq ssd_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ssd_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_sizeob   = */ NULL,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssd_contains,
 	/* .tp_getitem  = */ NULL,
 	/* .tp_delitem  = */ NULL,
@@ -1294,7 +1294,7 @@ si_foreach(SetIntersection *__restrict self, Dee_foreach_t proc, void *arg) {
 
 PRIVATE struct type_seq si_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&si_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_sizeob   = */ NULL,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&si_contains,
 	/* .tp_getitem  = */ NULL,
 	/* .tp_delitem  = */ NULL,
@@ -1517,7 +1517,7 @@ sd_foreach(SetDifference *__restrict self, Dee_foreach_t proc, void *arg) {
 
 PRIVATE struct type_seq sd_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&sd_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))NULL,
+	/* .tp_sizeob   = */ NULL,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sd_contains,
 	/* .tp_getitem  = */ NULL,
 	/* .tp_delitem  = */ NULL,

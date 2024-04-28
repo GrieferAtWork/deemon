@@ -540,7 +540,7 @@ com_visit(Combinations *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE struct type_seq com_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&com_iter
 };
 
 PRIVATE struct type_member tpconst com_class_members[] = {
@@ -797,7 +797,7 @@ err_r:
 }
 
 PRIVATE struct type_seq rcom_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&rcom_iter
 };
 
 PRIVATE struct type_member tpconst rcom_class_members[] = {
@@ -1041,7 +1041,7 @@ err_r:
 }
 
 PRIVATE struct type_seq pmut_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&pmut_iter
 };
 
 PRIVATE struct type_member tpconst pmut_class_members[] = {

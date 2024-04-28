@@ -63,6 +63,9 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
  * Sub-classes of these types are not fast-sequence-compatible. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
 DeeFastSeq_GetSize(DeeObject *__restrict self) {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	return DeeObject_SizeFast(self);
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
 	struct type_nsi const *nsi;
@@ -83,6 +86,7 @@ DeeFastSeq_GetSize(DeeObject *__restrict self) {
 	return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
 nope:
 	return DEE_FASTSEQ_NOTFAST;
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 }
 
 

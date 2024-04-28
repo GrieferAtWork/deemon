@@ -440,7 +440,7 @@ dict_rehash(CachedDict *__restrict self) {
 		end = (iter = self->cd_elem) + (self->cd_mask + 1);
 		for (; iter < end; ++iter) {
 			struct cached_dict_item *item;
-			dhash_t i, perturb;
+			Dee_hash_t i, perturb;
 
 			/* Skip dummy keys. */
 			if (!iter->cdi_key)
@@ -469,12 +469,12 @@ dict_rehash(CachedDict *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
 DeeCachedDict_Remember(DeeCachedDictObject *__restrict self,
                        /*inherit(always)*/ DREF DeeObject *key,
-                       /*inherit(always)*/ DREF DeeObject *value, dhash_t hash) {
+                       /*inherit(always)*/ DREF DeeObject *value, Dee_hash_t hash) {
 	size_t mask;
 	struct cached_dict_item *vector;
 	int error;
 	struct cached_dict_item *first_dummy;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 again_lock:
 	DeeCachedDict_LockRead(self);
 again:
@@ -568,7 +568,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_LookupAndRemember(DeeCachedDictObject *__restrict self,
-                                DeeObject *key, dhash_t hash) {
+                                DeeObject *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItem(self->cd_map, key);
 	if likely(result) {
@@ -580,7 +580,7 @@ DeeCachedDict_LookupAndRemember(DeeCachedDictObject *__restrict self,
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_LookupAndRememberStringHash(DeeCachedDictObject *__restrict self,
-                                          char const *key, dhash_t hash) {
+                                          char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeObject *basemap = self->cd_map;
 	if (DeeDict_CheckExact(basemap)) {
@@ -602,7 +602,7 @@ err_r:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_LookupAndRememberStringLenHash(DeeCachedDictObject *__restrict self,
-                                             char const *key, size_t keylen, dhash_t hash) {
+                                             char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeObject *basemap = self->cd_map;
 	if (DeeDict_CheckExact(basemap)) {
@@ -622,39 +622,33 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
-DeeCachedDict_LookupAndRememberDef(DeeCachedDictObject *__restrict self,
-                                   DeeObject *key, dhash_t hash, DeeObject *def) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeCachedDict_TryLookupAndRememberDef(DeeCachedDictObject *__restrict self,
+                                      DeeObject *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
-	result = DeeObject_GetItemDef(self->cd_map, key, def);
+	result = DeeObject_TryGetItem(self->cd_map, key);
 	if likely(result) {
-		if (result == def) {
-			if (def != ITER_DONE)
-				Dee_DecrefNokill(def);
+		if (result == ITER_DONE)
 			return result;
-		}
 		Dee_Incref(key);
 		result = DeeCachedDict_Remember(self, key, result, hash);
 	}
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
-DeeCachedDict_LookupAndRememberStringHashDef(DeeCachedDictObject *__restrict self,
-                                             char const *key, dhash_t hash, DeeObject *def) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeCachedDict_TryLookupAndRememberStringHash(DeeCachedDictObject *__restrict self,
+                                             char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeObject *basemap = self->cd_map;
 	if (DeeDict_CheckExact(basemap)) {
 		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
 	}
-	result = DeeObject_GetItemStringHashDef(basemap, key, hash, def);
+	result = DeeObject_TryGetItemStringHash(basemap, key, hash);
 	if likely(result) {
 		DREF DeeObject *keyob;
-		if (result == def) {
-			if (def != ITER_DONE)
-				Dee_DecrefNokill(def);
+		if (result == ITER_DONE)
 			return result;
-		}
 		keyob = DeeString_NewWithHash(key, hash);
 		if unlikely(!keyob)
 			goto err_r;
@@ -666,23 +660,19 @@ err_r:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
-DeeCachedDict_LookupAndRememberStringLenHashDef(DeeCachedDictObject *__restrict self,
-                                                char const *key, size_t keylen,
-                                                dhash_t hash, DeeObject *def) {
+PRIVATE WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeCachedDict_TryLookupAndRememberStringLenHash(DeeCachedDictObject *__restrict self,
+                                                char const *key, size_t keylen, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	DeeObject *basemap = self->cd_map;
 	if (DeeDict_CheckExact(basemap)) {
 		/* TODO: Special optimization here so "keyob" will be shared with the underlying dict */
 	}
-	result = DeeObject_GetItemStringLenHashDef(basemap, key, keylen, hash, def);
+	result = DeeObject_TryGetItemStringLenHash(basemap, key, keylen, hash);
 	if likely(result) {
 		DREF DeeObject *keyob;
-		if (result == def) {
-			if (def != ITER_DONE)
-				Dee_DecrefNokill(def);
+		if (result == ITER_DONE)
 			return result;
-		}
 		keyob = DeeString_NewSizedWithHash(key, keylen, hash);
 		if unlikely(!keyob)
 			goto err_r;
@@ -699,9 +689,9 @@ INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_GetItemNR(DeeCachedDictObject *self, DeeObject *key) {
 	size_t mask;
 	struct cached_dict_item *vector;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	int error;
-	dhash_t hash = DeeObject_Hash(key);
+	Dee_hash_t hash = DeeObject_Hash(key);
 	DeeCachedDict_LockRead(self);
 restart:
 	vector  = self->cd_elem;
@@ -742,9 +732,9 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_GetItemNRStringHash(DeeCachedDictObject *__restrict self,
                                   char const *__restrict key,
-                                  dhash_t hash) {
+                                  Dee_hash_t hash) {
 	DeeObject *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
@@ -768,9 +758,9 @@ DeeCachedDict_GetItemNRStringHash(DeeCachedDictObject *__restrict self,
 INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_GetItemNRStringLenHash(DeeCachedDictObject *__restrict self,
                                      char const *__restrict key,
-                                     size_t keylen, dhash_t hash) {
+                                     size_t keylen, Dee_hash_t hash) {
 	DeeObject *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
@@ -791,14 +781,13 @@ DeeCachedDict_GetItemNRStringLenHash(DeeCachedDictObject *__restrict self,
 	return DeeCachedDict_LookupAndRememberStringLenHash(self, key, keylen, hash);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
-DeeCachedDict_GetItemNRDef(DeeCachedDictObject *self,
-                           DeeObject *key, DeeObject *def) {
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
+DeeCachedDict_TryGetItemNR(DeeCachedDictObject *self, DeeObject *key) {
 	size_t mask;
 	struct cached_dict_item *vector;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	int error;
-	dhash_t hash = DeeObject_Hash(key);
+	Dee_hash_t hash = DeeObject_Hash(key);
 	DeeCachedDict_LockRead(self);
 restart:
 	vector  = self->cd_elem;
@@ -831,17 +820,16 @@ restart:
 			goto restart;
 	}
 	DeeCachedDict_LockEndRead(self);
-	return DeeCachedDict_LookupAndRememberDef(self, key, hash, def);
+	return DeeCachedDict_TryLookupAndRememberDef(self, key, hash);
 err:
 	return NULL;
 }
 
 INTERN WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
-DeeCachedDict_GetItemNRStringHashDef(DeeCachedDictObject *__restrict self,
-                                     char const *__restrict key,
-                                     dhash_t hash, DeeObject *def) {
+DeeCachedDict_TryGetItemNRStringHash(DeeCachedDictObject *__restrict self,
+                                     char const *__restrict key, Dee_hash_t hash) {
 	DeeObject *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
@@ -859,16 +847,15 @@ DeeCachedDict_GetItemNRStringHashDef(DeeCachedDictObject *__restrict self,
 		}
 	}
 	DeeCachedDict_LockEndRead(self);
-	return DeeCachedDict_LookupAndRememberStringHashDef(self, key, hash, def);
+	return DeeCachedDict_TryLookupAndRememberStringHash(self, key, hash);
 }
 
 INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
-DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *__restrict self,
+DeeCachedDict_TryGetItemNRStringLenHash(DeeCachedDictObject *__restrict self,
                                         char const *__restrict key,
-                                        size_t keylen, dhash_t hash,
-                                        DeeObject *def) {
+                                        size_t keylen, Dee_hash_t hash) {
 	DeeObject *result;
-	dhash_t i, perturb;
+	Dee_hash_t i, perturb;
 	DeeCachedDict_LockRead(self);
 	perturb = i = DeeCachedDict_HashSt(self, hash);
 	for (;; DeeCachedDict_HashNx(i, perturb)) {
@@ -886,77 +873,136 @@ DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *__restrict self,
 		}
 	}
 	DeeCachedDict_LockEndRead(self);
-	return DeeCachedDict_LookupAndRememberStringLenHashDef(self, key, keylen, hash, def);
+	return DeeCachedDict_TryLookupAndRememberStringLenHash(self, key, keylen, hash);
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_iscached(DeeCachedDictObject *self, DeeObject *key, Dee_hash_t hash) {
+	size_t mask;
+	struct cached_dict_item *vector;
+	Dee_hash_t i, perturb;
+	int error;
+	DeeCachedDict_LockRead(self);
+restart:
+	vector  = self->cd_elem;
+	mask    = self->cd_mask;
+	perturb = i = hash & mask;
+	for (;; DeeCachedDict_HashNx(i, perturb)) {
+		DeeObject *item_key;
+		struct cached_dict_item *item = &vector[i & mask];
+		if (!item->cdi_key)
+			break; /* Not found */
+		if (item->cdi_hash != hash)
+			continue; /* Non-matching hash */
+		item_key = item->cdi_key;
+		DeeCachedDict_LockEndRead(self);
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeCachedDict_HasItemStringHash(DeeCachedDictObject *__restrict self,
-                                char const *__restrict key,
-                                dhash_t hash) {
-	DeeObject *value = DeeCachedDict_GetItemNRStringHashDef(self, key, hash, ITER_DONE);
-	if unlikely(!value)
-		return -1;
-	return value != ITER_DONE ? 1 : 0;
-}
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_CompareEq(key, item_key);
+		if (error > 0)
+			return 1; /* Found the item. */
+		if unlikely(error < 0)
+			goto err; /* Error in compare operator. */
+		DeeCachedDict_LockRead(self);
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
-DeeCachedDict_HasItemStringLenHash(DeeCachedDictObject *__restrict self,
-                                   char const *__restrict key,
-                                   size_t keylen, dhash_t hash) {
-	DeeObject *value = DeeCachedDict_GetItemNRStringLenHashDef(self, key, keylen, hash, ITER_DONE);
-	if unlikely(!value)
-		return -1;
-	return value != ITER_DONE ? 1 : 0;
-}
-
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeCachedDict_BoundItemStringHash(DeeCachedDictObject *__restrict self,
-                                  char const *__restrict key,
-                                  Dee_hash_t hash) {
-	DeeObject *value = DeeCachedDict_GetItemNRStringHashDef(self, key, hash, ITER_DONE);
-	if (value == ITER_DONE)
-		return -2;
-	if (!value) {
-		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError))
-			return -2;
-		return -1;
+		/* Check if the CachedDict was modified. */
+		if (self->cd_elem != vector ||
+		    self->cd_mask != mask ||
+		    item->cdi_key != item_key)
+			goto restart;
 	}
-	return 1;
+	DeeCachedDict_LockEndRead(self);
+	return 0;
+err:
+	return -1;
 }
 
-INTDEF WUNUSED NONNULL((1, 2)) int DCALL
-DeeCachedDict_BoundItemStringLenHash(DeeCachedDictObject *__restrict self,
-                                     char const *__restrict key, size_t keylen,
-                                     Dee_hash_t hash) {
-	DeeObject *value = DeeCachedDict_GetItemNRStringLenHashDef(self, key, keylen, hash, ITER_DONE);
-	if (value == ITER_DONE)
-		return -2;
-	if (!value) {
-		if (DeeError_Catch(&DeeError_UnboundItem))
-			return 0;
-		if (DeeError_Catch(&DeeError_IndexError) ||
-		    DeeError_Catch(&DeeError_KeyError))
-			return -2;
-		return -1;
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+cdict_iscached_string_hash(DeeCachedDictObject *self, char const *key, Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
+	DeeCachedDict_LockRead(self);
+	perturb = i = DeeCachedDict_HashSt(self, hash);
+	for (;; DeeCachedDict_HashNx(i, perturb)) {
+		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		if (!item->cdi_key)
+			break; /* Not found */
+		if (item->cdi_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->cdi_key))
+			continue;
+		if (!strcmp(DeeString_STR(item->cdi_key), key)) {
+			DeeCachedDict_LockEndRead(self);
+			return true;
+		}
 	}
-	return 1;
+	DeeCachedDict_LockEndRead(self);
+	return false;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) bool DCALL
+cdict_iscached_string_len_hash(DeeCachedDictObject *self, char const *key,
+                               size_t keylen, Dee_hash_t hash) {
+	Dee_hash_t i, perturb;
+	DeeCachedDict_LockRead(self);
+	perturb = i = DeeCachedDict_HashSt(self, hash);
+	for (;; DeeCachedDict_HashNx(i, perturb)) {
+		struct cached_dict_item *item = DeeCachedDict_HashIt(self, i);
+		if (!item->cdi_key)
+			break; /* Not found */
+		if (item->cdi_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->cdi_key))
+			continue;
+		if (DeeString_EqualsBuf(item->cdi_key, key, keylen)) {
+			DeeCachedDict_LockEndRead(self);
+			return true;
+		}
+	}
+	DeeCachedDict_LockEndRead(self);
+	return false;
 }
 
 
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cdict_size(CachedDict *__restrict self) {
+
+INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
+DeeCachedDict_GetItemNRDef(DeeCachedDictObject *self,
+                           DeeObject *key, DeeObject *def) {
+	DeeObject *result = DeeCachedDict_TryGetItemNR(self, key);
+	if (result == ITER_DONE)
+		result = def;
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+DeeCachedDict_GetItemNRStringHashDef(DeeCachedDictObject *__restrict self,
+                                     char const *__restrict key,
+                                     Dee_hash_t hash, DeeObject *def) {
+	DeeObject *result = DeeCachedDict_TryGetItemNRStringHash(self, key, hash);
+	if (result == ITER_DONE)
+		result = def;
+	return result;
+}
+
+INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
+DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *__restrict self,
+                                        char const *__restrict key,
+                                        size_t keylen, Dee_hash_t hash, DeeObject *def) {
+	DeeObject *result = DeeCachedDict_TryGetItemNRStringLenHash(self, key, keylen, hash);
+	if (result == ITER_DONE)
+		result = def;
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+cdict_sizeob(CachedDict *__restrict self) {
 	return DeeObject_SizeObject(self->cd_map);
 }
 
 /* This one's basically your hasitem operator. */
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cdict_contains(CachedDict *self, DeeObject *key) {
-	DeeObject *value = DeeCachedDict_GetItemNRDef(self, key, ITER_DONE);
+	DeeObject *value = DeeCachedDict_TryGetItemNR(self, key);
 	if unlikely(!value)
 		goto err;
 	return_bool_(value != ITER_DONE);
@@ -972,16 +1018,14 @@ cdict_nsi_getdefault(CachedDict *self, DeeObject *key, DeeObject *def) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cdict_getitem(CachedDict *self, DeeObject *key) {
-	DeeObject *result = DeeCachedDict_GetItemNR(self, key);
-	Dee_XIncref(result);
-	return result;
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+cdict_size(CachedDict *__restrict self) {
+	return DeeObject_Size(self->cd_map);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cdict_nsi_getsize(CachedDict *__restrict self) {
-	return DeeObject_Size(self->cd_map);
+cdict_size_fast(CachedDict *__restrict self) {
+	return DeeObject_SizeFast(self->cd_map);
 }
 
 PRIVATE struct type_nsi tpconst cdict_nsi = {
@@ -989,7 +1033,7 @@ PRIVATE struct type_nsi tpconst cdict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cdict_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&cdict_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&cdictiterator_next_key,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&cdictiterator_next_value,
 			/* .nsi_getdefault = */ (dfunptr_t)&cdict_nsi_getdefault,
@@ -1006,7 +1050,7 @@ cdict_printrepr(CachedDict *__restrict self,
 	return DeeFormat_Printf(printer, arg, "CachedDict(%r)", self->cd_map);
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
 cdict_hash(CachedDict *__restrict self) {
 	return DeeObject_Hash(self->cd_map);
 }
@@ -1067,9 +1111,142 @@ cdict_foreach_pair(CachedDict *self, Dee_foreach_pair_t proc, void *arg) {
 	return DeeObject_ForeachPair(self->cd_map, proc, arg);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_getitem(CachedDict *self, DeeObject *key) {
+	DeeObject *result;
+	result = DeeCachedDict_GetItemNR(self, key);
+	Dee_XIncref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_getitem_string_hash(CachedDict *self, char const *key, Dee_hash_t hash) {
+	DeeObject *result;
+	result = DeeCachedDict_GetItemNRStringHash(self, key, hash);
+	Dee_XIncref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_getitem_string_len_hash(CachedDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	DeeObject *result;
+	result = DeeCachedDict_GetItemNRStringLenHash(self, key, keylen, hash);
+	Dee_XIncref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_trygetitem(CachedDict *self, DeeObject *key) {
+	DeeObject *result;
+	result = DeeCachedDict_TryGetItemNR(self, key);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_trygetitem_string_hash(CachedDict *self, char const *key, Dee_hash_t hash) {
+	DeeObject *result;
+	result = DeeCachedDict_TryGetItemNRStringHash(self, key, hash);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cdict_trygetitem_string_len_hash(CachedDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	DeeObject *result;
+	result = DeeCachedDict_TryGetItemNRStringLenHash(self, key, keylen, hash);
+	if (ITER_ISOK(result))
+		Dee_Incref(result);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_bounditem(CachedDict *self, DeeObject *key) {
+	Dee_hash_t hash = DeeObject_Hash(key);
+	int result = cdict_iscached(self, key, hash);
+	if (result == 0) {
+		DREF DeeObject *value;
+		value = DeeObject_GetItem(self->cd_map, key);
+		if (value) {
+			Dee_Incref(key);
+			if (!DeeCachedDict_Remember(self, key, value, hash))
+				goto err;
+			return 1;
+		}
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_IndexError))
+			return -2;
+		if (DeeError_Catch(&DeeError_UnboundItem))
+			return 0;
+		goto err;
+	}
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_bounditem_string_hash(CachedDict *self, char const *key, Dee_hash_t hash) {
+	int result = cdict_iscached_string_hash(self, key, hash);
+	if (result == 0) {
+		DREF DeeObject *value;
+		value = DeeObject_GetItemStringHash(self->cd_map, key, hash);
+		if (value) {
+			DREF DeeObject *keyob;
+			keyob = DeeString_NewWithHash(key, hash);
+			if unlikely(!keyob) {
+				Dee_Decref(value);
+				goto err;
+			}
+			if (!DeeCachedDict_Remember(self, keyob, value, hash))
+				goto err;
+			return 1;
+		}
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_IndexError))
+			return -2;
+		if (DeeError_Catch(&DeeError_UnboundItem))
+			return 0;
+		goto err;
+	}
+	return result;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+cdict_bounditem_string_len_hash(CachedDict *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	int result = cdict_iscached_string_len_hash(self, key, keylen, hash);
+	if (result == 0) {
+		DREF DeeObject *value;
+		value = DeeObject_GetItemStringLenHash(self->cd_map, key, keylen, hash);
+		if (value) {
+			DREF DeeObject *keyob;
+			keyob = DeeString_NewSizedWithHash(key, keylen, hash);
+			if unlikely(!keyob) {
+				Dee_Decref(value);
+				goto err;
+			}
+			if (!DeeCachedDict_Remember(self, keyob, value, hash))
+				goto err;
+			return 1;
+		}
+		if (DeeError_Catch(&DeeError_KeyError) ||
+		    DeeError_Catch(&DeeError_IndexError))
+			return -2;
+		if (DeeError_Catch(&DeeError_UnboundItem))
+			return 0;
+		goto err;
+	}
+	return result;
+err:
+	return -1;
+}
 
 PRIVATE struct type_cmp cdict_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&cdict_hash,
+	/* .tp_hash = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&cdict_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_eq,
 	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_ne,
 	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_lo,
@@ -1079,18 +1256,47 @@ PRIVATE struct type_cmp cdict_cmp = {
 };
 
 PRIVATE struct type_seq cdict_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
-	/* .tp_delitem      = */ NULL,
-	/* .tp_setitem      = */ NULL,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ &cdict_nsi,
-	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cdict_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &cdict_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cdict_foreach,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cdict_foreach_pair,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&cdict_bounditem,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cdict_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&cdict_size_fast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cdict_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cdict_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cdict_getitem_string_hash,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&cdict_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cdict_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cdict_getitem_string_len_hash,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cdict_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

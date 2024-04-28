@@ -1587,7 +1587,7 @@ err_r_base:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF YFIterator *DCALL
-yf_iter_self(YFunction *__restrict self) {
+yf_iter(YFunction *__restrict self) {
 	DREF YFIterator *result;
 	result = DeeGCObject_MALLOC(YFIterator);
 	if unlikely(!result)
@@ -1603,7 +1603,8 @@ err:
 }
 
 PRIVATE struct type_seq yf_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter_self
+	/* .tp_iter = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&yf_iter
+	/* TODO: tp_foreach */
 };
 
 PRIVATE struct type_member tpconst yf_class_members[] = {

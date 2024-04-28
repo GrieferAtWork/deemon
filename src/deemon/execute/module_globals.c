@@ -521,7 +521,7 @@ PRIVATE struct type_seq modexports_seq = {
 	/* .tp_getrange     = */ NULL,
 	/* .tp_delrange     = */ NULL,
 	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ NULL, /* TODO */
+	/* .tp_nsi          = */ NULL,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ NULL, /* TODO */
 };
@@ -690,6 +690,25 @@ err:
 	return -1;
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+modglobals_nsi_bounditem(ModuleGlobals *self, size_t index) {
+	DeeObject *value;
+	DeeModuleObject *mod = self->modglobals_module;
+	if (DeeModule_LockSymbols(mod))
+		goto err;
+	if (index >= mod->mo_globalc) {
+		DeeModule_UnlockSymbols(mod);
+		return -2;
+	}
+	DeeModule_LockRead(mod);
+	value = mod->mo_globalv[index];
+	DeeModule_LockEndRead(mod);
+	DeeModule_UnlockSymbols(mod);
+	return value ? 1 : 0;
+err:
+	return -1;
+}
+
 PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 modglobals_nsi_xchitem(ModuleGlobals *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldvalue;
@@ -757,17 +776,34 @@ PRIVATE struct type_nsi tpconst modglobals_nsi = {
 };
 
 PRIVATE struct type_seq modglobals_seq = {
-	/* .tp_iter     = */ NULL,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &modglobals_nsi,
-	/* .tp_foreach  = */ NULL, /* TODO */
+	/* .tp_iter               = */ NULL,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ NULL,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_nsi                = */ &modglobals_nsi,
+	/* .tp_foreach            = */ NULL, /* TODO */
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_nsi_getsize,
+	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&modglobals_nsi_getsize,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&modglobals_nsi_getitem,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_nsi_delitem,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&modglobals_nsi_setitem,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&modglobals_nsi_bounditem,
+	/* .tp_hasitem_index      = */ NULL,
+	/* .tp_getrange_index     = */ NULL,
+	/* .tp_delrange_index     = */ NULL,
+	/* .tp_setrange_index     = */ NULL,
+	/* .tp_getrange_index_n   = */ NULL,
+	/* .tp_delrange_index_n   = */ NULL,
+	/* .tp_setrange_index_n   = */ NULL,
 };
 
 INTERN DeeTypeObject ModuleGlobals_Type = {

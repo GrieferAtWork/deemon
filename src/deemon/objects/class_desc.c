@@ -308,7 +308,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cot_nsi_getsize(ClassOperatorTable *__restrict self) {
+cot_size(ClassOperatorTable *__restrict self) {
 	Dee_operator_t i;
 	size_t result = 0;
 	ClassDescriptor *desc = self->co_desc;
@@ -319,17 +319,26 @@ cot_nsi_getsize(ClassOperatorTable *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cot_size(ClassOperatorTable *__restrict self) {
-	return DeeInt_NewSize(cot_nsi_getsize(self));
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cot_trygetitem_byid(ClassOperatorTable *self, Dee_operator_t opname) {
+	Dee_operator_t i, perturb;
+	ClassDescriptor *desc = self->co_desc;
+	i = perturb = opname & desc->cd_clsop_mask;
+	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
+		struct class_operator *op;
+		op = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
+		if (op->co_name == (Dee_operator_t)-1)
+			break;
+		if (op->co_name != opname)
+			continue;
+		return DeeInt_NewUInt16(op->co_addr);
+	}
+	return ITER_DONE;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-cot_getitemdef(ClassOperatorTable *__restrict self,
-               DeeObject *__restrict key,
-               DeeObject *__restrict defl) {
-	Dee_operator_t opname, i, perturb;
-	ClassDescriptor *desc = self->co_desc;
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cot_trygetitem(ClassOperatorTable *self, DeeObject *key) {
+	Dee_operator_t opname;
 	if (DeeString_Check(key)) {
 		struct opinfo const *info;
 		/* TODO: Check if the table contains a string-operator "key" */
@@ -341,34 +350,89 @@ cot_getitemdef(ClassOperatorTable *__restrict self,
 		if (DeeObject_AsUInt16(key, &opname))
 			goto err;
 	}
-	i = perturb = opname & desc->cd_clsop_mask;
-	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
-		struct class_operator *op;
-		op = &desc->cd_clsop_list[i & desc->cd_clsop_mask];
-		if (op->co_name == (Dee_operator_t)-1)
-			break;
-		if (op->co_name != opname)
-			continue;
-		return DeeInt_NewUInt16(op->co_addr);
-	}
+	return cot_trygetitem_byid(self, opname);
 nope:
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
+	return ITER_DONE;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cot_getitem(ClassOperatorTable *self,
-            DeeObject *key) {
-	DREF DeeObject *result;
-	result = cot_getitemdef(self, key, ITER_DONE);
+cot_trygetitem_string_hash(ClassOperatorTable *self, char const *key, Dee_hash_t hash) {
+	Dee_operator_t opname;
+	struct opinfo const *info;
+	/* TODO: Check if the table contains a string-operator "key" */
+	(void)hash;
+	info = DeeTypeType_GetOperatorByName(&DeeType_Type, key, (size_t)-1);
+	if (info == NULL)
+		goto nope;
+	opname = info->oi_id;
+	return cot_trygetitem_byid(self, opname);
+nope:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cot_trygetitem_string_len_hash(ClassOperatorTable *self, char const *key,
+                               size_t keylen, Dee_hash_t hash) {
+	Dee_operator_t opname;
+	struct opinfo const *info;
+	/* TODO: Check if the table contains a string-operator "key" */
+	(void)hash;
+	info = DeeTypeType_GetOperatorByNameLen(&DeeType_Type, key, keylen, (size_t)-1);
+	if (info == NULL)
+		goto nope;
+	opname = info->oi_id;
+	return cot_trygetitem_byid(self, opname);
+nope:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+cot_getitemdef(ClassOperatorTable *self,
+               DeeObject *key, DeeObject *defl) {
+	DREF DeeObject *result = cot_trygetitem(self, key);
 	if (result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
-		result = NULL;
+		result = defl;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
 	}
 	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cot_foreach_pair(ClassOperatorTable *self, Dee_foreach_pair_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	ClassDescriptor *desc = self->co_desc;
+	Dee_operator_t i;
+	for (i = 0; i <= desc->cd_clsop_mask; ++i) {
+		struct opinfo const *info;
+		struct class_operator *op;
+		DREF DeeObject *name, *addr;
+		op = &desc->cd_clsop_list[i];
+		if (op->co_name == (Dee_operator_t)-1)
+			break;
+		addr = DeeInt_NEWU(op->co_addr);
+		if unlikely(!addr)
+			goto err;
+		info = DeeTypeType_GetOperatorById(&DeeType_Type, op->co_name);
+		name = info ? DeeString_New(info->oi_sname) : DeeInt_NEWU(op->co_name);
+		if unlikely(!name) {
+			Dee_Decref(addr);
+			goto err;
+		}
+		temp = (*proc)(arg, name, addr);
+		Dee_Decref(addr);
+		Dee_Decref(name);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 PRIVATE struct type_nsi tpconst cot_nsi = {
@@ -376,7 +440,7 @@ PRIVATE struct type_nsi tpconst cot_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cot_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&cot_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&coti_next_key,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&coti_next_value,
 			/* .nsi_getdefault = */ (dfunptr_t)&cot_getitemdef,
@@ -388,16 +452,47 @@ PRIVATE struct type_nsi tpconst cot_nsi = {
 };
 
 PRIVATE struct type_seq cot_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &cot_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cot_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &cot_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cot_foreach_pair,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cot_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&cot_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cot_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cot_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cot_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst cot_class_members[] = {
@@ -616,7 +711,7 @@ cat_bool(ClassAttributeTable *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cat_nsi_getsize(ClassAttributeTable *__restrict self) {
+cat_size(ClassAttributeTable *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i <= self->ca_mask; ++i) {
 		if (self->ca_desc[i].cd_name != NULL)
@@ -625,15 +720,8 @@ cat_nsi_getsize(ClassAttributeTable *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cat_size(ClassAttributeTable *__restrict self) {
-	return DeeInt_NewSize(cat_nsi_getsize(self));
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-cat_getitemdef(ClassAttributeTable *__restrict self,
-               DeeObject *__restrict key,
-               DeeObject *__restrict defl) {
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cat_trygetitem(ClassAttributeTable *self, DeeObject *key) {
 	dhash_t hash, i, perturb;
 	if (DeeObject_AssertTypeExact(key, &DeeString_Type))
 		goto err;
@@ -654,21 +742,84 @@ cat_getitemdef(ClassAttributeTable *__restrict self,
 		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
 	}
 /*nope:*/
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
+	return ITER_DONE;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cat_getitem(ClassAttributeTable *self,
-            DeeObject *key) {
-	DREF DeeObject *result;
-	result = cat_getitemdef(self, key, ITER_DONE);
+cat_trygetitem_string_hash(ClassAttributeTable *self,
+                           char const *key, Dee_hash_t hash) {
+	dhash_t i, perturb;
+	i = perturb = hash & self->ca_mask;
+	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
+		struct class_attribute const *at;
+		at = &self->ca_start[i & self->ca_mask];
+		if (at->ca_name == NULL)
+			break;
+		if (at->ca_hash != hash)
+			continue;
+		if (strcmp(DeeString_STR(at->ca_name), key) != 0)
+			continue;
+		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
+	}
+/*nope:*/
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+cat_trygetitem_string_len_hash(ClassAttributeTable *self, char const *key,
+                               size_t keylen, Dee_hash_t hash) {
+	dhash_t i, perturb;
+	i = perturb = hash & self->ca_mask;
+	for (;; DeeClassDescriptor_CLSOPNEXT(i, perturb)) {
+		struct class_attribute const *at;
+		at = &self->ca_start[i & self->ca_mask];
+		if (at->ca_name == NULL)
+			break;
+		if (at->ca_hash != hash)
+			continue;
+		if (!DeeString_EqualsBuf(at->ca_name, key, keylen))
+			continue;
+		return (DREF DeeObject *)cattr_new(self->ca_desc, at);
+	}
+/*nope:*/
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+cat_foreach_pair(ClassAttributeTable *self, Dee_foreach_pair_t proc, void *arg) {
+	Dee_hash_t i;
+	Dee_ssize_t temp, result = 0;
+	for (i = 0; i <= self->ca_mask; ++i) {
+		struct class_attribute const *at;
+		DREF ClassAttribute *attr;
+		at = &self->ca_start[i];
+		if (at->ca_name == NULL)
+			continue;
+		attr = cattr_new(self->ca_desc, at);
+		if unlikely(!attr)
+			goto err;
+		temp = (*proc)(arg, (DeeObject *)at->ca_name, (DeeObject *)attr);
+		Dee_Decref(attr);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+cat_getitemdef(ClassAttributeTable *self, DeeObject *key, DeeObject *defl) {
+	DREF DeeObject *result = cat_trygetitem(self, key);
 	if (result == ITER_DONE) {
-		err_unknown_key((DeeObject *)self, key);
-		result = NULL;
+		result = defl;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
 	}
 	return result;
 }
@@ -909,7 +1060,7 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&cat_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&cat_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&cati_next_key,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&cati_next_value,
 			/* .nsi_getdefault = */ (dfunptr_t)&cat_getitemdef,
@@ -921,16 +1072,47 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 };
 
 PRIVATE struct type_seq cat_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &cat_nsi
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &cat_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&cat_foreach_pair,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&cat_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&cat_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 INTERN DeeTypeObject ClassAttribute_Type = {
@@ -2269,12 +2451,12 @@ ot_visit(ObjectTable *__restrict self, dvisit_t proc, void *arg) {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-ot_nsi_getsize(ObjectTable *__restrict self) {
+ot_size(ObjectTable *__restrict self) {
 	return self->ot_size;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ot_nsi_getitem(ObjectTable *__restrict self, size_t index) {
+ot_getitem_index(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2295,7 +2477,7 @@ err_index:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
+ot_getitem_index_fast(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->ot_size);
 	Dee_instance_desc_lock_read(self->ot_desc);
@@ -2306,7 +2488,7 @@ ot_nsi_getitem_fast(ObjectTable *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-ot_nsi_delitem(ObjectTable *__restrict self, size_t index) {
+ot_delitem_index(ObjectTable *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2320,9 +2502,8 @@ err_index:
 	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
 }
 
-PRIVATE int DCALL
-ot_nsi_setitem(ObjectTable *__restrict self, size_t index,
-               DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+ot_setitem_index(ObjectTable *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2337,9 +2518,15 @@ err_index:
 	return err_index_out_of_bounds((DeeObject *)self, index, self->ot_size);
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-ot_nsi_xchitem(ObjectTable *__restrict self, size_t index,
-               DeeObject *__restrict newval) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ot_bounditem_index(ObjectTable *__restrict self, size_t index) {
+	if unlikely(index >= self->ot_size)
+		return -2;
+	return atomic_read(&self->ot_desc->id_vtab[index]) ? 1 : 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+ot_nsi_xchitem(ObjectTable *self, size_t index, DeeObject *newval) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->ot_size)
 		goto err_index;
@@ -2361,19 +2548,42 @@ err:
 	return NULL;
 }
 
-
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ot_foreach(ObjectTable *self, Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	for (i = 0; i < self->ot_size; ++i) {
+		DREF DeeObject *elem;
+		Dee_instance_desc_lock_read(self->ot_desc);
+		elem = self->ot_desc->id_vtab[i];
+		if (!elem) {
+			Dee_instance_desc_lock_endread(self->ot_desc);
+			continue;
+		}
+		Dee_Incref(elem);
+		Dee_instance_desc_lock_endread(self->ot_desc);
+		temp = (*proc)(arg, elem);
+		Dee_Decref_unlikely(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+}
 
 PRIVATE struct type_nsi tpconst ot_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&ot_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&ot_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&ot_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&ot_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&ot_nsi_setitem,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&ot_nsi_getitem_fast,
+			/* .nsi_getsize      = */ (dfunptr_t)&ot_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&ot_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&ot_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&ot_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&ot_setitem_index,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&ot_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -2397,16 +2607,47 @@ PRIVATE struct type_nsi tpconst ot_nsi = {
 };
 
 PRIVATE struct type_seq ot_seq = {
-	/* .tp_iter     = */ NULL,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &ot_nsi
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &ot_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ot_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ot_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&ot_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ot_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ot_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ot_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ot_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ot_bounditem_index,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 

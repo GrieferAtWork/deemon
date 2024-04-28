@@ -506,7 +506,7 @@ PRIVATE struct type_member tpconst cat_class_members[] = {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-cat_nsi_getsize(Cat *__restrict self) {
+cat_size(Cat *__restrict self) {
 	size_t i, result = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		size_t temp = DeeObject_Size(DeeTuple_GET(self, i));
@@ -521,19 +521,8 @@ cat_nsi_getsize(Cat *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cat_size(Cat *__restrict self) {
-	size_t result = cat_nsi_getsize(self);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize(result);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cat_contains(Cat *self,
-             DeeObject *search_item) {
+cat_contains(Cat *self, DeeObject *search_item) {
 	size_t i;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		DREF DeeObject *result;
@@ -555,10 +544,12 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-cat_nsi_getitem(Cat *__restrict self, size_t index) {
+cat_getitem_index(Cat *__restrict self, size_t index) {
 	size_t i, temp, sub_index = index, total_length = 0;
 	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
 		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		if unlikely(temp == (size_t)-1)
+			goto err;
 		if (sub_index >= temp) {
 			sub_index -= temp;
 			total_length += temp;
@@ -567,18 +558,64 @@ cat_nsi_getitem(Cat *__restrict self, size_t index) {
 		return DeeObject_GetItemIndex(DeeTuple_GET(self, i), sub_index);
 	}
 	err_index_out_of_bounds((DeeObject *)self, index, total_length);
+err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-cat_getitem(Cat *self,
-            DeeObject *index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return cat_nsi_getitem(self, index);
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cat_delitem_index(Cat *__restrict self, size_t index) {
+	size_t i, temp, sub_index = index, total_length = 0;
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		if unlikely(temp == (size_t)-1)
+			goto err;
+		if (sub_index >= temp) {
+			sub_index -= temp;
+			total_length += temp;
+			continue;
+		}
+		return DeeObject_DelItemIndex(DeeTuple_GET(self, i), sub_index);
+	}
+	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
 err:
-	return NULL;
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+cat_setitem_index(Cat *self, size_t index, DeeObject *value) {
+	size_t i, temp, sub_index = index, total_length = 0;
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		if unlikely(temp == (size_t)-1)
+			goto err;
+		if (sub_index >= temp) {
+			sub_index -= temp;
+			total_length += temp;
+			continue;
+		}
+		return DeeObject_SetItemIndex(DeeTuple_GET(self, i), sub_index, value);
+	}
+	return err_index_out_of_bounds((DeeObject *)self, index, total_length);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+cat_bounditem_index(Cat *self, size_t index) {
+	size_t i, temp, sub_index = index;
+	for (i = 0; i < DeeTuple_SIZE(self); ++i) {
+		temp = DeeObject_Size(DeeTuple_GET(self, i));
+		if unlikely(temp == (size_t)-1)
+			goto err;
+		if (sub_index >= temp) {
+			sub_index -= temp;
+			continue;
+		}
+		return DeeObject_BoundItemIndex(DeeTuple_GET(self, i), sub_index);
+	}
+	return -2;
+err:
+	return -1;
 }
 
 PRIVATE size_t DCALL
@@ -748,9 +785,9 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&cat_nsi_getsize,
+			/* .nsi_getsize      = */ (dfunptr_t)&cat_size,
 			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getitem      = */ (dfunptr_t)&cat_nsi_getitem,
+			/* .nsi_getitem      = */ (dfunptr_t)&cat_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
@@ -777,17 +814,28 @@ PRIVATE struct type_nsi tpconst cat_nsi = {
 };
 
 PRIVATE struct type_seq cat_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &cat_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
+	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&cat_iter,
+	/* .tp_sizeob             = */ NULL,
+	/* .tp_contains           = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&cat_contains,
+	/* .tp_getitem            = */ NULL,
+	/* .tp_delitem            = */ NULL,
+	/* .tp_setitem            = */ NULL,
+	/* .tp_getrange           = */ NULL,
+	/* .tp_delrange           = */ NULL,
+	/* .tp_setrange           = */ NULL,
+	/* .tp_nsi                = */ &cat_nsi,
+	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&cat_foreach,
+	/* .tp_foreach_pair       = */ NULL,
+	/* .tp_bounditem          = */ NULL,
+	/* .tp_hasitem            = */ NULL,
+	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&cat_size,
+	/* .tp_size_fast          = */ NULL,
+	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&cat_getitem_index,
+	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))NULL,
+	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&cat_delitem_index,
+	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&cat_setitem_index,
+	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&cat_bounditem_index,
+	/* .tp_hasitem_index      = */ NULL,
 };
 
 
@@ -797,9 +845,8 @@ INTDEF NONNULL((1)) void DCALL tuple_tp_free(void *__restrict ob);
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 cat_bool(Cat *__restrict self) {
 	size_t i;
-	int temp;
 	for (i = 0; i < self->t_size; ++i) {
-		temp = DeeObject_Bool(self->t_elem[i]);
+		int temp = DeeObject_Bool(self->t_elem[i]);
 		if (temp != 0)
 			return temp;
 	}

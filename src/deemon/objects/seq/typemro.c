@@ -537,7 +537,7 @@ typebases_contains(TypeMRO *self, DeeTypeObject *elem) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-typemro_nsi_getsize(TypeMRO *__restrict self) {
+typemro_size(TypeMRO *__restrict self) {
 	size_t result = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -549,7 +549,7 @@ typemro_nsi_getsize(TypeMRO *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-typebases_nsi_getsize(TypeMRO *__restrict self) {
+typebases_size(TypeMRO *__restrict self) {
 	size_t result = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -557,16 +557,6 @@ typebases_nsi_getsize(TypeMRO *__restrict self) {
 	while ((iter = DeeTypeMRO_NextDirectBase(&mro, iter)) != NULL)
 		++result;
 	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-typemro_size(TypeMRO *__restrict self) {
-	return DeeInt_NewSize(typemro_nsi_getsize(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-typebases_size(TypeMRO *__restrict self) {
-	return DeeInt_NewSize(typebases_nsi_getsize(self));
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
@@ -722,7 +712,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typemro_nsi_getitem(TypeMRO *__restrict self, size_t index) {
+typemro_getitem_index(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -737,7 +727,7 @@ typemro_nsi_getitem(TypeMRO *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typemro_nsi_getitem_fast(TypeMRO *__restrict self, size_t index) {
+typemro_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -754,7 +744,7 @@ typemro_nsi_getitem_fast(TypeMRO *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typebases_nsi_getitem(TypeMRO *__restrict self, size_t index) {
+typebases_getitem_index(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -769,7 +759,7 @@ typebases_nsi_getitem(TypeMRO *__restrict self, size_t index) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTypeObject *DCALL
-typebases_nsi_getitem_fast(TypeMRO *__restrict self, size_t index) {
+typebases_getitem_index_fast(TypeMRO *__restrict self, size_t index) {
 	size_t position = 0;
 	DeeTypeMRO mro;
 	DeeTypeObject *iter;
@@ -823,12 +813,12 @@ PRIVATE struct type_nsi tpconst typemro_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&typemro_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&typemro_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&typemro_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&typemro_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&typemro_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&typemro_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&typemro_nsi_getitem_fast,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&typemro_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -856,12 +846,12 @@ PRIVATE struct type_nsi tpconst typebases_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&typebases_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&typebases_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&typebases_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&typebases_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&typebases_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&typebases_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&typebases_nsi_getitem_fast,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&typebases_getitem_index_fast,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -885,31 +875,91 @@ PRIVATE struct type_nsi tpconst typebases_nsi = {
 };
 
 PRIVATE struct type_seq typemro_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typemro_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typemro_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemro_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &typemro_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typemro_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typemro_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemro_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &typemro_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typemro_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&typemro_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&typemro_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typemro_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typemro_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq typebases_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typebases_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typebases_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebases_contains,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &typebases_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typebases_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&typebases_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebases_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &typebases_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&typebases_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&typebases_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&typebases_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typebases_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&typebases_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 #define typebases_members typemro_members

@@ -22,6 +22,7 @@
 
 #include "subrange.h"
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 #include <deemon/alloc.h>
 #include <deemon/api.h>
 #include <deemon/arg.h>
@@ -919,5 +920,6 @@ INTERN DeeTypeObject SeqSubRangeN_Type = {
 
 
 DECL_END
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 #endif /* !GUARD_DEEMON_OBJECTS_SEQ_SUBRANGE_C */

@@ -91,8 +91,8 @@ DFUNDEF WUNUSED ATTR_INS(4, 3) NONNULL((1, 2)) DREF DeeObject *DCALL DeeObject_T
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TThisCall(DeeTypeObject *tp_self, DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv);
 DFUNDEF WUNUSED ATTR_INS(5, 4) NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeObject_TThisCallKw(DeeTypeObject *tp_self, DeeObject *self, DeeObject *this_arg, size_t argc, DeeObject *const *argv, DeeObject *kw);
 DFUNDEF WUNUSED /*ATTR_PURE*/ NONNULL((1, 2)) Dee_hash_t (DCALL DeeObject_THash)(DeeTypeObject *tp_self, DeeObject *self);
-DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet32Bit)(DeeTypeObject *tp_self, DeeObject *__restrict self, int32_t *__restrict result);
-DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet64Bit)(DeeTypeObject *tp_self, DeeObject *__restrict self, int64_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet32Bit)(DeeTypeObject *tp_self, DeeObject *self, int32_t *__restrict result);
+DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TGet64Bit)(DeeTypeObject *tp_self, DeeObject *self, int64_t *__restrict result);
 DFUNDEF WUNUSED ATTR_OUT(3) NONNULL((1, 2)) int (DCALL DeeObject_TAsDouble)(DeeTypeObject *tp_self, DeeObject *self, double *__restrict result);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TInt)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TInv)(DeeTypeObject *tp_self, DeeObject *self);
@@ -128,18 +128,58 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareLoOb
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareLeObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareGrObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareGeObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TSizeObject)(DeeTypeObject *tp_self, DeeObject *__restrict self);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TContainsObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TSetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TGetRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TDelRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end);
-DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int (DCALL DeeObject_TSetRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *values);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrint)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrintRepr)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeach)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeachPair)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIter)(DeeTypeObject *tp_self, DeeObject *self);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TIterNext)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TSizeObject)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TSize)(DeeTypeObject *tp_self, DeeObject *self); /* @return: (size_t)-1: Error */
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeObject_TSizeFast)(DeeTypeObject *tp_self, DeeObject *self); /* @return: (size_t)-1: Fast size cannot be determined */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TContainsObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TGetItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TTryGetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *key); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TTryGetItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TTryGetItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TDelItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TSetItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TSetItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeObject_TSetItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 6)) int (DCALL DeeObject_TSetItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *(DCALL DeeObject_TGetRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetRangeBeginIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, DeeObject *end);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetRangeEndIndex)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TGetRangeIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TGetRangeIndexN)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TDelRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelRangeBeginIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, DeeObject *end);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelRangeEndIndex)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TDelRangeIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TDelRangeIndexN)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 4, 5)) int (DCALL DeeObject_TSetRange)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, DeeObject *end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeObject_TSetRangeBeginIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, DeeObject *end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 2, 3, 5)) int (DCALL DeeObject_TSetRangeEndIndex)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *begin, Dee_ssize_t end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 2, 5)) int (DCALL DeeObject_TSetRangeIndex)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, Dee_ssize_t end, DeeObject *values);
+DFUNDEF WUNUSED NONNULL((1, 2, 4)) int (DCALL DeeObject_TSetRangeIndexN)(DeeTypeObject *tp_self, DeeObject *self, Dee_ssize_t begin, DeeObject *values);
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_TBoundItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TBoundItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_THasItemIndex)(DeeTypeObject *tp_self, DeeObject *self, size_t index);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, Dee_hash_t hash);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_THasItemStringLenHash)(DeeTypeObject *tp_self, DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
+
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrint)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TPrintRepr)(DeeTypeObject *tp_self, DeeObject *self, Dee_formatprinter_t printer, void *arg);
+
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TGetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TDelAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr);
 DFUNDEF WUNUSED NONNULL((1, 2, 3, 4)) int (DCALL DeeObject_TSetAttr)(DeeTypeObject *tp_self, DeeObject *self, /*String*/ DeeObject *attr, DeeObject *value);
@@ -180,9 +220,9 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) int (DCALL DeeObject_TGetBuf)(DeeTypeObject *
 #define DeeObject_TThisCallTupleKw(tp_self, self, this_arg, args, kw) DeeObject_TThisCallKw(tp_self, self, this_arg, DeeTuple_SIZE(args), DeeTuple_ELEM(args), kw)
 
 /* GC operator invocation. */
-DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TVisit)(DeeTypeObject *tp_self, DeeObject *__restrict self, Dee_visit_t proc, void *arg);
-DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TClear)(DeeTypeObject *tp_self, DeeObject *__restrict self);
-DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TPClear)(DeeTypeObject *tp_self, DeeObject *__restrict self, unsigned int gc_priority);
+DFUNDEF NONNULL((1, 2, 3)) void (DCALL DeeObject_TVisit)(DeeTypeObject *tp_self, DeeObject *self, Dee_visit_t proc, void *arg);
+DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TClear)(DeeTypeObject *tp_self, DeeObject *self);
+DFUNDEF NONNULL((1, 2)) void (DCALL DeeObject_TPClear)(DeeTypeObject *tp_self, DeeObject *self, unsigned int gc_priority);
 
 #ifndef __INTELLISENSE__
 #ifndef __NO_builtin_expect

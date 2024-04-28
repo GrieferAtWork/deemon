@@ -17,43 +17,31 @@
  *    misrepresented as being the original software.                          *
  * 3. This notice may not be removed or altered from any source distribution. *
  */
-#ifndef GUARD_DEEMON_OBJECTS_SEQ_SUBRANGE_H
-#define GUARD_DEEMON_OBJECTS_SEQ_SUBRANGE_H 1
+#ifndef GUARD_DEEMON_OBJECTS_INT_8BIT_H
+#define GUARD_DEEMON_OBJECTS_INT_8BIT_H 1
 
 #include <deemon/api.h>
+#include <deemon/int.h>
 
-#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-#include <deemon/object.h>
+/* Config option to statically pre-allocate all 8-bit integer constants (that is: [-128,255]). */
+#if (!defined(CONFIG_STRING_8BIT_STATIC) && \
+     !defined(CONFIG_STRING_8BIT_NORMAL))
+#ifdef __OPTIMIZE_SIZE__
+#define CONFIG_STRING_8BIT_NORMAL
+#else /* __OPTIMIZE_SIZE__ */
+#define CONFIG_STRING_8BIT_STATIC
+#endif /* !__OPTIMIZE_SIZE__ */
+#endif /* ... */
+
 
 DECL_BEGIN
 
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *sr_iter;  /* [1..1][const] Underlying iterator. */
-	size_t          sr_size;  /* Max remaining number of items to-be yielded. */
-	size_t          sr_start; /* Starting index of the original sub-range. */
-} SubRangeIterator;
-#define READ_SIZE(x) atomic_read(&(x)->sr_size)
-
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *sr_seq;   /* [1..1][const] Underlying sequence. */
-	size_t          sr_start; /* [const] Amount of items discarded at the beginning. */
-	size_t          sr_size;  /* [const] Max amount of items yielded. */
-} SubRange;
-
-typedef struct {
-	OBJECT_HEAD
-	DREF DeeObject *sr_seq;   /* [1..1][const] Underlying sequence. */
-	size_t          sr_start; /* [const] Amount of items discarded at the beginning. */
-} SubRangeN;
-
-INTDEF DeeTypeObject SeqSubRangeIterator_Type;
-INTDEF DeeTypeObject SeqSubRange_Type;
-INTDEF DeeTypeObject SeqSubRangeN_Type;
+#undef DeeInt_8bit
+#ifdef CONFIG_STRING_8BIT_STATIC
+INTDEF struct _Dee_int_1digit_object DeeInt_8bit_blob[128 + 256];
+#define DeeInt_8bit (DeeInt_8bit_blob + 128)
+#endif /* CONFIG_STRING_8BIT_STATIC */
 
 DECL_END
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
-#endif /* !GUARD_DEEMON_OBJECTS_SEQ_SUBRANGE_H */
+#endif /* !GUARD_DEEMON_OBJECTS_INT_8BIT_H */

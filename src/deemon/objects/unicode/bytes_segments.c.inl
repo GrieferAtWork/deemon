@@ -30,6 +30,8 @@
 #include <deemon/string.h>
 #include <deemon/util/atomic.h>
 
+#include <hybrid/align.h>
+
 #include "../../runtime/strings.h"
 
 DECL_BEGIN
@@ -249,17 +251,16 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 bseg_size(BytesSegments *__restrict self) {
-	size_t result = DeeBytes_SIZE(self->b_str);
-	result += (self->b_siz - 1);
-	result /= self->b_siz;
-	return DeeInt_NewSize(result);
+	size_t length;
+	length = DeeBytes_SIZE(self->b_str);
+	length = CEILDIV(length, self->b_siz);
+	return length;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bseg_contains(BytesSegments *self,
-              DeeObject *other) {
+bseg_contains(BytesSegments *self, DeeObject *other) {
 	byte_t *other_data, *iter, *end;
 	DeeBytesObject *str;
 	size_t other_size;
@@ -301,32 +302,90 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeBytesObject *DCALL
-bseg_get(BytesSegments *__restrict self,
-         DeeObject *__restrict index_ob) {
-	size_t index, length;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
+PRIVATE WUNUSED NONNULL((1)) DREF DeeBytesObject *DCALL
+bseg_getitem_index(BytesSegments *__restrict self, size_t index) {
+	size_t length;
 	length = DeeBytes_SIZE(self->b_str);
-	length += (self->b_siz - 1);
-	length /= self->b_siz;
-	if unlikely(index > length)
+	length = CEILDIV(length, self->b_siz);
+	if unlikely(index >= length)
 		goto err_index;
 	index *= self->b_siz;
 	return bytes_getsubstr(self->b_str, index, index + self->b_siz);
 err_index:
 	err_index_out_of_bounds((DeeObject *)self, index, length);
-err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+bseg_foreach(BytesSegments *__restrict self, Dee_foreach_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i, length;
+	length = DeeBytes_SIZE(self->b_str);
+	length = CEILDIV(length, self->b_siz);
+	for (i = 0; i < length; ++i) {
+		DREF Bytes *elem;
+		size_t start = i * self->b_siz;
+		size_t end   = start + self->b_siz;
+		elem = bytes_getsubstr(self->b_str, start, end);
+		if unlikely(!elem)
+			goto err;
+		temp = (*proc)(arg, (DeeObject *)elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
 }
 
 
 
 PRIVATE struct type_seq bseg_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bseg_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bseg_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bseg_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bseg_get
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bseg_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bseg_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bseg_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bseg_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&bseg_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bseg_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 

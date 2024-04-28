@@ -58,12 +58,12 @@ rg_bool(ReGroups *__restrict UNUSED(self)) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-rg_nsi_getsize(ReGroups *__restrict self) {
+rg_size(ReGroups *__restrict self) {
 	return self->rg_ngroups;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rg_nsi_getitem(ReGroups *__restrict self, size_t index) {
+rg_getitem_index(ReGroups *__restrict self, size_t index) {
 	if unlikely(index >= self->rg_ngroups)
 		goto err_bounds;
 	return DeeRegexMatch_AsRangeObject(&self->rg_groups[index]);
@@ -77,9 +77,9 @@ PRIVATE struct type_nsi tpconst rg_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rg_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rg_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&rg_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&rg_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&rg_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&rg_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
@@ -102,6 +102,50 @@ PRIVATE struct type_nsi tpconst rg_nsi = {
 			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
+};
+
+PRIVATE struct type_seq rg_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rg_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rg_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rg_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rg_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED DREF ReSubStrings *DCALL rss_ctor(void) {
@@ -130,42 +174,30 @@ rss_bool(ReSubStrings *__restrict self) {
 	return self->rss_ngroups != 0;
 }
 
-#define rss_nsi_getsize rg_nsi_getsize
-#define rsb_nsi_getsize rg_nsi_getsize
+#define rss_size rg_size
+#define rsb_nsi_getsize rg_size
 #define rss_size rg_size
 #define rsb_size rg_size
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rss_nsi_getitem_fast(ReSubStrings *__restrict self, size_t index) {
-	ASSERT(index < self->rss_ngroups);
+rss_getitem_index(ReSubStrings *__restrict self, size_t index) {
+	if unlikely(index >= self->rss_ngroups)
+		goto err_bounds;
 	return DeeRegexMatch_AsSubString(&self->rss_groups[index],
 	                                 self->rss_baseown,
 	                                 self->rss_baseptr);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rsb_nsi_getitem_fast(ReSubBytes *__restrict self, size_t index) {
-	ASSERT(index < self->rss_ngroups);
-	return DeeRegexMatch_AsSubBytes(&self->rss_groups[index],
-	                                self->rss_baseown,
-	                                self->rss_baseptr);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rss_nsi_getitem(ReSubStrings *__restrict self, size_t index) {
-	if unlikely(index >= self->rss_ngroups)
-		goto err_bounds;
-	return rss_nsi_getitem_fast(self, index);
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, self->rss_ngroups);
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-rsb_nsi_getitem(ReSubBytes *__restrict self, size_t index) {
+rsb_getitem_index(ReSubBytes *__restrict self, size_t index) {
 	if unlikely(index >= self->rss_ngroups)
 		goto err_bounds;
-	return rsb_nsi_getitem_fast(self, index);
+	return DeeRegexMatch_AsSubBytes(&self->rss_groups[index],
+	                                self->rss_baseown,
+	                                self->rss_baseptr);
 err_bounds:
 	err_index_out_of_bounds((DeeObject *)self, index, self->rss_ngroups);
 	return NULL;
@@ -176,12 +208,12 @@ PRIVATE struct type_nsi tpconst rss_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&rss_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&rss_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&rss_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&rss_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&rss_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&rss_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&rss_nsi_getitem_fast,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -201,6 +233,50 @@ PRIVATE struct type_nsi tpconst rss_nsi = {
 			/* .nsi_removeall    = */ (dfunptr_t)NULL
 		}
 	}
+};
+
+PRIVATE struct type_seq rss_seq = {
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rss_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rss_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rss_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rss_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_nsi tpconst rsb_nsi = {
@@ -210,10 +286,10 @@ PRIVATE struct type_nsi tpconst rsb_nsi = {
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&rsb_nsi_getsize,
 			/* .nsi_getsize_fast = */ (dfunptr_t)&rsb_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&rsb_nsi_getitem,
+			/* .nsi_getitem      = */ (dfunptr_t)&rsb_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&rsb_nsi_getitem_fast,
+			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
@@ -235,61 +311,48 @@ PRIVATE struct type_nsi tpconst rsb_nsi = {
 	}
 };
 
-PRIVATE struct type_seq rg_seq = {
-	/* .tp_iter               = */ NULL,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ NULL,
-	/* .tp_getitem            = */ NULL,
-	/* .tp_delitem            = */ NULL,
-	/* .tp_setitem            = */ NULL,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ &rg_nsi,
-	/* .tp_foreach            = */ NULL,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&rg_nsi_getsize,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&rg_nsi_getsize,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rg_nsi_getitem,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ NULL,
-	/* .tp_setitem_index      = */ NULL,
-	/* .tp_bounditem_index    = */ NULL,
-	/* .tp_hasitem_index      = */ NULL,
-	/* .tp_getrange_index     = */ NULL,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ NULL,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
-};
-
-PRIVATE struct type_seq rss_seq = {
-	/* .tp_iter     = */ NULL,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rss_nsi
-};
-
 PRIVATE struct type_seq rsb_seq = {
-	/* .tp_iter     = */ NULL,
-	/* .tp_sizeob   = */ NULL,
-	/* .tp_contains = */ NULL,
-	/* .tp_getitem  = */ NULL,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rsb_nsi
+	/* .tp_iter                       = */ NULL,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &rsb_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&rsb_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&rsb_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&rsb_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst rss_members[] = {

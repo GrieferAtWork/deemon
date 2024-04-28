@@ -46,6 +46,12 @@
 #include "../runtime/runtime_error.h"
 #include "../runtime/strings.h"
 
+#ifdef __OPTIMIZE_SIZE__
+#define NULL_IF_Os(v) NULL
+#else /* __OPTIMIZE_SIZE__ */
+#define NULL_IF_Os(v) v
+#endif /* !__OPTIMIZE_SIZE__ */
+
 DECL_BEGIN
 
 #ifndef CONFIG_HAVE_strcmp
@@ -889,6 +895,161 @@ DeeDict_GetItemStringLenHash(DeeObject *__restrict self,
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_trygetitem_string_hash(DeeObject *self, char const *key, dhash_t hash) {
+	Dict *me = (Dict *)self;
+	DREF DeeObject *result;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
+			result = item->di_value;
+			Dee_Incref(result);
+			DeeDict_LockEndRead(me);
+			return result;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_trygetitem_string_len_hash(DeeObject *self, char const *key,
+                                size_t keylen, dhash_t hash) {
+	Dict *me = (Dict *)self;
+	DREF DeeObject *result;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
+			result = item->di_value;
+			Dee_Incref(result);
+			DeeDict_LockEndRead(me);
+			return result;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return ITER_DONE;
+}
+
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_hasitem_string_hash(DeeObject *__restrict self,
+                         char const *__restrict key,
+                         dhash_t hash) {
+	Dict *me = (Dict *)self;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
+			DeeDict_LockEndRead(me);
+			return 1;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_hasitem_string_len_hash(DeeObject *__restrict self,
+                             char const *__restrict key,
+                             size_t keylen, dhash_t hash) {
+	Dict *me = (Dict *)self;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
+			DeeDict_LockEndRead(me);
+			return 1;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return 0;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_bounditem_string_hash(DeeObject *__restrict self,
+                           char const *__restrict key,
+                           dhash_t hash) {
+	Dict *me = (Dict *)self;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (strcmp(DeeString_STR(item->di_key), key) == 0) {
+			DeeDict_LockEndRead(me);
+			return 1;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return -2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_bounditem_string_len_hash(DeeObject *__restrict self,
+                               char const *__restrict key,
+                               size_t keylen, dhash_t hash) {
+	Dict *me = (Dict *)self;
+	dhash_t i, perturb;
+	DeeDict_LockRead(me);
+	perturb = i = DeeDict_HashSt(me, hash);
+	for (;; DeeDict_HashNx(i, perturb)) {
+		struct dict_item *item = DeeDict_HashIt(me, i);
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (!DeeString_Check(item->di_key))
+			continue; /* NOTE: This also captures `dummy' */
+		if (DeeString_EqualsBuf(item->di_key, key, keylen)) {
+			DeeDict_LockEndRead(me);
+			return 1;
+		}
+	}
+	DeeDict_LockEndRead(me);
+	return -2;
+}
+
 INTERN WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *DCALL
 DeeDict_GetItemStringHashDef(DeeObject *self,
                              char const *__restrict key,
@@ -1304,12 +1465,6 @@ collect_memory:
 	return -1;
 }
 
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-dict_size(Dict *__restrict self) {
-	return DeeInt_NewSize(atomic_read(&self->d_used));
-}
-
 /* This one's basically your hasitem operator. */
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 dict_contains(Dict *self, DeeObject *key) {
@@ -1407,6 +1562,150 @@ restart:
 err:
 	return NULL;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+dict_trygetitem(Dict *self, DeeObject *key) {
+	size_t mask;
+	struct dict_item *vector;
+	dhash_t i, perturb;
+	int error;
+	dhash_t hash = DeeObject_Hash(key);
+	DeeDict_LockRead(self);
+restart:
+	vector  = self->d_elem;
+	mask    = self->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		DREF DeeObject *item_key, *item_value;
+		struct dict_item *item = &vector[i & mask];
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (item->di_key == dummy)
+			continue; /* Dummy key. */
+		item_key   = item->di_key;
+		item_value = item->di_value;
+		Dee_Incref(item_key);
+		Dee_Incref(item_value);
+		DeeDict_LockEndRead(self);
+
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_CompareEq(key, item_key);
+		Dee_Decref(item_key);
+		if (error > 0)
+			return item_value; /* Found the item. */
+		Dee_Decref(item_value);
+		if unlikely(error < 0)
+			goto err; /* Error in compare operator. */
+		DeeDict_LockRead(self);
+
+		/* Check if the Dict was modified. */
+		if (self->d_elem != vector ||
+		    self->d_mask != mask ||
+		    item->di_key != item_key ||
+		    item->di_value != item_value)
+			goto restart;
+	}
+	DeeDict_LockEndRead(self);
+	return ITER_DONE;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_bounditem(Dict *self, DeeObject *key) {
+	size_t mask;
+	struct dict_item *vector;
+	dhash_t i, perturb;
+	int error;
+	dhash_t hash = DeeObject_Hash(key);
+	DeeDict_LockRead(self);
+restart:
+	vector  = self->d_elem;
+	mask    = self->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		DREF DeeObject *item_key;
+		struct dict_item *item = &vector[i & mask];
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (item->di_key == dummy)
+			continue; /* Dummy key. */
+		item_key   = item->di_key;
+		Dee_Incref(item_key);
+		DeeDict_LockEndRead(self);
+
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_CompareEq(key, item_key);
+		Dee_Decref(item_key);
+		if (error > 0)
+			return 1; /* Found the item. */
+		if unlikely(error < 0)
+			goto err; /* Error in compare operator. */
+		DeeDict_LockRead(self);
+
+		/* Check if the Dict was modified. */
+		if (self->d_elem != vector ||
+		    self->d_mask != mask ||
+		    item->di_key != item_key)
+			goto restart;
+	}
+	DeeDict_LockEndRead(self);
+	return -2;
+err:
+	return -1;
+}
+
+#ifndef __OPTIMIZE_SIZE__
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+dict_hasitem(Dict *self, DeeObject *key) {
+	size_t mask;
+	struct dict_item *vector;
+	dhash_t i, perturb;
+	int error;
+	dhash_t hash = DeeObject_Hash(key);
+	DeeDict_LockRead(self);
+restart:
+	vector  = self->d_elem;
+	mask    = self->d_mask;
+	perturb = i = hash & mask;
+	for (;; DeeDict_HashNx(i, perturb)) {
+		DREF DeeObject *item_key;
+		struct dict_item *item = &vector[i & mask];
+		if (!item->di_key)
+			break; /* Not found */
+		if (item->di_hash != hash)
+			continue; /* Non-matching hash */
+		if (item->di_key == dummy)
+			continue; /* Dummy key. */
+		item_key   = item->di_key;
+		Dee_Incref(item_key);
+		DeeDict_LockEndRead(self);
+
+		/* Invoke the compare operator outside of any lock. */
+		error = DeeObject_CompareEq(key, item_key);
+		Dee_Decref(item_key);
+		if (error > 0)
+			return 1; /* Found the item. */
+		if unlikely(error < 0)
+			goto err; /* Error in compare operator. */
+		DeeDict_LockRead(self);
+
+		/* Check if the Dict was modified. */
+		if (self->d_elem != vector ||
+		    self->d_mask != mask ||
+		    item->di_key != item_key)
+			goto restart;
+	}
+	DeeDict_LockEndRead(self);
+	return 0;
+err:
+	return -1;
+}
+#endif /* !__OPTIMIZE_SIZE__ */
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 DeeDict_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
@@ -1866,7 +2165,7 @@ INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL dictiterator_next_value(DeeObj
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-dict_nsi_getsize(Dict *__restrict self) {
+dict_size(Dict *__restrict self) {
 	return atomic_read(&self->d_used);
 }
 
@@ -1902,12 +2201,41 @@ err:
 	return -1;
 }
 
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+dict_foreach(Dict *self, Dee_foreach_pair_t proc, void *arg) {
+	Dee_ssize_t temp, result = 0;
+	size_t i;
+	DeeDict_LockRead(self);
+	for (i = 0; i <= self->d_mask; ++i) {
+		DREF DeeObject *key, *value;
+		key = self->d_elem[i].di_key;
+		if (!key || key == dummy)
+			continue;
+		value = self->d_elem[i].di_value;
+		Dee_Incref(key);
+		Dee_Incref(value);
+		DeeDict_LockEndRead(self);
+		temp = (*proc)(arg, key, value);
+		Dee_Decref_unlikely(value);
+		Dee_Decref_unlikely(key);
+		if unlikely(temp < 0)
+			goto err;
+		result += temp;
+		DeeDict_LockRead(self);
+	}
+	DeeDict_LockEndRead(self);
+	return result;
+err:
+	return temp;
+}
+
+
 PRIVATE struct type_nsi tpconst dict_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&dict_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&dict_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&dictiterator_next_key,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&dictiterator_next_value,
 			/* .nsi_getdefault = */ (dfunptr_t)&DeeDict_GetItemDef,
@@ -1916,6 +2244,50 @@ PRIVATE struct type_nsi tpconst dict_nsi = {
 			/* .nsi_insertnew  = */ (dfunptr_t)&dict_nsi_insertnew
 		}
 	}
+};
+
+PRIVATE struct type_seq dict_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&dict_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &dict_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_bounditem,
+	/* .tp_hasitem                    = */ NULL_IF_Os((int (DCALL *)(DeeObject *, DeeObject *))&dict_hasitem),
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&dict_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&dict_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeDict_GetItemStringHash,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&DeeDict_DelItemStringHash,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&DeeDict_SetItemStringHash,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&dict_bounditem_string_hash,
+	/* .tp_hasitem_string_hash        = */ NULL_IF_Os((int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&dict_hasitem_string_hash),
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&dict_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeDict_GetItemStringLenHash,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&DeeDict_DelItemStringLenHash,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&DeeDict_SetItemStringLenHash,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&dict_bounditem_string_len_hash,
+	/* .tp_hasitem_string_len_hash    = */ NULL_IF_Os((int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&dict_hasitem_string_len_hash),
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -2071,35 +2443,6 @@ again:
 	return result;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-dict_foreach(Dict *self, Dee_foreach_pair_t proc, void *arg) {
-	Dee_ssize_t temp, result = 0;
-	size_t i;
-	DeeDict_LockRead(self);
-	for (i = 0; i <= self->d_mask; ++i) {
-		DREF DeeObject *key, *value;
-		key = self->d_elem[i].di_key;
-		if (!key || key == dummy)
-			continue;
-		value = self->d_elem[i].di_value;
-		Dee_Incref(key);
-		Dee_Incref(value);
-		DeeDict_LockEndRead(self);
-		temp = (*proc)(arg, key, value);
-		Dee_Decref_unlikely(value);
-		Dee_Decref_unlikely(key);
-		if unlikely(temp < 0)
-			goto err;
-		result += temp;
-		DeeDict_LockRead(self);
-	}
-	DeeDict_LockEndRead(self);
-	return result;
-err:
-	return temp;
-}
-
-
 PRIVATE struct type_cmp dict_cmp = {
 	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&dict_hash,
 	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_eq,
@@ -2108,21 +2451,6 @@ PRIVATE struct type_cmp dict_cmp = {
 	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_le,
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_ge,
-};
-
-PRIVATE struct type_seq dict_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&dict_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&dict_getitem,
-	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&dict_delitem,
-	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&dict_setitem,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ &dict_nsi,
-	/* .tp_foreach      = */ NULL,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&dict_foreach,
 };
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL

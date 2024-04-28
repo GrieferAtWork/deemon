@@ -1384,7 +1384,7 @@ list_bool(List *__restrict me) {
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_size(List *__restrict me) {
+list_sizeob(List *__restrict me) {
 	return DeeInt_NewSize(DeeList_SIZE_ATOMIC(me));
 }
 
@@ -1440,7 +1440,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_nsi_getrange(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
+list_getrange_index(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	DREF DeeObject **new_elemv;
@@ -1492,9 +1492,9 @@ err_elemv:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_nsi_getrange_n(List *__restrict me, dssize_t i_begin) {
+list_getrange_index_n(List *__restrict me, dssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return list_nsi_getrange(me, i_begin, SSIZE_MAX);
+	return list_getrange_index(me, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject **new_elemv;
 	DREF List *result;
@@ -1551,10 +1551,10 @@ list_getrange(List *me, DeeObject *begin, DeeObject *end) {
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return list_nsi_getrange_n(me, i_begin);
+		return list_getrange_index_n(me, i_begin);
 	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return list_nsi_getrange(me, i_begin, i_end);
+	return list_getrange_index(me, i_begin, i_end);
 err:
 	return NULL;
 }
@@ -1596,7 +1596,7 @@ err:
 	return -1;
 }
 
-INTERN WUNUSED NONNULL((1, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
 list_setitem_index(List *me, size_t index, DeeObject *value) {
 	DREF DeeObject *old_item;
 	DeeList_LockWrite(me);
@@ -1617,6 +1617,16 @@ unlock_and_err_index:
 		                               index,
 		                               length);
 	}
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+list_bounditem_index(List *me, size_t index) {
+	return index < DeeList_SIZE_ATOMIC(me) ? 1 : -2;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+list_hasitem_index(List *me, size_t index) {
+	return index < DeeList_SIZE_ATOMIC(me) ? 1 : 0;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
@@ -1644,7 +1654,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_nsi_delrange(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
+list_delrange_index(List *__restrict me, dssize_t i_begin, dssize_t i_end) {
 	DREF DeeObject **delobv;
 	struct Dee_seq_range range;
 	size_t range_size;
@@ -1688,9 +1698,9 @@ done_noop:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-list_nsi_delrange_n(List *__restrict me, dssize_t i_begin) {
+list_delrange_index_n(List *__restrict me, dssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return list_nsi_delrange(me, i_begin, SSIZE_MAX);
+	return list_delrange_index(me, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject **delobv;
 	size_t start, range_size;
@@ -1736,7 +1746,7 @@ list_setrange_fast(List *me, dssize_t i_begin, dssize_t i_end,
 	struct Dee_seq_range range;
 	size_t range_size, i;
 	if unlikely(!insert_count)
-		return list_nsi_delrange(me, i_begin, i_end);
+		return list_delrange_index(me, i_begin, i_end);
 again:
 	DeeList_LockWrite(me);
 	DeeSeqRange_Clamp(&range, i_begin, i_end, me->l_list.ol_elemc);
@@ -1912,7 +1922,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-list_nsi_setrange(List *me, dssize_t i_begin,
+list_setrange_index(List *me, dssize_t i_begin,
                   dssize_t i_end, DeeObject *items) {
 	DREF DeeObject **delobv, **insertv;
 	size_t range_size, insert_count;
@@ -1927,7 +1937,7 @@ list_nsi_setrange(List *me, dssize_t i_begin,
 		goto err;
 	if unlikely(!insert_count) {
 		Dee_Free(insertv);
-		return list_nsi_delrange(me, i_begin, i_end);
+		return list_delrange_index(me, i_begin, i_end);
 	}
 again:
 	DeeList_LockWrite(me);
@@ -2037,9 +2047,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-list_nsi_setrange_n(List *me, dssize_t i_begin, DeeObject *items) {
+list_setrange_index_n(List *me, dssize_t i_begin, DeeObject *items) {
 #ifdef __OPTIMIZE_SIZE__
-	return list_nsi_setrange(me, i_begin, SSIZE_MAX, items);
+	return list_setrange_index(me, i_begin, SSIZE_MAX, items);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF DeeObject **delobv, **insertv;
 	size_t range_size, insert_count, start;
@@ -2048,7 +2058,7 @@ list_nsi_setrange_n(List *me, dssize_t i_begin, DeeObject *items) {
 	insert_count = DeeFastSeq_GetSizeNB(items);
 	if (insert_count != DEE_FASTSEQ_NOTFAST) {
 		if (!insert_count)
-			return list_nsi_delrange_n(me, i_begin);
+			return list_delrange_index_n(me, i_begin);
 		return list_setrange_fast_n(me, i_begin, items, insert_count);
 	}
 	insertv = DeeSeq_AsHeapVector(items, &insert_count);
@@ -2056,7 +2066,7 @@ list_nsi_setrange_n(List *me, dssize_t i_begin, DeeObject *items) {
 		goto err;
 	if unlikely(!insert_count) {
 		Dee_Free(insertv);
-		return list_nsi_delrange_n(me, i_begin);
+		return list_delrange_index_n(me, i_begin);
 	}
 again:
 	DeeList_LockWrite(me);
@@ -2166,10 +2176,10 @@ list_delrange(List *me, DeeObject *begin, DeeObject *end) {
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return list_nsi_delrange_n(me, i_begin);
+		return list_delrange_index_n(me, i_begin);
 	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return list_nsi_delrange(me, i_begin, i_end);
+	return list_delrange_index(me, i_begin, i_end);
 err:
 	return -1;
 }
@@ -2181,22 +2191,22 @@ list_setrange(List *me, DeeObject *begin,
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return list_nsi_setrange_n(me, i_begin, items);
+		return list_setrange_index_n(me, i_begin, items);
 	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return list_nsi_setrange(me, i_begin, i_end, items);
+	return list_setrange_index(me, i_begin, i_end, items);
 err:
 	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-list_nsi_getsize(List *__restrict me) {
+list_size(List *__restrict me) {
 	ASSERT(me->l_list.ol_elemc != (size_t)-1);
 	return atomic_read(&me->l_list.ol_elemc);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-list_nsi_getitem(List *__restrict me, size_t index) {
+list_getitem_index(List *__restrict me, size_t index) {
 	DREF DeeObject *result;
 	DeeList_LockRead(me);
 	if unlikely(index >= DeeList_SIZE(me)) {
@@ -2318,18 +2328,18 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&list_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&list_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&list_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&list_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&list_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&list_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)&list_delitem_index,
 			/* .nsi_setitem      = */ (dfunptr_t)&list_setitem_index,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&list_nsi_getrange,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&list_nsi_getrange_n,
-			/* .nsi_delrange     = */ (dfunptr_t)&list_nsi_delrange,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&list_nsi_delrange_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&list_nsi_setrange,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&list_nsi_setrange_n,
+			/* .nsi_getrange     = */ (dfunptr_t)&list_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&list_getrange_index_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&list_delrange_index,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&list_delrange_index_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&list_setrange_index,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&list_setrange_index_n,
 			/* .nsi_find         = */ (dfunptr_t)&list_nsi_find,
 			/* .nsi_rfind        = */ (dfunptr_t)&list_nsi_rfind,
 			/* .nsi_xch          = */ (dfunptr_t)&list_nsi_xch,
@@ -2347,17 +2357,47 @@ PRIVATE struct type_nsi tpconst list_nsi = {
 };
 
 PRIVATE struct type_seq list_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_getitem,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_setitem,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
-	/* .tp_nsi      = */ &list_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&list_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&list_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&list_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_setitem,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_getrange,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&list_delrange,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&list_setrange,
+	/* .tp_nsi                        = */ &list_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&list_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL, /* default */
+	/* .tp_hasitem                    = */ NULL, /* default */
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&list_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&list_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&list_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&list_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&list_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&list_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&list_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&list_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&list_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&list_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&list_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&list_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&list_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 

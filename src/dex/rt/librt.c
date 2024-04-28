@@ -87,6 +87,112 @@ DECL_BEGIN
  * required to include the `_np' suffix normally required to indicate non-portable. */
 
 
+/*[[[deemon
+import define_Dee_HashStr from rt.gen.hash;
+print define_Dee_HashStr("Attribute");
+print define_Dee_HashStr("AttributeTable");
+print define_Dee_HashStr("Items");
+print define_Dee_HashStr("ObjectTable");
+print define_Dee_HashStr("OperatorTable");
+print define_Dee_HashStr("Proxy");
+print define_Dee_HashStr("Values");
+print define_Dee_HashStr("__args__");
+print define_Dee_HashStr("__bases__");
+print define_Dee_HashStr("__exports__");
+print define_Dee_HashStr("__globals__");
+print define_Dee_HashStr("__kwds__");
+print define_Dee_HashStr("__locals__");
+print define_Dee_HashStr("__mro__");
+print define_Dee_HashStr("__operators__");
+print define_Dee_HashStr("__stack__");
+print define_Dee_HashStr("__statics__");
+print define_Dee_HashStr("__symbols__");
+print define_Dee_HashStr("byattr");
+print define_Dee_HashStr("byhash");
+print define_Dee_HashStr("casefindall");
+print define_Dee_HashStr("casesplit");
+print define_Dee_HashStr("classes");
+print define_Dee_HashStr("combinations");
+print define_Dee_HashStr("each");
+print define_Dee_HashStr("filter");
+print define_Dee_HashStr("findall");
+print define_Dee_HashStr("future");
+print define_Dee_HashStr("ids");
+print define_Dee_HashStr("locateall");
+print define_Dee_HashStr("ordinals");
+print define_Dee_HashStr("pending");
+print define_Dee_HashStr("permutations");
+print define_Dee_HashStr("reachable");
+print define_Dee_HashStr("refindall");
+print define_Dee_HashStr("regfindall");
+print define_Dee_HashStr("regmatch");
+print define_Dee_HashStr("relocateall");
+print define_Dee_HashStr("repeat");
+print define_Dee_HashStr("repeatcombinations");
+print define_Dee_HashStr("repeatseq");
+print define_Dee_HashStr("rescanf");
+print define_Dee_HashStr("resplit");
+print define_Dee_HashStr("scanf");
+print define_Dee_HashStr("segments");
+print define_Dee_HashStr("seq");
+print define_Dee_HashStr("split");
+print define_Dee_HashStr("splitlines");
+print define_Dee_HashStr("transform");
+print define_Dee_HashStr("types");
+]]]*/
+#define Dee_HashStr__Attribute _Dee_HashSelectC(0xa08b731, 0x2e763a5308721ff3)
+#define Dee_HashStr__AttributeTable _Dee_HashSelectC(0xb3fdb6eb, 0x2abf3f78af71dee0)
+#define Dee_HashStr__Items _Dee_HashSelectC(0x58117411, 0x947064e89df3b8bd)
+#define Dee_HashStr__ObjectTable _Dee_HashSelectC(0xc5d943d2, 0x8cda148232a1cdb2)
+#define Dee_HashStr__OperatorTable _Dee_HashSelectC(0xee6c4bef, 0x7987fd5ae34b3d62)
+#define Dee_HashStr__Proxy _Dee_HashSelectC(0x1e08cc78, 0x57cf9ad5a4dae6)
+#define Dee_HashStr__Values _Dee_HashSelectC(0x47fcf975, 0x323bdee84d34e652)
+#define Dee_HashStr____args__ _Dee_HashSelectC(0x938e1f4c, 0x78969e2a67f8471d)
+#define Dee_HashStr____bases__ _Dee_HashSelectC(0xff4ac0d2, 0x56bdc053fa64e4c9)
+#define Dee_HashStr____exports__ _Dee_HashSelectC(0x1d7df2db, 0x304ed10433cd0d26)
+#define Dee_HashStr____globals__ _Dee_HashSelectC(0x6bd07fac, 0x3114153efd2ae18d)
+#define Dee_HashStr____kwds__ _Dee_HashSelectC(0xd3926a14, 0xa90825b224a7262b)
+#define Dee_HashStr____locals__ _Dee_HashSelectC(0x9afc687c, 0x5b2c71a072cbe841)
+#define Dee_HashStr____mro__ _Dee_HashSelectC(0x4b5e22f6, 0x8dbbdb5c2f99ff7a)
+#define Dee_HashStr____operators__ _Dee_HashSelectC(0xed78c2be, 0xfc4c23ee6412f79c)
+#define Dee_HashStr____stack__ _Dee_HashSelectC(0xe739f041, 0x170e744df540dd5c)
+#define Dee_HashStr____statics__ _Dee_HashSelectC(0x4147b465, 0x61d855a2a9645021)
+#define Dee_HashStr____symbols__ _Dee_HashSelectC(0x81659df, 0xf4073184aaae4c4c)
+#define Dee_HashStr__byattr _Dee_HashSelectC(0x7f16cf28, 0x58b9e1994d29c7ca)
+#define Dee_HashStr__byhash _Dee_HashSelectC(0x7b5277ce, 0x773c8074445a28d9)
+#define Dee_HashStr__casefindall _Dee_HashSelectC(0x68f0403d, 0x2aa76ae718f34e43)
+#define Dee_HashStr__casesplit _Dee_HashSelectC(0x8d4e9c87, 0x69205bfad60e0e61)
+#define Dee_HashStr__classes _Dee_HashSelectC(0x75e5899b, 0xc75d2d970415e4a0)
+#define Dee_HashStr__combinations _Dee_HashSelectC(0x184d9b51, 0x3e5802b7656c4900)
+#define Dee_HashStr__each _Dee_HashSelectC(0x9de8b13d, 0x374e052f37a5e158)
+#define Dee_HashStr__filter _Dee_HashSelectC(0x3110088a, 0x32e04884df75b1c1)
+#define Dee_HashStr__findall _Dee_HashSelectC(0xa7064666, 0x73bffde4f31b16e5)
+#define Dee_HashStr__future _Dee_HashSelectC(0x5ca3159c, 0x8ab2926ab5959525)
+#define Dee_HashStr__ids _Dee_HashSelectC(0x3173a48f, 0x7cd9fae6cf17bb9f)
+#define Dee_HashStr__locateall _Dee_HashSelectC(0xd447ec, 0xc6a682da9d9f8345)
+#define Dee_HashStr__ordinals _Dee_HashSelectC(0x4237d4c5, 0x5459ba3a055d9b9a)
+#define Dee_HashStr__pending _Dee_HashSelectC(0xa318502a, 0x9f3f699bf5a1e785)
+#define Dee_HashStr__permutations _Dee_HashSelectC(0x923fbd44, 0x498779abec4910f6)
+#define Dee_HashStr__reachable _Dee_HashSelectC(0x54a10efd, 0x6f461510341a0f20)
+#define Dee_HashStr__refindall _Dee_HashSelectC(0x821c12cd, 0x6e1b190da9b3fef9)
+#define Dee_HashStr__regfindall _Dee_HashSelectC(0x48a7b09d, 0x34acc7f51335ea55)
+#define Dee_HashStr__regmatch _Dee_HashSelectC(0x29e07576, 0xf95c79aef53a2c4f)
+#define Dee_HashStr__relocateall _Dee_HashSelectC(0xe2b79628, 0x188da1195d4b6ae9)
+#define Dee_HashStr__repeat _Dee_HashSelectC(0x26374320, 0x5a5a8c53402eacfe)
+#define Dee_HashStr__repeatcombinations _Dee_HashSelectC(0xa3bc4ae1, 0x7ef1d21507ad27f5)
+#define Dee_HashStr__repeatseq _Dee_HashSelectC(0xb271fb0, 0x2045cc35458ec0da)
+#define Dee_HashStr__rescanf _Dee_HashSelectC(0x18d32308, 0xbf03693953b5fdbb)
+#define Dee_HashStr__resplit _Dee_HashSelectC(0x8147c0a0, 0xb0ae6734658c0c4f)
+#define Dee_HashStr__scanf _Dee_HashSelectC(0x1369b612, 0x86d0b7e2f8b4b546)
+#define Dee_HashStr__segments _Dee_HashSelectC(0x20acb0bd, 0x8554d160c212a46a)
+#define Dee_HashStr__seq _Dee_HashSelectC(0x232af2b7, 0x80a0b0950a5a5251)
+#define Dee_HashStr__split _Dee_HashSelectC(0x916f9388, 0xca3aa391a92a6314)
+#define Dee_HashStr__splitlines _Dee_HashSelectC(0xed695afd, 0xbac074bd124b8342)
+#define Dee_HashStr__transform _Dee_HashSelectC(0x1f489cc3, 0x9dc554137fbc6ef6)
+#define Dee_HashStr__types _Dee_HashSelectC(0x871b2836, 0xde8693a2d24930)
+/*[[[end]]]*/
+
+#define STR_AND_HASH(s) #s, Dee_HashStr__##s
 
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -170,6 +276,7 @@ PRIVATE DEFINE_STRING_EX(str_Iterator, "Iterator", 0xfce46883, 0x3c33c9d5c64ebff
 /*[[[end]]]*/
 #endif
 
+
 LOCAL WUNUSED DREF DeeObject *DCALL
 get_type_of(DREF DeeObject *ob) {
 	DREF DeeObject *result = NULL;
@@ -195,32 +302,32 @@ get_iterator_of(DREF DeeObject *ob) {
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ClassOperatorTable_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeClassDescriptor_Type, "OperatorTable");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeClassDescriptor_Type, STR_AND_HASH(OperatorTable));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ClassAttribute_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeClassDescriptor_Type, "Attribute");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeClassDescriptor_Type, STR_AND_HASH(Attribute));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ClassAttributeTable_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeClassDescriptor_Type, "AttributeTable");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeClassDescriptor_Type, STR_AND_HASH(AttributeTable));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ObjectTable_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeClassDescriptor_Type, "ObjectTable");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeClassDescriptor_Type, STR_AND_HASH(ObjectTable));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_TypeMRO_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeInt_Type, "__mro__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeInt_Type, STR_AND_HASH(__mro__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_TypeBases_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeInt_Type, "__bases__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeInt_Type, STR_AND_HASH(__bases__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -314,19 +421,19 @@ PRIVATE DeeObject DeeIterator_StubInstance = {
 };
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-get_generic_iterator_member_type(char const *__restrict name) {
+get_generic_iterator_member_type(char const *__restrict name, Dee_hash_t hash) {
 	/* return type(iterator().operator . (name)); */
-	return get_type_of(DeeObject_GetAttrString(&DeeIterator_StubInstance, name));
+	return get_type_of(DeeObject_GetAttrStringHash(&DeeIterator_StubInstance, name, hash));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IteratorPending_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_generic_iterator_member_type("pending");
+	return get_generic_iterator_member_type(STR_AND_HASH(pending));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_IteratorFuture_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
-	return get_generic_iterator_member_type("future");
+	return get_generic_iterator_member_type(STR_AND_HASH(future));
 }
 
 
@@ -413,7 +520,7 @@ librt_get_Traceback_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 	DREF DeeObject *iter, *result = NULL;
 	iter = librt_get_TracebackIterator_impl_f();
 	if likely(iter) {
-		result = DeeObject_GetAttrString(iter, "seq");
+		result = DeeObject_GetAttrStringHash(iter, STR_AND_HASH(seq));
 		Dee_Decref_likely(iter);
 	}
 	return result;
@@ -422,7 +529,7 @@ librt_get_Traceback_empty_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_GCSet_empty_impl_f(void) {
 	DeeObject *argv[] = { Dee_None };
-	return DeeObject_CallAttrString(&DeeGCEnumTracked_Singleton, "reachable", 1, argv);
+	return DeeObject_CallAttrStringHash(&DeeGCEnumTracked_Singleton, STR_AND_HASH(reachable), 1, argv);
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -505,7 +612,7 @@ librt_get_DocKwds_impl_f(void) {
 	 * with a non-empty keyword list, without having to create such an
 	 * object ourself. */
 	DREF DeeObject *result, *kwds;
-	kwds = DeeObject_GetAttrString((DeeObject *)&DeeBuiltin_Import, "__kwds__");
+	kwds = DeeObject_GetAttrStringHash((DeeObject *)&DeeBuiltin_Import, STR_AND_HASH(__kwds__));
 	if unlikely(!kwds)
 		goto err;
 	result = (DREF DeeObject *)Dee_TYPE(kwds);
@@ -529,33 +636,33 @@ librt_get_DocKwdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv))
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingProxy_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type, "Proxy");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Proxy));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingKeys_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type, "Proxy");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Proxy));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingValues_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type, "Values");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Values));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingItems_impl_f(void) {
-	return DeeObject_GetAttrString((DeeObject *)&DeeMapping_Type, "Items");
+	return DeeObject_GetAttrStringHash((DeeObject *)&DeeMapping_Type, STR_AND_HASH(Items));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingHashFilter_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyMapping, "byhash", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyMapping, STR_AND_HASH(byhash), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_MappingByAttr_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString(Dee_EmptyMapping, "byattr"));
+	return get_type_of(DeeObject_GetAttrStringHash(Dee_EmptyMapping, STR_AND_HASH(byattr)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -615,7 +722,7 @@ librt_get_MappingByAttr_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_TypeOperators_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeString_Type, "__operators__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeString_Type, STR_AND_HASH(__operators__)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -630,26 +737,26 @@ librt_get_TypeOperatorsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-librt_get_sequence_mutation_type(char const *__restrict name) {
+librt_get_sequence_mutation_type(char const *__restrict name, Dee_hash_t hash) {
 	DREF DeeObject *ob, *result = NULL;
 	ob = DeeTuple_Pack(2, Dee_None, Dee_None);
 	if likely(ob) {
 		DeeObject *argv[] = { DeeInt_One };
-		result            = get_type_of(DeeObject_CallAttrString(ob, name, 1, argv));
+		result = get_type_of(DeeObject_CallAttrStringHash(ob, name, hash, 1, argv));
 		Dee_Decref(ob);
 	}
 	return result;
 }
 
 LOCAL WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-librt_get_string_mutation_type(char const *__restrict name) {
+librt_get_string_mutation_type(char const *__restrict name, Dee_hash_t hash) {
 	DeeObject *argv[] = { DeeInt_One };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, name, 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, name, hash, 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqCombinations_impl_f(void) {
-	return librt_get_string_mutation_type("combinations");
+	return librt_get_string_mutation_type(STR_AND_HASH(combinations));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -665,7 +772,7 @@ librt_get_SeqCombinationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSE
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqRepeatCombinations_impl_f(void) {
-	return librt_get_string_mutation_type("repeatcombinations");
+	return librt_get_string_mutation_type(STR_AND_HASH(repeatcombinations));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -681,7 +788,7 @@ librt_get_SeqRepeatCombinationsIterator_f(size_t UNUSED(argc), DeeObject *const 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqPermutations_impl_f(void) {
-	return librt_get_string_mutation_type("permutations");
+	return librt_get_string_mutation_type(STR_AND_HASH(permutations));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -697,7 +804,7 @@ librt_get_SeqPermutationsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSE
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSegments_impl_f(void) {
 	/* Since string overrides `segments', we must use a true sequence here! */
-	return librt_get_sequence_mutation_type("segments");
+	return librt_get_sequence_mutation_type(STR_AND_HASH(segments));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -728,13 +835,13 @@ librt_get_SeqConcatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqFilter_impl_f(void) {
 	DeeObject *argv[] = { Dee_None };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "filter", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(filter), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqHashFilter_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "byhash", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(byhash), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -760,7 +867,7 @@ librt_get_SeqHashFilterIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqLocator_impl_f(void) {
 	DeeObject *argv[] = { Dee_None };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "locateall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(locateall), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -773,6 +880,7 @@ librt_get_SeqLocatorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 	return get_iterator_of(librt_get_SeqLocator_impl_f());
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSubRange_impl_f(void) {
 	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, DeeInt_Zero, DeeInt_One));
@@ -792,11 +900,12 @@ PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_SeqSubRangeN_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) {
 	return get_type_of(DeeObject_GetRange(Dee_EmptySeq, DeeInt_One, Dee_None));
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqTransformation_impl_f(void) {
 	DeeObject *argv[] = { Dee_None };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptySeq, "transform", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptySeq, STR_AND_HASH(transform), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -842,7 +951,7 @@ librt_get_SeqIntRangeIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(ar
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqRepeat_impl_f(void) {
 	DeeObject *argv[] = { Dee_EmptySeq, DeeInt_One };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "repeatseq", 2, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeatseq), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -858,7 +967,7 @@ librt_get_SeqRepeatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqItemRepeat_impl_f(void) {
 	DeeObject *argv[] = { Dee_None, DeeInt_One };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&DeeSeq_Type, "repeat", 2, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&DeeSeq_Type, STR_AND_HASH(repeat), 2, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -873,7 +982,7 @@ librt_get_SeqItemRepeatIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqIds_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)Dee_EmptySeq, "ids"));
+	return get_type_of(DeeObject_GetAttrStringHash(Dee_EmptySeq, STR_AND_HASH(ids)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -888,7 +997,7 @@ librt_get_SeqIdsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) 
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqTypes_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)Dee_EmptySeq, "types"));
+	return get_type_of(DeeObject_GetAttrStringHash(Dee_EmptySeq, STR_AND_HASH(types)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -903,7 +1012,7 @@ librt_get_SeqTypesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqClasses_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)Dee_EmptySeq, "classes"));
+	return get_type_of(DeeObject_GetAttrStringHash(Dee_EmptySeq, STR_AND_HASH(classes)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -918,7 +1027,7 @@ librt_get_SeqClassesIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_SeqEach_stub_instance(void) {
-	return DeeObject_GetAttrString(Dee_EmptySeq, "each");
+	return DeeObject_GetAttrStringHash(Dee_EmptySeq, STR_AND_HASH(each));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
@@ -1181,7 +1290,7 @@ librt_get_RefVectorIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ModuleExports_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "__exports__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__exports__)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1196,7 +1305,7 @@ librt_get_ModuleExportsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
 librt_get_ModuleGlobals_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)DeeModule_GetDeemon(), "__globals__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)DeeModule_GetDeemon(), STR_AND_HASH(__globals__)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1208,7 +1317,7 @@ PRIVATE DEFINE_BYTES(small_bytes, Dee_BUFFER_FREADONLY, 1, { 0 });
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesFind_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "findall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(findall), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1224,7 +1333,7 @@ librt_get_BytesFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesCaseFind_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "casefindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(casefindall), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1240,7 +1349,7 @@ librt_get_BytesCaseFindIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesSegments_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_One };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "segments", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(segments), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1256,7 +1365,7 @@ librt_get_BytesSegmentsIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesSplit_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "split", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(split), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1272,7 +1381,7 @@ librt_get_BytesSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED(arg
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesCaseSplit_impl_f(void) {
 	DeeObject *argv[] = { DeeInt_Zero };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "casesplit", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(casesplit), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1287,7 +1396,7 @@ librt_get_BytesCaseSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_BytesLineSplit_impl_f(void) {
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&small_bytes, "splitlines", 0, NULL));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&small_bytes, STR_AND_HASH(splitlines), 0, NULL));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1307,47 +1416,47 @@ librt_get_BytesLineSplitIterator_f(size_t UNUSED(argc), DeeObject *const *UNUSED
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringSegments_impl_f(void) {
-	return librt_get_string_mutation_type("segments");
+	return librt_get_string_mutation_type(STR_AND_HASH(segments));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringFind_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "findall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(findall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringCaseFind_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "casefindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(casefindall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringSplit_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "split", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(split), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringCaseSplit_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "casesplit", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(casesplit), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringLineSplit_impl_f(void) {
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "splitlines", 0, NULL));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(splitlines), 0, NULL));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringScan_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)&str_Iterator };
-	return get_type_of(DeeObject_CallAttrString((DeeObject *)&str_Iterator, "scanf", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(scanf), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_StringOrdinals_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&str_Iterator, "ordinals"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&str_Iterator, STR_AND_HASH(ordinals)));
 }
 
 
@@ -1431,67 +1540,67 @@ librt_get_StringOrdinals_f(size_t UNUSED(argc), DeeObject *const *UNUSED(argv)) 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReFindAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "refindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(refindall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_RegFindAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "regfindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(regfindall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReLocateAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "relocateall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(relocateall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReSplit_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "resplit", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(resplit), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReGroups_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "regmatch", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(regmatch), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReSubStrings_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyString, "rescanf", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyString, STR_AND_HASH(rescanf), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesFindAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "refindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyBytes, STR_AND_HASH(refindall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_RegBytesFindAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "regfindall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyBytes, STR_AND_HASH(regfindall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesLocateAll_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "relocateall", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyBytes, STR_AND_HASH(relocateall), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReBytesSplit_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "resplit", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyBytes, STR_AND_HASH(resplit), 1, argv));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_ReSubBytes_impl_f(void) {
 	DeeObject *argv[] = { (DeeObject *)Dee_EmptyString };
-	return get_type_of(DeeObject_CallAttrString(Dee_EmptyBytes, "rescanf", 1, argv));
+	return get_type_of(DeeObject_CallAttrStringHash(Dee_EmptyBytes, STR_AND_HASH(rescanf), 1, argv));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1679,37 +1788,37 @@ PRIVATE DeeFrameObject DeeFrame_Empty = {
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionStatics_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFunction_EmptyYielding.ob, "__statics__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFunction_EmptyYielding.ob, STR_AND_HASH(__statics__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FunctionSymbolsByName_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFunction_EmptyYielding.ob, "__symbols__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFunction_EmptyYielding.ob, STR_AND_HASH(__symbols__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_YieldFunctionSymbolsByName_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeYieldFunction_Empty, "__symbols__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeYieldFunction_Empty, STR_AND_HASH(__symbols__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameArgs_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__args__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFrame_Empty, STR_AND_HASH(__args__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameLocals_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__locals__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFrame_Empty, STR_AND_HASH(__locals__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameStack_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__stack__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFrame_Empty, STR_AND_HASH(__stack__)));
 }
 
 LOCAL WUNUSED DREF DeeObject *DCALL
 librt_get_FrameSymbolsByName_impl_f(void) {
-	return get_type_of(DeeObject_GetAttrString((DeeObject *)&DeeFrame_Empty, "__symbols__"));
+	return get_type_of(DeeObject_GetAttrStringHash((DeeObject *)&DeeFrame_Empty, STR_AND_HASH(__symbols__)));
 }
 
 PRIVATE WUNUSED DREF DeeObject *DCALL
@@ -1787,9 +1896,11 @@ PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilter, &librt_get_SeqHashFilter_f, METH
 PRIVATE DEFINE_CMETHOD(librt_get_SeqHashFilterIterator, &librt_get_SeqHashFilterIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqLocator, &librt_get_SeqLocator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqLocatorIterator, &librt_get_SeqLocatorIterator_f, METHOD_FCONSTCALL);
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRange, &librt_get_SeqSubRange_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRangeIterator, &librt_get_SeqSubRangeIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqSubRangeN, &librt_get_SeqSubRangeN_f, METHOD_FCONSTCALL);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 PRIVATE DEFINE_CMETHOD(librt_get_SeqTransformation, &librt_get_SeqTransformation_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqTransformationIterator, &librt_get_SeqTransformationIterator_f, METHOD_FCONSTCALL);
 PRIVATE DEFINE_CMETHOD(librt_get_SeqRange, &librt_get_SeqRange_f, METHOD_FCONSTCALL);
@@ -2081,9 +2192,11 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "SeqHashFilterIterator", (DeeObject *)&librt_get_SeqHashFilterIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                 /* SeqHashFilterIterator_Type */
 	{ "SeqLocator", (DeeObject *)&librt_get_SeqLocator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                       /* SeqLocator_Type */
 	{ "SeqLocatorIterator", (DeeObject *)&librt_get_SeqLocatorIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                       /* SeqLocatorIterator_Type */
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 	{ "SeqSubRange", (DeeObject *)&librt_get_SeqSubRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                     /* SeqSubRange_Type */
 	{ "SeqSubRangeIterator", (DeeObject *)&librt_get_SeqSubRangeIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                     /* SeqSubRangeIterator_Type */
 	{ "SeqSubRangeN", (DeeObject *)&librt_get_SeqSubRangeN, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                   /* SeqSubRangeN_Type */
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	{ "SeqTransformation", (DeeObject *)&librt_get_SeqTransformation, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                         /* SeqTransformation_Type */
 	{ "SeqTransformationIterator", (DeeObject *)&librt_get_SeqTransformationIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },         /* SeqTransformationIterator_Type */
 	{ "SeqRange", (DeeObject *)&librt_get_SeqRange, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR },                                           /* SeqRange_Type */
@@ -2367,7 +2480,7 @@ PRIVATE struct dex_symbol symbols[] = {
 	{ "DictValuesIterator", (DeeObject *)&librt_get_DictValuesIterator, MODSYM_FREADONLY | MODSYM_FPROPERTY | MODSYM_FCONSTEXPR }, /* DictValuesIterator_Type */
 
 	/* Special instances of non-singleton objects */
-	{ "Sequence_empty", (DeeObject *)Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },
+	{ "Sequence_empty", Dee_EmptySeq, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty sequence singleton") },
 	{ "Set_empty", (DeeObject *)Dee_EmptySet, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty set singleton") },
 	{ "Mapping_empty", (DeeObject *)Dee_EmptyMapping, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("A general-purpose, empty mapping singleton") },
 	{ "RoDict_empty", (DeeObject *)Dee_EmptyRoDict, MODSYM_FREADONLY | MODSYM_FCONSTEXPR, DOC("An empty instance of ?GRoDict") },

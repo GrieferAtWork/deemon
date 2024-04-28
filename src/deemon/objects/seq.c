@@ -2457,6 +2457,7 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
 	/* .tp_setitem_string_hash        = */ NULL,

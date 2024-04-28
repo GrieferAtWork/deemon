@@ -80,12 +80,32 @@ none_i2(void *UNUSED(a), void *UNUSED(b)) {
 }
 
 INTERN int DCALL
+none_i2_1(void *UNUSED(a), void *UNUSED(b)) {
+	return 1;
+}
+
+INTERN int DCALL
 none_i3(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
 	return 0;
 }
 
-PRIVATE int DCALL
+INTERN int DCALL
+none_i3_1(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c)) {
+	return 1;
+}
+
+INTERN int DCALL
 none_i4(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
+	return 0;
+}
+
+INTERN int DCALL
+none_i4_1(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d)) {
+	return 1;
+}
+
+INTERN int DCALL
+none_i5(void *UNUSED(a), void *UNUSED(b), void *UNUSED(c), void *UNUSED(d), void *UNUSED(e)) {
 	return 0;
 }
 
@@ -285,18 +305,47 @@ PRIVATE struct type_nsi tpconst none_nsi = {
 };
 
 PRIVATE struct type_seq none_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
-	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2,
-	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
-	/* .tp_getrange     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
-	/* .tp_delrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
-	/* .tp_setrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
-	/* .tp_nsi          = */ &none_nsi,
-	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&none_s3,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&none_1,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_3,
+	/* .tp_delrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&none_i3,
+	/* .tp_setrange                   = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&none_i4,
+	/* .tp_nsi                        = */ &none_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&none_s3,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&none_s3,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&none_i2_1,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&none_s1,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&none_s1,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&none_2,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&none_2,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&none_i2,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&none_i3,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&none_i2_1,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&none_i2_1,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&none_3,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&none_i3,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&none_i4,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&none_2,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&none_i2,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&none_i3,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&none_2,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_3,
+	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_3,
+	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3,
+	/* .tp_setitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t, DeeObject *))&none_i4,
+	/* .tp_bounditem_string_hash      = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3_1,
+	/* .tp_hasitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&none_i3_1,
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_3,
+	/* .tp_getitem_string_len_hash    = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_3,
+	/* .tp_delitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4,
+	/* .tp_setitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t, DeeObject *))&none_i5,
+	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
+	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&none_i4_1,
 };
 
 PRIVATE struct type_attr tpconst none_attr = {

@@ -2605,7 +2605,7 @@ PRIVATE struct type_getset tpconst file_getsets[] = {
 
 
 PRIVATE struct type_seq file_seq = {
-	/* .tp_iter     = */ &DeeObject_NewRef
+	/* .tp_iter = */ &DeeObject_NewRef
 };
 
 

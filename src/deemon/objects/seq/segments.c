@@ -308,36 +308,23 @@ err_r:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-seg_nsi_getsize(Segments *__restrict self) {
-	size_t result;
-	result = DeeObject_Size(self->s_seq);
+seg_size(Segments *__restrict self) {
+	size_t result = DeeObject_Size(self->s_seq);
 	if likely(result != (size_t)-1)
 		result = (result + (self->s_len - 1)) / self->s_len;
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-seg_getsize(Segments *__restrict self) {
-	size_t result;
-	result = DeeObject_Size(self->s_seq);
-	if unlikely(result == (size_t)-1)
-		goto err;
-	return DeeInt_NewSize((result + (self->s_len - 1)) / self->s_len);
-err:
-	return NULL;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-seg_nsi_fast_getsize(Segments *__restrict self) {
-	size_t result;
-	result = DeeFastSeq_GetSize(self->s_seq);
+seg_size_fast(Segments *__restrict self) {
+	size_t result = DeeObject_SizeFast(self->s_seq);
 	if likely(result != (size_t)-1)
 		result = (result + (self->s_len - 1)) / self->s_len;
 	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeTupleObject *DCALL
-seg_nsi_getitem(Segments *__restrict self, size_t index) {
+seg_getitem_index(Segments *__restrict self, size_t index) {
 	size_t i;
 	DREF DeeTupleObject *result;
 	size_t start = index * self->s_len;
@@ -374,25 +361,15 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeTupleObject *DCALL
-seg_getitem(Segments *self, DeeObject *index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return seg_nsi_getitem(self, index);
-err:
-	return NULL;
-}
-
 
 PRIVATE struct type_nsi tpconst seg_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SEQ,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&seg_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&seg_nsi_fast_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&seg_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&seg_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&seg_size_fast,
+			/* .nsi_getitem      = */ (dfunptr_t)&seg_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
@@ -419,16 +396,47 @@ PRIVATE struct type_nsi tpconst seg_nsi = {
 };
 
 PRIVATE struct type_seq seg_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_getsize,
-	/* .tp_contains = */ NULL, /* TODO */
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seg_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ NULL,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &seg_nsi,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&seg_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL, /* TODO */
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &seg_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))NULL,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&seg_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&seg_size_fast,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&seg_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst seg_members[] = {

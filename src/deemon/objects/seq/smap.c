@@ -411,101 +411,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-smap_getitem(SharedMap *self, DeeObject *key) {
-	dhash_t i, perturb, hash;
-	SharedItemEx *item;
-	int temp;
-	bool was_loaded;
-	was_loaded = self->sm_loaded != 0;
-	COMPILER_READ_BARRIER();
-
-	/* Search the hash-table. */
-	hash = DeeObject_Hash(key);
-again_search:
-	perturb = i = SMAP_HASHST(self, hash);
-	for (;; SMAP_HASHNX(i, perturb)) {
-		DREF DeeObject *item_key, *item_value;
-		item = SMAP_HASHIT(self, i);
-		if (!item->si_key)
-			break;
-		if (item->si_hash != hash)
-			continue;
-		SharedMap_LockRead(self);
-		item_key = item->si_key;
-		if (self->sm_length == 0) {
-			SharedMap_LockEndRead(self);
-			goto not_found;
-		}
-		item_value = item->si_value;
-		Dee_Incref(item_key);
-		Dee_Incref(item_value);
-		SharedMap_LockEndRead(self);
-		temp = DeeObject_CompareEq(key, item->si_key);
-		Dee_Decref(item_key);
-		if (temp != 0) {
-			if unlikely(temp < 0) {
-				Dee_Decref(item_value);
-				goto err;
-			}
-			return item_value;
-		}
-		Dee_Decref(item_value);
-	}
-
-	/* Find the item in the key vector. */
-	SharedMap_LockRead(self);
-	if (self->sm_loaded) {
-		if (!was_loaded) {
-			SharedMap_LockEndRead(self);
-			was_loaded = true;
-			goto again_search;
-		}
-	} else {
-		for (i = 0; i < self->sm_length; ++i) {
-			DREF DeeObject *item_key, *item_value;
-			dhash_t item_hash;
-			item_key   = self->sm_vector[i].si_key;
-			item_value = self->sm_vector[i].si_value;
-			Dee_Incref(item_key);
-			Dee_Incref(item_value);
-			SharedMap_LockEndRead(self);
-			item_hash = DeeObject_Hash(item_key);
-
-			/* Cache the key-value pair in the hash-vector */
-			SharedMap_LockWrite(self);
-			smap_cache(self, item_key, item_value, item_hash);
-			SharedMap_LockEndWrite(self);
-
-			/* Check if this is the key we're looking for. */
-			if (item_hash == hash) {
-				temp = DeeObject_CompareEq(key, item_key);
-				if (temp != 0) {
-					Dee_Decref(item_key);
-					if unlikely(temp < 0) {
-						Dee_Decref(item_value);
-						goto err;
-					}
-					return item_value;
-				}
-			}
-			Dee_Decref(item_value);
-			Dee_Decref(item_key);
-			SharedMap_LockRead(self);
-		}
-		if (SharedMap_LockTryUpgrade(self)) {
-			smap_mark_loaded_and_endwrite(self);
-			goto not_found;
-		}
-	}
-	SharedMap_LockEndRead(self);
-not_found:
-	err_unknown_key((DeeObject *)self, key);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-smap_nsi_getdefault(SharedMap *self, DeeObject *key, DeeObject *defl) {
+smap_trygetitem(SharedMap *self, DeeObject *key) {
 	dhash_t i, perturb, hash;
 	SharedItemEx *item;
 	int temp;
@@ -593,11 +499,20 @@ again_search:
 	}
 	SharedMap_LockEndRead(self);
 not_found:
-	if (defl != ITER_DONE)
-		Dee_Incref(defl);
-	return defl;
+	return ITER_DONE;
 err:
 	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
+smap_nsi_getdefault(SharedMap *self, DeeObject *key, DeeObject *defl) {
+	DREF DeeObject *result = smap_trygetitem(self, key);
+	if (result == ITER_DONE) {
+		result = defl;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
+	}
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -610,20 +525,14 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 smap_size(SharedMap *__restrict self) {
-	size_t result = atomic_read(&self->sm_length);
-	return DeeInt_NewSize(result);
+	return atomic_read(&self->sm_length);
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 smap_bool(SharedMap *__restrict self) {
 	return atomic_read(&self->sm_length) != 0;
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-smap_nsi_getsize(SharedMap *__restrict self) {
-	return atomic_read(&self->sm_length);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
@@ -652,12 +561,173 @@ err:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+smap_trygetitem_string_hash(SharedMap *self, char const *key, Dee_hash_t hash) {
+	dhash_t i, perturb;
+	SharedItemEx *item;
+	bool was_loaded;
+	was_loaded = self->sm_loaded != 0;
+	COMPILER_READ_BARRIER();
+
+	/* Search the hash-table. */
+again_search:
+	perturb = i = SMAP_HASHST(self, hash);
+	for (;; SMAP_HASHNX(i, perturb)) {
+		DREF DeeObject *item_key, *item_value;
+		item = SMAP_HASHIT(self, i);
+		if (!item->si_key)
+			break;
+		if (item->si_hash != hash)
+			continue;
+		SharedMap_LockRead(self);
+		item_key = item->si_key;
+		if (self->sm_length == 0) {
+			SharedMap_LockEndRead(self);
+			goto not_found;
+		}
+		if (!DeeString_Check(item_key) ||
+		    strcmp(DeeString_STR(item_key), key) != 0) {
+			SharedMap_LockEndRead(self);
+			continue;
+		}
+		item_value = item->si_value;
+		Dee_Incref(item_value);
+		SharedMap_LockEndRead(self);
+		return item_value;
+	}
+
+	/* Find the item in the key vector. */
+	SharedMap_LockRead(self);
+	if (self->sm_loaded) {
+		if (!was_loaded) {
+			SharedMap_LockEndRead(self);
+			was_loaded = true;
+			goto again_search;
+		}
+	} else {
+		for (i = 0; i < self->sm_length; ++i) {
+			DREF DeeObject *item_key, *item_value;
+			dhash_t item_hash;
+			item_key   = self->sm_vector[i].si_key;
+			item_value = self->sm_vector[i].si_value;
+			Dee_Incref(item_key);
+			Dee_Incref(item_value);
+			SharedMap_LockEndRead(self);
+			item_hash = DeeObject_Hash(item_key);
+
+			/* Cache the key-value pair in the hash-vector */
+			SharedMap_LockWrite(self);
+			smap_cache(self, item_key, item_value, item_hash);
+			SharedMap_LockEndWrite(self);
+
+			/* Check if this is the key we're looking for. */
+			if (item_hash == hash &&
+			    DeeString_Check(item_key) &&
+			    strcmp(DeeString_STR(item_key), key) == 0) {
+				Dee_Decref(item_key);
+				return item_value;
+			}
+			Dee_Decref(item_value);
+			Dee_Decref(item_key);
+			SharedMap_LockRead(self);
+		}
+		if (SharedMap_LockTryUpgrade(self)) {
+			smap_mark_loaded_and_endwrite(self);
+			goto not_found;
+		}
+	}
+	SharedMap_LockEndRead(self);
+not_found:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+smap_trygetitem_string_len_hash(SharedMap *self, char const *key, size_t keylen, Dee_hash_t hash) {
+	dhash_t i, perturb;
+	SharedItemEx *item;
+	bool was_loaded;
+	was_loaded = self->sm_loaded != 0;
+	COMPILER_READ_BARRIER();
+
+	/* Search the hash-table. */
+again_search:
+	perturb = i = SMAP_HASHST(self, hash);
+	for (;; SMAP_HASHNX(i, perturb)) {
+		DREF DeeObject *item_key, *item_value;
+		item = SMAP_HASHIT(self, i);
+		if (!item->si_key)
+			break;
+		if (item->si_hash != hash)
+			continue;
+		SharedMap_LockRead(self);
+		item_key = item->si_key;
+		if (self->sm_length == 0) {
+			SharedMap_LockEndRead(self);
+			goto not_found;
+		}
+		if (!DeeString_Check(item_key) ||
+		    !DeeString_EqualsBuf(item_key, key, keylen)) {
+			SharedMap_LockEndRead(self);
+			continue;
+		}
+		item_value = item->si_value;
+		Dee_Incref(item_value);
+		SharedMap_LockEndRead(self);
+		return item_value;
+	}
+
+	/* Find the item in the key vector. */
+	SharedMap_LockRead(self);
+	if (self->sm_loaded) {
+		if (!was_loaded) {
+			SharedMap_LockEndRead(self);
+			was_loaded = true;
+			goto again_search;
+		}
+	} else {
+		for (i = 0; i < self->sm_length; ++i) {
+			DREF DeeObject *item_key, *item_value;
+			dhash_t item_hash;
+			item_key   = self->sm_vector[i].si_key;
+			item_value = self->sm_vector[i].si_value;
+			Dee_Incref(item_key);
+			Dee_Incref(item_value);
+			SharedMap_LockEndRead(self);
+			item_hash = DeeObject_Hash(item_key);
+
+			/* Cache the key-value pair in the hash-vector */
+			SharedMap_LockWrite(self);
+			smap_cache(self, item_key, item_value, item_hash);
+			SharedMap_LockEndWrite(self);
+
+			/* Check if this is the key we're looking for. */
+			if (item_hash == hash &&
+			    DeeString_Check(item_key) &&
+			    DeeString_EqualsBuf(item_key, key, keylen)) {
+				Dee_Decref(item_key);
+				return item_value;
+			}
+			Dee_Decref(item_value);
+			Dee_Decref(item_key);
+			SharedMap_LockRead(self);
+		}
+		if (SharedMap_LockTryUpgrade(self)) {
+			smap_mark_loaded_and_endwrite(self);
+			goto not_found;
+		}
+	}
+	SharedMap_LockEndRead(self);
+not_found:
+	return ITER_DONE;
+}
+
+
 PRIVATE struct type_nsi tpconst smap_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_MAP,
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&smap_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&smap_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&smap_nsi_nextkey,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&smap_nsi_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&smap_nsi_getdefault
@@ -666,18 +736,47 @@ PRIVATE struct type_nsi tpconst smap_nsi = {
 };
 
 PRIVATE struct type_seq smap_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_getitem,
-	/* .tp_delitem      = */ NULL,
-	/* .tp_setitem      = */ NULL,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ &smap_nsi,
-	/* .tp_foreach      = */ NULL,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&smap_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_contains,
+	/* .tp_getitem                    = */ NULL, /* default */
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &smap_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&smap_foreach,
+	/* .tp_bounditem                  = */ NULL, /* default */
+	/* .tp_hasitem                    = */ NULL, /* default */
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&smap_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&smap_trygetitem,
+	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&smap_trygetitem_string_hash,
+	/* .tp_getitem_string_hash        = */ NULL, /* default */
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL, /* default */
+	/* .tp_hasitem_string_hash        = */ NULL, /* default */
+	/* .tp_trygetitem_string_len_hash = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&smap_trygetitem_string_len_hash,
+	/* .tp_getitem_string_len_hash    = */ NULL, /* default */
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL, /* default */
+	/* .tp_hasitem_string_len_hash    = */ NULL, /* default */
 };
 
 PRIVATE struct type_getset tpconst smap_getsets[] = {
