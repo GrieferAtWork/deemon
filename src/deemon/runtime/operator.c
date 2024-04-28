@@ -340,6 +340,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_HASITEM_NODEFAULT                 DeeType_InvokeSeqHasItem_NODEFAULT
 #define DeeType_INVOKE_SIZE                              DeeType_InvokeSeqSize
 #define DeeType_INVOKE_SIZE_NODEFAULT                    DeeType_InvokeSeqSize_NODEFAULT
+#define DeeType_INVOKE_SIZEFAST                          DeeType_InvokeSeqSizeFast
+#define DeeType_INVOKE_SIZEFAST_NODEFAULT                DeeType_InvokeSeqSizeFast_NODEFAULT
 #define DeeType_INVOKE_GETITEMINDEX                      DeeType_InvokeSeqGetItemIndex
 #define DeeType_INVOKE_GETITEMINDEX_NODEFAULT            DeeType_InvokeSeqGetItemIndex_NODEFAULT
 #define DeeType_INVOKE_DELITEMINDEX                      DeeType_InvokeSeqDelItemIndex
@@ -461,6 +463,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_BOUNDITEM(tp_self, self, index)                               (*(tp_self)->tp_seq->tp_bounditem)(self, index)
 #define DeeType_INVOKE_HASITEM(tp_self, self, index)                                 (*(tp_self)->tp_seq->tp_hasitem)(self, index)
 #define DeeType_INVOKE_SIZE(tp_self, self)                                           (*(tp_self)->tp_seq->tp_size)(self)
+#define DeeType_INVOKE_SIZEFAST(tp_self, self)                                       (*(tp_self)->tp_seq->tp_size_fast)(self)
 #define DeeType_INVOKE_GETITEMINDEX(tp_self, self, index)                            (*(tp_self)->tp_seq->tp_getitem_index)(self, index)
 #define DeeType_INVOKE_DELITEMINDEX(tp_self, self, index)                            (*(tp_self)->tp_seq->tp_delitem_index)(self, index)
 #define DeeType_INVOKE_SETITEMINDEX(tp_self, self, index, value)                     (*(tp_self)->tp_seq->tp_setitem_index)(self, index, value)
@@ -553,6 +556,7 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_BOUNDITEM_NODEFAULT               DeeType_INVOKE_BOUNDITEM
 #define DeeType_INVOKE_HASITEM_NODEFAULT                 DeeType_INVOKE_HASITEM
 #define DeeType_INVOKE_SIZE_NODEFAULT                    DeeType_INVOKE_SIZE
+#define DeeType_INVOKE_SIZEFAST_NODEFAULT                DeeType_INVOKE_SIZEFAST
 #define DeeType_INVOKE_GETITEMINDEX_NODEFAULT            DeeType_INVOKE_GETITEMINDEX
 #define DeeType_INVOKE_DELITEMINDEX_NODEFAULT            DeeType_INVOKE_DELITEMINDEX
 #define DeeType_INVOKE_SETITEMINDEX_NODEFAULT            DeeType_INVOKE_SETITEMINDEX
@@ -3913,6 +3917,16 @@ err:
 	return (size_t)-1;
 }
 
+/* tp_size_fast */
+#ifndef DEFINE_TYPED_OPERATORS
+DEFINE_INTERNAL_OPERATOR(size_t, DefaultSizeFastWithErrorNotFast,
+                         (DeeObject *RESTRICT_IF_NOTYPE self)) {
+	(void)self;
+	return (size_t)-1;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+
 INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 default_contains_with_foreach_cb(void *arg, DeeObject *elem);
 
@@ -4562,7 +4576,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_getitem_string_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
 
 #ifndef DEFINE_TYPED_OPERATORS
-PRIVATE WUNUSED NONNULL((2)) bool DCALL
+PRIVATE WUNUSED NONNULL((1, 3)) bool DCALL
 string_hash_equals_object(char const *lhs, Dee_hash_t lhs_hash, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && strcmp(lhs, DeeString_STR(rhs)) == 0);
@@ -4767,7 +4781,7 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t DCALL
 default_map_getitem_string_len_hash_with_foreach_pair_cb(void *arg, DeeObject *key, DeeObject *value);
 
 #ifndef DEFINE_TYPED_OPERATORS
-PRIVATE WUNUSED NONNULL((2)) bool DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) bool DCALL
 string_len_hash_equals_object(char const *lhs, size_t lhs_len, Dee_hash_t lhs_hash, DeeObject *rhs) {
 	if (DeeString_Check(rhs))
 		return (DeeString_Hash(rhs) == lhs_hash && DeeString_EqualsBuf(rhs, lhs, lhs_len));
@@ -9206,7 +9220,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_lo(DeeSuperObject *self, DeeObject *some_object);
 
 
-/* @return: == -2: An error occurred.
+/* @return: == Dee_COMPARE_ERR: An error occurred.
  * @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs' */
@@ -9253,8 +9267,11 @@ again:
 		if unlikely(!opres)
 			goto err;
 		opval = DeeObject_BoolInherited(opres);
-		if (opval != 0)
-			return unlikely(opval < 0) ? -2 : -1;
+		if (opval != 0) {
+			if unlikely(opval < 0)
+				goto err;
+			return -1;
+		}
 
 		/* At this point we know that: "!(lhs < rhs)"
 		 * -> Now check if "lhs == rhs" */
@@ -9275,17 +9292,21 @@ again:
 no_lo:
 	err_unimplemented_operator(tp_lhs, OPERATOR_LO);
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 #else
 	/* Fallback: use the normal compare operators.
 	 * For this purpose, we always use "operator <" and "operator ==" */
 	result = DeeObject_CompareLo(self, some_object);
-	if (result != 0)
-		return unlikely(result < 0) ? -2 : -1;
+	if (result != 0) {
+		if unlikely(result < 0)
+			goto err;
+		return -1;
+	}
 	result = DeeObject_CompareEq(self, some_object);
 	if likely(result >= 0)
-		result = !result;
-	return result;
+		return result ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
 #endif
 }
 
@@ -10326,6 +10347,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_setitem_string_len_hash = &DeeObject_DefaultSetItemStringLenHashWithErrorRequiresInt;
 		}
 	}
+
+	/* tp_size_fast (simply set to return `(size_t)-1') */
+	if (!seq->tp_size_fast)
+		seq->tp_size_fast = &DeeObject_DefaultSizeFastWithErrorNotFast;
 }
 
 
@@ -10489,10 +10514,14 @@ DeeType_InheritSize(DeeTypeObject *__restrict self) {
 		if (base_seq->tp_size) {
 			if (base_seq->tp_sizeob == NULL)
 				base_seq->tp_sizeob = &DeeObject_DefaultSizeObWithSize;
+			if (base_seq->tp_size_fast == NULL)
+				base_seq->tp_size_fast = &DeeObject_DefaultSizeFastWithErrorNotFast;
 			return true;
 		} else if (base_seq->tp_sizeob) {
 			if (base_seq->tp_size == NULL)
 				base_seq->tp_size = &DeeObject_DefaultSizeWithSizeOb;
+			if (base_seq->tp_size_fast == NULL)
+				base_seq->tp_size_fast = &DeeObject_DefaultSizeFastWithErrorNotFast;
 			return true;
 		}
 	}
@@ -11489,9 +11518,8 @@ err:
 /* @return: (size_t)-1: Fast size cannot be determined */
 DEFINE_OPERATOR(size_t, SizeFast, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
-	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) ||
-	          (!tp_self->tp_seq->tp_size && DeeType_InheritSize(tp_self) && tp_self->tp_seq->tp_size_fast))
-		return (*tp_self->tp_seq->tp_size_fast)(self);
+	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_size_fast) || DeeType_InheritSize(tp_self))
+		return DeeType_INVOKE_SIZEFAST(tp_self, self);
 	return (size_t)-1;
 }
 
@@ -12302,6 +12330,7 @@ DEFINE_OPERATOR(DREF DeeObject *, TryGetItemStringLenHash, (DeeObject *self, cha
 	return NULL;
 }
 
+#ifndef DEFINE_TYPED_OPERATORS
 DEFINE_OPERATOR(DREF DeeObject *, GetItemDef, (DeeObject *self, DeeObject *index, DeeObject *def)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem) ||
@@ -12352,6 +12381,7 @@ DEFINE_OPERATOR(DREF DeeObject *, GetItemStringLenHashDef, (DeeObject *self, cha
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 	return NULL;
 }
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 DEFINE_OPERATOR(DREF DeeObject *, GetItemIndex, (DeeObject *self, size_t index)) {
 	LOAD_TP_SELF;
@@ -13415,8 +13445,8 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 	/* TODO: Use DeeObject_Foreach() */
 
 	/* Try to make use of the fast-sequence API. */
-	fast_size = DeeFastSeq_GetSize(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(self);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (objc != fast_size) {
 			if (DeeNone_Check(self)) {
 				/* Special case: `none' can be unpacked into anything. */
@@ -13427,7 +13457,7 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 			return err_invalid_unpack_size(self, objc, fast_size);
 		}
 		for (i = 0; i < objc; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
+			elem = DeeFastSeq_GetItem_deprecated(self, i);
 			if unlikely(!elem)
 				goto err_objv;
 			objv[i] = elem; /* Inherit reference. */

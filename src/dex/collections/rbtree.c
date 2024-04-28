@@ -2868,12 +2868,12 @@ PRIVATE WUNUSED NONNULL((1, 2)) size_t
 	size_t fast_size, i;
 
 	/* Try to make use of the fast-sequence API. */
-	fast_size = DeeFastSeq_GetSize(self);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(self);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (fast_size != 2 && fast_size != 3)
 			return (size_t)err_bad_unpack_size_not_2or3(fast_size);
 		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
+			elem = DeeFastSeq_GetItem_deprecated(self, i);
 			if unlikely(!elem)
 				goto err_objv;
 			objv[i] = elem; /* Inherit reference. */

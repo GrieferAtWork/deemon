@@ -505,7 +505,7 @@ PRIVATE struct type_nsi tpconst trans_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&trans_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&trans_size_fast,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)&trans_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,

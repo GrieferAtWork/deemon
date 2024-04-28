@@ -384,7 +384,7 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF String *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF String *DCALL
 sseg_getitem_index(StringSegments *__restrict self, size_t index) {
 	size_t length;
 	length = DeeString_WLEN(self->s_str);

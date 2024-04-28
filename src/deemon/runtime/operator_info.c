@@ -1321,23 +1321,65 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 			DeeType_InheritNSI(self);
 		switch (name) {
 		case OPERATOR_ITER:
-			return (self->tp_seq && (self->tp_seq->tp_iter)) || DeeType_InheritIter(self);
+			return (self->tp_seq && (self->tp_seq->tp_iter &&
+			                         self->tp_seq->tp_foreach &&
+			                         self->tp_seq->tp_foreach_pair)) ||
+			       DeeType_InheritIter(self);
 		case OPERATOR_SIZE:
-			return (self->tp_seq && (self->tp_seq->tp_sizeob)) || DeeType_InheritSize(self);
+			return (self->tp_seq && (self->tp_seq->tp_sizeob &&
+			                         self->tp_seq->tp_size)) ||
+			       DeeType_InheritSize(self);
 		case OPERATOR_CONTAINS:
-			return (self->tp_seq && (self->tp_seq->tp_contains)) || DeeType_InheritContains(self);
+			return (self->tp_seq && (self->tp_seq->tp_contains)) ||
+			       DeeType_InheritContains(self);
 		case OPERATOR_GETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_getitem)) || DeeType_InheritGetItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_getitem &&
+			                         self->tp_seq->tp_getitem_index &&
+			                         self->tp_seq->tp_getitem_string_hash &&
+			                         self->tp_seq->tp_getitem_string_len_hash &&
+			                         /*self->tp_seq->tp_getitem_index_fast &&*/ /* May not end up defined */
+			                         self->tp_seq->tp_trygetitem &&
+			                         self->tp_seq->tp_trygetitem_string_hash &&
+			                         self->tp_seq->tp_trygetitem_string_len_hash &&
+			                         /* Everything above is functionally equivalent */
+			                         /* ================ */
+			                         /* Everything below can be substituted using the above */
+			                         self->tp_seq->tp_bounditem &&
+			                         self->tp_seq->tp_bounditem_index &&
+			                         self->tp_seq->tp_bounditem_string_hash &&
+			                         self->tp_seq->tp_bounditem_string_len_hash &&
+			                         self->tp_seq->tp_hasitem &&
+			                         self->tp_seq->tp_hasitem_index &&
+			                         self->tp_seq->tp_hasitem_string_hash &&
+			                         self->tp_seq->tp_hasitem_string_len_hash)) ||
+			       DeeType_InheritGetItem(self);
 		case OPERATOR_DELITEM:
-			return (self->tp_seq && (self->tp_seq->tp_delitem)) || DeeType_InheritDelItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_delitem &&
+			                         self->tp_seq->tp_delitem_index &&
+			                         self->tp_seq->tp_delitem_string_hash &&
+			                         self->tp_seq->tp_delitem_string_len_hash)) ||
+			       DeeType_InheritDelItem(self);
 		case OPERATOR_SETITEM:
-			return (self->tp_seq && (self->tp_seq->tp_setitem)) || DeeType_InheritSetItem(self);
+			return (self->tp_seq && (self->tp_seq->tp_setitem &&
+			                         self->tp_seq->tp_setitem_index &&
+			                         self->tp_seq->tp_setitem_string_hash &&
+			                         self->tp_seq->tp_setitem_string_len_hash)) ||
+			       DeeType_InheritSetItem(self);
 		case OPERATOR_GETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_getrange)) || DeeType_InheritGetRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_getrange &&
+			                         self->tp_seq->tp_getrange_index &&
+			                         self->tp_seq->tp_getrange_index_n)) ||
+			       DeeType_InheritGetRange(self);
 		case OPERATOR_DELRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_delrange)) || DeeType_InheritDelRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_delrange &&
+			                         self->tp_seq->tp_delrange_index &&
+			                         self->tp_seq->tp_delrange_index_n)) ||
+			       DeeType_InheritDelRange(self);
 		case OPERATOR_SETRANGE:
-			return (self->tp_seq && (self->tp_seq->tp_setrange)) || DeeType_InheritSetRange(self);
+			return (self->tp_seq && (self->tp_seq->tp_setrange &&
+			                         self->tp_seq->tp_setrange_index &&
+			                         self->tp_seq->tp_setrange_index_n)) ||
+			       DeeType_InheritSetRange(self);
 		default: __builtin_unreachable();
 		}
 		__builtin_unreachable();

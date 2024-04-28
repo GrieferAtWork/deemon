@@ -1733,7 +1733,7 @@ DeeSeq_CompareVF(DeeObject *const *lhsv, size_t lhsc,
 	for (i = 0; i < common; ++i) {
 		int diff;
 		DREF DeeObject *rhs_item;
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item)
 			return -2;
 		diff = DeeObject_Compare(lhsv[i], rhs_item);
@@ -1779,7 +1779,7 @@ DeeSeq_CompareVS(DeeObject *const *lhsv, size_t lhsc,
 	size_t rhs_size;
 	if (DeeTuple_Check(rhs)) {
 		result = DeeSeq_CompareVV(lhsv, lhsc, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result = DeeSeq_CompareVF(lhsv, lhsc, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
@@ -1799,7 +1799,7 @@ DeeSeq_CompareFV(DeeObject *lhs, size_t lhsc,
 	for (i = 0; i < common; ++i) {
 		int diff;
 		DREF DeeObject *lhs_item;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -2;
 		diff = DeeObject_Compare(lhs_item, rhsv[i]);
@@ -1817,10 +1817,10 @@ DeeSeq_CompareFF(DeeObject *lhs, size_t lhsc, DeeObject *rhs, size_t rhsc) {
 		int diff;
 		DREF DeeObject *lhs_item;
 		DREF DeeObject *rhs_item;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -2;
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item) {
 			Dee_Decref(lhs_item);
 			return -2;
@@ -1841,7 +1841,7 @@ DeeSeq_CompareFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 	for (i = 0; i < lhsc; ++i) {
 		DREF DeeObject *lhs_item;
 		int diff;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -2;
 		rhs_item = DeeObject_IterNext(rhs);
@@ -1873,7 +1873,7 @@ DeeSeq_CompareFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 	size_t rhs_size;
 	if (DeeTuple_Check(rhs)) {
 		result = DeeSeq_CompareFV(lhs, lhsc, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result = DeeSeq_CompareFF(lhs, lhsc, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
@@ -1929,7 +1929,7 @@ DeeSeq_CompareIF(DeeObject *lhs,
 				return -1; /* COUNT(LHS) < COUNT(RHS) */
 			return -2;
 		}
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item) {
 			Dee_Decref(lhs_item);
 			return -2;
@@ -1992,7 +1992,7 @@ DeeSeq_CompareIS(DeeObject *lhs,
 	size_t rhs_size;
 	if (DeeTuple_Check(rhs)) {
 		result = DeeSeq_CompareIV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result = DeeSeq_CompareIF(lhs, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;
@@ -2030,7 +2030,7 @@ DeeSeq_EqVF(DeeObject *const *lhsv,
 	for (i = 0; i < elemc; ++i) {
 		int diff;
 		DREF DeeObject *rhs_item;
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item)
 			return -2;
 		diff = DeeObject_CompareEq(lhsv[i], rhs_item);
@@ -2078,7 +2078,7 @@ DeeSeq_EqVS(DeeObject *const *lhsv, size_t lhsc,
 		if (lhsc != DeeTuple_SIZE(rhs))
 			return 0;
 		result = DeeSeq_EqVV(lhsv, DeeTuple_ELEM(rhs), lhsc);
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (lhsc != rhs_size)
 			return 0;
 		result = DeeSeq_EqVF(lhsv, rhs, rhs_size);
@@ -2100,7 +2100,7 @@ DeeSeq_EqFV(DeeObject *lhs,
 	for (i = 0; i < elemc; ++i) {
 		int diff;
 		DREF DeeObject *lhs_item;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -1;
 		diff = DeeObject_CompareEq(lhs_item, rhsv[i]);
@@ -2118,10 +2118,10 @@ DeeSeq_EqFF(DeeObject *lhs, DeeObject *rhs, size_t elemc) {
 		int diff;
 		DREF DeeObject *lhs_item;
 		DREF DeeObject *rhs_item;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -1;
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item) {
 			Dee_Decref(lhs_item);
 			return -1;
@@ -2142,7 +2142,7 @@ DeeSeq_EqFI(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 	for (i = 0; i < lhsc; ++i) {
 		DREF DeeObject *lhs_item;
 		int diff;
-		lhs_item = DeeFastSeq_GetItem(lhs, i);
+		lhs_item = DeeFastSeq_GetItem_deprecated(lhs, i);
 		if unlikely(!lhs_item)
 			return -1;
 		rhs_item = DeeObject_IterNext(rhs);
@@ -2176,7 +2176,7 @@ DeeSeq_EqFS(DeeObject *lhs, size_t lhsc, DeeObject *rhs) {
 		if (DeeTuple_SIZE(rhs) != lhsc)
 			return 0;
 		result = DeeSeq_EqFV(lhs, DeeTuple_ELEM(rhs), lhsc);
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (rhs_size != lhsc)
 			return 0;
 		result = DeeSeq_EqFF(lhs, rhs, rhs_size);
@@ -2234,7 +2234,7 @@ DeeSeq_EqIF(DeeObject *lhs,
 				return 0; /* COUNT(LHS) < COUNT(RHS) */
 			return -1;
 		}
-		rhs_item = DeeFastSeq_GetItem(rhs, i);
+		rhs_item = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_item) {
 			Dee_Decref(lhs_item);
 			return -1;
@@ -2295,7 +2295,7 @@ DeeSeq_EqIS(DeeObject *lhs, DeeObject *rhs) {
 	size_t rhs_size;
 	if (DeeTuple_Check(rhs)) {
 		result = DeeSeq_EqIV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	} else if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST) {
+	} else if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result = DeeSeq_EqIF(lhs, rhs, rhs_size);
 	} else {
 		DREF DeeObject *rhs_iter;

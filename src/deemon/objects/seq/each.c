@@ -1793,7 +1793,7 @@ seo_setrange(SeqEachOperator *self, DeeObject *start,
 	return (int)seo_foreach(self, &se_foreach_setrange_cb, &data);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1)) int DCALL
 seo_delitem_index(SeqEachOperator *self, size_t index) {
 	return (int)seo_foreach(self, &se_foreach_delitem_index_cb, (void *)(uintptr_t)index);
 }
@@ -2125,7 +2125,7 @@ err_r:
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 sew_nsi_fastsize(SeqEachBase *__restrict self) {
-	return DeeFastSeq_GetSize(self->se_seq);
+	return DeeFastSeq_GetSize_deprecated(self->se_seq);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL

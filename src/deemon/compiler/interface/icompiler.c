@@ -794,14 +794,14 @@ unpack_catch_expressions(DeeObject *__restrict handlers,
 	size_t catch_c, catch_a, i;
 	int error;
 	DREF DeeObject *iterator, *elem;
-	catch_c = DeeFastSeq_GetSize(handlers);
+	catch_c = DeeFastSeq_GetSize_deprecated(handlers);
 	/* Make use of fast-sequence optimizations. */
-	if (catch_c != DEE_FASTSEQ_NOTFAST) {
+	if (catch_c != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		catch_v = (struct catch_expr *)Dee_Mallocc(catch_c, sizeof(struct catch_expr));
 		if unlikely(!catch_v)
 			goto done;
 		for (i = 0; i < catch_c; ++i) {
-			elem = DeeFastSeq_GetItem(handlers, i);
+			elem = DeeFastSeq_GetItem_deprecated(handlers, i);
 			if unlikely(!elem)
 				goto err_fast;
 			error = unpack_catch_expression(elem, &catch_v[i], base_scope);

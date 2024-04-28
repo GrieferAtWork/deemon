@@ -647,8 +647,8 @@ again_hashset:
 	}
 	{
 		/* Fallback: Try the fast-sequence interface. */
-		size_t i, fastsize = DeeFastSeq_GetSize(sequence);
-		if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i, fastsize = DeeFastSeq_GetSize_deprecated(sequence);
+		if (fastsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 			size_t min_mask, mask;
 			if (fastsize == 0)
 				return USet_InitEmpty(self);
@@ -672,7 +672,7 @@ again_hashset:
 			self->us_size = fastsize;
 			for (i = 0; i < fastsize; ++i) {
 				DREF DeeObject *key;
-				key = DeeFastSeq_GetItemUnbound(sequence, i);
+				key = DeeFastSeq_GetItemUnbound_deprecated(sequence, i);
 				if unlikely(!ITER_ISOK(key)) {
 					if unlikely(key == ITER_DONE)
 						goto err_elem;
@@ -1702,6 +1702,7 @@ URoSet_DoInsertOrRehash(URoSet *__restrict self,
 		                                    sizeof(struct uset_item));
 		if unlikely(!newset)
 			goto err_ob;
+		newset->urs_size = self->urs_size;
 		newset->urs_mask = newmsk;
 		for (i = 0; i <= self->urs_mask; ++i) {
 			DREF DeeObject *key;
@@ -1742,8 +1743,8 @@ URoSet_FromIterator(DeeObject *__restrict iterator) {
 	                                         1 * sizeof(struct uset_item));
 	if unlikely(!result)
 		goto err;
-	result->urs_mask           = 0;
-	result->urs_size           = 0;
+	result->urs_mask            = 0;
+	result->urs_size            = 0;
 	result->urs_elem[0].usi_key = NULL;
 
 	/* Insert all elements from the given iterator into the resulting set. */
@@ -1899,8 +1900,8 @@ return_result:
 	}
 	{
 		/* Fallback: Try the fast-sequence interface. */
-		size_t i, fastsize = DeeFastSeq_GetSize(sequence);
-		if (fastsize != DEE_FASTSEQ_NOTFAST) {
+		size_t i, fastsize = DeeFastSeq_GetSize_deprecated(sequence);
+		if (fastsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 			size_t mask;
 			if (fastsize == 0)
 				return URoSet_New();
@@ -1918,7 +1919,7 @@ return_result:
 			result->urs_size = fastsize;
 			for (i = 0; i < fastsize; ++i) {
 				DREF DeeObject *key;
-				key = DeeFastSeq_GetItemUnbound(sequence, i);
+				key = DeeFastSeq_GetItemUnbound_deprecated(sequence, i);
 				if unlikely(!ITER_ISOK(key)) {
 					if unlikely(key == ITER_DONE) {
 						Dee_XDecrefv((DREF DeeObject **)result->urs_elem, i);

@@ -172,11 +172,11 @@ DeeStructType_FromSequence(DeeObject *name,
 	DREF DeeStructTypeObject *result;
 	size_t i, field_count;
 
-	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize() */
+	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize_deprecated() */
 
 	/* Optimization for fast sequence types. */
-	field_count = DeeFastSeq_GetSize(fields);
-	if (field_count != DEE_FASTSEQ_NOTFAST) {
+	field_count = DeeFastSeq_GetSize_deprecated(fields);
+	if (field_count != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t result_mask = 1;
 		size_t min_align = 1, instance_size = 0;
 		while (result_mask <= field_count)
@@ -191,7 +191,7 @@ DeeStructType_FromSequence(DeeObject *name,
 			DREF DeeObject *field_name_and_type[2];
 			int temp;
 			dhash_t j, perturb, hash;
-			elem = DeeFastSeq_GetItem(fields, i);
+			elem = DeeFastSeq_GetItem_deprecated(fields, i);
 			if unlikely(!elem)
 				goto err_r;
 			temp = DeeObject_Unpack(elem, 2, field_name_and_type);
@@ -643,7 +643,7 @@ struct_assign(DeeStructTypeObject *tp_self,
 		return 0;
 	}
 
-	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize() */
+	/* TODO: Use DeeObject_ForeachPair(), and get rid of DeeFastSeq_GetSize_deprecated() */
 
 	/* Fallback: assign a sequence:
 	 * >> struct_type point = {
@@ -656,12 +656,12 @@ struct_assign(DeeStructTypeObject *tp_self,
 	 * >> };
 	 * >> print repr p;
 	 */
-	fast_size = DeeFastSeq_GetSize(value);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(value);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t i;
 		for (i = 0; i < fast_size; ++i) {
 			int temp;
-			elem = DeeFastSeq_GetItem(value, i);
+			elem = DeeFastSeq_GetItem_deprecated(value, i);
 			if unlikely(!elem)
 				goto err;
 			temp = struct_setpair(tp_self, self, elem);

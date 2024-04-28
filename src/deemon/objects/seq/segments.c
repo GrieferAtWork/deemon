@@ -368,7 +368,7 @@ PRIVATE struct type_nsi tpconst seg_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&seg_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&seg_size_fast,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)&seg_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,

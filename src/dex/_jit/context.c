@@ -915,12 +915,12 @@ JITLValueList_UnpackAssign(JITLValueList *__restrict self,
 	size_t fast_size, i = 0;
 	int temp;
 	/* Try to make use of the fast-sequence API. */
-	fast_size = DeeFastSeq_GetSize(values);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(values);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (self->ll_size != fast_size)
 			return err_invalid_unpack_size(values, self->ll_size, fast_size);
 		for (; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(values, i);
+			elem = DeeFastSeq_GetItem_deprecated(values, i);
 			if unlikely(!elem)
 				goto err;
 			temp = JITLValue_SetValue(&self->ll_list[i],

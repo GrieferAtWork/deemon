@@ -1885,6 +1885,8 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 };
 
+#define Dee_COMPARE_ERR (-2)
+
 struct Dee_type_nii;
 struct Dee_type_cmp {
 	/* Compare operators. */
@@ -1905,11 +1907,17 @@ struct Dee_type_cmp {
 
 	/* Rich-compare operator that can be defined instead
 	 * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
-	 * @return: -2: An error occurred.
+	 * @return: Dee_COMPARE_ERR: An error occurred.
 	 * @return: -1: `lhs < rhs'
 	 * @return: 0:  `lhs == rhs'
 	 * @return: 1:  `lhs > rhs' */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
+	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
+	 * @return: Dee_COMPARE_ERR: An error occurred.
+	 * @return: -1: `lhs != rhs'
+	 * @return: 0:  `lhs == rhs'
+	 * @return: 1:  `lhs != rhs' */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare_eq)(DeeObject *self, DeeObject *some_object);
 };
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
@@ -3886,7 +3894,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);         /* tp_sizeob, tp_size */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritContains(DeeTypeObject *__restrict self);     /* tp_contains */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);      /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast, tp_trygetitem, tp_getitem_string_hash, tp_bounditem_string_hash, tp_hasitem_string_hash, tp_trygetitem_string_len_hash, tp_getitem_string_len_hash, tp_bounditem_string_len_hash, tp_hasitem_string_len_hash */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetItem(DeeTypeObject *__restrict self);      /* tp_getitem, tp_getitem_index, tp_bounditem, tp_bounditem_index, tp_hasitem, tp_hasitem_index, tp_getitem_index_fast, tp_trygetitem, tp_trygetitem_string_hash, tp_getitem_string_hash, tp_bounditem_string_hash, tp_hasitem_string_hash, tp_trygetitem_string_len_hash, tp_getitem_string_len_hash, tp_bounditem_string_len_hash, tp_hasitem_string_len_hash */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritDelItem(DeeTypeObject *__restrict self);      /* tp_delitem, tp_delitem_index, tp_delitem_string_hash, tp_delitem_string_len_hash */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSetItem(DeeTypeObject *__restrict self);      /* tp_setitem, tp_setitem_index, tp_setitem_string_hash, tp_setitem_string_len_hash */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritGetRange(DeeTypeObject *__restrict self);     /* tp_getrange, tp_getrange_index, tp_getrange_index_n */
@@ -4455,7 +4463,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLe)(DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGr)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self, DeeObject *some_object);
 
-/* @return: == -2: An error occurred.
+/* @return: == Dee_COMPARE_ERR: An error occurred.
  * @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs > rhs' */
@@ -4463,7 +4471,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
- * @return: == -2: An error occurred.
+ * @return: == Dee_COMPARE_ERR: An error occurred.
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
  * @return: == 1:  `lhs_keyed > key(rhs)' */

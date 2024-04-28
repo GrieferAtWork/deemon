@@ -6356,7 +6356,7 @@ fg_vopunpack(struct fungen *__restrict self, vstackaddr_t n) {
 			}
 
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-			/* If "seqtype" implements "nsi_getsize_fast" (DeeFastSeq_GetSize),
+			/* If "seqtype" implements "nsi_getsize_fast" (DeeFastSeq_GetSize_deprecated),
 			 * inline the relevant code from `DeeObject_Unpack()' */
 			if (seqtype->tp_seq &&
 			    seqtype->tp_seq->tp_nsi &&

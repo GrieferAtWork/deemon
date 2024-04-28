@@ -3161,10 +3161,10 @@ unpack_init_info(DeeObject *__restrict info,
 	} else {
 		size_t fast_size;
 		/* Use the fast-sequence interface. */
-		fast_size = DeeFastSeq_GetSize(info);
-		if (fast_size != DEE_FASTSEQ_NOTFAST) {
+		fast_size = DeeFastSeq_GetSize_deprecated(info);
+		if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 			if (fast_size == 1) {
-				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				*p_init_fields = DeeFastSeq_GetItem_deprecated(info, 0);
 				if unlikely(!*p_init_fields)
 					goto err;
 				*p_init_args = Dee_EmptyTuple;
@@ -3172,22 +3172,22 @@ unpack_init_info(DeeObject *__restrict info,
 				goto done_iterator_data;
 			}
 			if (fast_size == 2) {
-				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				*p_init_fields = DeeFastSeq_GetItem_deprecated(info, 0);
 				if unlikely(!*p_init_fields)
 					goto err;
-				*p_init_args = DeeFastSeq_GetItem(info, 1);
+				*p_init_args = DeeFastSeq_GetItem_deprecated(info, 1);
 				if unlikely(!*p_init_args)
 					goto err_fields;
 				goto done_iterator_data;
 			}
 			if (fast_size == 3) {
-				*p_init_fields = DeeFastSeq_GetItem(info, 0);
+				*p_init_fields = DeeFastSeq_GetItem_deprecated(info, 0);
 				if unlikely(!*p_init_fields)
 					goto err;
-				*p_init_args = DeeFastSeq_GetItem(info, 1);
+				*p_init_args = DeeFastSeq_GetItem_deprecated(info, 1);
 				if unlikely(!*p_init_args)
 					goto err_fields;
-				*p_init_kw = DeeFastSeq_GetItem(info, 2);
+				*p_init_kw = DeeFastSeq_GetItem_deprecated(info, 2);
 				if unlikely(!*p_init_kw)
 					goto err_args;
 				goto done_iterator_data;

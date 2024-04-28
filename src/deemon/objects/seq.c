@@ -2174,47 +2174,33 @@ err:
 #undef DO
 }
 
-/* Generic sequence operators: treat "self" as an indexable sequence.
- * When "self" doesn't override any sequence operators, treat as an empty sequence.
+/* Generic sequence operators: treat "self" as a read-only, indexable sequence.
+ *
+ * When "self" doesn't override any sequence operators, throw errors (unless
+ * "self" explicitly uses operators from "Sequence", in which case it is treated
+ * like an empty sequence).
  *
  * For this purpose, trust the return value of `DeeType_GetSeqClass()',
  * and wrap/modify operator invocation such that the object behaves as
  * though it was an indexable sequence. */
 
-#define DeeType_RequireIter(tp_self)                                                        \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_iter != &generic_seq_iter))
-#define DeeType_RequireSizeOb(tp_self)                                                        \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_sizeob != &generic_seq_sizeob))
-#define DeeType_RequireSize(tp_self)                                                        \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size) || DeeType_InheritSize(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_size != &generic_seq_size))
-#define DeeType_RequireContains(tp_self)                                                            \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_contains != &generic_seq_contains))
-#define DeeType_RequireForeach(tp_self)                                                        \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_foreach != &generic_seq_foreach))
-#define DeeType_RequireGetItemIndex(tp_self)                                                            \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_getitem_index != &generic_seq_getitem_index))
-#define DeeType_RequireBoundItemIndex(tp_self)                                                            \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem_index) || DeeType_InheritGetItem(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_bounditem_index != &generic_seq_bounditem_index))
-#define DeeType_RequireHasItemIndex(tp_self)                                                            \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_index) || DeeType_InheritGetItem(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_hasitem_index != &generic_seq_hasitem_index))
-#define DeeType_RequireGetRangeIndex(tp_self)                                                             \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index) || DeeType_InheritGetRange(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_getrange_index != &generic_seq_getrange_index))
-#define DeeType_RequireGetRangeIndexN(tp_self)                                                              \
-	((((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index_n) || DeeType_InheritGetRange(tp_self)) && \
-	 ((tp_self)->tp_seq->tp_getrange_index_n != &generic_seq_getrange_index_n))
+#define DeeType_RequireIter(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireSizeOb(tp_self)                (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
+#define DeeType_RequireSize(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size) || DeeType_InheritSize(tp_self))
+#define DeeType_RequireContains(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self))
+#define DeeType_RequireForeach(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireForeachPair(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireForeachAndForeachPair(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireGetItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_index) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireBoundItemIndex(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem_index) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireHasItemIndex(tp_self)          (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_index) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireGetRangeIndex(tp_self)         (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index) || DeeType_InheritGetRange(tp_self))
+#define DeeType_RequireGetRangeIndexN(tp_self)        (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getrange_index_n) || DeeType_InheritGetRange(tp_self))
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_iter(DeeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_sizeob(DeeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL generic_seq_size(DeeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL generic_seq_size_fast(DeeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_seq_contains(DeeObject *self, DeeObject *other);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL generic_seq_foreach(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_getitem_index(DeeObject *self, size_t index);
@@ -2226,43 +2212,91 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_seq_getrange_index_n(
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_iter(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_RequireIter(tp_self))
+	if (DeeType_RequireIter(tp_self)) {
+		if (tp_self->tp_seq->tp_iter == &generic_seq_iter)
+			goto handle_empty; /* Empty sequence. */
 		return (*tp_self->tp_seq->tp_iter)(self);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_ITER);
+	return NULL;
+handle_empty:
 	return_empty_iterator;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 generic_seq_foreach(DeeObject *__restrict self, Dee_foreach_t proc, void *arg) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_RequireForeach(tp_self))
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
 		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
-	return 0; /* Empty sequence. */
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
 }
 
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_sizeob(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSizeOb(tp_self))
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSizeOb(tp_self)) {
+		if (tp_self->tp_seq->tp_sizeob == &generic_seq_sizeob)
+			goto handle_empty; /* Empty sequence. */
 		return (*tp_self->tp_seq->tp_sizeob)(self);
-	if (DeeType_RequireIter(tp_self)) {
-		size_t result = DeeSeq_DefaultSizeWithIter(self);
+	}
+	if (DeeType_RequireForeachAndForeachPair(tp_self)) {
+		size_t result;
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
+		if (!DeeType_IsDefaultForeachPair(tp_self->tp_seq->tp_foreach_pair)) {
+			result = DeeSeq_DefaultSizeWithForeachPair(self);
+		} else {
+			result = DeeSeq_DefaultSizeWithForeach(self);
+		}
 		if unlikely(result == (size_t)-1)
 			goto err;
 		return DeeInt_NewSize(result);
 	}
-	return_reference_(DeeInt_Zero);
+	err_unimplemented_operator(tp_self, OPERATOR_SIZE);
 err:
 	return NULL;
+handle_empty:
+	return_reference_(DeeInt_Zero);
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 generic_seq_size(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(tp_self))
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(tp_self)) {
+		if (tp_self->tp_seq->tp_size == &generic_seq_size)
+			goto handle_empty; /* Empty sequence. */
 		return (*tp_self->tp_seq->tp_size)(self);
-	if (DeeType_RequireIter(tp_self))
-		return DeeSeq_DefaultSizeWithIter(self);
+	}
+	if (DeeType_RequireForeachAndForeachPair(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
+		if (!DeeType_IsDefaultForeachPair(tp_self->tp_seq->tp_foreach_pair)) {
+			return DeeSeq_DefaultSizeWithForeachPair(self);
+		} else {
+			return DeeSeq_DefaultSizeWithForeach(self);
+		}
+	}
+	return (size_t)err_unimplemented_operator(tp_self, OPERATOR_SIZE);
+handle_empty:
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+generic_seq_size_fast(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(tp_self)) {
+		if (tp_self->tp_seq->tp_size_fast == &generic_seq_size_fast)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_size_fast)(self);
+	}
+	return (size_t)-1;
+handle_empty:
 	return 0;
 }
 
@@ -2272,8 +2306,11 @@ generic_seq_contains(DeeObject *self, DeeObject *other) {
 	switch (DeeType_GetSeqClass(tp_self)) {
 	case Dee_SEQCLASS_SEQ:
 	case Dee_SEQCLASS_SET:
-		if (DeeType_RequireContains(tp_self))
+		if (DeeType_RequireContains(tp_self)) {
+			if (tp_self->tp_seq->tp_contains == &generic_seq_contains)
+				goto handle_empty; /* Empty sequence. */
 			return (*tp_self->tp_seq->tp_contains)(self, other);
+		}
 		break;
 	case Dee_SEQCLASS_MAP:
 		if ((tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem) || DeeType_InheritGetItem(tp_self)) {
@@ -2299,22 +2336,34 @@ generic_seq_contains(DeeObject *self, DeeObject *other) {
 		break;
 	default: break;
 	}
-	if (DeeType_RequireForeach(tp_self))
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
 		return DeeSeq_DefaultContainsWithForeachDefault(self, other);
-	return_false;
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_CONTAINS);
 err:
 	return NULL;
+handle_empty:
+	return_false;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_getitem_index(DeeObject *self, size_t index) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ) {
-		if (DeeType_RequireGetItemIndex(tp_self))
-			return (*tp_self->tp_seq->tp_getitem_index)(self, index);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGetItemIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_getitem_index)(self, index);
 	}
-	if (DeeType_RequireForeach(tp_self))
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_seq_foreach)
+			goto handle_empty; /* Empty sequence. */
 		return DeeSeq_DefaultGetItemIndexWithForeachDefault(self, index);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
+	return NULL;
+handle_empty:
 	err_index_out_of_bounds(self, index, 0);
 	return NULL;
 }
@@ -2323,15 +2372,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 generic_seq_bounditem_index(DeeObject *self, size_t index) {
 	size_t seqsize;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ) {
-		if (DeeType_RequireBoundItemIndex(tp_self))
-			return (*tp_self->tp_seq->tp_bounditem_index)(self, index);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireBoundItemIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_bounditem_index == &generic_seq_bounditem_index)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_bounditem_index)(self, index);
 	}
 	seqsize = generic_seq_size(self);
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
 	if (index < seqsize)
 		return 1;
+handle_empty:
 	return -2;
 err:
 	return -1;
@@ -2341,15 +2392,17 @@ PRIVATE WUNUSED NONNULL((1)) int DCALL
 generic_seq_hasitem_index(DeeObject *self, size_t index) {
 	size_t seqsize;
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ) {
-		if (DeeType_RequireHasItemIndex(tp_self))
-			return (*tp_self->tp_seq->tp_hasitem_index)(self, index);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireHasItemIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_hasitem_index == &generic_seq_hasitem_index)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_hasitem_index)(self, index);
 	}
 	seqsize = generic_seq_size(self);
 	if unlikely(seqsize == (size_t)-1)
 		goto err;
 	if (index < seqsize)
 		return 1;
+handle_empty:
 	return 0;
 err:
 	return -1;
@@ -2358,13 +2411,16 @@ err:
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_getrange_index(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ) {
-		if (DeeType_RequireGetRangeIndex(tp_self))
-			return (*tp_self->tp_seq->tp_getrange_index)(self, start, end);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGetRangeIndex(tp_self)) {
+		if (tp_self->tp_seq->tp_getrange_index == &generic_seq_getrange_index)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_getrange_index)(self, start, end);
 	}
 	if (DeeType_RequireIter(tp_self)) {
 		DREF DefaultSequence_WithIter *result;
 		struct Dee_seq_range range;
+		if (tp_self->tp_seq->tp_iter == &generic_seq_iter)
+			goto handle_empty;
 		if (start >= 0 && end >= 0) {
 			range.sr_start = (size_t)start;
 			range.sr_end   = (size_t)end;
@@ -2375,7 +2431,7 @@ generic_seq_getrange_index(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) 
 			DeeSeqRange_Clamp(&range, start, end, size);
 		}
 		if (range.sr_start >= range.sr_end)
-			goto empty_seq;
+			goto handle_empty;
 		result = DeeObject_MALLOC(DefaultSequence_WithIter);
 		if unlikely(!result)
 			goto err;
@@ -2387,22 +2443,26 @@ generic_seq_getrange_index(DeeObject *self, Dee_ssize_t start, Dee_ssize_t end) 
 		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
 		return (DREF DeeObject *)result;
 	}
-empty_seq:
-	return_empty_seq;
+	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 err:
 	return NULL;
+handle_empty:
+	return_empty_seq;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 generic_seq_getrange_index_n(DeeObject *self, Dee_ssize_t start) {
 	DeeTypeObject *tp_self = Dee_TYPE(self);
-	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ) {
-		if (DeeType_RequireGetRangeIndexN(tp_self))
-			return (*tp_self->tp_seq->tp_getrange_index_n)(self, start);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGetRangeIndexN(tp_self)) {
+		if (tp_self->tp_seq->tp_getrange_index_n == &generic_seq_getrange_index_n)
+			goto handle_empty; /* Empty sequence. */
+		return (*tp_self->tp_seq->tp_getrange_index_n)(self, start);
 	}
 	if (DeeType_RequireIter(tp_self)) {
 		DREF DefaultSequence_WithIter *result;
 		size_t used_start;
+		if (tp_self->tp_seq->tp_iter == &generic_seq_iter)
+			goto handle_empty;
 		if (start >= 0) {
 			used_start = (size_t)start;
 		} else {
@@ -2422,9 +2482,11 @@ generic_seq_getrange_index_n(DeeObject *self, Dee_ssize_t start) {
 		DeeObject_Init(result, &DefaultSequence_WithIter_Type);
 		return (DREF DeeObject *)result;
 	}
-	return_empty_seq;
+	err_unimplemented_operator(tp_self, OPERATOR_GETRANGE);
 err:
 	return NULL;
+handle_empty:
+	return_empty_seq;
 }
 
 PRIVATE struct type_seq seq_seq = {
@@ -2443,7 +2505,7 @@ PRIVATE struct type_seq seq_seq = {
 	/* .tp_bounditem                  = */ NULL,
 	/* .tp_hasitem                    = */ NULL,
 	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_seq_size,
-	/* .tp_size_fast                  = */ NULL,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_seq_size_fast,
 	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_seq_getitem_index,
 	/* .tp_getitem_index_fast         = */ NULL,
 	/* .tp_delitem_index              = */ NULL,
@@ -2478,7 +2540,7 @@ DeeSeq_Eq(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *lhs_iter;
 	size_t lhs_size;
-	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
+	if ((lhs_size = DeeFastSeq_GetSize_deprecated(lhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return DeeSeq_EqFS(lhs, lhs_size, rhs);
 	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
@@ -2493,7 +2555,7 @@ DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 	int result;
 	DREF DeeObject *lhs_iter;
 	size_t lhs_size;
-	if ((lhs_size = DeeFastSeq_GetSize(lhs)) != DEE_FASTSEQ_NOTFAST)
+	if ((lhs_size = DeeFastSeq_GetSize_deprecated(lhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return DeeSeq_CompareFS(lhs, lhs_size, rhs);
 	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
@@ -4032,7 +4094,11 @@ seq_blocateall(DeeObject *self, size_t argc, DeeObject *const *argv, DeeObject *
 	}
 	if unlikely(error)
 		goto err;
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	return generic_seq_getrange_index(self, result_start, result_end);
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	return DeeSeq_GetRange(self, result_start, result_end);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 err:
 	return NULL;
 }

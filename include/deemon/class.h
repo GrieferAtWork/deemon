@@ -1413,6 +1413,7 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 #define DeeType_invoke_seq_tp_bounditem_NODEFAULT(tp_self, tp_bounditem, self, index)                                                (*tp_bounditem)(self, index)
 #define DeeType_invoke_seq_tp_hasitem_NODEFAULT(tp_self, tp_hasitem, self, index)                                                    (*tp_hasitem)(self, index)
 #define DeeType_invoke_seq_tp_size_NODEFAULT(tp_self, tp_size, self)                                                                 (*tp_size)(self)
+#define DeeType_invoke_seq_tp_size_fast_NODEFAULT(tp_self, tp_size_fast, self)                                                       (*tp_size_fast)(self)
 #define DeeType_invoke_seq_tp_getitem_index_NODEFAULT(tp_self, tp_getitem_index, self, index)                                        (*tp_getitem_index)(self, index)
 #define DeeType_invoke_seq_tp_delitem_index_NODEFAULT(tp_self, tp_delitem_index, self, index)                                        (*tp_delitem_index)(self, index)
 #define DeeType_invoke_seq_tp_setitem_index_NODEFAULT(tp_self, tp_setitem_index, self, index, value)                                 (*tp_setitem_index)(self, index, value)
@@ -1572,6 +1573,9 @@ INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultSizeWithSizeOb(DeeObje
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultSizeWithForeachPair(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultSizeWithForeach(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_DefaultSizeWithIter(DeeObject *__restrict self);
+
+/* tp_size_fast */
+INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeObject_DefaultSizeFastWithErrorNotFast(DeeObject *__restrict self);
 
 /* tp_contains */
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL DeeSeq_DefaultContainsWithForeachDefault(DeeObject *self, DeeObject *elem); /* May call other DEFAULT operators */
@@ -1973,14 +1977,19 @@ for (local a, b, c: decls) {
 for (local name: groupNames) {
 	local mems = Tuple(for (local x: groups[name]) if (hasTypedVariant(x)) x);
 	local tp = getTpName(name);
-	print("#define DeeType_MapDefault", name, "(", tp, ", map, default) \\");
-	for (local i, mem: util.enumerate(mems)) {
-		print("	", i == 0 ? "(" : " "),;
-		print("(", tp, ") == &", mem, " ? map(", mem.replace("_", "_T"), ") : "),;
-		if (i == #mems - 1) {
-			print("default)");
-		} else {
-			print("\\");
+	print("#define DeeType_MapDefault", name, "(", tp, ", map, default) "),;
+	if (!mems) {
+		print("default");
+	} else {
+		print("\\");
+		for (local i, mem: util.enumerate(mems)) {
+			print("	", i == 0 ? "(" : " "),;
+			print("(", tp, ") == &", mem, " ? map(", mem.replace("_", "_T"), ") : "),;
+			if (i == #mems - 1) {
+				print("default)");
+			} else {
+				print("\\");
+			}
 		}
 	}
 }
@@ -2014,6 +2023,7 @@ function getOperatorPackage(name: string): string {
 		"Ge" : "cmp",
 		"Iter" : "seq",
 		"Size" : "seq",
+		"SizeFast" : "seq",
 		"SizeOb" : "seq",
 		"Foreach" : "seq",
 		"ForeachPair" : "seq",
@@ -2028,15 +2038,21 @@ for (local name: groupNames) {
 		package += "_";
 	local args = decls.filter(e -> e[1] == mems.first).first.last.rstrip(");");
 	local args = ", ".join(for (local a: args.split(",")) a.strip().rerpartition(r"[* ]").last);
-	print("#define DeeType_invoke_", package, tp, "_DEFAULT(tp_self, ", tp, ", ", args, ", default) \\");
 	local mems = Tuple(for (local x: mems) if (hasTypedVariant(x)) x);
-	for (local i, mem: util.enumerate(mems)) {
-		print("	", i == 0 ? "(" : " "),;
-		print("(", tp, ") == &", mem, " ? ", mem.replace("_", "_T"), "(tp_self, ", args, ") : "),;
+	print("#define DeeType_invoke_", package, tp, "_DEFAULT(tp_self, ", tp, ", ", args, ", default) "),;
+	if (!mems) {
+		print("default");
+		//print("(*(", tp, "))(", args, ")");
+	} else {
 		print("\\");
+		for (local i, mem: util.enumerate(mems)) {
+			print("	", i == 0 ? "(" : " "),;
+			print("(", tp, ") == &", mem, " ? ", mem.replace("_", "_T"), "(tp_self, ", args, ") : "),;
+			print("\\");
+		}
+		print("	 default)");
+		//print("	 (*(", tp, "))(", args, "))");
 	}
-	print("	 default)");
-	//print("	 (*(", tp, "))(", args, "))");
 }
 for (local name: groupNames) {
 	local mems = groups[name];
@@ -2134,6 +2150,7 @@ INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultSizeWithSizeOb(Dee
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultSizeWithForeachPair(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultSizeWithForeach(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeSeq_TDefaultSizeWithIter(DeeTypeObject *tp_self, DeeObject *self);
+INTDEF WUNUSED NONNULL((1, 2)) size_t DCALL DeeObject_TDefaultSizeFastWithErrorNotFast(DeeTypeObject *tp_self, DeeObject *self);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeSeq_TDefaultContainsWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *elem);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_TDefaultContainsWithHasItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *elem);
 INTDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL DeeMap_TDefaultContainsWithBoundItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *elem);
@@ -2521,6 +2538,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_size) == &DeeSeq_DefaultSizeWithForeachPair ? map(DeeSeq_TDefaultSizeWithForeachPair) : \
 	 (tp_size) == &DeeSeq_DefaultSizeWithForeach ? map(DeeSeq_TDefaultSizeWithForeach) : \
 	 (tp_size) == &DeeSeq_DefaultSizeWithIter ? map(DeeSeq_TDefaultSizeWithIter) : default)
+#define DeeType_MapDefaultSizeFast(tp_size_fast, map, default) default
 #define DeeType_MapDefaultContains(tp_contains, map, default) \
 	((tp_contains) == &DeeSeq_DefaultContainsWithForeachDefault ? map(DeeSeq_TDefaultContainsWithForeachDefault) : \
 	 (tp_contains) == &DeeMap_DefaultContainsWithHasItem ? map(DeeMap_TDefaultContainsWithHasItem) : \
@@ -2924,6 +2942,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_size) == &DeeSeq_DefaultSizeWithForeachPair || \
 	 (tp_size) == &DeeSeq_DefaultSizeWithForeach || \
 	 (tp_size) == &DeeSeq_DefaultSizeWithIter)
+#define DeeType_IsDefaultSizeFast(tp_size_fast) \
+	((tp_size_fast) == &DeeObject_DefaultSizeFastWithErrorNotFast)
 #define DeeType_IsDefaultContains(tp_contains) \
 	((tp_contains) == &DeeSeq_DefaultContainsWithForeachDefault || \
 	 (tp_contains) == &DeeMap_DefaultContainsWithHasItem || \
@@ -3389,6 +3409,7 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_size) == &DeeSeq_DefaultSizeWithForeach ? DeeSeq_TDefaultSizeWithForeach(tp_self, self) : \
 	 (tp_size) == &DeeSeq_DefaultSizeWithIter ? DeeSeq_TDefaultSizeWithIter(tp_self, self) : \
 	 default)
+#define DeeType_invoke_seq_tp_size_fast_DEFAULT(tp_self, tp_size_fast, self, default) default
 #define DeeType_invoke_seq_tp_contains_DEFAULT(tp_self, tp_contains, self, elem, default) \
 	((tp_contains) == &DeeSeq_DefaultContainsWithForeachDefault ? DeeSeq_TDefaultContainsWithForeachDefault(tp_self, self, elem) : \
 	 (tp_contains) == &DeeMap_DefaultContainsWithHasItem ? DeeMap_TDefaultContainsWithHasItem(tp_self, self, elem) : \
@@ -3786,6 +3807,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 DeeType_invoke_seq_tp_sizeob_DEFAULT(tp_self, tp_sizeob, self, DeeType_invoke_seq_tp_sizeob_NODEFAULT(tp_self, tp_sizeob, self))
 #define DeeType_invoke_seq_tp_size(tp_self, tp_size, self) \
 	 DeeType_invoke_seq_tp_size_DEFAULT(tp_self, tp_size, self, DeeType_invoke_seq_tp_size_NODEFAULT(tp_self, tp_size, self))
+#define DeeType_invoke_seq_tp_size_fast(tp_self, tp_size_fast, self) \
+	 DeeType_invoke_seq_tp_size_fast_DEFAULT(tp_self, tp_size_fast, self, DeeType_invoke_seq_tp_size_fast_NODEFAULT(tp_self, tp_size_fast, self))
 #define DeeType_invoke_seq_tp_contains(tp_self, tp_contains, self, elem) \
 	 DeeType_invoke_seq_tp_contains_DEFAULT(tp_self, tp_contains, self, elem, DeeType_invoke_seq_tp_contains_NODEFAULT(tp_self, tp_contains, self, elem))
 #define DeeType_invoke_seq_tp_getitem(tp_self, tp_getitem, self, index) \
@@ -4020,6 +4043,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_InvokeSeqHasItem_NODEFAULT(tp_self, self, index)                                 DeeType_invoke_seq_tp_hasitem_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_hasitem, self, index)
 #define DeeType_InvokeSeqSize(tp_self, self)                                                     DeeType_invoke_seq_tp_size(tp_self, (tp_self)->tp_seq->tp_size, self)
 #define DeeType_InvokeSeqSize_NODEFAULT(tp_self, self)                                           DeeType_invoke_seq_tp_size_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_size, self)
+#define DeeType_InvokeSeqSizeFast(tp_self, self)                                                 DeeType_invoke_seq_tp_size_fast(tp_self, (tp_self)->tp_seq->tp_size, self)
+#define DeeType_InvokeSeqSizeFast_NODEFAULT(tp_self, self)                                       DeeType_invoke_seq_tp_size_fast_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_size, self)
 #define DeeType_InvokeSeqGetItemIndex(tp_self, self, index)                                      DeeType_invoke_seq_tp_getitem_index(tp_self, (tp_self)->tp_seq->tp_getitem_index, self, index)
 #define DeeType_InvokeSeqGetItemIndex_NODEFAULT(tp_self, self, index)                            DeeType_invoke_seq_tp_getitem_index_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_getitem_index, self, index)
 #define DeeType_InvokeSeqDelItemIndex(tp_self, self, index)                                      DeeType_invoke_seq_tp_delitem_index(tp_self, (tp_self)->tp_seq->tp_delitem_index, self, index)

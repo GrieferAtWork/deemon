@@ -41,6 +41,33 @@ DECL_BEGIN
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_seq) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_index) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_index));
 
+#define di_sgi_copy  di_gi_copy
+#define di_sgif_copy di_gi_copy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_gi_copy(DefaultIterator_WithGetItemIndex *__restrict self,
+           DefaultIterator_WithGetItemIndex *__restrict other) {
+	self->digi_seq = other->digi_seq;
+	Dee_Incref(self->digi_seq);
+	self->digi_tp_getitem_index = other->digi_tp_getitem_index;
+	self->digi_index = atomic_read(&other->digi_index);
+	return 0;
+}
+
+#define di_sgi_deepcopy  di_gi_deepcopy
+#define di_sgif_deepcopy di_gi_deepcopy
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_gi_deepcopy(DefaultIterator_WithGetItemIndex *__restrict self,
+               DefaultIterator_WithGetItemIndex *__restrict other) {
+	self->digi_seq = DeeObject_DeepCopy(other->digi_seq);
+	if unlikely(!self->digi_seq)
+		goto err;
+	self->digi_tp_getitem_index = other->digi_tp_getitem_index;
+	self->digi_index = atomic_read(&other->digi_index);
+	return 0;
+err:
+	return -1;
+}
+
 #define di_sgi_fini  di_gi_fini
 #define di_sgif_fini di_gi_fini
 PRIVATE NONNULL((1)) void DCALL
@@ -211,8 +238,8 @@ INTERN DeeTypeObject DefaultIterator_WithGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_gi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_gi_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithGetItemIndex)
 			}
@@ -256,8 +283,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_sgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_sgi_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
 			}
@@ -301,8 +328,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_sgif_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_sgif_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
 			}
@@ -367,6 +394,70 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithGetItem, dig_index) == offsetof(Defau
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItem, dig_lock) == offsetof(DefaultIterator_WithTGetItem, ditg_lock));
 #endif /* !CONFIG_NO_THREADS */
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_g_copy(DefaultIterator_WithGetItem *__restrict self,
+          DefaultIterator_WithGetItem *__restrict other) {
+	DREF DeeObject *index, *index_copy;
+	DefaultIterator_WithGetItem_LockAcquire(other);
+	index = other->dig_index;
+	Dee_Incref(index);
+	DefaultIterator_WithGetItem_LockRelease(other);
+	index_copy = DeeObject_Copy(index);
+	Dee_Decref_unlikely(index);
+	if unlikely(!index_copy)
+		goto err;
+	self->dig_index = index_copy;
+	Dee_atomic_lock_init(&self->dig_lock);
+	self->dig_tp_getitem = other->dig_tp_getitem;
+	self->dig_seq        = other->dig_seq;
+	Dee_Incref(self->dig_seq);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_g_deepcopy(DefaultIterator_WithGetItem *__restrict self,
+              DefaultIterator_WithGetItem *__restrict other) {
+	DREF DeeObject *index, *index_copy;
+	DefaultIterator_WithGetItem_LockAcquire(other);
+	index = other->dig_index;
+	Dee_Incref(index);
+	DefaultIterator_WithGetItem_LockRelease(other);
+	index_copy = DeeObject_DeepCopy(index);
+	Dee_Decref_unlikely(index);
+	if unlikely(!index_copy)
+		goto err;
+	self->dig_seq = DeeObject_DeepCopy(other->dig_seq);
+	if unlikely(!self->dig_seq)
+		goto err_index_copy;
+
+	self->dig_index = index_copy;
+	Dee_atomic_lock_init(&self->dig_lock);
+	self->dig_tp_getitem = other->dig_tp_getitem;
+	return 0;
+err_index_copy:
+	Dee_Decref(index_copy);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_tg_copy(DefaultIterator_WithTGetItem *__restrict self,
+           DefaultIterator_WithTGetItem *__restrict other) {
+	self->ditg_tp_seq = other->ditg_tp_seq;
+	return di_g_copy((DefaultIterator_WithGetItem *)self,
+	                 (DefaultIterator_WithGetItem *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_tg_deepcopy(DefaultIterator_WithTGetItem *__restrict self,
+               DefaultIterator_WithTGetItem *__restrict other) {
+	self->ditg_tp_seq = other->ditg_tp_seq;
+	return di_g_deepcopy((DefaultIterator_WithGetItem *)self,
+	                     (DefaultIterator_WithGetItem *)other);
+}
 
 #define di_tg_fini di_g_fini
 PRIVATE NONNULL((1)) void DCALL
@@ -557,8 +648,8 @@ INTERN DeeTypeObject DefaultIterator_WithGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_g_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_g_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithGetItem)
 			}
@@ -602,8 +693,8 @@ INTERN DeeTypeObject DefaultIterator_WithTGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_tg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_tg_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithTGetItem)
 			}
@@ -668,6 +759,83 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_index) == offset
 #ifndef CONFIG_NO_THREADS
 STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_lock) == offsetof(DefaultIterator_WithGetItem, dig_lock));
 #endif /* !CONFIG_NO_THREADS */
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_seq) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_seq));
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_index) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_index));
+#ifndef CONFIG_NO_THREADS
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_lock) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_lock));
+#endif /* !CONFIG_NO_THREADS */
+STATIC_ASSERT(offsetof(DefaultIterator_WithSizeAndGetItem, disg_end) == offsetof(DefaultIterator_WithTSizeAndGetItem, ditsg_end));
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sg_copy(DefaultIterator_WithSizeAndGetItem *__restrict self,
+           DefaultIterator_WithSizeAndGetItem *__restrict other) {
+	DREF DeeObject *index, *index_copy;
+	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
+	index = other->disg_index;
+	Dee_Incref(index);
+	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
+	index_copy = DeeObject_Copy(index);
+	Dee_Decref_unlikely(index);
+	if unlikely(!index_copy)
+		goto err;
+	self->disg_index = index_copy;
+	Dee_atomic_lock_init(&self->disg_lock);
+	self->disg_tp_getitem = other->disg_tp_getitem;
+	self->disg_seq        = other->disg_seq;
+	Dee_Incref(self->disg_seq);
+	self->disg_end = other->disg_end;
+	Dee_Incref(other->disg_end);
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_sg_deepcopy(DefaultIterator_WithSizeAndGetItem *__restrict self,
+               DefaultIterator_WithSizeAndGetItem *__restrict other) {
+	DREF DeeObject *index, *index_copy, *end_copy;
+	DefaultIterator_WithSizeAndGetItem_LockAcquire(other);
+	index = other->disg_index;
+	Dee_Incref(index);
+	DefaultIterator_WithSizeAndGetItem_LockRelease(other);
+	index_copy = DeeObject_DeepCopy(index);
+	Dee_Decref_unlikely(index);
+	if unlikely(!index_copy)
+		goto err;
+	end_copy = DeeObject_DeepCopy(other->disg_end);
+	if unlikely(!end_copy)
+		goto err_index_copy;
+	self->disg_seq = DeeObject_DeepCopy(other->disg_seq);
+	if unlikely(!self->disg_seq)
+		goto err_index_copy_end_copy;
+	self->disg_index = index_copy;
+	self->disg_end   = end_copy;
+	Dee_atomic_lock_init(&self->disg_lock);
+	self->disg_tp_getitem = other->disg_tp_getitem;
+	return 0;
+err_index_copy_end_copy:
+	Dee_Decref(end_copy);
+err_index_copy:
+	Dee_Decref(index_copy);
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_tsg_copy(DefaultIterator_WithTSizeAndGetItem *__restrict self,
+            DefaultIterator_WithTSizeAndGetItem *__restrict other) {
+	self->ditsg_tp_seq = other->ditsg_tp_seq;
+	return di_sg_copy((DefaultIterator_WithSizeAndGetItem *)self,
+	                  (DefaultIterator_WithSizeAndGetItem *)other);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_tsg_deepcopy(DefaultIterator_WithTSizeAndGetItem *__restrict self,
+                DefaultIterator_WithTSizeAndGetItem *__restrict other) {
+	self->ditsg_tp_seq = other->ditsg_tp_seq;
+	return di_sg_deepcopy((DefaultIterator_WithSizeAndGetItem *)self,
+	                      (DefaultIterator_WithSizeAndGetItem *)other);
+}
 
 #define di_tsg_fini di_sg_fini
 PRIVATE NONNULL((1)) void DCALL
@@ -813,8 +981,8 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_sg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_sg_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithSizeAndGetItem)
 			}
@@ -858,8 +1026,8 @@ INTERN DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_tsg_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_tsg_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR_GC(DefaultIterator_WithTSizeAndGetItem)
 			}
@@ -919,6 +1087,32 @@ INTERN DeeTypeObject DefaultIterator_WithTSizeAndGetItem_Type = {
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithNextAndLimit, dinl_iter) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nl_copy(DefaultIterator_WithNextAndLimit *__restrict self,
+           DefaultIterator_WithNextAndLimit *__restrict other) {
+	self->dinl_iter = DeeObject_Copy(other->dinl_iter);
+	if unlikely(!self->dinl_iter)
+		goto err;
+	self->dinl_tp_next = other->dinl_tp_next;
+	self->dinl_limit   = other->dinl_limit;
+	return 0;
+err:
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+di_nl_deepcopy(DefaultIterator_WithNextAndLimit *__restrict self,
+               DefaultIterator_WithNextAndLimit *__restrict other) {
+	self->dinl_iter = DeeObject_DeepCopy(other->dinl_iter);
+	if unlikely(!self->dinl_iter)
+		goto err;
+	self->dinl_tp_next = other->dinl_tp_next;
+	self->dinl_limit   = other->dinl_limit;
+	return 0;
+err:
+	return -1;
+}
 
 #define di_nl_fini  di_sgi_fini
 #define di_nl_visit di_sgi_visit
@@ -988,8 +1182,8 @@ INTERN DeeTypeObject DefaultIterator_WithNextAndLimit_Type = {
 		{
 			/* .tp_alloc = */ {
 				/* .tp_ctor      = */ (dfunptr_t)NULL,
-				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
-				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_nl_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_nl_deepcopy,
 				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
 				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithNextAndLimit)
 			}

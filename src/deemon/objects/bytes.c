@@ -254,8 +254,8 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 		return 0;
 	}
 
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(seq);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (fast_size != num_bytes) {
 			err_invalid_unpack_size(seq, num_bytes, fast_size);
 			goto err;
@@ -263,7 +263,7 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 
 		/* Fast-sequence optimizations. */
 		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(seq, i);
+			elem = DeeFastSeq_GetItem_deprecated(seq, i);
 			if unlikely(!elem)
 				goto err;
 			error = DeeObject_AsUIntX(elem, &dst[i]);
@@ -315,8 +315,8 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 	DREF DeeObject *iter, *elem;
 	if (DeeBytes_Check(seq))
 		return DeeBytes_NewBufferData(DeeBytes_DATA(seq), DeeBytes_SIZE(seq));
-	bufsize = DeeFastSeq_GetSize(seq);
-	if (bufsize != DEE_FASTSEQ_NOTFAST) {
+	bufsize = DeeFastSeq_GetSize_deprecated(seq);
+	if (bufsize != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (bufsize == 0)
 			return_empty_bytes;
 		result = (DREF Bytes *)DeeObject_Malloc(offsetof(Bytes, b_data) +
@@ -327,7 +327,7 @@ DeeBytes_FromSequence(DeeObject *__restrict seq) {
 		/* Fast-sequence optimizations. */
 		for (i = 0; i < bufsize; ++i) {
 			int error;
-			elem = DeeFastSeq_GetItem(seq, i);
+			elem = DeeFastSeq_GetItem_deprecated(seq, i);
 			if unlikely(!elem)
 				goto err_r;
 			error = DeeObject_AsUIntX(elem, &result->b_data[i]);

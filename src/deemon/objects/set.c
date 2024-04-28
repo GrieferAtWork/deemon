@@ -25,6 +25,7 @@
 #include <deemon/arg.h>
 #include <deemon/attribute.h>
 #include <deemon/bool.h>
+#include <deemon/class.h>
 #include <deemon/error.h>
 #include <deemon/format.h>
 #include <deemon/int.h>
@@ -584,10 +585,10 @@ set_inplace_sub(DeeObject **__restrict p_self,
 	remove_func = DeeObject_GetAttr(self, (DeeObject *)&str_remove);
 	if unlikely(!remove_func)
 		goto err;
-	size = DeeFastSeq_GetSize(items);
-	if (size != DEE_FASTSEQ_NOTFAST) {
+	size = DeeFastSeq_GetSize_deprecated(items);
+	if (size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		for (i = 0; i < size; ++i) {
-			remove_args[0] = DeeFastSeq_GetItem(items, i);
+			remove_args[0] = DeeFastSeq_GetItem_deprecated(items, i);
 			if unlikely(!remove_args[0])
 				goto err_func;
 			callback_result = DeeObject_Call(remove_func, 1, remove_args);
@@ -847,6 +848,216 @@ PRIVATE struct type_cmp set_cmp = {
 };
 
 
+
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+
+/* Generic set operators: treat "self" as a read-only set that can be enumerated
+ * to yield keys.
+ *
+ * When "self" doesn't override any sequence operators, throw errors (unless
+ * "self" explicitly uses operators from "Set", in which case it is treated
+ * like an empty set).
+ *
+ * For this purpose, trust the return value of `DeeType_GetSeqClass()',
+ * and wrap/modify operator invocation such that the object behaves as
+ * though it was an indexable sequence. */
+#define DeeType_RequireIter(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_iter) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireSizeOb(tp_self)                (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_sizeob) || DeeType_InheritSize(tp_self))
+#define DeeType_RequireSize(tp_self)                  (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_size) || DeeType_InheritSize(tp_self))
+#define DeeType_RequireContains(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_contains) || DeeType_InheritContains(tp_self))
+#define DeeType_RequireForeach(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireForeachPair(tp_self)           (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+#define DeeType_RequireForeachAndForeachPair(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_foreach && (tp_self)->tp_seq->tp_foreach_pair) || DeeType_InheritIter(tp_self))
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_set_iter(DeeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_set_sizeob(DeeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL generic_set_size(DeeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL generic_set_size_fast(DeeObject *__restrict self);
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_contains(DeeObject *self, DeeObject *other);
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_set_iter(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_RequireIter(tp_self)) {
+		if (tp_self->tp_seq->tp_iter == &generic_set_iter)
+			goto handle_empty; /* Empty set. */
+		return (*tp_self->tp_seq->tp_iter)(self);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_ITER);
+	return NULL;
+handle_empty:
+	return_empty_iterator;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+generic_set_foreach(DeeObject *__restrict self, Dee_foreach_t proc, void *arg) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_set_foreach)
+			goto handle_empty; /* Empty set. */
+		return (*tp_self->tp_seq->tp_foreach)(self, proc, arg);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_ITER);
+handle_empty:
+	return 0;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_set_sizeob(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSizeOb(tp_self)) {
+		if (tp_self->tp_seq->tp_sizeob == &generic_set_sizeob)
+			goto handle_empty; /* Empty set. */
+		return (*tp_self->tp_seq->tp_sizeob)(self);
+	}
+	if (DeeType_RequireForeachAndForeachPair(tp_self)) {
+		size_t result;
+		if (tp_self->tp_seq->tp_foreach == &generic_set_foreach)
+			goto handle_empty; /* Empty set. */
+		if (!DeeType_IsDefaultForeachPair(tp_self->tp_seq->tp_foreach_pair)) {
+			result = DeeSeq_DefaultSizeWithForeachPair(self);
+		} else {
+			result = DeeSeq_DefaultSizeWithForeach(self);
+		}
+		if unlikely(result == (size_t)-1)
+			goto err;
+		return DeeInt_NewSize(result);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_SIZE);
+err:
+	return NULL;
+handle_empty:
+	return_reference_(DeeInt_Zero);
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+generic_set_size(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(tp_self)) {
+		if (tp_self->tp_seq->tp_size == &generic_set_size)
+			goto handle_empty; /* Empty set. */
+		return (*tp_self->tp_seq->tp_size)(self);
+	}
+	if (DeeType_RequireForeachAndForeachPair(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_set_foreach)
+			goto handle_empty; /* Empty set. */
+		if (!DeeType_IsDefaultForeachPair(tp_self->tp_seq->tp_foreach_pair)) {
+			return DeeSeq_DefaultSizeWithForeachPair(self);
+		} else {
+			return DeeSeq_DefaultSizeWithForeach(self);
+		}
+	}
+	return (size_t)err_unimplemented_operator(tp_self, OPERATOR_SIZE);
+handle_empty:
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+generic_set_size_fast(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) != Dee_SEQCLASS_NONE && DeeType_RequireSize(tp_self)) {
+		if (tp_self->tp_seq->tp_size_fast == &generic_set_size_fast)
+			goto handle_empty; /* Empty set. */
+		return (*tp_self->tp_seq->tp_size_fast)(self);
+	}
+	return (size_t)-1;
+handle_empty:
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_set_contains(DeeObject *self, DeeObject *other) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	switch (DeeType_GetSeqClass(tp_self)) {
+	case Dee_SEQCLASS_SEQ:
+	case Dee_SEQCLASS_SET:
+		if (DeeType_RequireContains(tp_self)) {
+			if (tp_self->tp_seq->tp_contains == &generic_set_contains)
+				goto handle_empty; /* Empty set. */
+			return (*tp_self->tp_seq->tp_contains)(self, other);
+		}
+		break;
+	case Dee_SEQCLASS_MAP:
+		if ((tp_self->tp_seq && tp_self->tp_seq->tp_trygetitem) || DeeType_InheritGetItem(tp_self)) {
+			DREF DeeObject *wanted_key_value[2];
+			DREF DeeObject *value, *result;
+			if (DeeObject_Unpack(other, 2, wanted_key_value))
+				goto err;
+			value = (*tp_self->tp_seq->tp_trygetitem)(self, wanted_key_value[0]);
+			Dee_Decref(wanted_key_value[0]);
+			if unlikely(!value) {
+				Dee_Decref(wanted_key_value[1]);
+				goto err;
+			}
+			if (value == ITER_DONE) {
+				Dee_Decref(wanted_key_value[1]);
+				return_false;
+			}
+			result = DeeObject_CompareEqObject(wanted_key_value[1], value);
+			Dee_Decref(wanted_key_value[1]);
+			Dee_Decref(value);
+			return result;
+		}
+		break;
+	default: break;
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach == &generic_set_foreach)
+			goto handle_empty; /* Empty set. */
+		return DeeSeq_DefaultContainsWithForeachDefault(self, other);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_CONTAINS);
+err:
+	return NULL;
+handle_empty:
+	return_false;
+}
+
+PRIVATE struct type_seq set_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_set_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&generic_set_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_set_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&generic_set_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_set_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&generic_set_size_fast,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+};
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 set_iterself(DeeObject *__restrict self) {
 	if unlikely(Dee_TYPE(self) == &DeeSet_Type) {
@@ -889,6 +1100,7 @@ PRIVATE struct type_seq set_seq = {
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 /* TODO: insert(object item)->?Dbool

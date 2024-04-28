@@ -38,7 +38,7 @@ PRIVATE WUNUSED NONNULL((1, 3, 4)) int
 	/* Now to push individual elements. */
 	for (i = 0; i < seqlen; ++i) {
 		DREF DeeObject *elem;
-		elem = DeeFastSeq_GetItem(seqexpr, i);
+		elem = DeeFastSeq_GetItem_deprecated(seqexpr, i);
 		if (asm_allowconst(elem)) {
 			/* Use a constant prefix. */
 			if (asm_putddi(ddi))
@@ -114,8 +114,8 @@ PRIVATE WUNUSED NONNULL((1, 2)) int
 			size_t fastlen;
 			DeeObject *seqexpr;
 			seqexpr = expandexpr->a_constexpr;
-			fastlen = DeeFastSeq_GetSize(seqexpr);
-			if (fastlen != DEE_FASTSEQ_NOTFAST) {
+			fastlen = DeeFastSeq_GetSize_deprecated(seqexpr);
+			if (fastlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 				if (fastlen > 8)
 					goto after_constexpr_expand;
 				if ((current_assembler.a_flag & ASM_FOPTIMIZE_SIZE) && fastlen > 1)

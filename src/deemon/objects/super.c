@@ -597,12 +597,12 @@ super_foreach_pair(Super *me, Dee_foreach_pair_t proc, void *arg) {
 	return DeeObject_TForeachPair(me->s_type, me->s_self, proc, arg);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_bounditem(Super *self, DeeObject *index) {
 	return DeeObject_TBoundItem(self->s_type, self->s_self, index);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 super_hasitem(Super *self, DeeObject *index) {
 	return DeeObject_THasItem(self->s_type, self->s_self, index);
 }

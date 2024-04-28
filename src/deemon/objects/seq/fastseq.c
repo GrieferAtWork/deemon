@@ -30,6 +30,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/super.h>
 #include <deemon/thread.h>
 #include <deemon/tuple.h>
 
@@ -41,12 +42,12 @@
 
 DECL_BEGIN
 
-STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
+STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST_DEPRECATED == (size_t)-1,
                   "`nsi_getsize_fast' assumes this correlation");
 
 
 /* Check if `self' is a fast-sequence object, and return its (current)
- * length if it is, or return `DEE_FASTSEQ_NOTFAST' if it isn't.
+ * length if it is, or return `DEE_FASTSEQ_NOTFAST_DEPRECATED' if it isn't.
  * A fast-sequence object is a vector-based object implemented by the
  * deemon C-core, meaning that its size can quickly be determined,
  * and items can quickly be accessed, given their index.
@@ -62,10 +63,7 @@ STATIC_ASSERT_MSG(DEE_FASTSEQ_NOTFAST == (size_t)-1,
  *  - Bytes
  * Sub-classes of these types are not fast-sequence-compatible. */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSize(DeeObject *__restrict self) {
-#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
-	return DeeObject_SizeFast(self);
-#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+DeeFastSeq_GetSize_deprecated(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
 	struct type_nsi const *nsi;
@@ -85,18 +83,17 @@ DeeFastSeq_GetSize(DeeObject *__restrict self) {
 	       nsi->nsi_seqlike.nsi_getitem_fast);
 	return (*nsi->nsi_seqlike.nsi_getsize_fast)(self);
 nope:
-	return DEE_FASTSEQ_NOTFAST;
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+	return DEE_FASTSEQ_NOTFAST_DEPRECATED;
 }
 
 
 /* Returns the `index'th item of `self'.
- * The caller is responsible that `index < DeeFastSeq_GetSize(self)' when
+ * The caller is responsible that `index < DeeFastSeq_GetSize_deprecated(self)' when
  * `self' is an immutable sequence (anything other than `List' and `_SharedVector').
- * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize(self)'
- *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
+ * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize_deprecated(self)'
+ *          returned something other than `DEE_FASTSEQ_NOTFAST_DEPRECATED'. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
+DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
 	struct type_nsi const *nsi;
@@ -119,10 +116,10 @@ DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index) {
 	return (*nsi->nsi_seqlike.nsi_getitem)(self, index);
 }
 
-/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE if an error
+/* Same as `DeeFastSeq_GetItem_deprecated()', but returns ITER_DONE if an error
  * occurred, and `NULL' if the item has been marked as unbound. */
 PUBLIC WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
+DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	DeeTypeObject *tp_self;
 	struct type_seq *seq;
@@ -154,7 +151,7 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
  *  - Semantically, these functions are used the same way as the regular interface
  *  - Unlike the functions above, these are guarantied to be non-blocking
  *    -> However, an atomic lock doesn't count as something that would block,
- *       yet because this means that `DeeFastSeq_GetItemNB()' can never throw
+ *       yet because this means that `DeeFastSeq_GetItemNB_deprecated()' can never throw
  *       an exception, it also means that any sequence who's size could change
  *       at any time (such as `List') cannot be used here.
  * The following types function as fast-sequence-compatible-nb:
@@ -162,7 +159,7 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index) {
  *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
  *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
 PUBLIC WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
+DeeFastSeq_GetSizeNB_deprecated(DeeObject *__restrict self) {
 	DeeTypeObject *tp_self;
 	ASSERT_OBJECT(self);
 	tp_self = Dee_TYPE(self);
@@ -170,11 +167,11 @@ DeeFastSeq_GetSizeNB(DeeObject *__restrict self) {
 		return DeeTuple_SIZE(self);
 	if (tp_self == &DeeSharedVector_Type)
 		return ((SharedVector *)self)->sv_length;
-	return DEE_FASTSEQ_NOTFAST;
+	return DEE_FASTSEQ_NOTFAST_DEPRECATED;
 }
 
 PUBLIC ATTR_RETNONNULL DREF DeeObject *DCALL
-DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
+DeeFastSeq_GetItemNB_deprecated(DeeObject *__restrict self, size_t index) {
 	DeeTypeObject *tp_self;
 	DREF DeeObject *result;
 	ASSERT_OBJECT(self);
@@ -194,6 +191,48 @@ DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index) {
 	SharedVector_LockEndRead((SharedVector *)self);
 	return result;
 }
+
+
+
+/* Try to load index-based fast sequence controls for "seq".
+ * @return: true:  Success. You may use other `DeeFastSeq_*' to access sequence elements.
+ * @return: false: Failure. Given `seq' does not implement `tp_getitem_index_fast' */
+PUBLIC WUNUSED NONNULL((1, 2)) bool
+(DCALL DeeFastSeq_Init)(DeeFastSeq *__restrict self, DeeObject *__restrict seq) {
+	self->fsq_size = DeeFastSeq_Init_impl(self, seq);
+	return self->fsq_size != (size_t)-1;
+}
+
+PUBLIC WUNUSED NONNULL((1, 2)) size_t
+(DCALL DeeFastSeq_Init_impl)(DeeFastSeq *__restrict self, DeeObject *__restrict seq) {
+	DeeTypeObject *tp_seq;
+	tp_seq = Dee_TYPE(seq);
+again:
+	if (tp_seq->tp_seq &&
+	    tp_seq->tp_seq->tp_getitem_index_fast &&
+	    tp_seq->tp_seq->tp_size_fast) {
+have_operators:
+		self->fsq_self               = seq;
+		self->fsq_getitem_index_fast = tp_seq->tp_seq->tp_getitem_index_fast;
+		return (*tp_seq->tp_seq->tp_size_fast)(seq);
+	} else if (tp_seq == &DeeSuper_Type) {
+		tp_seq = DeeSuper_TYPE(seq);
+		seq    = DeeSuper_SELF(seq);
+		goto again;
+	} else if (!tp_seq->tp_seq && (DeeType_InheritSize(tp_seq) ||
+	                               DeeType_InheritGetItem(tp_seq))) {
+		if (tp_seq->tp_seq &&
+		    tp_seq->tp_seq->tp_getitem_index_fast &&
+		    tp_seq->tp_seq->tp_size_fast)
+			goto have_operators;
+	}
+	return (size_t)-1;
+}
+
+
+
+
+
 
 
 struct foreach_seq_as_heap_vector_data {
@@ -248,8 +287,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) /*owned(Dee_Free)*/ DREF DeeObject **DCALL
 DeeSeq_AsHeapVector(DeeObject *__restrict self,
                     size_t *__restrict p_length) {
 	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_size = DeeFastSeq_GetSize(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t i;
 		/* Optimization for fast-sequence-compatible objects. */
 		*p_length = data.sahvd_size;
@@ -263,7 +302,7 @@ DeeSeq_AsHeapVector(DeeObject *__restrict self,
 		}
 		for (i = 0; i < data.sahvd_size; ++i) {
 			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItem(self, i);
+			elem = DeeFastSeq_GetItem_deprecated(self, i);
 			if unlikely(!elem) {
 				data.sahvd_size = i;
 				goto err_data;
@@ -334,8 +373,8 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 #endif /* !Dee_MallocUsableSize */
 {
 	struct foreach_seq_as_heap_vector_data data;
-	data.sahvd_size = DeeFastSeq_GetSize(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t i;
 		/* Optimization for fast-sequence-compatible objects. */
 #ifndef Dee_MallocUsableSize
@@ -352,7 +391,7 @@ DeeSeq_AsHeapVectorWithAlloc(DeeObject *__restrict self,
 		}
 		for (i = 0; i < data.sahvd_size; ++i) {
 			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItem(self, i);
+			elem = DeeFastSeq_GetItem_deprecated(self, i);
 			if unlikely(!elem) {
 				data.sahvd_size = i;
 				goto err_data;
@@ -446,8 +485,8 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 #endif /* !Dee_MallocUsableSize */
 	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
 
-	data.sahvd_size = DeeFastSeq_GetSize(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		/* Fast sequence optimizations. */
 		if (data.sahvd_size > data.sahvd_alloc) {
 			DeeObject **new_vector;
@@ -470,7 +509,7 @@ DeeSeq_AsHeapVectorWithAllocReuse(DeeObject *__restrict self,
 			size_t i;
 			for (i = 0; i < data.sahvd_size; ++i) {
 				DREF DeeObject *elem;
-				elem = DeeFastSeq_GetItem(self, i);
+				elem = DeeFastSeq_GetItem_deprecated(self, i);
 				if unlikely(!elem) {
 					data.sahvd_size = i;
 					goto err_data;
@@ -548,8 +587,8 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 	ASSERT(data.sahvd_alloc >= offset);
 	ASSERT(!data.sahvd_alloc || data.sahvd_vector);
 
-	data.sahvd_size = DeeFastSeq_GetSize(self);
-	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST) {
+	data.sahvd_size = DeeFastSeq_GetSize_deprecated(self);
+	if (data.sahvd_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		/* Fast sequence optimizations. */
 		if (data.sahvd_size > (data.sahvd_alloc - offset)) {
 			DeeObject **new_vector;
@@ -573,7 +612,7 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset(DeeObject *__restrict self,
 			size_t i;
 			for (i = 0; i < data.sahvd_size; ++i) {
 				DREF DeeObject *elem;
-				elem = DeeFastSeq_GetItem(self, i);
+				elem = DeeFastSeq_GetItem_deprecated(self, i);
 				if unlikely(!elem) {
 					data.sahvd_size = offset + i;
 					goto err_data;
@@ -608,8 +647,8 @@ err:
 /* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
  * by filling in the resp. element from `objv[*]' with `NULL'.
  * This function is implemented to try the following things with `self' (in order):
- *  - Use `DeeFastSeq_GetSize()' + `DeeFastSeq_GetItemUnbound()'
- *    Try next when `DeeFastSeq_GetSize() == DEE_FASTSEQ_NOTFAST'
+ *  - Use `DeeFastSeq_GetSize_deprecated()' + `DeeFastSeq_GetItemUnbound_deprecated()'
+ *    Try next when `DeeFastSeq_GetSize_deprecated() == DEE_FASTSEQ_NOTFAST_DEPRECATED'
  *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
  *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
  *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'
@@ -621,13 +660,13 @@ PUBLIC WUNUSED ATTR_OUTS(3, 2) NONNULL((1)) int
 (DCALL DeeObject_UnpackWithUnbound)(DeeObject *__restrict self, size_t objc,
                                     /*out*/ DREF DeeObject **__restrict objv) {
 	size_t i, size;
-	size = DeeFastSeq_GetSize(self);
-	if (size != DEE_FASTSEQ_NOTFAST) {
+	size = DeeFastSeq_GetSize_deprecated(self);
+	if (size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (size != objc)
 			goto err_badsize;
 		for (i = 0; i < objc; ++i) {
 			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItemUnbound(self, i);
+			elem = DeeFastSeq_GetItemUnbound_deprecated(self, i);
 			if unlikely(elem == ITER_DONE) {
 				Dee_XDecrefv(objv, i);
 				goto err;

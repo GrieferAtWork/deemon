@@ -723,12 +723,12 @@ rvec_setrange_index(RefVector *self, Dee_ssize_t i_begin,
 		return err_readonly_rvec();
 	DeeSeqRange_Clamp(&range, i_begin, i_end, self->rv_length);
 	range_size = range.sr_end - range.sr_start;
-	fast_length = DeeFastSeq_GetSize(values);
-	if (fast_length != DEE_FASTSEQ_NOTFAST) {
+	fast_length = DeeFastSeq_GetSize_deprecated(values);
+	if (fast_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (fast_length != range_size)
 			return err_invalid_unpack_size(values, range_size, fast_length);
 		for (i = range.sr_start; i < range.sr_end; ++i) {
-			elem = DeeFastSeq_GetItem(values, i - range.sr_start);
+			elem = DeeFastSeq_GetItem_deprecated(values, i - range.sr_start);
 			if unlikely(!elem)
 				goto err;
 			rvec_nsi_setitem_fast(self, i, elem); /* Inherit reference. */

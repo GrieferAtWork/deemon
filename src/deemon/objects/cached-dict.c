@@ -825,7 +825,7 @@ err:
 	return NULL;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_TryGetItemNRStringHash(DeeCachedDictObject *__restrict self,
                                      char const *__restrict key, Dee_hash_t hash) {
 	DeeObject *result;
@@ -850,7 +850,7 @@ DeeCachedDict_TryGetItemNRStringHash(DeeCachedDictObject *__restrict self,
 	return DeeCachedDict_TryLookupAndRememberStringHash(self, key, hash);
 }
 
-INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeCachedDict_TryGetItemNRStringLenHash(DeeCachedDictObject *__restrict self,
                                         char const *__restrict key,
                                         size_t keylen, Dee_hash_t hash) {

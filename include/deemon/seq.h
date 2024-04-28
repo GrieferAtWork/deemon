@@ -390,7 +390,7 @@ struct Dee_type_nsi {
 			WUNUSED_T NONNULL_T((1))    size_t          (DCALL *nsi_getsize)(DeeObject *__restrict self);
 
 			/* Same as `nsi_getsize', but never throw any errors, and simply return (size_t)-1 to indicate failure.
-			 * HINT: This callback is used to implement `DeeFastSeq_GetSize()', with
+			 * HINT: This callback is used to implement `DeeFastSeq_GetSize_deprecated()', with
 			 *       either `nsi_getitem_fast()' or `nsi_getitem()' then being used
 			 *       to implement the item lookup itself.
 			 * WARNING: When implementing this operator, you must also implement at
@@ -599,13 +599,17 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self, D
 
 #ifdef CONFIG_BUILDING_DEEMON
 /* Mutable-sequence API */
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelItem(DeeObject *__restrict self, size_t index);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetItem(DeeObject *self, size_t index, DeeObject *value);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value);
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end);
 INTDEF WUNUSED NONNULL((1, 4)) int DCALL DeeSeq_SetRange(DeeObject *self, size_t start, size_t end, DeeObject *values);
 INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_DelRangeN(DeeObject *__restrict self, size_t start);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_SetRangeN(DeeObject *self, size_t start, DeeObject *values);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_Insert(DeeObject *self, size_t index, DeeObject *value);
 INTDEF WUNUSED NONNULL((1, 3)) int DCALL DeeSeq_InsertAll(DeeObject *self, size_t index, DeeObject *values);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_Append(DeeObject *self, DeeObject *value);
@@ -638,8 +642,10 @@ INTDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_IsResizable(DeeObject *__restrict s
  *       for a general purpose sequence by writing `x is Sequence from deemon' */
 INTDEF WUNUSED NONNULL((1)) size_t DCALL DeeSeq_Size(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetItem(DeeObject *__restrict self, size_t index);
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRange(DeeObject *__restrict self, size_t begin, size_t end);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_GetRangeN(DeeObject *__restrict self, size_t begin);
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 /* @return: == -2: An error occurred.
  * @return: == -1: `self < some_object'
@@ -958,7 +964,7 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
 
 
 /* Check if `self' is a fast-sequence object, and return its (current)
- * length if it is, or return `DEE_FASTSEQ_NOTFAST' if it isn't.
+ * length if it is, or return `DEE_FASTSEQ_NOTFAST_DEPRECATED' if it isn't.
  * A fast-sequence object is a vector-based object implemented by the
  * deemon C-core, meaning that its size can quickly be determined,
  * and items can quickly be accessed, given their index.
@@ -974,27 +980,27 @@ DeeSharedVector_DecrefNoGiftItems(DREF DeeObject *__restrict self);
  *  - Bytes
  * Sub-classes of these types are not fast-sequence-compatible. */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSize(DeeObject *__restrict self);
-#define DEE_FASTSEQ_NOTFAST ((size_t)-1)
+DeeFastSeq_GetSize_deprecated(DeeObject *__restrict self); /* Deprecated */
+#define DEE_FASTSEQ_NOTFAST_DEPRECATED ((size_t)-1)
 
 /* Returns the `index'th item of `self'.
- * The caller is responsible that `index < DeeFastSeq_GetSize(self)' when
+ * The caller is responsible that `index < DeeFastSeq_GetSize_deprecated(self)' when
  * `self' is an immutable sequence (anything other than `List' and `_SharedVector').
- * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize(self)'
- *          returned something other than `DEE_FASTSEQ_NOTFAST'. */
+ * WARNING: This function may _ONLY_ be used if `DeeFastSeq_GetSize_deprecated(self)'
+ *          returned something other than `DEE_FASTSEQ_NOTFAST_DEPRECATED'. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItem(DeeObject *__restrict self, size_t index);
+DeeFastSeq_GetItem_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
 
-/* Same as `DeeFastSeq_GetItem()', but returns ITER_DONE if an error
+/* Same as `DeeFastSeq_GetItem_deprecated()', but returns ITER_DONE if an error
  * occurred, and `NULL' if the item has been marked as unbound. */
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
+DeeFastSeq_GetItemUnbound_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
 
 /* An alternative (and more restrictive) variant of the FastSeq-interface:
  *  - Semantically, these functions are used the same way as the regular interface
  *  - Unlike the functions above, these are guarantied to be non-blocking
  *    -> However, an atomic lock doesn't count as something that would block,
- *       yet because this means that `DeeFastSeq_GetItemNB()' can never throw
+ *       yet because this means that `DeeFastSeq_GetItemNB_deprecated()' can never throw
  *       an exception, it also means that any sequence who's size could change
  *       at any time (such as `List') cannot be used here.
  * The following types function as fast-sequence-compatible-nb:
@@ -1002,9 +1008,38 @@ DeeFastSeq_GetItemUnbound(DeeObject *__restrict self, size_t index);
  *  - _SharedVector   (If the sequence is cleared while being used here, `none' will be returned)
  *  - _SeqSubRange    (Only if the sub-ranged sequence is a fast-sequence-nb) */
 DFUNDEF WUNUSED NONNULL((1)) size_t DCALL
-DeeFastSeq_GetSizeNB(DeeObject *__restrict self);
+DeeFastSeq_GetSizeNB_deprecated(DeeObject *__restrict self); /* Deprecated */
 DFUNDEF ATTR_RETNONNULL DREF DeeObject *DCALL
-DeeFastSeq_GetItemNB(DeeObject *__restrict self, size_t index);
+DeeFastSeq_GetItemNB_deprecated(DeeObject *__restrict self, size_t index); /* Deprecated */
+
+
+
+
+
+/* New fast-sequence interface */
+typedef struct {
+	DeeObject *fsq_self; /* [1..1] The sequence being enumerated. */
+	size_t     fsq_size; /* The # of items in `fsq_self' */
+	/* [1..1] Callback to get the index'th element of "fsq_self".
+	 * NOTE: The caller must ensure that `index < fsq_size'
+	 * HINT: This is the relevant "tp_getitem_index_fast" operator.
+	 * @return: * :   A reference to the index'th element of "fsq_self".
+	 * @return: NULL: The index'th element of "fsq_self" isn't bound (no error was thrown) */
+	DREF DeeObject *(DCALL *fsq_getitem_index_fast)(DeeObject *__restrict self, size_t index);
+} DeeFastSeq;
+
+#define DeeFastSeq_GetSize(self)        ((self)->fsq_size)
+#define DeeFastSeq_GetItem(self, index) ((*(self)->fsq_getitem_index_fast)((self)->fsq_self, index))
+
+/* Try to load index-based fast sequence controls for "seq".
+ * @return: true:  Success. You may use other `DeeFastSeq_*' to access sequence elements.
+ * @return: false: Failure. Given `seq' does not implement `tp_getitem_index_fast' */
+#ifndef __OPTIMIZE_SIZE__
+#define DeeFastSeq_Init(self, seq) (((self)->fsq_size = DeeFastSeq_Init_impl(self, seq)) != (size_t)-1)
+#endif /* !__OPTIMIZE_SIZE__ */
+DFUNDEF WUNUSED NONNULL((1, 2)) bool (DCALL DeeFastSeq_Init)(DeeFastSeq *__restrict self, DeeObject *__restrict seq);
+DFUNDEF WUNUSED NONNULL((1, 2)) size_t (DCALL DeeFastSeq_Init_impl)(DeeFastSeq *__restrict self, DeeObject *__restrict seq);
+
 
 
 /* Allocate a suitable heap-vector for all the elements of a given sequence,
@@ -1076,8 +1111,8 @@ DeeSeq_AsHeapVectorWithAllocReuseOffset2(DeeObject *__restrict self,
 /* Same as `DeeObject_Unpack()', but handle `DeeError_UnboundItem'
  * by filling in the resp. element from `objv[*]' with `NULL'.
  * This function is implemented to try the following things with `self' (in order):
- *  - Use `DeeFastSeq_GetSize()' + `DeeFastSeq_GetItemUnbound()'
- *    Try next when `DeeFastSeq_GetSize() == DEE_FASTSEQ_NOTFAST'
+ *  - Use `DeeFastSeq_GetSize_deprecated()' + `DeeFastSeq_GetItemUnbound_deprecated()'
+ *    Try next when `DeeFastSeq_GetSize_deprecated() == DEE_FASTSEQ_NOTFAST_DEPRECATED'
  *  - Use `DeeObject_Size()' + `DeeObject_GetItemIndex()'
  *    Try next when `DeeObject_Size()' throws `DeeError_NotImplemented', or
  *    `DeeObject_GetItemIndex()' (first call only) throws `DeeError_NotImplemented'

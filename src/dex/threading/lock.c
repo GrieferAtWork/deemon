@@ -2276,7 +2276,7 @@ LockUnion_FromFastSequence(DeeObject *__restrict seq, size_t size) {
 	for (i = 0; i < size; ++i) {
 		int temp;
 		DREF DeeObject *lock;
-		lock = DeeFastSeq_GetItem(seq, i);
+		lock = DeeFastSeq_GetItem_deprecated(seq, i);
 		if unlikely(!lock)
 			goto err_alloc;
 		temp = lock_union_allocator_append(&alloc, lock);
@@ -2298,8 +2298,8 @@ LockUnion_FromSequence(DeeObject *__restrict seq) {
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
 		return LockUnion_FromVector(DeeTuple_SIZE(seq), DeeTuple_ELEM(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
+	fast_size = DeeFastSeq_GetSize_deprecated(seq);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return LockUnion_FromFastSequence(seq, fast_size);
 	iter = DeeObject_Iter(seq);
 	if unlikely(!iter)

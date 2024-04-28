@@ -1019,9 +1019,9 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	int result;
 	DREF DeeObject *elem;
 	bool is_first    = true;
-	size_t fast_size = DeeFastSeq_GetSize(ob);
+	size_t fast_size = DeeFastSeq_GetSize_deprecated(ob);
 	/* Optimization for fast-sequence objects. */
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t i;
 		for (i = 0; i < fast_size; ++i) {
 			if (i != 0) {
@@ -1029,7 +1029,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 				if unlikely(result)
 					goto err;
 			}
-			elem = DeeFastSeq_GetItem(ob, i);
+			elem = DeeFastSeq_GetItem_deprecated(ob, i);
 			if unlikely(!elem)
 				goto err_m1;
 			result = DeeFile_PrintObject(self, elem);
@@ -1075,12 +1075,12 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
                            DeeObject *ob) {
 	int result;
 	DREF DeeObject *elem;
-	size_t fast_size = DeeFastSeq_GetSize(ob);
+	size_t fast_size = DeeFastSeq_GetSize_deprecated(ob);
 	/* Optimization for fast-sequence objects. */
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		size_t i;
 		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(ob, i);
+			elem = DeeFastSeq_GetItem_deprecated(ob, i);
 			if unlikely(!elem)
 				goto err;
 			result = DeeFile_PrintObjectSp(self, elem);

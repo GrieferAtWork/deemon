@@ -1120,8 +1120,8 @@ DeeSeq_Combinations(DeeObject *__restrict self, size_t r) {
 		result->c_seqlen  = DeeTuple_SIZE(self);
 		goto fill_in_result_2;
 	}
-	result->c_seqlen = DeeFastSeq_GetSize(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST) {
+	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
+	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result->c_getitem    = tp_iter->tp_seq;
 		result->c_elem       = NULL;
 		result->c_getitem_tp = tp_iter;
@@ -1292,8 +1292,8 @@ DeeSeq_RepeatCombinations(DeeObject *__restrict self, size_t r) {
 		result->c_seqlen  = DeeTuple_SIZE(self);
 		goto fill_in_result_2;
 	}
-	result->c_seqlen = DeeFastSeq_GetSize(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST) {
+	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
+	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result->c_getitem    = tp_iter->tp_seq;
 		result->c_elem       = NULL;
 		result->c_getitem_tp = tp_iter;
@@ -1457,8 +1457,8 @@ DeeSeq_Permutations(DeeObject *__restrict self) {
 		result->c_seqlen  = DeeTuple_SIZE(self);
 		goto fill_in_result_2;
 	}
-	result->c_seqlen = DeeFastSeq_GetSize(self);
-	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST) {
+	result->c_seqlen = DeeFastSeq_GetSize_deprecated(self);
+	if (result->c_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		result->c_getitem    = tp_iter->tp_seq;
 		result->c_elem       = NULL;
 		result->c_getitem_tp = tp_iter;

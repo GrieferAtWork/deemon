@@ -338,8 +338,8 @@ DeeRoSet_FromSequence(DeeObject *__restrict sequence) {
 
 	/* Construct a read-only RoSet from a generic sequence. */
 	mask        = ROSET_INITIAL_MASK;
-	length_hint = DeeFastSeq_GetSize(sequence);
-	if (length_hint != DEE_FASTSEQ_NOTFAST) {
+	length_hint = DeeFastSeq_GetSize_deprecated(sequence);
+	if (length_hint != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		while (mask <= length_hint)
 			mask = (mask << 1) | 1;
 		mask = (mask << 1) | 1;

@@ -238,7 +238,7 @@ fl_init(size_t argc, DeeObject *const *argv) {
 			goto init_from_iterator;
 
 		/* Initialize from sequence. */
-		size = DeeFastSeq_GetSize(size_ob);
+		size = DeeFastSeq_GetSize_deprecated(size_ob);
 		if (size == (size_t)-1) {
 			DeeTypeObject *iter;
 			DREF DeeObject *iterator;
@@ -288,7 +288,7 @@ init_from_iterator:
 		result->fl_size = size;
 		for (i = 0; i < size; ++i) {
 			DREF DeeObject *elem;
-			elem = DeeFastSeq_GetItemUnbound(size_ob, i);
+			elem = DeeFastSeq_GetItemUnbound_deprecated(size_ob, i);
 			if (elem == ITER_DONE)
 				goto err_r;
 			result->fl_elem[i] = elem; /* Inherit reference. */

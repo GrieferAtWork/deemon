@@ -95,7 +95,7 @@ function assertFindAnyImpl(expected: none | int | (int, int), s: string, method:
 	assertFindAnyImpl2(expected, s, method, needles);
 	assertFindAnyImpl2(expected, s, method, Tuple(needles));
 	/* Force test for the case where the "needles"
-	 * argument doesn't support `DeeFastSeq_GetSize()',
+	 * argument doesn't support `DeeFastSeq_GetSize_deprecated()',
 	 * and the call needs to use an iterator internally. */
 	assertFindAnyImpl2(expected, s, method, () -> {
 		for (local x: needles)

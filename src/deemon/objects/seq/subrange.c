@@ -365,7 +365,7 @@ subrange_nsi_getsize(SubRange *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrange_nsi_getsize_fast(SubRange *__restrict self) {
-	size_t inner_size = DeeFastSeq_GetSize(self->sr_seq);
+	size_t inner_size = DeeFastSeq_GetSize_deprecated(self->sr_seq);
 	if unlikely(inner_size != (size_t)-1) {
 		if (self->sr_start >= inner_size)
 			return 0;
@@ -674,7 +674,7 @@ subrangen_nsi_getsize(SubRangeN *__restrict self) {
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 subrangen_nsi_getsize_fast(SubRangeN *__restrict self) {
 	size_t result;
-	result = DeeFastSeq_GetSize(self->sr_seq);
+	result = DeeFastSeq_GetSize_deprecated(self->sr_seq);
 	if likely(result != (size_t)-1) {
 		if (result <= self->sr_start) {
 			result = 0;

@@ -181,6 +181,7 @@ call_generic_attribute(DeeTypeObject *tp_self, DeeObject *self,
 	return result;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) DREF DeeObject *
 call_generic_attribute_in_range(DeeTypeObject *tp_limit, DeeObject *self,
                                 DeeObject *name, char const *format,
@@ -230,7 +231,6 @@ err:
 	return NULL;
 }
 
-
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *
 call_generic_attribute_anywhere(DeeObject *self, DeeObject *name,
                                 char const *format, ...) {
@@ -278,7 +278,6 @@ call_generic_attribute_anywhere(DeeObject *self, DeeObject *name,
 err:
 	return NULL;
 }
-
 
 
 INTERN WUNUSED NONNULL((1)) int DCALL
@@ -506,6 +505,7 @@ err_start_index:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 INTERN WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
 DeeSeq_XchItem(DeeObject *self, size_t index, DeeObject *value) {
@@ -657,6 +657,7 @@ err_r:
 	goto err;
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1)) int DCALL
 DeeSeq_DelRange(DeeObject *__restrict self, size_t start, size_t end) {
 	int result;
@@ -926,7 +927,6 @@ err:
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorFuture_For(DeeObject *__restrict self);
 INTDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL IteratorPending_For(DeeObject *__restrict self);
 
-
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 nsi_insert_iterator(struct type_nsi const *__restrict nsi,
                     DeeObject *self, size_t index,
@@ -974,6 +974,7 @@ nsi_insert_iterator(struct type_nsi const *__restrict nsi,
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1, 2, 4)) int DCALL
 nsi_insert_sequence_as_single(struct type_nsi const *__restrict nsi,
@@ -983,10 +984,10 @@ nsi_insert_sequence_as_single(struct type_nsi const *__restrict nsi,
 	int temp;
 	size_t i, fast_size;
 	ASSERT(nsi->nsi_seqlike.nsi_insert);
-	fast_size = DeeFastSeq_GetSize(values);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(values);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		for (i = 0; i < fast_size; ++i) {
-			elem = DeeFastSeq_GetItem(values, i);
+			elem = DeeFastSeq_GetItem_deprecated(values, i);
 			if unlikely(!elem)
 				goto err;
 			temp = (*nsi->nsi_seqlike.nsi_insert)(self, index, elem);
@@ -1022,6 +1023,7 @@ err:
 }
 
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 INTERN WUNUSED NONNULL((1, 4)) int DCALL
 DeeSeq_SetRange(DeeObject *self, size_t start, size_t end,
                 DeeObject *values) {
@@ -1468,6 +1470,7 @@ err_valiter:
 err:
 	return -1;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 
 
@@ -1660,11 +1663,11 @@ do_insert_as_single:
 				if unlikely(!append_function)
 					goto err_attr;
 				/* Use the append function to append everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_append_function;
 						callback_result = DeeObject_Call(append_function, 1, &elem);
@@ -1714,11 +1717,11 @@ err_append_function:
 				if (index > SSIZE_MAX)
 					index = SSIZE_MAX;
 				/* Use the insert function to insert everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_insert_function;
 						callback_result = DeeObject_Callf(insert_function, PCKuSIZ "o", index, elem);
@@ -1952,11 +1955,11 @@ do_insert_as_single:
 				if unlikely(!append_function)
 					goto err_attr;
 				/* Use the append function to append everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_append_function;
 						callback_result = DeeObject_Call(append_function, 1, &elem);
@@ -2004,11 +2007,11 @@ err_append_function:
 				if unlikely(!insert_function)
 					goto err_attr;
 				/* Use the insert function to insert everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_insert_function;
 						callback_result = DeeObject_Callf(insert_function, PCKuSIZ "o", (size_t)SSIZE_MAX, elem);
@@ -2148,11 +2151,11 @@ do_insert_as_single:
 				if unlikely(!append_function)
 					goto err_attr;
 				/* Use the append function to append everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_append_function;
 						callback_result = DeeObject_Call(append_function, 1, &elem);
@@ -2200,11 +2203,11 @@ err_append_function:
 				if unlikely(!insert_function)
 					goto err_attr;
 				/* Use the insert function to insert everything */
-				fast_size = DeeFastSeq_GetSize(values);
-				if (fast_size != DEE_FASTSEQ_NOTFAST) {
+				fast_size = DeeFastSeq_GetSize_deprecated(values);
+				if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 					for (i = 0; i < fast_size; ++i) {
 						DREF DeeObject *callback_result;
-						elem = DeeFastSeq_GetItem(values, i);
+						elem = DeeFastSeq_GetItem_deprecated(values, i);
 						if unlikely(!elem)
 							goto err_insert_function;
 						callback_result = DeeObject_Callf(insert_function, PCKuSIZ "o", (size_t)SSIZE_MAX, elem);

@@ -572,8 +572,8 @@ list_size_changed:
 	}
 
 	/* Optimization for fast-sequence compatible objects. */
-	seq_length = DeeFastSeq_GetSize(self);
-	if (seq_length != DEE_FASTSEQ_NOTFAST) {
+	seq_length = DeeFastSeq_GetSize_deprecated(self);
+	if (seq_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		DREF DeeObject *elem;
 		if (seq_length == 0)
 			return_empty_tuple;
@@ -581,7 +581,7 @@ list_size_changed:
 		if unlikely(!result)
 			goto err;
 		for (i = 0; i < seq_length; ++i) {
-			elem = DeeFastSeq_GetItem(self, i);
+			elem = DeeFastSeq_GetItem_deprecated(self, i);
 			if unlikely(!elem)
 				goto err_r;
 			DeeTuple_SET(result, i, elem); /* Inherit reference. */
@@ -1949,8 +1949,8 @@ tuple_concat(Tuple *self, DeeObject *other) {
 		            ot_length);
 		goto done;
 	}
-	ot_length = DeeFastSeq_GetSize(other);
-	if (ot_length != DEE_FASTSEQ_NOTFAST) {
+	ot_length = DeeFastSeq_GetSize_deprecated(other);
+	if (ot_length != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (ot_length == 0)
 			goto return_self;
 		result = DeeTuple_NewUninitialized(my_length + ot_length);
@@ -1960,7 +1960,7 @@ tuple_concat(Tuple *self, DeeObject *other) {
 		                   DeeTuple_ELEM(self),
 		                   my_length);
 		for (i = 0; i < ot_length; ++i) {
-			elem = DeeFastSeq_GetItem(other, i);
+			elem = DeeFastSeq_GetItem_deprecated(other, i);
 			if unlikely(!elem)
 				goto err_r;
 			*dst++ = elem; /* Inherit reference. */

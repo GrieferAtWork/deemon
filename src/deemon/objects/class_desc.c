@@ -319,7 +319,7 @@ cot_size(ClassOperatorTable *__restrict self) {
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cot_trygetitem_byid(ClassOperatorTable *self, Dee_operator_t opname) {
 	Dee_operator_t i, perturb;
 	ClassDescriptor *desc = self->co_desc;
@@ -1747,20 +1747,20 @@ class_attribute_init(struct class_attribute *__restrict self,
 		return 0;
 	}
 	doc       = NULL;
-	fast_size = DeeFastSeq_GetSize(data);
-	if (fast_size != DEE_FASTSEQ_NOTFAST) {
+	fast_size = DeeFastSeq_GetSize_deprecated(data);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (fast_size != 2 && fast_size != 3) {
 			err_invalid_unpack_size_minmax(data, 2, 3, fast_size);
 			goto err;
 		}
-		addr = DeeFastSeq_GetItem(data, 0);
+		addr = DeeFastSeq_GetItem_deprecated(data, 0);
 		if unlikely(!addr)
 			goto err;
-		flags = DeeFastSeq_GetItem(data, 1);
+		flags = DeeFastSeq_GetItem_deprecated(data, 1);
 		if unlikely(!addr)
 			goto err_addr;
 		if (fast_size >= 3) {
-			doc = DeeFastSeq_GetItem(data, 2);
+			doc = DeeFastSeq_GetItem_deprecated(data, 2);
 			if unlikely(!addr)
 				goto err_addr_flags;
 		}

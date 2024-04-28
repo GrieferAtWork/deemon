@@ -449,8 +449,8 @@ DeeList_ConcatInherited(/*inherit(on_success)*/ DREF DeeObject *self,
 			goto err;
 		return self;
 	}
-	fast_seqlen = DeeFastSeq_GetSize(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST) {
+	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
+	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		/* TODO: Special optimization. */
 	}
 
@@ -1109,8 +1109,8 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	ASSERT_OBJECT(sequence);
 	if (DeeTuple_CheckExact(sequence))
 		return DeeList_AppendVector(self, DeeTuple_SIZE(sequence), DeeTuple_ELEM(sequence));
-	fast_seqlen = DeeFastSeq_GetSize(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST) {
+	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
+	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		/* TODO: Special optimization. */
 	}
 
@@ -1261,8 +1261,8 @@ PUBLIC WUNUSED NONNULL((1, 3)) int
 	/* Optimization for known types. */
 	if (DeeTuple_CheckExact(sequence))
 		return DeeList_InsertVector(self, index, DeeTuple_SIZE(sequence), DeeTuple_ELEM(sequence));
-	fast_seqlen = DeeFastSeq_GetSize(sequence);
-	if (fast_seqlen != DEE_FASTSEQ_NOTFAST) {
+	fast_seqlen = DeeFastSeq_GetSize_deprecated(sequence);
+	if (fast_seqlen != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		/* TODO: Special optimization. */
 	}
 	iterator = DeeObject_Iter(sequence);
@@ -1791,7 +1791,7 @@ again:
 
 		/* Fill in the new items. */
 		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB(items, i));
+			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
 	} else {
@@ -1818,7 +1818,7 @@ again:
 
 		/* Fill in the new items. */
 		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB(items, i));
+			DeeList_SET(me, range.sr_start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
 		me->l_list.ol_elemc -= range_size;
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
@@ -1886,7 +1886,7 @@ again:
 
 		/* Fill in the new items. */
 		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB(items, i));
+			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
 	} else {
@@ -1904,7 +1904,7 @@ again:
 
 		/* Fill in the new items. */
 		for (i = 0; i < insert_count; ++i)
-			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB(items, i));
+			DeeList_SET(me, start + i, DeeFastSeq_GetItemNB_deprecated(items, i));
 		me->l_list.ol_elemc -= range_size;
 		me->l_list.ol_elemc += insert_count;
 		DeeList_LockEndWrite(me);
@@ -1929,8 +1929,8 @@ list_setrange_index(List *me, dssize_t i_begin,
 	struct Dee_seq_range range;
 
 	/* Check for special case: Fast-insert */
-	insert_count = DeeFastSeq_GetSizeNB(items);
-	if (insert_count != DEE_FASTSEQ_NOTFAST)
+	insert_count = DeeFastSeq_GetSizeNB_deprecated(items);
+	if (insert_count != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return list_setrange_fast(me, i_begin, i_end, items, insert_count);
 	insertv = DeeSeq_AsHeapVector(items, &insert_count);
 	if unlikely(!insertv)
@@ -2055,8 +2055,8 @@ list_setrange_index_n(List *me, dssize_t i_begin, DeeObject *items) {
 	size_t range_size, insert_count, start;
 
 	/* Check for special case: Fast-insert */
-	insert_count = DeeFastSeq_GetSizeNB(items);
-	if (insert_count != DEE_FASTSEQ_NOTFAST) {
+	insert_count = DeeFastSeq_GetSizeNB_deprecated(items);
+	if (insert_count != DEE_FASTSEQ_NOTFAST_DEPRECATED) {
 		if (!insert_count)
 			return list_delrange_index_n(me, i_begin);
 		return list_setrange_fast_n(me, i_begin, items, insert_count);
@@ -3392,7 +3392,7 @@ DeeList_EqF(List *lhs, DeeObject *rhs, size_t elemc) {
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
+		rhs_elem = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
 			return -1;
@@ -3456,8 +3456,8 @@ DeeList_EqS(List *lhs, DeeObject *seq) {
 	size_t fast_size;
 	if (DeeTuple_Check(seq))
 		return DeeList_EqV(lhs, DeeTuple_ELEM(seq), DeeTuple_SIZE(seq));
-	fast_size = DeeFastSeq_GetSize(seq);
-	if (fast_size != DEE_FASTSEQ_NOTFAST)
+	fast_size = DeeFastSeq_GetSize_deprecated(seq);
+	if (fast_size != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return DeeList_EqF(lhs, seq, fast_size);
 	seq = DeeObject_Iter(seq);
 	if unlikely(!seq)
@@ -3514,7 +3514,7 @@ DeeList_LoF(List *lhs, DeeObject *rhs, size_t rhsc) {
 		lhs_elem = DeeList_GET(lhs, i);
 		Dee_Incref(lhs_elem);
 		DeeList_LockEndRead(lhs);
-		rhs_elem = DeeFastSeq_GetItem(rhs, i);
+		rhs_elem = DeeFastSeq_GetItem_deprecated(rhs, i);
 		if unlikely(!rhs_elem) {
 			Dee_Decref(lhs_elem);
 			return -2;
@@ -3577,7 +3577,7 @@ DeeList_CompareS(List *lhs, DeeObject *rhs) {
 	size_t rhs_size;
 	if (DeeTuple_Check(rhs))
 		return DeeList_CompareV(lhs, DeeTuple_ELEM(rhs), DeeTuple_SIZE(rhs));
-	if ((rhs_size = DeeFastSeq_GetSize(rhs)) != DEE_FASTSEQ_NOTFAST)
+	if ((rhs_size = DeeFastSeq_GetSize_deprecated(rhs)) != DEE_FASTSEQ_NOTFAST_DEPRECATED)
 		return DeeList_LoF(lhs, rhs, rhs_size);
 	rhs = DeeObject_Iter(rhs);
 	if unlikely(!rhs)

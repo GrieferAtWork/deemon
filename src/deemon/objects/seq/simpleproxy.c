@@ -346,7 +346,7 @@ PRIVATE struct type_nsi tpconst ids_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&proxy_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_size_fast,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)&ids_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
@@ -379,7 +379,7 @@ PRIVATE struct type_nsi tpconst types_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&proxy_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_size_fast,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)&types_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
@@ -412,7 +412,7 @@ PRIVATE struct type_nsi tpconst classes_nsi = {
 	{
 		/* .nsi_seqlike = */ {
 			/* .nsi_getsize      = */ (dfunptr_t)&proxy_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&proxy_size_fast,
+			/* .nsi_getsize_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getitem      = */ (dfunptr_t)&classes_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
