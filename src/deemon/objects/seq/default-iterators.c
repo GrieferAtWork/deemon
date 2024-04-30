@@ -36,6 +36,7 @@ DECL_BEGIN
 /* DefaultIterator_WithGetItemIndex_Type                                */
 /* DefaultIterator_WithSizeAndGetItemIndex_Type                         */
 /* DefaultIterator_WithSizeAndGetItemIndexFast_Type                     */
+/* DefaultIterator_WithTryGetItemIndexAndSize_Type                      */
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_seq) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
@@ -43,6 +44,7 @@ STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_index) == offsetof
 
 #define di_sgi_copy  di_gi_copy
 #define di_sgif_copy di_gi_copy
+#define di_stgi_copy di_gi_copy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_copy(DefaultIterator_WithGetItemIndex *__restrict self,
            DefaultIterator_WithGetItemIndex *__restrict other) {
@@ -55,6 +57,7 @@ di_gi_copy(DefaultIterator_WithGetItemIndex *__restrict self,
 
 #define di_sgi_deepcopy  di_gi_deepcopy
 #define di_sgif_deepcopy di_gi_deepcopy
+#define di_stgi_deepcopy di_gi_deepcopy
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_deepcopy(DefaultIterator_WithGetItemIndex *__restrict self,
                DefaultIterator_WithGetItemIndex *__restrict other) {
@@ -70,6 +73,7 @@ err:
 
 #define di_sgi_fini  di_gi_fini
 #define di_sgif_fini di_gi_fini
+#define di_stgi_fini di_gi_fini
 PRIVATE NONNULL((1)) void DCALL
 di_gi_fini(DefaultIterator_WithGetItemIndex *__restrict self) {
 	Dee_Decref(self->digi_seq);
@@ -77,12 +81,16 @@ di_gi_fini(DefaultIterator_WithGetItemIndex *__restrict self) {
 
 #define di_sgi_visit  di_gi_visit
 #define di_sgif_visit di_gi_visit
+#define di_stgi_visit di_gi_visit
 PRIVATE NONNULL((1, 2)) void DCALL
 di_gi_visit(DefaultIterator_WithGetItemIndex *__restrict self,
             dvisit_t proc, void *arg) {
 	Dee_Visit(self->digi_seq);
 }
 
+#define di_sgi_compare  di_gi_compare
+#define di_sgif_compare di_gi_compare
+#define di_stgi_compare di_gi_compare
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 di_gi_compare(DefaultIterator_WithGetItemIndex *self,
               DefaultIterator_WithGetItemIndex *other) {
@@ -175,6 +183,33 @@ again:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+di_stgi_iter_next(DefaultIterator_WithSizeAndGetItemIndex *__restrict self) {
+	size_t old_index, new_index;
+	DREF DeeObject *result;
+again:
+	old_index = atomic_read(&self->disgi_index);
+	new_index = old_index;
+	for (;;) {
+		if (new_index >= self->disgi_end)
+			return ITER_DONE;
+		result = (*self->disgi_tp_getitem_index)(self->disgi_seq, new_index);
+		if (result != ITER_DONE) {
+			if (result)
+				break;
+			goto err;
+		}
+		++new_index;
+	}
+	if (!atomic_cmpxch_or_write(&self->disgi_index, old_index, new_index + 1)) {
+		Dee_Decref(result);
+		goto again;
+	}
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 di_sgif_getindex(DefaultIterator_WithSizeAndGetItemIndex *__restrict self) {
 	size_t index = atomic_read(&self->disgi_index);
 	return DeeInt_NewSize(index);
@@ -195,6 +230,7 @@ err:
 
 #define di_sgi_cmp  di_gi_cmp
 #define di_sgif_cmp di_gi_cmp
+#define di_stgi_cmp di_gi_cmp
 PRIVATE struct type_cmp di_gi_cmp = {
 	/* .tp_hash    = */ NULL,
 	/* .tp_eq      = */ NULL,
@@ -207,6 +243,7 @@ PRIVATE struct type_cmp di_gi_cmp = {
 	/* .tp_compare = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 };
 
+#define di_stgi_members di_sgi_members
 PRIVATE struct type_member tpconst di_sgi_members[] = {
 	TYPE_MEMBER_FIELD("__end__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_end)),
 #define di_gi_members (di_sgi_members + 1)
@@ -356,6 +393,51 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_methods       = */ NULL,
 	/* .tp_getsets       = */ di_sgif_getsets,
 	/* .tp_members       = */ di_sgif_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ NULL
+};
+
+INTERN DeeTypeObject DefaultIterator_WithTryGetItemIndexAndSize_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_IterWithTryGetItemIndexAndSize",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeIterator_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)&di_stgi_copy,
+				/* .tp_deep_ctor = */ (dfunptr_t)&di_stgi_deepcopy,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DefaultIterator_WithSizeAndGetItemIndex)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&di_stgi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&di_stgi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ &di_stgi_cmp,
+	/* .tp_seq           = */ NULL,
+	/* .tp_iter_next     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&di_stgi_iter_next,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ di_stgi_members,
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ NULL

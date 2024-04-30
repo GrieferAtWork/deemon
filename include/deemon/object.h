@@ -2006,6 +2006,7 @@ struct Dee_type_seq {
 	 * `KeyError' or `IndexError' (or `UnboundItem', which is a given
 	 * since that one's a sub-class of `IndexError') */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem)(DeeObject *self, DeeObject *index);
+	WUNUSED_T NONNULL_T((1)) DREF DeeObject *(DCALL *tp_trygetitem_index)(DeeObject *self, size_t index);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_trygetitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_getitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_delitem_string_hash)(DeeObject *self, char const *key, Dee_hash_t hash);
@@ -2234,6 +2235,14 @@ myob_trygetitem(MyObject *self, DeeObject *index) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+myob_trygetitem_index(MyObject *self, size_t index) {
+	(void)self;
+	(void)index;
+	DeeError_NOTIMPLEMENTED();
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 myob_trygetitem_string_hash(MyObject *self, char const *key, Dee_hash_t hash) {
 	(void)self;
 	(void)key;
@@ -2370,6 +2379,7 @@ PRIVATE struct type_seq myob_seq = {
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&myob_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&myob_setrange_index_n,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&myob_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&myob_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&myob_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&myob_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&myob_delitem_string_hash,
@@ -4498,6 +4508,7 @@ DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_GetItemIndex)(DeeO
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringHash)(DeeObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHash)(DeeObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItem)(DeeObject *self, DeeObject *key); /* @return: ITER_DONE: No such key/index */
+DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *(DCALL DeeObject_TryGetItemIndex)(DeeObject *self, size_t index); /* @return: ITER_DONE: No such key/index */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItemStringHash)(DeeObject *self, char const *__restrict key, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_TryGetItemStringLenHash)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash); /* @return: ITER_DONE: No such key/index */
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_DelItem)(DeeObject *self, DeeObject *index);

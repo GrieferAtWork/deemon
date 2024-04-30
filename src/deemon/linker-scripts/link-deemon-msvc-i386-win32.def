@@ -906,6 +906,7 @@ EXPORTS
 	DeeObject_TThisCall@20=_DeeObject_TThisCall@20
 	DeeObject_TThisCallKw@24=_DeeObject_TThisCallKw@24
 	DeeObject_TTryGetItem@12=_DeeObject_TTryGetItem@12
+	DeeObject_TTryGetItemIndex@12=_DeeObject_TTryGetItemIndex@12
 	DeeObject_TTryGetItemStringHash@16=_DeeObject_TTryGetItemStringHash@16
 	DeeObject_TTryGetItemStringLenHash@20=_DeeObject_TTryGetItemStringLenHash@20
 	DeeObject_TVCallAttrStringHashf@24=_DeeObject_TVCallAttrStringHashf@24
@@ -917,6 +918,7 @@ EXPORTS
 	DeeObject_ThisCallTuple@12=_DeeObject_ThisCallTuple@12
 	DeeObject_ThisCallTupleKw@16=_DeeObject_ThisCallTupleKw@16
 	DeeObject_TryGetItem@8=_DeeObject_TryGetItem@8
+	DeeObject_TryGetItemIndex@8=_DeeObject_TryGetItemIndex@8
 	DeeObject_TryGetItemStringHash@12=_DeeObject_TryGetItemStringHash@12
 	DeeObject_TryGetItemStringLenHash@16=_DeeObject_TryGetItemStringLenHash@16
 	DeeObject_TypeAssertFailed@8=_DeeObject_TypeAssertFailed@8

@@ -44,10 +44,13 @@ DECL_BEGIN
 /************************************************************************/
 /* DefaultSequence_WithSizeAndGetItemIndex_Type                         */
 /* DefaultSequence_WithSizeAndGetItemIndexFast_Type                     */
+/* DefaultSequence_WithTryGetItemIndexAndSize_Type                      */
 /************************************************************************/
 
 #define ds_sgif_fini  ds_sgi_fini
 #define ds_sgif_visit ds_sgi_visit
+#define ds_stgi_fini  ds_sgi_fini
+#define ds_stgi_visit ds_sgi_visit
 
 PRIVATE NONNULL((1)) void DCALL
 ds_sgi_fini(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
@@ -89,6 +92,23 @@ ds_sgif_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	result->disgi_index            = self->dssgi_start;
 	result->disgi_end              = self->dssgi_end;
 	DeeObject_Init(result, &DefaultIterator_WithSizeAndGetItemIndexFast_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultIterator_WithSizeAndGetItemIndex *DCALL
+ds_stgi_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
+	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
+	result = DeeObject_MALLOC(DefaultIterator_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self->dssgi_seq);
+	result->disgi_seq              = self->dssgi_seq;
+	result->disgi_tp_getitem_index = self->dssgi_tp_getitem_index;
+	result->disgi_index            = self->dssgi_start;
+	result->disgi_end              = self->dssgi_end;
+	DeeObject_Init(result, &DefaultIterator_WithTryGetItemIndexAndSize_Type);
 	return result;
 err:
 	return NULL;
@@ -141,7 +161,34 @@ err_temp:
 	return temp;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+ds_stgi_foreach(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                Dee_foreach_t proc, void *arg) {
+	size_t i;
+	Dee_ssize_t temp, result = 0;
+	for (i = self->dssgi_start; i < self->dssgi_end; ++i) {
+		DREF DeeObject *elem;
+		elem = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, i);
+		if (!ITER_ISOK(elem)) {
+			if (elem == ITER_DONE)
+				continue; /* Unbound item. */
+			goto err;
+		}
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+	}
+	return result;
+err_temp:
+	return temp;
+err:
+	return -1;
+}
+
 #define ds_sgif_size ds_sgi_size
+#define ds_stgi_size ds_sgi_size
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
 ds_sgi_size(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	return self->dssgi_end - self->dssgi_start;
@@ -162,63 +209,241 @@ err_obb:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 ds_sgif_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DREF DeeObject *result;
 	size_t used_index;
-	struct type_seq *tp_seq = Dee_TYPE(self->dssgi_seq)->tp_seq;
-	ASSERT(tp_seq);
-	ASSERT(tp_seq->tp_getitem_index_fast);
-	ASSERT(tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index);
-	ASSERTF(tp_seq->tp_getitem_index, "Always present because `tp_getitem_index_fast' is, too");
 	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
 		goto err_obb;
 	if (used_index >= self->dssgi_end)
 		goto err_obb;
-	return (*tp_seq->tp_getitem_index)(self->dssgi_seq, used_index);
+	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
+	if unlikely(result == NULL)
+		err_unbound_index(self->dssgi_seq, used_index);
+	return result;
 err_obb:
-	err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+	err_index_out_of_bounds((DeeObject *)self, index, ds_sgif_size(self));
 	return NULL;
 }
 
-#define ds_sgif_delitem_index ds_sgi_delitem_index
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_stgi_getitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
+	if unlikely(result == ITER_DONE) {
+		err_unbound_index(self->dssgi_seq, used_index);
+		result = NULL;
+	}
+	return result;
+err_obb:
+	err_index_out_of_bounds((DeeObject *)self, index, ds_stgi_size(self));
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_sgi_trygetitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	size_t used_index;
+	if unlikely(OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if unlikely(used_index >= self->dssgi_end)
+		goto err_obb;
+	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
+	if unlikely(!result) {
+		if (DeeError_Catch(&DeeError_IndexError) ||
+		    DeeError_Catch(&DeeError_UnboundItem))
+			result = ITER_DONE;
+	}
+	return result;
+err_obb:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_sgif_trygetitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	result = (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
+	if unlikely(result == NULL)
+		result = ITER_DONE;
+	return result;
+err_obb:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+ds_stgi_trygetitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	size_t used_index;
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return (*self->dssgi_tp_getitem_index)(self->dssgi_seq, used_index);
+err_obb:
+	return ITER_DONE;
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ds_sgi_getseq(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
+	DeeTypeMRO mro;
+	DeeTypeObject *tp = Dee_TYPE(self->dssgi_seq);
+	struct type_seq *tp_seq = tp->tp_seq;
+	if likely(tp_seq && tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index)
+		return tp;
+
+	/* Must be somewhere else in the MRO */
+	tp = DeeTypeMRO_Init(&mro, tp);
+	for (;;) {
+		tp = DeeTypeMRO_Next(&mro, tp);
+		ASSERTF(tp, "this can only fail if `dssgi_tp_getitem_index' doesn't belong to `self->dssgi_seq'");
+		tp_seq = tp->tp_seq;
+		if likely(tp_seq && tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index)
+			return tp;
+	}
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ds_sgif_getseq(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
+	DeeTypeMRO mro;
+	DeeTypeObject *tp = Dee_TYPE(self->dssgi_seq);
+	struct type_seq *tp_seq = tp->tp_seq;
+	if likely(tp_seq && tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index)
+		return tp;
+
+	/* Must be somewhere else in the MRO */
+	tp = DeeTypeMRO_Init(&mro, tp);
+	for (;;) {
+		tp = DeeTypeMRO_Next(&mro, tp);
+		ASSERTF(tp, "this can only fail if `dssgi_tp_getitem_index' doesn't belong to `self->dssgi_seq'");
+		tp_seq = tp->tp_seq;
+		if likely(tp_seq && tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index)
+			return tp;
+	}
+}
+
+PRIVATE ATTR_RETNONNULL WUNUSED NONNULL((1)) DeeTypeObject *DCALL
+ds_stgi_getseq(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
+	DeeTypeMRO mro;
+	DeeTypeObject *tp = Dee_TYPE(self->dssgi_seq);
+	struct type_seq *tp_seq = tp->tp_seq;
+	if likely(tp_seq && tp_seq->tp_trygetitem_index == self->dssgi_tp_getitem_index)
+		return tp;
+
+	/* Must be somewhere else in the MRO */
+	tp = DeeTypeMRO_Init(&mro, tp);
+	for (;;) {
+		tp = DeeTypeMRO_Next(&mro, tp);
+		ASSERTF(tp, "this can only fail if `dssgi_tp_getitem_index' doesn't belong to `self->dssgi_seq'");
+		tp_seq = tp->tp_seq;
+		if likely(tp_seq && tp_seq->tp_trygetitem_index == self->dssgi_tp_getitem_index)
+			return tp;
+	}
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
-	struct type_seq *tp_seq = Dee_TYPE(self->dssgi_seq)->tp_seq;
-	ASSERT(tp_seq);
-	ASSERT(tp_seq->tp_getitem_index);
-	ASSERT(tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index ||
-	       tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index);
-	if (tp_seq->tp_delitem_index) {
+	DeeTypeObject *tp = ds_sgi_getseq(self);
+	if (tp->tp_seq->tp_delitem_index) {
 		size_t used_index;
 		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
 			goto err_obb;
 		if (used_index >= self->dssgi_end)
 			goto err_obb;
-		return (*tp_seq->tp_delitem_index)(self->dssgi_seq, used_index);
+		return DeeType_InvokeSeqDelItemIndex(tp, self->dssgi_seq, used_index);
 	}
-	return err_unimplemented_operator(Dee_TYPE(self->dssgi_seq), OPERATOR_DELITEM);
+	return err_unimplemented_operator(tp, OPERATOR_DELITEM);
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
 }
 
-#define ds_sgif_setitem_index ds_sgi_setitem_index
-PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-ds_sgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
-                     size_t index, DeeObject *value) {
-	struct type_seq *tp_seq = Dee_TYPE(self->dssgi_seq)->tp_seq;
-	ASSERT(tp_seq);
-	ASSERT(tp_seq->tp_getitem_index);
-	ASSERT(tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index ||
-	       tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index);
-	if (tp_seq->tp_setitem_index) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sgif_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DeeTypeObject *tp = ds_sgif_getseq(self);
+	if (tp->tp_seq->tp_delitem_index) {
 		size_t used_index;
 		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
 			goto err_obb;
 		if (used_index >= self->dssgi_end)
 			goto err_obb;
-		return (*tp_seq->tp_setitem_index)(self->dssgi_seq, used_index, value);
+		return DeeType_InvokeSeqDelItemIndex(tp, self->dssgi_seq, used_index);
+	}
+	return err_unimplemented_operator(tp, OPERATOR_DELITEM);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgif_size(self));
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_stgi_delitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	DeeTypeObject *tp = ds_stgi_getseq(self);
+	if (tp->tp_seq->tp_delitem_index) {
+		size_t used_index;
+		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+			goto err_obb;
+		if (used_index >= self->dssgi_end)
+			goto err_obb;
+		return DeeType_InvokeSeqDelItemIndex(tp, self->dssgi_seq, used_index);
+	}
+	return err_unimplemented_operator(tp, OPERATOR_DELITEM);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_stgi_size(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+ds_sgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                     size_t index, DeeObject *value) {
+	DeeTypeObject *tp = ds_sgi_getseq(self);
+	if (tp->tp_seq->tp_setitem_index) {
+		size_t used_index;
+		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+			goto err_obb;
+		if (used_index >= self->dssgi_end)
+			goto err_obb;
+		return (*tp->tp_seq->tp_setitem_index)(self->dssgi_seq, used_index, value);
 	}
 	return err_unimplemented_operator(Dee_TYPE(self->dssgi_seq), OPERATOR_SETITEM);
 err_obb:
 	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgi_size(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+ds_sgif_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                      size_t index, DeeObject *value) {
+	DeeTypeObject *tp = ds_sgif_getseq(self);
+	if (tp->tp_seq->tp_setitem_index) {
+		size_t used_index;
+		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+			goto err_obb;
+		if (used_index >= self->dssgi_end)
+			goto err_obb;
+		return (*tp->tp_seq->tp_setitem_index)(self->dssgi_seq, used_index, value);
+	}
+	return err_unimplemented_operator(Dee_TYPE(self->dssgi_seq), OPERATOR_SETITEM);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_sgif_size(self));
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+ds_stgi_setitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                      size_t index, DeeObject *value) {
+	DeeTypeObject *tp = ds_stgi_getseq(self);
+	if (tp->tp_seq->tp_setitem_index) {
+		size_t used_index;
+		if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+			goto err_obb;
+		if (used_index >= self->dssgi_end)
+			goto err_obb;
+		return (*tp->tp_seq->tp_setitem_index)(self->dssgi_seq, used_index, value);
+	}
+	return err_unimplemented_operator(Dee_TYPE(self->dssgi_seq), OPERATOR_SETITEM);
+err_obb:
+	return err_index_out_of_bounds((DeeObject *)self, index, ds_stgi_size(self));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -227,40 +452,80 @@ ds_sgif_getitem_index_fast(DefaultSequence_WithSizeAndGetItemIndex *__restrict s
 	return (*self->dssgi_tp_getitem_index)(self->dssgi_seq, self->dssgi_start + index);
 }
 
-#define ds_sgif_bounditem_index ds_sgi_bounditem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 ds_sgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	size_t used_index;
-	struct type_seq *tp_seq = Dee_TYPE(self->dssgi_seq)->tp_seq;
-	ASSERT(tp_seq);
-	ASSERT(tp_seq->tp_getitem_index);
-	ASSERT(tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index ||
-	       tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index);
-	ASSERTF(tp_seq->tp_bounditem_index, "Always present when `tp_getitem_index' is present");
+	DeeTypeObject *tp = ds_sgi_getseq(self);
 	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
 		goto err_obb;
 	if (used_index >= self->dssgi_end)
 		goto err_obb;
-	return (*tp_seq->tp_bounditem_index)(self->dssgi_seq, used_index);
+	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
 	return -2; /* Item doesn't exist */
 }
 
-#define ds_sgif_hasitem_index ds_sgi_hasitem_index
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-ds_sgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+ds_sgif_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
 	size_t used_index;
-	struct type_seq *tp_seq = Dee_TYPE(self->dssgi_seq)->tp_seq;
-	ASSERT(tp_seq);
-	ASSERT(tp_seq->tp_getitem_index);
-	ASSERT(tp_seq->tp_getitem_index == self->dssgi_tp_getitem_index ||
-	       tp_seq->tp_getitem_index_fast == self->dssgi_tp_getitem_index);
-	ASSERTF(tp_seq->tp_hasitem_index, "Always present when `tp_getitem_index' is present");
+	DeeTypeObject *tp = ds_sgif_getseq(self);
 	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
 		goto err_obb;
 	if (used_index >= self->dssgi_end)
 		goto err_obb;
-	return (*tp_seq->tp_hasitem_index)(self->dssgi_seq, used_index);
+	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
+err_obb:
+	return -2; /* Item doesn't exist */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_stgi_bounditem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	size_t used_index;
+	DeeTypeObject *tp = ds_stgi_getseq(self);
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeType_InvokeSeqBoundItemIndex(tp, self->dssgi_seq, used_index);
+err_obb:
+	return -2; /* Item doesn't exist */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	size_t used_index;
+	DeeTypeObject *tp = ds_sgi_getseq(self);
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeType_InvokeSeqHasItemIndex(tp, self->dssgi_seq, used_index);
+err_obb:
+	return 0; /* Item doesn't exist */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_sgif_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	size_t used_index;
+	DeeTypeObject *tp = ds_sgif_getseq(self);
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeType_InvokeSeqHasItemIndex(tp, self->dssgi_seq, used_index);
+err_obb:
+	return 0; /* Item doesn't exist */
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+ds_stgi_hasitem_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, size_t index) {
+	size_t used_index;
+	DeeTypeObject *tp = ds_stgi_getseq(self);
+	if (OVERFLOW_UADD(index, self->dssgi_start, &used_index))
+		goto err_obb;
+	if (used_index >= self->dssgi_end)
+		goto err_obb;
+	return DeeType_InvokeSeqHasItemIndex(tp, self->dssgi_seq, used_index);
 err_obb:
 	return 0; /* Item doesn't exist */
 }
@@ -312,6 +577,29 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithSizeAndGetItemIndex *DCALL
+ds_stgi_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
+                       Dee_ssize_t start, Dee_ssize_t end) {
+	struct Dee_seq_range range;
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
+	size_t size = self->dssgi_end - self->dssgi_start;
+	DeeSeqRange_Clamp(&range, start, end, size);
+	if (range.sr_start <= 0 && range.sr_end >= size)
+		return_reference_(self);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self->dssgi_seq);
+	result->dssgi_seq              = self->dssgi_seq;
+	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
+	result->dssgi_start            = self->dssgi_start + range.sr_start;
+	result->dssgi_end              = self->dssgi_start + range.sr_end;
+	DeeObject_Init(result, &DefaultSequence_WithTryGetItemIndexAndSize_Type);
+	return result;
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithSizeAndGetItemIndex *DCALL
 ds_sgi_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, Dee_ssize_t start) {
 	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
 	size_t used_start, size;
@@ -355,7 +643,30 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DefaultSequence_WithSizeAndGetItemIndex *DCALL
+ds_stgi_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict self, Dee_ssize_t start) {
+	DREF DefaultSequence_WithSizeAndGetItemIndex *result;
+	size_t used_start, size;
+	size       = self->dssgi_end - self->dssgi_start;
+	used_start = DeeSeqRange_Clamp_n(start, size);
+	if (used_start <= 0)
+		return_reference_(self);
+	result = DeeObject_MALLOC(DefaultSequence_WithSizeAndGetItemIndex);
+	if unlikely(!result)
+		goto err;
+	Dee_Incref(self->dssgi_seq);
+	result->dssgi_seq              = self->dssgi_seq;
+	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
+	result->dssgi_start            = self->dssgi_start + used_start;
+	result->dssgi_end              = self->dssgi_end;
+	DeeObject_Init(result, &DefaultSequence_WithTryGetItemIndexAndSize_Type);
+	return result;
+err:
+	return NULL;
+}
+
 #define ds_sgif_members ds_sgi_members
+#define ds_stgi_members ds_sgi_members
 PRIVATE struct type_member tpconst ds_sgi_members[] = {
 	TYPE_MEMBER_FIELD_DOC("__seq__", STRUCT_OBJECT, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_seq), "->?DSequence"),
 	TYPE_MEMBER_FIELD("__start__", STRUCT_CONST | STRUCT_SIZE_T, offsetof(DefaultSequence_WithSizeAndGetItemIndex, dssgi_start)),
@@ -373,67 +684,145 @@ PRIVATE struct type_member ds_sgif_class_members[] = {
 	TYPE_MEMBER_END
 };
 
+PRIVATE struct type_member ds_stgi_class_members[] = {
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithTryGetItemIndexAndSize_Type),
+	TYPE_MEMBER_END
+};
+
 
 PRIVATE struct type_seq ds_sgi_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sgi_iter,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ NULL,
-	/* .tp_getitem            = */ NULL,
-	/* .tp_delitem            = */ NULL,
-	/* .tp_setitem            = */ NULL,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ NULL,
-	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgi_foreach,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgi_getitem_index,
-	/* .tp_getitem_index_fast = */ NULL,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_delitem_index,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgi_setitem_index,
-	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_bounditem_index,
-	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_hasitem_index,
-	/* .tp_getrange_index     = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_sgi_getrange_index,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgi_getrange_index_n,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sgi_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgi_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgi_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgi_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgi_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgi_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_sgi_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgi_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgi_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_seq ds_sgif_seq = {
-	/* .tp_iter               = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sgif_iter,
-	/* .tp_sizeob             = */ NULL,
-	/* .tp_contains           = */ NULL,
-	/* .tp_getitem            = */ NULL,
-	/* .tp_delitem            = */ NULL,
-	/* .tp_setitem            = */ NULL,
-	/* .tp_getrange           = */ NULL,
-	/* .tp_delrange           = */ NULL,
-	/* .tp_setrange           = */ NULL,
-	/* .tp_nsi                = */ NULL,
-	/* .tp_foreach            = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgif_foreach,
-	/* .tp_foreach_pair       = */ NULL,
-	/* .tp_bounditem          = */ NULL,
-	/* .tp_hasitem            = */ NULL,
-	/* .tp_size               = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
-	/* .tp_size_fast          = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
-	/* .tp_getitem_index      = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index,
-	/* .tp_getitem_index_fast = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,
-	/* .tp_delitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_delitem_index,
-	/* .tp_setitem_index      = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgif_setitem_index,
-	/* .tp_bounditem_index    = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_bounditem_index,
-	/* .tp_hasitem_index      = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_hasitem_index,
-	/* .tp_getrange_index     = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_sgif_getrange_index,
-	/* .tp_delrange_index     = */ NULL,
-	/* .tp_setrange_index     = */ NULL,
-	/* .tp_getrange_index_n   = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgif_getrange_index_n,
-	/* .tp_delrange_index_n   = */ NULL,
-	/* .tp_setrange_index_n   = */ NULL,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_sgif_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_sgif_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_sgif_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_sgif_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_sgif_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_sgif_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_sgif_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_sgif_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
+};
+
+PRIVATE struct type_seq ds_stgi_seq = {
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&ds_stgi_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ NULL,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ NULL,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&ds_stgi_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_stgi_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&ds_stgi_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_stgi_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_stgi_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&ds_stgi_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&ds_stgi_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&ds_stgi_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&ds_stgi_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&ds_stgi_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&ds_stgi_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type = {
@@ -524,6 +913,51 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_class_methods = */ NULL,
 	/* .tp_class_getsets = */ NULL,
 	/* .tp_class_members = */ ds_sgif_class_members
+};
+
+INTERN DeeTypeObject DefaultSequence_WithTryGetItemIndexAndSize_Type = {
+	OBJECT_HEAD_INIT(&DeeType_Type),
+	/* .tp_name     = */ "_SeqWithTryGetItemIndexAndSize",
+	/* .tp_doc      = */ NULL,
+	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
+	/* .tp_weakrefs = */ 0,
+	/* .tp_features = */ TF_NONE,
+	/* .tp_base     = */ &DeeSeq_Type,
+	/* .tp_init = */ {
+		{
+			/* .tp_alloc = */ {
+				/* .tp_ctor      = */ (dfunptr_t)NULL,
+				/* .tp_copy_ctor = */ (dfunptr_t)NULL,
+				/* .tp_deep_ctor = */ (dfunptr_t)NULL,
+				/* .tp_any_ctor  = */ (dfunptr_t)NULL,
+				TYPE_FIXED_ALLOCATOR(DefaultSequence_WithSizeAndGetItemIndex)
+			}
+		},
+		/* .tp_dtor        = */ (void (DCALL *)(DeeObject *__restrict))&ds_stgi_fini,
+		/* .tp_assign      = */ NULL,
+		/* .tp_move_assign = */ NULL
+	},
+	/* .tp_cast = */ {
+		/* .tp_str  = */ NULL,
+		/* .tp_repr = */ NULL,
+		/* .tp_bool = */ NULL
+	},
+	/* .tp_call          = */ NULL,
+	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&ds_stgi_visit,
+	/* .tp_gc            = */ NULL,
+	/* .tp_math          = */ NULL,
+	/* .tp_cmp           = */ NULL,
+	/* .tp_seq           = */ &ds_stgi_seq,
+	/* .tp_iter_next     = */ NULL,
+	/* .tp_attr          = */ NULL,
+	/* .tp_with          = */ NULL,
+	/* .tp_buffer        = */ NULL,
+	/* .tp_methods       = */ NULL,
+	/* .tp_getsets       = */ NULL,
+	/* .tp_members       = */ ds_stgi_members,
+	/* .tp_class_methods = */ NULL,
+	/* .tp_class_getsets = */ NULL,
+	/* .tp_class_members = */ ds_stgi_class_members
 };
 
 

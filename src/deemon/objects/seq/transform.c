@@ -427,6 +427,19 @@ trans_trygetitem(Transformation *self, DeeObject *index) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+trans_trygetitem_index(Transformation *self, size_t index) {
+	DREF DeeObject *result;
+	result = DeeObject_TryGetItemIndex(self->t_seq, index);
+	if (ITER_ISOK(result)) {
+		DREF DeeObject *new_result;
+		new_result = DeeObject_Call(self->t_fun, 1, &result);
+		Dee_Decref(result);
+		result = new_result;
+	}
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 trans_trygetitem_string_hash(Transformation *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
@@ -562,6 +575,7 @@ PRIVATE struct type_seq trans_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&trans_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&trans_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&trans_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&trans_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ NULL,

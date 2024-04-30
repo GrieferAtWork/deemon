@@ -677,6 +677,11 @@ super_trygetitem(Super *self, DeeObject *index) {
 	return DeeObject_TTryGetItem(self->s_type, self->s_self, index);
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+super_trygetitem_index(Super *self, size_t index) {
+	return DeeObject_TTryGetItemIndex(self->s_type, self->s_self, index);
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_trygetitem_string_hash(Super *self, char const *key, Dee_hash_t hash) {
 	return DeeObject_TTryGetItemStringHash(self->s_type, self->s_self, key, hash);
@@ -768,6 +773,7 @@ PRIVATE struct type_seq super_seq = {
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&super_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&super_setrange_index_n,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&super_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&super_delitem_string_hash,

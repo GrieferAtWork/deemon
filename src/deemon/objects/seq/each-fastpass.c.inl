@@ -313,6 +313,15 @@ F(trygetitem)(STRUCT_TYPE *self, DeeObject *index) {
 }
 
 PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
+F(trygetitem_index)(STRUCT_TYPE *self, size_t index) {
+	DREF DeeObject *result;
+	result = DeeObject_TryGetItemIndex(self->se_seq, index);
+	if likely(ITER_ISOK(result))
+		result = F(transform_inherit)(self, result);
+	return result;
+}
+
+PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
 F(getitem_string_hash)(STRUCT_TYPE *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
 	result = DeeObject_GetItemStringHash(self->se_seq, key, hash);
@@ -719,6 +728,7 @@ PRIVATE struct type_seq F(seq) = {
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&F(delrange_index_n),
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&F(setrange_index_n),
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&F(trygetitem),
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&F(trygetitem_index),
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(trygetitem_string_hash),
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(getitem_string_hash),
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&F(delitem_string_hash),

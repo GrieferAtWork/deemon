@@ -904,6 +904,7 @@ PRIVATE struct type_seq proxykeys_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -948,6 +949,7 @@ PRIVATE struct type_seq proxyvalues_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -992,6 +994,7 @@ PRIVATE struct type_seq proxyitems_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL,
 	/* .tp_delitem_string_hash        = */ NULL,
@@ -1364,6 +1367,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 #define DeeType_RequireGetItemStringHash(tp_self)       (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_string_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireGetItemStringLenHash(tp_self)    (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_getitem_string_len_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireTryGetItem(tp_self)              (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireTryGetItemIndex(tp_self)         (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem_index) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireTryGetItemStringHash(tp_self)    (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem_string_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireTryGetItemStringLenHash(tp_self) (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_trygetitem_string_len_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireBoundItem(tp_self)               (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_bounditem) || DeeType_InheritGetItem(tp_self))
@@ -1385,6 +1389,7 @@ PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_map_getitem_index(Dee
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_getitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_getitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_trygetitem(DeeObject *self, DeeObject *key);
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_map_trygetitem_index(DeeObject *self, size_t key);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_trygetitem_string_hash(DeeObject *self, char const *key, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_trygetitem_string_len_hash(DeeObject *self, char const *key, size_t keylen, Dee_hash_t hash);
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL generic_map_foreach(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
@@ -1588,6 +1593,25 @@ generic_map_trygetitem(DeeObject *self, DeeObject *key) {
 		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
 			goto handle_empty;
 		return DeeMap_DefaultTryGetItemWithForeachPair(self, key);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
+	return NULL;
+handle_empty:
+	return ITER_DONE;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+generic_map_trygetitem_index(DeeObject *self, size_t key) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_MAP && DeeType_RequireTryGetItem(tp_self)) {
+		if (tp_self->tp_seq->tp_trygetitem_index == &generic_map_trygetitem_index)
+			goto handle_empty;
+		return (*tp_self->tp_seq->tp_trygetitem_index)(self, key);
+	}
+	if (DeeType_RequireForeachPair(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty;
+		return DeeMap_DefaultTryGetItemIndexWithForeachPair(self, key);
 	}
 	err_unimplemented_operator(tp_self, OPERATOR_GETITEM);
 	return NULL;
@@ -1836,6 +1860,7 @@ PRIVATE struct type_seq map_seq = {
 	/* .tp_delrange_index_n           = */ NULL,
 	/* .tp_setrange_index_n           = */ NULL,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&generic_map_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&generic_map_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&generic_map_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ NULL,

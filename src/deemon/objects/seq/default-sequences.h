@@ -75,6 +75,7 @@ typedef struct {
 
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndex_Type;     /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type; /* DefaultSequence_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultSequence_WithTryGetItemIndexAndSize_Type;  /* DefaultSequence_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultSequence_WithSizeAndGetItem_Type;          /* DefaultSequence_WithSizeAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithTSizeAndGetItem_Type;         /* DefaultSequence_WithTSizeAndGetItem */
 INTDEF DeeTypeObject DefaultSequence_WithIter_Type;                    /* DefaultSequence_WithIter */

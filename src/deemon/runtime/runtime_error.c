@@ -261,6 +261,13 @@ INTERN ATTR_COLD NONNULL((1, 2)) int
 	                       index, DeeObject_SizeObject(self), Dee_TYPE(self));
 }
 
+INTERN ATTR_COLD NONNULL((1, 2, 3)) int
+(DCALL err_index_out_of_bounds_ob_x)(DeeObject *self, DeeObject *index, DeeObject *sizeob) {
+	return DeeError_Throwf(&DeeError_IndexError,
+	                       "Index `%r' lies outside the valid bounds `0...%R' of sequence of type `%k'",
+	                       index, sizeob, Dee_TYPE(self));
+}
+
 INTERN ATTR_COLD int
 (DCALL err_va_index_out_of_bounds)(size_t index, size_t size) {
 	ASSERT(index >= size);
@@ -275,6 +282,14 @@ INTERN ATTR_COLD NONNULL((1)) int
 	return DeeError_Throwf(&DeeError_UnboundItem,
 	                       "Index `%" PRFuSIZ "' of instance of `%k': %k has not been bound",
 	                       index, Dee_TYPE(self), self);
+}
+
+INTERN ATTR_COLD NONNULL((1, 2)) int
+(DCALL err_unbound_index_ob)(DeeObject *self, DeeObject *indexob) {
+	ASSERT_OBJECT(self);
+	return DeeError_Throwf(&DeeError_UnboundItem,
+	                       "Index `%r' of instance of `%k': %k has not been bound",
+	                       indexob, Dee_TYPE(self), self);
 }
 
 INTERN ATTR_COLD NONNULL((1, 2)) int

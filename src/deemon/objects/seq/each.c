@@ -987,6 +987,7 @@ PRIVATE struct type_seq se_seq = {
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&se_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&se_setrange_index_n,
 	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
 	/* .tp_trygetitem_string_hash     = */ NULL,
 	/* .tp_getitem_string_hash        = */ NULL, /* default */
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&se_delitem_string_hash,
@@ -2210,6 +2211,15 @@ seo_trygetitem(SeqEachOperator *self, DeeObject *index) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+seo_trygetitem_index(SeqEachOperator *self, size_t index) {
+	DREF DeeObject *result;
+	result = DeeObject_TryGetItemIndex(self->se_seq, index);
+	if likely(ITER_ISOK(result))
+		result = seo_transform_inherit(self, result);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seo_getitem_string_hash(SeqEachOperator *self, char const *key, Dee_hash_t hash) {
 	DREF DeeObject *result;
@@ -2310,6 +2320,7 @@ PRIVATE struct type_seq seo_seq = {
 	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&seo_delrange_index_n,
 	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&seo_setrange_index_n,
 	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&seo_trygetitem,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&seo_trygetitem_index,
 	/* .tp_trygetitem_string_hash     = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_trygetitem_string_hash,
 	/* .tp_getitem_string_hash        = */ (DREF DeeObject *(DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_getitem_string_hash,
 	/* .tp_delitem_string_hash        = */ (int (DCALL *)(DeeObject *, char const *, Dee_hash_t))&seo_delitem_string_hash,
