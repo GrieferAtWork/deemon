@@ -137,12 +137,8 @@ err:
 
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_getrange_i(DeeTupleObject *__restrict self,
-                 dssize_t i_begin, dssize_t i_end);
-
-INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 list_getrange_as_tuple(DeeListObject *__restrict self,
-                       dssize_t i_begin, dssize_t i_end) {
+                       Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	DREF DeeTupleObject *result;
 	struct Dee_seq_range range;
 	size_t range_size;
@@ -227,6 +223,10 @@ roset_insert_nocheck(DeeRoSetObject *__restrict self,
 #define ROSET_INITIAL_MASK 0x1f
 
 
+INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+tuple_getrange_index(DeeTupleObject *__restrict self,
+                     Dee_ssize_t i_begin, Dee_ssize_t i_end);
+
 
 #define STACK_PACK_THRESHOLD 16
 INTERN WUNUSED NONNULL((1)) int
@@ -273,7 +273,7 @@ push_tuple_parts:
 		is_first_part = start == end;
 		if (!is_first_part) {
 			DREF DeeObject *subrange;
-			subrange = tuple_getrange_i(val, (dssize_t)start, (dssize_t)end);
+			subrange = tuple_getrange_index(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
 			if unlikely(!subrange)
 				goto err;
 			cid = asm_newconst(subrange);
@@ -313,7 +313,7 @@ push_tuple_parts:
 					if (asm_gextend(1))
 						goto err;
 				} else {
-					subrange = tuple_getrange_i(val, (dssize_t)start, (dssize_t)end);
+					subrange = tuple_getrange_index(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
 					if unlikely(!subrange)
 						goto err;
 					cid = asm_newconst(subrange);
@@ -398,7 +398,7 @@ push_tuple_parts:
 					}
 				} else {
 					DeeList_LockEndRead(val);
-					subrange = list_getrange_as_tuple(val, (dssize_t)start, (dssize_t)end);
+					subrange = list_getrange_as_tuple(val, (Dee_ssize_t)start, (Dee_ssize_t)end);
 					if unlikely(!subrange)
 						goto err;
 					cid = asm_newconst(subrange);

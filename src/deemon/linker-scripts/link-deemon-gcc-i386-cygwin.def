@@ -4,11 +4,11 @@ EXPORTS
 	; See this mail that noone ever bothered to reply to:
 	; https://cygwin.com/ml/cygwin/2001-03/msg00514.html
 	_DeeArg_GetKwNR@16=DeeArg_GetKwNR@16
-	_DeeArg_GetKwNRDef@20=DeeArg_GetKwNRDef@20
 	_DeeArg_GetKwNRStringHash@20=DeeArg_GetKwNRStringHash@20
-	_DeeArg_GetKwNRStringHashDef@24=DeeArg_GetKwNRStringHashDef@24
 	_DeeArg_GetKwNRStringLenHash@24=DeeArg_GetKwNRStringLenHash@24
-	_DeeArg_GetKwNRStringLenHashDef@28=DeeArg_GetKwNRStringLenHashDef@28
+	_DeeArg_TryGetKwNR@16=DeeArg_TryGetKwNR@16
+	_DeeArg_TryGetKwNRStringHash@20=DeeArg_TryGetKwNRStringHash@20
+	_DeeArg_TryGetKwNRStringLenHash@24=DeeArg_TryGetKwNRStringLenHash@24
 	_DeeArg_VUnpack@16=DeeArg_VUnpack@16
 	_DeeArg_VUnpackKw@24=DeeArg_VUnpackKw@24
 	_DeeAsm_IsNoreturn@8=DeeAsm_IsNoreturn@8
@@ -407,12 +407,12 @@ EXPORTS
 	_DeeInt_TryGet8Bit@8=DeeInt_TryGet8Bit@8
 	_DeeKwArgs_Done@12=DeeKwArgs_Done@12
 	_DeeKwArgs_GetItemNR@8=DeeKwArgs_GetItemNR@8
-	_DeeKwArgs_GetItemNRDef@12=DeeKwArgs_GetItemNRDef@12
 	_DeeKwArgs_GetItemNRStringHash@12=DeeKwArgs_GetItemNRStringHash@12
-	_DeeKwArgs_GetItemNRStringHashDef@16=DeeKwArgs_GetItemNRStringHashDef@16
 	_DeeKwArgs_GetItemNRStringLenHash@16=DeeKwArgs_GetItemNRStringLenHash@16
-	_DeeKwArgs_GetItemNRStringLenHashDef@20=DeeKwArgs_GetItemNRStringLenHashDef@20
 	_DeeKwArgs_Init@16=DeeKwArgs_Init@16
+	_DeeKwArgs_TryGetItemNR@8=DeeKwArgs_TryGetItemNR@8
+	_DeeKwArgs_TryGetItemNRStringHash@12=DeeKwArgs_TryGetItemNRStringHash@12
+	_DeeKwArgs_TryGetItemNRStringLenHash@16=DeeKwArgs_TryGetItemNRStringLenHash@16
 	_DeeKwBlackList_Decref@4=DeeKwBlackList_Decref@4
 	_DeeKwBlackList_New@16=DeeKwBlackList_New@16
 	_DeeKwCMethod_New@8=DeeKwCMethod_New@8
@@ -422,11 +422,11 @@ EXPORTS
 	_DeeKwObjMethod_New@8=DeeKwObjMethod_New@8
 	_DeeKw_ForceWrap@4=DeeKw_ForceWrap@4
 	_DeeKw_GetItemNR@8=DeeKw_GetItemNR@8
-	_DeeKw_GetItemNRDef@12=DeeKw_GetItemNRDef@12
 	_DeeKw_GetItemNRStringHash@12=DeeKw_GetItemNRStringHash@12
-	_DeeKw_GetItemNRStringHashDef@16=DeeKw_GetItemNRStringHashDef@16
 	_DeeKw_GetItemNRStringLenHash@16=DeeKw_GetItemNRStringLenHash@16
-	_DeeKw_GetItemNRStringLenHashDef@20=DeeKw_GetItemNRStringLenHashDef@20
+	_DeeKw_TryGetItemNR@8=DeeKw_TryGetItemNR@8
+	_DeeKw_TryGetItemNRStringHash@12=DeeKw_TryGetItemNRStringHash@12
+	_DeeKw_TryGetItemNRStringLenHash@16=DeeKw_TryGetItemNRStringLenHash@16
 	_DeeKw_Wrap@4=DeeKw_Wrap@4
 	_DeeKw_WrapInherited@4=DeeKw_WrapInherited@4
 	_DeeKwdsMapping_Decref@4=DeeKwdsMapping_Decref@4

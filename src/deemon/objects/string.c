@@ -159,7 +159,7 @@ err:
 }
 
 /* Append the given data to a string printer. (HINT: Use this one as a `Dee_formatprinter_t') */
-PUBLIC WUNUSED NONNULL((1)) dssize_t
+PUBLIC WUNUSED NONNULL((1)) Dee_ssize_t
 (DPRINTER_CC Dee_ascii_printer_print)(void *__restrict self,
                                       char const *__restrict data,
                                       size_t datalen) {
@@ -227,7 +227,7 @@ realloc_again:
 	        data, datalen, sizeof(char));
 	me->ap_length += datalen;
 done:
-	return (dssize_t)datalen;
+	return (Dee_ssize_t)datalen;
 }
 
 /* Pack together data from a string printer and return the generated contained string.
@@ -276,7 +276,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) char *
 (DCALL Dee_ascii_printer_allocstr)(struct ascii_printer *__restrict self,
                                    char const *__restrict str, size_t length) {
 	char *result;
-	dssize_t error;
+	Dee_ssize_t error;
 	if (self->ap_string) {
 		result = (char *)memmem(self->ap_string->s_str,
 		                        self->ap_length, str, length);
@@ -1317,13 +1317,45 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_contains(String *self, DeeObject *some_object);
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_size(String *__restrict self) {
+string_sizeob(String *__restrict self) {
 	size_t result = DeeString_WLEN(self);
 	return DeeInt_NewSize(result);
 }
 
+PRIVATE WUNUSED NONNULL((1)) size_t DCALL
+string_size(String *__restrict self) {
+	ASSERT(DeeString_WLEN(self) != (size_t)-1);
+	return DeeString_WLEN(self);
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+string_getitem_index(String *__restrict self, size_t index) {
+	int width = DeeString_WIDTH(self);
+	union dcharptr str;
+	size_t len;
+	str.ptr = DeeString_WSTR(self);
+	len     = WSTR_LENGTH(str.ptr);
+	if unlikely(index >= len)
+		goto err_oob;
+	SWITCH_SIZEOF_WIDTH(width) {
+
+	CASE_WIDTH_1BYTE:
+		return DeeString_Chr(str.cp8[index]);
+
+	CASE_WIDTH_2BYTE:
+		return DeeString_Chr(str.cp16[index]);
+
+	CASE_WIDTH_4BYTE:
+		return DeeString_Chr(str.cp32[index]);
+
+	}
+err_oob:
+	err_index_out_of_bounds((DeeObject *)self, index, len);
+	return NULL;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_get(String *self, DeeObject *index) {
+string_getitem(String *self, DeeObject *index) {
 	int width = DeeString_WIDTH(self);
 	union dcharptr str;
 	size_t i, len;
@@ -1331,8 +1363,8 @@ string_get(String *self, DeeObject *index) {
 	len     = WSTR_LENGTH(str.ptr);
 	if (DeeObject_AsSize(index, &i))
 		goto err;
-	if unlikely((size_t)i >= len)
-		goto err_bound;
+	if unlikely(i >= len)
+		goto err_oob;
 	SWITCH_SIZEOF_WIDTH(width) {
 
 	CASE_WIDTH_1BYTE:
@@ -1345,15 +1377,15 @@ string_get(String *self, DeeObject *index) {
 		return DeeString_Chr(str.cp32[i]);
 
 	}
-err_bound:
+err_oob:
 	err_index_out_of_bounds((DeeObject *)self, i, len);
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_getrange_i(String *__restrict self,
-                  dssize_t begin, dssize_t end) {
+string_getrange_index(String *__restrict self,
+                  Dee_ssize_t begin, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	void *str  = DeeString_WSTR(self);
@@ -1369,9 +1401,9 @@ string_getrange_i(String *__restrict self,
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_getrange_in(String *__restrict self, dssize_t begin) {
+string_getrange_index_n(String *__restrict self, Dee_ssize_t begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return string_getrange_i(self, begin, SSIZE_MAX);
+	return string_getrange_index(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t range_size, start;
 	void *str  = DeeString_WSTR(self);
@@ -1388,17 +1420,15 @@ string_getrange_in(String *__restrict self, dssize_t begin) {
 }
 
 INTERN WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-string_range_get(String *__restrict self,
-                 DeeObject *__restrict begin,
-                 DeeObject *__restrict end) {
-	dssize_t i_begin, i_end;
+string_getrange(String *self, DeeObject *begin, DeeObject *end) {
+	Dee_ssize_t i_begin, i_end;
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return string_getrange_in(self, i_begin);
+		return string_getrange_index_n(self, i_begin);
 	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return string_getrange_i(self, i_begin, i_end);
+	return string_getrange_index(self, i_begin, i_end);
 err:
 	return NULL;
 }
@@ -1413,22 +1443,6 @@ PRIVATE struct type_cmp string_cmp = {
 	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_gr,
 	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
 };
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-string_nsi_getsize(String *__restrict self) {
-	ASSERT(DeeString_WLEN(self) != (size_t)-1);
-	return DeeString_WLEN(self);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-string_nsi_getitem(String *__restrict self, size_t index) {
-	if unlikely(index >= DeeString_WLEN(self))
-		goto err_index;
-	return DeeString_Chr(DeeString_GetChar(self, index));
-err_index:
-	err_index_out_of_bounds((DeeObject *)self, index, DeeString_WLEN(self));
-	return NULL;
-}
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 string_foreach(String *self, Dee_foreach_t proc, void *arg) {
@@ -1503,14 +1517,14 @@ PRIVATE struct type_nsi tpconst string_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&string_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&string_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&string_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&string_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&string_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&string_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
-			/* .nsi_getrange     = */ (dfunptr_t)&string_getrange_i,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&string_getrange_in,
+			/* .nsi_getrange     = */ (dfunptr_t)&string_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&string_getrange_index_n,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
@@ -1532,17 +1546,48 @@ PRIVATE struct type_nsi tpconst string_nsi = {
 };
 
 PRIVATE struct type_seq string_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_get,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&string_range_get,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &string_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&string_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&string_getrange,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &string_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&string_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&string_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&string_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&string_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&string_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_member tpconst string_class_members[] = {

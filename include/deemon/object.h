@@ -1969,7 +1969,7 @@ struct Dee_type_seq {
 	/* Aliases for `tp_sizeob' */
 	WUNUSED_T NONNULL_T((1)) size_t (DCALL *tp_size)(DeeObject *__restrict self);
 
-	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions:
+	/* Same as `tp_size', but should execute in O(1) time and never throw exceptions.
 	 * NOTE: This operator can NOT be used to substitute `tp_size'!
 	 * @return: * : A snapshot of the object's current size.
 	 * @return: (size_t)-1: Size cannot be determined fast. */

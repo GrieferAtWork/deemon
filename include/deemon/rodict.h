@@ -102,20 +102,16 @@ DDATDEF DeeObject DeeRoDict_EmptyInstance;
 
 
 #ifdef CONFIG_BUILDING_DEEMON
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringHash(DeeRoDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL DeeRoDict_HasItemStringLenHash(DeeRoDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNR(DeeRoDictObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNRStringHash(DeeRoDictObject *__restrict self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_GetItemNRStringLenHash(DeeRoDictObject *__restrict self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL DeeRoDict_GetItemNRDef(DeeRoDictObject *self, DeeObject *key, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL DeeRoDict_GetItemNRStringHashDef(DeeRoDictObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeRoDict_GetItemNRStringLenHashDef(DeeRoDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
-#define DeeRoDict_HasItemString(self, key)                      DeeRoDict_HasItemStringHash(self, key, Dee_HashStr(key))
-#define DeeRoDict_HasItemStringLen(self, key, keylen)           DeeRoDict_HasItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeRoDict_GetItemNRString(self, key)                    DeeRoDict_GetItemNRStringHash(self, key, Dee_HashStr(key))
-#define DeeRoDict_GetItemNRStringLen(self, key, keylen)         DeeRoDict_GetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeRoDict_GetItemNRStringDef(self, key, def)            DeeRoDict_GetItemNRStringHashDef(self, key, Dee_HashStr(key), def)
-#define DeeRoDict_GetItemNRStringLenDef(self, key, keylen, def) DeeRoDict_GetItemNRStringLenHashDef(self, key, keylen, Dee_HashPtr(key, keylen), def)
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNR(DeeRoDictObject *self, DeeObject *key);
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNRStringHash(DeeRoDictObject *self, char const *__restrict key, Dee_hash_t hash);
+INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeRoDict_TryGetItemNRStringLenHash(DeeRoDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
+#define DeeRoDict_GetItemNRString(self, key)               DeeRoDict_GetItemNRStringHash(self, key, Dee_HashStr(key))
+#define DeeRoDict_GetItemNRStringLen(self, key, keylen)    DeeRoDict_GetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
+#define DeeRoDict_TryGetItemNRString(self, key)            DeeRoDict_TryGetItemNRStringHash(self, key, Dee_HashStr(key))
+#define DeeRoDict_TryGetItemNRStringLen(self, key, keylen) DeeRoDict_TryGetItemNRStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #endif /* !CONFIG_BUILDING_DEEMON */
 
 /* Hash-iteration control. */

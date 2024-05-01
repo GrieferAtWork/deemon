@@ -174,7 +174,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 			DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 			ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-			val = DeeKw_GetItemNRDef(kw, (DeeObject *)name, ITER_DONE);
+			val = DeeKw_TryGetItemNR(kw, (DeeObject *)name);
 			if unlikely(!ITER_ISOK(val)) {
 				if (val != NULL) {
 					/* Missing, mandatory argument. */
@@ -216,7 +216,7 @@ PP_CAT2(LOCAL_DeeFunction_Call, IntellisenseInternal)
 		DeeStringObject *name = code->co_keywords[frame.cf_argc + i];
 		ASSERT_OBJECT_TYPE_EXACT(name, &DeeString_Type);
 #ifdef KW_IS_MAPPING
-		val = DeeKw_GetItemNRDef(kw, (DeeObject *)name, ITER_DONE);
+		val = DeeKw_TryGetItemNR(kw, (DeeObject *)name);
 		if (!ITER_ISOK(val)) {
 			if unlikely(!val)
 				goto err_ex_frame;

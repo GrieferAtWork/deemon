@@ -1430,7 +1430,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_size(Tuple *__restrict self) {
+tuple_sizeob(Tuple *__restrict self) {
 	return DeeInt_NewSize(DeeTuple_SIZE(self));
 }
 
@@ -1469,7 +1469,7 @@ err:
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_getrange_i(Tuple *__restrict self,
+tuple_getrange_index(Tuple *__restrict self,
                  dssize_t begin, dssize_t end) {
 	size_t range_size;
 	struct Dee_seq_range range;
@@ -1481,10 +1481,10 @@ tuple_getrange_i(Tuple *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_getrange_in(Tuple *__restrict self,
+tuple_getrange_index_n(Tuple *__restrict self,
                   dssize_t begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return tuple_getrange_i(self, begin, SSIZE_MAX);
+	return tuple_getrange_index(self, begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t start;
 	start = DeeSeqRange_Clamp_n(begin, self->t_size);
@@ -1503,10 +1503,10 @@ tuple_getrange(Tuple *__restrict self,
 	if (DeeObject_AsSSize(begin, &i_begin))
 		goto err;
 	if (DeeNone_Check(end))
-		return tuple_getrange_in(self, i_begin);
+		return tuple_getrange_index_n(self, i_begin);
 	if (DeeObject_AsSSize(end, &i_end))
 		goto err;
-	return tuple_getrange_i(self, i_begin, i_end);
+	return tuple_getrange_index(self, i_begin, i_end);
 err:
 	return NULL;
 }
@@ -1514,13 +1514,13 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-tuple_nsi_getsize(Tuple *__restrict self) {
+tuple_size(Tuple *__restrict self) {
 	ASSERT(self->t_size != (size_t)-1);
 	return self->t_size;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_nsi_getitem(Tuple *__restrict self, size_t index) {
+tuple_getitem_index(Tuple *__restrict self, size_t index) {
 	if unlikely(index >= self->t_size)
 		goto err_bounds;
 	return_reference(self->t_elem[index]);
@@ -1530,7 +1530,7 @@ err_bounds:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-tuple_nsi_getitem_fast(Tuple *__restrict self, size_t index) {
+tuple_getitem_index_fast(Tuple *__restrict self, size_t index) {
 	ASSERT(index < self->t_size);
 	return_reference(self->t_elem[index]);
 }
@@ -1599,14 +1599,14 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&tuple_nsi_getsize,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&tuple_nsi_getsize,
-			/* .nsi_getitem      = */ (dfunptr_t)&tuple_nsi_getitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&tuple_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&tuple_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&tuple_getitem_index,
 			/* .nsi_delitem      = */ (dfunptr_t)NULL,
 			/* .nsi_setitem      = */ (dfunptr_t)NULL,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&tuple_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&tuple_getrange_i,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&tuple_getrange_in,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&tuple_getitem_index_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&tuple_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&tuple_getrange_index_n,
 			/* .nsi_delrange     = */ (dfunptr_t)NULL,
 			/* .nsi_delrange_n   = */ (dfunptr_t)NULL,
 			/* .nsi_setrange     = */ (dfunptr_t)NULL,
@@ -1628,17 +1628,48 @@ PRIVATE struct type_nsi tpconst tuple_nsi = {
 
 
 PRIVATE struct type_seq tuple_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_getitem,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &tuple_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_iter,
+	/* .tp_sizeob                     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&tuple_sizeob,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&tuple_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&tuple_getrange,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &tuple_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&tuple_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&tuple_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&tuple_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&tuple_getitem_index_fast,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&tuple_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&tuple_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF Tuple *DCALL

@@ -1512,7 +1512,7 @@ yf_deepcopy(YFunction *__restrict self) {
 					val = kw_argv[index];
 				}
 			} else {
-				val = DeeKw_GetItemNRDef(kwcopy, (DeeObject *)name, ITER_DONE);
+				val = DeeKw_TryGetItemNR(kwcopy, (DeeObject *)name);
 				if unlikely(!ITER_ISOK(val)) {
 					if unlikely(!val)
 						goto err_kw_this_args_r_kw;

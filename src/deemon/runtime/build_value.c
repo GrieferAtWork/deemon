@@ -1318,10 +1318,7 @@ PUBLIC WUNUSED ATTR_INS(2, 1) NONNULL((4, 5)) int
 			keyword_hash   = Dee_HashStr(kwlist->k_name);
 			kwlist->k_hash = keyword_hash;
 		}
-		keyword_value = DeeKw_GetItemNRStringHashDef(kw,
-		                                             kwlist->k_name,
-		                                             keyword_hash,
-		                                             ITER_DONE);
+		keyword_value = DeeKw_TryGetItemNRStringHash(kw, kwlist->k_name, keyword_hash);
 		if unlikely(keyword_value == ITER_DONE) {
 			/* Argument not given. */
 			if (!is_optional) {
