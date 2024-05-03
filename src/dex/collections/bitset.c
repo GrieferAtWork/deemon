@@ -39,9 +39,13 @@
 #include <deemon/util/atomic.h>
 
 #include <hybrid/bitset.h>
+#include <hybrid/limitcore.h>
 #include <hybrid/overflow.h>
 
 #include <stddef.h>
+
+#undef SSIZE_MAX
+#define SSIZE_MAX __SSIZE_MAX__
 
 /* Use <deemon/util/atomic.h> to implement atomic bitset ops (so they're faster under CONFIG_NO_THREADS) */
 #undef __hybrid_bitset_atomic_set
@@ -245,7 +249,7 @@ struct bitset_fromseq_data {
 	                            * # of bits is stored in `bsfsd_bitset->bs_nbits') */
 };
 
-PRIVATE WUNUSED NONNULL((2)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((2)) Dee_ssize_t DCALL
 bitset_fromseq_cb(void *cookie, DeeObject *item) {
 	struct bitset_fromseq_data *me = (struct bitset_fromseq_data *)cookie;
 	DREF Bitset *bitset;
@@ -329,7 +333,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-bs_nsi_getsize(Bitset *__restrict self) {
+bs_size(Bitset *__restrict self) {
 	return bitset_popcount(self->bs_bitset, self->bs_nbits);
 }
 
@@ -647,11 +651,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bs_size(Bitset *__restrict self) {
-	return DeeInt_NewSize(bs_nsi_getsize(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bs_contains(Bitset *self, DeeObject *key) {
 	size_t bitno;
 	if (DeeObject_AsSize(key, &bitno))
@@ -662,27 +661,36 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_getitem_index(Bitset *self, size_t bitno) {
+	if unlikely(bitno >= self->bs_nbits)
+		goto err_too_large;
+	return_bool(bitset_test(self->bs_bitset, bitno));
+err_too_large:
+	bs_err_bad_index(self, bitno);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bs_trygetitem_index(Bitset *self, size_t bitno) {
+	if unlikely(bitno >= self->bs_nbits)
+		return ITER_DONE;
+	return_bool(bitset_test(self->bs_bitset, bitno));
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_delitem(Bitset *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
+bs_delitem_index(Bitset *self, size_t bitno) {
 	if unlikely(bitno >= self->bs_nbits)
 		goto err_too_large;
 	bitset_atomic_clear(self->bs_bitset, bitno);
 	return 0;
 err_too_large:
 	return bs_err_bad_index(self, bitno);
-err:
-	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_setitem(Bitset *self, DeeObject *key, DeeObject *value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+bs_setitem_index(Bitset *self, size_t bitno, DeeObject *value) {
 	int temp;
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
 	if unlikely(bitno >= self->bs_nbits)
 		goto err_too_large;
 	temp = DeeObject_Bool(value);
@@ -701,7 +709,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-bs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
+bs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	DREF BitsetView *result;
 	result = DeeObject_MALLOC(BitsetView);
@@ -725,48 +733,46 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-bs_getrange(Bitset *self, DeeObject *start, DeeObject *end) {
-	Dee_ssize_t start_i, end_i = self->bs_nbits;
-	if (DeeObject_AsSSize(start, &start_i))
+bs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
+	DREF BitsetView *result;
+	result = DeeObject_MALLOC(BitsetView);
+	if unlikely(!result)
 		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
-	return bs_getrange_i(self, start_i, end_i);
+	result->bsv_owner = (DREF DeeObject *)self;
+	Dee_Incref(self);
+	result->bsv_buf.bb_base = self->bs_bitset;
+	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
+#ifndef __INTELLISENSE__
+	result->bsv_buf.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+	result->bsv_startbit = DeeSeqRange_Clamp_n(start, self->bs_nbits);
+	result->bsv_endbit   = self->bs_nbits;
+	result->bsv_bflags   = Dee_BUFFER_FWRITABLE;
+	DeeObject_Init(result, &BitsetView_Type);
+	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bs_delrange(Bitset *self, DeeObject *start, DeeObject *end) {
+bs_delrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
-	Dee_ssize_t start_i, end_i = self->bs_nbits;
-	if (DeeObject_AsSSize(start, &start_i))
-		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
-	DeeSeqRange_Clamp(&range, start_i, end_i, self->bs_nbits);
+	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
 	bitset_nclear(self->bs_bitset, range.sr_start, range.sr_end);
 	return 0;
-err:
-	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-bs_setrange(Bitset *self, DeeObject *start,
-            DeeObject *end, DeeObject *value) {
-	Dee_ssize_t start_i, end_i = self->bs_nbits;
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bs_delrange_index_n(Bitset *self, Dee_ssize_t start) {
+	size_t used_start = DeeSeqRange_Clamp_n(start, self->bs_nbits);
+	bitset_nclear(self->bs_bitset, used_start, self->bs_nbits);
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+bs_setrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end, DeeObject *value) {
 	struct Dee_seq_range range;
-	if (DeeObject_AsSSize(start, &start_i))
-		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
-	DeeSeqRange_Clamp(&range, start_i, end_i, self->bs_nbits);
+	DeeSeqRange_Clamp(&range, start, end, self->bs_nbits);
 	if (DeeBool_Check(value)) {
 		if (DeeBool_IsTrue(value)) {
 			bitset_nset(self->bs_bitset, range.sr_start, range.sr_end);
@@ -798,6 +804,11 @@ bs_setrange(Bitset *self, DeeObject *start,
 	return 0;
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+bs_setrange_index_n(Bitset *self, Dee_ssize_t start, DeeObject *value) {
+	return bs_setrange_index(self, start, SSIZE_MAX, value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -1516,11 +1527,11 @@ bs_bool(Bitset *__restrict self) {
 	return bitset_anyset(self->bs_bitset, self->bs_nbits) ? 1 : 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 bs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
 	bool is_first;
 	size_t bitno;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "Bitset({");
 	if unlikely(result < 0)
 		goto done;
@@ -1542,7 +1553,7 @@ err_temp:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 bs_foreach(Bitset *self, Dee_foreach_t proc, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	size_t bitno;
 	bitset_foreach (bitno, self->bs_bitset, self->bs_nbits) {
 		DREF DeeObject *id;
@@ -1568,7 +1579,7 @@ PRIVATE struct type_nsi tpconst bs_nsi = {
 	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&bs_nsi_getsize,
+			/* .nsi_getsize = */ (dfunptr_t)&bs_size,
 			/* .nsi_insert  = */ (dfunptr_t)&bs_nsi_insert,
 			/* .nsi_remove  = */ (dfunptr_t)&bs_nsi_remove,
 		}
@@ -1621,17 +1632,48 @@ PRIVATE struct type_cmp bs_cmp = {
 };
 
 PRIVATE struct type_seq bs_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_contains,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&bs_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bs_setitem,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bs_getrange,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bs_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bs_setrange,
-	/* .tp_nsi      = */ &bs_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bs_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bs_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &bs_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bs_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bs_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bs_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&bs_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&bs_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bs_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bs_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&bs_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&bs_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&bs_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&bs_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bs_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_buffer bs_buffer = {
@@ -1943,7 +1985,7 @@ INTERN DeeTypeObject Bitset_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&bs_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&bs_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&bs_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -1974,7 +2016,7 @@ INTERN DeeTypeObject Bitset_Type = {
 
 
 
-#define robs_nsi_getsize bs_nsi_getsize
+#define robs_nsi_getsize bs_size
 #define robs_hash        bs_hash
 
 PRIVATE WUNUSED NONNULL((1)) DREF Bitset *DCALL
@@ -2033,19 +2075,21 @@ err:
 #define robs_or  bs_or
 #define robs_xor bs_xor
 
-#define robs_eq       bs_eq
-#define robs_ne       bs_ne
-#define robs_le       bs_le
-#define robs_ge       bs_ge
-#define robs_gr       bs_gr
-#define robs_lo       bs_lo
-#define robs_iter     bs_iter
-#define robs_size     bs_size
-#define robs_contains bs_contains
-#define robs_foreach  bs_foreach
+#define robs_eq               bs_eq
+#define robs_ne               bs_ne
+#define robs_le               bs_le
+#define robs_ge               bs_ge
+#define robs_gr               bs_gr
+#define robs_lo               bs_lo
+#define robs_iter             bs_iter
+#define robs_size             bs_size
+#define robs_contains         bs_contains
+#define robs_foreach          bs_foreach
+#define robs_getitem_index    bs_getitem_index
+#define robs_trygetitem_index bs_trygetitem_index
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-robs_getrange_i(Bitset *self, dssize_t start, dssize_t end) {
+robs_getrange_index(Bitset *self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	DREF BitsetView *result;
 	result = DeeObject_MALLOC(BitsetView);
@@ -2069,15 +2113,23 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-robs_getrange(Bitset *self, DeeObject *start, DeeObject *end) {
-	Dee_ssize_t start_i, end_i = self->bs_nbits;
-	if (DeeObject_AsSSize(start, &start_i))
+robs_getrange_index_n(Bitset *self, Dee_ssize_t start) {
+	DREF BitsetView *result;
+	result = DeeObject_MALLOC(BitsetView);
+	if unlikely(!result)
 		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
-	return robs_getrange_i(self, start_i, end_i);
+	result->bsv_owner = (DREF DeeObject *)self;
+	Dee_Incref(self);
+	result->bsv_buf.bb_base = self->bs_bitset;
+	result->bsv_buf.bb_size = BITSET_SIZEOF(self->bs_nbits);
+#ifndef __INTELLISENSE__
+	result->bsv_buf.bb_put = NULL;
+#endif /* !__INTELLISENSE__ */
+	result->bsv_startbit = DeeSeqRange_Clamp_n(start, self->bs_nbits);
+	result->bsv_endbit   = self->bs_nbits;
+	result->bsv_bflags   = Dee_BUFFER_FREADONLY;
+	DeeObject_Init(result, &BitsetView_Type);
+	return result;
 err:
 	return NULL;
 }
@@ -2133,11 +2185,11 @@ err:
 
 #define robs_bool bs_bool
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 robs_printrepr(Bitset *__restrict self, dformatprinter printer, void *arg) {
 	bool is_first;
 	size_t bitno;
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	result = DeeFormat_PRINT(printer, arg, "Bitset.Frozen({");
 	if unlikely(result < 0)
 		goto done;
@@ -2216,17 +2268,48 @@ PRIVATE struct type_cmp robs_cmp = {
 };
 
 PRIVATE struct type_seq robs_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&robs_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&robs_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_contains,
-	/* .tp_delitem  = */ NULL,
-	/* .tp_setitem  = */ NULL,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&robs_getrange,
-	/* .tp_delrange = */ NULL,
-	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &robs_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&robs_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&robs_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &robs_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&robs_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&robs_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&robs_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&robs_getrange_index,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&robs_getrange_index_n,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&robs_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_buffer robs_buffer = {
@@ -2434,7 +2517,7 @@ INTERN DeeTypeObject RoBitset_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&robs_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&robs_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&robs_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ NULL,
@@ -2477,7 +2560,7 @@ bsv_err_readonly(BitsetView *__restrict self) {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-bsv_nsi_getsize(BitsetView *__restrict self) {
+bsv_size(BitsetView *__restrict self) {
 	return bitset_npopcount(BitsetView_GetBitset(self),
 	                        self->bsv_startbit,
 	                        self->bsv_endbit);
@@ -2679,11 +2762,6 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-bsv_size(BitsetView *__restrict self) {
-	return DeeInt_NewSize(bsv_nsi_getsize(self));
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 bsv_contains(BitsetView *self, DeeObject *key) {
 	size_t bitno;
 	if (DeeObject_AsSize(key, &bitno))
@@ -2695,11 +2773,27 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_getitem_index(BitsetView *self, size_t bitno) {
+	if unlikely(bitno >= BitsetView_GetNBits(self))
+		goto err_too_large;
+	return_bool(bitset_test(BitsetView_GetBitset(self),
+	                        bitno + self->bsv_startbit));
+err_too_large:
+	bsv_err_bad_index(self, bitno);
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+bsv_trygetitem_index(BitsetView *self, size_t bitno) {
+	if unlikely(bitno >= BitsetView_GetNBits(self))
+		return ITER_DONE;
+	return_bool(bitset_test(BitsetView_GetBitset(self),
+	                        bitno + self->bsv_startbit));
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsv_delitem(BitsetView *self, DeeObject *key) {
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
+bsv_delitem_index(BitsetView *self, size_t bitno) {
 	if unlikely(bitno >= BitsetView_GetNBits(self))
 		goto err_too_large;
 	if unlikely(!BitsetView_IsWritable(self))
@@ -2710,16 +2804,11 @@ err_readonly:
 	return bsv_err_readonly(self);
 err_too_large:
 	return bsv_err_bad_index(self, bitno);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsv_setitem(BitsetView *self, DeeObject *key, DeeObject *value) {
+bsv_setitem_index(BitsetView *self, size_t bitno, DeeObject *value) {
 	int temp;
-	size_t bitno;
-	if (DeeObject_AsSize(key, &bitno))
-		goto err;
 	if unlikely(bitno >= BitsetView_GetNBits(self))
 		goto err_too_large;
 	if unlikely(!BitsetView_IsWritable(self))
@@ -2742,7 +2831,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-bsv_getrange_i(BitsetView *self, dssize_t start, dssize_t end) {
+bsv_getrange_index(BitsetView *self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
 	DREF BitsetView *result;
 	result = DeeObject_MALLOC(BitsetView);
@@ -2768,56 +2857,64 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF BitsetView *DCALL
-bsv_getrange(BitsetView *self, DeeObject *start, DeeObject *end) {
-	Dee_ssize_t start_i, end_i = BitsetView_GetNBits(self);
-	if (DeeObject_AsSSize(start, &start_i))
+bsv_getrange_index_n(BitsetView *self, Dee_ssize_t start) {
+	DREF BitsetView *result;
+	result = DeeObject_MALLOC(BitsetView);
+	if unlikely(!result)
 		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
-	return bsv_getrange_i(self, start_i, end_i);
+	result->bsv_owner = (DREF DeeObject *)self;
+	result->bsv_buf.bb_base = self->bsv_buf.bb_base;
+	result->bsv_buf.bb_size = self->bsv_buf.bb_size;
+#ifndef __INTELLISENSE__
+	result->bsv_buf.bb_put = self->bsv_buf.bb_put;
+	if (!result->bsv_buf.bb_put)
+		result->bsv_owner = self->bsv_owner;
+#endif /* !__INTELLISENSE__ */
+	Dee_Incref(result->bsv_owner);
+	result->bsv_startbit = DeeSeqRange_Clamp_n(start, BitsetView_GetNBits(self)) + self->bsv_startbit;
+	result->bsv_endbit   = self->bsv_endbit;
+	result->bsv_bflags   = self->bsv_bflags;
+	DeeObject_Init(result, &BitsetView_Type);
+	return result;
 err:
 	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-bsv_delrange(BitsetView *self, DeeObject *start, DeeObject *end) {
+bsv_delrange_index(BitsetView *self, Dee_ssize_t start, Dee_ssize_t end) {
 	struct Dee_seq_range range;
-	Dee_ssize_t start_i, end_i = BitsetView_GetNBits(self);
-	if (DeeObject_AsSSize(start, &start_i))
-		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
-	DeeSeqRange_Clamp(&range, start_i, end_i, BitsetView_GetNBits(self));
+	DeeSeqRange_Clamp(&range, start, end, BitsetView_GetNBits(self));
 	bitset_nclear(BitsetView_GetBitset(self),
 	              self->bsv_startbit + range.sr_start,
 	              self->bsv_startbit + range.sr_end);
 	return 0;
 err_readonly:
 	return bsv_err_readonly(self);
-err:
-	return -1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-bsv_setrange(BitsetView *self, DeeObject *start,
-             DeeObject *end, DeeObject *value) {
-	Dee_ssize_t start_i, end_i = BitsetView_GetNBits(self);
-	struct Dee_seq_range range;
-	if (DeeObject_AsSSize(start, &start_i))
-		goto err;
-	if (!DeeNone_Check(end)) {
-		if (DeeObject_AsSSize(end, &end_i))
-			goto err;
-	}
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+bsv_delrange_index_n(BitsetView *self, Dee_ssize_t start) {
+	size_t used_start;
 	if unlikely(!BitsetView_IsWritable(self))
 		goto err_readonly;
-	DeeSeqRange_Clamp(&range, start_i, end_i, BitsetView_GetNBits(self));
+	used_start = DeeSeqRange_Clamp_n(start, BitsetView_GetNBits(self));
+	bitset_nclear(BitsetView_GetBitset(self),
+	              self->bsv_startbit + used_start,
+	              self->bsv_endbit);
+	return 0;
+err_readonly:
+	return bsv_err_readonly(self);
+}
+
+PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
+bsv_setrange_index(BitsetView *self, Dee_ssize_t start,
+                   Dee_ssize_t end, DeeObject *value) {
+	struct Dee_seq_range range;
+	if unlikely(!BitsetView_IsWritable(self))
+		goto err_readonly;
+	DeeSeqRange_Clamp(&range, start, end, BitsetView_GetNBits(self));
 	if (DeeBool_Check(value)) {
 		if (DeeBool_IsTrue(value)) {
 			bitset_nset(BitsetView_GetBitset(self),
@@ -2857,6 +2954,11 @@ err_readonly:
 	return bsv_err_readonly(self);
 err:
 	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+bsv_setrange_index_n(BitsetView *self, Dee_ssize_t start, DeeObject *value) {
+	return bsv_setrange_index(self, start, SSIZE_MAX, value);
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
@@ -3429,22 +3531,22 @@ bsv_init(BitsetView *__restrict self, size_t argc, DeeObject *const *argv) {
 				goto err_invalid_mode;
 			}
 			if (argc >= 3) {
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&start))
+				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&start))
 					goto err;
 				if (argc >= 4) {
 					if unlikely(argc > 4)
 						goto err_args;
-					if (DeeObject_AsSSize(argv[3], (dssize_t *)&end))
+					if (DeeObject_AsSSize(argv[3], (Dee_ssize_t *)&end))
 						goto err;
 				}
 			}
 		} else {
-			if (DeeObject_AsSSize(argv[1], (dssize_t *)&start))
+			if (DeeObject_AsSSize(argv[1], (Dee_ssize_t *)&start))
 				goto err;
 			if (argc >= 3) {
 				if unlikely(argc > 3)
 					goto err_args;
-				if (DeeObject_AsSSize(argv[2], (dssize_t *)&end))
+				if (DeeObject_AsSSize(argv[2], (Dee_ssize_t *)&end))
 					goto err;
 			}
 		}
@@ -3747,9 +3849,9 @@ bsv_bool(BitsetView *self) {
 	return bitset_nanyset(BitsetView_GetBitset(self), self->bsv_startbit, self->bsv_endbit) ? 1 : 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
 bsv_printrepr(BitsetView *__restrict self, dformatprinter printer, void *arg) {
-	dssize_t temp, result;
+	Dee_ssize_t temp, result;
 	DeeObject *owner = self->bsv_owner;
 	result = DeeFormat_Printf(printer, arg, "BitsetView(%r", owner);
 	if unlikely(result < 0)
@@ -3776,7 +3878,7 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 bsv_foreach(BitsetView *self, Dee_foreach_t proc, void *arg) {
-	dssize_t temp, result = 0;
+	Dee_ssize_t temp, result = 0;
 	size_t bitno;
 	bitset_nforeach (bitno, BitsetView_GetBitset(self),
 	                 self->bsv_startbit, self->bsv_endbit) {
@@ -3802,7 +3904,7 @@ PRIVATE struct type_nsi tpconst bsv_nsi = {
 	/* .nsi_flags = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_setlike = */ {
-			/* .nsi_getsize = */ (dfunptr_t)&bsv_nsi_getsize,
+			/* .nsi_getsize = */ (dfunptr_t)&bsv_size,
 			/* .nsi_insert  = */ (dfunptr_t)&bsv_nsi_insert,
 			/* .nsi_remove  = */ (dfunptr_t)&bsv_nsi_remove,
 		}
@@ -3855,17 +3957,48 @@ PRIVATE struct type_cmp bsv_cmp = {
 };
 
 PRIVATE struct type_seq bsv_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsv_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsv_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_contains,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&bsv_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bsv_setitem,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bsv_getrange,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&bsv_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&bsv_setrange,
-	/* .tp_nsi      = */ &bsv_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bsv_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&bsv_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &bsv_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&bsv_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&bsv_size,
+	/* .tp_size_fast                  = */ NULL,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bsv_getitem_index,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&bsv_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&bsv_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bsv_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&bsv_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&bsv_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&bsv_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&bsv_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&bsv_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&bsv_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE struct type_buffer bsv_buffer = {
@@ -4181,7 +4314,7 @@ INTERN DeeTypeObject BitsetView_Type = {
 		/* .tp_repr      = */ NULL,
 		/* .tp_bool      = */ (int (DCALL *)(DeeObject *__restrict))&bsv_bool,
 		/* .tp_print     = */ NULL,
-		/* .tp_printrepr = */ (dssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&bsv_printrepr,
+		/* .tp_printrepr = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_formatprinter_t, void *))&bsv_printrepr,
 	},
 	/* .tp_call          = */ NULL,
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&bsv_visit,

@@ -650,7 +650,8 @@ PRIVATE struct type_seq rangemap_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &rangemap_nsi
+	/* .tp_nsi      = */ &rangemap_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_method tpconst rangemap_methods[] = {
@@ -1282,7 +1283,8 @@ PRIVATE struct type_seq proxy_keys_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_keys_nsi
+	/* .tp_nsi      = */ &proxy_keys_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_values_seq = {
@@ -1295,7 +1297,8 @@ PRIVATE struct type_seq proxy_values_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_nsi
+	/* .tp_nsi      = */ &proxy_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_items_seq = {
@@ -1308,7 +1311,8 @@ PRIVATE struct type_seq proxy_items_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_nsi
+	/* .tp_nsi      = */ &proxy_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_nodes_seq = {
@@ -1321,7 +1325,8 @@ PRIVATE struct type_seq proxy_nodes_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_nsi
+	/* .tp_nsi      = */ &proxy_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_ranges_seq = {
@@ -1334,7 +1339,8 @@ PRIVATE struct type_seq proxy_ranges_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_nsi
+	/* .tp_nsi      = */ &proxy_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_mapitems_seq = {
@@ -1347,7 +1353,8 @@ PRIVATE struct type_seq proxy_mapitems_seq = {
 	/* .tp_getrange = */ NULL,
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
-	/* .tp_nsi      = */ &proxy_mapitems_nsi
+	/* .tp_nsi      = */ &proxy_mapitems_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_seq proxy_asmap_seq = {
@@ -1361,6 +1368,7 @@ PRIVATE struct type_seq proxy_asmap_seq = {
 	/* .tp_delrange = */ NULL,
 	/* .tp_setrange = */ NULL,
 	/* .tp_nsi      = */ &proxy_asmap_nsi,
+	/* TODO: New operators */
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF RangeMapProxy *DCALL

@@ -729,6 +729,47 @@ udict_contains(UDict *self, DeeObject *key) {
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+udict_bounditem(UDict *self, DeeObject *key) {
+	dhash_t i, perturb;
+	dhash_t hash = UHASH(key);
+	UDict_LockRead(self);
+	perturb = i = hash & self->ud_mask;
+	for (;; UDict_HashNx(i, perturb)) {
+		struct udict_item *item;
+		item = &self->ud_elem[i & self->ud_mask];
+		if (USAME(item->di_key, key)) {
+			UDict_LockEndRead(self);
+			return 1; /* Found the item. */
+		}
+		if (!item->di_key)
+			break;
+	}
+	UDict_LockEndRead(self);
+	return -2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+udict_hasitem(UDict *self, DeeObject *key) {
+	dhash_t i, perturb;
+	dhash_t hash = UHASH(key);
+	UDict_LockRead(self);
+	perturb = i = hash & self->ud_mask;
+	for (;; UDict_HashNx(i, perturb)) {
+		struct udict_item *item;
+		item = &self->ud_elem[i & self->ud_mask];
+		if (USAME(item->di_key, key)) {
+			UDict_LockEndRead(self);
+			return 1; /* Found the item. */
+		}
+		if (!item->di_key)
+			break;
+	}
+	UDict_LockEndRead(self);
+	return 0;
+}
+
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 udict_getitem(UDict *self, DeeObject *key) {
 	dhash_t i, perturb;
@@ -753,6 +794,31 @@ udict_getitem(UDict *self, DeeObject *key) {
 	err_unknown_key((DeeObject *)self, key);
 	return NULL;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+udict_trygetitem(UDict *self, DeeObject *key) {
+	dhash_t i, perturb;
+	dhash_t hash = UHASH(key);
+	UDict_LockRead(self);
+	perturb = i = hash & self->ud_mask;
+	for (;; UDict_HashNx(i, perturb)) {
+		struct udict_item *item;
+		item = &self->ud_elem[i & self->ud_mask];
+		if (USAME(item->di_key, key)) {
+			/* Found the item. */
+			DREF DeeObject *result;
+			result = item->di_value;
+			Dee_Incref(result);
+			UDict_LockEndRead(self);
+			return result;
+		}
+		if (!item->di_key)
+			break;
+	}
+	UDict_LockEndRead(self);
+	return ITER_DONE;
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 UDict_GetItemDef(UDict *self, DeeObject *key, DeeObject *def) {
@@ -969,7 +1035,7 @@ again_locked:
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-udict_nsi_getsize(UDict *__restrict self) {
+udict_size(UDict *__restrict self) {
 	return atomic_read(&self->ud_used);
 }
 
@@ -1003,11 +1069,6 @@ udict_nsi_insertnew(UDict *self, DeeObject *key,
 	return !error;
 err:
 	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-udict_size(UDict *__restrict self) {
-	return DeeInt_NewSize(atomic_read(&self->ud_used));
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1424,7 +1485,7 @@ PRIVATE struct type_nsi tpconst udict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&udict_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&udict_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&udictiterator_nextkey,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&udictiterator_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&UDict_GetItemDef,
@@ -1436,18 +1497,48 @@ PRIVATE struct type_nsi tpconst udict_nsi = {
 };
 
 PRIVATE struct type_seq udict_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
-	/* .tp_delitem      = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
-	/* .tp_setitem      = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ &udict_nsi,
-	/* .tp_foreach      = */ NULL,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&udict_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_getitem,
+	/* .tp_delitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_delitem,
+	/* .tp_setitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&udict_setitem,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &udict_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&udict_foreach,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&udict_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&udict_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&udict_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&udict_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 
@@ -1970,7 +2061,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-urodict_nsi_getsize(URoDict *__restrict self) {
+urodict_size(URoDict *__restrict self) {
 	ASSERT(self->urd_size != (size_t)-2);
 	return self->urd_size;
 }
@@ -2009,11 +2100,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-urodict_size(URoDict *__restrict self) {
-	return DeeInt_NewSize(self->urd_size);
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 urodict_contains(URoDict *self, DeeObject *key) {
 	size_t i, perturb, hash;
@@ -2047,6 +2133,54 @@ urodict_getitem(URoDict *self, DeeObject *key) {
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+urodict_bounditem(URoDict *self, DeeObject *key) {
+	size_t i, perturb, hash;
+	struct udict_item *item;
+	hash    = UHASH(key);
+	perturb = i = hash & self->urd_mask;
+	for (;; URoDict_HashNx(i, perturb)) {
+		item = &self->urd_elem[i & self->urd_mask];
+		if (!item->di_key)
+			break;
+		if (USAME(item->di_key, key))
+			return 1; /* Found it! */
+	}
+	return -2;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+urodict_hasitem(URoDict *self, DeeObject *key) {
+	size_t i, perturb, hash;
+	struct udict_item *item;
+	hash    = UHASH(key);
+	perturb = i = hash & self->urd_mask;
+	for (;; URoDict_HashNx(i, perturb)) {
+		item = &self->urd_elem[i & self->urd_mask];
+		if (!item->di_key)
+			break;
+		if (USAME(item->di_key, key))
+			return 1; /* Found it! */
+	}
+	return 0;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+urodict_trygetitem(URoDict *self, DeeObject *key) {
+	size_t i, perturb, hash;
+	struct udict_item *item;
+	hash    = UHASH(key);
+	perturb = i = hash & self->urd_mask;
+	for (;; URoDict_HashNx(i, perturb)) {
+		item = &self->urd_elem[i & self->urd_mask];
+		if (!item->di_key)
+			break;
+		if (USAME(item->di_key, key))
+			return_reference_(item->di_value); /* Found it! */
+	}
+	return ITER_DONE;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 urodict_foreach(URoDict *self, Dee_foreach_pair_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -2071,7 +2205,7 @@ PRIVATE struct type_nsi tpconst urodict_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FNORMAL,
 	{
 		/* .nsi_maplike = */ {
-			/* .nsi_getsize    = */ (dfunptr_t)&urodict_nsi_getsize,
+			/* .nsi_getsize    = */ (dfunptr_t)&urodict_size,
 			/* .nsi_nextkey    = */ (dfunptr_t)&urodictiterator_nextkey,
 			/* .nsi_nextvalue  = */ (dfunptr_t)&urodictiterator_nextvalue,
 			/* .nsi_getdefault = */ (dfunptr_t)&URoDict_GetItemDef
@@ -2081,18 +2215,48 @@ PRIVATE struct type_nsi tpconst urodict_nsi = {
 
 
 PRIVATE struct type_seq urodict_seq = {
-	/* .tp_iter         = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
-	/* .tp_sizeob       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_size,
-	/* .tp_contains     = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_contains,
-	/* .tp_getitem      = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
-	/* .tp_delitem      = */ NULL,
-	/* .tp_setitem      = */ NULL,
-	/* .tp_getrange     = */ NULL,
-	/* .tp_delrange     = */ NULL,
-	/* .tp_setrange     = */ NULL,
-	/* .tp_nsi          = */ &urodict_nsi,
-	/* .tp_foreach      = */ NULL,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&urodict_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_contains,
+	/* .tp_getitem                    = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_getitem,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &urodict_nsi,
+	/* .tp_foreach                    = */ NULL,
+	/* .tp_foreach_pair               = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&urodict_foreach,
+	/* .tp_bounditem                  = */ (int (DCALL *)(DeeObject *, DeeObject *))&urodict_bounditem,
+	/* .tp_hasitem                    = */ (int (DCALL *)(DeeObject *, DeeObject *))&urodict_hasitem,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&urodict_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&urodict_size,
+	/* .tp_getitem_index              = */ NULL,
+	/* .tp_getitem_index_fast         = */ NULL,
+	/* .tp_delitem_index              = */ NULL,
+	/* .tp_setitem_index              = */ NULL,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
+	/* .tp_getrange_index             = */ NULL,
+	/* .tp_delrange_index             = */ NULL,
+	/* .tp_setrange_index             = */ NULL,
+	/* .tp_getrange_index_n           = */ NULL,
+	/* .tp_delrange_index_n           = */ NULL,
+	/* .tp_setrange_index_n           = */ NULL,
+	/* .tp_trygetitem                 = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&urodict_trygetitem,
+	/* .tp_trygetitem_index           = */ NULL,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

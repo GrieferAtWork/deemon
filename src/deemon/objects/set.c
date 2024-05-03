@@ -193,12 +193,14 @@ invset_printrepr(DeeSetInversionObject *__restrict self,
 	return DeeFormat_Printf(printer, arg, "~%r", self->si_set);
 }
 
+#ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 invset_iterself(DeeSetInversionObject *__restrict self) {
 	/* Sorry, but it's impossible to enumerate a set containing (almost) everything */
 	err_unimplemented_operator(Dee_TYPE(self), OPERATOR_ITER);
 	return NULL;
 }
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 invset_tpcontains(DeeSetInversionObject *self, DeeObject *key) {
@@ -211,7 +213,11 @@ err:
 }
 
 PRIVATE struct type_seq invset_seq = {
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* .tp_iter     = */ NULL,
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&invset_iterself,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_sizeob   = */ NULL,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&invset_tpcontains,
 	/* .tp_getitem  = */ NULL,

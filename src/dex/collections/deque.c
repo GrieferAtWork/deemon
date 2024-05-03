@@ -42,8 +42,7 @@ DECL_BEGIN
 
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-Deque_PushFront_unlocked(Deque *__restrict self,
-                         DeeObject *__restrict item) {
+Deque_PushFront_unlocked(Deque *self, DeeObject *item) {
 	DequeBucket *new_bucket;
 	ASSERT(self->d_head_idx < self->d_bucket_sz);
 	ASSERT(self->d_head_use <= self->d_bucket_sz);
@@ -91,8 +90,7 @@ Deque_PushFront_unlocked(Deque *__restrict self,
 }
 
 INTERN WUNUSED NONNULL((1, 2)) bool DCALL
-Deque_PushBack_unlocked(Deque *__restrict self,
-                        DeeObject *__restrict item) {
+Deque_PushBack_unlocked(Deque *self, DeeObject *item) {
 	DequeBucket *new_bucket;
 	ASSERT(self->d_head_idx < self->d_bucket_sz);
 	ASSERT(self->d_head_use <= self->d_bucket_sz);
@@ -274,9 +272,9 @@ Deque_lrrot_unlocked(Deque *__restrict self, size_t num_objects) {
 	temp = DequeIterator_ITEM(&iter);
 	while (num_objects--) {
 		DequeIterator_Next(&iter, self);
-		next                      = DequeIterator_ITEM(&iter);
+		next = DequeIterator_ITEM(&iter);
 		DequeIterator_ITEM(&iter) = temp;
-		temp                      = next;
+		temp = next;
 	}
 	DEQUE_HEAD(self) = temp;
 	++self->d_version;
@@ -435,10 +433,8 @@ Deque_PopBack(Deque *__restrict self) {
 }
 
 /* Insert/delete items at a given index. */
-INTERN int DCALL
-Deque_Insert(Deque *__restrict self,
-             size_t index,
-             DeeObject *__restrict item) {
+INTERN WUNUSED NONNULL((1, 3)) int DCALL
+Deque_Insert(Deque *self, size_t index, DeeObject *item) {
 again:
 	Deque_LockWrite(self);
 	if (index > self->d_size)
@@ -470,7 +466,7 @@ again:
 	result = self->d_size - (size_t)index;
 	if (result > num_items)
 		result = num_items;
-	pop_objv = (DREF DeeObject **)Dee_TryMalloca(result * sizeof(DREF DeeObject *));
+	pop_objv = (DREF DeeObject **)Dee_TryMallocac(result, sizeof(DREF DeeObject *));
 	if unlikely(!pop_objv) {
 		Deque_LockEndWrite(self);
 		if (Dee_CollectMemory(result * sizeof(DREF DeeObject *)))
@@ -490,7 +486,7 @@ again:
 	/* Drop references to popped objects. */
 	Dee_Decrefv(pop_objv, result);
 	Dee_Freea(pop_objv);
-	return (dssize_t)result;
+	return (Dee_ssize_t)result;
 }
 
 
@@ -513,7 +509,7 @@ Deque_Pop(Deque *__restrict self, size_t index) {
 }
 
 INTERN WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-Deque_Pops(Deque *__restrict self, dssize_t index) {
+Deque_Pops(Deque *__restrict self, Dee_ssize_t index) {
 	DREF DeeObject *result;
 	Deque_LockWrite(self);
 	if unlikely(index < 0)
@@ -779,16 +775,15 @@ deq_fini(Deque *__restrict self) {
 
 
 #if __SIZEOF_INT__ != __SIZEOF_SIZE_T__
-PRIVATE dssize_t DCALL
+PRIVATE NONNULL((1, 2)) Dee_ssize_t DCALL
 deque_push_back(void *self, DeeObject *__restrict ob) {
-	return (dssize_t)Deque_PushBack((Deque *)self, ob);
+	return (Dee_ssize_t)Deque_PushBack((Deque *)self, ob);
 }
 #endif /* __SIZEOF_INT__ != __SIZEOF_SIZE_T__ */
 
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-deq_init(Deque *__restrict self,
-         size_t argc, DeeObject *const *argv) {
+deq_init(Deque *__restrict self, size_t argc, DeeObject *const *argv) {
 	DeeObject *init   = Dee_EmptySeq;
 	self->d_bucket_sz = DEQUE_BUCKET_DEFAULT_SIZE;
 	if (DeeArg_Unpack(argc, argv, "|o" UNPuSIZ ":Deque", &init, &self->d_bucket_sz))
@@ -833,8 +828,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-deq_assign(Deque *__restrict self,
-           DeeObject *__restrict seq) {
+deq_assign(Deque *self, DeeObject *seq) {
 	Deque bTemp, bOld;
 	weakref_support_init(&bTemp);
 	if (DeeObject_InstanceOfExact(seq, &Deque_Type)) {
@@ -898,7 +892,8 @@ deq_moveassign(Deque *__restrict self,
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1)) int DCALL deq_bool(Deque *__restrict self) {
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+deq_bool(Deque *__restrict self) {
 	return atomic_read(&self->d_size) != 0;
 }
 
@@ -935,7 +930,7 @@ deq_clear(Deque *__restrict self) {
 	deq_fini(&bData);
 }
 
-PRIVATE void DCALL
+PRIVATE NONNULL((1)) void DCALL
 deq_pclear(Deque *__restrict self, unsigned int gc_priority) {
 	Deque_LockWrite(self);
 	if (self->d_size) {
@@ -993,11 +988,6 @@ done:
 	return result;
 }
 
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_size(Deque *__restrict self) {
-	return DeeInt_NewSize(atomic_read(&self->d_size));
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 deq_contains(Deque *self, DeeObject *item) {
 	Deque_LockRead(self);
@@ -1033,77 +1023,13 @@ err:
 	return NULL;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-deq_get(Deque *self, DeeObject *index_ob) {
-	size_t index;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	Deque_LockRead(self);
-	if (index >= self->d_size) {
-		size_t deq_size = self->d_size;
-		COMPILER_READ_BARRIER();
-		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
-		goto err;
-	}
-	result = DEQUE_ITEM(self, index);
-	Dee_Incref(result);
-	Deque_LockEndRead(self);
-	return result;
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-deq_del(Deque *__restrict self, DeeObject *__restrict index_ob) {
-	size_t index;
-	DREF DeeObject *result;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	result = Deque_Pop(self, index);
-	if unlikely(!result)
-		goto err;
-	Dee_Decref(result);
-	return 0;
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-deq_set(Deque *__restrict self,
-        DeeObject *__restrict index_ob,
-        DeeObject *__restrict value) {
-	size_t index;
-	DREF DeeObject *oldval;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	Deque_LockRead(self);
-	if (index >= self->d_size) {
-		size_t deq_size = self->d_size;
-		COMPILER_READ_BARRIER();
-		Deque_LockEndRead(self);
-		err_index_out_of_bounds((DeeObject *)self, index, deq_size);
-		goto err;
-	}
-	/* Exchange the stored item. */
-	Dee_Incref(value);
-	oldval                  = DEQUE_ITEM(self, index);
-	DEQUE_ITEM(self, index) = value;
-	Deque_LockEndRead(self);
-	Dee_Decref(oldval);
-	return 0;
-err:
-	return -1;
-}
-
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-deq_nsi_size(Deque *__restrict self) {
+deq_size(Deque *__restrict self) {
 	return atomic_read(&self->d_size);
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-deq_nsi_getitem(Deque *__restrict self, size_t index) {
+deq_getitem_index(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	Deque_LockRead(self);
 	if (index >= self->d_size) {
@@ -1121,8 +1047,36 @@ err:
 	return NULL;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_trygetitem_index(Deque *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	Deque_LockRead(self);
+	if unlikely(index >= self->d_size) {
+		Deque_LockEndRead(self);
+		return ITER_DONE;
+	}
+	result = DEQUE_ITEM(self, index);
+	Dee_Incref(result);
+	Deque_LockEndRead(self);
+	return result;
+}
+
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+deq_getitem_index_fast(Deque *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	Deque_LockRead(self);
+	if unlikely(index >= self->d_size) {
+		Deque_LockEndRead(self);
+		return NULL; /* >> The sequence is resizable and `index >= CURRENT_SIZE' */
+	}
+	result = DEQUE_ITEM(self, index);
+	Dee_Incref(result);
+	Deque_LockEndRead(self);
+	return result;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-deq_nsi_delitem(Deque *__restrict self, size_t index) {
+deq_delitem_index(Deque *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	result = Deque_Pop(self, index);
 	if unlikely(!result)
@@ -1133,10 +1087,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-deq_nsi_setitem(Deque *__restrict self,
-                size_t index,
-                DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+deq_setitem_index(Deque *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	Deque_LockRead(self);
 	if (index >= self->d_size) {
@@ -1157,10 +1109,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-deq_nsi_xchitem(Deque *__restrict self,
-                size_t index,
-                DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+deq_nsi_xchitem(Deque *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	Deque_LockRead(self);
 	if (index >= self->d_size) {
@@ -1208,11 +1158,11 @@ PRIVATE struct type_nsi tpconst deq_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&deq_nsi_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&deq_nsi_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&deq_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&deq_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&deq_nsi_setitem,
+			/* .nsi_getsize      = */ (dfunptr_t)&deq_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&deq_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&deq_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&deq_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&deq_setitem_index,
 			/* .nsi_getitem_fast = */ (dfunptr_t)NULL,
 			/* .nsi_getrange     = */ (dfunptr_t)NULL,
 			/* .nsi_getrange_n   = */ (dfunptr_t)NULL,
@@ -1237,20 +1187,51 @@ PRIVATE struct type_nsi tpconst deq_nsi = {
 };
 
 PRIVATE struct type_seq deq_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&deq_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&deq_get,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&deq_del,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&deq_set,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&deq_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&deq_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &deq_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&deq_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&deq_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&deq_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&deq_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&deq_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&deq_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&deq_setitem_index,
+	/* .tp_bounditem_index            = */ NULL,
+	/* .tp_hasitem_index              = */ NULL,
 	/* XXX: range operators? (Also: Add a fallback delrange / setrange in `sequence' that calls
 	 *                              forward to member functions `insert(index:?Dint, ob)',
 	 *                             `erase(index:?Dint, count:?Dint = 1)') */
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))NULL,
-	/* .tp_nsi      = */ &deq_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&deq_foreach,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))NULL,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))NULL,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))NULL,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&deq_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1395,7 +1376,7 @@ deq_sizeof(Deque *self) {
 	Deque_LockRead(self);
 	ASSERT((self->d_head != NULL) == (self->d_tail != NULL));
 	if (self->d_head) {
-		size_t count      = 1;
+		size_t count = 1;
 		DequeBucket *iter = self->d_head;
 		for (; iter != self->d_tail; iter = iter->db_next)
 			++count;
@@ -1759,8 +1740,7 @@ deqiter_getindex_ob(DequeIteratorObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-deqiter_setindex_ob(DequeIteratorObject *__restrict self,
-                    DeeObject *__restrict value) {
+deqiter_setindex_ob(DequeIteratorObject *self, DeeObject *value) {
 	size_t newindex = (size_t)-1;
 	if (!DeeNone_Check(value) &&
 	    DeeObject_AsSize(value, &newindex))

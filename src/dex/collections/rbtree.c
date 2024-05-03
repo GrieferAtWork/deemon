@@ -3537,6 +3537,7 @@ PRIVATE struct type_seq rbtree_seq = {
 	/* .tp_nsi          = */ &rbtree_nsi,
 	/* .tp_foreach      = */ NULL,
 	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach,
+	/* TODO: New operators */
 };
 
 PRIVATE struct type_gc tpconst rbtree_gc = {

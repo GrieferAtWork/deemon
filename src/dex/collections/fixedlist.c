@@ -471,17 +471,12 @@ PRIVATE struct type_gc tpconst fl_gc = {
 
 
 PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-fl_nsi_size(FixedList *__restrict self) {
+fl_size(FixedList *__restrict self) {
 	return self->fl_size;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_size(FixedList *__restrict self) {
-	return DeeInt_NewSize(self->fl_size);
-}
-
-PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getitem(FixedList *__restrict self, size_t index) {
+fl_getitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
@@ -502,7 +497,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
+fl_getitem_index_fast(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *result;
 	ASSERT(index < self->fl_size);
 	FixedList_LockRead(self);
@@ -512,8 +507,48 @@ fl_nsi_getitem_fast(FixedList *__restrict self, size_t index) {
 	return result;
 }
 
+PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
+fl_trygetitem_index(FixedList *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	if unlikely(index >= self->fl_size)
+		goto nope;
+	FixedList_LockRead(self);
+	result = self->fl_elem[index];
+	if unlikely(!result) {
+		FixedList_LockEndRead(self);
+		goto nope;
+	}
+	Dee_Incref(result);
+	FixedList_LockEndRead(self);
+	return result;
+nope:
+	return ITER_DONE;
+}
+
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fl_nsi_delitem(FixedList *__restrict self, size_t index) {
+fl_bounditem_index(FixedList *__restrict self, size_t index) {
+	DREF DeeObject *result;
+	if unlikely(index >= self->fl_size)
+		return -2;
+	FixedList_LockRead(self);
+	result = self->fl_elem[index];
+	if unlikely(!result) {
+		FixedList_LockEndRead(self);
+		return 0;
+	}
+	Dee_Incref(result);
+	FixedList_LockEndRead(self);
+	return 1;
+}
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fl_hasitem_index(FixedList *__restrict self, size_t index) {
+	return index < self->fl_size ? 1 : 0;
+}
+
+
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+fl_delitem_index(FixedList *__restrict self, size_t index) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
@@ -529,9 +564,8 @@ err:
 	return -1;
 }
 
-PRIVATE int DCALL
-fl_nsi_setitem(FixedList *__restrict self, size_t index,
-               DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
+fl_setitem_index(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *oldval;
 	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
@@ -548,9 +582,8 @@ err:
 	return -1;
 }
 
-PRIVATE WUNUSED DREF DeeObject *DCALL
-fl_nsi_xchitem(FixedList *__restrict self, size_t index,
-               DeeObject *__restrict value) {
+PRIVATE WUNUSED NONNULL((1, 3)) DREF DeeObject *DCALL
+fl_nsi_xchitem(FixedList *self, size_t index, DeeObject *value) {
 	DREF DeeObject *result;
 	if unlikely(index >= self->fl_size) {
 		err_index_out_of_bounds((DeeObject *)self, index, self->fl_size);
@@ -572,42 +605,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-fl_getitem(FixedList *self,
-           DeeObject *index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return fl_nsi_getitem(self, index);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-fl_delitem(FixedList *__restrict self,
-           DeeObject *__restrict index_ob) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return fl_nsi_delitem(self, index);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fl_setitem(FixedList *__restrict self,
-           DeeObject *__restrict index_ob,
-           DeeObject *__restrict value) {
-	size_t index;
-	if (DeeObject_AsSize(index_ob, &index))
-		goto err;
-	return fl_nsi_setitem(self, index, value);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-fl_contains(FixedList *self,
-            DeeObject *value) {
+fl_contains(FixedList *self, DeeObject *value) {
 	size_t i;
 	for (i = 0; i < self->fl_size; ++i) {
 		DREF DeeObject *elem;
@@ -644,7 +642,7 @@ done:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
+fl_getrange_index(FixedList *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	DREF FixedList *result;
 	struct Dee_seq_range range;
 	size_t range_size;
@@ -671,9 +669,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_getrange_n(FixedList *__restrict self, dssize_t i_begin) {
+fl_getrange_index_n(FixedList *__restrict self, Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return fl_nsi_getrange(self, i_begin, SSIZE_MAX);
+	return fl_getrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	DREF FixedList *result;
 	size_t start, range_size;
@@ -701,7 +699,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fl_nsi_delrange(FixedList *__restrict self, dssize_t i_begin, dssize_t i_end) {
+fl_delrange_index(FixedList *__restrict self, Dee_ssize_t i_begin, Dee_ssize_t i_end) {
 	struct Dee_seq_range range;
 	size_t range_size;
 	DeeSeqRange_Clamp(&range, i_begin, i_end, self->fl_size);
@@ -730,9 +728,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
-fl_nsi_delrange_n(FixedList *__restrict self, dssize_t i_begin) {
+fl_delrange_index_n(FixedList *__restrict self, Dee_ssize_t i_begin) {
 #ifdef __OPTIMIZE_SIZE__
-	return fl_nsi_delrange(self, i_begin, SSIZE_MAX);
+	return fl_delrange_index(self, i_begin, SSIZE_MAX);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t start, range_size;
 	start = DeeSeqRange_Clamp_n(i_begin, self->fl_size);
@@ -762,8 +760,8 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) int DCALL
-fl_nsi_setrange(FixedList *self, dssize_t i_begin,
-                dssize_t i_end, DeeObject *values) {
+fl_setrange_index(FixedList *self, Dee_ssize_t i_begin,
+                  Dee_ssize_t i_end, DeeObject *values) {
 	struct Dee_seq_range range;
 	size_t i, range_size;
 	DREF DeeObject **values_buf;
@@ -794,9 +792,9 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 3)) int DCALL
-fl_nsi_setrange_n(FixedList *self, dssize_t i_begin, DeeObject *values) {
+fl_setrange_index_n(FixedList *self, Dee_ssize_t i_begin, DeeObject *values) {
 #ifdef __OPTIMIZE_SIZE__
-	return fl_nsi_setrange(self, i_begin, SSIZE_MAX, values);
+	return fl_setrange_index(self, i_begin, SSIZE_MAX, values);
 #else /* __OPTIMIZE_SIZE__ */
 	size_t i, start, range_size;
 	DREF DeeObject **values_buf;
@@ -825,50 +823,6 @@ err_values_buf:
 err:
 	return -1;
 #endif /* !__OPTIMIZE_SIZE__ */
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
-fl_getrange(FixedList *self, DeeObject *begin, DeeObject *end) {
-	dssize_t i_begin, i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return fl_nsi_getrange_n(self, i_begin);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return fl_nsi_getrange(self, i_begin, i_end);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3)) int DCALL
-fl_delrange(FixedList *self, DeeObject *begin, DeeObject *end) {
-	dssize_t i_begin, i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return fl_nsi_delrange_n(self, i_begin);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return fl_nsi_delrange(self, i_begin, i_end);
-err:
-	return -1;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2, 3, 4)) int DCALL
-fl_setrange(FixedList *self, DeeObject *begin,
-            DeeObject *end, DeeObject *values) {
-	dssize_t i_begin, i_end;
-	if (DeeObject_AsSSize(begin, &i_begin))
-		goto err;
-	if (DeeNone_Check(end))
-		return fl_nsi_setrange_n(self, i_begin, values);
-	if (DeeObject_AsSSize(end, &i_end))
-		goto err;
-	return fl_nsi_setrange(self, i_begin, i_end, values);
-err:
-	return -1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
@@ -927,7 +881,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
-fl_nsi_pop(FixedList *__restrict self, dssize_t index) {
+fl_nsi_pop(FixedList *__restrict self, Dee_ssize_t index) {
 	DREF DeeObject *result;
 	if (index < 0)
 		index += self->fl_size;
@@ -1143,18 +1097,18 @@ PRIVATE struct type_nsi tpconst fl_nsi = {
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE,
 	{
 		/* .nsi_seqlike = */ {
-			/* .nsi_getsize      = */ (dfunptr_t)&fl_nsi_size,
-			/* .nsi_getsize_fast = */ (dfunptr_t)&fl_nsi_size,
-			/* .nsi_getitem      = */ (dfunptr_t)&fl_nsi_getitem,
-			/* .nsi_delitem      = */ (dfunptr_t)&fl_nsi_delitem,
-			/* .nsi_setitem      = */ (dfunptr_t)&fl_nsi_setitem,
-			/* .nsi_getitem_fast = */ (dfunptr_t)&fl_nsi_getitem_fast,
-			/* .nsi_getrange     = */ (dfunptr_t)&fl_nsi_getrange,
-			/* .nsi_getrange_n   = */ (dfunptr_t)&fl_nsi_getrange_n,
-			/* .nsi_delrange     = */ (dfunptr_t)&fl_nsi_delrange,
-			/* .nsi_delrange_n   = */ (dfunptr_t)&fl_nsi_delrange_n,
-			/* .nsi_setrange     = */ (dfunptr_t)&fl_nsi_setrange,
-			/* .nsi_setrange_n   = */ (dfunptr_t)&fl_nsi_setrange_n,
+			/* .nsi_getsize      = */ (dfunptr_t)&fl_size,
+			/* .nsi_getsize_fast = */ (dfunptr_t)&fl_size,
+			/* .nsi_getitem      = */ (dfunptr_t)&fl_getitem_index,
+			/* .nsi_delitem      = */ (dfunptr_t)&fl_delitem_index,
+			/* .nsi_setitem      = */ (dfunptr_t)&fl_setitem_index,
+			/* .nsi_getitem_fast = */ (dfunptr_t)&fl_getitem_index_fast,
+			/* .nsi_getrange     = */ (dfunptr_t)&fl_getrange_index,
+			/* .nsi_getrange_n   = */ (dfunptr_t)&fl_getrange_index_n,
+			/* .nsi_delrange     = */ (dfunptr_t)&fl_delrange_index,
+			/* .nsi_delrange_n   = */ (dfunptr_t)&fl_delrange_index_n,
+			/* .nsi_setrange     = */ (dfunptr_t)&fl_setrange_index,
+			/* .nsi_setrange_n   = */ (dfunptr_t)&fl_setrange_index_n,
 			/* .nsi_find         = */ (dfunptr_t)&fl_nsi_find,
 			/* .nsi_rfind        = */ (dfunptr_t)&fl_nsi_rfind,
 			/* .nsi_xch          = */ (dfunptr_t)&fl_nsi_xchitem,
@@ -1172,17 +1126,48 @@ PRIVATE struct type_nsi tpconst fl_nsi = {
 };
 
 PRIVATE struct type_seq fl_seq = {
-	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_iter,
-	/* .tp_sizeob   = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_size,
-	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_contains,
-	/* .tp_getitem  = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_getitem,
-	/* .tp_delitem  = */ (int (DCALL *)(DeeObject *, DeeObject *))&fl_delitem,
-	/* .tp_setitem  = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_setitem,
-	/* .tp_getrange = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_getrange,
-	/* .tp_delrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&fl_delrange,
-	/* .tp_setrange = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&fl_setrange,
-	/* .tp_nsi      = */ &fl_nsi,
-	/* .tp_foreach  = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
+	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&fl_iter,
+	/* .tp_sizeob                     = */ NULL,
+	/* .tp_contains                   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&fl_contains,
+	/* .tp_getitem                    = */ NULL,
+	/* .tp_delitem                    = */ NULL,
+	/* .tp_setitem                    = */ NULL,
+	/* .tp_getrange                   = */ NULL,
+	/* .tp_delrange                   = */ NULL,
+	/* .tp_setrange                   = */ NULL,
+	/* .tp_nsi                        = */ &fl_nsi,
+	/* .tp_foreach                    = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&fl_foreach,
+	/* .tp_foreach_pair               = */ NULL,
+	/* .tp_bounditem                  = */ NULL,
+	/* .tp_hasitem                    = */ NULL,
+	/* .tp_size                       = */ (size_t (DCALL *)(DeeObject *__restrict))&fl_size,
+	/* .tp_size_fast                  = */ (size_t (DCALL *)(DeeObject *__restrict))&fl_size,
+	/* .tp_getitem_index              = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&fl_getitem_index,
+	/* .tp_getitem_index_fast         = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&fl_getitem_index_fast,
+	/* .tp_delitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&fl_delitem_index,
+	/* .tp_setitem_index              = */ (int (DCALL *)(DeeObject *, size_t, DeeObject *))&fl_setitem_index,
+	/* .tp_bounditem_index            = */ (int (DCALL *)(DeeObject *, size_t))&fl_bounditem_index,
+	/* .tp_hasitem_index              = */ (int (DCALL *)(DeeObject *, size_t))&fl_hasitem_index,
+	/* .tp_getrange_index             = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&fl_getrange_index,
+	/* .tp_delrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t))&fl_delrange_index,
+	/* .tp_setrange_index             = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, Dee_ssize_t, DeeObject *))&fl_setrange_index,
+	/* .tp_getrange_index_n           = */ (DREF DeeObject *(DCALL *)(DeeObject *, Dee_ssize_t))&fl_getrange_index_n,
+	/* .tp_delrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t))&fl_delrange_index_n,
+	/* .tp_setrange_index_n           = */ (int (DCALL *)(DeeObject *, Dee_ssize_t, DeeObject *))&fl_setrange_index_n,
+	/* .tp_trygetitem                 = */ NULL,
+	/* .tp_trygetitem_index           = */ (DREF DeeObject *(DCALL *)(DeeObject *, size_t))&fl_trygetitem_index,
+	/* .tp_trygetitem_string_hash     = */ NULL,
+	/* .tp_getitem_string_hash        = */ NULL,
+	/* .tp_delitem_string_hash        = */ NULL,
+	/* .tp_setitem_string_hash        = */ NULL,
+	/* .tp_bounditem_string_hash      = */ NULL,
+	/* .tp_hasitem_string_hash        = */ NULL,
+	/* .tp_trygetitem_string_len_hash = */ NULL,
+	/* .tp_getitem_string_len_hash    = */ NULL,
+	/* .tp_delitem_string_len_hash    = */ NULL,
+	/* .tp_setitem_string_len_hash    = */ NULL,
+	/* .tp_bounditem_string_len_hash  = */ NULL,
+	/* .tp_hasitem_string_len_hash    = */ NULL,
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

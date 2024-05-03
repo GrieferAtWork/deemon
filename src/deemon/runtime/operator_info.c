@@ -2052,6 +2052,7 @@ PRIVATE struct type_seq to_seq = {
 	/* .tp_iter     = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&to_iter,
 	/* .tp_sizeob   = */ NULL,
 	/* .tp_contains = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&to_contains
+	/* TODO: tp_foreach */
 };
 
 PRIVATE struct type_member tpconst to_class_members[] = {
