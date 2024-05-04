@@ -1293,7 +1293,8 @@ DeeType_InheritOperator(DeeTypeObject *__restrict self, Dee_operator_t name) {
 	case OPERATOR_INPLACE_POW:
 		return (self->tp_math && (self->tp_math->tp_pow || self->tp_math->tp_inplace_pow)) || DeeType_InheritPow(self);
 	case OPERATOR_HASH:
-		return (self->tp_cmp && self->tp_cmp->tp_hash) || DeeType_InheritHash(self);
+		return (self->tp_cmp && self->tp_cmp->tp_hash) ||
+		       (DeeType_InheritCompare(self) && self->tp_cmp->tp_hash);
 	case OPERATOR_EQ:
 	case OPERATOR_NE:
 		return (self->tp_cmp && self->tp_cmp->tp_eq) ||

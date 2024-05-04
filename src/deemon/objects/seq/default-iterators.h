@@ -127,7 +127,7 @@ typedef struct {
 INTDEF DeeTypeObject DefaultIterator_WithGetItemIndex_Type;            /* DefaultIterator_WithGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndex_Type;     /* DefaultIterator_WithSizeAndGetItemIndex */
 INTDEF DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type; /* DefaultIterator_WithSizeAndGetItemIndex */
-INTDEF DeeTypeObject DefaultIterator_WithTryGetItemIndexAndSize_Type;  /* DefaultIterator_WithSizeAndGetItemIndex */
+INTDEF DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type;  /* DefaultIterator_WithSizeAndGetItemIndex */
 
 INTDEF DeeTypeObject DefaultIterator_WithGetItem_Type;  /* DefaultIterator_WithGetItem */
 INTDEF DeeTypeObject DefaultIterator_WithTGetItem_Type; /* DefaultIterator_WithTGetItem */

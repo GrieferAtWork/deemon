@@ -56,6 +56,7 @@
 #include <stdarg.h>
 
 #include "../objects/int_logic.h"
+#include "../objects/seq/default-compare.h"
 #include "../objects/seq/default-iterators.h"
 #include "../objects/seq/default-sequences.h"
 #include "../objects/seq/each.h"
@@ -312,6 +313,10 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_GR_NODEFAULT                      DeeType_InvokeCmpGr_NODEFAULT
 #define DeeType_INVOKE_GE                                DeeType_InvokeCmpGe
 #define DeeType_INVOKE_GE_NODEFAULT                      DeeType_InvokeCmpGe_NODEFAULT
+#define DeeType_INVOKE_COMPARE_EQ                        DeeType_InvokeCmpCompareEq
+#define DeeType_INVOKE_COMPARE_EQ_NODEFAULT              DeeType_InvokeCmpCompareEq_NODEFAULT
+#define DeeType_INVOKE_COMPARE                           DeeType_InvokeCmpCompare
+#define DeeType_INVOKE_COMPARE_NODEFAULT                 DeeType_InvokeCmpCompare_NODEFAULT
 #define DeeType_INVOKE_ITER                              DeeType_InvokeSeqIter
 #define DeeType_INVOKE_ITER_NODEFAULT                    DeeType_InvokeSeqIter_NODEFAULT
 #define DeeType_INVOKE_SIZEOB                            DeeType_InvokeSeqSizeOb
@@ -451,6 +456,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_LE(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_le)(self, other)
 #define DeeType_INVOKE_GR(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_gr)(self, other)
 #define DeeType_INVOKE_GE(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_ge)(self, other)
+#define DeeType_INVOKE_COMPARE_EQ(tp_self, self, other)                              (*(tp_self)->tp_cmp->tp_compare_eq)(self, other)
+#define DeeType_INVOKE_COMPARE(tp_self, self, other)                                 (*(tp_self)->tp_cmp->tp_compare)(self, other)
 #define DeeType_INVOKE_ITER(tp_self, self)                                           (*(tp_self)->tp_seq->tp_iter)(self)
 #define DeeType_INVOKE_SIZEOB(tp_self, self)                                         (*(tp_self)->tp_seq->tp_sizeob)(self)
 #define DeeType_INVOKE_CONTAINS(tp_self, self, other)                                (*(tp_self)->tp_seq->tp_contains)(self, other)
@@ -545,6 +552,8 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_LE_NODEFAULT                      DeeType_INVOKE_LE
 #define DeeType_INVOKE_GR_NODEFAULT                      DeeType_INVOKE_GR
 #define DeeType_INVOKE_GE_NODEFAULT                      DeeType_INVOKE_GE
+#define DeeType_INVOKE_COMPARE_EQ_NODEFAULT              DeeType_INVOKE_COMPARE_EQ
+#define DeeType_INVOKE_COMPARE_NODEFAULT                 DeeType_INVOKE_COMPARE
 #define DeeType_INVOKE_ITER_NODEFAULT                    DeeType_INVOKE_ITER
 #define DeeType_INVOKE_SIZEOB_NODEFAULT                  DeeType_INVOKE_SIZEOB
 #define DeeType_INVOKE_CONTAINS_NODEFAULT                DeeType_INVOKE_CONTAINS
@@ -2252,7 +2261,7 @@ WUNUSED /*ATTR_PURE*/
 DEFINE_OPERATOR(dhash_t, Hash, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_hash) ||
-	          DeeType_InheritHash(tp_self)) {
+	          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_hash)) {
 		if likely(!(tp_self->tp_flags & TP_FGC)) {
 			return DeeType_INVOKE_HASH(tp_self, self);
 		} else {
@@ -3323,10 +3332,405 @@ xinvoke_not(/*[0..1],inherit(always)*/ DREF DeeObject *ob) {
 	return ob;
 }
 
+
+INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self);
+INTDEF NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self);
+INTDEF NONNULL((1)) Dee_hash_t DCALL DeeMap_HandleHashError(DeeObject *self);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN NONNULL((1)) Dee_hash_t DCALL DeeSeq_HandleHashError(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Sequence.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+
+INTERN NONNULL((1)) Dee_hash_t DCALL DeeSet_HandleHashError(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Set.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+
+INTERN NONNULL((1)) Dee_hash_t DCALL DeeMap_HandleHashError(DeeObject *self) {
+	DeeError_Print("Unhandled error in `Mapping.operator hash'\n",
+	               ERROR_PRINT_DOHANDLE);
+	return DeeObject_HashGeneric(self);
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+/* tp_hash */
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeAndGetItemIndexFast, (DeeObject *self)) {
+	Dee_hash_t result;
+	size_t i, size;
+	DREF DeeObject *elem;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	elem = (*tp_self->tp_seq->tp_getitem_index_fast)(self, 0);
+	if unlikely(!elem) {
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = (*tp_self->tp_seq->tp_getitem_index_fast)(self, i);
+		if unlikely(!elem) {
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+
+struct default_seq_hash_with_foreach_data {
+	Dee_hash_t sqhwf_result;   /* Hash result (or DEE_HASHOF_EMPTY_SEQUENCE when sqhwf_nonempty=false) */
+	bool       sqhwf_nonempty; /* True after the first element */
+};
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_seq_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	struct default_seq_hash_with_foreach_data *data;
+	Dee_hash_t elem_hash;
+	data = (struct default_seq_hash_with_foreach_data *)arg;
+	elem_hash = DeeObject_Hash(elem);
+	if (data->sqhwf_nonempty) {
+		data->sqhwf_result = Dee_HashCombine(data->sqhwf_result, elem_hash);
+	} else {
+		data->sqhwf_result = elem_hash;
+		data->sqhwf_nonempty = true;
+	}
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithForeach, (DeeObject *self)) {
+	struct default_seq_hash_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwf_nonempty = false;
+	if unlikely(DeeType_INVOKE_FOREACH_NODEFAULT(tp_self, self, &default_seq_hash_with_foreach_cb, &data))
+		goto err;
+	return data.sqhwf_result;
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeAndTryGetItemIndex, (DeeObject *self)) {
+	Dee_hash_t result;
+	size_t i, size;
+	DREF DeeObject *elem;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	elem = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, 0);
+	if unlikely(!elem)
+		goto err;
+	if unlikely(elem == ITER_DONE) {
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = DeeType_INVOKE_TRYGETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(elem)
+			goto err;
+		if unlikely(elem == ITER_DONE) {
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeAndGetItemIndex, (DeeObject *self)) {
+	Dee_hash_t result;
+	size_t i, size;
+	DREF DeeObject *elem;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(size == (size_t)-1)
+		goto err;
+	if (size == 0)
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	elem = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, 0);
+	if unlikely(!elem) {
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err;
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (i = 1; i < size; ++i) {
+		Dee_hash_t elem_hash;
+		elem = DeeType_INVOKE_GETITEMINDEX_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_UnboundItem))
+				goto err;
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err;
+	}
+	return result;
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithSizeObAndGetItem, (DeeObject *self)) {
+	int temp;
+	Dee_hash_t result;
+	DREF DeeObject *indexob, *sizeob;
+	DREF DeeObject *elem;
+	LOAD_TP_SELF;
+	sizeob = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
+	if unlikely(!sizeob)
+		goto err;
+	indexob = DeeObject_NewDefault(Dee_TYPE(sizeob));
+	if unlikely(!indexob)
+		goto err_sizeob;
+	temp = DeeObject_CompareLo(indexob, sizeob);
+	if (temp <= 0) {
+		if unlikely(temp < 0)
+			goto err_sizeob_indexob;
+		Dee_Decref(indexob);
+		Dee_Decref(sizeob);
+		return DEE_HASHOF_EMPTY_SEQUENCE;
+	}
+	elem = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, indexob);
+	if unlikely(!elem) {
+		if (!DeeError_Catch(&DeeError_UnboundItem))
+			goto err_sizeob_indexob;
+		result = DEE_HASHOF_UNBOUND_ITEM;
+	} else {
+		result = DeeObject_Hash(elem);
+		Dee_Decref(elem);
+	}
+	for (;;) {
+		Dee_hash_t elem_hash;
+		if (DeeObject_Inc(&indexob))
+			goto err_sizeob_indexob;
+		temp = DeeObject_CompareLo(indexob, sizeob);
+		if (temp <= 0) {
+			if unlikely(temp < 0)
+				goto err_sizeob_indexob;
+			break;
+		}
+		elem = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, indexob);
+		if unlikely(!elem) {
+			if (!DeeError_Catch(&DeeError_UnboundItem))
+				goto err_sizeob_indexob;
+			elem_hash = DEE_HASHOF_UNBOUND_ITEM;
+		} else {
+			elem_hash = DeeObject_Hash(elem);
+			Dee_Decref(elem);
+		}
+		result = Dee_HashCombine(result, elem_hash);
+		if (DeeThread_CheckInterrupt())
+			goto err_sizeob_indexob;
+	}
+	Dee_Decref(indexob);
+	Dee_Decref(sizeob);
+	return result;
+err_sizeob_indexob:
+	Dee_Decref(indexob);
+err_sizeob:
+	Dee_Decref(sizeob);
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_hash_t, DefaultHashWithForeachDefault, (DeeObject *self)) {
+	struct default_seq_hash_with_foreach_data data;
+	LOAD_TP_SELF;
+	data.sqhwf_result   = DEE_HASHOF_EMPTY_SEQUENCE;
+	data.sqhwf_nonempty = false;
+	if unlikely(DeeType_INVOKE_FOREACH(tp_self, self, &default_seq_hash_with_foreach_cb, &data))
+		goto err;
+	return data.sqhwf_result;
+err:
+	return DeeSeq_HandleHashError(self);
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_hash_with_foreach_cb(void *arg, DeeObject *elem);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_set_hash_with_foreach_cb(void *arg, DeeObject *elem) {
+	*(Dee_hash_t *)arg ^= DeeObject_Hash(elem);
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_SET_OPERATOR(Dee_hash_t, DefaultHashWithForeachDefault, (DeeObject *self)) {
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	LOAD_TP_SELF;
+	if unlikely(DeeType_INVOKE_FOREACH(tp_self, self, &default_set_hash_with_foreach_cb, &result))
+		goto err;
+	return result;
+err:
+	return DeeSet_HandleHashError(self);
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_hash_with_foreach_cb(void *arg, DeeObject *key, DeeObject *value);
+
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+default_map_hash_with_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
+	/* Note that we still combine the hashes for the key and value,
+	 * thus not only mirroring the behavior of hash of the item (that
+	 * is the tuple `(key, value)', including the order between the
+	 * key and value within the hash, so that swapping the key and
+	 * value would produce a different hash) */
+	*(Dee_hash_t *)arg ^= Dee_HashCombine(DeeObject_Hash(key),
+	                                      DeeObject_Hash(value));
+	return 0;
+}
+#endif /* !DEFINE_TYPED_OPERATORS */
+
+DEFINE_INTERNAL_MAP_OPERATOR(Dee_hash_t, DefaultHashWithForeachPairDefault, (DeeObject *self)) {
+	Dee_hash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
+	LOAD_TP_SELF;
+	if unlikely(DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &default_map_hash_with_foreach_cb, &result))
+		goto err;
+	return result;
+err:
+	return DeeMap_HandleHashError(self);
+}
+
+
+/* tp_eq */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithCompareEq,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_EQ_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result == 0);
+err:
+	return NULL;
+}
+
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithNe,
                          (DeeObject *self, DeeObject *other)) {
 	LOAD_TP_SELF;
 	return xinvoke_not(DeeType_INVOKE_NE_NODEFAULT(tp_self, self, other));
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithLoAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LO_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		goto not_equal;
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		goto not_equal;
+	return_true;
+not_equal:
+	return_false;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithLeAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		goto not_equal;
+	cmp_ob = DeeType_INVOKE_GE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		goto not_equal;
+	return_true;
+not_equal:
+	return_false;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithCompareEqDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_EQ(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result == 0);
+err:
+	return NULL;
+}
+
+
+/* tp_ne */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithCompareEq,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_EQ_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result != 0);
+err:
+	return NULL;
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithEq,
@@ -3335,10 +3739,180 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithEq,
 	return xinvoke_not(DeeType_INVOKE_NE_NODEFAULT(tp_self, self, other));
 }
 
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithLoAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LO_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		goto not_equal;
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		goto not_equal;
+	return_false;
+not_equal:
+	return_true;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithLeAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		goto not_equal;
+	cmp_ob = DeeType_INVOKE_GE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		goto not_equal;
+	return_false;
+not_equal:
+	return_true;
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithCompareEqDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_EQ(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result != 0);
+err:
+	return NULL;
+}
+
+
+/* tp_lo */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLoWithCompare,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result < 0);
+err:
+	return NULL;
+}
+
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLoWithGe,
                          (DeeObject *self, DeeObject *other)) {
 	LOAD_TP_SELF;
 	return xinvoke_not(DeeType_INVOKE_GE_NODEFAULT(tp_self, self, other));
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLoWithCompareDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result < 0);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLoWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct set_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
+		goto err_other_no_contains;
+	data.sc_lfr_rhs       = other;
+	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self" */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status >= rhs_size)
+		goto missing_item; /* "other" contains element not found in "self" */
+	return_true;
+missing_item:
+	return_false;
+err_other_no_contains:
+	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLoWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct map_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
+		goto err_other_no_getitem;
+	data.mc_lfr_rhs         = other;
+	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status >= rhs_size)
+		goto missing_item; /* "other" contains element not found in "self" */
+	return_true;
+missing_item:
+	return_false;
+err_other_no_getitem:
+	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
+err:
+	return NULL;
+}
+
+
+
+
+/* tp_le */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLeWithCompare,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result <= 0);
+err:
+	return NULL;
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLeWithGr,
@@ -3347,10 +3921,160 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLeWithGr,
 	return xinvoke_not(DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other));
 }
 
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultLeWithCompareDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result <= 0);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultLeWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct set_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
+		goto err_other_no_contains;
+	data.sc_lfr_rhs       = other;
+	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self" */
+	return_true;
+missing_item:
+	return_false;
+err_other_no_contains:
+	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultLeWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct map_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
+		goto err_other_no_getitem;
+	data.mc_lfr_rhs         = other;
+	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
+	return_true;
+missing_item:
+	return_false;
+err_other_no_getitem:
+	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
+err:
+	return NULL;
+}
+
+
+
+/* tp_gr */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGrWithCompare,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result > 0);
+err:
+	return NULL;
+}
+
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGrWithLe,
                          (DeeObject *self, DeeObject *other)) {
 	LOAD_TP_SELF;
 	return xinvoke_not(DeeType_INVOKE_LE_NODEFAULT(tp_self, self, other));
+}
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGrWithCompareDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result > 0);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGrWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct set_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
+		goto err_other_no_contains;
+	data.sc_lfr_rhs       = other;
+	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self" */
+	return_false;
+missing_item:
+	return_true;
+err_other_no_contains:
+	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGrWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct map_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
+		goto err_other_no_getitem;
+	data.mc_lfr_rhs         = other;
+	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
+	return_false;
+missing_item:
+	return_true;
+err_other_no_getitem:
+	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
+err:
+	return NULL;
+}
+
+
+
+/* tp_ge */
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithCompare,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_NODEFAULT(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result >= 0);
+err:
+	return NULL;
 }
 
 DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithLo,
@@ -3358,6 +4082,1309 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithLo,
 	LOAD_TP_SELF;
 	return xinvoke_not(DeeType_INVOKE_LO_NODEFAULT(tp_self, self, other));
 }
+
+DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultGeWithCompareDefault,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE(tp_self, self, other);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool_(result >= 0);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_SET_OPERATOR(DREF DeeObject *, DefaultGeWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct set_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
+		goto err_other_no_contains;
+	data.sc_lfr_rhs       = other;
+	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self" */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status >= rhs_size)
+		goto missing_item; /* "other" contains element not found in "self" */
+	return_false;
+missing_item:
+	return_true;
+err_other_no_contains:
+	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
+err:
+	return NULL;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(DREF DeeObject *, DefaultGeWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct map_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
+		goto err_other_no_getitem;
+	data.mc_lfr_rhs         = other;
+	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		goto missing_item; /* "other" is missing some element of "self", or has a different value for it */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status >= rhs_size)
+		goto missing_item; /* "other" contains element not found in "self" */
+	return_false;
+missing_item:
+	return_true;
+err_other_no_getitem:
+	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
+err:
+	return NULL;
+}
+
+
+
+/* tp_compare_eq */
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareEqWithEq,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_EQ_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	result = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(result < 0)
+		goto err;
+	return result ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareEqWithNe,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_NE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	result = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(result < 0)
+		goto err;
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareEqWithLoAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LO_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Different */
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Different */
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareEqWithLeAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 1; /* Different */
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return -1; /* Different */
+	return 0;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	Dee_ssize_t result;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_getitem_index_fast;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_size_and_getitem_index_fast__cb, &data);
+		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_trygetitem_index;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_size_and_trygetitem_index__cb, &data);
+		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_getitem_index;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_size_and_getitem_index__cb, &data);
+		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		struct seq_compare_foreach__sizeob_and_getitem__data data;
+		data.scf_sg_osize = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!data.scf_sg_osize)
+			goto err;
+		data.scf_sg_oindex = DeeObject_NewDefault(Dee_TYPE(data.scf_sg_osize));
+		if unlikely(!data.scf_sg_oindex) {
+			result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
+		} else {
+			data.scf_sg_other    = other;
+			data.scf_sg_ogetitem = tp_other->tp_seq->tp_getitem;
+			result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
+			if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+				int temp = DeeObject_CompareLo(data.scf_sg_oindex, data.scf_sg_osize);
+				Dee_Decref(data.scf_sg_oindex);
+				if unlikely(temp < 0) {
+					result = SEQ_COMPAREEQ_FOREACH_RESULT_ERROR;
+				} else if (temp) {
+					result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+				}
+			} else {
+				Dee_Decref(data.scf_sg_oindex);
+			}
+		}
+		Dee_Decref(data.scf_sg_osize);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = (*tp_other->tp_seq->tp_iter)(other);
+		if unlikely(!rhs_iter)
+			goto err;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compareeq__lhs_foreach__rhs_iter__cb, rhs_iter);
+		if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			DREF DeeObject *next = DeeObject_IterNext(rhs_iter);
+			Dee_Decref(rhs_iter);
+			if unlikely(!next)
+				goto err;
+			if (next != ITER_DONE) {
+				Dee_Decref(next);
+				result = SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL;
+			}
+		} else {
+			Dee_Decref(rhs_iter);
+		}
+	}
+	ASSERT(result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+	       result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+	       result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+	if unlikely(result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+		goto err;
+	if (result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL)
+		return 0;
+	return 1;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithSizeAndGetItemIndexFast,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem_index_fast)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem_index_fast = tp_self->tp_seq->tp_getitem_index_fast;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index_fast__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                           other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index_fast__rhs_size_and_trygetitem_index(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                         other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index_fast__rhs_size_and_getitem_index(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                      other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index_fast__rhs_sizeob_and_getitem(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                  other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_getitem_index_fast;
+		foreach_result = (*other_tp_foreach)(other, &seq_compareeq__lhs_size_and_getitem_index_fast__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
+		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
+			result = 0;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithSizeAndTryGetItemIndex,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_trygetitem_index)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_trygetitem_index__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_trygetitem_index,
+		                                                                                         other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_trygetitem_index__rhs_size_and_trygetitem_index(self, lhs_size, lhs_trygetitem_index,
+		                                                                                       other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_trygetitem_index__rhs_size_and_getitem_index(self, lhs_size, lhs_trygetitem_index,
+		                                                                                    other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_trygetitem_index__rhs_sizeob_and_getitem(self, lhs_size, lhs_trygetitem_index,
+		                                                                                other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_trygetitem_index;
+		foreach_result = (*other_tp_foreach)(other, &seq_compareeq__lhs_size_and_trygetitem_index__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
+		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
+			result = 0;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithSizeAndGetItemIndex,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem_index)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem_index = tp_self->tp_seq->tp_trygetitem_index;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_getitem_index,
+		                                                                                      other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index__rhs_size_and_trygetitem_index(self, lhs_size, lhs_getitem_index,
+		                                                                                    other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index__rhs_size_and_getitem_index(self, lhs_size, lhs_getitem_index,
+		                                                                                 other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompareeq__lhs_size_and_getitem_index__rhs_sizeob_and_getitem(self, lhs_size, lhs_getitem_index,
+		                                                                             other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_getitem_index;
+		foreach_result = (*other_tp_foreach)(other, &seq_compareeq__lhs_size_and_getitem_index__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL &&
+		    data.scf_sgi_oindex >= data.scf_sgi_osize) {
+			result = 0;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareEqWithSizeObAndGetItem,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *lhs_sizeob;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem)(DeeObject *self, DeeObject *index);
+#ifdef DEFINE_TYPED_OPERATORS
+	DREF DeeObject *(DCALL *lhs_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+#endif /* DEFINE_TYPED_OPERATORS */
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem = tp_self->tp_seq->tp_getitem;
+#ifdef DEFINE_TYPED_OPERATORS
+	lhs_tgetitem = lhs_getitem == &instance_getitem ? &instance_tgetitem : NULL;
+#endif /* DEFINE_TYPED_OPERATORS */
+	lhs_sizeob = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
+	if unlikely(!lhs_sizeob)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompareeq__lhs_tsizeob_and_getitem__rhs_size_and_getitem_index_fast(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                                   rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompareeq__lhs_sizeob_and_getitem__rhs_size_and_getitem_index_fast(self, lhs_sizeob, lhs_getitem, other,
+			                                                                                  rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompareeq__lhs_tsizeob_and_getitem__rhs_size_and_trygetitem_index(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                                 rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompareeq__lhs_sizeob_and_getitem__rhs_size_and_trygetitem_index(self, lhs_sizeob, lhs_getitem, other,
+			                                                                                rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompareeq__lhs_tsizeob_and_getitem__rhs_size_and_getitem_index(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                              rhs_size, tp_other->tp_seq->tp_getitem_index);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompareeq__lhs_sizeob_and_getitem__rhs_size_and_getitem_index(self, lhs_sizeob, lhs_getitem, other,
+			                                                                             rhs_size, tp_other->tp_seq->tp_getitem_index);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompareeq__lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                          rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompareeq__lhs_sizeob_and_getitem__rhs_sizeob_and_getitem(self, lhs_sizeob, lhs_getitem, other,
+			                                                                         rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		}
+		Dee_Decref(rhs_sizeob);
+	} else {
+		Dee_ssize_t foreach_result;
+		DREF DeeObject *lhs_indexob;
+		lhs_indexob = DeeObject_NewDefault(Dee_TYPE(lhs_sizeob));
+		if unlikely(!lhs_indexob)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			struct seq_compare_foreach__tsizeob_and_getitem__data data;
+			data.scf_tsg_tpother   = tp_self;
+			data.scf_tsg_other     = self;
+			data.scf_tsg_osize     = lhs_sizeob;
+			data.scf_tsg_oindex    = lhs_indexob;
+			data.scf_tsg_otgetitem = lhs_tgetitem;
+			foreach_result = (*other_tp_foreach)(other, &seq_compareeq__tlhs_sizeob_and_getitem__rhs_foreach__cb, &data);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			struct seq_compare_foreach__sizeob_and_getitem__data data;
+			data.scf_sg_other    = self;
+			data.scf_sg_osize    = lhs_sizeob;
+			data.scf_sg_oindex   = lhs_indexob;
+			data.scf_sg_ogetitem = lhs_getitem;
+			foreach_result = (*other_tp_foreach)(other, &seq_compareeq__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
+		}
+		Dee_Decref(lhs_indexob);
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err_lhs_sizeob;
+		result = foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ? 0 : 1;
+	}
+	Dee_Decref(lhs_sizeob);
+	return result;
+err_lhs_sizeob:
+	Dee_Decref(lhs_sizeob);
+	return Dee_COMPARE_ERR;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SET_OPERATOR(int, DefaultCompareEqWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct set_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_contains) && !DeeType_InheritContains(tp_other))
+		goto err_other_no_contains;
+	data.sc_lfr_rhs       = other;
+	data.sc_lfr_rcontains = tp_other->tp_seq->tp_contains;
+	contains_status = DeeType_INVOKE_FOREACH(tp_self, self, &set_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		return 1; /* "other" is missing some element of "self" */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status != rhs_size)
+		return 1; /* Sets have different sizes */
+	return 0;
+err_other_no_contains:
+	err_unimplemented_operator(tp_other, OPERATOR_CONTAINS);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_MAP_OPERATOR(int, DefaultCompareEqWithForeachPairDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	size_t rhs_size;
+	Dee_ssize_t contains_status;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	struct map_compare__lhs_foreach__rhs__data data;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_trygetitem) && !DeeType_InheritGetItem(tp_other))
+		goto err_other_no_getitem;
+	data.mc_lfr_rhs         = other;
+	data.mc_lfr_rtrygetitem = tp_other->tp_seq->tp_trygetitem;
+	contains_status = DeeType_INVOKE_FOREACH_PAIR(tp_self, self, &map_compare__lhs_foreach__rhs__cb, &data);
+	if unlikely(contains_status == -1)
+		goto err;
+	if (contains_status == -2)
+		return 1; /* "other" is missing some element of "self", or has a different value for it */
+	rhs_size = DeeObject_Size(other);
+	if unlikely(rhs_size == (size_t)-1)
+		goto err;
+	if ((size_t)contains_status != rhs_size)
+		return 1; /* Maps have different sizes */
+	return 0;
+err_other_no_getitem:
+	err_unimplemented_operator(tp_other, OPERATOR_GETITEM);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+/* tp_compare */
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithEqAndLo,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_EQ(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_LO(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Less */
+	return 1;      /* Greater */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithEqAndLe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_EQ(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_LE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Less */
+	return 1;      /* Greater */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithEqAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_EQ(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_GR(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Greater */
+	return -1;    /* Less */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithEqAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_EQ(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_GE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Greater */
+	return -1;    /* Less */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithNeAndLo,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_NE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_LO(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Less */
+	return 1;      /* Greater */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithNeAndLe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_NE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_LE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Less */
+	return 1;      /* Greater */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithNeAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_NE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_GR(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Greater */
+	return -1;    /* Less */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultCompareWithNeAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_NE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 0; /* Equal */
+	cmp_ob = DeeType_INVOKE_GE(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Greater */
+	return -1;    /* Less */
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithForeachDefault,
+                             (DeeObject *self, DeeObject *other)) {
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	Dee_ssize_t result;
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_getitem_index_fast;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_size_and_getitem_index_fast__cb, &data);
+		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_trygetitem_index;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_size_and_trygetitem_index__cb, &data);
+		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		data.scf_sgi_osize = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(data.scf_sgi_osize == (size_t)-1)
+			goto err;
+		data.scf_sgi_other          = other;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = tp_other->tp_seq->tp_getitem_index;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_size_and_getitem_index__cb, &data);
+		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL && data.scf_sgi_oindex < data.scf_sgi_osize)
+			result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		struct seq_compare_foreach__sizeob_and_getitem__data data;
+		data.scf_sg_osize = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!data.scf_sg_osize)
+			goto err;
+		data.scf_sg_oindex = DeeObject_NewDefault(Dee_TYPE(data.scf_sg_osize));
+		if unlikely(!data.scf_sg_oindex) {
+			result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
+		} else {
+			data.scf_sg_other    = other;
+			data.scf_sg_ogetitem = tp_other->tp_seq->tp_getitem;
+			result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_sizeob_and_getitem__cb, &data);
+			if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
+				int temp = DeeObject_CompareLo(data.scf_sg_oindex, data.scf_sg_osize);
+				Dee_Decref(data.scf_sg_oindex);
+				if unlikely(temp < 0) {
+					result = SEQ_COMPARE_FOREACH_RESULT_ERROR;
+				} else if (temp) {
+					result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+				}
+			} else {
+				Dee_Decref(data.scf_sg_oindex);
+			}
+		}
+		Dee_Decref(data.scf_sg_osize);
+	} else {
+		DREF DeeObject *rhs_iter;
+		rhs_iter = (*tp_other->tp_seq->tp_iter)(other);
+		if unlikely(!rhs_iter)
+			goto err;
+		result = DeeType_INVOKE_FOREACH(tp_self, self, &seq_compare__lhs_foreach__rhs_iter__cb, rhs_iter);
+		if (result == SEQ_COMPARE_FOREACH_RESULT_EQUAL) {
+			DREF DeeObject *next = DeeObject_IterNext(rhs_iter);
+			Dee_Decref(rhs_iter);
+			if unlikely(!next)
+				goto err;
+			if (next != ITER_DONE) {
+				Dee_Decref(next);
+				result = SEQ_COMPARE_FOREACH_RESULT_LESS;
+			}
+		} else {
+			Dee_Decref(rhs_iter);
+		}
+	}
+	ASSERT(result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+	       result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+	       result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+	       result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+	if unlikely(result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+		goto err;
+	if (result == SEQ_COMPARE_FOREACH_RESULT_LESS)
+		return -1;
+	if (result == SEQ_COMPARE_FOREACH_RESULT_GREATER)
+		return 1;
+	return 0; /* Equal */
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithSizeAndGetItemIndexFast,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem_index_fast)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem_index_fast = tp_self->tp_seq->tp_getitem_index_fast;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index_fast__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                         other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index_fast__rhs_size_and_trygetitem_index(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                       other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index_fast__rhs_size_and_getitem_index(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                    other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index_fast__rhs_sizeob_and_getitem(self, lhs_size, lhs_getitem_index_fast,
+		                                                                                other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_getitem_index_fast;
+		foreach_result = (*other_tp_foreach)(other, &seq_compare__lhs_size_and_getitem_index_fast__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			result = 0;
+		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
+			result = -1;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithSizeAndTryGetItemIndex,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_trygetitem_index)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_trygetitem_index = tp_self->tp_seq->tp_trygetitem_index;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_trygetitem_index__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_trygetitem_index,
+		                                                                                       other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_trygetitem_index__rhs_size_and_trygetitem_index(self, lhs_size, lhs_trygetitem_index,
+		                                                                                     other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_trygetitem_index__rhs_size_and_getitem_index(self, lhs_size, lhs_trygetitem_index,
+		                                                                                  other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompare__lhs_size_and_trygetitem_index__rhs_sizeob_and_getitem(self, lhs_size, lhs_trygetitem_index,
+		                                                                              other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_trygetitem_index;
+		foreach_result = (*other_tp_foreach)(other, &seq_compare__lhs_size_and_trygetitem_index__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			result = 0;
+		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
+			result = -1;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithSizeAndGetItemIndex,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	size_t lhs_size;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem_index)(DeeObject *self, size_t index);
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem_index = tp_self->tp_seq->tp_getitem_index;
+	lhs_size = DeeType_INVOKE_SIZE_NODEFAULT(tp_self, self);
+	if unlikely(lhs_size == (size_t)-1)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index__rhs_size_and_getitem_index_fast(self, lhs_size, lhs_getitem_index,
+		                                                                                    other, rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index__rhs_size_and_trygetitem_index(self, lhs_size, lhs_getitem_index,
+		                                                                                  other, rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index__rhs_size_and_getitem_index(self, lhs_size, lhs_getitem_index,
+		                                                                               other, rhs_size, tp_other->tp_seq->tp_getitem_index);
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err;
+		result = seq_docompare__lhs_size_and_getitem_index__rhs_sizeob_and_getitem(self, lhs_size, lhs_getitem_index,
+		                                                                           other, rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		Dee_Decref(rhs_sizeob);
+	} else {
+		struct seq_compareforeach__size_and_getitem_index__data data;
+		Dee_ssize_t foreach_result;
+		data.scf_sgi_other          = self;
+		data.scf_sgi_osize          = lhs_size;
+		data.scf_sgi_oindex         = 0;
+		data.scf_sgi_ogetitem_index = lhs_getitem_index;
+		foreach_result = (*other_tp_foreach)(other, &seq_compare__lhs_size_and_getitem_index__rhs_foreach__cb, &data);
+		ASSERT(foreach_result == SEQ_COMPARE_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS ||
+		       foreach_result == SEQ_COMPARE_FOREACH_RESULT_GREATER);
+		if unlikely(foreach_result == SEQ_COMPARE_FOREACH_RESULT_ERROR)
+			goto err;
+		if (foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL) {
+			result = 0;
+		} else if (foreach_result == SEQ_COMPARE_FOREACH_RESULT_LESS) {
+			result = -1;
+		} else {
+			result = 1;
+		}
+	}
+	return result;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultCompareWithSizeObAndGetItem,
+                             (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *lhs_sizeob;
+	DeeTypeObject *tp_other = Dee_TYPE(other);
+	DREF DeeObject *(DCALL *lhs_getitem)(DeeObject *self, DeeObject *index);
+#ifdef DEFINE_TYPED_OPERATORS
+	DREF DeeObject *(DCALL *lhs_tgetitem)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *index);
+#endif /* DEFINE_TYPED_OPERATORS */
+	Dee_ssize_t (DCALL *other_tp_foreach)(DeeObject *__restrict self, Dee_foreach_t proc, void *arg);
+	LOAD_TP_SELF;
+	if ((!tp_other->tp_seq || !tp_other->tp_seq->tp_foreach) && !DeeType_InheritIter(tp_other))
+		goto err_other_no_iter;
+	other_tp_foreach = tp_other->tp_seq->tp_foreach;
+	ASSERT(other_tp_foreach);
+	lhs_getitem = tp_self->tp_seq->tp_getitem;
+#ifdef DEFINE_TYPED_OPERATORS
+	lhs_tgetitem = lhs_getitem == &instance_getitem ? &instance_tgetitem : NULL;
+#endif /* DEFINE_TYPED_OPERATORS */
+	lhs_sizeob = DeeType_INVOKE_ITER_NODEFAULT(tp_self, self);
+	if unlikely(!lhs_sizeob)
+		goto err;
+	if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompare__lhs_tsizeob_and_getitem__rhs_size_and_getitem_index_fast(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                                 rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompare__lhs_sizeob_and_getitem__rhs_size_and_getitem_index_fast(self, lhs_sizeob, lhs_getitem, other,
+			                                                                                rhs_size, tp_other->tp_seq->tp_getitem_index_fast);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompare__lhs_tsizeob_and_getitem__rhs_size_and_trygetitem_index(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                               rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompare__lhs_sizeob_and_getitem__rhs_size_and_trygetitem_index(self, lhs_sizeob, lhs_getitem, other,
+			                                                                              rhs_size, tp_other->tp_seq->tp_trygetitem_index);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeAndGetItemIndex ||
+	           other_tp_foreach == &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault) {
+		size_t rhs_size = (*tp_other->tp_seq->tp_size)(other);
+		if unlikely(rhs_size == (size_t)-1)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompare__lhs_tsizeob_and_getitem__rhs_size_and_getitem_index(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                            rhs_size, tp_other->tp_seq->tp_getitem_index);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompare__lhs_sizeob_and_getitem__rhs_size_and_getitem_index(self, lhs_sizeob, lhs_getitem, other,
+			                                                                           rhs_size, tp_other->tp_seq->tp_getitem_index);
+		}
+	} else if (other_tp_foreach == &DeeSeq_DefaultForeachWithSizeObAndGetItem) {
+		DREF DeeObject *rhs_sizeob = (*tp_other->tp_seq->tp_sizeob)(other);
+		if unlikely(!rhs_sizeob)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			result = seq_docompare__lhs_tsizeob_and_getitem__rhs_sizeob_and_getitem(tp_self, self, lhs_sizeob, lhs_tgetitem, other,
+			                                                                        rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			result = seq_docompare__lhs_sizeob_and_getitem__rhs_sizeob_and_getitem(self, lhs_sizeob, lhs_getitem, other,
+			                                                                       rhs_sizeob, tp_other->tp_seq->tp_getitem);
+		}
+		Dee_Decref(rhs_sizeob);
+	} else {
+		Dee_ssize_t foreach_result;
+		DREF DeeObject *lhs_indexob;
+		lhs_indexob = DeeObject_NewDefault(Dee_TYPE(lhs_sizeob));
+		if unlikely(!lhs_indexob)
+			goto err_lhs_sizeob;
+#ifdef DEFINE_TYPED_OPERATORS
+		if (lhs_tgetitem) {
+			struct seq_compare_foreach__tsizeob_and_getitem__data data;
+			data.scf_tsg_tpother   = tp_self;
+			data.scf_tsg_other     = self;
+			data.scf_tsg_osize     = lhs_sizeob;
+			data.scf_tsg_oindex    = lhs_indexob;
+			data.scf_tsg_otgetitem = lhs_tgetitem;
+			foreach_result = (*other_tp_foreach)(other, &seq_compare__tlhs_sizeob_and_getitem__rhs_foreach__cb, &data);
+		} else
+#endif /* DEFINE_TYPED_OPERATORS */
+		{
+			struct seq_compare_foreach__sizeob_and_getitem__data data;
+			data.scf_sg_other    = self;
+			data.scf_sg_osize    = lhs_sizeob;
+			data.scf_sg_oindex   = lhs_indexob;
+			data.scf_sg_ogetitem = lhs_getitem;
+			foreach_result = (*other_tp_foreach)(other, &seq_compare__lhs_sizeob_and_getitem__rhs_foreach__cb, &data);
+		}
+		Dee_Decref(lhs_indexob);
+		ASSERT(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR ||
+		       foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL);
+		if unlikely(foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_ERROR)
+			goto err_lhs_sizeob;
+		result = foreach_result == SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL ? 0 : 1;
+	}
+	Dee_Decref(lhs_sizeob);
+	return result;
+err_lhs_sizeob:
+	Dee_Decref(lhs_sizeob);
+	return Dee_COMPARE_ERR;
+err_other_no_iter:
+	err_unimplemented_operator(tp_other, OPERATOR_ITER);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+
+
 
 
 /* Default wrappers for implementing OPERATOR_ITER via `tp_iter <===> tp_foreach <===> tp_foreach_pair' */
@@ -3561,7 +5588,7 @@ err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithSizeAndTryGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	size_t size;
 	DREF DefaultIterator_WithSizeAndGetItemIndex *result;
@@ -3578,7 +5605,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultIterWithTryGetItemIndexAnd
 	result->disgi_tp_getitem_index = tp_self->tp_seq->tp_trygetitem_index;
 	result->disgi_index            = 0;
 	result->disgi_end              = size;
-	DeeObject_Init(result, &DefaultIterator_WithTryGetItemIndexAndSize_Type);
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
 	return (DREF DeeObject *)result;
 err:
 	return NULL;
@@ -3750,7 +5777,7 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndTryGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
 	Dee_ssize_t temp, result = 0;
 	size_t i, size;
@@ -3804,6 +5831,54 @@ DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeAndGetItemIndex,
 		result += temp;
 	}
 	return result;
+err:
+	return -1;
+}
+
+DEFINE_INTERNAL_SEQ_OPERATOR(Dee_ssize_t, DefaultForeachWithSizeObAndGetItem,
+                             (DeeObject *RESTRICT_IF_NOTYPE self, Dee_foreach_t proc, void *arg)) {
+	Dee_ssize_t temp, result = 0;
+	DREF DeeObject *i, *size;
+	LOAD_TP_SELF;
+	size = DeeType_INVOKE_SIZEOB_NODEFAULT(tp_self, self);
+	if unlikely(!size)
+		goto err;
+	i = DeeObject_NewDefault(Dee_TYPE(size));
+	if unlikely(!i)
+		goto err_size;
+	for (;;) {
+		DREF DeeObject *elem;
+		int cmp_status;
+		cmp_status = DeeObject_CompareLo(i, size);
+		if unlikely(cmp_status < 0)
+			goto err_size_i;
+		if (!cmp_status)
+			break;
+		elem = DeeType_INVOKE_GETITEM_NODEFAULT(tp_self, self, i);
+		if unlikely(!elem) {
+			if (DeeError_Catch(&DeeError_UnboundItem))
+				continue;
+			if (DeeError_Catch(&DeeError_IndexError))
+				break; /* In case the sequence's length got truncated since we checked above. */
+			goto err_size_i;
+		}
+		temp = (*proc)(arg, elem);
+		Dee_Decref(elem);
+		if unlikely(temp < 0) {
+			result = temp;
+			break;
+		}
+		result += temp;
+		if (DeeObject_Inc(&i))
+			goto err_size_i;
+	}
+	Dee_Decref(i);
+	Dee_Decref(size);
+	return result;
+err_size_i:
+	Dee_Decref(i);
+err_size:
+	Dee_Decref(size);
 err:
 	return -1;
 }
@@ -4385,7 +6460,7 @@ err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemWithTryGetItemIndexAndSizeOb,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemWithSizeAndTryGetItemIndexOb,
                              (DeeObject *self, DeeObject *index)) {
 	size_t index_value;
 	DREF DeeObject *result;
@@ -4416,7 +6491,7 @@ err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemWithSizeAndTryGetItemIndex,
                              (DeeObject *self, DeeObject *index)) {
 	size_t index_value;
 	DREF DeeObject *result;
@@ -4622,7 +6697,7 @@ default_getitem_index_with_foreach_cb(void *arg, DeeObject *elem) {
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithSizeAndTryGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
@@ -4643,7 +6718,7 @@ err:
 	return NULL;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithTryGetItemIndexAndSizeOb,
+DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetItemIndexWithSizeAndTryGetItemIndexOb,
                              (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *result;
 	LOAD_TP_SELF;
@@ -6358,7 +8433,7 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemWithSizeAndTryGetItemIndex,
                              (DeeObject *self, DeeObject *index)) {
 	DREF DeeObject *value;
 	size_t index_value;
@@ -6668,7 +8743,7 @@ err:
 	return -1;
 }
 
-DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithTryGetItemIndexAndSize,
+DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoundItemIndexWithSizeAndTryGetItemIndex,
                              (DeeObject *RESTRICT_IF_NOTYPE self, size_t index)) {
 	DREF DeeObject *value;
 	LOAD_TP_SELF;
@@ -8518,7 +10593,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(DREF DeeObject *, DefaultGetRangeWithSizeDefaultAnd
 	result->dssgi_tp_getitem_index = tp_self->tp_seq->tp_trygetitem_index;
 	result->dssgi_start            = range.sr_start;
 	result->dssgi_end              = range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithTryGetItemIndexAndSize_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return (DREF DeeObject *)result;
 	__builtin_unreachable();
 err:
@@ -10025,136 +12100,6 @@ DEFINE_MATH_INPLACE_INT_OPERATOR(DeeObject_InplaceXorUInt32, DeeObject_InplaceXo
 #endif /* !DEFINE_TYPED_OPERATORS */
 
 
-#ifndef DEFINE_TYPED_OPERATORS
-INTERN NONNULL((1)) bool DCALL
-DeeType_InheritHash(DeeTypeObject *__restrict self) {
-	struct type_cmp *base_cmp;
-	DeeTypeMRO mro;
-	DeeTypeObject *base;
-	base_cmp = self->tp_cmp;
-	if (base_cmp) {
-		if (base_cmp->tp_hash)
-			return true;
-		if (base_cmp->tp_eq) {
-			if (base_cmp->tp_ne == NULL)
-				base_cmp->tp_ne = &DeeObject_DefaultNeWithEq;
-			return false; /* Cannot inherit "operator hash" when "operator ==" is defined. */
-		} else if (base_cmp->tp_ne) {
-			if (base_cmp->tp_eq == NULL)
-				base_cmp->tp_eq = &DeeObject_DefaultEqWithNe;
-			return false; /* Cannot inherit "operator hash" when "operator !=" is defined. */
-		}
-	}
-
-	base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		base_cmp = base->tp_cmp;
-		if (base_cmp == NULL) {
-			if (!base_cmp->tp_hash) {
-				if (!DeeType_InheritHash(base))
-					continue;
-			} else {
-				if (base_cmp->tp_eq || base_cmp->tp_ne)
-					return false; /* Cannot inherit hash in this case */
-			}
-			base_cmp = base->tp_cmp;
-		}
-		ASSERT(base_cmp->tp_hash);
-		LOG_INHERIT(base, self, "operator hash");
-		if (self->tp_cmp) {
-			DeeTypeObject *origin = DeeType_GetCmpOrigin(self);
-			if unlikely(origin)
-				return DeeType_InheritHash(origin);
-			if (self->tp_cmp->tp_hash == NULL)
-				self->tp_cmp->tp_hash = base_cmp->tp_hash;
-			if (self->tp_cmp->tp_eq == NULL && base_cmp->tp_eq)
-				self->tp_cmp->tp_eq = base_cmp->tp_eq;
-			if (self->tp_cmp->tp_ne == NULL && base_cmp->tp_ne)
-				self->tp_cmp->tp_ne = base_cmp->tp_ne;
-		} else {
-			self->tp_cmp = base_cmp;
-		}
-		return true;
-	}
-	return false;
-}
-
-INTERN NONNULL((1)) bool DCALL
-DeeType_InheritCompare(DeeTypeObject *__restrict self) {
-	struct type_cmp *base_cmp;
-	DeeTypeMRO mro;
-	DeeTypeObject *base;
-	base_cmp = self->tp_cmp;
-	if (base_cmp) {
-		bool ok = false;
-		if (base_cmp->tp_eq) {
-			if (base_cmp->tp_ne == NULL)
-				base_cmp->tp_ne = &DeeObject_DefaultNeWithEq;
-			ok = true;
-		} else if (base_cmp->tp_ne) {
-			if (base_cmp->tp_eq == NULL)
-				base_cmp->tp_eq = &DeeObject_DefaultEqWithNe;
-			ok = true;
-		}
-		if (base_cmp->tp_lo) {
-			if (base_cmp->tp_ge == NULL)
-				base_cmp->tp_ge = &DeeObject_DefaultGeWithLo;
-			ok = true;
-		} else if (base_cmp->tp_ge) {
-			if (base_cmp->tp_lo == NULL)
-				base_cmp->tp_lo = &DeeObject_DefaultLoWithGe;
-			ok = true;
-		}
-		if (base_cmp->tp_le) {
-			if (base_cmp->tp_gr == NULL)
-				base_cmp->tp_gr = &DeeObject_DefaultGrWithLe;
-			ok = true;
-		} else if (base_cmp->tp_le) {
-			if (base_cmp->tp_gr == NULL)
-				base_cmp->tp_gr = &DeeObject_DefaultLeWithGr;
-			ok = true;
-		}
-		if (ok)
-			return true;
-	}
-
-	base = DeeTypeMRO_Init(&mro, self);
-	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
-		base_cmp = base->tp_cmp;
-		if (base_cmp == NULL ||
-		    (!base_cmp->tp_eq && !base_cmp->tp_ne &&
-		     !base_cmp->tp_lo && !base_cmp->tp_le &&
-		     !base_cmp->tp_gr && !base_cmp->tp_ge)) {
-			if (!DeeType_InheritCompare(base))
-				continue;
-			base_cmp = base->tp_cmp;
-		}
-		LOG_INHERIT(base, self, "operator <compare>");
-		if (self->tp_cmp) {
-			DeeTypeObject *origin = DeeType_GetCmpOrigin(self);
-			if unlikely(origin)
-				return DeeType_InheritCompare(origin);
-			if (self->tp_cmp->tp_eq == NULL)
-				self->tp_cmp->tp_eq = base_cmp->tp_eq;
-			if (self->tp_cmp->tp_ne == NULL)
-				self->tp_cmp->tp_ne = base_cmp->tp_ne;
-			if (self->tp_cmp->tp_lo == NULL)
-				self->tp_cmp->tp_lo = base_cmp->tp_lo;
-			if (self->tp_cmp->tp_le == NULL)
-				self->tp_cmp->tp_le = base_cmp->tp_le;
-			if (self->tp_cmp->tp_gr == NULL)
-				self->tp_cmp->tp_gr = base_cmp->tp_gr;
-			if (self->tp_cmp->tp_ge == NULL)
-				self->tp_cmp->tp_ge = base_cmp->tp_ge;
-		} else {
-			self->tp_cmp = base_cmp;
-		}
-		return true;
-	}
-	return false;
-}
-#endif /* !DEFINE_TYPED_OPERATORS */
-
 #define DEFINE_OBJECT_COMPARE_OPERATOR(name, cmp, operator_name, invoke)          \
 	DEFINE_OPERATOR(DREF DeeObject *, name,                                       \
 	                (DeeObject *self, DeeObject *some_object)) {                  \
@@ -10243,10 +12188,10 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_lo(DeeSuperObject *self, DeeObject *some_object);
 
 
-/* @return: == Dee_COMPARE_ERR: An error occurred.
- * @return: == -1: `lhs < rhs'
+/* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
- * @return: == 1:  `lhs > rhs' */
+ * @return: == 1:  `lhs > rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
 DeeObject_Compare(DeeObject *lhs, DeeObject *rhs) {
 #if 1
@@ -10333,9 +12278,19 @@ err:
 #endif
 }
 
+PUBLIC WUNUSED NONNULL((1, 2)) int DCALL
+DeeObject_CompareForEquality(DeeObject *lhs, DeeObject *rhs) {
+	int result = DeeObject_CompareNe(lhs, rhs);
+	if (result == -1)
+		result = Dee_COMPARE_ERR;
+	return result;
+}
+
 #endif /* !DEFINE_TYPED_OPERATORS */
 
+
 #ifndef DEFINE_TYPED_OPERATORS
+
 INTERN NONNULL((1)) bool DCALL
 DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 	DeeTypeMRO mro;
@@ -10350,6 +12305,125 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 		return true;
 	}
 	return false;
+}
+
+/* Try to substitute default compare operators. */
+PRIVATE NONNULL((1)) void DCALL
+DeeType_SubstituteDefaultCompareOperators(struct type_cmp *__restrict cmp) {
+	bool has_eq = cmp->tp_eq && !DeeType_IsDefaultEq(cmp->tp_eq);
+	bool has_ne = cmp->tp_ne && !DeeType_IsDefaultNe(cmp->tp_ne);
+	bool has_lo = cmp->tp_lo && !DeeType_IsDefaultLo(cmp->tp_lo);
+	bool has_le = cmp->tp_le && !DeeType_IsDefaultLe(cmp->tp_le);
+	bool has_gr = cmp->tp_gr && !DeeType_IsDefaultGr(cmp->tp_gr);
+	bool has_ge = cmp->tp_ge && !DeeType_IsDefaultGe(cmp->tp_ge);
+	bool has_compare_eq = cmp->tp_compare_eq && !DeeType_IsDefaultCompareEq(cmp->tp_compare_eq);
+	bool has_compare = cmp->tp_compare && !DeeType_IsDefaultCompare(cmp->tp_compare);
+
+	if (!cmp->tp_compare) {
+		if (has_eq && has_lo) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLo;
+		} else if (has_eq && has_le) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLe;
+		} else if (has_eq && has_gr) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGr;
+		} else if (has_eq && has_ge) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGe;
+		} else if (has_ne && has_lo) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLo;
+		} else if (has_ne && has_le) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLe;
+		} else if (has_ne && has_gr) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGr;
+		} else if (has_ne && has_ge) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGe;
+		} else if (has_lo && has_gr) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithLoAndGr;
+		} else if (has_le && has_ge) {
+			cmp->tp_compare = &DeeObject_DefaultCompareWithLeAndGe;
+		}
+	}
+
+	if (!cmp->tp_compare_eq) {
+		if (has_compare) {
+			cmp->tp_compare_eq = cmp->tp_compare;
+		} else if (has_eq) {
+			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithEq;
+		} else if (has_ne) {
+			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithNe;
+		} else if (has_lo && has_gr) {
+			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithLoAndGr;
+		} else if (has_le && has_ge) {
+			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithLeAndGe;
+		}
+	}
+
+	if (!cmp->tp_eq) {
+		if (has_compare_eq) {
+			cmp->tp_eq = &DeeObject_DefaultEqWithCompareEq;
+		} else if (has_ne) {
+			cmp->tp_eq = &DeeObject_DefaultEqWithNe;
+		} else if (has_lo && has_gr) {
+			cmp->tp_eq = &DeeObject_DefaultEqWithLoAndGr;
+		} else if (has_le && has_ge) {
+			cmp->tp_eq = &DeeObject_DefaultEqWithLeAndGe;
+		} else if (cmp->tp_compare_eq) {
+			cmp->tp_eq = &DeeObject_DefaultEqWithCompareEqDefault;
+		}
+	}
+
+	if (!cmp->tp_ne) {
+		if (has_compare_eq) {
+			cmp->tp_ne = &DeeObject_DefaultNeWithCompareEq;
+		} else if (has_eq) {
+			cmp->tp_ne = &DeeObject_DefaultNeWithEq;
+		} else if (has_lo && has_gr) {
+			cmp->tp_ne = &DeeObject_DefaultNeWithLoAndGr;
+		} else if (has_le && has_ge) {
+			cmp->tp_ne = &DeeObject_DefaultNeWithLeAndGe;
+		} else if (cmp->tp_compare_eq) {
+			cmp->tp_ne = &DeeObject_DefaultNeWithCompareEqDefault;
+		}
+	}
+
+	if (!cmp->tp_lo) {
+		if (has_compare) {
+			cmp->tp_lo = &DeeObject_DefaultLoWithCompare;
+		} else if (has_ge) {
+			cmp->tp_lo = &DeeObject_DefaultLoWithGe;
+		} else if (cmp->tp_compare) {
+			cmp->tp_lo = &DeeObject_DefaultLoWithCompareDefault;
+		}
+	}
+
+	if (!cmp->tp_le) {
+		if (has_compare) {
+			cmp->tp_le = &DeeObject_DefaultLeWithCompare;
+		} else if (has_gr) {
+			cmp->tp_le = &DeeObject_DefaultLeWithGr;
+		} else if (cmp->tp_compare) {
+			cmp->tp_le = &DeeObject_DefaultLeWithCompareDefault;
+		}
+	}
+
+	if (!cmp->tp_gr) {
+		if (has_compare) {
+			cmp->tp_gr = &DeeObject_DefaultGrWithCompare;
+		} else if (has_le) {
+			cmp->tp_gr = &DeeObject_DefaultGrWithLe;
+		} else if (cmp->tp_compare) {
+			cmp->tp_gr = &DeeObject_DefaultGrWithCompareDefault;
+		}
+	}
+
+	if (!cmp->tp_ge) {
+		if (has_compare) {
+			cmp->tp_ge = &DeeObject_DefaultGeWithCompare;
+		} else if (has_lo) {
+			cmp->tp_ge = &DeeObject_DefaultGeWithLo;
+		} else if (cmp->tp_compare) {
+			cmp->tp_ge = &DeeObject_DefaultGeWithCompareDefault;
+		}
+	}
 }
 
 /* Sequence feature flags. */
@@ -10518,7 +12592,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndexFast;
 		} else if (seq_featureset_test(features, FEAT_tp_size) &&
 		           seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_iter = &DeeSeq_DefaultIterWithTryGetItemIndexAndSize;
+			seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_size) &&
 		           seq_featureset_test(features, FEAT_tp_getitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_iter = &DeeSeq_DefaultIterWithSizeAndGetItemIndex;
@@ -10535,33 +12609,6 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_iter = &DeeObject_DefaultIterWithForeach;
 		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
 			seq->tp_iter = &DeeObject_DefaultIterWithForeachPair;
-		}
-	}
-
-	/* tp_foreach */
-	if (!seq->tp_foreach) {
-		if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
-			seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPair;
-		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
-			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast;
-		} else if (seq_featureset_test(features, FEAT_tp_size) &&
-		           seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_foreach = &DeeSeq_DefaultForeachWithTryGetItemIndexAndSize;
-		} else if (seq_featureset_test(features, FEAT_tp_size) &&
-		           seq_featureset_test(features, FEAT_tp_getitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndex;
-		} else if (seq_featureset_test(features, FEAT_tp_iter)) {
-			seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
-		} else if ((seq_featureset_test(features, FEAT_tp_sizeob) || seq_featureset_test(features, FEAT_tp_size)) &&
-		           (seq_featureset_test(features, FEAT_tp_getitem) ||
-		            seq_featureset_test(features, FEAT_tp_getitem_index) ||
-		            seq_featureset_test(features, FEAT_tp_trygetitem)) &&
-		           (seqclass == Dee_SEQCLASS_SEQ)) {
-			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault;
-		} else if ((seq_featureset_test(features, FEAT_tp_getitem) ||
-		            seq_featureset_test(features, FEAT_tp_getitem_index)) &&
-		           (seqclass == Dee_SEQCLASS_SEQ)) {
-			seq->tp_foreach = &DeeSeq_DefaultForeachWithGetItemIndexDefault;
 		}
 	}
 
@@ -10584,6 +12631,36 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_sizeob = &DeeObject_DefaultSizeObWithSize;
 		} else if (seq->tp_size) {
 			seq->tp_sizeob = &DeeObject_DefaultSizeObWithSizeDefault;
+		}
+	}
+
+	/* tp_foreach */
+	if (!seq->tp_foreach) {
+		if (seq_featureset_test(features, FEAT_tp_foreach_pair)) {
+			seq->tp_foreach = &DeeObject_DefaultForeachWithForeachPair;
+		} else if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndexFast;
+		} else if (seq_featureset_test(features, FEAT_tp_size) &&
+		           seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndTryGetItemIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_size) &&
+		           seq_featureset_test(features, FEAT_tp_getitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeAndGetItemIndex;
+		} else if (seq_featureset_test(features, FEAT_tp_sizeob) &&
+		           seq_featureset_test(features, FEAT_tp_getitem) && seqclass == Dee_SEQCLASS_SEQ) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeObAndGetItem;
+		} else if (seq_featureset_test(features, FEAT_tp_iter)) {
+			seq->tp_foreach = &DeeObject_DefaultForeachWithIter;
+		} else if (seq->tp_size &&
+		           (seq_featureset_test(features, FEAT_tp_getitem) ||
+		            seq_featureset_test(features, FEAT_tp_getitem_index) ||
+		            seq_featureset_test(features, FEAT_tp_trygetitem)) &&
+		           (seqclass == Dee_SEQCLASS_SEQ)) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithSizeDefaultAndGetItemIndexDefault;
+		} else if ((seq_featureset_test(features, FEAT_tp_getitem) ||
+		            seq_featureset_test(features, FEAT_tp_getitem_index)) &&
+		           (seqclass == Dee_SEQCLASS_SEQ)) {
+			seq->tp_foreach = &DeeSeq_DefaultForeachWithGetItemIndexDefault;
 		}
 	}
 
@@ -10640,10 +12717,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem = &DeeSeq_DefaultGetItemWithTryGetItemAndSize;
 		} else if (seq_featureset_test(features, FEAT_tp_sizeob) &&
 		           seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
-			       seq->tp_getitem = &DeeSeq_DefaultGetItemWithTryGetItemIndexAndSizeOb;
+			       seq->tp_getitem = &DeeSeq_DefaultGetItemWithSizeAndTryGetItemIndexOb;
 		} else if (seq_featureset_test(features, FEAT_tp_size) &&
 		           seq_featureset_test(features, FEAT_tp_trygetitem_index) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_getitem = &DeeSeq_DefaultGetItemWithTryGetItemIndexAndSize;
+			seq->tp_getitem = &DeeSeq_DefaultGetItemWithSizeAndTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_index)) {
 			seq->tp_getitem = &DeeObject_DefaultGetItemWithGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_getitem_string_hash)) {
@@ -10671,10 +12748,10 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 			seq->tp_getitem_index = &DeeObject_DefaultGetItemIndexWithSizeAndGetItemIndexFast;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index) &&
 		           seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithTryGetItemIndexAndSize;
+			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithSizeAndTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index) &&
 		           seq_featureset_test(features, FEAT_tp_sizeob) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithTryGetItemIndexAndSizeOb;
+			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithSizeAndTryGetItemIndexOb;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem) &&
 		           seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_getitem_index = &DeeSeq_DefaultGetItemIndexWithTryGetItemAndSize;
@@ -10997,7 +13074,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem) && seq_featureset_test(features, FEAT_tp_hasitem)) {
 			seq->tp_bounditem_index = &DeeObject_DefaultBoundItemIndexWithTryGetItemAndHasItem;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index) && seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_bounditem_index = &DeeSeq_DefaultBoundItemIndexWithTryGetItemIndexAndSize;
+			seq->tp_bounditem_index = &DeeSeq_DefaultBoundItemIndexWithSizeAndTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem) && seq_featureset_test(features, FEAT_tp_sizeob) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_bounditem_index = &DeeSeq_DefaultBoundItemIndexWithTryGetItemAndSizeOb;
 		} else if (seq_featureset_test(features, FEAT_tp_foreach_pair) && seqclass == Dee_SEQCLASS_MAP) {
@@ -11051,7 +13128,7 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem) && seq_featureset_test(features, FEAT_tp_sizeob) && seqclass == Dee_SEQCLASS_SEQ) {
 			seq->tp_bounditem = &DeeSeq_DefaultBoundItemWithTryGetItemAndSizeOb;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index) && seq_featureset_test(features, FEAT_tp_size) && seqclass == Dee_SEQCLASS_SEQ) {
-			seq->tp_bounditem = &DeeSeq_DefaultBoundItemWithTryGetItemIndexAndSize;
+			seq->tp_bounditem = &DeeSeq_DefaultBoundItemWithSizeAndTryGetItemIndex;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem)) {
 			seq->tp_bounditem = &DeeObject_DefaultBoundItemWithTryGetItem;
 		} else if (seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
@@ -11506,8 +13583,208 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 	/* tp_size_fast (simply set to return `(size_t)-1') */
 	if (!seq->tp_size_fast)
 		seq->tp_size_fast = &DeeObject_DefaultSizeFastWithErrorNotFast;
+
+	/* Fill in compare operators. */
+	if (self->tp_cmp) {
+		struct type_cmp *cmp = self->tp_cmp;
+		DeeType_SubstituteDefaultCompareOperators(cmp);
+		if (!cmp->tp_compare || !cmp->tp_compare_eq) {
+			switch (seqclass) {
+			case Dee_SEQCLASS_SEQ:
+				if (!cmp->tp_hash) {
+					if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast;
+					} else if (seq_featureset_test(features, FEAT_tp_foreach)) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithForeach;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithSizeAndGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seq_featureset_test(features, FEAT_tp_getitem)) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithSizeObAndGetItem;
+					} else if (seq->tp_foreach) {
+						cmp->tp_hash = &DeeSeq_DefaultHashWithForeachDefault;
+					}
+				}
+				if (!cmp->tp_compare) {
+					if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+						cmp->tp_compare = &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+						cmp->tp_compare = &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+						cmp->tp_compare = &DeeSeq_DefaultCompareWithSizeAndGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seq_featureset_test(features, FEAT_tp_getitem)) {
+						cmp->tp_compare = &DeeSeq_DefaultCompareWithSizeObAndGetItem;
+					} else if (seq->tp_foreach) {
+						cmp->tp_compare = &DeeSeq_DefaultCompareWithForeachDefault;
+					}
+				}
+				if (!cmp->tp_compare_eq) {
+					if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+						cmp->tp_compare_eq = &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+						cmp->tp_compare_eq = &DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+						cmp->tp_compare_eq = &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex;
+					} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seq_featureset_test(features, FEAT_tp_getitem)) {
+						cmp->tp_compare_eq = &DeeSeq_DefaultCompareEqWithSizeObAndGetItem;
+					} else if (seq->tp_foreach) {
+						cmp->tp_compare_eq = &DeeSeq_DefaultCompareEqWithForeachDefault;
+					}
+				}
+				break;
+			case Dee_SEQCLASS_SET:
+				if (seq->tp_foreach) {
+					if (!cmp->tp_hash)
+						cmp->tp_hash = &DeeSet_DefaultHashWithForeachDefault;
+					if (!cmp->tp_compare_eq)
+						cmp->tp_compare_eq = &DeeSet_DefaultCompareEqWithForeachDefault;
+					if (!cmp->tp_lo)
+						cmp->tp_lo = &DeeSet_DefaultLoWithForeachDefault;
+					if (!cmp->tp_le)
+						cmp->tp_le = &DeeSet_DefaultLeWithForeachDefault;
+					if (!cmp->tp_gr)
+						cmp->tp_gr = &DeeSet_DefaultGrWithForeachDefault;
+					if (!cmp->tp_ge)
+						cmp->tp_ge = &DeeSet_DefaultGeWithForeachDefault;
+				}
+				break;
+			case Dee_SEQCLASS_MAP:
+				if (seq->tp_foreach_pair) {
+					if (!cmp->tp_hash)
+						cmp->tp_hash = &DeeMap_DefaultHashWithForeachPairDefault;
+					if (!cmp->tp_compare_eq)
+						cmp->tp_compare_eq = &DeeMap_DefaultCompareEqWithForeachPairDefault;
+					if (!cmp->tp_lo)
+						cmp->tp_lo = &DeeMap_DefaultLoWithForeachPairDefault;
+					if (!cmp->tp_le)
+						cmp->tp_le = &DeeMap_DefaultLeWithForeachPairDefault;
+					if (!cmp->tp_gr)
+						cmp->tp_gr = &DeeMap_DefaultGrWithForeachPairDefault;
+					if (!cmp->tp_ge)
+						cmp->tp_ge = &DeeMap_DefaultGeWithForeachPairDefault;
+				}
+				break;
+			default: __builtin_unreachable();
+			}
+			DeeType_SubstituteDefaultCompareOperators(cmp);
+		}
+	} else {
+		/* No user-provided compare operators -> use a default group. */
+
+		switch (seqclass) {
+		case Dee_SEQCLASS_SEQ:
+			if (seq_featureset_test(features, FEAT_tp_size) && seq->tp_getitem_index_fast) {
+				self->tp_cmp = &DeeSeq_DefaultCmpWithSizeAndGetItemIndexFast;
+			} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_trygetitem_index)) {
+				self->tp_cmp = &DeeSeq_DefaultCmpWithSizeAndTryGetItemIndex;
+			} else if (seq_featureset_test(features, FEAT_tp_size) && seq_featureset_test(features, FEAT_tp_getitem_index)) {
+				self->tp_cmp = &DeeSeq_DefaultCmpWithSizeAndGetItemIndex;
+			} else if (seq_featureset_test(features, FEAT_tp_sizeob) && seq_featureset_test(features, FEAT_tp_getitem)) {
+				self->tp_cmp = &DeeSeq_DefaultCmpWithSizeObAndGetItem;
+			} else if (seq->tp_foreach) {
+				self->tp_cmp = &DeeSeq_DefaultCmpWithForeachDefault;
+			}
+			break;
+		case Dee_SEQCLASS_SET:
+			if (seq->tp_foreach)
+				self->tp_cmp = &DeeSet_DefaultCmpWithForeachDefault;
+			break;
+		case Dee_SEQCLASS_MAP:
+			if (seq->tp_foreach_pair)
+				self->tp_cmp = &DeeMap_DefaultCmpWithForeachPairDefault;
+			break;
+		default: __builtin_unreachable();
+		}
+	}
 }
 
+#ifndef DEFINE_TYPED_OPERATORS
+INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndexFast = {
+	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast,
+	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast,
+};
+INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndTryGetItemIndex = {
+	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex,
+	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex,
+};
+INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndex = {
+	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndex,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex,
+	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndex,
+};
+INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeObAndGetItem = {
+	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeObAndGetItem,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeObAndGetItem,
+	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeObAndGetItem,
+};
+INTERN struct type_cmp DeeSeq_DefaultCmpWithForeachDefault = {
+	/* .tp_hash       = */ &DeeSeq_DefaultHashWithForeachDefault,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithForeachDefault,
+	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithForeachDefault,
+};
+INTERN struct type_cmp DeeSet_DefaultCmpWithForeachDefault = {
+	/* .tp_hash       = */ &DeeSet_DefaultHashWithForeachDefault,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeSet_DefaultCompareEqWithForeachDefault,
+	/* .tp_compare    = */ NULL,
+};
+INTERN struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault = {
+	/* .tp_hash       = */ &DeeMap_DefaultHashWithForeachPairDefault,
+	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ &DeeMap_DefaultCompareEqWithForeachPairDefault,
+	/* .tp_compare    = */ NULL,
+};
+#endif /* !DEFINE_TYPED_OPERATORS */
 
 /* Inherit OPERATOR_ITER, OPERATOR_SIZE and OPERTOR_GETITEM for
  * a type with `DeeType_GetSeqClass(self) == Dee_SEQCLASS_SEQ' */
@@ -11586,6 +13863,24 @@ DeeType_InheritSeqOperators(DeeTypeObject *__restrict self, unsigned int seqclas
 			self->tp_seq->tp_hasitem_string_len_hash    = base_seq->tp_hasitem_string_len_hash;
 		} else {
 			self->tp_seq = base_seq;
+		}
+		if (self->tp_cmp && base->tp_cmp) {
+			DeeTypeObject *origin = DeeType_GetSeqOrigin(self);
+			if unlikely(origin) {
+				DeeType_InheritCompare(origin);
+			} else {
+				self->tp_cmp->tp_hash       = base->tp_cmp->tp_hash;
+				self->tp_cmp->tp_eq         = base->tp_cmp->tp_eq;
+				self->tp_cmp->tp_ne         = base->tp_cmp->tp_ne;
+				self->tp_cmp->tp_lo         = base->tp_cmp->tp_lo;
+				self->tp_cmp->tp_le         = base->tp_cmp->tp_le;
+				self->tp_cmp->tp_gr         = base->tp_cmp->tp_gr;
+				self->tp_cmp->tp_ge         = base->tp_cmp->tp_ge;
+				self->tp_cmp->tp_compare_eq = base->tp_cmp->tp_compare_eq;
+				self->tp_cmp->tp_compare    = base->tp_cmp->tp_compare;
+			}
+		} else {
+			self->tp_cmp = base->tp_cmp;
 		}
 		return true;
 	}
@@ -12681,7 +14976,68 @@ DeeType_InheritSetRange(DeeTypeObject *__restrict self) {
 	}
 	return false;
 }
+
+
+INTERN NONNULL((1)) bool DCALL
+DeeType_InheritCompare(DeeTypeObject *__restrict self) {
+	struct type_cmp *base_cmp;
+	DeeTypeMRO mro;
+	DeeTypeObject *base;
+
+	/* Special case when it's a sequence type. */
+	{
+		unsigned int seqclass = DeeType_GetSeqClass(self);
+		if (seqclass != Dee_SEQCLASS_NONE) {
+			return (DeeType_InheritSeqOperators(self, seqclass) &&
+			        self->tp_cmp && (self->tp_cmp->tp_compare_eq || self->tp_cmp->tp_hash));
+		}
+	}
+
+	base_cmp = self->tp_cmp;
+	if (base_cmp) {
+		DeeType_SubstituteDefaultCompareOperators(base_cmp);
+		if (base_cmp->tp_hash || base_cmp->tp_eq || base_cmp->tp_lo || base_cmp->tp_le)
+			return true;
+	}
+
+	base = DeeTypeMRO_Init(&mro, self);
+	while ((base = DeeTypeMRO_NextDirectBase(&mro, base)) != NULL) {
+		base_cmp = base->tp_cmp;
+		if (base_cmp == NULL ||
+		    (!base_cmp->tp_hash ||
+		     !base_cmp->tp_eq || !base_cmp->tp_ne ||
+		     !base_cmp->tp_lo || !base_cmp->tp_le ||
+		     !base_cmp->tp_gr || !base_cmp->tp_ge ||
+		     !base_cmp->tp_compare_eq || !base_cmp->tp_compare)) {
+			if (!DeeType_InheritCompare(base))
+				continue;
+			base_cmp = base->tp_cmp;
+		}
+		LOG_INHERIT(base, self, "operator <compare>");
+		if (self->tp_cmp) {
+			DeeTypeObject *origin = DeeType_GetCmpOrigin(self);
+			if unlikely(origin)
+				return DeeType_InheritCompare(origin);
+			self->tp_cmp->tp_hash       = base_cmp->tp_hash;
+			self->tp_cmp->tp_eq         = base_cmp->tp_eq;
+			self->tp_cmp->tp_ne         = base_cmp->tp_ne;
+			self->tp_cmp->tp_lo         = base_cmp->tp_lo;
+			self->tp_cmp->tp_le         = base_cmp->tp_le;
+			self->tp_cmp->tp_gr         = base_cmp->tp_gr;
+			self->tp_cmp->tp_ge         = base_cmp->tp_ge;
+			self->tp_cmp->tp_compare_eq = base_cmp->tp_compare_eq;
+			self->tp_cmp->tp_compare    = base_cmp->tp_compare;
+		} else {
+			self->tp_cmp = base_cmp;
+		}
+		return true;
+	}
+	return false;
+}
 #endif /* !DEFINE_TYPED_OPERATORS */
+
+
+
 
 DEFINE_OPERATOR(DREF DeeObject *, Iter, (DeeObject *RESTRICT_IF_NOTYPE self)) {
 	LOAD_TP_SELF;
@@ -14686,10 +17042,10 @@ err:
 
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
- * @return: == -2: An error occurred.
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed > key(rhs)' */
+ * @return: == 1:  `lhs_keyed > key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, /*nullable*/ DeeObject *key) {
@@ -14703,7 +17059,7 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	Dee_Decref(rhs);
 	return result;
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
 

@@ -109,7 +109,6 @@ DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritAnd, DeeType_InheritAnd);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritOr, DeeType_InheritOr);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritXor, DeeType_InheritXor);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritPow, DeeType_InheritPow);
-DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritHash, DeeType_InheritHash);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritCompare, DeeType_InheritCompare);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIterNext, DeeType_InheritIterNext);
 DEFINE_TYPE_INHERIT_HOOK(do_DeeType_InheritIter, DeeType_InheritIter);
@@ -234,7 +233,7 @@ err:
 	return NULL;
 }
 
-DEFINE_OPERATOR_INVOKE(operator_hash, &instance_hash, &do_DeeType_InheritHash) {
+DEFINE_OPERATOR_INVOKE(operator_hash, &instance_hash, &do_DeeType_InheritCompare) {
 	dhash_t result;
 	(void)p_self;
 	(void)opname;

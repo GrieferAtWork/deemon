@@ -312,7 +312,7 @@ F(trygetitem)(STRUCT_TYPE *self, DeeObject *index) {
 	return result;
 }
 
-PRIVATE NONNULL((1, 2)) WUNUSED DREF DeeObject *DCALL
+PRIVATE NONNULL((1)) WUNUSED DREF DeeObject *DCALL
 F(trygetitem_index)(STRUCT_TYPE *self, size_t index) {
 	DREF DeeObject *result;
 	result = DeeObject_TryGetItemIndex(self->se_seq, index);

@@ -1847,38 +1847,6 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-hashset_hash(HashSet *__restrict self) {
-	dhash_t result;
-	struct hashset_item *iter, *end;
-	struct hashset_item *vector;
-	size_t mask;
-again:
-	result = DEE_HASHOF_EMPTY_SEQUENCE;
-	DeeHashSet_LockRead(self);
-	vector = self->hs_elem;
-	mask   = self->hs_mask;
-	end    = (iter = vector) + (mask + 1);
-	for (; iter < end; ++iter) {
-		DREF DeeObject *key;
-		key = iter->hsi_key;
-		if (key == NULL || key == dummy)
-			continue;
-		Dee_Incref(key);
-		DeeHashSet_LockEndRead(self);
-		result ^= DeeObject_Hash(key);
-		Dee_Decref(key);
-		DeeHashSet_LockRead(self);
-		if unlikely(self->hs_elem != vector ||
-		            self->hs_mask != mask) {
-			DeeHashSet_LockEndRead(self);
-			goto again;
-		}
-	}
-	DeeHashSet_LockEndRead(self);
-	return result;
-}
-
 PRIVATE struct type_nsi tpconst hashset_nsi = {
 	/* .nsi_class   = */ TYPE_SEQX_CLASS_SET,
 	/* .nsi_flags   = */ TYPE_SEQX_FMUTABLE | TYPE_SEQX_FRESIZABLE,
@@ -1889,16 +1857,6 @@ PRIVATE struct type_nsi tpconst hashset_nsi = {
 			/* .nsi_remove     = */ (dfunptr_t)&DeeHashSet_Remove,
 		}
 	}
-};
-
-PRIVATE struct type_cmp hashset_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&hashset_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &hashset_ge,
 };
 
 PRIVATE struct type_seq hashset_seq = {
@@ -2256,7 +2214,7 @@ PUBLIC DeeTypeObject DeeHashSet_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&hashset_visit,
 	/* .tp_gc            = */ &hashset_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &hashset_cmp,
+	/* .tp_cmp           = */ NULL, /* TODO: &hashset_cmp */
 	/* .tp_seq           = */ &hashset_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

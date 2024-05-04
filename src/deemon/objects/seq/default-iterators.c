@@ -36,7 +36,7 @@ DECL_BEGIN
 /* DefaultIterator_WithGetItemIndex_Type                                */
 /* DefaultIterator_WithSizeAndGetItemIndex_Type                         */
 /* DefaultIterator_WithSizeAndGetItemIndexFast_Type                     */
-/* DefaultIterator_WithTryGetItemIndexAndSize_Type                      */
+/* DefaultIterator_WithSizeAndTryGetItemIndex_Type                      */
 /************************************************************************/
 
 STATIC_ASSERT(offsetof(DefaultIterator_WithGetItemIndex, digi_seq) == offsetof(DefaultIterator_WithSizeAndGetItemIndex, disgi_seq));
@@ -232,15 +232,16 @@ err:
 #define di_sgif_cmp di_gi_cmp
 #define di_stgi_cmp di_gi_cmp
 PRIVATE struct type_cmp di_gi_cmp = {
-	/* .tp_hash    = */ NULL,
-	/* .tp_eq      = */ NULL,
-	/* .tp_ne      = */ NULL,
-	/* .tp_lo      = */ NULL,
-	/* .tp_le      = */ NULL,
-	/* .tp_gr      = */ NULL,
-	/* .tp_ge      = */ NULL,
-	/* .tp_nii     = */ NULL,
-	/* .tp_compare = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ NULL,
+	/* .tp_ne         = */ NULL,
+	/* .tp_lo         = */ NULL,
+	/* .tp_le         = */ NULL,
+	/* .tp_gr         = */ NULL,
+	/* .tp_ge         = */ NULL,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 };
 
 #define di_stgi_members di_sgi_members
@@ -398,9 +399,9 @@ INTERN DeeTypeObject DefaultIterator_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_class_members = */ NULL
 };
 
-INTERN DeeTypeObject DefaultIterator_WithTryGetItemIndexAndSize_Type = {
+INTERN DeeTypeObject DefaultIterator_WithSizeAndTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_IterWithTryGetItemIndexAndSize",
+	/* .tp_name     = */ "_IterWithSizeAndTryGetItemIndex",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
@@ -695,15 +696,16 @@ err_new_index:
 
 #define di_tg_cmp di_g_cmp
 PRIVATE struct type_cmp di_g_cmp = {
-	/* .tp_hash    = */ NULL,
-	/* .tp_eq      = */ NULL,
-	/* .tp_ne      = */ NULL,
-	/* .tp_lo      = */ NULL,
-	/* .tp_le      = */ NULL,
-	/* .tp_gr      = */ NULL,
-	/* .tp_ge      = */ NULL,
-	/* .tp_nii     = */ NULL,
-	/* .tp_compare = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ NULL,
+	/* .tp_ne         = */ NULL,
+	/* .tp_lo         = */ NULL,
+	/* .tp_le         = */ NULL,
+	/* .tp_gr         = */ NULL,
+	/* .tp_ge         = */ NULL,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 };
 
 #define di_tg_members di_g_members
@@ -1235,15 +1237,16 @@ di_nl_iter_next(DefaultIterator_WithNextAndLimit *self) {
 }
 
 PRIVATE struct type_cmp di_nl_cmp = {
-	/* .tp_hash    = */ NULL,
-	/* .tp_eq      = */ NULL,
-	/* .tp_ne      = */ NULL,
-	/* .tp_lo      = */ NULL,
-	/* .tp_le      = */ NULL,
-	/* .tp_gr      = */ NULL,
-	/* .tp_ge      = */ NULL,
-	/* .tp_nii     = */ NULL,
-	/* .tp_compare = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ NULL,
+	/* .tp_ne         = */ NULL,
+	/* .tp_lo         = */ NULL,
+	/* .tp_le         = */ NULL,
+	/* .tp_gr         = */ NULL,
+	/* .tp_ge         = */ NULL,
+	/* .tp_nii        = */ NULL,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 };
 
 PRIVATE struct type_member tpconst di_nl_members[] = {

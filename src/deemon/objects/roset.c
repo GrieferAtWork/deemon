@@ -488,18 +488,6 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-roset_hash(RoSet *__restrict self) {
-	size_t i;
-	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
-	for (i = 0; i <= self->rs_mask; ++i) {
-		if (!self->rs_elem[i].rsi_key)
-			continue;
-		result ^= DeeObject_Hash(self->rs_elem[i].rsi_key);
-	}
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 roset_foreach(RoSet *self, Dee_foreach_t proc, void *arg) {
 	Dee_ssize_t temp, result = 0;
@@ -517,16 +505,6 @@ roset_foreach(RoSet *self, Dee_foreach_t proc, void *arg) {
 err:
 	return temp;
 }
-
-PRIVATE struct type_cmp roset_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&roset_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &roset_ge,
-};
 
 PRIVATE struct type_seq roset_seq = {
 	/* .tp_iter                       = */ (DREF DeeObject *(DCALL *)(DeeObject *__restrict))&roset_iter,
@@ -711,7 +689,7 @@ PUBLIC DeeTypeObject DeeRoSet_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&roset_visit,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &roset_cmp,
+	/* .tp_cmp           = */ NULL, /* TODO: &roset_cmp */
 	/* .tp_seq           = */ &roset_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

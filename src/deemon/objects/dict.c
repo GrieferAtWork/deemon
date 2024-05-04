@@ -2408,52 +2408,6 @@ err:
 	return temp;
 }
 
-PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-dict_hash(Dict *__restrict self) {
-	dhash_t result;
-	struct dict_item *iter, *end;
-	struct dict_item *vector;
-	size_t mask;
-again:
-	result = DEE_HASHOF_EMPTY_SEQUENCE;
-	DeeDict_LockRead(self);
-	vector = self->d_elem;
-	mask   = self->d_mask;
-	end    = (iter = vector) + (mask + 1);
-	for (; iter < end; ++iter) {
-		DREF DeeObject *key, *value;
-		key = iter->di_key;
-		if (key == NULL || key == dummy)
-			continue;
-		value = iter->di_value;
-		Dee_Incref(key);
-		Dee_Incref(value);
-		DeeDict_LockEndRead(self);
-		result ^= Dee_HashCombine(DeeObject_Hash(key),
-		                          DeeObject_Hash(value));
-		Dee_Decref(value);
-		Dee_Decref(key);
-		DeeDict_LockRead(self);
-		if unlikely(self->d_elem != vector ||
-		            self->d_mask != mask) {
-			DeeDict_LockEndRead(self);
-			goto again;
-		}
-	}
-	DeeDict_LockEndRead(self);
-	return result;
-}
-
-PRIVATE struct type_cmp dict_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&dict_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL, // TODO: &dict_ge,
-};
-
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 dict_bool(Dict *__restrict self) {
 	return atomic_read(&self->d_used) != 0;
@@ -2834,7 +2788,7 @@ PUBLIC DeeTypeObject DeeDict_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&dict_visit,
 	/* .tp_gc            = */ &dict_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ &dict_cmp,
+	/* .tp_cmp           = */ NULL, /* TODO: &dict_cmp */
 	/* .tp_seq           = */ &dict_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

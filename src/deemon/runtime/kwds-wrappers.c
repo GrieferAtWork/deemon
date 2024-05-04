@@ -1550,7 +1550,7 @@ DeeBlackListKw_TryGetItemNRStringHash(DeeBlackListKwObject *self,
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeBlackListKw_TryGetItemNRStringLenHash(DeeBlackListKwObject *self,
                                          char const *__restrict name,
                                          size_t namelen, Dee_hash_t hash) {

@@ -1620,7 +1620,7 @@ DeeKwdsMapping_TryGetItemNRStringHash(DeeKwdsMappingObject *__restrict self,
 	return ITER_DONE;
 }
 
-INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
+INTERN WUNUSED NONNULL((1, 2)) DeeObject *DCALL
 DeeKwdsMapping_TryGetItemNRStringLenHash(DeeKwdsMappingObject *__restrict self,
                                          char const *__restrict name,
                                          size_t namelen, Dee_hash_t hash) {

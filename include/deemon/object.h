@@ -1905,6 +1905,13 @@ struct Dee_type_cmp {
 	 *       them to be ordered with other operators. */
 	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 
+	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
+	 * @return: Dee_COMPARE_ERR: An error occurred.
+	 * @return: -1: `lhs != rhs'
+	 * @return: 0:  `lhs == rhs'
+	 * @return: 1:  `lhs != rhs' */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare_eq)(DeeObject *self, DeeObject *some_object);
+
 	/* Rich-compare operator that can be defined instead
 	 * of `tp_eq', `tp_ne', `tp_lo', `tp_le', `tp_gr', `tp_ge'
 	 * @return: Dee_COMPARE_ERR: An error occurred.
@@ -1912,12 +1919,6 @@ struct Dee_type_cmp {
 	 * @return: 0:  `lhs == rhs'
 	 * @return: 1:  `lhs > rhs' */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
-	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
-	 * @return: Dee_COMPARE_ERR: An error occurred.
-	 * @return: -1: `lhs != rhs'
-	 * @return: 0:  `lhs == rhs'
-	 * @return: 1:  `lhs != rhs' */
-	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare_eq)(DeeObject *self, DeeObject *some_object);
 };
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
@@ -3898,8 +3899,7 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritAnd(DeeTypeObject *__restrict self
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritOr(DeeTypeObject *__restrict self);           /* tp_or, tp_inplace_or */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritXor(DeeTypeObject *__restrict self);          /* tp_xor, tp_inplace_xor */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritPow(DeeTypeObject *__restrict self);          /* tp_pow, tp_inplace_pow */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritHash(DeeTypeObject *__restrict self);         /* tp_hash, tp_eq, tp_ne  (in order to inherit "tp_hash", must also inherit "tp_eq" and "tp_ne") */
-INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);      /* tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge */
+INTDEF NONNULL((1)) bool DCALL DeeType_InheritCompare(DeeTypeObject *__restrict self);      /* tp_hash, tp_eq, tp_ne, tp_lo, tp_le, tp_gr, tp_ge, tp_compare_eq, tp_compare */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIterNext(DeeTypeObject *__restrict self);     /* tp_iter_next */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritIter(DeeTypeObject *__restrict self);         /* tp_iter, tp_foreach, tp_foreach_pair */
 INTDEF NONNULL((1)) bool DCALL DeeType_InheritSize(DeeTypeObject *__restrict self);         /* tp_sizeob, tp_size */
@@ -3934,7 +3934,6 @@ INTDEF NONNULL((1)) bool DCALL DeeType_InheritBuffer(DeeTypeObject *__restrict s
 #define DeeType_InheritOr(self)           DeeType_InheritOperator(self, OPERATOR_OR)
 #define DeeType_InheritXor(self)          DeeType_InheritOperator(self, OPERATOR_XOR)
 #define DeeType_InheritPow(self)          DeeType_InheritOperator(self, OPERATOR_POW)
-#define DeeType_InheritHash(self)         DeeType_InheritOperator(self, OPERATOR_HASH)
 #define DeeType_InheritCompare(self)      DeeType_InheritOperator(self, OPERATOR_EQ)
 #define DeeType_InheritIterNext(self)     DeeType_InheritOperator(self, OPERATOR_ITERNEXT)
 #define DeeType_InheritIter(self)         DeeType_InheritOperator(self, OPERATOR_ITER)
@@ -4473,18 +4472,25 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareLe)(DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGr)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self, DeeObject *some_object);
 
-/* @return: == Dee_COMPARE_ERR: An error occurred.
- * @return: == -1: `lhs < rhs'
+/* @return: == -1: `lhs < rhs'
  * @return: == 0:  `lhs == rhs'
- * @return: == 1:  `lhs > rhs' */
+ * @return: == 1:  `lhs > rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
+/* @return: == -1: `lhs != rhs'
+ * @return: == 0:  `lhs == rhs'
+ * @return: == 1:  `lhs != rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_CompareForEquality)(DeeObject *lhs, DeeObject *rhs);
+
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
- * @return: == Dee_COMPARE_ERR: An error occurred.
  * @return: == -1: `lhs_keyed < key(rhs)'
  * @return: == 0:  `lhs_keyed == key(rhs)'
- * @return: == 1:  `lhs_keyed > key(rhs)' */
+ * @return: == 1:  `lhs_keyed > key(rhs)'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareKey)(DeeObject *lhs_keyed,
                              DeeObject *rhs, /*nullable*/ DeeObject *key);

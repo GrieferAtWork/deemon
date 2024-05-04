@@ -44,7 +44,7 @@ DECL_BEGIN
 /************************************************************************/
 /* DefaultSequence_WithSizeAndGetItemIndex_Type                         */
 /* DefaultSequence_WithSizeAndGetItemIndexFast_Type                     */
-/* DefaultSequence_WithTryGetItemIndexAndSize_Type                      */
+/* DefaultSequence_WithSizeAndTryGetItemIndex_Type                      */
 /************************************************************************/
 
 #define ds_sgif_fini  ds_sgi_fini
@@ -108,7 +108,7 @@ ds_stgi_iter(DefaultSequence_WithSizeAndGetItemIndex *__restrict self) {
 	result->disgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->disgi_index            = self->dssgi_start;
 	result->disgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultIterator_WithTryGetItemIndexAndSize_Type);
+	DeeObject_Init(result, &DefaultIterator_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -593,7 +593,7 @@ ds_stgi_getrange_index(DefaultSequence_WithSizeAndGetItemIndex *__restrict self,
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + range.sr_start;
 	result->dssgi_end              = self->dssgi_start + range.sr_end;
-	DeeObject_Init(result, &DefaultSequence_WithTryGetItemIndexAndSize_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -659,7 +659,7 @@ ds_stgi_getrange_index_n(DefaultSequence_WithSizeAndGetItemIndex *__restrict sel
 	result->dssgi_tp_getitem_index = self->dssgi_tp_getitem_index;
 	result->dssgi_start            = self->dssgi_start + used_start;
 	result->dssgi_end              = self->dssgi_end;
-	DeeObject_Init(result, &DefaultSequence_WithTryGetItemIndexAndSize_Type);
+	DeeObject_Init(result, &DefaultSequence_WithSizeAndTryGetItemIndex_Type);
 	return result;
 err:
 	return NULL;
@@ -685,7 +685,7 @@ PRIVATE struct type_member ds_sgif_class_members[] = {
 };
 
 PRIVATE struct type_member ds_stgi_class_members[] = {
-	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithTryGetItemIndexAndSize_Type),
+	TYPE_MEMBER_CONST(STR_Iterator, &DefaultIterator_WithSizeAndTryGetItemIndex_Type),
 	TYPE_MEMBER_END
 };
 
@@ -915,9 +915,9 @@ INTERN DeeTypeObject DefaultSequence_WithSizeAndGetItemIndexFast_Type = {
 	/* .tp_class_members = */ ds_sgif_class_members
 };
 
-INTERN DeeTypeObject DefaultSequence_WithTryGetItemIndexAndSize_Type = {
+INTERN DeeTypeObject DefaultSequence_WithSizeAndTryGetItemIndex_Type = {
 	OBJECT_HEAD_INIT(&DeeType_Type),
-	/* .tp_name     = */ "_SeqWithTryGetItemIndexAndSize",
+	/* .tp_name     = */ "_SeqWithSizeAndTryGetItemIndex",
 	/* .tp_doc      = */ NULL,
 	/* .tp_flags    = */ TP_FNORMAL | TP_FFINAL,
 	/* .tp_weakrefs = */ 0,
