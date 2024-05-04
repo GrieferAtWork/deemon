@@ -180,24 +180,14 @@ none_eq(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(DeeNone_Check(other));
 }
 
+PRIVATE WUNUSED NONNULL((1)) int DCALL
+none_compare(DeeObject *UNUSED(self), DeeObject *other) {
+	return DeeNone_Check(other) ? 0 : -1;
+}
+
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 none_ne(DeeObject *UNUSED(self), DeeObject *other) {
 	return_bool(!DeeNone_Check(other));
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-none_nii_getindex(DeeObject *UNUSED(self)) {
-	return (size_t)-2;
-}
-
-PRIVATE WUNUSED NONNULL((1)) size_t DCALL
-none_nii_revert(DeeObject *UNUSED(self), size_t UNUSED(step)) {
-	return 1;
-}
-
-PRIVATE WUNUSED NONNULL((1)) int DCALL
-none_nii_prev(DeeObject *UNUSED(self)) {
-	return 1;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) dssize_t DCALL
@@ -241,34 +231,16 @@ PRIVATE struct type_math none_math = {
 	/* .tp_inplace_pow = */ (int (DCALL *)(DeeObject **__restrict, DeeObject *))&none_i2
 };
 
-PRIVATE struct type_nii tpconst none_nii = {
-	/* .nii_class = */ TYPE_ITERX_CLASS_BIDIRECTIONAL,
-	/* .nii_flags = */ TYPE_ITERX_FNORMAL,
-	{
-		/* .nii_common = */ {
-			/* .nii_getseq   = */ (dfunptr_t)&none_1,
-			/* .nii_getindex = */ (dfunptr_t)&none_nii_getindex,
-			/* .nii_setindex = */ (dfunptr_t)&none_i2,
-			/* .nii_rewind   = */ (dfunptr_t)&none_i1,
-			/* .nii_revert   = */ (dfunptr_t)&none_nii_revert,
-			/* .nii_advance  = */ (dfunptr_t)&none_nii_revert,
-			/* .nii_prev     = */ (dfunptr_t)&none_nii_prev,
-			/* .nii_next     = */ (dfunptr_t)&none_nii_prev,
-			/* .nii_hasprev  = */ (dfunptr_t)&none_i1,
-			/* .nii_peek     = */ (dfunptr_t)&none_iternext
-		}
-	}
-};
-
 PRIVATE struct type_cmp none_cmp = {
-	/* .tp_hash = */ &none_hash,
-	/* .tp_eq   = */ &none_eq,
-	/* .tp_ne   = */ &none_ne,
-	/* .tp_lo   = */ &none_ne,
-	/* .tp_le   = */ &none_eq,
-	/* .tp_gr   = */ &none_ne,
-	/* .tp_ge   = */ &none_eq,
-	/* .tp_nii  = */ &none_nii
+	/* .tp_hash       = */ &none_hash,
+	/* .tp_eq         = */ &none_eq,
+	/* .tp_ne         = */ &none_ne,
+	/* .tp_lo         = */ &none_ne,
+	/* .tp_le         = */ &none_eq,
+	/* .tp_gr         = */ &none_ne,
+	/* .tp_ge         = */ &none_eq,
+	/* .tp_compare_eq = */ &none_compare,
+	/* .tp_compare    = */ &none_compare,
 };
 
 PRIVATE struct type_nsi tpconst none_nsi = {

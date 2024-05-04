@@ -239,7 +239,6 @@ PRIVATE struct type_cmp di_gi_cmp = {
 	/* .tp_le         = */ NULL,
 	/* .tp_gr         = */ NULL,
 	/* .tp_ge         = */ NULL,
-	/* .tp_nii        = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
 };
@@ -703,7 +702,6 @@ PRIVATE struct type_cmp di_g_cmp = {
 	/* .tp_le         = */ NULL,
 	/* .tp_gr         = */ NULL,
 	/* .tp_ge         = */ NULL,
-	/* .tp_nii        = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
 };
@@ -1244,7 +1242,6 @@ PRIVATE struct type_cmp di_nl_cmp = {
 	/* .tp_le         = */ NULL,
 	/* .tp_gr         = */ NULL,
 	/* .tp_ge         = */ NULL,
-	/* .tp_nii        = */ NULL,
 	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
 };

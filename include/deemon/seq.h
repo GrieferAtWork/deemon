@@ -597,6 +597,7 @@ DFUNDEF WUNUSED NONNULL((1)) int DCALL DeeSeq_All(DeeObject *__restrict self);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Min(DeeObject *self, DeeObject *key);
 DFUNDEF WUNUSED NONNULL((1)) DREF DeeObject *DCALL DeeSeq_Max(DeeObject *self, DeeObject *key);
 
+
 #ifdef CONFIG_BUILDING_DEEMON
 /* Mutable-sequence API */
 #ifndef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
@@ -1029,6 +1030,10 @@ typedef struct {
 } DeeFastSeq;
 
 #define DeeFastSeq_GetSize(self)        ((self)->fsq_size)
+
+/* Return the index'th element of "self".
+ * @return: * :   A reference to the index'th element of "self".
+ * @return: NULL: The index'th element of "self" isn't bound (no error was thrown) */
 #define DeeFastSeq_GetItem(self, index) ((*(self)->fsq_getitem_index_fast)((self)->fsq_self, index))
 
 /* Try to load index-based fast sequence controls for "seq".

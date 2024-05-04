@@ -570,7 +570,7 @@ kwds_foreach_pair(Kwds *self, Dee_foreach_pair_t proc, void *arg) {
 		DREF DeeObject *indexob;
 		struct kwds_entry *entry = &self->kw_map[i];
 		if (!entry->ke_name)
-			break;
+			continue;
 		indexob = DeeInt_NewSize(entry->ke_index);
 		if unlikely(!indexob)
 			goto err;
@@ -1242,7 +1242,7 @@ kmap_foreach_pair(KwdsMapping *self, Dee_foreach_pair_t proc, void *arg) {
 		DeeObject *value;
 		struct kwds_entry *entry = &kwds->kw_map[i];
 		if (!entry->ke_name)
-			break;
+			continue;
 		ASSERT(entry->ke_index < self->kmo_kwds->kw_size);
 		DeeKwdsMapping_LockRead(self);
 		value = self->kmo_argv[entry->ke_index];

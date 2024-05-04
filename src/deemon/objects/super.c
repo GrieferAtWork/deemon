@@ -511,7 +511,7 @@ super_ne(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareNeObject(self->s_type, self->s_self, some_object);
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 super_lo(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareLoObject(self->s_type, self->s_self, some_object);
 }
@@ -531,14 +531,26 @@ super_ge(Super *self, DeeObject *some_object) {
 	return DeeObject_TCompareGeObject(self->s_type, self->s_self, some_object);
 }
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_compare_eq(Super *self, DeeObject *some_object) {
+	return DeeObject_TCompareForEquality(self->s_type, self->s_self, some_object);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+super_compare(Super *self, DeeObject *some_object) {
+	return DeeObject_TCompare(self->s_type, self->s_self, some_object);
+}
+
 PRIVATE struct type_cmp super_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&super_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ge
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&super_hash,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&super_ge,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&super_compare,
 };
 
 

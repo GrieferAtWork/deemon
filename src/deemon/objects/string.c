@@ -909,7 +909,7 @@ compare_strings(String *__restrict lhs,
 }
 
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 string_compare(String *lhs, DeeObject *rhs) {
 	int result;
 	if (DeeBytes_Check(rhs)) {
@@ -921,13 +921,13 @@ string_compare(String *lhs, DeeObject *rhs) {
 	}
 	return result;
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_lo(String *self, DeeObject *some_object) {
 	int result = string_compare(self, some_object);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result < 0);
 err:
@@ -937,7 +937,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_le(String *self, DeeObject *some_object) {
 	int result = string_compare(self, some_object);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result <= 0);
 err:
@@ -947,7 +947,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_gr(String *self, DeeObject *some_object) {
 	int result = string_compare(self, some_object);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result > 0);
 err:
@@ -957,17 +957,34 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_ge(String *self, DeeObject *some_object) {
 	int result = string_compare(self, some_object);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result >= 0);
 err:
 	return NULL;
 }
 
-
 INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
 string_eq_bytes(String *__restrict self,
                 DeeBytesObject *__restrict other);
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare_eq(String *self, DeeObject *some_object) {
+	/* Basic checks for same-object. */
+	if (self == (String *)some_object)
+		return 0;
+	if (DeeBytes_Check(some_object))
+		return !string_eq_bytes(self, (DeeBytesObject *)some_object);
+	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
+		goto err;
+	if (DeeString_Hash((DeeObject *)self) !=
+	    DeeString_Hash((DeeObject *)some_object))
+		return 1;
+	return compare_strings(self, (String *)some_object);
+err:
+	return Dee_COMPARE_ERR;
+}
+
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 string_eq(String *self, DeeObject *some_object) {
@@ -1238,14 +1255,16 @@ PRIVATE struct type_nii tpconst stringiter_nii = {
 
 
 PRIVATE struct type_cmp stringiter_cmp = {
-	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ge,
-	/* .tp_nii  = */ &stringiter_nii
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&stringiter_ge,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_nii        = */ &stringiter_nii
 };
 
 INTERN DeeTypeObject StringIterator_Type = {
@@ -1435,13 +1454,15 @@ err:
 
 
 PRIVATE struct type_cmp string_cmp = {
-	/* .tp_hash = */ &DeeString_Hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
+	/* .tp_hash       = */ &DeeString_Hash,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&string_ge,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&string_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL

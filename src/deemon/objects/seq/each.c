@@ -2574,14 +2574,16 @@ PRIVATE struct type_nii tpconst sewi_nii = {
 };
 
 PRIVATE struct type_cmp sewi_cmp = {
-	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ge,
-	/* .tp_nii  = */ &sewi_nii
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&sewi_ge,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_nii        = */ &sewi_nii
 };
 
 PRIVATE struct type_member tpconst seoi_members[] = {

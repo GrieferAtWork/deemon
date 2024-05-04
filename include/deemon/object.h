@@ -1898,13 +1898,6 @@ struct Dee_type_cmp {
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_gr)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ge)(DeeObject *self, DeeObject *some_object);
 
-	/* Optional iterator-extensions for providing optimized (but
-	 * less generic) variants for various iterator operations.
-	 * NOTE: The compare sub-structure was chosen for this, as native
-	 *       iterators usually implement compare operators to allow
-	 *       them to be ordered with other operators. */
-	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
-
 	/* Same as "tp_compare", but only needs to support equal/not-equal compare:
 	 * @return: Dee_COMPARE_ERR: An error occurred.
 	 * @return: -1: `lhs != rhs'
@@ -1919,6 +1912,13 @@ struct Dee_type_cmp {
 	 * @return: 0:  `lhs == rhs'
 	 * @return: 1:  `lhs > rhs' */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
+
+	/* Optional iterator-extensions for providing optimized (but
+	 * less generic) variants for various iterator operations.
+	 * NOTE: The compare sub-structure was chosen for this, as native
+	 *       iterators usually implement compare operators to allow
+	 *       them to be ordered with other operators. */
+	struct Dee_type_nii Dee_tpconst *tp_nii; /* TODO: Deprecated */
 };
 
 typedef WUNUSED_T NONNULL_T((2)) Dee_ssize_t (DCALL *Dee_foreach_t)(void *arg, DeeObject *elem);
@@ -4452,13 +4452,11 @@ DFUNDEF WUNUSED NONNULL((1)) int (DCALL DeeObject_InplaceXorUInt32)(DREF DeeObje
 
 /* Comparison operator invocation.
  * NOTE: `DeeObject_CompareEq()' and `DeeObject_CompareNe()' will automatically attempt
- *        to catch the following errors, returning `true' / `false' indicative of
- *        equal/non-equal objects (then computed by comparing pointers) when possible:
- *          - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
- *          - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
- *          - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
- *        This error handling is only performed during invocation of the `__eq__' / `__ne__'
- *        operators, but not when the returned result is then interpreted as a boolean. */
+ *       to catch the following errors, which are interpreted to indicate non-equality:
+ *         - `Error.RuntimeError.NotImplemented' (`DeeError_NotImplemented'; Should indicate compare-not-implemented)
+ *         - `Error.TypeError'                   (`DeeError_TypeError';      Should indicate unsupported type combination)
+ *         - `Error.ValueError'                  (`DeeError_ValueError';     Should indicate unsupported instance combination)
+ *       This error handling is only performed during invocation of the `operator ==' / `operator !='. */
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareEqObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareNeObject)(DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *(DCALL DeeObject_CompareLoObject)(DeeObject *self, DeeObject *some_object);
@@ -4479,7 +4477,7 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
-/* @return: == -1: `lhs != rhs'
+/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */

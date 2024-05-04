@@ -46,20 +46,20 @@ DECL_BEGIN
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR    SEQ_COMPAREEQ_FOREACH_RESULT_ERROR
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS     SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER  SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL
-#define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(compare_result) \
-	((compare_result) == 0 ? SEQ_COMPAREEQ_FOREACH_RESULT_ERROR : SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL)
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE_NE(compare_result) \
 	(SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL)
+#define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(compare_result) \
+	((compare_result) == 0 ? SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL : SEQ_COMPAREEQ_FOREACH_RESULT_NOTEQUAL)
 #else /* DEFINE_compareeq */
 #define LOCAL_DeeObject_Compare                   DeeObject_Compare
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_EQUAL    SEQ_COMPARE_FOREACH_RESULT_EQUAL
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_ERROR    SEQ_COMPARE_FOREACH_RESULT_ERROR
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS     SEQ_COMPARE_FOREACH_RESULT_LESS
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER  SEQ_COMPARE_FOREACH_RESULT_GREATER
-#define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(compare_result) \
-	((compare_result) < 0 ? SEQ_COMPARE_FOREACH_RESULT_LESS : (compare_result) > 0 ? SEQ_COMPARE_FOREACH_RESULT_GREATER : SEQ_COMPARE_FOREACH_RESULT_EQUAL)
 #define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE_NE(compare_result) \
 	((compare_result) < 0 ? SEQ_COMPARE_FOREACH_RESULT_LESS : SEQ_COMPARE_FOREACH_RESULT_GREATER)
+#define LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE(compare_result) \
+	((compare_result) == 0 ? SEQ_COMPAREEQ_FOREACH_RESULT_EQUAL : LOCAL_SEQ_COMPARE_FOREACH_RESULT_FROMCOMPARE_NE(compare_result))
 #endif /* !DEFINE_compareeq */
 
 
@@ -222,7 +222,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_sizeob_and_getitem__cb)(void *arg, DeeObjec
 	DREF DeeObject *rhs_elem;
 	struct seq_compare_foreach__sizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__sizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareGe(data->scf_sg_oindex, data->scf_sg_osize);
+	temp = DeeObject_CompareLo(data->scf_sg_oindex, data->scf_sg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -255,7 +255,7 @@ LOCAL_seq_compare__(lhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObjec
 	DREF DeeObject *lhs_elem;
 	struct seq_compare_foreach__sizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__sizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareGe(data->scf_sg_oindex, data->scf_sg_osize);
+	temp = DeeObject_CompareLo(data->scf_sg_oindex, data->scf_sg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -296,7 +296,7 @@ LOCAL_seq_compare__(tlhs_sizeob_and_getitem__rhs_foreach__cb)(void *arg, DeeObje
 	DREF DeeObject *lhs_elem;
 	struct seq_compare_foreach__tsizeob_and_getitem__data *data;
 	data = (struct seq_compare_foreach__tsizeob_and_getitem__data *)arg;
-	temp = DeeObject_CompareGe(data->scf_tsg_oindex, data->scf_tsg_osize);
+	temp = DeeObject_CompareLo(data->scf_tsg_oindex, data->scf_tsg_osize);
 	if (temp <= 0) {
 		if unlikely(temp < 0)
 			goto err;
@@ -341,7 +341,7 @@ LOCAL_seq_compare__(lhs_foreach__rhs_iter__cb)(void *arg, DeeObject *lhs_elem) {
 	if (!ITER_ISOK(rhs_elem)) {
 		if unlikely(!rhs_elem)
 			goto err;
-		return SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
+		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_GREATER; /* lhs > rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 	Dee_Decref(rhs_elem);
@@ -360,7 +360,7 @@ LOCAL_seq_compare__(lhs_iter__rhs_foreach__cb)(void *arg, DeeObject *rhs_elem) {
 	if (!ITER_ISOK(lhs_elem)) {
 		if unlikely(!lhs_elem)
 			goto err;
-		return SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
+		return LOCAL_SEQ_COMPARE_FOREACH_RESULT_LESS; /* lhs < rhs */
 	}
 	temp = LOCAL_DeeObject_Compare(lhs_elem, rhs_elem);
 	Dee_Decref(lhs_elem);

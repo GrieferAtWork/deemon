@@ -773,7 +773,7 @@ blv_foreach_pair(DeeBlackListKwdsObject *self, Dee_foreach_pair_t proc, void *ar
 		DeeObject *value;
 		struct kwds_entry *entry = &kwds->kw_map[i];
 		if (!entry->ke_name)
-			break;
+			continue;
 		if (DeeBlackListKwds_IsBlackListed(self, (DeeObject *)entry->ke_name))
 			continue;
 		DeeBlackListKwds_LockRead(self);
@@ -1572,7 +1572,7 @@ blkw_visit(DeeBlackListKwObject *__restrict self, dvisit_t proc, void *arg) {
 }
 
 PRIVATE WUNUSED NONNULL((1)) Dee_ssize_t DCALL
-blkw_bool_foreach(void *arg, DeeObject *key, DeeObject *value) {
+blkw_bool_foreach_cb(void *arg, DeeObject *key, DeeObject *value) {
 	DeeBlackListKwObject *self = (DeeBlackListKwObject *)arg;
 	(void)value;
 	if (!DeeString_Check(key) ||
@@ -1585,7 +1585,7 @@ blkw_bool_foreach(void *arg, DeeObject *key, DeeObject *value) {
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
 blkw_bool(DeeBlackListKwObject *__restrict self) {
-	int status = (int)DeeObject_ForeachPair(self->blkw_kw, &blkw_bool_foreach, self);
+	int status = (int)DeeObject_ForeachPair(self->blkw_kw, &blkw_bool_foreach_cb, self);
 	ASSERT(status == 0 || status == -1 || status == -2);
 	if (status == -2)
 		status = 1;

@@ -45,11 +45,3 @@ assert d.decls[0].ret.Etyperef.typ === string;
 assert d.isaccepted(1234) == true;
 assert d.isaccepted(1.0) == true;
 assert d.isaccepted("foo") == false;
-
-
-
-
-
-
-
-

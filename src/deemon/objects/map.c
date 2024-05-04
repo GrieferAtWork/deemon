@@ -1378,6 +1378,15 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 #define DeeType_RequireHasItemIndex(tp_self)            (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_index) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireHasItemStringHash(tp_self)       (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_string_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireHasItemStringLenHash(tp_self)    (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_string_len_hash) || DeeType_InheritGetItem(tp_self))
+#define DeeType_RequireHash(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_hash) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireCompareEq(tp_self)               (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_compare_eq) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireEq(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_eq) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireNe(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ne) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireLo(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_lo) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireLe(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_le) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireGr(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_gr) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireGe(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ge) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireBool(tp_self)                    (((tp_self)->tp_cast.tp_bool) || DeeType_InheritBool(tp_self))
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_map_iter(DeeObject *__restrict self);
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL generic_map_sizeob(DeeObject *__restrict self);
@@ -1874,6 +1883,188 @@ PRIVATE struct type_seq map_seq = {
 	/* .tp_bounditem_string_len_hash  = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_bounditem_string_len_hash,
 	/* .tp_hasitem_string_len_hash    = */ (int (DCALL *)(DeeObject *, char const *, size_t, Dee_hash_t))&generic_map_hasitem_string_len_hash,
 };
+
+INTERN WUNUSED NONNULL((1)) Dee_hash_t DCALL
+generic_map_hash(DeeObject *__restrict self) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireHash(tp_self)) {
+		if (tp_self->tp_cmp->tp_hash == &generic_map_hash)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_hash)(self);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultHashWithForeachPairDefault(self);
+	}
+	return DeeObject_HashGeneric(self);
+handle_empty:
+	return DEE_HASHOF_EMPTY_SEQUENCE;
+}
+
+INTDEF WUNUSED NONNULL((1)) int DCALL
+empty_seq_compare(DeeObject *some_object);
+#define empty_map_compare empty_seq_compare
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_map_compare_eq(DeeObject *self, DeeObject *some_object) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireCompareEq(tp_self)) {
+		if (tp_self->tp_cmp->tp_compare_eq == &generic_map_compare_eq)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_compare_eq)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultCompareEqWithForeachPairDefault(self, some_object);
+	}
+	return err_unimplemented_operator(tp_self, OPERATOR_EQ);
+handle_empty:
+	return empty_map_compare(some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_eq(DeeObject *self, DeeObject *some_object) {
+	int result;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireEq(tp_self)) {
+		if (tp_self->tp_cmp->tp_eq == &generic_map_eq)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_eq)(self, some_object);
+	}
+	result = generic_map_compare_eq(self, some_object);
+process_result:
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result == 0);
+handle_empty:
+	result = empty_map_compare(some_object);
+	goto process_result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_ne(DeeObject *self, DeeObject *some_object) {
+	int result;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireNe(tp_self)) {
+		if (tp_self->tp_cmp->tp_ne == &generic_map_ne)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_ne)(self, some_object);
+	}
+	result = generic_map_compare_eq(self, some_object);
+process_result:
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result != 0);
+handle_empty:
+	result = empty_map_compare(some_object);
+	goto process_result;
+err:
+	return NULL;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_lo(DeeObject *self, DeeObject *some_object) {
+	int result;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireLo(tp_self)) {
+		if (tp_self->tp_cmp->tp_lo == &generic_map_lo)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_lo)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultLoWithForeachPairDefault(self, some_object);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_LO);
+err:
+	return NULL;
+handle_empty:
+	result = empty_map_compare(some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result == 0);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_le(DeeObject *self, DeeObject *some_object) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireLe(tp_self)) {
+		if (tp_self->tp_cmp->tp_le == &generic_map_le)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_le)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultLeWithForeachPairDefault(self, some_object);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_LE);
+	return NULL;
+handle_empty:
+	return_true;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_gr(DeeObject *self, DeeObject *some_object) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGr(tp_self)) {
+		if (tp_self->tp_cmp->tp_gr == &generic_map_gr)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_gr)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultGrWithForeachPairDefault(self, some_object);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_GR);
+	return NULL;
+handle_empty:
+	return_false;
+}
+
+INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+generic_map_ge(DeeObject *self, DeeObject *some_object) {
+	int result;
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireGe(tp_self)) {
+		if (tp_self->tp_cmp->tp_ge == &generic_map_ge)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_ge)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultGeWithForeachPairDefault(self, some_object);
+	}
+	err_unimplemented_operator(tp_self, OPERATOR_GE);
+err:
+	return NULL;
+handle_empty:
+	result = empty_map_compare(some_object);
+	if unlikely(result == Dee_COMPARE_ERR)
+		goto err;
+	return_bool(result != 0);
+}
+
+
+
+INTERN struct type_cmp generic_map_cmp = {
+	/* .tp_hash       = */ &generic_map_hash,
+	/* .tp_eq         = */ &generic_map_eq,
+	/* .tp_ne         = */ &generic_map_ne,
+	/* .tp_lo         = */ &generic_map_lo,
+	/* .tp_le         = */ &generic_map_le,
+	/* .tp_gr         = */ &generic_map_gr,
+	/* .tp_ge         = */ &generic_map_ge,
+	/* .tp_compare_eq = */ &generic_map_compare_eq,
+};
+
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_iterself(DeeObject *__restrict self) {
@@ -2084,29 +2275,6 @@ PRIVATE struct type_seq map_seq = {
 	/* .tp_setrange = */ NULL,
 	/* .tp_nsi      = */ &map_nsi
 };
-#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-
-
-PRIVATE struct type_math map_math = {
-	/* .tp_int32  = */ NULL,
-	/* .tp_int64  = */ NULL,
-	/* .tp_double = */ NULL,
-	/* .tp_int    = */ NULL,
-	/* .tp_inv    = */ NULL,
-	/* .tp_pos    = */ NULL,
-	/* .tp_neg    = */ NULL,
-	/* .tp_add    = */ NULL, /* TODO: &DeeMap_Union */
-	/* .tp_sub    = */ NULL, /* TODO: &DeeMap_Difference */
-	/* .tp_mul    = */ NULL,
-	/* .tp_div    = */ NULL,
-	/* .tp_mod    = */ NULL,
-	/* .tp_shl    = */ NULL,
-	/* .tp_shr    = */ NULL,
-	/* .tp_and    = */ NULL, /* TODO: &DeeMap_Intersection */
-	/* .tp_or     = */ NULL, /* TODO: &DeeMap_Union */
-	/* .tp_xor    = */ NULL, /* TODO: &DeeMap_SymmetricDifference */
-	/* .tp_pow    = */ NULL
-};
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 map_eq_impl(DeeObject *__restrict self,
@@ -2160,7 +2328,7 @@ err:
 
 
 PRIVATE WUNUSED NONNULL((1)) dhash_t DCALL
-map_hash(DeeObject *__restrict self) {
+generic_map_hash(DeeObject *__restrict self) {
 	dhash_t result = DEE_HASHOF_EMPTY_SEQUENCE;
 	DREF DeeObject *iter, *elem;
 	iter = DeeObject_Iter(self);
@@ -2183,7 +2351,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-map_eq(DeeObject *self, DeeObject *other) {
+generic_map_eq(DeeObject *self, DeeObject *other) {
 	int error = map_eq_impl(self, other);
 	if unlikely(error < 0)
 		goto err;
@@ -2193,7 +2361,7 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-map_ne(DeeObject *self, DeeObject *other) {
+generic_map_ne(DeeObject *self, DeeObject *other) {
 	int error = map_eq_impl(self, other);
 	if unlikely(error < 0)
 		goto err;
@@ -2202,15 +2370,41 @@ err:
 	return NULL;
 }
 
-PRIVATE struct type_cmp map_cmp = {
-	/* .tp_hash = */ &map_hash,
-	/* .tp_eq   = */ &map_eq,
-	/* .tp_ne   = */ &map_ne,
+PRIVATE struct type_cmp generic_map_cmp = {
+	/* .tp_hash = */ &generic_map_hash,
+	/* .tp_eq   = */ &generic_map_eq,
+	/* .tp_ne   = */ &generic_map_ne,
 	/* .tp_lo   = */ NULL, /* TODO: Sub-set */
 	/* .tp_le   = */ NULL, /* TODO: Sub-set, or same */
 	/* .tp_gr   = */ NULL, /* TODO: Super-set */
 	/* .tp_ge   = */ NULL, /* TODO: Super-set, or same */
 };
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
+
+
+
+PRIVATE struct type_math map_math = {
+	/* .tp_int32  = */ NULL,
+	/* .tp_int64  = */ NULL,
+	/* .tp_double = */ NULL,
+	/* .tp_int    = */ NULL,
+	/* .tp_inv    = */ NULL,
+	/* .tp_pos    = */ NULL,
+	/* .tp_neg    = */ NULL,
+	/* .tp_add    = */ NULL, /* TODO: &DeeMap_Union */
+	/* .tp_sub    = */ NULL, /* TODO: &DeeMap_Difference */
+	/* .tp_mul    = */ NULL,
+	/* .tp_div    = */ NULL,
+	/* .tp_mod    = */ NULL,
+	/* .tp_shl    = */ NULL,
+	/* .tp_shr    = */ NULL,
+	/* .tp_and    = */ NULL, /* TODO: &DeeMap_Intersection */
+	/* .tp_or     = */ NULL, /* TODO: &DeeMap_Union */
+	/* .tp_xor    = */ NULL, /* TODO: &DeeMap_SymmetricDifference */
+	/* .tp_pow    = */ NULL
+};
+
+
 
 
 PRIVATE WUNUSED NONNULL((1, 2)) dssize_t DCALL
@@ -2672,7 +2866,11 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	                         "Returns an iterator for enumerating key-value pairs as 2-elements sequences"),
 	/* .tp_flags    = */ TP_FNORMAL | TP_FABSTRACT | TP_FNAMEOBJECT, /* Generic base class type. */
 	/* .tp_weakrefs = */ 0,
+#ifdef CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS
+	/* .tp_features = */ TF_NONE | (Dee_SEQCLASS_MAP << Dee_TF_SEQCLASS_SHFT),
+#else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_features = */ TF_NONE,
+#endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 	/* .tp_base     = */ &DeeSeq_Type,
 	/* .tp_init = */ {
 		{
@@ -2699,7 +2897,7 @@ PUBLIC DeeTypeObject DeeMapping_Type = {
 	/* .tp_visit         = */ NULL,
 	/* .tp_gc            = */ NULL,
 	/* .tp_math          = */ &map_math,
-	/* .tp_cmp           = */ &map_cmp,
+	/* .tp_cmp           = */ &generic_map_cmp,
 	/* .tp_seq           = */ &map_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

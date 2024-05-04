@@ -997,14 +997,16 @@ PRIVATE struct type_nii tpconst rbtreeiter_nii = {
 };
 
 PRIVATE struct type_cmp rbtreeiter_cmp = {
-	/* .tp_hash = */ NULL,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_ge,
-	/* .tp_nii  = */ &rbtreeiter_nii
+	/* .tp_hash       = */ NULL,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&rbtreeiter_ge,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ NULL,
+	/* .tp_nii        = */ &rbtreeiter_nii
 };
 
 PRIVATE struct type_method tpconst rbtreeiter_methods[] = {
@@ -3458,7 +3460,59 @@ err:
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
-rbtree_foreach(RBTree *self, Dee_foreach_pair_t proc, void *arg) {
+rbtree_foreach(RBTree *self, Dee_foreach_t proc, void *arg) {
+	DREF DeeTupleObject *tuple;
+	DREF DeeObject *start, *end, *value;
+	dssize_t temp, result = 0;
+	struct rbtree_node *node;
+	uintptr_t version;
+	RBTree_LockRead(self);
+	node = self->rbt_root;
+	if unlikely(!node)
+		goto unlock_and_stop;
+	while (node->rbtn_lhs)
+		node = node->rbtn_lhs;
+	version = self->rbt_version;
+	do {
+		start = rbtree_node_get_minkey(node);
+		end   = rbtree_node_get_maxkey(node);
+		value = rbtree_node_get_value(node);
+		Dee_Incref(start);
+		Dee_Incref(end);
+		Dee_Incref(value);
+		RBTree_LockEndRead(self);
+		tuple = DeeTuple_NewUninitialized(3);
+		if unlikely(!tuple)
+			goto err_start_end_value;
+		DeeTuple_SET(tuple, 0, start); /* Inherit reference */
+		DeeTuple_SET(tuple, 1, end);   /* Inherit reference */
+		DeeTuple_SET(tuple, 2, value); /* Inherit reference */
+		temp = (*proc)(arg, (DeeObject *)tuple);
+		Dee_Decref(tuple);
+		if unlikely(temp < 0)
+			goto err_temp;
+		result += temp;
+		RBTree_LockRead(self);
+		if unlikely(version != self->rbt_version) {
+			RBTree_LockEndRead(self);
+			goto stop_after_changed;
+		}
+	} while ((node = rbtree_abi_nextnode(node)) != NULL);
+unlock_and_stop:
+	RBTree_LockEndRead(self);
+stop_after_changed:
+	return result;
+err_temp:
+	return temp;
+err_start_end_value:
+	Dee_Decref_unlikely(value);
+	Dee_Decref_unlikely(end);
+	Dee_Decref_unlikely(start);
+	return -1;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+rbtree_foreach_pair(RBTree *self, Dee_foreach_pair_t proc, void *arg) {
 	DREF DeeObject *range, *start, *end, *value;
 	dssize_t temp, result = 0;
 	struct rbtree_node *node;
@@ -3535,8 +3589,8 @@ PRIVATE struct type_seq rbtree_seq = {
 	/* .tp_delrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *))&rbtree_delrange,
 	/* .tp_setrange     = */ (int (DCALL *)(DeeObject *, DeeObject *, DeeObject *, DeeObject *))&rbtree_setrange,
 	/* .tp_nsi          = */ &rbtree_nsi,
-	/* .tp_foreach      = */ NULL,
-	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach,
+	/* .tp_foreach      = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_t, void *))&rbtree_foreach,
+	/* .tp_foreach_pair = */ (Dee_ssize_t (DCALL *)(DeeObject *__restrict, Dee_foreach_pair_t, void *))&rbtree_foreach_pair,
 	/* TODO: New operators */
 };
 
@@ -3753,13 +3807,7 @@ INTERN DeeTypeObject RBTree_Type = {
 	/* .tp_visit         = */ (void (DCALL *)(DeeObject *__restrict, dvisit_t, void *))&rbtree_visit,
 	/* .tp_gc            = */ &rbtree_gc,
 	/* .tp_math          = */ NULL,
-	/* .tp_cmp           = */ NULL, /* NOTE: the dex initializer fills this in with `DeeSeq_Type.tp_cmp',
-	                                 *       because the map compare operator (which is designed with the
-	                                 *       fact in mind that Mapping item orders are undefined, and that
-	                                 *       all items are 2-element tuples, neither of which applies to
-	                                 *       RBTree).
-	                                 * But, since RBTrees are strongly ordered, we can just override the
-	                                 * Mapping compare operators yet again with those from Sequence. */
+	/* .tp_cmp           = */ NULL,
 	/* .tp_seq           = */ &rbtree_seq,
 	/* .tp_iter_next     = */ NULL,
 	/* .tp_attr          = */ NULL,

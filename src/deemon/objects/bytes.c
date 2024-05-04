@@ -882,6 +882,21 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(DeeStringObject *lhs,
                      DeeBytesObject *rhs);
 
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bytes_compare_eq(Bytes *self, DeeObject *other) {
+	byte_t *other_data;
+	size_t other_size;
+	if (DeeString_Check(other))
+		return !string_eq_bytes((DeeStringObject *)other, self);
+	if (DeeObject_AssertTypeExact(other, &DeeBytes_Type))
+		goto err;
+	other_data = DeeBytes_DATA(other);
+	other_size = DeeBytes_SIZE(other);
+	return !!bcmp(DeeBytes_DATA(self), other_data, other_size);
+err:
+	return Dee_COMPARE_ERR;
+}
+
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 bytes_eq(Bytes *self, DeeObject *other) {
 	byte_t *other_data;
@@ -956,7 +971,7 @@ bytes_compare(Bytes *lhs, DeeObject *rhs) {
 	               other_data,
 	               other_size);
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
 
@@ -965,7 +980,7 @@ err:
 	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Bytes *self, DeeObject *other) {                \
 		int diff = bytes_compare(self, other);           \
-		if unlikely(diff == -2)                          \
+		if unlikely(diff == Dee_COMPARE_ERR)             \
 			goto err;                                    \
 		return_bool(diff op 0);                          \
 	err:                                                 \
@@ -973,7 +988,7 @@ err:
 	}
 #else /* __OPTIMIZE_SIZE__ */
 #define DEFINE_BYTES_COMPARE(name, op)                                              \
-	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                            \
+	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
 	name(Bytes *self, DeeObject *other) {                                           \
 		byte_t *other_data;                                                         \
 		size_t other_size;                                                          \
@@ -1122,13 +1137,15 @@ PRIVATE struct type_math bytes_math = {
 };
 
 PRIVATE struct type_cmp bytes_cmp = {
-	/* .tp_hash = */ (dhash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
-	/* .tp_eq   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_eq,
-	/* .tp_ne   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ne,
-	/* .tp_lo   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_lo,
-	/* .tp_le   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_le,
-	/* .tp_gr   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_gr,
-	/* .tp_ge   = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ge
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&bytes_hash,
+	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_eq,
+	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ne,
+	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_lo,
+	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_le,
+	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_gr,
+	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bytes_ge,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&bytes_compare
 };
 
 
