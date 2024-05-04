@@ -31,6 +31,7 @@
 #include <deemon/object.h>
 #include <deemon/seq.h>
 #include <deemon/string.h>
+#include <deemon/stringutils.h>
 #include <deemon/super.h>
 #include <deemon/system-features.h> /* memcpy(), bzero(), ... */
 #include <deemon/thread.h>
@@ -882,54 +883,103 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL
 compare_string_bytes(DeeStringObject *lhs,
                      DeeBytesObject *rhs);
 
+
+struct bytes_compare_seq_data {
+	byte_t               *bcsd_data;  /* [1..bcsd_size] The LHS byte-block */
+	size_t                bcsd_size;  /* # of bytes in `bcsd_data' */
+	size_t                bcsd_index; /* [<= bcsd_size] Index to next byte */
+};
+
+
+/* @return: 0 : lhs == rhs (for now...)
+ * @return: -1: Error
+ * @return: -2: lhs < rhs
+ * @return: -3: lhs > rhs */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+bytes_compare_seq_cb(void *arg, DeeObject *rhs_elem) {
+	byte_t lhs_byte, rhs_byte;
+	struct bytes_compare_seq_data *data;
+	data = (struct bytes_compare_seq_data *)arg;
+	if (data->bcsd_index >= data->bcsd_size)
+		return -2; /* lhs < rhs */
+	if (DeeString_Check(rhs_elem)) {
+		uint32_t rhs_word;
+		if (DeeString_WLEN(rhs_elem) != 1)
+			goto err_wrong_length;
+		rhs_word = DeeString_GetChar(rhs_elem, 0);
+		if unlikely(rhs_word > 0xff)
+			return -2;
+		rhs_byte = (byte_t)rhs_word;
+	} else if (DeeBytes_Check(rhs_elem)) {
+		if (DeeBytes_SIZE(rhs_elem) != 1)
+			goto err_wrong_length;
+		rhs_byte = DeeBytes_DATA(rhs_elem)[0];
+	} else {
+		uint32_t rhs_word;
+		if (DeeObject_AsUInt32(rhs_elem, &rhs_word))
+			goto err;
+		if unlikely(rhs_word > 0xff)
+			return -2;
+		rhs_byte = (byte_t)rhs_word;
+	}
+	lhs_byte = data->bcsd_data[data->bcsd_index++];
+	if (lhs_byte == rhs_byte)
+		return 0;
+	if (lhs_byte < rhs_byte)
+		return -2; /* lhs < rhs */
+	return -3;     /* lhs > rhs */
+err_wrong_length:
+	err_expected_single_character_string(rhs_elem);
+err:
+	return -1;
+}
+
+/* Also accept "rhs" complaying with `{(string | Bytes | int)...}'
+ * - string: Must be a single latin-1 character
+ * - Bytes:  Must be a single byte
+ * - int:    Must be in the range [0,256)
+ * @return: -1: lhs < rhs
+ * @return:  0: Equal
+ * @return:  1: lhs > rhs
+ * @return: Dee_COMPARE_ERR: Error */
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-bytes_compare_eq(Bytes *self, DeeObject *other) {
-	byte_t *other_data;
-	size_t other_size;
-	if (DeeString_Check(other))
-		return !string_eq_bytes((DeeStringObject *)other, self);
-	if (DeeObject_AssertTypeExact(other, &DeeBytes_Type))
+bytes_compare_seq(Bytes *lhs, DeeObject *rhs) {
+	Dee_ssize_t foreach_status;
+	struct bytes_compare_seq_data data;
+	data.bcsd_data  = DeeBytes_DATA(lhs);
+	data.bcsd_size  = DeeBytes_SIZE(lhs);
+	data.bcsd_index = 0;
+	foreach_status = DeeObject_Foreach(rhs, &bytes_compare_seq_cb, &data);
+	ASSERT(foreach_status == 0 || foreach_status == -1 ||
+	       foreach_status == -2 || foreach_status == -3);
+	if unlikely(foreach_status == -1)
 		goto err;
-	other_data = DeeBytes_DATA(other);
-	other_size = DeeBytes_SIZE(other);
-	return !!bcmp(DeeBytes_DATA(self), other_data, other_size);
+	if unlikely(foreach_status == -2)
+		return -1; /* lhs < rhs */
+	if unlikely(foreach_status == -3)
+		return 1; /* lhs > rhs */
+	if (data.bcsd_index < data.bcsd_size)
+		return 1; /* lhs > rhs */
+	return 0;
 err:
 	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_eq(Bytes *self, DeeObject *other) {
-	byte_t *other_data;
-	size_t other_size;
-	if (DeeString_Check(other))
-		return_bool(string_eq_bytes((DeeStringObject *)other, self));
-	if (DeeObject_AssertTypeExact(other, &DeeBytes_Type))
-		goto err;
-	other_data = DeeBytes_DATA(other);
-	other_size = DeeBytes_SIZE(other);
-	if (DeeBytes_SIZE(self) != other_size)
-		return_false;
-	return_bool(bcmp(DeeBytes_DATA(self), other_data, other_size) == 0);
-err:
-	return NULL;
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+bytes_compare_eq(Bytes *lhs, DeeObject *rhs) {
+	if (DeeString_Check(rhs))
+		return !string_eq_bytes((DeeStringObject *)rhs, lhs);
+	if (DeeBytes_Check(rhs)) {
+		byte_t *rhs_data = DeeBytes_DATA(rhs);
+		size_t rhs_size  = DeeBytes_SIZE(rhs);
+		if (DeeBytes_SIZE(lhs) != rhs_size)
+			return 1;
+		return !!bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size);
+	}
+	return bytes_compare_seq(lhs, rhs);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-bytes_ne(Bytes *self, DeeObject *other) {
-	byte_t *other_data;
-	size_t other_size;
-	if (DeeString_Check(other))
-		return_bool(!string_eq_bytes((DeeStringObject *)other, self));
-	if (DeeObject_AssertTypeExact(other, &DeeBytes_Type))
-		goto err;
-	other_data = DeeBytes_DATA(other);
-	other_size = DeeBytes_SIZE(other);
-	if (DeeBytes_SIZE(self) != other_size)
-		return_true;
-	return_bool(bcmp(DeeBytes_DATA(self), other_data, other_size) != 0);
-err:
-	return NULL;
-}
 
 LOCAL ATTR_CONST int DCALL
 fix_memcmp_return(int value) {
@@ -956,26 +1006,62 @@ dee_memxcmp(void const *a, size_t asiz,
 	return 1;
 }
 
-INTERN WUNUSED NONNULL((1, 2)) int DCALL
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 bytes_compare(Bytes *lhs, DeeObject *rhs) {
-	byte_t *other_data;
-	size_t other_size;
 	if (DeeString_Check(rhs))
 		return -compare_string_bytes((DeeStringObject *)rhs, lhs);
-	if (DeeObject_AssertTypeExact(rhs, &DeeBytes_Type))
-		goto err;
-	other_data = DeeBytes_DATA(rhs);
-	other_size = DeeBytes_SIZE(rhs);
-	return memxcmp(DeeBytes_DATA(lhs),
-	               DeeBytes_SIZE(lhs),
-	               other_data,
-	               other_size);
-err:
-	return Dee_COMPARE_ERR;
+	if (DeeBytes_Check(rhs)) {
+		return memxcmp(DeeBytes_DATA(lhs), DeeBytes_SIZE(lhs),
+		               DeeBytes_DATA(rhs), DeeBytes_SIZE(rhs));
+	}
+	return bytes_compare_seq(lhs, rhs);
 }
 
 
-#ifdef __OPTIMIZE_SIZE__
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_eq(Bytes *lhs, DeeObject *rhs) {
+	if (DeeBytes_Check(rhs)) {
+		byte_t *rhs_data = DeeBytes_DATA(rhs);
+		size_t rhs_size  = DeeBytes_SIZE(rhs);
+		if (DeeBytes_SIZE(lhs) != rhs_size)
+			return_false;
+		return_bool(bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size) == 0);
+	}
+	if (DeeString_Check(rhs))
+		return_bool(string_eq_bytes((DeeStringObject *)rhs, lhs));
+	{
+		int temp = bytes_compare_seq(lhs, rhs);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		return_bool(temp == 0);
+	}
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+bytes_ne(Bytes *lhs, DeeObject *rhs) {
+	if (DeeBytes_Check(rhs)) {
+		byte_t *rhs_data = DeeBytes_DATA(rhs);
+		size_t rhs_size  = DeeBytes_SIZE(rhs);
+		if (DeeBytes_SIZE(lhs) != rhs_size)
+			return_true;
+		return_bool(bcmp(DeeBytes_DATA(lhs), rhs_data, rhs_size) != 0);
+	}
+	if (DeeString_Check(rhs))
+		return_bool(!string_eq_bytes((DeeStringObject *)rhs, lhs));
+	{
+		int temp = bytes_compare_seq(lhs, rhs);
+		if unlikely(temp == Dee_COMPARE_ERR)
+			goto err;
+		return_bool(temp != 0);
+	}
+err:
+	return NULL;
+}
+
+
 #define DEFINE_BYTES_COMPARE(name, op)                   \
 	INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL \
 	name(Bytes *self, DeeObject *other) {                \
@@ -986,26 +1072,6 @@ err:
 	err:                                                 \
 		return NULL;                                     \
 	}
-#else /* __OPTIMIZE_SIZE__ */
-#define DEFINE_BYTES_COMPARE(name, op)                                              \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                           \
-	name(Bytes *self, DeeObject *other) {                                           \
-		byte_t *other_data;                                                         \
-		size_t other_size;                                                          \
-		if (DeeString_Check(other))                                                 \
-			return_bool(0 op compare_string_bytes((DeeStringObject *)other, self)); \
-		if (DeeObject_AssertTypeExact(other, &DeeBytes_Type))                       \
-			goto err;                                                               \
-		other_data = DeeBytes_DATA(other);                                          \
-		other_size = DeeBytes_SIZE(other);                                          \
-		return_bool(memxcmp(DeeBytes_DATA(self),                                    \
-		                    DeeBytes_SIZE(self),                                    \
-		                    other_data,                                             \
-		                    other_size) op 0);                                      \
-	err:                                                                            \
-		return NULL;                                                                \
-	}
-#endif /* !__OPTIMIZE_SIZE__ */
 DEFINE_BYTES_COMPARE(bytes_lo, <)
 DEFINE_BYTES_COMPARE(bytes_le, <=)
 DEFINE_BYTES_COMPARE(bytes_gr, >)
@@ -1959,12 +2025,12 @@ PUBLIC DeeTypeObject DeeBytes_Type = {
 	                         "Allows for iteration of the individual bytes as integers between $0 and $0xff\n"
 	                         "\n"
 
-	                         "<(other:?X2?.?Dstring)->\n"
-	                         "<=(other:?X2?.?Dstring)->\n"
-	                         "==(other:?X2?.?Dstring)->\n"
-	                         "!=(other:?X2?.?Dstring)->\n"
-	                         ">(other:?X2?.?Dstring)->\n"
-	                         ">=(other:?X2?.?Dstring)->\n"
+	                         "<(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
+	                         "<=(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
+	                         "==(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
+	                         "!=(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
+	                         ">(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
+	                         ">=(other:?X3?.?Dstring?S?X3?.?Dstring?Dint)->\n"
 	                         "#tValueError{The given @other is a string containing characters ${> 0xff}}"
 	                         "Perform a lexicographical comparison between @this and @other, and return the result\n"
 	                         "\n"

@@ -909,19 +909,164 @@ compare_strings(String *__restrict lhs,
 }
 
 
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-string_compare(String *lhs, DeeObject *rhs) {
-	int result;
-	if (DeeBytes_Check(rhs)) {
-		result = compare_string_bytes(lhs, (DeeBytesObject *)rhs);
+
+struct string_compare_seq_data {
+	size_t               *scsd_wstr;  /* [1..1] The LHS width-string */
+	size_t                scsd_index; /* Index to next character */
+	__UINTPTR_HALF_TYPE__ scsd_width; /* String switch (one of `Dee_STRING_WIDTH_*BYTE') */
+};
+
+/* @return: 0 : lhs == rhs (for now...)
+ * @return: -1: Error
+ * @return: -2: lhs < rhs
+ * @return: -3: lhs > rhs */
+PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
+string_compare_seq_cb(void *arg, DeeObject *rhs_elem) {
+	uint32_t lhs_ord, rhs_ord;
+	struct string_compare_seq_data *data;
+	data = (struct string_compare_seq_data *)arg;
+	if (data->scsd_index >= WSTR_LENGTH(data->scsd_wstr))
+		return -2; /* lhs < rhs */
+	if (DeeString_Check(rhs_elem)) {
+		if (DeeString_WLEN(rhs_elem) != 1)
+			goto err_wrong_length;
+		rhs_ord = DeeString_GetChar(rhs_elem, 0);
+	} else if (DeeBytes_Check(rhs_elem)) {
+		if (DeeBytes_SIZE(rhs_elem) != 1)
+			goto err_wrong_length;
+		rhs_ord = DeeBytes_DATA(rhs_elem)[0];
 	} else {
-		if (DeeObject_AssertTypeExact(rhs, &DeeString_Type))
-			goto err;
-		result = compare_strings(lhs, (String *)rhs);
+		DeeObject_TypeAssertFailed(rhs_elem, &DeeString_Type);
+		goto err;
 	}
-	return result;
+	SWITCH_SIZEOF_WIDTH(data->scsd_width) {
+	CASE_WIDTH_1BYTE:
+		lhs_ord = ((uint8_t const *)data->scsd_wstr)[data->scsd_index];
+		break;
+	CASE_WIDTH_2BYTE:
+		lhs_ord = ((uint16_t const *)data->scsd_wstr)[data->scsd_index];
+		break;
+	CASE_WIDTH_4BYTE:
+		lhs_ord = ((uint32_t const *)data->scsd_wstr)[data->scsd_index];
+		break;
+	}
+	++data->scsd_index;
+	if (lhs_ord == rhs_ord)
+		return 0;
+	if (lhs_ord < rhs_ord)
+		return -2; /* lhs < rhs */
+	return -3;     /* lhs > rhs */
+err_wrong_length:
+	err_expected_single_character_string(rhs_elem);
+err:
+	return -1;
+}
+
+
+/* Also accept "rhs" complaying with `{(string | Bytes)...}'
+ * - string: Must be a single character
+ * - Bytes:  Must be a single byte
+ * @return: -1: lhs < rhs
+ * @return:  0: Equal
+ * @return:  1: lhs > rhs
+ * @return: Dee_COMPARE_ERR: Error */
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare_seq(String *lhs, DeeObject *rhs) {
+	Dee_ssize_t foreach_status;
+	struct string_compare_seq_data data;
+	data.scsd_wstr  = DeeString_WSTR(lhs);
+	data.scsd_index = 0;
+	data.scsd_width = DeeString_WIDTH(lhs);
+	foreach_status = DeeObject_Foreach(rhs, &string_compare_seq_cb, &data);
+	ASSERT(foreach_status == 0 || foreach_status == -1 ||
+	       foreach_status == -2 || foreach_status == -3);
+	if unlikely(foreach_status == -1)
+		goto err;
+	if unlikely(foreach_status == -2)
+		return -1; /* lhs < rhs */
+	if unlikely(foreach_status == -3)
+		return 1; /* lhs > rhs */
+	if (data.scsd_index < WSTR_LENGTH(data.scsd_wstr))
+		return 1; /* lhs > rhs */
+	return 0;
 err:
 	return Dee_COMPARE_ERR;
+}
+
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare(String *lhs, DeeObject *rhs) {
+	if likely(DeeString_Check(rhs))
+		return compare_strings(lhs, (String *)rhs);
+	if (DeeBytes_Check(rhs))
+		return compare_string_bytes(lhs, (DeeBytesObject *)rhs);
+	return string_compare_seq(lhs, rhs);
+}
+
+INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
+string_eq_bytes(String *__restrict self,
+                DeeBytesObject *__restrict other);
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+string_compare_eq(String *self, DeeObject *some_object) {
+	/* Basic checks for same-object. */
+	if (self == (String *)some_object)
+		return 0;
+	if likely(DeeString_Check(some_object)) {
+		if (DeeString_Hash((DeeObject *)self) !=
+		    DeeString_Hash((DeeObject *)some_object))
+			return 1;
+		return compare_strings(self, (String *)some_object);
+	}
+	if (DeeBytes_Check(some_object))
+		return !string_eq_bytes(self, (DeeBytesObject *)some_object);
+	return string_compare_seq(self, some_object);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_eq(String *self, DeeObject *some_object) {
+	/* Basic checks for same-object. */
+	if (self == (String *)some_object)
+		return_true;
+	if likely(DeeString_Check(some_object)) {
+		if (DeeString_Hash((DeeObject *)self) !=
+		    DeeString_Hash((DeeObject *)some_object))
+			return_false;
+		return_bool(compare_strings(self, (String *)some_object) == 0);
+	}
+	if (DeeBytes_Check(some_object))
+		return_bool(string_eq_bytes(self, (DeeBytesObject *)some_object));
+	{
+		int temp = string_compare_seq(self, some_object);
+		if unlikely(temp < 0)
+			goto err;
+		return_bool(temp == 0);
+	}
+err:
+	return NULL;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
+string_ne(String *self, DeeObject *some_object) {
+	/* Basic checks for same-object. */
+	if (self == (String *)some_object)
+		return_false;
+	if likely(DeeString_Check(some_object)) {
+		if (DeeString_Hash((DeeObject *)self) !=
+		    DeeString_Hash((DeeObject *)some_object))
+			return_true;
+		return_bool(compare_strings(self, (String *)some_object) != 0);
+	}
+	if (DeeBytes_Check(some_object))
+		return_bool(!string_eq_bytes(self, (DeeBytesObject *)some_object));
+	{
+		int temp = string_compare_seq(self, some_object);
+		if unlikely(temp < 0)
+			goto err;
+		return_bool(temp != 0);
+	}
+err:
+	return NULL;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
@@ -960,63 +1105,6 @@ string_ge(String *self, DeeObject *some_object) {
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result >= 0);
-err:
-	return NULL;
-}
-
-INTDEF WUNUSED NONNULL((1, 2)) bool DCALL
-string_eq_bytes(String *__restrict self,
-                DeeBytesObject *__restrict other);
-
-PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-string_compare_eq(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return 0;
-	if (DeeBytes_Check(some_object))
-		return !string_eq_bytes(self, (DeeBytesObject *)some_object);
-	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-		goto err;
-	if (DeeString_Hash((DeeObject *)self) !=
-	    DeeString_Hash((DeeObject *)some_object))
-		return 1;
-	return compare_strings(self, (String *)some_object);
-err:
-	return Dee_COMPARE_ERR;
-}
-
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_eq(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return_true;
-	if (DeeBytes_Check(some_object))
-		return_bool(string_eq_bytes(self, (DeeBytesObject *)some_object));
-	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-		goto err;
-	if (DeeString_Hash((DeeObject *)self) !=
-	    DeeString_Hash((DeeObject *)some_object))
-		return_false;
-	return_bool(compare_strings(self, (String *)some_object) == 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-string_ne(String *self, DeeObject *some_object) {
-	/* Basic checks for same-object. */
-	if (self == (String *)some_object)
-		return_false;
-	if (DeeBytes_Check(some_object))
-		return_bool(!string_eq_bytes(self, (DeeBytesObject *)some_object));
-	if (DeeObject_AssertTypeExact(some_object, &DeeString_Type))
-		goto err;
-	if (DeeString_Hash((DeeObject *)self) !=
-	    DeeString_Hash((DeeObject *)some_object))
-		return_true;
-	/* XXX: This could be optimized! */
-	return_bool(compare_strings(self, (String *)some_object) != 0);
 err:
 	return NULL;
 }
@@ -2049,12 +2137,12 @@ PUBLIC DeeTypeObject DeeString_Type = {
 	                         "}\n"
 	                         "\n"
 
-	                         "<(other:?X2?.?DBytes)->\n"
-	                         "<=(other:?X2?.?DBytes)->\n"
-	                         "==(other:?X2?.?DBytes)->\n"
-	                         "!=(other:?X2?.?DBytes)->\n"
-	                         ">(other:?X2?.?DBytes)->\n"
-	                         ">=(other:?X2?.?DBytes)->\n"
+	                         "<(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         "<=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         "==(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         "!=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         ">(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
+	                         ">=(other:?X3?.?DBytes?S?X2?.?DBytes)->\n"
 	                         "Perform a lexicographical comparison between @this ?. "
 	                         /**/ "and @other, and return the result\n"
 	                         "\n"

@@ -12396,7 +12396,8 @@ DeeType_InheritIterNext(DeeTypeObject *__restrict self) {
 
 /* Try to substitute default compare operators. */
 PRIVATE NONNULL((1)) void DCALL
-DeeType_SubstituteDefaultCompareOperators(struct type_cmp *__restrict cmp) {
+DeeType_SubstituteDefaultCompareOperators(DeeTypeObject *__restrict self) {
+	struct type_cmp *cmp = (ASSERT(self->tp_cmp), self->tp_cmp);
 	bool has_eq = cmp->tp_eq && !DeeType_IsDefaultEq(cmp->tp_eq);
 	bool has_ne = cmp->tp_ne && !DeeType_IsDefaultNe(cmp->tp_ne);
 	bool has_lo = cmp->tp_lo && !DeeType_IsDefaultLo(cmp->tp_lo);
@@ -12407,26 +12408,51 @@ DeeType_SubstituteDefaultCompareOperators(struct type_cmp *__restrict cmp) {
 	bool has_compare = cmp->tp_compare && !DeeType_IsDefaultCompare(cmp->tp_compare);
 
 	if (!cmp->tp_compare) {
-		if (has_eq && has_lo) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLo;
-		} else if (has_eq && has_le) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLe;
-		} else if (has_eq && has_gr) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGr;
-		} else if (has_eq && has_ge) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGe;
-		} else if (has_ne && has_lo) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLo;
-		} else if (has_ne && has_le) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLe;
-		} else if (has_ne && has_gr) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGr;
-		} else if (has_ne && has_ge) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGe;
-		} else if (has_lo && has_gr) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithLoAndGr;
-		} else if (has_le && has_ge) {
-			cmp->tp_compare = &DeeObject_DefaultCompareWithLeAndGe;
+		unsigned int seqclass = DeeType_GetSeqClass(self);
+		if (seqclass != Dee_SEQCLASS_SET && seqclass != Dee_SEQCLASS_MAP) {
+			/* Sets and maps cannot be <=> compared:
+			 *
+			 *           +-----------+
+			 *           |           |
+			 *     +-----|-----+     |
+			 *     |  A  |  B  |  C  |
+			 *     +-----|-----+     |
+			 *       ^   |           |
+			 *       |   +-----------+
+			 *       |       ^
+			 *       |       |
+			 *     SET_1   SET_2
+			 *
+			 * Here, SET_1 and SET_2 are neither sub-sets, nor super-set
+			 * of each other, nor equal to each other:
+			 * >> assert SET_1 != SET_2;
+			 * >> assert !(SET_1 < SET_2);   // not subset
+			 * >> assert !(SET_1 > SET_2);   // not superset
+			 *
+			 * As such, there is no valid value that could be returned
+			 * by the rocketship operator (<=>), meaning that such a
+			 * compare operation must not be substituted. */
+			if (has_eq && has_lo) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLo;
+			} else if (has_eq && has_le) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndLe;
+			} else if (has_eq && has_gr) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGr;
+			} else if (has_eq && has_ge) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithEqAndGe;
+			} else if (has_ne && has_lo) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLo;
+			} else if (has_ne && has_le) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndLe;
+			} else if (has_ne && has_gr) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGr;
+			} else if (has_ne && has_ge) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithNeAndGe;
+			} else if (has_lo && has_gr) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithLoAndGr;
+			} else if (has_le && has_ge) {
+				cmp->tp_compare = &DeeObject_DefaultCompareWithLeAndGe;
+			}
 		}
 	}
 
@@ -15284,7 +15310,7 @@ DeeType_InheritCompare(DeeTypeObject *__restrict self) {
 	DeeTypeObject *base;
 	base_cmp = self->tp_cmp;
 	if (base_cmp) {
-		DeeType_SubstituteDefaultCompareOperators(base_cmp);
+		DeeType_SubstituteDefaultCompareOperators(self);
 		if (base_cmp->tp_hash || base_cmp->tp_eq || base_cmp->tp_lo || base_cmp->tp_le)
 			return true;
 	}
