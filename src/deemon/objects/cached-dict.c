@@ -966,36 +966,6 @@ cdict_iscached_string_len_hash(DeeCachedDictObject *self, char const *key,
 }
 
 
-
-INTERN WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL
-DeeCachedDict_GetItemNRDef(DeeCachedDictObject *self,
-                           DeeObject *key, DeeObject *def) {
-	DeeObject *result = DeeCachedDict_TryGetItemNR(self, key);
-	if (result == ITER_DONE)
-		result = def;
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL
-DeeCachedDict_GetItemNRStringHashDef(DeeCachedDictObject *__restrict self,
-                                     char const *__restrict key,
-                                     Dee_hash_t hash, DeeObject *def) {
-	DeeObject *result = DeeCachedDict_TryGetItemNRStringHash(self, key, hash);
-	if (result == ITER_DONE)
-		result = def;
-	return result;
-}
-
-INTERN WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL
-DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *__restrict self,
-                                        char const *__restrict key,
-                                        size_t keylen, Dee_hash_t hash, DeeObject *def) {
-	DeeObject *result = DeeCachedDict_TryGetItemNRStringLenHash(self, key, keylen, hash);
-	if (result == ITER_DONE)
-		result = def;
-	return result;
-}
-
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_sizeob(CachedDict *__restrict self) {
 	return DeeObject_SizeOb(self->cd_map);
@@ -1014,9 +984,14 @@ err:
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 cdict_nsi_getdefault(CachedDict *self, DeeObject *key, DeeObject *def) {
-	DeeObject *result = DeeCachedDict_GetItemNRDef(self, key, def);
-	if (ITER_ISOK(result))
+	DeeObject *result = DeeCachedDict_TryGetItemNR(self, key);
+	if (result == ITER_DONE) {
+		result = def;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
+	} else if (result) {
 		Dee_Incref(result);
+	}
 	return result;
 }
 
@@ -1346,10 +1321,17 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 cdict_get(CachedDict *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
-	return DeeCachedDict_GetItemNRDef(self, key, def);
+	result = DeeCachedDict_TryGetItemNR(self, key);
+	if unlikely(!result)
+		goto err;
+	if (result == ITER_DONE)
+		result = def;
+	Dee_Incref(result);
+	return result;
 err:
 	return NULL;
 }

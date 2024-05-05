@@ -63,10 +63,16 @@ err:
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
 map_get(DeeObject *self, size_t argc, DeeObject *const *argv) {
+	DREF DeeObject *result;
 	DeeObject *key, *def = Dee_None;
 	if (DeeArg_Unpack(argc, argv, "o|o:get", &key, &def))
 		goto err;
-	return DeeObject_GetItemDef(self, key, def);
+	result = DeeObject_TryGetItem(self, key);
+	if (result == ITER_DONE) {
+		result = def;
+		Dee_Incref(def);
+	}
+	return result;
 err:
 	return NULL;
 }
@@ -83,7 +89,7 @@ map_setdefault(DeeObject *self, size_t argc, DeeObject *const *argv) {
 		return (*nsi->nsi_maplike.nsi_setdefault)(self, key, value);
 
 	/* Fallback: lookup key and override if not already present (thread-unsafe) */
-	result = DeeObject_GetItemDef(self, key, ITER_DONE);
+	result = DeeObject_TryGetItem(self, key);
 	if (result == ITER_DONE) {
 		if unlikely(DeeObject_SetItem(self, key, value))
 			goto err;
@@ -101,7 +107,7 @@ map_pop(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	DeeObject *key, *def = NULL;
 	if (DeeArg_Unpack(argc, argv, "o|o:pop", &key, &def))
 		goto err;
-	result = DeeObject_GetItemDef(self, key, ITER_DONE);
+	result = DeeObject_TryGetItem(self, key);
 	if (result == ITER_DONE) {
 		/* Not present -> use default */
 		if (def) {
@@ -227,7 +233,7 @@ map_setold(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 
 	/* Fallback: must use thread-unsafe (multi-step) operations. */
-	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	old_value = DeeObject_TryGetItem(self, key);
 	if (ITER_ISOK(old_value)) {
 		Dee_Decref(old_value);
 		if unlikely(DeeObject_SetItem(self, key, value))
@@ -258,7 +264,7 @@ map_setnew(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 
 	/* Fallback: must use thread-unsafe (multi-step) operations. */
-	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	old_value = DeeObject_TryGetItem(self, key);
 	if (ITER_ISOK(old_value)) {
 		Dee_Decref(old_value);
 		return_false;
@@ -295,7 +301,7 @@ map_setold_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 
 	/* Fallback: must use thread-unsafe (multi-step) operations. */
-	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	old_value = DeeObject_TryGetItem(self, key);
 	if (ITER_ISOK(old_value)) {
 		if unlikely(DeeObject_SetItem(self, key, value)) {
 			Dee_Decref(old_value);
@@ -335,7 +341,7 @@ map_setnew_ex(DeeObject *self, size_t argc, DeeObject *const *argv) {
 	}
 
 	/* Fallback: must use thread-unsafe (multi-step) operations. */
-	old_value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	old_value = DeeObject_TryGetItem(self, key);
 	if (ITER_ISOK(old_value)) {
 		result = DeeTuple_Pack(2, Dee_False, old_value);
 		Dee_Decref_unlikely(old_value);
@@ -2102,7 +2108,7 @@ map_iterself(DeeObject *__restrict self) {
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 map_contains(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *value;
-	value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	value = DeeObject_TryGetItem(self, key);
 	if (!ITER_ISOK(value)) {
 		if (value == ITER_DONE)
 			return_false;
@@ -2315,7 +2321,7 @@ map_eq_impl(DeeObject *__restrict self,
 		if (DeeObject_Unpack(elem, 2, pair))
 			goto err_elem;
 		Dee_Decref(elem);
-		other_value = DeeObject_GetItemDef(other, pair[0], ITER_DONE);
+		other_value = DeeObject_TryGetItem(other, pair[0]);
 		Dee_Decref(pair[0]);
 		if (!ITER_ISOK(other_value)) {
 			Dee_Decref(pair[1]);

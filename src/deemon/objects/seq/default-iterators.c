@@ -102,7 +102,7 @@ di_gi_compare(DefaultIterator_WithGetItemIndex *self,
 	}
 	return Dee_Compare(self->digi_index, other->digi_index);
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -599,7 +599,7 @@ di_g_compare(DefaultIterator_WithGetItem *self,
 	Dee_Decref(ot_index);
 	return result;
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL
@@ -1203,7 +1203,7 @@ di_nl_compare(DefaultIterator_WithNextAndLimit *self,
 	}
 	return result;
 err:
-	return -2;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

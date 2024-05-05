@@ -3996,11 +3996,20 @@ err:
 }
 
 
+PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL /* TODO: Remove me and directly use `DeeObject_TryGetItem()' */
+deprecated_DeeObject_GetItemDef(DeeObject *self, DeeObject *key, DeeObject *def) {
+	DREF DeeObject *result = DeeObject_TryGetItem(self, key);
+	if (result == ITER_DONE) {
+		result = def;
+		Dee_Incref(result);
+	}
+	return result;
+}
 
 /* seq, key_or_index, def -> result */
 INTERN WUNUSED NONNULL((1)) int DCALL
 fg_vopgetitemdef(struct fungen *__restrict self) {
-	/* IMPORTANT: `def' is allowed to be `ITER_DONE', and `DeeObject_GetItemDef()' is allowed to return `ITER_DONE' */
+	/* IMPORTANT: `def' is allowed to be `ITER_DONE', and `deprecated_DeeObject_GetItemDef()' is allowed to return `ITER_DONE' */
 	DeeTypeObject *seq_type;
 	if unlikely(self->fg_state->ms_stackc < 3)
 		return err_illegal_stack_effect();
@@ -4010,14 +4019,19 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 		uintptr_t getitem_flags = DeeType_GetOperatorFlags(seq_type, OPERATOR_GETITEM);
 		if ((getitem_flags & METHOD_FCONSTCALL) && fg_vallconst(self, 3)) {
 			DREF DeeObject *result;
-			DeeObject *seq, *key_def[2];
-			seq        = memval_const_getobj(&fg_vtop(self)[-2]);
-			key_def[0] = memval_const_getobj(&fg_vtop(self)[-1]);
-			key_def[1] = memval_const_getobj(&fg_vtop(self)[-0]);
-			if (!DeeMethodFlags_VerifyConstCallCondition(getitem_flags, seq, 2, key_def, NULL)) {
+			DeeObject *seq, *key, *def;
+			seq = memval_const_getobj(&fg_vtop(self)[-2]);
+			key = memval_const_getobj(&fg_vtop(self)[-1]);
+			def = memval_const_getobj(&fg_vtop(self)[-0]);
+			if (!DeeMethodFlags_VerifyConstCallCondition(getitem_flags, seq, 1, &key, NULL)) {
 				/* Not allowed */
 			} else {
-				result = DeeObject_GetItemDef(seq, key_def[0], key_def[1]);
+				result = DeeObject_TryGetItem(seq, key);
+				if (result == ITER_DONE) {
+					result = def;
+					if (result != ITER_DONE)
+						Dee_Incref(result);
+				}
 				if likely(result != NULL) {
 					if (result != ITER_DONE) {
 						result = fg_inlineref(self, result);
@@ -4064,7 +4078,7 @@ fg_vopgetitemdef(struct fungen *__restrict self) {
 	}
 	DO(fg_vnotoneref(self, 2));                                  /* seq, key_or_index, def */
 	DO(fg_vnotoneref_if_operator_at(self, OPERATOR_GETITEM, 3)); /* seq, key_or_index, def */
-	return fg_vcallapi(self, &DeeObject_GetItemDef, VCALL_CC_OBJECT, 3);
+	return fg_vcallapi(self, &deprecated_DeeObject_GetItemDef, VCALL_CC_OBJECT, 3);
 err:
 	return -1;
 }

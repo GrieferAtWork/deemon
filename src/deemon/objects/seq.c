@@ -2120,7 +2120,7 @@ DeeSeq_Compare(DeeObject *lhs, DeeObject *rhs) {
 		return DeeSeq_CompareFS(lhs, lhs_size, rhs);
 	lhs_iter = DeeObject_Iter(lhs);
 	if unlikely(!lhs_iter)
-		return -2;
+		return Dee_COMPARE_ERR;
 	result = DeeSeq_CompareIS(lhs_iter, rhs);
 	Dee_Decref(lhs_iter);
 	return result;
@@ -2179,7 +2179,7 @@ err:
 INTERN WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_lo(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Compare(self, other);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result < 0);
 err:
@@ -2189,7 +2189,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_le(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Compare(self, other);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result <= 0);
 err:
@@ -2199,7 +2199,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_gr(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Compare(self, other);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result > 0);
 err:
@@ -2209,7 +2209,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 seq_ge(DeeObject *self, DeeObject *other) {
 	int result = DeeSeq_Compare(self, other);
-	if unlikely(result == -2)
+	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result >= 0);
 err:

@@ -600,7 +600,7 @@ err:
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 rangemap_contains(DeeObject *self, DeeObject *key) {
 	DREF DeeObject *value;
-	value = DeeObject_GetItemDef(self, key, ITER_DONE);
+	value = DeeObject_TryGetItem(self, key);
 	if (!ITER_ISOK(value)) {
 		if (value == ITER_DONE)
 			return_false;
@@ -1156,7 +1156,14 @@ proxy_nsi_getsize(RangeMapProxy *__restrict self) {
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL
 proxy_asmap_nsi_getdefault(RangeMapProxy *self, DeeObject *key, DeeObject *defl) {
-	return DeeObject_GetItemDef(self->rmp_rmap, key, defl);
+	DREF DeeObject *result;
+	result = DeeObject_TryGetItem(self->rmp_rmap, key);
+	if (result == ITER_DONE) {
+		result = defl;
+		if (result != ITER_DONE)
+			Dee_Incref(result);
+	}
+	return result;
 }
 
 PRIVATE WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *DCALL

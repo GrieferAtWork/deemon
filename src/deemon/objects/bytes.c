@@ -949,9 +949,9 @@ bytes_compare_seq(Bytes *lhs, DeeObject *rhs) {
 	       foreach_status == -2 || foreach_status == -3);
 	if unlikely(foreach_status == -1)
 		goto err;
-	if unlikely(foreach_status == -2)
+	if (foreach_status == -2)
 		return -1; /* lhs < rhs */
-	if unlikely(foreach_status == -3)
+	if (foreach_status == -3)
 		return 1; /* lhs > rhs */
 	if (data.bcsd_index < data.bcsd_size)
 		return 1; /* lhs > rhs */

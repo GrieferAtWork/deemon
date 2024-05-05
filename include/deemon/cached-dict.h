@@ -89,9 +89,6 @@ INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_GetItemNRStringLen
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNR(DeeCachedDictObject *self, DeeObject *key);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNRStringHash(DeeCachedDictObject *self, char const *__restrict key, Dee_hash_t hash);
 INTDEF WUNUSED NONNULL((1, 2)) DeeObject *DCALL DeeCachedDict_TryGetItemNRStringLenHash(DeeCachedDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash);
-INTDEF WUNUSED NONNULL((1, 2, 3)) DeeObject *DCALL DeeCachedDict_GetItemNRDef(DeeCachedDictObject *self, DeeObject *key, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2, 4)) DeeObject *DCALL DeeCachedDict_GetItemNRStringHashDef(DeeCachedDictObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
-INTDEF WUNUSED NONNULL((1, 2, 5)) DeeObject *DCALL DeeCachedDict_GetItemNRStringLenHashDef(DeeCachedDictObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 #endif /* CONFIG_BUILDING_DEEMON */
 
 /* Hash iteration helpers. */

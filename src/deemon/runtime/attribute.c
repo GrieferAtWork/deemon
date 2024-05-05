@@ -343,6 +343,15 @@ PUBLIC WUNUSED NONNULL((1, 2)) int
 	return DeeObject_HasAttrStringHash(self, attr, Dee_HashStr(attr));
 }
 
+/* Check if a given attribute exists and/or is bound.
+ * @return: 1:       Attribute is bound.
+ * @return: 0:     Attribute isn't bound.
+ * @return: -1:         An error occurred.
+ * @return: -2:      The attribute doesn't exist.
+ * @return: -3: A user-defined getattr operator threw an error indicating
+ *                                     that the attribute doesn't exists. - Should be handled the
+ *                                     same way as `-2', however search for the
+ *                                     attribute should not continue. */
 PUBLIC WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_BoundAttrString)(DeeObject *__restrict self,
                                   char const *__restrict attr) {

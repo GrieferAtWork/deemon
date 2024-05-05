@@ -660,12 +660,9 @@ EXPORTS
 	DeeObject_GetAttrStringLenHash@16=_DeeObject_GetAttrStringLenHash@16
 	DeeObject_GetBuf@12=_DeeObject_GetBuf@12
 	DeeObject_GetItem@8=_DeeObject_GetItem@8
-	DeeObject_GetItemDef@12=_DeeObject_GetItemDef@12
 	DeeObject_GetItemIndex@8=_DeeObject_GetItemIndex@8
 	DeeObject_GetItemStringHash@12=_DeeObject_GetItemStringHash@12
-	DeeObject_GetItemStringHashDef@16=_DeeObject_GetItemStringHashDef@16
 	DeeObject_GetItemStringLenHash@16=_DeeObject_GetItemStringLenHash@16
-	DeeObject_GetItemStringLenHashDef@20=_DeeObject_GetItemStringLenHashDef@20
 	DeeObject_GetRange@12=_DeeObject_GetRange@12
 	DeeObject_GetRangeBeginIndex@12=_DeeObject_GetRangeBeginIndex@12
 	DeeObject_GetRangeEndIndex@12=_DeeObject_GetRangeEndIndex@12

@@ -97,10 +97,10 @@ LOCAL_bfind_with_xxx(
 #ifndef DEFINE_DeeSeq_BLocate
 		Dee_Decref(seq_elem);
 #endif /* !DEFINE_DeeSeq_BLocate */
+		if unlikely(diff == Dee_COMPARE_ERR)
+			goto err;
 
 		if (diff < 0) {
-			if unlikely(diff == -2)
-				goto err;
 			/* keyed_search_item < self[mid] */
 			end = mid;
 		} else if (diff > 0) {

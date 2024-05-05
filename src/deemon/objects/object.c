@@ -3342,13 +3342,20 @@ type_new_extended(DeeTypeObject *self,
 
 	/* {(Type, ({(string, Object)...}, Tuple))...} */
 	/* {(Type, ({(string, Object)...}, Tuple, Mapping))...} */
-	init_info = DeeObject_GetItemDef(initializer, (DeeObject *)first_base, Dee_None);
+	init_info = DeeObject_TryGetItem(initializer, (DeeObject *)first_base);
 	if unlikely(!init_info)
 		goto err_r;
-	temp = unpack_init_info(init_info, &init_fields, &init_args, &init_kw);
-	Dee_Decref(init_info);
-	if unlikely(temp)
-		goto err_r;
+	if (init_info == ITER_DONE) {
+		Dee_Incref(Dee_EmptyTuple);
+		init_args   = Dee_EmptyTuple;
+		init_fields = NULL;
+		init_kw     = NULL;
+	} else {
+		temp = unpack_init_info(init_info, &init_fields, &init_args, &init_kw);
+		Dee_Decref(init_info);
+		if unlikely(temp)
+			goto err_r;
+	}
 
 	/* Invoke the mandatory base-type constructor. */
 	temp = type_invoke_base_constructor(first_base, result,
@@ -3369,11 +3376,11 @@ done_fields:
 	do {
 		if (iter == first_base)
 			continue;
-		init_info = DeeObject_GetItemDef(initializer,
-		                                 (DeeObject *)iter,
-		                                 Dee_None);
+		init_info = DeeObject_TryGetItem(initializer, (DeeObject *)iter);
 		if unlikely(!init_info)
 			goto err_r_firstbase;
+		if (init_info == ITER_DONE)
+			continue;
 		if (DeeNone_Check(init_info)) {
 			Dee_DecrefNokill(init_info);
 			continue;

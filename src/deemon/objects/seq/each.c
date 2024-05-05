@@ -579,10 +579,11 @@ struct se_hasattr_string_len_hash_data {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_hasattr_string_hash_cb(void *arg, DeeObject *elem) {
+	int status;
 	struct se_hasattr_string_hash_data *attr;
-	attr = (struct se_hasattr_string_hash_data *)arg;
-	int status = DeeObject_HasAttrStringHash(elem, attr->shashd_attr,
-	                                         attr->shashd_hash);
+	attr   = (struct se_hasattr_string_hash_data *)arg;
+	status = DeeObject_HasAttrStringHash(elem, attr->shashd_attr,
+	                                     attr->shashd_hash);
 	if unlikely(status <= 0)
 		return status < 0 ? -1 : -2;
 	return 0;
@@ -590,11 +591,12 @@ se_foreach_hasattr_string_hash_cb(void *arg, DeeObject *elem) {
 
 PRIVATE WUNUSED NONNULL((1, 2)) Dee_ssize_t DCALL
 se_foreach_hasattr_string_len_hash_cb(void *arg, DeeObject *elem) {
+	int status;
 	struct se_hasattr_string_len_hash_data *attr;
 	attr = (struct se_hasattr_string_len_hash_data *)arg;
-	int status = DeeObject_HasAttrStringLenHash(elem, attr->shaslhd_attr,
-	                                            attr->shaslhd_attrlen,
-	                                            attr->shaslhd_hash);
+	status = DeeObject_HasAttrStringLenHash(elem, attr->shaslhd_attr,
+	                                        attr->shaslhd_attrlen,
+	                                        attr->shaslhd_hash);
 	if unlikely(status <= 0)
 		return status < 0 ? -1 : -2;
 	return 0;

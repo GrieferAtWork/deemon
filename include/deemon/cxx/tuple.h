@@ -61,14 +61,8 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItemIndex(m_self, Index);
 	}
-	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		DREF DeeObject *index_ob, *result = NULL;
-		index_ob = DeeInt_NewSize(Index);
-		if likely(index_ob) {
-			result = DeeObject_GetItemDef(m_self, index_ob, def);
-			Dee_Decref(index_ob);
-		}
-		return result;
+	WUNUSED DREF DeeObject *_trygetref() const DEE_CXX_NOTHROW {
+		return DeeObject_TryGetItemIndex(m_self, Index);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
 		return DeeObject_SetItemIndex(m_self, Index, value);

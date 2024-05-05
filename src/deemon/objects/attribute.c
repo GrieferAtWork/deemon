@@ -1051,7 +1051,7 @@ enumattriter_visit(EnumAttrIter *__restrict self, dvisit_t proc, void *arg) {
 
 
 #ifdef CONFIG_LONGJMP_ENUMATTR
-PRIVATE dssize_t DCALL
+PRIVATE WUNUSED NONNULL((1, 2, 6)) dssize_t DCALL
 enumattr_longjmp(DeeObject *__restrict declarator,
                  char const *__restrict attr_name, char const *attr_doc,
                  uint16_t perm, DeeTypeObject *attr_type,

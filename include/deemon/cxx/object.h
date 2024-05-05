@@ -1164,7 +1164,12 @@ public:
 	using ConstGetAndSetRefProxy<ProxyType, GetReturnType>::operator=;
 	template<class S>
 	Ref<DEE_ENABLE_IF_OBJECT_ASSIGNABLE(GetReturnType, S)> get(S *def) const {
-		return inherit(((ProxyType const *)this)->_getref(def));
+		DREF DeeObject *result = ((ProxyType const *)this)->_trygetref();
+		if (result == ITER_DONE) {
+			result = (DREF DeeObject *)def;
+			Dee_Incref(result);
+		}
+		return inherit(result);
 	}
 };
 
@@ -1927,8 +1932,8 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItem(m_ptr, m_idx);
 	}
-	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemDef(m_ptr, m_idx, def);
+	WUNUSED DREF DeeObject *_trygetref() const DEE_CXX_NOTHROW {
+		return DeeObject_TryGetItem(m_ptr, m_idx);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
 		return DeeObject_SetItem(m_ptr, m_idx, value);
@@ -1958,14 +1963,8 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItemIndex(m_ptr, m_idx);
 	}
-	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		DREF DeeObject *index_ob, *result = NULL;
-		index_ob = DeeInt_NewSize(m_idx);
-		if likely(index_ob) {
-			result = DeeObject_GetItemDef(m_ptr, index_ob, def);
-			Dee_Decref(index_ob);
-		}
-		return result;
+	WUNUSED DREF DeeObject *_trygetref() const DEE_CXX_NOTHROW {
+		return DeeObject_TryGetItemIndex(m_ptr, m_idx);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
 		return DeeObject_SetItemIndex(m_ptr, m_idx, value);
@@ -1998,8 +1997,8 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItemStringHash(m_ptr, m_key, m_hsh);
 	}
-	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemStringHashDef(m_ptr, m_key, m_hsh, def);
+	WUNUSED DREF DeeObject *_trygetref() const DEE_CXX_NOTHROW {
+		return DeeObject_TryGetItemStringHash(m_ptr, m_key, m_hsh);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
 		return DeeObject_SetItemStringHash(m_ptr, m_key, m_hsh, value);
@@ -2035,8 +2034,8 @@ public:
 	WUNUSED DREF DeeObject *_getref() const DEE_CXX_NOTHROW {
 		return DeeObject_GetItemStringLenHash(m_ptr, m_key, m_len, m_hsh);
 	}
-	WUNUSED DREF DeeObject *_getref(DeeObject *def) const DEE_CXX_NOTHROW {
-		return DeeObject_GetItemStringLenHashDef(m_ptr, m_key, m_len, m_hsh, def);
+	WUNUSED DREF DeeObject *_trygetref(DeeObject *def) const DEE_CXX_NOTHROW {
+		return DeeObject_TryGetItemStringLenHash(m_ptr, m_key, m_len, m_hsh);
 	}
 	WUNUSED int _setref(DeeObject *value) const DEE_CXX_NOTHROW {
 		return DeeObject_SetItemStringLenHash(m_ptr, m_key, m_len, m_hsh, value);
@@ -2521,39 +2520,157 @@ public:
 		return ItemProxySnh<GetItemType>(((ProxyType *)this)->ptr(), key, keylen, hash);
 	}
 
+	NONNULL_CXX((1)) DREF DeeObject *_getitem(DeeObject *index_or_key) {
+		return DeeObject_GetItem(((ProxyType *)this)->ptr(), index_or_key);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_getitem(size_t index) {
+		return DeeObject_GetItemIndex(((ProxyType *)this)->ptr(), index);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_getitem(char const *key) {
+		return DeeObject_GetItemString(((ProxyType *)this)->ptr(), key);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_getitem(char const *key, Dee_hash_t hash) {
+		return DeeObject_GetItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_getitem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return DeeObject_GetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+	}
+
+	NONNULL_CXX((1)) DREF DeeObject *_trygetitem(DeeObject *index_or_key) {
+		return DeeObject_TryGetItem(((ProxyType *)this)->ptr(), index_or_key);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_trygetitem(size_t index) {
+		return DeeObject_TryGetItemIndex(((ProxyType *)this)->ptr(), index);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_trygetitem(char const *key) {
+		return DeeObject_TryGetItemString(((ProxyType *)this)->ptr(), key);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_trygetitem(char const *key, Dee_hash_t hash) {
+		return DeeObject_TryGetItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+	}
+	NONNULL_CXX((1)) DREF DeeObject *_trygetitem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return DeeObject_TryGetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+	}
+
+	NONNULL_CXX((1)) int _bounditem(DeeObject *index_or_key) {
+		return DeeObject_BoundItem(((ProxyType *)this)->ptr(), index_or_key);
+	}
+	int _bounditem(size_t index) {
+		return DeeObject_BoundItemIndex(((ProxyType *)this)->ptr(), index);
+	}
+	NONNULL_CXX((1)) int _bounditem(char const *key) {
+		return DeeObject_BoundItemString(((ProxyType *)this)->ptr(), key);
+	}
+	NONNULL_CXX((1)) int _bounditem(char const *key, Dee_hash_t hash) {
+		return DeeObject_BoundItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+	}
+	NONNULL_CXX((1)) int _bounditem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return DeeObject_BoundItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+	}
+
+	NONNULL_CXX((1)) int _hasitem(DeeObject *index_or_key) {
+		return DeeObject_HasItem(((ProxyType *)this)->ptr(), index_or_key);
+	}
+	int _hasitem(size_t index) {
+		return DeeObject_HasItemIndex(((ProxyType *)this)->ptr(), index);
+	}
+	NONNULL_CXX((1)) int _hasitem(char const *key) {
+		return DeeObject_HasItemString(((ProxyType *)this)->ptr(), key);
+	}
+	NONNULL_CXX((1)) int _hasitem(char const *key, Dee_hash_t hash) {
+		return DeeObject_HasItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+	}
+	NONNULL_CXX((1)) int _hasitem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return DeeObject_HasItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+	}
+
+	NONNULL_CXX((1)) int _delitem(DeeObject *index_or_key) {
+		return DeeObject_DelItem(((ProxyType *)this)->ptr(), index_or_key);
+	}
+	int _delitem(size_t index) {
+		return DeeObject_DelItemIndex(((ProxyType *)this)->ptr(), index);
+	}
+	NONNULL_CXX((1)) int _delitem(char const *key) {
+		return DeeObject_DelItemString(((ProxyType *)this)->ptr(), key);
+	}
+	NONNULL_CXX((1)) int _delitem(char const *key, Dee_hash_t hash) {
+		return DeeObject_DelItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+	}
+	NONNULL_CXX((1)) int _delitem(char const *key, size_t keylen, Dee_hash_t hash) {
+		return DeeObject_DelItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+	}
+
+	NONNULL_CXX((1, 2)) int _setitem(DeeObject *index_or_key, DeeObject *value) {
+		return DeeObject_SetItem(((ProxyType *)this)->ptr(), index_or_key, value);
+	}
+	NONNULL_CXX((2)) int _setitem(size_t index, DeeObject *value) {
+		return DeeObject_SetItemIndex(((ProxyType *)this)->ptr(), index, value);
+	}
+	NONNULL_CXX((1, 2)) int _setitem(char const *key, DeeObject *value) {
+		return DeeObject_SetItemString(((ProxyType *)this)->ptr(), key, value);
+	}
+	NONNULL_CXX((1, 3)) int _setitem(char const *key, Dee_hash_t hash, DeeObject *value) {
+		return DeeObject_SetItemStringHash(((ProxyType *)this)->ptr(), key, hash, value);
+	}
+	NONNULL_CXX((1, 4)) int _setitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *value) {
+		return DeeObject_SetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash, value);
+	}
+
+
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(DeeObject *index_or_key) {
 		return inherit(DeeObject_GetItem(((ProxyType *)this)->ptr(), index_or_key));
 	}
 	NONNULL_CXX((1, 2)) Ref<GetItemType> getitem(DeeObject *index_or_key, DeeObject *def) {
-		return inherit(DeeObject_GetItemDef(((ProxyType *)this)->ptr(), index_or_key, def));
+		DREF DeeObject *result = DeeObject_TryGetItem(((ProxyType *)this)->ptr(), index_or_key);
+		if (result == ITER_DONE) {
+			Dee_Incref(def);
+			result = def;
+		}
+		return inherit(result);
 	}
 	Ref<GetItemType> getitem(size_t index) {
 		return inherit(DeeObject_GetItemIndex(((ProxyType *)this)->ptr(), index));
 	}
 	NONNULL_CXX((2)) Ref<GetItemType> getitem(size_t index, DeeObject *def) {
-		DREF DeeObject *index_ob, *result;
-		index_ob = throw_if_null(DeeInt_NewSize(index));
-		result = DeeObject_GetItemDef(((ProxyType *)this)->ptr(), index_ob, def);
-		Dee_Decref(index_ob);
+		DREF DeeObject *result = DeeObject_TryGetItemIndex(((ProxyType *)this)->ptr(), index);
+		if (result == ITER_DONE) {
+			Dee_Incref(def);
+			result = def;
+		}
 		return inherit(result);
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key) {
 		return inherit(DeeObject_GetItemString(((ProxyType *)this)->ptr(), key));
 	}
 	NONNULL_CXX((1, 2)) Ref<GetItemType> getitem(char const *key, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringDef(((ProxyType *)this)->ptr(), key, def));
+		DREF DeeObject *result = DeeObject_TryGetItemString(((ProxyType *)this)->ptr(), key);
+		if (result == ITER_DONE) {
+			Dee_Incref(def);
+			result = def;
+		}
+		return inherit(result);
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash) {
 		return inherit(DeeObject_GetItemStringHash(((ProxyType *)this)->ptr(), key, hash));
 	}
 	NONNULL_CXX((1, 3)) Ref<GetItemType> getitem(char const *key, Dee_hash_t hash, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringHashDef(((ProxyType *)this)->ptr(), key, hash, def));
+		DREF DeeObject *result = DeeObject_TryGetItemStringHash(((ProxyType *)this)->ptr(), key, hash);
+		if (result == ITER_DONE) {
+			Dee_Incref(def);
+			result = def;
+		}
+		return inherit(result);
 	}
 	NONNULL_CXX((1)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash) {
 		return inherit(DeeObject_GetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash));
 	}
 	NONNULL_CXX((1, 4)) Ref<GetItemType> getitem(char const *key, size_t keylen, Dee_hash_t hash, DeeObject *def) {
-		return inherit(DeeObject_GetItemStringLenHashDef(((ProxyType *)this)->ptr(), key, keylen, hash, def));
+		DREF DeeObject *result = DeeObject_TryGetItemStringLenHash(((ProxyType *)this)->ptr(), key, keylen, hash);
+		if (result == ITER_DONE) {
+			Dee_Incref(def);
+			result = def;
+		}
+		return inherit(result);
 	}
 
 	NONNULL_CXX((1)) bool bounditem(DeeObject *index_or_key) {

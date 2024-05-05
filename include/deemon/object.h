@@ -4658,17 +4658,12 @@ DFUNDEF WUNUSED NONNULL((1, 4)) int (DCALL DeeObject_SetRangeIndex)(DeeObject *s
 DFUNDEF WUNUSED NONNULL((1, 3)) int (DCALL DeeObject_SetRangeIndexN)(DeeObject *self, Dee_ssize_t begin, DeeObject *values);
 #define DeeObject_GetItemString(self, key)                    DeeObject_GetItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_GetItemStringLen(self, key, keylen)         DeeObject_GetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
-#define DeeObject_GetItemStringDef(self, key, def)            DeeObject_GetItemStringHashDef(self, key, Dee_HashStr(key), def)
-#define DeeObject_GetItemStringLenDef(self, key, keylen, def) DeeObject_GetItemStringLenHashDef(self, key, keylen, Dee_HashPtr(key, keylen), def)
+#define DeeObject_TryGetItemString(self, key)                 DeeObject_TryGetItemStringHash(self, key, Dee_HashStr(key))
+#define DeeObject_TryGetItemStringLen(self, key, keylen)      DeeObject_TryGetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeObject_DelItemString(self, key)                    DeeObject_DelItemStringHash(self, key, Dee_HashStr(key))
 #define DeeObject_DelItemStringLen(self, key, keylen)         DeeObject_DelItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen))
 #define DeeObject_SetItemString(self, key, value)             DeeObject_SetItemStringHash(self, key, Dee_HashStr(key), value)
 #define DeeObject_SetItemStringLen(self, key, keylen, value)  DeeObject_SetItemStringLenHash(self, key, keylen, Dee_HashPtr(key, keylen), value)
-
-/* TODO: These are deprecated in favor of "DeeObject_TryGetItem()" */
-DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_GetItemDef)(DeeObject *self, DeeObject *key, DeeObject *def);
-DFUNDEF WUNUSED NONNULL((1, 2, 4)) DREF DeeObject *(DCALL DeeObject_GetItemStringHashDef)(DeeObject *self, char const *__restrict key, Dee_hash_t hash, DeeObject *def);
-DFUNDEF WUNUSED NONNULL((1, 2, 5)) DREF DeeObject *(DCALL DeeObject_GetItemStringLenHashDef)(DeeObject *self, char const *__restrict key, size_t keylen, Dee_hash_t hash, DeeObject *def);
 
 /* Check if a given item exists (`deemon.hasitem(self, index)')
  * @return: 0:  Doesn't exist;

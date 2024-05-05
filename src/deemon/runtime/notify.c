@@ -48,7 +48,7 @@ Dee_GetEnv(DeeObject *__restrict name) {
 	                                    (DeeObject *)&str_environ);
 	if unlikely(!posix_environ)
 		goto err_tryhandle;
-	result = DeeObject_GetItemDef(posix_environ, name, ITER_DONE);
+	result = DeeObject_TryGetItem(posix_environ, name);
 	Dee_Decref(posix_environ);
 	if unlikely(!result)
 		goto err_tryhandle;

@@ -370,7 +370,7 @@ read_symbol:
 	goto read_symbol;
 }
 
-LOCAL WUNUSED DREF DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
@@ -394,7 +394,7 @@ module_getattr_impl(DeeModuleObject *__restrict self,
 	return NULL;
 }
 
-LOCAL WUNUSED DREF DeeObject *DCALL
+LOCAL WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
 module_getattr_len_impl(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash) {
@@ -421,7 +421,7 @@ module_getattr_len_impl(DeeModuleObject *__restrict self,
 	return NULL;
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 module_boundattr_impl(DeeModuleObject *__restrict self,
                       char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
@@ -440,7 +440,7 @@ module_boundattr_impl(DeeModuleObject *__restrict self,
 	return DeeObject_GenericBoundAttrStringHash((DeeObject *)self, attr_name, hash);
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 module_boundattr_len_impl(DeeModuleObject *__restrict self,
                           char const *__restrict attr_name,
                           size_t attrlen, dhash_t hash) {
@@ -462,7 +462,7 @@ module_boundattr_len_impl(DeeModuleObject *__restrict self,
 	return DeeObject_GenericBoundAttrStringLenHash((DeeObject *)self, attr_name, attrlen, hash);
 }
 
-LOCAL bool DCALL
+LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
 module_hasattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
 	dhash_t i, perturb;
@@ -480,7 +480,7 @@ module_hasattr_impl(DeeModuleObject *__restrict self,
 	return DeeObject_GenericHasAttrStringHash((DeeObject *)self, attr_name, hash);
 }
 
-LOCAL bool DCALL
+LOCAL WUNUSED NONNULL((1, 2)) bool DCALL
 module_hasattr_len_impl(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash) {
@@ -541,7 +541,7 @@ DeeModule_DelAttrSymbol(DeeModuleObject *__restrict self,
 	return 0;
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr_impl(DeeModuleObject *__restrict self,
                     char const *__restrict attr_name, dhash_t hash) {
 	int error;
@@ -564,7 +564,7 @@ module_delattr_impl(DeeModuleObject *__restrict self,
 	return err_module_no_such_global_string(self, attr_name, ATTR_ACCESS_DEL);
 }
 
-LOCAL int DCALL
+LOCAL WUNUSED NONNULL((1, 2)) int DCALL
 module_delattr_len_impl(DeeModuleObject *__restrict self,
                         char const *__restrict attr_name,
                         size_t attrlen, dhash_t hash) {

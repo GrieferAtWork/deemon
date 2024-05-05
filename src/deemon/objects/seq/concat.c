@@ -606,7 +606,7 @@ err:
 	return -1;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 cat_nsi_find(Cat *__restrict self,
              size_t start, size_t end,
              DeeObject *__restrict keyed_search_item,
@@ -620,8 +620,8 @@ cat_nsi_find(Cat *__restrict self,
 			if (OVERFLOW_UADD(offset, temp, &offset))
 				goto index_overflow;
 			if unlikely(offset == (size_t)-1 ||
-				         offset == (size_t)-2)
-			goto index_overflow;
+			            offset == (size_t)-2)
+				goto index_overflow;
 			return offset;
 		}
 		temp = DeeObject_Size(DeeTuple_GET(self, i));
@@ -640,7 +640,7 @@ err:
 	return (size_t)-2;
 }
 
-PRIVATE size_t DCALL
+PRIVATE WUNUSED NONNULL((1, 4)) size_t DCALL
 cat_nsi_rfind(Cat *__restrict self,
               size_t start, size_t end,
               DeeObject *__restrict keyed_search_item,
