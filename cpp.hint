@@ -1460,12 +1460,10 @@
 	DeeObject*lexer_get_##n(DeeCompilerWrapperObject*self){}\
 	int lexer_del_##n(DeeCompilerWrapperObject*self){}\
 	int lexer_set_##n(DeeCompilerWrapperObject*self,DeeObject*value){}
-#define DEFINE_MEI_COMPARE(n,op) DeeObject*n(ModuleExportsIterator*self,ModuleExportsIterator*other){}
 #define STACK_ALLOCATOR_DECL
 #define CONFIG_DEEMON_PATH(x)
 #define DEFINE_BLACKLISTVARKWDSITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwdsIterator*self,DeeBlackListKwdsIterator*other){}
 #define DEFINE_BLACKLISTMAPPINGITERATOR_COMPARE(n,...) DeeObject*n(DeeBlackListKwIterator*self,DeeBlackListKwIterator*other){}
-#define DEFINE_HASHFILTERITERATOR_COMPARE(n,...) DeeObject*n(HashFilterIterator*self,HashFilterIterator*other){}
 #define DEFINE_ITER_COMPARE(n,...) DeeObject*n(SeqSimpleProxyIterator*self,SeqSimpleProxyIterator*other){}
 #define DEFINE_SIITER_COMPARE(n,...) DeeObject*n(SetIntersectionIterator*self,SetIntersectionIterator*other){}
 #define DEFINE_SEGITER_COMPARE(n,...) DeeObject*n(SegmentsIterator*self,SegmentsIterator*other){}
@@ -1474,7 +1472,6 @@
 #define DEFINE_RANGEITERATOR_COMPARE_R(n,...) DeeObject*n(RangeIterator*self,RangeIterator*other){}
 #define DEFINE_IRI_COMPARE(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
 #define DEFINE_IRI_COMPARE_R(n,...) DeeObject*n(IntRangeIterator*self,IntRangeIterator*other){}
-#define DEFINE_LOCATORITERATOR_COMPARE(n,...) DeeObject*n(LocatorIterator*self,LocatorIterator*other){}
 #define DEFINE_KWDSITERATOR_COMPARE(n,...) DeeObject*n(KwdsIterator*self,KwdsIterator*other){}
 #define SEQ_EACH_HEAD OBJECT_HEAD DeeObject*se_seq;
 #define DEFINE_SEQ_EACH_UNARY(n,...) SeqEachOperator*n(SeqEachBase*self){}
@@ -1487,10 +1484,6 @@
 #define DEFINE_SEW_TRINARY(n,...) SeqEachOperator*n(DeeObject*self,DeeObject*a,DeeObject*b){}
 #define DEFINE_SEO_UNARY_INPLACE(n,...) int n(SeqEachOperator**p_self){}
 #define DEFINE_SEO_BINARY_INPLACE(n,...) int n(SeqEachOperator**p_self,DeeObject*other){}
-#define DEFINE_SEWI_COMPARE(n,...) DeeObject*n(SeqEachIterator*self,SeqEachIterator*other){}
-#define DEFINE_CATITERATOR_COMPARE(n,...) DeeObject*n(CatIterator*self,CatIterator*other){}
-#define DEFINE_COMITER_COMPARE(n,...) DeeObject*n(CombinationsIterator*self,CombinationsIterator*other){}
-#define DEFINE_MAPBYATTR_COMPARE(n,...) DeeObject*n(MapByAttr*self,MapByAttr*other){}
 #define DEFINE_SUBRANGEITERATOR_COMPARE(n,...) DeeObject*n(SubRangeIterator*self,SubRangeIterator*other){}
 #define DEFINE_TRANSFORMATIONITERATOR_COMPARE(n,...) DeeObject*n(TransformationIterator*self,TransformationIterator*other){}
 #define DEFINE_FOLD_COMPARE(n,T) size_t n(T const*data,size_t datalen,uint32_t fold[UNICODE_FOLDED_MAX],size_t fold_len);
@@ -1629,7 +1622,6 @@
 	int time_delval_##n(DeeTimeObject*self){}
 #define DEFINE_TIME_COMPARE(n,...) DeeObject*n(DeeTimeObject*self,DeeTimeObject*other){}
 #define DEFINE_WIN32_HANDLE_COMPARE(n,...) DeeObject*n(DeeHandleObject*self,DeeHandleObject*other){}
-#define DEFINE_FILTERITERATOR_COMPARE(n,...) DeeObject*n(FilterIterator*self,FilterIterator*other){}
 
 #define DEFINE_CCALL_OPTIMIZATION(name,...) int name(struct fungen*self,vstackaddr_t argc){}
 #define DEFINE_CCALL_OPERATOR(name,...) int name(struct fungen*self,vstackaddr_t argc){}

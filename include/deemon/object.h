@@ -226,9 +226,21 @@ DFUNDEF ATTR_PURE WUNUSED ATTR_INS(1, 2) Dee_hash_t (DCALL Dee_HashCase4Byte)(ui
 #define DeeObject_Id(ob)          ((uintptr_t)(ob))
 
 
+/* Error return value for compare "tp_compare_eq", "tp_compare" and "tp_trycompare_eq". */
+#define Dee_COMPARE_ERR (-2)
+
 /* Helper macros for implementing compare operators. */
 #define Dee_CompareNe(a, b) ((a) < (b) ? -1 : 1)
 #define Dee_Compare(a, b)   ((a) == (b) ? 0 : Dee_CompareNe(a, b))
+#define Dee_return_compare_if_ne(a, b)  \
+	do {                                \
+		if ((a) != (b))                 \
+			return Dee_CompareNe(a, b); \
+	}	__WHILE0
+#define Dee_return_compare(a, b)  \
+	do {                          \
+		return Dee_Compare(a, b); \
+	}	__WHILE0
 
 
 typedef __hybrid_uint128_t Dee_uint128_t;
@@ -1884,8 +1896,6 @@ struct Dee_type_math {
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_xor)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_inplace_pow)(DREF DeeObject **__restrict p_self, DeeObject *some_object);
 };
-
-#define Dee_COMPARE_ERR (-2)
 
 struct Dee_type_nii;
 struct Dee_type_cmp {

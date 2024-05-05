@@ -1746,33 +1746,25 @@ module_hash(DeeModuleObject *__restrict self) {
 	return DeeObject_HashGeneric(self);
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_eq(DeeModuleObject *self,
-          DeeModuleObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_compare_eq(DeeModuleObject *self, DeeModuleObject *other) {
 	if (DeeObject_AssertType(other, &DeeModule_Type))
 		goto err;
-	return_bool_(self == other);
+	return self == other ? 0 : 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-module_ne(DeeModuleObject *self,
-          DeeModuleObject *other) {
-	if (DeeObject_AssertType(other, &DeeModule_Type))
-		goto err;
-	return_bool_(self != other);
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+module_trycompare_eq(DeeModuleObject *self, DeeModuleObject *other) {
+	return self == other ? 0 : 1;
 }
 
 PRIVATE struct type_cmp module_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&module_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&module_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&module_ne
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&module_trycompare_eq,
 };
 
 PUBLIC DeeTypeObject DeeModule_Type = {

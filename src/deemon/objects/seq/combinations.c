@@ -283,51 +283,46 @@ PRIVATE struct type_member tpconst comiter_members[] = {
 	TYPE_MEMBER_END
 };
 
-#define DEFINE_COMITER_COMPARE(name, if_diff_combi, op)             \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL           \
-	name(CombinationsIterator *self, CombinationsIterator *other) { \
-		int result;                                                 \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))       \
-			goto err;                                               \
-		if (self->ci_combi != other->ci_combi)                      \
-			if_diff_combi;                                          \
-	again_lock:                                                     \
-		CombinationsIterator_LockRead(self);                        \
-		if unlikely(!CombinationsIterator_LockTryRead(other)) {     \
-			CombinationsIterator_LockEndRead(self);                 \
-			CombinationsIterator_LockRead(other);                   \
-			if unlikely(!CombinationsIterator_LockTryRead(self)) {  \
-				CombinationsIterator_LockEndRead(other);            \
-				goto again_lock;                                    \
-			}                                                       \
-		}                                                           \
-		result = bcmpc(self->ci_indices, other->ci_indices,         \
-		               self->ci_combi->c_comlen, sizeof(size_t));   \
-		CombinationsIterator_LockEndRead(other);                    \
-		CombinationsIterator_LockEndRead(self);                     \
-		return_bool_(result op 0);                                  \
-	err:                                                            \
-		return NULL;                                                \
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+comiter_compare(CombinationsIterator *self, CombinationsIterator *other) {
+	size_t i;
+	int result = 0;
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	Dee_return_compare_if_ne(self->ci_combi, other->ci_combi);
+	DeeLock_Acquire2(CombinationsIterator_LockRead(self),
+	                 CombinationsIterator_LockTryRead(self),
+	                 CombinationsIterator_LockEndRead(self),
+	                 CombinationsIterator_LockRead(other),
+	                 CombinationsIterator_LockTryRead(other),
+	                 CombinationsIterator_LockEndRead(other));
+	for (i = 0; i < self->ci_combi->c_comlen; ++i) {
+		size_t lhs_index = self->ci_indices[i];
+		size_t rhs_index = other->ci_indices[i];
+		if (lhs_index != rhs_index) {
+			result = Dee_CompareNe(lhs_index, rhs_index);
+			break;
+		}
 	}
-DEFINE_COMITER_COMPARE(comiter_eq, return_false, ==)
-DEFINE_COMITER_COMPARE(comiter_ne, return_true, !=)
-DEFINE_COMITER_COMPARE(comiter_lo, return_bool(self->ci_combi < other->ci_combi), <)
-DEFINE_COMITER_COMPARE(comiter_le, return_bool(self->ci_combi < other->ci_combi), <=)
-DEFINE_COMITER_COMPARE(comiter_gr, return_bool(self->ci_combi > other->ci_combi), >)
-DEFINE_COMITER_COMPARE(comiter_ge, return_bool(self->ci_combi > other->ci_combi), >=)
-#undef DEFINE_COMITER_COMPARE
+	CombinationsIterator_LockEndRead(other);
+	CombinationsIterator_LockEndRead(self);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp comiter_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&comiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&comiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 };
 
 INTERN DeeTypeObject SeqCombinationsIterator_Type = {

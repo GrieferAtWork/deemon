@@ -168,37 +168,30 @@ filteriterator_hash(HashFilterIterator *__restrict self) {
 	return DeeObject_Hash(self->fi_iter) ^ self->fi_hash;
 }
 
-#define DEFINE_HASHFILTERITERATOR_COMPARE(name, compare_object, more) \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(HashFilterIterator *self, HashFilterIterator *other) {       \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))         \
-			goto err;                                                 \
-		more                                                          \
-		return compare_object(self->fi_iter, other->fi_iter);         \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_eq, DeeObject_CompareEqObject,
-                                  if (self->fi_hash != other->fi_hash) return_false;)
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_ne, DeeObject_CompareNeObject,
-                                  if (self->fi_hash != other->fi_hash) return_true;)
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_lo, DeeObject_CompareLoObject, )
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_le, DeeObject_CompareLeObject, )
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_gr, DeeObject_CompareGrObject, )
-DEFINE_HASHFILTERITERATOR_COMPARE(filteriterator_ge, DeeObject_CompareGeObject, )
-#undef DEFINE_HASHFILTERITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+filteriterator_compare_eq(HashFilterIterator *self, HashFilterIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	if (self->fi_hash != other->fi_hash)
+		return 1;
+	return DeeObject_CompareForEquality(self->fi_iter, other->fi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+filteriterator_compare(HashFilterIterator *self, HashFilterIterator *other) {
+	if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))
+		goto err;
+	return DeeObject_Compare(self->fi_iter, other->fi_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp filteriterator_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&filteriterator_ge,
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&filteriterator_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&filteriterator_compare,
 };
 
 

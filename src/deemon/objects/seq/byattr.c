@@ -251,34 +251,36 @@ byattr_hash(MapByAttr *__restrict self) {
 	return DeeObject_Hash(self->mba_map);
 }
 
-#define DEFINE_MAPBYATTR_COMPARE(name, Name)                                   \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
-	name(MapByAttr *self, MapByAttr *other) {                                  \
-		if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))              \
-			goto err;                                                          \
-		return DeeObject_Compare##Name##Object(self->mba_map, other->mba_map); \
-	err:                                                                       \
-		return NULL;                                                           \
-	}
-DEFINE_MAPBYATTR_COMPARE(byattr_eq, Eq)
-DEFINE_MAPBYATTR_COMPARE(byattr_ne, Ne)
-DEFINE_MAPBYATTR_COMPARE(byattr_lo, Lo)
-DEFINE_MAPBYATTR_COMPARE(byattr_le, Le)
-DEFINE_MAPBYATTR_COMPARE(byattr_gr, Gr)
-DEFINE_MAPBYATTR_COMPARE(byattr_ge, Ge)
-#undef DEFINE_MAPBYATTR_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_compare_eq(MapByAttr *self, MapByAttr *other) {
+	if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))
+		goto err;
+	return DeeObject_CompareEq(self->mba_map, other->mba_map);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_compare(MapByAttr *self, MapByAttr *other) {
+	if unlikely(DeeObject_AssertType(other, &MapByAttr_Type))
+		goto err;
+	return DeeObject_Compare(self->mba_map, other->mba_map);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+byattr_trycompare_eq(MapByAttr *self, MapByAttr *other) {
+	if unlikely(!DeeObject_InstanceOf(other, &MapByAttr_Type))
+		return -1;
+	return DeeObject_TryCompareForEquality(self->mba_map, other->mba_map);
+}
 
 PRIVATE struct type_cmp byattr_cmp = {
 	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&byattr_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *self, DeeObject *))&byattr_ge,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_compare_eq,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_compare,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *self, DeeObject *))&byattr_trycompare_eq,
 };
 
 

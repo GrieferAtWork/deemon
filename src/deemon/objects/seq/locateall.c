@@ -170,34 +170,33 @@ err:
 }
 
 
-#define DEFINE_LOCATORITERATOR_COMPARE(name, compare_object)            \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL               \
-	name(LocatorIterator *self, LocatorIterator *other) {               \
-		if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type)) \
-			goto err;                                                   \
-		return compare_object(self->li_iter, other->li_iter);           \
-	err:                                                                \
-		return NULL;                                                    \
-	}
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_eq, DeeObject_CompareEqObject)
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_ne, DeeObject_CompareNeObject)
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_lo, DeeObject_CompareLoObject)
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_le, DeeObject_CompareLeObject)
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_gr, DeeObject_CompareGrObject)
-DEFINE_LOCATORITERATOR_COMPARE(locatoriter_ge, DeeObject_CompareGeObject)
-#undef DEFINE_LOCATORITERATOR_COMPARE
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+locatoriter_hash(LocatorIterator *__restrict self) {
+	return DeeObject_Hash(self->li_iter);
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+locatoriter_compare(LocatorIterator *self, LocatorIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type))
+		goto err;
+	return DeeObject_Compare(self->li_iter, other->li_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+locatoriter_compare_eq(LocatorIterator *self, LocatorIterator *other) {
+	if (DeeObject_AssertTypeExact(other, &SeqLocatorIterator_Type))
+		goto err;
+	return DeeObject_CompareForEquality(self->li_iter, other->li_iter);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp locatoriter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&locatoriter_ge,
+	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&locatoriter_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&locatoriter_compare_eq,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&locatoriter_compare,
 };
 
 

@@ -3345,9 +3345,8 @@ err:
 	return (dhash_t)-1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-token_eq(DeeCompilerWrapperObject *self,
-         DeeObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+token_compare_eq(DeeCompilerWrapperObject *self, DeeObject *other) {
 	bool result;
 	char const *other_utf8;
 	tok_t other_id;
@@ -3361,39 +3360,14 @@ token_eq(DeeCompilerWrapperObject *self,
 	other_id = get_token_from_str(other_utf8, false);
 	result   = tok == other_id;
 	COMPILER_END();
-	return_bool_(result);
+	return result ? 0 : 1;
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-token_ne(DeeCompilerWrapperObject *self,
-         DeeObject *other) {
-	bool result;
-	char const *other_utf8;
-	tok_t other_id;
-	if (DeeObject_AssertTypeExact(other, &DeeString_Type))
-		goto err;
-	other_utf8 = DeeString_AsUtf8(other);
-	if unlikely(!other_utf8)
-		goto err;
-	if (COMPILER_BEGIN(self->cw_compiler))
-		goto err;
-	other_id = get_token_from_str(other_utf8, false);
-	result   = tok != other_id;
-	COMPILER_END();
-	return_bool_(result);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE struct type_cmp token_cmp = {
-	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&token_hash,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&token_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&token_ne
+	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&token_hash,
+	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&token_compare_eq,
 };
 
 

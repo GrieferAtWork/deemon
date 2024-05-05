@@ -1936,35 +1936,41 @@ relint_fini(DeeRelIntObject *__restrict self) {
 	--self->ri_sym->as_used;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-relint_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
-	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
-		goto err;
-	return_bool(self->ri_sym == other->ri_sym &&
-	            self->ri_add == other->ri_add &&
-	            self->ri_mode == other->ri_mode);
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1)) Dee_hash_t DCALL
+relint_hash(DeeRelIntObject *self) {
+	return Dee_HashPtr(DeeObject_DATA(self), sizeof(DeeRelIntObject) - sizeof(DeeObject));
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-relint_ne(DeeRelIntObject *self, DeeRelIntObject *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+relint_compare_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
 	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
 		goto err;
-	return_bool(self->ri_sym != other->ri_sym ||
-	            self->ri_add != other->ri_add ||
-	            self->ri_mode != other->ri_mode);
+	return (self->ri_sym == other->ri_sym &&
+	        self->ri_add == other->ri_add &&
+	        self->ri_mode == other->ri_mode)
+	       ? 0
+	       : 1;
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
+
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+relint_trycompare_eq(DeeRelIntObject *self, DeeRelIntObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeRelInt_Type))
+		return -1;
+	return (self->ri_sym == other->ri_sym &&
+	        self->ri_add == other->ri_add &&
+	        self->ri_mode == other->ri_mode)
+	       ? 0
+	       : 1;
+}
+
 
 PRIVATE struct type_cmp relint_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *))&relint_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&relint_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&relint_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&relint_ne,
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&relint_trycompare_eq,
 };
 
 INTERN DeeTypeObject DeeRelInt_Type = {

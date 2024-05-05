@@ -103,36 +103,23 @@ modexportsiter_visit(ModuleExportsIterator *__restrict self,
 	Dee_Visit(self->mei_module);
 }
 
-
-#define DEFINE_MEI_COMPARE(name, op)                                  \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL             \
-	name(ModuleExportsIterator *self, ModuleExportsIterator *other) { \
-		if (DeeObject_AssertTypeExact(other, Dee_TYPE(self)))         \
-			goto err;                                                 \
-		return_bool(atomic_read(&self->mei_index) op                  \
-		            atomic_read(&other->mei_index));                  \
-	err:                                                              \
-		return NULL;                                                  \
-	}
-DEFINE_MEI_COMPARE(modexportsiter_eq, ==)
-DEFINE_MEI_COMPARE(modexportsiter_ne, !=)
-DEFINE_MEI_COMPARE(modexportsiter_lo, <)
-DEFINE_MEI_COMPARE(modexportsiter_le, <=)
-DEFINE_MEI_COMPARE(modexportsiter_gr, >)
-DEFINE_MEI_COMPARE(modexportsiter_ge, >=)
-#undef DEFINE_MEI_COMPARE
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+modexportsiter_compare(ModuleExportsIterator *lhs,
+                       ModuleExportsIterator *rhs) {
+	uint16_t lhs_index, rhs_index;
+	if (DeeObject_AssertTypeExact(rhs, Dee_TYPE(lhs)))
+		goto err;
+	lhs_index = atomic_read(&lhs->mei_index);
+	rhs_index = atomic_read(&rhs->mei_index);
+	Dee_return_compare(lhs_index, rhs_index);
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp modexportsiter_cmp = {
-	/* .tp_hash          = */ NULL,
-	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&modexportsiter_ge,
+	/* .tp_hash       = */ NULL,
+	/* .tp_compare_eq = */ NULL,
+	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&modexportsiter_compare,
 };
 
 PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL

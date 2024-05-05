@@ -1601,13 +1601,9 @@ code_hash(DeeCodeObject *__restrict self) {
 }
 
 PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
-code_eq_impl(DeeCodeObject *__restrict self,
-             DeeCodeObject *__restrict other) {
-	int temp;
-	if (DeeObject_AssertTypeExact(other, &DeeCode_Type))
-		goto err;
+code_compare_eq_impl(DeeCodeObject *self, DeeCodeObject *other) {
 	if (self == other)
-		return 1;
+		return 0;
 	if (self->co_flags != other->co_flags)
 		goto nope;
 	if (self->co_localc != other->co_localc)
@@ -1636,7 +1632,7 @@ code_eq_impl(DeeCodeObject *__restrict self,
 			goto nope;
 		for (i = 0; i < self->co_argc_max; ++i) {
 			if (!DeeString_EqualsSTR(self->co_keywords[i],
-			                          other->co_keywords[i]))
+			                         other->co_keywords[i]))
 				goto nope;
 		}
 	} else if (other->co_keywords) {
@@ -1649,21 +1645,22 @@ code_eq_impl(DeeCodeObject *__restrict self,
 				if (other->co_defaultv[i] != NULL)
 					goto nope;
 			} else {
+				int temp;
 				if (other->co_defaultv[i] == NULL)
 					goto nope;
-				temp = DeeObject_TryCompareEq(self->co_defaultv[i],
-				                           other->co_defaultv[i]);
-				if (temp <= 0)
-					goto err_temp;
+				temp = DeeObject_TryCompareForEquality(self->co_defaultv[i],
+				                                       other->co_defaultv[i]);
+				if (temp != 0)
+					return temp;
 			}
 		}
 	}
 	if (self->co_constv) {
 		uint16_t i;
 		for (i = 0; i < self->co_constc; ++i) {
-			temp = DeeObject_TryCompareEq(self->co_constv[i], other->co_constv[i]);
-			if (temp <= 0)
-				goto err_temp;
+			int temp = DeeObject_TryCompareForEquality(self->co_constv[i], other->co_constv[i]);
+			if (temp != 0)
+				return temp;
 		}
 	}
 	if (self->co_exceptv) {
@@ -1683,52 +1680,35 @@ code_eq_impl(DeeCodeObject *__restrict self,
 				goto nope;
 		}
 	}
-	temp = DeeObject_TryCompareEq((DeeObject *)self->co_ddi,
-	                           (DeeObject *)other->co_ddi);
-	if (temp <= 0)
-		goto err_temp;
 	if (bcmp(self->co_code, other->co_code, self->co_codebytes) != 0)
 		goto nope;
-	return 1;
-err_temp:
-	return temp;
+	return DeeObject_TryCompareForEquality((DeeObject *)self->co_ddi,
+	                                       (DeeObject *)other->co_ddi);
 nope:
-	return 0;
-err:
-	return -1;
+	return 1;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-code_eq(DeeCodeObject *self,
-        DeeCodeObject *other) {
-	int result;
-	result = code_eq_impl(self, other);
-	if unlikely(result < 0)
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+code_compare_eq(DeeCodeObject *self, DeeCodeObject *other) {
+	if (DeeObject_AssertTypeExact(other, &DeeCode_Type))
 		goto err;
-	return_bool_(result != 0);
+	return code_compare_eq_impl(self, other);
 err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-code_ne(DeeCodeObject *self,
-        DeeCodeObject *other) {
-	int result;
-	result = code_eq_impl(self, other);
-	if unlikely(result < 0)
-		goto err;
-	return_bool_(result == 0);
-err:
-	return NULL;
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+code_trycompare_eq(DeeCodeObject *self, DeeCodeObject *other) {
+	if (!DeeCode_Check(other))
+		return -1;
+	return code_compare_eq_impl(self, other);
 }
 
 PRIVATE struct type_cmp code_cmp = {
 	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&code_hash,
-	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_compare_eq,
 	/* .tp_compare       = */ NULL,
-	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&code_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&code_ne
+	/* .tp_trycompare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&code_trycompare_eq,
 };
 
 PRIVATE WUNUSED DREF DeeObject *DCALL code_ctor(void) {

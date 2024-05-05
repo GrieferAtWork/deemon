@@ -106,74 +106,18 @@ funcstaticsiter_nii_rewind(FunctionStaticsIterator *__restrict self) {
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_eq(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcstaticsiter_compare(FunctionStaticsIterator *self,
+                        FunctionStaticsIterator *other) {
+	uint16_t lhs_sid, rhs_sid;
 	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
 		goto err;
-	return_bool(self->fsi_func == other->fsi_func &&
-	            atomic_read(&self->fsi_end) == atomic_read(&other->fsi_end));
+	Dee_return_compare_if_ne(self->fsi_func, other->fsi_func);
+	lhs_sid = atomic_read(&self->fsi_end);
+	rhs_sid = atomic_read(&other->fsi_end);
+	Dee_return_compare(lhs_sid, rhs_sid);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_ne(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
-		goto err;
-	return_bool(self->fsi_func != other->fsi_func ||
-	            atomic_read(&self->fsi_end) != atomic_read(&other->fsi_end));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_lo(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
-		goto err;
-	return_bool(self->fsi_func == other->fsi_func
-	            ? atomic_read(&self->fsi_end) < atomic_read(&other->fsi_end)
-	            : self->fsi_func < other->fsi_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_le(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
-		goto err;
-	return_bool(self->fsi_func == other->fsi_func
-	            ? atomic_read(&self->fsi_end) <= atomic_read(&other->fsi_end)
-	            : self->fsi_func <= other->fsi_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_gr(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
-		goto err;
-	return_bool(self->fsi_func == other->fsi_func
-	            ? atomic_read(&self->fsi_end) > atomic_read(&other->fsi_end)
-	            : self->fsi_func > other->fsi_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcstaticsiter_ge(FunctionStaticsIterator *self,
-                   FunctionStaticsIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionStaticsIterator_Type))
-		goto err;
-	return_bool(self->fsi_func == other->fsi_func
-	            ? atomic_read(&self->fsi_end) >= atomic_read(&other->fsi_end)
-	            : self->fsi_func >= other->fsi_func);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -290,14 +234,14 @@ PRIVATE struct type_nii tpconst funcstaticsiter_nii = {
 PRIVATE struct type_cmp funcstaticsiter_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcstaticsiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &funcstaticsiter_nii,
 };
 
@@ -746,74 +690,18 @@ funcsymbolsbynameiter_nii_rewind(FunctionSymbolsByNameIterator *__restrict self)
 	return 0;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_eq(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+funcsymbolsbynameiter_compare(FunctionSymbolsByNameIterator *self,
+                              FunctionSymbolsByNameIterator *other) {
+	uint16_t lhs_rid, rhs_rid;
 	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
 		goto err;
-	return_bool(self->fsbni_func == other->fsbni_func &&
-	            atomic_read(&self->fsbni_end) == atomic_read(&other->fsbni_end));
+	Dee_return_compare_if_ne(self->fsbni_func, other->fsbni_func);
+	lhs_rid = atomic_read(&self->fsbni_rid);
+	rhs_rid = atomic_read(&other->fsbni_rid);
+	Dee_return_compare(lhs_rid, rhs_rid);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_ne(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(self->fsbni_func != other->fsbni_func ||
-	            atomic_read(&self->fsbni_end) != atomic_read(&other->fsbni_end));
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_lo(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(self->fsbni_func == other->fsbni_func
-	            ? atomic_read(&self->fsbni_end) < atomic_read(&other->fsbni_end)
-	            : self->fsbni_func < other->fsbni_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_le(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(self->fsbni_func == other->fsbni_func
-	            ? atomic_read(&self->fsbni_end) <= atomic_read(&other->fsbni_end)
-	            : self->fsbni_func <= other->fsbni_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_gr(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(self->fsbni_func == other->fsbni_func
-	            ? atomic_read(&self->fsbni_end) > atomic_read(&other->fsbni_end)
-	            : self->fsbni_func > other->fsbni_func);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-funcsymbolsbynameiter_ge(FunctionSymbolsByNameIterator *self,
-                         FunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(self->fsbni_func == other->fsbni_func
-	            ? atomic_read(&self->fsbni_end) >= atomic_read(&other->fsbni_end)
-	            : self->fsbni_func >= other->fsbni_func);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) int DCALL
@@ -1002,14 +890,14 @@ PRIVATE struct type_nii tpconst funcsymbolsbynameiter_nii = {
 PRIVATE struct type_cmp funcsymbolsbynameiter_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&funcsymbolsbynameiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &funcsymbolsbynameiter_nii,
 };
 
@@ -1744,79 +1632,15 @@ yfuncsymbolsbynameiter_compare(YieldFunctionSymbolsByNameIterator *lhs,
                                YieldFunctionSymbolsByNameIterator *rhs) {
 	YieldFunctionSymbolsByNameIteratorIndex lhs_idx;
 	YieldFunctionSymbolsByNameIteratorIndex rhs_idx;
-	int result;
-	if (lhs->yfsbni_seq != rhs->yfsbni_seq)
-		return lhs->yfsbni_seq < rhs->yfsbni_seq ? -1 : 1;
+	if (DeeObject_AssertTypeExact(rhs, &YieldFunctionSymbolsByNameIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(lhs->yfsbni_seq, rhs->yfsbni_seq);
 	lhs_idx.yfsbnii_word = atomic_read(&lhs->yfsbni_idx.yfsbnii_word);
 	rhs_idx.yfsbnii_word = atomic_read(&rhs->yfsbni_idx.yfsbnii_word);
-	if (lhs_idx.yfsbnii_idx.i_aid != rhs_idx.yfsbnii_idx.i_aid) {
-		result = lhs_idx.yfsbnii_idx.i_aid < rhs_idx.yfsbnii_idx.i_aid ? -1 : 1;
-	} else if (lhs_idx.yfsbnii_idx.i_rid != rhs_idx.yfsbnii_idx.i_rid) {
-		result = lhs_idx.yfsbnii_idx.i_rid < rhs_idx.yfsbnii_idx.i_rid ? -1 : 1;
-	} else {
-		result = 0;
-	}
-	return result;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_eq(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) == 0);
+	Dee_return_compare_if_ne(lhs_idx.yfsbnii_idx.i_aid, rhs_idx.yfsbnii_idx.i_aid);
+	Dee_return_compare(lhs_idx.yfsbnii_idx.i_rid, rhs_idx.yfsbnii_idx.i_rid);
 err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_ne(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) != 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_lo(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) < 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_le(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) <= 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_gr(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) > 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-yfuncsymbolsbynameiter_ge(YieldFunctionSymbolsByNameIterator *self,
-                          YieldFunctionSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &YieldFunctionSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(yfuncsymbolsbynameiter_compare(self, other) >= 0);
-err:
-	return NULL;
+	return Dee_COMPARE_ERR;
 }
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeYieldFunctionObject *DCALL
@@ -2083,14 +1907,14 @@ PRIVATE struct type_nii tpconst yfuncsymbolsbynameiter_nii = {
 PRIVATE struct type_cmp yfuncsymbolsbynameiter_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&yfuncsymbolsbynameiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &yfuncsymbolsbynameiter_nii,
 };
 
@@ -3747,8 +3571,9 @@ PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
 framesymbolsbynameiter_compare(FrameSymbolsByNameIterator *lhs,
                                FrameSymbolsByNameIterator *rhs) {
 	int result;
-	if (lhs->frsbni_seq != rhs->frsbni_seq)
-		return lhs->frsbni_seq < rhs->frsbni_seq ? -1 : 1;
+	if (DeeObject_AssertTypeExact(rhs, &FrameSymbolsByNameIterator_Type))
+		goto err;
+	Dee_return_compare_if_ne(lhs->frsbni_seq, rhs->frsbni_seq);
 	if (lhs == rhs)
 		return 0;
 	DeeLock_Acquire2(FrameSymbolsByNameIterator_LockAcquire(lhs),
@@ -3758,80 +3583,23 @@ framesymbolsbynameiter_compare(FrameSymbolsByNameIterator *lhs,
 	                 FrameSymbolsByNameIterator_LockTryAcquire(rhs),
 	                 FrameSymbolsByNameIterator_LockRelease(rhs));
 	if (lhs->frsbni_idx.frsbnii_aid != rhs->frsbni_idx.frsbnii_aid) {
-		result = lhs->frsbni_idx.frsbnii_aid < rhs->frsbni_idx.frsbnii_aid ? -1 : 1;
+		result = Dee_CompareNe(lhs->frsbni_idx.frsbnii_aid, rhs->frsbni_idx.frsbnii_aid);
 	} else if (lhs->frsbni_idx.frsbnii_rid != rhs->frsbni_idx.frsbnii_rid) {
-		result = lhs->frsbni_idx.frsbnii_rid < rhs->frsbni_idx.frsbnii_rid ? -1 : 1;
+		result = Dee_CompareNe(lhs->frsbni_idx.frsbnii_rid, rhs->frsbni_idx.frsbnii_rid);
 	} else if (lhs->frsbni_idx.frsbnii_lid != rhs->frsbni_idx.frsbnii_lid) {
-		result = lhs->frsbni_idx.frsbnii_lid < rhs->frsbni_idx.frsbnii_lid ? -1 : 1;
+		result = Dee_CompareNe(lhs->frsbni_idx.frsbnii_lid, rhs->frsbni_idx.frsbnii_lid);
 	} else if (lhs->frsbni_idx.frsbnii_nsp != rhs->frsbni_idx.frsbnii_nsp) {
-		result = lhs->frsbni_idx.frsbnii_nsp < rhs->frsbni_idx.frsbnii_nsp ? -1 : 1;
+		result = Dee_CompareNe(lhs->frsbni_idx.frsbnii_nsp, rhs->frsbni_idx.frsbnii_nsp);
 	} else {
 		result = 0;
 	}
 	FrameSymbolsByNameIterator_LockRelease(lhs);
 	FrameSymbolsByNameIterator_LockRelease(rhs);
 	return result;
+err:
+	return Dee_COMPARE_ERR;
 }
 
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_eq(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) == 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_ne(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) != 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_lo(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) < 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_le(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) <= 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_gr(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) > 0);
-err:
-	return NULL;
-}
-
-PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL
-framesymbolsbynameiter_ge(FrameSymbolsByNameIterator *self,
-                          FrameSymbolsByNameIterator *other) {
-	if (DeeObject_AssertTypeExact(other, &FrameSymbolsByNameIterator_Type))
-		goto err;
-	return_bool(framesymbolsbynameiter_compare(self, other) >= 0);
-err:
-	return NULL;
-}
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeFrameObject *DCALL
 framesymbolsbynameiter_get_frame(FrameSymbolsByNameIterator *__restrict self) {
@@ -4359,14 +4127,14 @@ PRIVATE struct type_nii tpconst framesymbolsbynameiter_nii = {
 PRIVATE struct type_cmp framesymbolsbynameiter_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&framesymbolsbynameiter_ge,
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 	/* .tp_nii           = */ &framesymbolsbynameiter_nii,
 };
 

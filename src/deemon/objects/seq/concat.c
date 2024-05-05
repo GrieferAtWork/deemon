@@ -204,56 +204,48 @@ done:
 }
 
 
-#define DEFINE_CATITERATOR_COMPARE(name, if_equal, if_diffseq, compare_object) \
-	PRIVATE WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL                      \
-	name(CatIterator *self, CatIterator *other) {                              \
-		DREF DeeObject *result;                                                \
-		DREF DeeObject *my_curr, *ot_curr;                                     \
-		DREF DeeObject **my_pseq, **ot_pseq;                                   \
-		if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))         \
-			goto err;                                                          \
-		if (self == other)                                                     \
-			if_equal;                                                          \
-		CatIterator_LockRead2(self, other);                                    \
-		my_pseq = (DREF DeeObject **)self->cti_pseq;                           \
-		ot_pseq = (DREF DeeObject **)other->cti_pseq;                          \
-		if (my_pseq != ot_pseq) {                                              \
-			CatIterator_LockEndRead(other);                                    \
-			CatIterator_LockEndRead(self);                                     \
-			if_diffseq;                                                        \
-		}                                                                      \
-		my_curr = self->cti_curr;                                              \
-		Dee_Incref(my_curr);                                                   \
-		ot_curr = other->cti_curr;                                             \
-		Dee_Incref(ot_curr);                                                   \
-		CatIterator_LockEndRead(other);                                        \
-		CatIterator_LockEndRead(self);                                         \
-		result = compare_object(my_curr, ot_curr);                             \
-		Dee_Decref(ot_curr);                                                   \
-		Dee_Decref(my_curr);                                                   \
-		return result;                                                         \
-	err:                                                                       \
-		return NULL;                                                           \
+PRIVATE WUNUSED NONNULL((1, 2)) int DCALL
+catiterator_compare(CatIterator *self, CatIterator *other) {
+	DREF DeeObject *my_curr, *ot_curr;
+	DREF DeeObject **my_pseq, **ot_pseq;
+	int result;
+	if (DeeObject_AssertTypeExact(other, &SeqConcatIterator_Type))
+		goto err;
+	if (self == other)
+		return 0;
+	CatIterator_LockRead2(self, other);
+	my_pseq = (DREF DeeObject **)self->cti_pseq;
+	ot_pseq = (DREF DeeObject **)other->cti_pseq;
+	if (my_pseq != ot_pseq) {
+		CatIterator_LockEndRead(other);
+		CatIterator_LockEndRead(self);
+		return Dee_CompareNe(my_pseq, ot_pseq);
 	}
-DEFINE_CATITERATOR_COMPARE(catiterator_eq, return_true, return_false, DeeObject_CompareEqObject)
-DEFINE_CATITERATOR_COMPARE(catiterator_ne, return_false, return_true, DeeObject_CompareNeObject)
-DEFINE_CATITERATOR_COMPARE(catiterator_lo, return_false, return_bool_(my_pseq < ot_pseq), DeeObject_CompareLoObject)
-DEFINE_CATITERATOR_COMPARE(catiterator_le, return_true, return_bool_(my_pseq < ot_pseq), DeeObject_CompareLeObject)
-DEFINE_CATITERATOR_COMPARE(catiterator_gr, return_false, return_bool_(my_pseq > ot_pseq), DeeObject_CompareGrObject)
-DEFINE_CATITERATOR_COMPARE(catiterator_ge, return_true, return_bool_(my_pseq > ot_pseq), DeeObject_CompareGeObject)
-#undef DEFINE_CATITERATOR_COMPARE
+	my_curr = self->cti_curr;
+	Dee_Incref(my_curr);
+	ot_curr = other->cti_curr;
+	Dee_Incref(ot_curr);
+	CatIterator_LockEndRead(other);
+	CatIterator_LockEndRead(self);
+	result = DeeObject_Compare(my_curr, ot_curr);
+	Dee_Decref(ot_curr);
+	Dee_Decref(my_curr);
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
 
 PRIVATE struct type_cmp catiterator_cmp = {
 	/* .tp_hash          = */ NULL,
 	/* .tp_compare_eq    = */ NULL,
-	/* .tp_compare       = */ NULL,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&catiterator_compare,
 	/* .tp_trycompare_eq = */ NULL,
-	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_eq,
-	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ne,
-	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_lo,
-	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_le,
-	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_gr,
-	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ge
+	/* .tp_eq            = */ NULL,
+	/* .tp_ne            = */ NULL,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL
 };
 
 
