@@ -556,15 +556,16 @@ DEFINE_STRINGSCANITERATOR_COMPARE(ssi_ge, >=)
 #undef DEFINE_STRINGSCANITERATOR_COMPARE
 
 PRIVATE struct type_cmp ssi_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ge
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&ssi_ge
 };
 
 PRIVATE struct type_member tpconst ssi_members[] = {

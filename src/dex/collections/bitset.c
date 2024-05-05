@@ -1622,15 +1622,16 @@ PRIVATE struct type_math bs_math = {
 
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
 PRIVATE struct type_cmp bs_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bs_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_ge,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bs_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bs_ge,
 };
 
 PRIVATE struct type_seq bs_seq = {
@@ -2260,15 +2261,16 @@ PRIVATE struct type_math robs_math = {
 
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
 PRIVATE struct type_cmp robs_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&robs_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ge,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&robs_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&robs_ge,
 };
 
 PRIVATE struct type_seq robs_seq = {
@@ -3951,15 +3953,16 @@ PRIVATE struct type_math bsv_math = {
 
 /* Compare operators with optimizations when the operand is another `Bitset' or `BitsetView' */
 PRIVATE struct type_cmp bsv_cmp = {
-	/* .tp_hash       = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bsv_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_ge,
+	/* .tp_hash          = */ (Dee_hash_t (DCALL *)(DeeObject *__restrict))&bsv_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsv_ge,
 };
 
 PRIVATE struct type_seq bsv_seq = {
@@ -4661,16 +4664,17 @@ PRIVATE struct type_nii tpconst bsiter_nii = {
 };
 
 PRIVATE struct type_cmp bsiter_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ge,
-	/* .tp_nii        = */ &bsiter_nii
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&bsiter_ge,
+	/* .tp_nii           = */ &bsiter_nii
 };
 
 PRIVATE struct type_member tpconst bsiter_members[] = {

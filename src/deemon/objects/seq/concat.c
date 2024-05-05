@@ -244,15 +244,16 @@ DEFINE_CATITERATOR_COMPARE(catiterator_ge, return_true, return_bool_(my_pseq > o
 #undef DEFINE_CATITERATOR_COMPARE
 
 PRIVATE struct type_cmp catiterator_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_lo,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_le,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_gr,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ge
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_lo,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_le,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_gr,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&catiterator_ge
 };
 
 

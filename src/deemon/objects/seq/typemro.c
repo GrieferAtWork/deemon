@@ -316,29 +316,31 @@ err:
 }
 
 PRIVATE struct type_cmp typemroiter_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_nii        = */ &typemroiter_nii,
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typemroiter_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_nii           = */ &typemroiter_nii,
 };
 
 PRIVATE struct type_cmp typebasesiter_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_ne,
-	/* .tp_lo         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_le         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_gr         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_ge         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
-	/* .tp_nii        = */ &typebasesiter_nii,
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&typebasesiter_ne,
+	/* .tp_lo            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_le            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_gr            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_ge            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))NULL,
+	/* .tp_nii           = */ &typebasesiter_nii,
 };
 
 INTERN DeeTypeObject TypeMROIterator_Type = {

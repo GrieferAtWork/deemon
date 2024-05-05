@@ -131,6 +131,7 @@ DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareGrOb
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) DREF DeeObject *(DCALL DeeObject_TCompareGeObject)(DeeTypeObject *tp_self, DeeObject *self, DeeObject *some_object);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TCompare(DeeTypeObject *tp_lhs, DeeObject *lhs, DeeObject *rhs);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TCompareForEquality(DeeTypeObject *tp_lhs, DeeObject *lhs, DeeObject *rhs);
+DFUNDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TTryCompareForEquality(DeeTypeObject *tp_lhs, DeeObject *lhs, DeeObject *rhs);
 
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeach)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_t proc, void *arg);
 DFUNDEF WUNUSED NONNULL((1, 2, 3)) Dee_ssize_t (DCALL DeeObject_TForeachPair)(DeeTypeObject *tp_self, DeeObject *self, Dee_foreach_pair_t proc, void *arg);

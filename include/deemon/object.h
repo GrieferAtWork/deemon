@@ -1907,7 +1907,26 @@ struct Dee_type_cmp {
 	 * @return: 1:  `lhs > rhs' */
 	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_compare)(DeeObject *self, DeeObject *some_object);
 
-	/* Individual compare opeartors. */
+	/* Same as "tp_compare_eq", but shouldn't[1] throw `NotImplemented', `TypeError' or `ValueError'.
+	 * Instead of throwing these errors, this implementation should handle these errors by returning
+	 * either `-1' or `1' to indicate non-equality.
+	 *
+	 * [1] With "shouldn't" I mean *REALLY* shouldn't. As in: unless you *really* want it to throw
+	 *     one of those errors, you should either use API functions that never throw these errors,
+	 *     or add `DeeError_Catch()' calls to your function to catch those errors by returning either
+	 *     `-1' or `1' instead.
+	 *
+	 * !!! THIS OPERATOR CANNOT BE USED TO SUBSTITUTE "tp_compare_eq" !!!
+	 * -> Defining this operator but not defining "tp_compare_eq" is !NOT VALID!
+	 *    However, "tp_trycompare_eq" can ITSELF be substituted by "tp_compare_eq"
+	 *
+	 * @return: Dee_COMPARE_ERR: An error occurred.
+	 * @return: -1: `lhs != rhs'
+	 * @return: 0:  `lhs == rhs'
+	 * @return: 1:  `lhs != rhs' */
+	WUNUSED_T NONNULL_T((1, 2)) int (DCALL *tp_trycompare_eq)(DeeObject *self, DeeObject *some_object);
+
+	/* Individual compare operators. */
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_eq)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_ne)(DeeObject *self, DeeObject *some_object);
 	WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
@@ -4479,12 +4498,19 @@ DFUNDEF WUNUSED NONNULL((1, 2)) int (DCALL DeeObject_CompareGe)(DeeObject *self,
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_Compare)(DeeObject *lhs, DeeObject *rhs);
 
-/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
+/* @return: == -1: `lhs != rhs'
  * @return: == 0:  `lhs == rhs'
  * @return: == 1:  `lhs != rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DFUNDEF WUNUSED NONNULL((1, 2)) int
 (DCALL DeeObject_CompareForEquality)(DeeObject *lhs, DeeObject *rhs);
+
+/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
+ * @return: == 0:  `lhs == rhs'
+ * @return: == 1:  `lhs != rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+DFUNDEF WUNUSED NONNULL((1, 2)) int
+(DCALL DeeObject_TryCompareForEquality)(DeeObject *lhs, DeeObject *rhs);
 
 /* Compare a pre-keyed `lhs_keyed' with `rhs' using the given (optional) `key' function
  * @return: == -1: `lhs_keyed < key(rhs)'

@@ -4123,15 +4123,16 @@ instance_builtin_ge(DeeObject *self, DeeObject *other) {
 }
 
 INTERN struct type_cmp instance_builtin_cmp = {
-	/* .tp_hash       = */ &instance_builtin_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &instance_builtin_eq,
-	/* .tp_ne         = */ &instance_builtin_ne,
-	/* .tp_lo         = */ &instance_builtin_lo,
-	/* .tp_le         = */ &instance_builtin_le,
-	/* .tp_gr         = */ &instance_builtin_gr,
-	/* .tp_ge         = */ &instance_builtin_ge
+	/* .tp_hash          = */ &instance_builtin_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ &instance_builtin_eq,
+	/* .tp_ne            = */ &instance_builtin_ne,
+	/* .tp_lo            = */ &instance_builtin_lo,
+	/* .tp_le            = */ &instance_builtin_le,
+	/* .tp_gr            = */ &instance_builtin_gr,
+	/* .tp_ge            = */ &instance_builtin_ge
 };
 
 

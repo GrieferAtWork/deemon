@@ -313,10 +313,12 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_GR_NODEFAULT                      DeeType_InvokeCmpGr_NODEFAULT
 #define DeeType_INVOKE_GE                                DeeType_InvokeCmpGe
 #define DeeType_INVOKE_GE_NODEFAULT                      DeeType_InvokeCmpGe_NODEFAULT
-#define DeeType_INVOKE_COMPARE_EQ                        DeeType_InvokeCmpCompareEq
-#define DeeType_INVOKE_COMPARE_EQ_NODEFAULT              DeeType_InvokeCmpCompareEq_NODEFAULT
+#define DeeType_INVOKE_COMPAREEQ                         DeeType_InvokeCmpCompareEq
+#define DeeType_INVOKE_COMPAREEQ_NODEFAULT               DeeType_InvokeCmpCompareEq_NODEFAULT
 #define DeeType_INVOKE_COMPARE                           DeeType_InvokeCmpCompare
 #define DeeType_INVOKE_COMPARE_NODEFAULT                 DeeType_InvokeCmpCompare_NODEFAULT
+#define DeeType_INVOKE_TRYCOMPAREEQ                      DeeType_InvokeCmpTryCompareEq
+#define DeeType_INVOKE_TRYCOMPAREEQ_NODEFAULT            DeeType_InvokeCmpTryCompareEq_NODEFAULT
 #define DeeType_INVOKE_ITER                              DeeType_InvokeSeqIter
 #define DeeType_INVOKE_ITER_NODEFAULT                    DeeType_InvokeSeqIter_NODEFAULT
 #define DeeType_INVOKE_SIZEOB                            DeeType_InvokeSeqSizeOb
@@ -456,8 +458,9 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_LE(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_le)(self, other)
 #define DeeType_INVOKE_GR(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_gr)(self, other)
 #define DeeType_INVOKE_GE(tp_self, self, other)                                      (*(tp_self)->tp_cmp->tp_ge)(self, other)
-#define DeeType_INVOKE_COMPARE_EQ(tp_self, self, other)                              (*(tp_self)->tp_cmp->tp_compare_eq)(self, other)
+#define DeeType_INVOKE_COMPAREEQ(tp_self, self, other)                               (*(tp_self)->tp_cmp->tp_compare_eq)(self, other)
 #define DeeType_INVOKE_COMPARE(tp_self, self, other)                                 (*(tp_self)->tp_cmp->tp_compare)(self, other)
+#define DeeType_INVOKE_TRYCOMPAREEQ(tp_self, self, other)                            (*(tp_self)->tp_cmp->tp_trycompare_eq)(self, other)
 #define DeeType_INVOKE_ITER(tp_self, self)                                           (*(tp_self)->tp_seq->tp_iter)(self)
 #define DeeType_INVOKE_SIZEOB(tp_self, self)                                         (*(tp_self)->tp_seq->tp_sizeob)(self)
 #define DeeType_INVOKE_CONTAINS(tp_self, self, other)                                (*(tp_self)->tp_seq->tp_contains)(self, other)
@@ -552,8 +555,9 @@ DeeSystem_DEFINE_memsetp(dee_memsetp)
 #define DeeType_INVOKE_LE_NODEFAULT                      DeeType_INVOKE_LE
 #define DeeType_INVOKE_GR_NODEFAULT                      DeeType_INVOKE_GR
 #define DeeType_INVOKE_GE_NODEFAULT                      DeeType_INVOKE_GE
-#define DeeType_INVOKE_COMPARE_EQ_NODEFAULT              DeeType_INVOKE_COMPARE_EQ
+#define DeeType_INVOKE_COMPAREEQ_NODEFAULT               DeeType_INVOKE_COMPAREEQ
 #define DeeType_INVOKE_COMPARE_NODEFAULT                 DeeType_INVOKE_COMPARE
+#define DeeType_INVOKE_TRYCOMPAREEQ_NODEFAULT            DeeType_INVOKE_TRYCOMPAREEQ
 #define DeeType_INVOKE_ITER_NODEFAULT                    DeeType_INVOKE_ITER
 #define DeeType_INVOKE_SIZEOB_NODEFAULT                  DeeType_INVOKE_SIZEOB
 #define DeeType_INVOKE_CONTAINS_NODEFAULT                DeeType_INVOKE_CONTAINS
@@ -3396,7 +3400,7 @@ DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoolWithForeach, (DeeObject *self)) {
 DEFINE_INTERNAL_SEQ_OPERATOR(int, DefaultBoolWithCompareEq, (DeeObject *self)) {
 	int result;
 	LOAD_TP_SELF;
-	result = DeeType_INVOKE_COMPARE_EQ_NODEFAULT(tp_self, self, Dee_EmptySeq);
+	result = DeeType_INVOKE_COMPAREEQ_NODEFAULT(tp_self, self, Dee_EmptySeq);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	if (result == -1)
@@ -3738,7 +3742,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithCompareEq,
                          (DeeObject *self, DeeObject *other)) {
 	int result;
 	LOAD_TP_SELF;
-	result = DeeType_INVOKE_COMPARE_EQ_NODEFAULT(tp_self, self, other);
+	result = DeeType_INVOKE_COMPAREEQ_NODEFAULT(tp_self, self, other);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result == 0);
@@ -3812,7 +3816,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultEqWithCompareEqDefault,
                          (DeeObject *self, DeeObject *other)) {
 	int result;
 	LOAD_TP_SELF;
-	result = DeeType_INVOKE_COMPARE_EQ(tp_self, self, other);
+	result = DeeType_INVOKE_COMPAREEQ(tp_self, self, other);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result == 0);
@@ -3826,7 +3830,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithCompareEq,
                          (DeeObject *self, DeeObject *other)) {
 	int result;
 	LOAD_TP_SELF;
-	result = DeeType_INVOKE_COMPARE_EQ_NODEFAULT(tp_self, self, other);
+	result = DeeType_INVOKE_COMPAREEQ_NODEFAULT(tp_self, self, other);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result != 0);
@@ -3900,7 +3904,7 @@ DEFINE_INTERNAL_OPERATOR(DREF DeeObject *, DefaultNeWithCompareEqDefault,
                          (DeeObject *self, DeeObject *other)) {
 	int result;
 	LOAD_TP_SELF;
-	result = DeeType_INVOKE_COMPARE_EQ(tp_self, self, other);
+	result = DeeType_INVOKE_COMPAREEQ(tp_self, self, other);
 	if unlikely(result == Dee_COMPARE_ERR)
 		goto err;
 	return_bool_(result != 0);
@@ -4255,6 +4259,144 @@ err_other_no_getitem:
 err:
 	return NULL;
 }
+
+
+
+/* tp_trycompare_eq */
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithCompareEq,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPAREEQ_NODEFAULT(tp_self, self, other);
+	if (result == Dee_COMPARE_ERR) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError))
+			result = -1;
+	}
+	return result;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithEq,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *resultob;
+	LOAD_TP_SELF;
+	resultob = DeeType_INVOKE_EQ_NODEFAULT(tp_self, self, other);
+	if unlikely(!resultob) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError))
+			return -1;
+		goto err;
+	}
+	result = DeeObject_BoolInherited(resultob);
+	Dee_Decref(resultob);
+	if unlikely(result < 0)
+		goto err;
+	return result ? 0 : 1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithNe,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	DREF DeeObject *resultob;
+	LOAD_TP_SELF;
+	resultob = DeeType_INVOKE_NE_NODEFAULT(tp_self, self, other);
+	if unlikely(!resultob) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError))
+			return -1;
+		goto err;
+	}
+	result = DeeObject_BoolInherited(resultob);
+	Dee_Decref(resultob);
+	if unlikely(result < 0)
+		goto err;
+	return result;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithCompare,
+                         (DeeObject *self, DeeObject *other)) {
+	int result;
+	LOAD_TP_SELF;
+	result = DeeType_INVOKE_COMPARE_NODEFAULT(tp_self, self, other);
+	if (result == Dee_COMPARE_ERR) {
+		if (DeeError_Catch(&DeeError_NotImplemented) ||
+		    DeeError_Catch(&DeeError_TypeError) ||
+		    DeeError_Catch(&DeeError_ValueError))
+			result = -1;
+	}
+	return result;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithLoAndGr,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LO_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err_tryhandle;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return -1; /* Different */
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err_tryhandle;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (temp)
+		return 1; /* Different */
+	return 0;
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_NotImplemented) ||
+	    DeeError_Catch(&DeeError_TypeError) ||
+	    DeeError_Catch(&DeeError_ValueError))
+		return -1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
+DEFINE_INTERNAL_OPERATOR(int, DefaultTryCompareEqWithLeAndGe,
+                         (DeeObject *self, DeeObject *other)) {
+	int temp;
+	DREF DeeObject *cmp_ob;
+	LOAD_TP_SELF;
+	cmp_ob = DeeType_INVOKE_LE_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err_tryhandle;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return 1; /* Different */
+	cmp_ob = DeeType_INVOKE_GR_NODEFAULT(tp_self, self, other);
+	if unlikely(!cmp_ob)
+		goto err_tryhandle;
+	temp = DeeObject_BoolInherited(cmp_ob);
+	if unlikely(temp < 0)
+		goto err;
+	if (!temp)
+		return -1; /* Different */
+	return 0;
+err_tryhandle:
+	if (DeeError_Catch(&DeeError_NotImplemented) ||
+	    DeeError_Catch(&DeeError_TypeError) ||
+	    DeeError_Catch(&DeeError_ValueError))
+		return -1;
+err:
+	return Dee_COMPARE_ERR;
+}
+
 
 
 
@@ -12293,84 +12435,36 @@ err:
  * @return: == 1:  `lhs > rhs'
  * @return: == Dee_COMPARE_ERR: An error occurred. */
 DEFINE_OPERATOR(int, Compare, (DeeObject *self, DeeObject *rhs)) {
-#if 1
 	LOAD_TP_SELF;
 	if likely((tp_self->tp_cmp && tp_self->tp_cmp->tp_compare) ||
 	          (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_compare))
 		return DeeType_INVOKE_COMPARE(tp_self, self, rhs);
 	err_unimplemented_operator(tp_self, OPERATOR_LO);
 	return Dee_COMPARE_ERR;
-#elif 1
-	DeeTypeObject *tp_lhs;
-	ASSERT_OBJECT(self);
-	ASSERT_OBJECT(rhs);
-	tp_lhs = Dee_TYPE(self);
-again:
-	if (tp_lhs->tp_cmp || DeeType_InheritCompare(tp_lhs)) {
-		int opval;
-		DREF DeeObject *opres;
-		DREF DeeObject *(DCALL *tp_lo)(DeeObject *self, DeeObject *some_object);
-		tp_lo = tp_lhs->tp_cmp->tp_lo;
-
-		/* Fallback: do 1/2 operator invocations, based on those operators that are available. */
-		if (tp_lo) {
-			opres = (*tp_lo)(self, rhs);
-		} else if (tp_lhs->tp_cmp->tp_ge) {
-			opres = xinvoke_not((*tp_lhs->tp_cmp->tp_ge)(self, rhs));
-		} else {
-			goto no_lo;
-		}
-		if unlikely(!opres)
-			goto err;
-		opval = DeeObject_BoolInherited(opres);
-		if (opval != 0) {
-			if unlikely(opval < 0)
-				goto err;
-			return -1;
-		}
-
-		/* At this point we know that: "!(self < rhs)"
-		 * -> Now check if "self == rhs" */
-		if (tp_lhs->tp_cmp->tp_eq) {
-			opres = (*tp_lhs->tp_cmp->tp_eq)(self, rhs);
-		} else if (tp_lhs->tp_cmp->tp_ne) {
-			opres = xinvoke_not((*tp_lhs->tp_cmp->tp_ne)(self, rhs));
-		} else {
-			goto no_lo;
-		}
-		if unlikely(!opres)
-			goto err;
-		opval = DeeObject_BoolInherited(opres);
-		if likely(opval >= 0)
-			opval = !opval;
-		return opval;
-	}
-no_lo:
-	err_unimplemented_operator(tp_lhs, OPERATOR_LO);
-err:
-	return Dee_COMPARE_ERR;
-#else
-	/* Fallback: use the normal compare operators.
-	 * For this purpose, we always use "operator <" and "operator ==" */
-	result = DeeObject_CompareLo(self, rhs);
-	if (result != 0) {
-		if unlikely(result < 0)
-			goto err;
-		return -1;
-	}
-	result = DeeObject_CompareEq(self, rhs);
-	if likely(result >= 0)
-		return result ? 0 : 1;
-err:
-	return Dee_COMPARE_ERR;
-#endif
 }
 
+/* @return: == -1: `lhs != rhs'
+ * @return: == 0:  `lhs == rhs'
+ * @return: == 1:  `lhs != rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
 DEFINE_OPERATOR(int, CompareForEquality, (DeeObject *self, DeeObject *rhs)) {
 	LOAD_TP_SELF;
 	if ((tp_self->tp_cmp && tp_self->tp_cmp->tp_compare_eq) ||
 	    (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_compare_eq))
-		return DeeType_INVOKE_COMPARE_EQ(tp_self, self, rhs);
+		return DeeType_INVOKE_COMPAREEQ(tp_self, self, rhs);
+	err_unimplemented_operator(tp_self, OPERATOR_EQ);
+	return Dee_COMPARE_ERR;
+}
+
+/* @return: == -1: `lhs != rhs', or `NotImplemented', `TypeError' or `ValueError' was thrown an handled
+ * @return: == 0:  `lhs == rhs'
+ * @return: == 1:  `lhs != rhs'
+ * @return: == Dee_COMPARE_ERR: An error occurred. */
+DEFINE_OPERATOR(int, TryCompareForEquality, (DeeObject *self, DeeObject *rhs)) {
+	LOAD_TP_SELF;
+	if ((tp_self->tp_cmp && tp_self->tp_cmp->tp_trycompare_eq) ||
+	    (DeeType_InheritCompare(tp_self) && tp_self->tp_cmp->tp_trycompare_eq))
+		return DeeType_INVOKE_TRYCOMPAREEQ(tp_self, self, rhs);
 	return -1; /* Implicit "NotImplemented" caught */
 }
 
@@ -12467,6 +12561,22 @@ DeeType_SubstituteDefaultCompareOperators(DeeTypeObject *__restrict self) {
 			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithLoAndGr;
 		} else if (has_le && has_ge) {
 			cmp->tp_compare_eq = &DeeObject_DefaultCompareEqWithLeAndGe;
+		}
+	}
+
+	if (!cmp->tp_trycompare_eq) {
+		if (has_compare_eq) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithCompareEq;
+		} else if (has_eq) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithEq;
+		} else if (has_ne) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithNe;
+		} else if (has_compare) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithCompare;
+		} else if (has_lo && has_gr) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithLoAndGr;
+		} else if (has_le && has_ge) {
+			cmp->tp_trycompare_eq = &DeeObject_DefaultTryCompareEqWithLeAndGe;
 		}
 	}
 
@@ -13813,81 +13923,88 @@ DeeSeqType_SubstituteDefaultOperators(DeeTypeObject *self, seq_featureset_t feat
 }
 
 INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndexFast = {
-	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast,
-	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast,
-	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndexFast,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndexFast,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
 INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndTryGetItemIndex = {
-	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex,
-	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex,
-	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithSizeAndTryGetItemIndex,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithSizeAndTryGetItemIndex,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
 INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeAndGetItemIndex = {
-	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndex,
-	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex,
-	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndex,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithSizeAndGetItemIndex,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithSizeAndGetItemIndex,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
 INTERN struct type_cmp DeeSeq_DefaultCmpWithSizeObAndGetItem = {
-	/* .tp_hash       = */ &DeeSeq_DefaultHashWithSizeObAndGetItem,
-	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithSizeObAndGetItem,
-	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithSizeObAndGetItem,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithSizeObAndGetItem,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithSizeObAndGetItem,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithSizeObAndGetItem,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
 INTERN struct type_cmp DeeSeq_DefaultCmpWithForeachDefault = {
-	/* .tp_hash       = */ &DeeSeq_DefaultHashWithForeachDefault,
-	/* .tp_compare_eq = */ &DeeSeq_DefaultCompareEqWithForeachDefault,
-	/* .tp_compare    = */ &DeeSeq_DefaultCompareWithForeachDefault,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeObject_DefaultLoWithCompareDefault,
-	/* .tp_le         = */ &DeeObject_DefaultLeWithCompareDefault,
-	/* .tp_gr         = */ &DeeObject_DefaultGrWithCompareDefault,
-	/* .tp_ge         = */ &DeeObject_DefaultGeWithCompareDefault,
+	/* .tp_hash          = */ &DeeSeq_DefaultHashWithForeachDefault,
+	/* .tp_compare_eq    = */ &DeeSeq_DefaultCompareEqWithForeachDefault,
+	/* .tp_compare       = */ &DeeSeq_DefaultCompareWithForeachDefault,
+	/* .tp_trycompare_eq = */ &DeeSeq_DefaultTryCompareEqWithForeachDefault,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeObject_DefaultLoWithCompareDefault,
+	/* .tp_le            = */ &DeeObject_DefaultLeWithCompareDefault,
+	/* .tp_gr            = */ &DeeObject_DefaultGrWithCompareDefault,
+	/* .tp_ge            = */ &DeeObject_DefaultGeWithCompareDefault,
 };
 INTERN struct type_cmp DeeSet_DefaultCmpWithForeachDefault = {
-	/* .tp_hash       = */ &DeeSet_DefaultHashWithForeachDefault,
-	/* .tp_compare_eq = */ &DeeSet_DefaultCompareEqWithForeachDefault,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeSet_DefaultLoWithForeachDefault,
-	/* .tp_le         = */ &DeeSet_DefaultLeWithForeachDefault,
-	/* .tp_gr         = */ &DeeSet_DefaultGrWithForeachDefault,
-	/* .tp_ge         = */ &DeeSet_DefaultGeWithForeachDefault,
+	/* .tp_hash          = */ &DeeSet_DefaultHashWithForeachDefault,
+	/* .tp_compare_eq    = */ &DeeSet_DefaultCompareEqWithForeachDefault,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &DeeSet_DefaultTryCompareEqWithForeachDefault,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeSet_DefaultLoWithForeachDefault,
+	/* .tp_le            = */ &DeeSet_DefaultLeWithForeachDefault,
+	/* .tp_gr            = */ &DeeSet_DefaultGrWithForeachDefault,
+	/* .tp_ge            = */ &DeeSet_DefaultGeWithForeachDefault,
 };
 INTERN struct type_cmp DeeMap_DefaultCmpWithForeachPairDefault = {
-	/* .tp_hash       = */ &DeeMap_DefaultHashWithForeachPairDefault,
-	/* .tp_compare_eq = */ &DeeMap_DefaultCompareEqWithForeachPairDefault,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &DeeObject_DefaultEqWithCompareEqDefault,
-	/* .tp_ne         = */ &DeeObject_DefaultNeWithCompareEqDefault,
-	/* .tp_lo         = */ &DeeMap_DefaultLoWithForeachPairDefault,
-	/* .tp_le         = */ &DeeMap_DefaultLeWithForeachPairDefault,
-	/* .tp_gr         = */ &DeeMap_DefaultGrWithForeachPairDefault,
-	/* .tp_ge         = */ &DeeMap_DefaultGeWithForeachPairDefault,
+	/* .tp_hash          = */ &DeeMap_DefaultHashWithForeachPairDefault,
+	/* .tp_compare_eq    = */ &DeeMap_DefaultCompareEqWithForeachPairDefault,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &DeeMap_DefaultTryCompareEqWithForeachPairDefault,
+	/* .tp_eq            = */ &DeeObject_DefaultEqWithCompareEqDefault,
+	/* .tp_ne            = */ &DeeObject_DefaultNeWithCompareEqDefault,
+	/* .tp_lo            = */ &DeeMap_DefaultLoWithForeachPairDefault,
+	/* .tp_le            = */ &DeeMap_DefaultLeWithForeachPairDefault,
+	/* .tp_gr            = */ &DeeMap_DefaultGrWithForeachPairDefault,
+	/* .tp_ge            = */ &DeeMap_DefaultGeWithForeachPairDefault,
 };
 
 
@@ -14983,6 +15100,7 @@ typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_gr_t)(Dee
 typedef WUNUSED_T NONNULL_T((1, 2)) DREF DeeObject *(DCALL *DeeType_tp_ge_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_compare_eq_t)(DeeObject *self, DeeObject *some_object);
 typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_compare_t)(DeeObject *self, DeeObject *some_object);
+typedef WUNUSED_T NONNULL_T((1, 2)) int (DCALL *DeeType_tp_trycompare_eq_t)(DeeObject *self, DeeObject *some_object);
 
 /* Special sequence operators which (when inherited) get replaced with
  * optimized `Dee(Seq|Set|Map)_Default*' functions based on sequence
@@ -14998,6 +15116,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_seq_gr(DeeObject *l
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_seq_ge(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_compare_eq(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_compare(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_seq_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
 
 INTDEF struct Dee_type_cmp generic_set_cmp;
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_set_hash(DeeObject *__restrict self);
@@ -15008,6 +15127,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_le(DeeObject *l
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_gr(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_set_ge(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_set_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_set_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
 
 INTDEF struct Dee_type_cmp generic_map_cmp;
 INTDEF WUNUSED NONNULL((1)) Dee_hash_t DCALL generic_map_hash(DeeObject *__restrict self);
@@ -15018,6 +15138,7 @@ INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_le(DeeObject *l
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_gr(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) DREF DeeObject *DCALL generic_map_ge(DeeObject *lhs, DeeObject *rhs);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_compare_eq(DeeObject *lhs, DeeObject *rhs);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL generic_map_trycompare_eq(DeeObject *lhs, DeeObject *rhs);
 
 
 PRIVATE NONNULL((1)) DeeType_tp_bool_t DCALL
@@ -15350,18 +15471,65 @@ DeeType_Optimize_tp_compare_eq(DeeTypeObject *__restrict dst,
 	}
 	return DeeType_Optimize_tp_compare(dst, tp_compare_eq);
 }
+
+PRIVATE NONNULL((1)) DeeType_tp_trycompare_eq_t DCALL
+DeeType_Optimize_tp_trycompare_eq(DeeTypeObject *__restrict dst,
+                                  DeeType_tp_trycompare_eq_t tp_trycompare_eq) {
+	if (tp_trycompare_eq == &generic_seq_trycompare_eq ||
+	    tp_trycompare_eq == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast ||
+	    tp_trycompare_eq == &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex ||
+	    tp_trycompare_eq == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex ||
+	    tp_trycompare_eq == &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem ||
+	    tp_trycompare_eq == &DeeSeq_DefaultTryCompareEqWithForeachDefault) {
+		struct type_seq *dst_seq = dst->tp_seq;
+		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
+			bool has_tp_size = Dee_type_seq_has_custom_tp_size(dst_seq);
+			if (has_tp_size && dst_seq->tp_getitem_index_fast) {
+				return &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast;
+			} else if (has_tp_size && Dee_type_seq_has_custom_tp_trygetitem_index(dst_seq)) {
+				return &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex;
+			} else if (has_tp_size && Dee_type_seq_has_custom_tp_getitem_index(dst_seq)) {
+				return &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex;
+			} else if (Dee_type_seq_has_custom_tp_sizeob(dst_seq) &&
+			           Dee_type_seq_has_custom_tp_getitem(dst_seq)) {
+				return &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem;
+			} else if (dst_seq->tp_foreach) {
+				return &DeeSeq_DefaultTryCompareEqWithForeachDefault;
+			}
+		}
+		return &generic_seq_trycompare_eq;
+	} else if (tp_trycompare_eq == &generic_set_trycompare_eq ||
+	           tp_trycompare_eq == &DeeSet_DefaultTryCompareEqWithForeachDefault) {
+		struct type_seq *dst_seq = dst->tp_seq;
+		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
+			if (dst_seq->tp_foreach)
+				return &DeeSet_DefaultTryCompareEqWithForeachDefault;
+		}
+		return &generic_set_trycompare_eq;
+	} else if (tp_trycompare_eq == &generic_map_trycompare_eq ||
+	           tp_trycompare_eq == &DeeMap_DefaultTryCompareEqWithForeachPairDefault) {
+		struct type_seq *dst_seq = dst->tp_seq;
+		if (dst_seq || (DeeType_InheritIter(dst) && (dst_seq = dst->tp_seq) != NULL)) {
+			if (dst_seq->tp_foreach_pair)
+				return &DeeMap_DefaultTryCompareEqWithForeachPairDefault;
+		}
+		return &generic_map_trycompare_eq;
+	}
+	return tp_trycompare_eq;
+}
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
-#define DeeType_Optimize_tp_bool(dst, tp_bool)             tp_bool
-#define DeeType_Optimize_tp_hash(dst, tp_hash)             tp_hash
-#define DeeType_Optimize_tp_cmp(dst, tp_cmp)               tp_cmp
-#define DeeType_Optimize_tp_eq(dst, tp_eq)                 tp_eq
-#define DeeType_Optimize_tp_ne(dst, tp_ne)                 tp_ne
-#define DeeType_Optimize_tp_lo(dst, tp_lo)                 tp_lo
-#define DeeType_Optimize_tp_le(dst, tp_le)                 tp_le
-#define DeeType_Optimize_tp_gr(dst, tp_gr)                 tp_gr
-#define DeeType_Optimize_tp_ge(dst, tp_ge)                 tp_ge
-#define DeeType_Optimize_tp_compare(dst, tp_compare)       tp_compare
-#define DeeType_Optimize_tp_compare_eq(dst, tp_compare_eq) tp_compare_eq
+#define DeeType_Optimize_tp_bool(dst, tp_bool)                   tp_bool
+#define DeeType_Optimize_tp_hash(dst, tp_hash)                   tp_hash
+#define DeeType_Optimize_tp_cmp(dst, tp_cmp)                     tp_cmp
+#define DeeType_Optimize_tp_eq(dst, tp_eq)                       tp_eq
+#define DeeType_Optimize_tp_ne(dst, tp_ne)                       tp_ne
+#define DeeType_Optimize_tp_lo(dst, tp_lo)                       tp_lo
+#define DeeType_Optimize_tp_le(dst, tp_le)                       tp_le
+#define DeeType_Optimize_tp_gr(dst, tp_gr)                       tp_gr
+#define DeeType_Optimize_tp_ge(dst, tp_ge)                       tp_ge
+#define DeeType_Optimize_tp_compare_eq(dst, tp_compare_eq)       tp_compare_eq
+#define DeeType_Optimize_tp_compare(dst, tp_compare)             tp_compare
+#define DeeType_Optimize_tp_trycompare_eq(dst, tp_trycompare_eq) tp_trycompare_eq
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 
 INTERN NONNULL((1)) bool DCALL
@@ -15380,10 +15548,11 @@ DeeType_InheritCompare(DeeTypeObject *__restrict self) {
 		base_cmp = base->tp_cmp;
 		if (base_cmp == NULL ||
 		    (!base_cmp->tp_hash ||
+		     !base_cmp->tp_compare_eq || !base_cmp->tp_compare ||
+		     !base_cmp->tp_trycompare_eq ||
 		     !base_cmp->tp_eq || !base_cmp->tp_ne ||
 		     !base_cmp->tp_lo || !base_cmp->tp_le ||
-		     !base_cmp->tp_gr || !base_cmp->tp_ge ||
-		     !base_cmp->tp_compare_eq || !base_cmp->tp_compare)) {
+		     !base_cmp->tp_gr || !base_cmp->tp_ge)) {
 			if (!DeeType_InheritCompare(base))
 				continue;
 			base_cmp = base->tp_cmp;
@@ -15393,9 +15562,10 @@ DeeType_InheritCompare(DeeTypeObject *__restrict self) {
 			DeeTypeObject *origin = DeeType_GetCmpOrigin(self);
 			if unlikely(origin)
 				return DeeType_InheritCompare(origin);
-			self->tp_cmp->tp_hash       = DeeType_Optimize_tp_hash(self, base_cmp->tp_hash);
-			self->tp_cmp->tp_compare    = DeeType_Optimize_tp_compare(self, base_cmp->tp_compare);
-			self->tp_cmp->tp_compare_eq = DeeType_Optimize_tp_compare_eq(self, base_cmp->tp_compare_eq);
+			self->tp_cmp->tp_hash          = DeeType_Optimize_tp_hash(self, base_cmp->tp_hash);
+			self->tp_cmp->tp_compare       = DeeType_Optimize_tp_compare(self, base_cmp->tp_compare);
+			self->tp_cmp->tp_compare_eq    = DeeType_Optimize_tp_compare_eq(self, base_cmp->tp_compare_eq);
+			self->tp_cmp->tp_trycompare_eq = DeeType_Optimize_tp_trycompare_eq(self, base_cmp->tp_trycompare_eq);
 			/* Important: must optimize these *after* the stuff above! */
 			self->tp_cmp->tp_eq = DeeType_Optimize_tp_eq(self, base_cmp->tp_eq);
 			self->tp_cmp->tp_ne = DeeType_Optimize_tp_ne(self, base_cmp->tp_ne);

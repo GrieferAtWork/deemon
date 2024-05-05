@@ -1380,6 +1380,7 @@ PRIVATE DeeTypeObject DeeMappingItems_Type = {
 #define DeeType_RequireHasItemStringLenHash(tp_self)    (((tp_self)->tp_seq && (tp_self)->tp_seq->tp_hasitem_string_len_hash) || DeeType_InheritGetItem(tp_self))
 #define DeeType_RequireHash(tp_self)                    (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_hash) || DeeType_InheritCompare(tp_self))
 #define DeeType_RequireCompareEq(tp_self)               (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_compare_eq) || DeeType_InheritCompare(tp_self))
+#define DeeType_RequireTryCompareEq(tp_self)            (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_trycompare_eq) || DeeType_InheritCompare(tp_self))
 #define DeeType_RequireEq(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_eq) || DeeType_InheritCompare(tp_self))
 #define DeeType_RequireNe(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_ne) || DeeType_InheritCompare(tp_self))
 #define DeeType_RequireLo(tp_self)                      (((tp_self)->tp_cmp && (tp_self)->tp_cmp->tp_lo) || DeeType_InheritCompare(tp_self))
@@ -1919,7 +1920,26 @@ generic_map_compare_eq(DeeObject *self, DeeObject *some_object) {
 			goto handle_empty; /* Empty map. */
 		return DeeMap_DefaultCompareEqWithForeachPairDefault(self, some_object);
 	}
-	return err_unimplemented_operator(tp_self, OPERATOR_EQ);
+	err_unimplemented_operator(tp_self, OPERATOR_EQ);
+	return Dee_COMPARE_ERR;
+handle_empty:
+	return empty_map_compare(some_object);
+}
+
+INTERN WUNUSED NONNULL((1, 2)) int DCALL
+generic_map_trycompare_eq(DeeObject *self, DeeObject *some_object) {
+	DeeTypeObject *tp_self = Dee_TYPE(self);
+	if (DeeType_GetSeqClass(tp_self) == Dee_SEQCLASS_SEQ && DeeType_RequireTryCompareEq(tp_self)) {
+		if (tp_self->tp_cmp->tp_trycompare_eq == &generic_map_trycompare_eq)
+			goto handle_empty; /* Empty map. */
+		return (*tp_self->tp_cmp->tp_trycompare_eq)(self, some_object);
+	}
+	if (DeeType_RequireForeach(tp_self)) {
+		if (tp_self->tp_seq->tp_foreach_pair == &generic_map_foreach_pair)
+			goto handle_empty; /* Empty map. */
+		return DeeMap_DefaultTryCompareEqWithForeachPairDefault(self, some_object);
+	}
+	return -1;
 handle_empty:
 	return empty_map_compare(some_object);
 }
@@ -2055,15 +2075,16 @@ handle_empty:
 
 
 INTERN struct type_cmp generic_map_cmp = {
-	/* .tp_hash       = */ &generic_map_hash,
-	/* .tp_compare_eq = */ &generic_map_compare_eq,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &generic_map_eq,
-	/* .tp_ne         = */ &generic_map_ne,
-	/* .tp_lo         = */ &generic_map_lo,
-	/* .tp_le         = */ &generic_map_le,
-	/* .tp_gr         = */ &generic_map_gr,
-	/* .tp_ge         = */ &generic_map_ge,
+	/* .tp_hash          = */ &generic_map_hash,
+	/* .tp_compare_eq    = */ &generic_map_compare_eq,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ &generic_map_trycompare_eq,
+	/* .tp_eq            = */ &generic_map_eq,
+	/* .tp_ne            = */ &generic_map_ne,
+	/* .tp_lo            = */ &generic_map_lo,
+	/* .tp_le            = */ &generic_map_le,
+	/* .tp_gr            = */ &generic_map_gr,
+	/* .tp_ge            = */ &generic_map_ge,
 };
 
 #else /* CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
@@ -2372,15 +2393,16 @@ err:
 }
 
 PRIVATE struct type_cmp generic_map_cmp = {
-	/* .tp_hash       = */ &generic_map_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &generic_map_eq,
-	/* .tp_ne         = */ &generic_map_ne,
-	/* .tp_lo         = */ NULL,
-	/* .tp_le         = */ NULL,
-	/* .tp_gr         = */ NULL,
-	/* .tp_ge         = */ NULL,
+	/* .tp_hash          = */ &generic_map_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ &generic_map_eq,
+	/* .tp_ne            = */ &generic_map_ne,
+	/* .tp_lo            = */ NULL,
+	/* .tp_le            = */ NULL,
+	/* .tp_gr            = */ NULL,
+	/* .tp_ge            = */ NULL,
 };
 #endif /* !CONFIG_EXPERIMENTAL_NEW_SEQUENCE_OPERATORS */
 

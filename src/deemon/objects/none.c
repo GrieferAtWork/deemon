@@ -232,15 +232,16 @@ PRIVATE struct type_math none_math = {
 };
 
 PRIVATE struct type_cmp none_cmp = {
-	/* .tp_hash       = */ &none_hash,
-	/* .tp_compare_eq = */ &none_compare,
-	/* .tp_compare    = */ &none_compare,
-	/* .tp_eq         = */ &none_eq,
-	/* .tp_ne         = */ &none_ne,
-	/* .tp_lo         = */ &none_ne,
-	/* .tp_le         = */ &none_eq,
-	/* .tp_gr         = */ &none_ne,
-	/* .tp_ge         = */ &none_eq,
+	/* .tp_hash          = */ &none_hash,
+	/* .tp_compare_eq    = */ &none_compare,
+	/* .tp_compare       = */ &none_compare,
+	/* .tp_trycompare_eq = */ &none_compare,
+	/* .tp_eq            = */ &none_eq,
+	/* .tp_ne            = */ &none_ne,
+	/* .tp_lo            = */ &none_ne,
+	/* .tp_le            = */ &none_eq,
+	/* .tp_gr            = */ &none_ne,
+	/* .tp_ge            = */ &none_eq,
 };
 
 PRIVATE struct type_nsi tpconst none_nsi = {

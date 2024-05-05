@@ -232,9 +232,10 @@ err:
 #define di_sgif_cmp di_gi_cmp
 #define di_stgi_cmp di_gi_cmp
 PRIVATE struct type_cmp di_gi_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_gi_compare,
+	/* .tp_trycompare_eq = */ NULL,
 };
 
 #define di_stgi_members di_sgi_members
@@ -689,9 +690,10 @@ err_new_index:
 
 #define di_tg_cmp di_g_cmp
 PRIVATE struct type_cmp di_g_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_g_compare,
+	/* .tp_trycompare_eq = */ NULL,
 };
 
 #define di_tg_members di_g_members
@@ -1223,9 +1225,10 @@ di_nl_iter_next(DefaultIterator_WithNextAndLimit *self) {
 }
 
 PRIVATE struct type_cmp di_nl_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
-	/* .tp_compare    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
+	/* .tp_compare       = */ (int (DCALL *)(DeeObject *, DeeObject *))&di_nl_compare,
+	/* .tp_trycompare_eq = */ NULL,
 };
 
 PRIVATE struct type_member tpconst di_nl_members[] = {

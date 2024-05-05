@@ -212,15 +212,16 @@ DEFINE_ITERATOR_COMPARE(iterator_ge, >=, return_true)
 #undef DEFINE_ITERATOR_COMPARE
 
 PRIVATE struct type_cmp iterator_cmp = {
-	/* .tp_hash       = */ NULL,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &iterator_eq,
-	/* .tp_ne         = */ &iterator_ne,
-	/* .tp_lo         = */ &iterator_lo,
-	/* .tp_le         = */ &iterator_le,
-	/* .tp_gr         = */ &iterator_gr,
-	/* .tp_ge         = */ &iterator_ge
+	/* .tp_hash          = */ NULL,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ &iterator_eq,
+	/* .tp_ne            = */ &iterator_ne,
+	/* .tp_lo            = */ &iterator_lo,
+	/* .tp_le            = */ &iterator_le,
+	/* .tp_gr            = */ &iterator_gr,
+	/* .tp_ge            = */ &iterator_ge
 };
 
 PRIVATE WUNUSED NONNULL((1)) DREF DeeObject *DCALL

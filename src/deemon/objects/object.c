@@ -4658,11 +4658,12 @@ err:
 }
 
 PRIVATE struct type_cmp type_cmp_data = {
-	/* .tp_hash       = */ &type_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ &type_eq,
-	/* .tp_ne         = */ &type_ne,
+	/* .tp_hash          = */ &type_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ &type_eq,
+	/* .tp_ne            = */ &type_ne,
 };
 
 

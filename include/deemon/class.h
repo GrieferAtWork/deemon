@@ -1372,8 +1372,9 @@ INTDEF WUNUSED NONNULL((1, 2)) dssize_t DCALL instance_enumattr(DeeTypeObject *t
 	 : (tp_ge) == &instance_builtin_ge                                  \
 	   ? instance_builtin_tge(tp_self, self, other)                     \
 	   : (*(tp_ge))(self, other))
-#define DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, tp_compare_eq, self, other) (*(tp_compare_eq))(self, other)
-#define DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other)       (*(tp_compare))(self, other)
+#define DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, tp_compare_eq, self, other)       (*(tp_compare_eq))(self, other)
+#define DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other)             (*(tp_compare))(self, other)
+#define DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, tp_trycompare_eq, self, other) (*(tp_trycompare_eq))(self, other)
 #define DeeType_invoke_seq_tp_iter_NODEFAULT(tp_self, tp_iter, self) \
 	((tp_iter) == &instance_iter                                     \
 	 ? instance_titer(tp_self, self)                                 \
@@ -1610,6 +1611,37 @@ INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultCompareEqWithSizeAndGetIt
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultCompareEqWithSizeObAndGetItem(DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultCompareEqWithForeachDefault(DeeObject *self, DeeObject *other); /* Also use when non-Default would be usable */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultCompareEqWithForeachPairDefault(DeeObject *self, DeeObject *other); /* Also use when non-Default would be usable */
+
+/* tp_trycompare_eq */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithCompareEq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithEq(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithNe(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithCompare(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithLoAndGr(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultTryCompareEqWithLeAndGe(DeeObject *self, DeeObject *other);
+#if 0
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultTryCompareEqWithForeachDefault(DeeObject *self, DeeObject *other); /* Also use when non-Default would be usable */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem(DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeSet_DefaultTryCompareEqWithForeachDefault(DeeObject *self, DeeObject *other); /* Also use when non-Default would be usable */
+INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeMap_DefaultTryCompareEqWithForeachPairDefault(DeeObject *self, DeeObject *other); /* Also use when non-Default would be usable */
+#endif
+#define DeeSeq_DefaultTryCompareEqWithForeachDefault           DeeSeq_DefaultCompareEqWithForeachDefault
+#define DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast  DeeSeq_DefaultCompareEqWithSizeAndGetItemIndexFast
+#define DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex   DeeSeq_DefaultCompareEqWithSizeAndTryGetItemIndex
+#define DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex      DeeSeq_DefaultCompareEqWithSizeAndGetItemIndex
+#define DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem         DeeSeq_DefaultCompareEqWithSizeObAndGetItem
+#define DeeSet_DefaultTryCompareEqWithForeachDefault           DeeSet_DefaultCompareEqWithForeachDefault
+#define DeeMap_DefaultTryCompareEqWithForeachPairDefault       DeeMap_DefaultCompareEqWithForeachPairDefault
+#define DeeSeq_TDefaultTryCompareEqWithForeachDefault          DeeSeq_TDefaultCompareEqWithForeachDefault
+#define DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndexFast DeeSeq_TDefaultCompareEqWithSizeAndGetItemIndexFast
+#define DeeSeq_TDefaultTryCompareEqWithSizeAndTryGetItemIndex  DeeSeq_TDefaultCompareEqWithSizeAndTryGetItemIndex
+#define DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndex     DeeSeq_TDefaultCompareEqWithSizeAndGetItemIndex
+#define DeeSeq_TDefaultTryCompareEqWithSizeObAndGetItem        DeeSeq_TDefaultCompareEqWithSizeObAndGetItem
+#define DeeSet_TDefaultTryCompareEqWithForeachDefault          DeeSet_TDefaultCompareEqWithForeachDefault
+#define DeeMap_TDefaultTryCompareEqWithForeachPairDefault      DeeMap_TDefaultCompareEqWithForeachPairDefault
 
 /* tp_compare */
 INTDEF WUNUSED NONNULL((1, 2)) int DCALL DeeObject_DefaultCompareWithEqAndLo(DeeObject *self, DeeObject *other);
@@ -2182,6 +2214,7 @@ function getOperatorPackage(name: string): string {
 		"Hash" : "cmp",
 		"Compare" : "cmp",
 		"CompareEq" : "cmp",
+		"TryCompareEq" : "cmp",
 		"Iter" : "seq",
 		"Size" : "seq",
 		"SizeFast" : "seq",
@@ -2339,6 +2372,19 @@ INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareEqWithSizeAndG
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultCompareEqWithSizeObAndGetItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSet_TDefaultCompareEqWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_TDefaultCompareEqWithForeachPairDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithCompareEq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithEq(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithNe(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithCompare(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithLoAndGr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultTryCompareEqWithLeAndGe(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultTryCompareEqWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndexFast(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultTryCompareEqWithSizeAndTryGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndex(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSeq_TDefaultTryCompareEqWithSizeObAndGetItem(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeSet_TDefaultTryCompareEqWithForeachDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
+INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeMap_TDefaultTryCompareEqWithForeachPairDefault(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultCompareWithEqAndLo(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultCompareWithEqAndLe(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
 INTDEF WUNUSED NONNULL((1, 2, 3)) int DCALL DeeObject_TDefaultCompareWithEqAndGr(DeeTypeObject *tp_self, DeeObject *self, DeeObject *other);
@@ -2841,6 +2887,20 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare_eq) == &DeeSeq_DefaultCompareEqWithSizeObAndGetItem ? map(DeeSeq_TDefaultCompareEqWithSizeObAndGetItem) : \
 	 (tp_compare_eq) == &DeeSet_DefaultCompareEqWithForeachDefault ? map(DeeSet_TDefaultCompareEqWithForeachDefault) : \
 	 (tp_compare_eq) == &DeeMap_DefaultCompareEqWithForeachPairDefault ? map(DeeMap_TDefaultCompareEqWithForeachPairDefault) : default)
+#define DeeType_MapDefaultTryCompareEq(tp_trycompare_eq, map, default) \
+	((tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompareEq ? map(DeeObject_TDefaultTryCompareEqWithCompareEq) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithEq ? map(DeeObject_TDefaultTryCompareEqWithEq) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithNe ? map(DeeObject_TDefaultTryCompareEqWithNe) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompare ? map(DeeObject_TDefaultTryCompareEqWithCompare) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLoAndGr ? map(DeeObject_TDefaultTryCompareEqWithLoAndGr) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLeAndGe ? map(DeeObject_TDefaultTryCompareEqWithLeAndGe) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithForeachDefault ? map(DeeSeq_TDefaultTryCompareEqWithForeachDefault) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast ? map(DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndexFast) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex ? map(DeeSeq_TDefaultTryCompareEqWithSizeAndTryGetItemIndex) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex ? map(DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndex) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem ? map(DeeSeq_TDefaultTryCompareEqWithSizeObAndGetItem) : \
+	 (tp_trycompare_eq) == &DeeSet_DefaultTryCompareEqWithForeachDefault ? map(DeeSet_TDefaultTryCompareEqWithForeachDefault) : \
+	 (tp_trycompare_eq) == &DeeMap_DefaultTryCompareEqWithForeachPairDefault ? map(DeeMap_TDefaultTryCompareEqWithForeachPairDefault) : default)
 #define DeeType_MapDefaultCompare(tp_compare, map, default) \
 	((tp_compare) == &DeeObject_DefaultCompareWithEqAndLo ? map(DeeObject_TDefaultCompareWithEqAndLo) : \
 	 (tp_compare) == &DeeObject_DefaultCompareWithEqAndLe ? map(DeeObject_TDefaultCompareWithEqAndLe) : \
@@ -3365,6 +3425,20 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare_eq) == &DeeSeq_DefaultCompareEqWithSizeObAndGetItem || \
 	 (tp_compare_eq) == &DeeSet_DefaultCompareEqWithForeachDefault || \
 	 (tp_compare_eq) == &DeeMap_DefaultCompareEqWithForeachPairDefault)
+#define DeeType_IsDefaultTryCompareEq(tp_trycompare_eq) \
+	((tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompareEq || \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithEq || \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithNe || \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompare || \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLoAndGr || \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLeAndGe || \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithForeachDefault || \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast || \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex || \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex || \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem || \
+	 (tp_trycompare_eq) == &DeeSet_DefaultTryCompareEqWithForeachDefault || \
+	 (tp_trycompare_eq) == &DeeMap_DefaultTryCompareEqWithForeachPairDefault)
 #define DeeType_IsDefaultCompare(tp_compare) \
 	((tp_compare) == &DeeObject_DefaultCompareWithEqAndLo || \
 	 (tp_compare) == &DeeObject_DefaultCompareWithEqAndLe || \
@@ -3951,6 +4025,21 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 (tp_compare_eq) == &DeeSet_DefaultCompareEqWithForeachDefault ? DeeSet_TDefaultCompareEqWithForeachDefault(tp_self, self, other) : \
 	 (tp_compare_eq) == &DeeMap_DefaultCompareEqWithForeachPairDefault ? DeeMap_TDefaultCompareEqWithForeachPairDefault(tp_self, self, other) : \
 	 default)
+#define DeeType_invoke_cmp_tp_trycompare_eq_DEFAULT(tp_self, tp_trycompare_eq, self, other, default) \
+	((tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompareEq ? DeeObject_TDefaultTryCompareEqWithCompareEq(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithEq ? DeeObject_TDefaultTryCompareEqWithEq(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithNe ? DeeObject_TDefaultTryCompareEqWithNe(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithCompare ? DeeObject_TDefaultTryCompareEqWithCompare(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLoAndGr ? DeeObject_TDefaultTryCompareEqWithLoAndGr(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeObject_DefaultTryCompareEqWithLeAndGe ? DeeObject_TDefaultTryCompareEqWithLeAndGe(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithForeachDefault ? DeeSeq_TDefaultTryCompareEqWithForeachDefault(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndexFast ? DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndexFast(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndTryGetItemIndex ? DeeSeq_TDefaultTryCompareEqWithSizeAndTryGetItemIndex(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeAndGetItemIndex ? DeeSeq_TDefaultTryCompareEqWithSizeAndGetItemIndex(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSeq_DefaultTryCompareEqWithSizeObAndGetItem ? DeeSeq_TDefaultTryCompareEqWithSizeObAndGetItem(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeSet_DefaultTryCompareEqWithForeachDefault ? DeeSet_TDefaultTryCompareEqWithForeachDefault(tp_self, self, other) : \
+	 (tp_trycompare_eq) == &DeeMap_DefaultTryCompareEqWithForeachPairDefault ? DeeMap_TDefaultTryCompareEqWithForeachPairDefault(tp_self, self, other) : \
+	 default)
 #define DeeType_invoke_cmp_tp_compare_DEFAULT(tp_self, tp_compare, self, other, default) \
 	((tp_compare) == &DeeObject_DefaultCompareWithEqAndLo ? DeeObject_TDefaultCompareWithEqAndLo(tp_self, self, other) : \
 	 (tp_compare) == &DeeObject_DefaultCompareWithEqAndLe ? DeeObject_TDefaultCompareWithEqAndLe(tp_self, self, other) : \
@@ -4446,6 +4535,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 	 DeeType_invoke_cmp_tp_ge_DEFAULT(tp_self, tp_ge, self, other, DeeType_invoke_cmp_tp_ge_NODEFAULT(tp_self, tp_ge, self, other))
 #define DeeType_invoke_cmp_tp_compare_eq(tp_self, tp_compare_eq, self, other) \
 	 DeeType_invoke_cmp_tp_compare_eq_DEFAULT(tp_self, tp_compare_eq, self, other, DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, tp_compare_eq, self, other))
+#define DeeType_invoke_cmp_tp_trycompare_eq(tp_self, tp_trycompare_eq, self, other) \
+	 DeeType_invoke_cmp_tp_trycompare_eq_DEFAULT(tp_self, tp_trycompare_eq, self, other, DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, tp_trycompare_eq, self, other))
 #define DeeType_invoke_cmp_tp_compare(tp_self, tp_compare, self, other) \
 	 DeeType_invoke_cmp_tp_compare_DEFAULT(tp_self, tp_compare, self, other, DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, tp_compare, self, other))
 #define DeeType_invoke_seq_tp_iter(tp_self, tp_iter, self) \
@@ -4666,6 +4757,8 @@ INTDEF WUNUSED NONNULL((1, 2, 4)) int DCALL DeeSeq_TDefaultSetRangeIndexNWithSiz
 #define DeeType_InvokeCmpCompareEq_NODEFAULT(tp_self, self, other)                               DeeType_invoke_cmp_tp_compare_eq_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_compare_eq, self, other)
 #define DeeType_InvokeCmpCompare(tp_self, self, other)                                           DeeType_invoke_cmp_tp_compare(tp_self, (tp_self)->tp_cmp->tp_compare, self, other)
 #define DeeType_InvokeCmpCompare_NODEFAULT(tp_self, self, other)                                 DeeType_invoke_cmp_tp_compare_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_compare, self, other)
+#define DeeType_InvokeCmpTryCompareEq(tp_self, self, other)                                      DeeType_invoke_cmp_tp_trycompare_eq(tp_self, (tp_self)->tp_cmp->tp_trycompare_eq, self, other)
+#define DeeType_InvokeCmpTryCompareEq_NODEFAULT(tp_self, self, other)                            DeeType_invoke_cmp_tp_trycompare_eq_NODEFAULT(tp_self, (tp_self)->tp_cmp->tp_trycompare_eq, self, other)
 #define DeeType_InvokeSeqIter(tp_self, self)                                                     DeeType_invoke_seq_tp_iter(tp_self, (tp_self)->tp_seq->tp_iter, self)
 #define DeeType_InvokeSeqIter_NODEFAULT(tp_self, self)                                           DeeType_invoke_seq_tp_iter_NODEFAULT(tp_self, (tp_self)->tp_seq->tp_iter, self)
 #define DeeType_InvokeSeqSizeOb(tp_self, self)                                                   DeeType_invoke_seq_tp_sizeob(tp_self, (tp_self)->tp_seq->tp_sizeob, self)

@@ -1197,8 +1197,8 @@ err:
 }
 
 PRIVATE struct type_cmp function_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
-	/* .tp_compare_eq = */ (int (DCALL *)(DeeObject *, DeeObject *))&function_compare_eq,
+	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&function_hash,
+	/* .tp_compare_eq    = */ (int (DCALL *)(DeeObject *, DeeObject *))&function_compare_eq,
 };
 
 

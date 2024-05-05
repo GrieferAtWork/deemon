@@ -152,10 +152,11 @@ err:
 }
 
 PRIVATE struct type_cmp attr_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&attr_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&attr_eq,
+	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&attr_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&attr_eq,
 };
 
 PRIVATE struct type_member tpconst attr_members[] = {
@@ -935,11 +936,12 @@ err:
 }
 
 PRIVATE struct type_cmp enumattr_cmp = {
-	/* .tp_hash       = */ (dhash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
-	/* .tp_compare_eq = */ NULL,
-	/* .tp_compare    = */ NULL,
-	/* .tp_eq         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_eq,
-	/* .tp_ne         = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_ne
+	/* .tp_hash          = */ (dhash_t (DCALL *)(DeeObject *__restrict))&enumattr_hash,
+	/* .tp_compare_eq    = */ NULL,
+	/* .tp_compare       = */ NULL,
+	/* .tp_trycompare_eq = */ NULL,
+	/* .tp_eq            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_eq,
+	/* .tp_ne            = */ (DREF DeeObject *(DCALL *)(DeeObject *, DeeObject *))&enumattr_ne
 };
 
 PRIVATE struct type_seq enumattr_seq = {
